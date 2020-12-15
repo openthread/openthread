@@ -225,7 +225,7 @@ SILABS_EFR32MG12_SOURCES                                                        
 SILABS_EFR32MG13_SOURCES                                                                           = \
     gecko_sdk_suite/v3.1/hardware/kit/common/drivers/mx25flash_spi.c                                 \
     gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG13P/Source/system_efr32mg13p.c           \
-    gecko_sdk_suite/v3.1//platform/Device/SiliconLabs/EFR32MG13P/Source/GCC/startup_efr32mg13p.c     \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG13P/Source/GCC/startup_efr32mg13p.c      \
     $(NULL)
 
 SILABS_EFR32MG21_SOURCES                                                                      = \
