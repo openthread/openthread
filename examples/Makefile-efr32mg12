@@ -43,14 +43,14 @@ EFR32_PLATFORM = efr32mg12
 PLATFORM_LOWERCASE = $(shell echo $(EFR32_PLATFORM) | tr A-Z a-z)
 BOARD_LOWERCASE = $(shell echo $(BOARD) | tr A-Z a-z)
 
-configure_OPTIONS               = \
-    --enable-cli                  \
-    --enable-ftd                  \
-    --enable-mtd                  \
-    --enable-ncp                  \
-    --enable-radio-only           \
-    --enable-linker-map           \
-    --enable-builtin-mbedtls=no   \
+configure_OPTIONS                              = \
+    --enable-cli                                 \
+    --enable-ftd                                 \
+    --enable-mtd                                 \
+    --enable-ncp                                 \
+    --enable-radio-only                          \
+    --enable-linker-map                          \
+    --enable-builtin-mbedtls=no                  \
     --with-examples=$(EFR32_PLATFORM)            \
     MBEDTLS_CPPFLAGS="$(EFR32_MBEDTLS_CPPFLAGS)" \
     $(NULL)
