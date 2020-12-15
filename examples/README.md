@@ -33,16 +33,16 @@ This page lists the available common switches with description. For build comman
 | DEBUG_UART_LOG | not implemented | Enables the log output for the debug UART. Requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART to be enabled. |
 | DNS_CLIENT | OT_DNS_CLIENT | Enables support for DNS client. Enable this switch on a device that sends a DNS query for AAAA (IPv6) record. |
 | DUA | OT_DUA | Enables the Domain Unicast Address feature for Thread 1.2. |
-| DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic [log level](https://openthread.io/reference/group/api-logging) feature. Enable this switch if OpenThread log level is required to be set at runtime. |
+| DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic log level feature. Enable this switch if OpenThread log level is required to be set at runtime. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
 | EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. Enable this switch if the platform uses its own heap. |
-| FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. |
+| FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | IP6_FRAGM | OT_IP6_FRAGM | Enables support for IPv6 fragmentation. |
 | JAM_DETECTION | OT_JAM_DETECTION | Enables support for [Jam Detection](https://openthread.io/guides/build/features/jam-detection). Enable this switch if a device requires the ability to detect signal jamming on a specific channel. |
 | JOINER | OT_JOINER | Enables [support for Joiner](https://openthread.io/reference/group/api-joiner). Enable this switch on a device that has to be commissioned to join the network. |
 | LEGACY | OT_LEGACY | Enables support for legacy network. |
 | LINK_RAW | OT_LINK_RAW | Enables the Link Raw service. |
-| LOG_OUTPUT | not implemented | Defines if the LOG output is to be created and where it goes. There are several options available: `NONE`, `DEBUG_UART`, `APP`, `PLATFORM_DEFINED` (default). |
+| LOG_OUTPUT | not implemented | Defines if the LOG output is to be created and where it goes. There are several options available: `NONE`, `DEBUG_UART`, `APP`, `PLATFORM_DEFINED` (default). See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | MAC_FILTER | OT_MAC_FILTER | Enables support for the MAC filter. |
 | MLE_LONG_ROUTES | OT_MLE_LONG_ROUTES | Enables the MLE long routes extension. **Note: Enabling this feature breaks conformance to the Thread Specification.** |
 | MLR | OT_MLR | Enables Multicast Listener Registration feature for Thread 1.2. |
