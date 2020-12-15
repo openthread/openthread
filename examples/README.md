@@ -1,6 +1,6 @@
 ﻿# Common switches
 
-OpenThread allows you to [configure](https://openthread.io/guides/build?hl=en#configuration) the stack for different functionality and behavior. This configuration is based on changing compile-time constants during the build process using common switches listed in `/examples/common-switches.mk`.
+OpenThread allows you to [configure](https://openthread.io/guides/build#configuration) the stack for different functionality and behavior. This configuration is based on changing compile-time constants during the build process using common switches listed in `/examples/common-switches.mk`.
 
 This page lists the available common switches with description. For build command examples, see [build examples](https://openthread.io/guides/build#build_examples).
 
@@ -35,7 +35,7 @@ This page lists the available common switches with description. For build comman
 | DUA | OT_DUA | Enables the Domain Unicast Address feature for Thread 1.2. |
 | DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic log level feature. Enable this switch if OpenThread log level is required to be set at runtime. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
-| EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. Enable this switch if the platform uses its own heap. |
+| EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Enable this switch if the platform uses its own heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. |
 | FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | IP6_FRAGM | OT_IP6_FRAGM | Enables support for IPv6 fragmentation. |
 | JAM_DETECTION | OT_JAM_DETECTION | Enables support for [Jam Detection](https://openthread.io/guides/build/features/jam-detection). Enable this switch if a device requires the ability to detect signal jamming on a specific channel. |
@@ -56,6 +56,6 @@ This page lists the available common switches with description. For build comman
 | SLAAC | OT_SLAAC | Enables support for adding auto-configured SLAAC addresses by OpenThread. This feature is enabled by default. |
 | SNTP_CLIENT | OT_SNTP_CLIENT | Enables support for SNTP Client. |
 | SPINEL_ENCRYPTER_LIBS | not implemented | Specifies library files (absolute paths) for implementing the NCP Spinel Encrypter. |
-| THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 (default) / 1.2). For example, set to `1.1` for Thread 1.1. |
+| THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 (default) / 1.2). For example, set to `1.2` for Thread 1.2. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |
