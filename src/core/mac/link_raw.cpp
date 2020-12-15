@@ -72,8 +72,14 @@ otError LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
-#endif
 
+    // In MTD/FTD build, `Mac` has already enabled sub-mac. We ensure to
+    // disable/enable MAC layer when link-raw is being enabled/disabled to
+    // avoid any conflict in control of radio and sub-mac between `Mac` and
+    // `LinkRaw`. in RADIO build, we directly enable/disable sub-mac.
+
+    Get<Mac>().SetEnabled(aCallback == nullptr);
+#else
     if (aCallback)
     {
         SuccessOrExit(error = mSubMac.Enable());
@@ -82,6 +88,7 @@ otError LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
     {
         IgnoreError(mSubMac.Disable());
     }
+#endif
 
     mReceiveDoneCallback = aCallback;
 
