@@ -565,11 +565,11 @@ _LAYER_FIELDS = {
     'thread_meshcop.len_size_mismatch': _str,
     'thread_meshcop.tlv.type': _list(_auto),
     'thread_meshcop.tlv.len8': _list(_auto),
-    'thread_meshcop.tlv.net_name': _str,  # from thread_bl
+    'thread_meshcop.tlv.net_name': _list(_str),  # from thread_bl
     'thread_meshcop.tlv.commissioner_id': _str,
     'thread_meshcop.tlv.commissioner_sess_id': _auto,  # from mle
     "thread_meshcop.tlv.channel_page": _auto,  # from ble
-    "thread_meshcop.tlv.channel": _auto,  # from ble
+    "thread_meshcop.tlv.channel": _list(_auto),  # from ble
     "thread_meshcop.tlv.chan_mask": _str,  # from ble
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
@@ -577,7 +577,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.discovery_req_ver': _auto,
     'thread_meshcop.tlv.discovery_rsp_ver': _auto,
     'thread_meshcop.tlv.energy_list': _list(_auto),
-    'thread_meshcop.tlv.pan_id': _auto,
+    'thread_meshcop.tlv.pan_id': _list(_auto),
     'thread_meshcop.tlv.xpan_id': _bytes,
     'thread_meshcop.tlv.ml_prefix': _bytes,
     'thread_meshcop.tlv.master_key': _bytes,

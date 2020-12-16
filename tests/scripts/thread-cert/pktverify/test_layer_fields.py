@@ -164,7 +164,7 @@ class TestLayerFields(unittest.TestCase):
         self.assertIsInstanceOrNull(thread_bl.tlv.target_eid, Ipv6Addr)
         self.assertIsInstanceOrNull(thread_bl.tlv.ml_eid, ExtAddr)
         self.assertIsInstanceOrNull(thread_bl.tlv.last_transaction_time, int)
-        self.assertIsInstanceOrNull(p.thread_meshcop.tlv.net_name, str)
+        self.assertIsInstanceOrNull(p.thread_meshcop.tlv.net_name, list)
 
     def _test_thread_meshcop(self, p: Packet):
         thread_meshcop = p.thread_meshcop
@@ -174,13 +174,13 @@ class TestLayerFields(unittest.TestCase):
                 self.assertIsInstance(thread_meshcop.tlv.commissioner_sess_id, int)
 
             if 'thread_meshcop.tlv.net_name' in layer._layer._all_fields:
-                self.assertIsInstance(thread_meshcop.tlv.net_name, str)
+                self.assertIsInstance(thread_meshcop.tlv.net_name, list)
 
             if 'thread_meshcop.tlv.channel_page' in layer._layer._all_fields:
                 self.assertIsInstance(thread_meshcop.tlv.channel_page, int)
 
             if 'thread_meshcop.tlv.channel' in layer._layer._all_fields:
-                self.assertIsInstance(thread_meshcop.tlv.channel, int)
+                self.assertIsInstance(thread_meshcop.tlv.channel, list)
 
             if 'thread_meshcop.tlv.chan_mask_page' in layer._layer._all_fields:
                 self.assertIsInstance(thread_meshcop.tlv.chan_mask_page, int)
@@ -220,7 +220,7 @@ class TestLayerFields(unittest.TestCase):
                 self.assertIsInstance(thread_meshcop.tlv.sec_policy_b, int)
 
             if 'thread_meshcop.tlv.pan_id' in layer._layer._all_fields:
-                self.assertIsInstance(thread_meshcop.tlv.pan_id, int)
+                self.assertIsInstance(thread_meshcop.tlv.pan_id, list)
 
             if 'thread_meshcop.tlv.xpan_id' in layer._layer._all_fields:
                 self.assertIsInstance(thread_meshcop.tlv.xpan_id, Bytes)
