@@ -208,34 +208,6 @@ public:
     }
 
     /**
-     * This method overloads operator `<` to evaluate whether this prefix is
-     * smaller than the other.
-     *
-     * Prefix A is consider smaller than B if:
-     * 1. len(A) < len(B) or
-     * 2. len(A) == len(B) and there is `i` in [0, len(A)) that A[i] < B[i].
-     *
-     * @param[in]  aOther  The other prefix to compare with.
-     *
-     * @retval TRUE   If this prefix is smaller than the other.
-     * @retval FALSE  If this prefix is equal or greater than the other.
-     *
-     */
-    bool operator<(const Prefix &aOther) const;
-
-    /**
-     * This method overloads operator `>` to evaluate whether this prefix is
-     * greater than the other.
-     *
-     * @param[in]  aOther  The other prefix to compare with.
-     *
-     * @retval TRUE   If this prefix is greater than the other.
-     * @retval FALSE  If this prefix is equal or smaller than the other.
-     *
-     */
-    bool operator>(const Prefix &aOther) const { return aOther < *this; }
-
-    /**
      * This method overloads operator `==` to evaluate whether or not two prefixes are equal.
      *
      * @param[in]  aOther  The other prefix to compare with.

@@ -143,6 +143,14 @@ private:
     otError LoadOrGenerateRandomOmrPrefix(void);
     otError LoadOrGenerateRandomOnLinkPrefix(void);
 
+    /**
+     * This method tells whether the first prefix is numerically smaller than the second one.
+     *
+     * @note  The caller must guarantee that the two prefix has the same length.
+     *
+     */
+    static bool IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const Ip6::Prefix &aSecondPrefix);
+
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 

@@ -275,7 +275,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
         }
 
         aNewOmrPrefixes[newOmrPrefixNum] = onMeshPrefixConfig.GetPrefix();
-        if (smallestOmrPrefix == nullptr || onMeshPrefixConfig.GetPrefix() < *smallestOmrPrefix)
+        if (smallestOmrPrefix == nullptr || IsPrefixSmallerThan(onMeshPrefixConfig.GetPrefix(), *smallestOmrPrefix))
         {
             smallestOmrPrefix = &aNewOmrPrefixes[newOmrPrefixNum];
         }
@@ -575,6 +575,19 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
                         otThreadErrorToString(error));
         }
     }
+}
+
+bool RoutingManager::IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const Ip6::Prefix &aSecondPrefix)
+{
+    uint8_t matchedLength;
+
+    OT_ASSERT(aFirstPrefix.GetLength() == aSecondPrefix.GetLength());
+
+    matchedLength =
+        Ip6::Prefix::MatchLength(aFirstPrefix.GetBytes(), aSecondPrefix.GetBytes(), aFirstPrefix.GetBytesSize());
+
+    return matchedLength < aFirstPrefix.GetLength() &&
+           aFirstPrefix.GetBytes()[matchedLength / CHAR_BIT] < aSecondPrefix.GetBytes()[matchedLength / CHAR_BIT];
 }
 
 bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
