@@ -214,6 +214,9 @@ static inline void all_prec_update(void)
         {
             m_requested_prio = new_prio;
 
+            nrf_802154_wifi_coex_prio_request(new_prio);
+            prec_approved_prio_set(RSCH_PREC_COEX, new_prio);
+
             if (new_prio == RSCH_PRIO_IDLE)
             {
                 nrf_802154_priority_drop_hfclk_stop();
@@ -228,9 +231,6 @@ static inline void all_prec_update(void)
                 nrf_802154_clock_hfclk_start();
                 nrf_raal_continuous_mode_enter();
             }
-
-            nrf_802154_wifi_coex_prio_request(new_prio);
-            prec_approved_prio_set(RSCH_PREC_COEX, new_prio);
         }
 
         mutex_unlock(&m_req_mutex);
