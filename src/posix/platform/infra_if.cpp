@@ -82,12 +82,10 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
     memset(&dest, 0, sizeof(dest));
     dest.sin6_family = AF_INET6;
     memcpy(&dest.sin6_addr, aDestAddress, sizeof(*aDestAddress));
-#ifdef HAVE_SIN6_SCOPE_ID
-    if (IN6_IS_ADDR_LINKLOCAL(&addr.sin6_addr) || IN6_IS_ADDR_MC_LINKLOCAL(&addr.sin6_addr))
+    if (IN6_IS_ADDR_LINKLOCAL(&dest.sin6_addr) || IN6_IS_ADDR_MC_LINKLOCAL(&dest.sin6_addr))
     {
         dest.sin6_scope_id = sInfraIfIndex;
     }
-#endif
 
     iov.iov_base = const_cast<uint8_t *>(aBuffer);
     iov.iov_len  = aBufferLength;
