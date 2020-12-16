@@ -76,6 +76,11 @@ public:
         kRouteInfo  = 24, ///< Route Information Option.
     };
 
+    enum : uint8_t
+    {
+        kLengthUnit = 8u, ///< The unit of length in octets.
+    };
+
     /**
      * This constructor initializes the option with given type and length.
      *
@@ -106,7 +111,7 @@ public:
      * @param[in]  aLength  The length of the option in unit of 1 byte.
      *
      */
-    void SetLength(uint16_t aLength) { mLength = (aLength + 7) / 8; }
+    void SetLength(uint16_t aLength) { mLength = (aLength + kLengthUnit - 1) / kLengthUnit; }
 
     /**
      * This method returns the length of the option (in bytes).
@@ -286,7 +291,7 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetLength() == CHAR_BIT || GetLength() == 2 * CHAR_BIT || GetLength() == 3 * CHAR_BIT) &&
+        return (GetLength() == kLengthUnit || GetLength() == 2 * kLengthUnit || GetLength() == 3 * kLengthUnit) &&
                (mPrefixLength <= OT_IP6_ADDRESS_SIZE * 8);
     }
 
@@ -325,9 +330,17 @@ public:
      * @param[in]  aRouterLifetime  The router lifetime in seconds.
      *
      */
-    void SetRouterLifetime(uint16_t aRouterLifetime) { mHeader.mData.m16[1] = HostSwap16(aRouterLifetime); }
+    void SetRouterLifetime(uint16_t aRouterLifetime)
+    {
+        mHeader.mData.m16[kRouteLifetimeIdx] = HostSwap16(aRouterLifetime);
+    }
 
 private:
+    enum : uint8_t
+    {
+        kRouteLifetimeIdx = 1u, // The index of Route Lifetime in ICMPv6 Header Data. in unit of 2 octets.
+    };
+
     Ip6::Icmp::Header mHeader;        // The common ICMPv6 header.
     uint32_t          mReachableTime; // The reachable time. In milliseconds.
     uint32_t          mRetransTimer;  // The retransmission timer. In milliseconds.
