@@ -36,7 +36,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <lib/platform/exit_code.h>
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
@@ -3908,7 +3907,6 @@ otError Interpreter::ProcessThread(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
-    DieNow(OT_EXIT_FAILURE);
     return error;
 }
 
