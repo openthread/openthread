@@ -461,7 +461,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         nrf5FemEnable();
     }
 
-    transmitPower = sDefaultTxPower < channelMaxPower ? sDefaultTxPower : channelMaxPower;
+    transmitPower = OT_MIN(sDefaultTxPower, channelMaxPower);
     nrf_802154_tx_power_set(transmitPower);
 
     result = nrf_802154_receive();
@@ -1333,7 +1333,7 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
         }
         else
         {
-            power = sDefaultTxPower < aMaxPower ? sDefaultTxPower : aMaxPower;
+            power = OT_MIN(sDefaultTxPower, aMaxPower);
         }
         nrf_802154_tx_power_set(power);
     }
