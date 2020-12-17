@@ -94,14 +94,13 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual('router', self.nodes[ROUTER1].get_state())
 
         self.simulator.go(10)
-        logging.info("Host addresses: %r", self.nodes[HOST].get_addrs())
-        self.assertGreaterEqual(len(self.nodes[HOST].get_addrs()), 2)
-
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
         logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
         logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+
+        self.assertGreaterEqual(len(self.nodes[HOST].get_addrs()), 2)
 
         self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
         self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
@@ -115,21 +114,20 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                               backbone=True))
 
-        # Add two external route on BR1, so that
+        # Add two on-mesh prefix on BR1, so that
         # it will deregister its random-generated OMR prefix.
         self.nodes[BR1].add_prefix(ON_MESH_PREFIX1)
         self.nodes[BR1].add_prefix(ON_MESH_PREFIX2)
         self.nodes[BR1].register_netdata()
 
         self.simulator.go(10)
-        logging.info("Host addresses: %r", self.nodes[HOST].get_addrs())
-        self.assertGreaterEqual(len(self.nodes[HOST].get_addrs()), 2)
-
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
         logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
         logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+
+        self.assertGreaterEqual(len(self.nodes[HOST].get_addrs()), 2)
 
         self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 2)
         self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 2)

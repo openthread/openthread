@@ -150,13 +150,7 @@ void RoutingManager::Start(void)
 
 void RoutingManager::Stop(void)
 {
-    Ip6::Prefix invalidOmrPrefix;
-    Ip6::Prefix invalidOnLinkPrefix;
-
     UnpublishLocalOmrPrefix();
-
-    invalidOmrPrefix.Clear();
-    invalidOnLinkPrefix.Clear();
 
     // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
     SendRouterAdvertisement(nullptr, 0, nullptr);
@@ -305,7 +299,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
                         smallestOmrPrefix->ToString().AsCString());
             UnpublishLocalOmrPrefix();
 
-            // Remove the local OMR prefix from the list.
+            // Remove the local OMR prefix from the list by swapping it with the last one.
             *publishedLocalOmrPrefix = aNewOmrPrefixes[--newOmrPrefixNum];
         }
     }
@@ -447,7 +441,7 @@ void RoutingManager::StartRouterSolicitation()
     mRouterSolicitTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRtrSolicitationDelay * 1000));
 }
 
-otError RoutingManager::SendRouterSolicit(void)
+otError RoutingManager::SendRouterSolicitation(void)
 {
     Ip6::Address                    destAddress;
     RouterAdv::RouterSolicitMessage routerSolicit;
@@ -626,7 +620,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         uint32_t nextSolicitationDelay;
         otError  error;
 
-        error = SendRouterSolicit();
+        error = SendRouterSolicitation();
         ++mRouterSolicitCount;
 
         if (error == OT_ERROR_NONE)

@@ -155,6 +155,8 @@ static void InitLinkLocalAddress(void)
 
 void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     int                 sock;
     struct icmp6_filter filter;
     ssize_t             rval;
@@ -163,7 +165,12 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     const int           kHopLimit = 255;
     uint32_t            ifIndex   = 0;
 
-    OT_UNUSED_VARIABLE(aInstance);
+    if (strlen(aIfName) >= sizeof(sInfraIfName))
+    {
+        otLogCritPlat("infra interface name '%s' is too long", aIfName);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+    strcpy(sInfraIfName, aIfName);
 
     // Initializes the infra interface.
     ifIndex = if_nametoindex(aIfName);
@@ -173,13 +180,6 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
         DieNow(OT_EXIT_ERROR_ERRNO);
     }
     sInfraIfIndex = ifIndex;
-
-    if (strlen(aIfName) >= sizeof(sInfraIfName))
-    {
-        otLogCritPlat("infra interface name '%s' is too long", aIfName);
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    strcpy(sInfraIfName, aIfName);
 
     // Initializes the ICMPv6 socket.
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
@@ -329,7 +329,7 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
 
     VerifyOrExit(ifIndex == sInfraIfIndex);
 
-    // We currently acepts only RA & RS messages for the Border Router and it requires that
+    // We currently accept only RA & RS messages for the Border Router and it requires that
     // the hoplimit must be 255.
     VerifyOrExit(hopLimit == 255);
 

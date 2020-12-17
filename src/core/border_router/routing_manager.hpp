@@ -109,9 +109,10 @@ private:
 
     enum : uint8_t
     {
-        kMaxOmrPrefixNum    = 8u,                    // The maximum number of the OMR prefixes to advertise.
-        kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE, // The length of an OMR prefix. In bits.
-        kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE, // The length of an On-link prefix. In bits.
+        kMaxOmrPrefixNum =
+            OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES, // The maximum number of the OMR prefixes to advertise.
+        kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE,   // The length of an OMR prefix. In bits.
+        kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE,   // The length of an On-link prefix. In bits.
     };
 
     enum : uint32_t
@@ -209,13 +210,13 @@ private:
     void StartRouterSolicitation();
 
     /**
-     * This method sends Router Solicitation messages to discovery on-link
+     * This method sends Router Solicitation messages to discover on-link
      * prefix on infra links.
      *
      * @sa HandleRouterAdvertisement
      *
      */
-    otError SendRouterSolicit(void);
+    otError SendRouterSolicitation(void);
 
     /**
      * This method sends Router Advertisement messages to advertise
@@ -252,7 +253,8 @@ private:
     uint32_t mInfraIfIndex;
 
     /**
-     * The OMR prefix loaded from local persistent storage.
+     * The OMR prefix loaded from local persistent storage or randomly generated
+     * if non is found in persistent storage.
      *
      */
     Ip6::Prefix mLocalOmrPrefix;
@@ -265,7 +267,8 @@ private:
     uint8_t     mAdvertisedOmrPrefixNum;
 
     /**
-     * The on-link prefix created based on the local OMR prefix.
+     * The on-link prefix loaded from local persistent storage or randomly generated
+     * if non is found in persistent storage.
      *
      */
     Ip6::Prefix mLocalOnLinkPrefix;
