@@ -188,7 +188,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                                                  panid=params['active_dataset'].get('panid'),
                                                  channel=params['active_dataset'].get('channel'),
                                                  channel_mask=params['active_dataset'].get('channel_mask'),
-                                                 master_key=params['active_dataset'].get('master_key'))
+                                                 master_key=params['active_dataset'].get('master_key'),
+                                                 security_policy=params['active_dataset'].get('security_policy'))
 
             if 'pending_dataset' in params:
                 self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],

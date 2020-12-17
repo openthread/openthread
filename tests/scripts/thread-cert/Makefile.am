@@ -80,6 +80,7 @@ EXTRA_DIST                                                         = \
     Cert_5_7_03_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
+    Cert_5_8_04_SecurityPolicyTLV.py                                 \
     Cert_6_1_01_RouterAttach.py                                      \
     Cert_6_1_02_REEDAttach.py                                        \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
@@ -264,6 +265,7 @@ check_SCRIPTS                                                      = \
     Cert_5_7_03_CoapDiagCommands.py                                  \
     Cert_5_8_02_KeyIncrement.py                                      \
     Cert_5_8_03_KeyIncrementRollOver.py                              \
+    Cert_5_8_04_SecurityPolicyTLV.py                                 \
     Cert_6_1_01_RouterAttach.py                                      \
     Cert_6_1_02_REEDAttach.py                                        \
     Cert_6_1_03_RouterAttachConnectivity.py                          \
