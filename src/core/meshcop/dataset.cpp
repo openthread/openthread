@@ -173,7 +173,8 @@ bool Dataset::IsValid(void) const
 
     for (const Tlv *cur = GetTlvsStart(); cur < end; cur = cur->GetNext())
     {
-        VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end && Tlv::IsValid(*cur), rval = false);
+        VerifyOrExit(!cur->IsExtended() && (cur + 1) <= end && cur->GetNext() <= end && Tlv::IsValid(*cur),
+                     rval = false);
     }
 
 exit:
