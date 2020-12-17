@@ -93,6 +93,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         # Step 2: new, valid Timestamp TLV
         #         all valid Active Operational Dataset parameters,
         #         with new values in the TLVs that don’t affect connectivity
+        #         binary = new pskc and security policy [3600, 0b11100000]
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=100,
             channel_mask=0x3fff800,
@@ -109,6 +110,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         # Step 7: old, invalid Active Timestamp TLV
         #         all valid Active Operational Dataset parameters, with
         #         new values in the TLVs that don’t affect connectivity
+        #         binary = new pskc and security policy [3600, 0b11110000]
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=100,
             channel_mask=0x1fff800,
@@ -125,6 +127,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         # Step 9: new, valid Active Timestamp TLV
         #         all of valid Commissioner Dataset parameters plus one bogus TLV, and
         #         new values in the TLVs that don’t affect connectivity
+        #         binary = new pskc and security policy [3600, 0b11111000] and BogusTLV=0x400
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=101,
             channel_mask=0xfff800,
@@ -140,6 +143,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
 
         # Step 14: new, valid Active Timestamp TLV
         #          attempt to set Channel TLV to an unsupported channel + all of other TLVs
+        #          binary = pskc and security policy step 9
         self.nodes[ROUTER].send_mgmt_active_set(
             active_timestamp=102,
             channel_mask=0x1fff800,
