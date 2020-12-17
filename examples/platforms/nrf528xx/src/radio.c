@@ -450,9 +450,9 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    bool    result;
-    int8_t  transmitPower;
-    uint8_t channel = nrf_802154_channel_get();
+    bool   result;
+    int8_t transmitPower;
+    int8_t channelMaxPower = nrf5GetChannelMaxTransmitPower(aChannel);
 
     nrf_802154_channel_set(aChannel);
     if (nrf_802154_state_get() == NRF_802154_STATE_SLEEP)
@@ -461,9 +461,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         nrf5FemEnable();
     }
 
-    transmitPower = sDefaultTxPower < sMaxTxPowerTable[channel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN]
-                        ? sDefaultTxPower
-                        : sMaxTxPowerTable[channel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN];
+    transmitPower = sDefaultTxPower < channelMaxPower ? sDefaultTxPower : channelMaxPower;
     nrf_802154_tx_power_set(transmitPower);
 
     result = nrf_802154_receive();
@@ -708,15 +706,12 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    int8_t  power;
-    uint8_t channel = nrf_802154_channel_get();
+    uint8_t channel         = nrf_802154_channel_get();
+    int8_t  channelMaxPower = nrf5GetChannelMaxTransmitPower(channel);
 
     sDefaultTxPower   = aPower;
     sPowerInitialized = true;
-    power             = aPower < sMaxTxPowerTable[channel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN]
-                ? aPower
-                : sMaxTxPowerTable[channel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN];
-    nrf_802154_tx_power_set(power);
+    nrf_802154_tx_power_set(aPower < channelMaxPower ? aPower : channelMaxPower);
 
     return OT_ERROR_NONE;
 }
