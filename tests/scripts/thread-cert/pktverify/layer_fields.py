@@ -584,7 +584,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.master_key': _bytes,
     'thread_meshcop.tlv.pskc': _bytes,
     'thread_meshcop.tlv.sec_policy_rot': _auto,
-    'thread_meshcop.tlv.sec_policy.o': _auto,
+    'thread_meshcop.tlv.sec_policy_o': _auto,
     'thread_meshcop.tlv.sec_policy_n': _auto,
     'thread_meshcop.tlv.sec_policy_r': _auto,
     'thread_meshcop.tlv.sec_policy_c': _auto,
