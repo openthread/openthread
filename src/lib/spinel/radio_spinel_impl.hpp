@@ -2193,6 +2193,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     mTxRadioTid   = 0;
     mWaitingTid   = 0;
     mWaitingKey   = SPINEL_PROP_LAST_STATUS;
+    mError        = OT_ERROR_NONE;
     mIsReady      = false;
     mIsTimeSynced = false;
 
