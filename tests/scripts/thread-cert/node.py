@@ -1418,7 +1418,7 @@ class NodeImpl:
             self.send_command(cmd)
             self._expect('Done')
 
-        if len(security_policy) == 2:
+        if security_policy and len(security_policy) == 2:
             cmd = 'dataset securitypolicy %s %s' % (
                 str(security_policy[0]),
                 security_policy[1],
