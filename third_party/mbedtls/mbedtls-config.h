@@ -104,8 +104,10 @@
 #define MBEDTLS_BASE64_C
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECDSA_C
+#define MBEDTLS_ECDSA_DETERMINISTIC
 #define MBEDTLS_OID_C
 #define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PK_WRITE_C
 #endif
 
 #define MBEDTLS_MPI_WINDOW_SIZE            1 /**< Maximum windows size used. */

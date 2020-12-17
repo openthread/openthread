@@ -80,12 +80,7 @@ public:
          * @returns A pointer to a byte array containing the hash.
          *
          */
-        const uint8_t *GetBytes(void) { return m8; }
-    };
-
-    enum
-    {
-        kHashSize = 32, ///< SHA-256 hash size (bytes)
+        const uint8_t *GetBytes(void) const { return m8; }
     };
 
     /**
