@@ -281,7 +281,7 @@ jobs:
       run: |
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
-        OT_OPTIONS='-DOT_TIME_SYNC=ON -DOT_FULL_LOGS=ON' VIRTUAL_TIME=0 ./script/test build expect
+        OT_OPTIONS='-DOT_TIME_SYNC=ON -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 ./script/test build expect
     - name: Copy Shared Libraries
       if: ${{ failure() }}
       run: |
