@@ -305,7 +305,7 @@ jobs:
       run: |
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
-        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON' VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -325,7 +325,7 @@ jobs:
         host ipv6.google.com ::1
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
-        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON' OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Copy Shared Libraries
       if: ${{ failure() }}
       run: |
