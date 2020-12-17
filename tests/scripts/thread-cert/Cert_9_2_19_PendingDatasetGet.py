@@ -168,7 +168,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
                               NM_PAN_ID_TLV
                              } <= set(p.thread_meshcop.tlv.type) and\
                    p.thread_meshcop.tlv.active_tstamp == 60 and\
-                   p.thread_meshcop.tlv.pan_id == 0xafce and\
+                   p.thread_meshcop.tlv.pan_id == [0xafce] and\
                    p.thread_meshcop.tlv.delay_timer == 60000
                    ).\
            must_next()
@@ -263,7 +263,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
                               NM_DELAY_TIMER_TLV,
                               NM_PAN_ID_TLV
                              } == set(p.coap.tlv.type) and\
-                   p.thread_meshcop.tlv.pan_id == 0xafce and\
+                   p.thread_meshcop.tlv.pan_id == [0xafce] and\
                    p.thread_meshcop.tlv.delay_timer < 60000
                    ).\
            must_next()

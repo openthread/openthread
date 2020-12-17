@@ -223,7 +223,7 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             p.mle.tlv.type) and {NM_CHANNEL_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV} <=
                       set(p.thread_meshcop.tlv.type) and p.mle.tlv.active_tstamp == ROUTER_ACTIVE_TIMESTAMP and p.mle.
                       tlv.pending_tstamp == COMMISSIONER_PENDING_TIMESTAMP and p.thread_meshcop.tlv.pan_id ==
-                      COMMISSIONER_PENDING_PANID and p.thread_meshcop.tlv.channel == COMMISSIONER_PENDING_CHANNEL)
+                      [COMMISSIONER_PENDING_PANID] and p.thread_meshcop.tlv.channel == [COMMISSIONER_PENDING_CHANNEL])
 
         # Step 21: Router MUST respond with an ICMPv6 Echo Reply
         pkts.filter_wpan_src16_dst16(ROUTER_RLOC16, LEADER_RLOC16).filter_ping_reply().must_next()

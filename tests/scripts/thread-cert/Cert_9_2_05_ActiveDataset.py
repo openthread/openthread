@@ -249,7 +249,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                    p.mle.tlv.active_tstamp == 100 and\
                    p.thread_meshcop.tlv.chan_mask_mask == '001fffc0' and\
                    p.thread_meshcop.tlv.xpan_id == '000db80000000001' and\
-                   p.thread_meshcop.tlv.net_name == 'TEST_1' and\
+                   p.thread_meshcop.tlv.net_name == ['TEST_1'] and\
                    p.thread_meshcop.tlv.pskc == 'd2aa9cd8dff7919122d77d37ec3c1b5f'
                    ).\
             must_next()
@@ -342,7 +342,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                    p.mle.tlv.active_tstamp == 101 and\
                    p.thread_meshcop.tlv.chan_mask_mask == '001fff00' and\
                    p.thread_meshcop.tlv.xpan_id == '000db80000000003' and\
-                   p.thread_meshcop.tlv.net_name == 'TEST_3' and\
+                   p.thread_meshcop.tlv.net_name == ['TEST_3'] and\
                    p.thread_meshcop.tlv.pskc == '08f4e9531e8efa8e852d5f4fb951b13e'
                    ).\
             must_next()

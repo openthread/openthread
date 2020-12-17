@@ -206,9 +206,9 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
                    p.thread_meshcop.tlv.delay_timer ==
                    COMMISSIONER_DELAY_TIMER and\
                    p.thread_meshcop.tlv.channel ==
-                   COMMISSIONER_PENDING_CHANNEL and\
+                   [COMMISSIONER_PENDING_CHANNEL] and\
                    p.thread_meshcop.tlv.pan_id ==
-                   COMMISSIONER_PENDING_PANID and\
+                   [COMMISSIONER_PENDING_PANID] and\
                    NM_COMMISSIONER_SESSION_ID_TLV in p.thread_meshcop.tlv.type
                   ).\
             must_next()

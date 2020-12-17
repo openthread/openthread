@@ -249,8 +249,8 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 } <= set(p.mle.tlv.type) and {
                     NM_CHANNEL_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PAN_ID_TLV, NM_DELAY_TIMER_TLV,
                     NM_ACTIVE_TIMESTAMP_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MASTER_KEY_TLV
-                } <= set(p.thread_meshcop.tlv.type) and p.thread_meshcop.tlv.net_name == "MyHouse" and p.thread_meshcop
-                .tlv.master_key == KEY2)
+                } <= set(p.thread_meshcop.tlv.type) and p.thread_meshcop.tlv.net_name == ["MyHouse"] and p.
+                thread_meshcop.tlv.master_key == KEY2)
 
         # Step 17: MED and SED MUST respond with an ICMPv6 Echo Reply
         pkts.filter_ipv6_src_dst(ED_RLOC, COMMISSIONER_RLOC).filter_ping_reply().must_next()
