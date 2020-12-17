@@ -37,9 +37,21 @@ from pktverify.null_field import nullField
 
 CHANNEL_INIT = 19
 PANID_INIT = 0xface
+TIMESTAMP_INIT = 10
 CHANNEL_SECOND = 20
+
 CHANNEL_FINAL = 19
 PANID_FINAL = 0xabcd
+
+ROUTER2_ACTIVE_TIMESTAMP = 15
+ROUTER2_PENDING_ACTIVE_TIMESTAMP = 410
+ROUTER2_PENDING_TIMESTAMP = 50
+ROUTER2_DELAY_TIMER = 200000
+ROUTER2_NET_NAME = 'TEST'
+
+COMM_PENDING_ACTIVE_TIMESTAMP = 210
+COMM_PENDING_TIMESTAMP = 30
+COMM_DELAY_TIMER = 1000000
 
 COMMISSIONER = 1
 LEADER = 2
@@ -76,7 +88,7 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'active_dataset': {
-                'timestamp': 10,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -87,7 +99,7 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'active_dataset': {
-                'timestamp': 10,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -99,7 +111,7 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         ROUTER1: {
             'name': 'ROUTER_1',
             'active_dataset': {
-                'timestamp': 10,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -110,7 +122,7 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         ROUTER2: {
             'name': 'ROUTER_2',
             'active_dataset': {
-                'timestamp': 10,
+                'timestamp': TIMESTAMP_INIT,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT
             },
@@ -141,9 +153,9 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
-            pending_timestamp=30,
-            active_timestamp=210,
-            delay_timer=1000000,
+            pending_timestamp=COMM_PENDING_TIMESTAMP,
+            active_timestamp=COMM_PENDING_ACTIVE_TIMESTAMP,
+            delay_timer=COMM_DELAY_TIMER,
             channel=CHANNEL_SECOND,
             panid=PANID_INIT,
         )
@@ -160,15 +172,15 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         self.nodes[ROUTER2].commissioner_start()
         self.simulator.go(3)
         self.nodes[ROUTER2].send_mgmt_active_set(
-            active_timestamp=15,
-            network_name='TEST',
+            active_timestamp=ROUTER2_ACTIVE_TIMESTAMP,
+            network_name=ROUTER2_NET_NAME,
         )
         self.simulator.go(5)
 
         self.nodes[ROUTER2].send_mgmt_pending_set(
-            pending_timestamp=50,
-            active_timestamp=410,
-            delay_timer=200000,
+            pending_timestamp=ROUTER2_PENDING_TIMESTAMP,
+            active_timestamp=ROUTER2_PENDING_ACTIVE_TIMESTAMP,
+            delay_timer=ROUTER2_DELAY_TIMER,
             channel=CHANNEL_FINAL,
             panid=PANID_FINAL,
         )
@@ -256,8 +268,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(LEADER).\
             filter_LLANMA().\
-            filter(lambda p: p.mle.tlv.active_tstamp == 10 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
+            filter(lambda p: p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
                    (p.mle.tlv.leader_data.data_version -
                    _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -277,7 +289,7 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                               NETWORK_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                               } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.active_tstamp == 10 and\
+                   p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
                    p.thread_meshcop.tlv.type is nullField
                    ).\
             must_next()
@@ -311,10 +323,10 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                    NWD_COMMISSIONING_DATA_TLV in p.thread_nwd.tlv.type and\
                    NM_COMMISSIONER_SESSION_ID_TLV in p.thread_meshcop.tlv.type and\
                    NM_BORDER_AGENT_LOCATOR_TLV in p.thread_meshcop.tlv.type and\
-                   p.mle.tlv.active_tstamp == 10 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
-                   p.thread_meshcop.tlv.delay_timer < 1000000 and\
-                   p.thread_meshcop.tlv.active_tstamp == 210 and\
+                   p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
+                   p.thread_meshcop.tlv.delay_timer < COMM_DELAY_TIMER and\
+                   p.thread_meshcop.tlv.active_tstamp == COMM_PENDING_ACTIVE_TIMESTAMP and\
                    p.thread_meshcop.tlv.channel == [CHANNEL_SECOND] and\
                    p.thread_meshcop.tlv.pan_id == [PANID_INIT]
                    ).\
@@ -337,8 +349,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
             pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
                 filter_wpan_src64(ROUTER_1).\
                 filter_LLANMA().\
-                filter(lambda p: p.mle.tlv.active_tstamp == 10 and\
-                       p.mle.tlv.pending_tstamp == 30 and\
+                filter(lambda p: p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                       p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
                        (p.mle.tlv.leader_data.data_version -
                        _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                        (p.mle.tlv.leader_data.stable_data_version -
@@ -379,10 +391,10 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                    NWD_COMMISSIONING_DATA_TLV in p.thread_nwd.tlv.type and\
                    NM_COMMISSIONER_SESSION_ID_TLV in p.thread_meshcop.tlv.type and\
                    NM_BORDER_AGENT_LOCATOR_TLV in p.thread_meshcop.tlv.type and\
-                   p.mle.tlv.active_tstamp == 10 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
-                   p.thread_meshcop.tlv.delay_timer < 1000000 and\
-                   p.thread_meshcop.tlv.active_tstamp == 210 and\
+                   p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
+                   p.thread_meshcop.tlv.delay_timer < COMM_DELAY_TIMER and\
+                   p.thread_meshcop.tlv.active_tstamp == COMM_PENDING_ACTIVE_TIMESTAMP and\
                    p.thread_meshcop.tlv.channel == [CHANNEL_SECOND] and\
                    p.thread_meshcop.tlv.pan_id == [PANID_INIT]
                    ).\
@@ -407,8 +419,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                                   NETWORK_DATA_TLV,
                                   ACTIVE_TIMESTAMP_TLV
                                   } <= set(p.mle.tlv.type) and\
-                       p.mle.tlv.active_tstamp == 10 and\
-                       p.mle.tlv.pending_tstamp == 30 and\
+                       p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                       p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
                        p.thread_meshcop.tlv.type is nullField
                        ).\
                 must_next()
@@ -429,8 +441,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(ROUTER_1).\
             filter_LLANMA().\
-            filter(lambda p: p.mle.tlv.active_tstamp == 15 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
+            filter(lambda p: p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
                    (p.mle.tlv.leader_data.data_version -
                    _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -456,8 +468,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                               NETWORK_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                               } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.active_tstamp == 15 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
+                   p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
                    p.thread_meshcop.tlv.type is nullField
                    ).\
             must_next()
@@ -478,8 +490,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(ROUTER_1).\
             filter_LLANMA().\
-            filter(lambda p: p.mle.tlv.active_tstamp == 15 and\
-                   p.mle.tlv.pending_tstamp == 50 and\
+            filter(lambda p: p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                   p.mle.tlv.pending_tstamp == ROUTER2_PENDING_TIMESTAMP and\
                    (p.mle.tlv.leader_data.data_version -
                    _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -497,7 +509,7 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
             filter_wpan_src64(ROUTER_1).\
             filter_wpan_dst64(LEADER).\
-            filter(lambda p: p.mle.tlv.active_tstamp == 15).\
+            filter(lambda p: p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP).\
             must_next()
 
         # Step 22: Leader MUST send MLE Child ID Response to Router_1, including its current
@@ -511,9 +523,9 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
             filter_wpan_src64(LEADER).\
             filter_wpan_dst64(ROUTER_1).\
             filter(lambda p:
-                   p.mle.tlv.active_tstamp == 10 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
-                   p.thread_meshcop.tlv.active_tstamp == 210
+                   p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
+                   p.thread_meshcop.tlv.active_tstamp == COMM_PENDING_ACTIVE_TIMESTAMP
                    ).\
             must_next()
 
@@ -535,8 +547,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                                   NM_NETWORK_NAME_TLV,
                                   NM_PAN_ID_TLV,
                                  } <= set(p.thread_meshcop.tlv.type) and\
-                       p.thread_meshcop.tlv.active_tstamp == 15 and\
-                       p.thread_meshcop.tlv.net_name == ['TEST']
+                       p.thread_meshcop.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                       p.thread_meshcop.tlv.net_name == [ROUTER2_NET_NAME]
                        ).\
                 must_next()
 
@@ -574,12 +586,12 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                 filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
                 filter_coap_request(MGMT_PENDING_SET_URI) .\
                 filter(lambda p:
-                       p.thread_meshcop.tlv.delay_timer < 200000 and\
+                       p.thread_meshcop.tlv.delay_timer < ROUTER2_DELAY_TIMER and\
                        p.thread_meshcop.tlv.channel == [CHANNEL_FINAL] and\
                        p.thread_meshcop.tlv.pan_id == [PANID_FINAL] and\
-                       p.thread_meshcop.tlv.active_tstamp == 410 and\
-                       p.thread_meshcop.tlv.pending_tstamp == 50 and\
-                       p.thread_meshcop.tlv.net_name == ['TEST']
+                       p.thread_meshcop.tlv.active_tstamp == ROUTER2_PENDING_ACTIVE_TIMESTAMP and\
+                       p.thread_meshcop.tlv.pending_tstamp == ROUTER2_PENDING_TIMESTAMP and\
+                       p.thread_meshcop.tlv.net_name == [ROUTER2_NET_NAME]
                        ).\
                 must_next()
 
@@ -617,8 +629,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(LEADER).\
             filter_LLANMA().\
-            filter(lambda p: p.mle.tlv.active_tstamp == 15 and\
-                   p.mle.tlv.pending_tstamp == 50 and\
+            filter(lambda p: p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                   p.mle.tlv.pending_tstamp == ROUTER2_PENDING_TIMESTAMP and\
                    (p.mle.tlv.leader_data.data_version -
                    _pkt.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    (p.mle.tlv.leader_data.stable_data_version -
@@ -658,11 +670,11 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                        NWD_COMMISSIONING_DATA_TLV in p.thread_nwd.tlv.type and\
                        NM_COMMISSIONER_SESSION_ID_TLV in p.thread_meshcop.tlv.type and\
                        NM_BORDER_AGENT_LOCATOR_TLV in p.thread_meshcop.tlv.type and\
-                       p.mle.tlv.active_tstamp == 15 and\
-                       p.mle.tlv.pending_tstamp == 50 and\
-                       p.thread_meshcop.tlv.net_name == ['TEST', 'TEST'] and\
-                       p.thread_meshcop.tlv.delay_timer < 200000 and\
-                       p.thread_meshcop.tlv.active_tstamp == 410 and\
+                       p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                       p.mle.tlv.pending_tstamp == ROUTER2_PENDING_TIMESTAMP and\
+                       p.thread_meshcop.tlv.net_name == [ROUTER2_NET_NAME, ROUTER2_NET_NAME] and\
+                       p.thread_meshcop.tlv.delay_timer < ROUTER2_DELAY_TIMER and\
+                       p.thread_meshcop.tlv.active_tstamp == ROUTER2_PENDING_ACTIVE_TIMESTAMP and\
                        p.thread_meshcop.tlv.channel == [CHANNEL_INIT, CHANNEL_FINAL] and\
                        p.thread_meshcop.tlv.pan_id == [PANID_INIT, PANID_FINAL]
                        ).\
@@ -682,8 +694,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                               NETWORK_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                               } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.active_tstamp == 10 and\
-                   p.mle.tlv.pending_tstamp == 30 and\
+                   p.mle.tlv.active_tstamp == TIMESTAMP_INIT and\
+                   p.mle.tlv.pending_tstamp == COMM_PENDING_TIMESTAMP and\
                    p.thread_meshcop.tlv.type is nullField
                    ).\
             must_next()
@@ -710,10 +722,10 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                               PENDING_TIMESTAMP_TLV,
                               PENDING_OPERATION_DATASET_TLV
                               } <= set(p.mle.tlv.type) and\
-                   p.mle.tlv.active_tstamp == 15 and\
-                   p.mle.tlv.pending_tstamp == 50 and\
-                   p.thread_meshcop.tlv.delay_timer < 200000 and\
-                   p.thread_meshcop.tlv.active_tstamp == 410 and\
+                   p.mle.tlv.active_tstamp == ROUTER2_ACTIVE_TIMESTAMP and\
+                   p.mle.tlv.pending_tstamp == ROUTER2_PENDING_TIMESTAMP and\
+                   p.thread_meshcop.tlv.delay_timer < ROUTER2_DELAY_TIMER and\
+                   p.thread_meshcop.tlv.active_tstamp == ROUTER2_PENDING_ACTIVE_TIMESTAMP and\
                    p.thread_meshcop.tlv.channel == [CHANNEL_INIT, CHANNEL_FINAL] and\
                    p.thread_meshcop.tlv.pan_id == [PANID_INIT, PANID_FINAL]
                    ).\
