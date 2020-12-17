@@ -276,12 +276,12 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
-        OT_OPTIONS=-DOT_READLINE=OFF sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
     - name: Run
       run: |
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
-        OT_OPTIONS=-DOT_TIME_SYNC=ON VIRTUAL_TIME=0 ./script/test build expect
+        OT_OPTIONS='-DOT_TIME_SYNC=ON -DOT_FULL_LOGS=ON' VIRTUAL_TIME=0 ./script/test build expect
     - name: Copy Shared Libraries
       if: ${{ failure() }}
       run: |
@@ -305,20 +305,7 @@ jobs:
       run: |
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
-        OT_OPTIONS=-DOT_READLINE=OFF VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
-    - name: Copy Shared Libraries
-      if: ${{ failure() }}
-      run: |
-          ./script/test copy_so_lib
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: core-expect-rcp
-        path: |
-          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
-          ./build/openthread-posix-1.1/src/posix/ot-cli
-          ./ot-core-dump/*
-          ./so-lib/*
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON' VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -338,7 +325,7 @@ jobs:
         host ipv6.google.com ::1
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
-        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON' OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
     - name: Copy Shared Libraries
       if: ${{ failure() }}
       run: |
@@ -346,12 +333,17 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
-        name: core-expect-tun
+        name: core-expect-posix
         path: |
           ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
           ./build/openthread-posix-1.1/src/posix/ot-cli
           ./ot-core-dump/*
           ./so-lib/*
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: syslog-expect-posix
+        path: /var/log/syslog
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
