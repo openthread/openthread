@@ -98,9 +98,6 @@ SILABS_GSDK_CPPFLAGS                                                          = 
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
     -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
-    -I$(SDK_SRC_DIR)/util/third_party/crypto/mbedtls/configs                    \
-    -I$(SDK_SRC_DIR)/util/third_party/crypto/mbedtls/include                    \
-    -I$(SDK_SRC_DIR)/util/third_party/crypto/mbedtls/sl_crypto/include          \
     $(NULL)
 
 
