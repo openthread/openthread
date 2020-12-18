@@ -362,7 +362,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
 
         // missingCaps may be an unused variable when otLogCritPlat is blank
         // avoid compiler warning in that case
-        (void)missingCaps;
+        OT_UNUSED_VARIABLE(missingCaps);
 
         otLogCritPlat("RCP is missing required capabilities: %s%s%s%s%s",
                       (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
