@@ -2,7 +2,7 @@
 
 OpenThread allows you to [configure](https://openthread.io/guides/build#configuration) the stack for different functionality and behavior. This configuration is based on changing compile-time constants during the build process using common switches listed in `/examples/common-switches.mk`.
 
-This page lists the available common switches with description. For build command examples, see [build examples](https://openthread.io/guides/build#build_examples).
+This page lists the available common switches with description. Unless stated otherwise, the switches are set to 0 by default. For build command examples, see [build examples](https://openthread.io/guides/build#build_examples).
 
 | Makefile switch | CMake switch | Description |
 | --- | --- | --- |
