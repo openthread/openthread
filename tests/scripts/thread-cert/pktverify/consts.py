@@ -293,6 +293,7 @@ REAL_LAYER_NAMES = {
     'thread_address',
     'thread_diagnostic',
     'thread_nm',
+    'thread_bcn',
     'ssdp',
     'dns',
     'igmp',

@@ -54,9 +54,12 @@ THREAD_NODE = 4
 #
 # Test Topology:
 # -------------
-#  Leader
-#     |
-# Commissioner
+#              Leader  ---- Commissioner_2
+# Thread_Node    |
+#             Commissioner_1
+#
+# Notes: Commissioner_2 is introduced in Step 10 and powoff
+#        Thread_Node sends scan beacon
 #
 # DUT Types:
 # ----------
@@ -65,6 +68,7 @@ THREAD_NODE = 4
 
 class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
     SUPPORT_NCP = False
+    USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         LEADER: {
@@ -343,6 +347,12 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         #          (Protocol ID= 3, Version = 2)
         pkts.filter_wpan_src64(LEADER).\
             filter_wpan_beacon().\
+            filter(lambda p:
+                   (p.thread_bcn.protocol is nullField or\
+                    p.thread_bcn.protocol != 3) and\
+                   (p.thread_bcn.version is nullField or\
+                    p.thread_bcn.version != 2)
+                   ).\
             must_next()
 
         # Step 17: Commissioner_1 sends MGMT_ACTIVE_SET.req to Leader
