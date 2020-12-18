@@ -194,20 +194,20 @@ private:
      * This method publishes the local OMR prefix in Thread network.
      *
      */
-    otError PublishLocalOmrPrefix();
+    otError PublishLocalOmrPrefix(void);
 
     /**
      * This method unpublishes the local OMR prefix.
      *
      */
-    void UnpublishLocalOmrPrefix();
+    void UnpublishLocalOmrPrefix(void);
 
     /**
      * This method starts sending Router Solicitations in random delay
      * between 0 and kMaxRtrSolicitationDelay.
      *
      */
-    void StartRouterSolicitation();
+    void StartRouterSolicitation(void);
 
     /**
      * This method sends Router Solicitation messages to discover on-link

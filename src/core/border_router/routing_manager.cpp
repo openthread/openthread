@@ -308,7 +308,7 @@ exit:
     return newOmrPrefixNum;
 }
 
-otError RoutingManager::PublishLocalOmrPrefix()
+otError RoutingManager::PublishLocalOmrPrefix(void)
 {
     otError                         error = OT_ERROR_NONE;
     NetworkData::OnMeshPrefixConfig omrPrefixConfig;
@@ -338,7 +338,7 @@ otError RoutingManager::PublishLocalOmrPrefix()
     return error;
 }
 
-void RoutingManager::UnpublishLocalOmrPrefix()
+void RoutingManager::UnpublishLocalOmrPrefix(void)
 {
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
@@ -435,7 +435,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     mAdvertisedOmrPrefixNum = newOmrPrefixNum;
 }
 
-void RoutingManager::StartRouterSolicitation()
+void RoutingManager::StartRouterSolicitation(void)
 {
     mRouterSolicitCount = 0;
     mRouterSolicitTimer.Start(Random::NonCrypto::GetUint32InRange(0, kMaxRtrSolicitationDelay * 1000));

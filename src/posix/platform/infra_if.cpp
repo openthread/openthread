@@ -52,9 +52,9 @@
 
 #include "common/code_utils.hpp"
 
-static char         sInfraIfName[IFNAMSIZ] = "UNKNOWN";
-static uint32_t     sInfraIfIndex          = 0;
-static int          sInfraIfIcmp6Socket    = -1;
+static char         sInfraIfName[IFNAMSIZ];
+static uint32_t     sInfraIfIndex       = 0;
+static int          sInfraIfIcmp6Socket = -1;
 static otIp6Address sInfraIfLinkLocalAddr;
 
 otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
@@ -160,10 +160,10 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     int                 sock;
     struct icmp6_filter filter;
     ssize_t             rval;
-    const int           kOne      = 1;
-    const int           kTwo      = 2;
-    const int           kHopLimit = 255;
-    uint32_t            ifIndex   = 0;
+    const int           kEnable             = 1;
+    const int           kIpv6ChecksumOffset = 2;
+    const int           kHopLimit           = 255;
+    uint32_t            ifIndex             = 0;
 
     if (strlen(aIfName) >= sizeof(sInfraIfName))
     {
@@ -202,7 +202,7 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     }
 
     // We want a source address and interface index.
-    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &kOne, sizeof(kOne));
+    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &kEnable, sizeof(kEnable));
     if (rval < 0)
     {
         otLogCritPlat("Can't set IPV6_RECVPKTINFO: %s", strerror(errno));
@@ -210,9 +210,9 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     }
 
 #ifdef __linux__
-    rval = setsockopt(sock, IPPROTO_RAW, IPV6_CHECKSUM, &kTwo, sizeof(kTwo));
+    rval = setsockopt(sock, IPPROTO_RAW, IPV6_CHECKSUM, &kIpv6ChecksumOffset, sizeof(kIpv6ChecksumOffset));
 #else
-    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_CHECKSUM, &kTwo, sizeof(kTwo));
+    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_CHECKSUM, &kIpv6ChecksumOffset, sizeof(kIpv6ChecksumOffset));
 #endif
     if (rval < 0)
     {
@@ -221,7 +221,7 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     }
 
     // We need to be able to reject RAs arriving from off-link.
-    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_RECVHOPLIMIT, &kOne, sizeof(kOne));
+    rval = setsockopt(sock, IPPROTO_IPV6, IPV6_RECVHOPLIMIT, &kEnable, sizeof(kEnable));
     if (rval < 0)
     {
         otLogCritPlat("Can't set IPV6_RECVHOPLIMIT: %s", strerror(errno));
@@ -345,7 +345,6 @@ exit:
     {
         otLogDebgPlat("drop ICMPv6 message");
     }
-    return;
 }
 
 uint32_t platformInfraIfGetIndex(void)
