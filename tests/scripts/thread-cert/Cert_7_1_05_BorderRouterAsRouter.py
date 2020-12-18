@@ -159,16 +159,17 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         # Step 5: The DUT MUST send a multicast MLE Data Response,
         #         including at least three Prefix TLVs (Prefix 1, Prefix2,
         #         and Prefix 3).
-        _dv_pkt = pkts.filter_wpan_src64(ROUTER).\
-            filter_LLANMA().\
-            filter_mle_cmd(MLE_DATA_RESPONSE).\
-            filter(lambda p: {
-                              Ipv6Addr(PREFIX_2001[:-3]),
-                              Ipv6Addr(PREFIX_2002[:-3]),
-                              Ipv6Addr(PREFIX_2003[:-3])
-                             } == set(p.thread_nwd.tlv.prefix)
-                   ).\
-            must_next()
+        with pkts.save_index():
+            _dv_pkt = pkts.filter_wpan_src64(ROUTER).\
+                filter_LLANMA().\
+                filter_mle_cmd(MLE_DATA_RESPONSE).\
+                filter(lambda p: {
+                                  Ipv6Addr(PREFIX_2001[:-3]),
+                                  Ipv6Addr(PREFIX_2002[:-3]),
+                                  Ipv6Addr(PREFIX_2003[:-3])
+                                 } == set(p.thread_nwd.tlv.prefix)
+                       ).\
+                must_next()
 
         # Step 6: MED automatically sends MLE Child Update Request to its parent
         #         (DUT), reporting its configured global addresses in the Address
