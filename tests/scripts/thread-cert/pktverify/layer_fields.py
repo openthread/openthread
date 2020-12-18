@@ -536,6 +536,12 @@ _LAYER_FIELDS = {
     'dtls.record.content_type': _list(_auto),
     'dtls.alert_message.desc': _auto,
 
+    # thread beacon
+    'thread_bcn.protocol': _auto,
+    'thread_bcn.version': _auto,
+    'thread_bcn.network_name': _str,
+    'thread_bcn.epid': _ext_addr,
+
     # thread_address
     'thread_address.tlv.len': _list(_auto),
     'thread_address.tlv.type': _list(_auto),
@@ -576,6 +582,7 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.chan_mask_mask': _bytes,
     'thread_meshcop.tlv.discovery_req_ver': _auto,
     'thread_meshcop.tlv.discovery_rsp_ver': _auto,
+    'thread_meshcop.tlv.discovery_rsp_n': _auto,
     'thread_meshcop.tlv.energy_list': _list(_auto),
     'thread_meshcop.tlv.pan_id': _list(_auto),
     'thread_meshcop.tlv.xpan_id': _bytes,
@@ -734,6 +741,8 @@ def _get_candidate_layers(packet, layer_name):
         candidate_layer_names = ['wpan', 'mle']
     elif layer_name == 'ip':
         candidate_layer_names = ['ip', 'ipv6']
+    elif layer_name == 'thread_bcn':
+        candidate_layer_names = ['thread_bcn']
     else:
         candidate_layer_names = [layer_name]
 

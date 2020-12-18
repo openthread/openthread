@@ -71,6 +71,7 @@ def make_filter_func(func: Union[str, Callable], **vars) -> Callable:
                     'thread_nm': p.thread_nm,
                     'thread_nwd': p.thread_nwd,
                     'thread_address': p.thread_address,
+                    'thread_bcn': p.thread_bcn,
                     'null': nullField,
                 })
     else:

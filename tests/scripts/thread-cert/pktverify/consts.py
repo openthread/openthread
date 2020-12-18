@@ -293,6 +293,7 @@ REAL_LAYER_NAMES = {
     'thread_address',
     'thread_diagnostic',
     'thread_nm',
+    'thread_bcn',
     'ssdp',
     'dns',
     'igmp',
@@ -338,6 +339,7 @@ MAC_FRAME_VERSION_2006 = 1
 MAC_FRAME_VERSION_2015 = 2
 
 # 802.15.4 Frame Type
+MAC_FRAME_TYPE_BEACON = 0x0
 MAC_FRAME_TYPE_DATA = 0x1
 MAC_FRAME_TYPE_ACK = 0x2
 MAC_FRAME_TYPE_MAC_CMD = 0x3

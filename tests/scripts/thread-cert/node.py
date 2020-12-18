@@ -1333,10 +1333,12 @@ class NodeImpl:
 
         self._expect('Conflict:', timeout=timeout)
 
-    def scan(self):
+    def scan(self, result=1):
         self.send_command('scan')
 
-        return self._expect_results(r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
+        if result == 1:
+            return self._expect_results(
+                r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         cmd = 'ping %s' % ipaddr
@@ -1387,6 +1389,7 @@ class NodeImpl:
         channel=None,
         channel_mask=None,
         master_key=None,
+        security_policy=[],
     ):
         self.send_command('dataset clear')
         self._expect('Done')
@@ -1412,6 +1415,14 @@ class NodeImpl:
 
         if master_key is not None:
             cmd = 'dataset masterkey %s' % master_key
+            self.send_command(cmd)
+            self._expect('Done')
+
+        if security_policy and len(security_policy) == 2:
+            cmd = 'dataset securitypolicy %s %s' % (
+                str(security_policy[0]),
+                security_policy[1],
+            )
             self.send_command(cmd)
             self._expect('Done')
 
