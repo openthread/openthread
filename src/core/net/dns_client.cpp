@@ -50,7 +50,6 @@ namespace Dns {
 
 Client::Client(Instance &aInstance)
     : mSocket(aInstance)
-    , mMessageId(0)
     , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer, this)
 {
 }
@@ -92,7 +91,7 @@ otError Client::Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *a
 
     VerifyOrExit(aQuery.IsValid(), error = OT_ERROR_INVALID_ARGS);
 
-    header.SetMessageId(mMessageId++);
+    header.SetMessageId(GenerateUniqueRandomId());
     header.SetType(Header::kTypeQuery);
     header.SetQueryType(Header::kQueryTypeStandard);
 
@@ -199,6 +198,23 @@ exit:
     }
 }
 
+uint16_t Client::GenerateUniqueRandomId(void)
+{
+    uint16_t randomId;
+    otError  error;
+
+    OT_UNUSED_VARIABLE(error);
+
+    do
+    {
+        error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&randomId), sizeof(randomId));
+        OT_ASSERT(error == OT_ERROR_NONE);
+
+    } while (FindQueryById(randomId) != nullptr);
+
+    return randomId;
+}
+
 otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
 {
     otError  error = OT_ERROR_NONE;
@@ -228,7 +244,7 @@ exit:
     return error;
 }
 
-Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata)
+Message *Client::FindQueryById(uint16_t aMessageId)
 {
     uint16_t messageId;
     Message *message;
@@ -241,9 +257,8 @@ Message *Client::FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &
             OT_ASSERT(false);
         }
 
-        if (HostSwap16(messageId) == aResponseHeader.GetMessageId())
+        if (HostSwap16(messageId) == aMessageId)
         {
-            aQueryMetadata.ReadFrom(*message);
             break;
         }
     }
@@ -346,7 +361,8 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     aMessage.MoveOffset(sizeof(responseHeader));
     offset = aMessage.GetOffset();
 
-    VerifyOrExit((message = FindRelatedQuery(responseHeader, queryMetadata)) != nullptr);
+    VerifyOrExit((message = FindQueryById(responseHeader.GetMessageId())) != nullptr);
+    queryMetadata.ReadFrom(*message);
 
     VerifyOrExit(responseHeader.GetResponseCode() == Header::kResponseSuccess, error = OT_ERROR_FAILED);
 
