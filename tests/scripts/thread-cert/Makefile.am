@@ -116,6 +116,7 @@ EXTRA_DIST                                                         = \
     Cert_9_2_03_ActiveDatasetGet.py                                  \
     Cert_9_2_04_ActiveDataset.py                                     \
     Cert_9_2_05_ActiveDataset.py                                     \
+    Cert_9_2_06_DatasetDissemination.py                              \
     Cert_9_2_07_DelayTimer.py                                        \
     Cert_9_2_08_PersistentDatasets.py                                \
     Cert_9_2_09_PendingPartition.py                                  \
@@ -302,6 +303,7 @@ check_SCRIPTS                                                      = \
     Cert_9_2_03_ActiveDatasetGet.py                                  \
     Cert_9_2_04_ActiveDataset.py                                     \
     Cert_9_2_05_ActiveDataset.py                                     \
+    Cert_9_2_06_DatasetDissemination.py                              \
     Cert_9_2_07_DelayTimer.py                                        \
     Cert_9_2_08_PersistentDatasets.py                                \
     Cert_9_2_09_PendingPartition.py                                  \
