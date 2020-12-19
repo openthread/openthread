@@ -37,7 +37,7 @@ from pktverify.packet_verifier import PacketVerifier
 from pktverify.bytes import Bytes
 from pktverify.addrs import Ipv6Addr
 from pktverify.null_field import nullField
-from pktverify.utils import sublist
+from pktverify.utils import is_sublist
 
 LEADER = 1
 ROUTER_1 = 2
@@ -201,12 +201,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
         SED = pv.vars['SED']
         MED = pv.vars['MED']
         GUA = [{}, {}]
-        PRE = [Bytes(PREFIX_1[:-5]), Bytes(PREFIX_2[:-5])]
+        PREFIXES = [Bytes(PREFIX_1[:-5]), Bytes(PREFIX_2[:-5])]
 
         for i in (0, 1):
             for node in ('LEADER', 'ROUTER_1', 'SED'):
                 for addr in pv.vars['%s_IPADDRS' % node]:
-                    if addr.startswith(PRE[i]):
+                    if addr.startswith(PREFIXES[i]):
                         GUA[i][node] = addr
 
         # Step 1: Ensure topology is formed correctly
@@ -228,7 +228,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
         #         Router_2
         with pkts.save_index():
             for node in ('ROUTER_1', 'ROUTER_2'):
-                pkts.filter_wpan_src64(pv.vars['%s' %node]).\
+                _dn_pkt = pkts.filter_wpan_src64(pv.vars['%s' %node]).\
                     filter_wpan_dst16(LEADER_RLOC16).\
                     filter_coap_request(SVR_DATA_URI).\
                     filter(lambda p:
@@ -241,6 +241,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                 pkts.filter_wpan_src64(LEADER).\
                     filter_ipv6_dst(pv.vars['%s_RLOC' %node]).\
                     filter_coap_ack(SVR_DATA_URI).\
+                    filter(lambda p: p.coap.mid == _dn_pkt.coap.mid).\
                     must_next()
 
         # Step 5: Leader MUST multicast MLE Data Response with the new
@@ -291,11 +292,11 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                        (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
                        p.mle.tlv.leader_data.stable_data_version ==
                        _dr_pkt.mle.tlv.leader_data.stable_data_version and\
-                       sublist([ROUTER_1_RLOC16, ROUTER_2_RLOC16],
+                       is_sublist([ROUTER_1_RLOC16, ROUTER_2_RLOC16],
                                p.thread_nwd.tlv.border_router_16) and\
-                       sublist([0, 1, 1, 1, 0], p.thread_nwd.tlv.stable) and\
-                       sublist([1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
-                       sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix)
+                       is_sublist([0, 1, 1, 1, 0], p.thread_nwd.tlv.stable) and\
+                       is_sublist([1], getattr(p.thread_nwd.tlv, '6co').flag.c) and\
+                       is_sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix)
                        ).\
                 must_next()
 
@@ -321,10 +322,10 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } == set(p.mle.tlv.type) and\
-                   sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix) and\
-                   sublist([1, 1, 1], p.thread_nwd.tlv.stable) and\
-                   sublist([1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
-                   sublist([0xFFFE], p.thread_nwd.tlv.border_router_16)
+                   is_sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix) and\
+                   is_sublist([1, 1, 1], p.thread_nwd.tlv.stable) and\
+                   is_sublist([1], getattr(p.thread_nwd.tlv, '6co').flag.c) and\
+                   is_sublist([0xFFFE], p.thread_nwd.tlv.border_router_16)
                    ).\
             must_next()
 
@@ -339,20 +340,21 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
         # Step 11: Leader sends a CoAP ACK frame to each of Routers
         pv.verify_attached('ROUTER_2', 'LEADER')
         with pkts.save_index():
-            pkts.filter_wpan_src64(ROUTER_2).\
-                filter_wpan_dst16(LEADER_RLOC16).\
-                filter_coap_request(SVR_DATA_URI).\
-                filter(lambda p:
-                       [Ipv6Addr(PREFIX_2[:-3])] ==
-                       p.thread_nwd.tlv.prefix and\
-                       [ROUTER_2_RLOC16] ==
-                       p.thread_nwd.tlv.border_router_16
-                       ).\
-                must_next()
+            _dn_pkt = pkts.filter_wpan_src64(ROUTER_2).\
+                  filter_wpan_dst16(LEADER_RLOC16).\
+                  filter_coap_request(SVR_DATA_URI).\
+                  filter(lambda p:
+                         [Ipv6Addr(PREFIX_2[:-3])] ==
+                         p.thread_nwd.tlv.prefix and\
+                         [ROUTER_2_RLOC16] ==
+                         p.thread_nwd.tlv.border_router_16
+                         ).\
+                  must_next()
 
             pkts.filter_wpan_src64(LEADER).\
                 filter_ipv6_dst(ROUTER_2_RLOC).\
                 filter_coap_ack(SVR_DATA_URI).\
+                filter(lambda p: p.coap.mid == _dn_pkt.coap.mid).\
                 must_next()
 
         # Step 12: Leader MUST multicast MLE Data Response with the new
@@ -388,12 +390,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               NWD_BORDER_ROUTER_TLV,
                               NWD_6LOWPAN_ID_TLV
                              } <= set(p.thread_nwd.tlv.type) and\
-                   sublist([ROUTER_1_RLOC16, ROUTER_2_RLOC16],
+                   is_sublist([ROUTER_1_RLOC16, ROUTER_2_RLOC16],
                            p.thread_nwd.tlv.border_router_16) and\
-                   sublist([0, 1, 1, 1, 1, 1, 1],
+                   is_sublist([0, 1, 1, 1, 1, 1, 1],
                            p.thread_nwd.tlv.stable) and\
-                   sublist([1, 1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
-                   sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                   is_sublist([1, 1], getattr(p.thread_nwd.tlv, '6co').flag.c) and\
+                   is_sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
                            p.thread_nwd.tlv.prefix) and\
                    p.mle.tlv.leader_data.data_version ==
                    (_dr_pkt1.mle.tlv.leader_data.data_version + 1) % 256 and\
@@ -436,12 +438,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                                   LEADER_DATA_TLV,
                                   ACTIVE_TIMESTAMP_TLV
                                  } == set(p.mle.tlv.type) and\
-                       sublist([1, 1, 1, 1, 1, 1],
+                       is_sublist([1, 1, 1, 1, 1, 1],
                                p.thread_nwd.tlv.stable) and\
-                       sublist([1, 1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
-                       sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                       is_sublist([1, 1], getattr(p.thread_nwd.tlv, '6co').flag.c) and\
+                       is_sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
                                p.thread_nwd.tlv.prefix) and\
-                       sublist([0xFFFE, 0xFFFE], p.thread_nwd.tlv.border_router_16)
+                       is_sublist([0xFFFE, 0xFFFE], p.thread_nwd.tlv.border_router_16)
                        ).\
                 must_next()
 
@@ -468,7 +470,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
         # Step 16: Leader sends a CoAP ACK frame to each of Router_1 and
         #          Router_2
         with pkts.save_index():
-            pkts.filter_wpan_src64(ROUTER_2).\
+            _dn_pkt = pkts.filter_wpan_src64(ROUTER_2).\
                 filter_wpan_dst16(LEADER_RLOC16).\
                 filter_coap_request(SVR_DATA_URI).\
                 filter(lambda p:
@@ -479,6 +481,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
             pkts.filter_wpan_src64(LEADER).\
                 filter_ipv6_dst(ROUTER_2_RLOC).\
                 filter_coap_ack(SVR_DATA_URI).\
+                filter(lambda p: p.coap.mid == _dn_pkt.coap.mid).\
                 must_next()
 
         # Step 17: Leader MUST multicast MLE Data Response with the new
@@ -518,9 +521,9 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                    (_dr_pkt2.mle.tlv.leader_data.data_version + 1) % 256 and\
                    p.mle.tlv.leader_data.stable_data_version ==
                    (_dr_pkt2.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
-                   sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                   is_sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
                            p.thread_nwd.tlv.prefix) and\
-                   sublist([1,0], p.thread_nwd.tlv.__getattr__('6co.flag.c'))
+                   is_sublist([1,0], getattr(p.thread_nwd.tlv, '6co').flag.c)
                    ).\
             must_next()
 
@@ -554,11 +557,11 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } == set(p.mle.tlv.type) and\
-                   sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                   is_sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
                            p.thread_nwd.tlv.prefix) and\
-                   sublist([1, 1, 1, 1, 1], p.thread_nwd.tlv.stable) and\
-                   sublist([0xFFFE], p.thread_nwd.tlv.border_router_16) and\
-                   sublist([1,0], p.thread_nwd.tlv.__getattr__('6co.flag.c'))
+                   is_sublist([1, 1, 1, 1, 1], p.thread_nwd.tlv.stable) and\
+                   is_sublist([0xFFFE], p.thread_nwd.tlv.border_router_16) and\
+                   is_sublist([1,0], getattr(p.thread_nwd.tlv, '6co').flag.c)
                    ).\
             must_next()
 
