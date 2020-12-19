@@ -79,6 +79,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
+            'router_selection_jitter': 1,
             'allowlist': [ROUTER_1, ROUTER_2, MED, SED]
         },
         ROUTER_1: {
@@ -146,12 +147,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
 
         self.nodes[ROUTER_2].set_preferred_partition_id(1)
         self.nodes[ROUTER_2].set_network_id_timeout(50)
-        # Waiting for NETWORK_ID_TIMEOUT taking effect
-        self.simulator.go(50)
 
-        # Router_2 creates a new partition
         self.nodes[ROUTER_2].remove_allowlist(self.nodes[LEADER].get_addr64())
         self.nodes[LEADER].remove_allowlist(self.nodes[ROUTER_2].get_addr64())
+
+        # Wait for NETWORK_ID_TIMEOUT taking effect
+        # Router_2 creates a new partition
         self.simulator.go(60)
         self.assertEqual(self.nodes[ROUTER_2].get_state(), 'leader')
         self.nodes[ROUTER_2].remove_domain_prefix(PREFIX_1)
@@ -161,7 +162,10 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
         # Router_2 reattaches to Leader
         self.nodes[ROUTER_2].add_allowlist(self.nodes[LEADER].get_addr64())
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER_2].get_addr64())
-        self.simulator.go(40)
+
+        # Wait for Router_2 reattachment and network data propagation
+        # ADVERTISEMENT_I_MAX + DEFAULT_CHILD_TIMEOUT + ATTACH_DELAY + Extra
+        self.simulator.go(60)
         self.assertEqual(self.nodes[ROUTER_2].get_state(), 'router')
         self.collect_ipaddrs()
         self.collect_rloc16s()
@@ -282,14 +286,14 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                                   NWD_BORDER_ROUTER_TLV,
                                   NWD_6LOWPAN_ID_TLV
                                  } <= set(p.thread_nwd.tlv.type) and\
-                       p.thread_nwd.tlv.border_router_16 ==
-                       [ROUTER_1_RLOC16, ROUTER_2_RLOC16] and\
-                       p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0] and\
                        p.mle.tlv.leader_data.data_version ==
                        (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
                        p.mle.tlv.leader_data.stable_data_version ==
                        _dr_pkt.mle.tlv.leader_data.stable_data_version and\
-                       p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1] and\
+                       p.thread_nwd.tlv.border_router_16 >=
+                       [ROUTER_1_RLOC16, ROUTER_2_RLOC16] and\
+                       p.thread_nwd.tlv.stable >= [0, 1, 1, 1, 0] and\
+                       p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1] and\
                        [Ipv6Addr(PREFIX_1[:-3])] <=
                        p.thread_nwd.tlv.prefix
                        ).\
@@ -317,10 +321,10 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } == set(p.mle.tlv.type) and\
-                   [Ipv6Addr(PREFIX_1[:-3])] ==
+                   [Ipv6Addr(PREFIX_1[:-3])] <=
                    p.thread_nwd.tlv.prefix and\
-                   p.thread_nwd.tlv.stable == [1, 1, 1] and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1] and\
+                   p.thread_nwd.tlv.stable >= [1, 1, 1] and\
+                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1] and\
                    [0xFFFE] == p.thread_nwd.tlv.border_router_16
                    ).\
             must_next()
@@ -383,17 +387,16 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                              } <= set(p.mle.tlv.type) and\
                              {
                               NWD_BORDER_ROUTER_TLV,
-                              NWD_6LOWPAN_ID_TLV,
                               NWD_6LOWPAN_ID_TLV
                              } <= set(p.thread_nwd.tlv.type) and\
-                   p.thread_nwd.tlv.border_router_16 ==
+                   p.thread_nwd.tlv.border_router_16 >=
                    [ROUTER_1_RLOC16, ROUTER_2_RLOC16] and\
-                   p.thread_nwd.tlv.stable == [0, 1, 1, 1, 1, 1, 1] and\
+                   p.thread_nwd.tlv.stable >= [0, 1, 1, 1, 1, 1, 1] and\
                    p.mle.tlv.leader_data.data_version ==
                    (_dr_pkt1.mle.tlv.leader_data.data_version + 1) % 256 and\
                    p.mle.tlv.leader_data.stable_data_version ==
                    (_dr_pkt1.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1, 1] and\
+                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1, 1] and\
                    {Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])} <=
                    set(p.thread_nwd.tlv.prefix)
                    ).\
@@ -435,9 +438,9 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                                  } == set(p.mle.tlv.type) and\
                        {Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])} <=
                        set(p.thread_nwd.tlv.prefix) and\
-                       p.thread_nwd.tlv.stable == [1, 1, 1, 1, 1, 1] and\
-                       p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1, 1] and\
-                       [0xFFFE, 0xFFFE] == p.thread_nwd.tlv.border_router_16
+                       p.thread_nwd.tlv.stable >= [1, 1, 1, 1, 1, 1] and\
+                       p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1, 1] and\
+                       p.thread_nwd.tlv.border_router_16 >= [0xFFFE, 0xFFFE]
                        ).\
                 must_next()
 
@@ -516,7 +519,7 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                    (_dr_pkt2.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
                    [Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])] <=
                    p.thread_nwd.tlv.prefix and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1,0]
+                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1,0]
                    ).\
             must_next()
 
@@ -552,9 +555,9 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                              } == set(p.mle.tlv.type) and\
                    [Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])] <=
                    p.thread_nwd.tlv.prefix and\
-                   p.thread_nwd.tlv.stable == [1, 1, 1, 1, 1] and\
-                   [0xFFFE] == p.thread_nwd.tlv.border_router_16 and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1,0]
+                   p.thread_nwd.tlv.stable >= [1, 1, 1, 1, 1] and\
+                   [0xFFFE] <= p.thread_nwd.tlv.border_router_16 and\
+                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1,0]
                    ).\
             must_next()
 
