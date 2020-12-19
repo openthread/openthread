@@ -287,6 +287,8 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                        p.thread_nwd.tlv.stable == [0, 1, 1, 1, 0] and\
                        p.mle.tlv.leader_data.data_version ==
                        (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
+                       p.mle.tlv.leader_data.stable_data_version ==
+                       _dr_pkt.mle.tlv.leader_data.stable_data_version and\
                        p.thread_nwd.tlv.__getattr__('6co.flag.c') == [1] and\
                        [Ipv6Addr(PREFIX_1[:-3])] <=
                        p.thread_nwd.tlv.prefix
@@ -384,8 +386,8 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               NWD_6LOWPAN_ID_TLV,
                               NWD_6LOWPAN_ID_TLV
                              } <= set(p.thread_nwd.tlv.type) and\
-                   set(p.thread_nwd.tlv.border_router_16) ==
-                   {ROUTER_1_RLOC16, ROUTER_2_RLOC16} and\
+                   p.thread_nwd.tlv.border_router_16 ==
+                   [ROUTER_1_RLOC16, ROUTER_2_RLOC16] and\
                    p.thread_nwd.tlv.stable == [0, 1, 1, 1, 1, 1, 1] and\
                    p.mle.tlv.leader_data.data_version ==
                    (_dr_pkt1.mle.tlv.leader_data.data_version + 1) % 256 and\
