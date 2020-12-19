@@ -37,6 +37,7 @@ from pktverify.packet_verifier import PacketVerifier
 from pktverify.bytes import Bytes
 from pktverify.addrs import Ipv6Addr
 from pktverify.null_field import nullField
+from pktverify.utils import sublist
 
 LEADER = 1
 ROUTER_1 = 2
@@ -290,12 +291,11 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                        (_dr_pkt.mle.tlv.leader_data.data_version + 1) % 256 and\
                        p.mle.tlv.leader_data.stable_data_version ==
                        _dr_pkt.mle.tlv.leader_data.stable_data_version and\
-                       p.thread_nwd.tlv.border_router_16 >=
-                       [ROUTER_1_RLOC16, ROUTER_2_RLOC16] and\
-                       p.thread_nwd.tlv.stable >= [0, 1, 1, 1, 0] and\
-                       p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1] and\
-                       [Ipv6Addr(PREFIX_1[:-3])] <=
-                       p.thread_nwd.tlv.prefix
+                       sublist([ROUTER_1_RLOC16, ROUTER_2_RLOC16],
+                               p.thread_nwd.tlv.border_router_16) and\
+                       sublist([0, 1, 1, 1, 0], p.thread_nwd.tlv.stable) and\
+                       sublist([1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
+                       sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix)
                        ).\
                 must_next()
 
@@ -321,11 +321,10 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } == set(p.mle.tlv.type) and\
-                   [Ipv6Addr(PREFIX_1[:-3])] <=
-                   p.thread_nwd.tlv.prefix and\
-                   p.thread_nwd.tlv.stable >= [1, 1, 1] and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1] and\
-                   [0xFFFE] == p.thread_nwd.tlv.border_router_16
+                   sublist([Ipv6Addr(PREFIX_1[:-3])], p.thread_nwd.tlv.prefix) and\
+                   sublist([1, 1, 1], p.thread_nwd.tlv.stable) and\
+                   sublist([1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
+                   sublist([0xFFFE], p.thread_nwd.tlv.border_router_16)
                    ).\
             must_next()
 
@@ -389,16 +388,17 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               NWD_BORDER_ROUTER_TLV,
                               NWD_6LOWPAN_ID_TLV
                              } <= set(p.thread_nwd.tlv.type) and\
-                   p.thread_nwd.tlv.border_router_16 >=
-                   [ROUTER_1_RLOC16, ROUTER_2_RLOC16] and\
-                   p.thread_nwd.tlv.stable >= [0, 1, 1, 1, 1, 1, 1] and\
+                   sublist([ROUTER_1_RLOC16, ROUTER_2_RLOC16],
+                           p.thread_nwd.tlv.border_router_16) and\
+                   sublist([0, 1, 1, 1, 1, 1, 1],
+                           p.thread_nwd.tlv.stable) and\
+                   sublist([1, 1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
+                   sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                           p.thread_nwd.tlv.prefix) and\
                    p.mle.tlv.leader_data.data_version ==
                    (_dr_pkt1.mle.tlv.leader_data.data_version + 1) % 256 and\
                    p.mle.tlv.leader_data.stable_data_version ==
-                   (_dr_pkt1.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1, 1] and\
-                   {Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])} <=
-                   set(p.thread_nwd.tlv.prefix)
+                   (_dr_pkt1.mle.tlv.leader_data.stable_data_version + 1) % 256
                    ).\
             must_next()
 
@@ -436,11 +436,12 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                                   LEADER_DATA_TLV,
                                   ACTIVE_TIMESTAMP_TLV
                                  } == set(p.mle.tlv.type) and\
-                       {Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])} <=
-                       set(p.thread_nwd.tlv.prefix) and\
-                       p.thread_nwd.tlv.stable >= [1, 1, 1, 1, 1, 1] and\
-                       p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1, 1] and\
-                       p.thread_nwd.tlv.border_router_16 >= [0xFFFE, 0xFFFE]
+                       sublist([1, 1, 1, 1, 1, 1],
+                               p.thread_nwd.tlv.stable) and\
+                       sublist([1, 1], p.thread_nwd.tlv.__getattr__('6co.flag.c')) and\
+                       sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                               p.thread_nwd.tlv.prefix) and\
+                       sublist([0xFFFE, 0xFFFE], p.thread_nwd.tlv.border_router_16)
                        ).\
                 must_next()
 
@@ -517,9 +518,9 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                    (_dr_pkt2.mle.tlv.leader_data.data_version + 1) % 256 and\
                    p.mle.tlv.leader_data.stable_data_version ==
                    (_dr_pkt2.mle.tlv.leader_data.stable_data_version + 1) % 256 and\
-                   [Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])] <=
-                   p.thread_nwd.tlv.prefix and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1,0]
+                   sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                           p.thread_nwd.tlv.prefix) and\
+                   sublist([1,0], p.thread_nwd.tlv.__getattr__('6co.flag.c'))
                    ).\
             must_next()
 
@@ -553,11 +554,11 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
                               LEADER_DATA_TLV,
                               ACTIVE_TIMESTAMP_TLV
                              } == set(p.mle.tlv.type) and\
-                   [Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])] <=
-                   p.thread_nwd.tlv.prefix and\
-                   p.thread_nwd.tlv.stable >= [1, 1, 1, 1, 1] and\
-                   [0xFFFE] <= p.thread_nwd.tlv.border_router_16 and\
-                   p.thread_nwd.tlv.__getattr__('6co.flag.c') >= [1,0]
+                   sublist([Ipv6Addr(PREFIX_1[:-3]), Ipv6Addr(PREFIX_2[:-3])],
+                           p.thread_nwd.tlv.prefix) and\
+                   sublist([1, 1, 1, 1, 1], p.thread_nwd.tlv.stable) and\
+                   sublist([0xFFFE], p.thread_nwd.tlv.border_router_16) and\
+                   sublist([1,0], p.thread_nwd.tlv.__getattr__('6co.flag.c'))
                    ).\
             must_next()
 
