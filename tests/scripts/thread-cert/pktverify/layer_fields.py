@@ -632,7 +632,7 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.border_router.flag.c': _list(_auto),
     'thread_nwd.tlv.6co.flag.reserved': _auto,
     'thread_nwd.tlv.6co.flag.cid': _auto,
-    'thread_nwd.tlv.6co.flag.c': _auto,
+    'thread_nwd.tlv.6co.flag.c': _list(_auto),
     'thread_nwd.tlv.6co.context_length': _auto,
 
     # Thread Diagnostic

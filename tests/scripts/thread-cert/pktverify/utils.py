@@ -147,3 +147,13 @@ def colon_hex(hexstr, interval) -> str:
     """
     assert len(hexstr) % interval == 0
     return ':'.join(hexstr[i:i + interval] for i in range(0, len(hexstr), interval))
+
+
+def is_sublist(lst1: list, lst2: list) -> bool:
+    """ Test whether lst1 is a slice of lst2
+
+    :param lst1: The list to judge if it is a sublist of lst2.
+    :param lst2: The list to judge if contains lst1.
+    :return: Whether lst1 is a slice of lst2.
+    """
+    return lst1 in [lst2[i:len(lst1) + i] for i in range(len(lst1))]
