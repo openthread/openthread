@@ -23,7 +23,7 @@ This page lists the available common switches with description. Unless stated ot
 | CSL_RECEIVER | OT_CSL_RECEIVER | Enables CSL receiver feature for Thread 1.2. |
 | DEBUG | not implemented | Allows building debug instance. Code optimization is disabled. |
 | DHCP6_CLIENT | OT_DHCP6_CLIENT | Enables support for the DHCP6 client. The device is able to act as typical DHCP client. Enable this switch on a device that is supposed to request networking parameters from the DHCP server. |
-| DHCP6_SERVER | OT_DHCP6_SERVER |Enables support for the DHCP6 server. The device is able to act as typical DHCP server. Enable this switch on a device that is supposed to provide networking parameters to devices with DHCP_CLIENT switch enabled. |
+| DHCP6_SERVER | OT_DHCP6_SERVER | Enables support for the DHCP6 server. The device is able to act as typical DHCP server. Enable this switch on a device that is supposed to provide networking parameters to devices with DHCP_CLIENT switch enabled. |
 | DIAGNOSTIC | OT_DIAGNOSTIC | Enables diagnostic support. Enable this switch on a device that is tested in the factory production stage. |
 | DISABLE_BUILTIN_MBEDTLS | not implemented | Disables OpenThread's mbedTLS build. Enable this switch if you do not want to use the built-in mbedTLS and you do not want to manage mbedTLS internally. Enabling this switch will disable support for such features as memory allocation and debug. |
 | DISABLE_DOC | not implemented | Disables building of the documentation. |
