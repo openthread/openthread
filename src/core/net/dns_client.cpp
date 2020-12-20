@@ -88,10 +88,13 @@ otError Client::Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *a
     Message *     messageCopy = nullptr;
     Header        header;
     QuestionAaaa  question;
+    uint16_t      messageId;
 
     VerifyOrExit(aQuery.IsValid(), error = OT_ERROR_INVALID_ARGS);
 
-    header.SetMessageId(GenerateUniqueRandomId());
+    SuccessOrExit(error = GenerateUniqueRandomId(messageId));
+
+    header.SetMessageId(messageId);
     header.SetType(Header::kTypeQuery);
     header.SetQueryType(Header::kQueryTypeStandard);
 
@@ -198,21 +201,17 @@ exit:
     }
 }
 
-uint16_t Client::GenerateUniqueRandomId(void)
+otError Client::GenerateUniqueRandomId(uint16_t &aRandomId)
 {
-    uint16_t randomId;
-    otError  error;
-
-    OT_UNUSED_VARIABLE(error);
+    otError error;
 
     do
     {
-        error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&randomId), sizeof(randomId));
-        OT_ASSERT(error == OT_ERROR_NONE);
+        SuccessOrExit(error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&aRandomId), sizeof(aRandomId)));
+    } while (FindQueryById(aRandomId) != nullptr);
 
-    } while (FindQueryById(randomId) != nullptr);
-
-    return randomId;
+exit:
+    return error;
 }
 
 otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)

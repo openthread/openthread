@@ -181,7 +181,7 @@ private:
     otError  SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void     SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    uint16_t GenerateUniqueRandomId(void);
+    otError GenerateUniqueRandomId(uint16_t &aRandomId);
 
     otError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);
 
