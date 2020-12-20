@@ -184,6 +184,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         _pkt = pkts.filter_wpan_src64(MED).\
             filter_wpan_dst64(ROUTER).\
             filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+            filter(lambda p: len(p.mle.tlv.addr_reg_iid) == 4).\
             must_next()
         pkts.filter_wpan_src64(ROUTER).\
             filter_wpan_dst64(MED).\
@@ -193,7 +194,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
                              } < set(p.mle.tlv.type) and\
-                   len(p.mle.tlv.addr_reg_iid) > 0 and\
+                   len(p.mle.tlv.addr_reg_iid) == 3 and\
                    set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                    ).\
             must_next()
@@ -241,6 +242,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         _pkt = pkts.filter_wpan_src64(SED).\
             filter_wpan_dst64(ROUTER).\
             filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+            filter(lambda p: len(p.mle.tlv.addr_reg_iid) == 3).\
             must_next()
         pkts.filter_wpan_src64(ROUTER).\
             filter_wpan_dst64(SED).\
@@ -250,7 +252,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
                              } < set(p.mle.tlv.type) and\
-                   len(p.mle.tlv.addr_reg_iid) > 0 and\
+                   len(p.mle.tlv.addr_reg_iid) == 2 and\
                    set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                    ).\
             must_next()
