@@ -250,6 +250,7 @@ private:
 
     static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
 
+    bool     mIsRunning;
     uint32_t mInfraIfIndex;
 
     /**

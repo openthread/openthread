@@ -292,7 +292,7 @@ public:
     bool IsValid(void) const
     {
         return (GetLength() == kLengthUnit || GetLength() == 2 * kLengthUnit || GetLength() == 3 * kLengthUnit) &&
-               (mPrefixLength <= OT_IP6_ADDRESS_SIZE * 8);
+               (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT);
     }
 
 private:

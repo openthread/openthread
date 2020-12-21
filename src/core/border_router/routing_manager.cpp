@@ -59,6 +59,7 @@ namespace BorderRouter {
 
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mIsRunning(false)
     , mInfraIfIndex(0)
     , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer, this)
     , mRouterAdvertisementCount(0)
@@ -145,11 +146,17 @@ exit:
 
 void RoutingManager::Start(void)
 {
-    StartRouterSolicitation();
+    if (!mIsRunning)
+    {
+        mIsRunning = true;
+        StartRouterSolicitation();
+    }
 }
 
 void RoutingManager::Stop(void)
 {
+    VerifyOrExit(mIsRunning);
+
     UnpublishLocalOmrPrefix();
 
     // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
@@ -168,6 +175,11 @@ void RoutingManager::Stop(void)
 
     mRouterSolicitTimer.Stop();
     mRouterSolicitCount = 0;
+
+    mIsRunning = false;
+
+exit:
+    return;
 }
 
 void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
@@ -177,8 +189,7 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
 {
     const Ip6::Icmp::Header *icmp6Header;
 
-    // The Border Routing function is enabled only when we are attached.
-    VerifyOrExit(IsInitialized() && Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(mIsRunning);
 
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex);
     VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header));
@@ -219,10 +230,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadNetdataChanged))
     {
-        if (Get<Mle::MleRouter>().IsAttached())
-        {
-            EvaluateRoutingPolicy();
-        }
+        EvaluateRoutingPolicy();
     }
 
 exit:
@@ -237,7 +245,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
     Ip6::Prefix *                   smallestOmrPrefix       = nullptr;
     Ip6::Prefix *                   publishedLocalOmrPrefix = nullptr;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    OT_ASSERT(mIsRunning);
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
     {
@@ -304,7 +312,6 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
         }
     }
 
-exit:
     return newOmrPrefixNum;
 }
 
@@ -313,7 +320,7 @@ otError RoutingManager::PublishLocalOmrPrefix(void)
     otError                         error = OT_ERROR_NONE;
     NetworkData::OnMeshPrefixConfig omrPrefixConfig;
 
-    OT_ASSERT(Get<Mle::MleRouter>().IsAttached());
+    OT_ASSERT(mIsRunning);
 
     omrPrefixConfig.Clear();
     omrPrefixConfig.mPrefix       = mLocalOmrPrefix;
@@ -340,7 +347,7 @@ otError RoutingManager::PublishLocalOmrPrefix(void)
 
 void RoutingManager::UnpublishLocalOmrPrefix(void)
 {
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(mIsRunning);
 
     IgnoreError(Get<NetworkData::Local>().RemoveOnMeshPrefix(mLocalOmrPrefix));
     Get<NetworkData::Notifier>().HandleServerDataUpdated();
@@ -394,8 +401,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     Ip6::Prefix        newOmrPrefixes[kMaxOmrPrefixNum];
     uint8_t            newOmrPrefixNum = 0;
 
-    OT_ASSERT(IsInitialized());
-    OT_ASSERT(Get<Mle::MleRouter>().IsAttached());
+    VerifyOrExit(mIsRunning);
 
     otLogInfoBr("evaluating routing policy");
 
@@ -433,6 +439,9 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     static_assert(sizeof(mAdvertisedOmrPrefixes) == sizeof(newOmrPrefixes), "invalid new OMR prefix array size");
     memcpy(mAdvertisedOmrPrefixes, newOmrPrefixes, sizeof(newOmrPrefixes[0]) * newOmrPrefixNum);
     mAdvertisedOmrPrefixNum = newOmrPrefixNum;
+
+exit:
+    return;
 }
 
 void RoutingManager::StartRouterSolicitation(void)
