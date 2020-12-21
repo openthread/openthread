@@ -26,6 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+/* Define to 1 to enable Backbone Router support. */
+#define OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE 1
+
+/* Define to 1 to enable Backbone Router Multicast Routing for Thread 1.2 MLR feature. */
+#define OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE 1
+
+/* Define to 0 to disable Backbone Router ND Proxying for Thread 1.2 DUA feature. */
+#define OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE 0
+
 /* Define to 1 to enable the border agent feature. */
 #define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
 
@@ -58,6 +67,9 @@
 
 /* Define to 1 to enable posix platform. */
 #define OPENTHREAD_PLATFORM_POSIX 1
+
+/* Use Thread version 1.2. */
+#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_2
 
 /* Define to 1 if you want to enable Service */
 #define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
