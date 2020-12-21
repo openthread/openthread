@@ -132,6 +132,11 @@ if(OT_CSL_DEBUG)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE=1")
 endif()
 
+option(OT_SSED_SSED_LINK "enable SSED-to-SSED link")
+if(OT_SSED_SSED_LINK)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE=1")
+endif()
+
 option(OT_DATASET_UPDATER "enable dataset updater support")
 if(OT_DATASET_UPDATER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE=1")

@@ -407,4 +407,14 @@
 #define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 2
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
+ *
+ * This setting configures the CSL SSED-to-SSED link feature in Thread 1.2.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE 0
+#endif
+
 #endif // CONFIG_MAC_H_

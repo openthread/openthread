@@ -75,6 +75,7 @@ SETTINGS_RAM              ?= 0
 # SLAAC is enabled by default
 SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
+SSED_SSED_LINK            ?= 0
 THREAD_VERSION            ?= 1.1
 TIME_SYNC                 ?= 0
 UDP_FORWARD               ?= 0
@@ -305,6 +306,10 @@ endif
 
 ifeq ($(OTNS),1)
 COMMONCFLAGS += -DOPENTHREAD_CONFIG_OTNS_ENABLE=1
+endif
+
+ifeq ($(SSED_SSED_LINK),1)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE=1
 endif
 
 ifneq ($(SPINEL_ENCRYPTER_LIBS),)
