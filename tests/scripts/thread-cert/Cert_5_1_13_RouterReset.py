@@ -196,7 +196,7 @@ class Cert_5_1_13_RouterReset(thread_cert.TestCase):
                        p.mle.tlv.addr16 is not nullField and \
                        p.mle.tlv.route64.id_mask is not nullField and\
                        p.mle.tlv.addr16 == ROUTER_RLOC16 and\
-                       p.sniff_timestamp - _pkt_lq.sniff_timestamp <= 1
+                       p.sniff_timestamp - _pkt_lq.sniff_timestamp < 1.1
                        ).\
                 must_next()
         if _pkt.mle.cmd == MLE_LINK_ACCEPT_AND_REQUEST:
