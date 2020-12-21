@@ -50,11 +50,11 @@
 /**
  * @def OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
  *
- * Defines the default interface name used for TREL UDP6 platform.
+ * Defines the default interface name used for TREL UDP6 platform. Empty string disables TREL platform.
  *
  */
 #ifndef OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
-#define OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME "trel"
+#define OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME ""
 #endif
 
 /**

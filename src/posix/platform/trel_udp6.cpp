@@ -71,6 +71,7 @@ static TxPacket     sTxPacketPool[TREL_PACKET_POOL_SIZE];
 static TxPacket *   sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
 static TxPacket *   sTxPacketQueueTail; // A circular linked list for queued tx packets.
 static char         sInterfaceName[IFNAMSIZ + 1];
+static bool         sEnabled         = false;
 static int          sInterfaceIndex  = -1;
 static int          sMulticastSocket = -1;
 static int          sSocket          = -1;
@@ -413,8 +414,12 @@ exit:
 
 void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddress, uint16_t aUdpPort)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     int                 val;
     struct sockaddr_in6 sockAddr;
+
+    VerifyOrExit(sEnabled);
 
     otLogDebgPlat("[trel] otPlatTrelUdp6Init(%s, port:%d)", Ip6AddrToString(aUnicastAddress), aUdpPort);
 
@@ -453,11 +458,16 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
 
     PrepareSocket();
 
-    OT_UNUSED_VARIABLE(aInstance);
+exit:
+    return;
 }
 
 void otPlatTrelUdp6UpdateAddress(otInstance *aInstance, const otIp6Address *aUnicastAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
+    VerifyOrExit(sEnabled);
+
     assert(sSocket >= 0);
 
     otLogDebgPlat("[trel] otPlatTrelUdp6UpdateAddress(%s)", Ip6AddrToString(aUnicastAddress));
@@ -473,14 +483,16 @@ void otPlatTrelUdp6UpdateAddress(otInstance *aInstance, const otIp6Address *aUni
     PrepareSocket();
 
 exit:
-    OT_UNUSED_VARIABLE(aInstance);
+    return;
 }
 
 void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aMulticastAddress)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     struct ipv6_mreq mr;
 
-    OT_UNUSED_VARIABLE(aInstance);
+    VerifyOrExit(sEnabled);
 
     assert(sMulticastSocket != -1);
 
@@ -489,6 +501,9 @@ void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6A
     VerifyOrDie(setsockopt(sMulticastSocket, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mr, sizeof(mr)) == 0, OT_EXIT_ERROR_ERRNO);
 
     otLogDebgPlat("[trel] otPlatTrelUdp6SubscribeMulticastAddress(%s)", Ip6AddrToString(aMulticastAddress));
+
+exit:
+    return;
 }
 
 otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
@@ -499,6 +514,8 @@ otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
     OT_UNUSED_VARIABLE(aInstance);
 
     otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(sEnabled);
 
     assert(aLength <= TREL_MAX_PACKET_SIZE);
 
@@ -524,6 +541,7 @@ otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
         }
     }
 
+exit:
     return error;
 }
 
@@ -545,6 +563,9 @@ void platformTrelInit(const char *aInterfaceName)
     otLogDebgPlat("[trel] platformTrelInit(InterfaceName:\"%s\")", sInterfaceName);
 
     InitPacketQueue();
+
+    // Disable trel platform when interface name is empty.
+    sEnabled = (sInterfaceName[0] != '\0');
 }
 
 void platformTrelDeinit(void)
@@ -564,6 +585,8 @@ void platformTrelDeinit(void)
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
 {
+    OT_UNUSED_VARIABLE(aTimeout);
+
     assert((aReadFdSet != NULL) && (aWriteFdSet != NULL) && (aMaxFd != NULL) && (aTimeout != NULL));
     VerifyOrExit((sSocket >= 0) && (sMulticastSocket >= 0));
 
@@ -586,7 +609,6 @@ void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxF
     }
 
 exit:
-    OT_UNUSED_VARIABLE(aTimeout);
     return;
 }
 
