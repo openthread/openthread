@@ -240,7 +240,7 @@ public:
     public:
         enum
         {
-            kSize = (kMpiSize * 2) + 1, ///< Size of the public key in bytes (two MPIs + one overhead byte).
+            kSize = kMpiSize * 2, ///< Size of the public key in bytes.
         };
 
         /**
