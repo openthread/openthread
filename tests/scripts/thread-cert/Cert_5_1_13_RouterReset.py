@@ -31,7 +31,7 @@ import unittest
 
 import mle
 import thread_cert
-from pktverify.consts import MLE_ADVERTISEMENT, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, TLV_REQUEST_TLV, VERSION_TLV
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, TLV_REQUEST_TLV, VERSION_TLV, MLE_MAX_RESPONSE_DELAY
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -196,7 +196,8 @@ class Cert_5_1_13_RouterReset(thread_cert.TestCase):
                        p.mle.tlv.addr16 is not nullField and \
                        p.mle.tlv.route64.id_mask is not nullField and\
                        p.mle.tlv.addr16 == ROUTER_RLOC16 and\
-                       p.sniff_timestamp - _pkt_lq.sniff_timestamp <= 1
+                       p.sniff_timestamp - _pkt_lq.sniff_timestamp <
+                       MLE_MAX_RESPONSE_DELAY + 0.1
                        ).\
                 must_next()
         if _pkt.mle.cmd == MLE_LINK_ACCEPT_AND_REQUEST:
