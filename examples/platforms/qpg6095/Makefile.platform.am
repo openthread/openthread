@@ -35,12 +35,12 @@ LDADD_COMMON                                                          += \
     $(NULL)
 if OPENTHREAD_ENABLE_FTD
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/qpg6095/libQorvoQPG6095_ftd.a        \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6095/libQorvoQPG6095_ftd.a        \
     $(NULL)
 endif # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/qpg6095/libQorvoQPG6095_mtd.a        \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6095/libQorvoQPG6095_mtd.a        \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
 LDFLAGS_COMMON                                                        += \

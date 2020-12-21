@@ -35,12 +35,12 @@ LDADD_COMMON                                                          += \
     $(NULL)
 if OPENTHREAD_ENABLE_FTD
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/gp712/libQorvoGP712_ftd.a            \
+    $(top_srcdir)/third_party/Qorvo/repo/gp712/libQorvoGP712_ftd.a       \
     $(NULL)
 endif # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/gp712/libQorvoGP712_mtd.a            \
+    $(top_srcdir)/third_party/Qorvo/repo/gp712/libQorvoGP712_mtd.a       \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
 

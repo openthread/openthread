@@ -44,6 +44,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -58,6 +60,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo pip3 install --system -U cmake==3.10.3
@@ -84,6 +88,8 @@ jobs:
       CXX: ${{ matrix.compiler_cpp }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -96,6 +102,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -127,6 +135,8 @@ jobs:
             gcc_extract_dir: gcc-arm-none-eabi-9-2019-q4-major
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         cd /tmp
@@ -155,6 +165,8 @@ jobs:
       CXX: g++-${{ matrix.gcc_ver }}
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -175,6 +187,8 @@ jobs:
       CXX: clang++-${{ matrix.clang_ver }}
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Bootstrap
         run: |
           sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -198,6 +212,8 @@ jobs:
       LDFLAGS: -m32
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: true
       - name: Bootstrap
         run: |
           sudo dpkg --add-architecture i386
@@ -213,6 +229,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -233,6 +251,8 @@ jobs:
       CXX: clang++
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         brew install automake ninja llvm
@@ -248,6 +268,8 @@ jobs:
       CXX: g++
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         brew install automake ninja
@@ -260,6 +282,8 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Build
       run: |
         docker run --rm -v $PWD:/build/openthread openthread/android-trusty /build/openthread/script/check-android-build

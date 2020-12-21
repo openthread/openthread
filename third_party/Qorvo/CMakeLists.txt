@@ -31,12 +31,12 @@ add_library(gp712-driver INTERFACE)
 if (OT_MTD)
     target_link_libraries(gp712-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/gp712/libQorvoGP712_mtd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/gp712/libQorvoGP712_mtd.a
     )
 else()
     target_link_libraries(gp712-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/gp712/libQorvoGP712_ftd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/gp712/libQorvoGP712_ftd.a
     )
 endif()
 
@@ -45,12 +45,12 @@ add_library(qpg6095-driver INTERFACE)
 if (OT_MTD)
     target_link_libraries(qpg6095-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/qpg6095/libQorvoQPG6095_mtd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6095/libQorvoQPG6095_mtd.a
     )
 else()
     target_link_libraries(qpg6095-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/qpg6095/libQorvoQPG6095_ftd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6095/libQorvoQPG6095_ftd.a
     )
 endif()
 
@@ -59,12 +59,12 @@ add_library(qpg6100-driver INTERFACE)
 if (OT_MTD)
     target_link_libraries(qpg6100-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/qpg6100/libQorvoQPG6100_mtd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6100/libQorvoQPG6100_mtd.a
     )
 else()
     target_link_libraries(qpg6100-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/qpg6100/libQorvoQPG6100_ftd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6100/libQorvoQPG6100_ftd.a
     )
 endif()
 
@@ -73,11 +73,11 @@ endif()
 if (OT_MTD)
     target_link_libraries(qpg7015m-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/qpg7015m/libQorvoQPG7015m_mtd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/libQorvoQPG7015m_mtd.a
     )
 else()
     target_link_libraries(qpg7015m-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/qpg7015m/libQorvoQPG7015m_ftd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/libQorvoQPG7015m_ftd.a
     )
 endif()

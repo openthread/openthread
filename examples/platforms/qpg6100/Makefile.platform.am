@@ -35,17 +35,17 @@ LDADD_COMMON                                                          += \
     $(NULL)
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/qpg6100/libmbedtls_alt.a             \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libmbedtls_alt.a             \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 if OPENTHREAD_ENABLE_FTD
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/qpg6100/libQorvoQPG6100_ftd.a        \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libQorvoQPG6100_ftd.a        \
     $(NULL)
 endif # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
 LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/qpg6100/libQorvoQPG6100_mtd.a        \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libQorvoQPG6100_mtd.a        \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
 LDFLAGS_COMMON                                                        += \
