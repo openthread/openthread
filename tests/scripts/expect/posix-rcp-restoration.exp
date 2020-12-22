@@ -190,14 +190,7 @@ try {
     puts "Many children, queued child-to-child packets"
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
-    send "panid 0xface\n"
-    expect "Done"
-    send "ifconfig up\n"
-    expect "Done"
-    send "thread start\n"
-    expect "Done"
-    wait_for "state" "leader"
-    expect "Done"
+    setup_leader
     send "ipaddr mleid\n"
     expect "ipaddr mleid"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
@@ -211,15 +204,8 @@ try {
     set max_children 15
     for {set i 2} {$i <= $max_children + 1} {incr i} {
         spawn_node $i
-        send "mode -\n"
-        expect "Done"
-        send "panid 0xface\n"
-        expect "Done"
-        send "ifconfig up\n"
-        expect "Done"
-        send "thread start\n"
-        expect "Done"
-        wait_for "state" "child"
+        setup_node $i "-"
+        switch_node $i
         send "ipaddr mleid\n"
         expect "ipaddr mleid"
         expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
