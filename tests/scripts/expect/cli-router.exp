@@ -62,7 +62,7 @@ wait_for "router list" $router_id
 send "router $router_id\n"
 expect "Router ID: $router_id"
 expect "Rloc: $rloc"
-expect "Next Hop: fc00"
+expect -re {Next Hop: [0-9a-f]{4}}
 expect -re {Link: [01]}
 expect "Done"
 
