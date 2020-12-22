@@ -152,6 +152,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 is_bbr=params['is_bbr'],
             )
 
+            node.set_masterkey('00112233445566778899aabbccddeeff')
+
             self.nodes[i] = node
 
             if node.is_host:
