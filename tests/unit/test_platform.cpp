@@ -691,6 +691,12 @@ otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const ot
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aShortAddress);
+
+    otLinkMetrics metrics;
+
+    memset(&metrics, 0, sizeof(metrics));
+
+    return metrics;
 }
 #endif
 
