@@ -199,4 +199,10 @@ void nrf5SdSocFlashProcess(uint32_t aEvtId);
 
 int8_t nrf5GetChannelMaxTransmitPower(uint8_t aChannel);
 
+/**
+ * Callback function for region changed.
+ *
+ */
+void nrf5HandleRegionChanged(uint16_t aRegionCode);
+
 #endif // PLATFORM_NRF5_H_

@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include <openthread/diag.h>
 #include <openthread/icmp6.h>
@@ -3310,6 +3311,29 @@ otError Interpreter::ProcessRcp(uint8_t aArgsLength, char *aArgs[])
     else
     {
         ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
+
+exit:
+    return error;
+}
+
+otError Interpreter::ProcessRegion(uint8_t aArgsLength, char *aArgs[])
+{
+    otError  error = OT_ERROR_NONE;
+    uint16_t regionCode;
+
+    if (aArgsLength == 0)
+    {
+        SuccessOrExit(error = otPlatRadioGetRegion(mInstance, &regionCode));
+        OutputLine("%c%c", regionCode >> 8, regionCode & 0xff);
+    }
+    else
+    {
+        VerifyOrExit(strlen(aArgs[0]) == 2, error = OT_ERROR_INVALID_ARGS);
+
+        regionCode =
+            static_cast<uint16_t>(static_cast<uint16_t>(aArgs[0][0]) << 8) + static_cast<uint16_t>(aArgs[0][1]);
+        error = otPlatRadioSetRegion(mInstance, regionCode);
     }
 
 exit:
