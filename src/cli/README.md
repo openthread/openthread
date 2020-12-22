@@ -1793,11 +1793,10 @@ Print table of routers.
 
 ```bash
 > router table
-| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     | Link Est |
-+----+--------+----------+-----------+-------+--------+-----+------------------+----------+
-|  0 | 0x0000 |       18 |         1 |     3 |      3 |   0 | e692427cf5d7f7c3 |        Y |
-|  2 | 0x0800 |       63 |         0 |     0 |      0 |   0 | 82ec906dd241786c |        N |
-| 18 | 0x4800 |        0 |         1 |     3 |      3 |  14 | c6cc0be1c2ce2229 |        Y |
+| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     | Link |
++----+--------+----------+-----------+-------+--------+-----+------------------+------+
+| 22 | 0x5800 |       63 |         0 |     0 |      0 |   0 | 0aeb8196c9f61658 |    0 |
+| 49 | 0xc400 |       63 |         0 |     3 |      3 |   0 | faa1c03908e2dbf2 |    1 |
 Done
 ```
 
