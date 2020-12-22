@@ -54,6 +54,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME
+ *
+ * Defines the default interface name used for TREL UDP6 platform. Empty string disables TREL platform.
+ *
+ */
+#define OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME "trel"
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
  *
  * Define as 1 to enable PTY device support in POSIX app.

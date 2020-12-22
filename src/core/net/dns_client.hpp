@@ -181,9 +181,11 @@ private:
     otError  SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void     SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
+    otError GenerateUniqueRandomId(uint16_t &aRandomId);
+
     otError CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset);
 
-    Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
+    Message *FindQueryById(uint16_t aMessageId);
     void     FinalizeDnsTransaction(Message &            aQuery,
                                     const QueryMetadata &aQueryMetadata,
                                     const Ip6::Address * aAddress,
@@ -198,7 +200,6 @@ private:
 
     Ip6::Udp::Socket mSocket;
 
-    uint16_t     mMessageId;
     MessageQueue mPendingQueries;
     TimerMilli   mRetransmissionTimer;
 };

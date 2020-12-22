@@ -43,6 +43,7 @@
 
 #include <openthread/link.h>
 
+#include "common/code_utils.hpp"
 #include "utils/code_utils.h"
 #include "utils/mac_frame.h"
 
@@ -107,6 +108,7 @@ static otInstance *  sInstance = NULL;
 static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
 
+static int8_t sMaxTxPowerTable[OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN + 1];
 static int8_t sDefaultTxPower;
 static int8_t sLnaGain = 0;
 
@@ -144,10 +146,28 @@ static uint32_t        sAckFrameCounter;
 static uint8_t         sAckKeyId;
 #endif
 
+static int8_t GetTransmitPowerForChannel(uint8_t aChannel)
+{
+    int8_t channelMaxPower = nrf5GetChannelMaxTransmitPower(aChannel);
+    int8_t power           = 0; // 0 dbm as default value
+
+    if (sDefaultTxPower != OT_RADIO_POWER_INVALID)
+    {
+        power = OT_MIN(channelMaxPower, sDefaultTxPower);
+    }
+    else if (channelMaxPower != OT_RADIO_POWER_INVALID)
+    {
+        power = channelMaxPower;
+    }
+
+    return power;
+}
+
 static void dataInit(void)
 {
     sDisabled = true;
 
+    sDefaultTxPower      = OT_RADIO_POWER_INVALID;
     sTransmitFrame.mPsdu = sTransmitPsdu + 1;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     sTransmitFrame.mInfo.mTxInfo.mIeInfo = &sTransmitIeInfo;
@@ -158,6 +178,11 @@ static void dataInit(void)
     for (uint32_t i = 0; i < NRF_802154_RX_BUFFERS; i++)
     {
         sReceivedFrames[i].mPsdu = NULL;
+    }
+
+    for (size_t i = 0; i < OT_ARRAY_LENGTH(sMaxTxPowerTable); i++)
+    {
+        sMaxTxPowerTable[i] = OT_RADIO_POWER_INVALID;
     }
 
     memset(&sAckFrame, 0, sizeof(sAckFrame));
@@ -451,7 +476,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
         nrf5FemEnable();
     }
 
-    nrf_802154_tx_power_set(sDefaultTxPower);
+    nrf_802154_tx_power_set(GetTransmitPowerForChannel(aChannel));
 
     result = nrf_802154_receive();
     clearPendingEvents();
@@ -695,11 +720,15 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    uint8_t channel = nrf_802154_channel_get();
+    otError error   = OT_ERROR_NONE;
 
+    VerifyOrExit(aPower != OT_RADIO_POWER_INVALID, error = OT_ERROR_INVALID_ARGS);
     sDefaultTxPower = aPower;
-    nrf_802154_tx_power_set(aPower);
+    nrf_802154_tx_power_set(GetTransmitPowerForChannel(channel));
 
-    return OT_ERROR_NONE;
+exit:
+    return error;
 }
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
@@ -1299,3 +1328,37 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 #endif
+
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otError error = OT_ERROR_NONE;
+
+    otEXPECT_ACTION(aChannel >= OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN && aChannel <= OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
+                    error = OT_ERROR_INVALID_ARGS);
+
+    sMaxTxPowerTable[aChannel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN] = aMaxPower;
+    if (aChannel == nrf_802154_channel_get())
+    {
+        nrf_802154_tx_power_set(GetTransmitPowerForChannel(aChannel));
+    }
+
+exit:
+    return error;
+}
+
+int8_t nrf5GetChannelMaxTransmitPower(uint8_t aChannel)
+{
+    int8_t power;
+
+    if (aChannel < OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN || aChannel > OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX)
+    {
+        power = OT_RADIO_POWER_INVALID;
+    }
+    else
+    {
+        power = sMaxTxPowerTable[aChannel - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN];
+    }
+
+    return power;
+}

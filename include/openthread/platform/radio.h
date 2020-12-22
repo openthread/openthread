@@ -425,6 +425,9 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
 /**
  * Get the radio's transmit power in dBm.
  *
+ * @note The transmit power returned will be no larger than the power specified in the max power table for
+ * the current channel.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[out] aPower    The transmit power in dBm.
  *
@@ -437,6 +440,9 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
 
 /**
  * Set the radio's transmit power in dBm.
+ *
+ * @note The real transmit power will be no larger than the power specified in the max power table for
+ * the current channel.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPower     The transmit power in dBm.

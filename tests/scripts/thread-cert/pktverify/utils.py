@@ -71,6 +71,7 @@ def make_filter_func(func: Union[str, Callable], **vars) -> Callable:
                     'thread_nm': p.thread_nm,
                     'thread_nwd': p.thread_nwd,
                     'thread_address': p.thread_address,
+                    'thread_bcn': p.thread_bcn,
                     'null': nullField,
                 })
     else:
@@ -135,3 +136,24 @@ def which_mergecap() -> str:
     :return: The path to `mergecap` executable.
     """
     return os.path.join(get_wireshark_dir(), 'mergecap')
+
+
+def colon_hex(hexstr, interval) -> str:
+    """ Convert hexstr to colon seperated string every interval
+
+    :param hexstr: The hex string to convert.
+    :param interval: The interval number.
+    :return: The colon seperated string.
+    """
+    assert len(hexstr) % interval == 0
+    return ':'.join(hexstr[i:i + interval] for i in range(0, len(hexstr), interval))
+
+
+def is_sublist(lst1: list, lst2: list) -> bool:
+    """ Test whether lst1 is a slice of lst2
+
+    :param lst1: The list to judge if it is a sublist of lst2.
+    :param lst2: The list to judge if contains lst1.
+    :return: Whether lst1 is a slice of lst2.
+    """
+    return lst1 in [lst2[i:len(lst1) + i] for i in range(len(lst1))]

@@ -80,6 +80,11 @@ otError MbedTls::MapError(int aMbedTlsError)
 
     switch (aMbedTlsError)
     {
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+    case MBEDTLS_ERR_ECP_BAD_INPUT_DATA:
+    case MBEDTLS_ERR_MPI_BAD_INPUT_DATA:
+    case MBEDTLS_ERR_MPI_INVALID_CHARACTER:
+#endif
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PK_TYPE_MISMATCH:
     case MBEDTLS_ERR_PK_FILE_IO_ERROR:
@@ -114,12 +119,17 @@ otError MbedTls::MapError(int aMbedTlsError)
         error = OT_ERROR_INVALID_ARGS;
         break;
 
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+    case MBEDTLS_ERR_ECP_BUFFER_TOO_SMALL:
+    case MBEDTLS_ERR_MPI_BUFFER_TOO_SMALL:
+    case MBEDTLS_ERR_MPI_ALLOC_FAILED:
+#endif
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_PEM_ALLOC_FAILED:
     case MBEDTLS_ERR_PK_ALLOC_FAILED:
     case MBEDTLS_ERR_X509_BUFFER_TOO_SMALL:
     case MBEDTLS_ERR_X509_ALLOC_FAILED:
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#endif
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
     case MBEDTLS_ERR_SSL_WANT_WRITE:
     case MBEDTLS_ERR_ENTROPY_MAX_SOURCES:
@@ -146,15 +156,24 @@ otError MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_X509_FATAL_ERROR:
         error = OT_ERROR_FAILED;
         break;
-#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-
+#endif
     case MBEDTLS_ERR_SSL_TIMEOUT:
     case MBEDTLS_ERR_SSL_WANT_READ:
         error = OT_ERROR_BUSY;
         break;
 
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+    case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:
+        error = OT_ERROR_NOT_CAPABLE;
+        break;
+#endif
+
     default:
-        OT_ASSERT(aMbedTlsError >= 0);
+        if (aMbedTlsError < 0)
+        {
+            error = OT_ERROR_FAILED;
+        }
+
         break;
     }
 

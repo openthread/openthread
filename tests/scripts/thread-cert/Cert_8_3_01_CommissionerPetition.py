@@ -323,8 +323,8 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                              {
                               NM_COMMISSIONER_SESSION_ID_TLV
                              } == set(p.thread_meshcop.tlv.type) and\
-                   p.mle.tlv.leader_data.data_version >=
-                   (_dr_pkt2.mle.tlv.leader_data.data_version + 1) % 256 and\
+                   (p.mle.tlv.leader_data.data_version -
+                   _dr_pkt2.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    p.thread_nwd.tlv.stable == [0]
                    ).\
             must_next()

@@ -74,6 +74,7 @@ try {
     expect "ipaddr mleid"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
     set addr_2 $expect_out(1,string)
+    expect "Done"
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11003\n"
@@ -88,6 +89,7 @@ try {
     expect "ipaddr mleid"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
     set addr_1 $expect_out(1,string)
+    expect "Done"
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11004\n"
@@ -106,6 +108,8 @@ try {
     sleep 1
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
+
+    sleep 1
 
     switch_node 2
     send "pollperiod 1000\n"
@@ -134,6 +138,7 @@ try {
     expect "ipaddr mleid"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
     set addr_2 $expect_out(1,string)
+    expect "Done"
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11003\n"
@@ -148,6 +153,7 @@ try {
     expect "ipaddr mleid"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
     set addr_1 $expect_out(1,string)
+    expect "Done"
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11004\n"
@@ -196,6 +202,7 @@ try {
     expect "ipaddr mleid"
     expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
     set addr(1) $expect_out(1,string)
+    expect "Done"
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11004\n"
@@ -242,6 +249,8 @@ try {
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
 
+    sleep 1
+
     for {set i 7} {$i <= 9} {incr i} {
         switch_node $i
         send "pollperiod 1000\n"
@@ -263,6 +272,8 @@ try {
     sleep 1
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
+
+    sleep 1
 
     switch_node 5
     send "pollperiod 1000\n"
@@ -293,6 +304,8 @@ try {
     sleep 1
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
+
+    sleep 1
 
     for {set i 11} {$i <= 26} {incr i} {
         expect -re "\\| +$i \\| +-?\\d+ \\|"

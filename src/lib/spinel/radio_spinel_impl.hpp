@@ -360,6 +360,10 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
     {
         otRadioCaps missingCaps = (mRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
 
+        // missingCaps may be an unused variable when otLogCritPlat is blank
+        // avoid compiler warning in that case
+        OT_UNUSED_VARIABLE(missingCaps);
+
         otLogCritPlat("RCP is missing required capabilities: %s%s%s%s%s",
                       (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
                       (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "tx-retries " : "",
@@ -2193,6 +2197,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     mTxRadioTid   = 0;
     mWaitingTid   = 0;
     mWaitingKey   = SPINEL_PROP_LAST_STATUS;
+    mError        = OT_ERROR_NONE;
     mIsReady      = false;
     mIsTimeSynced = false;
 

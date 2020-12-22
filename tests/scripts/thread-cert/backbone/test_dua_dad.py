@@ -261,7 +261,7 @@ class TestDuaDad(thread_cert.TestCase):
         ba.must_verify("""
             set(thread_bl.tlv.type) == {tlvs}
             and thread_bl.tlv.last_transaction_time > 0
-            and thread_meshcop.tlv.net_name == {NET_NAME}
+            and thread_meshcop.tlv.net_name == [{NET_NAME}]
         """,
                        tlvs={0, 3, 6, 12},
                        **pv.vars)
