@@ -410,7 +410,7 @@
 /**
  * @def OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
  *
- * This setting configures the CSL SSED-to-SSED link feature in Thread 1.2.
+ * SSED-to-SSED link feature option. This is not an official Thread 1.2 feature.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
