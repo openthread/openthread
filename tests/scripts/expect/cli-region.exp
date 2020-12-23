@@ -28,42 +28,13 @@
 #
 
 source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
 
-setup_two_nodes
+spawn_node 1
 
-switch_node 1
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
+send "region\n"
 expect "Done"
-send "router list\n"
-expect "router list"
-expect -re {(\d+)}
-set router_id $expect_out(1,string)
+send "region US\n"
 expect "Done"
-send "router $router_id\n"
-expect -re {Rloc: ([0-9a-f]{4})}
-set rloc $expect_out(1,string)
+send "region\n"
+expect "US"
 expect "Done"
-send "router table\n"
-expect "| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |"
-expect "+----+--------+----------+-----------+-------+--------+-----+------------------+"
-expect -re "\\| +$router_id \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| $extaddr \\|"
-expect "Done"
-
-switch_node 2
-send "mode rdn\n"
-expect "Done"
-send "state router\n"
-expect "Done"
-wait_for "router list" $router_id
-send "router $router_id\n"
-expect "Router ID: $router_id"
-expect "Rloc: $rloc"
-expect -re {Next Hop: [0-9a-f]{4}}
-expect -re {Link: [01]}
-expect "Done"
-
-dispose_all
