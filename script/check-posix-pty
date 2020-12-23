@@ -176,6 +176,14 @@ EOF
     else
         die 'Failed to access application CoAP'
     fi
+
+    # Retrievie extended address through network diagnostic get
+    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f-)
+
+    # Verify Tmf CoAP is blocked
+    if [[ -z ${coap_response} ]]; then
+        die 'Tmf is not blocked'
+    fi
 }
 
 main()
