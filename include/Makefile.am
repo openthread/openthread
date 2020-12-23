@@ -89,6 +89,7 @@ ot_platform_headers                     = \
     openthread/platform/diag.h            \
     openthread/platform/flash.h           \
     openthread/platform/entropy.h         \
+    openthread/platform/infra_if.h        \
     openthread/platform/memory.h          \
     openthread/platform/misc.h            \
     openthread/platform/logging.h         \

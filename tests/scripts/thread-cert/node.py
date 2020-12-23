@@ -219,6 +219,7 @@ class OtbrDocker:
 
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
+        self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
 
 
 class OtCli:
@@ -1169,6 +1170,17 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def __getOmrAddress(self):
+        prefixes = [prefix.split('::')[0] for prefix in self.get_prefixes()]
+        omr_addrs = []
+        for addr in self.get_addrs():
+            for prefix in prefixes:
+                if (addr.startswith(prefix)):
+                    omr_addrs.append(addr)
+                    break
+
+        return omr_addrs
+
     def __getLinkLocalAddress(self):
         for ip6Addr in self.get_addrs():
             if re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I):
@@ -1242,6 +1254,8 @@ class NodeImpl:
             return self.__getDua()
         elif address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
+        elif address_type == config.ADDRESS_TYPE.OMR:
+            return self.__getOmrAddress()
         else:
             return None
 
@@ -1263,6 +1277,21 @@ class NodeImpl:
         cmd = 'prefix remove %s' % prefix
         self.send_command(cmd)
         self._expect('Done')
+
+    def get_prefixes(self):
+        netdata = self.netdata_show()
+        prefixes = []
+
+        for i in range(1, len(netdata)):
+            if netdata[i].startswith("Routes:"):
+                break
+            prefixes.append(netdata[i])
+
+        return prefixes
+
+    def netdata_show(self):
+        self.send_command('netdata show')
+        return self._expect_command_output('netdata show')
 
     def add_route(self, prefix, stable=False, prf='med'):
         cmd = 'route add %s ' % prefix
@@ -2046,11 +2075,21 @@ class LinuxHost():
         return resp_count
 
     def _getBackboneGua(self) -> Optional[str]:
-        for ip6Addr in self.get_addrs():
-            if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, ip6Addr, re.I):
-                return ip6Addr
+        for addr in self.get_addrs():
+            if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, addr, re.I):
+                return addr
 
         return None
+
+    def _getInfraUla(self) -> Optional[str]:
+        """ Returns the ULA addresses autoconfigured on the infra link.
+        """
+        addrs = []
+        for addr in self.get_addrs():
+            if re.match(config.ONLINK_PREFIX_REGEX_PATTERN, addr, re.I):
+                addrs.append(addr)
+
+        return addrs
 
     def ping(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)
@@ -2099,9 +2138,12 @@ class HostNode(LinuxHost, OtbrDocker):
         self.name = name or ('Host%d' % nodeid)
         super().__init__(nodeid, **kwargs)
 
-    def start(self):
+    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()
-        self._service_radvd_start()
+        if start_radvd:
+            self._service_radvd_start(prefix, slaac)
+        else:
+            self._service_radvd_stop()
 
     def stop(self):
         self._service_radvd_stop()
@@ -2121,14 +2163,16 @@ class HostNode(LinuxHost, OtbrDocker):
         Returns:
             IPv6 address string.
         """
-        assert address_type == config.ADDRESS_TYPE.BACKBONE_GUA
+        assert address_type in [config.ADDRESS_TYPE.BACKBONE_GUA, config.ADDRESS_TYPE.ONLINK_ULA]
 
         if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
+        if address_type == config.ADDRESS_TYPE.ONLINK_ULA:
+            return self._getInfraUla()
         else:
             return None
 
-    def _service_radvd_start(self):
+    def _service_radvd_start(self, prefix, slaac):
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface eth0
 {
@@ -2141,12 +2185,12 @@ interface eth0
 	prefix %s
 	{
 		AdvOnLink on;
-		AdvAutonomous off;
+		AdvAutonomous %s;
 		AdvRouterAddr off;
 	};
 };
 EOF
-""" % config.DOMAIN_PREFIX)
+""" % (prefix, 'on' if slaac else 'off'))
         self.bash('service radvd start')
         self.bash('service radvd status')  # Make sure radvd service is running
 

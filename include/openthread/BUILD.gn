@@ -96,6 +96,7 @@ source_set("openthread") {
     "platform/diag.h",
     "platform/entropy.h",
     "platform/flash.h",
+    "platform/infra_if.h",
     "platform/logging.h",
     "platform/memory.h",
     "platform/messagepool.h",

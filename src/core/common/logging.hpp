@@ -94,6 +94,7 @@ extern "C" {
 #define _OT_REGION_BBR_PREFIX "-BBR-----: "
 #define _OT_REGION_MLR_PREFIX "-MLR-----: "
 #define _OT_REGION_DUA_PREFIX "-DUA-----: "
+#define _OT_REGION_BR_PREFIX "-BR------: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -114,6 +115,7 @@ extern "C" {
 #define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_DUA_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_BR_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -328,6 +330,64 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogNoteMbedTls(...) otLogNoteMeshCoP(__VA_ARGS__)
 #define otLogInfoMbedTls(...) otLogInfoMeshCoP(__VA_ARGS__)
 #define otLogDebgMbedTls(...) otLogDebgMeshCoP(__VA_ARGS__)
+
+/**
+ * @def otLogCritBr
+ *
+ * This function generates a log with level critical for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnBr
+ *
+ * This function generates a log with level warning for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteBr
+ *
+ * This function generates a log with level note for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoBr
+ *
+ * This function generates a log with level info for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgBr
+ *
+ * This function generates a log with level debug for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BR
+#define otLogCritBr(...) otLogCrit(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogWarnBr(...) otLogWarn(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogNoteBr(...) otLogNote(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogInfoBr(...) otLogInfo(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogDebgBr(...) otLogDebg(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritBr(...)
+#define otLogWarnBr(...)
+#define otLogNoteBr(...)
+#define otLogInfoBr(...)
+#define otLogDebgBr(...)
+#endif
 
 /**
  * @def otLogCritMle

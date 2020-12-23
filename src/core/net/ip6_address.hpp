@@ -87,7 +87,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Prefix : public otIp6Prefix
+class Prefix : public otIp6Prefix, public Clearable<Prefix>
 {
 public:
     enum : uint8_t

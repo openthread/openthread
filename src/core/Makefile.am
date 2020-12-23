@@ -153,6 +153,9 @@ SOURCES_COMMON                                  = \
     backbone_router/bbr_manager.cpp               \
     backbone_router/multicast_listeners_table.cpp \
     backbone_router/ndproxy_table.cpp             \
+    border_router/infra_if_platform.cpp           \
+    border_router/router_advertisement.cpp        \
+    border_router/routing_manager.cpp             \
     coap/coap.cpp                                 \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
@@ -346,6 +349,8 @@ HEADERS_COMMON                                  = \
     backbone_router/bbr_manager.hpp               \
     backbone_router/multicast_listeners_table.hpp \
     backbone_router/ndproxy_table.hpp             \
+    border_router/router_advertisement.hpp        \
+    border_router/routing_manager.hpp             \
     coap/coap.hpp                                 \
     coap/coap_message.hpp                         \
     coap/coap_secure.hpp                          \

@@ -74,6 +74,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1" ]
     }
 
+    if (openthread_config_border_routing_enable) {
+      defines += [ "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1" ]
+    }
+
     if (openthread_external_mbedtls != "") {
       defines += [ "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0" ]
     } else if (!openthread_config_enable_builtin_mbedtls_management) {
@@ -234,6 +238,7 @@ if (openthread_enable_core_config_args) {
         "OPENTHREAD_CONFIG_LOG_API=1",
         "OPENTHREAD_CONFIG_LOG_ARP=1",
         "OPENTHREAD_CONFIG_LOG_BBR=1",
+        "OPENTHREAD_CONFIG_LOG_BR=1",
         "OPENTHREAD_CONFIG_LOG_CLI=1",
         "OPENTHREAD_CONFIG_LOG_COAP=1",
         "OPENTHREAD_CONFIG_LOG_DUA=1",
@@ -342,6 +347,11 @@ openthread_core_files = [
   "backbone_router/multicast_listeners_table.hpp",
   "backbone_router/ndproxy_table.cpp",
   "backbone_router/ndproxy_table.hpp",
+  "border_router/infra_if_platform.cpp",
+  "border_router/router_advertisement.cpp",
+  "border_router/router_advertisement.hpp",
+  "border_router/routing_manager.cpp",
+  "border_router/routing_manager.hpp",
   "coap/coap.cpp",
   "coap/coap.hpp",
   "coap/coap_message.cpp",

@@ -300,6 +300,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_BR
+ *
+ * Define to Border Router (BR) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_BR
+#define OPENTHREAD_CONFIG_LOG_BR 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages.

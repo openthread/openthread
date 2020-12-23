@@ -64,6 +64,7 @@ add_library(openthread-posix
     backbone.cpp
     entropy.cpp
     hdlc_interface.cpp
+    infra_if.cpp
     logging.cpp
     misc.cpp
     multicast_routing.cpp

@@ -90,6 +90,9 @@ if (openthread_enable_core_config_args) {
     # Enable border router support
     openthread_config_border_router_enable = false
 
+    # Enable border routing support
+    openthread_config_border_routing_enable = false
+
     # Enable channel manager support
     openthread_config_channel_manager_enable = false
 

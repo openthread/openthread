@@ -87,6 +87,8 @@ public:
             kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
             kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
             kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
+            kTypeRouterSolicit    = OT_ICMP6_TYPE_ROUTER_SOLICIT,    ///< Router Solicitation
+            kTypeRouterAdvert     = OT_ICMP6_TYPE_ROUTER_ADVERT,     ///< Router Advertisement
         };
 
         /**
@@ -195,7 +197,6 @@ public:
          *
          */
         void SetSequence(uint16_t aSequence) { mData.m16[1] = HostSwap16(aSequence); }
-
     } OT_TOOL_PACKED_END;
 
     /**
