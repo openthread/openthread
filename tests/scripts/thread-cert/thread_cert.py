@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import binascii
 import json
 import logging
 import os
@@ -426,6 +427,11 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params = dict(DEFAULT_PARAMS, **params)
         else:
             params = DEFAULT_PARAMS.copy()
+
+        if 'active_dataset' not in params:
+            params['active_dataset'] = {'timestamp': 5}
+        if 'master_key' not in params['active_dataset']:
+            params['active_dataset']['master_key'] = binascii.hexlify(config.DEFAULT_MASTER_KEY).decode()
 
         return params
 
