@@ -37,18 +37,11 @@ proc setup_two_nodes {{childmode "r"} {should_spawn_node true}} {
 
     if {$should_spawn_node} {
         spawn_node 2
-    } else {
-        switch_node 2
-    }
-
-    # Sets up a Thread network with node 1 as the leader.
-    if {$should_spawn_node} {
         spawn_node 1
     } else {
         switch_node 1
     }
     setup_leader
-
     setup_node 2 $childmode "child"
 }
 
