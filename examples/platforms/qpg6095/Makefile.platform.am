@@ -32,9 +32,17 @@
 
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/qpg6095/libopenthread-qpg6095.a   \
-    $(top_srcdir)/third_party/Qorvo/qpg6095/libQorvoQPG6095.a            \
     $(NULL)
-
+if OPENTHREAD_ENABLE_FTD
+LDADD_COMMON                                                          += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6095/libQorvoQPG6095_ftd.a        \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_FTD
+if OPENTHREAD_ENABLE_MTD
+LDADD_COMMON                                                          += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6095/libQorvoQPG6095_mtd.a        \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_MTD
 LDFLAGS_COMMON                                                        += \
     -T $(top_srcdir)/examples/platforms/qpg6095/qpg6095.ld               \
     $(NULL)

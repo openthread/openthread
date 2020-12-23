@@ -27,12 +27,15 @@
 #
 
 .NOTPARALLEL:
+NAME           = QPG6095
+PREFIX_UC      = $(NAME)
+PREFIX_LC     := $(shell echo $(PREFIX_UC) | tr A-Z a-z)
 
 AR                              = arm-none-eabi-ar
-CCAS                            = $(CCPREFIX) arm-none-eabi-gcc
+CCAS                            = arm-none-eabi-gcc
 CPP                             = arm-none-eabi-cpp
-CC                              = $(CCPREFIX) arm-none-eabi-gcc
-CXX                             = $(CCPREFIX) arm-none-eabi-g++
+CC                              = arm-none-eabi-gcc
+CXX                             = arm-none-eabi-g++
 LD                              = arm-none-eabi-ld
 STRIP                           = arm-none-eabi-strip
 NM                              = arm-none-eabi-nm
@@ -42,63 +45,64 @@ OBJCOPY                         = arm-none-eabi-objcopy
 BuildJobs                      ?= 10
 GCCVersion                      = $(shell expr `$(CC) -dumpversion | cut -f1 -d.`)
 
-configure_OPTIONS                                 = \
-    --enable-cli                                    \
-    --enable-ftd                                    \
-    --enable-mtd                                    \
-    --enable-ncp                                    \
-    --enable-radio-only                             \
-    --enable-linker-map                             \
-    --with-examples=qpg6095                         \
-    MBEDTLS_CPPFLAGS="$(QPG6095_MBEDTLS_CPPFLAGS)"  \
+configure_OPTIONS                                    += \
+    --disable-tools                                     \
+    --enable-cli                                        \
+    --enable-ftd                                        \
+    --enable-mtd                                        \
+    --with-examples=$(PREFIX_LC)                        \
+    MBEDTLS_CPPFLAGS="$($(PREFIX_UC)_MBEDTLS_CPPFLAGS)" \
     $(NULL)
 
 TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
 AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-QPG6095_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-qpg6095-config.h\"'
-QPG6095_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-qpg6095-config-check.h\"'
-QPG6095_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/qpg6095/
-QPG6095_MBEDTLS_CPPFLAGS      = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
-QPG6095_MBEDTLS_CPPFLAGS     += -DMBEDTLS_USER_CONFIG_FILE='\"qpg6095-mbedtls-config.h\"'
-QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/examples/platforms/qpg6095/crypto
-QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls
-QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include
-QPG6095_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include/mbedtls
+$(PREFIX_UC)_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-$(PREFIX_LC)-config.h\"'
+$(PREFIX_UC)_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-$(PREFIX_LC)-config-check.h\"'
+$(PREFIX_UC)_CONFIG_FILE_CPPFLAGS += -I$(PWD)/examples/platforms/$(PREFIX_LC)/
+$(PREFIX_UC)_MBEDTLS_CPPFLAGS      = -DMBEDTLS_CONFIG_FILE='\"mbedtls-config.h\"'
+$(PREFIX_UC)_MBEDTLS_CPPFLAGS     += -DMBEDTLS_USER_CONFIG_FILE='\"$(PREFIX_LC)-mbedtls-config.h\"'
+$(PREFIX_UC)_MBEDTLS_CPPFLAGS     += -I$(PWD)/examples/platforms/$(PREFIX_LC)/crypto
+$(PREFIX_UC)_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls
+$(PREFIX_UC)_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include
+$(PREFIX_UC)_MBEDTLS_CPPFLAGS     += -I$(PWD)/third_party/mbedtls/repo/include/mbedtls
 
-COMMONCFLAGS                     := \
-    -fdata-sections                 \
-    -ffunction-sections             \
-    -Os                             \
-    -g                              \
-    $(QPG6095_CONFIG_FILE_CPPFLAGS) \
+COMMONCFLAGS                                         := \
+    -fdata-sections                                     \
+    -ffunction-sections                                 \
+    -Os                                                 \
+    $($(PREFIX_UC)_CONFIG_FILE_CPPFLAGS)                \
+    -Wall                                               \
+    -Wextra                                             \
     $(NULL)
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
 
-CPPFLAGS                       += \
-    $(COMMONCFLAGS)               \
-    $(target_CPPFLAGS)            \
+CPPFLAGS                                             += \
+    $(COMMONCFLAGS)                                     \
+    $(target_CPPFLAGS)                                  \
     $(NULL)
 
-CFLAGS                         += \
-    $(COMMONCFLAGS)               \
-    $(target_CFLAGS)              \
+CFLAGS                                               += \
+    $(COMMONCFLAGS)                                     \
+    $(target_CFLAGS)                                    \
     $(NULL)
 
-CXXFLAGS                       += \
-    $(COMMONCFLAGS)               \
-    $(target_CXXFLAGS)            \
-    -fno-exceptions               \
-    -fno-rtti                     \
+CXXFLAGS                                             += \
+    $(COMMONCFLAGS)                                     \
+    $(target_CXXFLAGS)                                  \
+    -fno-exceptions                                     \
+    -fno-rtti                                           \
     $(NULL)
 
-LDFLAGS                        += \
-    $(COMMONCFLAGS)               \
-    $(target_LDFLAGS)             \
-    -specs=nano.specs             \
-    -specs=nosys.specs            \
-    -Wl,--gc-sections             \
+LDFLAGS                                              += \
+    $(COMMONCFLAGS)                                     \
+    $(target_LDFLAGS)                                   \
+    -specs=nano.specs                                   \
+    -specs=nosys.specs                                  \
+    -Wl,--gc-sections                                   \
+    -nostdlib                                           \
+    -Wl,-Map=$(PREFIX_LC).map,--cref                    \
     $(NULL)
 
 ECHO                            := @echo
@@ -118,7 +122,7 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = qpg6095
+TargetTuple                     = $(PREFIX_LC)
 
 ARCHS                           = cortex-m4
 
@@ -137,13 +141,13 @@ JOBSFLAG := -j$(BuildJobs)
 #   arch - The architecture to configure.
 #
 define configure-arch
-$(ECHO) "  CONFIG   $(TargetTuple)..."
+$(ECHO) "  CONFIG   $(TargetTuple)"
 (cd $(BuildPath)/$(TargetTuple) && $(AbsTopSourceDir)/configure \
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
 CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" CCAS="$(CCAS)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" CCASFLAGS="$(CCASFLAGS)" LDFLAGS="$(LDFLAGS)" \
 --host=arm-none-eabi \
---prefix=/ \
---exec-prefix=/$(TargetTuple) \
+--prefix=/$(TargetTuple) \
+--program-prefix=$(TargetTuple)- \
 $(configure_OPTIONS))
 endef # configure-arch
 
@@ -179,8 +183,8 @@ endef # stage-arch
 # @FIXME: get the filenames of the targets of OBJCOPY (now they are hardcoded)
 define hex-arch
 $(ECHO) "  HEX       $(TargetTuple)"
-$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-mtd $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-mtd.hex
-$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-ftd $(AbsTopResultDir)/$(TargetTuple)/bin/ot-cli-ftd.hex
+$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(TargetTuple)/bin/$(TargetTuple)-ot-cli-mtd $(AbsTopResultDir)/$(TargetTuple)/bin/$(TargetTuple)-ot-cli-mtd.hex
+$(OBJCOPY) -O ihex $(AbsTopResultDir)/$(TargetTuple)/bin/$(TargetTuple)-ot-cli-ftd $(AbsTopResultDir)/$(TargetTuple)/bin/$(TargetTuple)-ot-cli-ftd.hex
 endef # hex-arch
 
 #

@@ -59,6 +59,8 @@ jobs:
         arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -103,6 +105,8 @@ jobs:
       INTER_OP: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -159,6 +163,8 @@ jobs:
       THREAD_VERSION: 1.2
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -199,6 +205,8 @@ jobs:
       VIRTUAL_TIME: 0
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
@@ -243,6 +251,8 @@ jobs:
       VERBOSE: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Build OTBR Docker
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
@@ -294,6 +304,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y lcov
