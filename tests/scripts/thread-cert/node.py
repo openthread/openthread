@@ -1908,7 +1908,7 @@ class NodeImpl:
 
             line = line[1:][:-1]
             line = [x.strip() for x in line.split('|')]
-            if len(line) != 8:
+            if len(line) < 9:
                 print("unexpected line %d: %s" % (i, line))
                 continue
 
@@ -1927,6 +1927,7 @@ class NodeImpl:
             lqout = int(line[5])
             age = int(line[6])
             emac = str(line[7])
+            link = int(line[8])
 
             router_table[id] = {
                 'rloc16': rloc16,
@@ -1936,6 +1937,7 @@ class NodeImpl:
                 'lqout': lqout,
                 'age': age,
                 'emac': emac,
+                'link': link,
             }
 
         return router_table

@@ -3492,8 +3492,8 @@ otError Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
 
         if (isTable)
         {
-            OutputLine("| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |");
-            OutputLine("+----+--------+----------+-----------+-------+--------+-----+------------------+");
+            OutputLine("| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     | Link |");
+            OutputLine("+----+--------+----------+-----------+-------+--------+-----+------------------+------+");
         }
 
         maxRouterId = otThreadGetMaxRouterId(mInstance);
@@ -3516,7 +3516,7 @@ otError Interpreter::ProcessRouter(uint8_t aArgsLength, char *aArgs[])
                 OutputFormat("| %3d ", routerInfo.mAge);
                 OutputFormat("| ");
                 OutputExtAddress(routerInfo.mExtAddress);
-                OutputLine(" |");
+                OutputLine(" | %4d |", routerInfo.mLinkEstablished);
             }
             else
             {
