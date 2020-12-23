@@ -97,16 +97,16 @@ otError P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
     mbedtls_pk_context   pk;
     mbedtls_ecp_keypair *keyPair;
     int                  ret;
-    size_t               len;
 
     SuccessOrExit(error = Parse(&pk));
 
     keyPair = mbedtls_pk_ec(pk);
 
-    ret = mbedtls_ecp_point_write_binary(&keyPair->grp, &keyPair->Q, MBEDTLS_ECP_PF_UNCOMPRESSED, &len,
-                                         aPublicKey.mData, sizeof(aPublicKey.mData));
+    ret = mbedtls_mpi_write_binary(&keyPair->Q.X, aPublicKey.mData, kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-    VerifyOrExit(len == sizeof(aPublicKey.mData), error = OT_ERROR_PARSE);
+
+    ret = mbedtls_mpi_write_binary(&keyPair->Q.Y, aPublicKey.mData + kMpiSize, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
 exit:
     mbedtls_pk_free(&pk);
@@ -170,7 +170,11 @@ otError P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSig
     ret = mbedtls_ecp_group_load(&ecdsa.grp, MBEDTLS_ECP_DP_SECP256R1);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    ret = mbedtls_ecp_point_read_binary(&ecdsa.grp, &ecdsa.Q, mData, sizeof(mData));
+    ret = mbedtls_mpi_read_binary(&ecdsa.Q.X, GetBytes(), kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_mpi_read_binary(&ecdsa.Q.Y, GetBytes() + kMpiSize, kMpiSize);
+    VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
+    ret = mbedtls_mpi_lset(&ecdsa.Q.Z, 1);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
     ret = mbedtls_mpi_read_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
