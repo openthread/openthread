@@ -294,9 +294,9 @@ otError Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
             sha256.Update(aNetworkId, aNetworkIdLength);
         }
 
-        sha256.Update(netIface, sizeof(netIface));
-        sha256.Update(reinterpret_cast<uint8_t *>(&dadCounter), sizeof(dadCounter));
-        sha256.Update(secretKey.m8, sizeof(IidSecretKey));
+        sha256.Update(netIface);
+        sha256.Update(dadCounter);
+        sha256.Update(secretKey);
         sha256.Finish(hash);
 
         aAddress.GetAddress().GetIid().SetBytes(hash.GetBytes());

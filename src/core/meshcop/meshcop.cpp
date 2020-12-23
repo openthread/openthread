@@ -291,7 +291,7 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId)
     Crypto::Sha256::Hash hash;
 
     sha256.Start();
-    sha256.Update(aEui64.m8, sizeof(aEui64));
+    sha256.Update(aEui64);
     sha256.Finish(hash);
 
     memcpy(&aJoinerId, hash.GetBytes(), sizeof(aJoinerId));

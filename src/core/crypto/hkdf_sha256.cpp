@@ -75,13 +75,13 @@ void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOu
 
         if (iter != 0)
         {
-            hmac.Update(hash.GetBytes(), sizeof(hash));
+            hmac.Update(hash);
         }
 
         hmac.Update(aInfo, aInfoLength);
 
         iter++;
-        hmac.Update(&iter, sizeof(iter));
+        hmac.Update(iter);
         hmac.Finish(hash);
 
         copyLength = (aOutputKeyLength > sizeof(hash)) ? sizeof(hash) : aOutputKeyLength;

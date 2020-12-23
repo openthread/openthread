@@ -33,6 +33,8 @@
 
 #include "hmac_sha256.hpp"
 
+#include "common/message.hpp"
+
 namespace ot {
 namespace Crypto {
 
@@ -54,9 +56,22 @@ void HmacSha256::Start(const uint8_t *aKey, uint16_t aKeyLength)
     mbedtls_md_hmac_starts(&mContext, aKey, aKeyLength);
 }
 
-void HmacSha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
+void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    mbedtls_md_hmac_update(&mContext, aBuf, aBufLength);
+    mbedtls_md_hmac_update(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+}
+
+void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Message::Chunk chunk;
+
+    aMessage.GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        Update(chunk.GetData(), chunk.GetLength());
+        aMessage.GetNextChunk(aLength, chunk);
+    }
 }
 
 void HmacSha256::Finish(Hash &aHash)

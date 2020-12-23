@@ -101,7 +101,7 @@ void TestEcdsaVector(void)
 
     printf("\nHash the message ----------------------------------------------------------\n");
     sha256.Start();
-    sha256.Update(kMessage, sizeof(kMessage));
+    sha256.Update(kMessage);
     sha256.Finish(hash);
 
     DumpBuffer("Hash", hash.GetBytes(), sizeof(hash));
@@ -153,7 +153,7 @@ void TestEdsaKeyGenerationSignAndVerify(void)
 
     printf("\nHash the message ----------------------------------------------------------\n");
     sha256.Start();
-    sha256.Update(reinterpret_cast<const uint8_t *>(kMessage), sizeof(kMessage) - 1);
+    sha256.Update(kMessage, sizeof(kMessage) - 1);
     sha256.Finish(hash);
 
     DumpBuffer("Hash", hash.GetBytes(), sizeof(hash));
@@ -167,7 +167,7 @@ void TestEdsaKeyGenerationSignAndVerify(void)
     printf("\nSignature was verified successfully.");
 
     sha256.Start();
-    sha256.Update(reinterpret_cast<const uint8_t *>(kMessage), sizeof(kMessage)); // include null char
+    sha256.Update(kMessage, sizeof(kMessage)); // include null char
     sha256.Finish(hash);
     VerifyOrQuit(publicKey.Verify(hash, signature) != OT_ERROR_NONE,
                  "PublicKey::Verify() passed for invalid signature");

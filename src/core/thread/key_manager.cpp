@@ -163,8 +163,8 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
     hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
 
     Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
-    hmac.Update(keySequenceBytes, sizeof(keySequenceBytes));
-    hmac.Update(kThreadString, sizeof(kThreadString));
+    hmac.Update(keySequenceBytes);
+    hmac.Update(kThreadString);
 
     hmac.Finish(aHashKeys.mHash);
 }
