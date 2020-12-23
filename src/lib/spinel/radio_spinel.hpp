@@ -651,6 +651,29 @@ public:
     otError SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
+     * This method sets the radio region code.
+     *
+     * @param[in]   aRegionCode  The radio region code.
+     *
+     * @retval  OT_ERROR_NONE             Successfully set region code.
+     * @retval  OT_ERROR_FAILED           Other platform specific errors.
+     *
+     */
+    otError SetRadioRegion(uint16_t aRegionCode);
+
+    /**
+     * This method gets the radio region code.
+     *
+     * @param[out]   aRegionCode  The radio region code.
+     *
+     * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+     * @retval  OT_ERROR_NONE             Successfully got region code.
+     * @retval  OT_ERROR_FAILED           Other platform specific errors.
+     *
+     */
+    otError GetRadioRegion(uint16_t *aRegionCode);
+
+    /**
      * This method checks whether the spinel interface is radio-only.
      *
      * @param[out] aSupportsRcpApiVersion   A reference to a boolean variable to update whether the list of spinel

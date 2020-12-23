@@ -83,7 +83,7 @@ check()
     # Cover setting a valid network interface name.
     readonly VALID_NETIF_NAME="wan$(date +%H%M%S)"
 
-    RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
+    RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
     if [[ ${DAEMON} == 1 ]]; then
         sudo "$PWD/output/posix/bin/ot-daemon" -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
@@ -112,6 +112,9 @@ check()
 spawn ${OT_CLI_CMD}
 send "radiourl\r\n"
 expect "${RADIO_URL}"
+expect "Done"
+send "region\r\n"
+expect "US"
 expect "Done"
 send "panid 0xface\r\n"
 expect "Done"

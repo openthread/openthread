@@ -2262,6 +2262,36 @@ exit:
     return error;
 }
 
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_REGION_CODE>(void)
+{
+    uint16_t regionCode;
+    otError  error = OT_ERROR_NONE;
+
+    error = otPlatRadioGetRegion(mInstance, &regionCode);
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteUint16(regionCode);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_REGION_CODE>(void)
+{
+    uint16_t regionCode;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(regionCode));
+    error = otPlatRadioSetRegion(mInstance, regionCode);
+
+exit:
+    return error;
+}
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TEST_ASSERT>(void)
 {
 #ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION

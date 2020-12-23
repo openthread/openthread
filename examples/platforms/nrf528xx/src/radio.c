@@ -108,9 +108,10 @@ static otInstance *  sInstance = NULL;
 static otRadioFrame sAckFrame;
 static bool         sAckedWithFramePending;
 
-static int8_t sMaxTxPowerTable[OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN + 1];
-static int8_t sDefaultTxPower;
-static int8_t sLnaGain = 0;
+static int8_t   sMaxTxPowerTable[OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN + 1];
+static int8_t   sDefaultTxPower;
+static int8_t   sLnaGain    = 0;
+static uint16_t sRegionCode = 0;
 
 static uint32_t sEnergyDetectionTime;
 static uint8_t  sEnergyDetectionChannel;
@@ -1361,4 +1362,30 @@ int8_t nrf5GetChannelMaxTransmitPower(uint8_t aChannel)
     }
 
     return power;
+}
+
+otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sRegionCode = aRegionCode;
+    nrf5HandleRegionChanged(aRegionCode);
+    return OT_ERROR_NONE;
+}
+
+otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aRegionCode != NULL, error = OT_ERROR_INVALID_ARGS);
+
+    *aRegionCode = sRegionCode;
+exit:
+    return error;
+}
+
+OT_TOOL_WEAK void nrf5HandleRegionChanged(uint16_t aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aRegionCode);
 }
