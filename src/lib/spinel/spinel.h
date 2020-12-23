@@ -377,7 +377,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 2
+#define SPINEL_RCP_API_VERSION 3
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION

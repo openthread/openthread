@@ -117,7 +117,7 @@ static bool           sTxWait      = false;
 static int8_t         sTxPower     = 0;
 static int8_t         sCcaEdThresh = -74;
 static int8_t         sLnaGain     = 0;
-static uint16_t       sRegionCode  = 0x5858; // "XX"
+static uint16_t       sRegionCode  = 0;
 
 enum
 {

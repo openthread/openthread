@@ -111,7 +111,7 @@ static bool         sAckedWithFramePending;
 static int8_t   sMaxTxPowerTable[OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX - OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN + 1];
 static int8_t   sDefaultTxPower;
 static int8_t   sLnaGain    = 0;
-static uint16_t sRegionCode = 0x5858; // "XX"
+static uint16_t sRegionCode = 0;
 
 static uint32_t sEnergyDetectionTime;
 static uint8_t  sEnergyDetectionChannel;
