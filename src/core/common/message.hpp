@@ -54,6 +54,13 @@
 
 namespace ot {
 
+namespace Crypto {
+
+class Sha256;
+class HmacSha256;
+
+} // namespace Crypto
+
 /**
  * @addtogroup core-message
  *
@@ -294,6 +301,8 @@ protected:
 class Message : public Buffer
 {
     friend class Checksum;
+    friend class Crypto::HmacSha256;
+    friend class Crypto::Sha256;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;

@@ -43,6 +43,9 @@
 #include "crypto/sha256.hpp"
 
 namespace ot {
+
+class Message;
+
 namespace Crypto {
 
 /**
@@ -66,19 +69,19 @@ public:
     typedef Sha256::Hash Hash;
 
     /**
-     * Constructor for initialization of mbedtls_md_context_t.
+     * Constructor for `HmacSha256`.
      *
      */
     HmacSha256(void);
 
     /**
-     * Destructor for freeing of mbedtls_md_context_t.
+     * Destructor for `HmacSha256`.
      *
      */
     ~HmacSha256(void);
 
     /**
-     * This method sets the key.
+     * This method sets the key and starts the HMAC computation.
      *
      * @param[in]  aKey        A pointer to the key.
      * @param[in]  aKeyLength  The key length in bytes.
@@ -93,7 +96,31 @@ public:
      * @param[in]  aBufLength  The length of @p aBuf in bytes.
      *
      */
-    void Update(const uint8_t *aBuf, uint16_t aBufLength);
+    void Update(const void *aBuf, uint16_t aBufLength);
+
+    /**
+     * This method inputs an object (treated as a sequence of bytes) into the HMAC computation.
+     *
+     * @tparam    ObjectType   The object type.
+     *
+     * @param[in] aObject      A reference to the object.
+     *
+     */
+    template <typename ObjectType> void Update(const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+        return Update(&aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method inputs the bytes read from a given message into the HMAC computation.
+     *
+     * @param[in] aMessage    The message to read the data from.
+     * @param[in] aOffset     The offset into @p aMessage to start to read.
+     * @param[in] aLength     The number of bytes to read.
+     *
+     */
+    void Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method finalizes the hash computation.
