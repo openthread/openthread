@@ -426,6 +426,7 @@ class NodeImpl:
 
         super().__init__(nodeid, **kwargs)
 
+        self.set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
         self.set_extpanid(config.EXTENDED_PANID)
         self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
 
@@ -1405,6 +1406,7 @@ class NodeImpl:
     def reset(self):
         self.send_command('reset')
         time.sleep(0.1)
+        self.set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
 
     def set_router_selection_jitter(self, jitter):
         cmd = 'routerselectionjitter %d' % jitter

@@ -37,11 +37,7 @@
 source "tests/scripts/expect/_common.exp"
 
 spawn_node 1
-
-set timeout 1
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "ifconfig up\n"
 expect "Done"
@@ -55,9 +51,7 @@ expect "Done"
 set extaddr1 [get_extaddr]
 
 spawn_node 2 cli
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "ifconfig up\n"
 expect "Done"
@@ -69,9 +63,7 @@ wait_for "state" "router"
 sleep 3
 
 spawn_node 3 cli
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "macfilter addr add ${extaddr1}\n"
 expect "Done"
@@ -91,9 +83,7 @@ sleep 4
 set extaddr3 [get_extaddr]
 
 spawn_node 4 cli
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "mode rn\n"
 expect "Done"
