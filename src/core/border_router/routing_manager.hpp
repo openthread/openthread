@@ -188,7 +188,7 @@ private:
      *           nullptr if we should no longer advertise an on-link prefix.
      *
      */
-    const Ip6::Prefix *EvaluateOnLinkPrefix(void);
+    const Ip6::Prefix *EvaluateOnLinkPrefix(void) const;
 
     /**
      * This method publishes the local OMR prefix in Thread network.
@@ -214,6 +214,9 @@ private:
      * prefix on infra links.
      *
      * @sa HandleRouterAdvertisement
+     *
+     * @retval  OT_ERROR_NONE    Successfully sent the message.
+     * @retval  OT_ERROR_FAILED  Failed to send the message.
      *
      */
     otError SendRouterSolicitation(void);

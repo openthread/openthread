@@ -695,10 +695,10 @@ otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const ot
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
-                               const otIp6Address *aDestAddress,
-                               const uint8_t *     aBuffer,
-                               uint16_t            aBufferLength)
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t *     aBuffer,
+                                 uint16_t            aBufferLength)
 {
     OT_UNUSED_VARIABLE(aInfraIfIndex);
     OT_UNUSED_VARIABLE(aDestAddress);

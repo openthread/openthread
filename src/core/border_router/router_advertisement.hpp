@@ -97,7 +97,7 @@ public:
     /**
      * This method returns the type of this option.
      *
-     * @return  The option type.
+     * @returns  The option type.
      *
      */
     Type GetType(void) const { return mType; }
@@ -116,19 +116,19 @@ public:
     /**
      * This method returns the length of the option (in bytes).
      *
-     * @return  The length of the option.
+     * @returns  The length of the option.
      *
      */
     uint16_t GetLength(void) const { return mLength * 8; }
 
     /**
-     * This helper method returns the starting address of the next valid option in the buffer.
+     * This helper method returns a pointer to the next valid option in the buffer.
      *
      * @param[in]  aCurOption     The current option. Use nullptr to get the first option.
      * @param[in]  aBuffer        The buffer within which the options are held.
      * @param[in]  aBufferLength  The length of the buffer.
      *
-     * @returns  The address of the next option if there are a valid one. Otherwise, nullptr.
+     * @returns  A pointer to the next option if there are a valid one. Otherwise, nullptr.
      *
      */
     static const Option *GetNextOption(const Option *aCurOption, const uint8_t *aBuffer, uint16_t aBufferLength);
@@ -136,7 +136,7 @@ public:
     /**
      * This method tells whether this option is valid.
      *
-     * @return  A boolean indicates whether this option is valid.
+     * @return  A boolean that indicates whether this option is valid.
      *
      */
     bool IsValid(void) const { return mLength > 0; }
@@ -193,7 +193,7 @@ public:
     /**
      * THis method returns the valid lifetime of the prefix in seconds.
      *
-     * @return  The valid lifetime in seconds.
+     * @returns  The valid lifetime in seconds.
      *
      */
     uint32_t GetValidLifetime(void) const { return HostSwap32(mValidLifetime); }
@@ -225,7 +225,7 @@ public:
     /**
      * This method tells whether this option is valid.
      *
-     * @return  A boolean indicates whether this option is valid.
+     * @returns  A boolean indicates whether this option is valid.
      *
      */
     bool IsValid(void) const
@@ -286,7 +286,7 @@ public:
     /**
      * This method tells whether this option is valid.
      *
-     * @return  A boolean indicates whether this option is valid.
+     * @returns  A boolean indicates whether this option is valid.
      *
      */
     bool IsValid(void) const

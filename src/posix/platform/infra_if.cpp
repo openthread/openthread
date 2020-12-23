@@ -57,17 +57,18 @@ static uint32_t     sInfraIfIndex       = 0;
 static int          sInfraIfIcmp6Socket = -1;
 static otIp6Address sInfraIfLinkLocalAddr;
 
-otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
-                               const otIp6Address *aDestAddress,
-                               const uint8_t *     aBuffer,
-                               uint16_t            aBufferLength)
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t *     aBuffer,
+                                 uint16_t            aBufferLength)
 {
     otError error = OT_ERROR_NONE;
 
     struct iovec        iov;
     struct in6_pktinfo *packetInfo;
 
-    uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo))];
+    int                 hopLimit = 255;
+    uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo)) + CMSG_SPACE(sizeof(hopLimit))];
     struct msghdr       msgHeader;
     struct cmsghdr *    cmsgPointer;
     ssize_t             rval;
@@ -97,7 +98,7 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
     msgHeader.msg_control    = cmsgBuffer;
     msgHeader.msg_controllen = sizeof(cmsgBuffer);
 
-    // Specify the interface
+    // Specify the interface.
     cmsgPointer             = CMSG_FIRSTHDR(&msgHeader);
     cmsgPointer->cmsg_level = IPPROTO_IPV6;
     cmsgPointer->cmsg_type  = IPV6_PKTINFO;
@@ -105,6 +106,13 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
     packetInfo              = (struct in6_pktinfo *)CMSG_DATA(cmsgPointer);
     memset(packetInfo, 0, sizeof(*packetInfo));
     packetInfo->ipi6_ifindex = sInfraIfIndex;
+
+    // Per section 6.1.2 of RFC 4861, we need to send the ICMPv6 message with IP Hop Limit 255.
+    cmsgPointer             = CMSG_NXTHDR(&msgHeader, cmsgPointer);
+    cmsgPointer->cmsg_level = IPPROTO_IPV6;
+    cmsgPointer->cmsg_type  = IPV6_HOPLIMIT;
+    cmsgPointer->cmsg_len   = CMSG_LEN(sizeof(hopLimit));
+    memcpy(CMSG_DATA(cmsgPointer), &hopLimit, sizeof(hopLimit));
 
     rval = sendmsg(sInfraIfIcmp6Socket, &msgHeader, 0);
     if (rval < 0)
@@ -330,13 +338,13 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
     VerifyOrExit(ifIndex == sInfraIfIndex);
 
     // We currently accept only RA & RS messages for the Border Router and it requires that
-    // the hoplimit must be 255.
-    VerifyOrExit(hopLimit == 255);
+    // the hoplimit must be 255 and the source address must be a link-local address.
+    VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr));
 
     // Drop multicast messages sent by ourselves.
     VerifyOrExit(!otIp6IsAddressEqual(&sInfraIfLinkLocalAddr, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr)));
-    otPlatInfraIfRecvIcmp6(aInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
-                           bufferLength);
+    otPlatInfraIfRecvIcmp6Nd(aInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
+                             bufferLength);
 
     error = OT_ERROR_NONE;
 

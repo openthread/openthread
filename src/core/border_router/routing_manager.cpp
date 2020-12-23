@@ -61,6 +61,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsRunning(false)
     , mInfraIfIndex(0)
+    , mAdvertisedOmrPrefixNum(0)
+    , mAdvertisedOnLinkPrefix(nullptr)
     , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer, this)
     , mRouterAdvertisementCount(0)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer, this)
@@ -69,10 +71,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
 {
     mLocalOmrPrefix.Clear();
     memset(mAdvertisedOmrPrefixes, 0, sizeof(mAdvertisedOmrPrefixes));
-    mAdvertisedOmrPrefixNum = 0;
 
     mLocalOnLinkPrefix.Clear();
-    mAdvertisedOnLinkPrefix = nullptr;
     mDiscoveredOnLinkPrefix.Clear();
 }
 
@@ -102,10 +102,11 @@ otError RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 
         otLogNoteBr("no valid OMR prefix found in settings, generating new one");
 
-        if (randomOmrPrefix.GenerateRandomUla() != OT_ERROR_NONE)
+        error = randomOmrPrefix.GenerateRandomUla();
+        if (error != OT_ERROR_NONE)
         {
             otLogCritBr("failed to generate random OMR prefix");
-            ExitNow(error = OT_ERROR_FAILED);
+            ExitNow();
         }
 
         mLocalOmrPrefix.Set(randomOmrPrefix);
@@ -127,10 +128,11 @@ otError RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 
         otLogNoteBr("no valid on-link prefix found in settings, generating new one");
 
-        if (randomOnLinkPrefix.GenerateRandomUla() != OT_ERROR_NONE)
+        error = randomOnLinkPrefix.GenerateRandomUla();
+        if (error != OT_ERROR_NONE)
         {
             otLogCritBr("failed to generate random on-link prefix");
-            ExitNow(error = OT_ERROR_FAILED);
+            ExitNow();
         }
 
         randomOnLinkPrefix.m8[6] = 0;
@@ -205,7 +207,7 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
         HandleRouterSolicit(aSrcAddress, aBuffer, aBufferLength);
         break;
     default:
-        ExitNow();
+        break;
     }
 
 exit:
@@ -299,17 +301,14 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
 
         // The `newOmrPrefixNum` is zero when we failed to publish the local OMR prefix.
     }
-    else
+    else if (publishedLocalOmrPrefix != nullptr && smallestOmrPrefix != publishedLocalOmrPrefix)
     {
-        if (publishedLocalOmrPrefix != nullptr && smallestOmrPrefix != publishedLocalOmrPrefix)
-        {
-            otLogInfoBr("EvaluateOmrPrefix: there is already a smaller OMR prefix %s in the Thread network",
-                        smallestOmrPrefix->ToString().AsCString());
-            UnpublishLocalOmrPrefix();
+        otLogInfoBr("EvaluateOmrPrefix: there is already a smaller OMR prefix %s in the Thread network",
+                    smallestOmrPrefix->ToString().AsCString());
+        UnpublishLocalOmrPrefix();
 
-            // Remove the local OMR prefix from the list by overwriting it with the last one.
-            *publishedLocalOmrPrefix = aNewOmrPrefixes[--newOmrPrefixNum];
-        }
+        // Remove the local OMR prefix from the list by overwriting it with the last one.
+        *publishedLocalOmrPrefix = aNewOmrPrefixes[--newOmrPrefixNum];
     }
 
     return newOmrPrefixNum;
@@ -374,7 +373,7 @@ bool RoutingManager::ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefi
     return ret;
 }
 
-const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
+const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void) const
 {
     const Ip6::Prefix *newOnLinkPrefix = nullptr;
 
@@ -416,7 +415,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
         // This is the very exceptional case and happens only when we failed to publish
         // our local OMR prefix to the Thread network. We schedule the Router Advertisement
         // timer to re-evaluate our routing policy in the future.
-        otLogWarnBr("No OMR prefix advertised! Start Router Advertisement timer for future evaluation");
+        otLogWarnBr("no OMR prefix advertised! Start Router Advertisement timer for future evaluation");
     }
 
     // 2. Schedule Router Advertisement timer with random interval.
@@ -430,7 +429,7 @@ void RoutingManager::EvaluateRoutingPolicy(void)
             nextSendTime = kMaxInitRtrAdvInterval;
         }
 
-        otLogInfoBr("Router Advertisement scheduled in %u seconds", nextSendTime);
+        otLogInfoBr("router advertisement scheduled in %u seconds", nextSendTime);
         mRouterAdvertisementTimer.Start(nextSendTime * 1000);
     }
 
@@ -458,8 +457,8 @@ otError RoutingManager::SendRouterSolicitation(void)
     OT_ASSERT(IsInitialized());
 
     destAddress.SetToLinkLocalAllRoutersMulticast();
-    return otPlatInfraIfSendIcmp6(mInfraIfIndex, &destAddress, reinterpret_cast<const uint8_t *>(&routerSolicit),
-                                  sizeof(routerSolicit));
+    return otPlatInfraIfSendIcmp6Nd(mInfraIfIndex, &destAddress, reinterpret_cast<const uint8_t *>(&routerSolicit),
+                                    sizeof(routerSolicit));
 }
 
 void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
@@ -566,7 +565,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
         ++mRouterAdvertisementCount;
 
         destAddress.SetToLinkLocalAllNodesMulticast();
-        error = otPlatInfraIfSendIcmp6(mInfraIfIndex, &destAddress, buffer, bufferLength);
+        error = otPlatInfraIfSendIcmp6Nd(mInfraIfIndex, &destAddress, buffer, bufferLength);
 
         if (error == OT_ERROR_NONE)
         {
@@ -614,7 +613,7 @@ void RoutingManager::HandleRouterAdvertisementTimer(Timer &aTimer)
 
 void RoutingManager::HandleRouterAdvertisementTimer(void)
 {
-    otLogInfoBr("Router Advertisement timer triggered");
+    otLogInfoBr("router advertisement timer triggered");
 
     EvaluateRoutingPolicy();
 }
@@ -626,7 +625,7 @@ void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
 
 void RoutingManager::HandleRouterSolicitTimer(void)
 {
-    otLogInfoBr("Router Solicit timeouted");
+    otLogInfoBr("router solicitation times out");
 
     if (mRouterSolicitCount < kMaxRtrSolicitations)
     {
@@ -638,7 +637,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
 
         if (error == OT_ERROR_NONE)
         {
-            otLogDebgBr("Successfully sent %uth Router Solicitation", mRouterSolicitCount);
+            otLogDebgBr("successfully sent %uth Router Solicitation", mRouterSolicitCount);
         }
         else
         {
@@ -649,7 +648,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         nextSolicitationDelay =
             (mRouterSolicitCount == kMaxRtrSolicitations) ? kMaxRtrSolicitationDelay : kRtrSolicitationInterval;
 
-        otLogDebgBr("Router Solicitation timer scheduled in %u seconds", nextSolicitationDelay);
+        otLogDebgBr("router solicitation timer scheduled in %u seconds", nextSolicitationDelay);
         mRouterSolicitTimer.Start(nextSolicitationDelay * 1000);
     }
     else
@@ -772,7 +771,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
             mDiscoveredOnLinkPrefix = prefix;
 
             // Stop Router Solicitation if we found a valid on-link prefix.
-            // Otherwise, we wait till the Router Solicitation process timeouted.
+            // Otherwise, we wait till the Router Solicitation process times out.
             // So the maximum delay before the Border Router starts advertising
             // its own on-link prefix is 9 (4 + 4 + 1) seconds.
             mRouterSolicitTimer.Stop();

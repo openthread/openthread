@@ -500,7 +500,7 @@ extern char gBackboneNetifName[IFNAMSIZ];
 extern unsigned int gBackboneNetifIndex;
 
 /**
- * Thid function initializes the infrastructrue interface.
+ * This function initializes the infrastructure interface.
  *
  * @param[in]  aInstance  The OpenThread instance.
  * @param[in]  aIfName    The name of the infrastructure interface.
@@ -524,7 +524,7 @@ void platformInfraIfDeinit(void);
 void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
 
 /**
- * This function processes possible events on the infrastructrue interface.
+ * This function processes possible events on the infrastructure interface.
  *
  * @param[in]  aInstance   The OpenThread instance.
  * @param[in]  aReadFdSet  The fd set which may contain read vents.
@@ -535,7 +535,7 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
 /**
  * This function returns the index of the infrastructure interface.
  *
- * @retval  The index of the infrastructure interface. 0 indicates invalid index.
+ * @returns  The index of the infrastructure interface. 0 indicates invalid index.
  *
  */
 uint32_t platformInfraIfGetIndex(void);

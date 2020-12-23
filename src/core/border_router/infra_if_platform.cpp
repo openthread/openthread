@@ -41,11 +41,11 @@
 
 using namespace ot;
 
-extern "C" void otPlatInfraIfRecvIcmp6(otInstance *        aInstance,
-                                       uint32_t            aInfraIfIndex,
-                                       const otIp6Address *aSrcAddress,
-                                       const uint8_t *     aBuffer,
-                                       uint16_t            aBufferLength)
+extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
+                                         uint32_t            aInfraIfIndex,
+                                         const otIp6Address *aSrcAddress,
+                                         const uint8_t *     aBuffer,
+                                         uint16_t            aBufferLength)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 

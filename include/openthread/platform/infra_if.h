@@ -47,24 +47,32 @@ extern "C" {
 #endif
 
 /**
- * This method sends an ICMPv6 message on given infrastructure interface.
+ * This method sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
  *
- * @param[in]  aInfraIfIndex  The index of the infrastructure interface.
+ * See RFC 4861: https://tools.ietf.org/html/rfc4861.
+ *
+ * @param[in]  aInfraIfIndex  The index of the infrastructure interface this message is sent to.
  * @param[in]  aDestAddress   The destination address this message is sent to.
  * @param[in]  aBuffer        The ICMPv6 message buffer.
  * @param[in]  aBufferLength  The length of the message buffer.
+ *
+ * @note  Per RFC 4861, the implementation should send the message with IPv6 link-local source address
+ *        of interface @p aInfraIfIndex and IP Hop Limit 255.
  *
  * @retval OT_ERROR_NONE    Successfully sent the ICMPv6 message.
  * @retval OT_ERROR_FAILED  Failed to send the ICMPv6 message.
  *
  */
-otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
-                               const otIp6Address *aDestAddress,
-                               const uint8_t *     aBuffer,
-                               uint16_t            aBufferLength);
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t *     aBuffer,
+                                 uint16_t            aBufferLength);
 
 /**
- * The infra interface driver calls this method to notify OpenThread that an ICMPv6 message is received.
+ * The infra interface driver calls this method to notify OpenThread
+ * that an ICMPv6 Neighbor Discovery message is received.
+ *
+ * See RFC 4861: https://tools.ietf.org/html/rfc4861.
  *
  * @param[in]  aInstance      The OpenThread instance structure.
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface on which the ICMPv6 message is received.
@@ -72,14 +80,17 @@ otError otPlatInfraIfSendIcmp6(uint32_t            aInfraIfIndex,
  * @param[in]  aBuffer        The ICMPv6 message buffer.
  * @param[in]  aBufferLength  The length of the ICMPv6 message buffer.
  *
- * @note  ICMPv6 message received from current infrastructure interface via multicast loopback should not be passed in.
+ * @note  Per RFC 4861, the caller should enforce that the source address MUST be a IPv6 link-local
+ *        address and the IP Hop Limit MUST be 255.
+ *
+ * @note  ICMPv6 message received from @p aInfraIfIndex via multicast loopback should not be passed in.
  *
  */
-extern void otPlatInfraIfRecvIcmp6(otInstance *        aInstance,
-                                   uint32_t            aInfraIfIndex,
-                                   const otIp6Address *aSrcAddress,
-                                   const uint8_t *     aBuffer,
-                                   uint16_t            aBufferLength);
+extern void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
+                                     uint32_t            aInfraIfIndex,
+                                     const otIp6Address *aSrcAddress,
+                                     const uint8_t *     aBuffer,
+                                     uint16_t            aBufferLength);
 
 #ifdef __cplusplus
 } // extern "C"
