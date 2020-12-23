@@ -159,16 +159,17 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         # Step 5: The DUT MUST send a multicast MLE Data Response,
         #         including at least three Prefix TLVs (Prefix 1, Prefix2,
         #         and Prefix 3).
-        _dv_pkt = pkts.filter_wpan_src64(ROUTER).\
-            filter_LLANMA().\
-            filter_mle_cmd(MLE_DATA_RESPONSE).\
-            filter(lambda p: {
-                              Ipv6Addr(PREFIX_2001[:-3]),
-                              Ipv6Addr(PREFIX_2002[:-3]),
-                              Ipv6Addr(PREFIX_2003[:-3])
-                             } == set(p.thread_nwd.tlv.prefix)
-                   ).\
-            must_next()
+        with pkts.save_index():
+            _dv_pkt = pkts.filter_wpan_src64(ROUTER).\
+                filter_LLANMA().\
+                filter_mle_cmd(MLE_DATA_RESPONSE).\
+                filter(lambda p: {
+                                  Ipv6Addr(PREFIX_2001[:-3]),
+                                  Ipv6Addr(PREFIX_2002[:-3]),
+                                  Ipv6Addr(PREFIX_2003[:-3])
+                                 } <= set(p.thread_nwd.tlv.prefix)
+                       ).\
+                must_next()
 
         # Step 6: MED automatically sends MLE Child Update Request to its parent
         #         (DUT), reporting its configured global addresses in the Address
@@ -183,6 +184,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         _pkt = pkts.filter_wpan_src64(MED).\
             filter_wpan_dst64(ROUTER).\
             filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+            filter(lambda p: len(p.mle.tlv.addr_reg_iid) >= 4).\
             must_next()
         pkts.filter_wpan_src64(ROUTER).\
             filter_wpan_dst64(MED).\
@@ -192,7 +194,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
                              } < set(p.mle.tlv.type) and\
-                   len(p.mle.tlv.addr_reg_iid) > 0 and\
+                   len(p.mle.tlv.addr_reg_iid) >= 3 and\
                    set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                    ).\
             must_next()
@@ -240,6 +242,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
         _pkt = pkts.filter_wpan_src64(SED).\
             filter_wpan_dst64(ROUTER).\
             filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).\
+            filter(lambda p: len(p.mle.tlv.addr_reg_iid) >= 3).\
             must_next()
         pkts.filter_wpan_src64(ROUTER).\
             filter_wpan_dst64(SED).\
@@ -249,7 +252,7 @@ class Cert_7_1_5_BorderRouterAsRouter(thread_cert.TestCase):
                               MODE_TLV,
                               ADDRESS_REGISTRATION_TLV
                              } < set(p.mle.tlv.type) and\
-                   len(p.mle.tlv.addr_reg_iid) > 0 and\
+                   len(p.mle.tlv.addr_reg_iid) >= 2 and\
                    set(p.mle.tlv.addr_reg_iid) < set(_pkt.mle.tlv.addr_reg_iid)
                    ).\
             must_next()
