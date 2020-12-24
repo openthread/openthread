@@ -153,6 +153,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 is_bbr=params['is_bbr'],
             )
 
+            node.set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
+
             self.nodes[i] = node
 
             if node.is_host:
@@ -185,6 +187,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_timeout(params['timeout'])
 
             if 'active_dataset' in params:
+                if 'master_key' not in params['active_dataset']:
+                    params['active_dataset']['master_key'] = binascii.hexlify(config.DEFAULT_MASTER_KEY).decode()
                 self.nodes[i].set_active_dataset(params['active_dataset']['timestamp'],
                                                  panid=params['active_dataset'].get('panid'),
                                                  channel=params['active_dataset'].get('channel'),
@@ -427,11 +431,6 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             params = dict(DEFAULT_PARAMS, **params)
         else:
             params = DEFAULT_PARAMS.copy()
-
-        if 'active_dataset' not in params:
-            params['active_dataset'] = {'timestamp': 5}
-        if 'master_key' not in params['active_dataset']:
-            params['active_dataset']['master_key'] = binascii.hexlify(config.DEFAULT_MASTER_KEY).decode()
 
         return params
 
