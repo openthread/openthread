@@ -168,7 +168,7 @@ EOF
     fi
 
     prefix=$(grep -aoP 'Mesh Local Prefix: \K[0-9a-f:]+(?=::\/64)' $OT_OUTPUT | tr -d '\r\n')
-    LEADER_ALOC="$prefix:ff:fe00:fc00"
+    LEADER_ALOC="$prefix::ff:fe00:fc00"
     # Retrievie test resource through application CoAP
     coap_response=$(coap-client -B 5 -m GET "coap://[${LEADER_ALOC}]:5683/TestResource")
     echo "CoAP response is: ${coap_response}"
