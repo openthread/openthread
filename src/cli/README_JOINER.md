@@ -18,7 +18,7 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 
 Usage: `joiner help`
 
-Print dataset help menu.
+Print joiner help menu.
 
 ```bash
 > joiner help
