@@ -53,12 +53,13 @@ wpan.Node.init_all_nodes()
 # Test implementation
 
 # default values after reset
-DEFAULT_KEY = '[00112233445566778899AABBCCDDEEFF]'
+DEFAULT_KEY = '[00000000000000000000000000000000]'
 DEFAULT_NAME = '"OpenThread"'
 DEFAULT_PANID = '0xFFFF'
-DEFAULT_XPANID = '0xDEAD00BEEF00CAFE'
+DEFAULT_XPANID = '0x0000000000000000'
 
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
+verify(node.get(wpan.WPAN_KEY) == DEFAULT_KEY)
 verify(node.get(wpan.WPAN_NAME) == DEFAULT_NAME)
 verify(node.get(wpan.WPAN_PANID) == DEFAULT_PANID)
 verify(node.get(wpan.WPAN_XPANID) == DEFAULT_XPANID)

@@ -34,7 +34,6 @@
 #include "key_manager.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"

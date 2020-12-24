@@ -53,6 +53,9 @@ expect "Done"
 send "udp bind :: 1234\n"
 expect "Done"
 
+send "dataset active\n"
+expect "Mesh Local Prefix: ([0-9a-f:]*)::\/64"
+
 send "udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234\n"
 expect "Done"
 

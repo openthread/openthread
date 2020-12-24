@@ -128,6 +128,8 @@ expect "leader"
 expect "Done"
 send "extaddr\r\n"
 expect "Done"
+send "dataset active\r\n"
+expect "Done"
 send "ipaddr\r\n"
 expect "Done"
 send "coex\r\n"
@@ -165,7 +167,8 @@ EOF
             || die 'multicast group join failed'
     fi
 
-    LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
+    prefix=$(grep -a 'Mesh Local Prefix:' $OT_OUTPUT | sed -E 's/Mesh Local Prefix: ([0-9a-f:]*)::\/64/\1/')
+    LEADER_ALOC="$prefix:ff:fe00:fc00"
     # Retrievie test resource through application CoAP
     coap_response=$(coap-client -B 5 -m GET coap://[${LEADER_ALOC}]:5683/TestResource)
     echo "CoAP response is: ${coap_response}"
