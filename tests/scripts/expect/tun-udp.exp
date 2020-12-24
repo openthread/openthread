@@ -54,9 +54,11 @@ send "udp bind :: 1234\n"
 expect "Done"
 
 send "dataset active\n"
-expect "Mesh Local Prefix: ([0-9a-f:]*)::\/64"
+expect -re {Mesh Local Prefix: ([0-9a-f:]*)::\/64}
+set prefix $expect_out(1,string)
+expect "Done"
 
-send "udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234\n"
+send "udp connect $prefix:bb1:ebd6:ad10:f33 1234\n"
 expect "Done"
 
 send "udp connect :: 1\n"
