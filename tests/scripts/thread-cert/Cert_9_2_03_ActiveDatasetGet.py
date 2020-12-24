@@ -57,6 +57,7 @@ LEADER = 2
 
 class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
     SUPPORT_NCP = False
+    USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         COMMISSIONER: {
@@ -83,7 +84,6 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
         self.nodes[COMMISSIONER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
-        self.simulator.get_messages_sent_by(LEADER)
 
         self.collect_rlocs()
         self.collect_rloc16s()
@@ -152,7 +152,7 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
         #             PAN ID TLV
         #             PSKc TLV
         #             Security Policy TLV
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_ACTIVE_GET_URI).\
             filter(lambda p: {
                               NM_ACTIVE_TIMESTAMP_TLV,

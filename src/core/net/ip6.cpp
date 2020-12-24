@@ -462,8 +462,7 @@ otError Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t 
         header.SetHopLimit(static_cast<uint8_t>(kDefaultHopLimit));
     }
 
-    if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast() ||
-        Get<Mle::Mle>().IsAnycastLocator(aMessageInfo.GetSockAddr()))
+    if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
     {
         const NetifUnicastAddress *source = SelectSourceAddress(aMessageInfo);
 

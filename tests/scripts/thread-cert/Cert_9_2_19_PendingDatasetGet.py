@@ -131,7 +131,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             CON POST coap://<L>:MM/c/pg
         #         CoAP Payload
         #             <empty> - get all Active Operational Dataset parameters
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_get_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_PENDING_GET_URI).\
             filter(lambda p: p.coap.tlv.type is nullField).\
@@ -143,7 +143,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             <empty> - (no Pending Operational Dataset)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_get_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_PENDING_GET_URI).\
             filter(lambda p: p.coap.tlv.type is nullField).\
             must_next()
@@ -158,7 +158,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             Delay Timer TLV: 1 minute
         #             Pending Timestamp TLV: 30s
         #             PAN ID TLV: 0xAFCE (new value)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_pending_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_PENDING_SET_URI).\
             filter(lambda p: {
@@ -179,7 +179,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Accept (01))
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_pending_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_PENDING_SET_URI).\
             filter(lambda p:
                    p.thread_meshcop.tlv.state == 1
@@ -192,7 +192,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             CON POST coap://<L>:MM/c/pg
         #         CoAP Payload
         #             <empty> - get all Active Operational Dataset parameters
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_pending_get_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_PENDING_GET_URI).\
             filter(lambda p: p.coap.tlv.type is nullField).\
@@ -216,7 +216,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             Pending Timestamp TLV
         #             PSKc TLV
         #             Security Policy TLV
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_pending_get_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_PENDING_GET_URI).\
             filter(lambda p: {
                               NM_ACTIVE_TIMESTAMP_TLV,
@@ -241,7 +241,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             CON POST coap://<L>:MM/c/pg
         #         CoAP Payload
         #             PAN ID TLV
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_pending_get_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_PENDING_GET_URI).\
             filter(lambda p: {
@@ -257,7 +257,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #         CoAP Payload
         #             PAN ID TLV
         #             Delay Timer TLV
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_pending_get_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_PENDING_GET_URI).\
             filter(lambda p: {
                               NM_DELAY_TIMER_TLV,
@@ -274,7 +274,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             CON POST coap://<L>:MM/c/pg
         #         CoAP Payload
         #             <empty> - get all Active Operational Dataset parameters
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_pending_get_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_PENDING_GET_URI).\
             filter(lambda p: p.coap.tlv.type is nullField).\
@@ -286,7 +286,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             <empty> - (no Pending Operational Dataset)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_pending_get_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_PENDING_GET_URI).\
             filter(lambda p: p.thread_meshcop.tlv.type is nullField).\
            must_next()

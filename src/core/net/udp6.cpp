@@ -374,15 +374,6 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     if (ShouldUsePlatformUdp(aSocket))
     {
-        // Replace anycast address with a valid unicast address since response messages typically copy the peer address
-        if (Get<Mle::Mle>().IsAnycastLocator(messageInfoLocal.GetSockAddr()))
-        {
-            const NetifUnicastAddress *netifAddr = Get<Ip6>().SelectSourceAddress(messageInfoLocal);
-
-            VerifyOrExit(netifAddr != nullptr, error = OT_ERROR_INVALID_ARGS);
-            messageInfoLocal.SetSockAddr(netifAddr->GetAddress());
-        }
-
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }
     else

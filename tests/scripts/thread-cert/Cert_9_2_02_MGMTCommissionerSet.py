@@ -152,7 +152,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #         CoAP Payload
         #             (missing Commissioner Session ID TLV)
         #             Steering Data TLV (0xFF)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
@@ -167,7 +167,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Reject)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
                    [NM_STATE_TLV] == p.coap.tlv.type and\
@@ -182,7 +182,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #         CoAP Payload
         #             Commissioner Session ID TLV
         #             Steering Data TLV (0xFF)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
@@ -199,7 +199,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Accept)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
                    [NM_STATE_TLV] == p.coap.tlv.type and\
@@ -241,7 +241,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #         CoAP Payload
         #             Commissioner Session ID TLV
         #             Border Agent Locator TLV (0x0400) (not allowed TLV)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
@@ -258,7 +258,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Reject)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
                    [NM_STATE_TLV] == p.coap.tlv.type and\
@@ -274,7 +274,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             Commissioner Session ID TLV
         #             Steering Data TLV (0xFF)
         #             Border Agent Locator TLV (0x0400) (not allowed TLV)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
@@ -293,7 +293,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Reject)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
                    [NM_STATE_TLV] == p.coap.tlv.type and\
@@ -308,7 +308,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #         CoAP Payload
         #             Commissioner Session ID TLV (0xFFFF) (invalid value)
         #             Steering Data TLV (0xFF)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
@@ -326,7 +326,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Reject)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
                    [NM_STATE_TLV] == p.coap.tlv.type and\
@@ -342,7 +342,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             Commissioner Session ID TLV
         #             Steering Data TLV (0xFF)
         #             Channel TLV (not allowed TLV)
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
@@ -360,7 +360,7 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Accept)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p:
                    [NM_STATE_TLV] == p.coap.tlv.type and\
