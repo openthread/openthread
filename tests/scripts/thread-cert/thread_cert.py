@@ -153,13 +153,12 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 is_bbr=params['is_bbr'],
             )
 
-            node.set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
-
             self.nodes[i] = node
 
             if node.is_host:
                 continue
 
+            self.nodes[i].set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
