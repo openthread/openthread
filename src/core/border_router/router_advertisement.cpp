@@ -110,9 +110,12 @@ void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
 }
 
-void PrefixInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
+Ip6::Prefix PrefixInfoOption::GetPrefix(void) const
 {
-    aPrefix.Set(mPrefix.GetBytes(), mPrefixLength);
+    Ip6::Prefix prefix;
+
+    prefix.Set(mPrefix.GetBytes(), mPrefixLength);
+    return prefix;
 }
 
 RouteInfoOption::RouteInfoOption(void)
@@ -126,6 +129,23 @@ RouteInfoOption::RouteInfoOption(void)
     mPrefix.Clear();
 }
 
+void RouteInfoOption::SetPreference(otRoutePreference aPreference)
+{
+    mReserved &= ~kPreferenceMask;
+    mReserved |= (static_cast<uint8_t>(aPreference) << kPreferenceOffset) & kPreferenceMask;
+}
+
+otRoutePreference RouteInfoOption::GetPreference(void) const
+{
+    uint8_t preference = (mReserved & kPreferenceMask) >> kPreferenceOffset;
+
+    if (preference == ((OT_ROUTE_PREFERENCE_LOW & kPreferenceMask) >> kPreferenceOffset))
+    {
+        preference = OT_ROUTE_PREFERENCE_LOW;
+    }
+    return static_cast<otRoutePreference>(preference);
+}
+
 void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 {
     // The total length (in bytes) of a Router Information Option
@@ -136,6 +156,23 @@ void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 
     mPrefixLength = aPrefix.mLength;
     mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
+}
+
+Ip6::Prefix RouteInfoOption::GetPrefix(void) const
+{
+    Ip6::Prefix prefix;
+
+    prefix.Set(mPrefix.GetBytes(), mPrefixLength);
+    return prefix;
+}
+
+bool RouteInfoOption::IsValid(void) const
+{
+    otRoutePreference pref = GetPreference();
+
+    return (GetLength() == kLengthUnit || GetLength() == 2 * kLengthUnit || GetLength() == 3 * kLengthUnit) &&
+           (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT) &&
+           (pref == OT_ROUTE_PREFERENCE_LOW || pref == OT_ROUTE_PREFERENCE_MED || pref == OT_ROUTE_PREFERENCE_HIGH);
 }
 
 RouterAdvMessage::RouterAdvMessage(void)

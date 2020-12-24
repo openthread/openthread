@@ -40,7 +40,7 @@ import thread_cert
 #           |               |
 #          BR1             BR2
 #           |               |
-#          ED1             ED2
+#        ROUTER1         ROUTER2
 #
 #     Thread Net1       Thread Net2
 #
@@ -118,6 +118,25 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
         self.assertTrue(len(self.nodes[BR2].get_prefixes()) == 1)
         self.assertTrue(len(self.nodes[ROUTER2].get_prefixes()) == 1)
+
+        br1_omr_prefix = self.nodes[BR1].get_prefixes()[0]
+        br2_omr_prefix = self.nodes[BR2].get_prefixes()[0]
+
+        self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
+
+        # Each BR should independently register an external route for the on-link prefix
+        # and OMR prefix in another Thread Network.
+        self.assertTrue(len(self.nodes[BR1].get_routes()) == 2)
+        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 2)
+        self.assertTrue(len(self.nodes[BR2].get_routes()) == 2)
+        self.assertTrue(len(self.nodes[ROUTER2].get_routes()) == 2)
+
+        br1_external_routes = self.nodes[BR1].get_routes()
+        br2_external_routes = self.nodes[BR2].get_routes()
+
+        br1_external_routes.sort()
+        br2_external_routes.sort()
+        self.assertNotEqual(br1_external_routes, br2_external_routes)
 
         self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
         self.assertTrue(len(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)

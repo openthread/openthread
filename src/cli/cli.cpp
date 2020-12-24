@@ -271,6 +271,31 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError Interpreter::ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "enable") == 0)
+    {
+        SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, true));
+    }
+    else if (strcmp(aArgs[0], "disable") == 0)
+    {
+        SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, false));
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
+}
+#endif
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
 {

@@ -40,6 +40,7 @@
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #include <openthread/error.h>
+#include <openthread/netdata.h>
 #include <openthread/platform/infra_if.h>
 
 #include "border_router/router_advertisement.hpp"
@@ -56,9 +57,9 @@ namespace BorderRouter {
  * This class implements bi-directional routing between Thread and
  * Infrastructure networks.
  *
- * The routing manager works on both Thread interface and infrastructure
- * interface. All ICMPv6 messages are sent/recv on the infrastructure
- * interface.
+ * The Border Routing manager works on both Thread interface and
+ * infrastructure interface. All ICMPv6 messages are sent/recv
+ * on the infrastructure interface.
  *
  */
 class RoutingManager : public InstanceLocator
@@ -86,6 +87,19 @@ public:
     otError Init(uint32_t aInfraIfIndex);
 
     /**
+     * This method enables/disables the Border Routing Manager.
+     *
+     * @param[in]  aEnabled   A boolean to enable/disable the Border Routing Manager.
+     *
+     * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+     * @retval  OT_ERROR_NONE           Successfully enabled the Border Routing Manager.
+     *
+     * @note  The Border Routing Manager is enabled by default.
+     *
+     */
+    otError SetEnabled(bool aEnabled);
+
+    /**
      * This method receives an ICMPv6 message on the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
@@ -111,8 +125,9 @@ private:
     {
         kMaxOmrPrefixNum =
             OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES, // The maximum number of the OMR prefixes to advertise.
-        kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE,   // The length of an OMR prefix. In bits.
-        kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE,   // The length of an On-link prefix. In bits.
+        kMaxDiscoveredPrefixNum = 8u,                  // The maximum number of prefixes to discover on the infra link.
+        kOmrPrefixLength        = OT_IP6_PREFIX_BITSIZE, // The length of an OMR prefix. In bits.
+        kOnLinkPrefixLength     = OT_IP6_PREFIX_BITSIZE, // The length of an On-link prefix. In bits.
     };
 
     enum : uint32_t
@@ -137,10 +152,22 @@ private:
         kMaxRtrSolicitations = 3, // The Maximum number of Router Solicitations before sending Router Advertisements.
     };
 
+    /**
+     * This struct represents an external prefix which is discovered on the infrastructure interface.
+     *
+     */
+    struct ExternalPrefix : public Clearable<ExternalPrefix>
+    {
+        Ip6::Prefix mPrefix;
+        TimeMilli   mExpireTime;
+        bool        mIsOnLinkPrefix;
+    };
+
     void    Start(void);
     void    Stop(void);
     void    HandleNotifierEvents(Events aEvents);
     bool    IsInitialized(void) const { return mInfraIfIndex != 0; }
+    bool    IsEnabled(void) const { return mEnabled; }
     otError LoadOrGenerateRandomOmrPrefix(void);
     otError LoadOrGenerateRandomOnLinkPrefix(void);
 
@@ -188,7 +215,7 @@ private:
      *           nullptr if we should no longer advertise an on-link prefix.
      *
      */
-    const Ip6::Prefix *EvaluateOnLinkPrefix(void) const;
+    const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
     /**
      * This method publishes the local OMR prefix in Thread network.
@@ -201,6 +228,18 @@ private:
      *
      */
     void UnpublishLocalOmrPrefix(void);
+
+    /**
+     * This method adds external route for the prefix.
+     *
+     */
+    otError AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
+
+    /**
+     * This method removes the external route added for the prefix.
+     *
+     */
+    void RemoveExternalRoute(const Ip6::Prefix &aPrefix);
 
     /**
      * This method starts sending Router Solicitations in random delay
@@ -222,8 +261,7 @@ private:
     otError SendRouterSolicitation(void);
 
     /**
-     * This method sends Router Advertisement messages to advertise
-     * on-link prefix and route for OMR prefix.
+     * This method sends Router Advertisement messages to advertise on-link prefix and route for OMR prefix.
      *
      * @param[in]  aNewOmrPrefixes   A pointer to an array of the new OMR prefixes to be advertised.
      *                               @p aNewOmrPrefixNum must be zero if this argument is nullptr.
@@ -243,11 +281,66 @@ private:
     static void HandleRouterSolicitTimer(Timer &aTimer);
     void        HandleRouterSolicitTimer(void);
 
-    static void HandleDiscoveredOnLinkPrefixInvalidTimer(Timer &aTimer);
-    void        HandleDiscoveredOnLinkPrefixInvalidTimer(void);
+    static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
+    void        HandleDiscoveredPrefixInvalidTimer(void);
 
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
+
+    /**
+     * This method updates the discovered prefix list with given Prefix Information Option.
+     *
+     * @param[in]  aPio  A reference to the Prefix Information Option.
+     *
+     * @returns  A boolean indicates whether we need to re-evaluate our routing policy.
+     *
+     */
+    bool UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio);
+
+    /**
+     * This method updates the discovered prefix list with given Route Information Option.
+     *
+     * @param[in]  aPio  A reference to the Route Information Option.
+     *
+     * @returns  A boolean indicates whether we need to re-evaluate our routing policy.
+     *
+     */
+    bool UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &aRio);
+
+    /**
+     * This method removes expired or specific discovered prefixes.
+     *
+     * @param[in]  aPrefix          A pointer to a specific prefix to be removed.
+     * @param[in]  aIsOnLinkPrefix  A boolean which indicates whether the prefix is an on-link prefix.
+     *
+     * @returns  The number of removed prefixes.
+     *
+     */
+    uint8_t InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix = nullptr, bool aIsOnLinkPrefix = true);
+
+    /**
+     * This method invalidates all discovered prefixes.
+     *
+     */
+    void InvalidateAllDiscoveredPrefixes(void);
+
+    /**
+     * This methods adds a prefix discovered in a RA message.
+     *
+     * If the same prefix already exists, only the lifetime will be updated.
+     *
+     * @param[in]  aPrefix           The prefix to be added.
+     * @param[in]  aIsOnLinkPrefix   A boolean which indicates whether the prefix is an on-link prefix.
+     * @param[in]  aLifetime         The lifetime of the prefix. In seconds.
+     * @param[in]  aRoutePreference  The preference of the route which is associated with the prefix.
+     *
+     * @returns  A boolean indicates whether a new prefix is added.
+     *
+     */
+    bool AddDiscoveredPrefix(const Ip6::Prefix &aPrefix,
+                             bool               aIsOnLinkPrefix,
+                             uint32_t           aLifetime,
+                             otRoutePreference  aRoutePreference = OT_ROUTE_PREFERENCE_MED);
 
     static bool ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
 
@@ -255,6 +348,7 @@ private:
 
     bool     mIsRunning;
     uint32_t mInfraIfIndex;
+    bool     mEnabled;
 
     /**
      * The OMR prefix loaded from local persistent storage or randomly generated
@@ -264,7 +358,11 @@ private:
     Ip6::Prefix mLocalOmrPrefix;
 
     /**
-     * The advertised OMR prefixes.
+     * The advertised OMR prefixes. For a stable Thread network without
+     * manually configured OMR prefixes, there should be a single OMR prefix
+     * that being advertised because each BRs will converge to the smallest
+     * OMR prefix sorted by method IsPrefixSmallerThan. If manually configured
+     * OMR prefixes exist, they will also be advertised on infra link.
      *
      */
     Ip6::Prefix mAdvertisedOmrPrefixes[kMaxOmrPrefixNum];
@@ -286,18 +384,21 @@ private:
     const Ip6::Prefix *mAdvertisedOnLinkPrefix;
 
     /**
-     * The on-link prefix we discovered on the infra link.
+     * The array of prefixes discovered on the infra link. Those prefixes consist of
+     * on-link prefix(es) and OMR prefixes advertised by BRs in another Thread Network
+     * which is connected to the same infra link.
      *
      */
-    Ip6::Prefix mDiscoveredOnLinkPrefix;
+    ExternalPrefix mDiscoveredPrefixes[kMaxDiscoveredPrefixNum];
+    uint8_t        mDiscoveredPrefixNum;
+
+    TimerMilli mDiscoveredPrefixInvalidTimer;
 
     TimerMilli mRouterAdvertisementTimer;
     uint32_t   mRouterAdvertisementCount;
 
     TimerMilli mRouterSolicitTimer;
     uint8_t    mRouterSolicitCount;
-
-    TimerMilli mDiscoveredOnLinkPrefixInvalidTimer;
 };
 
 } // namespace BorderRouter
