@@ -59,7 +59,6 @@ DEFAULT_PANID = '0xFFFF'
 DEFAULT_XPANID = '0xDEAD00BEEF00CAFE'
 
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
-verify(node.get(wpan.WPAN_KEY) == DEFAULT_KEY)
 verify(node.get(wpan.WPAN_NAME) == DEFAULT_NAME)
 verify(node.get(wpan.WPAN_PANID) == DEFAULT_PANID)
 verify(node.get(wpan.WPAN_XPANID) == DEFAULT_XPANID)
