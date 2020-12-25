@@ -312,6 +312,7 @@ if(OT_FULL_LOGS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PLATFORM=1")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_PREPEND_REGION=1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_SRP=1")
 endif()
 
 option(OT_OTNS "enable OTNS support")
