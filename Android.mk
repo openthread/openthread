@@ -207,6 +207,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/trickle_timer.cpp                       \
     src/core/crypto/aes_ccm.cpp                             \
     src/core/crypto/aes_ecb.cpp                             \
+    src/core/crypto/ecdsa.cpp                               \
     src/core/crypto/hkdf_sha256.cpp                         \
     src/core/crypto/hmac_sha256.cpp                         \
     src/core/crypto/mbedtls.cpp                             \
@@ -354,9 +355,9 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/platform.c             \
     third_party/mbedtls/repo/library/platform_util.c        \
     third_party/mbedtls/repo/library/sha256.c               \
-    third_party/mbedtls/repo/library/ssl_cookie.c           \
     third_party/mbedtls/repo/library/ssl_ciphersuites.c     \
     third_party/mbedtls/repo/library/ssl_cli.c              \
+    third_party/mbedtls/repo/library/ssl_cookie.c           \
     third_party/mbedtls/repo/library/ssl_srv.c              \
     third_party/mbedtls/repo/library/ssl_ticket.c           \
     third_party/mbedtls/repo/library/ssl_tls.c              \
