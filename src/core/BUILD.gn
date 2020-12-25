@@ -255,6 +255,7 @@ if (openthread_enable_core_config_args) {
         "OPENTHREAD_CONFIG_LOG_PLATFORM=1",
         "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1",
         "OPENTHREAD_CONFIG_LOG_PREPEND_REGION=1",
+        "OPENTHREAD_CONFIG_LOG_SRP=1",
       ]
     }
 
