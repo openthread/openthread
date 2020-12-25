@@ -134,6 +134,8 @@ Mle::Mle(Instance &aInstance)
     }
 #endif
 
+    meshLocalPrefix.SetFromExtendedPanId(Get<Mac::Mac>().GetExtendedPanId());
+
     mMeshLocal64.InitAsThreadOriginRealmLocalScope();
     mMeshLocal64.GetAddress().GetIid().GenerateRandom();
 
@@ -152,7 +154,6 @@ Mle::Mle(Instance &aInstance)
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[0] = HostSwap16(0xff33);
     mRealmLocalAllThreadNodes.GetAddress().mFields.m16[7] = HostSwap16(0x0001);
 
-    meshLocalPrefix.Clear();
     SetMeshLocalPrefix(meshLocalPrefix);
 
     // `SetMeshLocalPrefix()` also adds the Mesh-Local EID and subscribes
@@ -211,22 +212,6 @@ otError Mle::Start(bool aAnnounceAttach)
     if (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
     {
         Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());
-    }
-
-    if (Get<Mac::Mac>().GetExtendedPanId() == Mac::ExtendedPanId())
-    {
-        Mac::ExtendedPanId extendedPanId;
-
-        SuccessOrExit(error = Random::Crypto::FillBuffer(extendedPanId.m8, sizeof(extendedPanId.m8)));
-        Get<Mac::Mac>().SetExtendedPanId(extendedPanId);
-    }
-
-    if (GetMeshLocalPrefix() == MeshLocalPrefix())
-    {
-        MeshLocalPrefix meshLocalPrefix;
-
-        SuccessOrExit(error = meshLocalPrefix.GenerateRandomUla());
-        SetMeshLocalPrefix(meshLocalPrefix);
     }
 
     SetStateDetached();
