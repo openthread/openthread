@@ -14,7 +14,11 @@
 // <i> Default: 768
 // <i> The size configured here determines the size of each of the two
 // <i> internal I/O buffers used in mbedTLS when sending and receiving data.
-#define MBEDTLS_SSL_MAX_CONTENT_LEN 768
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#define MBEDTLS_SSL_MAX_CONTENT_LEN 900 /**< Maximum fragment length in bytes */
+#else
+#define MBEDTLS_SSL_MAX_CONTENT_LEN 768 /**< Maximum fragment length in bytes */
+#endif
 
 // <q SL_MBEDTLS_SSL_MAX_FRAGMENT_LENGTH> Enable support for RFC 6066 max_fragment_length extension in SSL.
 // <i> Default: 1
