@@ -186,6 +186,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/random_crypto_api.cpp                      \
     src/core/api/random_noncrypto_api.cpp                   \
     src/core/api/server_api.cpp                             \
+    src/core/api/srp_client_api.cpp                         \
     src/core/api/tasklet_api.cpp                            \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
@@ -262,6 +263,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
+    src/core/net/srp_client.cpp                             \
     src/core/net/udp6.cpp                                   \
     src/core/radio/radio.cpp                                \
     src/core/radio/radio_callbacks.cpp                      \
