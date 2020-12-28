@@ -62,6 +62,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mDnsClient(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClient(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(aInstance)
 #endif

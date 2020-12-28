@@ -167,6 +167,11 @@ if(OT_ECDSA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ECDSA_ENABLE=1")
 endif()
 
+option(OT_SRP_CLIENT "enable SRP client support")
+if (OT_SRP_CLIENT)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1")
+endif()
+
 option(OT_DUA "enable Domain Unicast Address feature for Thread 1.2")
 if(OT_DUA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DUA_ENABLE=1")

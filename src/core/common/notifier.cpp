@@ -183,6 +183,9 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Get<Srp::Client>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {

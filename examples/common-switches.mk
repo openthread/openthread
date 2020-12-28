@@ -76,6 +76,7 @@ SETTINGS_RAM              ?= 0
 # SLAAC is enabled by default
 SLAAC                     ?= 1
 SNTP_CLIENT               ?= 0
+SRP_CLIENT                ?= 0
 THREAD_VERSION            ?= 1.1
 TIME_SYNC                 ?= 0
 UDP_FORWARD               ?= 0
@@ -266,6 +267,10 @@ endif
 
 ifeq ($(SNTP_CLIENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1
+endif
+
+ifeq ($(SRP_CLIENT),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1
 endif
 
 ifeq ($(THREAD_VERSION),1.1)
