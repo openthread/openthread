@@ -516,6 +516,48 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
+otError Settings::SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = Save(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), aKeyPair.GetDerLength()));
+    otLogInfoCore("Non-volatile: Saved SRP key");
+
+exit:
+    LogFailure(error, "saving SRP key", false);
+    return error;
+}
+
+otError Settings::ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const
+{
+    otError  error;
+    uint16_t length = Crypto::Ecdsa::P256::KeyPair::kMaxDerSize;
+
+    SuccessOrExit(error = Read(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), length));
+    VerifyOrExit(length <= Crypto::Ecdsa::P256::KeyPair::kMaxDerSize, error = OT_ERROR_NOT_FOUND);
+    aKeyPair.SetDerLength(static_cast<uint8_t>(length));
+    otLogInfoCore("Non-volatile: Read SRP key");
+
+exit:
+    return error;
+}
+
+otError Settings::DeleteSrpKey(void)
+{
+    otError error;
+
+    SuccessOrExit(error = Delete(kKeySrpEcdsaKey));
+    otLogInfoCore("Non-volatile: Deleted SRP key");
+
+exit:
+    LogFailure(error, "deleting SRP key", true);
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 otError Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
 {
     return Get<SettingsDriver>().Get(aKey, 0, reinterpret_cast<uint8_t *>(aBuffer), &aSize);
