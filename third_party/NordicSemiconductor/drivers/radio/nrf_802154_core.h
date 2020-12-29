@@ -226,6 +226,13 @@ bool nrf_802154_core_rssi_measure(void);
  */
 bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi);
 
+/**
+ * @brief Gets the last LQI value.
+ *
+ * returns The LQI value of last Rx frame.
+ */
+uint8_t nrf_802154_core_last_lqi_get(void);
+
 #if !NRF_802154_INTERNAL_IRQ_HANDLING
 /**
  * @brief Notifies the core module that there is a pending IRQ to be handled.

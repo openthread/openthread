@@ -154,6 +154,18 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
 otError otMacFrameGetSrcAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress);
 
 /**
+ * Get destination MAC address.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ * @param[out]  aMacAddress     A pointer to MAC address.
+ *
+ * @retval  OT_ERROR_NONE   Successfully got the destination MAC address.
+ * @retval  OT_ERROR_PARSE  Failed to parse the destination MAC address.
+ *
+ */
+otError otMacFrameGetDstAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress);
+
+/**
  * Get the sequence of @p aFrame.
  *
  * @param[in]   aFrame          A pointer to the frame.

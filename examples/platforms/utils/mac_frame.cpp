@@ -120,6 +120,35 @@ exit:
     return error;
 }
 
+otError otMacFrameGetDstAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress)
+{
+    otError      error;
+    Mac::Address address;
+
+    error = static_cast<const Mac::Frame *>(aFrame)->GetDstAddr(address);
+    SuccessOrExit(error);
+
+    switch (address.GetType())
+    {
+    case Mac::Address::kTypeNone:
+        aMacAddress->mType = OT_MAC_ADDRESS_TYPE_NONE;
+        break;
+
+    case Mac::Address::kTypeShort:
+        aMacAddress->mType                  = OT_MAC_ADDRESS_TYPE_SHORT;
+        aMacAddress->mAddress.mShortAddress = address.GetShort();
+        break;
+
+    case Mac::Address::kTypeExtended:
+        aMacAddress->mType                = OT_MAC_ADDRESS_TYPE_EXTENDED;
+        aMacAddress->mAddress.mExtAddress = address.GetExtended();
+        break;
+    }
+
+exit:
+    return error;
+}
+
 uint8_t otMacFrameGetSequence(const otRadioFrame *aFrame)
 {
     return static_cast<const Mac::Frame *>(aFrame)->GetSequence();

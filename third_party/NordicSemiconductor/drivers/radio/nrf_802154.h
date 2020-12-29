@@ -924,6 +924,13 @@ bool nrf_802154_rssi_measure_begin(void);
 int8_t nrf_802154_rssi_last_get(void);
 
 /**
+ * @brief Gets the result of last LQI value.
+ *
+ * @returns LQI value of last Rx frame.
+ */
+uint8_t nrf_802154_lqi_last_get(void);
+
+/**
  * @}
  * @defgroup nrf_802154_prom Promiscuous mode
  * @{

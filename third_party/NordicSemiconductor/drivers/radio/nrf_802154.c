@@ -575,6 +575,11 @@ int8_t nrf_802154_rssi_last_get(void)
     return result;
 }
 
+uint8_t nrf_802154_lqi_last_get(void)
+{
+    return nrf_802154_core_last_lqi_get();
+}
+
 bool nrf_802154_promiscuous_get(void)
 {
     return nrf_802154_pib_promiscuous_get();
