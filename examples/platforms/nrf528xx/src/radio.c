@@ -1089,6 +1089,7 @@ void nrf_802154_transmitted_timestamp_raw(const uint8_t *aFrame,
                                           uint8_t        aLqi,
                                           uint32_t       ack_time)
 {
+    OT_UNUSED_VARIABLE(aFrame); // For ARM gcc
     assert(aFrame == sTransmitPsdu);
 
     if (aAckPsdu == NULL)
@@ -1113,6 +1114,7 @@ void nrf_802154_transmitted_timestamp_raw(const uint8_t *aFrame,
 
 void nrf_802154_transmit_failed(const uint8_t *aFrame, nrf_802154_tx_error_t error)
 {
+    OT_UNUSED_VARIABLE(aFrame); // For ARM gcc
     assert(aFrame == sTransmitPsdu);
 
     switch (error)
@@ -1265,6 +1267,8 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static void updateIeData(otInstance *aInstance, const uint8_t *aShortAddr, const uint8_t *aExtAddr)
 {
+    OT_UNUSED_VARIABLE(aInstance);
+
     int8_t  offset = 0;
     uint8_t ackIeData[OT_ACK_IE_MAX_SIZE];
 
@@ -1324,6 +1328,9 @@ otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
                                           const otExtAddress * aExtAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLinkMetrics);
+    OT_UNUSED_VARIABLE(aShortAddress);
+    OT_UNUSED_VARIABLE(aExtAddress);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }

@@ -66,7 +66,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal/softdevice                       \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/lp_timer                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/temperature                       \
-    -Wno-unused-parameter                                                                                    \
     $(NULL)
 
 # Only reference the SDK header files included in third_party/NordicSemiconductor
@@ -108,7 +107,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/softdevice/s140/headers/nrf52                            \
-    -Wno-unused-parameter                                                                                    \
     $(NULL)
 endif
 
@@ -145,6 +143,7 @@ SOFTDEVICE_SOURCES                                                              
 SOFTDEVICE_CPPFLAGS                                                                                        = \
     -DSOFTDEVICE_PRESENT                                                                                     \
     -DS140                                                                                                   \
+    -Wno-unused-parameter                                                                                    \
     $(NULL)
 
 PLATFORM_SOURCES                                                                                           = \
@@ -154,7 +153,7 @@ PLATFORM_SOURCES                                                                
 libopenthread_nrf52840_a_CPPFLAGS                                                                          = \
     $(COMMONCPPFLAGS)                                                                                        \
     $(SINGLEPHY_CPPFLAGS)                                                                                    \
-    -DPLATFORM_OPENTHREAD_VANILLA                                                                             \
+    -DPLATFORM_OPENTHREAD_VANILLA                                                                            \
     $(NULL)
 
 libopenthread_nrf52840_a_SOURCES                                                                           = \
