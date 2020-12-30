@@ -288,6 +288,15 @@ public:
     otError Sleep(void);
 
     /**
+     * This method indicates whether the sub-mac is busy transmitting or scanning.
+     *
+     * @retval TRUE if the sub-mac is busy transmitting or scanning.
+     * @retval FALSE if the sub-mac is not busy transmitting or scanning.
+     *
+     */
+    bool IsTransmittingOrScanning(void) const { return (mState == kStateTransmit) || (mState == kStateEnergyScan); }
+
+    /**
      * This method transitions the radio to Receive.
      *
      * @param[in]  aChannel   The channel to use for receiving.
