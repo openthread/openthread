@@ -100,6 +100,7 @@ Done
 - [singleton](#singleton)
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
+- [srp](README_SRP.md)
 - [thread](#thread-start)
 - [txpower](#txpower)
 - [unsecureport](#unsecureport-add-port)
