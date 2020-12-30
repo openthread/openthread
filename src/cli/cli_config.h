@@ -99,4 +99,28 @@
 #error "Unsupported CLI transport!"
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_CLI_SRP_CLIENT_MAX_SERVICES
+ *
+ * The maximum number of service entries supported by SRP client.
+ *
+ * This is only applicable when SRP client is enabled, i.e. OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE is set.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_SRP_CLIENT_MAX_SERVICES
+#define OPENTHREAD_CONFIG_CLI_SRP_CLIENT_MAX_SERVICES 2
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_SRP_CLIENT_MAX_HOST_ADDRESSES
+ *
+ * The maximum number of host IPv6 address entries supported by SRP client.
+ *
+ * This is only applicable when SRP client is enabled, i.e. OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE is set.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_SRP_CLIENT_MAX_HOST_ADDRESSES
+#define OPENTHREAD_CONFIG_CLI_SRP_CLIENT_MAX_HOST_ADDRESSES 2
+#endif
+
 #endif // CONFIG_CLI_H_
