@@ -97,6 +97,8 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
                                                 size=128,
                                                 timeout=timeout * 2))
 
+        self.simulator.go(5)
+
     def verify(self, pv):
         pkts = pv.pkts
         pv.summary.show()
