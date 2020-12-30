@@ -71,12 +71,12 @@ KeyManager::KeyManager(Instance &aInstance)
     , mSecurityPolicyFlags(kDefaultSecurityPolicyFlags)
     , mIsPskcSet(false)
 {
-    otError error;
+    otError error = mMasterKey.GenerateRandom();
 
-    mMacFrameCounters.Reset();
-    error = mMasterKey.GenerateRandom();
     OT_ASSERT(error == OT_ERROR_NONE);
     OT_UNUSED_VARIABLE(error);
+
+    mMacFrameCounters.Reset();
     mPskc.Clear();
 }
 
