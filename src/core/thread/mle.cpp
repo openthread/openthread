@@ -201,14 +201,6 @@ otError Mle::Start(bool aAnnounceAttach)
     VerifyOrExit(!Get<Radio>().GetPromiscuous(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
 
-    if (Get<KeyManager>().GetMasterKey() == MasterKey())
-    {
-        MasterKey masterKey;
-
-        SuccessOrExit(error = masterKey.GenerateRandom());
-        SuccessOrExit(error = Get<KeyManager>().SetMasterKey(masterKey));
-    }
-
     if (Get<Mac::Mac>().GetPanId() == Mac::kPanIdBroadcast)
     {
         Get<Mac::Mac>().SetPanId(Mac::GenerateRandomPanId());

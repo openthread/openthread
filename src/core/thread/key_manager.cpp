@@ -58,7 +58,6 @@ const uint8_t KeyManager::kTrelInfoString[] = {'T', 'h', 'r', 'e', 'a', 'd', 'O'
 
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mMasterKey()
     , mKeySequence(0)
     , mMleFrameCounter(0)
     , mStoredMacFrameCounter(0)
@@ -73,6 +72,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mIsPskcSet(false)
 {
     mMacFrameCounters.Reset();
+    OT_ASSERT(mMasterKey.GenerateRandom() == OT_ERROR_NONE);
     mPskc.Clear();
 }
 
