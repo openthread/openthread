@@ -531,8 +531,7 @@ private:
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
 
-    static const uint8_t     kThreadString[];
-    static const otMasterKey kDefaultMasterKey;
+    static const uint8_t kThreadString[];
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     static const uint8_t kHkdfExtractSaltString[];

@@ -175,4 +175,13 @@ proc get_rloc16 {} {
     return $rval
 }
 
+proc setup_default_network {} {
+    send "channel 11\n"
+    expect "Done"
+    send "panid 0xface\n"
+    expect "Done"
+    send "masterkey 00112233445566778899aabbccddeeff\n"
+    expect "Done"
+}
+
 set timeout 10

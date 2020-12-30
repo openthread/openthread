@@ -128,6 +128,8 @@ expect "leader"
 expect "Done"
 send "extaddr\r\n"
 expect "Done"
+send "dataset active\r\n"
+expect "Done"
 send "ipaddr\r\n"
 expect "Done"
 send "coex\r\n"
@@ -153,7 +155,7 @@ EOF
 
     netstat -an | grep -q 5683 || die 'Application CoAP port is not available!'
 
-    extaddr=$(grep -aoE '[0-9a-z]{16}' $OT_OUTPUT)
+    extaddr=$(grep -azoP 'extaddr[\r\n]+\K[0-9a-z]{16}' $OT_OUTPUT | tr -d '\0')
     echo "Extended address is: ${extaddr}"
 
     if [[ ${DAEMON} == 1 ]]; then
@@ -165,9 +167,10 @@ EOF
             || die 'multicast group join failed'
     fi
 
-    LEADER_ALOC=fdde:ad00:beef::ff:fe00:fc00
+    prefix=$(grep -aoP 'Mesh Local Prefix: \K[0-9a-f:]+(?=::\/64)' $OT_OUTPUT | tr -d '\r\n')
+    LEADER_ALOC="$prefix::ff:fe00:fc00"
     # Retrievie test resource through application CoAP
-    coap_response=$(coap-client -B 5 -m GET coap://[${LEADER_ALOC}]:5683/TestResource)
+    coap_response=$(coap-client -B 5 -m GET "coap://[${LEADER_ALOC}]:5683/TestResource")
     echo "CoAP response is: ${coap_response}"
 
     # Verify CoAP response contains the test content
@@ -178,7 +181,7 @@ EOF
     fi
 
     # Retrievie extended address through network diagnostic get
-    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST coap://[${LEADER_ALOC}]:61631/d/dg -f-)
+    coap_response=$(echo -n '120100' | xxd -r -p | coap-client -B 5 -m POST "coap://[${LEADER_ALOC}]:61631/d/dg" -f-)
 
     # Verify Tmf CoAP is blocked
     if [[ -z ${coap_response} ]]; then

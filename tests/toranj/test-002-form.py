@@ -53,13 +53,11 @@ wpan.Node.init_all_nodes()
 # Test implementation
 
 # default values after reset
-DEFAULT_KEY = '[00112233445566778899AABBCCDDEEFF]'
 DEFAULT_NAME = '"OpenThread"'
 DEFAULT_PANID = '0xFFFF'
 DEFAULT_XPANID = '0xDEAD00BEEF00CAFE'
 
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_OFFLINE)
-verify(node.get(wpan.WPAN_KEY) == DEFAULT_KEY)
 verify(node.get(wpan.WPAN_NAME) == DEFAULT_NAME)
 verify(node.get(wpan.WPAN_PANID) == DEFAULT_PANID)
 verify(node.get(wpan.WPAN_XPANID) == DEFAULT_XPANID)
@@ -70,7 +68,6 @@ node.form('asha')
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 verify(node.get(wpan.WPAN_NODE_TYPE) == wpan.NODE_TYPE_LEADER)
 verify(node.get(wpan.WPAN_NAME) == '"asha"')
-verify(node.get(wpan.WPAN_KEY) != DEFAULT_KEY)
 verify(node.get(wpan.WPAN_PANID) != DEFAULT_PANID)
 verify(node.get(wpan.WPAN_XPANID) != DEFAULT_XPANID)
 
@@ -83,7 +80,6 @@ node.form('ahura', channel=20)
 verify(node.get(wpan.WPAN_STATE) == wpan.STATE_ASSOCIATED)
 verify(node.get(wpan.WPAN_NAME) == '"ahura"')
 verify(node.get(wpan.WPAN_CHANNEL) == '20')
-verify(node.get(wpan.WPAN_KEY) != DEFAULT_KEY)
 verify(node.get(wpan.WPAN_PANID) != DEFAULT_PANID)
 verify(node.get(wpan.WPAN_XPANID) != DEFAULT_XPANID)
 

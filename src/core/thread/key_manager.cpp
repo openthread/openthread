@@ -48,25 +48,6 @@ const uint8_t KeyManager::kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-const otMasterKey KeyManager::kDefaultMasterKey = {{
-    0x00,
-    0x11,
-    0x22,
-    0x33,
-    0x44,
-    0x55,
-    0x66,
-    0x77,
-    0x88,
-    0x99,
-    0xaa,
-    0xbb,
-    0xcc,
-    0xdd,
-    0xee,
-    0xff,
-}};
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 const uint8_t KeyManager::kHkdfExtractSaltString[] = {'T', 'h', 'r', 'e', 'a', 'd', 'S', 'e', 'q', 'u', 'e', 'n',
                                                       'c', 'e', 'M', 'a', 's', 't', 'e', 'r', 'K', 'e', 'y'};
@@ -90,8 +71,12 @@ KeyManager::KeyManager(Instance &aInstance)
     , mSecurityPolicyFlags(kDefaultSecurityPolicyFlags)
     , mIsPskcSet(false)
 {
+    otError error = mMasterKey.GenerateRandom();
+
+    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_UNUSED_VARIABLE(error);
+
     mMacFrameCounters.Reset();
-    mMasterKey = static_cast<const MasterKey &>(kDefaultMasterKey);
     mPskc.Clear();
 }
 
