@@ -127,7 +127,6 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'network_id_timeout': 70,
             'router_selection_jitter': 1,
             'allowlist': [ROUTER1]
         },
@@ -141,8 +140,6 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         self.nodes[COMMISSIONER].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'router')
-        self.nodes[COMMISSIONER].commissioner_start()
-        self.simulator.go(3)
 
         self.nodes[ROUTER1].start()
         self.simulator.go(5)
@@ -151,6 +148,9 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
+
+        self.nodes[COMMISSIONER].commissioner_start()
+        self.simulator.go(3)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=COMM_PENDING_TIMESTAMP,
@@ -164,6 +164,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         self.nodes[LEADER].remove_allowlist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER1].remove_allowlist(self.nodes[LEADER].get_addr64())
         self.nodes[ROUTER2].set_preferred_partition_id(1)
+        self.nodes[ROUTER2].set_network_id_timeout(70)
+        # Wating for Router_1 attaches to new partition formed by Router_2
         self.simulator.go(250)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
@@ -188,7 +190,9 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
 
         self.nodes[LEADER].add_allowlist(self.nodes[ROUTER1].get_addr64())
         self.nodes[ROUTER1].add_allowlist(self.nodes[LEADER].get_addr64())
-        self.simulator.go(260)
+        # wait for Merging and Delay timer to expire
+        # and Router_2 move to CHANNEL_FINAL
+        self.simulator.go(250)
 
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
