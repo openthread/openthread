@@ -141,6 +141,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClient(*this)
+#endif
     , mInstance(aInstance)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -3840,6 +3843,30 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     OutputResult(OT_ERROR_NONE);
 }
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+otError Interpreter::ProcessSrp(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        OutputLine("client");
+        // OutputLine("server");
+        ExitNow();
+    }
+
+    if (strcmp(aArgs[0], "client") == 0)
+    {
+        ExitNow(error = mSrpClient.Process(aArgsLength - 1, aArgs + 1));
+    }
+
+    error = OT_ERROR_INVALID_COMMAND;
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 otError Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
 {

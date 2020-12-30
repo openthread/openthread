@@ -420,6 +420,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_joiner.cpp                    \
     src/cli/cli_network_data.cpp              \
+    src/cli/cli_srp_client.cpp                \
     src/cli/cli_uart.cpp                      \
     src/cli/cli_udp.cpp                       \
     $(NULL)
