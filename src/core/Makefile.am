@@ -364,6 +364,7 @@ HEADERS_COMMON                                  = \
     common/equatable.hpp                          \
     common/extension.hpp                          \
     common/instance.hpp                           \
+    common/iterator_utils.hpp                     \
     common/linked_list.hpp                        \
     common/locator.hpp                            \
     common/locator-getters.hpp                    \

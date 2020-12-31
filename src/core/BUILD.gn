@@ -370,6 +370,7 @@ openthread_core_files = [
   "common/extension.hpp",
   "common/instance.cpp",
   "common/instance.hpp",
+  "common/iterator_utils.hpp",
   "common/linked_list.hpp",
   "common/locator-getters.hpp",
   "common/locator.hpp",
