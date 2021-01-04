@@ -33,6 +33,23 @@
 
 set -euxo pipefail
 
+install_packages_apt_pretty_format()
+{
+    echo 'Installing pretty tools useful for code contributions...'
+
+    # add clang-format and clang-tidy for pretty
+    sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 || echo 'WARNING: could not install clang-format-9 and clang-tidy-9, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
+
+    # add yapf for pretty
+    python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
+
+    # add mdv for local size report
+    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is useful if you plan to contribute markdown to the OpenThread project.'
+
+    # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
+    command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
+}
+
 install_packages_apt()
 {
     echo 'Installing toolchain dependencies...'
@@ -56,19 +73,9 @@ install_packages_apt()
             && sudo ln -s /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
     fi
 
-    echo 'Installing pretty tools useful for code contributions...'
-
-    # add clang-format and clang-tidy for pretty
-    sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 || echo 'WARNING: could not install clang-format-9 and clang-tidy-9, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
-
-    # add yapf for pretty
-    python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
-
-    # add mdv for local size report
-    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is useful if you plan to contribute markdown to the OpenThread project.'
-
-    # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
-    command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
+    if [ "$PLATFORM" != "Raspbian" ]; then
+        install_packages_apt_pretty_format
+    fi
 }
 
 install_packages_opkg()
@@ -129,6 +136,8 @@ install_packages()
         PM=opkg
     elif command -v brew; then
         PM=brew
+    elif command -v pretty-format; then
+        PM=apt-pretty-format
     fi
     install_packages_$PM
 }
