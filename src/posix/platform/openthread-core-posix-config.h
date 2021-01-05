@@ -35,6 +35,16 @@
 #define OPENTHREAD_CORE_POSIX_CONFIG_H_
 
 /**
+ * @def OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+ *
+ * The number of message buffers in the buffer pool.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS
+#define OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS 256
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PLATFORM
  *
  * Define to enable platform region logging.
