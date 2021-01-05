@@ -3265,11 +3265,6 @@ bool nrf_802154_core_last_rssi_measurement_get(int8_t * p_rssi)
     return result;
 }
 
-uint8_t nrf_802154_core_last_lqi_get(void)
-{
-    return m_last_lqi;
-}
-
 #if NRF_802154_INTERNAL_RADIO_IRQ_HANDLING
 void RADIO_IRQHandler(void)
 #else // NRF_802154_INTERNAL_RADIO_IRQ_HANDLING
