@@ -1977,7 +1977,7 @@ static void irq_address_state_tx_frame(void)
 
 static void irq_address_state_tx_ack(void)
 {
-    nrf_802154_tx_ack_started(mp_ack);
+    nrf_802154_tx_ack_started(mp_ack, rssi_last_measurement_get(), m_last_lqi);
 }
 
 static void irq_address_state_rx_ack(void)

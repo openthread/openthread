@@ -1074,13 +1074,16 @@ static uint16_t getCslPhase()
 }
 #endif
 
-void nrf_802154_tx_ack_started(uint8_t *p_data)
+void nrf_802154_tx_ack_started(uint8_t *p_data, int8_t power, uint8_t lqi)
 {
     otRadioFrame ackFrame;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     uint8_t      linkMetricsDataLen = 0;
     uint8_t      linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
     otMacAddress macAddress;
+#else
+    OT_UNUSED_VARIABLE(power);
+    OT_UNUSED_VARIABLE(lqi);
 #endif
 
     OT_UNUSED_VARIABLE(ackFrame);
@@ -1102,8 +1105,7 @@ void nrf_802154_tx_ack_started(uint8_t *p_data)
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     otMacFrameGetDstAddr(&ackFrame, &macAddress);
-    if ((linkMetricsDataLen = otLinkMetricsEnhAckGenData(&macAddress, nrf_802154_lqi_last_get(),
-                                                         nrf_802154_rssi_last_get(), linkMetricsData)) > 0)
+    if ((linkMetricsDataLen = otLinkMetricsEnhAckGenData(&macAddress, lqi, power, linkMetricsData)) > 0)
     {
         otMacFrameSetEnhAckProbingIe(&ackFrame, linkMetricsData, linkMetricsDataLen);
     }
