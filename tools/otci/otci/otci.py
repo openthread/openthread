@@ -37,7 +37,8 @@ from . import connectors
 from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshCommandRunner
 from .connectors import Simulator
 from .errors import UnexpectedCommandOutput, ExpectLineTimeoutError, CommandError, InvalidArgumentsError
-from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix
+from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix, \
+    RouterTableEntry
 from .utils import match_line, constant_property
 
 
@@ -575,7 +576,7 @@ class OTCI(object):
         line = self.__parse_str(self.execute_command('router list'))
         return list(map(RouterId, line.strip().split()))
 
-    def get_router_table(self) -> Dict[RouterId, Dict[str, Any]]:
+    def get_router_table(self) -> Dict[RouterId, RouterTableEntry]:
         """table of routers."""
         output = self.execute_command('router table')
         if len(output) < 2:
@@ -606,7 +607,7 @@ class OTCI(object):
             col = lambda colname: self.__get_table_col(colname, headers, fields)
             id = col('ID')
 
-            table[RouterId(id)] = {
+            table[RouterId(id)] = router = RouterTableEntry({
                 'id': RouterId(id),
                 'rloc16': Rloc16(col('RLOC16'), 16),
                 'next_hop': int(col('Next Hop')),
@@ -615,11 +616,33 @@ class OTCI(object):
                 'lq_out': int(col('LQ Out')),
                 'age': int(col('Age')),
                 'extaddr': col('Extended MAC'),
-            }
+            })
+
+            if 'Link' in headers:
+                router['link'] = int(col('Link'))
+            else:
+                # support older version of OT which does not output `Link` field
+                router['link'] = self.get_router_info(router['id'], silent=True)['link']
 
         return table
 
-    # TODO: router <id>
+    def get_router_info(self, id: int, silent: bool = False) -> RouterTableEntry:
+        cmd = f'router {id}'
+        info = {}
+        output = self.execute_command(cmd, silent=silent)
+        items = [line.strip().split(': ') for line in output]
+
+        headers = [h for h, _ in items]
+        fields = [f for _, f in items]
+        col = lambda colname: self.__get_table_col(colname, headers, fields)
+
+        return RouterTableEntry({
+            'id': RouterId(id),
+            'rloc16': Rloc16(col('Rloc'), 16),
+            'alloc': int(col('Alloc')),
+            'next_hop': int(col('Next Hop'), 16) >> 10,  # convert RLOC16 to Router ID
+            'link': int(col('Link')),
+        })
 
     #
     # Router utilities: Child management
