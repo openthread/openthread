@@ -234,6 +234,9 @@ void DiscoverScanner::HandleDiscoverComplete(void)
         mTimer.Stop();
         Get<MeshForwarder>().ResumeMessageTransmissions();
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
 
     case kStateScanDone:

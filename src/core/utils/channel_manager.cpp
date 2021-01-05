@@ -121,6 +121,9 @@ void ChannelManager::StartDatasetUpdate(void)
     case OT_ERROR_INVALID_STATE:
         otLogInfoUtil("ChannelManager: Request to change to channel %d failed. Device is disabled", mChannel);
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
 
     default:

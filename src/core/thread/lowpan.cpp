@@ -350,6 +350,9 @@ otError Lowpan::Compress(Message &           aMessage,
             hcCtl |= kHcNextHeader;
             break;
         }
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     default:
@@ -439,6 +442,9 @@ otError Lowpan::Compress(Message &           aMessage,
 
             error = Compress(aMessage, aMacSource, aMacDest, buf);
 
+#ifdef __ANDROID__
+            [[clang::fallthrough]];
+#endif
             // fall through
 
         default:

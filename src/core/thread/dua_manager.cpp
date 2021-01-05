@@ -110,6 +110,9 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
         // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcely
         VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
     case BackboneRouter::Leader::kDomainPrefixRefreshed:
     case BackboneRouter::Leader::kDomainPrefixAdded:

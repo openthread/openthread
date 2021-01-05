@@ -295,7 +295,11 @@ void MleRouter::HandleChildStart(AttachMode aMode)
             RemoveChildren();
         }
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
+
     case kAttachBetter:
         if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
@@ -823,6 +827,9 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
     case Neighbor::kStateInvalid:
         VerifyOrExit((mChallengeTimeout > 0) && (response == mChallenge), error = OT_ERROR_SECURITY);
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
 
     case Neighbor::kStateValid:
         break;
@@ -1360,6 +1367,9 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
             mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
         }
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case kRoleLeader:
@@ -1737,6 +1747,9 @@ void MleRouter::HandleTimeTick(void)
             ExitNow();
         }
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case kRoleRouter:

@@ -654,6 +654,9 @@ void CoapBase::ProcessReceivedResponse(Message &aMessage, const Ip6::MessageInfo
     case kTypeConfirmable:
         // Send empty ACK if it is a CON message.
         IgnoreError(SendAck(aMessage, aMessageInfo));
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
         // Handling of RFC7641 and multicast is below.
     case kTypeNonConfirmable:
@@ -707,6 +710,9 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         cachedResponse->Finish();
         error = Send(*cachedResponse, aMessageInfo);
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case OT_ERROR_NO_BUFS:

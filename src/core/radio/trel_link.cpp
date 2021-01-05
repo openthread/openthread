@@ -284,6 +284,9 @@ void Link::HandleTimer(void)
     case Mle::kRoleChild:
         HandleTimer(Get<Mle::MleRouter>().GetParent());
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
 
     case Mle::kRoleRouter:

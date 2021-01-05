@@ -158,6 +158,9 @@ void NcpUart::EncodeAndSendToUart(void)
             {
                 mByte = txFrameBuffer.OutFrameReadByte();
 
+#ifdef __ANDROID__
+                [[clang::fallthrough]];
+#endif
             case kEncodingFrame:
 
                 SuccessOrExit(mFrameEncoder.Encode(mByte));
@@ -181,6 +184,9 @@ void NcpUart::EncodeAndSendToUart(void)
 
             mState = kFinalizingFrame;
 
+#ifdef __ANDROID__
+            [[clang::fallthrough]];
+#endif
             // fall through
 
         case kFinalizingFrame:

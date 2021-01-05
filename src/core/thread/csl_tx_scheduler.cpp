@@ -254,7 +254,11 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
             aChild.ResetCslTxAttempts();
         }
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
+
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
     case OT_ERROR_ABORT:
 

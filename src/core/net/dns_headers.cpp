@@ -282,6 +282,9 @@ otError Name::ReadName(const Message &aMessage,
             aOffset      = iterator.mNameEndOffset;
             error        = OT_ERROR_NONE;
 
+#ifdef __ANDROID__
+            [[clang::fallthrough]];
+#endif
             // Fall through
 
         default:

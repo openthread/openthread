@@ -313,6 +313,9 @@ exit:
 
     case OT_ERROR_NO_BUFS:
         mTimer.Start(kDelayNoBufs);
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     default:

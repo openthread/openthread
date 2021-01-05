@@ -542,6 +542,9 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         // queue for it. The message would be then converted to a
         // direct tx.
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
 #endif
 

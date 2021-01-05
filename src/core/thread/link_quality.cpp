@@ -234,16 +234,25 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     case 0:
         threshold1 += kHysteresisThreshold;
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall-through
 
     case 1:
         threshold2 += kHysteresisThreshold;
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall-through
 
     case 2:
         threshold3 += kHysteresisThreshold;
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall-through
 
     default:

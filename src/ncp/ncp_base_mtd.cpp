@@ -125,6 +125,9 @@ static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
         break;
 
     case OT_ROUTE_PREFERENCE_MED:
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     default:

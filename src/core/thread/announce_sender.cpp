@@ -142,6 +142,9 @@ void AnnounceSender::CheckState(void)
         }
 #endif
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case Mle::kRoleDisabled:

@@ -718,6 +718,9 @@ uint8_t Buffer::OutFrameReadByte(void)
     {
     case kReadStateNotActive:
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // Fall through
 
     case kReadStateDone:

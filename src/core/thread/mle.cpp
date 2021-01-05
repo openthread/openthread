@@ -1726,6 +1726,9 @@ void Mle::HandleAttachTimer(void)
             break;
         }
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case kAttachStateAnnounce:
@@ -1738,6 +1741,9 @@ void Mle::HandleAttachTimer(void)
             }
         }
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case kAttachStateChildIdRequest:
@@ -3692,6 +3698,9 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
         mRetrieveNewNetworkData = true;
 
+#ifdef __ANDROID__
+        [[clang::fallthrough]];
+#endif
         // fall through
 
     case kRoleChild:
