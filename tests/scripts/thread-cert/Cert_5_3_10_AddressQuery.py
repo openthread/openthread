@@ -78,6 +78,7 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
+            'router_selection_jitter': 1,
             'allowlist': [BR, ROUTER1, DUT_ROUTER2]
         },
         BR: {
@@ -150,19 +151,19 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
         router1_addr = self.nodes[ROUTER1].get_addr(PREFIX_1)
         self.assertTrue(router1_addr is not None)
         self.assertTrue(self.nodes[MED1].ping(router1_addr))
-        self.simulator.go(3)
+        self.simulator.go(1)
 
         # 4 BR: BR sends an ICMPv6 Echo Request to MED1 using GUA PREFIX_1
         # address
         med1_addr = self.nodes[MED1].get_addr(PREFIX_1)
         self.assertTrue(med1_addr is not None)
         self.assertTrue(self.nodes[BR].ping(med1_addr))
-        self.simulator.go(3)
+        self.simulator.go(1)
 
         # 5 MED1: MED1 sends an ICMPv6 Echo Request to ROUTER1 using GUA PREFIX_1
         # address
         self.assertTrue(self.nodes[MED1].ping(router1_addr))
-        self.simulator.go(3)
+        self.simulator.go(1)
 
         # 6 DUT_ROUTER2: Power off ROUTER1 and wait 580 seconds to allow the
         # LEADER to expire its Router ID
@@ -172,7 +173,7 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
 
         # Send an ICMPv6 Echo Request from MED1 to ROUTER1 GUA PREFIX_1 address
         self.assertFalse(self.nodes[MED1].ping(router1_addr))
-        self.simulator.go(3)
+        self.simulator.go(1)
 
         # 7 MED1: Power off MED1 and wait to allow DUT_ROUTER2 to timeout the
         # child
