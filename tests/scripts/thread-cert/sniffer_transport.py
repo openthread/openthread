@@ -128,6 +128,8 @@ class SnifferSocketTransport(SnifferTransport):
 
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 10 * 1024 * 1024)
+        self._socket.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 10 * 1024 * 1024)
         self._socket.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP,
                                 socket.inet_aton(self.RADIO_GROUP) + socket.inet_aton('127.0.0.1'))
         self._socket.bind(self._nodeid_to_address(0))
