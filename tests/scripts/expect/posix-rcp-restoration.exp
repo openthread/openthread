@@ -70,11 +70,7 @@ try {
     setup_two_nodes "-" false
 
     switch_node 2
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_2 $expect_out(1,string)
-    expect "Done"
+    set addr_2 [get_ipaddr mleid]
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11003\n"
@@ -85,11 +81,7 @@ try {
     sleep 1
 
     switch_node 1
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_1 $expect_out(1,string)
-    expect "Done"
+    set addr_1 [get_ipaddr mleid]
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11004\n"
@@ -134,11 +126,7 @@ try {
     setup_two_nodes "-" false
 
     switch_node 2
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_2 $expect_out(1,string)
-    expect "Done"
+    set addr_2 [get_ipaddr mleid]
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11003\n"
@@ -149,11 +137,7 @@ try {
     sleep 1
 
     switch_node 1
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_1 $expect_out(1,string)
-    expect "Done"
+    set addr_1 [get_ipaddr mleid]
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11004\n"
@@ -191,11 +175,7 @@ try {
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
     setup_leader
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr(1) $expect_out(1,string)
-    expect "Done"
+    set addr(1) [get_ipaddr mleid]
     send "udp open\n"
     expect "Done"
     send "udp bind :: 11004\n"
@@ -206,11 +186,7 @@ try {
         spawn_node $i
         setup_node $i "-"
         switch_node $i
-        send "ipaddr mleid\n"
-        expect "ipaddr mleid"
-        expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-        set addr($i) $expect_out(1,string)
-        expect "Done"
+        set addr($i) [get_ipaddr mleid]
         send "udp open\n"
         expect "Done"
         send "udp bind :: 11003\n"

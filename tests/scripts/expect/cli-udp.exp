@@ -37,16 +37,10 @@ send "udp open\n"
 expect "Done"
 send "udp bind :: 11001\n"
 expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_2 $expect_out(1,string)
+set addr_2 [get_ipaddr mleid]
 
 switch_node 1
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_1 $expect_out(1,string)
+set addr_1 [get_ipaddr mleid]
 send "udp open\n"
 expect "Done"
 send "udp bind :: 11002\n"

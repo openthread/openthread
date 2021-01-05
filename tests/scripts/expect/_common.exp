@@ -127,6 +127,8 @@ proc dispose_node {id} {
 proc setup_leader {} {
     send "dataset init new\n"
     expect "Done"
+    send "dataset masterkey 00112233445566778899aabbccddeeff\n"
+    expect "Done"
     send "dataset commit active\n"
     expect "Done"
     send "ifconfig up\n"
@@ -149,8 +151,8 @@ proc dispose_all {} {
 proc get_ipaddr {type} {
     send "ipaddr $type\n"
     expect "ipaddr $type"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set rval $expect_out(1,string)
+    expect -re {([\r\n ])(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})([\r\n>])}
+    set rval $expect_out(2,string)
     expect "Done"
 
     return $rval
@@ -158,8 +160,8 @@ proc get_ipaddr {type} {
 
 proc get_extaddr {} {
     send "extaddr\n"
-    expect -re {([0-9a-fA-F]{16})}
-    set rval $expect_out(1,string)
+    expect -re {([\r\n ])([0-9a-fA-F]{16})([\r\n>])}
+    set rval $expect_out(2,string)
     expect "Done"
 
     return $rval
@@ -168,8 +170,8 @@ proc get_extaddr {} {
 proc get_rloc16 {} {
     send "rloc16\n"
     expect "rloc16"
-    expect -re {([0-9a-fA-F]{4})}
-    set rval $expect_out(1,string)
+    expect -re {([\r\n ])([0-9a-fA-F]{4})([\r\n>])}
+    set rval $expect_out(2,string)
     expect "Done"
 
     return $rval

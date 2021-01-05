@@ -33,11 +33,7 @@ source "tests/scripts/expect/_multinode.exp"
 setup_two_nodes
 
 switch_node 1
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
-expect "Done"
+set extaddr [get_extaddr]
 send "router list\n"
 expect "router list"
 expect -re {(\d+)}

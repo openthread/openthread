@@ -39,11 +39,7 @@ send "coap resource test/resource\n"
 expect "Done"
 send "coap set Testing123\n"
 expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_1 $expect_out(1,string)
-expect "Done"
+set addr_1 [get_ipaddr mleid]
 
 switch_node 2
 send "coap start\n"
@@ -70,11 +66,7 @@ expect "Done"
 expect "coap response from $addr_1"
 send "coap post $addr_1 test/resource none Testing123\n"
 expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_2 $expect_out(1,string)
-expect "Done"
+set addr_2 [get_ipaddr mleid]
 
 switch_node 1
 expect "coap request from $addr_2 GET"

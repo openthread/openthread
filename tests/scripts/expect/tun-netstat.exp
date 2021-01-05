@@ -47,10 +47,7 @@ expect "|                 Local Address                 |                  Peer 
 expect "+-----------------------------------------------+-----------------------------------------------+"
 expect "| 0:0:0:0:0:0:0:0:10001                         | 0:0:0:0:0:0:0:0:*                             |"
 expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr $expect_out(1,string)
+set addr [get_ipaddr mleid]
 send "udp connect $addr 10001\n"
 expect "Done"
 send "netstat\n"

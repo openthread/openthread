@@ -41,11 +41,8 @@ send "coaps resource test/resource\n"
 expect "Done"
 send "coaps set Testing123\n"
 expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_1 $expect_out(1,string)
-expect "Done"
+
+set addr_1 [get_ipaddr mleid]
 
 switch_node 2
 send "coaps x509\n"
@@ -72,11 +69,7 @@ expect "Done"
 send "coaps get $addr_1 default\n"
 expect "Done"
 expect "coaps response from $addr_1"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_2 $expect_out(1,string)
-expect "Done"
+set addr_2 [get_ipaddr mleid]
 
 switch_node 1
 expect "coaps request from $addr_2 GET"

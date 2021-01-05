@@ -183,11 +183,7 @@ send "dataset init pending\n"
 expect "Error 23: NotFound"
 
 switch_node 1
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr $expect_out(1,string)
-expect "Done"
+set addr [get_ipaddr mleid]
 
 switch_node 2
 send "dataset mgmtgetcommand active \
