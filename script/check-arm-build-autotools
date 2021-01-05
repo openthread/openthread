@@ -133,7 +133,6 @@ build_kw41z()
 build_nrf52811()
 {
     local options=(
-        "BORDER_ROUTER=1"
         "COAP=1"
         "DNS_CLIENT=1"
         "LINK_RAW=1"

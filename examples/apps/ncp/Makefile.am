@@ -76,10 +76,12 @@ LDADD_COMMON                                                          += \
     $(NULL)
 endif # OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
+if OPENTHREAD_ENABLE_NCP
 if OPENTHREAD_ENABLE_FTD
 bin_PROGRAMS                                                          += \
     ot-ncp-ftd                                                           \
     $(NULL)
+endif
 endif
 
 ot_ncp_ftd_CPPFLAGS                                                    = \
@@ -110,10 +112,12 @@ ot_ncp_ftd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_NCP
 if OPENTHREAD_ENABLE_MTD
 bin_PROGRAMS                                                          += \
     ot-ncp-mtd                                                           \
     $(NULL)
+endif
 endif
 
 ot_ncp_mtd_CPPFLAGS                                                    = \
