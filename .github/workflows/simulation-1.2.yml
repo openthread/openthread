@@ -353,6 +353,59 @@ jobs:
         name: cov-thread-border-routing
         path: tmp/coverage.info
 
+  thread-1-2-posix:
+    name: thread-1-2-posix-${{ matrix.compiler.c }}-${{ matrix.arch }}
+    runs-on: ubuntu-20.04
+    env:
+      CFLAGS: -${{ matrix.arch }}
+      CXXFLAGS: -${{ matrix.arch }}
+      LDFLAGS: -${{ matrix.arch }}
+      COVERAGE: 1
+      THREAD_VERSION: 1.2
+      OT_NODE_TYPE: rcp
+      VIRTUAL_TIME: 1
+      INTER_OP: 1
+      CC: ${{ matrix.compiler.c }}
+      CXX: ${{ matrix.compiler.cxx }}
+    strategy:
+      matrix:
+        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
+        arch: ["m32", "m64"]
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./bootstrap
+        ./script/test build
+    - name: Run
+      run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
+    - name: Copy Shared Libraries
+      if: ${{ failure() }}
+      run: |
+          ./script/test copy_so_lib
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: thread-1-2-posix-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
+        path: "*.pcap"
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-posix-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        path: tmp/coverage.info
+
   upload-coverage:
     needs:
     - thread-1-2
@@ -361,6 +414,7 @@ jobs:
     - expects
     - thread-1-2-backbone
     - thread-border-routing
+    - thread-1-2-posix
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
