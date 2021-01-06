@@ -265,7 +265,7 @@ extern "C" {
  */
 #if defined(__cplusplus) && (__cplusplus >= 201703L)
 #define OT_FALL_THROUGH [[fallthrough]]
-#elif defined(__CLANG__)
+#elif defined(__clang__)
 #define OT_FALL_THROUGH [[clang::fallthrough]]
 #elif defined(__GNUC__) && (__GNUC__ >= 7)
 #define OT_FALL_THROUGH __attribute__((fallthrough))

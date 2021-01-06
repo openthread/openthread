@@ -62,9 +62,9 @@ ot_android_bp_cc_defaults {
         enable_android_bp: {
             enabled: true,
         },
-		disable_android_bp: {
+        disable_android_bp: {
             enabled: false,
-		},
+        },
     },
 }
 
@@ -149,12 +149,12 @@ ot_vendor_extension_cc_defaults {
         enable_vendor_extension: {
             cflags: ["-DOPENTHREAD_ENABLE_VENDOR_EXTENSION=1"],
         },
-		vendor_extension_local_include_dir: {
+        vendor_extension_local_include_dir: {
             local_include_dirs: ["%s"],
-		},
-		vendor_extension_src: {
+        },
+        vendor_extension_src: {
             srcs: ["%s"],
-		},
+        },
     },
 }
 
