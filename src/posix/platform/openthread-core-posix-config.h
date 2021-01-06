@@ -136,4 +136,84 @@
 #define OPENTHREAD_CONFIG_LOG_MAX_SIZE 1024
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES
+ *
+ * The maximum number of Joiner entries maintained by the Commissioner.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES
+#define OPENTHREAD_CONFIG_COMMISSIONER_MAX_JOINER_ENTRIES 4
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
+ *
+ * The number of EID-to-RLOC cache entries.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES 32
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+ *
+ * The maximum number of children.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_MAX_CHILDREN
+#define OPENTHREAD_CONFIG_MLE_MAX_CHILDREN 64
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+ *
+ * The maximum number of supported IPv6 address registrations per child.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD
+#define OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD 16
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
+ *
+ * The maximum number of supported IPv6 addresses allows to be externally added.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS 8
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
+ *
+ * The maximum number of supported IPv6 multicast addresses allows to be externally added.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
+#define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS 8
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
+ *
+ * The size of heap buffer when DTLS is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (63 * 1024)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS
+ *
+ * The size of heap buffer when DTLS is disabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE_NO_DTLS (63 * 1024)
+#endif
+
 #endif // OPENTHREAD_CORE_POSIX_CONFIG_H_
