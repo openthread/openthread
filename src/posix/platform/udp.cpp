@@ -55,6 +55,10 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
+#include "posix/platform/ip6_utils.hpp"
+
+using namespace ot::Posix::Ip6Utils;
+
 static const size_t kMaxUdpSize = 1280;
 
 static void *FdToHandle(int aFd)
@@ -392,26 +396,24 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
         if (len > 0 && netifName[0] != '\0')
         {
             fd = FdFromHandle(aUdpSocket->mHandle);
-            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, error = OT_ERROR_FAILED);
+            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, {
+                otLogWarnPlat("Failed to bind to device: %s", strerror(errno));
+                error = OT_ERROR_FAILED;
+            });
         }
 
         ExitNow();
 #endif
     }
 
-    switch (connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)))
+    if (connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)) != 0)
     {
-    case 0:
-        break;
 #ifdef __APPLE__
-    case EAFNOSUPPORT:
-        VerifyOrExit(isDisconnect, error = OT_ERROR_FAILED);
-        break;
+        VerifyOrExit(errno == EAFNOSUPPORT && isDisconnect);
 #endif
-
-    default:
+        otLogWarnPlat("Failed to connect to [%s]:%u: %s", Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
+                      aUdpSocket->mPeerName.mPort, strerror(errno));
         error = OT_ERROR_FAILED;
-        break;
     }
 
 exit:
