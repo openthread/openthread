@@ -220,7 +220,9 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool aRestoreDatasetFromNcp)
+void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
+                                                          bool aRestoreDatasetFromNcp,
+                                                          bool aSkipRcpCompatibilityCheck)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -253,8 +255,11 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
         DieNow(exitCode);
     }
 
-    SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
-    SuccessOrDie(CheckRadioCapabilities());
+    if (!aSkipRcpCompatibilityCheck)
+    {
+        SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
+        SuccessOrDie(CheckRadioCapabilities());
+    }
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;

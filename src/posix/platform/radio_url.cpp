@@ -92,7 +92,8 @@ const char *otSysGetRadioUrlHelpString(void)
            "    cca-threshold[=dbm]           Set the radio's CCA ED threshold in dBm measured at antenna connector.\n"
            "    fem-lnagain[=dbm]             Set the Rx LNA gain in dBm of the external FEM.\n"
            "    ncp-dataset                   Retrieve dataset from ncp.\n"
-           "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n";
+           "    no-reset                      Do not send Spinel reset command to RCP on initialization.\n"
+           "    skip-rcp-compatibility-check  Skip checking RCP API version and capabilities during initialization.\n";
 }
 
 namespace ot {
