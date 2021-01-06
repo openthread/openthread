@@ -1726,10 +1726,7 @@ void Mle::HandleAttachTimer(void)
             break;
         }
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     case kAttachStateAnnounce:
         if (shouldAnnounce)
@@ -1741,10 +1738,7 @@ void Mle::HandleAttachTimer(void)
             }
         }
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     case kAttachStateChildIdRequest:
         SetAttachState(kAttachStateIdle);
@@ -3698,10 +3692,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
         mRetrieveNewNetworkData = true;
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleChild:
         // Source Address

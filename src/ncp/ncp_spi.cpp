@@ -326,10 +326,7 @@ void NcpSpi::PrepareTxFrame(void)
     case kTxStateHandlingSendDone:
         mTxState = kTxStateIdle;
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+        OT_FALL_THROUGH;
         // to next case to prepare the next frame (if any).
 
     case kTxStateIdle:

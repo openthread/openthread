@@ -217,10 +217,7 @@ void Joiner::Finish(otError aError)
         IgnoreError(Get<Ip6::Filter>().RemoveUnsecurePort(kJoinerUdpPort));
         mTimer.Stop();
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kStateDiscover:
         Get<Coap::CoapSecure>().Stop();

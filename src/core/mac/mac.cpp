@@ -1380,10 +1380,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
         case OT_ERROR_NO_ACK:
             frameTxSuccess = false;
 
-#ifdef __ANDROID__
-            [[clang::fallthrough]];
-#endif
-            // Fall through
+            OT_FALL_THROUGH;
 
         case OT_ERROR_NONE:
             neighbor->GetLinkInfo().AddFrameTxStatus(frameTxSuccess);
@@ -2027,10 +2024,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         srcaddr.SetExtended(neighbor->GetExtAddress());
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+        OT_FALL_THROUGH;
 
     case Address::kTypeExtended:
 
@@ -2090,10 +2084,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         VerifyOrExit(mOperation == kOperationWaitingForData);
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+        OT_FALL_THROUGH;
 
     case OT_ERROR_NONE:
         break;
@@ -2169,10 +2160,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             ExitNow();
         }
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kOperationEnergyScan:
 

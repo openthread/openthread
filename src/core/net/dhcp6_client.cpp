@@ -231,10 +231,7 @@ bool Client::HandleTrickleTimer(void)
         mStartTime                           = TimerMilli::GetNow();
         mIdentityAssociationCurrent->mStatus = kIaStatusSoliciting;
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     case kIaStatusSoliciting:
         Solicit(mIdentityAssociationCurrent->mPrefixAgentRloc);

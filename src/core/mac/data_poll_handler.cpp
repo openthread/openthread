@@ -247,10 +247,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
         otLogInfoMac("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(),
                      aChild.GetIndirectTxAttempts(), kMaxPollTriggeredTxAttempts);
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+        OT_FALL_THROUGH;
 
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
     case OT_ERROR_ABORT:

@@ -131,10 +131,9 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
     {
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+
+        OT_FALL_THROUGH;
+
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         property = SPINEL_PROP_THREAD_CHILD_TABLE;
         VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
@@ -142,10 +141,9 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
 
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // Fall through
+
+        OT_FALL_THROUGH;
+
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
         property = SPINEL_PROP_THREAD_NEIGHBOR_TABLE;
         break;

@@ -350,10 +350,7 @@ otError Lowpan::Compress(Message &           aMessage,
             hcCtl |= kHcNextHeader;
             break;
         }
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     default:
         SuccessOrExit(error = buf.Write(static_cast<uint8_t>(ip6Header.GetNextHeader())));
@@ -442,10 +439,7 @@ otError Lowpan::Compress(Message &           aMessage,
 
             error = Compress(aMessage, aMacSource, aMacDest, buf);
 
-#ifdef __ANDROID__
-            [[clang::fallthrough]];
-#endif
-            // fall through
+            OT_FALL_THROUGH;
 
         default:
             ExitNow();

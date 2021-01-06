@@ -313,10 +313,7 @@ exit:
 
     case OT_ERROR_NO_BUFS:
         mTimer.Start(kDelayNoBufs);
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     default:
         LogError("send Dataset set to leader", error);

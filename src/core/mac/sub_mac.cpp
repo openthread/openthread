@@ -479,10 +479,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
         ccaSuccess = false;
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     case OT_ERROR_NONE:
     case OT_ERROR_NO_ACK:

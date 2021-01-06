@@ -142,10 +142,7 @@ void AnnounceSender::CheckState(void)
         }
 #endif
 
-#ifdef __ANDROID__
-        [[clang::fallthrough]];
-#endif
-        // fall through
+        OT_FALL_THROUGH;
 
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:

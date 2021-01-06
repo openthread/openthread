@@ -223,10 +223,7 @@ otError DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInf
                 }
             }
 
-#ifdef __ANDROID__
-                [[clang::fallthrough]];
-#endif
-                // fall through
+                OT_FALL_THROUGH;
 
             default:
                 SuccessOrExit(dataset.SetTlv(datasetTlv));
