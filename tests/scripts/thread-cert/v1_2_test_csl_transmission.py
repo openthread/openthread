@@ -47,6 +47,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         },
         SSED_1: {
             'version': '1.2',
+            'is_mtd': True,
             'mode': '-',
         },
     }

@@ -354,23 +354,16 @@ jobs:
         path: tmp/coverage.info
 
   thread-1-2-posix:
-    name: thread-1-2-posix-${{ matrix.compiler.c }}-${{ matrix.arch }}
     runs-on: ubuntu-20.04
     env:
-      CFLAGS: -${{ matrix.arch }}
-      CXXFLAGS: -${{ matrix.arch }}
-      LDFLAGS: -${{ matrix.arch }}
       COVERAGE: 1
+      PYTHONUNBUFFERED: 1
+      READLINE: readline
       THREAD_VERSION: 1.2
       OT_NODE_TYPE: rcp
       VIRTUAL_TIME: 1
+      VIRTUAL_TIME_UART: 1
       INTER_OP: 1
-      CC: ${{ matrix.compiler.c }}
-      CXX: ${{ matrix.compiler.cxx }}
-    strategy:
-      matrix:
-        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
-        arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
       with:
@@ -378,7 +371,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y libreadline6-dev g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -396,14 +389,14 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
-        name: thread-1-2-posix-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
+        name: thread-1-2-posix-pcaps
         path: "*.pcap"
     - name: Generate Coverage
       run: |
-        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
+        ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-thread-1-2-posix-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        name: cov-thread-1-2-posix
         path: tmp/coverage.info
 
   upload-coverage:

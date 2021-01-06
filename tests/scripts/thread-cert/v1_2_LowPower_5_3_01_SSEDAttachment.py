@@ -61,6 +61,7 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
         SSED_1: {
             'version': '1.2',
             'name': 'SSED_1',
+            'is_mtd': True,
             'mode': '-',
             'panid': 0xface,
             'allowlist': [LEADER],
