@@ -55,6 +55,8 @@ extern "C" {
 /**
  * This method initializes the Border Routing Manager on given infrastructure interface.
  *
+ * @note  This method MUST be called before any other otBorderRouting* APIs.
+ *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex  The infrastructure interface index.
  *
@@ -62,21 +64,19 @@ extern "C" {
  * @retval  OT_ERROR_INVALID_ARGS  The index of the infra interface is not valid.
  * @retval  OT_ERROR_FAILED        Internal failure. This is usually failed to generate random prefixes.
  *
- * @retval  This method MUST be called before any other otBorderRouting* APIs.
- *
  */
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex);
 
 /**
  * This method enables/disables the Border Routing Manager.
  *
+ * @note  The Border Routing Manager is enabled by default.
+ *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  * @param[in]  aEnabled   A boolean to enable/disable the routing manager.
  *
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
- * @retval  OT_ERROR_NONE           Successfully enabled the Border Routing Manager.
- *
- * @note  The Border Routing Manager is enabled by default.
+ * @retval  OT_ERROR_NONE           Successfully enabled/disabled the Border Routing Manager.
  *
  */
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);

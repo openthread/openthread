@@ -104,23 +104,39 @@ public:
     Type GetType(void) const { return mType; }
 
     /**
-     * This method sets the length of the option (in bytes).
+     * This method sets the size of the option (in bytes).
      *
      * Since the option must end on their natural 64-bits boundaries,
-     * the actual length set to the option is padded to (aLength + 7) / 8 * 8.
+     * the actual length set to the option is padded to (aSize + 7) / 8 * 8.
      *
-     * @param[in]  aLength  The length of the option in unit of 1 byte.
+     * @param[in]  aSize  The size of the option in unit of 1 byte.
      *
      */
-    void SetLength(uint16_t aLength) { mLength = (aLength + kLengthUnit - 1) / kLengthUnit; }
+    void SetSize(uint16_t aSize) { mLength = (aSize + kLengthUnit - 1) / kLengthUnit; }
 
     /**
-     * This method returns the length of the option (in bytes).
+     * This method returns the size of the option (in bytes).
      *
-     * @returns  The length of the option.
+     * @returns  The size of the option in unit of 1 byte.
      *
      */
-    uint16_t GetLength(void) const { return mLength * 8; }
+    uint16_t GetSize(void) const { return mLength * kLengthUnit; }
+
+    /**
+     * This method sets the length of the option (in unit of 8 bytes).
+     *
+     * @param[in]  aLength  The length of the option in unit of 8 bytes.
+     *
+     */
+    void SetLength(uint8_t aLength) { mLength = aLength; }
+
+    /**
+     * This method returns the length of the option (in unit of 8 bytes).
+     *
+     * @returns  The length of the option in unit of 8 bytes.
+     *
+     */
+    uint16_t GetLength(void) const { return mLength; }
 
     /**
      * This helper method returns a pointer to the next valid option in the buffer.
@@ -218,7 +234,7 @@ public:
     /**
      * This method returns the prefix in this option.
      *
-     * @retval  The IPv6 prefix in this option.
+     * @returns  The IPv6 prefix in this option.
      *
      */
     Ip6::Prefix GetPrefix(void) const;
@@ -231,7 +247,7 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetLength() == sizeof(*this)) && (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT);
+        return (GetSize() == sizeof(*this)) && (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT);
     }
 
 private:
@@ -279,7 +295,7 @@ public:
     /**
      * This method returns the route preference.
      *
-     * @returns  the route preference.
+     * @returns  The route preference.
      *
      */
     otRoutePreference GetPreference(void) const;
@@ -293,7 +309,7 @@ public:
     void SetRouteLifetime(uint32_t aLifetime) { mRouteLifetime = HostSwap32(aLifetime); }
 
     /**
-     * This method returns lifetime of the route in seconds.
+     * This method returns Route Lifetime in seconds.
      *
      * @returns  The Route Lifetime in seconds.
      *
@@ -311,7 +327,7 @@ public:
     /**
      * This method returns the prefix in this option.
      *
-     * @retval  The IPv6 prefix in this option.
+     * @returns  The IPv6 prefix in this option.
      *
      */
     Ip6::Prefix GetPrefix(void) const;
@@ -329,6 +345,13 @@ private:
     {
         kPreferenceMask   = 0x18u,
         kPreferenceOffset = 3u,
+    };
+
+    enum : uint8_t
+    {
+        kPreferenceLow  = 0x03,
+        kPreferenceMed  = 0x00,
+        kPreferenceHigh = 0x01,
     };
 
     uint8_t      mPrefixLength;  // The prefix length in bits.
