@@ -262,8 +262,13 @@ class OtCli:
         # Default command if no match below, will be overridden if below conditions are met.
         cmd = './ot-cli-%s' % (mode)
 
+        # For Thread 1.2 MTD node, use ot-cli-mtd build regardless of OT_CLI_PATH
+        if self.version == '1.2' and mode == 'mtd' and 'top_builddir' in os.environ:
+            srcdir = os.environ['top_builddir']
+            cmd = '%s/examples/apps/cli/ot-cli-%s %d' % (srcdir, mode, nodeid)
+
         # If Thread version of node matches the testing environment version.
-        if self.version == self.env_version:
+        elif self.version == self.env_version:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
             if self.version == '1.2' and self.is_bbr:
