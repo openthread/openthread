@@ -151,8 +151,8 @@ proc dispose_all {} {
 proc get_ipaddr {type} {
     send "ipaddr $type\n"
     expect "ipaddr $type"
-    expect -re {([\r\n ])(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})([\r\n>])}
-    set rval $expect_out(2,string)
+    expect -re {[\r\n ](([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})[\r\n>]}
+    set rval $expect_out(1,string)
     expect "Done"
 
     return $rval
@@ -160,8 +160,8 @@ proc get_ipaddr {type} {
 
 proc get_extaddr {} {
     send "extaddr\n"
-    expect -re {([\r\n ])([0-9a-fA-F]{16})([\r\n>])}
-    set rval $expect_out(2,string)
+    expect -re {[\r\n ]([0-9a-fA-F]{16})[\r\n>]}
+    set rval $expect_out(1,string)
     expect "Done"
 
     return $rval
@@ -170,8 +170,8 @@ proc get_extaddr {} {
 proc get_rloc16 {} {
     send "rloc16\n"
     expect "rloc16"
-    expect -re {([\r\n ])([0-9a-fA-F]{4})([\r\n>])}
-    set rval $expect_out(2,string)
+    expect -re {[\r\n ]([0-9a-fA-F]{4})[\r\n>]}
+    set rval $expect_out(1,string)
     expect "Done"
 
     return $rval
