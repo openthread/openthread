@@ -33,6 +33,6 @@ spawn_node 1
 
 send "netif\n"
 expect -re {[\r\n][^\r\n:]+?:\d+}
-expect "Done"
+expect_line "Done"
 
 dispose_all

@@ -42,13 +42,13 @@ expect "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|Q
 expect "+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+"
 expect -re "\\| +(\\d+) \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\|\\d\\|\\d\\|\\d\\| *\\d+\\| \\d \\| +\\d+ \\| $extaddr \\|"
 set child_id $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 send "child list\n"
 expect "child list"
 expect $child_id
-expect "Done"
+expect_line "Done"
 send "child $child_id\n"
 expect "Ext Addr: $extaddr"
-expect "Done"
+expect_line "Done"
 
 dispose_all

@@ -34,7 +34,7 @@ spawn_node 1
 
 spawn_node 2 mtd
 send "csl period 5000\n"
-expect "Done"
+expect_line "Done"
 
 setup_two_nodes "-" false
 

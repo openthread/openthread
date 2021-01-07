@@ -35,15 +35,15 @@ setup_two_nodes
 switch_node 1
 
 send "netdata help\n"
-expect "Done"
+expect_line "Done"
 
 send "netdata register\n"
-expect "Done"
+expect_line "Done"
 
 send "netdata show\n"
-expect "Done"
+expect_line "Done"
 
 send "netdata show -x\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

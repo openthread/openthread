@@ -33,12 +33,12 @@ spawn_node 1
 
 send "log level\n"
 expect -re {\d}
-expect "Done"
+expect_line "Done"
 send "log level 5\n"
-expect "Done"
+expect_line "Done"
 send "log level\n"
 expect "5"
-expect "Done"
+expect_line "Done"
 send "log level -1\n"
 expect "Error 7: InvalidArgs"
 send "log level 6\n"

@@ -68,4 +68,3 @@ private:
 } // namespace Ip6Utils
 } // namespace Posix
 } // namespace ot
-
