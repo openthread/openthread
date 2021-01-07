@@ -64,7 +64,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/rsch/raal                                  \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/lp_timer                          \
     -I$(top_srcdir)/third_party/NordicSemiconductor/drivers/radio/platform/temperature                       \
-    -Wno-unused-parameter                                                                                    \
     $(NULL)
 
 # Only reference the SDK header files included in third_party/NordicSemiconductor
@@ -99,7 +98,6 @@ COMMONCPPFLAGS                                                                  
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/drivers/include                                     \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/mdk                                                 \
     -I$(top_srcdir)/third_party/NordicSemiconductor/nrfx/soc                                                 \
-    -Wno-unused-parameter                                                                                    \
     $(NULL)
 endif
 
