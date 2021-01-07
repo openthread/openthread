@@ -92,14 +92,12 @@ public:
         explicit Iterator(Instance &aInstance)
             : InstanceLocator(aInstance)
             , mFilter(Child::StateFilter::kInStateValid)
-            , mItem(nullptr)
         {
         }
 
         void Advance(void);
 
         Child::StateFilter mFilter;
-        Child *            mItem;
     };
 
     /**

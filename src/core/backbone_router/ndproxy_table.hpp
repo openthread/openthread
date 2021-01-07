@@ -264,8 +264,7 @@ private:
 
         void Advance(void);
 
-        NdProxy *mItem;
-        Filter   mFilter;
+        Filter mFilter;
     };
 
     class IteratorBuilder : public InstanceLocator

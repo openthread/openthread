@@ -76,13 +76,10 @@ public:
 
         Iterator(Instance &aInstance, IteratorType)
             : InstanceLocator(aInstance)
-            , mItem(nullptr)
         {
         }
 
         void Advance(void);
-
-        Router *mItem;
     };
 
     /**

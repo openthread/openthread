@@ -55,13 +55,30 @@ namespace ot {
  * Users of this class should follow CRTP-style inheritance, i.e., `IteratorType` class itself should publicly inherit
  * from `ItemPtrIterator<ItemType, IteratorType>`. `ItemType` is the type of the object that `IteratorType` points to.
  *
- * The template type `IteratorType` should contain a `mItem` member variable  which is a pointer of `ItemType`,
- * and have a method `Advance()`.
+ * The template type `IteratorType` MUST have a method `Advance()`.
  *
  */
 template <class ItemType, class IteratorType> class ItemPtrIterator
 {
 public:
+    /**
+     * Default constructor
+     *
+     */
+    ItemPtrIterator(void)
+        : mItem(nullptr)
+    {
+    }
+
+    /**
+     * Contructor with an Item pointer.
+     *
+     */
+    explicit ItemPtrIterator(ItemType *item)
+        : mItem(item)
+    {
+    }
+
     /**
      * This method indicates whether there are no more items to be accessed (iterator has reached the end).
      *
@@ -69,7 +86,7 @@ public:
      * @retval FALSE  The current item is valid.
      *
      */
-    bool IsDone(void) const { return (static_cast<const IteratorType *>(this)->mItem == nullptr); }
+    bool IsDone(void) const { return mItem == nullptr; }
 
     /**
      * This method overloads `++` operator (pre-increment) to advance the iterator.
@@ -100,7 +117,7 @@ public:
      * @returns A reference to the item currently pointed by the iterator.
      *
      */
-    ItemType &operator*(void) { return *(static_cast<IteratorType *>(this)->mItem); }
+    ItemType &operator*(void) { return *mItem; }
 
     /**
      * This method overloads the `->` dereference operator and gets a pointer to the item to which the iterator is
@@ -109,7 +126,7 @@ public:
      * @returns A pointer to the item associated with the iterator, or `nullptr` if iterator is empty/done.
      *
      */
-    ItemType *operator->(void) { return static_cast<IteratorType *>(this)->mItem; }
+    ItemType *operator->(void) { return mItem; }
 
     /**
      * This method overloads operator `==` to evaluate whether or not two `Iterator` instances point to the same
@@ -121,10 +138,7 @@ public:
      * @retval FALSE  If the two `Iterator` objects do not point to the same item.
      *
      */
-    bool operator==(const IteratorType &aOther) const
-    {
-        return static_cast<const IteratorType *>(this)->mItem == aOther.mItem;
-    }
+    bool operator==(const IteratorType &aOther) const { return mItem == aOther.mItem; }
 
     /**
      * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances point to the same
@@ -136,10 +150,10 @@ public:
      * @retval FALSE  If the two `Iterator` objects point to the same item or both are done.
      *
      */
-    bool operator!=(const IteratorType &aOther) const
-    {
-        return static_cast<const IteratorType *>(this)->mItem != aOther.mItem;
-    }
+    bool operator!=(const IteratorType &aOther) const { return mItem != aOther.mItem; }
+
+protected:
+    ItemType *mItem;
 };
 
 /**

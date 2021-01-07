@@ -289,7 +289,8 @@ public:
          *
          */
         explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny)
-            : mNetif(aNetif)
+            : ItemPtrIterator(nullptr)
+            , mNetif(aNetif)
             , mFilter(aFilter)
         {
             AdvanceFrom(mNetif.GetMulticastAddresses());
@@ -303,7 +304,6 @@ public:
 
         ExternalMulticastAddressIterator(const Netif &aNetif, IteratorType)
             : mNetif(aNetif)
-            , mItem(nullptr)
         {
         }
 
@@ -321,9 +321,8 @@ public:
 
         void Advance(void) { AdvanceFrom(mItem->GetNext()); }
 
-        const Netif &                  mNetif;
-        ExternalNetifMulticastAddress *mItem;
-        Address::TypeFilter            mFilter;
+        const Netif &       mNetif;
+        Address::TypeFilter mFilter;
     };
 
     /**

@@ -44,7 +44,7 @@ namespace ot {
 
 RouterTable::Iterator::Iterator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mItem(Get<RouterTable>().GetFirstEntry())
+    , ItemPtrIterator(Get<RouterTable>().GetFirstEntry())
 {
 }
 

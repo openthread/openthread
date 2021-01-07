@@ -43,8 +43,8 @@ namespace ot {
 
 ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter)
     : InstanceLocator(aInstance)
+    , ItemPtrIterator(nullptr)
     , mFilter(aFilter)
-    , mItem(nullptr)
 {
     Reset();
 }
