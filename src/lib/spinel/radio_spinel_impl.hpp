@@ -80,7 +80,7 @@ using ot::Spinel::Decoder;
 namespace ot {
 namespace Spinel {
 
-static otError SpinelStatusToOtError(spinel_status_t aError)
+static inline otError SpinelStatusToOtError(spinel_status_t aError)
 {
     otError ret;
 
@@ -154,7 +154,7 @@ static otError SpinelStatusToOtError(spinel_status_t aError)
     return ret;
 }
 
-static void LogIfFail(const char *aText, otError aError)
+static inline void LogIfFail(const char *aText, otError aError)
 {
     OT_UNUSED_VARIABLE(aText);
     OT_UNUSED_VARIABLE(aError);

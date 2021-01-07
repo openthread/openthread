@@ -47,6 +47,10 @@ endif
 
 if OPENTHREAD_ENABLE_NCP
 SUBDIRS                                += ncp
+else
+if OPENTHREAD_ENABLE_RADIO_ONLY
+SUBDIRS                                += ncp
+endif
 endif
 endif
 

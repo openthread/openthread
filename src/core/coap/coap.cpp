@@ -950,8 +950,8 @@ bool TxParameters::IsValid(void) const
         // Calulate exchange lifetime step by step and verify no overflow.
         uint32_t tmp = Multiply(mAckTimeout, (1U << (mMaxRetransmit + 1)) - 1);
 
-        tmp /= mAckRandomFactorDenominator;
         tmp = Multiply(tmp, mAckRandomFactorNumerator);
+        tmp /= mAckRandomFactorDenominator;
 
         rval = (tmp != 0 && (tmp + mAckTimeout + 2 * kDefaultMaxLatency) > tmp);
     }
