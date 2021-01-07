@@ -114,6 +114,18 @@ public:
     }
 
     /**
+     * This method gets the length of Link Metrics Data.
+     *
+     * @returns  The number of bytes for the data.
+     *
+     */
+    uint8_t GetEnhAckDataLen() const
+    {
+        return static_cast<uint8_t>(mLinkMetrics.mLqi) + static_cast<uint8_t>(mLinkMetrics.mLinkMargin) +
+               static_cast<uint8_t>(mLinkMetrics.mRssi);
+    }
+
+    /**
      * This method gets the metrics configured for the Enhanced-ACK Based Probing.
      *
      * @returns  The metrics configured.
@@ -235,5 +247,17 @@ uint8_t otLinkMetricsEnhAckGenData(const otMacAddress *aMacAddress, uint8_t aLqi
 
 exit:
     return bytes;
+}
+
+uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress)
+{
+    uint8_t              len      = 0;
+    LinkMetricsDataInfo *dataInfo = GetLinkMetricsInfoByMacAddress(aMacAddress);
+
+    VerifyOrExit(dataInfo != nullptr);
+    len = dataInfo->GetEnhAckDataLen();
+
+exit:
+    return len;
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
