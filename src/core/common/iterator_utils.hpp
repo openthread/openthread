@@ -53,32 +53,17 @@ namespace ot {
  * object.
  *
  * Users of this class should follow CRTP-style inheritance, i.e., `IteratorType` class itself should publicly inherit
- * from `ItemPtrIterator<ItemType, IteratorType>`. `ItemType` is the type of the object that `IteratorType` points to.
+ * from `ItemPtrIterator<ItemType, IteratorType>`.
  *
- * The template type `IteratorType` MUST have a method `Advance()`.
+ * @tparam  ItemType      The type of the object that the iterator points to.
+ * @tparam  IteratorType  The Iterator class that inherits this class. The class MUST have a method `Advance()` which
+ *                        moves the pointer to the next. `Advance()` SHALL NOT be called when `IsDone()` is `true` and
+ *                        would set the pointer to `nullptr` when there's no more elements.
  *
  */
 template <class ItemType, class IteratorType> class ItemPtrIterator
 {
 public:
-    /**
-     * Default constructor
-     *
-     */
-    ItemPtrIterator(void)
-        : mItem(nullptr)
-    {
-    }
-
-    /**
-     * Contructor with an Item pointer.
-     *
-     */
-    explicit ItemPtrIterator(ItemType *item)
-        : mItem(item)
-    {
-    }
-
     /**
      * This method indicates whether there are no more items to be accessed (iterator has reached the end).
      *
@@ -153,6 +138,24 @@ public:
     bool operator!=(const IteratorType &aOther) const { return mItem != aOther.mItem; }
 
 protected:
+    /**
+     * Default constructor
+     *
+     */
+    ItemPtrIterator(void)
+        : mItem(nullptr)
+    {
+    }
+
+    /**
+     * Contructor with an Item pointer.
+     *
+     */
+    explicit ItemPtrIterator(ItemType *item)
+        : mItem(item)
+    {
+    }
+
     ItemType *mItem;
 };
 
