@@ -34,13 +34,13 @@ source "tests/scripts/expect/_multinode.exp"
 spawn_node 1
 
 send "ping ::1 1 2 1 1\n"
-expect "Done"
+expect_line "Done"
 send "ping stop\n"
-expect "Done"
+expect_line "Done"
 send "ping ::1 1 2 0.12345 1\n"
-expect "Done"
+expect_line "Done"
 send "ping stop\n"
-expect "Done"
+expect_line "Done"
 send "ping ::1 1 2 1 1 1\n"
 expect "Error 7: InvalidArgs"
 
@@ -50,11 +50,7 @@ dispose_all
 setup_two_nodes
 
 switch_node 2
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr $expect_out(1,string)
-expect "Done"
+set addr [get_ipaddr mleid]
 
 switch_node 1
 send "ping $addr\n"

@@ -42,16 +42,16 @@ setup_default_network
 set timeout 1
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 set extaddr1 [get_extaddr]
 
@@ -61,16 +61,16 @@ spawn_node 2 cli
 setup_default_network
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "router"
-expect "Done"
+expect_line "Done"
 sleep 3
 
 get_rloc16
@@ -79,22 +79,22 @@ spawn_node 3 cli
 setup_default_network
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr add ${extaddr1}\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr denylist\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "router"
-expect "Done"
+expect_line "Done"
 sleep 4
 
 set extaddr3 [get_extaddr]
@@ -105,25 +105,25 @@ spawn_node 4 cli
 setup_default_network
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 
 send "mode rn\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr add ${extaddr3}\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr allowlist\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "child"
-expect "Done"
+expect_line "Done"
 
 get_rloc16
 
@@ -133,7 +133,7 @@ set rloc(1) [get_ipaddr "rloc"]
 
 send "networkdiagnostic get ff03::2 5 16\n"
 expect "DIAG_GET.rsp/ans from $rloc(1)"
-expect "Done"
+expect_line "Done"
 
 sleep 5
 

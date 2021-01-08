@@ -34,35 +34,32 @@ setup_two_nodes
 
 switch_node 1
 send "ipmaddr add ff0e::1\n"
-expect "Done"
+expect_line "Done"
 send "ipmaddr\n"
 expect "ff0e:0:0:0:0:0:0:1"
-expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr $expect_out(1,string)
+expect_line "Done"
+set addr [get_ipaddr mleid]
 
 switch_node 2
 send "ping ff0e::1\n"
-expect "Done"
+expect_line "Done"
 expect "16 bytes from $addr: icmp_seq=1"
 
 switch_node 1
 send "ipmaddr del ff0e::1\n"
-expect "Done"
+expect_line "Done"
 send "ipmaddr del ff0e::1\n"
 expect "Error 23: NotFound"
 send "ipmaddr promiscuous enable\n"
-expect "Done"
+expect_line "Done"
 send "ipmaddr promiscuous\n"
 expect "Enabled"
-expect "Done"
+expect_line "Done"
 send "ipmaddr promiscuous disable\n"
-expect "Done"
+expect_line "Done"
 send "ipmaddr promiscuous\n"
 expect "Disabled"
-expect "Done"
+expect_line "Done"
 send "ipmaddr something_invalid\n"
 expect "Error 35: InvalidCommand"
 
