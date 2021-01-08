@@ -113,13 +113,14 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aResetRadio            TRUE to reset on init, FALSE to not reset on init.
-     * @param[in]  aRestoreDatasetFromNcp TRUE to restore dataset to host from non-volatile memory
-     *                                    (only used when attempts to upgrade from NCP to RCP mode),
-     *                                    FALSE otherwise.
+     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
+     * @param[in]  aRestoreDatasetFromNcp      TRUE to restore dataset to host from non-volatile memory
+     *                                         (only used when attempts to upgrade from NCP to RCP mode),
+     *                                         FALSE otherwise.
+     * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
 
     /**
      * Deinitialize this radio transceiver.
