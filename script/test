@@ -403,6 +403,13 @@ do_copy_so_lib()
     cp /lib64/ld-linux-x86-64.so.2 ./so-lib
 }
 
+do_check_crash()
+{
+    CRASHED=$([[ $(ls ./ot-core-dump 2>/dev/null) ]] && echo 1 || echo 0)
+    echo "$CRASHED"
+    [[ $CRASHED -eq "1" ]] && do_copy_so_lib
+}
+
 do_generate_coverage()
 {
     mkdir -p tmp/
@@ -554,8 +561,8 @@ main()
             prepare_coredump_upload)
                 do_prepare_coredump_upload
                 ;;
-            copy_so_lib)
-                do_copy_so_lib
+            check_crash)
+                do_check_crash
                 ;;
             generate_coverage)
                 shift

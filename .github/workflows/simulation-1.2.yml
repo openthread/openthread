@@ -76,15 +76,26 @@ jobs:
         ./script/test prepare_coredump_upload
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-packet-verification-low-power
+        path: |
+          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
+          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
+          ./ot-core-dump/*
+          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
@@ -126,10 +137,12 @@ jobs:
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
         done
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -138,7 +151,7 @@ jobs:
           *.pcap
           *.json
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-packet-verification-low-power
         path: |
@@ -215,12 +228,14 @@ jobs:
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
         OT_OPTIONS=-DOT_READLINE=OFF OT_NODE_TYPE=rcp ./script/test build expect
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-expect-1-2
         path: |
