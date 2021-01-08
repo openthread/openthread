@@ -138,7 +138,7 @@ otError P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) co
         mbedtls_ecdsa_sign_det(&ecdsa.grp, &r, &s, &ecdsa.d, aHash.GetBytes(), Sha256::Hash::kSize, MBEDTLS_MD_SHA256);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    OT_ASSERT(mbedtls_mpi_size(&r) == kMpiSize);
+    OT_ASSERT(mbedtls_mpi_size(&r) <= kMpiSize);
 
     ret = mbedtls_mpi_write_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
