@@ -44,13 +44,13 @@ namespace ot {
 
 RouterTable::Iterator::Iterator(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mRouter(Get<RouterTable>().GetFirstEntry())
+    , ItemPtrIterator(Get<RouterTable>().GetFirstEntry())
 {
 }
 
 void RouterTable::Iterator::Advance(void)
 {
-    mRouter = Get<RouterTable>().GetNextEntry(mRouter);
+    mItem = Get<RouterTable>().GetNextEntry(mItem);
 }
 
 RouterTable::RouterTable(Instance &aInstance)
