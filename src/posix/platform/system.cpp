@@ -39,6 +39,7 @@
 
 #include <openthread-core-config.h>
 #include <openthread/border_router.h>
+#include <openthread/heap.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/otns.h>
@@ -93,6 +94,10 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
     instance = otInstanceInitSingle();
     assert(instance != nullptr);
+
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    otHeapSetCAllocFree(calloc, free);
+#endif
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneInit(instance, aPlatformConfig->mBackboneInterfaceName);
