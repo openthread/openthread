@@ -137,21 +137,21 @@ Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatc
 Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
 {
     Neighbor *   neighbor = nullptr;
-    Mac::Address macAddresss;
+    Mac::Address macAddress;
 
     if (aIp6Address.IsLinkLocal())
     {
-        aIp6Address.GetIid().ConvertToMacAddress(macAddresss);
+        aIp6Address.GetIid().ConvertToMacAddress(macAddress);
     }
 
     if (Get<Mle::Mle>().IsRoutingLocator(aIp6Address))
     {
-        macAddresss.SetShort(aIp6Address.GetIid().GetLocator());
+        macAddress.SetShort(aIp6Address.GetIid().GetLocator());
     }
 
-    if (!macAddresss.IsNone())
+    if (!macAddress.IsNone())
     {
-        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddresss, aFilter));
+        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddress, aFilter));
         ExitNow();
     }
 
