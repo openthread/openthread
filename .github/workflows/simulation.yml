@@ -333,9 +333,9 @@ jobs:
       with:
         name: core-expect-rcp
         path: |
-          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-mtd
-          ./build/openthread-simulation-1.2/examples/apps/ncp/ot-rcp
-          ./build/openthread-posix-1.2/src/posix/ot-cli
+          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-mtd
+          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
+          ./build/openthread-posix-1.1/src/posix/ot-cli
           ./ot-core-dump/*
           ./so-lib/*
     - name: Generate Coverage
