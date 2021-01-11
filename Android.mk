@@ -313,6 +313,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/backbone.cpp                         \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
+    src/posix/platform/infra_if.cpp                         \
     src/posix/platform/logging.cpp                          \
     src/posix/platform/misc.cpp                             \
     src/posix/platform/multicast_routing.cpp                \
