@@ -219,6 +219,7 @@ class OtbrDocker:
 
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
+        self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
 
 
 class OtCli:
@@ -570,7 +571,6 @@ class NodeImpl:
                 data = [int(hex, 16) for hex in res.group(0)[1:-1].split(b' ') if hex and hex != b'..']
                 payload += bytearray(data)
                 log = log[res.end() - 1:]
-
         assert len(payload) == payload_len
         return (direction, type, payload)
 
@@ -636,6 +636,11 @@ class NodeImpl:
 
     def commissioner_add_joiner(self, addr, psk):
         cmd = 'commissioner joiner add %s %s' % (addr, psk)
+        self.send_command(cmd)
+        self._expect('Done')
+
+    def commissioner_set_provisioning_url(self, provisioning_url=''):
+        cmd = 'commissioner provisioningurl %s' % provisioning_url
         self.send_command(cmd)
         self._expect('Done')
 
@@ -1165,6 +1170,17 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
+    def __getOmrAddress(self):
+        prefixes = [prefix.split('::')[0] for prefix in self.get_prefixes()]
+        omr_addrs = []
+        for addr in self.get_addrs():
+            for prefix in prefixes:
+                if (addr.startswith(prefix)):
+                    omr_addrs.append(addr)
+                    break
+
+        return omr_addrs
+
     def __getLinkLocalAddress(self):
         for ip6Addr in self.get_addrs():
             if re.match(config.LINK_LOCAL_REGEX_PATTERN, ip6Addr, re.I):
@@ -1238,6 +1254,8 @@ class NodeImpl:
             return self.__getDua()
         elif address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
+        elif address_type == config.ADDRESS_TYPE.OMR:
+            return self.__getOmrAddress()
         else:
             return None
 
@@ -1259,6 +1277,21 @@ class NodeImpl:
         cmd = 'prefix remove %s' % prefix
         self.send_command(cmd)
         self._expect('Done')
+
+    def get_prefixes(self):
+        netdata = self.netdata_show()
+        prefixes = []
+
+        for i in range(1, len(netdata)):
+            if netdata[i].startswith("Routes:"):
+                break
+            prefixes.append(netdata[i])
+
+        return prefixes
+
+    def netdata_show(self):
+        self.send_command('netdata show')
+        return self._expect_command_output('netdata show')
 
     def add_route(self, prefix, stable=False, prf='med'):
         cmd = 'route add %s ' % prefix
@@ -1329,10 +1362,12 @@ class NodeImpl:
 
         self._expect('Conflict:', timeout=timeout)
 
-    def scan(self):
+    def scan(self, result=1):
         self.send_command('scan')
 
-        return self._expect_results(r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
+        if result == 1:
+            return self._expect_results(
+                r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
     def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
         cmd = 'ping %s' % ipaddr
@@ -1383,6 +1418,7 @@ class NodeImpl:
         channel=None,
         channel_mask=None,
         master_key=None,
+        security_policy=[],
     ):
         self.send_command('dataset clear')
         self._expect('Done')
@@ -1408,6 +1444,14 @@ class NodeImpl:
 
         if master_key is not None:
             cmd = 'dataset masterkey %s' % master_key
+            self.send_command(cmd)
+            self._expect('Done')
+
+        if security_policy and len(security_policy) == 2:
+            cmd = 'dataset securitypolicy %s %s' % (
+                str(security_policy[0]),
+                security_policy[1],
+            )
             self.send_command(cmd)
             self._expect('Done')
 
@@ -1506,48 +1550,35 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect('Done')
 
-    def send_mgmt_active_get(
-        self,
-        active_timestamp=None,
-        channel=None,
-        channel_mask=None,
-        extended_panid=None,
-        panid=None,
-        master_key=None,
-        mesh_local=None,
-        network_name=None,
-        binary=None,
-    ):
-        cmd = 'dataset mgmtgetcommand active '
+    def send_mgmt_active_get(self, addr='', tlvs=[]):
+        cmd = 'dataset mgmtgetcommand active'
 
-        if active_timestamp is not None:
-            cmd += 'activetimestamp %d ' % active_timestamp
+        if addr != '':
+            cmd += ' address '
+            cmd += addr
 
-        if channel is not None:
-            cmd += 'channel %d ' % channel
-
-        if channel_mask is not None:
-            cmd += 'channelmask %d ' % channel_mask
-
-        if extended_panid is not None:
-            cmd += 'extpanid %s ' % extended_panid
-
-        if panid is not None:
-            cmd += 'panid %d ' % panid
-
-        if master_key is not None:
-            cmd += 'masterkey %s ' % master_key
-
-        if mesh_local is not None:
-            cmd += 'localprefix %s ' % mesh_local
-
-        if network_name is not None:
-            cmd += 'networkname %s ' % self._escape_escapable(network_name)
-
-        if binary is not None:
-            cmd += 'binary %s ' % binary
+        if len(tlvs) != 0:
+            tlv_str = ''.join('%02x' % tlv for tlv in tlvs)
+            cmd += ' -x '
+            cmd += tlv_str
 
         self.send_command(cmd)
+        self._expect('Done')
+
+    def send_mgmt_pending_get(self, addr='', tlvs=[]):
+        cmd = 'dataset mgmtgetcommand pending'
+
+        if addr != '':
+            cmd += ' address '
+            cmd += addr
+
+        if len(tlvs) != 0:
+            tlv_str = ''.join('%02x' % tlv for tlv in tlvs)
+            cmd += ' -x '
+            cmd += tlv_str
+
+        self.send_command(cmd)
+        self._expect('Done')
 
     def send_mgmt_pending_set(
         self,
@@ -1824,6 +1855,13 @@ class NodeImpl:
 
         self._expect('coaps response', timeout=timeout)
 
+    def commissioner_mgmtget(self, tlvs_binary=None):
+        cmd = 'commissioner mgmtget'
+        if tlvs_binary is not None:
+            cmd += ' -x %s' % tlvs_binary
+        self.send_command(cmd)
+        self._expect('Done')
+
     def commissioner_mgmtset(self, tlvs_binary):
         cmd = 'commissioner mgmtset -x %s' % tlvs_binary
         self.send_command(cmd)
@@ -1899,7 +1937,7 @@ class NodeImpl:
 
             line = line[1:][:-1]
             line = [x.strip() for x in line.split('|')]
-            if len(line) != 8:
+            if len(line) < 9:
                 print("unexpected line %d: %s" % (i, line))
                 continue
 
@@ -1918,6 +1956,7 @@ class NodeImpl:
             lqout = int(line[5])
             age = int(line[6])
             emac = str(line[7])
+            link = int(line[8])
 
             router_table[id] = {
                 'rloc16': rloc16,
@@ -1927,6 +1966,7 @@ class NodeImpl:
                 'lqout': lqout,
                 'age': age,
                 'emac': emac,
+                'link': link,
             }
 
         return router_table
@@ -2035,11 +2075,21 @@ class LinuxHost():
         return resp_count
 
     def _getBackboneGua(self) -> Optional[str]:
-        for ip6Addr in self.get_addrs():
-            if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, ip6Addr, re.I):
-                return ip6Addr
+        for addr in self.get_addrs():
+            if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, addr, re.I):
+                return addr
 
         return None
+
+    def _getInfraUla(self) -> Optional[str]:
+        """ Returns the ULA addresses autoconfigured on the infra link.
+        """
+        addrs = []
+        for addr in self.get_addrs():
+            if re.match(config.ONLINK_PREFIX_REGEX_PATTERN, addr, re.I):
+                addrs.append(addr)
+
+        return addrs
 
     def ping(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)
@@ -2088,9 +2138,12 @@ class HostNode(LinuxHost, OtbrDocker):
         self.name = name or ('Host%d' % nodeid)
         super().__init__(nodeid, **kwargs)
 
-    def start(self):
+    def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()
-        self._service_radvd_start()
+        if start_radvd:
+            self._service_radvd_start(prefix, slaac)
+        else:
+            self._service_radvd_stop()
 
     def stop(self):
         self._service_radvd_stop()
@@ -2110,14 +2163,16 @@ class HostNode(LinuxHost, OtbrDocker):
         Returns:
             IPv6 address string.
         """
-        assert address_type == config.ADDRESS_TYPE.BACKBONE_GUA
+        assert address_type in [config.ADDRESS_TYPE.BACKBONE_GUA, config.ADDRESS_TYPE.ONLINK_ULA]
 
         if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
+        if address_type == config.ADDRESS_TYPE.ONLINK_ULA:
+            return self._getInfraUla()
         else:
             return None
 
-    def _service_radvd_start(self):
+    def _service_radvd_start(self, prefix, slaac):
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface eth0
 {
@@ -2130,12 +2185,12 @@ interface eth0
 	prefix %s
 	{
 		AdvOnLink on;
-		AdvAutonomous off;
+		AdvAutonomous %s;
 		AdvRouterAddr off;
 	};
 };
 EOF
-""" % config.DOMAIN_PREFIX)
+""" % (prefix, 'on' if slaac else 'off'))
         self.bash('service radvd start')
         self.bash('service radvd status')  # Make sure radvd service is running
 

@@ -186,6 +186,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/backbone_router/bbr_manager.cpp                \
     src/core/backbone_router/multicast_listeners_table.cpp  \
     src/core/backbone_router/ndproxy_table.cpp              \
+    src/core/border_router/infra_if_platform.cpp            \
+    src/core/border_router/router_advertisement.cpp         \
+    src/core/border_router/routing_manager.cpp              \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
@@ -204,6 +207,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/trickle_timer.cpp                       \
     src/core/crypto/aes_ccm.cpp                             \
     src/core/crypto/aes_ecb.cpp                             \
+    src/core/crypto/ecdsa.cpp                               \
     src/core/crypto/hkdf_sha256.cpp                         \
     src/core/crypto/hmac_sha256.cpp                         \
     src/core/crypto/mbedtls.cpp                             \
@@ -309,6 +313,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/backbone.cpp                         \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
+    src/posix/platform/infra_if.cpp                         \
     src/posix/platform/logging.cpp                          \
     src/posix/platform/misc.cpp                             \
     src/posix/platform/multicast_routing.cpp                \
@@ -320,12 +325,10 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/system.cpp                           \
     src/posix/platform/uart.cpp                             \
     src/posix/platform/udp.cpp                              \
-    third_party/mbedtls/repo/library/md.c                   \
-    third_party/mbedtls/repo/library/md_wrap.c              \
-    third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
-    third_party/mbedtls/repo/library/platform.c             \
-    third_party/mbedtls/repo/library/platform_util.c        \
-    third_party/mbedtls/repo/library/sha256.c               \
+    third_party/mbedtls/repo/library/aes.c                  \
+    third_party/mbedtls/repo/library/asn1parse.c            \
+    third_party/mbedtls/repo/library/asn1write.c            \
+    third_party/mbedtls/repo/library/base64.c               \
     third_party/mbedtls/repo/library/bignum.c               \
     third_party/mbedtls/repo/library/ccm.c                  \
     third_party/mbedtls/repo/library/cipher.c               \
@@ -333,18 +336,35 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/cmac.c                 \
     third_party/mbedtls/repo/library/ctr_drbg.c             \
     third_party/mbedtls/repo/library/debug.c                \
+    third_party/mbedtls/repo/library/ecdh.c                 \
+    third_party/mbedtls/repo/library/ecdsa.c                \
     third_party/mbedtls/repo/library/ecjpake.c              \
+    third_party/mbedtls/repo/library/ecp.c                  \
     third_party/mbedtls/repo/library/ecp_curves.c           \
     third_party/mbedtls/repo/library/entropy.c              \
     third_party/mbedtls/repo/library/entropy_poll.c         \
-    third_party/mbedtls/repo/library/ssl_cookie.c           \
+    third_party/mbedtls/repo/library/hmac_drbg.c            \
+    third_party/mbedtls/repo/library/md.c                   \
+    third_party/mbedtls/repo/library/md_wrap.c              \
+    third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
+    third_party/mbedtls/repo/library/oid.c                  \
+    third_party/mbedtls/repo/library/pem.c                  \
+    third_party/mbedtls/repo/library/pk.c                   \
+    third_party/mbedtls/repo/library/pk_wrap.c              \
+    third_party/mbedtls/repo/library/pkparse.c              \
+    third_party/mbedtls/repo/library/pkwrite.c              \
+    third_party/mbedtls/repo/library/platform.c             \
+    third_party/mbedtls/repo/library/platform_util.c        \
+    third_party/mbedtls/repo/library/sha256.c               \
     third_party/mbedtls/repo/library/ssl_ciphersuites.c     \
     third_party/mbedtls/repo/library/ssl_cli.c              \
+    third_party/mbedtls/repo/library/ssl_cookie.c           \
     third_party/mbedtls/repo/library/ssl_srv.c              \
     third_party/mbedtls/repo/library/ssl_ticket.c           \
     third_party/mbedtls/repo/library/ssl_tls.c              \
-    third_party/mbedtls/repo/library/aes.c                  \
-    third_party/mbedtls/repo/library/ecp.c                  \
+    third_party/mbedtls/repo/library/threading.c            \
+    third_party/mbedtls/repo/library/x509.c                 \
+    third_party/mbedtls/repo/library/x509_crt.c             \
     $(OPENTHREAD_PROJECT_SRC_FILES)                         \
     $(NULL)
 

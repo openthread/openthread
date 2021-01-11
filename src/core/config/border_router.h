@@ -55,4 +55,14 @@
 #define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+ *
+ * Define to 1 to enable (Duckhorn) Border Routing support.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#define OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE 0
+#endif
+
 #endif // CONFIG_BORDER_ROUTER_H_

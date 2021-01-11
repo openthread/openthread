@@ -551,7 +551,7 @@ class ProvisioningUrl(object):
 class ProvisioningUrlFactory:
 
     def parse(self, data, message_info):
-        url = data.decode('utf-8')
+        url = data.getvalue().decode('utf-8')
         return ProvisioningUrl(url)
 
 

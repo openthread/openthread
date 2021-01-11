@@ -1,4 +1,4 @@
-#!/usr/bin/expect -f
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
@@ -26,31 +26,38 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import functools
+from typing import Union, Collection, Any, Pattern
 
-source "tests/scripts/expect/_common.exp"
+
+def match_line(line: str, expect_line: Union[str, Pattern, Collection[Any]]) -> bool:
+    """Checks if a line is expected (matched by one of the given patterns)."""
+    if isinstance(expect_line, Pattern):
+        match = expect_line.match(line)
+    elif isinstance(expect_line, str):
+        match = (line == expect_line)
+    else:
+        match = any(match_line(line, x) for x in expect_line)
+
+    return match
 
 
-set spawn_id [spawn_node 1]
+def cached(func):
+    """Decorator cached makes the function to cache its result and return it in duplicate calls."""
+    prop_name = '__cached_' + func.__name__
 
-send "panid 0xface\n"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "thread start\n"
-expect "Done"
+    @functools.wraps(func)
+    def _cached_func(self):
+        try:
+            return getattr(self, prop_name)
+        except AttributeError:
+            val = func(self)
+            setattr(self, prop_name, val)
+            return val
 
-wait_for "state" "leader"
-expect "Done"
+    return _cached_func
 
-send "ping fdde:ad00:beef:0:0:ff:fe00:fc00\n"
-expect "Done"
-expect "16 bytes from "
-expect {
-    "fdde:ad00:beef:0:0:ff:fe00:fc00" abort
 
-    -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})} {}
-
-    timeout abort
-}
-
-dispose
+def constant_property(func):
+    """A constant property is a property that only evaluated once."""
+    return property(cached(func))

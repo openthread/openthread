@@ -113,13 +113,14 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aResetRadio            TRUE to reset on init, FALSE to not reset on init.
-     * @param[in]  aRestoreDatasetFromNcp TRUE to restore dataset to host from non-volatile memory
-     *                                    (only used when attempts to upgrade from NCP to RCP mode),
-     *                                    FALSE otherwise.
+     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
+     * @param[in]  aRestoreDatasetFromNcp      TRUE to restore dataset to host from non-volatile memory
+     *                                         (only used when attempts to upgrade from NCP to RCP mode),
+     *                                         FALSE otherwise.
+     * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
 
     /**
      * Deinitialize this radio transceiver.
@@ -649,6 +650,29 @@ public:
      *
      */
     otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+
+    /**
+     * This method sets the radio region code.
+     *
+     * @param[in]   aRegionCode  The radio region code.
+     *
+     * @retval  OT_ERROR_NONE             Successfully set region code.
+     * @retval  OT_ERROR_FAILED           Other platform specific errors.
+     *
+     */
+    otError SetRadioRegion(uint16_t aRegionCode);
+
+    /**
+     * This method gets the radio region code.
+     *
+     * @param[out]   aRegionCode  The radio region code.
+     *
+     * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+     * @retval  OT_ERROR_NONE             Successfully got region code.
+     * @retval  OT_ERROR_FAILED           Other platform specific errors.
+     *
+     */
+    otError GetRadioRegion(uint16_t *aRegionCode);
 
     /**
      * This method checks whether the spinel interface is radio-only.

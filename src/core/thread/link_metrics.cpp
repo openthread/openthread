@@ -498,7 +498,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
         case kLinkMetricsReportSub:
             VerifyOrExit(!hasStatus,
                          error = OT_ERROR_DROP); // There shouldn't be any Report-Sub TLV when there's a Status TLV
-            VerifyOrExit(tlv.GetLength() == sizeof(typeIdFlags), error = OT_ERROR_PARSE);
+            VerifyOrExit(tlv.GetLength() > sizeof(typeIdFlags), error = OT_ERROR_PARSE);
             SuccessOrExit(aMessage.Read(pos, typeIdFlags));
             if (typeIdFlags.IsExtendedFlagSet())
             {

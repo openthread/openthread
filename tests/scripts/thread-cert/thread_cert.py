@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import binascii
 import json
 import logging
 import os
@@ -157,6 +158,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if node.is_host:
                 continue
 
+            self.nodes[i].set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
@@ -184,11 +186,14 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_timeout(params['timeout'])
 
             if 'active_dataset' in params:
+                if 'master_key' not in params['active_dataset']:
+                    params['active_dataset']['master_key'] = binascii.hexlify(config.DEFAULT_MASTER_KEY).decode()
                 self.nodes[i].set_active_dataset(params['active_dataset']['timestamp'],
                                                  panid=params['active_dataset'].get('panid'),
                                                  channel=params['active_dataset'].get('channel'),
                                                  channel_mask=params['active_dataset'].get('channel_mask'),
-                                                 master_key=params['active_dataset'].get('master_key'))
+                                                 master_key=params['active_dataset'].get('master_key'),
+                                                 security_policy=params['active_dataset'].get('security_policy'))
 
             if 'pending_dataset' in params:
                 self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],

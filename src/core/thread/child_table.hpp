@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "thread/topology.hpp"
@@ -58,8 +59,9 @@ public:
      * This class represents an iterator for iterating through the child entries in the child table.
      *
      */
-    class Iterator : public InstanceLocator
+    class Iterator : public InstanceLocator, public ItemPtrIterator<Child, Iterator>
     {
+        friend class ItemPtrIterator<Child, Iterator>;
         friend class IteratorBuilder;
 
     public:
@@ -79,99 +81,23 @@ public:
         void Reset(void);
 
         /**
-         * This method indicates whether there are no more `Child` entries in the list (iterator has reached end of
-         * the list).
-         *
-         * @retval TRUE   There are no more entries in the list (reached end of the list).
-         * @retval FALSE  The current entry is valid.
-         *
-         */
-        bool IsDone(void) const { return (mChild == nullptr); }
-
-        /**
-         * This method overloads `++` operator (pre-increment) to advance the iterator.
-         *
-         * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
-         * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `nullptr` and `IsDone()` returns `true`).
-         *
-         */
-        void operator++(void) { Advance(); }
-
-        /**
-         * This method overloads `++` operator (post-increment) to advance the iterator.
-         *
-         * The iterator is moved to point to the next `Child` entry matching the given state filter in the constructor.
-         * If there are no more `Child` entries matching the given filter, the iterator becomes empty (i.e.,
-         * `GetChild()` returns `nullptr` and `IsDone()` returns `true`).
-         *
-         */
-        void operator++(int) { Advance(); }
-
-        /**
          * This method gets the `Child` entry to which the iterator is currently pointing.
          *
          * @returns A pointer to the `Child` entry, or `nullptr` if the iterator is done and/or empty.
          *
          */
-        Child *GetChild(void) { return mChild; }
-
-        /**
-         * This method overloads the `*` dereference operator and gets a reference to `Child` entry to which the
-         * iterator is currently pointing.
-         *
-         * This method MUST be used when the iterator is not empty/finished (i.e., `IsDone()` returns `false`).
-         *
-         * @returns A reference to the `Child` entry currently pointed by the iterator.
-         *
-         */
-        Child &operator*(void) { return *mChild; }
-
-        /**
-         * This method overloads the `->` dereference operator and gets a pointer to `Child` entry to which the iterator
-         * is currently pointing.
-         *
-         * @returns A pointer to the `Child` entry associated with the iterator, or `nullptr` if iterator is empty/done.
-         *
-         */
-        Child *operator->(void) { return mChild; }
-
-        /**
-         * This method overloads operator `==` to evaluate whether or not two `Iterator` instances point to the same
-         * child entry.
-         *
-         * @param[in]  aOther  The other `Iterator` to compare with.
-         *
-         * @retval TRUE   If the two `Iterator` objects point to the same child entry or both are done.
-         * @retval FALSE  If the two `Iterator` objects do not point to the same child entry.
-         *
-         */
-        bool operator==(const Iterator &aOther) const { return mChild == aOther.mChild; }
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances point to the same
-         * child entry.
-         *
-         * @param[in]  aOther  The other `Iterator` to compare with.
-         *
-         * @retval TRUE   If the two `Iterator` objects do not point to the same child entry.
-         * @retval FALSE  If the two `Iterator` objects point to the same child entry or both are done.
-         *
-         */
-        bool operator!=(const Iterator &aOther) const { return mChild != aOther.mChild; }
+        Child *GetChild(void) { return mItem; }
 
     private:
         explicit Iterator(Instance &aInstance)
             : InstanceLocator(aInstance)
             , mFilter(Child::StateFilter::kInStateValid)
-            , mChild(nullptr)
         {
         }
 
         void Advance(void);
 
         Child::StateFilter mFilter;
-        Child *            mChild;
     };
 
     /**

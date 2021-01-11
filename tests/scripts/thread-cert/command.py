@@ -643,28 +643,41 @@ def get_joiner_udp_port_in_discovery_response(command_msg):
     return udp_port_tlv.udp_port
 
 
-def check_joiner_commissioning_messages(commissioning_messages):
+def check_joiner_commissioning_messages(commissioning_messages, url=''):
     """Verify COAP messages sent by joiner while commissioning process.
     """
     print(commissioning_messages)
-    assert len(commissioning_messages) >= 2
+    assert len(commissioning_messages) >= 4
     join_fin_req = commissioning_messages[0]
     assert join_fin_req.type == mesh_cop.MeshCopMessageType.JOIN_FIN_REQ
-    assert_contains_tlv(join_fin_req.tlvs, CheckType.NOT_CONTAIN, mesh_cop.ProvisioningUrl)
-    join_ent_rsp = commissioning_messages[1]
+    if url:
+        provisioning_url = assert_contains_tlv(join_fin_req.tlvs, CheckType.CONTAIN, mesh_cop.ProvisioningUrl)
+        assert url == provisioning_url.url
+    else:
+        assert_contains_tlv(join_fin_req.tlvs, CheckType.NOT_CONTAIN, mesh_cop.ProvisioningUrl)
+
+    join_ent_rsp = commissioning_messages[3]
     assert join_ent_rsp.type == mesh_cop.MeshCopMessageType.JOIN_ENT_RSP
 
 
-def check_commissioner_commissioning_messages(commissioning_messages):
+def check_commissioner_commissioning_messages(commissioning_messages, state=mesh_cop.MeshCopState.ACCEPT):
     """Verify COAP messages sent by commissioner while commissioning process.
     """
-    assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP for msg in commissioning_messages)
+    assert len(commissioning_messages) >= 2
+    join_fin_rsq = commissioning_messages[1]
+    assert join_fin_rsq.type == mesh_cop.MeshCopMessageType.JOIN_FIN_RSP
+    rsq_state = assert_contains_tlv(join_fin_rsq.tlvs, CheckType.CONTAIN, mesh_cop.State)
+    assert rsq_state.state == state
 
 
 def check_joiner_router_commissioning_messages(commissioning_messages):
     """Verify COAP messages sent by joiner router while commissioning process.
     """
-    assert any(msg.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF for msg in commissioning_messages)
+    if len(commissioning_messages) >= 4:
+        join_ent_ntf = commissioning_messages[2]
+    else:
+        join_ent_ntf = commissioning_messages[0]
+    assert join_ent_ntf.type == mesh_cop.MeshCopMessageType.JOIN_ENT_NTF
     return None
 
 

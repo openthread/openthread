@@ -119,7 +119,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #             Commissioner ID TLV
         pv.verify_attached('COMMISSIONER', 'LEADER')
         _pkt = pkts.last()
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _leader_pet_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_wpan_dst16(LEADER_RLOC16).\
             filter_coap_request(LEAD_PET_URI).\
             filter(lambda p: {
@@ -143,7 +143,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #             - Leader Data TLV
         #             - Network Data TLV
         #             - Source Address TLV
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_leader_pet_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(LEAD_PET_URI).\
             filter(lambda p: {
                               NM_STATE_TLV,
@@ -182,7 +182,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #         CoAP Payload
         #             State TLV (value = Accept)
         #             Commissioner Session ID TLV
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _leader_ka_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(LEAD_KA_URI).\
             filter(lambda p: {
@@ -198,7 +198,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #             2.04 Changed
         #         CoAP Payload
         #             State TLV (value = Accept)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_leader_ka_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(LEAD_KA_URI).\
             filter(lambda p: {
                               NM_STATE_TLV
@@ -214,7 +214,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #         CoAP Payload
         #             Commissioner Session ID TLV
         #             Steering Data TLV
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _mgmt_set_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
@@ -237,7 +237,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #             - Leader Data TLV
         #             - Network Data TLV
         #             - Source Address TLV
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_mgmt_set_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(MGMT_COMMISSIONER_SET_URI).\
             filter(lambda p: {
                               NM_STATE_TLV
@@ -276,7 +276,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #         CoAP Payload
         #             State TLV (value = Reject)
         #             Commissioner Session ID TLV
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _leader_ka_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(LEAD_KA_URI).\
             filter(lambda p: {
@@ -300,7 +300,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #             - Leader Data TLV
         #             - Network Data TLV
         #             - Source Address TLV
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_leader_ka_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(LEAD_KA_URI).\
             filter(lambda p: {
                               NM_STATE_TLV
@@ -323,8 +323,8 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
                              {
                               NM_COMMISSIONER_SESSION_ID_TLV
                              } == set(p.thread_meshcop.tlv.type) and\
-                   p.mle.tlv.leader_data.data_version >=
-                   (_dr_pkt2.mle.tlv.leader_data.data_version + 1) % 256 and\
+                   (p.mle.tlv.leader_data.data_version -
+                   _dr_pkt2.mle.tlv.leader_data.data_version) % 256 <= 127 and\
                    p.thread_nwd.tlv.stable == [0]
                    ).\
             must_next()
@@ -334,7 +334,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #              CON POST coap://<L>:MM/c/lp
         #          CoAP Payload
         #              Commissioner ID TLV
-        pkts.filter_wpan_src64(COMMISSIONER).\
+        _leader_pet_pkt = pkts.filter_wpan_src64(COMMISSIONER).\
             filter_ipv6_2dsts(LEADER_ALOC, LEADER_RLOC).\
             filter_coap_request(LEAD_PET_URI).\
             filter(lambda p: {
@@ -352,7 +352,7 @@ class Cert_8_3_01_CommissionerPetition(thread_cert.TestCase):
         #              Commissioner ID TLV
         #              Commissioner Session ID TLV (contains higher Session ID number
         #              than in Step 9)
-        pkts.filter_ipv6_src_dst(LEADER_RLOC, COMMISSIONER_RLOC).\
+        pkts.filter_ipv6_src_dst(_leader_pet_pkt.ipv6.dst, COMMISSIONER_RLOC).\
             filter_coap_ack(LEAD_PET_URI).\
             filter(lambda p: {
                               NM_STATE_TLV,

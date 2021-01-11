@@ -55,6 +55,11 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
     }
 }
 
+proc expect_line {line} {
+    expect -re "\[\r\n \]($line)(?=\[\r\n>\])"
+    return $expect_out(1,string)
+}
+
 proc spawn_node {id {type ""} {radio_url ""}} {
     global spawn_id
     global spawn_ids
@@ -81,23 +86,23 @@ proc spawn_node {id {type ""} {radio_url ""}} {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_POSIX_APPS)/ot-cli $radio_url
             send "factoryreset\n"
             wait_for "state" "disabled"
-            expect "Done"
+            expect_line "Done"
             send "routerselectionjitter 1\n"
-            expect "Done"
+            expect_line "Done"
         }
         cli {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-ftd $id
             send "factoryreset\n"
             wait_for "state" "disabled"
-            expect "Done"
+            expect_line "Done"
             send "routerselectionjitter 1\n"
-            expect "Done"
+            expect_line "Done"
         }
         mtd {
             spawn /usr/bin/env GCOV_PREFIX=$gcov_prefix $::env(OT_SIMULATION_APPS)/cli/ot-cli-mtd $id
             send "factoryreset\n"
             wait_for "state" "disabled"
-            expect "Done"
+            expect_line "Done"
         }
     }
 
@@ -126,15 +131,17 @@ proc dispose_node {id} {
 
 proc setup_leader {} {
     send "dataset init new\n"
-    expect "Done"
+    expect_line "Done"
+    send "dataset masterkey 00112233445566778899aabbccddeeff\n"
+    expect_line "Done"
     send "dataset commit active\n"
-    expect "Done"
+    expect_line "Done"
     send "ifconfig up\n"
-    expect "Done"
+    expect_line "Done"
     send "thread start\n"
-    expect "Done"
+    expect_line "Done"
     wait_for "state" "leader"
-    expect "Done"
+    expect_line "Done"
 }
 
 proc dispose_all {} {
@@ -149,18 +156,16 @@ proc dispose_all {} {
 proc get_ipaddr {type} {
     send "ipaddr $type\n"
     expect "ipaddr $type"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set rval $expect_out(1,string)
-    expect "Done"
+    set rval [expect_line {([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}}]
+    expect_line "Done"
 
     return $rval
 }
 
 proc get_extaddr {} {
     send "extaddr\n"
-    expect -re {([0-9a-fA-F]{16})}
-    set rval $expect_out(1,string)
-    expect "Done"
+    set rval [expect_line {[0-9a-fA-F]{16}}]
+    expect_line "Done"
 
     return $rval
 }
@@ -168,11 +173,19 @@ proc get_extaddr {} {
 proc get_rloc16 {} {
     send "rloc16\n"
     expect "rloc16"
-    expect -re {([0-9a-fA-F]{4})}
-    set rval $expect_out(1,string)
-    expect "Done"
+    set rval [expect_line {[0-9a-fA-F]{4}}]
+    expect_line "Done"
 
     return $rval
+}
+
+proc setup_default_network {} {
+    send "channel 11\n"
+    expect_line "Done"
+    send "panid 0xface\n"
+    expect_line "Done"
+    send "masterkey 00112233445566778899aabbccddeeff\n"
+    expect_line "Done"
 }
 
 set timeout 10

@@ -33,26 +33,18 @@ source "tests/scripts/expect/_multinode.exp"
 setup_two_nodes
 
 switch_node 2
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr $expect_out(1,string)
-expect "Done"
-send "rloc16\n"
-expect "rloc16"
-expect -re {([0-9a-f]{4})}
-set rloc $expect_out(1,string)
-expect "Done"
+set addr [get_ipaddr mleid]
+set rloc [get_rloc16]
 
 switch_node 1
 send "childip\n"
 expect "$rloc: $addr"
-expect "Done"
+expect_line "Done"
 send "childip max 2\n"
-expect "Done"
+expect_line "Done"
 send "childip max\n"
 expect "2"
-expect "Done"
+expect_line "Done"
 send "childip max something_invalid\n"
 expect "Error 7: InvalidArgs"
 send "childip something_invalid\n"

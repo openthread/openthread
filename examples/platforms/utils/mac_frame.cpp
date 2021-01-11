@@ -91,6 +91,26 @@ bool otMacFrameIsAckRequested(const otRadioFrame *aFrame)
     return static_cast<const Mac::Frame *>(aFrame)->GetAckRequest();
 }
 
+static void GetOtMacAddress(const Mac::Address &aInAddress, otMacAddress *aOutAddress)
+{
+    switch (aInAddress.GetType())
+    {
+    case Mac::Address::kTypeNone:
+        aOutAddress->mType = OT_MAC_ADDRESS_TYPE_NONE;
+        break;
+
+    case Mac::Address::kTypeShort:
+        aOutAddress->mType                  = OT_MAC_ADDRESS_TYPE_SHORT;
+        aOutAddress->mAddress.mShortAddress = aInAddress.GetShort();
+        break;
+
+    case Mac::Address::kTypeExtended:
+        aOutAddress->mType                = OT_MAC_ADDRESS_TYPE_EXTENDED;
+        aOutAddress->mAddress.mExtAddress = aInAddress.GetExtended();
+        break;
+    }
+}
+
 otError otMacFrameGetSrcAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress)
 {
     otError      error;
@@ -99,22 +119,21 @@ otError otMacFrameGetSrcAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddre
     error = static_cast<const Mac::Frame *>(aFrame)->GetSrcAddr(address);
     SuccessOrExit(error);
 
-    switch (address.GetType())
-    {
-    case Mac::Address::kTypeNone:
-        aMacAddress->mType = OT_MAC_ADDRESS_TYPE_NONE;
-        break;
+    GetOtMacAddress(address, aMacAddress);
 
-    case Mac::Address::kTypeShort:
-        aMacAddress->mType                  = OT_MAC_ADDRESS_TYPE_SHORT;
-        aMacAddress->mAddress.mShortAddress = address.GetShort();
-        break;
+exit:
+    return error;
+}
 
-    case Mac::Address::kTypeExtended:
-        aMacAddress->mType                = OT_MAC_ADDRESS_TYPE_EXTENDED;
-        aMacAddress->mAddress.mExtAddress = address.GetExtended();
-        break;
-    }
+otError otMacFrameGetDstAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress)
+{
+    otError      error;
+    Mac::Address address;
+
+    error = static_cast<const Mac::Frame *>(aFrame)->GetDstAddr(address);
+    SuccessOrExit(error);
+
+    GetOtMacAddress(address, aMacAddress);
 
 exit:
     return error;

@@ -12,7 +12,7 @@ The diagnostics module supports common diagnostics features that are listed belo
 - [diag power](#diag-power)
 - [diag send](#diag-send-packets-length)
 - [diag repeat](#diag-repeat-delay-length)
-- [diag radio](#diag-radio)
+- [diag radio](#diag-radio-sleep)
 - [diag stats](#diag-stats)
 - [diag stop](#diag-stop)
 

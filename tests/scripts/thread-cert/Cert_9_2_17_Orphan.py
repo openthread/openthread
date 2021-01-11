@@ -119,7 +119,7 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
         # Step 1: Ensure the topology is formed correctly
         # Verify that Leader_1 & Leader_2 are sending MLE Advertisements on separate channels.
         pkts.filter_wpan_src64(LEADER_1).filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next().must_verify(
-            lambda p: p.wpan.dst64 == ED and p.thread_meshcop.tlv.channel == CHANNEL1)
+            lambda p: p.wpan.dst64 == ED and p.thread_meshcop.tlv.channel == [CHANNEL1])
         pkts.filter_wpan_src64(LEADER_1).filter_mle_cmd(MLE_ADVERTISEMENT).must_next()
         pkts.copy().filter_wpan_src64(LEADER_2).filter_mle_cmd(MLE_ADVERTISEMENT).must_next()
 

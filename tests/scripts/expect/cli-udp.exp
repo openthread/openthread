@@ -34,31 +34,25 @@ setup_two_nodes
 
 switch_node 2
 send "udp open\n"
-expect "Done"
+expect_line "Done"
 send "udp bind :: 11001\n"
-expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_2 $expect_out(1,string)
+expect_line "Done"
+set addr_2 [get_ipaddr mleid]
 
 switch_node 1
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_1 $expect_out(1,string)
+set addr_1 [get_ipaddr mleid]
 send "udp open\n"
-expect "Done"
+expect_line "Done"
 send "udp bind :: 11002\n"
-expect "Done"
+expect_line "Done"
 send "udp connect $addr_2 11001\n"
-expect "Done"
+expect_line "Done"
 send "udp send -s 10\n"
-expect "Done"
+expect_line "Done"
 send "udp send -x a68656c6c6f\n"
-expect "Done"
+expect_line "Done"
 send "udp send -t there\n"
-expect "Done"
+expect_line "Done"
 
 switch_node 2
 expect "10 bytes from $addr_1 11002 0123456789"
@@ -68,7 +62,7 @@ expect "5 bytes from $addr_1 11002 there"
 
 switch_node 1
 send "udp help\n"
-expect "Done"
+expect_line "Done"
 send "udp connect something_invalid\n"
 expect "Error 7: InvalidArgs"
 send "udp send -x something_invalid\n"
@@ -78,17 +72,17 @@ expect "Error 7: InvalidArgs"
 
 send "udp linksecurity\n"
 expect "Enabled"
-expect "Done"
+expect_line "Done"
 send "udp linksecurity disable\n"
-expect "Done"
+expect_line "Done"
 send "udp linksecurity\n"
 expect "Disabled"
-expect "Done"
+expect_line "Done"
 send "udp linksecurity enable\n"
-expect "Done"
+expect_line "Done"
 send "udp linksecurity\n"
 expect "Enabled"
-expect "Done"
+expect_line "Done"
 
 send "udp linksecurity something_invalid\n"
 expect "Error 35: InvalidCommand"

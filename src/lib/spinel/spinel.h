@@ -377,7 +377,7 @@
  * Please see section "Spinel definition compatibility guideline" for more details.
  *
  */
-#define SPINEL_RCP_API_VERSION 2
+#define SPINEL_RCP_API_VERSION 3
 
 /**
  * @def SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION
@@ -692,6 +692,8 @@ enum
     SPINEL_NCP_LOG_REGION_OT_BBR      = 17,
     SPINEL_NCP_LOG_REGION_OT_MLR      = 18,
     SPINEL_NCP_LOG_REGION_OT_DUA      = 19,
+    SPINEL_NCP_LOG_REGION_OT_BR       = 20,
+    SPINEL_NCP_LOG_REGION_OT_SRP      = 21,
 };
 
 enum
@@ -1582,6 +1584,13 @@ enum
      * First byte is the channel then the max transmit power, write-only.
      */
     SPINEL_PROP_PHY_CHAN_MAX_POWER = SPINEL_PROP_PHY__BEGIN + 11,
+    /// Region code
+    /** Format: `S`
+     *
+     * The ascii representation of the ISO 3166 alpha-2 code.
+     *
+     */
+    SPINEL_PROP_PHY_REGION_CODE = SPINEL_PROP_PHY__BEGIN + 12,
 
     SPINEL_PROP_PHY__END = 0x30,
 

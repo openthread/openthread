@@ -102,6 +102,10 @@ group("libopenthread-spinel-rcp") {
 
 if (current_os == "fuchsia") {
   group("lib-ot-core") {
-    public_deps = [ ":libopenthread-ftd" ]
+    public_deps = [
+      ":libopenthread-ftd",
+      "src/core:libopenthread-ftd",
+      "src/ncp:libopenthread-ncp-ftd",
+    ]
   }
 }

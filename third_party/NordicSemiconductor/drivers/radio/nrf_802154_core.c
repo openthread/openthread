@@ -169,6 +169,7 @@ static uint8_t *       mp_ack;         ///< Pointer to Ack frame buffer.
 static const uint8_t * mp_tx_data;     ///< Pointer to the data to transmit.
 static uint32_t        m_ed_time_left; ///< Remaining time of the current energy detection procedure [us].
 static uint8_t         m_ed_result;    ///< Result of the current energy detection procedure.
+static uint8_t         m_last_lqi;     ///< LQI value of last Rx frame.
 
 static volatile radio_state_t m_state; ///< State of the radio driver.
 
@@ -1976,7 +1977,7 @@ static void irq_address_state_tx_frame(void)
 
 static void irq_address_state_tx_ack(void)
 {
-    nrf_802154_tx_ack_started(mp_ack);
+    nrf_802154_tx_ack_started(mp_ack, rssi_last_measurement_get(), m_last_lqi);
 }
 
 static void irq_address_state_rx_ack(void)
@@ -2144,6 +2145,8 @@ static void irq_crcok_state_rx(void)
             nrf_802154_pib_auto_ack_get())
         {
             mp_ack = nrf_802154_ack_generator_create(mp_current_rx_buffer->data);
+            m_last_lqi = lqi_get(mp_current_rx_buffer->data);
+
             if (NULL != mp_ack)
             {
                 send_ack = true;

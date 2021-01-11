@@ -119,7 +119,6 @@ void CslTxScheduler::Clear(void)
  */
 void CslTxScheduler::RescheduleCslTx(void)
 {
-    uint64_t radioNow     = otPlatRadioGetNow(&GetInstance());
     uint32_t minDelayTime = Time::kMaxDuration;
     Child *  bestChild    = nullptr;
 
@@ -133,7 +132,7 @@ void CslTxScheduler::RescheduleCslTx(void)
             continue;
         }
 
-        delay = GetNextCslTransmissionDelay(child, radioNow, cslTxDelay);
+        delay = GetNextCslTransmissionDelay(child, cslTxDelay);
 
         if (delay < minDelayTime)
         {
@@ -150,19 +149,18 @@ void CslTxScheduler::RescheduleCslTx(void)
     mCslTxChild = bestChild;
 }
 
-uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild,
-                                                     uint64_t     aRadioNow,
-                                                     uint32_t &   aDelayFromLastRx) const
+uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx) const
 {
+    uint64_t radioNow      = otPlatRadioGetNow(&GetInstance());
     uint32_t periodInUs    = aChild.GetCslPeriod() * kUsPerTenSymbols;
     uint64_t firstTxWindow = aChild.GetLastRxTimestamp() + aChild.GetCslPhase() * kUsPerTenSymbols;
-    uint64_t nextTxWindow  = aRadioNow - (aRadioNow % periodInUs) + (firstTxWindow % periodInUs);
+    uint64_t nextTxWindow  = radioNow - (radioNow % periodInUs) + (firstTxWindow % periodInUs);
 
-    while (aRadioNow + mCslFrameRequestAheadUs >= nextTxWindow) nextTxWindow += periodInUs;
+    while (nextTxWindow < radioNow + mCslFrameRequestAheadUs) nextTxWindow += periodInUs;
 
     aDelayFromLastRx = static_cast<uint32_t>(nextTxWindow - aChild.GetLastRxTimestamp());
 
-    return static_cast<uint32_t>(nextTxWindow - aRadioNow - mCslFrameRequestAheadUs);
+    return static_cast<uint32_t>(nextTxWindow - radioNow - mCslFrameRequestAheadUs);
 }
 
 Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
@@ -207,7 +205,8 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 
     frame->SetChannel(mCslTxChild->GetCslChannel() == 0 ? Get<Mac::Mac>().GetPanChannel()
                                                         : mCslTxChild->GetCslChannel());
-    GetNextCslTransmissionDelay(*mCslTxChild, otPlatRadioGetNow(&GetInstance()), txDelay);
+
+    GetNextCslTransmissionDelay(*mCslTxChild, txDelay);
     frame->SetTxDelay(txDelay);
     frame->SetTxDelayBaseTime(
         static_cast<uint32_t>(mCslTxChild->GetLastRxTimestamp())); // Only LSB part of the time is required.

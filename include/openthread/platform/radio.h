@@ -425,6 +425,9 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
 /**
  * Get the radio's transmit power in dBm.
  *
+ * @note The transmit power returned will be no larger than the power specified in the max power table for
+ * the current channel.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[out] aPower    The transmit power in dBm.
  *
@@ -437,6 +440,9 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
 
 /**
  * Set the radio's transmit power in dBm.
+ *
+ * @note The real transmit power will be no larger than the power specified in the max power table for
+ * the current channel.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPower     The transmit power in dBm.
@@ -977,6 +983,37 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
  *
  */
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
+
+/**
+ * Set the region code.
+ *
+ * The radio region format is the 2-bytes ascii representation of the
+ * ISO 3166 alpha-2 code.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aRegionCode  The radio region.
+ *
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully set region code.
+ *
+ */
+otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode);
+
+/**
+ * Get the region code.
+ *
+ * The radio region format is the 2-bytes ascii representation of the
+ * ISO 3166 alpha-2 code.
+
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[out] aRegionCode  The radio region.
+ *
+ * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully got region code.
+ *
+ */
+otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
 
 /**
  * Enable/disable or update Enhanced-ACK Based Probing in radio for a specific Initiator.

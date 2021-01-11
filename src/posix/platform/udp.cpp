@@ -55,6 +55,10 @@
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
+#include "posix/platform/ip6_utils.hpp"
+
+using namespace ot::Posix::Ip6Utils;
+
 static const size_t kMaxUdpSize = 1280;
 
 static void *FdToHandle(int aFd)
@@ -79,15 +83,20 @@ static bool IsMulticast(const otIp6Address &aAddress)
 
 static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
+#ifdef __APPLE__
+    // use fixed value for CMSG_SPACE is not a constant expression on macOS
+    constexpr size_t kBufferSize = 128;
+#else
+    constexpr size_t kBufferSize = CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int));
+#endif
     struct sockaddr_in6 peerAddr;
-    uint8_t
-                    control[OT_APPLE_IGNORE_GNU_FOLDING_CONSTANT(CMSG_SPACE(sizeof(struct in6_pktinfo)) + CMSG_SPACE(sizeof(int)))];
-    size_t          controlLength = 0;
-    struct iovec    iov;
-    struct msghdr   msg;
-    struct cmsghdr *cmsg;
-    ssize_t         rval;
-    otError         error = OT_ERROR_NONE;
+    uint8_t             control[kBufferSize];
+    size_t              controlLength = 0;
+    struct iovec        iov;
+    struct msghdr       msg;
+    struct cmsghdr *    cmsg;
+    ssize_t             rval;
+    otError             error = OT_ERROR_NONE;
 
     memset(&peerAddr, 0, sizeof(peerAddr));
     peerAddr.sin6_port   = htons(aMessageInfo.mPeerPort);
@@ -108,7 +117,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     msg.msg_name       = &peerAddr;
     msg.msg_namelen    = sizeof(peerAddr);
     msg.msg_control    = control;
-    msg.msg_controllen = sizeof(control);
+    msg.msg_controllen = static_cast<decltype(msg.msg_controllen)>(sizeof(control));
     msg.msg_iov        = &iov;
     msg.msg_iovlen     = 1;
     msg.msg_flags      = 0;
@@ -149,7 +158,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
 #ifdef __APPLE__
     msg.msg_controllen = static_cast<socklen_t>(controlLength);
 #else
-    msg.msg_controllen = controlLength;
+    msg.msg_controllen           = controlLength;
 #endif
 
     rval = sendmsg(aFd, &msg, 0);
@@ -299,7 +308,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     {
     case OT_NETIF_UNSPECIFIED:
     {
-#if __linux__
+#ifdef __linux__
         VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, nullptr, 0) == 0, error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
         unsigned int netifIndex = 0;
@@ -310,7 +319,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     }
     case OT_NETIF_THREAD:
     {
-#if __linux__
+#ifdef __linux__
         VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &gNetifName, strlen(gNetifName)) == 0,
                      error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
@@ -387,26 +396,24 @@ otError otPlatUdpConnect(otUdpSocket *aUdpSocket)
         if (len > 0 && netifName[0] != '\0')
         {
             fd = FdFromHandle(aUdpSocket->mHandle);
-            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, error = OT_ERROR_FAILED);
+            VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, &netifName, len) == 0, {
+                otLogWarnPlat("Failed to bind to device: %s", strerror(errno));
+                error = OT_ERROR_FAILED;
+            });
         }
 
         ExitNow();
 #endif
     }
 
-    switch (connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)))
+    if (connect(fd, reinterpret_cast<struct sockaddr *>(&sin6), sizeof(sin6)) != 0)
     {
-    case 0:
-        break;
 #ifdef __APPLE__
-    case EAFNOSUPPORT:
-        VerifyOrExit(isDisconnect, error = OT_ERROR_FAILED);
-        break;
+        VerifyOrExit(errno == EAFNOSUPPORT && isDisconnect);
 #endif
-
-    default:
+        otLogWarnPlat("Failed to connect to [%s]:%u: %s", Ip6AddressString(&aUdpSocket->mPeerName.mAddress).AsCString(),
+                      aUdpSocket->mPeerName.mPort, strerror(errno));
         error = OT_ERROR_FAILED;
-        break;
     }
 
 exit:

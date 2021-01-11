@@ -34,14 +34,14 @@ setup_two_nodes "-"
 
 switch_node 1
 send "childsupervision interval 30\n"
-expect "Done"
+expect_line "Done"
 send "childsupervision interval\n"
-expect "Done"
+expect_line "Done"
 
 switch_node 2
 send "childsupervision checktimeout 30\n"
-expect "Done"
+expect_line "Done"
 send "childsupervision checktimeout\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

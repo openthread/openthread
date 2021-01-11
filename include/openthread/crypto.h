@@ -54,7 +54,25 @@ extern "C" {
  *
  */
 
-#define OT_CRYPTO_HMAC_SHA_HASH_SIZE 32 ///< Length of HMAC SHA (in bytes).
+#define OT_CRYPTO_SHA256_HASH_SIZE 32 ///< Length of SHA256 hash (in bytes).
+
+/**
+ * @struct otCryptoSha256Hash
+ *
+ * This structure represents a SHA-256 hash.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otCryptoSha256Hash
+{
+    uint8_t m8[OT_CRYPTO_SHA256_HASH_SIZE]; ///< Hash bytes.
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a SHA-256 hash.
+ *
+ */
+typedef struct otCryptoSha256Hash otCryptoSha256Hash;
 
 /**
  * This function performs HMAC computation.
@@ -63,14 +81,14 @@ extern "C" {
  * @param[in]     aKeyLength     The key length in bytes.
  * @param[in]     aBuf           A pointer to the input buffer.
  * @param[in]     aBufLength     The length of @p aBuf in bytes.
- * @param[out]    aHash          A pointer to the output hash buffer.
+ * @param[out]    aHash          A pointer to a `otCryptoSha256Hash` structure to output the hash value.
  *
  */
-void otCryptoHmacSha256(const uint8_t *aKey,
-                        uint16_t       aKeyLength,
-                        const uint8_t *aBuf,
-                        uint16_t       aBufLength,
-                        uint8_t *      aHash);
+void otCryptoHmacSha256(const uint8_t *     aKey,
+                        uint16_t            aKeyLength,
+                        const uint8_t *     aBuf,
+                        uint16_t            aBufLength,
+                        otCryptoSha256Hash *aHash);
 
 /**
  * This method performs AES CCM computation.

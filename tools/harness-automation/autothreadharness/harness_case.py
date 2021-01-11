@@ -1113,7 +1113,7 @@ class HarnessCase(unittest.TestCase):
             raise
 
         # get case result
-        status = self._browser.find_element_by_class_name('title-test').text
+        status = self._browser.find_element_by_class_name('title-test').get_attribute('innerText')
         logger.info(status)
         success = 'Pass' in status
         self.assertTrue(success)

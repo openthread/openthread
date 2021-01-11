@@ -28,37 +28,20 @@
 #
 
 source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
 
 spawn_node 1
 
-send "panid 0xface\n"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "thread start\n"
-expect "Done"
-wait_for "state" "leader"
-expect "Done"
-
-send "ipaddr mleid\n"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr $expect_out(1,string)
-expect "Done"
-
 spawn_node 2 mtd
-
-send "panid 0xface\n"
-expect "Done"
-send "mode -\n"
-expect "Done"
 send "csl period 5000\n"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "thread start\n"
-expect "Done"
-wait_for "state" "child"
-expect "Done"
+expect_line "Done"
+
+setup_two_nodes "-" false
+
+switch_node 1
+set addr [get_ipaddr "mleid"]
+
+switch_node 2
 send "ping $addr\n"
 expect "16 bytes from $addr: icmp_seq=1"
 

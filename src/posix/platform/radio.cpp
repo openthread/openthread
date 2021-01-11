@@ -33,6 +33,8 @@
 
 #include "platform-posix.h"
 
+#include <string.h>
+
 #include "lib/spinel/radio_spinel.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
@@ -90,16 +92,18 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
 void platformRadioInit(otUrl *aRadioUrl)
 {
-    ot::Posix::RadioUrl &radioUrl       = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
-    bool                 resetRadio     = (radioUrl.GetValue("no-reset") == nullptr);
-    bool                 restoreDataset = (radioUrl.GetValue("ncp-dataset") != nullptr);
+    ot::Posix::RadioUrl &radioUrl               = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
+    bool                 resetRadio             = (radioUrl.GetValue("no-reset") == nullptr);
+    bool                 restoreDataset         = (radioUrl.GetValue("ncp-dataset") != nullptr);
+    bool                 skipCompatibilityCheck = (radioUrl.GetValue("skip-rcp-compatibility-check") != nullptr);
     const char *         parameterValue;
+    const char *         region;
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     const char *maxPowerTable;
 #endif
 
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(radioUrl));
-    sRadioSpinel.Init(resetRadio, restoreDataset);
+    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck);
 
     parameterValue = radioUrl.GetValue("fem-lnagain");
     if (parameterValue != nullptr)
@@ -117,6 +121,16 @@ void platformRadioInit(otUrl *aRadioUrl)
 
         VerifyOrDie(INT8_MIN <= ccaThreshold && ccaThreshold <= INT8_MAX, OT_EXIT_INVALID_ARGUMENTS);
         SuccessOrDie(sRadioSpinel.SetCcaEnergyDetectThreshold(static_cast<int8_t>(ccaThreshold)));
+    }
+
+    region = radioUrl.GetValue("region");
+    if (region != nullptr)
+    {
+        uint16_t regionCode;
+
+        VerifyOrDie(strnlen(region, 3) == 2, OT_EXIT_INVALID_ARGUMENTS);
+        regionCode = static_cast<uint16_t>(static_cast<uint16_t>(region[0]) << 8) + static_cast<uint16_t>(region[1]);
+        SuccessOrDie(sRadioSpinel.SetRadioRegion(regionCode));
     }
 
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
@@ -545,4 +559,16 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 {
     OT_UNUSED_VARIABLE(aInstance);
     return sRadioSpinel.SetChannelMaxTransmitPower(aChannel, aMaxPower);
+}
+
+otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.SetRadioRegion(aRegionCode);
+}
+
+otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return sRadioSpinel.GetRadioRegion(aRegionCode);
 }

@@ -93,6 +93,14 @@ if OPENTHREAD_EXAMPLES_QPG6095
 include $(top_srcdir)/examples/platforms/qpg6095/Makefile.platform.am
 endif
 
+if OPENTHREAD_EXAMPLES_QPG6100
+include $(top_srcdir)/examples/platforms/qpg6100/Makefile.platform.am
+endif
+
+if OPENTHREAD_EXAMPLES_QPG7015M
+include $(top_srcdir)/examples/platforms/qpg7015m/Makefile.platform.am
+endif
+
 if OPENTHREAD_EXAMPLES_SAMR21
 include $(top_srcdir)/examples/platforms/samr21/Makefile.platform.am
 endif # OPENTHREAD_EXAMPLES_SAMR21

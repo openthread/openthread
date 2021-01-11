@@ -1245,11 +1245,8 @@ void Mac::BeginTransmit(void)
     {
 #if OPENTHREAD_CONFIG_MULTI_RADIO
         // Go through all selected radio link types for this tx and
-        // copy the frame into correct `TxFrame`  for each radio type
-        // (if it is not already prepared), then process security for
-        // each radio type separately. This allows radio links to
-        // handle security differently, e.g., with different keys or
-        // link frame counters.
+        // copy the frame into correct `TxFrame` for each radio type
+        // (if it is not already prepared).
 
         for (uint8_t index = 0; index < OT_ARRAY_LENGTH(RadioTypes::kAllRadioTypes); index++)
         {
@@ -1263,8 +1260,20 @@ void Mac::BeginTransmit(void)
                 {
                     txFrame.CopyFrom(*frame);
                 }
+            }
+        }
 
-                ProcessTransmitSecurity(txFrame);
+        // Go through all selected radio link types for this tx and
+        // process security for each radio type separately. This
+        // allows radio links to handle security differently, e.g.,
+        // with different keys or link frame counters.
+        for (uint8_t index = 0; index < OT_ARRAY_LENGTH(RadioTypes::kAllRadioTypes); index++)
+        {
+            RadioType radio = RadioTypes::kAllRadioTypes[index];
+
+            if (txFrames.GetSelectedRadioTypes().Contains(radio))
+            {
+                ProcessTransmitSecurity(txFrames.GetTxFrame(radio));
             }
         }
 #else

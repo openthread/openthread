@@ -445,6 +445,15 @@ class PacketFilter(object):
         """
         return self.filter(lambda p: p.wpan.frame_type == consts.MAC_FRAME_TYPE_ACK, **kwargs)
 
+    def filter_wpan_beacon(self, **kwargs):
+        """
+        Create a new PacketFilter for filter WPAN beacon.
+
+        :param kwargs: Extra arguments for `filter`.
+        :return: The new PacketFilter to filter WPAN packets.
+        """
+        return self.filter(lambda p: p.wpan.frame_type == consts.MAC_FRAME_TYPE_BEACON, **kwargs)
+
     def filter_wpan_data(self, **kwargs):
         """
         Create a new PacketFilter for filter WPAN data packets.

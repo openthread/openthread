@@ -48,6 +48,7 @@ libopenthread_posix_a_SOURCES             = \
     backbone.cpp                            \
     entropy.cpp                             \
     hdlc_interface.cpp                      \
+    infra_if.cpp                            \
     logging.cpp                             \
     misc.cpp                                \
     multicast_routing.cpp                   \

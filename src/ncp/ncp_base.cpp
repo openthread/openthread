@@ -624,6 +624,14 @@ unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
     case OT_LOG_REGION_DUA:
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_DUA;
         break;
+
+    case OT_LOG_REGION_BR:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_BR;
+        break;
+
+    case OT_LOG_REGION_SRP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_SRP;
+        break;
     }
 
     return spinelLogRegion;
@@ -2257,6 +2265,36 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_CHAN_MAX_POWER>(v
     SuccessOrExit(error = mDecoder.ReadUint8(channel));
     SuccessOrExit(error = mDecoder.ReadInt8(maxPower));
     error = otPlatRadioSetChannelMaxTransmitPower(mInstance, channel, maxPower);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_PHY_REGION_CODE>(void)
+{
+    uint16_t regionCode;
+    otError  error = OT_ERROR_NONE;
+
+    error = otPlatRadioGetRegion(mInstance, &regionCode);
+    if (error == OT_ERROR_NONE)
+    {
+        error = mEncoder.WriteUint16(regionCode);
+    }
+    else
+    {
+        error = mEncoder.OverwriteWithLastStatusError(ThreadErrorToSpinelStatus(error));
+    }
+
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_PHY_REGION_CODE>(void)
+{
+    uint16_t regionCode;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(regionCode));
+    error = otPlatRadioSetRegion(mInstance, regionCode);
 
 exit:
     return error;

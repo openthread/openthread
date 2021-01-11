@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -40,6 +40,8 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/uart.h>
 
+#include "alarm_qorvo.h"
+#include "platform_qorvo.h"
 #include "radio_qorvo.h"
 #include "random_qorvo.h"
 #include "uart_qorvo.h"
@@ -71,7 +73,7 @@ void otSysInit(int argc, char *argv[])
 
     qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
     platformUartInit();
-    // qorvoAlarmInit();
+    qorvoAlarmInit();
     qorvoRandomInit();
     qorvoRadioInit();
 }

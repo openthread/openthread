@@ -517,8 +517,8 @@ private:
 
     union HashKeys
     {
-        uint8_t mHash[Crypto::HmacSha256::kHashSize];
-        Keys    mKeys;
+        Crypto::HmacSha256::Hash mHash;
+        Keys                     mKeys;
     };
 
     void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
@@ -531,8 +531,7 @@ private:
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
 
-    static const uint8_t     kThreadString[];
-    static const otMasterKey kDefaultMasterKey;
+    static const uint8_t kThreadString[];
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     static const uint8_t kHkdfExtractSaltString[];

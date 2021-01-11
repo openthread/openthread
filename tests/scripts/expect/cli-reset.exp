@@ -32,11 +32,11 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "panid 0xabcd\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 sleep 3
 
@@ -45,24 +45,24 @@ sleep 3
 
 send "ifconfig\n"
 expect "down"
-expect "Done"
+expect_line "Done"
 send "panid\n"
 expect "0xabcd"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 send "factoryreset\n"
 sleep 3
 
 send "ifconfig\n"
 expect "down"
-expect "Done"
+expect_line "Done"
 send "panid\n"
 expect "0xffff"
-expect "Done"
+expect_line "Done"
 
 dispose_all

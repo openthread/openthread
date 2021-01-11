@@ -556,6 +556,7 @@ void BorderAgent::HandleConnected(bool aConnected)
     else
     {
         otLogInfoMeshCoP("Commissioner disconnected");
+        IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
         Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
         mState = kStateStarted;
     }

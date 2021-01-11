@@ -151,40 +151,9 @@ unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#include "posix/platform/ip6_utils.hpp"
 
-namespace {
-
-/**
- * This utility class converts binary IPv6 address to text format.
- *
- */
-class Ip6AddressString
-{
-public:
-    /**
-     * The constructor of this converter.
-     *
-     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
-     *
-     */
-    Ip6AddressString(const void *aAddress)
-    {
-        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
-    }
-
-    /**
-     * This method returns the string as a null-terminated C string.
-     *
-     * @returns The null-terminated C string.
-     *
-     */
-    const char *AsCString(void) const { return mBuffer; }
-
-private:
-    char mBuffer[INET6_ADDRSTRLEN];
-};
-
-} // namespace
+using namespace ot::Posix::Ip6Utils;
 
 #ifndef OPENTHREAD_POSIX_TUN_DEVICE
 

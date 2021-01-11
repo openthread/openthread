@@ -97,6 +97,16 @@ otError otLinkMetricsConfigureEnhAckProbing(otShortAddress      aShortAddress,
  */
 uint8_t otLinkMetricsEnhAckGenData(const otMacAddress *aMacAddress, uint8_t aLqi, int8_t aRssi, uint8_t *aData);
 
+/**
+ * This method returns the data length of Enhanced-ACK Based Probing for a specific Initiator.
+ *
+ * @param[in]  aMacAddress    The Mac address of the Initiator.
+ *
+ * @returns  The size of data. `0` if it's not configured for the Initiator.
+ *
+ */
+uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress);
+
 #ifdef __cplusplus
 } // extern "C"
 #endif

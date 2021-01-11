@@ -34,47 +34,47 @@ spawn_node 2
 
 switch_node 1
 send "networkname Thread\\ Network\n"
-expect "Done"
+expect_line "Done"
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 switch_node 2
 send "scan\n"
 expect "Thread Network"
-expect "Done"
+expect_line "Done"
 
 switch_node 1
 send "thread stop\n"
-expect "Done"
+expect_line "Done"
 send "networkname Thread\\ 网络\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 switch_node 2
 send "scan\n"
 expect "Thread 网络"
-expect "Done"
+expect_line "Done"
 
 switch_node 1
 send "thread stop\n"
-expect "Done"
+expect_line "Done"
 send "networkname スレッド\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 switch_node 2
 send "scan\n"
 expect "スレッド"
-expect "Done"
+expect_line "Done"
 
 dispose_all

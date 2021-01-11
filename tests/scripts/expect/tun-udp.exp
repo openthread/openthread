@@ -36,30 +36,35 @@ spawn_node 1
 set timeout 1
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 send "udp open\n"
-expect "Done"
+expect_line "Done"
 
 send "udp bind :: 1234\n"
-expect "Done"
+expect_line "Done"
 
-send "udp connect fdde:ad00:beef:0:bb1:ebd6:ad10:f33 1234\n"
-expect "Done"
+send "dataset active\n"
+expect -re {Mesh Local Prefix: ([0-9a-f:]*)::\/64}
+set prefix $expect_out(1,string)
+expect_line "Done"
+
+send "udp connect $prefix:bb1:ebd6:ad10:f33 1234\n"
+expect_line "Done"
 
 send "udp connect :: 1\n"
-expect "Done"
+expect_line "Done"
 
 send "udp close\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

@@ -38,6 +38,8 @@
 #include <assert.h>
 
 #include <openthread-core-config.h>
+#include <openthread/border_router.h>
+#include <openthread/heap.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/otns.h>
@@ -93,8 +95,17 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     instance = otInstanceInitSingle();
     assert(instance != nullptr);
 
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    otHeapSetCAllocFree(calloc, free);
+#endif
+
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneInit(instance, aPlatformConfig->mBackboneInterfaceName);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    // Reuse the backbone interface name.
+    platformInfraIfInit(instance, aPlatformConfig->mBackboneInterfaceName);
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
@@ -105,6 +116,10 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    SuccessOrDie(otBorderRoutingInit(instance, platformInfraIfGetIndex()));
 #endif
 
     return instance;
@@ -123,6 +138,10 @@ void otSysDeinit(void)
     platformTrelDeinit();
 #endif
     IgnoreError(otPlatUartDisable());
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfDeinit();
+#endif
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -172,6 +191,9 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneUpdateFdSet(aMainloop->mReadFdSet, aMainloop->mMaxFd);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfUpdateFdSet(aMainloop->mReadFdSet, aMainloop->mMaxFd);
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
@@ -253,6 +275,9 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     platformBackboneProcess(aMainloop->mReadFdSet);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    platformInfraIfProcess(aInstance, aMainloop->mReadFdSet);
 #endif
 }
 

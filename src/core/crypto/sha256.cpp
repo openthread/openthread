@@ -33,6 +33,8 @@
 
 #include "sha256.hpp"
 
+#include "common/message.hpp"
+
 namespace ot {
 namespace Crypto {
 
@@ -51,14 +53,27 @@ void Sha256::Start(void)
     mbedtls_sha256_starts_ret(&mContext, 0);
 }
 
-void Sha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
+void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    mbedtls_sha256_update_ret(&mContext, aBuf, aBufLength);
+    mbedtls_sha256_update_ret(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
 }
 
-void Sha256::Finish(uint8_t aHash[kHashSize])
+void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
-    mbedtls_sha256_finish_ret(&mContext, aHash);
+    Message::Chunk chunk;
+
+    aMessage.GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        Update(chunk.GetData(), chunk.GetLength());
+        aMessage.GetNextChunk(aLength, chunk);
+    }
+}
+
+void Sha256::Finish(Hash &aHash)
+{
+    mbedtls_sha256_finish_ret(&mContext, aHash.m8);
 }
 
 } // namespace Crypto

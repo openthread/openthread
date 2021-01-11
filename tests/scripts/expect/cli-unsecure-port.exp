@@ -32,33 +32,33 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "unsecureport remove all\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport get\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport add 123\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport add 456\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport get\n"
 expect "123 456"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport remove 123\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport get\n"
 expect "456"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport remove all\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport get\n"
-expect "Done"
+expect_line "Done"
 
 send "unsecureport invalid_command\n"
 expect "Error 35: InvalidCommand"
