@@ -521,6 +521,12 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
             otLogInfoBr("EvaluateOnLinkPrefix: there is already smaller on-link prefix %s on interface %u",
                         smallestOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
 
+            // TODO: we removes the advertised on-link prefix by setting valid lifetime for PIO.
+            // But SLAAC addresses configured by PIO prefix will not be removed immediately (
+            // https://tools.ietf.org/html/rfc4862#section-5.5.3). This leads to a situation that
+            // a WiFi device keeps using the old SLAAC address but a Thread device cannot reach to
+            // it. One solution is to delay removing external route until the SLAAC addresses are
+            // actually expired/deprecated.
             RemoveExternalRoute(*mAdvertisedOnLinkPrefix);
         }
     }
