@@ -392,6 +392,7 @@ do_package()
 do_prepare_coredump_upload()
 {
     echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+    rm -rf ot-core-dump
     mkdir -p ot-core-dump
 }
 
