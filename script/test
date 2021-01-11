@@ -58,11 +58,6 @@ build_simulation()
 
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_SIMULATION_VIRTUAL_TIME=ON")
-
-        if [[ ${OT_NODE_TYPE} == rcp* ]]; then
-            options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
-        fi
-
     fi
 
     if [[ ${version} == "1.2" ]]; then
@@ -75,6 +70,15 @@ build_simulation()
     fi
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
+
+    if [[ ${VIRTUAL_TIME} == 1 ]] && [[ ${OT_NODE_TYPE} == rcp* ]]; then
+
+        options+=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON")
+        options+=("-DOT_APP_CLI=OFF")
+
+        OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
+
+    fi
 
     if [[ ${version} == "1.2" ]]; then
 

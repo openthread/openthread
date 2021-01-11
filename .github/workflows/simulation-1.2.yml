@@ -363,7 +363,6 @@ jobs:
       OT_NODE_TYPE: rcp
       USE_MTD: 1
       VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
       INTER_OP: 1
     steps:
     - uses: actions/checkout@v2
