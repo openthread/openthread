@@ -301,9 +301,9 @@ jobs:
       run: |
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
-          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+          echo "CRASHED_CLI=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && env.CRASHED == '1' }}
+      if: ${{ failure() && env.CRASHED_CLI == '1' }}
       with:
         name: core-expect-cli
         path: |
@@ -327,9 +327,9 @@ jobs:
       run: |
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
-          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+          echo "CRASHED_RCP=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && env.CRASHED == '1' }}
+      if: ${{ failure() && env.CRASHED_RCP == '1' }}
       with:
         name: core-expect-rcp
         path: |
@@ -363,9 +363,9 @@ jobs:
       run: |
           CRASHED=$(./script/test check_crash | tail -1)
           [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
-          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+          echo "CRASHED_TUN=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() && env.CRASHED == '1' }}
+      if: ${{ failure() && env.CRASHED_TUN == '1' }}
       with:
         name: core-expect-posix
         path: |
