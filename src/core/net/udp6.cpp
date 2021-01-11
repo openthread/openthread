@@ -372,7 +372,7 @@ otError Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo 
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (ShouldUsePlatformUdp(aSocket))
+    if (ShouldUsePlatformUdp(aSocket) && messageInfoLocal.IsHostInterface())
     {
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }
