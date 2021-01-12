@@ -70,7 +70,7 @@ otError Header::ResponseCodeToError(Response aResponse)
         break;
 
     case kResponseNameError:       // Name that ought to exist, does not exists.
-    case kResponseRecordNotExists: // Some RRset that out to exist, does not exist.
+    case kResponseRecordNotExists: // Some RRset that ought to exist, does not exist.
         error = OT_ERROR_NOT_FOUND;
         break;
 
@@ -83,7 +83,7 @@ otError Header::ResponseCodeToError(Response aResponse)
         break;
 
     case kResponseNameExists:   // Some name that ought not to exist, does exist.
-    case kResponseRecordExists: // Some RRset that ought not to exits, does exist.
+    case kResponseRecordExists: // Some RRset that ought not to exist, does exist.
         error = OT_ERROR_DUPLICATED;
         break;
 
