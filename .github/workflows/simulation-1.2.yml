@@ -383,7 +383,8 @@ jobs:
         ./script/test prepare_coredump_upload
         ./script/test cert tests/scripts/thread-cert/v1_2_LowPower_5_3_01_SSEDAttachment.py
         ./script/test cert tests/scripts/thread-cert/v1_2_LowPower_6_1_07_PreferringARouterOverAReed.py
-        ./script/test cert tests/scripts/thread-cert/v1_2_test_csl_transmission.p
+        ./script/test cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_csl_transmission.py
         ./script/test cert tests/scripts/thread-cert/v1_2_test_enhanced_frame_pending.py
         ./script/test cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
         ./script/test cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
