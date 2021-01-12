@@ -272,9 +272,9 @@ class TestOTCI(unittest.TestCase):
 
         logging.info("network data: %r", leader.get_network_data())
         logging.info("network data raw: %r", leader.get_network_data_bytes())
-        self.assertEqual(leader.get_network_data()['prefixes'] == leader.get_prefixes())
-        self.assertEqual(leader.get_network_data()['routes'] == leader.get_routes())
-        self.assertEqual(leader.get_network_data()['services'] == leader.get_services())
+        self.assertEqual(leader.get_network_data()['prefixes'], leader.get_prefixes())
+        self.assertEqual(leader.get_network_data()['routes'], leader.get_routes())
+        self.assertEqual(leader.get_network_data()['services'], leader.get_services())
 
         logging.info("local prefixes: %r", leader.get_local_prefixes())
         logging.info("local routes: %r", leader.get_local_routes())
