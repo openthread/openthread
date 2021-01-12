@@ -88,13 +88,14 @@ otError Client::Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *a
     Message *     messageCopy = nullptr;
     Header        header;
     QuestionAaaa  question;
-    uint16_t      messageId;
 
     VerifyOrExit(aQuery.IsValid(), error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = GenerateUniqueRandomId(messageId));
+    do
+    {
+        SuccessOrExit(error = header.SetRandomMessageId());
+    } while (FindQueryById(header.GetMessageId()) != nullptr);
 
-    header.SetMessageId(messageId);
     header.SetType(Header::kTypeQuery);
     header.SetQueryType(Header::kQueryTypeStandard);
 
@@ -199,19 +200,6 @@ exit:
         FreeMessage(messageCopy);
         otLogWarnIp6("Failed to send DNS request: %s", otThreadErrorToString(error));
     }
-}
-
-otError Client::GenerateUniqueRandomId(uint16_t &aRandomId)
-{
-    otError error;
-
-    do
-    {
-        SuccessOrExit(error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&aRandomId), sizeof(aRandomId)));
-    } while (FindQueryById(aRandomId) != nullptr);
-
-exit:
-    return error;
 }
 
 otError Client::CompareQuestions(Message &aMessageResponse, Message &aMessageQuery, uint16_t &aOffset)
