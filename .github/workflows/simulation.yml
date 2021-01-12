@@ -307,9 +307,7 @@ jobs:
       with:
         name: core-expect-cli
         path: |
-          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-ftd
           ./ot-core-dump/*
-          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -333,11 +331,7 @@ jobs:
       with:
         name: core-expect-rcp
         path: |
-          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-mtd
-          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
-          ./build/openthread-posix-1.1/src/posix/ot-cli
           ./ot-core-dump/*
-          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -369,10 +363,7 @@ jobs:
       with:
         name: core-expect-posix
         path: |
-          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
-          ./build/openthread-posix-1.1/src/posix/ot-cli
           ./ot-core-dump/*
-          ./so-lib/*
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:

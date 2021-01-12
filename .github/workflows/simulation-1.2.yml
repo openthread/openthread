@@ -90,12 +90,9 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: ${{ failure() && env.CRASHED == '1' }}
       with:
-        name: core-packet-verification-low-power
+        name: core-packet-verification-thread-1-2
         path: |
-          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
-          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
-          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
@@ -155,10 +152,7 @@ jobs:
       with:
         name: core-packet-verification-low-power
         path: |
-          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
-          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
-          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -239,11 +233,7 @@ jobs:
       with:
         name: core-expect-1-2
         path: |
-          ./build/openthread-simulation-1.2/examples/apps/cli/ot-cli-mtd
-          ./build/openthread-simulation-1.2/examples/apps/ncp/ot-rcp
-          ./build/openthread-posix-1.2/src/posix/ot-cli
           ./ot-core-dump/*
-          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
