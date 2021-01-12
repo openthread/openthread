@@ -230,6 +230,7 @@ class OtCli:
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
         self.is_bbr = is_bbr
         self._initialized = False
+        self.is_posix = False
         if os.getenv('COVERAGE', 0) and os.getenv('CC', 'gcc') == 'gcc':
             self._cmd_prefix = '/usr/bin/env GCOV_PREFIX=%s/ot-run/%s/ot-gcda.%d ' % (os.getenv(
                 'top_srcdir', '.'), sys.argv[0], nodeid)
@@ -289,6 +290,7 @@ class OtCli:
             if 'RADIO_DEVICE' in os.environ:
                 cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
                                                                                            nodeid)
+                self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
 
@@ -304,6 +306,7 @@ class OtCli:
             if 'RADIO_DEVICE_1_1' in os.environ:
                 cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
+                self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
 
@@ -332,6 +335,7 @@ class OtCli:
             if 'RADIO_DEVICE' in os.environ:
                 args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
                                                                                         nodeid)
+                self.is_posix = True
             else:
                 args = ''
 
@@ -371,6 +375,7 @@ class OtCli:
             if 'RADIO_DEVICE_1_1' in os.environ:
                 args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
                                                                                         nodeid)
+                self.is_posix = True
             else:
                 args = ''
 
@@ -583,7 +588,7 @@ class NodeImpl:
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
-            self.simulator.go(0, nodeid=self.nodeid)
+            self.simulator.go(0, nodeid=self.nodeid, is_posix=self.is_posix)
         sys.stdout.flush()
 
     def get_commands(self):

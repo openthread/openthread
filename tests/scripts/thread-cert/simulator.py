@@ -144,7 +144,6 @@ class VirtualTime(BaseSimulator):
 
     BLOCK_TIMEOUT = 10
 
-    RADIO_ONLY = os.getenv('RADIO_DEVICE') is not None
     NCP_SIM = os.getenv('NODE_TYPE', 'sim') == 'ncp-sim'
 
     _message_factory = None
@@ -243,8 +242,8 @@ class VirtualTime(BaseSimulator):
         assert not self._is_radio(addr)
         return (addr[0], addr[1] - self.BASE_PORT)
 
-    def _core_addr_from(self, nodeid):
-        if self.RADIO_ONLY:
+    def _core_addr_from(self, nodeid, is_posix):
+        if is_posix:
             return ('127.0.0.1', self.BASE_PORT + self.port + nodeid)
         else:
             return ('127.0.0.1', self.port + nodeid)
@@ -497,7 +496,7 @@ class VirtualTime(BaseSimulator):
     def now(self):
         return self.current_time / 1000000
 
-    def go(self, duration, nodeid=None):
+    def go(self, duration, nodeid=None, is_posix=False):
         assert self.current_time == self._pause_time
         duration = int(duration) * 1000000
         dbg_print('running for %d us' % duration)
@@ -505,7 +504,7 @@ class VirtualTime(BaseSimulator):
         if nodeid:
             if self.NCP_SIM:
                 self.current_nodeid = nodeid
-            self.awake_devices.add(self._core_addr_from(nodeid))
+            self.awake_devices.add(self._core_addr_from(nodeid, is_posix))
         self.receive_events()
         while self._next_event_time() <= self._pause_time:
             self.process_next_event()
