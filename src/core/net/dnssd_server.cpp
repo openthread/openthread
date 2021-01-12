@@ -116,7 +116,7 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
     uint16_t         readOffset, nameSerializeOffset;
     Question         question;
     uint16_t         qtype;
-    char             name[Dns::Name::kMaxLength + 1];
+    char             name[Dns::Name::kMaxNameSize];
     otError          error = OT_ERROR_NONE;
     NameCompressInfo compressInfo;
 
@@ -376,8 +376,8 @@ otError Server::AppendInstanceName(Message &aMessage, const char *aName, NameCom
     }
     else
     {
-        uint8_t serviceStart = static_cast<uint8_t>(StringLength(aName, Name::kMaxLength) -
-                                                    StringLength(aCompressInfo.GetServiceName(), Name::kMaxLength));
+        uint8_t serviceStart = static_cast<uint8_t>(StringLength(aName, Name::kMaxNameLength) -
+                                                    StringLength(aCompressInfo.GetServiceName(), Name::kMaxNameLength));
 
         aCompressInfo.SetInstanceNameOffset(aMessage.GetLength(), aName);
 
@@ -400,8 +400,8 @@ otError Server::AppendHostName(Message &aMessage, const char *aName, NameCompres
     }
     else
     {
-        uint8_t domainStart = static_cast<uint8_t>(StringLength(aName, Name::kMaxLength) -
-                                                   StringLength(aCompressInfo.GetDomainName(), Name::kMaxLength));
+        uint8_t domainStart = static_cast<uint8_t>(StringLength(aName, Name::kMaxNameLength) -
+                                                   StringLength(aCompressInfo.GetDomainName(), Name::kMaxNameLength));
 
         aCompressInfo.SetHostNameOffset(aMessage.GetLength(), aName);
 
@@ -427,8 +427,8 @@ void Server::IncResourceRecordCount(Header &aHeader, bool aAdditional)
 
 otError Server::FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo)
 {
-    uint8_t nameLen   = static_cast<uint8_t>(StringLength(aName, Name::kMaxLength));
-    uint8_t domainLen = static_cast<uint8_t>(StringLength(aDomain, Name::kMaxLength));
+    uint8_t nameLen   = static_cast<uint8_t>(StringLength(aName, Name::kMaxNameLength));
+    uint8_t domainLen = static_cast<uint8_t>(StringLength(aDomain, Name::kMaxNameLength));
     otError error     = OT_ERROR_NONE;
     uint8_t labelBegin, labelEnd;
 

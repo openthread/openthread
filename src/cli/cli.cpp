@@ -121,9 +121,6 @@ Interpreter::Interpreter(Instance *aInstance)
     , mPingAllowZeroHopLimit(false)
     , mPingIdentifier(0)
     , mPingTimer(*aInstance, Interpreter::HandlePingTimer)
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    , mResolvingInProgress(false)
-#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
@@ -159,10 +156,6 @@ Interpreter::Interpreter(Instance *aInstance)
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
     IgnoreError(otIcmp6RegisterHandler(mInstance, &mIcmpHandler));
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
-#endif
 }
 
 void Interpreter::OutputResult(otError aError)
@@ -1344,45 +1337,34 @@ exit:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
 {
-    otError          error = OT_ERROR_NONE;
-    uint16_t         port  = OT_DNS_DEFAULT_SERVER_PORT;
-    Ip6::MessageInfo messageInfo;
-    otDnsQuery       query;
+    otError    error = OT_ERROR_NONE;
+    otSockAddr serverSockAddr;
+
+    serverSockAddr.mPort = OT_DNS_DEFAULT_SERVER_PORT;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(aArgs[0], "resolve") == 0)
     {
-        VerifyOrExit(!mResolvingInProgress, error = OT_ERROR_BUSY);
         VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
-        VerifyOrExit(strlen(aArgs[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = OT_ERROR_INVALID_ARGS);
-
-        strcpy(mResolvingHostname, aArgs[1]);
 
         if (aArgsLength > 2)
         {
-            SuccessOrExit(error = ParseAsIp6Address(aArgs[2], messageInfo.GetPeerAddr()));
+            SuccessOrExit(error = ParseAsIp6Address(aArgs[2], serverSockAddr.mAddress));
         }
         else
         {
             // Use IPv6 address of default DNS server.
-            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_DNS_DEFAULT_SERVER_IP));
+            SuccessOrExit(error = otIp6AddressFromString(OT_DNS_DEFAULT_SERVER_IP, &serverSockAddr.mAddress));
         }
 
         if (aArgsLength > 3)
         {
-            SuccessOrExit(error = ParseAsUint16(aArgs[3], port));
+            SuccessOrExit(error = ParseAsUint16(aArgs[3], serverSockAddr.mPort));
         }
 
-        messageInfo.SetPeerPort(port);
-
-        query.mHostname    = mResolvingHostname;
-        query.mMessageInfo = static_cast<const otMessageInfo *>(&messageInfo);
-        query.mNoRecursion = false;
-
-        SuccessOrExit(error = otDnsClientQuery(mInstance, &query, &Interpreter::HandleDnsResponse, this));
-
-        mResolvingInProgress = true;
+        SuccessOrExit(error = otDnsClientResolveAddress(mInstance, &serverSockAddr, aArgs[1], /* aNoRecursion */ false,
+                                                        &Interpreter::HandleDnsResponse, this));
     }
     else
     {
@@ -1395,32 +1377,36 @@ exit:
     return error;
 }
 
-void Interpreter::HandleDnsResponse(void *              aContext,
-                                    const char *        aHostname,
-                                    const otIp6Address *aAddress,
-                                    uint32_t            aTtl,
-                                    otError             aResult)
+void Interpreter::HandleDnsResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname, static_cast<const Ip6::Address *>(aAddress),
-                                                            aTtl, aResult);
+    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aError, aResponse);
 }
 
-void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult)
+void Interpreter::HandleDnsResponse(otError aError, const otDnsAddressResponse *aResponse)
 {
-    OutputFormat("DNS response for %s - ", aHostname);
+    char         hostName[OT_DNS_MAX_NAME_SIZE];
+    otIp6Address address;
+    uint32_t     ttl;
 
-    if (aResult == OT_ERROR_NONE)
+    IgnoreError(otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName)));
+
+    OutputFormat("DNS response for %s - ", hostName);
+
+    if (aError == OT_ERROR_NONE)
     {
-        if (aAddress != nullptr)
+        uint16_t index = 0;
+
+        while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
         {
-            OutputIp6Address(*aAddress);
+            OutputIp6Address(address);
+            OutputFormat(" TTL: %u ", ttl);
+            index++;
         }
-        OutputLine(" TTL: %d", aTtl);
+
+        OutputLine("");
     }
 
-    OutputResult(aResult);
-
-    mResolvingInProgress = false;
+    OutputResult(aError);
 }
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
