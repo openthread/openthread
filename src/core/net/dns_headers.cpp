@@ -102,7 +102,7 @@ otError Header::ResponseCodeToError(Response aResponse)
 
 otError Name::AppendLabel(const char *aLabel, Message &aMessage)
 {
-    return AppendLabel(aLabel, static_cast<uint8_t>(StringLength(aLabel, kMaxLabelLength + 1)), aMessage);
+    return AppendLabel(aLabel, static_cast<uint8_t>(StringLength(aLabel, kMaxLabelSize)), aMessage);
 }
 
 otError Name::AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage)
@@ -120,7 +120,7 @@ exit:
 
 otError Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
 {
-    return AppendMultipleLabels(aLabels, kMaxLength, aMessage);
+    return AppendMultipleLabels(aLabels, kMaxNameLength, aMessage);
 }
 
 otError Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage)
@@ -270,7 +270,7 @@ otError Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBu
                 // here since `iterator.ReadLabel()` would verify it.
             }
 
-            labelLength = static_cast<uint8_t>(OT_MIN(kMaxLabelLength + 1, aNameBufferSize));
+            labelLength = static_cast<uint8_t>(OT_MIN(static_cast<uint8_t>(kMaxLabelSize), aNameBufferSize));
             SuccessOrExit(error = iterator.ReadLabel(aNameBuffer, labelLength, /* aAllowDotCharInLabel */ false));
             aNameBuffer += labelLength;
             aNameBufferSize -= labelLength;
@@ -548,8 +548,8 @@ bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) cons
 bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
 {
     bool     match        = false;
-    uint16_t nameLength   = StringLength(aName, kMaxLength);
-    uint16_t domainLength = StringLength(aDomain, kMaxLength);
+    uint16_t nameLength   = StringLength(aName, kMaxNameLength);
+    uint16_t domainLength = StringLength(aDomain, kMaxNameLength);
 
     if (nameLength > 0 && aName[nameLength - 1] == kLabelSeperatorChar)
     {

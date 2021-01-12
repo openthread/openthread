@@ -51,7 +51,7 @@ openthread_headers                      = \
     openthread/dataset_ftd.h              \
     openthread/dataset_updater.h          \
     openthread/diag.h                     \
-    openthread/dns.h                      \
+    openthread/dns_client.h               \
     openthread/entropy.h                  \
     openthread/error.h                    \
     openthread/heap.h                     \
