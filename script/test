@@ -50,7 +50,7 @@ build_simulation()
 {
     local version="$1"
     local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON" "-DOT_REFERENCE_DEVICE=ON")
-    local rcp_options=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON" "-DOT_APP_CLI=OFF")
+    local rcp_options=("-DOT_SIMULATION_VIRTUAL_TIME_UART=ON" "-DOT_APP_CLI=OFF" "-DOT_APP_NCP=OFF")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")

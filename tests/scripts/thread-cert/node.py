@@ -230,7 +230,6 @@ class OtCli:
         self.env_version = os.getenv('THREAD_VERSION', '1.1')
         self.is_bbr = is_bbr
         self._initialized = False
-        self.is_posix = False
         if os.getenv('COVERAGE', 0) and os.getenv('CC', 'gcc') == 'gcc':
             self._cmd_prefix = '/usr/bin/env GCOV_PREFIX=%s/ot-run/%s/ot-gcda.%d ' % (os.getenv(
                 'top_srcdir', '.'), sys.argv[0], nodeid)
@@ -429,6 +428,7 @@ class NodeImpl:
     def __init__(self, nodeid, name=None, simulator=None, **kwargs):
         self.nodeid = nodeid
         self.name = name or ('Node%d' % nodeid)
+        self.is_posix = False
 
         self.simulator = simulator
         if self.simulator:
