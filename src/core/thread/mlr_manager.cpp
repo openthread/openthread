@@ -290,10 +290,11 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
     mMlrPending = true;
 
-    // TODO: not enable fast polls for SSED
+    // Regardless of csl enabled or not, sleepy end device should always rely on
+    // fast data poll to fetch the response timely when the parent is of version 1.1.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
-        Get<DataPollSender>().SendFastPolls(DataPollSender::kDefaultFastPolls);
+        Get<DataPollSender>().SendFastPolls();
     }
 
 exit:

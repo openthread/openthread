@@ -508,7 +508,8 @@ void DuaManager::PerformNextRegistration(void)
     mIsDuaPending   = true;
     mRegisteringDua = dua;
 
-    // TODO: (DUA) need update when CSL is enabled.
+    // Regardless of csl enabled or not, sleepy end device should always rely on
+    // fast data poll to fetch the response timely when the parent is of version 1.1.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SendFastPolls();
