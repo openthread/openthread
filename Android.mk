@@ -147,9 +147,9 @@ LOCAL_CPPFLAGS                                                              := \
     -pedantic-errors                                                           \
     $(NULL)
 
+ifeq ($(ANDROID_NDK),1)
 LOCAL_SHARED_LIBRARIES := libcutils
 
-ifeq ($(ANDROID_NDK),1)
 LOCAL_CFLAGS                                             += \
     -DOPENTHREAD_ENABLE_ANDROID_NDK=1                       \
     $(NULL)
