@@ -69,7 +69,7 @@ class BaseSimulator(object):
     def get_messages_sent_by(self, nodeid):
         raise NotImplementedError
 
-    def go(self, duration, nodeid=None):
+    def go(self, duration, nodeid=None, is_posix=False):
         raise NotImplementedError
 
     def stop(self):
@@ -108,7 +108,7 @@ class RealTime(BaseSimulator):
     def now(self):
         return time.time()
 
-    def go(self, duration, nodeid=None):
+    def go(self, duration, nodeid=None, is_posix=False):
         time.sleep(duration)
 
     def stop(self):
