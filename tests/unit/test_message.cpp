@@ -67,6 +67,8 @@ void TestMessage(void)
     message->WriteBytes(0, writeBuffer, kMaxSize);
     SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
     VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
+    VerifyOrQuit(message->CompareBytes(0, readBuffer, kMaxSize), "Message::CompareBytes failed");
+    VerifyOrQuit(message->Compare(0, readBuffer), "Message::Compare failed");
     VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
 
     for (uint16_t offset = 0; offset < kMaxSize; offset++)
@@ -82,11 +84,30 @@ void TestMessage(void)
 
             SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
             VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
+            VerifyOrQuit(message->Compare(0, writeBuffer), "Message::Compare() failed");
 
             memset(readBuffer, 0, sizeof(readBuffer));
             SuccessOrQuit(message->Read(offset, readBuffer, length), "Message::Read failed");
             VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], length) == 0, "Message compare failed");
             VerifyOrQuit(memcmp(&readBuffer[length], zeroBuffer, kMaxSize - length) == 0, "Message read after length");
+
+            VerifyOrQuit(message->CompareBytes(offset, &writeBuffer[offset], length), "Message::CompareBytes() failed");
+
+            if (length == 0)
+            {
+                continue;
+            }
+
+            // Change the first byte, and then last byte, and verify that
+            // `CompareBytes()` correctly fails.
+
+            writeBuffer[offset]++;
+            VerifyOrQuit(!message->CompareBytes(offset, &writeBuffer[offset], length), "CompareBytes() failed");
+            writeBuffer[offset]--;
+
+            writeBuffer[offset + length - 1]++;
+            VerifyOrQuit(!message->CompareBytes(offset, &writeBuffer[offset], length), "CompareBytes() failed");
+            writeBuffer[offset + length - 1]--;
         }
 
         // Verify `ReadBytes()` behavior when requested read length goes beyond available bytes in the message.
@@ -97,10 +118,14 @@ void TestMessage(void)
 
             memset(readBuffer, 0, sizeof(readBuffer));
             readLength = message->ReadBytes(offset, readBuffer, length);
-            VerifyOrQuit(readLength <= length, "Message::ReadBytes() returned longer length");
+
+            VerifyOrQuit(readLength < length, "Message::ReadBytes() returned longer length");
             VerifyOrQuit(readLength == kMaxSize - offset, "Message::Read failed");
             VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], readLength) == 0, "Message compare failed");
             VerifyOrQuit(memcmp(&readBuffer[readLength], zeroBuffer, kMaxSize - readLength) == 0, "read after length");
+
+            VerifyOrQuit(!message->CompareBytes(offset, readBuffer, length), "Message::CompareBytes failed");
+            VerifyOrQuit(message->CompareBytes(offset, readBuffer, readLength), "Message::CompareBytes failed");
         }
     }
 
@@ -140,6 +165,11 @@ void TestMessage(void)
                 VerifyOrQuit(
                     memcmp(&readBuffer[dstOffset + bytesCopied], zeroBuffer, kMaxSize - bytesCopied - dstOffset) == 0,
                     "read after length");
+
+                VerifyOrQuit(message->CompareBytes(srcOffset, *message2, dstOffset, bytesCopied),
+                             "Message::CompareBytes with two messages failed");
+                VerifyOrQuit(message2->CompareBytes(dstOffset, *message, srcOffset, bytesCopied),
+                             "Message::CompareBytes with two messages failed");
             }
         }
     }
