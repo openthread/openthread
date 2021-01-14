@@ -196,6 +196,17 @@ public:
          */
         bool Matches(const char *aFullName) const;
 
+        /**
+         * This method tells whether this service matches a given service name <Service>.<Domain>.
+         *
+         * @param[in] aServiceName  The full service name to match.
+         *
+         * @retval  TRUE   If the service matches the full service name.
+         * @retval  FALSE  If the service does not match the full service name.
+         *
+         */
+        bool MatchesServiceName(const char *aServiceName) const;
+
     private:
         explicit Service(void);
         otError SetFullName(const char *aFullName);

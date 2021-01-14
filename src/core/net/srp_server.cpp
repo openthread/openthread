@@ -1417,6 +1417,20 @@ bool Server::Service::Matches(const char *aFullName) const
     return (mFullName != nullptr) && (strcmp(mFullName, aFullName) == 0);
 }
 
+bool Server::Service::MatchesServiceName(const char *aServiceName) const
+{
+    uint8_t i = static_cast<uint8_t>(strlen(mFullName));
+    uint8_t j = static_cast<uint8_t>(strlen(aServiceName));
+
+    while (i > 0 && j > 0 && mFullName[i - 1] == aServiceName[j - 1])
+    {
+        i--;
+        j--;
+    }
+
+    return j == 0 && i > 0 && mFullName[i - 1] == '.';
+}
+
 Server::Host *Server::Host::New(void)
 {
     void *buf;

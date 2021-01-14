@@ -158,6 +158,7 @@ EXTRA_DIST                                                         = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
+    test_dnssd.py                                                    \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \
@@ -210,6 +211,7 @@ check_SCRIPTS                                                      = \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
+    test_dnssd.py                                                    \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \

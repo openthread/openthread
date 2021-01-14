@@ -138,6 +138,7 @@ set(COMMON_SOURCES
     net/dhcp6_server.cpp
     net/dns_client.cpp
     net/dns_headers.cpp
+    net/dnssd_server.cpp
     net/icmp6.cpp
     net/ip6.cpp
     net/ip6_address.cpp

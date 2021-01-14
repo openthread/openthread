@@ -218,6 +218,85 @@ class OtbrDocker:
             else:
                 return lines
 
+    def dns_dig(self, server: str, name: str, qtype: str):
+        """
+        Run dig command to query a DNS server.
+
+        Args:
+            server: the server address.
+            name: the name to query.
+            qtype: the query type (e.g. AAAA, PTR, TXT, SRV).
+
+        Returns:
+            The dig result similar as below:
+            {
+                "opcode": "QUERY",
+                "status": "NOERROR",
+                "id": "64144",
+                "QUESTION": [
+                    ('google.com.', 'IN', 'AAAA')
+                ],
+                "ANSWER": [
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::71'),
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::8a'),
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::66'),
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::8b'),
+                ],
+                "ADDITIONAL": [
+                ],
+            }
+        """
+        output = self.bash(f'dig -6 @{server} {name} {qtype}')
+
+        section = None
+        dig_result = {
+            'QUESTION': [],
+            'ANSWER': [],
+            'ADDITIONAL': [],
+        }
+
+        for line in output:
+            line = line.strip()
+
+            if line.startswith(';; ->>HEADER<<- '):
+                headers = line[len(';; ->>HEADER<<- '):].split(', ')
+                for header in headers:
+                    key, val = header.split(': ')
+                    dig_result[key] = val
+
+                continue
+
+            if line == ';; QUESTION SECTION:':
+                section = 'QUESTION'
+                continue
+            elif line == ';; ANSWER SECTION:':
+                section = 'ANSWER'
+                continue
+            elif line == ';; ADDITIONAL SECTION:':
+                section = 'ADDITIONAL'
+                continue
+            elif section and not line:
+                section = None
+                continue
+
+            if section:
+                assert line
+
+                if section == 'QUESTION':
+                    assert line.startswith(';')
+                    line = line[1:]
+
+                record = list(line.split())
+
+                if section != 'QUESTION':
+                    record[1] = int(record[1])
+                    if record[3] == 'SRV':
+                        record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
+
+                dig_result[section].append(tuple(record))
+
+        return dig_result
+
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
@@ -860,8 +939,8 @@ class NodeImpl:
         self.send_command(f'srp client host clear')
         self._expect_done()
 
-    def srp_client_set_host_address(self, address):
-        self.send_command(f'srp client host address {address}')
+    def srp_client_set_host_address(self, *addrs: str):
+        self.send_command(f'srp client host address {" ".join(addrs)}')
         self._expect_done()
 
     def srp_client_get_host_address(self):
@@ -2322,6 +2401,22 @@ class NodeImpl:
         cmd = f'fake /b/ba {target} {mliid} {ltt}'
         self.send_command(cmd)
         self._expect_done()
+
+    def dns_resolve(self, hostname, server=None, port=53):
+        cmd = f'dns resolve {hostname}'
+        if server is not None:
+            cmd += f' {server} {port}'
+
+        self.send_command(cmd)
+        self.simulator.go(10)
+        output = self._expect_command_output(cmd)
+        dns_resp = output[0]
+        # example output: DNS response for host1.default.service.arpa. - fd00:db8:0:0:ae43:4938:4c42:e6af TTL: 7190
+        ip, ttl = dns_resp.split(' - ')[1].split(' TTL: ')
+        ip = ip.strip()
+        ttl = int(ttl)
+
+        return (ip, ttl)
 
 
 class Node(NodeImpl, OtCli):
