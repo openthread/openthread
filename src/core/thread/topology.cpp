@@ -214,6 +214,88 @@ const char *Neighbor::StateToString(State aState)
     return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "Unknown";
 }
 
+void SedCapableNeighbor::Clear(void)
+{
+    Instance &instance = GetInstance();
+
+    memset(reinterpret_cast<void *>(this), 0, sizeof(SedCapableNeighbor));
+    Init(instance);
+}
+
+otError SedCapableNeighbor::AddIp6Address(const Ip6::Address &aAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+    for (Ip6::Address &ip6Address : mIp6Address)
+    {
+        if (ip6Address.IsUnspecified())
+        {
+            ip6Address = aAddress;
+            ExitNow();
+        }
+
+        VerifyOrExit(ip6Address != aAddress, error = OT_ERROR_ALREADY);
+    }
+
+    error = OT_ERROR_NO_BUFS;
+
+exit:
+    return error;
+}
+
+otError SedCapableNeighbor::RemoveIp6Address(const Ip6::Address &aAddress)
+{
+    otError  error = OT_ERROR_NOT_FOUND;
+    uint16_t index;
+
+    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+
+    for (index = 0; index < kNumIp6Addresses; index++)
+    {
+        VerifyOrExit(!mIp6Address[index].IsUnspecified());
+
+        if (mIp6Address[index] == aAddress)
+        {
+            error = OT_ERROR_NONE;
+            break;
+        }
+    }
+
+    SuccessOrExit(error);
+
+    for (; index < kNumIp6Addresses - 1; index++)
+    {
+        mIp6Address[index] = mIp6Address[index + 1];
+    }
+
+    mIp6Address[kNumIp6Addresses - 1].Clear();
+
+exit:
+    return error;
+}
+
+bool SedCapableNeighbor::HasIp6Address(const Ip6::Address &aAddress) const
+{
+    bool retval = false;
+
+    VerifyOrExit(!aAddress.IsUnspecified());
+
+    for (const Ip6::Address &ip6Address : mIp6Address)
+    {
+        VerifyOrExit(!ip6Address.IsUnspecified());
+
+        if (ip6Address == aAddress)
+        {
+            ExitNow(retval = true);
+        }
+    }
+
+exit:
+    return retval;
+}
+
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();

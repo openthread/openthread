@@ -26,42 +26,37 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for a child mask.
- */
+#if OPENTHREAD_FTD
 
-#ifndef CHILD_MASK_HPP_
-#define CHILD_MASK_HPP_
+#include "sed_capable_neighbor_table.hpp"
 
-#include "openthread-core-config.h"
-
-#include "common/bit_vector.hpp"
+#include "common/locator-getters.hpp"
+#include "thread/child_table.hpp"
 
 namespace ot {
 
-/**
- * @addtogroup core-child-mask
- *
- * @brief
- *   This module includes definitions for OpenThread Child Mask.
- *
- * @{
- *
- */
+SedCapableNeighborTable::SedCapableNeighborTable(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
 
-/**
- * This class represents a bit-vector of child mask.
- *
- */
-typedef BitVector<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> ChildMask;
-typedef BitVector<OPENTHREAD_CONFIG_MLE_MAX_CHILDREN> NeighborMask;
+uint16_t SedCapableNeighborTable::GetSedCapableNeighborIndex(const SedCapableNeighbor &aSedCapableNeighbor) const
+{
+    return Get<ChildTable>().GetChildIndex(static_cast<const Child &>(aSedCapableNeighbor));
+}
 
-/**
- * @}
- *
- */
+SedCapableNeighbor *SedCapableNeighborTable::FindSedCapableNeighbor(uint16_t                        aRloc16,
+                                                                    SedCapableNeighbor::StateFilter aFilter)
+{
+    return Get<ChildTable>().FindChild(aRloc16, aFilter);
+}
+
+SedCapableNeighbor *SedCapableNeighborTable::FindSedCapableNeighbor(const Mac::Address &            aMacAddress,
+                                                                    SedCapableNeighbor::StateFilter aFilter)
+{
+    return Get<ChildTable>().FindChild(aMacAddress, aFilter);
+}
 
 } // namespace ot
 
-#endif // CHILD_MASK_HPP_
+#endif // OPENTHREAD_FTD

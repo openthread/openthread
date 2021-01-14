@@ -815,16 +815,86 @@ private:
 };
 
 /**
+ * This class represents a Sed-Capable Neighbor
+ *
+ */
+class SedCapableNeighbor : public Neighbor,
+                           public IndirectSender::IndirectTxInfo,
+                           public DataPollHandler::IndirectTxInfo
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    ,
+                           public CslTxScheduler::IndirectTxInfo
+#endif
+{
+public:
+    /**
+     * This method initializes the `SedCapableNeighbor` object.
+     *
+     * @param[in] aInstance  A reference to OpenThread instance.
+     *
+     */
+    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
+
+    /**
+     * This method clears the sed capable neighbor entry.
+     *
+     */
+    void Clear(void);
+
+    /**
+     * This method adds an IPv6 address to the list.
+     *
+     * @param[in]  aAddress           A reference to IPv6 address to be added.
+     *
+     * @retval OT_ERROR_NONE          Successfully added the new address.
+     * @retval OT_ERROR_ALREADY       Address is already in the list.
+     * @retval OT_ERROR_NO_BUFS       Already at maximum number of addresses. No entry available to add the new address.
+     * @retval OT_ERROR_INVALID_ARGS  Address is invalid (it is the Unspecified Address).
+     *
+     */
+    otError AddIp6Address(const Ip6::Address &aAddress);
+
+    /**
+     * This method removes an IPv6 address from the list.
+     *
+     * @param[in]  aAddress               A reference to IPv6 address to be removed.
+     *
+     * @retval OT_ERROR_NONE              Successfully removed the address.
+     * @retval OT_ERROR_NOT_FOUND         Address was not found in the list.
+     * @retval OT_ERROR_INVALID_ARGS      Address is invalid (it is the Unspecified Address).
+     *
+     */
+    otError RemoveIp6Address(const Ip6::Address &aAddress);
+
+    /**
+     * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.
+     *
+     * @param[in]  aAddress   A reference to IPv6 address.
+     *
+     * @retval TRUE           The address exists on the list.
+     * @retval FALSE          Address was not found in the list.
+     *
+     */
+    bool HasIp6Address(const Ip6::Address &aAddress) const;
+
+protected:
+#if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
+#error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
+#endif
+
+    enum
+    {
+        kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
+    };
+
+    Ip6::Address mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
+};
+
+/**
  * This class represents a Thread Child.
  *
  */
-class Child : public Neighbor,
-              public IndirectSender::ChildInfo,
-              public DataPollHandler::ChildInfo
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    ,
-              public CslTxScheduler::ChildInfo
-#endif
+class Child : public SedCapableNeighbor
 {
     class AddressIteratorBuilder;
 
@@ -866,8 +936,8 @@ public:
         typedef otChildIp6AddressIterator Index;
 
         /**
-         * This constructor initializes the iterator associated with a given `Child` starting from beginning of the
-         * IPv6 address list.
+         * This constructor initializes the iterator associated with a given `SedCapableNeighbor` starting from
+         * beginning of the IPv6 address list.
          *
          * @param[in] aChild    A reference to a child entry.
          * @param[in] aFilter   An IPv6 address type filter restricting iterator to certain type of addresses.
@@ -1013,7 +1083,7 @@ public:
      * @param[in] aInstance  A reference to OpenThread instance.
      *
      */
-    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
+    void Init(Instance &aInstance) { SedCapableNeighbor::Init(aInstance); }
 
     /**
      * This method clears the child entry.
@@ -1272,15 +1342,6 @@ public:
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 private:
-#if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
-#error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
-#endif
-
-    enum
-    {
-        kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
-    };
-
     typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
 
     class AddressIteratorBuilder
@@ -1300,9 +1361,8 @@ private:
         Ip6::Address::TypeFilter mFilter;
     };
 
-    Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
-    Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
-    uint32_t                 mTimeout;                      ///< Child timeout
+    Ip6::InterfaceIdentifier mMeshLocalIid; ///< IPv6 address IID for mesh-local address
+    uint32_t                 mTimeout;      ///< Child timeout
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressMask mMlrToRegisterMask;

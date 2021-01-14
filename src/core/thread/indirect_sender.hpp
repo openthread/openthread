@@ -58,6 +58,7 @@ namespace ot {
  */
 
 class Child;
+class SedCapableNeighbor;
 
 /**
  * This class implements indirect transmission.
@@ -67,7 +68,7 @@ class IndirectSender : public InstanceLocator, public IndirectSenderBase, privat
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     friend class CslTxScheduler::Callbacks;
 #endif
 
@@ -78,7 +79,7 @@ public:
      * `Child` class publicly inherits from this class.
      *
      */
-    class ChildInfo
+    class IndirectTxInfo
     {
         friend class IndirectSender;
         friend class DataPollHandler;
@@ -154,33 +155,33 @@ public:
     void Stop(void);
 
     /**
-     * This method adds a message for indirect transmission to a sleepy child.
+     * This method adds a message for indirect transmission to a sed capable neighbor.
      *
-     * @param[in] aMessage  The message to add.
-     * @param[in] aChild    The (sleepy) child for indirect transmission.
+     * @param[in] aMessage             The message to add.
+     * @param[in] aSedCapableNeighbor  The (rx-off) neighbor for indirect transmission.
      *
      */
-    void AddMessageForSleepyChild(Message &aMessage, Child &aChild);
+    void AddMessageForSedNeighbor(Message &aMessage, SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
-     * This method removes a message for indirect transmission to a sleepy child.
+     * This method removes a message for indirect transmission to a sed capable neighbor.
      *
-     * @param[in] aMessage  The message to update.
-     * @param[in] aChild    The (sleepy) child for indirect transmission.
+     * @param[in] aMessage               The message to update.
+     * @param[in] aSedCapableNeighbor    The (rx-off) neighbor for indirect transmission.
      *
      * @retval OT_ERROR_NONE           Successfully removed the message for indirect transmission.
-     * @retval OT_ERROR_NOT_FOUND      The message was not scheduled for indirect transmission to the child.
+     * @retval OT_ERROR_NOT_FOUND      The message was not scheduled for indirect transmission to the neighbor.
      *
      */
-    otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
+    otError RemoveMessageFromSedNeighbor(Message &aMessage, SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
-     * This method removes all added messages for a specific child and frees message (with no indirect/direct tx).
+     * This method removes all added messages for a specific neighbor and frees message (with no indirect/direct tx).
      *
-     * @param[in]  aChild  A reference to a child whose messages shall be removed.
+     * @param[in]  aSedCapableNeighbor  A reference to a neighbor whose messages shall be removed.
      *
      */
-    void ClearAllMessagesForSleepyChild(Child &aChild);
+    void ClearAllMessagesForSedNeighbor(SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
      * This method sets whether to use the extended or short address for a child.
@@ -211,24 +212,26 @@ private:
     };
 
     // Callbacks from DataPollHandler
-    otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void    HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                   const FrameContext &aContext,
-                                   otError             aError,
-                                   Child &             aChild);
-    void    HandleFrameChangeDone(Child &aChild);
+    otError PrepareFrameForSedNeighbor(Mac::TxFrame &      aFrame,
+                                       FrameContext &      aContext,
+                                       SedCapableNeighbor &aSedCapableNeighbor);
+    void    HandleSentFrameToSedNeighbor(const Mac::TxFrame &aFrame,
+                                         const FrameContext &aContext,
+                                         otError             aError,
+                                         SedCapableNeighbor &aSedCapableNeighbor);
+    void    HandleFrameChangeDone(SedCapableNeighbor &aSedCapableNeighbor);
 
-    void     UpdateIndirectMessage(Child &aChild);
-    Message *FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly = false);
-    void     RequestMessageUpdate(Child &aChild);
-    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, Child &aChild, Message &aMessage);
-    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool aAckRequest);
-    void     ClearMessagesForRemovedChildren(void);
+    void     UpdateIndirectMessage(SedCapableNeighbor &aSedCapableNeighbor);
+    Message *FindIndirectMessage(SedCapableNeighbor &aSedCapableNeighbor, bool aSupervisionTypeOnly = false);
+    void     RequestMessageUpdate(SedCapableNeighbor &aSedCapableNeighbor);
+    uint16_t PrepareDataFrame(Mac::TxFrame &aFrame, SedCapableNeighbor &aSedCapableNeighbor, Message &aMessage);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, SedCapableNeighbor &aSedCapableNeighbor, bool aAckRequest);
+    void     ClearMessagesForRemovedSedNeighbors(void);
 
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     CslTxScheduler mCslTxScheduler;
 #endif
 };

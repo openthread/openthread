@@ -563,8 +563,8 @@ private:
 #if OPENTHREAD_FTD
     FragmentPriorityList mFragmentPriorityList;
     PriorityQueue        mResolvingQueue;
-    IndirectSender       mIndirectSender;
 #endif
+    IndirectSender mIndirectSender;
 
     DataPollSender mDataPollSender;
 };

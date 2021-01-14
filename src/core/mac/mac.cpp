@@ -205,11 +205,9 @@ bool Mac::IsInTransmitState(void) const
     switch (mOperation)
     {
     case kOperationTransmitDataDirect:
-#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
-#endif
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
@@ -569,7 +567,6 @@ exit:
     return;
 }
 
-#if OPENTHREAD_FTD
 void Mac::RequestIndirectFrameTransmission(void)
 {
     VerifyOrExit(IsEnabled());
@@ -581,7 +578,7 @@ exit:
     return;
 }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 void Mac::RequestCslFrameTransmission(uint32_t aDelay)
 {
     VerifyOrExit(mEnabled);
@@ -594,7 +591,6 @@ exit:
     return;
 }
 #endif
-#endif // OPENTHREAD_FTD
 
 otError Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
 {
@@ -722,16 +718,14 @@ void Mac::StartOperation(Operation aOperation)
         mPendingTransmitDataDirect = true;
         break;
 
-#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
         mPendingTransmitDataIndirect = true;
         break;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         mPendingTransmitDataCsl = true;
         break;
-#endif
 #endif
 
     case kOperationTransmitPoll:
@@ -820,13 +814,11 @@ void Mac::PerformNextOperation(void)
         mPendingTransmitBeacon = false;
         mOperation             = kOperationTransmitBeacon;
     }
-#if OPENTHREAD_FTD
     else if (mPendingTransmitDataIndirect)
     {
         mPendingTransmitDataIndirect = false;
         mOperation                   = kOperationTransmitDataIndirect;
     }
-#endif // OPENTHREAD_FTD
     else if (mPendingTransmitPoll && (!mPendingTransmitDataDirect || mShouldTxPollBeforeData))
     {
         mPendingTransmitPoll = false;
@@ -868,11 +860,9 @@ void Mac::PerformNextOperation(void)
 
     case kOperationTransmitBeacon:
     case kOperationTransmitDataDirect:
-#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
-#endif
 #endif
     case kOperationTransmitPoll:
     case kOperationTransmitOutOfBandFrame:
@@ -1183,7 +1173,6 @@ void Mac::BeginTransmit(void)
         frame->SetSequence(mDataSequence++);
         break;
 
-#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
         txFrames.SetChannel(mRadioChannel);
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsIndirect);
@@ -1198,7 +1187,7 @@ void Mac::BeginTransmit(void)
         }
         break;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsCsl);
         txFrames.SetMaxFrameRetries(kMaxFrameRetriesCsl);
@@ -1214,7 +1203,6 @@ void Mac::BeginTransmit(void)
         break;
 
 #endif
-#endif // OPENTHREAD_FTD
 
     case kOperationTransmitOutOfBandFrame:
         frame = &txFrames.GetBroadcastTxFrame();
@@ -1629,8 +1617,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         PerformNextOperation();
         break;
 
-#if OPENTHREAD_FTD
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         mCounters.mTxData++;
 
@@ -1660,7 +1647,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         Get<DataPollHandler>().HandleSentFrame(aFrame, aError);
         PerformNextOperation();
         break;
-#endif
 
     case kOperationTransmitOutOfBandFrame:
         // count Oob frames
@@ -2388,16 +2374,14 @@ const char *Mac::OperationToString(Operation aOperation)
         retval = "TransmitDataDirect";
         break;
 
-#if OPENTHREAD_FTD
     case kOperationTransmitDataIndirect:
         retval = "TransmitDataIndirect";
         break;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     case kOperationTransmitDataCsl:
         retval = "TransmitDataCsl";
         break;
-#endif
 #endif
 
     case kOperationTransmitPoll:

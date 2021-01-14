@@ -3075,7 +3075,7 @@ otError MleRouter::SendChildUpdateRequest(Child &aChild)
 
         for (message = Get<MeshForwarder>().GetSendQueue().GetHead(); message; message = message->GetNext())
         {
-            if (message->GetChildMask(childIndex) && message->GetSubType() == Message::kSubTypeMleChildUpdateRequest)
+            if (message->GetNeighborMask(childIndex) && message->GetSubType() == Message::kSubTypeMleChildUpdateRequest)
             {
                 // No need to send the resync "Child Update Request" to the sleepy child
                 // if there is one already queued.
@@ -3339,7 +3339,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
             mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
         }
 
-        Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
+        Get<IndirectSender>().ClearAllMessagesForSedNeighbor(static_cast<SedCapableNeighbor &>(aNeighbor));
 
         if (aNeighbor.IsFullThreadDevice())
         {

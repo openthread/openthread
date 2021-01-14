@@ -48,7 +48,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     otError         error = OT_ERROR_NONE;
-    Neighbor *      neighbor;
+    Child *         rx_off_child;
 
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
@@ -84,7 +84,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                     {
                         if (!child.IsRxOnWhenIdle())
                         {
-                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
+                            mIndirectSender.AddMessageForSedNeighbor(aMessage, child);
                         }
                     }
                 }
@@ -95,18 +95,17 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                     {
                         if (!child.IsRxOnWhenIdle() && child.HasIp6Address(ip6Header.GetDestination()))
                         {
-                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
+                            mIndirectSender.AddMessageForSedNeighbor(aMessage, child);
                         }
                     }
                 }
             }
         }
-        else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination())) != nullptr &&
-                 !neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
+        else if ((rx_off_child = Get<ChildTable>().FindChild(ip6Header.GetDestination())) != nullptr &&
+                 !rx_off_child->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
         {
-            // destined for a sleepy child
-            Child &child = *static_cast<Child *>(neighbor);
-            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
+            // destined for a sleepy rx_off_child
+            mIndirectSender.AddMessageForSedNeighbor(aMessage, *rx_off_child);
         }
         else
         {
@@ -121,7 +120,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
         OT_ASSERT((child != nullptr) && !child->IsRxOnWhenIdle());
-        mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
+        mIndirectSender.AddMessageForSedNeighbor(aMessage, *child);
         break;
     }
 
@@ -226,7 +225,7 @@ otError MeshForwarder::EvictMessage(Message::Priority aPriority)
                 continue;
             }
 
-            if (message->IsChildPending())
+            if (message->IsNeighborPending())
             {
                 evict = message;
                 ExitNow(error = OT_ERROR_NONE);
@@ -257,7 +256,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             continue;
         }
 
-        if (mIndirectSender.RemoveMessageFromSleepyChild(*message, aChild) != OT_ERROR_NONE)
+        if (mIndirectSender.RemoveMessageFromSedNeighbor(*message, aChild) != OT_ERROR_NONE)
         {
             switch (message->GetType())
             {
@@ -267,7 +266,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 
                 IgnoreError(message->Read(0, ip6header));
 
-                if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(ip6header.GetDestination())))
+                if (&aChild == Get<ChildTable>().FindChild(ip6header.GetDestination()))
                 {
                     message->ClearDirectTransmission();
                 }
@@ -281,7 +280,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
 
                 IgnoreError(meshHeader.ParseFrom(*message));
 
-                if (&aChild == static_cast<Child *>(Get<NeighborTable>().FindNeighbor(meshHeader.GetDestination())))
+                if (&aChild == Get<ChildTable>().FindChild(meshHeader.GetDestination()))
                 {
                     message->ClearDirectTransmission();
                 }
@@ -294,7 +293,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             }
         }
 
-        if (!message->IsChildPending() && !message->GetDirectTransmission())
+        if (!message->IsNeighborPending() && !message->GetDirectTransmission())
         {
             if (mSendMessage == message)
             {
@@ -324,7 +323,7 @@ void MeshForwarder::RemoveDataResponseMessages(void)
         {
             for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
             {
-                IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(*message, child));
+                IgnoreError(mIndirectSender.RemoveMessageFromSedNeighbor(*message, child));
             }
         }
 

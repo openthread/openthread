@@ -481,6 +481,11 @@ template <> inline NeighborTable &Instance::Get(void)
     return mThreadNetif.mMleRouter.mNeighborTable;
 }
 
+template <> inline SedCapableNeighborTable &Instance::Get(void)
+{
+    return mThreadNetif.mMleRouter.mSedCapableNeighborTable;
+}
+
 #if OPENTHREAD_FTD
 template <> inline ChildTable &Instance::Get(void)
 {
@@ -552,8 +557,6 @@ template <> inline Ip6::Filter &Instance::Get(void)
     return mThreadNetif.mIp6Filter;
 }
 
-#if OPENTHREAD_FTD
-
 template <> inline IndirectSender &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder.mIndirectSender;
@@ -569,13 +572,14 @@ template <> inline DataPollHandler &Instance::Get(void)
     return mThreadNetif.mMeshForwarder.mIndirectSender.mDataPollHandler;
 }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 template <> inline CslTxScheduler &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder.mIndirectSender.mCslTxScheduler;
 }
 #endif
 
+#if OPENTHREAD_FTD
 template <> inline AddressResolver &Instance::Get(void)
 {
     return mThreadNetif.mAddressResolver;

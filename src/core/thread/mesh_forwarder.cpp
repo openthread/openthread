@@ -90,9 +90,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mTxPaused(false)
     , mSendBusy(false)
     , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask, this)
-#if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
-#endif
     , mDataPollSender(aInstance)
 {
     mFragTag = Random::NonCrypto::GetUint16();
@@ -201,9 +199,10 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
     if (queue == &mSendQueue)
     {
 #if OPENTHREAD_FTD
-        for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+        for (SedCapableNeighbor &neighbor :
+             Get<SedCapableNeighborTable>().Iterate(SedCapableNeighbor::kInStateAnyExceptInvalid))
         {
-            IgnoreError(mIndirectSender.RemoveMessageFromSleepyChild(aMessage, child));
+            IgnoreError(mIndirectSender.RemoveMessageFromSedNeighbor(aMessage, neighbor));
         }
 #endif
 
@@ -1027,7 +1026,7 @@ void MeshForwarder::UpdateSendMessage(otError aFrameTxError, Mac::Address &aMacD
         Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(*mSendMessage);
     }
 
-    if (!mSendMessage->GetDirectTransmission() && !mSendMessage->IsChildPending())
+    if (!mSendMessage->GetDirectTransmission() && !mSendMessage->IsNeighborPending())
     {
         if (mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest && mSendMessage->IsLinkSecurityEnabled())
         {

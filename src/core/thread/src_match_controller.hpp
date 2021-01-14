@@ -42,7 +42,7 @@
 
 namespace ot {
 
-class Child;
+class SedCapableNeighbor;
 
 /**
  * @addtogroup core-source-match-controller
@@ -57,13 +57,13 @@ class Child;
  * This class implements the "source address match" controller.
  *
  * The source address match feature controls how the radio layer decides the "frame pending" bit for acks sent in
- * response to data request commands from sleepy children.
+ * response to data request commands from rx-off neighbors.
  *
  * This class updates the source match table and also controls when to enable or disable the source matching
  * feature.
  *
- * The source address match table provides the list of children for which there is a pending frame. Either a short
- * address or an extended/long address can be added to the source address match table.
+ * The source address match table provides the list of rx-off neighbors for which there is a pending frame. Either a
+ * short address or an extended/long address can be added to the source address match table.
  *
  */
 class SourceMatchController : public InstanceLocator, private NonCopyable
@@ -86,38 +86,38 @@ public:
     bool IsEnabled(void) const { return mEnabled; }
 
     /**
-     * This method increments the message count for a child and updates the source match table.
+     * This method increments the message count for a rx-off neighbor and updates the source match table.
      *
-     * @param[in] aChild    A reference to the child.
+     * @param[in] aSedCapableNeighbor    A reference to the neighbor.
      *
      */
-    void IncrementMessageCount(Child &aChild);
+    void IncrementMessageCount(SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
-     * This method decrements the message count for a child and updates the source match table.
+     * This method decrements the message count for a rx-off neighbor and updates the source match table.
      *
-     * @param[in] aChild    A reference to the child.
+     * @param[in] aSedCapableNeighbor    A reference to the neighbor.
      *
      */
-    void DecrementMessageCount(Child &aChild);
+    void DecrementMessageCount(SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
-     * This method resets the message count for a child to zero and updates the source match table.
+     * This method resets the message count for a rx-off neighbor to zero and updates the source match table.
      *
-     * @param[in] aChild    A reference to the child.
+     * @param[in] aSedCapableNeighbor    A reference to the neighbor.
      *
      */
-    void ResetMessageCount(Child &aChild);
+    void ResetMessageCount(SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
      * This method sets whether or not to perform source address matching on the extended or short address for
-     * a child.
+     * a neighbor.
      *
-     * @param[in] aChild            A reference to the child.
-     * @param[in] aUseShortAddress  `true` to match on short source address, `false` otherwise.
+     * @param[in] aSedCapableNeighbor  A reference to the neighbor.
+     * @param[in] aUseShortAddress     `true` to match on short source address, `false` otherwise.
      *
      */
-    void SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress);
+    void SetSrcMatchAsShort(SedCapableNeighbor &aSedCapableNeighbor, bool aUseShortAddress);
 
 private:
     /**
@@ -139,41 +139,41 @@ private:
     void Enable(bool aEnable);
 
     /**
-     * This method adds an entry to source match table for a given child and updates the state of source matching
+     * This method adds an entry to source match table for a given neighbor and updates the state of source matching
      * feature accordingly.
      *
      * If the entry is added successfully, source matching feature is enabled (if not already enabled) after ensuring
      * that there are no remaining pending entries. If the entry cannot be added (no space in source match table),
-     * the child is marked to remember the pending entry and source matching is disabled.
+     * the neighbor is marked to remember the pending entry and source matching is disabled.
      *
-     * @param[in] aChild    A reference to the child.
+     * @param[in] aSedCapableNeighbor    A reference to the neighbor.
      *
      */
-    void AddEntry(Child &aChild);
+    void AddEntry(SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
-     * This method clears an entry in source match table for a given child and updates the state of source matching
+     * This method clears an entry in source match table for a given neighbor and updates the state of source matching
      * feature accordingly.
      *
      * If the entry is removed successfully and frees up space in the source match table, any remaining pending
      * entries are added. If all pending entries are successfully added, source matching is enabled.
      *
-     * @param[in] aChild    A reference to the child.
+     * @param[in] aSedCapableNeighbor    A reference to the neighbor.
      *
      */
-    void ClearEntry(Child &aChild);
+    void ClearEntry(SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
-     * This method adds a given child's address (short or extended address depending on child's setting) to the source
-     * source match table (@sa SetSrcMatchAsShort.
+     * This method adds a given neighbor's address (short or extended address depending on neighbor's setting) to the
+     * source source match table (@sa SetSrcMatchAsShort.
      *
-     * @param[in] aChild            A reference to the child
+     * @param[in] aSedCapableNeighbor            A reference to the neighbor
      *
-     * @retval OT_ERROR_NONE     Child's address was added successfully to the source match table.
+     * @retval OT_ERROR_NONE     Neighbor's address was added successfully to the source match table.
      * @retval OT_ERROR_NO_BUFS  No available space in the source match table.
      *
      */
-    otError AddAddress(const Child &aChild);
+    otError AddAddress(const SedCapableNeighbor &aSedCapableNeighbor);
 
     /**
      * This method adds all pending entries to the source match table.

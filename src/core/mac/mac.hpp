@@ -214,14 +214,13 @@ public:
      */
     void RequestDirectFrameTransmission(void);
 
-#if OPENTHREAD_FTD
     /**
      * This method requests an indirect data frame transmission.
      *
      */
     void RequestIndirectFrameTransmission(void);
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * This method requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
      *
@@ -229,8 +228,6 @@ public:
      *
      */
     void RequestCslFrameTransmission(uint32_t aDelay);
-#endif
-
 #endif
 
     /**
@@ -545,7 +542,6 @@ public:
      */
     bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
 
-#if OPENTHREAD_FTD
     /**
      * This method indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
      *
@@ -553,7 +549,6 @@ public:
      *
      */
     bool IsPerformingIndirectTransmit(void) const { return (mOperation == kOperationTransmitDataIndirect); }
-#endif
 
     /**
      * This method returns if the MAC layer is in transmit state.
@@ -790,11 +785,9 @@ private:
         kOperationEnergyScan,
         kOperationTransmitBeacon,
         kOperationTransmitDataDirect,
-#if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
-#endif
 #endif
         kOperationTransmitPoll,
         kOperationWaitingForData,
@@ -881,10 +874,8 @@ private:
     bool mPendingEnergyScan : 1;
     bool mPendingTransmitBeacon : 1;
     bool mPendingTransmitDataDirect : 1;
-#if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
-#endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     bool mPendingTransmitDataCsl : 1;
 #endif
     bool mPendingTransmitPoll : 1;
@@ -917,10 +908,8 @@ private:
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;
     uint8_t     mMaxFrameRetriesDirect;
-#if OPENTHREAD_FTD
-    uint8_t mMaxFrameRetriesIndirect;
-#endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    uint8_t     mMaxFrameRetriesIndirect;
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
 #endif
 

@@ -33,8 +33,6 @@
 
 #include "src_match_controller.hpp"
 
-#if OPENTHREAD_FTD
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -55,54 +53,55 @@ SourceMatchController::SourceMatchController(Instance &aInstance)
     ClearTable();
 }
 
-void SourceMatchController::IncrementMessageCount(Child &aChild)
+void SourceMatchController::IncrementMessageCount(SedCapableNeighbor &aSedCapableNeighbor)
 {
-    if (aChild.GetIndirectMessageCount() == 0)
+    if (aSedCapableNeighbor.GetIndirectMessageCount() == 0)
     {
-        AddEntry(aChild);
+        AddEntry(aSedCapableNeighbor);
     }
 
-    aChild.IncrementIndirectMessageCount();
+    aSedCapableNeighbor.IncrementIndirectMessageCount();
 }
 
-void SourceMatchController::DecrementMessageCount(Child &aChild)
+void SourceMatchController::DecrementMessageCount(SedCapableNeighbor &aSedCapableNeighbor)
 {
-    if (aChild.GetIndirectMessageCount() == 0)
+    if (aSedCapableNeighbor.GetIndirectMessageCount() == 0)
     {
-        otLogWarnMac("DecrementMessageCount(child 0x%04x) called when already at zero count.", aChild.GetRloc16());
+        otLogWarnMac("DecrementMessageCount(child 0x%04x) called when already at zero count.",
+                     aSedCapableNeighbor.GetRloc16());
         ExitNow();
     }
 
-    aChild.DecrementIndirectMessageCount();
+    aSedCapableNeighbor.DecrementIndirectMessageCount();
 
-    if (aChild.GetIndirectMessageCount() == 0)
+    if (aSedCapableNeighbor.GetIndirectMessageCount() == 0)
     {
-        ClearEntry(aChild);
+        ClearEntry(aSedCapableNeighbor);
     }
 
 exit:
     return;
 }
 
-void SourceMatchController::ResetMessageCount(Child &aChild)
+void SourceMatchController::ResetMessageCount(SedCapableNeighbor &aSedCapableNeighbor)
 {
-    aChild.ResetIndirectMessageCount();
-    ClearEntry(aChild);
+    aSedCapableNeighbor.ResetIndirectMessageCount();
+    ClearEntry(aSedCapableNeighbor);
 }
 
-void SourceMatchController::SetSrcMatchAsShort(Child &aChild, bool aUseShortAddress)
+void SourceMatchController::SetSrcMatchAsShort(SedCapableNeighbor &aSedCapableNeighbor, bool aUseShortAddress)
 {
-    VerifyOrExit(aChild.IsIndirectSourceMatchShort() != aUseShortAddress);
+    VerifyOrExit(aSedCapableNeighbor.IsIndirectSourceMatchShort() != aUseShortAddress);
 
-    if (aChild.GetIndirectMessageCount() > 0)
+    if (aSedCapableNeighbor.GetIndirectMessageCount() > 0)
     {
-        ClearEntry(aChild);
-        aChild.SetIndirectSourceMatchShort(aUseShortAddress);
-        AddEntry(aChild);
+        ClearEntry(aSedCapableNeighbor);
+        aSedCapableNeighbor.SetIndirectSourceMatchShort(aUseShortAddress);
+        AddEntry(aSedCapableNeighbor);
     }
     else
     {
-        aChild.SetIndirectSourceMatchShort(aUseShortAddress);
+        aSedCapableNeighbor.SetIndirectSourceMatchShort(aUseShortAddress);
     }
 
 exit:
@@ -123,9 +122,9 @@ void SourceMatchController::Enable(bool aEnable)
     otLogDebgMac("SrcAddrMatch - %sabling", mEnabled ? "En" : "Dis");
 }
 
-void SourceMatchController::AddEntry(Child &aChild)
+void SourceMatchController::AddEntry(SedCapableNeighbor &aSedCapableNeighbor)
 {
-    aChild.SetIndirectSourceMatchPending(true);
+    aSedCapableNeighbor.SetIndirectSourceMatchPending(true);
 
     if (!IsEnabled())
     {
@@ -134,66 +133,66 @@ void SourceMatchController::AddEntry(Child &aChild)
     }
     else
     {
-        VerifyOrExit(AddAddress(aChild) == OT_ERROR_NONE, Enable(false));
-        aChild.SetIndirectSourceMatchPending(false);
+        VerifyOrExit(AddAddress(aSedCapableNeighbor) == OT_ERROR_NONE, Enable(false));
+        aSedCapableNeighbor.SetIndirectSourceMatchPending(false);
     }
 
 exit:
     return;
 }
 
-otError SourceMatchController::AddAddress(const Child &aChild)
+otError SourceMatchController::AddAddress(const SedCapableNeighbor &aSedCapableNeighbor)
 {
     otError error = OT_ERROR_NONE;
 
-    if (aChild.IsIndirectSourceMatchShort())
+    if (aSedCapableNeighbor.IsIndirectSourceMatchShort())
     {
-        error = Get<Radio>().AddSrcMatchShortEntry(aChild.GetRloc16());
+        error = Get<Radio>().AddSrcMatchShortEntry(aSedCapableNeighbor.GetRloc16());
 
-        otLogDebgMac("SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
+        otLogDebgMac("SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)", aSedCapableNeighbor.GetRloc16(),
                      otThreadErrorToString(error), error);
     }
     else
     {
         Mac::ExtAddress address;
 
-        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        address.Set(aSedCapableNeighbor.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
         error = Get<Radio>().AddSrcMatchExtEntry(address);
 
-        otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
-                     otThreadErrorToString(error), error);
+        otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)",
+                     aSedCapableNeighbor.GetExtAddress().ToString().AsCString(), otThreadErrorToString(error), error);
     }
 
     return error;
 }
 
-void SourceMatchController::ClearEntry(Child &aChild)
+void SourceMatchController::ClearEntry(SedCapableNeighbor &aSedCapableNeighbor)
 {
     otError error = OT_ERROR_NONE;
 
-    if (aChild.IsIndirectSourceMatchPending())
+    if (aSedCapableNeighbor.IsIndirectSourceMatchPending())
     {
-        otLogDebgMac("SrcAddrMatch - Clearing pending flag for 0x%04x", aChild.GetRloc16());
-        aChild.SetIndirectSourceMatchPending(false);
+        otLogDebgMac("SrcAddrMatch - Clearing pending flag for 0x%04x", aSedCapableNeighbor.GetRloc16());
+        aSedCapableNeighbor.SetIndirectSourceMatchPending(false);
         ExitNow();
     }
 
-    if (aChild.IsIndirectSourceMatchShort())
+    if (aSedCapableNeighbor.IsIndirectSourceMatchShort())
     {
-        error = Get<Radio>().ClearSrcMatchShortEntry(aChild.GetRloc16());
+        error = Get<Radio>().ClearSrcMatchShortEntry(aSedCapableNeighbor.GetRloc16());
 
-        otLogDebgMac("SrcAddrMatch - Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
+        otLogDebgMac("SrcAddrMatch - Clearing short addr: 0x%04x -- %s (%d)", aSedCapableNeighbor.GetRloc16(),
                      otThreadErrorToString(error), error);
     }
     else
     {
         Mac::ExtAddress address;
 
-        address.Set(aChild.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
+        address.Set(aSedCapableNeighbor.GetExtAddress().m8, Mac::ExtAddress::kReverseByteOrder);
         error = Get<Radio>().ClearSrcMatchExtEntry(address);
 
-        otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
-                     otThreadErrorToString(error), error);
+        otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)",
+                     aSedCapableNeighbor.GetExtAddress().ToString().AsCString(), otThreadErrorToString(error), error);
     }
 
     SuccessOrExit(error);
@@ -212,12 +211,13 @@ otError SourceMatchController::AddPendingEntries(void)
 {
     otError error = OT_ERROR_NONE;
 
-    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+    for (SedCapableNeighbor &neighbor :
+         Get<SedCapableNeighborTable>().Iterate(SedCapableNeighbor::kInStateValidOrRestoring))
     {
-        if (child.IsIndirectSourceMatchPending())
+        if (neighbor.IsIndirectSourceMatchPending())
         {
-            SuccessOrExit(error = AddAddress(child));
-            child.SetIndirectSourceMatchPending(false);
+            SuccessOrExit(error = AddAddress(neighbor));
+            neighbor.SetIndirectSourceMatchPending(false);
         }
     }
 
@@ -226,5 +226,3 @@ exit:
 }
 
 } // namespace ot
-
-#endif // OPENTHREAD_FTD

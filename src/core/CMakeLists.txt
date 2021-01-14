@@ -181,6 +181,8 @@ set(COMMON_SOURCES
     thread/panid_query_server.cpp
     thread/radio_selector.cpp
     thread/router_table.cpp
+    thread/sed_capable_neighbor_table_ftd.cpp
+    thread/sed_capable_neighbor_table_mtd.cpp
     thread/src_match_controller.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp

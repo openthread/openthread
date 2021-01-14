@@ -35,15 +35,91 @@
 
 #include "mesh_forwarder.hpp"
 
+#include "common/locator-getters.hpp"
+
 namespace ot {
 
 otError MeshForwarder::SendMessage(Message &aMessage)
 {
+    Mle::Mle &          mle = Get<Mle::Mle>();
+    SedCapableNeighbor *rx_off_neighbor;
+
     aMessage.SetDirectTransmission();
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
 
     mSendQueue.Enqueue(aMessage);
+
+    switch (aMessage.GetType())
+    {
+    case Message::kTypeIp6:
+    {
+        Ip6::Header ip6Header;
+
+        IgnoreError(aMessage.Read(0, ip6Header));
+
+        if (ip6Header.GetDestination().IsMulticast())
+        {
+            // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
+            // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
+            // is multicast address larger than realm local, it should be for indirection transmission for the
+            // device's sleepy child, thus there should be no direct transmission.
+            if (!ip6Header.GetDestination().IsMulticastLargerThanRealmLocal())
+            {
+                // schedule direct transmission
+                aMessage.SetDirectTransmission();
+            }
+
+            if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
+            {
+                if (ip6Header.GetDestination() == mle.GetLinkLocalAllThreadNodesAddress() ||
+                    ip6Header.GetDestination() == mle.GetRealmLocalAllThreadNodesAddress())
+                {
+                    // destined for all rx-off neighbors
+                    for (SedCapableNeighbor &neighbor :
+                         Get<SedCapableNeighborTable>().Iterate(SedCapableNeighbor::kInStateValidOrRestoring))
+                    {
+                        if (!neighbor.IsRxOnWhenIdle())
+                        {
+                            mIndirectSender.AddMessageForSedNeighbor(aMessage, neighbor);
+                        }
+                    }
+                }
+                else
+                {
+                    // destined for some sleepy children which subscribed the multicast address.
+                    for (SedCapableNeighbor &neighbor :
+                         Get<SedCapableNeighborTable>().Iterate(SedCapableNeighbor::kInStateValidOrRestoring))
+                    {
+                        if (!neighbor.IsRxOnWhenIdle() && neighbor.HasIp6Address(ip6Header.GetDestination()))
+                        {
+                            mIndirectSender.AddMessageForSedNeighbor(aMessage, neighbor);
+                        }
+                    }
+                }
+            }
+        }
+        else if ((rx_off_neighbor =
+                      Get<SedCapableNeighborTable>().FindSedCapableNeighbor(ip6Header.GetDestination())) != nullptr &&
+                 !rx_off_neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
+        {
+            // destined for an rx-off neighbor
+            mIndirectSender.AddMessageForSedNeighbor(aMessage, *rx_off_neighbor);
+        }
+        else
+        {
+            // schedule direct transmission
+            aMessage.SetDirectTransmission();
+        }
+
+        break;
+    }
+
+    default:
+        aMessage.SetDirectTransmission();
+        break;
+    }
+
     mScheduleTransmissionTask.Post();
 
     return OT_ERROR_NONE;

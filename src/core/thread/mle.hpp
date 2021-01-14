@@ -49,6 +49,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/neighbor_table.hpp"
+#include "thread/sed_capable_neighbor_table.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -1547,12 +1548,15 @@ protected:
 
     Ip6::NetifUnicastAddress mLeaderAloc; ///< Leader anycast locator
 
-    LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
-    bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
-    DeviceRole    mRole;                     ///< Current Thread role.
-    Router        mParent;                   ///< Parent information.
-    Router        mParentCandidate;          ///< Parent candidate information.
-    NeighborTable mNeighborTable;            ///< The neighbor table.
+    LeaderData    mLeaderData;             ///< Last received Leader Data TLV.
+    bool          mRetrieveNewNetworkData; ///< Indicating new Network Data is needed if set.
+    DeviceRole    mRole;                   ///< Current Thread role.
+    Router        mParent;                 ///< Parent information.
+    Router        mParentCandidate;        ///< Parent candidate information.
+    NeighborTable mNeighborTable;          ///< The neighbor table.
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    SedCapableNeighborTable mSedCapableNeighborTable; ///< The sed capable neighbor table.
+#endif
     DeviceMode    mDeviceMode;               ///< Device mode setting.
     AttachState   mAttachState;              ///< The parent request state.
     ReattachState mReattachState;            ///< Reattach state

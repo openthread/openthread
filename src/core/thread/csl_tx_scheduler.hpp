@@ -50,9 +50,9 @@ namespace ot {
  * @{
  */
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
-class Child;
+class SedCapableNeighbor;
 
 /**
  * This class implements CSL tx scheduling functionality.
@@ -70,12 +70,12 @@ public:
     };
 
     /**
-     * This class defines all the child info required for scheduling CSL transmissions.
+     * This class defines all the indirect TX info required for scheduling CSL transmissions.
      *
-     * `Child` class publicly inherits from this class.
+     * `SedCapableNeighbor` class publicly inherits from this class.
      *
      */
-    class ChildInfo
+    class IndirectTxInfo
     {
     public:
         uint8_t GetCslTxAttempts(void) const { return mCslTxAttempts; }
@@ -138,32 +138,35 @@ public:
         /**
          * This callback method requests a frame to be prepared for CSL transmission to a given SSED.
          *
-         * @param[out] aFrame    A reference to a MAC frame where the new frame would be placed.
-         * @param[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
-         * @param[in]  aChild    The child for which to prepare the frame.
+         * @param[out] aFrame                 A reference to a MAC frame where the new frame would be placed.
+         * @param[out] aContext               A reference to a `FrameContext` where the context for the new frame would
+         * be placed.
+         * @param[in]  aSedCapableNeighbor    The neighbor for which to prepare the frame.
          *
          * @retval OT_ERROR_NONE   Frame was prepared successfully.
-         * @retval OT_ERROR_ABORT  CSL transmission should be aborted (no frame for the child).
+         * @retval OT_ERROR_ABORT  CSL transmission should be aborted (no frame for the neighbor).
          *
          */
-        otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
+        otError PrepareFrameForSedNeighbor(Mac::TxFrame &      aFrame,
+                                           FrameContext &      aContext,
+                                           SedCapableNeighbor &aSedCapableNeighbor);
 
         /**
-         * This callback method notifies the end of CSL frame transmission to a child.
+         * This callback method notifies the end of CSL frame transmission to a neighbor.
          *
-         * @param[in]  aFrame     The transmitted frame.
-         * @param[in]  aContext   The context associated with the frame when it was prepared.
-         * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted successfully,
-         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-         *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
-         * @param[in]  aChild     The child to which the frame was transmitted.
+         * @param[in]  aFrame               The transmitted frame.
+         * @param[in]  aContext             The context associated with the frame when it was prepared.
+         * @param[in]  aError               OT_ERROR_NONE when the frame was transmitted successfully,
+         *                                  OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
+         *                                  OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
+         *                                  OT_ERROR_ABORT when transmission was aborted for other reasons.
+         * @param[in]  aSedCapableNeighbor  The neighbor to which the frame was transmitted.
          *
          */
-        void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                    const FrameContext &aContext,
-                                    otError             aError,
-                                    Child &             aChild);
+        void HandleSentFrameToSedNeighbor(const Mac::TxFrame &aFrame,
+                                          const FrameContext &aContext,
+                                          otError             aError,
+                                          SedCapableNeighbor &aSedCapableNeighbor);
     };
     /**
      * This constructor initializes the CSL tx scheduler object.
@@ -174,17 +177,17 @@ public:
     explicit CslTxScheduler(Instance &aInstance);
 
     /**
-     * This method updates the next CSL transmission (finds the nearest child).
+     * This method updates the next CSL transmission (finds the nearest neighbor).
      *
      * It would then request the `Mac` to do the CSL tx. If the last CSL tx has been fired at `Mac` but hasn't been
-     * done yet, and it's aborted, this method would set `mCslTxChild` to `nullptr` to notify the `HandleTransmitDone`
-     * that the operation has been aborted.
+     * done yet, and it's aborted, this method would set `mCslTxNeighbor` to `nullptr` to notify the
+     * `HandleTransmitDone` that the operation has been aborted.
      *
      */
     void Update(void);
 
     /**
-     * This method clears all the states inside `CslTxScheduler` and the related states in each child.
+     * This method clears all the states inside `CslTxScheduler` and the related states in each neighbor.
      *
      */
     void Clear(void);
@@ -193,22 +196,23 @@ private:
     void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx) const;
+    uint32_t GetNextCslTransmissionDelay(const SedCapableNeighbor &aSedCapableNeighbor,
+                                         uint32_t &                aDelayFromLastRx) const;
 
     // Callbacks from `Mac`
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
     void          HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, SedCapableNeighbor &aSedCapableNeighbor);
 
     uint32_t                mCslFrameRequestAheadUs;
-    Child *                 mCslTxChild;
+    SedCapableNeighbor *    mCslTxNeighbor;
     Message *               mCslTxMessage;
     Callbacks::FrameContext mFrameContext;
     Callbacks               mCallbacks;
 };
 
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}

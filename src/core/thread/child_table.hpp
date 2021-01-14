@@ -52,6 +52,7 @@ namespace ot {
 class ChildTable : public InstanceLocator, private NonCopyable
 {
     friend class NeighborTable;
+    friend class SedCapableNeighborTable;
     class IteratorBuilder;
 
 public:
@@ -154,7 +155,7 @@ public:
      * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
      *
      */
-    Child *FindChild(uint16_t aRloc16, Child::StateFilter aFilter);
+    Child *FindChild(uint16_t aRloc16, Child::StateFilter aFilter = Child::kInStateValidOrRestoring);
 
     /**
      * This method searches the child table for a `Child` with a given extended address also matching a given state
@@ -178,6 +179,17 @@ public:
      *
      */
     Child *FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter);
+
+    /**
+     * This method searches the child table for a `Child` with a given Ip6 address also matching a given state filter.
+     *
+     * @param[in]  aIp6Address A reference to a Ip6 address.
+     * @param[in]  aFilter     A child state filter.
+     *
+     * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
+     *
+     */
+    Child *FindChild(const Ip6::Address &aIp6Address, Child::StateFilter aFilter = Child::kInStateValidOrRestoring);
 
     /**
      * This method indicates whether the child table contains any child matching a given state filter.

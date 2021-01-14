@@ -163,9 +163,9 @@ struct MessageMetadata
     LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
 #endif
 
-    ChildMask mChildMask; ///< A ChildMask to indicate which sleepy children need to receive this.
-    uint16_t  mMeshDest;  ///< Used for unicast non-link-local messages.
-    uint8_t   mTimeout;   ///< Seconds remaining before dropping the message.
+    NeighborMask mNeighborMask;
+    uint16_t     mMeshDest; ///< Used for unicast non-link-local messages.
+    uint8_t      mTimeout;  ///< Seconds remaining before dropping the message.
     union
     {
         uint16_t mPanId;   ///< Used for MLE Discover Request and Response messages.
@@ -857,40 +857,40 @@ public:
     void SetDatagramTag(uint32_t aTag) { GetMetadata().mDatagramTag = aTag; }
 
     /**
-     * This method returns whether or not the message forwarding is scheduled for the child.
+     * This method returns whether or not the message forwarding is scheduled for the neighbor.
      *
-     * @param[in]  aChildIndex  The index into the child table.
+     * @param[in]  aIndex  The index into the neighbor table.
      *
-     * @retval TRUE   If the message is scheduled to be forwarded to the child.
-     * @retval FALSE  If the message is not scheduled to be forwarded to the child.
+     * @retval TRUE   If the message is scheduled to be forwarded to the neighbor.
+     * @retval FALSE  If the message is not scheduled to be forwarded to the neighbor.
      *
      */
-    bool GetChildMask(uint16_t aChildIndex) const;
+    bool GetNeighborMask(uint16_t aNeighborIndex) const;
 
     /**
-     * This method unschedules forwarding of the message to the child.
+     * This method unschedules forwarding of the message to the neighbor.
      *
-     * @param[in]  aChildIndex  The index into the child table.
+     * @param[in]  aNeighborIndex  The index into the neighbor table.
      *
      */
-    void ClearChildMask(uint16_t aChildIndex);
+    void ClearNeighborMask(uint16_t aNeighborIndex);
 
     /**
-     * This method schedules forwarding of the message to the child.
+     * This method schedules forwarding of the message to the neighbor.
      *
-     * @param[in]  aChildIndex  The index into the child table.
+     * @param[in]  aNeighborIndex  The index into the neighbor table.
      *
      */
-    void SetChildMask(uint16_t aChildIndex);
+    void SetNeighborMask(uint16_t aNeighborIndex);
 
     /**
-     * This method returns whether or not the message forwarding is scheduled for at least one child.
+     * This method returns whether or not the message forwarding is scheduled for at least one neighbor.
      *
-     * @retval TRUE   If message forwarding is scheduled for at least one child.
-     * @retval FALSE  If message forwarding is not scheduled for any child.
+     * @retval TRUE   If message forwarding is scheduled for at least one neighbor.
+     * @retval FALSE  If message forwarding is not scheduled for any neighbor.
      *
      */
-    bool IsChildPending(void) const;
+    bool IsNeighborPending(void) const;
 
     /**
      * This method returns the RLOC16 of the mesh destination.

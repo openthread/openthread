@@ -299,6 +299,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/panid_query_server.cpp                  \
     src/core/thread/radio_selector.cpp                      \
     src/core/thread/router_table.cpp                        \
+    src/core/thread/sed_capable_neighbor_table_ftd.cpp      \
+    src/core/thread/sed_capable_neighbor_table_mtd.cpp      \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
     src/core/thread/tmf.cpp                                 \
