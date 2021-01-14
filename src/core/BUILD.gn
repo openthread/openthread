@@ -224,6 +224,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1" ]
     }
 
+    if (openthread_config_srp_server_enable) {
+      defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
+    }
+
     if (openthread_config_time_sync_enable) {
       defines += [ "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1" ]
     }
@@ -333,6 +337,7 @@ openthread_core_files = [
   "api/random_noncrypto_api.cpp",
   "api/server_api.cpp",
   "api/sntp_api.cpp",
+  "api/srp_server_api.cpp",
   "api/tasklet_api.cpp",
   "api/thread_api.cpp",
   "api/thread_ftd_api.cpp",
@@ -503,6 +508,8 @@ openthread_core_files = [
   "net/sntp_client.cpp",
   "net/sntp_client.hpp",
   "net/socket.hpp",
+  "net/srp_server.cpp",
+  "net/srp_server.hpp",
   "net/tcp.hpp",
   "net/udp6.cpp",
   "net/udp6.hpp",
@@ -683,6 +690,7 @@ source_set("libopenthread_core_config") {
     "config/platform.h",
     "config/radio_link.h",
     "config/sntp_client.h",
+    "config/srp_server.h",
     "config/time_sync.h",
     "config/tmf.h",
     "openthread-core-config.h",

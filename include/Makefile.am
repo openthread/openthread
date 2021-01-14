@@ -74,6 +74,7 @@ openthread_headers                      = \
     openthread/random_noncrypto.h         \
     openthread/server.h                   \
     openthread/sntp.h                     \
+    openthread/srp_server.h               \
     openthread/tasklet.h                  \
     openthread/thread.h                   \
     openthread/thread_ftd.h               \

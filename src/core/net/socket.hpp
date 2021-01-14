@@ -236,6 +236,19 @@ public:
 class SockAddr : public otSockAddr, public Clearable<SockAddr>
 {
 public:
+    enum
+    {
+        // The socket address string length is:
+        // len('[') + len(mAddress) + len(']') + len(':') + len(mPort)
+        kIp6SocketAddressStringSize = 1 + Address::kIp6AddressStringSize + 1 + 1 + 5,
+    };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kIp6SocketAddressStringSize> InfoString;
+
     /**
      * This constructor initializes the socket address (all fields are set to zero).
      *

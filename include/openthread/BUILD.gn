@@ -114,6 +114,7 @@ source_set("openthread") {
     "random_noncrypto.h",
     "server.h",
     "sntp.h",
+    "srp_server.h",
     "tasklet.h",
     "thread.h",
     "thread_ftd.h",

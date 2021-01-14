@@ -56,6 +56,7 @@ This page lists the available common switches with description. Unless stated ot
 | SLAAC | OT_SLAAC | Enables support for adding auto-configured SLAAC addresses by OpenThread. This feature is enabled by default. |
 | SNTP_CLIENT | OT_SNTP_CLIENT | Enables support for SNTP Client. |
 | SPINEL_ENCRYPTER_LIBS | not implemented | Specifies library files (absolute paths) for implementing the NCP Spinel Encrypter. |
+| SRP_SERVER | OT_SRP_SERVER | Enable support for SRP server. |
 | THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 (default) / 1.2). For example, set to `1.2` for Thread 1.2. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |

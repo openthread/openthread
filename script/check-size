@@ -126,6 +126,7 @@ size_nrf52840_version()
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"
+        "SRP_SERVER=1"
         "TIME_SYNC=1"
         "UDP_FORWARD=1"
     )

@@ -64,6 +64,10 @@
 #include "thread/dua_manager.hpp"
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#include "net/srp_server.hpp"
+#endif
+
 #include "meshcop/dataset_manager.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -262,6 +266,10 @@ private:
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     DuaManager mDuaManager;
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Srp::Server mSrpServer;
+#endif
+
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;
     AnnounceBeginServer        mAnnounceBegin;

@@ -39,6 +39,7 @@
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "crypto/ecdsa.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -924,6 +925,14 @@ public:
     }
 
     /**
+     * This method tells whether this is a valid AAAA record.
+     *
+     * @returns  A boolean indicates whether this is a valid AAAA record.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
      * This method sets the IPv6 address of the resource record.
      *
      * @param[in]  aAddress The IPv6 address of the resource record.
@@ -1096,6 +1105,14 @@ public:
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeKey, aClass); }
 
     /**
+     * This method tells whether the KEY record is valid.
+     *
+     * @returns  TRUE if this is a valid KEY record, FALSE if an invalid KEY record.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
      * This method gets the key use (or key type) flags.
      *
      * @returns The key use flags.
@@ -1189,6 +1206,60 @@ private:
 
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+OT_TOOL_PACKED_BEGIN
+class Ecdsa256KeyRecord : public KeyRecord, public Clearable<Ecdsa256KeyRecord>
+{
+public:
+    /**
+     * This method initializes the KEY Resource Record to ECDSA with curve P-256.
+     *
+     * Other record fields (TTL, length, flags, protocol) remain unchanged/uninitialized.
+     *
+     */
+    void Init(void);
+
+    /**
+     * This method tells whether this is a valid ECDSA DNSKEY with curve P-256.
+     *
+     * @returns  A boolean that indicates whether this is a valid ECDSA DNSKEY RR with curve P-256.
+     *
+     */
+    bool IsValid(void) const;
+
+    /**
+     * This method returns the ECDSA P-256 public kek.
+     *
+     * @returns  A reference to the public key.
+     *
+     */
+    const Crypto::Ecdsa::P256::PublicKey &GetKey(void) const { return mKey; }
+
+    /**
+     * This comparator tells whether two Ecdsa256KeyRecord objects are equal.
+     *
+     * @param[in]  aOther  The other Ecdsa256KeyRecord object.
+     *
+     * @returns  TRUE if they are equal, FALSE if not.
+     *
+     */
+    bool operator==(const Ecdsa256KeyRecord &aOther) const { return memcmp(this, &aOther, sizeof(*this)) == 0; }
+
+    /**
+     * This comparator tells whether two Ecdsa256KeyRecord objects are not equal.
+     *
+     * @param[in]  aOther  The other Ecdsa256KeyRecord object.
+     *
+     * @returns  TRUE if they are not equal, FALSE if equal.
+     *
+     */
+    bool operator!=(const Ecdsa256KeyRecord &aOther) const { return !(*this == aOther); }
+
+private:
+    Crypto::Ecdsa::P256::PublicKey mKey;
+} OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+
 /**
  * This class implements Resource Record body format of SIG type (RFC 2535 - section-4.1).
  *
@@ -1209,6 +1280,14 @@ public:
      *
      */
     void Init(uint16_t aClass) { ResourceRecord::Init(kTypeSig, aClass); }
+
+    /**
+     * This method tells whether the SIG record is valid.
+     *
+     * @returns  TRUE if this is a valid SIG record, FALSE if not a valid SIG record.
+     *
+     */
+    bool IsValid(void) const;
 
     /**
      * This method returns the SIG record's type-covered value.
@@ -1568,6 +1647,14 @@ public:
         SetOptionCode(kUpdateLease);
         SetOptionLength(kOptionLength);
     }
+
+    /**
+     * This method tells whether this is a valid Lease Option.
+     *
+     * @returns  TRUE if this is a valid Lease Option, FALSE if not a valid Lease Option.
+     *
+     */
+    bool IsValid(void) const;
 
     /**
      * This method returns the Update Lease OPT record's lease interval value.
