@@ -688,6 +688,215 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def srp_server_set_enabled(self, enable):
+        cmd = f'srp server {"enable" if enable else "disable"}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def srp_server_set_lease_range(self, min_lease, max_lease, min_key_lease, max_key_lease):
+        self.send_command(f'srp server lease {min_lease} {max_lease} {min_key_lease} {max_key_lease}')
+        self._expect_done()
+
+    def srp_server_get_hosts(self):
+        """Returns the host list on the SRP server as a list of property
+           dictionary.
+
+           Example output:
+           [{
+               'fullname': 'my-host.default.service.arpa.',
+               'name': 'my-host',
+               'deleted': 'false',
+               'addresses': ['2001::1', '2001::2']
+           }]
+        """
+
+        cmd = 'srp server host'
+        self.send_command(cmd)
+        lines = self._expect_command_output(cmd)
+        host_list = []
+        while lines:
+            host = {}
+
+            host['fullname'] = lines.pop(0).strip()
+            host['name'] = host['fullname'].split('.')[0]
+
+            host['deleted'] = lines.pop(0).strip().split(':')[1].strip()
+            if host['deleted'] == 'true':
+                host_list.append(host)
+                continue
+
+            addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
+            map(str.strip, addresses)
+            host['addresses'] = [addr for addr in addresses if addr]
+
+            host_list.append(host)
+
+        return host_list
+
+    def srp_server_get_host(self, host_name):
+        """Returns host on the SRP server that matches given host name.
+
+           Example usage:
+           self.srp_server_get_host("my-host")
+        """
+
+        for host in self.srp_server_get_hosts():
+            if host_name == host['name']:
+                return host
+
+    def srp_server_get_services(self):
+        """Returns the service list on the SRP server as a list of property
+           dictionary.
+
+           Example output:
+           [{
+               'fullname': 'my-service._ipps._tcp.default.service.arpa.',
+               'instance': 'my-service',
+               'name': '_ipps._tcp',
+               'deleted': 'false',
+               'port': '12345',
+               'priority': '0',
+               'weight': '0',
+               'TXT': '00',
+               'host_fullname': 'my-host.default.service.arpa.',
+               'host': 'my-host',
+               'addresses': ['2001::1', '2001::2']
+           }]
+
+           Note that the TXT data is output as a HEX string.
+        """
+
+        cmd = 'srp server service'
+        self.send_command(cmd)
+        lines = self._expect_command_output(cmd)
+        service_list = []
+        while lines:
+            service = {}
+
+            service['fullname'] = lines.pop(0).strip()
+            name_labels = service['fullname'].split('.')
+            service['instance'] = name_labels[0]
+            service['name'] = '.'.join(name_labels[1:3])
+
+            service['deleted'] = lines.pop(0).strip().split(':')[1].strip()
+            if service['deleted'] == 'true':
+                service_list.append(service)
+                continue
+
+            # 'port', 'priority', 'weight', 'TXT'
+            for i in range(0, 4):
+                key_value = lines.pop(0).strip().split(':')
+                service[key_value[0].strip()] = key_value[1].strip()
+
+            service['host_fullname'] = lines.pop(0).strip().split(':')[1].strip()
+            service['host'] = service['host_fullname'].split('.')[0]
+
+            addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
+            map(str.strip, addresses)
+            service['addresses'] = [addr for addr in addresses if addr]
+
+            service_list.append(service)
+
+        return service_list
+
+    def srp_server_get_service(self, instance_name, service_name):
+        """Returns service on the SRP server that matches given instance
+           name and service name.
+
+           Example usage:
+           self.srp_server_get_service("my-service", "_ipps._tcp")
+        """
+
+        for service in self.srp_server_get_services():
+            if (instance_name == service['instance'] and service_name == service['name']):
+                return service
+
+    def get_srp_server_port(self):
+        """Returns the dynamic SRP server UDP port by parsing
+           the SRP Server Data in Network Data.
+        """
+
+        for service in self.get_services():
+            # TODO: for now, we are using 0xfd as the SRP service data.
+            #       May use a dedicated bit flag for SRP server.
+            if int(service[1], 16) == 0x5d:
+                # The SRP server data are 2-bytes UDP port number.
+                return int(service[2], 16)
+
+    def srp_client_start(self, server_address, server_port):
+        self.send_command(f'srp client start {server_address} {server_port}')
+        self._expect_done()
+
+    def srp_client_stop(self):
+        self.send_command(f'srp client stop')
+        self._expect_done()
+
+    def srp_client_get_host_state(self):
+        cmd = 'srp client host state'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
+    def srp_client_set_host_name(self, name):
+        self.send_command(f'srp client host name {name}')
+        self._expect_done()
+
+    def srp_client_get_host_name(self):
+        self.send_command(f'srp client host name')
+        self._expect_done()
+
+    def srp_client_remove_host(self, remove_key=False):
+        self.send_command(f'srp client host remove {"1" if remove_key else "0"}')
+        self._expect_done()
+
+    def srp_client_clear_host(self):
+        self.send_command(f'srp client host clear')
+        self._expect_done()
+
+    def srp_client_set_host_address(self, address):
+        self.send_command(f'srp client host address {address}')
+        self._expect_done()
+
+    def srp_client_get_host_address(self):
+        self.send_command(f'srp client host address')
+        self._expect_done()
+
+    def srp_client_add_service(self, instance_name, service_name, port):
+        self.send_command(f'srp client service add {instance_name} {service_name} {port}')
+        self._expect_done()
+
+    def srp_client_remove_service(self, instance_name, service_name):
+        self.send_command(f'srp client service remove {instance_name} {service_name}')
+        self._expect_done()
+
+    def srp_client_get_services(self):
+        cmd = 'srp client service'
+        self.send_command(cmd)
+        service_lines = self._expect_command_output(cmd)
+        return [self._parse_srp_client_service(line) for line in service_lines]
+
+    def _parse_srp_client_service(self, line: str):
+        """Parse one line of srp service list into a dictionary which
+           maps string keys to string values.
+
+           Example output for input
+           'instance:\"%s\", name:\"%s\", state:%s, port:%d, priority:%d, weight:%d"'
+           {
+               'instance': 'my-service',
+               'name': '_ipps._udp',
+               'state': 'ToAdd',
+               'port': '12345',
+               'priority': '0',
+               'weight': '0'
+           }
+
+           Note that value of 'port', 'priority' and 'weight' are represented
+           as strings but not integers.
+        """
+        key_values = [word.strip().split(':') for word in line.split(',')]
+        keys = [key_value[0] for key_value in key_values]
+        values = [key_value[1].strip('"') for key_value in key_values]
+        return dict(zip(keys, values))
+
     def enable_backbone_router(self):
         cmd = 'bbr enable'
         self.send_command(cmd)
@@ -1286,17 +1495,29 @@ class NodeImpl:
 
     def enable_br(self):
         self.send_command('br enable')
-        self._expect('Done')
+        self._expect_done()
 
     def disable_br(self):
         self.send_command('br disable')
-        self._expect('Done')
+        self._expect_done()
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
 
     def get_routes(self):
         return self.get_netdata()['Routes']
+
+    def get_services(self):
+        netdata = self.netdata_show()
+        services = []
+        services_section = False
+
+        for line in netdata:
+            if line.startswith('Services:'):
+                services_section = True
+            elif services_section:
+                services.append(line.strip().split(' '))
+        return services
 
     def netdata_show(self):
         self.send_command('netdata show')
