@@ -67,6 +67,7 @@ set(COMMON_SOURCES
     api/server_api.cpp
     api/sntp_api.cpp
     api/srp_client_api.cpp
+    api/srp_server_api.cpp
     api/tasklet_api.cpp
     api/thread_api.cpp
     api/thread_ftd_api.cpp
@@ -146,6 +147,7 @@ set(COMMON_SOURCES
     net/netif.cpp
     net/sntp_client.cpp
     net/srp_client.cpp
+    net/srp_server.cpp
     net/udp6.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp

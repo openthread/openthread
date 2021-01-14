@@ -144,6 +144,9 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     , mSrpClient(*this)
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(*this)
+#endif
     , mInstance(aInstance)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -178,9 +181,9 @@ void Interpreter::OutputResult(otError aError)
     }
 }
 
-void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+void Interpreter::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
 {
-    for (int i = 0; i < aLength; i++)
+    for (uint16_t i = 0; i < aLength; i++)
     {
         OutputFormat("%02x", aBytes[i]);
     }
@@ -3872,29 +3875,41 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
 }
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 otError Interpreter::ProcessSrp(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
     if (aArgsLength == 0)
     {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
         OutputLine("client");
-        // OutputLine("server");
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+        OutputLine("server");
+#endif
         ExitNow();
     }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     if (strcmp(aArgs[0], "client") == 0)
     {
         ExitNow(error = mSrpClient.Process(aArgsLength - 1, aArgs + 1));
     }
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    if (strcmp(aArgs[0], "server") == 0)
+    {
+        ExitNow(error = mSrpServer.Process(aArgsLength - 1, aArgs + 1));
+    }
+#endif
 
     error = OT_ERROR_INVALID_COMMAND;
 
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 otError Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
 {
