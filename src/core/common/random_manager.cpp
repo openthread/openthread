@@ -200,7 +200,7 @@ void RandomManager::CryptoCtrDrbg::Init(void)
 
     if (rval != 0)
     {
-        otLogCritMbedTls("Can't seed the CTR DRBG");
+        otLogCritMbedTls("Failed to seed the CTR DRBG");
     }
 
     OT_ASSERT(rval == 0);
