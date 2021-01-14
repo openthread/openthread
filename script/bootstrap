@@ -33,7 +33,7 @@
 
 set -euxo pipefail
 
-install_packages_apt_pretty_format()
+install_packages_pretty_format()
 {
     echo 'Installing pretty tools useful for code contributions...'
 
@@ -74,7 +74,7 @@ install_packages_apt()
     fi
 
     if [ "$PLATFORM" != "Raspbian" ]; then
-        install_packages_apt_pretty_format
+        install_packages_pretty_format
     fi
 }
 
@@ -136,8 +136,6 @@ install_packages()
         PM=opkg
     elif command -v brew; then
         PM=brew
-    elif command -v pretty-format; then
-        PM=apt-pretty-format
     fi
     install_packages_$PM
 }
