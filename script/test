@@ -46,6 +46,8 @@ readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
 
+readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
+
 build_simulation()
 {
     local version="$1"
@@ -391,16 +393,47 @@ do_package()
 
 do_prepare_coredump_upload()
 {
-    echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
-    mkdir -p ot-core-dump
+    echo "$OT_COREDUMP_DIR/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+    rm -rf "$OT_COREDUMP_DIR"
+    mkdir -p "$OT_COREDUMP_DIR"
 }
 
 do_copy_so_lib()
 {
-    mkdir -p so-lib
-    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 ./so-lib
-    cp /lib/x86_64-linux-gnu/libc.so.6 ./so-lib
-    cp /lib64/ld-linux-x86-64.so.2 ./so-lib
+    mkdir -p "$OT_COREDUMP_DIR/so-lib"
+    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 "$OT_COREDUMP_DIR/so-lib"
+    cp /lib/x86_64-linux-gnu/libc.so.6 "$OT_COREDUMP_DIR/so-lib"
+    cp /lib64/ld-linux-x86-64.so.2 "$OT_COREDUMP_DIR/so-lib"
+}
+
+do_check_crash()
+{
+    shopt -s nullglob
+
+    # Scan core dumps and collect binaries which crashed
+    declare -A bin_list=([dummy]='')
+    for f in "$OT_COREDUMP_DIR"/core*; do
+        bin=$(file "$f" | grep -E -o "execfn: '(.*')," | sed -r "s/execfn: '(.*)',/\1/")
+        bin_list[$bin]=''
+    done
+
+    for key in "${!bin_list[@]}"; do
+        if [ "$key" != "dummy" ]; then
+            # Add postfix for binaries to avoid conflicts caused by different Thread version
+            postfix=""
+            if [[ $key =~ openthread-(simulation|posix)-([0-9]\.[0-9]) ]]; then
+                postfix="-$(echo "$key" | sed -r "s/.*openthread-(simulation|posix)-([0-9]\.[0-9]).*/\2/")"
+            fi
+            bin_name=$(basename "$key")
+            cp "$key" "$OT_COREDUMP_DIR"/"$bin_name""$postfix"
+        fi
+    done
+
+    # echo 1 and copy so libs if crash found, echo 0 otherwise
+    [[ ${#bin_list[@]} -gt 1 ]] && (
+        echo 1
+        do_copy_so_lib
+    ) || echo 0
 }
 
 do_generate_coverage()
@@ -554,8 +587,8 @@ main()
             prepare_coredump_upload)
                 do_prepare_coredump_upload
                 ;;
-            copy_so_lib)
-                do_copy_so_lib
+            check_crash)
+                do_check_crash
                 ;;
             generate_coverage)
                 shift
