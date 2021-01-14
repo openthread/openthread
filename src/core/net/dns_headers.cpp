@@ -282,7 +282,7 @@ otError Name::ReadName(const Message &aMessage,
             aOffset      = iterator.mNameEndOffset;
             error        = OT_ERROR_NONE;
 
-            // Fall through
+            OT_FALL_THROUGH;
 
         default:
             ExitNow();

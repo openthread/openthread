@@ -254,7 +254,8 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
             aChild.ResetCslTxAttempts();
         }
 
-        // Fall through
+        OT_FALL_THROUGH;
+
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
     case OT_ERROR_ABORT:
 

@@ -284,7 +284,7 @@ void Link::HandleTimer(void)
     case Mle::kRoleChild:
         HandleTimer(Get<Mle::MleRouter>().GetParent());
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case Mle::kRoleRouter:
     case Mle::kRoleLeader:

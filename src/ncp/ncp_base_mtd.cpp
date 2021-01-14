@@ -125,7 +125,8 @@ static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
         break;
 
     case OT_ROUTE_PREFERENCE_MED:
-        // fall through
+
+        OT_FALL_THROUGH;
 
     default:
         flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;

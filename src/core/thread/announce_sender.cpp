@@ -142,7 +142,7 @@ void AnnounceSender::CheckState(void)
         }
 #endif
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:

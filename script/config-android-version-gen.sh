@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-#  Copyright (c) 2018, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,28 +27,26 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+#  Description:
+#    This script generates the openthread version header file needed by Android.bp.
 #
-# Run this command on parent directory of openthread
-#
 
-set -euxo pipefail
-
-check_targets()
-{
-    for target in "$@"; do
-        make showcommands "${target}"
-        test -x "out/target/product/generic/system/bin/${target}"
-    done
-
-    for target in "$@"; do
-        make "clean-${target}" || true
-    done
-}
+set -euo pipefail
 
 main()
 {
-    OPENTHREAD_ENABLE_ANDROID_MK=1 ANDROID_NDK=1 USE_OTBR_DAEMON=1 check_targets ot-cli ot-ctl ot-ncp
-    OPENTHREAD_ENABLE_ANDROID_MK=1 ANDROID_NDK=1 check_targets ot-cli ot-ncp spi-hdlc-adapter
+    if [[ $# -ne 1 ]]; then
+        echo >&2 "Usage: $0 .default-version " \
+            "< etc/android/openthread-config-android-version.h.in > openthread-config-android-version.h"
+        exit 1
+    fi
+
+    OPENTHREAD_DEFAULT_VERSION_FILE="$1"
+    OPENTHREAD_SRC_PATH=$(dirname "${OPENTHREAD_DEFAULT_VERSION_FILE}")
+    OPENTHREAD_DEFAULT_VERSION=$(cat "${OPENTHREAD_DEFAULT_VERSION_FILE}")
+    OPENTHREAD_SOURCE_VERSION=$("${OPENTHREAD_SRC_PATH}"/third_party/nlbuild-autotools/repo/scripts/mkversion -b "${OPENTHREAD_DEFAULT_VERSION}" "${OPENTHREAD_SRC_PATH}")
+
+    sed -e s/@OPENTHREAD_SOURCE_VERSION@/"${OPENTHREAD_SOURCE_VERSION}"/
 }
 
 main "$@"

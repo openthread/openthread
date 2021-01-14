@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,45 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_ANDROID_VERSION_HEADER_ENABLE
-#include <openthread-config-android-version.h>
-#endif
-
-/* Define to 1 to enable the border agent feature. */
-#define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
-
-/* Define to 1 if you want to enable Border Router */
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
-
-/* Define to 1 if you want to enable channel manager feature */
-#define OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE 0
-
-/* Define to 1 if you want to use channel monitor feature */
-#define OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE 0
-
-/* Define to 1 if you want to use child supervision feature */
-#define OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE 1
-
-/* Define to 1 to enable dtls support. */
-#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
-
-/* Define to 1 if you want to use jam detection feature */
-#define OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE 1
-
-/* Define to 1 to enable the joiner role. */
-#define OPENTHREAD_CONFIG_JOINER_ENABLE 1
-
-/* Define to 1 if you want to use legacy network support */
-#define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
-
-/* Define to 1 to enable the NCP UART interface. */
-#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
-
-/* Define to 1 to enable posix platform. */
-#define OPENTHREAD_PLATFORM_POSIX 1
-
-/* Define to 1 if you want to enable Service */
-#define OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE 1
-
-/* OpenThread examples */
-#define OPENTHREAD_EXAMPLES none
+/**
+ * @def PACKAGE_VERSION
+ *
+ * The source code version string to insert into the OpenThread version string.
+ *
+ */
+#define PACKAGE_VERSION "@OPENTHREAD_SOURCE_VERSION@"

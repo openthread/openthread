@@ -121,7 +121,7 @@ void ChannelManager::StartDatasetUpdate(void)
     case OT_ERROR_INVALID_STATE:
         otLogInfoUtil("ChannelManager: Request to change to channel %d failed. Device is disabled", mChannel);
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     default:
         mState = kStateIdle;

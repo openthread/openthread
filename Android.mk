@@ -28,6 +28,8 @@
 
 LOCAL_PATH := $(call my-dir)
 
+ifeq ($(OPENTHREAD_ENABLE_ANDROID_MK),1)
+
 OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 
@@ -144,6 +146,14 @@ LOCAL_CPPFLAGS                                                              := \
     -std=c++11                                                                 \
     -pedantic-errors                                                           \
     $(NULL)
+
+ifeq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+
+LOCAL_CFLAGS                                             += \
+    -DOPENTHREAD_ENABLE_ANDROID_NDK=1                       \
+    $(NULL)
+endif
 
 LOCAL_SRC_FILES                                          := \
     src/core/api/backbone_router_api.cpp                    \
@@ -569,3 +579,5 @@ endif # ($(USE_OTBR_DAEMON), 1)
 ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
 include $(OPENTHREAD_PROJECT_ANDROID_MK)
 endif
+
+endif # ($(OPENTHREAD_ENABLE_ANDROID_MK),1)

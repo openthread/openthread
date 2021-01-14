@@ -1380,7 +1380,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
         case OT_ERROR_NO_ACK:
             frameTxSuccess = false;
 
-            // Fall through
+            OT_FALL_THROUGH;
 
         case OT_ERROR_NONE:
             neighbor->GetLinkInfo().AddFrameTxStatus(frameTxSuccess);
@@ -2024,7 +2024,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         srcaddr.SetExtended(neighbor->GetExtAddress());
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case Address::kTypeExtended:
 
@@ -2084,7 +2084,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         VerifyOrExit(mOperation == kOperationWaitingForData);
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case OT_ERROR_NONE:
         break;
@@ -2160,7 +2160,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
             ExitNow();
         }
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kOperationEnergyScan:
 
