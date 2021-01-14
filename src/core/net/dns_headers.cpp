@@ -292,6 +292,118 @@ exit:
     return error;
 }
 
+otError Name::CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel)
+{
+    otError       error;
+    LabelIterator iterator(aMessage, aOffset);
+
+    SuccessOrExit(error = iterator.GetNextLabel());
+    VerifyOrExit(iterator.CompareLabel(aLabel, /* aIsSingleLabel */ true), error = OT_ERROR_NOT_FOUND);
+    aOffset = iterator.mNextLabelOffset;
+
+exit:
+    return error;
+}
+
+otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName)
+{
+    otError       error;
+    LabelIterator iterator(aMessage, aOffset);
+    bool          matches = true;
+
+    if (*aName == kLabelSeperatorChar)
+    {
+        aName++;
+        VerifyOrExit(*aName == kNullChar, error = OT_ERROR_INVALID_ARGS);
+    }
+
+    while (true)
+    {
+        error = iterator.GetNextLabel();
+
+        switch (error)
+        {
+        case OT_ERROR_NONE:
+            if (matches && !iterator.CompareLabel(aName, /* aIsSingleLabel */ false))
+            {
+                matches = false;
+            }
+
+            break;
+
+        case OT_ERROR_NOT_FOUND:
+            // We reached the end of the name in `aMessage`. We check if
+            // all the previous labels matched so far, and we are also
+            // at the end of `aName` string (see null char), then we
+            // return `OT_ERROR_NONE` indicating a successful comparison
+            // (full match). Otherwise we return `OT_ERROR_NOT_FOUND` to
+            // indicate failed comparison.
+
+            if (matches && (*aName == kNullChar))
+            {
+                error = OT_ERROR_NONE;
+            }
+
+            aOffset = iterator.mNameEndOffset;
+
+            OT_FALL_THROUGH;
+
+        default:
+            ExitNow();
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2)
+{
+    otError       error;
+    LabelIterator iterator(aMessage, aOffset);
+    LabelIterator iterator2(aMessage2, aOffset2);
+    bool          matches = true;
+
+    while (true)
+    {
+        error = iterator.GetNextLabel();
+
+        switch (error)
+        {
+        case OT_ERROR_NONE:
+            // If all the previous labels matched so far, then verify
+            // that we can get the next label on `iterator2` and that it
+            // matches the label from `iterator`.
+            if (matches && (iterator2.GetNextLabel() != OT_ERROR_NONE || !iterator.CompareLabel(iterator2)))
+            {
+                matches = false;
+            }
+
+            break;
+
+        case OT_ERROR_NOT_FOUND:
+            // We reached the end of the name in `aMessage`. We check
+            // that `iterator2` is also at its end, and if all previous
+            // labels matched we return `OT_ERROR_NONE`.
+
+            if (matches && (iterator2.GetNextLabel() == OT_ERROR_NOT_FOUND))
+            {
+                error = OT_ERROR_NONE;
+            }
+
+            aOffset = iterator.mNameEndOffset;
+
+            OT_FALL_THROUGH;
+
+        default:
+            ExitNow();
+        }
+    }
+
+exit:
+    return error;
+}
+
 otError Name::LabelIterator::GetNextLabel(void)
 {
     otError error;
@@ -372,6 +484,51 @@ otError Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength
 
 exit:
     return error;
+}
+
+bool Name::LabelIterator::CompareLabel(const char *&aName, bool aIsSingleLabel) const
+{
+    // This method compares the current label in the iterator with the
+    // `aName` string. `aIsSingleLabel` indicates whether `aName` is a
+    // single label, or a sequence of labels separated by dot '.' char.
+    // If the label matches `aName`, then `aName` pointer is moved
+    // forward to the start of the next label (skipping over the `.`
+    // char). This method returns `true` when the labels match, `false`
+    // otherwise.
+
+    bool matches = false;
+
+    VerifyOrExit(StringLength(aName, mLabelLength) == mLabelLength);
+    matches = mMessage.CompareBytes(mLabelStartOffset, aName, mLabelLength);
+
+    VerifyOrExit(matches);
+
+    aName += mLabelLength;
+
+    // If `aName` is a single label, we should be also at the end of the
+    // `aName` string. Otherwise, we should see either null or dot '.'
+    // character (in case `aName` contains multiple labels).
+
+    matches = (*aName == kNullChar);
+
+    if (!aIsSingleLabel && (*aName == kLabelSeperatorChar))
+    {
+        matches = true;
+        aName++;
+    }
+
+exit:
+    return matches;
+}
+
+bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) const
+{
+    // This method compares the current label in the iterator with the
+    // label from another iterator.
+
+    return (mLabelLength == aOtherIterator.mLabelLength) &&
+           mMessage.CompareBytes(mLabelStartOffset, aOtherIterator.mMessage, aOtherIterator.mLabelStartOffset,
+                                 mLabelLength);
 }
 
 bool AaaaRecord::IsValid(void) const

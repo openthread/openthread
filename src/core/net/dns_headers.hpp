@@ -565,7 +565,7 @@ public:
      * This static method encodes and appends a full name to a message.
      *
      * The @p aName must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
-     * E.g., "example.com", "example.com." (same as previous one), local.", "default.service.arpa", "." or "" (root).
+     * E.g., "example.com", "example.com." (same as previous one), "local.", "default.service.arpa", "." or "" (root).
      *
      * This method validates that the @p aName is a valid name format, i.e. no empty labels, and labels are
      * `kMaxLabelLength` (63) characters or less, and the name is `kMaxLength` (255) characters or less.
@@ -614,7 +614,7 @@ public:
      *                                the next label.
      * @param[out]   aLabelBuffer     A pointer to a char array to output the read label as a null-terminated C string.
      * @param[inout] aLabelLength     On input, the maximum number chars in @p aLabelBuffer array.
-     *                                On output, when label is successfully read, @aLabelLength is updated to return
+     *                                On output, when label is successfully read, @p aLabelLength is updated to return
      *                                the label's length (number of chars in the label string, excluding the null char).
      *
      * @retval OT_ERROR_NONE          Successfully read the label and updated @p aLabelBuffer, @p aLabelLength, and
@@ -641,7 +641,7 @@ public:
      *                                On exit (when parsed successfully), @p aOffset is updated to point to the byte
      *                                after the end of name field.
      * @param[out]   aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string.
-     * @param[inout] aNameBufferSize  The maximum number chars in @p aNameBuffer array.
+     * @param[inout] aNameBufferSize  The maximum number of chars in @p aNameBuffer array.
      *
      * @retval OT_ERROR_NONE          Successfully read the name, @p aNameBuffer and @p Offset are updated.
      * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
@@ -649,6 +649,90 @@ public:
      *
      */
     static otError ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize);
+
+    /**
+     * This static method compares a single name label from a message with a given label string.
+     *
+     * This method can be used to compare labels one by one. It checks whether the label read from @p aMessage matches
+     * @p aLabel string.
+     *
+     * Unlike `CompareName()` which requires the labels in the the name string to contain no dot '.' character, this
+     * method allows @p aLabel to include any character.
+     *
+     * @param[in]    aMessage         The message to read the label from to compare. `aMessage.GetOffset()` MUST point
+     *                                to the start of DNS header (this is used to handle compressed names).
+     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the label to read.
+     *                                On exit and only when label is successfully read and does match @p aLabel,
+     *                                @p aOffset is updated to point to the start of the next label.
+     * @param[in]    aLabel           A pointer to a null terminated string containing the label to compare with.
+
+     * @retval OT_ERROR_NONE          The label from @p aMessage matches @p aLabel. @p aOffset is updated.
+     * @retval OT_ERROR_NOT_FOUND     The label from @p aMessage does not match @p aLabel (note that @p aOffset is not
+     *                                updated in this case).
+     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
+     *
+     */
+    static otError CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel);
+
+    /**
+     * This static method parses and compares a full name from a message with a given name.
+     *
+     * This method checks whether the encoded name in a message matches a given name string. It checks the name in
+     * the message in place and handles compressed names. If the name read from the message does not match @p aName, it
+     * returns `OT_ERROR_NOT_FOUND`. `OT_ERROR_NONE` indicates that the name matches @p aName.
+     *
+     * The @p aName must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
+     * E.g., "example.com", "example.com." (same as previous one), "local.", "default.service.arpa", "." or "" (root).
+     *
+     * @param[in]    aMessage         The message to read the name from and compare with @p aName.
+     *                                `aMessage.GetOffset()` MUST point to the start of DNS header (this is used to
+     *                                handle compressed names).
+     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     *                                On exit (when parsed successfully independent of whether the read name matches
+     *                                @p aName or not), @p aOffset is updated to point to the byte after the end of
+     *                                the name field.
+     * @param[in]    aName            A pointer to a null terminated string containing the name to compare with.
+     *
+     * @retval OT_ERROR_NONE          The name from @p aMessage matches @p aName. @p aOffset is updated.
+     * @retval OT_ERROR_NOT_FOUND     The name from @p aMessage does not match @p aName. @p aOffset is updated.
+     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
+     * @retval OT_ERROR_INVALID_ARGS  The @p aName is not a valid name (e.g. back to back "." chars)
+     *
+     */
+    static otError CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName);
+
+    /**
+     * This static method parses and compares a full name from a message with a name from another message.
+     *
+     * This method checks whether the encoded name in @p aMessage matches the name from @p aMessage2. It compares the
+     * names in both messages in place and handles compressed names. Note that this method works correctly even when
+     * the same message instance is used for both @p aMessage and @p aMessage2 (e.g., at different offsets).
+     *
+     * Only the name in @p aMessage is fully parsed and checked for parse errors. This method assumes that the name in
+     * @p aMessage2 was previously parsed and validated before calling this method (if there is a parse error in
+     * @p aMessage2, it is treated as a name mismatch with @p aMessage).
+     *
+     * If the name in @p aMessage can be parsed fully (independent of whether the name matches or not with the name
+     * from @p aMessage2), the @p aOffset is updated (note that @p aOffset2 for @p aMessage2 is not changed).
+     *
+     * @param[in]    aMessage         The message to read the name from and compare. `aMessage.GetOffset()` MUST point
+     *                                to the start of DNS header (this is used to handle compressed names).
+     * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
+     *                                On exit (when parsed successfully independent of whether the read name matches
+     *                                or not), @p aOffset is updated to point to the byte after the end of the name
+     *                                field.
+     * @param[in]    aMessage2        The second message to read the name from and compare with name from @p aMessage.
+     *                                `aMessage2.GetOffset()` MUST point to the start of DNS header.
+     * @param[in]    aOffset2         The offset in @p aMessage2 pointing to the start of the name field.
+     *
+     * @retval OT_ERROR_NONE          The name from @p aMessage matches the name from @p aMessage2. @p aOffset is
+     *                                updated.
+     * @retval OT_ERROR_NOT_FOUND     The name from @p aMessage does not match the name from @p aMessage2. @p aOffset
+     *                                is updated.
+     * @retval OT_ERROR_PARSE         Name in @p aMessage could not be parsed (invalid format).
+     *
+     */
+    static otError CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2);
 
 private:
     enum : char
@@ -693,6 +777,8 @@ private:
         bool    IsEndOffsetSet(void) const { return (mNameEndOffset != kUnsetNameEndOffset); }
         otError GetNextLabel(void);
         otError ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const;
+        bool    CompareLabel(const char *&aName, bool aIsSingleLabel) const;
+        bool    CompareLabel(const LabelIterator &aOtherIterator) const;
 
         const Message &mMessage;          // Message to read labels from.
         uint16_t       mLabelStartOffset; // Offset in `mMessage` to the first char of current label text.
