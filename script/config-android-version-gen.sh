@@ -37,7 +37,7 @@ main()
 {
     if [[ $# -ne 1 ]]; then
         echo >&2 "Usage: $0 .default-version " \
-            "< include/openthread-config-android-version.h.in > include/openthread-config-android-version.h"
+            "< etc/android/openthread-config-android-version.h.in > openthread-config-android-version.h"
         exit 1
     fi
 

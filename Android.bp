@@ -71,8 +71,8 @@ ot_android_bp_cc_defaults {
 genrule {
     name: "ot_version_header",
     cmd: "$(location script/config-android-version-gen.sh) $(location .default-version) < $(in) > $(out)",
-    srcs: ["include/openthread-config-android-version.h.in"],
-    out: ["include/openthread-config-android-version.h"],
+    srcs: ["etc/android/openthread-config-android-version.h.in"],
+    out: ["openthread-config-android-version.h"],
     tool_files: [
         "script/config-android-version-gen.sh",
         ".default-version",
