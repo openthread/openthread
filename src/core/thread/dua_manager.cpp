@@ -509,7 +509,9 @@ void DuaManager::PerformNextRegistration(void)
     mIsDuaPending   = true;
     mRegisteringDua = dua;
 
-    // TODO: (DUA) need update when CSL is enabled.
+    // Generally Thread 1.2 Router would send DUA.req on behalf for DUA registered by its MTD child.
+    // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send DUA.req to PBBR itself.
+    // In this case, Thread 1.2 sleepy end device relies on fast data poll to fetch the response timely.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SendFastPolls();
