@@ -110,8 +110,14 @@ otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfi
     for (const NetworkDataTlv *start                                                      = serviceTlv->GetSubTlvs();
          (serverTlv = FindTlv<ServerTlv>(start, serviceTlv->GetNext())) != nullptr; start = serverTlv->GetNext())
     {
-        const BackboneRouterServerData *serverData =
-            reinterpret_cast<const BackboneRouterServerData *>(serverTlv->GetServerData());
+        const BackboneRouterServerData *serverData;
+
+        if (serverTlv->GetServerDataLength() < sizeof(BackboneRouterServerData))
+        {
+            continue;
+        }
+
+        serverData = reinterpret_cast<const BackboneRouterServerData *>(serverTlv->GetServerData());
 
         if (rvalServerTlv == nullptr ||
             (serverTlv->GetServer16() == Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId())) ||

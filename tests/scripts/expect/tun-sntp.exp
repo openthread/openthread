@@ -38,16 +38,16 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 send "sntp query ::1 123\n"
 expect -re {SNTP response - Unix time: \d+ \(era: \d+\)}
-expect "Done"
+expect_line "Done"
 
 dispose_all

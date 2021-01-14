@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,69 +26,45 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "openthread-posix-config.h"
+#include "platform-posix.h"
+
+#include <arpa/inet.h>
+
+namespace ot {
+namespace Posix {
+namespace Ip6Utils {
+
 /**
- * @file
- *   This file implements the nrf5 platform transport initialization functions.
+ * This utility class converts binary IPv6 address to text format.
  *
  */
-
-#include <openthread/platform/toolchain.h>
-
-#include "platform-nrf5-transport.h"
-
-#include "transport-drivers.h"
-
-void nrf5TransportInit(bool aPseudoReset)
+class Ip6AddressString
 {
-    OT_UNUSED_VARIABLE(aPseudoReset);
-
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-    if (!aPseudoReset)
+public:
+    /**
+     * The constructor of this converter.
+     *
+     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
+     *
+     */
+    Ip6AddressString(const void *aAddress)
     {
-        nrf5UartInit();
+        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
     }
-    else
-    {
-        nrf5UartClearPendingData();
-    }
-#endif
 
-#if (SPIS_AS_SERIAL_TRANSPORT == 1)
-    nrf5SpiSlaveInit();
-#endif
-}
+    /**
+     * This method returns the string as a null-terminated C string.
+     *
+     * @returns The null-terminated C string.
+     *
+     */
+    const char *AsCString(void) const { return mBuffer; }
 
-void nrf5TransportDeinit(bool aPseudoReset)
-{
-    OT_UNUSED_VARIABLE(aPseudoReset);
+private:
+    char mBuffer[INET6_ADDRSTRLEN];
+};
 
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-    if (!aPseudoReset)
-    {
-        nrf5UartDeinit();
-    }
-#endif
-
-#if (SPIS_AS_SERIAL_TRANSPORT == 1)
-    nrf5SpiSlaveDeinit();
-#endif
-}
-
-void nrf5TransportProcess(void)
-{
-#if ((UART_AS_SERIAL_TRANSPORT == 1) || (USB_CDC_AS_SERIAL_TRANSPORT == 1))
-    nrf5UartProcess();
-#endif
-#if (SPIS_AS_SERIAL_TRANSPORT == 1)
-    nrf5SpiSlaveProcess();
-#endif
-}
-
-bool nrf5TransportPseudoResetRequired(void)
-{
-#if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    return true;
-#else // if OPENTHREAD_PLATFORM_USE_PSEUDO_RESET
-    return false;
-#endif
-}
+} // namespace Ip6Utils
+} // namespace Posix
+} // namespace ot

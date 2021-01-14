@@ -92,9 +92,10 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable)
 
 void platformRadioInit(otUrl *aRadioUrl)
 {
-    ot::Posix::RadioUrl &radioUrl       = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
-    bool                 resetRadio     = (radioUrl.GetValue("no-reset") == nullptr);
-    bool                 restoreDataset = (radioUrl.GetValue("ncp-dataset") != nullptr);
+    ot::Posix::RadioUrl &radioUrl               = *static_cast<ot::Posix::RadioUrl *>(aRadioUrl);
+    bool                 resetRadio             = (radioUrl.GetValue("no-reset") == nullptr);
+    bool                 restoreDataset         = (radioUrl.GetValue("ncp-dataset") != nullptr);
+    bool                 skipCompatibilityCheck = (radioUrl.GetValue("skip-rcp-compatibility-check") != nullptr);
     const char *         parameterValue;
     const char *         region;
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
@@ -102,7 +103,7 @@ void platformRadioInit(otUrl *aRadioUrl)
 #endif
 
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(radioUrl));
-    sRadioSpinel.Init(resetRadio, restoreDataset);
+    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck);
 
     parameterValue = radioUrl.GetValue("fem-lnagain");
     if (parameterValue != nullptr)

@@ -95,9 +95,9 @@ NdProxyTable::Iterator::Iterator(Instance &aInstance, Filter aFilter)
 {
     NdProxyTable &table = GetInstance().Get<BackboneRouter::NdProxyTable>();
 
-    mCurrent = &table.mProxies[0];
+    mItem = &table.mProxies[0];
 
-    if (!MatchesFilter(*mCurrent, mFilter))
+    if (!MatchesFilter(*mItem, mFilter))
     {
         Advance();
     }
@@ -107,7 +107,7 @@ NdProxyTable::Iterator::Iterator(Instance &aInstance, NdProxyTable::Iterator::It
     : InstanceLocator(aInstance)
 {
     NdProxyTable &table = GetInstance().Get<BackboneRouter::NdProxyTable>();
-    mCurrent            = OT_ARRAY_END(table.mProxies);
+    mItem               = OT_ARRAY_END(table.mProxies);
 }
 
 void NdProxyTable::Iterator::Advance(void)
@@ -116,8 +116,8 @@ void NdProxyTable::Iterator::Advance(void)
 
     do
     {
-        mCurrent++;
-    } while (mCurrent < OT_ARRAY_END(table.mProxies) && !MatchesFilter(*mCurrent, mFilter));
+        mItem++;
+    } while (mItem < OT_ARRAY_END(table.mProxies) && !MatchesFilter(*mItem, mFilter));
 }
 
 void NdProxyTable::Erase(NdProxy &aNdProxy)

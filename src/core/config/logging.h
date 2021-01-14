@@ -310,6 +310,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_SRP
+ *
+ * Define to enable Service Registration Protocol (SRP) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_SRP
+#define OPENTHREAD_CONFIG_LOG_SRP 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages.

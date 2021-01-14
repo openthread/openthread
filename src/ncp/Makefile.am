@@ -37,12 +37,14 @@ EXTRA_DIST                                        = \
 
 lib_LIBRARIES                                     = $(NULL)
 
+if OPENTHREAD_ENABLE_NCP
 if OPENTHREAD_ENABLE_FTD
 lib_LIBRARIES                                    += libopenthread-ncp-ftd.a
 endif
 
 if OPENTHREAD_ENABLE_MTD
 lib_LIBRARIES                                    += libopenthread-ncp-mtd.a
+endif
 endif
 
 if OPENTHREAD_ENABLE_RADIO_ONLY

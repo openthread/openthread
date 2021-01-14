@@ -34,108 +34,108 @@ spawn_node 1
 send "macfilter\n"
 expect "Address Mode: Disabled"
 expect "RssIn List:"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr add aabbccddeeff0011\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr\n"
 expect "Disabled"
 expect "aabbccddeeff0011"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr allowlist\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr\n"
 expect "Allowlist"
 expect "aabbccddeeff0011"
-expect "Done"
+expect_line "Done"
 
 send "macfilter\n"
 expect "Address Mode: Allowlist"
 expect "aabbccddeeff0011"
 expect "RssIn List:"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr add 2233445566778899\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr remove aabbccddeeff0011\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr denylist\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr\n"
 expect "Denylist"
 expect "2233445566778899"
-expect "Done"
+expect_line "Done"
 
 send "macfilter\n"
 expect "Address Mode: Denylist"
 expect "2233445566778899"
 expect "RssIn List:"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr clear\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr disable\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr\n"
 expect "Disabled"
-expect "Done"
+expect_line "Done"
 
 send "macfilter\n"
 expect "Address Mode: Disabled"
 expect "RssIn List:"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr something_invalid\n"
 expect "Error 35: InvalidCommand"
 
 send "macfilter rss\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss add-lqi * 2\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss add-lqi aabbccddeeff0011 3\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss\n"
 expect -re {aabbccddeeff0011 : rss -?\d+ \(lqi 3\)}
 expect -re {Default rss: -?\d+ \(lqi 2\)}
-expect "Done"
+expect_line "Done"
 
 send "macfilter\n"
 expect "Address Mode: Disabled"
 expect "RssIn List:"
 expect -re {aabbccddeeff0011 : rss -?\d+ \(lqi 3\)}
 expect -re {Default rss : -?\d+ \(lqi 2\)}
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss remove *\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss remove aabbccddeeff0011\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss add 2233445566778899 -70\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss add * -80\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss\n"
 expect -re {2233445566778899 : rss -70 \(lqi \d\)}
 expect -re {Default rss: -80 \(lqi \d\)}
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss clear\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter rss something_invalid\n"
 expect "Error 35: InvalidCommand"

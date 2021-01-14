@@ -34,8 +34,8 @@ setup_two_nodes "-"
 
 switch_node 2
 send "mac send emptydata\n"
-expect "Done"
+expect_line "Done"
 send "mac send datarequest\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

@@ -32,7 +32,7 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "rcp version\n"
-expect "Done"
+expect_line "Done"
 send "rcp something_invalid\n"
 expect "Error 7: InvalidArgs"
 

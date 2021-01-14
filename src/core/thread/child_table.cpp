@@ -43,17 +43,17 @@ namespace ot {
 
 ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter)
     : InstanceLocator(aInstance)
+    , ItemPtrIterator(nullptr)
     , mFilter(aFilter)
-    , mChild(nullptr)
 {
     Reset();
 }
 
 void ChildTable::Iterator::Reset(void)
 {
-    mChild = &Get<ChildTable>().mChildren[0];
+    mItem = &Get<ChildTable>().mChildren[0];
 
-    if (!mChild->MatchesFilter(mFilter))
+    if (!mItem->MatchesFilter(mFilter))
     {
         Advance();
     }
@@ -61,13 +61,13 @@ void ChildTable::Iterator::Reset(void)
 
 void ChildTable::Iterator::Advance(void)
 {
-    VerifyOrExit(mChild != nullptr);
+    VerifyOrExit(mItem != nullptr);
 
     do
     {
-        mChild++;
-        VerifyOrExit(mChild < &Get<ChildTable>().mChildren[Get<ChildTable>().mMaxChildrenAllowed], mChild = nullptr);
-    } while (!mChild->MatchesFilter(mFilter));
+        mItem++;
+        VerifyOrExit(mItem < &Get<ChildTable>().mChildren[Get<ChildTable>().mMaxChildrenAllowed], mItem = nullptr);
+    } while (!mItem->MatchesFilter(mFilter));
 
 exit:
     return;
