@@ -44,7 +44,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-thread-general
+ * @addtogroup api-operational-dataset
  *
  * @{
  *
