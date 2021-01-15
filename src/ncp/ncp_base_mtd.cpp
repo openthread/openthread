@@ -2750,7 +2750,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_DENYLIST>(void)
         SuccessOrExit(error = mDecoder.ReadEui64(extAddress));
         SuccessOrExit(error = mDecoder.CloseStruct());
 
-        otLinkFilterRemoveAddress(mInstance, extAddress);
+        SuccessOrExit(error = otLinkFilterAddAddress(mInstance, extAddress));
     }
 
 exit:
