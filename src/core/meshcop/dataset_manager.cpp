@@ -660,9 +660,14 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
     Get<Tmf::TmfAgent>().AddResource(mResourceGet);
 }
 
+bool ActiveDataset::IsSaved(void) const
+{
+    return mLocal.IsSaved();
+}
+
 bool ActiveDataset::IsPartiallyComplete(void) const
 {
-    return mLocal.IsSaved() && !mTimestampValid;
+    return IsSaved() && !mTimestampValid;
 }
 
 bool ActiveDataset::IsCommissioned(void) const

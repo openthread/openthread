@@ -186,7 +186,8 @@ otError MleRouter::BecomeLeader(void)
     uint32_t partitionId;
     uint8_t  leaderId;
 
-    VerifyOrExit(!Get<MeshCoP::ActiveDataset>().IsPartiallyComplete(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<MeshCoP::ActiveDataset>().IsSaved() && !Get<MeshCoP::ActiveDataset>().IsPartiallyComplete(),
+                 error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsDisabled(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsLeader(), error = OT_ERROR_NONE);
     VerifyOrExit(IsRouterEligible(), error = OT_ERROR_NOT_CAPABLE);
