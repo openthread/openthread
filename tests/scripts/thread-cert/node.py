@@ -499,7 +499,7 @@ class NodeImpl:
         cmd_output_started = False
 
         while True:
-            self._expect(r"[^\n]+")
+            self._expect(r"[^\n]+\n")
             line = self.pexpect.match.group(0).decode('utf8').strip()
 
             if line.startswith('> '):
