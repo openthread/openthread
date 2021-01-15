@@ -198,7 +198,7 @@ exit:
     if (error != OT_ERROR_NONE)
     {
         FreeMessage(messageCopy);
-        otLogWarnIp6("Failed to send DNS request: %s", otThreadErrorToString(error));
+        otLogWarnDns("Failed to send DNS request: %s", otThreadErrorToString(error));
     }
 }
 
