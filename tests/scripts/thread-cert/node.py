@@ -430,11 +430,11 @@ class NodeImpl:
         self.name = name or ('Node%d' % nodeid)
         self.is_posix = False
 
+        super().__init__(nodeid, **kwargs)
+
         self.simulator = simulator
         if self.simulator:
             self.simulator.add_node(self)
-
-        super().__init__(nodeid, **kwargs)
 
         self.set_extpanid(config.EXTENDED_PANID)
         self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
@@ -588,7 +588,7 @@ class NodeImpl:
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
-            self.simulator.go(0, nodeid=self.nodeid, is_posix=self.is_posix)
+            self.simulator.go(0, nodeid=self.nodeid)
         sys.stdout.flush()
 
     def get_commands(self):

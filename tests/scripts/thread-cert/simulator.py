@@ -69,7 +69,7 @@ class BaseSimulator(object):
     def get_messages_sent_by(self, nodeid):
         raise NotImplementedError
 
-    def go(self, duration, nodeid=None, is_posix=False):
+    def go(self, duration, nodeid=None):
         raise NotImplementedError
 
     def stop(self):
@@ -108,7 +108,7 @@ class RealTime(BaseSimulator):
     def now(self):
         return time.time()
 
-    def go(self, duration, nodeid=None, is_posix=False):
+    def go(self, duration, nodeid=None):
         time.sleep(duration)
 
     def stop(self):
@@ -244,8 +244,8 @@ class VirtualTime(BaseSimulator):
         assert not self._is_radio(addr)
         return (addr[0], addr[1] - self.BASE_PORT)
 
-    def _core_addr_from(self, nodeid, is_posix):
-        if is_posix:
+    def _core_addr_from(self, nodeid):
+        if self._nodes[nodeid].is_posix:
             return ('127.0.0.1', self.BASE_PORT + self.port + nodeid)
         else:
             return ('127.0.0.1', self.port + nodeid)
@@ -498,7 +498,7 @@ class VirtualTime(BaseSimulator):
     def now(self):
         return self.current_time / 1000000
 
-    def go(self, duration, nodeid=None, is_posix=False):
+    def go(self, duration, nodeid=None):
         assert self.current_time == self._pause_time
         duration = int(duration) * 1000000
         dbg_print('running for %d us' % duration)
@@ -506,7 +506,7 @@ class VirtualTime(BaseSimulator):
         if nodeid:
             if self.NCP_SIM:
                 self.current_nodeid = nodeid
-            self.awake_devices.add(self._core_addr_from(nodeid, is_posix))
+            self.awake_devices.add(self._core_addr_from(nodeid))
         self.receive_events()
         while self._next_event_time() <= self._pause_time:
             self.process_next_event()
