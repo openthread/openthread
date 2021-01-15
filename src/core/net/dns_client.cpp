@@ -87,7 +87,7 @@ otError Client::Query(const QueryInfo &aQuery, ResponseHandler aHandler, void *a
     Message *     message     = nullptr;
     Message *     messageCopy = nullptr;
     Header        header;
-    QuestionAaaa  question;
+    Question      question(ResourceRecord::kTypeAaaa);
 
     VerifyOrExit(aQuery.IsValid(), error = OT_ERROR_INVALID_ARGS);
 
