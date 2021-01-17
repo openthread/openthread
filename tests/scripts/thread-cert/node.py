@@ -445,6 +445,9 @@ class NodeImpl:
                 if timeout <= 0:
                     raise
 
+    def _expect_done(self, timeout=-1):
+        self._expect('Done', timeout)
+
     def _prepare_pattern(self, pattern):
         """Build a new pexpect pattern matching line by line.
 
@@ -589,7 +592,7 @@ class NodeImpl:
     def set_mode(self, mode):
         cmd = 'mode %s' % mode
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def debug(self, level):
         # `debug` command will not trigger interaction with simulator
@@ -605,29 +608,29 @@ class NodeImpl:
 
     def interface_up(self):
         self.send_command('ifconfig up')
-        self._expect('Done')
+        self._expect_done()
 
     def interface_down(self):
         self.send_command('ifconfig down')
-        self._expect('Done')
+        self._expect_done()
 
     def thread_start(self):
         self.send_command('thread start')
-        self._expect('Done')
+        self._expect_done()
 
     def thread_stop(self):
         self.send_command('thread stop')
-        self._expect('Done')
+        self._expect_done()
 
     def commissioner_start(self):
         cmd = 'commissioner start'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def commissioner_stop(self):
         cmd = 'commissioner stop'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def commissioner_state(self):
         states = [r'disabled', r'petitioning', r'active']
@@ -637,32 +640,32 @@ class NodeImpl:
     def commissioner_add_joiner(self, addr, psk):
         cmd = 'commissioner joiner add %s %s' % (addr, psk)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def commissioner_set_provisioning_url(self, provisioning_url=''):
         cmd = 'commissioner provisioningurl %s' % provisioning_url
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def joiner_start(self, pskd='', provisioning_url=''):
         cmd = 'joiner start %s %s' % (pskd, provisioning_url)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def clear_allowlist(self):
         cmd = 'macfilter addr clear'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def enable_allowlist(self):
         cmd = 'macfilter addr allowlist'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def disable_allowlist(self):
         cmd = 'macfilter addr disable'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def add_allowlist(self, addr, rssi=None):
         cmd = 'macfilter addr add %s' % addr
@@ -671,7 +674,7 @@ class NodeImpl:
             cmd += ' %s' % rssi
 
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_bbr_registration_jitter(self):
         self.send_command('bbr jitter')
@@ -680,22 +683,22 @@ class NodeImpl:
     def set_bbr_registration_jitter(self, jitter):
         cmd = 'bbr jitter %d' % jitter
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def enable_backbone_router(self):
         cmd = 'bbr enable'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def disable_backbone_router(self):
         cmd = 'bbr disable'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def register_backbone_router(self):
         cmd = 'bbr register'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_backbone_router_state(self):
         states = [r'Disabled', r'Primary', r'Secondary']
@@ -743,7 +746,7 @@ class NodeImpl:
             cmd += ' timeout %d' % mlr_timeout
 
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_domain_prefix(self, prefix, flags='prosD'):
         self.add_prefix(prefix, flags)
@@ -764,7 +767,7 @@ class NodeImpl:
         if iid is not None:
             cmd += ' ' + str(iid)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_dua_iid(self, iid: str):
         assert len(iid) == 16
@@ -772,12 +775,12 @@ class NodeImpl:
 
         cmd = 'dua iid {}'.format(iid)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def clear_dua_iid(self):
         cmd = 'dua iid clear'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def multicast_listener_list(self) -> Dict[ipaddress.IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
@@ -798,7 +801,7 @@ class NodeImpl:
     def multicast_listener_clear(self):
         cmd = f'bbr mgmt mlr listener clear'
         self.send_command(cmd)
-        self._expect("Done")
+        self._expect_done()
 
     def multicast_listener_add(self, ip: Union[ipaddress.IPv6Address, str], timeout: int = 0):
         if not isinstance(ip, ipaddress.IPv6Address):
@@ -811,7 +814,7 @@ class NodeImpl:
     def set_next_mlr_response(self, status: int):
         cmd = 'bbr mgmt mlr response {}'.format(status)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def register_multicast_listener(self, *ipaddrs: Union[ipaddress.IPv6Address, str], timeout=None):
         assert len(ipaddrs) > 0, ipaddrs
@@ -834,17 +837,17 @@ class NodeImpl:
     def set_link_quality(self, addr, lqi):
         cmd = 'macfilter rss add-lqi %s %s' % (addr, lqi)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_outbound_link_quality(self, lqi):
         cmd = 'macfilter rss add-lqi * %s' % (lqi)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def remove_allowlist(self, addr):
         cmd = 'macfilter addr remove %s' % addr
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_addr16(self):
         self.send_command('rloc16')
@@ -864,7 +867,7 @@ class NodeImpl:
         assert len(addr64) == 16
         int(addr64, 16)
         self.send_command('extaddr %s' % addr64)
-        self._expect('Done')
+        self._expect_done()
 
     def get_eui64(self):
         self.send_command('eui64')
@@ -872,7 +875,7 @@ class NodeImpl:
 
     def set_extpanid(self, extpanid):
         self.send_command('extpanid %s' % extpanid)
-        self._expect('Done')
+        self._expect_done()
 
     def get_joiner_id(self):
         self.send_command('joiner id')
@@ -885,7 +888,7 @@ class NodeImpl:
     def set_channel(self, channel):
         cmd = 'channel %d' % channel
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_masterkey(self):
         self.send_command('masterkey')
@@ -894,7 +897,7 @@ class NodeImpl:
     def set_masterkey(self, masterkey):
         cmd = 'masterkey %s' % masterkey
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_key_sequence_counter(self):
         self.send_command('keysequence counter')
@@ -904,17 +907,17 @@ class NodeImpl:
     def set_key_sequence_counter(self, key_sequence_counter):
         cmd = 'keysequence counter %d' % key_sequence_counter
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_key_switch_guardtime(self, key_switch_guardtime):
         cmd = 'keysequence guardtime %d' % key_switch_guardtime
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_network_id_timeout(self, network_id_timeout):
         cmd = 'networkidtimeout %d' % network_id_timeout
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def _escape_escapable(self, string):
         """Escape CLI escapable characters in the given string.
@@ -937,7 +940,7 @@ class NodeImpl:
     def set_network_name(self, network_name):
         cmd = 'networkname %s' % self._escape_escapable(network_name)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_panid(self):
         self.send_command('panid')
@@ -947,12 +950,12 @@ class NodeImpl:
     def set_panid(self, panid=config.PANID):
         cmd = 'panid %d' % panid
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_parent_priority(self, priority):
         cmd = 'parentpriority %d' % priority
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_preferred_partition_id(self):
         self.send_command('partitionid preferred')
@@ -961,7 +964,7 @@ class NodeImpl:
     def set_preferred_partition_id(self, partition_id):
         cmd = 'partitionid preferred %d' % partition_id
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_pollperiod(self):
         self.send_command('pollperiod')
@@ -969,41 +972,41 @@ class NodeImpl:
 
     def set_pollperiod(self, pollperiod):
         self.send_command('pollperiod %d' % pollperiod)
-        self._expect('Done')
+        self._expect_done()
 
     def get_csl_info(self):
         self.send_command('csl')
-        self._expect('Done')
+        self._expect_done()
 
     def set_csl_channel(self, csl_channel):
         self.send_command('csl channel %d' % csl_channel)
-        self._expect('Done')
+        self._expect_done()
 
     def set_csl_period(self, csl_period):
         self.send_command('csl period %d' % csl_period)
-        self._expect('Done')
+        self._expect_done()
 
     def set_csl_timeout(self, csl_timeout):
         self.send_command('csl timeout %d' % csl_timeout)
-        self._expect('Done')
+        self._expect_done()
 
     def send_mac_emptydata(self):
         self.send_command('mac send emptydata')
-        self._expect('Done')
+        self._expect_done()
 
     def send_mac_datarequest(self):
         self.send_command('mac send datarequest')
-        self._expect('Done')
+        self._expect_done()
 
     def set_router_upgrade_threshold(self, threshold):
         cmd = 'routerupgradethreshold %d' % threshold
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_router_downgrade_threshold(self, threshold):
         cmd = 'routerdowngradethreshold %d' % threshold
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_router_downgrade_threshold(self) -> int:
         self.send_command('routerdowngradethreshold')
@@ -1012,7 +1015,7 @@ class NodeImpl:
     def set_router_eligible(self, enable: bool):
         cmd = f'routereligible {"enable" if enable else "disable"}'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_router_eligible(self) -> bool:
         states = [r'Disabled', r'Enabled']
@@ -1022,12 +1025,12 @@ class NodeImpl:
     def prefer_router_id(self, router_id):
         cmd = 'preferrouterid %d' % router_id
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def release_router_id(self, router_id):
         cmd = 'releaserouterid %d' % router_id
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_state(self):
         states = [r'detached', r'child', r'router', r'leader', r'disabled']
@@ -1037,7 +1040,7 @@ class NodeImpl:
     def set_state(self, state):
         cmd = 'state %s' % state
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_timeout(self):
         self.send_command('childtimeout')
@@ -1046,12 +1049,12 @@ class NodeImpl:
     def set_timeout(self, timeout):
         cmd = 'childtimeout %d' % timeout
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_max_children(self, number):
         cmd = 'childmax %d' % number
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_weight(self):
         self.send_command('leaderweight')
@@ -1060,27 +1063,27 @@ class NodeImpl:
     def set_weight(self, weight):
         cmd = 'leaderweight %d' % weight
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def add_ipaddr(self, ipaddr):
         cmd = 'ipaddr add %s' % ipaddr
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def del_ipaddr(self, ipaddr):
         cmd = 'ipaddr del %s' % ipaddr
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def add_ipmaddr(self, ipmaddr):
         cmd = 'ipmaddr add %s' % ipmaddr
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def del_ipmaddr(self, ipmaddr):
         cmd = 'ipmaddr del %s' % ipmaddr
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_addrs(self):
         self.send_command('ipaddr')
@@ -1163,12 +1166,12 @@ class NodeImpl:
             serverData,
         )
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def remove_service(self, enterpriseNumber, serviceData):
         cmd = 'service remove %s %s' % (enterpriseNumber, serviceData)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def __getOmrAddress(self):
         prefixes = [prefix.split('::')[0] for prefix in self.get_prefixes()]
@@ -1266,17 +1269,17 @@ class NodeImpl:
     def set_context_reuse_delay(self, delay):
         cmd = 'contextreusedelay %d' % delay
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def add_prefix(self, prefix, flags='paosr', prf='med'):
         cmd = 'prefix add %s %s %s' % (prefix, flags, prf)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def remove_prefix(self, prefix):
         cmd = 'prefix remove %s' % prefix
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def get_prefixes(self):
         netdata = self.netdata_show()
@@ -1299,16 +1302,16 @@ class NodeImpl:
             cmd += 's'
         cmd += ' %s' % prf
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def remove_route(self, prefix):
         cmd = 'route remove %s' % prefix
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def register_netdata(self):
         self.send_command('netdata register')
-        self._expect('Done')
+        self._expect_done()
 
     def send_network_diag_get(self, addr, tlv_types):
         self.send_command('networkdiagnostic get %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
@@ -1319,7 +1322,7 @@ class NodeImpl:
         else:
             timeout = 8
 
-        self._expect('Done', timeout=timeout)
+        self._expect_done(timeout=timeout)
 
     def send_network_diag_reset(self, addr, tlv_types):
         self.send_command('networkdiagnostic reset %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
@@ -1330,7 +1333,7 @@ class NodeImpl:
         else:
             timeout = 8
 
-        self._expect('Done', timeout=timeout)
+        self._expect_done(timeout=timeout)
 
     def energy_scan(self, mask, count, period, scan_duration, ipaddr):
         cmd = 'commissioner energy %d %d %d %d %s' % (
@@ -1409,7 +1412,7 @@ class NodeImpl:
     def set_router_selection_jitter(self, jitter):
         cmd = 'routerselectionjitter %d' % jitter
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def set_active_dataset(
         self,
@@ -1421,31 +1424,31 @@ class NodeImpl:
         security_policy=[],
     ):
         self.send_command('dataset clear')
-        self._expect('Done')
+        self._expect_done()
 
         cmd = 'dataset activetimestamp %d' % timestamp
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
         if panid is not None:
             cmd = 'dataset panid %d' % panid
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         if channel_mask is not None:
             cmd = 'dataset channelmask %d' % channel_mask
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         if master_key is not None:
             cmd = 'dataset masterkey %s' % master_key
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         if security_policy and len(security_policy) == 2:
             cmd = 'dataset securitypolicy %s %s' % (
@@ -1453,48 +1456,48 @@ class NodeImpl:
                 security_policy[1],
             )
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         # Set the meshlocal prefix in config.py
         self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0])
-        self._expect('Done')
+        self._expect_done()
 
         self.send_command('dataset commit active')
-        self._expect('Done')
+        self._expect_done()
 
     def set_pending_dataset(self, pendingtimestamp, activetimestamp, panid=None, channel=None, delay=None):
         self.send_command('dataset clear')
-        self._expect('Done')
+        self._expect_done()
 
         cmd = 'dataset pendingtimestamp %d' % pendingtimestamp
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
         cmd = 'dataset activetimestamp %d' % activetimestamp
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
         if panid is not None:
             cmd = 'dataset panid %d' % panid
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         if delay is not None:
             cmd = 'dataset delay %d' % delay
             self.send_command(cmd)
-            self._expect('Done')
+            self._expect_done()
 
         # Set the meshlocal prefix in config.py
         self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0])
-        self._expect('Done')
+        self._expect_done()
 
         self.send_command('dataset commit pending')
-        self._expect('Done')
+        self._expect_done()
 
     def announce_begin(self, mask, count, period, ipaddr):
         cmd = 'commissioner announce %d %d %d %s' % (
@@ -1504,7 +1507,7 @@ class NodeImpl:
             ipaddr,
         )
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def send_mgmt_active_set(
         self,
@@ -1548,7 +1551,7 @@ class NodeImpl:
             cmd += '-x %s ' % binary
 
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def send_mgmt_active_get(self, addr='', tlvs=[]):
         cmd = 'dataset mgmtgetcommand active'
@@ -1563,7 +1566,7 @@ class NodeImpl:
             cmd += tlv_str
 
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def send_mgmt_pending_get(self, addr='', tlvs=[]):
         cmd = 'dataset mgmtgetcommand pending'
@@ -1578,7 +1581,7 @@ class NodeImpl:
             cmd += tlv_str
 
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def send_mgmt_pending_set(
         self,
@@ -1617,7 +1620,7 @@ class NodeImpl:
             cmd += 'networkname %s ' % self._escape_escapable(network_name)
 
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coap_cancel(self):
         """
@@ -1625,7 +1628,7 @@ class NodeImpl:
         """
         cmd = 'coap cancel'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coap_delete(self, ipaddr, uri, con=False, payload=None):
         """
@@ -1757,7 +1760,7 @@ class NodeImpl:
         """
         cmd = 'coap resource %s' % path
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coap_set_content(self, content):
         """
@@ -1765,7 +1768,7 @@ class NodeImpl:
         """
         cmd = 'coap set %s' % content
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coap_start(self):
         """
@@ -1773,7 +1776,7 @@ class NodeImpl:
         """
         cmd = 'coap start'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coap_stop(self):
         """
@@ -1788,30 +1791,30 @@ class NodeImpl:
         else:
             timeout = 5
 
-        self._expect('Done', timeout=timeout)
+        self._expect_done(timeout=timeout)
 
     def coaps_start_psk(self, psk, pskIdentity):
         cmd = 'coaps psk %s %s' % (psk, pskIdentity)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
         cmd = 'coaps start'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coaps_start_x509(self):
         cmd = 'coaps x509'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
         cmd = 'coaps start'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coaps_set_resource_path(self, path):
         cmd = 'coaps resource %s' % path
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coaps_stop(self):
         cmd = 'coaps stop'
@@ -1823,7 +1826,7 @@ class NodeImpl:
         else:
             timeout = 5
 
-        self._expect('Done', timeout=timeout)
+        self._expect_done(timeout=timeout)
 
     def coaps_connect(self, ipaddr):
         cmd = 'coaps connect %s' % ipaddr
@@ -1840,7 +1843,7 @@ class NodeImpl:
     def coaps_disconnect(self):
         cmd = 'coaps disconnect'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
         self.simulator.go(5)
 
     def coaps_get(self):
@@ -1860,12 +1863,12 @@ class NodeImpl:
         if tlvs_binary is not None:
             cmd += ' -x %s' % tlvs_binary
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def commissioner_mgmtset(self, tlvs_binary):
         cmd = 'commissioner mgmtset -x %s' % tlvs_binary
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def bytes_to_hex_str(self, src):
         return ''.join(format(x, '02x') for x in src)
@@ -1879,22 +1882,22 @@ class NodeImpl:
     def udp_start(self, local_ipaddr, local_port):
         cmd = 'udp open'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
         cmd = 'udp bind %s %s' % (local_ipaddr, local_port)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def udp_stop(self):
         cmd = 'udp close'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def udp_send(self, bytes, ipaddr, port, success=True):
         cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes)
         self.send_command(cmd)
         if success:
-            self._expect('Done')
+            self._expect_done()
         else:
             self._expect('Error')
 
@@ -1904,7 +1907,7 @@ class NodeImpl:
     def set_routereligible(self, enable: bool):
         cmd = f'routereligible {"enable" if enable else "disable"}'
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def router_list(self):
         cmd = 'router list'
@@ -1914,7 +1917,7 @@ class NodeImpl:
         g = self.pexpect.match.groups()
         router_list = g[0].decode('utf8') + ' ' + g[1].decode('utf8')
         router_list = [int(x) for x in router_list.split()]
-        self._expect('Done')
+        self._expect_done()
         return router_list
 
     def router_table(self):
@@ -1974,12 +1977,12 @@ class NodeImpl:
     def link_metrics_query_single_probe(self, dst_addr: str, linkmetrics_flags: str):
         cmd = 'linkmetrics query %s single %s' % (dst_addr, linkmetrics_flags)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def link_metrics_query_forward_tracking_series(self, dst_addr: str, series_id: int):
         cmd = 'linkmetrics query %s forward %d' % (dst_addr, series_id)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def link_metrics_mgmt_req_enhanced_ack_based_probing(self,
                                                          dst_addr: str,
@@ -1992,28 +1995,28 @@ class NodeImpl:
         else:
             cmd = cmd + " clear"
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def link_metrics_mgmt_req_forward_tracking_series(self, dst_addr: str, series_id: int, series_flags: str,
                                                       metrics_flags: str):
         cmd = "linkmetrics mgmt %s forward %d %s %s" % (dst_addr, series_id, series_flags, metrics_flags)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def link_metrics_send_link_probe(self, dst_addr: str, series_id: int, length: int):
         cmd = "linkmetrics probe %s %d %d" % (dst_addr, series_id, length)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def send_address_notification(self, dst: str, target: str, mliid: str):
         cmd = f'fake /a/an {dst} {target} {mliid}'
         self.send_command(cmd)
-        self._expect("Done")
+        self._expect_done()
 
     def send_proactive_backbone_notification(self, target: str, mliid: str, ltt: int):
         cmd = f'fake /b/ba {target} {mliid} {ltt}'
         self.send_command(cmd)
-        self._expect("Done")
+        self._expect_done()
 
 
 class Node(NodeImpl, OtCli):
