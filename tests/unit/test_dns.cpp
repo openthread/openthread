@@ -292,7 +292,7 @@ void TestDnsCompressedName(void)
 
     for (uint8_t index = 0; index < kHeaderOffset + kGuardBlockSize; index++)
     {
-        SuccessOrQuit(message->Append(index), "Message::Append() failed");
+        SuccessOrQuit(message->Append(0x80 + index), "Message::Append() failed");
     }
 
     name1Offset = message->GetLength();

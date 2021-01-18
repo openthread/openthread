@@ -697,7 +697,7 @@ private:
         }
 
         bool    IsEndOffsetSet(void) const { return (mNameEndOffset != kUnsetNameEndOffset); }
-        otError GetNextLabel(void);
+        otError GetNextLabel(bool aStopOnEndOffsetSet = false);
         otError ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const;
 
         const Message &mMessage;          // Message to read labels from.

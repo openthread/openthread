@@ -205,7 +205,7 @@ otError Name::ParseName(const Message &aMessage, uint16_t &aOffset)
 
     while (true)
     {
-        error = iterator.GetNextLabel();
+        error = iterator.GetNextLabel(/* aStopOnEndOffsetSet */ true);
 
         VerifyOrExit((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND));
 
@@ -293,7 +293,7 @@ exit:
     return error;
 }
 
-otError Name::LabelIterator::GetNextLabel(void)
+otError Name::LabelIterator::GetNextLabel(bool aStopOnEndOffsetSet)
 {
     otError error;
 
@@ -338,6 +338,7 @@ otError Name::LabelIterator::GetNextLabel(void)
             if (!IsEndOffsetSet())
             {
                 mNameEndOffset = mNextLabelOffset + sizeof(uint16_t);
+                VerifyOrExit(!aStopOnEndOffsetSet);
             }
 
             mNextLabelOffset = mHeaderOffset + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
