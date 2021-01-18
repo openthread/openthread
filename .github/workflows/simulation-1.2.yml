@@ -387,15 +387,23 @@ jobs:
         ./script/test cert tests/scripts/thread-cert/v1_2_test_enhanced_frame_pending.py
         ./script/test cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
         ./script/test cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: thread-1-2-posix-pcaps
         path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-thread-1-2-posix
+        path: |
+            ./ot-core-dump/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
