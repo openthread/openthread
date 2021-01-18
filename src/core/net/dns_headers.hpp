@@ -1618,7 +1618,7 @@ public:
      * Constructor for Question.
      *
      */
-    Question(uint16_t aType, uint16_t aClass)
+    explicit Question(uint16_t aType, uint16_t aClass = ResourceRecord::kClassInternet)
     {
         SetType(aType);
         SetClass(aClass);
@@ -1656,46 +1656,22 @@ public:
      */
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
-private:
-    uint16_t mType;  // The type of the data in question section.
-    uint16_t mClass; // The class of the data in question section.
-
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Question format of AAAA type.
- *
- */
-class QuestionAaaa : public Question
-{
-public:
     /**
-     * Default constructor for AAAA Question.
-     *
-     */
-    QuestionAaaa(void)
-        : Question(kType, kClass)
-    {
-    }
-
-    /**
-     * This method appends request data to the message.
+     * This method appends the question data to the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NONE     Successfully appended the question data.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
     otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
 
 private:
-    enum
-    {
-        kType  = 0x1C, // AAAA Resource Record type.
-        kClass = 0x01, // The value of the Internet class.
-    };
-};
+    uint16_t mType;  // The type of the data in question section.
+    uint16_t mClass; // The class of the data in question section.
+
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Zone section body for DNS Update (RFC 2136 - section 2.3).

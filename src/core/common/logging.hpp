@@ -96,6 +96,7 @@ extern "C" {
 #define _OT_REGION_DUA_PREFIX "-DUA-----: "
 #define _OT_REGION_BR_PREFIX "-BR------: "
 #define _OT_REGION_SRP_PREFIX "-SRP-----: "
+#define _OT_REGION_DNS_PREFIX "-DNS-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -118,6 +119,7 @@ extern "C" {
 #define _OT_REGION_DUA_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_BR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_SRP_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_DNS_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -1363,6 +1365,64 @@ void otLogCertMeshCoP(const char *aFormat, ...);
 #endif
 
 /**
+ * @def otLogCritDns
+ *
+ * This function generates a log with level critical for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnDns
+ *
+ * This function generates a log with level warning for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteDns
+ *
+ * This function generates a log with level note for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoDns
+ *
+ * This function generates a log with level info for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgDns
+ *
+ * This function generates a log with level debug for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_DNS
+#define otLogCritDns(...) otLogCrit(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogWarnDns(...) otLogWarn(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogNoteDns(...) otLogNote(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogInfoDns(...) otLogInfo(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogDebgDns(...) otLogDebg(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritDns(...)
+#define otLogWarnDns(...)
+#define otLogNoteDns(...)
+#define otLogInfoDns(...)
+#define otLogDebgDns(...)
+#endif
+
+/**
  * @def otLogCritPlat
  *
  * This function generates a log with level critical for the Platform region.
@@ -2263,6 +2323,74 @@ void otLogOtns(const char *aFormat, ...);
 #define otDumpNoteSrp(aId, aBuf, aLength)
 #define otDumpInfoSrp(aId, aBuf, aLength)
 #define otDumpDebgSrp(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritDns
+ *
+ * This function generates a memory dump with log level critical and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnDns
+ *
+ * This function generates a memory dump with log level warning and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteDns
+ *
+ * This function generates a memory dump with log level note and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoDns
+ *
+ * This function generates a memory dump with log level info and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgDns
+ *
+ * This function generates a memory dump with log level debug and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_SRP
+#define otDumpCritDns(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpWarnDns(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpNoteDns(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpInfoDns(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpDebgDns(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#else
+#define otDumpCritDns(aId, aBuf, aLength)
+#define otDumpWarnDns(aId, aBuf, aLength)
+#define otDumpNoteDns(aId, aBuf, aLength)
+#define otDumpInfoDns(aId, aBuf, aLength)
+#define otDumpDebgDns(aId, aBuf, aLength)
 #endif
 
 /**

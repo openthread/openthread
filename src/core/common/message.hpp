@@ -711,6 +711,60 @@ public:
     }
 
     /**
+     * This method compares the bytes in the message at a given offset with a given byte array.
+     *
+     * If there are fewer bytes available in the message than the requested @p aLength, the comparison is treated as
+     * failure (returns FALSE).
+     *
+     * @param[in]  aOffset    Byte offset within the message to read from for the comparison.
+     * @param[in]  aBuf       A pointer to a data buffer to compare with the bytes from message.
+     * @param[in]  aLength    Number of bytes in @p aBuf.
+     *
+     * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes from @p aBuf,
+     *          FALSE otherwise.
+     *
+     */
+    bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const;
+
+    /**
+     * This method compares the bytes in the message at a given offset with bytes read from another message.
+     *
+     * If either message has fewer bytes available than the requested @p aLength, the comparison is treated as failure
+     * (returns FALSE).
+     *
+     * @param[in]  aOffset        Byte offset within the message to read from for the comparison.
+     * @param[in]  aOtherMessage  The other message to compare with.
+     * @param[in]  aOtherOffset   Byte offset within @p aOtherMessage to read from for the comparison.
+     * @param[in]  aLength        Number of bytes to compare.
+     *
+     * @returns TRUE if there are enough bytes available in both messages and they all match. FALSE otherwise.
+     *
+     */
+    bool CompareBytes(uint16_t aOffset, const Message &aOtherMessage, uint16_t aOtherOffset, uint16_t aLength) const;
+
+    /**
+     * This method compares the bytes in the message at a given offset with an object.
+     *
+     * The bytes in the message are compared with the bytes in @p aObject. If there are fewer bytes available in the
+     * message than the requested object size, it is treated as failed comparison (returns FALSE).
+     *
+     * @tparam     ObjectType   The object type to compare with the bytes in message.
+     *
+     * @param[in] aOffset      Byte offset within the message to read from for the comparison.
+     * @param[in] aObject      A reference to the object to compare with the message bytes.
+     *
+     * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes in @p aObject,
+     *          FALSE otherwise.
+     *
+     */
+    template <typename ObjectType> bool Compare(uint16_t aOffset, const ObjectType &aObject) const
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return CompareBytes(aOffset, &aObject, sizeof(ObjectType));
+    }
+
+    /**
      * This method writes bytes to the message.
      *
      * This method will not resize the message. The given data to write (with @p aLength bytes) MUST fit within the

@@ -42,6 +42,14 @@
 #include "common/new.hpp"
 #include "radio/radio.hpp"
 
+#ifdef __ANDROID__
+#ifdef OPENTHREAD_ENABLE_ANDROID_NDK
+#include <sys/system_properties.h>
+#else
+#include <cutils/properties.h>
+#endif
+#endif
+
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
@@ -134,6 +142,24 @@ const char *otGetVersionString(void)
      * image will be undefined and may change.
      */
 
+#ifdef __ANDROID__
+
+#ifdef OPENTHREAD_ENABLE_ANDROID_NDK
+    static char sVersion[100 + PROP_VALUE_MAX];
+    char        dateTime[PROP_VALUE_MAX];
+
+    __system_property_get("ro.build.date", dateTime);
+#else
+    static char sVersion[100 + PROPERTY_VALUE_MAX];
+    char        dateTime[PROPERTY_VALUE_MAX];
+
+    property_get("ro.build.date", dateTime, "Thu Jan 1 1970 UTC 00:00:00");
+#endif
+
+    snprintf(sVersion, sizeof(sVersion), "%s/%s ;%s ; %s", PACKAGE_NAME, PACKAGE_VERSION,
+             OPENTHREAD_CONFIG_PLATFORM_INFO, dateTime);
+#else
+
 #ifdef PLATFORM_VERSION_ATTR_PREFIX
     PLATFORM_VERSION_ATTR_PREFIX
 #else
@@ -147,6 +173,8 @@ const char *otGetVersionString(void)
                                              PLATFORM_VERSION_ATTR_SUFFIX
 #endif
         ; // Trailing semicolon to end statement.
+
+#endif
 
     return sVersion;
 }

@@ -296,18 +296,18 @@ jobs:
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
         OT_OPTIONS='-DOT_TIME_SYNC=ON -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 ./script/test build expect
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED_CLI=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && env.CRASHED_CLI == '1' }}
       with:
         name: core-expect-cli
         path: |
-          ./build/openthread-simulation-1.1/examples/apps/cli/ot-cli-ftd
           ./ot-core-dump/*
-          ./so-lib/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -320,6 +320,18 @@ jobs:
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
         OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED_RCP=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED_RCP == '1' }}
+      with:
+        name: core-expect-rcp
+        path: |
+          ./ot-core-dump/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -340,19 +352,18 @@ jobs:
         ulimit -c unlimited
         ./script/test prepare_coredump_upload
         OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED_TUN=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && env.CRASHED_TUN == '1' }}
       with:
         name: core-expect-posix
         path: |
-          ./build/openthread-simulation-1.1/examples/apps/ncp/ot-rcp
-          ./build/openthread-posix-1.1/src/posix/ot-cli
           ./ot-core-dump/*
-          ./so-lib/*
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:

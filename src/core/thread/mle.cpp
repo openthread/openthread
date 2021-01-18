@@ -1726,7 +1726,7 @@ void Mle::HandleAttachTimer(void)
             break;
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kAttachStateAnnounce:
         if (shouldAnnounce)
@@ -1738,7 +1738,7 @@ void Mle::HandleAttachTimer(void)
             }
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kAttachStateChildIdRequest:
         SetAttachState(kAttachStateIdle);
@@ -3692,7 +3692,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
         mRetrieveNewNetworkData = true;
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleChild:
         // Source Address

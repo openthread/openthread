@@ -320,6 +320,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_DNS
+ *
+ * Define to enable DNS region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_DNS
+#define OPENTHREAD_CONFIG_LOG_DNS 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
  *
  * Define to prepend the log level to all log messages.
