@@ -69,6 +69,17 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
 
 /**
+ * @def OPENTHREAD_CONFIG_FULL_LOGS_ENABLE
+ *
+ * Define to 1 to enable full logs which will enable all logging regions by default and set the the default logging
+ * level to DEBG.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_FULL_LOGS_ENABLE
+#define OPENTHREAD_CONFIG_FULL_LOGS_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level (used at compile time). If `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE` is set, this defines the most
@@ -76,7 +87,11 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_LEVEL
+#if OPENTHREAD_CONFIG_FULL_LOGS_ENABLE
+#define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_DEBG
+#else
 #define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_CRIT
+#endif
 #endif
 
 /**
@@ -220,7 +235,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PLATFORM
-#define OPENTHREAD_CONFIG_LOG_PLATFORM 0
+#define OPENTHREAD_CONFIG_LOG_PLATFORM OPENTHREAD_CONFIG_FULL_LOGS_ENABLE
 #endif
 
 /**

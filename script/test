@@ -47,11 +47,16 @@ readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
 
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
+readonly FULL_LOGS=${FULL_LOGS:-0}
 
 build_simulation()
 {
     local version="$1"
     local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON" "-DOT_REFERENCE_DEVICE=ON")
+
+    if [[ ${FULL_LOGS} == 1 ]]; then
+        options+=("-DOT_FULL_LOGS=ON")
+    fi
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
