@@ -328,6 +328,7 @@ ENVIRONMENTS:
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
     INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.2. The default is 0.
+    INTER_OP_BBR    1 to build bbr version together. Only works when THREAD_VERSION is 1.2. The default is 1.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
