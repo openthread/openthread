@@ -26,4 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+if(OT_FTD)
 add_subdirectory(unit)
+endif()
