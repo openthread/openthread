@@ -487,8 +487,9 @@ class Name
 public:
     enum : uint8_t
     {
-        kMaxLabelLength = 63,  ///< Max number of characters in a label.
-        kMaxLength      = 255, ///< Max number of characters in a name.
+        kMaxLabelLength   = 63,  ///< Max number of characters in a label.
+        kMaxLength        = 254, ///< Max number of characters in a name.
+        kMaxEncodedLength = 255, ///< Max length of an encoded name.
     };
 
     /**

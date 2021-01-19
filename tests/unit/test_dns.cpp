@@ -88,6 +88,18 @@ void TestDnsName(void)
         {nullptr, sizeof(kEncodedName4), kEncodedName4, kLabels4, "."},
     };
 
+    static const char *kMaxLengthNames[] = {
+        "HereIsSomeoneHidden.MyHoldFromMeTaken.FromSelfHasMeDriven.MyLeadFromMeTaken."
+        "HereIsSomeoneHidden.AsLifeSweeterThanLife.TakesMeToGardenOfSoul.MyFortFromMeTaken."
+        "HereIsSomeoneHidden.LikeSugarInSugarCane.ASweetSugarTrader.MyShopFromMeTaken."
+        "SorcererAndMagicia.",
+
+        "HereIsSomeoneHidden.MyHoldFromMeTaken.FromSelfHasMeDriven.MyLeadFromMeTaken."
+        "HereIsSomeoneHidden.AsLifeSweeterThanLife.TakesMeToGardenOfSoul.MyFortFromMeTaken."
+        "HereIsSomeoneHidden.LikeSugarInSugarCane.ASweetSugarTrader.MyShopFromMeTaken."
+        "SorcererAndMagicia",
+    };
+
     static const char *kInvalidNames[] = {
         "foo..bar",
         "..",
@@ -104,6 +116,19 @@ void TestDnsName(void)
         "SorcererAndMagician.NoEyesCanEverSee.AnArtfulConjurer.MySenseFromMeTaken."
         "MyEyesWillNeverSee.BeautiesOfTheWholeWorld.BeholdWhoseVisionFine.MySightFromMeTaken"
         "PoemByRumiMolana",
+
+        // Long name of 255 characters which ends with a dot
+        "HereIsSomeoneHidden.MyHoldFromMeTaken.FromSelfHasMeDriven.MyLeadFromMeTaken."
+        "HereIsSomeoneHidden.AsLifeSweeterThanLife.TakesMeToGardenOfSoul.MyFortFromMeTaken."
+        "HereIsSomeoneHidden.LikeSugarInSugarCane.ASweetSugarTrader.MyShopFromMeTaken."
+        "SorcererAndMagician.",
+
+        // Long name of 254 characters which does not end with a dot
+        "HereIsSomeoneHidden.MyHoldFromMeTaken.FromSelfHasMeDriven.MyLeadFromMeTaken."
+        "HereIsSomeoneHidden.AsLifeSweeterThanLife.TakesMeToGardenOfSoul.MyFortFromMeTaken."
+        "HereIsSomeoneHidden.LikeSugarInSugarCane.ASweetSugarTrader.MyShopFromMeTaken."
+        "SorcererAndMagician",
+
     };
 
     printf("================================================================\n");
@@ -175,6 +200,28 @@ void TestDnsName(void)
         VerifyOrQuit(Dns::Name::ReadName(*message, offset, name,
                                          static_cast<uint16_t>(strlen(test.mExpectedReadName))) == OT_ERROR_NO_BUFS,
                      "Name::ReadName() did not fail with too small name buffer size");
+    }
+
+    printf("----------------------------------------------------------------\n");
+    printf("Max length names:\n");
+
+    for (const char *&maxLengthName : kMaxLengthNames)
+    {
+        if (maxLengthName[strlen(maxLengthName) - 1] == '.')
+        {
+            VerifyOrQuit(strlen(maxLengthName) == Dns::Name::kMaxLength, "invalid max length string");
+        }
+        else
+        {
+            VerifyOrQuit(strlen(maxLengthName) == Dns::Name::kMaxLength - 1, "invalid max length string");
+        }
+
+        IgnoreError(message->SetLength(0));
+
+        printf("\"%s\"\n", maxLengthName);
+
+        VerifyOrQuit(Dns::Name::AppendName(maxLengthName, *message) == OT_ERROR_NONE,
+                     "Name::AppendName() failed with max length name");
     }
 
     printf("----------------------------------------------------------------\n");
