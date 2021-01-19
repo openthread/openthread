@@ -68,7 +68,6 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
         ./script/test build
     - name: Run
       run: |
@@ -111,6 +110,7 @@ jobs:
       THREAD_VERSION: 1.2
       MAC_FILTER: 1
       INTER_OP: 1
+      INTER_OP_BBR: 0
     steps:
     - uses: actions/checkout@v2
       with:
