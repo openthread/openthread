@@ -44,7 +44,7 @@ install_packages_pretty_format()
     python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
 
     # add mdv for local size report
-    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is useful if you plan to contribute markdown to the OpenThread project.'
+    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
 
     # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
     command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
