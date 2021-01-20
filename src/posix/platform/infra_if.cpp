@@ -231,6 +231,13 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &kHopLimit, sizeof(kHopLimit));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
+#ifdef __linux__
+    rval = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, sInfraIfName, strlen(sInfraIfName));
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+    rval = setsockopt(sock, IPPROTO_IP, IP_BOUND_IF, &sInfraIfIndex, sizeof(sInfraIfIndex));
+#endif // __linux__
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
+
     sInfraIfIcmp6Socket = sock;
     SuccessOrDie(InitLinkLocalAddress());
 }
