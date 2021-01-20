@@ -1281,20 +1281,38 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def enable_br(self):
+        self.send_command('br enable')
+        self._expect('Done')
+
+    def disable_br(self):
+        self.send_command('br disable')
+        self._expect('Done')
+
     def get_prefixes(self):
-        netdata = self.netdata_show()
-        prefixes = []
+        return self.get_netdata()['Prefixes']
 
-        for i in range(1, len(netdata)):
-            if netdata[i].startswith("Routes:"):
-                break
-            prefixes.append(netdata[i])
-
-        return prefixes
+    def get_routes(self):
+        return self.get_netdata()['Routes']
 
     def netdata_show(self):
         self.send_command('netdata show')
         return self._expect_command_output('netdata show')
+
+    def get_netdata(self):
+        raw_netdata = self.netdata_show()
+        netdata = {'Prefixes': [], 'Routes': [], 'Services': []}
+        key_list = ['Prefixes', 'Routes', 'Services']
+        key = None
+
+        for i in range(0, len(raw_netdata)):
+            keys = list(filter(raw_netdata[i].startswith, key_list))
+            if keys != []:
+                key = keys[0]
+            elif key is not None:
+                netdata[key].append(raw_netdata[i])
+
+        return netdata
 
     def add_route(self, prefix, stable=False, prf='med'):
         cmd = 'route add %s ' % prefix
@@ -2156,6 +2174,17 @@ class HostNode(LinuxHost, OtbrDocker):
 
     def __repr__(self):
         return f'Host<{self.nodeid}>'
+
+    def get_matched_ula_addresses(self, prefix):
+        """Get the IPv6 addresses that matches given prefix.
+        """
+
+        addrs = []
+        for addr in self.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA):
+            if addr.startswith(prefix.split('::')[0]):
+                addrs.append(addr)
+
+        return addrs
 
     def get_ip6_address(self, address_type: config.ADDRESS_TYPE):
         """Get specific type of IPv6 address configured on thread device.
