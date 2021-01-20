@@ -157,6 +157,14 @@ public:
      */
     Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
 
+    /**
+     * This method sets the prefix.
+     *
+     * @param[in]  aPrefix  The prefix to set to.
+     *
+     */
+    void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
+
 private:
     void SetFrom(Instance &           aInstance,
                  const PrefixTlv &    aPrefixTlv,

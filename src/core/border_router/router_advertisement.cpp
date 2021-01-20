@@ -55,12 +55,12 @@ const Option *Option::GetNextOption(const Option *aCurOption, const uint8_t *aBu
     }
     else
     {
-        nextOption = reinterpret_cast<const uint8_t *>(aCurOption) + aCurOption->GetLength();
+        nextOption = reinterpret_cast<const uint8_t *>(aCurOption) + aCurOption->GetSize();
     }
 
     VerifyOrExit(nextOption + sizeof(Option) <= bufferEnd, nextOption = nullptr);
-    VerifyOrExit(reinterpret_cast<const Option *>(nextOption)->GetLength() > 0, nextOption = nullptr);
-    VerifyOrExit(nextOption + reinterpret_cast<const Option *>(nextOption)->GetLength() <= bufferEnd,
+    VerifyOrExit(reinterpret_cast<const Option *>(nextOption)->GetSize() > 0, nextOption = nullptr);
+    VerifyOrExit(nextOption + reinterpret_cast<const Option *>(nextOption)->GetSize() <= bufferEnd,
                  nextOption = nullptr);
 
 exit:
@@ -110,9 +110,12 @@ void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
 }
 
-void PrefixInfoOption::GetPrefix(Ip6::Prefix &aPrefix) const
+Ip6::Prefix PrefixInfoOption::GetPrefix(void) const
 {
-    aPrefix.Set(mPrefix.GetBytes(), mPrefixLength);
+    Ip6::Prefix prefix;
+
+    prefix.Set(mPrefix.GetBytes(), mPrefixLength);
+    return prefix;
 }
 
 RouteInfoOption::RouteInfoOption(void)
@@ -126,16 +129,62 @@ RouteInfoOption::RouteInfoOption(void)
     mPrefix.Clear();
 }
 
+void RouteInfoOption::SetPreference(otRoutePreference aPreference)
+{
+    mReserved &= ~kPreferenceMask;
+    mReserved |= (static_cast<uint8_t>(aPreference) << kPreferenceOffset) & kPreferenceMask;
+}
+
+otRoutePreference RouteInfoOption::GetPreference(void) const
+{
+    otRoutePreference preference;
+
+    switch ((mReserved & kPreferenceMask) >> kPreferenceOffset)
+    {
+    case kPreferenceLow:
+        preference = OT_ROUTE_PREFERENCE_LOW;
+        break;
+    case kPreferenceMed:
+        preference = OT_ROUTE_PREFERENCE_MED;
+        break;
+    case kPreferenceHigh:
+        preference = OT_ROUTE_PREFERENCE_HIGH;
+        break;
+    default:
+        preference = OT_ROUTE_PREFERENCE_LOW;
+        break;
+    }
+
+    return preference;
+}
+
 void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 {
     // The total length (in bytes) of a Router Information Option
     // is: (8 bytes fixed option header) + (0, 8, or 16 bytes prefix).
     // Because the length of the option must be padded with 8 bytes,
     // the length of the prefix (in bits) must be padded with 64 bits.
-    SetLength(((aPrefix.mLength + kLengthUnit * CHAR_BIT - 1) / (kLengthUnit * CHAR_BIT) + 1) * kLengthUnit);
+    SetLength((aPrefix.mLength + kLengthUnit * CHAR_BIT - 1) / (kLengthUnit * CHAR_BIT) + 1);
 
     mPrefixLength = aPrefix.mLength;
     mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
+}
+
+Ip6::Prefix RouteInfoOption::GetPrefix(void) const
+{
+    Ip6::Prefix prefix;
+
+    prefix.Set(mPrefix.GetBytes(), mPrefixLength);
+    return prefix;
+}
+
+bool RouteInfoOption::IsValid(void) const
+{
+    otRoutePreference pref = GetPreference();
+
+    return (GetLength() == 1 || GetLength() == 2 || GetLength() == 3) &&
+           (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT) &&
+           (pref == OT_ROUTE_PREFERENCE_LOW || pref == OT_ROUTE_PREFERENCE_MED || pref == OT_ROUTE_PREFERENCE_HIGH);
 }
 
 RouterAdvMessage::RouterAdvMessage(void)
