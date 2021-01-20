@@ -45,6 +45,7 @@ readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
+readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
 
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
 
@@ -78,7 +79,7 @@ build_simulation()
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
-    if [[ ${version} == "1.2" ]]; then
+    if [[ ${version} == "1.2" && ${INTER_OP_BBR} == 1 ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
@@ -111,7 +112,7 @@ build_posix()
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
 
-    if [[ ${version} == "1.2" ]]; then
+    if [[ ${version} == "1.2" && ${INTER_OP_BBR} == 1 ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
@@ -165,7 +166,7 @@ do_unit()
 {
     do_unit_version "${THREAD_VERSION}"
 
-    if [[ ${THREAD_VERSION} == "1.2" ]]; then
+    if [[ ${THREAD_VERSION} == "1.2" && ${INTER_OP_BBR} == 1 ]]; then
         do_unit_version "1.2-bbr"
     fi
 }
@@ -327,6 +328,7 @@ ENVIRONMENTS:
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
     INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.2. The default is 0.
+    INTER_OP_BBR    1 to build bbr version together. Only works when THREAD_VERSION is 1.2. The default is 1.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
