@@ -339,14 +339,12 @@ void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessag
     QueryMetadata queryMetadata;
     AaaaRecord    record;
     Message *     message = nullptr;
-    uint16_t      offset;
+    uint16_t      offset  = aMessage.GetOffset();
 
-    SuccessOrExit(aMessage.Read(aMessage.GetOffset(), responseHeader));
+    SuccessOrExit(aMessage.Read(offset, responseHeader));
     VerifyOrExit(responseHeader.GetType() == Header::kTypeResponse && responseHeader.GetQuestionCount() == 1 &&
                  !responseHeader.IsTruncationFlagSet());
-
-    aMessage.MoveOffset(sizeof(responseHeader));
-    offset = aMessage.GetOffset();
+    offset += sizeof(responseHeader);
 
     VerifyOrExit((message = FindQueryById(responseHeader.GetMessageId())) != nullptr);
     queryMetadata.ReadFrom(*message);

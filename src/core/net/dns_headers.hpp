@@ -582,7 +582,8 @@ public:
     /**
      * This static method parses and skips over a full name in a message.
      *
-     * @param[in]    aMessage         The message to parse the name from.
+     * @param[in]    aMessage         The message to parse the name from. `aMessage.GetOffset()` MUST point to
+     *                                the start of DNS header (this is used to handle compressed names).
      * @param[inout] aOffset          On input the offset in @p aMessage pointing to the start of the name field.
      *                                On exit (when parsed successfully), @p aOffset is updated to point to the byte
      *                                after the end of name field.
@@ -605,11 +606,11 @@ public:
      * Unlike `ReadName()` which requires and verifies that the read label to contain no dot '.' character, this method
      * allows the read label to include any character.
      *
-     * @param[in]    aMessage         The message to read the label from.
+     * @param[in]    aMessage         The message to read the label from. `aMessage.GetOffset()` MUST point to
+     *                                the start of DNS header (this is used to handle compressed names).
      * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the label to read.
      *                                On exit, when successfully read, @p aOffset is updated to point to the start of
      *                                the next label.
-     * @param[in]    aHeaderOffset    The offset in @p aMessage to the start of the DNS header.
      * @param[out]   aLabelBuffer     A pointer to a char array to output the read label as a null-terminated C string.
      * @param[inout] aLabelLength     On input, the maximum number chars in @p aLabelBuffer array.
      *                                On output, when label is successfully read, @aLabelLength is updated to return
@@ -622,11 +623,7 @@ public:
      * @retval OT_ERROR_NO_BUFS       Label could not fit in @p aLabelLength chars.
      *
      */
-    static otError ReadLabel(const Message &aMessage,
-                             uint16_t &     aOffset,
-                             uint16_t       aHeaderOffset,
-                             char *         aLabelBuffer,
-                             uint8_t &      aLabelLength);
+    static otError ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength);
 
     /**
      * This static method reads a full name from a message.
@@ -637,11 +634,11 @@ public:
      * This method verifies that the read labels in message do not contain any dot character, otherwise it returns
      * `OT_ERROR_PARSE`).
      *
-     * @param[in]    aMessage         The message to read the name from.
+     * @param[in]    aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
+     *                                the start of DNS header (this is used to handle compressed names).
      * @param[inout] aOffset          On input, the offset in @p aMessage pointing to the start of the name field.
      *                                On exit (when parsed successfully), @p aOffset is updated to point to the byte
      *                                after the end of name field.
-     * @param[in]    aHeaderOffset    The offset in @p aMessage to the start of the DNS header.
      * @param[out]   aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string.
      * @param[inout] aNameBufferSize  The maximum number chars in @p aNameBuffer array.
      *
@@ -650,11 +647,7 @@ public:
      * @retval OT_ERROR_NO_BUFS       Name could not fit in @p aNameBufferSize chars.
      *
      */
-    static otError ReadName(const Message &aMessage,
-                            uint16_t &     aOffset,
-                            uint16_t       aHeaderOffset,
-                            char *         aNameBuffer,
-                            uint16_t       aNameBufferSize);
+    static otError ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize);
 
 private:
     enum : char
@@ -689,9 +682,8 @@ private:
             kUnsetNameEndOffset = 0, // Special value indicating `mNameEndOffset` is not yet set.
         };
 
-        LabelIterator(const Message &aMessage, uint16_t aLabelOffset, uint16_t aHeaderOffset = 0)
+        LabelIterator(const Message &aMessage, uint16_t aLabelOffset)
             : mMessage(aMessage)
-            , mHeaderOffset(aHeaderOffset)
             , mNextLabelOffset(aLabelOffset)
             , mNameEndOffset(kUnsetNameEndOffset)
         {
@@ -702,7 +694,6 @@ private:
         otError ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const;
 
         const Message &mMessage;          // Message to read labels from.
-        const uint16_t mHeaderOffset;     // Offset in `mMessage` to the start of DNS header.
         uint16_t       mLabelStartOffset; // Offset in `mMessage` to the first char of current label text.
         uint8_t        mLabelLength;      // Length of current label (number of chars).
         uint16_t       mNextLabelOffset;  // Offset in `mMessage` to the start of the next label.

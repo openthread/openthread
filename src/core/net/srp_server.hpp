@@ -553,12 +553,10 @@ private:
                                  const Message &          aMessage,
                                  const Dns::UpdateHeader &aDnsHeader,
                                  const Dns::Zone &        aZone,
-                                 uint16_t                 aHeaderOffset,
                                  uint16_t &               aOffset);
     otError ProcessAdditionalSection(Host *                   aHost,
                                      const Message &          aMessage,
                                      const Dns::UpdateHeader &aDnsHeader,
-                                     uint16_t                 aHeaderOffset,
                                      uint16_t &               aOffset);
     otError VerifySignature(const Dns::Ecdsa256KeyRecord &aKey,
                             const Message &               aMessage,
@@ -576,19 +574,16 @@ private:
                                                      const Message &          aMessage,
                                                      const Dns::UpdateHeader &aDnsHeader,
                                                      const Dns::Zone &        aZone,
-                                                     uint16_t                 aHeaderOffset,
                                                      uint16_t                 aOffset);
     static otError ProcessServiceDiscoveryInstructions(Host &                   aHost,
                                                        const Message &          aMessage,
                                                        const Dns::UpdateHeader &aDnsHeader,
                                                        const Dns::Zone &        aZone,
-                                                       uint16_t                 aHeaderOffset,
                                                        uint16_t                 aOffset);
     static otError ProcessServiceDescriptionInstructions(Host &                   aHost,
                                                          const Message &          aMessage,
                                                          const Dns::UpdateHeader &aDnsHeader,
                                                          const Dns::Zone &        aZone,
-                                                         uint16_t                 aHeaderOffset,
                                                          uint16_t &               aOffset);
     static bool    IsValidDeleteAllRecord(const Dns::ResourceRecord &aRecord);
 
