@@ -67,6 +67,8 @@ override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 # ==============================================================================
 SILABS_GSDK_CPPFLAGS                                                          = \
     -I$(SDK_SRC_DIR)                                                            \
+    -I$(SDK_SRC_DIR)/hardware/board/config/$(BOARD_LOWERCASE)_brd4001a          \
+    -I$(SDK_SRC_DIR)/hardware/board/config/$(BOARD_LOWERCASE)                   \
     -I$(SDK_SRC_DIR)/hardware/kit/$(PLATFORM_UPPERCASE)_$(BOARD_UPPERCASE)/config \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
