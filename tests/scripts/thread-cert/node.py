@@ -497,7 +497,7 @@ class NodeImpl:
 
         return results
 
-    def _expect_command_output(self, cmd: str):
+    def _expect_command_output(self, cmd: str, ignore_logs=True):
         lines = []
         cmd_output_started = False
 
@@ -515,7 +515,7 @@ class NodeImpl:
                 cmd_output_started = True
                 continue
 
-            if not cmd_output_started:
+            if not cmd_output_started or (ignore_logs and self.__is_logging_line(line)):
                 continue
 
             if line == 'Done':
@@ -527,6 +527,9 @@ class NodeImpl:
 
         print(f'_expect_command_output({cmd!r}) returns {lines!r}')
         return lines
+
+    def __is_logging_line(self, line: str) -> bool:
+        return len(line) >= 6 and line[:6] in {'[DEBG]', '[INFO]', '[NOTE]', '[WARN]', '[CRIT]', '[NONE]'}
 
     def read_cert_messages_in_commissioning_log(self, timeout=-1):
         """Get the log of the traffic after DTLS handshake.
