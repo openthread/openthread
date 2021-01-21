@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -87,6 +87,7 @@ list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONF
 add_library(openthread-nrf52840
     ${NRF_COMM_SOURCES}
     ${NRF_SINGLEPHY_SOURCES}
+    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 add_library(openthread-nrf52840-transport
@@ -96,11 +97,13 @@ add_library(openthread-nrf52840-transport
 add_library(openthread-nrf52840-sdk
     ${NRF_COMM_SOURCES}
     ${NRF_SINGLEPHY_SOURCES}
+    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 add_library(openthread-nrf52840-softdevice-sdk
     ${NRF_COMM_SOURCES}
     ${NRF_SOFTDEVICE_SOURCES}
+    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 set_target_properties(openthread-nrf52840 openthread-nrf52840-transport openthread-nrf52840-sdk openthread-nrf52840-softdevice-sdk
@@ -113,14 +116,19 @@ target_link_libraries(openthread-nrf52840
     PUBLIC
         ${OT_MBEDTLS}
         ${NRF52840_3RD_LIBS}
+        -T${LD_FILE}
+        -Wl,--gc-sections
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
     PRIVATE
-        openthread-platform-utils
         ot-config
 )
 
 target_link_libraries(openthread-nrf52840-transport
     PUBLIC
         ${OT_MBEDTLS}
+        -T${LD_FILE}
+        -Wl,--gc-sections
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
     PRIVATE
         nordicsemi-nrf52840-sdk
         ot-config
@@ -130,8 +138,10 @@ target_link_libraries(openthread-nrf52840-sdk
     PUBLIC
         ${OT_MBEDTLS}
         ${NRF52840_3RD_LIBS}
+        -T${LD_FILE}
+        -Wl,--gc-sections
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
     PRIVATE
-        openthread-platform-utils
         ot-config
 )
 
@@ -139,37 +149,11 @@ target_link_libraries(openthread-nrf52840-softdevice-sdk
     PUBLIC
         ${OT_MBEDTLS}
         ${NRF52840_3RD_LIBS}
+        -T${LD_FILE}
+        -Wl,--gc-sections
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
     PRIVATE
-        openthread-platform-utils
         ot-config
-)
-
-target_link_options(openthread-nrf52840
-    PUBLIC
-        -T${LD_FILE}
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
-)
-
-target_link_options(openthread-nrf52840-transport
-    PUBLIC
-        -T${LD_FILE}
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
-)
-
-target_link_options(openthread-nrf52840-sdk
-    PUBLIC
-        -T${LD_FILE}
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
-)
-
-target_link_options(openthread-nrf52840-softdevice-sdk
-    PUBLIC
-        -T${LD_FILE}
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
 target_compile_definitions(openthread-nrf52840

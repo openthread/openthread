@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -39,12 +39,12 @@ execute_process(COMMAND ${CMAKE_CXX_COMPILER} -dumpversion OUTPUT_VARIABLE COMPI
 set(COMMON_C_FLAGS                 "-mcpu=cortex-m4 -mfloat-abi=hard -mfpu=fpv4-sp-d16 -mthumb -mabi=aapcs -fdata-sections -ffunction-sections")
 
 if(COMPILER_VERSION VERSION_GREATER_EQUAL 7)
-    set(COMMON_C_FLAGS                 "${COMMON_C_FLAGS} -Wno-expansion-to-defined")
+    set(COMMON_C_FLAGS             "${COMMON_C_FLAGS} -Wno-expansion-to-defined")
 endif()
 
-set(CMAKE_C_FLAGS                  "${COMMON_C_FLAGS} -std=gnu99")
-set(CMAKE_CXX_FLAGS                "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
-set(CMAKE_ASM_FLAGS                "${COMMON_C_FLAGS} -x assembler-with-cpp")
+set(CMAKE_C_FLAGS_INIT             "${COMMON_C_FLAGS} -std=gnu99")
+set(CMAKE_CXX_FLAGS_INIT           "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_ASM_FLAGS_INIT           "${COMMON_C_FLAGS} -x assembler-with-cpp")
 set(CMAKE_EXE_LINKER_FLAGS_INIT    "${COMMON_C_FLAGS} -specs=nano.specs -specs=nosys.specs")
 
 set(CMAKE_C_FLAGS_DEBUG            "-Og -g")
