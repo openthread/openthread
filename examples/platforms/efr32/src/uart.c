@@ -33,6 +33,7 @@
  */
 
 #include <stddef.h>
+#include <string.h>
 
 #include "openthread-system.h"
 #include <openthread/platform/uart.h>
@@ -43,6 +44,15 @@
 #include "uartdrv.h"
 
 #include "hal-config.h"
+#include "sl_uartdrv_usart_vcom_config.h"
+
+#define HELPER1(x) USART ## x ## _RX_IRQn
+#define HELPER2(x) HELPER1(x)
+#define USART_IRQ  HELPER2(SL_UARTDRV_USART_VCOM_PERIPHERAL_NO)
+
+#define HELPER3(x)  USART ## x ## _RX_IRQHandler
+#define HELPER4(x)  HELPER3(x)
+#define USART_IRQHandler HELPER4(SL_UARTDRV_USART_VCOM_PERIPHERAL_NO)
 
 enum
 {
@@ -89,9 +99,15 @@ static const UARTDRV_InitUart_t USART_INIT = {
 
 static UARTDRV_HandleData_t sUartHandleData;
 static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
-static uint8_t              sReceiveBuffer[2];
+
+// In order to reduce the probability of data loss due to disabled interrupts, we use
+// two duplicate receive buffers so we can always have one "active" receive request.
+#define RECEIVE_BUFFER_SIZE 128
+static uint8_t              sReceiveBuffer1[RECEIVE_BUFFER_SIZE];
+static uint8_t              sReceiveBuffer2[RECEIVE_BUFFER_SIZE];
 static const uint8_t *      sTransmitBuffer = NULL;
 static volatile uint16_t    sTransmitLength = 0;
+static uint8_t              lastCount = 0;
 
 typedef struct ReceiveFifo_t
 {
@@ -109,14 +125,17 @@ static void processReceive(void);
 
 static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
+    OT_UNUSED_VARIABLE(aStatus);
+
     // We can only write if incrementing mTail doesn't equal mHead
-    if (sReceiveFifo.mHead != (sReceiveFifo.mTail + 1) % kReceiveFifoSize)
+    if (sReceiveFifo.mHead != (sReceiveFifo.mTail + aCount - lastCount) % kReceiveFifoSize)
     {
-        sReceiveFifo.mBuffer[sReceiveFifo.mTail] = aData[0];
-        sReceiveFifo.mTail                       = (sReceiveFifo.mTail + 1) % kReceiveFifoSize;
+        memcpy(sReceiveFifo.mBuffer + sReceiveFifo.mTail, aData + lastCount, aCount - lastCount);
+        sReceiveFifo.mTail = (sReceiveFifo.mTail + aCount - lastCount) % kReceiveFifoSize;
+        lastCount = 0;
     }
 
-    UARTDRV_Receive(aHandle, aData, 1, receiveDone);
+    UARTDRV_Receive(aHandle, aData, aCount, receiveDone);
     otSysEventSignalPending();
 }
 
@@ -133,6 +152,18 @@ static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDa
 
 static void processReceive(void)
 {
+    uint8_t *aData;
+    UARTDRV_Count_t aCount, remaining;
+    CORE_ATOMIC_SECTION(
+      UARTDRV_GetReceiveStatus(sUartHandle, &aData, &aCount, &remaining);
+      if (aCount > lastCount)
+      {
+          memcpy(sReceiveFifo.mBuffer + sReceiveFifo.mTail, aData + lastCount, aCount - lastCount);
+          sReceiveFifo.mTail = (sReceiveFifo.mTail + aCount - lastCount) % kReceiveFifoSize;
+          lastCount = aCount;
+      }
+    )
+
     // Copy tail to prevent multiple reads
     uint16_t tail = sReceiveFifo.mTail;
 
@@ -169,6 +200,11 @@ static void processTransmit(void)
     }
 }
 
+void USART_IRQHandler(void)
+{
+    otSysEventSignalPending();
+}
+
 otError otPlatUartEnable(void)
 {
     UARTDRV_InitUart_t uartInit = USART_INIT;
@@ -178,10 +214,14 @@ otError otPlatUartEnable(void)
 
     UARTDRV_Init(sUartHandle, &uartInit);
 
-    for (uint8_t i = 0; i < sizeof(sReceiveBuffer); i++)
-    {
-        UARTDRV_Receive(sUartHandle, &sReceiveBuffer[i], sizeof(sReceiveBuffer[i]), receiveDone);
-    }
+    // When one receive request is completed, the other buffer is used for a separate receive request, issued immediately.
+    UARTDRV_Receive(sUartHandle, sReceiveBuffer1, RECEIVE_BUFFER_SIZE, receiveDone);
+    UARTDRV_Receive(sUartHandle, sReceiveBuffer2, RECEIVE_BUFFER_SIZE, receiveDone);
+
+    // Enable USART0 interrupt to wake OT task when data arrives
+    NVIC_ClearPendingIRQ(USART_IRQ);
+    NVIC_EnableIRQ(USART_IRQ);
+    USART_IntEnable(SL_UARTDRV_USART_VCOM_PERIPHERAL, USART_IF_RXDATAV);
 
     return OT_ERROR_NONE;
 }
