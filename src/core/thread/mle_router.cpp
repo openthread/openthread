@@ -295,7 +295,8 @@ void MleRouter::HandleChildStart(AttachMode aMode)
             RemoveChildren();
         }
 
-        // fall through
+        OT_FALL_THROUGH;
+
     case kAttachBetter:
         if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
@@ -823,6 +824,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
 
     case Neighbor::kStateInvalid:
         VerifyOrExit((mChallengeTimeout > 0) && (response == mChallenge), error = OT_ERROR_SECURITY);
+
+        OT_FALL_THROUGH;
 
     case Neighbor::kStateValid:
         break;
@@ -1360,7 +1363,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
             mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleLeader:
         router = mRouterTable.GetRouter(routerId);
@@ -1737,7 +1740,7 @@ void MleRouter::HandleTimeTick(void)
             ExitNow();
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleRouter:
         // verify path to leader

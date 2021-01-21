@@ -525,6 +525,48 @@ otError Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
     return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? OT_ERROR_NONE : OT_ERROR_PARSE;
 }
 
+bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const
+{
+    uint16_t       bytesToCompare = aLength;
+    const uint8_t *bufPtr         = reinterpret_cast<const uint8_t *>(aBuf);
+    Chunk          chunk;
+
+    GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        VerifyOrExit(memcmp(bufPtr, chunk.GetData(), chunk.GetLength()) == 0);
+        bufPtr += chunk.GetLength();
+        bytesToCompare -= chunk.GetLength();
+        GetNextChunk(aLength, chunk);
+    }
+
+exit:
+    return (bytesToCompare == 0);
+}
+
+bool Message::CompareBytes(uint16_t       aOffset,
+                           const Message &aOtherMessage,
+                           uint16_t       aOtherOffset,
+                           uint16_t       aLength) const
+{
+    uint16_t bytesToCompare = aLength;
+    Chunk    chunk;
+
+    GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        VerifyOrExit(aOtherMessage.CompareBytes(aOtherOffset, chunk.GetData(), chunk.GetLength()));
+        aOtherOffset += chunk.GetLength();
+        bytesToCompare -= chunk.GetLength();
+        GetNextChunk(aLength, chunk);
+    }
+
+exit:
+    return (bytesToCompare == 0);
+}
+
 void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);

@@ -241,6 +241,7 @@ if (openthread_enable_core_config_args) {
         "OPENTHREAD_CONFIG_LOG_BR=1",
         "OPENTHREAD_CONFIG_LOG_CLI=1",
         "OPENTHREAD_CONFIG_LOG_COAP=1",
+        "OPENTHREAD_CONFIG_LOG_DNS=1",
         "OPENTHREAD_CONFIG_LOG_DUA=1",
         "OPENTHREAD_CONFIG_LOG_ICMP=1",
         "OPENTHREAD_CONFIG_LOG_IP6=1",

@@ -258,6 +258,25 @@ extern "C" {
 #endif
 
 /**
+ * @def OT_FALL_THROUGH
+ *
+ * Suppress fall through warning in specific compiler.
+ *
+ */
+#if defined(__cplusplus) && (__cplusplus >= 201703L)
+#define OT_FALL_THROUGH [[fallthrough]]
+#elif defined(__clang__)
+#define OT_FALL_THROUGH [[clang::fallthrough]]
+#elif defined(__GNUC__) && (__GNUC__ >= 7)
+#define OT_FALL_THROUGH __attribute__((fallthrough))
+#else
+#define OT_FALL_THROUGH \
+    do                  \
+    {                   \
+    } while (false) /* fallthrough */
+#endif
+
+/**
  * @}
  *
  */

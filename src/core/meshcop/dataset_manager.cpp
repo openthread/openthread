@@ -313,7 +313,7 @@ exit:
 
     case OT_ERROR_NO_BUFS:
         mTimer.Start(kDelayNoBufs);
-        // fall through
+        OT_FALL_THROUGH;
 
     default:
         LogError("send Dataset set to leader", error);

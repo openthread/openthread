@@ -260,7 +260,7 @@ public:
         kResponseNotImplemented  = 4,  ///< Server does not support the query type (OpCode).
         kResponseRefused         = 5,  ///< Server refused to perform operation for policy or security reasons.
         kResponseNameExists      = 6,  ///< Some name that ought not to exist, does exist.
-        kResponseRecordExists    = 7,  ///< Some RRset that ought not to exits, does exist.
+        kResponseRecordExists    = 7,  ///< Some RRset that ought not to exist, does exist.
         kResponseRecordNotExists = 8,  ///< Some RRset that ought to exist, does not exist.
         kResponseNotAuth         = 9,  ///< Service is not authoritative for zone.
         kResponseNotZone         = 10, ///< A name is not in the zone.
@@ -299,7 +299,7 @@ public:
      * - kResponseNotImplemented (4)  : Server does not support the query type (OpCode) -> OT_ERROR_NOT_IMPLEMENTED
      * - kResponseRefused (5)         : Server refused for policy/security reasons      -> OT_ERROR_SECURITY
      * - kResponseNameExists (6)      : Some name that ought not to exist, does exist   -> OT_ERROR_DUPLICATED
-     * - kResponseRecordExists (7)    : Some RRset that ought not to exits, does exist  -> OT_ERROR_DUPLICATED
+     * - kResponseRecordExists (7)    : Some RRset that ought not to exist, does exist  -> OT_ERROR_DUPLICATED
      * - kResponseRecordNotExists (8) : Some RRset that ought to exist, does not exist  -> OT_ERROR_NOT_FOUND
      * - kResponseNotAuth (9)         : Service is not authoritative for zone           -> OT_ERROR_SECURITY
      * - kResponseNotZone (10)        : A name is not in the zone                       -> OT_ERROR_PARSE
@@ -351,7 +351,7 @@ public:
      * @returns The number of entries in authority records section.
      *
      */
-    uint16_t GetAuthorityRecordsCount(void) const { return HostSwap16(mNsCount); }
+    uint16_t GetAuthorityRecordCount(void) const { return HostSwap16(mNsCount); }
 
     /**
      * This method sets the number of entries in authority records section.
@@ -359,7 +359,7 @@ public:
      * @param[in]  aCount The number of entries in authority records section.
      *
      */
-    void SetAuthorityRecordsCount(uint16_t aCount) { mNsCount = HostSwap16(aCount); }
+    void SetAuthorityRecordCount(uint16_t aCount) { mNsCount = HostSwap16(aCount); }
 
     /**
      * This method returns the number of entries in additional records section.
@@ -367,7 +367,7 @@ public:
      * @returns The number of entries in additional records section.
      *
      */
-    uint16_t GetAdditionalRecordsCount(void) const { return HostSwap16(mArCount); }
+    uint16_t GetAdditionalRecordCount(void) const { return HostSwap16(mArCount); }
 
     /**
      * This method sets the number of entries in additional records section.
@@ -375,7 +375,7 @@ public:
      * @param[in]  aCount The number of entries in additional records section.
      *
      */
-    void SetAdditionalRecordsCount(uint16_t aCount) { mArCount = HostSwap16(aCount); }
+    void SetAdditionalRecordCount(uint16_t aCount) { mArCount = HostSwap16(aCount); }
 
 private:
     /**
@@ -394,7 +394,6 @@ private:
         kTcFlagMask   = 0x01 << kTcFlagOffset, // TC Flag mask.
         kRdFlagOffset = 0,                     // RD Flag offset.
         kRdFlagMask   = 0x01 << kRdFlagOffset, // RD Flag mask.
-
         kRaFlagOffset = 7,                     // RA Flag offset.
         kRaFlagMask   = 0x01 << kRaFlagOffset, // RA Flag mask.
         kRCodeOffset  = 0,                     // RCODE field offset.
@@ -466,7 +465,7 @@ public:
      * @returns The number of records in Update section.
      *
      */
-    uint16_t GetUpdateRecordCount(void) const { return GetAuthorityRecordsCount(); }
+    uint16_t GetUpdateRecordCount(void) const { return GetAuthorityRecordCount(); }
 
     /**
      * This method sets the number of records in Update section.
@@ -474,7 +473,7 @@ public:
      * @param[in]  aCount The number of records in Update section.
      *
      */
-    void SetUpdateRecordCount(uint16_t aCount) { SetAuthorityRecordsCount(aCount); }
+    void SetUpdateRecordCount(uint16_t aCount) { SetAuthorityRecordCount(aCount); }
 
 } OT_TOOL_PACKED_END;
 
@@ -918,7 +917,11 @@ public:
      * Other record fields (TTL, address) remain unchanged/uninitialized.
      *
      */
-    void Init(void) { ResourceRecord::Init(kTypeAaaa); }
+    void Init(void)
+    {
+        ResourceRecord::Init(kTypeAaaa);
+        SetLength(sizeof(Ip6::Address));
+    }
 
     /**
      * This method sets the IPv6 address of the resource record.
@@ -1200,7 +1203,7 @@ public:
      *
      * Other record fields (TTL, length, ...) remain unchanged/uninitialized.
      *
-     * SIG(0) requires SIG RR to set class field as ANY or `kClassAnyANY (RFC 2931 - section 3).
+     * SIG(0) requires SIG RR to set class field as ANY or `kClassAny` (RFC 2931 - section 3).
      *
      * @param[in] aClass  The class of the resource record.
      *
@@ -1440,18 +1443,18 @@ public:
      * This method clears the DNSSEC OK bit flag.
      *
      */
-    void ClearDnsSecurityFlags(void) { mTtl &= ~kDnsSecFlag; }
+    void ClearDnsSecurityFlag(void) { mTtl &= ~kDnsSecFlag; }
 
     /**
      * This method sets the DNSSEC OK bit flag.
      *
      */
-    void SetDnsSecurityFlags(void) { mTtl |= kDnsSecFlag; }
+    void SetDnsSecurityFlag(void) { mTtl |= kDnsSecFlag; }
 
 private:
     // The OPT RR re-purposes the existing CLASS and TTL fields in the
-    // RR The CLASS field (`uint16_t`) is used for requester UDP
-    // payload size The TTL field is used for extended Response Code,
+    // RR. The CLASS field (`uint16_t`) is used for requester UDP
+    // payload size. The TTL field is used for extended Response Code,
     // version and flags as follows:
     //
     //    0   1   2   3   4   5   6   7   8   9   0   1   2   3   4   5
@@ -1615,7 +1618,7 @@ public:
      * Constructor for Question.
      *
      */
-    Question(uint16_t aType, uint16_t aClass)
+    explicit Question(uint16_t aType, uint16_t aClass = ResourceRecord::kClassInternet)
     {
         SetType(aType);
         SetClass(aClass);
@@ -1653,46 +1656,22 @@ public:
      */
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
-private:
-    uint16_t mType;  // The type of the data in question section.
-    uint16_t mClass; // The class of the data in question section.
-
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Question format of AAAA type.
- *
- */
-class QuestionAaaa : public Question
-{
-public:
     /**
-     * Default constructor for AAAA Question.
-     *
-     */
-    QuestionAaaa(void)
-        : Question(kType, kClass)
-    {
-    }
-
-    /**
-     * This method appends request data to the message.
+     * This method appends the question data to the message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
+     * @retval OT_ERROR_NONE     Successfully appended the question data.
      * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
      *
      */
     otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
 
 private:
-    enum
-    {
-        kType  = 0x1C, // AAAA Resource Record type.
-        kClass = 0x01, // The value of the Internet class.
-    };
-};
+    uint16_t mType;  // The type of the data in question section.
+    uint16_t mClass; // The class of the data in question section.
+
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements Zone section body for DNS Update (RFC 2136 - section 2.3).

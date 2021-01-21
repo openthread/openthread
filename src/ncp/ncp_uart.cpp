@@ -158,6 +158,8 @@ void NcpUart::EncodeAndSendToUart(void)
             {
                 mByte = txFrameBuffer.OutFrameReadByte();
 
+                OT_FALL_THROUGH;
+
             case kEncodingFrame:
 
                 SuccessOrExit(mFrameEncoder.Encode(mByte));
@@ -181,7 +183,7 @@ void NcpUart::EncodeAndSendToUart(void)
 
             mState = kFinalizingFrame;
 
-            // fall through
+            OT_FALL_THROUGH;
 
         case kFinalizingFrame:
 

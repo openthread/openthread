@@ -45,6 +45,9 @@ readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
+readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
+
+readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
 
 build_simulation()
 {
@@ -76,7 +79,7 @@ build_simulation()
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-simulation-${version}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
 
-    if [[ ${version} == "1.2" ]]; then
+    if [[ ${version} == "1.2" && ${INTER_OP_BBR} == 1 ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
@@ -109,7 +112,7 @@ build_posix()
 
     OT_CMAKE_BUILD_DIR="${OT_BUILDDIR}/openthread-posix-${version}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
 
-    if [[ ${version} == "1.2" ]]; then
+    if [[ ${version} == "1.2" && ${INTER_OP_BBR} == 1 ]]; then
 
         options+=("-DOT_BACKBONE_ROUTER=ON")
 
@@ -163,7 +166,7 @@ do_unit()
 {
     do_unit_version "${THREAD_VERSION}"
 
-    if [[ ${THREAD_VERSION} == "1.2" ]]; then
+    if [[ ${THREAD_VERSION} == "1.2" && ${INTER_OP_BBR} == 1 ]]; then
         do_unit_version "1.2-bbr"
     fi
 }
@@ -190,7 +193,7 @@ do_cert()
     fi
 
     [[ ! -d tmp ]] || rm -rvf tmp
-    PYTHONUNBUFFERED=1 "$1"
+    PYTHONUNBUFFERED=1 "$@"
 }
 
 do_cert_suite()
@@ -325,6 +328,7 @@ ENVIRONMENTS:
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default is 1.
     THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
     INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.2. The default is 0.
+    INTER_OP_BBR    1 to build bbr version together. Only works when THREAD_VERSION is 1.2. The default is 1.
 
 COMMANDS:
     clean           Clean built files to prepare for new build.
@@ -391,16 +395,47 @@ do_package()
 
 do_prepare_coredump_upload()
 {
-    echo "$PWD/ot-core-dump/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
-    mkdir -p ot-core-dump
+    echo "$OT_COREDUMP_DIR/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
+    rm -rf "$OT_COREDUMP_DIR"
+    mkdir -p "$OT_COREDUMP_DIR"
 }
 
 do_copy_so_lib()
 {
-    mkdir -p so-lib
-    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 ./so-lib
-    cp /lib/x86_64-linux-gnu/libc.so.6 ./so-lib
-    cp /lib64/ld-linux-x86-64.so.2 ./so-lib
+    mkdir -p "$OT_COREDUMP_DIR/so-lib"
+    cp /lib/x86_64-linux-gnu/libgcc_s.so.1 "$OT_COREDUMP_DIR/so-lib"
+    cp /lib/x86_64-linux-gnu/libc.so.6 "$OT_COREDUMP_DIR/so-lib"
+    cp /lib64/ld-linux-x86-64.so.2 "$OT_COREDUMP_DIR/so-lib"
+}
+
+do_check_crash()
+{
+    shopt -s nullglob
+
+    # Scan core dumps and collect binaries which crashed
+    declare -A bin_list=([dummy]='')
+    for f in "$OT_COREDUMP_DIR"/core*; do
+        bin=$(file "$f" | grep -E -o "execfn: '(.*')," | sed -r "s/execfn: '(.*)',/\1/")
+        bin_list[$bin]=''
+    done
+
+    for key in "${!bin_list[@]}"; do
+        if [ "$key" != "dummy" ]; then
+            # Add postfix for binaries to avoid conflicts caused by different Thread version
+            postfix=""
+            if [[ $key =~ openthread-(simulation|posix)-([0-9]\.[0-9]) ]]; then
+                postfix="-$(echo "$key" | sed -r "s/.*openthread-(simulation|posix)-([0-9]\.[0-9]).*/\2/")"
+            fi
+            bin_name=$(basename "$key")
+            cp "$key" "$OT_COREDUMP_DIR"/"$bin_name""$postfix"
+        fi
+    done
+
+    # echo 1 and copy so libs if crash found, echo 0 otherwise
+    [[ ${#bin_list[@]} -gt 1 ]] && (
+        echo 1
+        do_copy_so_lib
+    ) || echo 0
 }
 
 do_generate_coverage()
@@ -522,11 +557,13 @@ main()
                 ;;
             cert)
                 shift
-                do_cert "$1"
+                do_cert "$@"
+                shift $#
                 ;;
             cert_suite)
                 shift
                 do_cert_suite "$@"
+                shift $#
                 ;;
             get_thread_wireshark)
                 do_get_thread_wireshark
@@ -554,8 +591,8 @@ main()
             prepare_coredump_upload)
                 do_prepare_coredump_upload
                 ;;
-            copy_so_lib)
-                do_copy_so_lib
+            check_crash)
+                do_check_crash
                 ;;
             generate_coverage)
                 shift

@@ -294,6 +294,9 @@ private:
     otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otError ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[]);
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     otError ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[]);
 
@@ -597,6 +600,9 @@ private:
     static constexpr Command sCommands[] = {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"bbr", &Interpreter::ProcessBackboneRouter},
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        {"br", &Interpreter::ProcessBorderRouting},
 #endif
         {"bufferinfo", &Interpreter::ProcessBufferInfo},
         {"ccathreshold", &Interpreter::ProcessCcaThreshold},

@@ -542,7 +542,7 @@ Mac::TxFrame *MeshForwarder::HandleFrameRequest(Mac::TxFrames &aTxFrames)
         // queue for it. The message would be then converted to a
         // direct tx.
 
-        // Fall through
+        OT_FALL_THROUGH;
 #endif
 
     default:

@@ -234,7 +234,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
         mTimer.Stop();
         Get<MeshForwarder>().ResumeMessageTransmissions();
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kStateScanDone:
         Get<Mac::Mac>().ClearTemporaryChannel();

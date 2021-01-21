@@ -55,15 +55,31 @@ extern "C" {
 /**
  * This method initializes the Border Routing Manager on given infrastructure interface.
  *
+ * @note  This method MUST be called before any other otBorderRouting* APIs.
+ *
  * @param[in]  aInstance      A pointer to an OpenThread instance.
  * @param[in]  aInfraIfIndex  The infrastructure interface index.
  *
- * @retval  OT_ERROR_NONE          Successfully started the border routing manager on given infrastructure.
+ * @retval  OT_ERROR_NONE          Successfully started the Border Routing manager on given infrastructure.
  * @retval  OT_ERROR_INVALID_ARGS  The index of the infra interface is not valid.
  * @retval  OT_ERROR_FAILED        Internal failure. This is usually failed to generate random prefixes.
  *
  */
 otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex);
+
+/**
+ * This method enables/disables the Border Routing Manager.
+ *
+ * @note  The Border Routing Manager is enabled by default.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable the routing manager.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully enabled/disabled the Border Routing Manager.
+ *
+ */
+otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
  * This method provides a full or stable copy of the local Thread Network Data.

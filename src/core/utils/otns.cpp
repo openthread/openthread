@@ -38,6 +38,7 @@
 
 #include "common/debug.hpp"
 #include "common/locator-getters.hpp"
+#include "common/logging.hpp"
 
 namespace ot {
 namespace Utils {
