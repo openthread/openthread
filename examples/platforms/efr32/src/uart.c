@@ -46,12 +46,12 @@
 #include "hal-config.h"
 #include "sl_uartdrv_usart_vcom_config.h"
 
-#define HELPER1(x) USART ## x ## _RX_IRQn
+#define HELPER1(x) USART##x##_RX_IRQn
 #define HELPER2(x) HELPER1(x)
-#define USART_IRQ  HELPER2(SL_UARTDRV_USART_VCOM_PERIPHERAL_NO)
+#define USART_IRQ HELPER2(SL_UARTDRV_USART_VCOM_PERIPHERAL_NO)
 
-#define HELPER3(x)  USART ## x ## _RX_IRQHandler
-#define HELPER4(x)  HELPER3(x)
+#define HELPER3(x) USART##x##_RX_IRQHandler
+#define HELPER4(x) HELPER3(x)
 #define USART_IRQHandler HELPER4(SL_UARTDRV_USART_VCOM_PERIPHERAL_NO)
 
 enum
@@ -103,11 +103,11 @@ static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
 // In order to reduce the probability of data loss due to disabled interrupts, we use
 // two duplicate receive buffers so we can always have one "active" receive request.
 #define RECEIVE_BUFFER_SIZE 128
-static uint8_t              sReceiveBuffer1[RECEIVE_BUFFER_SIZE];
-static uint8_t              sReceiveBuffer2[RECEIVE_BUFFER_SIZE];
-static const uint8_t *      sTransmitBuffer = NULL;
-static volatile uint16_t    sTransmitLength = 0;
-static uint8_t              lastCount = 0;
+static uint8_t           sReceiveBuffer1[RECEIVE_BUFFER_SIZE];
+static uint8_t           sReceiveBuffer2[RECEIVE_BUFFER_SIZE];
+static const uint8_t *   sTransmitBuffer = NULL;
+static volatile uint16_t sTransmitLength = 0;
+static uint8_t           lastCount       = 0;
 
 typedef struct ReceiveFifo_t
 {
@@ -132,7 +132,7 @@ static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDat
     {
         memcpy(sReceiveFifo.mBuffer + sReceiveFifo.mTail, aData + lastCount, aCount - lastCount);
         sReceiveFifo.mTail = (sReceiveFifo.mTail + aCount - lastCount) % kReceiveFifoSize;
-        lastCount = 0;
+        lastCount          = 0;
     }
 
     UARTDRV_Receive(aHandle, aData, aCount, receiveDone);
@@ -152,17 +152,13 @@ static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDa
 
 static void processReceive(void)
 {
-    uint8_t *aData;
+    uint8_t *       aData;
     UARTDRV_Count_t aCount, remaining;
-    CORE_ATOMIC_SECTION(
-      UARTDRV_GetReceiveStatus(sUartHandle, &aData, &aCount, &remaining);
-      if (aCount > lastCount)
-      {
-          memcpy(sReceiveFifo.mBuffer + sReceiveFifo.mTail, aData + lastCount, aCount - lastCount);
-          sReceiveFifo.mTail = (sReceiveFifo.mTail + aCount - lastCount) % kReceiveFifoSize;
-          lastCount = aCount;
-      }
-    )
+    CORE_ATOMIC_SECTION(UARTDRV_GetReceiveStatus(sUartHandle, &aData, &aCount, &remaining); if (aCount > lastCount) {
+        memcpy(sReceiveFifo.mBuffer + sReceiveFifo.mTail, aData + lastCount, aCount - lastCount);
+        sReceiveFifo.mTail = (sReceiveFifo.mTail + aCount - lastCount) % kReceiveFifoSize;
+        lastCount          = aCount;
+    })
 
     // Copy tail to prevent multiple reads
     uint16_t tail = sReceiveFifo.mTail;
@@ -214,7 +210,8 @@ otError otPlatUartEnable(void)
 
     UARTDRV_Init(sUartHandle, &uartInit);
 
-    // When one receive request is completed, the other buffer is used for a separate receive request, issued immediately.
+    // When one receive request is completed, the other buffer is used for a separate receive request, issued
+    // immediately.
     UARTDRV_Receive(sUartHandle, sReceiveBuffer1, RECEIVE_BUFFER_SIZE, receiveDone);
     UARTDRV_Receive(sUartHandle, sReceiveBuffer2, RECEIVE_BUFFER_SIZE, receiveDone);
 
