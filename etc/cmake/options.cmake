@@ -321,13 +321,6 @@ if(OT_OTNS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_OTNS_ENABLE=1")
 endif()
 
-option(OT_NCP_SPI "enable NCP SPI support")
-if(OT_NCP_SPI)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_SPI_ENABLE=1")
-else()
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1")
-endif()
-
 set(OT_RCP_RESTORATION_MAX_COUNT "0" CACHE STRING "set max RCP restoration count")
 if(OT_RCP_RESTORATION_MAX_COUNT MATCHES "^[0-9]+$")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT=${OT_RCP_RESTORATION_MAX_COUNT}")
