@@ -429,6 +429,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := ot-cli
 LOCAL_MODULE_TAGS := eng
 
+ifneq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+endif
+
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
@@ -508,6 +512,10 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-ncp
 LOCAL_MODULE_TAGS := eng
+
+ifneq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+endif
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
