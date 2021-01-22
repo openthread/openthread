@@ -131,23 +131,7 @@ static volatile energyScanStatus sEnergyScanStatus;
 static volatile int8_t           sEnergyScanResultDbm;
 static energyScanMode            sEnergyScanMode;
 
-// Frame Pending
-enum
-{
-    ACKED_WITH_FP_MATCH_LENGTH = 1 + IEEE802154_MAX_MHR_LENGTH, // PHR and MHR
-    ACKED_WITH_FP_SLOTS = 16, // maximum number of Data Request packets in the RX FIFO. Length should be a power of 2.
-};
-
-typedef struct efr32AckedWithFP
-{
-    uint8_t mLength;
-    uint8_t mPacket[ACKED_WITH_FP_MATCH_LENGTH];
-} efr32AckedWithFP;
-
-static bool              sIsSrcMatchEnabled = false;
-static efr32AckedWithFP  sAckedWithFPFifo[ACKED_WITH_FP_SLOTS];
-static uint32_t          sAckedWithFPReadIndex;
-static volatile uint32_t sAckedWithFPWriteIndex;
+static bool sIsSrcMatchEnabled = false;
 
 // Receive
 static uint8_t      sReceivePsdu[IEEE802154_MAX_LENGTH];
@@ -351,7 +335,7 @@ static bool validatePacketDetails(RAIL_RxPacketHandle_t   packetHandle,
                                   RAIL_RxPacketInfo_t *   pPacketInfo,
                                   uint16_t *              packetLength);
 static bool validatePacketTimestamp(RAIL_RxPacketDetails_t *pPacketDetails, uint16_t packetLength);
-static void updateRxFrameDetails(RAIL_RxPacketDetails_t *pPacketDetails);
+static void updateRxFrameDetails(RAIL_RxPacketDetails_t *pPacketDetails, bool framePendingSetInOutgoingAck);
 
 //------------------------------------------------------------------------------
 // Helper Functions
@@ -633,10 +617,6 @@ void efr32RadioInit(void)
 
     sCurrentBandConfig = efr32RadioGetBandConfig(OPENTHREAD_CONFIG_DEFAULT_CHANNEL);
     assert(sCurrentBandConfig != NULL);
-
-    memset(sAckedWithFPFifo, 0, sizeof(sAckedWithFPFifo));
-    sAckedWithFPWriteIndex = 0;
-    sAckedWithFPReadIndex  = 0;
 
     efr32RadioSetTxPower(OPENTHREAD_CONFIG_DEFAULT_TRANSMIT_POWER);
 
@@ -1319,75 +1299,6 @@ exit:
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
 //------------------------------------------------------------------------------
-// Frame Pending Support
-
-static bool sAckedWithFPFifoIsFull(void)
-{
-    return (uint32_t)(sAckedWithFPWriteIndex - sAckedWithFPReadIndex) == otARRAY_LENGTH(sAckedWithFPFifo);
-}
-
-static bool sAckedWithFPFifoIsEmpty(void)
-{
-    return (uint32_t)(sAckedWithFPWriteIndex - sAckedWithFPReadIndex) == 0;
-}
-
-static efr32AckedWithFP *sAckedWithFPFifoGetWriteSlot(void)
-{
-    uint32_t idx = sAckedWithFPWriteIndex & (otARRAY_LENGTH(sAckedWithFPFifo) - 1);
-    return &sAckedWithFPFifo[idx];
-}
-
-static const efr32AckedWithFP *sAckedWithFPFifoGetReadSlot(void)
-{
-    uint32_t idx = sAckedWithFPReadIndex & (otARRAY_LENGTH(sAckedWithFPFifo) - 1);
-    return &sAckedWithFPFifo[idx];
-}
-
-static void insertIeee802154DataRequestCommand(RAIL_Handle_t aRailHandle)
-{
-    assert(!sAckedWithFPFifoIsFull());
-    efr32AckedWithFP *const slot = sAckedWithFPFifoGetWriteSlot();
-
-    RAIL_RxPacketInfo_t packetInfo;
-
-    RAIL_GetRxIncomingPacketInfo(aRailHandle, &packetInfo);
-    assert(packetInfo.packetBytes >= 4); // PHR + FCF + DSN
-
-    if (packetInfo.packetBytes > sizeof(slot->mPacket))
-    {
-        packetInfo.packetBytes = sizeof(slot->mPacket);
-        if (packetInfo.firstPortionBytes >= sizeof(slot->mPacket))
-        {
-            packetInfo.firstPortionBytes = sizeof(slot->mPacket);
-            packetInfo.lastPortionData   = NULL;
-        }
-    }
-    slot->mLength = packetInfo.packetBytes;
-    RAIL_CopyRxPacket(slot->mPacket, &packetInfo);
-
-    ++sAckedWithFPWriteIndex;
-}
-
-static bool wasAckedWithFramePending(const uint8_t *aPsdu, uint8_t aPsduLength)
-{
-    bool     ackedWithFramePending = false;
-    uint16_t fcf                   = aPsdu[IEEE802154_FCF_OFFSET] | (aPsdu[IEEE802154_FCF_OFFSET + 1] << 8);
-
-    otEXPECT((fcf & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_COMMAND);
-
-    while (!(ackedWithFramePending || sAckedWithFPFifoIsEmpty()))
-    {
-        const efr32AckedWithFP *const slot = sAckedWithFPFifoGetReadSlot();
-        if ((slot->mPacket[0] == aPsduLength) && (memcmp(slot->mPacket + 1, aPsdu, slot->mLength - 1) == 0))
-        {
-            ackedWithFramePending = true;
-        }
-        ++sAckedWithFPReadIndex;
-    }
-
-exit:
-    return ackedWithFramePending;
-}
 
 // Return false if enhanced ACK is not required
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -1822,6 +1733,8 @@ static void dataRequestCommandCallback(RAIL_Handle_t aRailHandle)
     // If not, RAIL will send an immediate ACK, but we need to do FP lookup.
     RAIL_Status_t status = RAIL_STATUS_NO_ERROR;
 
+    bool framePendingSet = false;
+
     if (sIsSrcMatchEnabled)
     {
         RAIL_IEEE802154_Address_t sourceAddress;
@@ -1836,14 +1749,32 @@ static void dataRequestCommandCallback(RAIL_Handle_t aRailHandle)
         {
             status = RAIL_IEEE802154_SetFramePending(aRailHandle);
             otEXPECT(status == RAIL_STATUS_NO_ERROR);
-            insertIeee802154DataRequestCommand(aRailHandle);
+            framePendingSet = true;
         }
     }
     else
     {
         status = RAIL_IEEE802154_SetFramePending(aRailHandle);
         otEXPECT(status == RAIL_STATUS_NO_ERROR);
-        insertIeee802154DataRequestCommand(aRailHandle);
+        framePendingSet = true;
+    }
+
+    if (framePendingSet)
+    {
+        // Store whether frame pending was set in the outgoing ACK in a reserved
+        // bit of the MAC header.
+        RAIL_RxPacketInfo_t packetInfo;
+        RAIL_GetRxIncomingPacketInfo(gRailHandle, &packetInfo);
+
+        // skip length byte
+        otEXPECT(packetInfo.firstPortionBytes > 0);
+        packetInfo.firstPortionData++;
+        packetInfo.firstPortionBytes--;
+        packetInfo.packetBytes--;
+
+        uint8_t *macFcfPointer = ((packetInfo.firstPortionBytes == 0) ? (uint8_t *)packetInfo.lastPortionData
+                                                                      : (uint8_t *)packetInfo.firstPortionData);
+        *macFcfPointer |= IEEE802154_FRAME_PENDING_SET_IN_OUTGOING_ACK;
     }
 
 exit:
@@ -1878,14 +1809,14 @@ static void packetReceivedCallback(RAIL_RxPacketHandle_t packetHandle)
     packetInfo.firstPortionBytes--;
     packetInfo.packetBytes--;
 
-    uint8_t macHdrByte0 =
+    uint8_t macFcf =
         ((packetInfo.firstPortionBytes == 0) ? packetInfo.lastPortionData[0] : packetInfo.firstPortionData[0]);
 
     if (packetDetails.isAck)
     {
-        otEXPECT_ACTION((length == IEEE802154_ACK_LENGTH &&
-                         (macHdrByte0 & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK),
-                        rxCorrupted = true);
+        otEXPECT_ACTION(
+            (length == IEEE802154_ACK_LENGTH && (macFcf & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK),
+            rxCorrupted = true);
 
         // read packet
         RAIL_CopyRxPacket(sReceiveAckFrame.mPsdu, &packetInfo);
@@ -1901,7 +1832,7 @@ static void packetReceivedCallback(RAIL_RxPacketHandle_t packetHandle)
             (sReceiveAckFrame.mPsdu[IEEE802154_DSN_OFFSET] == sTransmitFrame.mPsdu[IEEE802154_DSN_OFFSET]))
         {
             otEXPECT_ACTION(validatePacketTimestamp(&packetDetails, length), rxCorrupted = true);
-            updateRxFrameDetails(&packetDetails);
+            updateRxFrameDetails(&packetDetails, false);
 
             // Processing the ACK frame in ISR context avoids the Tx state to be messed up,
             // in case the Rx FIFO queue gets wiped out in a DMP situation.
@@ -1909,7 +1840,7 @@ static void packetReceivedCallback(RAIL_RxPacketHandle_t packetHandle)
             sTransmitError = OT_ERROR_NONE;
             setInternalFlag(FLAG_WAITING_FOR_ACK, false);
 
-            framePendingInAck = ((macHdrByte0 & IEEE802154_FRAME_FLAG_FRAME_PENDING) != 0);
+            framePendingInAck = ((macFcf & IEEE802154_FRAME_FLAG_FRAME_PENDING) != 0);
             (void)handlePhyStackEvent(SL_RAIL_UTIL_IEEE802154_STACK_EVENT_TX_ACK_RECEIVED, (uint32_t)framePendingInAck);
 
             if (txIsDataRequest() && framePendingInAck)
@@ -1928,7 +1859,7 @@ static void packetReceivedCallback(RAIL_RxPacketHandle_t packetHandle)
     {
         otEXPECT_ACTION(sPromiscuous || (length != IEEE802154_ACK_LENGTH), rxCorrupted = true);
 
-        if (macHdrByte0 & IEEE802154_FRAME_FLAG_ACK_REQUIRED)
+        if (macFcf & IEEE802154_FRAME_FLAG_ACK_REQUIRED)
         {
             (void)handlePhyStackEvent((RAIL_IsRxAutoAckPaused(gRailHandle)
                                            ? SL_RAIL_UTIL_IEEE802154_STACK_EVENT_RX_ACK_BLOCKED
@@ -2311,7 +2242,7 @@ exit:
     return rxTimestampValid;
 }
 
-static void updateRxFrameDetails(RAIL_RxPacketDetails_t *pPacketDetails)
+static void updateRxFrameDetails(RAIL_RxPacketDetails_t *pPacketDetails, bool framePendingSetInOutgoingAck)
 {
     assert(pPacketDetails != NULL);
 
@@ -2327,8 +2258,7 @@ static void updateRxFrameDetails(RAIL_RxPacketDetails_t *pPacketDetails)
         sReceiveFrame.mInfo.mRxInfo.mLqi       = pPacketDetails->lqi;
         sReceiveFrame.mInfo.mRxInfo.mTimestamp = pPacketDetails->timeReceived.packetTime;
         // Set this flag only when the packet is really acknowledged with frame pending set.
-        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending =
-            wasAckedWithFramePending(sReceiveFrame.mPsdu, sReceiveFrame.mLength);
+        sReceiveFrame.mInfo.mRxInfo.mAckedWithFramePending = framePendingSetInOutgoingAck;
     }
 }
 
@@ -2365,6 +2295,14 @@ static void processNextRxPacket(otInstance *aInstance)
     RAIL_CopyRxPacket(sReceiveFrame.mPsdu, &packetInfo);
     sReceiveFrame.mLength = length;
 
+    uint8_t *macFcfPointer = sReceiveFrame.mPsdu;
+
+    // Check the reserved bit in the MAC header to see whether the frame pending
+    // bit was set in the outgoing ACK
+    // Then, clear it.
+    bool framePendingSetInOutgoingAck = ((*macFcfPointer & IEEE802154_FRAME_PENDING_SET_IN_OUTGOING_ACK) != 0);
+    *macFcfPointer &= ~IEEE802154_FRAME_PENDING_SET_IN_OUTGOING_ACK;
+
     status = RAIL_ReleaseRxPacket(gRailHandle, packetHandle);
     if (status == RAIL_STATUS_NO_ERROR)
     {
@@ -2372,7 +2310,7 @@ static void processNextRxPacket(otInstance *aInstance)
     }
 
     otEXPECT(validatePacketTimestamp(&packetDetails, length));
-    updateRxFrameDetails(&packetDetails);
+    updateRxFrameDetails(&packetDetails, framePendingSetInOutgoingAck);
     rxProcessDone = true;
 
 exit:
