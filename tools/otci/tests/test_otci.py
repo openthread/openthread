@@ -260,6 +260,7 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual(1, len(leader.get_router_list()))
         self.assertEqual(1, len(leader.get_router_table()))
         logging.info("Leader router table: %r", leader.get_router_table())
+        self.assertFalse(list(leader.get_router_table().values())[0].is_link_established)
 
         logging.info('scan: %r', leader.scan())
         logging.info('scan energy: %r', leader.scan_energy())
@@ -499,6 +500,9 @@ class TestOTCI(unittest.TestCase):
 
         self.assertEqual(2, len(leader.get_router_list()))
         self.assertEqual(2, len(leader.get_router_table()))
+        logging.info('leader router table: %r', leader.get_router_table())
+        self.assertEqual({False, True},
+                         set(router.is_link_established for router in leader.get_router_table().values()))
 
         self.assertFalse(leader.is_singleton())
 
