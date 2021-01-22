@@ -37,10 +37,10 @@ if OPENTHREAD_ENABLE_FTD
 LDADD_COMMON                                                          += \
     $(top_srcdir)/third_party/Qorvo/repo/qpg7015m/libQorvoQPG7015M_ftd.a      \
     $(NULL)
-endif # OPENTHREAD_ENABLE_FTD
+else # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
 LDADD_COMMON                                                          += \
     $(top_srcdir)/third_party/Qorvo/repo/qpg7015m/libQorvoQPG7015M_mtd.a      \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
-
+endif 
