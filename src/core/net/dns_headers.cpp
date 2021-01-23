@@ -128,8 +128,6 @@ otError Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
 
     do
     {
-        VerifyOrExit(index < kMaxLength, error = OT_ERROR_INVALID_ARGS);
-
         ch = aLabels[index];
 
         if ((ch == kNullChar) || (ch == kLabelSeperatorChar))
@@ -149,6 +147,7 @@ otError Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
                 ExitNow();
             }
 
+            VerifyOrExit(index + 1 < kMaxEncodedLength, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = AppendLabel(&aLabels[labelStartIndex], labelLength, aMessage));
 
             labelStartIndex = index + 1;
