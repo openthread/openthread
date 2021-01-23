@@ -115,6 +115,8 @@ void TestDnsName(void)
     messagePool = &instance->Get<MessagePool>();
     VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
 
+    message->SetOffset(0);
+
     printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");
 
@@ -143,7 +145,7 @@ void TestDnsName(void)
         for (uint8_t index = 0; test.mLabels[index] != nullptr; index++)
         {
             labelLength = sizeof(label);
-            SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, 0, label, labelLength), "Name::ReadLabel() failed");
+            SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength), "Name::ReadLabel() failed");
 
             printf("Label[%d] = \"%s\"\n", index, label);
 
@@ -152,12 +154,12 @@ void TestDnsName(void)
         }
 
         labelLength = sizeof(label);
-        VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, 0, label, labelLength) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
                      "Name::ReadLabel() failed at end of the name");
 
         // Read entire name
         offset = 0;
-        SuccessOrQuit(Dns::Name::ReadName(*message, offset, 0, name, sizeof(name)), "Name::ReadName() failed");
+        SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)), "Name::ReadName() failed");
 
         printf("Read name =\"%s\"\n", name);
 
@@ -167,10 +169,10 @@ void TestDnsName(void)
         // Read entire name with different name buffer sizes (just right and one byte off the expected size)
         offset = 0;
         SuccessOrQuit(
-            Dns::Name::ReadName(*message, offset, 0, name, static_cast<uint16_t>(strlen(test.mExpectedReadName) + 1)),
+            Dns::Name::ReadName(*message, offset, name, static_cast<uint16_t>(strlen(test.mExpectedReadName) + 1)),
             "Name::ReadName() failed with exact name buffer size");
         offset = 0;
-        VerifyOrQuit(Dns::Name::ReadName(*message, offset, 0, name,
+        VerifyOrQuit(Dns::Name::ReadName(*message, offset, name,
                                          static_cast<uint16_t>(strlen(test.mExpectedReadName))) == OT_ERROR_NO_BUFS,
                      "Name::ReadName() did not fail with too small name buffer size");
     }
@@ -295,6 +297,8 @@ void TestDnsCompressedName(void)
         SuccessOrQuit(message->Append(index), "Message::Append() failed");
     }
 
+    message->SetOffset(kHeaderOffset);
+
     name1Offset = message->GetLength();
     SuccessOrQuit(Dns::Name::AppendName(kName, *message), "Name::AppendName() failed");
 
@@ -348,8 +352,7 @@ void TestDnsCompressedName(void)
     for (const char *nameLabel : kName1Labels)
     {
         labelLength = sizeof(label);
-        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength),
-                      "Name::ReadLabel() failed");
+        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength), "Name::ReadLabel() failed");
 
         printf("label: \"%s\"\n", label);
         VerifyOrQuit(strcmp(label, nameLabel) == 0, "Name::ReadLabel() did not get expected label");
@@ -357,11 +360,11 @@ void TestDnsCompressedName(void)
     }
 
     labelLength = sizeof(label);
-    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name1Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, kHeaderOffset, name, sizeof(name)), "Name::ReadName() failed");
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)), "Name::ReadName() failed");
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName1) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::ReadName() returned incorrect offset");
@@ -381,8 +384,7 @@ void TestDnsCompressedName(void)
     for (const char *nameLabel : kName2Labels)
     {
         labelLength = sizeof(label);
-        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength),
-                      "Name::ReadLabel() failed");
+        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength), "Name::ReadLabel() failed");
 
         printf("label: \"%s\"\n", label);
         VerifyOrQuit(strcmp(label, nameLabel) == 0, "Name::ReadLabel() did not get expected label");
@@ -390,11 +392,11 @@ void TestDnsCompressedName(void)
     }
 
     labelLength = sizeof(label);
-    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name2Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, kHeaderOffset, name, sizeof(name)), "Name::ReadName() failed");
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)), "Name::ReadName() failed");
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName2) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::ReadName() returned incorrect offset");
@@ -414,8 +416,7 @@ void TestDnsCompressedName(void)
     for (const char *nameLabel : kName3Labels)
     {
         labelLength = sizeof(label);
-        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength),
-                      "Name::ReadLabel() failed");
+        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength), "Name::ReadLabel() failed");
 
         printf("label: \"%s\"\n", label);
         VerifyOrQuit(strcmp(label, nameLabel) == 0, "Name::ReadLabel() did not get expected label");
@@ -423,11 +424,11 @@ void TestDnsCompressedName(void)
     }
 
     labelLength = sizeof(label);
-    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name3Offset;
-    SuccessOrQuit(Dns::Name::ReadName(*message, offset, kHeaderOffset, name, sizeof(name)), "Name::ReadName() failed");
+    SuccessOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)), "Name::ReadName() failed");
     printf("Read name =\"%s\"\n", name);
     VerifyOrQuit(strcmp(name, kExpectedReadName3) == 0, "Name::ReadName() did not return expected name");
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::ReadName() returned incorrect offset");
@@ -447,8 +448,7 @@ void TestDnsCompressedName(void)
     for (const char *nameLabel : kName4Labels)
     {
         labelLength = sizeof(label);
-        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, kHeaderOffset, label, labelLength),
-                      "Name::ReadLabel() failed");
+        SuccessOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength), "Name::ReadLabel() failed");
 
         printf("label: \"%s\"\n", label);
         VerifyOrQuit(strcmp(label, nameLabel) == 0, "Name::ReadLabel() did not get expected label");
@@ -457,7 +457,7 @@ void TestDnsCompressedName(void)
 
     // `ReadName()` for name-4 should fails due to first label containing dot char.
     offset = name4Offset;
-    VerifyOrQuit(Dns::Name::ReadName(*message, offset, kHeaderOffset, name, sizeof(name)) == OT_ERROR_PARSE,
+    VerifyOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)) == OT_ERROR_PARSE,
                  "Name::ReadName() did not fail with invalid label");
 
     message->Free();

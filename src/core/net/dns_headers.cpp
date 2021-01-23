@@ -207,12 +207,20 @@ otError Name::ParseName(const Message &aMessage, uint16_t &aOffset)
     {
         error = iterator.GetNextLabel();
 
-        VerifyOrExit((error == OT_ERROR_NONE) || (error == OT_ERROR_NOT_FOUND));
-
-        if (iterator.IsEndOffsetSet())
+        switch (error)
         {
+        case OT_ERROR_NONE:
+            break;
+
+        case OT_ERROR_NOT_FOUND:
+            // We reached the end of name successfully.
             aOffset = iterator.mNameEndOffset;
-            ExitNow(error = OT_ERROR_NONE);
+            error   = OT_ERROR_NONE;
+
+            OT_FALL_THROUGH;
+
+        default:
+            ExitNow();
         }
     }
 
@@ -220,14 +228,10 @@ exit:
     return error;
 }
 
-otError Name::ReadLabel(const Message &aMessage,
-                        uint16_t &     aOffset,
-                        uint16_t       aHeaderOffset,
-                        char *         aLabelBuffer,
-                        uint8_t &      aLabelLength)
+otError Name::ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength)
 {
     otError       error;
-    LabelIterator iterator(aMessage, aOffset, aHeaderOffset);
+    LabelIterator iterator(aMessage, aOffset);
 
     SuccessOrExit(error = iterator.GetNextLabel());
     SuccessOrExit(error = iterator.ReadLabel(aLabelBuffer, aLabelLength, /* aAllowDotCharInLabel */ true));
@@ -237,14 +241,10 @@ exit:
     return error;
 }
 
-otError Name::ReadName(const Message &aMessage,
-                       uint16_t &     aOffset,
-                       uint16_t       aHeaderOffset,
-                       char *         aNameBuffer,
-                       uint16_t       aNameBufferSize)
+otError Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize)
 {
     otError       error;
-    LabelIterator iterator(aMessage, aOffset, aHeaderOffset);
+    LabelIterator iterator(aMessage, aOffset);
     bool          firstLabel = true;
     uint8_t       labelLength;
 
@@ -340,7 +340,9 @@ otError Name::LabelIterator::GetNextLabel(void)
                 mNameEndOffset = mNextLabelOffset + sizeof(uint16_t);
             }
 
-            mNextLabelOffset = mHeaderOffset + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
+            // `mMessage.GetOffset()` must point to the start of the
+            // DNS header.
+            mNextLabelOffset = mMessage.GetOffset() + (HostSwap16(pointerValue) & kPointerLabelOffsetMask);
 
             // Go back through the `while(true)` loop to get the next label.
         }

@@ -529,8 +529,6 @@ void Server::HandleDnsUpdate(Message &                aMessage,
     Dns::Zone zone;
     Host *    host = nullptr;
 
-    uint16_t headerOffset = aOffset - sizeof(aDnsHeader);
-
     otLogInfoSrp("[server] receive DNS update from %s", aMessageInfo.GetPeerAddr().ToString().AsCString());
 
     SuccessOrExit(error = ProcessZoneSection(aMessage, aDnsHeader, aOffset, zone));
@@ -550,10 +548,10 @@ void Server::HandleDnsUpdate(Message &                aMessage,
 
     host = Host::New(GetInstance());
     VerifyOrExit(host != nullptr, error = OT_ERROR_NO_BUFS);
-    SuccessOrExit(error = ProcessUpdateSection(*host, aMessage, aDnsHeader, zone, headerOffset, aOffset));
+    SuccessOrExit(error = ProcessUpdateSection(*host, aMessage, aDnsHeader, zone, aOffset));
 
     // Parse lease time and validate signature.
-    SuccessOrExit(error = ProcessAdditionalSection(host, aMessage, aDnsHeader, headerOffset, aOffset));
+    SuccessOrExit(error = ProcessAdditionalSection(host, aMessage, aDnsHeader, aOffset));
 
     HandleUpdate(aDnsHeader, host, aMessageInfo);
 
@@ -593,7 +591,6 @@ otError Server::ProcessUpdateSection(Host &                   aHost,
                                      const Message &          aMessage,
                                      const Dns::UpdateHeader &aDnsHeader,
                                      const Dns::Zone &        aZone,
-                                     uint16_t                 aHeaderOffset,
                                      uint16_t &               aOffset)
 {
     otError error = OT_ERROR_NONE;
@@ -604,15 +601,15 @@ otError Server::ProcessUpdateSection(Host &                   aHost,
     // 0. Enumerate over all Service Discovery Instructions before processing any other records.
     // So that we will know whether a name is a hostname or service instance name when processing
     // a "Delete All RRsets from a name" record.
-    error = ProcessServiceDiscoveryInstructions(aHost, aMessage, aDnsHeader, aZone, aHeaderOffset, aOffset);
+    error = ProcessServiceDiscoveryInstructions(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
     // 1. Enumerate over all RRs to build the Host Description Instruction.
-    error = ProcessHostDescriptionInstruction(aHost, aMessage, aDnsHeader, aZone, aHeaderOffset, aOffset);
+    error = ProcessHostDescriptionInstruction(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
     // 2. Enumerate over all RRs to build the Service Description Insutructions.
-    error = ProcessServiceDescriptionInstructions(aHost, aMessage, aDnsHeader, aZone, aHeaderOffset, aOffset);
+    error = ProcessServiceDescriptionInstructions(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
     // 3. Verify that there are no name conflicts.
@@ -626,7 +623,6 @@ otError Server::ProcessHostDescriptionInstruction(Host &                   aHost
                                                   const Message &          aMessage,
                                                   const Dns::UpdateHeader &aDnsHeader,
                                                   const Dns::Zone &        aZone,
-                                                  uint16_t                 aHeaderOffset,
                                                   uint16_t                 aOffset)
 {
     otError error;
@@ -638,7 +634,7 @@ otError Server::ProcessHostDescriptionInstruction(Host &                   aHost
         char                name[Dns::Name::kMaxLength + 1];
         Dns::ResourceRecord record;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, name, sizeof(name)));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
         SuccessOrExit(error = aMessage.Read(aOffset, record));
 
         if (record.GetClass() == Dns::ResourceRecord::kClassAny)
@@ -732,7 +728,6 @@ otError Server::ProcessServiceDiscoveryInstructions(Host &                   aHo
                                                     const Message &          aMessage,
                                                     const Dns::UpdateHeader &aDnsHeader,
                                                     const Dns::Zone &        aZone,
-                                                    uint16_t                 aHeaderOffset,
                                                     uint16_t                 aOffset)
 {
     otError error = OT_ERROR_NONE;
@@ -744,15 +739,14 @@ otError Server::ProcessServiceDiscoveryInstructions(Host &                   aHo
         char                serviceName[Dns::Name::kMaxLength + 1];
         Service *           service;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, name, sizeof(name)));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
         SuccessOrExit(error = aMessage.Read(aOffset, record));
 
         aOffset += sizeof(record);
 
         if (record.GetType() == Dns::ResourceRecord::kTypePtr)
         {
-            SuccessOrExit(error =
-                              Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, serviceName, sizeof(serviceName)));
+            SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, serviceName, sizeof(serviceName)));
         }
         else
         {
@@ -782,7 +776,6 @@ otError Server::ProcessServiceDescriptionInstructions(Host &                   a
                                                       const Message &          aMessage,
                                                       const Dns::UpdateHeader &aDnsHeader,
                                                       const Dns::Zone &        aZone,
-                                                      uint16_t                 aHeaderOffset,
                                                       uint16_t &               aOffset)
 {
     Service *service;
@@ -793,7 +786,7 @@ otError Server::ProcessServiceDescriptionInstructions(Host &                   a
         char                name[Dns::Name::kMaxLength + 1];
         Dns::ResourceRecord record;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, name, sizeof(name)));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
         SuccessOrExit(error = aMessage.Read(aOffset, record));
 
         if (record.GetClass() == Dns::ResourceRecord::kClassAny)
@@ -820,7 +813,7 @@ otError Server::ProcessServiceDescriptionInstructions(Host &                   a
             SuccessOrExit(error = aMessage.Read(aOffset, srvRecord));
             aOffset += sizeof(srvRecord);
 
-            SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, hostName, hostNameLength));
+            SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, hostName, hostNameLength));
             VerifyOrExit(aHost.Matches(hostName), error = OT_ERROR_FAILED);
 
             service = aHost.FindService(name);
@@ -869,7 +862,6 @@ bool Server::IsValidDeleteAllRecord(const Dns::ResourceRecord &aRecord)
 otError Server::ProcessAdditionalSection(Host *                   aHost,
                                          const Message &          aMessage,
                                          const Dns::UpdateHeader &aDnsHeader,
-                                         uint16_t                 aHeaderOffset,
                                          uint16_t &               aOffset)
 {
     otError          error = OT_ERROR_NONE;
@@ -886,7 +878,7 @@ otError Server::ProcessAdditionalSection(Host *                   aHost,
 
     // EDNS(0) Update Lease Option.
 
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, name, sizeof(name)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
     SuccessOrExit(error = aMessage.Read(aOffset, optRecord));
     SuccessOrExit(error = aMessage.Read(aOffset + sizeof(optRecord), leaseOption));
     VerifyOrExit(leaseOption.IsValid(), error = OT_ERROR_FAILED);
@@ -900,7 +892,7 @@ otError Server::ProcessAdditionalSection(Host *                   aHost,
     // SIG(0).
 
     sigOffset = aOffset;
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, name, sizeof(name)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
     SuccessOrExit(error = aMessage.Read(aOffset, sigRecord));
     VerifyOrExit(sigRecord.IsValid(), error = OT_ERROR_PARSE);
 
@@ -911,7 +903,7 @@ otError Server::ProcessAdditionalSection(Host *                   aHost,
     // implemented because the end device may not be able to get
     // the synchronized date/time.
 
-    SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, aHeaderOffset, signerName, sizeof(signerName)));
+    SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, signerName, sizeof(signerName)));
 
     signatureLength = sigRecord.GetLength() - (aOffset - sigRdataOffset);
     aOffset += signatureLength;
