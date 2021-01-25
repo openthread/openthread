@@ -102,6 +102,10 @@ build_posix()
         options+=("-DOT_MLR=ON")
     fi
 
+    if [[ ${FULL_LOGS} == 1 ]]; then
+        options+=("-DOT_FULL_LOGS=ON")
+    fi
+
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
         options+=("-DOT_POSIX_VIRTUAL_TIME=ON")
     fi
