@@ -31,5 +31,5 @@
 #
 
 LDADD_COMMON                                                                  += \
-    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0/platform/emdrv/nvm3/lib/libnvm3_CM4_gcc.a \
+    $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.1/platform/emdrv/nvm3/lib/libnvm3_CM4_gcc.a \
     $(NULL)
