@@ -501,7 +501,7 @@ class VirtualTime(BaseSimulator):
 
     def go(self, duration, nodeid=None):
         assert self.current_time == self._pause_time
-        duration = int(duration) * 1000000
+        duration = int(duration * 1000000)
         dbg_print('running for %d us' % duration)
         self._pause_time += duration
         if nodeid:
