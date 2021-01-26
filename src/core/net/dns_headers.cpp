@@ -404,6 +404,14 @@ exit:
     return error;
 }
 
+otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName)
+{
+    return aName.IsFromCString()
+               ? CompareName(aMessage, aOffset, aName.mString)
+               : (aName.IsFromMessage() ? CompareName(aMessage, aOffset, *aName.mMessage, aName.mOffset)
+                                        : ParseName(aMessage, aOffset));
+}
+
 otError Name::LabelIterator::GetNextLabel(void)
 {
     otError error;
@@ -549,7 +557,7 @@ exit:
     return error;
 }
 
-otError ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const char *aName)
+otError ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const Name &aName)
 {
     otError error;
 
