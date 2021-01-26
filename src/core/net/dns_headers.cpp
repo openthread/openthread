@@ -545,15 +545,24 @@ bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
     uint16_t nameLength   = StringLength(aName, kMaxLength);
     uint16_t domainLength = StringLength(aDomain, kMaxLength);
 
-    VerifyOrExit(nameLength >= domainLength && domainLength >= 1);
+    if (nameLength > 0 && aName[nameLength - 1] == kLabelSeperatorChar)
+    {
+        --nameLength;
+    }
 
+    if (domainLength > 0 && aDomain[domainLength - 1] == kLabelSeperatorChar)
+    {
+        --domainLength;
+    }
+
+    VerifyOrExit(nameLength >= domainLength);
     aName += nameLength - domainLength;
-    VerifyOrExit(memcmp(aName, aDomain, domainLength) == 0);
 
     if (nameLength > domainLength)
     {
         VerifyOrExit(aName[-1] == kLabelSeperatorChar);
     }
+    VerifyOrExit(memcmp(aName, aDomain, domainLength) == 0);
 
     match = true;
 

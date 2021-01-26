@@ -149,25 +149,37 @@ void TestDnsName(void)
     printf("Verify domain name match:\n");
 
     {
-        const char *name;
+        const char *subDomain;
         const char *domain;
 
-        name   = "my-service._ipps._tcp.local.";
-        domain = "local.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(name, domain), "Name::IsSubDomainOf() failed");
+        subDomain = "my-service._ipps._tcp.local.";
+        domain    = "local.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
 
-        name   = "my-service._ipps._tcp.default.service.arpa.";
-        domain = "default.service.arpa.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(name, domain), "Name::IsSubDomainOf() failed");
+        subDomain = "my-service._ipps._tcp.local";
+        domain    = "local.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
 
-        name   = "my-service._ipps._tcp.default.service.arpa.";
-        domain = "service.arpa.";
-        VerifyOrQuit(Dns::Name::IsSubDomainOf(name, domain), "Name::IsSubDomainOf() failed");
+        subDomain = "my-service._ipps._tcp.local.";
+        domain    = "local";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.local";
+        domain    = "local";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.default.service.arpa.";
+        domain    = "default.service.arpa.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.default.service.arpa.";
+        domain    = "service.arpa.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
 
         // Verify it doesn't match a portion of a label.
-        name   = "my-service._ipps._tcp.default.service.arpa.";
-        domain = "vice.arpa.";
-        VerifyOrQuit(!Dns::Name::IsSubDomainOf(name, domain), "Name::IsSubDomainOf() succeed");
+        subDomain = "my-service._ipps._tcp.default.service.arpa.";
+        domain    = "vice.arpa.";
+        VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() succeed");
     }
 
     printf("----------------------------------------------------------------\n");
