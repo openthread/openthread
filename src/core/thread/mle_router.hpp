@@ -51,6 +51,7 @@
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/router_table.hpp"
+#include "thread/s2s.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/topology.hpp"
 
@@ -719,6 +720,9 @@ class MleRouter : public Mle
 public:
     explicit MleRouter(Instance &aInstance)
         : Mle(aInstance)
+#if OPENTHREAD_MTD_S2S
+        , mChildTable(aInstance)
+#endif
     {
     }
 
@@ -739,6 +743,11 @@ public:
     {
         return Mle::CheckReachability(aMeshDest, aIp6Header);
     }
+
+private:
+#if OPENTHREAD_MTD_S2S
+    ChildTable mChildTable;
+#endif
 };
 
 #endif // OPENTHREAD_MTD

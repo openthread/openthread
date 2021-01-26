@@ -90,7 +90,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mTxPaused(false)
     , mSendBusy(false)
     , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask)
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
     , mIndirectSender(aInstance)
 #endif
     , mDataPollSender(aInstance)
@@ -109,7 +109,7 @@ void MeshForwarder::Start(void)
     if (!mEnabled)
     {
         Get<Mac::Mac>().SetRxOnWhenIdle(true);
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
         mIndirectSender.Start();
 #endif
 

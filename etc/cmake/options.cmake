@@ -142,6 +142,11 @@ if(OT_CSL_DEBUG)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE=1")
 endif()
 
+option(OT_S2S "enable S2S")
+if(OT_S2S)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE=1")
+endif()
+
 option(OT_DATASET_UPDATER "enable dataset updater support")
 if(OT_DATASET_UPDATER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE=1")

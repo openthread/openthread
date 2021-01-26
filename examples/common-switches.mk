@@ -85,6 +85,7 @@ TIME_SYNC                 ?= 0
 TREL                      ?= 0
 UDP_FORWARD               ?= 0
 RCP_RESTORATION_MAX_COUNT ?= 0
+S2S                       ?= 0
 
 
 ifeq ($(BACKBONE_ROUTER),1)
@@ -149,6 +150,10 @@ endif
 
 ifeq ($(CSL_RECEIVER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1
+endif
+
+ifeq ($(S2S),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE=1
 endif
 
 ifeq ($(CSL_DEBUG),1)

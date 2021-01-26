@@ -36,14 +36,15 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD
-
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "thread/s2s.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 /**
  * This class represents the Thread child table.
@@ -178,6 +179,17 @@ public:
      *
      */
     Child *FindChild(const Mac::Address &aMacAddress, Child::StateFilter aFilter);
+
+    /**
+     * This method searches the child table for a `Child` with a given Ip6 address also matching a given state filter.
+     *
+     * @param[in]  aIp6Address A reference to a Ip6 address.
+     * @param[in]  aFilter     A child state filter.
+     *
+     * @returns  A pointer to the `Child` entry if one is found, or `nullptr` otherwise.
+     *
+     */
+    Child *FindChild(const Ip6::Address &aIp6Address, Child::StateFilter aFilter = Child::kInStateValidOrRestoring);
 
     /**
      * This method indicates whether the child table contains any child matching a given state filter.
@@ -337,8 +349,8 @@ private:
     Child    mChildren[kMaxChildren];
 };
 
-} // namespace ot
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
-#endif // OPENTHREAD_FTD
+} // namespace ot
 
 #endif // CHILD_TABLE_HPP_

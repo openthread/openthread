@@ -37,8 +37,12 @@
 #include "openthread-core-config.h"
 
 #include <openthread/error.h>
+
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "thread/s2s.hpp"
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 namespace ot {
 
@@ -193,5 +197,7 @@ private:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 #endif // SOURCE_MATCH_CONTROLLER_HPP_

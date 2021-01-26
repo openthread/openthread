@@ -50,6 +50,7 @@
 #include "thread/indirect_sender.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
+#include "thread/s2s.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -571,7 +572,9 @@ private:
 #if OPENTHREAD_FTD
     FragmentPriorityList mFragmentPriorityList;
     PriorityQueue        mResolvingQueue;
-    IndirectSender       mIndirectSender;
+#endif
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
+    IndirectSender mIndirectSender;
 #endif
 
     DataPollSender mDataPollSender;

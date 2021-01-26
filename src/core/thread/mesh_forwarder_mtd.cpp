@@ -35,15 +35,92 @@
 
 #include "mesh_forwarder.hpp"
 
+#include "common/locator-getters.hpp"
+
 namespace ot {
 
 otError MeshForwarder::SendMessage(Message &aMessage)
 {
+#if OPENTHREAD_MTD_S2S
+    Mle::MleRouter &mle = Get<Mle::MleRouter>();
+    Child *         rx_off_child;
+#endif
+
     aMessage.SetDirectTransmission();
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
 
     mSendQueue.Enqueue(aMessage);
+
+#if OPENTHREAD_MTD_S2S
+    switch (aMessage.GetType())
+    {
+    case Message::kTypeIp6:
+    {
+        Ip6::Header ip6Header;
+
+        IgnoreError(aMessage.Read(0, ip6Header));
+
+        if (ip6Header.GetDestination().IsMulticast())
+        {
+            // For traffic destined to multicast address larger than realm local, generally it uses IP-in-IP
+            // encapsulation (RFC2473), with outer destination as ALL_MPL_FORWARDERS. So here if the destination
+            // is multicast address larger than realm local, it should be for indirection transmission for the
+            // device's sleepy child, thus there should be no direct transmission.
+            if (!ip6Header.GetDestination().IsMulticastLargerThanRealmLocal())
+            {
+                // schedule direct transmission
+                aMessage.SetDirectTransmission();
+            }
+
+            if (aMessage.GetSubType() != Message::kSubTypeMplRetransmission)
+            {
+                if (ip6Header.GetDestination() == mle.GetLinkLocalAllThreadNodesAddress() ||
+                    ip6Header.GetDestination() == mle.GetRealmLocalAllThreadNodesAddress())
+                {
+                    // destined for all rx-off neighbors
+                    for (Child &neighbor : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+                    {
+                        if (!neighbor.IsRxOnWhenIdle())
+                        {
+                            mIndirectSender.AddMessageForSleepyChild(aMessage, neighbor);
+                        }
+                    }
+                }
+                else
+                {
+                    // destined for some sleepy children which subscribed the multicast address.
+                    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
+                    {
+                        if (!child.IsRxOnWhenIdle() && child.HasIp6Address(ip6Header.GetDestination()))
+                        {
+                            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
+                        }
+                    }
+                }
+            }
+        }
+        else if ((rx_off_child = Get<ChildTable>().FindChild(ip6Header.GetDestination())) != nullptr &&
+                 !rx_off_child->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
+        {
+            // destined for an rx-off child
+            mIndirectSender.AddMessageForSleepyChild(aMessage, *rx_off_child);
+        }
+        else
+        {
+            // schedule direct transmission
+            aMessage.SetDirectTransmission();
+        }
+
+        break;
+    }
+
+    default:
+        aMessage.SetDirectTransmission();
+        break;
+    }
+#endif // OPENTHREAD_MTD_S2S
+
     mScheduleTransmissionTask.Post();
 
     return OT_ERROR_NONE;

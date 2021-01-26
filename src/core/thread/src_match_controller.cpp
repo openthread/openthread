@@ -33,7 +33,7 @@
 
 #include "src_match_controller.hpp"
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -227,4 +227,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S

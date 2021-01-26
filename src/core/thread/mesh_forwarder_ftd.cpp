@@ -48,7 +48,7 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
     otError         error = OT_ERROR_NONE;
-    Neighbor *      neighbor;
+    Child *         rx_off_child;
 
     aMessage.SetOffset(0);
     aMessage.SetDatagramTag(0);
@@ -101,12 +101,11 @@ otError MeshForwarder::SendMessage(Message &aMessage)
                 }
             }
         }
-        else if ((neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetDestination())) != nullptr &&
-                 !neighbor->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
+        else if ((rx_off_child = Get<ChildTable>().FindChild(ip6Header.GetDestination())) != nullptr &&
+                 !rx_off_child->IsRxOnWhenIdle() && !aMessage.GetDirectTransmission())
         {
             // destined for a sleepy child
-            Child &child = *static_cast<Child *>(neighbor);
-            mIndirectSender.AddMessageForSleepyChild(aMessage, child);
+            mIndirectSender.AddMessageForSleepyChild(aMessage, *rx_off_child);
         }
         else
         {
