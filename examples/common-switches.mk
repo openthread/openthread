@@ -34,6 +34,7 @@ BORDER_AGENT              ?= 0
 BORDER_ROUTER             ?= 0
 BORDER_ROUTING            ?= 0
 COAP                      ?= 0
+COAP_BLOCK                ?= 0
 COAP_OBSERVE              ?= 0
 COAPS                     ?= 0
 COMMISSIONER              ?= 0
@@ -110,6 +111,10 @@ endif
 
 ifeq ($(COAPS),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1
+endif
+
+ifeq ($(COAP_BLOCK),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE=1
 endif
 
 ifeq ($(COAP_OBSERVE),1)

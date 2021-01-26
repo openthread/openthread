@@ -149,6 +149,7 @@ enum : uint16_t
     kOptionLocationQuery = OT_COAP_OPTION_LOCATION_QUERY, ///< Location-Query
     kOptionBlock2        = OT_COAP_OPTION_BLOCK2,         ///< Block2 (RFC7959)
     kOptionBlock1        = OT_COAP_OPTION_BLOCK1,         ///< Block1 (RFC7959)
+    kOptionSize2         = OT_COAP_OPTION_SIZE2,          ///< Size2 (RFC7959)
     kOptionProxyUri      = OT_COAP_OPTION_PROXY_URI,      ///< Proxy-Uri
     kOptionProxyScheme   = OT_COAP_OPTION_PROXY_SCHEME,   ///< Proxy-Scheme
     kOptionSize1         = OT_COAP_OPTION_SIZE1,          ///< Size1
@@ -507,7 +508,7 @@ public:
      * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
      *
      */
-    otError AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
+    otError AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize);
 
     /**
      * This method appends a Proxy-Uri option.
@@ -558,6 +559,62 @@ public:
      */
     otError AppendUriQueryOption(const char *aUriQuery) { return AppendStringOption(kOptionUriQuery, aUriQuery); }
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    /**
+     * This function reads the information contained in a Block1 or Block2 option and set it in
+     * the HelpData of the message.
+     *
+     * @param[in]   aBlockType  Block1 or Block2 option value.
+     *
+     * @retval  OT_ERROR_NONE           The option has been found and is valid.
+     * @retval  OT_ERROR_NOT_FOUND      The option has not been found.
+     * @retval  OT_ERROR_INVALID_ARGS   The option is invalid.
+     */
+    otError ReadBlockOptionValues(uint16_t aBlockType);
+
+    /**
+     * This method returns the current header length of a message.
+     *
+     * @returns The length of the message header.
+     *
+     */
+    uint16_t GetHeaderLength(void) const { return GetHelpData().mHeaderLength; }
+
+    /**
+     * This method returns the block number of a CoAP block-wise transfer message.
+     *
+     * @returns The block number.
+     *
+     */
+    uint32_t GetBlockWiseBlockNumber(void) const { return GetHelpData().mBlockWiseData.mBlockNumber; }
+
+    /**
+     * This method checks if the More Blocks flag is set.
+     *
+     * @retval TRUE   More Blocks flag is set.
+     * @retval FALSE  More Blocks flag is not set.
+     *
+     */
+    bool IsMoreBlocksFlagSet(void) const { return GetHelpData().mBlockWiseData.mMoreBlocks; }
+
+    /**
+     * This method returns the block size of a CoAP block-wise transfer message.
+     *
+     * @returns The block size.
+     *
+     */
+    otCoapBlockSzx GetBlockWiseBlockSize(void) const { return GetHelpData().mBlockWiseData.mBlockSize; }
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+    /**
+     * This function reads and reassembles the URI path string and fills it into @p aUriPath.
+     *
+     * @retval  OT_ERROR_NONE       URI path string has been reassembled.
+     * @retval  OT_ERROR_NO_BUFS    URI path string is too long.
+     *
+     */
+    otError GetUriPath(char *aUriPath) const;
+
     /**
      * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
      *
@@ -596,6 +653,33 @@ public:
      *
      */
     otError SetDefaultResponseHeader(const Message &aRequest);
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+    /**
+     * This method sets the block number value in the message HelpData.
+     *
+     * @param[in]   aBlockNumber    Block number value to set.
+     *
+     */
+    void SetBlockWiseBlockNumber(uint32_t aBlockNumber) { GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber; }
+
+    /**
+     * This method sets the More Blocks falg in the message HelpData.
+     *
+     * @param[in]   aMoreBlocks    TRUE or FALSE.
+     *
+     */
+    void SetMoreBlocksFlag(bool aMoreBlocks) { GetHelpData().mBlockWiseData.mMoreBlocks = aMoreBlocks; }
+
+    /**
+     * This method sets the block size value in the message HelpData.
+     *
+     * @param[in]   aBlockSize    Block size value to set.
+     *
+     */
+    void SetBlockWiseBlockSize(otCoapBlockSzx aBlockSize) { GetHelpData().mBlockWiseData.mBlockSize = aBlockSize; }
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
      * This method checks if a header is an empty message header.
@@ -845,6 +929,15 @@ private:
         kBlockNumMax = 0xffff,
     };
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    struct BlockWiseData
+    {
+        uint32_t       mBlockNumber;
+        bool           mMoreBlocks;
+        otCoapBlockSzx mBlockSize;
+    };
+#endif
+
     /**
      * This structure represents a CoAP header excluding CoAP options.
      *
@@ -868,6 +961,9 @@ private:
         uint16_t mOptionLast;
         uint16_t mHeaderOffset; ///< The byte offset for the CoAP Header
         uint16_t mHeaderLength;
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        BlockWiseData mBlockWiseData;
+#endif
     };
 
     const HelpData &GetHelpData(void) const

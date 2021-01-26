@@ -117,6 +117,11 @@ if(OT_COAPS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE=1")
 endif()
 
+option(OT_COAP_BLOCK "enable coap block-wise transfer (RFC7959) api support")
+if(OT_COAP_BLOCK)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE=1")
+endif()
+
 option(OT_COAP_OBSERVE "enable coap observe (RFC7641) api support")
 if(OT_COAP_OBSERVE)
     list(APPEND OT_PRIVATE_DEFINES "OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE=1")
