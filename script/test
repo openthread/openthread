@@ -48,6 +48,7 @@ readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
 readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
 
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
+readonly FULL_LOGS=${FULL_LOGS:-0}
 
 build_simulation()
 {
@@ -61,6 +62,10 @@ build_simulation()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_SERVICE=ON"
         "-DOT_ECDSA=ON")
+
+    if [[ ${FULL_LOGS} == 1 ]]; then
+        options+=("-DOT_FULL_LOGS=ON")
+    fi
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
@@ -104,6 +109,10 @@ build_posix()
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
         options+=("-DOT_MLR=ON")
+    fi
+
+    if [[ ${FULL_LOGS} == 1 ]]; then
+        options+=("-DOT_FULL_LOGS=ON")
     fi
 
     if [[ ${VIRTUAL_TIME} == 1 ]]; then
