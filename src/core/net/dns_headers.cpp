@@ -531,6 +531,169 @@ bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) cons
                                  mLabelLength);
 }
 
+otError ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
+{
+    otError error = OT_ERROR_NONE;
+
+    while (aNumRecords > 0)
+    {
+        ResourceRecord record;
+
+        SuccessOrExit(error = Name::ParseName(aMessage, aOffset));
+        SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
+        aOffset += static_cast<uint16_t>(record.GetSize());
+        aNumRecords--;
+    }
+
+exit:
+    return error;
+}
+
+otError ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const char *aName)
+{
+    otError error;
+
+    while (aNumRecords > 0)
+    {
+        bool           matches = true;
+        ResourceRecord record;
+
+        error = Name::CompareName(aMessage, aOffset, aName);
+
+        switch (error)
+        {
+        case OT_ERROR_NONE:
+            break;
+        case OT_ERROR_NOT_FOUND:
+            matches = false;
+            break;
+        default:
+            ExitNow();
+        }
+
+        SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
+        aNumRecords--;
+        VerifyOrExit(!matches);
+        aOffset += static_cast<uint16_t>(record.GetSize());
+    }
+
+    error = OT_ERROR_NOT_FOUND;
+
+exit:
+    return error;
+}
+
+otError ResourceRecord::ReadRecord(const Message & aMessage,
+                                   uint16_t &      aOffset,
+                                   uint16_t        aType,
+                                   ResourceRecord &aRecord,
+                                   uint16_t        aMinRecordSize)
+{
+    // This static method tries to read a matching resource record of a
+    // given type and a minimum record size from a message. The `aType`
+    // value of `kTypeAny` matches any type.  If the record in the
+    // message does not match, it skips over the record. Please see
+    // `ReadRecord<RecordType>()` for more details.
+
+    otError        error;
+    ResourceRecord record;
+
+    SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
+
+    if (((aType == kTypeAny) || (record.GetType() == aType)) && (record.GetSize() >= aMinRecordSize))
+    {
+        IgnoreError(aMessage.Read(aOffset, &aRecord, aMinRecordSize));
+        aOffset += aMinRecordSize;
+    }
+    else
+    {
+        // Skip over the entire record.
+        aOffset += static_cast<uint16_t>(record.GetSize());
+        error = OT_ERROR_NOT_FOUND;
+    }
+
+exit:
+    return error;
+}
+
+otError ResourceRecord::ReadName(const Message &aMessage,
+                                 uint16_t &     aOffset,
+                                 uint16_t       aStartOffset,
+                                 char *         aNameBuffer,
+                                 uint16_t       aNameBufferSize,
+                                 bool           aSkipRecord) const
+{
+    // This protected method parses and reads a name field in a record
+    // from a message. It is intended only for sub-classes of
+    // `ResourceRecord`.
+    //
+    // On input `aOffset` gives the offset in `aMessage` to the start of
+    // name field. `aStartOffset` gives the offset to the start of the
+    // `ResourceRecord`. `aSkipRecord` indicates whether to skip over
+    // the entire resource record or just the read name. On exit, when
+    // successfully read, `aOffset` is updated to either point after the
+    // end of record or after the the name field.
+    //
+    // When read successfully, this method returns `OT_ERROR_NONE`. On a
+    // parse error (invalid format) returns `OT_ERROR_PARSE`. If the
+    // name does not fit in the given name buffer it returns
+    // `OT_ERROR_NO_BUFS`
+
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = Name::ReadName(aMessage, aOffset, aNameBuffer, aNameBufferSize));
+    VerifyOrExit(aOffset <= aStartOffset + GetSize(), error = OT_ERROR_PARSE);
+
+    VerifyOrExit(aSkipRecord);
+    aOffset = aStartOffset;
+    error   = SkipRecord(aMessage, aOffset);
+
+exit:
+    return error;
+}
+
+otError ResourceRecord::SkipRecord(const Message &aMessage, uint16_t &aOffset) const
+{
+    // This protected method parses and skips over a resource record
+    // in a message.
+    //
+    // On input `aOffset` gives the offset in `aMessage` to the start of
+    // the `ResourceRecord`. On exit, when successfully parsed, `aOffset`
+    // is updated to point to byte after the entire record.
+
+    otError error;
+
+    SuccessOrExit(error = CheckRecord(aMessage, aOffset));
+    aOffset += static_cast<uint16_t>(GetSize());
+
+exit:
+    return error;
+}
+
+otError ResourceRecord::CheckRecord(const Message &aMessage, uint16_t aOffset) const
+{
+    // This method checks that the entire record (including record data)
+    // is present in `aMessage` at `aOffset` (pointing to the start of
+    // the `ResourceRecord` in `aMessage`).
+
+    return (aOffset + GetSize() <= aMessage.GetLength()) ? OT_ERROR_NONE : OT_ERROR_PARSE;
+}
+
+otError ResourceRecord::ReadFrom(const Message &aMessage, uint16_t aOffset)
+{
+    // This method reads the `ResourceRecord` from `aMessage` at
+    // `aOffset`. It verifies that the entire record (including record
+    // data) is present in the message.
+
+    otError error;
+
+    SuccessOrExit(error = aMessage.Read(aOffset, *this));
+    error = CheckRecord(aMessage, aOffset);
+
+exit:
+    return error;
+}
+
 bool AaaaRecord::IsValid(void) const
 {
     return GetType() == Dns::ResourceRecord::kTypeAaaa && GetSize() == sizeof(*this);
@@ -563,6 +726,51 @@ bool SigRecord::IsValid(void) const
 bool LeaseOption::IsValid(void) const
 {
     return GetLeaseInterval() <= GetKeyLeaseInterval();
+}
+
+otError PtrRecord::ReadPtrName(const Message &aMessage,
+                               uint16_t &     aOffset,
+                               char *         aLabelBuffer,
+                               uint8_t        aLabelBufferSize,
+                               char *         aNameBuffer,
+                               uint16_t       aNameBufferSize) const
+{
+    otError  error       = OT_ERROR_NONE;
+    uint16_t startOffset = aOffset - sizeof(PtrRecord); // start of `PtrRecord`.
+
+    // Verify that the name is within the record data length.
+    SuccessOrExit(error = Name::ParseName(aMessage, aOffset));
+    VerifyOrExit(aOffset <= startOffset + GetSize(), error = OT_ERROR_PARSE);
+
+    aOffset = startOffset + sizeof(PtrRecord);
+    SuccessOrExit(error = Name::ReadLabel(aMessage, aOffset, aLabelBuffer, aLabelBufferSize));
+
+    if (aNameBuffer != nullptr)
+    {
+        SuccessOrExit(error = Name::ReadName(aMessage, aOffset, aNameBuffer, aNameBufferSize));
+    }
+
+    aOffset = startOffset;
+    error   = SkipRecord(aMessage, aOffset);
+
+exit:
+    return error;
+}
+
+otError TxtRecord::ReadTxtData(const Message &aMessage,
+                               uint16_t &     aOffset,
+                               uint8_t *      aTxtBuffer,
+                               uint16_t &     aTxtBufferSize) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(GetLength() <= aTxtBufferSize, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
+    aTxtBufferSize = GetLength();
+    aOffset += GetLength();
+
+exit:
+    return error;
 }
 
 } // namespace Dns

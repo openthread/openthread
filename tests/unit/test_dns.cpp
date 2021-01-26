@@ -653,12 +653,339 @@ void TestDnsCompressedName(void)
     testFreeInstance(instance);
 }
 
+void TestHeaderAndResourceRecords(void)
+{
+    enum
+    {
+        kHeaderOffset    = 0,
+        kQuestionCount   = 1,
+        kAnswerCount     = 2,
+        kAdditionalCount = 5,
+        kTtl             = 7200,
+        kTxtTtl          = 7300,
+        kSrvPort         = 1234,
+        kSrvPriority     = 1,
+        kSrvWeight       = 2,
+        kMaxSize         = 600,
+    };
+
+    const char    kMessageString[]  = "DnsMessage";
+    const char    kDomainName[]     = "example.com.";
+    const char    kServiceLabels[]  = "_service._udp";
+    const char    kServiceName[]    = "_service._udp.example.com.";
+    const char    kInstance1Label[] = "inst1";
+    const char    kInstance2Label[] = "instance2";
+    const char    kInstance1Name[]  = "inst1._service._udp.example.com.";
+    const char    kInstance2Name[]  = "instance2._service._udp.example.com.";
+    const char    kHostName[]       = "host.example.com.";
+    const uint8_t kTxtData[]        = {9, 'k', 'e', 'y', '=', 'v', 'a', 'l', 'u', 'e', 0};
+    const char    kHostAddress[]    = "fd00::abcd:";
+
+    const char *kInstanceLabels[] = {kInstance1Label, kInstance2Label};
+    const char *kInstanceNames[]  = {kInstance1Name, kInstance2Name};
+
+    Instance *          instance;
+    MessagePool *       messagePool;
+    Message *           message;
+    Dns::Header         header;
+    uint16_t            messageId;
+    uint16_t            headerOffset;
+    uint16_t            offset;
+    uint16_t            numRecords;
+    uint16_t            len;
+    uint16_t            serviceNameOffset;
+    uint16_t            hostNameOffset;
+    uint16_t            answerSectionOffset;
+    uint16_t            additionalSectionOffset;
+    Dns::PtrRecord      ptrRecord;
+    Dns::SrvRecord      srvRecord;
+    Dns::TxtRecord      txtRecord;
+    Dns::AaaaRecord     aaaaRecord;
+    Dns::ResourceRecord record;
+    Ip6::Address        hostAddress;
+
+    char    label[Dns::Name::kMaxLabelLength + 1];
+    char    name[Dns::Name::kMaxLength];
+    uint8_t buffer[kMaxSize];
+
+    printf("================================================================\n");
+    printf("TestHeaderAndResourceRecords()\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
+
+    messagePool = &instance->Get<MessagePool>();
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+
+    printf("----------------------------------------------------------------\n");
+    printf("Preparing the message\n");
+
+    SuccessOrQuit(message->Append(kMessageString), "Message::Append() failed");
+
+    // Header
+
+    headerOffset = message->GetLength();
+    SuccessOrQuit(header.SetRandomMessageId(), "Header::SetRandomMessageId() failed");
+    messageId = header.GetMessageId();
+    header.SetType(Dns::Header::kTypeResponse);
+    header.SetQuestionCount(kQuestionCount);
+    header.SetAnswerCount(kAnswerCount);
+    header.SetAdditionalRecordCount(kAdditionalCount);
+    SuccessOrQuit(message->Append(header), "Message::Append() failed");
+    message->SetOffset(headerOffset);
+
+    // Question section
+
+    serviceNameOffset = message->GetLength() - headerOffset;
+    SuccessOrQuit(Dns::Name::AppendMultipleLabels(kServiceLabels, *message), "AppendMultipleLabels() failed");
+    SuccessOrQuit(Dns::Name::AppendName(kDomainName, *message), "AppendName() failed");
+    SuccessOrQuit(message->Append(Dns::Question(Dns::ResourceRecord::kTypePtr)), "Message::Append() failed");
+
+    // Answer section
+
+    answerSectionOffset = message->GetLength();
+
+    for (const char *instanceLabel : kInstanceLabels)
+    {
+        SuccessOrQuit(Dns::Name::AppendPointerLabel(serviceNameOffset, *message), "AppendPointerLabel() failed");
+        ptrRecord.Init();
+        ptrRecord.SetTtl(kTtl);
+        offset = message->GetLength();
+        SuccessOrQuit(message->Append(ptrRecord), "Message::Append() failed");
+        SuccessOrQuit(Dns::Name::AppendLabel(instanceLabel, *message), "AppendLabel failed");
+        SuccessOrQuit(Dns::Name::AppendPointerLabel(serviceNameOffset, *message), "AppendPointerLabel() failed");
+        ptrRecord.SetLength(message->GetLength() - offset - sizeof(Dns::ResourceRecord));
+        message->Write(offset, ptrRecord);
+    }
+
+    // Additional section
+
+    additionalSectionOffset = message->GetLength();
+
+    for (const char *instanceName : kInstanceNames)
+    {
+        uint16_t instanceNameOffset = message->GetLength() - headerOffset;
+
+        // SRV record
+        SuccessOrQuit(Dns::Name::AppendName(instanceName, *message), "AppendName() failed");
+        srvRecord.Init();
+        srvRecord.SetTtl(kTtl);
+        srvRecord.SetPort(kSrvPort);
+        srvRecord.SetWeight(kSrvWeight);
+        srvRecord.SetPriority(kSrvPriority);
+        offset = message->GetLength();
+        SuccessOrQuit(message->Append(srvRecord), "Message::Append() failed");
+        hostNameOffset = message->GetLength() - headerOffset;
+        SuccessOrQuit(Dns::Name::AppendName(kHostName, *message), "AppendName() failed");
+        srvRecord.SetLength(message->GetLength() - offset - sizeof(Dns::ResourceRecord));
+        message->Write(offset, srvRecord);
+
+        // TXT record
+        SuccessOrQuit(Dns::Name::AppendPointerLabel(instanceNameOffset, *message), "AppendPointerLabel() failed");
+        txtRecord.Init();
+        txtRecord.SetTtl(kTxtTtl);
+        txtRecord.SetLength(sizeof(kTxtData));
+        SuccessOrQuit(message->Append(txtRecord), "Message::Append() failed");
+        SuccessOrQuit(message->Append(kTxtData), "Message::Append() failed");
+    }
+
+    SuccessOrQuit(hostAddress.FromString(kHostAddress), "Address::FromString() failed");
+    SuccessOrQuit(Dns::Name::AppendPointerLabel(hostNameOffset, *message), "AppendPointerLabel() failed");
+    aaaaRecord.Init();
+    aaaaRecord.SetTtl(kTtl);
+    aaaaRecord.SetAddress(hostAddress);
+    SuccessOrQuit(message->Append(aaaaRecord), "Message::Append()");
+
+    // Dump the entire message
+
+    VerifyOrQuit(message->GetLength() < kMaxSize, "Message is too long");
+    SuccessOrQuit(message->Read(0, buffer, message->GetLength()), "Message::Read() failed");
+    DumpBuffer("message", buffer, message->GetLength());
+
+    printf("----------------------------------------------------------------\n");
+    printf("Parse and verify the message\n");
+
+    offset = 0;
+    VerifyOrQuit(message->Compare(offset, kMessageString), "Message header does not match");
+    offset += sizeof(kMessageString);
+
+    // Header
+
+    VerifyOrQuit(offset == headerOffset, "headerOffset is incorrect");
+    SuccessOrQuit(message->Read(offset, header), "Message::Read() failed");
+    offset += sizeof(header);
+
+    VerifyOrQuit(header.GetMessageId() == messageId, "Header::GetMessageId() failed");
+    VerifyOrQuit(header.GetType() == Dns::Header::kTypeResponse, "Header::GetType() failed");
+    VerifyOrQuit(header.GetQuestionCount() == kQuestionCount, "Header::GetQuestionCount() failed");
+    VerifyOrQuit(header.GetAnswerCount() == kAnswerCount, "Header::GetAnswerCount() failed");
+    VerifyOrQuit(header.GetAdditionalRecordCount() == kAdditionalCount, "Header::GetAdditionalRecordCount() failed");
+
+    printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+    printf("Question Section\n");
+
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, kServiceName), "Question name does not match");
+    VerifyOrQuit(message->Compare(offset, Dns::Question(Dns::ResourceRecord::kTypePtr)), "Question does not match");
+    offset += sizeof(Dns::Question);
+
+    printf("PTR for \"%s\"\n", kServiceName);
+
+    printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+    printf("Answer Section\n");
+
+    VerifyOrQuit(offset == answerSectionOffset, "answer section offset is incorrect");
+
+    for (const char *instanceName : kInstanceNames)
+    {
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, kServiceName), "ServiceName is incorrect");
+        SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord), "ReadRecord() failed");
+        VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
+
+        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, name, sizeof(name)), "ReadName() failed");
+        VerifyOrQuit(strcmp(name, instanceName) == 0, "Inst1 name is incorrect");
+
+        printf("    \"%s\" PTR %u %d \"%s\"\n", kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength(), name);
+    }
+
+    VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
+
+    offset = answerSectionOffset;
+    SuccessOrQuit(Dns::ResourceRecord::ParseRecords(*message, offset, kAnswerCount), "ParseRecords() failed");
+    VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
+
+    printf("Use FindRecord() to find and iterate through all the records:\n");
+
+    offset     = answerSectionOffset;
+    numRecords = kAnswerCount;
+
+    while (numRecords > 0)
+    {
+        uint16_t prevNumRecords = numRecords;
+
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kServiceName), "FindRecord failed");
+        VerifyOrQuit(numRecords == prevNumRecords - 1, "Incorrect num records");
+        SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord), "ReadRecord() failed");
+        VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
+        SuccessOrQuit(ptrRecord.ReadPtrName(*message, offset, label, sizeof(label), name, sizeof(name)),
+                      "ReadName() failed");
+        printf("    \"%s\" PTR %u %d inst:\"%s\" at \"%s\"\n", kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength(),
+               label, name);
+    }
+
+    VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kServiceName) == OT_ERROR_NOT_FOUND,
+                 "FindRecord did not fail with no records");
+
+    // Use `ReadRecord()` with a non-matching record type. Verify that it correct skips over the record.
+
+    offset     = answerSectionOffset;
+    numRecords = kAnswerCount;
+
+    while (numRecords > 0)
+    {
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kServiceName), "FindRecord failed");
+        VerifyOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord) == OT_ERROR_NOT_FOUND,
+                     "ReadRecord() did not fail with non-matching type");
+    }
+
+    VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
+
+    // Use `FindRecord` with a non-matching name. Verify that it correctly skips over all records.
+
+    offset     = answerSectionOffset;
+    numRecords = kAnswerCount;
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kInstance1Name) == OT_ERROR_NOT_FOUND,
+                 "FindRecord did not fail with non-matching name");
+    VerifyOrQuit(numRecords == 0, "Incorrect num records");
+    VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
+
+    printf("- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - \n");
+    printf("Additional Section\n");
+
+    for (const char *instanceName : kInstanceNames)
+    {
+        // SRV record
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName), "Instance is incorrect");
+        SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord), "ReadRecord() failed");
+        VerifyOrQuit(srvRecord.GetTtl() == kTtl, "Read SRV is incorrect");
+        VerifyOrQuit(srvRecord.GetPort() == kSrvPort, "Read SRV port is incorrect");
+        VerifyOrQuit(srvRecord.GetWeight() == kSrvWeight, "Read SRV weight is incorrect");
+        VerifyOrQuit(srvRecord.GetPriority() == kSrvPriority, "Read SRV priority is incorrect");
+        SuccessOrQuit(srvRecord.ReadTargetHostName(*message, offset, name, sizeof(name)),
+                      "ReadTargetHostName() failed");
+        VerifyOrQuit(strcmp(name, kHostName) == 0, "Inst1 name is incorrect");
+        printf("    \"%s\" SRV %u %d %d %d %d \"%s\"\n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
+               srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority(), name);
+
+        // TXT record
+        SuccessOrQuit(Dns::Name::CompareName(*message, offset, instanceName), "Instance is incorrect");
+        SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, txtRecord), "ReadRecord() failed");
+        VerifyOrQuit(txtRecord.GetTtl() == kTxtTtl, "Read TXT is incorrect");
+        len = sizeof(buffer);
+        SuccessOrQuit(txtRecord.ReadTxtData(*message, offset, buffer, len), "ReadTxtData() failed");
+        VerifyOrQuit(len == sizeof(kTxtData), "TXT data length is not valid");
+        VerifyOrQuit(memcmp(buffer, kTxtData, len) == 0, "TXT data is not valid");
+        printf("    \"%s\" TXT %u %d \"%s\"\n", instanceName, txtRecord.GetTtl(), txtRecord.GetLength(),
+               reinterpret_cast<const char *>(buffer));
+    }
+
+    SuccessOrQuit(Dns::Name::CompareName(*message, offset, kHostName), "HostName is incorrect");
+    SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, aaaaRecord), "ReadRecord() failed");
+    VerifyOrQuit(aaaaRecord.GetTtl() == kTtl, "Read AAAA is incorrect");
+    VerifyOrQuit(aaaaRecord.GetAddress() == hostAddress, "Read host address is incorrect");
+    printf("    \"%s\" AAAA %u %d \"%s\"\n", kHostName, aaaaRecord.GetTtl(), aaaaRecord.GetLength(),
+           aaaaRecord.GetAddress().ToString().AsCString());
+
+    VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
+
+    // Use `ParseRecords()` to parse all records
+    offset = additionalSectionOffset;
+    SuccessOrQuit(Dns::ResourceRecord::ParseRecords(*message, offset, kAdditionalCount), "ParseRecords() failed");
+    VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
+
+    printf("Use FindRecord() to search for specific name:\n");
+
+    for (const char *instanceName : kInstanceNames)
+    {
+        offset     = additionalSectionOffset;
+        numRecords = kAdditionalCount;
+
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, instanceName), "FindRecord failed");
+        SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord), "ReadRecord() failed");
+        SuccessOrQuit(Dns::Name::ParseName(*message, offset), "ParseName() failed");
+        printf("    \"%s\" SRV %u %d %d %d %d\n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
+               srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority());
+
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, instanceName), "FindRecord failed");
+        SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, txtRecord), "ReadRecord() failed");
+        offset += txtRecord.GetLength();
+        printf("    \"%s\" TXT %u %d\n", instanceName, txtRecord.GetTtl(), txtRecord.GetLength());
+
+        VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, instanceName) == OT_ERROR_NOT_FOUND,
+                     "FindRecord() did not fail with no more records");
+
+        VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
+    }
+
+    offset     = additionalSectionOffset;
+    numRecords = kAdditionalCount;
+    SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kHostName), "FindRecord() failed");
+    SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record), "ReadRecord() failed");
+    VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeAaaa, "Read record has incorrect type");
+    offset += record.GetLength();
+    VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
+
+    message->Free();
+    testFreeInstance(instance);
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestDnsName();
     ot::TestDnsCompressedName();
+    ot::TestHeaderAndResourceRecords();
 
     printf("All tests passed\n");
     return 0;

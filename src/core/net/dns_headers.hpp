@@ -233,6 +233,7 @@ public:
      * This method denotes whether recursive query support is available in the name server.
      *
      * @returns True if Recursion Available flag (RA) is set in the header, false otherwise.
+     *
      */
     bool IsRecursionAvailableFlagSet(void) const { return (mFlags[1] & kRaFlagMask) == kRaFlagMask; }
 
@@ -934,7 +935,108 @@ public:
      */
     uint32_t GetSize(void) const { return sizeof(ResourceRecord) + GetLength(); }
 
+    /**
+     * This static method parses and skips over a given number of resource records in a message from a given offset.
+     *
+     * @param[in]    aMessage     The message from which to parse/read the resource records. `aMessage.GetOffset()`
+     *                            MUST point to the start of DNS header.
+     * @param[inout] aOffset      On input the offset in @p aMessage pointing to the start of the first record.
+     *                            On exit (when parsed successfully), @p aOffset is updated to point to the byte after
+     *                            the last parsed record.
+     * @param[in]    aNumRecords  Number of resource records to parse.
+     *
+     * @retval OT_ERROR_NONE      Parsed records successfully. @p aOffset is updated.
+     * @retval OT_ERROR_PARSE     Could not parse the records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     *
+     */
+    static otError ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords);
+
+    /**
+     * This static method searches in a given message to find the first resource record matching a given record name.
+     *
+     * @param[in]    aMessage        The message in which to search for a matching resource record.
+     *                               `aMessage.GetOffset()` MUST point to the start of DNS header.
+     * @param[inout] aOffset         On input, the offset in @p aMessage pointing to the start of the first record.
+     *                               On exit, if a matching record is found, @p aOffset is updated to point to the byte
+     *                               after the record name.
+     *                               If a matching record could not be found, @p aOffset is updated to point to the byte
+     *                               after the last record that was checked.
+     * @param[inout] aNumRecords     On input, the maximum number of records to check (starting from @p aOffset).
+     *                               On exit and if a matching record is found, @p aNumRecords is updated to give the
+     *                               number of remaining records after @p aOffset (excluding the matching record).
+     * @param[in]    aName           The record name to match against (MUST be a null terminated string).
+     *
+     * @retval OT_ERROR_NONE         A matching record was found. @p aOffset, @p aNumRecords are updated.
+     * @retval OT_ERROR_NOT_FOUND    A matching record could not be found. @p aOffset and @p aNumRecords are updated.
+     * @retval OT_ERROR_PARSE        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     *
+     */
+    static otError FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const char *aName);
+
+    /**
+     * This template static method tries to read a resource record of a given type from a message. If the record type
+     * does not matches the type, it skips over the record.
+     *
+     * This method requires the record name to be already parsed/read from the message. On input, @p aOffset should
+     * point to the start of the `ResourceRecord` fields (type, class, TTL, data length) in @p aMessage.
+     *
+     * This method verifies that the record is well-formed in the message. It then reads the record type and compares
+     * it with `RecordType::kType` and ensures that the record size is at least `sizeof(RecordType)`. If it all matches,
+     * the record is read into @p aRecord.
+     *
+     * On success (i.e., when a matching record is read from the message), the @p aOffset is updated to point to after
+     * the last byte read from the message and copied into @p aRecord and not necessarily the end of the record.
+     *  Depending on the `RecordType` format, there may still be more data bytes left in the record to be read. For
+     * example, when reading a SRV record using `SrvRecord` type, @p aOffset would point to after the last field in
+     * `SrvRecord`  which is the start of "target host domain name" field.
+     *
+     * @tparam       RecordType      The resource record type (i.e., a sub-class of `ResourceRecord`).
+     *
+     * @param[in]    aMessage        The message from which to read the record.
+     * @param[inout] aOffset         On input, the offset in @p aMessage pointing to the byte after the record name.
+     *                               On exit, if a matching record is read, @p aOffset is updated to point to the last
+     *                               read byte in the record.
+     *                               If a matching record could not be read, @p aOffset is updated to point to the byte
+     *                               after the entire record (skipping over the record).
+     * @param[out]   aRecord         A reference to a record to read a matching record into.
+     *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
+     *                               read from @p aMessage and copied into @p aRecord.
+     *
+     * @retval OT_ERROR_NONE         A matching record was read successfully. @p aOffset, and @p aRecord are updated.
+     * @retval OT_ERROR_NOT_FOUND    A matching record could not be found. @p aOffset is updated.
+     * @retval OT_ERROR_PARSE        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     *
+     */
+    template <class RecordType>
+    static otError ReadRecord(const Message &aMessage, uint16_t &aOffset, RecordType &aRecord)
+    {
+        return ReadRecord(aMessage, aOffset, RecordType::kType, aRecord, sizeof(RecordType));
+    }
+
+protected:
+    otError ReadName(const Message &aMessage,
+                     uint16_t &     aOffset,
+                     uint16_t       aStartOffset,
+                     char *         aNameBuffer,
+                     uint16_t       aNameBufferSize,
+                     bool           aSkipRecord) const;
+    otError SkipRecord(const Message &aMessage, uint16_t &aOffset) const;
+
 private:
+    enum : uint8_t
+    {
+        kType = kTypeAny, // This is intended for used by `ReadRecord()` only.
+    };
+
+    static otError ReadRecord(const Message & aMessage,
+                              uint16_t &      aOffset,
+                              uint16_t        aType,
+                              ResourceRecord &aRecord,
+                              uint16_t        aMinRecordSize);
+
+    otError CheckRecord(const Message &aMessage, uint16_t aOffset) const;
+    otError ReadFrom(const Message &aMessage, uint16_t aOffset);
+
     uint16_t mType;   // The type of the data in RDATA section.
     uint16_t mClass;  // The class of the data in RDATA section.
     uint32_t mTtl;    // Specifies the maximum time that the resource record may be cached.
@@ -950,6 +1052,11 @@ OT_TOOL_PACKED_BEGIN
 class PtrRecord : public ResourceRecord
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypePtr, ///< The PTR record type.
+    };
+
     /**
      * This method initializes the PTR Resource Record by setting its type and class.
      *
@@ -959,6 +1066,70 @@ public:
      *
      */
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypePtr, aClass); }
+
+    /**
+     * This method parses and reads the PTR name from a message.
+     *
+     * This method also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
+     * the PTR encoded name).
+     *
+     * @param[in]     aMessage          The message to read from.  `aMessage.GetOffset()` MUST point to the start of
+     *                                  DNS header.
+     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of PTR name field.
+     *                                  On exit when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the entire PTR record (skipping over the record).
+     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be nullptr).
+     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     *
+     * @retval OT_ERROR_NONE            The PTR name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval OT_ERROR_PARSE           The PTR record in @p aMessage could not be parsed (invalid format).
+     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     *
+     */
+    otError ReadPtrName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize) const
+    {
+        return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(PtrRecord), aNameBuffer,
+                                        aNameBufferSize,
+                                        /* aSkipRecord */ true);
+    }
+
+    /**
+     * This method parses and reads the PTR name from a message.
+     *
+     * This method also verifies that the PTR record is well-formed (e.g., the record data length `GetLength()` matches
+     * the PTR encoded name).
+     *
+     * Unlike the previous method which reads the entire PTR name into a single char buffer, this method reads the
+     * first label separately and into a different buffer @p aLabelBuffer and the rest of the name into @p aNameBuffer.
+     * The @p aNameBuffer can be set to `nullptr` if the caller is only interested in the first label. This method is
+     * intended for "Service Instance Name" where first label (`<Instance>` portion) can be a user-friendly string and
+     * can contain dot character.
+     *
+     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     *                                  DNS header.
+     * @param[inout]  aOffset           On input, the offset in @p aMessage to the start of PTR name field.
+     *                                  On exit, when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the entire PTR record (skipping over the record).
+     * @param[out]    aLabelBuffer      A pointer to a char array to output the first label as a null-terminated C
+     *                                  string (MUST NOT be nullptr).
+     * @param[in]     aLabelBufferSize  The size of @p aLabelBuffer.
+     * @param[out]    aNameBuffer       A pointer to a char array to output the rest of name (after first label). Can
+     *                                  be `nullptr` if caller is only interested in the first label.
+     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     *
+     * @retval OT_ERROR_NONE            The PTR name was read successfully. @p aOffset, @aLabelBuffer and @aNameBuffer
+     *                                  are updated.
+     * @retval OT_ERROR_PARSE           The PTR record in @p aMessage could not be parsed (invalid format).
+     * @retval OT_ERROR_NO_BUFS         Either label or name could not fit in the related char buffers.
+     *
+     */
+    otError ReadPtrName(const Message &aMessage,
+                        uint16_t &     aOffset,
+                        char *         aLabelBuffer,
+                        uint8_t        aLabelBufferSize,
+                        char *         aNameBuffer,
+                        uint16_t       aNameBufferSize) const;
 
 } OT_TOOL_PACKED_END;
 
@@ -970,6 +1141,11 @@ OT_TOOL_PACKED_BEGIN
 class TxtRecord : public ResourceRecord
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypeTxt, ///< The TXT record type.
+    };
+
     /**
      * This method initializes the TXT Resource Record by setting its type and class.
      *
@@ -979,6 +1155,28 @@ public:
      *
      */
     void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeTxt, aClass); }
+
+    /**
+     * This method parses and reads the TXT record data from a message.
+     *
+     * @param[in]     aMessage          The message to read from.
+     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of TXT record data.
+     *                                  On exit when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the entire TXT record (skipping over the record).
+     * @param[out]    aTxtBuffer        A pointer to a byte array to output the read TXT data.
+     * @param[inout]  aTxtBufferSize    On input, the size of @p aTxtBuffer (max bytes that can be read).
+     *                                  On exit, @p aTxtBufferSize gives number of bytes written to @p aTxtBuffer.
+     *
+     * @retval OT_ERROR_NONE            The TXT data was read successfully. @p aOffset, @p aTxtBuffer and
+     *                                  @p aTxtBufferSize are updated.
+     * @retval OT_ERROR_PARSE           The TXT record in @p aMessage could not be parsed (invalid format).
+     * @retval OT_ERROR_NO_BUFS         TXT data could not fit in @p aTxtBufferSize bytes.
+     *
+     */
+    otError ReadTxtData(const Message &aMessage,
+                        uint16_t &     aOffset,
+                        uint8_t *      aTxtBuffer,
+                        uint16_t &     aTxtBufferSize) const;
 
 } OT_TOOL_PACKED_END;
 
@@ -990,6 +1188,11 @@ OT_TOOL_PACKED_BEGIN
 class AaaaRecord : public ResourceRecord
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypeAaaa, ///< The AAAA record type.
+    };
+
     /**
      * This method initializes the AAAA Resource Record by setting its type, class, and length.
      *
@@ -1038,6 +1241,11 @@ OT_TOOL_PACKED_BEGIN
 class SrvRecord : public ResourceRecord
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypeSrv, ///< The SRV record type.
+    };
+
     /**
      * This method initializes the SRV Resource Record by settings its type and class.
      *
@@ -1096,6 +1304,36 @@ public:
      */
     void SetPort(uint16_t aPort) { mPort = HostSwap16(aPort); }
 
+    /**
+     * This method parses and reads the SRV target host name from a message.
+     *
+     * This method also verifies that the SRV record is well-formed (e.g., the record data length `GetLength()` matches
+     * the SRV encoded name).
+     *
+     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     *                                  DNS header.
+     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of target host name field.
+     *                                  On exit when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the entire SRV record (skipping over the record).
+     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be nullptr).
+     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     *
+     * @retval OT_ERROR_NONE            The host name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval OT_ERROR_PARSE           The SRV record in @p aMessage could not be parsed (invalid format).
+     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     *
+     */
+    otError ReadTargetHostName(const Message &aMessage,
+                               uint16_t &     aOffset,
+                               char *         aNameBuffer,
+                               uint16_t       aNameBufferSize) const
+    {
+        return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SrvRecord), aNameBuffer,
+                                        aNameBufferSize,
+                                        /* aSkipRecord */ true);
+    }
+
 private:
     uint16_t mPriority;
     uint16_t mWeight;
@@ -1112,6 +1350,11 @@ OT_TOOL_PACKED_BEGIN
 class KeyRecord : public ResourceRecord
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypeKey, ///< The KEY record type.
+    };
+
     /**
      * This enumeration defines protocol field values (RFC 2535 - section 3.1.3).
      *
@@ -1347,6 +1590,11 @@ OT_TOOL_PACKED_BEGIN
 class SigRecord : public ResourceRecord, public Clearable<SigRecord>
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypeSig, ///< The SIG record type.
+    };
+
     /**
      * This method initializes the SIG Resource Record by setting its type and class.
      *
@@ -1489,6 +1737,33 @@ public:
      */
     const uint8_t *GetRecordData(void) const { return reinterpret_cast<const uint8_t *>(&mTypeCovered); }
 
+    /**
+     * This method parses and reads the SIG signer name from a message.
+     *
+     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of DNS
+     *                                  header.
+     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of signer name field.
+     *                                  On exit when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the name field (i.e., start of signature field).
+     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be nullptr).
+     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     *
+     * @retval OT_ERROR_NONE            The name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval OT_ERROR_PARSE           The SIG record in @p aMessage could not be parsed (invalid format).
+     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     *
+     */
+    otError ReadSignerName(const Message &aMessage,
+                           uint16_t &     aOffset,
+                           char *         aNameBuffer,
+                           uint16_t       aNameBufferSize) const
+    {
+        return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SigRecord), aNameBuffer,
+                                        aNameBufferSize,
+                                        /* aSkipRecord */ false);
+    }
+
 private:
     uint16_t mTypeCovered; // type of the other RRs covered by this SIG. set to zero for SIG(0).
     uint8_t  mAlgorithm;   // Algorithm number (see `KeyRecord` enumeration).
@@ -1508,6 +1783,11 @@ OT_TOOL_PACKED_BEGIN
 class OptRecord : public ResourceRecord
 {
 public:
+    enum : uint16_t
+    {
+        kType = kTypeOpt, ///< The OPT record type.
+    };
+
     /**
      * This method initializes the OPT Resource Record by setting its type and clearing extended Response Code, version
      * and all flags.
