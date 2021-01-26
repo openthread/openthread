@@ -757,7 +757,7 @@ class NodeImpl:
                'port': '12345',
                'priority': '0',
                'weight': '0',
-               'TXT': '00',
+               'TXT': ['abc=010203'],
                'host_fullname': 'my-host.default.service.arpa.',
                'host': 'my-host',
                'addresses': ['2001::1', '2001::2']
@@ -783,16 +783,20 @@ class NodeImpl:
                 service_list.append(service)
                 continue
 
-            # 'port', 'priority', 'weight', 'TXT'
-            for i in range(0, 4):
+            # 'port', 'priority', 'weight'
+            for i in range(0, 3):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
+
+            txt_entries = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
+            txt_entries = map(str.strip, txt_entries)
+            service['TXT'] = [txt for txt in txt_entries if txt]
 
             service['host_fullname'] = lines.pop(0).strip().split(':')[1].strip()
             service['host'] = service['host_fullname'].split('.')[0]
 
             addresses = lines.pop(0).strip().split('[')[1].strip(' ]').split(',')
-            map(str.strip, addresses)
+            addresses = map(str.strip, addresses)
             service['addresses'] = [addr for addr in addresses if addr]
 
             service_list.append(service)
@@ -860,8 +864,10 @@ class NodeImpl:
         self.send_command(f'srp client host address')
         self._expect_done()
 
-    def srp_client_add_service(self, instance_name, service_name, port):
-        self.send_command(f'srp client service add {instance_name} {service_name} {port}')
+    def srp_client_add_service(self, instance_name, service_name, port, priority=0, weight=0, txt_entries=[]):
+        txt_record = "".join(self._encode_txt_entry(entry) for entry in txt_entries)
+        self.send_command(
+            f'srp client service add {instance_name} {service_name} {port} {priority} {weight} {txt_record}')
         self._expect_done()
 
     def srp_client_remove_service(self, instance_name, service_name):
@@ -873,6 +879,16 @@ class NodeImpl:
         self.send_command(cmd)
         service_lines = self._expect_command_output(cmd)
         return [self._parse_srp_client_service(line) for line in service_lines]
+
+    def _encode_txt_entry(self, entry):
+        """Encodes the TXT entry to the DNS-SD TXT record format as a HEX string.
+
+           Example usage:
+           self._encode_txt_entries(['abc'])     -> '03616263'
+           self._encode_txt_entries(['def='])    -> '046465663d'
+           self._encode_txt_entries(['xyz=XYZ']) -> '0778797a3d58595a'
+        """
+        return '{:02x}'.format(len(entry)) + "".join("{:02x}".format(ord(c)) for c in entry)
 
     def _parse_srp_client_service(self, line: str):
         """Parse one line of srp service list into a dictionary which

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/dns.h>
+
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
@@ -794,6 +796,56 @@ private:
 };
 
 /**
+ * This type represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
+ *
+ */
+class TxtEntry : public otDnsTxtEntry
+{
+    friend class TxtRecord;
+
+public:
+    /**
+     * This method encodes and appends the `TxtEntry` to a message.
+     *
+     * @param[in] aMessage  The message to append to.
+     *
+     * @retval OT_ERROR_NONE           Entry was appended successfully to @p aMessage.
+     * @retval OT_ERROR_INVALID_ARGS   The `TxTEntry` info is not valid.
+     * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to grow the message.
+     *
+     */
+    otError AppendTo(Message &aMessage) const;
+
+    /**
+     * This static method appends an array of `TxtEntry` items to a message.
+     *
+     * @param[in] aEntries     A pointer to array of `TxtEntry` items.
+     * @param[in] aNumEntries  The number of entries in @p aEntries array.
+     * @param[in] aMessage     The message to append to.
+     *
+     *
+     * @retval OT_ERROR_NONE           Entries appended successfully to @p aMessage.
+     * @retval OT_ERROR_INVALID_ARGS   The `TxTEntry` info is not valid.
+     * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to grow the message.
+     *
+     */
+    static otError AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
+
+private:
+    enum : char
+    {
+        kKeyValueSeparator = '=',
+    };
+
+    enum : uint8_t
+    {
+        kMinKeyLength           = 1,
+        kMaxKeyLength           = 9,
+        kMaxKeyValueEncodedSize = 255,
+    };
+};
+
+/**
  * This class implements Resource Record (RR) body format.
  *
  */
@@ -1146,6 +1198,8 @@ public:
         kType = kTypeTxt, ///< The TXT record type.
     };
 
+    typedef otDnsTxtIterator TxtIterator;
+
     /**
      * This method initializes the TXT Resource Record by setting its type and class.
      *
@@ -1158,6 +1212,8 @@ public:
 
     /**
      * This method parses and reads the TXT record data from a message.
+     *
+     * This method also checks if the TXT data is well-formed by calling `VerifyTxtData()`.
      *
      * @param[in]     aMessage          The message to read from.
      * @param[inout]  aOffset           On input, the offset in @p aMessage to start of TXT record data.
@@ -1177,6 +1233,37 @@ public:
                         uint16_t &     aOffset,
                         uint8_t *      aTxtBuffer,
                         uint16_t &     aTxtBufferSize) const;
+
+    /**
+     * This static method tests if a buffer contains valid encoded TXT data.
+     *
+     * @param[in]  aTxtData    The TXT data buffer.
+     * @param[in]  aTxtLength  The length of the TXT data buffer.
+     *
+     * @returns  TRUE if @p aTxtData contains valid encoded TXT data, FALSE if not.
+     *
+     */
+    static bool VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength);
+
+    /**
+     * This static method returns the next TXT entry in the encoded TXT data buffer.
+     *
+     * This method assumes that @p aTxtData has already been verified by `VerifyTxtData()`.
+     *
+     * @param[in]     aTxtData    The encoded TXT data buffer.
+     * @param[in]     aTxtLength  The length of the encoded TXT data.
+     * @param[inout]  aIterator   A reference to the TXT iterator context. To get the first
+     *                            TXT entry, it should be set to OT_DNS_TXT_ITERATOR_INIT.
+     * @param[out]    aTxtEntry   A reference to where the TXT entry will be placed.
+     *
+     * @retval OT_ERROR_NONE       Successfully found the next TXT entry.
+     * @retval OT_ERROR_NOT_FOUND  No subsequent TXT entry exists in the service.
+     *
+     */
+    static otError GetNextTxtEntry(const uint8_t *aTxtData,
+                                   uint16_t       aTxtLength,
+                                   TxtIterator &  aIterator,
+                                   TxtEntry &     aTxtEntry);
 
 } OT_TOOL_PACKED_END;
 

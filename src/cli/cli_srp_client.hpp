@@ -88,7 +88,7 @@ private:
         bool IsInUse(void) const { return (mService.mNext != &mService); }
 
         otSrpClientService mService;
-        otSrpTxtEntry      mTxtEntry;
+        otDnsTxtEntry      mTxtEntry;
         char               mInstanceName[kNameSize];
         char               mServiceName[kNameSize];
         uint8_t            mTxtBuffer[kTxtSize];

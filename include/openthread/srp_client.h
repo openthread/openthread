@@ -35,6 +35,7 @@
 #ifndef OPENTHREAD_SRP_CLIENT_H_
 #define OPENTHREAD_SRP_CLIENT_H_
 
+#include <openthread/dns.h>
 #include <openthread/ip6.h>
 
 #ifdef __cplusplus
@@ -50,37 +51,6 @@ extern "C" {
  * @{
  *
  */
-
-/**
- * This structure represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
- *
- * The strings buffers pointed to by `mKey` and `mValue` MUST persist and remain unchanged after an instance of such a
- * structure is passed to OpenThread (as part of `otSrpClientService` instance).
- *
- * An array of `otSrpTxtEntry` entries is used in `otSrpClientService` to specify the full TXT record (a list of
- * entries).
- *
- */
-typedef struct otSrpTxtEntry
-{
-    /**
-     * The TXT record key string.
-     *
-     * If `mKey` is not NULL, then the entry is treated as key/value pair with `mValue` buffer providing the value.
-     *   - The entry is encoded as follows:
-     *        - A single string length byte followed by "key=value" format (without the quotation marks).
-              - In this case, the overall encoded length must be 255 bytes or less.
-     *   - If `mValue` is NULL, then key is treated as a boolean attribute and encoded as "key" (with no `=`).
-     *   - If `mValue` is not NULL but `mValueLength` is zero, then it is treated as empty value and encoded as "key=".
-     *
-     * If `mKey` is NULL, then `mValue` buffer is treated as an already encoded TXT-DATA and is appended as is in the
-     * DNS message.
-     *
-     */
-    const char *   mKey;
-    const uint8_t *mValue;       ///< The TXT record value or already encoded TXT-DATA (depending on `mKey`).
-    uint16_t       mValueLength; ///< Number of bytes in `mValue` buffer.
-} otSrpTxtEntry;
 
 /**
  * This enumeration specifies an SRP client item (service or host info) state.
@@ -122,7 +92,7 @@ typedef struct otSrpClientService
 {
     const char *         mName;          ///< The service name labels (e.g., "_chip._udp", not the full domain name).
     const char *         mInstanceName;  ///< The service instance name label (not the full name).
-    const otSrpTxtEntry *mTxtEntries;    ///< Array of TXT entries (number of entries is given by `mNumTxtEntries`).
+    const otDnsTxtEntry *mTxtEntries;    ///< Array of TXT entries (number of entries is given by `mNumTxtEntries`).
     uint16_t             mPort;          ///< The service port number.
     uint16_t             mPriority;      ///< The service priority.
     uint16_t             mWeight;        ///< The service weight.
@@ -179,7 +149,7 @@ typedef struct otSrpClientService
  * The following errors are also possible:
  *
  *    OT_ERROR_RESPONSE_TIMEOUT : Timed out waiting for response from server (client would continue to retry).
- *    OT_ERROR_INVALID_ARGS     : The provided service structure is invalid (e.g., bad service name or `otSrpTxtEntry`).
+ *    OT_ERROR_INVALID_ARGS     : The provided service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
  *    OT_ERROR_NO_BUFS          : Insufficient buffer to prepare or send the update message.
  *
  * Note that in case of any failure, the client continues the operation, i.e. it prepares and (re)transmits the SRP
@@ -377,7 +347,7 @@ otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *a
  * @retval OT_ERROR_NONE          The addition of service started successfully. The `otSrpClientCallback` will be
  *                                called to report the status.
  * @retval OT_ERROR_ALREADY       The same service is already in the list.
- * @retval OT_ERROR_INVALID_ARGS  The service structure is invalid (e.g., bad service name or `otSrpTxtEntry`).
+ * @retval OT_ERROR_INVALID_ARGS  The service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
  *
  */
 otError otSrpClientAddService(otInstance *aInstance, otSrpClientService *aService);

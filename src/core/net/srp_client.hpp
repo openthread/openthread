@@ -93,54 +93,6 @@ public:
     typedef otSrpClientCallback Callback;
 
     /**
-     * This type represents a TXT record entry representing a key/value pair (RFC 6763 - section 6.3).
-     *
-     */
-    class TxtEntry : public otSrpTxtEntry
-    {
-    public:
-        /**
-         * This method encodes and appends the `TxtEntry` to a message.
-         *
-         * @param[in] aMessage  The message to append to.
-         *
-         * @retval OT_ERROR_NONE           Entry was appended successfully to @p aMessage.
-         * @retval OT_ERROR_INVALID_ARGS   The `TxEntry` info is not valid.
-         * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to grow the message.
-         *
-         */
-        otError AppendTo(Message &aMessage) const;
-
-        /**
-         * This static method appends an array of `TxtEntry` items to a message.
-         *
-         * @param[in] aEntries     A pointer to array of `TxtEntry` items.
-         * @param[in] aNumEntries  The number of entries in @p aEntries array.
-         * @param[in] aMessage     The message to append to.
-         *
-         *
-         * @retval OT_ERROR_NONE           Entries appended successfully to @p aMessage.
-         * @retval OT_ERROR_INVALID_ARGS   The `TxEntry` info is not valid.
-         * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to grow the message.
-         *
-         */
-        static otError AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
-
-    private:
-        enum : char
-        {
-            kKeyValueSeparator = '=',
-        };
-
-        enum : uint8_t
-        {
-            kMinKeyLength           = 1,
-            kMaxKeyLength           = 9,
-            kMaxKeyValueEncodedSize = 255,
-        };
-    };
-
-    /**
      * This type represents an SRP client host info.
      *
      */
@@ -268,7 +220,7 @@ public:
          * @returns A pointer to an array of service TXT entries.
          *
          */
-        const TxtEntry *GetTxtEntries(void) const { return static_cast<const TxtEntry *>(mTxtEntries); }
+        const Dns::TxtEntry *GetTxtEntries(void) const { return static_cast<const Dns::TxtEntry *>(mTxtEntries); }
 
         /**
          * This method gets the number of entries in the service TXT entry array.

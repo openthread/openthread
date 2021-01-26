@@ -323,6 +323,7 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, char *aArgs[])
             entry->mService.mNumTxtEntries = 1;
             entry->mService.mTxtEntries    = &entry->mTxtEntry;
             entry->mTxtEntry.mKey          = nullptr; // Treat`mValue` as an already encoded TXT-DATA
+            entry->mTxtEntry.mKeyLength    = 0;
             entry->mTxtEntry.mValue        = entry->mTxtBuffer;
             entry->mTxtEntry.mValueLength  = sizeof(entry->mTxtBuffer);
 

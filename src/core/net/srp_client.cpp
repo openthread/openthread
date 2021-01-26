@@ -47,67 +47,6 @@ namespace ot {
 namespace Srp {
 
 //---------------------------------------------------------------------
-// Client::TxtEntry
-
-otError Client::TxtEntry::AppendTo(Message &aMessage) const
-{
-    otError error = OT_ERROR_NONE;
-    uint8_t length;
-
-    if (mKey == nullptr)
-    {
-        VerifyOrExit(mValue != nullptr);
-        error = aMessage.AppendBytes(mValue, mValueLength);
-        ExitNow();
-    }
-
-    length = static_cast<uint8_t>(StringLength(mKey, kMaxKeyLength + 1));
-
-    VerifyOrExit(length <= kMaxKeyLength, error = OT_ERROR_INVALID_ARGS);
-
-    if (mValue == nullptr)
-    {
-        // Treat as a boolean attribute and encoded as "key" (with no `=`).
-        SuccessOrExit(error = aMessage.Append(length));
-        error = aMessage.AppendBytes(mKey, length);
-        ExitNow();
-    }
-
-    // Treat as key/value and encode as "key=value", value may be empty.
-
-    VerifyOrExit(mValueLength + length + sizeof(char) <= kMaxKeyValueEncodedSize, error = OT_ERROR_INVALID_ARGS);
-
-    length += static_cast<uint8_t>(mValueLength + sizeof(char));
-
-    SuccessOrExit(error = aMessage.Append(length));
-    SuccessOrExit(error = aMessage.AppendBytes(mKey, length));
-    SuccessOrExit(error = aMessage.Append<char>(kKeyValueSeparator));
-    error = aMessage.AppendBytes(mValue, mValueLength);
-
-exit:
-    return error;
-}
-
-otError Client::TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
-{
-    otError  error       = OT_ERROR_NONE;
-    uint16_t startOffset = aMessage.GetLength();
-
-    for (uint8_t index = 0; index < aNumEntries; index++)
-    {
-        SuccessOrExit(error = aEntries[index].AppendTo(aMessage));
-    }
-
-    if (aMessage.GetLength() == startOffset)
-    {
-        error = aMessage.Append<uint8_t>(0);
-    }
-
-exit:
-    return error;
-}
-
-//---------------------------------------------------------------------
 // Client::HostInfo
 
 void Client::HostInfo::Init(void)
@@ -834,7 +773,8 @@ otError Client::AppendServiceInstructions(Service &aService, Message &aMessage, 
     rr.Init(Dns::ResourceRecord::kTypeTxt);
     offset = aMessage.GetLength();
     SuccessOrExit(error = aMessage.Append(rr));
-    SuccessOrExit(error = TxtEntry::AppendEntries(aService.GetTxtEntries(), aService.GetNumTxtEntries(), aMessage));
+    SuccessOrExit(error =
+                      Dns::TxtEntry::AppendEntries(aService.GetTxtEntries(), aService.GetNumTxtEntries(), aMessage));
     UpdateRecordLengthInMessage(rr, offset, aMessage);
     aInfo.mRecordCount++;
 

@@ -92,6 +92,9 @@ private:
     otError ProcessService(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
 
+    void OutputServiceTxtEntries(const otSrpServerService *aService);
+    void OutputHostAddresses(const otSrpServerHost *aHost);
+
     static constexpr Command sCommands[] = {
         {"disable", &SrpServer::ProcessDisable}, {"domain", &SrpServer::ProcessDomain},
         {"enable", &SrpServer::ProcessEnable},   {"help", &SrpServer::ProcessHelp},
