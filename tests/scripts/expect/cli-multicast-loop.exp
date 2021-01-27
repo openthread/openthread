@@ -41,9 +41,6 @@ setup_default_network
 
 set timeout 1
 
-send "panid 0xface\n"
-expect_line "Done"
-
 send "ifconfig up\n"
 expect_line "Done"
 
@@ -60,9 +57,6 @@ get_rloc16
 spawn_node 2 cli
 setup_default_network
 
-send "panid 0xface\n"
-expect_line "Done"
-
 send "ifconfig up\n"
 expect_line "Done"
 
@@ -77,9 +71,6 @@ get_rloc16
 
 spawn_node 3 cli
 setup_default_network
-
-send "panid 0xface\n"
-expect_line "Done"
 
 send "macfilter addr add ${extaddr1}\n"
 expect_line "Done"
@@ -103,9 +94,6 @@ get_rloc16
 
 spawn_node 4 cli
 setup_default_network
-
-send "panid 0xface\n"
-expect_line "Done"
 
 send "mode rn\n"
 expect_line "Done"
