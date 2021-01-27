@@ -1799,38 +1799,42 @@ class NodeImpl:
 
     def set_active_dataset(
         self,
-        timestamp,
+        timestamp=None,
         panid=None,
         channel=None,
         channel_mask=None,
         master_key=None,
         security_policy=[],
+        network_name=None,
+        extended_panid=None,
+        pskc=None,
     ):
-        self.send_command('dataset clear')
+        self.send_command('dataset clear', go=False)
         self._expect_done()
 
-        cmd = 'dataset activetimestamp %d' % timestamp
-        self.send_command(cmd)
-        self._expect_done()
+        if timestamp is not None:
+            cmd = 'dataset activetimestamp %d' % timestamp
+            self.send_command(cmd, go=False)
+            self._expect_done()
 
         if panid is not None:
             cmd = 'dataset panid %d' % panid
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         if channel_mask is not None:
             cmd = 'dataset channelmask %d' % channel_mask
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         if master_key is not None:
             cmd = 'dataset masterkey %s' % master_key
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         if security_policy and len(security_policy) == 2:
@@ -1838,11 +1842,26 @@ class NodeImpl:
                 str(security_policy[0]),
                 security_policy[1],
             )
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
+            self._expect_done()
+
+        if network_name is not None:
+            cmd = 'dataset networkname %s' % network_name
+            self.send_command(cmd, go=False)
+            self._expect_done()
+
+        if extended_panid is not None:
+            cmd = 'dataset extpanid %s' % extended_panid
+            self.send_command(cmd, go=False)
+            self._expect_done()
+
+        if pskc is not None:
+            cmd = 'dataset pskc %s' % pskc
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         # Set the meshlocal prefix in config.py
-        self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0])
+        self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0], go=False)
         self._expect_done()
 
         self.send_command('dataset commit active')
@@ -1853,30 +1872,30 @@ class NodeImpl:
         self._expect_done()
 
         cmd = 'dataset pendingtimestamp %d' % pendingtimestamp
-        self.send_command(cmd)
+        self.send_command(cmd, go=False)
         self._expect_done()
 
         cmd = 'dataset activetimestamp %d' % activetimestamp
-        self.send_command(cmd)
+        self.send_command(cmd, go=False)
         self._expect_done()
 
         if panid is not None:
             cmd = 'dataset panid %d' % panid
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         if channel is not None:
             cmd = 'dataset channel %d' % channel
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         if delay is not None:
             cmd = 'dataset delay %d' % delay
-            self.send_command(cmd)
+            self.send_command(cmd, go=False)
             self._expect_done()
 
         # Set the meshlocal prefix in config.py
-        self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0])
+        self.send_command('dataset meshlocalprefix %s' % config.MESH_LOCAL_PREFIX.split('/')[0], go=False)
         self._expect_done()
 
         self.send_command('dataset commit pending')

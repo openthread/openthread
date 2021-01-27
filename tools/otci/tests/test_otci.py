@@ -41,6 +41,11 @@ TEST_CHANNEL = 22
 TEST_NETWORK_NAME = 'OT CI'
 TEST_PANID = 0xeeee
 TEST_MASTERKEY = 'ffeeddccbbaa99887766554433221100'
+TEST_EXTENDED_PANID = '000db80000000000'
+TEST_MESH_LOCAL_PREFIX = 'fd00:db8::'
+TEST_CHANNEL_MASK = 0x07fff800
+TEST_SECURITY_POLICY = (672, 'onrcb')
+TEST_PSKC = 'c23a76e98f1a6483639b1ac1271e2e27'
 
 REAL_DEVICE = int(os.getenv('REAL_DEVICE', '0'))
 
@@ -168,6 +173,7 @@ class TestOTCI(unittest.TestCase):
         leader.set_preferred_partition_id(0xabcddead)
         self.assertEqual(leader.get_preferred_partition_id(), 0xabcddead)
 
+        _setup_default_network(leader)
         leader.thread_start()
         leader.wait(5)
         self.assertEqual('leader', leader.get_state())
@@ -364,18 +370,11 @@ class TestOTCI(unittest.TestCase):
         leader.set_extaddr(new_extaddr)
         self.assertEqual(new_extaddr, leader.get_extaddr())
 
-        leader.set_network_name(TEST_NETWORK_NAME)
+        _setup_default_network(leader)
 
-        leader.set_master_key(TEST_MASTERKEY)
         self.assertEqual(TEST_MASTERKEY, leader.get_master_key())
-
-        leader.set_panid(TEST_PANID)
         self.assertEqual(TEST_PANID, leader.get_panid())
-
-        leader.set_channel(TEST_CHANNEL)
         self.assertEqual(TEST_CHANNEL, leader.get_channel())
-
-        leader.set_network_name(TEST_NETWORK_NAME)
         self.assertEqual(TEST_NETWORK_NAME, leader.get_network_name())
 
         self.assertEqual('rdn', leader.get_mode())
@@ -390,11 +389,14 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual(rloc16, leader_id << 10)
 
         commissioner.ifconfig_up()
-        commissioner.set_channel(TEST_CHANNEL)
-        commissioner.set_panid(TEST_PANID)
-        commissioner.set_network_name(TEST_NETWORK_NAME)
+        commissioner.dataset_clear_buffer()
+        commissioner.dataset_set_buffer(
+            channel=TEST_CHANNEL,
+            panid=TEST_PANID,
+            master_key=TEST_MASTERKEY,
+        )
+        commissioner.dataset_commit_buffer('active')
         commissioner.set_router_selection_jitter(1)
-        commissioner.set_master_key(TEST_MASTERKEY)
         commissioner.thread_start()
 
         commissioner.wait(5)
@@ -519,6 +521,23 @@ class TestOTCI(unittest.TestCase):
         self.assertFalse(leader.get_ifconfig_state())
 
         leader.close()
+
+
+def _setup_default_network(node):
+    node.dataset_clear_buffer()
+    node.dataset_set_buffer(
+        active_timestamp=1,
+        channel=TEST_CHANNEL,
+        channel_mask=TEST_CHANNEL_MASK,
+        extpanid=TEST_EXTENDED_PANID,
+        mesh_local_prefix=TEST_MESH_LOCAL_PREFIX,
+        master_key=TEST_MASTERKEY,
+        network_name=TEST_NETWORK_NAME,
+        panid=TEST_PANID,
+        pskc=TEST_PSKC,
+        security_policy=TEST_SECURITY_POLICY,
+    )
+    node.dataset_commit_buffer('active')
 
 
 if __name__ == '__main__':

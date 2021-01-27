@@ -406,11 +406,14 @@ jobs:
       with:
         submodules: true
     - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+        script/git-tool clone https://github.com/openthread/pyspinel.git /tmp/pyspinel/ --depth 1 --branch main
+        sudo python3 -m pip install /tmp/pyspinel/
     - name: Build
       run: |
         ./bootstrap
@@ -446,11 +449,14 @@ jobs:
       with:
         submodules: true
     - name: Bootstrap
+      env:
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+        script/git-tool clone https://github.com/openthread/pyspinel.git /tmp/pyspinel/ --depth 1 --branch main
+        sudo python3 -m pip install /tmp/pyspinel/
     - name: Build
       run: |
         ./bootstrap

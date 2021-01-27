@@ -158,18 +158,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if node.is_host:
                 continue
 
-            self.nodes[i].set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
-            self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
             if 'partition_id' in params:
                 self.nodes[i].set_preferred_partition_id(params['partition_id'])
-            if 'channel' in params:
-                self.nodes[i].set_channel(params['channel'])
-            if 'masterkey' in params:
-                self.nodes[i].set_masterkey(params['masterkey'])
-            if 'network_name' in params:
-                self.nodes[i].set_network_name(params['network_name'])
 
             if 'router_selection_jitter' in params:
                 self.nodes[i].set_router_selection_jitter(params['router_selection_jitter'])
@@ -185,15 +177,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'timeout' in params:
                 self.nodes[i].set_timeout(params['timeout'])
 
-            if 'active_dataset' in params:
-                if 'master_key' not in params['active_dataset']:
-                    params['active_dataset']['master_key'] = binascii.hexlify(config.DEFAULT_MASTER_KEY).decode()
-                self.nodes[i].set_active_dataset(params['active_dataset']['timestamp'],
-                                                 panid=params['active_dataset'].get('panid'),
-                                                 channel=params['active_dataset'].get('channel'),
-                                                 channel_mask=params['active_dataset'].get('channel_mask'),
-                                                 master_key=params['active_dataset'].get('master_key'),
-                                                 security_policy=params['active_dataset'].get('security_policy'))
+            self._set_up_active_dataset(self.nodes[i], params)
 
             if 'pending_dataset' in params:
                 self.nodes[i].set_pending_dataset(params['pending_dataset']['pendingtimestamp'],
@@ -234,6 +218,32 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         self._inspector = debug.Inspector(self)
         self._collect_test_info_after_setup()
+
+    def _set_up_active_dataset(self, node, params):
+        dataset = {
+            'master_key': binascii.hexlify(config.DEFAULT_MASTER_KEY).decode(),
+            'panid': params['panid'],
+        }
+
+        dataset['timestamp'] = 0
+        dataset['channel'] = config.CHANNEL
+        dataset['channel_mask'] = config.CHANNEL_MASK
+        dataset['security_policy'] = config.SECURITY_POLICY
+        dataset['network_name'] = config.NETWORK_NAME
+        dataset['extended_panid'] = config.EXTENDED_PANID
+        dataset['pskc'] = config.PSKC
+
+        if 'channel' in params:
+            dataset['channel'] = params['channel']
+        if 'masterkey' in params:
+            dataset['master_key'] = params['masterkey']
+        if 'network_name' in params:
+            dataset['network_name'] = params['network_name']
+
+        if 'active_dataset' in params:
+            dataset.update(params['active_dataset'])
+
+        node.set_active_dataset(**dataset)
 
     def inspect(self):
         self._inspector.inspect()
