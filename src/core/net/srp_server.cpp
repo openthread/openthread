@@ -90,7 +90,6 @@ Server::Server(Instance &aInstance)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer, this)
     , mEnabled(false)
 {
-    IgnoreError(SetDomain(kDefaultDomain));
 }
 
 Server::~Server(void)
@@ -405,6 +404,12 @@ void Server::Start(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!IsRunning());
+
+    if (GetDomain() == nullptr)
+    {
+        SuccessOrExit(error = SetDomain(kDefaultDomain));
+        OT_ASSERT(GetDomain() != nullptr);
+    }
 
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(0));

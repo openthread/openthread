@@ -74,7 +74,8 @@ typedef void otSrpServerService;
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
  *
- * @returns A pointer to the dot-joined domain string.
+ * @returns A pointer to the dot-joined domain string, or NULL if the domain is not set
+ *          and the server hasn't been started.
  *
  */
 const char *otSrpServerGetDomain(otInstance *aInstance);
