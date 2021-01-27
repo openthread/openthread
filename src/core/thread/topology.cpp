@@ -255,13 +255,13 @@ void Child::AddressIterator::Update(void)
 {
     const Ip6::Address *address;
 
+    if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
+    {
+        mIndex++;
+    }
+
     while (true)
     {
-        if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
-        {
-            mIndex++;
-        }
-
         address = GetAddress();
 
         VerifyOrExit((address != nullptr) && !address->IsUnspecified(), mIndex = kMaxIndex);
