@@ -35,6 +35,10 @@
 
 #include "platform-posix.h"
 
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET && !defined(__linux__)
+#error "netlink socket use is only supported on linux platform"
+#endif
+
 #include <arpa/inet.h>
 #include <assert.h>
 #include <fcntl.h>
@@ -43,6 +47,11 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+#include <linux/if_tun.h>
+#include <linux/netlink.h>
+#include <linux/rtnetlink.h>
+#endif
 
 #include <openthread/platform/trel-udp6.h>
 
@@ -56,6 +65,9 @@
 
 #define USEC_PER_MSEC 1000u
 #define TREL_SOCKET_BIND_MAX_WAIT_TIME_MSEC 4000u
+
+#define TREL_UNICAST_ADDRESS_PREFIX_LEN 64
+#define TREL_UNICAST_ADDRESS_SCOPE 2 // The unicast address is link-local
 
 typedef struct TxPacket
 {
@@ -126,6 +138,66 @@ exit:
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
 #endif // OPENTHREAD_CONFIG_LOG_PLATFORM
 
+#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+
+static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAdd)
+{
+    int            netlinkSocket;
+    int            ret;
+    struct rtattr *rta;
+
+    struct
+    {
+        struct nlmsghdr  nh;
+        struct ifaddrmsg ifa;
+        char             buf[64];
+    } request;
+
+    netlinkSocket = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    VerifyOrDie(netlinkSocket >= 0, OT_EXIT_ERROR_ERRNO);
+
+    memset(&request, 0, sizeof(request));
+
+    request.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
+    request.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
+    request.nh.nlmsg_type  = aToAdd ? RTM_NEWADDR : RTM_DELADDR;
+    request.nh.nlmsg_pid   = 0;
+    request.nh.nlmsg_seq   = 0;
+
+    request.ifa.ifa_family    = AF_INET6;
+    request.ifa.ifa_prefixlen = TREL_UNICAST_ADDRESS_PREFIX_LEN;
+    request.ifa.ifa_flags     = IFA_F_NODAD;
+    request.ifa.ifa_scope     = TREL_UNICAST_ADDRESS_SCOPE;
+    request.ifa.ifa_index     = sInterfaceIndex;
+
+    rta = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&request)) + NLMSG_ALIGN(request.nh.nlmsg_len));
+    rta->rta_type = IFA_LOCAL;
+    rta->rta_len  = RTA_LENGTH(sizeof(otIp6Address));
+
+    memcpy(RTA_DATA(rta), aUnicastAddress, sizeof(otIp6Address));
+
+    request.nh.nlmsg_len = NLMSG_ALIGN(request.nh.nlmsg_len) + rta->rta_len;
+
+    ret = send(netlinkSocket, &request, request.nh.nlmsg_len, 0);
+    VerifyOrDie(ret != -1, OT_EXIT_ERROR_ERRNO);
+
+    close(netlinkSocket);
+}
+
+static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
+{
+    otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
+    UpdateUnicastAddress(aUnicastAddress, /* aToAdd */ true);
+}
+
+static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
+{
+    otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
+    UpdateUnicastAddress(aUnicastAddress, /* aToAdd */ false);
+}
+
+#else // OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+
 static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 {
     int mgmtFd;
@@ -184,6 +256,8 @@ static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
 
     close(mgmtFd);
 }
+
+#endif // OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
 
 static void PrepareSocket(void)
 {
