@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,36 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(NOT OT_EXTERNAL_MBEDTLS)
-    add_subdirectory(mbedtls)
+string(REPLACE "-Wundef" "" OT_CFLAGS "${OT_CFLAGS}")
+add_library(jlinkrtt
+    SEGGER_RTT_V640/RTT/SEGGER_RTT.c
+)
+
+if(OT_PLATFORM STREQUAL "nrf52811")
+    target_compile_options(jlinkrtt PRIVATE
+        -DNRF52811_XXAA
+    )
+elseif(OT_PLATFORM STREQUAL "nrf52833")
+    target_compile_options(jlinkrtt PRIVATE
+        -DNRF52833_XXAA
+    )
+else()
+    target_compile_options(jlinkrtt PRIVATE
+        -DNRF52840_XXAA
+    )
 endif()
 
-if(OT_PLATFORM STREQUAL "kw41z")
-    add_subdirectory(nxp)
-elseif(OT_PLATFORM MATCHES "cc*")
-    add_subdirectory(ti)
-elseif(OT_PLATFORM STREQUAL "qpg6095")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "samr21")
-    add_subdirectory(microchip)
-elseif(OT_PLATFORM MATCHES "^nrf*")
-    add_subdirectory(jlink)
-    add_subdirectory(NordicSemiconductor)
-endif()
+target_compile_options(jlinkrtt PRIVATE
+    -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
+    -DUSE_APP_CONFIG=1
+)
+
+target_include_directories(jlinkrtt PRIVATE
+    ${PROJECT_SOURCE_DIR}/include
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/cmsis
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/${OT_PLATFORM}/config
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/dependencies
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/app_error
+    ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/mdk
+)
