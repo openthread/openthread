@@ -862,7 +862,8 @@ void TestHeaderAndResourceRecords(void)
     {
         uint16_t prevNumRecords = numRecords;
 
-        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kServiceName), "FindRecord failed");
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kServiceName)),
+                      "FindRecord failed");
         VerifyOrQuit(numRecords == prevNumRecords - 1, "Incorrect num records");
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, ptrRecord), "ReadRecord() failed");
         VerifyOrQuit(ptrRecord.GetTtl() == kTtl, "Read PTR is incorrect");
@@ -873,7 +874,8 @@ void TestHeaderAndResourceRecords(void)
     }
 
     VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
-    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kServiceName) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kServiceName)) ==
+                     OT_ERROR_NOT_FOUND,
                  "FindRecord did not fail with no records");
 
     // Use `ReadRecord()` with a non-matching record type. Verify that it correct skips over the record.
@@ -883,7 +885,8 @@ void TestHeaderAndResourceRecords(void)
 
     while (numRecords > 0)
     {
-        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kServiceName), "FindRecord failed");
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kServiceName)),
+                      "FindRecord failed");
         VerifyOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord) == OT_ERROR_NOT_FOUND,
                      "ReadRecord() did not fail with non-matching type");
     }
@@ -894,7 +897,8 @@ void TestHeaderAndResourceRecords(void)
 
     offset     = answerSectionOffset;
     numRecords = kAnswerCount;
-    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kInstance1Name) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kInstance1Name)) ==
+                     OT_ERROR_NOT_FOUND,
                  "FindRecord did not fail with non-matching name");
     VerifyOrQuit(numRecords == 0, "Incorrect num records");
     VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
@@ -950,18 +954,21 @@ void TestHeaderAndResourceRecords(void)
         offset     = additionalSectionOffset;
         numRecords = kAdditionalCount;
 
-        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, instanceName), "FindRecord failed");
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(instanceName)),
+                      "FindRecord failed");
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord), "ReadRecord() failed");
         SuccessOrQuit(Dns::Name::ParseName(*message, offset), "ParseName() failed");
         printf("    \"%s\" SRV %u %d %d %d %d\n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
                srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority());
 
-        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, instanceName), "FindRecord failed");
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(instanceName)),
+                      "FindRecord failed");
         SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, txtRecord), "ReadRecord() failed");
         offset += txtRecord.GetLength();
         printf("    \"%s\" TXT %u %d\n", instanceName, txtRecord.GetTtl(), txtRecord.GetLength());
 
-        VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, instanceName) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(instanceName)) ==
+                         OT_ERROR_NOT_FOUND,
                      "FindRecord() did not fail with no more records");
 
         VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
@@ -969,7 +976,8 @@ void TestHeaderAndResourceRecords(void)
 
     offset     = additionalSectionOffset;
     numRecords = kAdditionalCount;
-    SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, kHostName), "FindRecord() failed");
+    SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kHostName)),
+                  "FindRecord() failed");
     SuccessOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, record), "ReadRecord() failed");
     VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeAaaa, "Read record has incorrect type");
     offset += record.GetLength();
