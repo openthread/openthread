@@ -40,8 +40,7 @@
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "net/dns_headers.hpp"
-#include "thread/network_data_local.hpp"
-#include "thread/network_data_notifier.hpp"
+#include "thread/network_data_service.hpp"
 #include "thread/thread_netif.hpp"
 #include "utils/heap.hpp"
 
@@ -468,33 +467,19 @@ exit:
 
 otError Server::PublishServerData(void)
 {
-    otError       error;
-    const uint8_t serviceData[] = {kThreadServiceTypeSrpServer};
-    uint8_t       serverData[sizeof(uint16_t)];
+    NetworkData::Service::SrpServer::ServerData serverData;
 
     OT_ASSERT(mSocket.IsBound());
 
-    Encoding::BigEndian::WriteUint16(mSocket.GetSockName().mPort, serverData);
+    serverData.SetPort(mSocket.GetSockName().GetPort());
 
-    SuccessOrExit(error = Get<NetworkData::Local>().AddService(
-                      NetworkData::ServiceTlv::kThreadEnterpriseNumber, serviceData, sizeof(serviceData),
-                      /* aServerStable */ true, serverData, sizeof(serverData)));
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-
-exit:
-    return error;
+    return Get<NetworkData::Service::Manager>().Add<NetworkData::Service::SrpServer>(serverData);
 }
 
 void Server::UnpublishServerData(void)
 {
-    otError       error;
-    const uint8_t serviceData[] = {kThreadServiceTypeSrpServer};
+    otError error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::SrpServer>();
 
-    SuccessOrExit(error = Get<NetworkData::Local>().RemoveService(NetworkData::ServiceTlv::kThreadEnterpriseNumber,
-                                                                  serviceData, sizeof(serviceData)));
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
-
-exit:
     if (error != OT_ERROR_NONE)
     {
         otLogWarnSrp("[server] failed to unpublish SRP service: %s", otThreadErrorToString(error));

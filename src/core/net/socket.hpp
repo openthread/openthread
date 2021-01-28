@@ -305,6 +305,14 @@ public:
     uint16_t GetPort(void) const { return mPort; }
 
     /**
+     * This method sets the socket address port number.
+     *
+     * @param[in] aPort  The port number.
+     *
+     */
+    void SetPort(uint16_t aPort) { mPort = aPort; }
+
+    /**
      * This method overloads operator `==` to evaluate whether or not two `SockAddr` instances are equal (same address
      * and port number).
      *

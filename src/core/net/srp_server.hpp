@@ -480,11 +480,6 @@ public:
     void HandleAdvertisingResult(const Host *aHost, otError aError);
 
 private:
-    enum : uint8_t
-    {
-        kThreadServiceTypeSrpServer = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_TYPE,
-    };
-
     enum : uint16_t
     {
         kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header), // Max UDP payload size

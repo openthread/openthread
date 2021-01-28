@@ -631,6 +631,11 @@ template <> inline NetworkData::Notifier &Instance::Get(void)
 }
 #endif
 
+template <> inline NetworkData::Service::Manager &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataServiceManager;
+}
+
 template <> inline Ip6::Udp &Instance::Get(void)
 {
     return mIp6.mUdp;

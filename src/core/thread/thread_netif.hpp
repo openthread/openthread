@@ -95,6 +95,7 @@
 #include "thread/mle_router.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
+#include "thread/network_data_service.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
 #include "thread/radio_selector.hpp"
@@ -227,6 +228,7 @@ private:
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Notifier mNetworkDataNotifier;
 #endif
+    NetworkData::Service::Manager mNetworkDataServiceManager;
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
