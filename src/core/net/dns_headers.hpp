@@ -1201,6 +1201,50 @@ public:
     static otError FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const Name &aName);
 
     /**
+     * This template static method searches in a message to find the i-th occurrence of resource records of specific
+     * type with a given record name and if found, reads the record from the message.
+     *
+     * This method searches in @p aMessage starting from @p aOffset up to maximum of @p aNumRecords, for the
+     * `(aIndex+1)`th occurrence of a resource record of `RecordType` with record name @p aName.
+     *
+     * On success (i.e., when a matching record is found and read from the message), @p aOffset is updated to point
+     * to after the last byte read from the message and copied into @p aRecord. This allows the caller to read any
+     * remaining fields in the record data.
+     *
+     * @tparam       RecordType      The resource record type (i.e., a sub-class of `ResourceRecord`).
+     *
+     * @param[in]    aMessage        The message to search within for matching resource records.
+     *                               `aMessage.GetOffset()` MUST point to the start of DNS header.
+     * @param[inout] aOffset         On input, the offset in @p aMessage pointing to the start of the first record.
+     *                               On exit and only if a matching record is found, @p aOffset is updated to point to
+     *                               the last read byte in the record (allowing caller to read any remaining fields in
+     *                               the record data from the message).
+     * @param[in]    aNumRecords     The maximum number of records to check (starting from @p aOffset).
+     * @param[in]    aIndex          The matching record index to find. @p aIndex value of zero returns the first
+     *                               matching record.
+     * @param[in]    aName           The record name to match against.
+     * @param[in]    aRecord         A reference to a record object to read a matching record into.
+     *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
+     *                               read and copied into @p aRecord.
+     *
+     * @retval OT_ERROR_NONE         A matching record was found. @p aOffset is updated.
+     * @retval OT_ERROR_NOT_FOUND    A matching record could not be found.
+     * @retval OT_ERROR_PARSE        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     *
+     */
+    template <class RecordType>
+    static otError FindRecord(const Message &aMessage,
+                              uint16_t &     aOffset,
+                              uint16_t       aNumRecords,
+                              uint16_t       aIndex,
+                              const Name &   aName,
+                              RecordType &   aRecord)
+    {
+        return FindRecord(aMessage, aOffset, aNumRecords, aIndex, aName, RecordType::kType, aRecord,
+                          sizeof(RecordType));
+    }
+
+    /**
      * This template static method tries to read a resource record of a given type from a message. If the record type
      * does not matches the type, it skips over the record.
      *
@@ -1227,7 +1271,7 @@ public:
      *                               after the entire record (skipping over the record).
      * @param[out]   aRecord         A reference to a record to read a matching record into.
      *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
-     *                               read from @p aMessage and copied into @p aRecord.
+     *                               read and copied into @p aRecord.
      *
      * @retval OT_ERROR_NONE         A matching record was read successfully. @p aOffset, and @p aRecord are updated.
      * @retval OT_ERROR_NOT_FOUND    A matching record could not be found. @p aOffset is updated.
@@ -1254,6 +1298,15 @@ private:
     {
         kType = kTypeAny, // This is intended for used by `ReadRecord()` only.
     };
+
+    static otError FindRecord(const Message & aMessage,
+                              uint16_t &      aOffset,
+                              uint16_t        aNumRecords,
+                              uint16_t        aIndex,
+                              const Name &    aName,
+                              uint16_t        aType,
+                              ResourceRecord &aRecord,
+                              uint16_t        aMinRecordSize);
 
     static otError ReadRecord(const Message & aMessage,
                               uint16_t &      aOffset,

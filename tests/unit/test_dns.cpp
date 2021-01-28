@@ -734,6 +734,7 @@ void TestHeaderAndResourceRecords(void)
     uint16_t            hostNameOffset;
     uint16_t            answerSectionOffset;
     uint16_t            additionalSectionOffset;
+    uint16_t            index;
     Dns::PtrRecord      ptrRecord;
     Dns::SrvRecord      srvRecord;
     Dns::TxtRecord      txtRecord;
@@ -1019,6 +1020,81 @@ void TestHeaderAndResourceRecords(void)
     VerifyOrQuit(record.GetType() == Dns::ResourceRecord::kTypeAaaa, "Read record has incorrect type");
     offset += record.GetLength();
     VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
+
+    printf("Use FindRecord() to search for specific records:\n");
+    printf(" Answer Section\n");
+
+    for (index = 0; index < OT_ARRAY_LENGTH(kInstanceNames); index++)
+    {
+        offset = answerSectionOffset;
+        SuccessOrQuit(
+            Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kServiceName), ptrRecord),
+            "FindRecord() failed");
+
+        printf("   index:%d -> \"%s\" PTR %u %d\n", index, kServiceName, ptrRecord.GetTtl(), ptrRecord.GetLength());
+    }
+
+    // Check `FindRecord()` failure with non-matching name, record type, or bad index.
+
+    offset = answerSectionOffset;
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kServiceName),
+                                                 ptrRecord) == OT_ERROR_NOT_FOUND,
+                 "FindRecord() did not fail with bad index");
+    VerifyOrQuit(offset == answerSectionOffset, "FindRecord() changed offset on failure");
+
+    offset = answerSectionOffset;
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kInstance1Name),
+                                                 ptrRecord) == OT_ERROR_NOT_FOUND,
+                 "FindRecord() did not fail with bad index");
+    VerifyOrQuit(offset == answerSectionOffset, "FindRecord() changed offset on failure");
+
+    offset = answerSectionOffset;
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kServiceName),
+                                                 txtRecord) == OT_ERROR_NOT_FOUND,
+                 "FindRecord() did not fail with bad index");
+    VerifyOrQuit(offset == answerSectionOffset, "FindRecord() changed offset on failure");
+
+    printf(" Additional Section\n");
+
+    for (const char *instanceName : kInstanceNames)
+    {
+        // There is a single SRV and TXT entry for each instance
+        offset = additionalSectionOffset;
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, /* aIndex */ 0,
+                                                      Dns::Name(instanceName), srvRecord),
+                      "FindRecord() failed");
+        printf("    \"%s\" SRV %u %d %d %d %d \n", instanceName, srvRecord.GetTtl(), srvRecord.GetLength(),
+               srvRecord.GetPort(), srvRecord.GetWeight(), srvRecord.GetPriority());
+
+        offset = additionalSectionOffset;
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, /* aIndex */ 0,
+                                                      Dns::Name(instanceName), txtRecord),
+                      "FindRecord() failed");
+        printf("    \"%s\" TXT %u %d\n", instanceName, txtRecord.GetTtl(), txtRecord.GetLength());
+
+        offset = additionalSectionOffset;
+        VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, /* aIndex */ 1,
+                                                     Dns::Name(instanceName), srvRecord) == OT_ERROR_NOT_FOUND,
+                     "FindRecord() did not fail with bad index");
+
+        offset = additionalSectionOffset;
+        VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, /* aIndex */ 1,
+                                                     Dns::Name(instanceName), txtRecord) == OT_ERROR_NOT_FOUND,
+                     "FindRecord() did not fail with bad index");
+    }
+
+    for (index = 0; index < kAdditionalCount; index++)
+    {
+        offset = additionalSectionOffset;
+        // Find record with empty name (matching any) and any type.
+        SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, index, Dns::Name(), record),
+                      "FindRecord() failed");
+    }
+
+    offset = additionalSectionOffset;
+    VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, index, Dns::Name(), record) ==
+                     OT_ERROR_NOT_FOUND,
+                 "FindRecord() did not fail with bad index");
 
     message->Free();
     testFreeInstance(instance);
