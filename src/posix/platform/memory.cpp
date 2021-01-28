@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,54 +26,21 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- * @brief
- *  This file defines the API for setting external heap in OpenThread.
- */
+#include "openthread-posix-config.h"
+#include "platform-posix.h"
 
-#ifndef OPENTHREAD_HEAP_H_
-#define OPENTHREAD_HEAP_H_
+#include <stdlib.h>
 
-#include <openthread/instance.h>
+#include <openthread/platform/memory.h>
 
-#ifdef __cplusplus
-extern "C" {
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+void *otPlatCAlloc(size_t aNum, size_t aSize)
+{
+    return calloc(aNum, aSize);
+}
+
+void otPlatFree(void *aPtr)
+{
+    free(aPtr);
+}
 #endif
-
-/**
- * @addtogroup api-heap
- *
- * @brief
- *   This module includes functions that set the external OpenThread heap.
- *
- * @{
- *
- */
-
-// This is a temporary API and would be removed after moving heap to platform.
-// TODO: Remove after moving heap to platform.
-/**
- * @note This API is deprecated and use of it is discouraged.
- *
- */
-void *otHeapCAlloc(size_t aCount, size_t aSize);
-
-// This is a temporary API and would be removed after moving heap to platform.
-// TODO: Remove after moving heap to platform.
-/**
- * @note This API is deprecated and use of it is discouraged.
- *
- */
-void otHeapFree(void *aPointer);
-
-/**
- * @}
- *
- */
-
-#ifdef __cplusplus
-} // extern "C"
-#endif
-
-#endif // OPENTHREAD_HEAP_H_

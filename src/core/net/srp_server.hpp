@@ -80,7 +80,7 @@ public:
      * This class implements a server-side SRP service.
      *
      */
-    class Service : public InstanceLocator, public LinkedListEntry<Service>, private NonCopyable
+    class Service : public LinkedListEntry<Service>, private NonCopyable
     {
         friend class LinkedListEntry<Service>;
         friend class Server;
@@ -89,14 +89,13 @@ public:
         /**
          * This method creates a new Service object with given full name.
          *
-         * @param[in]  aInstance  A reference to the OpenThread instance.
          * @param[in]  aFullName  The full name of the service instance.
          *
-         * @returns  A pointer to the newly created Service object. nullptr if
+         * @returns  A pointer to the newly created Service object, nullptr if
          *           cannot allocate memory for the object.
          *
          */
-        static Service *New(Instance &aInstance, const char *aFullName);
+        static Service *New(const char *aFullName);
 
         /**
          * This method frees the Service object.
@@ -198,7 +197,7 @@ public:
         bool Matches(const char *aFullName) const;
 
     private:
-        explicit Service(Instance &aInstance);
+        explicit Service(void);
         otError SetFullName(const char *aFullName);
         otError SetTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
         otError SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
@@ -222,22 +221,20 @@ public:
      * This class implements the Host which registers services on the SRP server.
      *
      */
-    class Host : public InstanceLocator, public LinkedListEntry<Host>, private NonCopyable
+    class Host : public LinkedListEntry<Host>, private NonCopyable
     {
         friend class LinkedListEntry<Host>;
         friend class Server;
 
     public:
         /**
-         * This method creates a new Host object with given full name.
+         * This method creates a new Host object.
          *
-         * @param[in]  aInstance  A reference to the OpenThread instance.
-         *
-         * @returns  A pointer to the newly created Host object. nullptr if
+         * @returns  A pointer to the newly created Host object, nullptr if
          *           cannot allocate memory for the object.
          *
          */
-        static Host *New(Instance &aInstance);
+        static Host *New(void);
 
         /**
          * This method Frees the Host object.
@@ -348,7 +345,7 @@ public:
             kMaxAddressesNum = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM,
         };
 
-        explicit Host(Instance &aInstance);
+        explicit Host(void);
         otError  SetFullName(const char *aFullName);
         void     SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void     SetLease(uint32_t aLease);
