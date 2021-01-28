@@ -204,16 +204,6 @@ static const RAIL_IEEE802154_Config_t sRailIeee802154Config = {
 static volatile uint16_t miscInternalFlags = 0;
 static bool              emPendingData     = false;
 
-// Antenna Diveristy
-#ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
-
-#ifndef RAIL_RX_OPTIONS_ANTENNA
-#define RAIL_RX_OPTIONS_ANTENNA (RAIL_RX_OPTION_ANTENNA0 | RAIL_RX_OPTION_ANTENNA1)
-#endif // RAIL_RX_OPTIONS_ANTENNA
-static int8_t sTxAntenna = SL_RAIL_UTIL_ANT_DIV_ANTENNA0;
-
-#endif // SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
-
 #ifdef SL_CATALOG_RAIL_UTIL_COEX_PRESENT
 enum
 {
@@ -1001,10 +991,11 @@ void txCurrentPacket(void)
     // Update Tx options to use currently-selected antenna.
     // If antenna diverisity on Tx is disabled, leave both options 0
     // so Tx antenna tracks Rx antenna.
-    if (SL_RAIL_UTIL_ANT_DIV_TX_MODE != SL_RAIL_UTIL_ANT_DIV_DISABLED)
+    if (sl_rail_util_ant_div_get_antenna_mode() != SL_RAIL_UTIL_ANT_DIV_DISABLED)
     {
-        txOptions |=
-            ((sTxAntenna == SL_RAIL_UTIL_ANT_DIV_ANTENNA0) ? RAIL_TX_OPTION_ANTENNA0 : RAIL_TX_OPTION_ANTENNA1);
+        txOptions |= ((sl_rail_util_ant_div_get_antenna_selected() == SL_RAIL_UTIL_ANTENNA_SELECT_ANTENNA1)
+                          ? RAIL_TX_OPTION_ANTENNA0
+                          : RAIL_TX_OPTION_ANTENNA1);
     }
 #endif // SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
 
@@ -1963,10 +1954,7 @@ static void ackTimeoutCallback(void)
 
 #ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
     // If antenna diversity is enabled toggle the selected antenna.
-    if (SL_RAIL_UTIL_ANT_DIV_TX_MODE == SL_RAIL_UTIL_ANT_DIV_DIVERSITY)
-    {
-        sTxAntenna = (sTxAntenna ^ SL_RAIL_UTIL_ANT_DIV_ANTENNA0 ^ SL_RAIL_UTIL_ANT_DIV_ANTENNA1);
-    }
+    sl_rail_util_ant_div_toggle_antenna();
 #endif // SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
     // TO DO: Check if we have an OT function that
     // provides the number of mac retry attempts left
@@ -2447,19 +2435,10 @@ exit:
 #ifdef SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
 void efr32AntennaConfigInit(void)
 {
-    RAIL_Status_t    status;
-    RAIL_RxOptions_t sRxOptions = RAIL_RX_OPTIONS_DEFAULT;
-
+    RAIL_Status_t status;
     sl_rail_util_ant_div_init();
-    sl_rail_util_ant_div_init_rx_options(&sRxOptions);
-    status = RAIL_ConfigRxOptions(gRailHandle, RAIL_RX_OPTIONS_ANTENNA, sRxOptions);
+    status = sl_rail_util_ant_div_update_antenna_config();
     assert(status == RAIL_STATUS_NO_ERROR);
-
-    // Change default antenna for Tx, if configured accordingly.
-    if (SL_RAIL_UTIL_ANT_DIV_TX_MODE == SL_RAIL_UTIL_ANT_DIV_ANTENNA1)
-    {
-        sTxAntenna = SL_RAIL_UTIL_ANT_DIV_ANTENNA1;
-    }
 }
 #endif // SL_CATALOG_RAIL_UTIL_ANT_DIV_PRESENT
 
@@ -2647,27 +2626,3 @@ void efr32RadioClearCoexCounters(void)
 
 #endif // SL_OPENTHREAD_COEX_COUNTER_ENABLE
 #endif // SL_CATALOG_RAIL_UTIL_COEX_PRESENT
-
-RAIL_AntennaConfig_t halAntennaConfig;
-
-void initAntenna(void)
-{
-#if (HAL_ANTDIV_ENABLE && defined(BSP_ANTDIV_SEL_PORT) && defined(BSP_ANTDIV_SEL_PIN) && defined(BSP_ANTDIV_SEL_LOC))
-    halAntennaConfig.ant0PinEn = true;
-    halAntennaConfig.ant0Port  = (uint8_t)BSP_ANTDIV_SEL_PORT;
-    halAntennaConfig.ant0Pin   = BSP_ANTDIV_SEL_PIN;
-    halAntennaConfig.ant0Loc   = BSP_ANTDIV_SEL_LOC;
-#endif
-#ifdef _SILICON_LABS_32B_SERIES_2
-    halAntennaConfig.defaultPath = BSP_ANTDIV_SEL_LOC;
-#endif
-#if (HAL_ANTDIV_ENABLE && defined(BSP_ANTDIV_NSEL_PORT) && defined(BSP_ANTDIV_NSEL_PIN) && defined(BSP_ANTDIV_NSEL_LOC))
-    halAntennaConfig.ant1PinEn = true;
-    halAntennaConfig.ant1Port  = (uint8_t)BSP_ANTDIV_NSEL_PORT;
-    halAntennaConfig.ant1Pin   = BSP_ANTDIV_NSEL_PIN;
-    halAntennaConfig.ant1Loc   = BSP_ANTDIV_NSEL_LOC;
-#endif
-#if (HAL_ANTDIV_ENABLE || defined(_SILICON_LABS_32B_SERIES_2))
-    (void)RAIL_ConfigAntenna(RAIL_EFR32_HANDLE, &halAntennaConfig);
-#endif
-}
