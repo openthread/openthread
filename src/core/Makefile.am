@@ -258,6 +258,7 @@ SOURCES_COMMON                                  = \
     thread/network_data_leader_ftd.cpp            \
     thread/network_data_local.cpp                 \
     thread/network_data_notifier.cpp              \
+    thread/network_data_service.cpp               \
     thread/network_diagnostic.cpp                 \
     thread/panid_query_server.cpp                 \
     thread/radio_selector.cpp                     \
@@ -506,6 +507,7 @@ HEADERS_COMMON                                  = \
     thread/network_data_leader_ftd.hpp            \
     thread/network_data_local.hpp                 \
     thread/network_data_notifier.hpp              \
+    thread/network_data_service.hpp               \
     thread/network_data_tlvs.hpp                  \
     thread/network_diagnostic.hpp                 \
     thread/network_diagnostic_tlvs.hpp            \
