@@ -117,6 +117,11 @@ void SettingsDriver::Init(void)
     otPlatSettingsInit(&GetInstance());
 }
 
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    otPlatSettingsSetCriticalKeys(&GetInstance(), aKeys, aKeysLength);
+}
+
 void SettingsDriver::Deinit(void)
 {
     otPlatSettingsDeinit(&GetInstance());
@@ -160,6 +165,12 @@ void SettingsDriver::Init(void)
     mFlash.Init();
 }
 
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    OT_UNUSED_VARIABLE(aKeys);
+    OT_UNUSED_VARIABLE(aKeysLength);
+}
+
 void SettingsDriver::Deinit(void)
 {
 }
@@ -194,6 +205,7 @@ void SettingsDriver::Wipe(void)
 void Settings::Init(void)
 {
     Get<SettingsDriver>().Init();
+    Get<SettingsDriver>().SetCriticalKeys(mCriticalKeys, OT_ARRAY_LENGTH(mCriticalKeys));
 }
 
 void Settings::Deinit(void)
@@ -579,3 +591,13 @@ otError Settings::Delete(Key aKey)
 }
 
 } // namespace ot
+
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of settings platform APIs
+
+OT_TOOL_WEAK void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeys);
+    OT_UNUSED_VARIABLE(aKeysLength);
+}

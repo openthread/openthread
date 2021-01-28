@@ -78,6 +78,15 @@ public:
     void Deinit(void);
 
     /**
+     * This method sets the critical keys that should be stored in a secure area.
+     *
+     * @param[in]  aKeys        A pointer to the value of the critical keys.
+     * @param[in]  aKeysLength  The length of the keys pointed to by @p akeys.
+     *
+     */
+    void SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength);
+
+    /**
      * This method adds a value to @p aKey.
      *
      * @param[in]  aKey          The key associated with the value.
@@ -1111,6 +1120,8 @@ private:
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);
     otError Delete(Key aKey);
+
+    const uint16_t mCriticalKeys[3] = {kKeyActiveDataset, kKeyPendingDataset, kKeySrpEcdsaKey};
 };
 
 } // namespace ot

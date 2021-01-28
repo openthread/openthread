@@ -67,6 +67,18 @@ void otPlatSettingsInit(otInstance *aInstance);
  */
 void otPlatSettingsDeinit(otInstance *aInstance);
 
+/**
+ * This function sets the critical keys that should be stored in a secure area.
+ *
+ * Note that the memory pointed by @p aKeys will never be released by the caller.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aKeys        A pointer to the value of the critical keys.
+ * @param[in]  aKeysLength  The length of the keys pointed to by @p akeys.
+ *
+ */
+void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys, uint16_t aKeysLength);
+
 /// Fetches the value of a setting
 /** This function fetches the value of the setting identified
  *  by aKey and write it to the memory pointed to by aValue.
