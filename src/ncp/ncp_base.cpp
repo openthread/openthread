@@ -243,6 +243,10 @@ NcpBase::NcpBase(Instance *aInstance)
     , mOutboundInsecureIpFrameCounter(0)
     , mDroppedOutboundIpFrameCounter(0)
     , mDroppedInboundIpFrameCounter(0)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClientNumHostAddresses(0)
+    , mSrpClientCallbackEnabled(false)
+#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
     , mFramingErrorCounter(0)
     , mRxSpinelFrameCounter(0)
@@ -281,6 +285,7 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
     otThreadRegisterParentResponseCallback(mInstance, &NcpBase::HandleParentResponseInfo, static_cast<void *>(this));
 #endif // OPENTHREAD_FTD
+
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
     mLegacyNodeDidJoin = false;
     mLegacyHandlers    = nullptr;
@@ -1909,6 +1914,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MULTI_RADIO));
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SRP_CLIENT));
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
