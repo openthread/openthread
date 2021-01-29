@@ -92,11 +92,9 @@ void Local::SetEnabled(bool aEnable)
     else
     {
         RemoveDomainPrefixFromNetworkData();
-        IgnoreError(RemoveService());
+        RemoveService();
         SetState(OT_BACKBONE_ROUTER_STATE_DISABLED);
     }
-
-    Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
 exit:
     return;
@@ -106,10 +104,7 @@ void Local::Reset(void)
 {
     VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED);
 
-    if (RemoveService() == OT_ERROR_NONE)
-    {
-        Get<NetworkData::Notifier>().HandleServerDataUpdated();
-    }
+    RemoveService();
 
     if (mState == OT_BACKBONE_ROUTER_STATE_PRIMARY)
     {
@@ -166,10 +161,7 @@ otError Local::SetConfig(const BackboneRouterConfig &aConfig)
     {
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
 
-        if (AddService() == OT_ERROR_NONE)
-        {
-            Get<NetworkData::Notifier>().HandleServerDataUpdated();
-        }
+        IgnoreError(AddService());
     }
 
 exit:
@@ -200,13 +192,14 @@ otError Local::AddService(bool aForce)
                       reinterpret_cast<const uint8_t *>(&serverData), sizeof(serverData)));
 
     mIsServiceAdded = true;
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
 exit:
     LogBackboneRouterService("Add", error);
     return error;
 }
 
-otError Local::RemoveService(void)
+void Local::RemoveService(void)
 {
     otError error;
     uint8_t serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
@@ -215,10 +208,10 @@ otError Local::RemoveService(void)
                                                                   &serviceData, sizeof(serviceData)));
 
     mIsServiceAdded = false;
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
 exit:
     LogBackboneRouterService("Remove", error);
-    return error;
 }
 
 void Local::SetState(BackboneRouterState aState)
