@@ -1039,8 +1039,8 @@ class OTCI(object):
     #
     # Network Data utilities
     #
-    def get_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
-        """Get the prefix list in the local Network Data."""
+    def get_local_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
+        """Get prefixes from local Network Data."""
         output = self.execute_command('prefix')
         return self.__parse_prefixes(output)
 
@@ -1093,11 +1093,25 @@ class OTCI(object):
             else:
                 routes_output.append(line)
 
-        print('routes_output:', routes_output, output)
         netdata['routes'] = self.__parse_routes(routes_output)
         netdata['services'] = self.__parse_services(output)
 
         return netdata
+
+    def get_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
+        """Get network prefixes from Thread Network Data."""
+        network_data = self.get_network_data()
+        return network_data['prefixes']
+
+    def get_routes(self) -> List[Tuple[str, bool, str, Rloc16]]:
+        """Get routes from Thread Network Data."""
+        network_data = self.get_network_data()
+        return network_data['routes']
+
+    def get_services(self) -> List[Tuple[int, bytes, bytes, bool, Rloc16]]:
+        """Get services from Thread Network Data"""
+        network_data = self.get_network_data()
+        return network_data['services']
 
     def __parse_services(self, output: List[str]) -> List[Tuple[int, bytes, bytes, bool, Rloc16]]:
         services = []
@@ -1124,8 +1138,8 @@ class OTCI(object):
         hexstr = self.__parse_str(self.execute_command('netdata show -x'))
         return bytes(int(hexstr[i:i + 2], 16) for i in range(0, len(hexstr), 2))
 
-    def get_routes(self) -> List[Tuple[str, bool, str, Rloc16]]:
-        """Get the external route list in the local Network Data."""
+    def get_local_routes(self) -> List[Tuple[str, bool, str, Rloc16]]:
+        """Get routes from local Network Data."""
         return self.__parse_routes(self.execute_command('route'))
 
     def __parse_routes(self, output: List[str]) -> List[Tuple[str, bool, str, Rloc16]]:
