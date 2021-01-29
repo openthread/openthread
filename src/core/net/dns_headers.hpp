@@ -890,6 +890,19 @@ public:
      */
     static otError CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
 
+    /**
+     * This static method tests if a DNS name is a sub-domain of a given domain.
+     *
+     * Both @p aName and @p aDomain can end without dot ('.').
+     *
+     * @param[in]  aName    The dot-separated name.
+     * @param[in]  aDomain  The dot-separated domain.
+     *
+     * @returns  TRUE if the name is a sub-domain of @p aDomain, FALSE if is not.
+     *
+     */
+    static bool IsSubDomainOf(const char *aName, const char *aDomain);
+
 private:
     enum : char
     {

@@ -146,6 +146,43 @@ void TestDnsName(void)
     message->SetOffset(0);
 
     printf("----------------------------------------------------------------\n");
+    printf("Verify domain name match:\n");
+
+    {
+        const char *subDomain;
+        const char *domain;
+
+        subDomain = "my-service._ipps._tcp.local.";
+        domain    = "local.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.local";
+        domain    = "local.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.local.";
+        domain    = "local";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.local";
+        domain    = "local";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.default.service.arpa.";
+        domain    = "default.service.arpa.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        subDomain = "my-service._ipps._tcp.default.service.arpa.";
+        domain    = "service.arpa.";
+        VerifyOrQuit(Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() failed");
+
+        // Verify it doesn't match a portion of a label.
+        subDomain = "my-service._ipps._tcp.default.service.arpa.";
+        domain    = "vice.arpa.";
+        VerifyOrQuit(!Dns::Name::IsSubDomainOf(subDomain, domain), "Name::IsSubDomainOf() succeed");
+    }
+
+    printf("----------------------------------------------------------------\n");
     printf("Append names, check encoded bytes, parse name and read labels:\n");
 
     for (const TestName &test : kTestNames)

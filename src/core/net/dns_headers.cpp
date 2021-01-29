@@ -539,6 +539,37 @@ bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) cons
                                  mLabelLength);
 }
 
+bool Name::IsSubDomainOf(const char *aName, const char *aDomain)
+{
+    bool     match        = false;
+    uint16_t nameLength   = StringLength(aName, kMaxLength);
+    uint16_t domainLength = StringLength(aDomain, kMaxLength);
+
+    if (nameLength > 0 && aName[nameLength - 1] == kLabelSeperatorChar)
+    {
+        --nameLength;
+    }
+
+    if (domainLength > 0 && aDomain[domainLength - 1] == kLabelSeperatorChar)
+    {
+        --domainLength;
+    }
+
+    VerifyOrExit(nameLength >= domainLength);
+    aName += nameLength - domainLength;
+
+    if (nameLength > domainLength)
+    {
+        VerifyOrExit(aName[-1] == kLabelSeperatorChar);
+    }
+    VerifyOrExit(memcmp(aName, aDomain, domainLength) == 0);
+
+    match = true;
+
+exit:
+    return match;
+}
+
 otError ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
 {
     otError error = OT_ERROR_NONE;

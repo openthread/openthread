@@ -361,7 +361,8 @@ public:
         void     DeleteResourcesButRetainName(void);
         void     CopyResourcesFrom(const Host &aHost);
         Service *FindService(const char *aFullName);
-        otError  AddIp6Address(const Ip6::Address &aIp6Address);
+        const Service *FindService(const char *aFullName) const;
+        otError        AddIp6Address(const Ip6::Address &aIp6Address);
 
         char *       mFullName;
         Ip6::Address mAddresses[kMaxAddressesNum];
@@ -552,45 +553,45 @@ private:
                                  const Message &          aMessage,
                                  const Dns::UpdateHeader &aDnsHeader,
                                  const Dns::Zone &        aZone,
-                                 uint16_t &               aOffset);
+                                 uint16_t &               aOffset) const;
     otError ProcessAdditionalSection(Host *                   aHost,
                                      const Message &          aMessage,
                                      const Dns::UpdateHeader &aDnsHeader,
-                                     uint16_t &               aOffset);
+                                     uint16_t &               aOffset) const;
     otError VerifySignature(const Dns::Ecdsa256KeyRecord &aKey,
                             const Message &               aMessage,
                             Dns::UpdateHeader             aDnsHeader,
                             uint16_t                      aSigOffset,
                             uint16_t                      aSigRdataOffset,
                             uint16_t                      aSigRdataLength,
-                            const char *                  aSignerName);
+                            const char *                  aSignerName) const;
+    otError ProcessZoneSection(const Message &          aMessage,
+                               const Dns::UpdateHeader &aDnsHeader,
+                               uint16_t &               aOffset,
+                               Dns::Zone &              aZone) const;
+    otError ProcessHostDescriptionInstruction(Host &                   aHost,
+                                              const Message &          aMessage,
+                                              const Dns::UpdateHeader &aDnsHeader,
+                                              const Dns::Zone &        aZone,
+                                              uint16_t                 aOffset) const;
+    otError ProcessServiceDiscoveryInstructions(Host &                   aHost,
+                                                const Message &          aMessage,
+                                                const Dns::UpdateHeader &aDnsHeader,
+                                                const Dns::Zone &        aZone,
+                                                uint16_t                 aOffset) const;
+    otError ProcessServiceDescriptionInstructions(Host &                   aHost,
+                                                  const Message &          aMessage,
+                                                  const Dns::UpdateHeader &aDnsHeader,
+                                                  const Dns::Zone &        aZone,
+                                                  uint16_t &               aOffset) const;
 
-    static otError ProcessZoneSection(const Message &          aMessage,
-                                      const Dns::UpdateHeader &aDnsHeader,
-                                      uint16_t &               aOffset,
-                                      Dns::Zone &              aZone);
-    static otError ProcessHostDescriptionInstruction(Host &                   aHost,
-                                                     const Message &          aMessage,
-                                                     const Dns::UpdateHeader &aDnsHeader,
-                                                     const Dns::Zone &        aZone,
-                                                     uint16_t                 aOffset);
-    static otError ProcessServiceDiscoveryInstructions(Host &                   aHost,
-                                                       const Message &          aMessage,
-                                                       const Dns::UpdateHeader &aDnsHeader,
-                                                       const Dns::Zone &        aZone,
-                                                       uint16_t                 aOffset);
-    static otError ProcessServiceDescriptionInstructions(Host &                   aHost,
-                                                         const Message &          aMessage,
-                                                         const Dns::UpdateHeader &aDnsHeader,
-                                                         const Dns::Zone &        aZone,
-                                                         uint16_t &               aOffset);
     static bool    IsValidDeleteAllRecord(const Dns::ResourceRecord &aRecord);
+    const Service *FindService(const char *aFullName) const;
 
     void        HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, const Ip6::MessageInfo &aMessageInfo);
     void        AddHost(Host *aHost);
     void        RemoveAndFreeHost(Host *aHost);
-    Service *   FindService(const char *aFullName);
-    bool        HasNameConflictsWith(Host &aHost);
+    bool        HasNameConflictsWith(Host &aHost) const;
     void        SendResponse(const Dns::UpdateHeader &   aHeader,
                              Dns::UpdateHeader::Response aResponseCode,
                              const Ip6::MessageInfo &    aMessageInfo);
