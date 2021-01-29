@@ -1324,6 +1324,11 @@ exit:
     return error;
 }
 
+otError Server::Service::GetNextTxtEntry(Dns::TxtRecord::TxtIterator &aIterator, Dns::TxtEntry &aTxtEntry) const
+{
+    return Dns::TxtRecord::GetNextTxtEntry(mTxtData, mTxtLength, aIterator, aTxtEntry);
+}
+
 TimeMilli Server::Service::GetExpireTime(void) const
 {
     OT_ASSERT(!mIsDeleted);
@@ -1366,6 +1371,7 @@ otError Server::Service::SetTxtDataFromMessage(const Message &aMessage, uint16_t
     txtData = static_cast<uint8_t *>(GetInstance().HeapCAlloc(1, aLength));
     VerifyOrExit(txtData != nullptr, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = OT_ERROR_PARSE);
+    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength), error = OT_ERROR_PARSE);
 
     GetInstance().HeapFree(mTxtData);
     mTxtData   = txtData;

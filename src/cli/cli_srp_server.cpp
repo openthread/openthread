@@ -163,6 +163,53 @@ exit:
     return error;
 }
 
+void SrpServer::OutputServiceTxtEntries(const otSrpServerService *aService)
+{
+    uint16_t         count = 0;
+    otDnsTxtEntry    entry;
+    otDnsTxtIterator iterator = OT_DNS_TXT_ITERATOR_INIT;
+
+    mInterpreter.OutputFormat("[");
+
+    while (otSrpServerServiceGetNextTxtEntry(aService, &iterator, &entry) == OT_ERROR_NONE)
+    {
+        if (count != 0)
+        {
+            mInterpreter.OutputFormat(", ");
+        }
+
+        mInterpreter.Output(entry.mKey, entry.mKeyLength);
+        if (entry.mValue != nullptr)
+        {
+            mInterpreter.OutputFormat("=");
+            mInterpreter.OutputBytes(entry.mValue, entry.mValueLength);
+        }
+        ++count;
+    }
+
+    mInterpreter.OutputFormat("]");
+}
+
+void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
+{
+    const otIp6Address *addresses;
+    uint8_t             addressesNum;
+
+    addresses = otSrpServerHostGetAddresses(aHost, &addressesNum);
+
+    mInterpreter.OutputFormat("[");
+    for (uint8_t i = 0; i < addressesNum; ++i)
+    {
+        if (i != 0)
+        {
+            mInterpreter.OutputFormat(", ");
+        }
+
+        mInterpreter.OutputIp6Address(addresses[i]);
+    }
+    mInterpreter.OutputFormat("]");
+}
+
 otError SrpServer::ProcessService(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
@@ -179,11 +226,7 @@ otError SrpServer::ProcessService(uint8_t aArgsLength, char *aArgs[])
 
         while ((service = otSrpServerHostGetNextService(host, service)) != nullptr)
         {
-            const otIp6Address *addresses;
-            uint8_t             addressesNum;
-            const uint8_t *     txtData;
-            uint16_t            txtLength;
-            bool                isDeleted = otSrpServerServiceIsDeleted(service);
+            bool isDeleted = otSrpServerServiceIsDeleted(service);
 
             mInterpreter.OutputLine(otSrpServerServiceGetFullName(service));
             mInterpreter.OutputLine(Interpreter::kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
@@ -196,30 +239,17 @@ otError SrpServer::ProcessService(uint8_t aArgsLength, char *aArgs[])
             mInterpreter.OutputLine(Interpreter::kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
             mInterpreter.OutputLine(Interpreter::kIndentSize, "weight: %hu", otSrpServerServiceGetWeight(service));
 
-            txtData = otSrpServerServiceGetTxtData(service, &txtLength);
-
-            if (txtLength > 0)
-            {
-                mInterpreter.OutputSpaces(Interpreter::kIndentSize);
-                mInterpreter.OutputFormat("TXT: ");
-                mInterpreter.OutputBytes(txtData, txtLength);
-                mInterpreter.OutputFormat("\r\n");
-            }
+            mInterpreter.OutputSpaces(Interpreter::kIndentSize);
+            mInterpreter.OutputFormat("TXT: ");
+            OutputServiceTxtEntries(service);
+            mInterpreter.OutputFormat("\r\n");
 
             mInterpreter.OutputLine(Interpreter::kIndentSize, "host: %s", otSrpServerHostGetFullName(host));
-            mInterpreter.OutputSpaces(Interpreter::kIndentSize);
-            mInterpreter.OutputFormat("addresses: [");
 
-            addresses = otSrpServerHostGetAddresses(host, &addressesNum);
-            for (uint8_t i = 0; i < addressesNum; ++i)
-            {
-                mInterpreter.OutputIp6Address(addresses[i]);
-                if (i < addressesNum - 1)
-                {
-                    mInterpreter.OutputFormat(", ");
-                }
-            }
-            mInterpreter.OutputFormat("]\r\n");
+            mInterpreter.OutputSpaces(Interpreter::kIndentSize);
+            mInterpreter.OutputFormat("addresses: ");
+            OutputHostAddresses(host);
+            mInterpreter.OutputFormat("\r\n");
         }
     }
 

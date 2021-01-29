@@ -702,6 +702,64 @@ exit:
     return error;
 }
 
+otError TxtEntry::AppendTo(Message &aMessage) const
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t length;
+
+    if (mKey == nullptr)
+    {
+        VerifyOrExit(mValue != nullptr);
+        error = aMessage.AppendBytes(mValue, mValueLength);
+        ExitNow();
+    }
+
+    length = mKeyLength;
+
+    VerifyOrExit(length <= kMaxKeyLength, error = OT_ERROR_INVALID_ARGS);
+
+    if (mValue == nullptr)
+    {
+        // Treat as a boolean attribute and encoded as "key" (with no `=`).
+        SuccessOrExit(error = aMessage.Append(length));
+        error = aMessage.AppendBytes(mKey, length);
+        ExitNow();
+    }
+
+    // Treat as key/value and encode as "key=value", value may be empty.
+
+    VerifyOrExit(mValueLength + length + sizeof(char) <= kMaxKeyValueEncodedSize, error = OT_ERROR_INVALID_ARGS);
+
+    length += static_cast<uint8_t>(mValueLength + sizeof(char));
+
+    SuccessOrExit(error = aMessage.Append(length));
+    SuccessOrExit(error = aMessage.AppendBytes(mKey, length));
+    SuccessOrExit(error = aMessage.Append<char>(kKeyValueSeparator));
+    error = aMessage.AppendBytes(mValue, mValueLength);
+
+exit:
+    return error;
+}
+
+otError TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
+{
+    otError  error       = OT_ERROR_NONE;
+    uint16_t startOffset = aMessage.GetLength();
+
+    for (uint8_t index = 0; index < aNumEntries; index++)
+    {
+        SuccessOrExit(error = aEntries[index].AppendTo(aMessage));
+    }
+
+    if (aMessage.GetLength() == startOffset)
+    {
+        error = aMessage.Append<uint8_t>(0);
+    }
+
+exit:
+    return error;
+}
+
 bool AaaaRecord::IsValid(void) const
 {
     return GetType() == Dns::ResourceRecord::kTypeAaaa && GetSize() == sizeof(*this);
@@ -774,8 +832,81 @@ otError TxtRecord::ReadTxtData(const Message &aMessage,
 
     VerifyOrExit(GetLength() <= aTxtBufferSize, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
+    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength()), error = OT_ERROR_PARSE);
     aTxtBufferSize = GetLength();
     aOffset += GetLength();
+
+exit:
+    return error;
+}
+
+bool TxtRecord::VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength)
+{
+    bool    valid          = false;
+    uint8_t curEntryLength = 0;
+
+    // Per RFC 1035, TXT-DATA MUST have one or more <character-string>s.
+    VerifyOrExit(aTxtLength > 0);
+
+    for (uint16_t i = 0; i < aTxtLength; ++i)
+    {
+        if (curEntryLength == 0)
+        {
+            curEntryLength = aTxtData[i];
+        }
+        else
+        {
+            --curEntryLength;
+        }
+    }
+
+    valid = (curEntryLength == 0);
+
+exit:
+    return valid;
+}
+
+otError TxtRecord::GetNextTxtEntry(const uint8_t *aTxtData,
+                                   uint16_t       aTxtLength,
+                                   TxtIterator &  aIterator,
+                                   TxtEntry &     aTxtEntry)
+{
+    otError error = OT_ERROR_NONE;
+
+    for (uint16_t i = aIterator; i < aTxtLength;)
+    {
+        uint8_t length = aTxtData[i++];
+
+        OT_ASSERT(i + length <= aTxtLength);
+        aTxtEntry.mKey         = reinterpret_cast<const char *>(aTxtData + i);
+        aTxtEntry.mKeyLength   = length;
+        aTxtEntry.mValue       = nullptr;
+        aTxtEntry.mValueLength = 0;
+
+        for (uint8_t j = 0; j < length; ++j)
+        {
+            if (aTxtData[i + j] == TxtEntry::kKeyValueSeparator)
+            {
+                aTxtEntry.mKeyLength   = j;
+                aTxtEntry.mValue       = aTxtData + i + j + 1;
+                aTxtEntry.mValueLength = length - j - 1;
+                break;
+            }
+        }
+
+        i += length;
+
+        // Per RFC 6763, a TXT entry with empty key MUST be silently ignored.
+        if (aTxtEntry.mKeyLength == 0)
+        {
+            continue;
+        }
+
+        aIterator = i;
+        ExitNow();
+    }
+
+    error = OT_ERROR_NOT_FOUND;
 
 exit:
     return error;

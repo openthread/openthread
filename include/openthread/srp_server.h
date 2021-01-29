@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 
+#include <openthread/dns.h>
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 
@@ -303,15 +304,20 @@ uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService);
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService);
 
 /**
- * This method returns the TXT data of the service instance.
+ * This method returns the next TXT entry of the service instance.
  *
- * @param[in]   aService    A pointer to the SRP service.
- * @param[out]  aTxtLength  A pointer to the output of the TXT data length.
+ * @param[in]     aService   A pointer to the SRP service.
+ * @param[inout]  aIterator  A pointer to the TXT iterator context. To get the first
+ *                           TXT entry, it should be set to OT_DNS_TXT_ITERATOR_INIT.
+ * @param[out]    aTxtEntry  A pointer to where the TXT entry will be placed.
  *
- * @returns  A pointer to the standard TXT data with format described by RFC 6763.
+ * @retval OT_ERROR_NONE       Successfully found the next TXT entry.
+ * @retval OT_ERROR_NOT_FOUND  No subsequent TXT entry exists in the service.
  *
  */
-const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, uint16_t *aTxtLength);
+otError otSrpServerServiceGetNextTxtEntry(const otSrpServerService *aService,
+                                          otDnsTxtIterator *        aIterator,
+                                          otDnsTxtEntry *           aTxtEntry);
 
 /**
  * This method returns the host which the service instance reside on.

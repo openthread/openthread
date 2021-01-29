@@ -94,7 +94,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
         client.srp_client_start(server.get_addrs()[0], client.get_srp_server_port())
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
+        client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
         self.simulator.go(2)
 
         self.check_host_and_service(server, client)
@@ -135,7 +135,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         #    reused.
         #
 
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
+        client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
         self.simulator.go(2)
 
         self.check_host_and_service(server, client)
@@ -181,7 +181,6 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(client_service['state'], 'Registered')
 
         server_services = server.srp_server_get_services()
-        print(server_services)
         self.assertEqual(len(server_services), 1)
         server_service = server_services[0]
 
@@ -193,6 +192,9 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(int(server_service['port']), int(client_service['port']))
         self.assertEqual(int(server_service['priority']), int(client_service['priority']))
         self.assertEqual(int(server_service['weight']), int(client_service['weight']))
+        # We output value of TXT entry as HEX string.
+        print(server_service['TXT'])
+        self.assertEqual(server_service['TXT'], ['abc', 'def=', 'xyz=58595a'])
         self.assertEqual(server_service['host'], 'my-host')
 
         server_hosts = server.srp_server_get_hosts()

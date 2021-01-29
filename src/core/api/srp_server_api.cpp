@@ -147,9 +147,12 @@ uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService)
     return static_cast<const Srp::Server::Service *>(aService)->GetPriority();
 }
 
-const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, uint16_t *aTxtLength)
+otError otSrpServerServiceGetNextTxtEntry(const otSrpServerService *aService,
+                                          otDnsTxtIterator *        aIterator,
+                                          otDnsTxtEntry *           aTxtEntry)
 {
-    return static_cast<const Srp::Server::Service *>(aService)->GetTxtData(*aTxtLength);
+    return static_cast<const Srp::Server::Service *>(aService)->GetNextTxtEntry(
+        *aIterator, static_cast<Dns::TxtEntry &>(*aTxtEntry));
 }
 
 const otSrpServerHost *otSrpServerServiceGetHost(const otSrpServerService *aService)
