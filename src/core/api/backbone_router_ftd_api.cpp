@@ -75,16 +75,9 @@ otError otBackboneRouterSetConfig(otInstance *aInstance, const otBackboneRouterC
 
 otError otBackboneRouterRegister(otInstance *aInstance)
 {
-    otError error = OT_ERROR_NONE;
-
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    SuccessOrExit(error = instance.Get<BackboneRouter::Local>().AddService(true /* Force registration */));
-
-    instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
-
-exit:
-    return error;
+    return instance.Get<BackboneRouter::Local>().AddService(true /* Force registration */);
 }
 
 uint8_t otBackboneRouterGetRegistrationJitter(otInstance *aInstance)
