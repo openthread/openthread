@@ -303,7 +303,7 @@ jobs:
         name: cov-thread-1-2-backbone
         path: tmp/coverage.info
 
-  thread-border-routing:
+  thread-border-router:
     runs-on: ubuntu-20.04
     env:
       REFERENCE_DEVICE: 1
@@ -337,15 +337,15 @@ jobs:
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
-        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/border_routing/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
+        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/border_router/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-thread-border-routing-docker
+        name: cov-thread-border-router-docker
         path: /tmp/coverage/
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
-        name: thread-border-routing-results
+        name: thread-border-router-results
         path: |
           *.pcap
           *.json
@@ -355,7 +355,7 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-thread-border-routing
+        name: cov-thread-border-router
         path: tmp/coverage.info
 
   upload-coverage:
@@ -365,7 +365,7 @@ jobs:
     - packet-verification-1-1-on-1-2
     - expects
     - thread-1-2-backbone
-    - thread-border-routing
+    - thread-border-router
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2

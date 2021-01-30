@@ -39,6 +39,7 @@ import time
 import traceback
 import unittest
 from typing import Union, Dict, Optional, List
+from zeroconf import Zeroconf, ServiceInfo
 
 import pexpect
 import pexpect.popen_spawn
@@ -220,6 +221,9 @@ class OtbrDocker:
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
+
+        # Zeroconf complains that there is not enough BUFS to subscribe multicast groups.
+        self.bash('sysctl net.ipv4.igmp_max_memberships=1024')
 
 
 class OtCli:
@@ -2416,6 +2420,41 @@ class LinuxHost():
         self.bash('ip -6 neigh list nud all dev %s | cut -d " " -f1 | sudo xargs -I{} ip -6 neigh delete {} dev %s' %
                   (self.ETH_DEV, self.ETH_DEV))
         self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
+
+    def discover_mdns_service(self, instance, name, host_name, timeout=2):
+        """ Discover/resolve the mDNS service on ethernet.
+
+        :param instance: the service instance name.
+        :param name: the service name in format of '<service-name>.<protocol>'.
+        :param host_name: the host name this service points to. The domain
+                          should not be included.
+        :param timeout: timeout value in seconds before returning.
+        :return: a dict of service properties or None.
+
+        The return value is a dict with the same key/values of srp_server_get_service
+        except that we don't have a `deleted` field here.
+        """
+        zeroconf = Zeroconf()
+        timeout *= 1000  # Zeroconf use timeout in milliseconds.
+        try:
+            info = ServiceInfo(type_=f'{name}.local.', name=f'{instance}.{name}.local.', server=f'{host_name}.local.')
+            while timeout > 0 and not info.parsed_addresses():
+                info.request(zeroconf, 500)
+                timeout -= 500
+            if info.parsed_addresses():
+                return {
+                    'fullname': info.name,
+                    'instance': info.get_name(),
+                    'name': name,
+                    'port': info.port,
+                    'weight': info.weight,
+                    'priority': info.priority,
+                    'host_fullname': info.server,
+                    'host': host_name,
+                    'addresses': info.parsed_addresses()
+                }
+        finally:
+            zeroconf.close()
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):

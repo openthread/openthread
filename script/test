@@ -254,7 +254,7 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF"
+    local otbr_options="-DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_MDNS=mDNSResponder -DOTBR_SRP_ADVERTISING_PROXY=ON"
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     # Always enable SRP server for OTBR.
