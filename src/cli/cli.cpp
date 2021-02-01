@@ -1335,37 +1335,70 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
+otError Interpreter::GetDnsServerAddress(uint8_t     aArgsLength,
+                                         char *      aArgs[],
+                                         otSockAddr &aAddress,
+                                         uint8_t     aStartArgsIndex)
+{
+    // This method gets the optional server address from given `aArgs`
+    // after the `aStartArgsIndex`. The format `[server IPv6 address]
+    // [server port]`.
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength >= aStartArgsIndex, error = OT_ERROR_INVALID_ARGS);
+
+    if (aArgsLength > aStartArgsIndex)
+    {
+        SuccessOrExit(error = ParseAsIp6Address(aArgs[aStartArgsIndex], aAddress.mAddress));
+    }
+    else
+    {
+        // Use IPv6 address of default DNS server.
+        SuccessOrExit(error = otIp6AddressFromString(OT_DNS_DEFAULT_SERVER_IP, &aAddress.mAddress));
+    }
+
+    if (aArgsLength > aStartArgsIndex + 1)
+    {
+        SuccessOrExit(error = ParseAsUint16(aArgs[aStartArgsIndex + 1], aAddress.mPort));
+    }
+    else
+    {
+        aAddress.mPort = OT_DNS_DEFAULT_SERVER_PORT;
+    }
+
+exit:
+    return error;
+}
+
 otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
 {
     otError    error = OT_ERROR_NONE;
     otSockAddr serverSockAddr;
 
-    serverSockAddr.mPort = OT_DNS_DEFAULT_SERVER_PORT;
-
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(aArgs[0], "resolve") == 0)
     {
-        VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
-
-        if (aArgsLength > 2)
-        {
-            SuccessOrExit(error = ParseAsIp6Address(aArgs[2], serverSockAddr.mAddress));
-        }
-        else
-        {
-            // Use IPv6 address of default DNS server.
-            SuccessOrExit(error = otIp6AddressFromString(OT_DNS_DEFAULT_SERVER_IP, &serverSockAddr.mAddress));
-        }
-
-        if (aArgsLength > 3)
-        {
-            SuccessOrExit(error = ParseAsUint16(aArgs[3], serverSockAddr.mPort));
-        }
-
+        SuccessOrExit(error = GetDnsServerAddress(aArgsLength, aArgs, serverSockAddr, 2));
         SuccessOrExit(error = otDnsClientResolveAddress(mInstance, &serverSockAddr, aArgs[1], /* aNoRecursion */ false,
-                                                        &Interpreter::HandleDnsResponse, this));
+                                                        &Interpreter::HandleDnsAddressResponse, this));
     }
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    else if (strcmp(aArgs[0], "browse") == 0)
+    {
+        SuccessOrExit(error = GetDnsServerAddress(aArgsLength, aArgs, serverSockAddr, 2));
+        SuccessOrExit(error = otDnsClientBrowse(mInstance, &serverSockAddr, aArgs[1],
+                                                &Interpreter::HandleDnsBrowseResponse, this));
+    }
+    else if (strcmp(aArgs[0], "service") == 0)
+    {
+        SuccessOrExit(error = GetDnsServerAddress(aArgsLength, aArgs, serverSockAddr, 3));
+        SuccessOrExit(error = otDnsClientResolveService(mInstance, &serverSockAddr, aArgs[1], aArgs[2],
+                                                        &Interpreter::HandleDnsServiceResponse, this));
+    }
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -1377,12 +1410,12 @@ exit:
     return error;
 }
 
-void Interpreter::HandleDnsResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
+void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aError, aResponse);
+    static_cast<Interpreter *>(aContext)->HandleDnsAddressResponse(aError, aResponse);
 }
 
-void Interpreter::HandleDnsResponse(otError aError, const otDnsAddressResponse *aResponse)
+void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse)
 {
     char         hostName[OT_DNS_MAX_NAME_SIZE];
     otIp6Address address;
@@ -1399,7 +1432,7 @@ void Interpreter::HandleDnsResponse(otError aError, const otDnsAddressResponse *
         while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
         {
             OutputIp6Address(address);
-            OutputFormat(" TTL: %u ", ttl);
+            OutputFormat(" TTL:%u ", ttl);
             index++;
         }
 
@@ -1408,6 +1441,98 @@ void Interpreter::HandleDnsResponse(otError aError, const otDnsAddressResponse *
 
     OutputResult(aError);
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+void Interpreter::OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo)
+{
+    OutputLine(aIndentSize, "Port:%d, Priority:%d, Weight:%d, TTL:%u", aServiceInfo.mPort, aServiceInfo.mPriority,
+               aServiceInfo.mWeight, aServiceInfo.mTtl);
+    OutputLine(aIndentSize, "Host:%s", aServiceInfo.mHostNameBuffer);
+    OutputFormat(aIndentSize, "HostAddress:");
+    OutputIp6Address(aServiceInfo.mHostAddress);
+    OutputLine(" TTL:%u", aServiceInfo.mHostAddressTtl);
+    OutputFormat(aIndentSize, "TXT-Data:(len:%d) [", aServiceInfo.mTxtDataSize);
+    OutputBytes(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+    OutputFormat("] TTL:%u", aServiceInfo.mTxtDataTtl);
+}
+
+void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDnsBrowseResponse(aError, aResponse);
+}
+
+void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse)
+{
+    char             name[OT_DNS_MAX_NAME_SIZE];
+    char             label[OT_DNS_MAX_LABEL_SIZE];
+    uint8_t          txtBuffer[255];
+    otDnsServiceInfo serviceInfo;
+
+    IgnoreError(otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
+
+    OutputLine("DNS browse response for %s", name);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        uint16_t index = 0;
+
+        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, label, sizeof(label)) == OT_ERROR_NONE)
+        {
+            OutputLine("%s", label);
+            index++;
+
+            serviceInfo.mHostNameBuffer     = name;
+            serviceInfo.mHostNameBufferSize = sizeof(name);
+            serviceInfo.mTxtData            = txtBuffer;
+            serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+            if (otDnsBrowseResponseGetServiceInfo(aResponse, label, &serviceInfo) == OT_ERROR_NONE)
+            {
+                OutputDnsServiceInfo(kIndentSize, serviceInfo);
+            }
+
+            OutputLine("");
+        }
+    }
+
+    OutputResult(aError);
+}
+
+void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDnsServiceResponse(aError, aResponse);
+}
+
+void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse)
+{
+    char             name[OT_DNS_MAX_NAME_SIZE];
+    char             label[OT_DNS_MAX_LABEL_SIZE];
+    uint8_t          txtBuffer[255];
+    otDnsServiceInfo serviceInfo;
+
+    IgnoreError(otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
+
+    OutputLine("DNS service resolution response for %s for service %s", label, name);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        serviceInfo.mHostNameBuffer     = name;
+        serviceInfo.mHostNameBufferSize = sizeof(name);
+        serviceInfo.mTxtData            = txtBuffer;
+        serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+        if (otDnsServiceResponseGetServiceInfo(aResponse, &serviceInfo) == OT_ERROR_NONE)
+        {
+            OutputDnsServiceInfo(/* aIndetSize */ 0, serviceInfo);
+            OutputLine("");
+        }
+    }
+
+    OutputResult(aError);
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #if OPENTHREAD_FTD
