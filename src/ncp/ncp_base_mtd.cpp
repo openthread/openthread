@@ -186,6 +186,62 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_PERIOD>(void)
+{
+    uint16_t cslPeriod;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(cslPeriod));
+
+    error = otLinkCslSetPeriod(mInstance, cslPeriod);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_PERIOD>(void)
+{
+    return mEncoder.WriteUint16(otLinkCslGetPeriod(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(void)
+{
+    uint32_t cslTimeout;
+    otError  error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint32(cslTimeout));
+
+    error = otLinkCslSetTimeout(mInstance, cslTimeout);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_TIMEOUT>(void)
+{
+    return mEncoder.WriteUint32(otLinkCslGetTimeout(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_CHANNEL>(void)
+{
+    uint8_t cslChannel;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(cslChannel));
+
+    error = otLinkCslSetChannel(mInstance, cslChannel);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_CHANNEL>(void)
+{
+    return mEncoder.WriteUint8(otLinkCslGetChannel(mInstance));
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_MAC_DATA_POLL_PERIOD>(void)
 {
     return mEncoder.WriteUint32(otLinkGetPollPeriod(mInstance));

@@ -1912,6 +1912,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_SERVICE));
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_CSL_RECEIVER));
+#endif
+
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_MULTI_RADIO));
 #endif
