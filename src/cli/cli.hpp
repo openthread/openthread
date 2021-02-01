@@ -554,8 +554,16 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    static void HandleDnsResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
-    void        HandleDnsResponse(otError aError, const otDnsAddressResponse *aResponse);
+    otError     GetDnsServerAddress(uint8_t aArgsLength, char *aArgs[], otSockAddr &aAddress, uint8_t aStartArgsIndex);
+    static void HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
+    void        HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    void        OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo);
+    static void HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
+    void        HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse);
+    static void HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
+    void        HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse);
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE

@@ -2411,12 +2411,13 @@ class NodeImpl:
         self.simulator.go(10)
         output = self._expect_command_output(cmd)
         dns_resp = output[0]
-        # example output: DNS response for host1.default.service.arpa. - fd00:db8:0:0:ae43:4938:4c42:e6af TTL: 7190
-        ip, ttl = dns_resp.split(' - ')[1].split(' TTL: ')
-        ip = ip.strip()
-        ttl = int(ttl)
+        # example output: "DNS response for host1.default.service.arpa. - fd00:db8:0:0:fd3d:d471:1e8c:b60 TTL:7190 "
+        #                 " fd00:db8:0:0:0:ff:fe00:9000 TTL:7190"
+        addrs = dns_resp.strip().split(' - ')[1].split(' ')
+        ip = [item.strip() for item in addrs[::2]]
+        ttl = [int(item.split('TTL:')[1]) for item in addrs[1::2]]
 
-        return (ip, ttl)
+        return list(zip(ip, ttl))
 
 
 class Node(NodeImpl, OtCli):
