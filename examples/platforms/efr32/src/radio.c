@@ -48,6 +48,7 @@
 
 #include "utils/soft_source_match_table.h"
 
+#include "antenna.h"
 #include "board_config.h"
 #include "em_core.h"
 #include "em_system.h"
