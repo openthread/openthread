@@ -928,6 +928,34 @@ class NodeImpl:
         self.send_command(f'srp client stop')
         self._expect_done()
 
+    def srp_client_get_state(self):
+        cmd = 'srp client state'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
+    def srp_client_get_auto_start_mode(self):
+        cmd = 'srp client autostart'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
+    def srp_client_enable_auto_start_mode(self):
+        self.send_command(f'srp client autostart enable')
+        self._expect_done()
+
+    def srp_client_disable_auto_start_mode(self):
+        self.send_command(f'srp client autostart able')
+        self._expect_done()
+
+    def srp_client_get_server_address(self):
+        cmd = 'srp client server address'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
+    def srp_client_get_server_port(self):
+        cmd = 'srp client server port'
+        self.send_command(cmd)
+        return int(self._expect_command_output(cmd)[0])
+
     def srp_client_get_host_state(self):
         cmd = 'srp client host state'
         self.send_command(cmd)

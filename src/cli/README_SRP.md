@@ -57,15 +57,7 @@ fe80:0:0:0:a8cd:6e23:df3d:4193
 Done
 > srp server enable
 Done
-> netdata show
-Prefixes:
-Routes:
-Services:
-44970 5d c002 s 8400
-Done
 ```
-
-The SRP Server listening UDP port which is `c002`(`49154`) is included in the Server Data (listed by the `netdata show` command).
 
 ### Start SRP Client
 
@@ -100,11 +92,28 @@ Done
 Done
 > srp client service add my-service _ipps._tcp 12345
 Done
-srp client start fded:5114:8263:1fe1:68bc:ec03:c1ad:9325 49154
+> srp client autostart enable
 Done
 ```
 
+The last command enables the auto-start mode on the client which then monitors the network data to discover available SRP servers within the Thread network and automatically starts the client.
+
+Alternatively, the client can be started manually using the `srp client start`.
+
+The SRP Server listening UDP port (which is `c002`(`49154`) in the example below) can be found from the Server Data (listed by the `netdata show` command).
+
 Make sure the SRP Server address & port are used for the `srp client start` command.
+
+```bash
+> netdata show
+Prefixes:
+Routes:
+Services:
+44970 5d c002 s 8400
+Done
+srp client start fded:5114:8263:1fe1:68bc:ec03:c1ad:9325 49154
+Done
+```
 
 ### Verify the service status
 

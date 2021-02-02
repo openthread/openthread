@@ -33,8 +33,10 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "common/random.hpp"
 #include "common/settings.hpp"
 #include "common/string.hpp"
+#include "thread/network_data_service.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
@@ -135,6 +137,10 @@ Client::Client(Instance &aInstance)
     , mState(kStateStopped)
     , mTxFailureRetryCount(0)
     , mShouldRemoveKeyLease(false)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    , mAutoStartModeEnabled(kAutoStartDefaultMode)
+    , mAutoStartDidSelectServer(false)
+#endif
     , mUpdateMessageId(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
     , mAcceptedLeaseInterval(0)
@@ -143,6 +149,10 @@ Client::Client(Instance &aInstance)
     , mSocket(aInstance)
     , mCallback(nullptr)
     , mCallbackContext(nullptr)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    , mAutoStartCallback(nullptr)
+    , mAutoStartContext(nullptr)
+#endif
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance, Client::HandleTimer)
 {
@@ -164,28 +174,33 @@ Client::Client(Instance &aInstance)
     static_assert(kRemoved == 7, "kRemoved value is not correct");
 }
 
-otError Client::Start(const Ip6::SockAddr &aServerSockAddr)
+otError Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 {
-    otError error = OT_ERROR_NONE;
+    otError error;
 
-    if (GetState() != kStateStopped)
-    {
-        VerifyOrExit(aServerSockAddr == mSocket.GetPeerName(), error = OT_ERROR_BUSY);
-        ExitNow();
-    }
+    VerifyOrExit(GetState() == kStateStopped,
+                 error = (aServerSockAddr == GetServerAddress()) ? OT_ERROR_NONE : OT_ERROR_BUSY);
 
     SuccessOrExit(error = mSocket.Open(Client::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Connect(aServerSockAddr));
 
-    otLogInfoSrp("[client] Starting, server %s", aServerSockAddr.ToString().AsCString());
+    otLogInfoSrp("[client] %starting, server %s", (aRequester == kRequesterUser) ? "S" : "Auto-s",
+                 aServerSockAddr.ToString().AsCString());
 
     Resume();
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    mAutoStartDidSelectServer = (aRequester == kRequesterAuto);
+
+    VerifyOrExit((aRequester == kRequesterAuto) && (mAutoStartCallback != nullptr));
+    mAutoStartCallback(&aServerSockAddr, mAutoStartContext);
+#endif
 
 exit:
     return error;
 }
 
-void Client::Stop(void)
+void Client::Stop(Requester aRequester)
 {
     // Change the state of host info and services so that they are
     // added/removed again once the client is started back. In the
@@ -222,8 +237,18 @@ void Client::Stop(void)
     ResetRetryWaitInterval();
     SetState(kStateStopped);
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    VerifyOrExit((aRequester == kRequesterAuto) && (mAutoStartCallback != nullptr));
+    mAutoStartCallback(nullptr, mAutoStartContext);
+#endif
+
 exit:
-    return;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    if (aRequester == kRequesterUser)
+    {
+        DisableAutoStartMode();
+    }
+#endif
 }
 
 void Client::SetCallback(Callback aCallback, void *aContext)
@@ -267,14 +292,21 @@ void Client::Pause(void)
 
 void Client::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit(aEvents.Contains(kEventThreadRoleChanged));
-
-    if (Get<Mle::Mle>().IsDisabled())
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        Stop();
-        ExitNow();
+        HandleRoleChanged();
     }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    if (aEvents.Contains(kEventThreadNetdataChanged))
+    {
+        ProcessAutoStart();
+    }
+#endif
+}
+
+void Client::HandleRoleChanged(void)
+{
     if (Get<Mle::Mle>().IsAttached())
     {
         VerifyOrExit(GetState() == kStatePaused);
@@ -1427,6 +1459,75 @@ void Client::HandleTimer(void)
         break;
     }
 }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+
+void Client::EnableAutoStartMode(AutoStartCallback aCallback, void *aContext)
+{
+    mAutoStartCallback = aCallback;
+    mAutoStartContext  = aContext;
+
+    VerifyOrExit(!mAutoStartModeEnabled);
+    mAutoStartModeEnabled = true;
+    ProcessAutoStart();
+
+exit:
+    return;
+}
+
+void Client::ProcessAutoStart(void)
+{
+    uint16_t                                numServers = 0;
+    NetworkData::Service::SrpServer::Info   selectedServer;
+    NetworkData::Service::SrpServer::Info   server;
+    NetworkData::Service::Manager::Iterator iterator;
+
+    VerifyOrExit(mAutoStartModeEnabled);
+
+    // If the client is not running we check if there is any SRP sever
+    // info in Network Data and select one randomly and then start the
+    // client. If the client is already running with a server that was
+    // selected by the auto-start feature, we verify that the selected
+    // server is still present in the Network Data.
+
+    VerifyOrExit(!IsRunning() || mAutoStartDidSelectServer);
+
+    while (Get<NetworkData::Service::Manager>().GetNextSrpServerInfo(iterator, server) == OT_ERROR_NONE)
+    {
+        numServers++;
+
+        // Choose a server randomly (with uniform distribution) from
+        // the list of servers. As we iterate through server entries,
+        // with probability `1/numServers`, we choose to switch the
+        // current selected server with the new entry. This approach
+        // results in a uniform/same probability of selection among
+        // all server entries.
+
+        if ((numServers == 1) || (Random::NonCrypto::GetUint16InRange(0, numServers) == 0))
+        {
+            selectedServer = server;
+        }
+
+        if (IsRunning() && mAutoStartDidSelectServer && (GetServerAddress() == server.mSockAddr))
+        {
+            ExitNow();
+        }
+    }
+
+    if (IsRunning())
+    {
+        otLogInfoSrp("[client] Server %s is no longer present in net data", GetServerAddress().ToString().AsCString());
+        Stop(kRequesterAuto);
+    }
+
+    VerifyOrExit(numServers > 0);
+    IgnoreError(Start(selectedServer.mSockAddr, kRequesterAuto));
+
+exit:
+    return;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
 const char *Client::ItemStateToString(ItemState aState)
 {

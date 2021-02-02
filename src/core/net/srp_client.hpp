@@ -276,7 +276,7 @@ public:
      * @retval OT_ERROR_FAILED   Failed to open/connect the client's UDP socket.
      *
      */
-    otError Start(const Ip6::SockAddr &aServerSockAddr);
+    otError Start(const Ip6::SockAddr &aServerSockAddr) { return Start(aServerSockAddr, kRequesterUser); }
 
     /**
      * This method stops the SRP client operation.
@@ -284,8 +284,63 @@ public:
      * This method stops any further interactions with the SRP server. Note that it does not remove or clear host info
      * and/or list of services. It marks all services to be added/removed again once the client is started again.
      *
+     * If `OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE` (auto-start feature) is enabled, a call to this method
+     * also disables the auto-start mode.
+     *
      */
-    void Stop(void);
+    void Stop(void) { Stop(kRequesterUser); }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    /**
+     * This function pointer type defines the callback used by SRP client to notify user when it is auto-started or
+     * stopped.
+     *
+     */
+    typedef otSrpClientAutoStartCallback AutoStartCallback;
+
+    /**
+     * This method enables the auto-start mode.
+     *
+     * Config option `OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE` specifies the default auto-start mode
+     * (whether it is enabled or disabled at the start of OT stack).
+     *
+     * When auto-start is enabled, the SRP client will monitor the Thread Network Data for SRP Server Service entries
+     * and automatically start and stop the client when an SRP server is detected.
+     *
+     * If multiple SRP servers are found, a random one will be selected. If the selected SRP server is no longer
+     * detected (not longer present in the Thread Network Data), the SRP client will be stopped and then it may switch
+     * to another SRP server (if available).
+     *
+     * When the SRP client is explicitly started through a successful call to `Start()`, the given SRP server address
+     * in `Start()` will continue to be used regardless of the state of auto-start mode and whether the same SRP
+     * server address is discovered or not in the Thread Network Data. In this case, only an explicit `Stop()` call
+     * will stop the client.
+     *
+     * @param[in] aCallback   A callback to notify when client is auto-started/stopped. Can be `nullptr` if not needed.
+     * @param[in] aContext    A context to be passed when invoking @p aCallback.
+     *
+     */
+    void EnableAutoStartMode(AutoStartCallback aCallback, void *aContext);
+
+    /**
+     * This method disables the auto-start mode.
+     *
+     * Disabling the auto-start mode will not stop the client if it is already running but the client stops monitoring
+     * the Thread Network Data to verify that the selected SRP server is still present in it.
+     *
+     * Note that a call to `Stop()` will also disable the auto-start mode.
+     *
+     */
+    void DisableAutoStartMode(void) { mAutoStartModeEnabled = false; }
+
+    /**
+     * This method indicates the current state of auto-start mode (enabled or disabled).
+     *
+     * @returns TRUE if the auto-start mode is enabled, FALSE otherwise.
+     *
+     */
+    bool IsAutoStartModeEnabled(void) const { return mAutoStartModeEnabled; }
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
     /**
      * This method indicates whether the SRP client is running or not.
@@ -623,6 +678,22 @@ private:
         kStateToRetry,  // SRP update tx failed, waiting to retry.
     };
 
+    enum : bool
+    {
+        kAutoStartDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE,
+    };
+
+    // This enumeration type is used by the private `Start()` and
+    // `Stop()` methods to indicate whether it is being requested by the
+    // user or by the auto-start feature.
+    enum Requester
+    {
+        kRequesterUser,
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+        kRequesterAuto,
+#endif
+    };
+
     struct Info : public Clearable<Info>
     {
         enum : uint16_t
@@ -636,9 +707,12 @@ private:
         Crypto::Ecdsa::P256::KeyPair mKeyPair;          // The ECDSA key pair.
     };
 
+    otError        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
+    void           Stop(Requester aRequester);
     void           Resume(void);
     void           Pause(void);
     void           HandleNotifierEvents(Events aEvents);
+    void           HandleRoleChanged(void);
     void           UpdateServiceStateToRemove(Service &aService);
     State          GetState(void) const { return mState; }
     void           SetState(State aState);
@@ -671,6 +745,9 @@ private:
     bool           ShouldRenewEarly(const Service &aService) const;
     static void    HandleTimer(Timer &aTimer);
     void           HandleTimer(void);
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    void ProcessAutoStart(void);
+#endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_SRP == 1)
     static const char *StateToString(State aState);
@@ -681,11 +758,15 @@ private:
 
     static const char kDefaultDomainName[];
 
-    static_assert(kMaxTxFailureRetries < 128, "kMaxTxFailureRetries exceed the range of mTxFailureRetryCount (7-bit)");
+    static_assert(kMaxTxFailureRetries < 16, "kMaxTxFailureRetries exceed the range of mTxFailureRetryCount (4-bit)");
 
     State   mState;
-    uint8_t mTxFailureRetryCount : 7;
+    uint8_t mTxFailureRetryCount : 4;
     bool    mShouldRemoveKeyLease : 1;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    bool mAutoStartModeEnabled : 1;
+    bool mAutoStartDidSelectServer : 1;
+#endif
 
     uint16_t mUpdateMessageId;
     uint32_t mRetryWaitInterval;
@@ -697,8 +778,14 @@ private:
 
     Ip6::Udp::Socket mSocket;
 
-    Callback            mCallback;
-    void *              mCallbackContext;
+    Callback mCallback;
+    void *   mCallbackContext;
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+    AutoStartCallback mAutoStartCallback;
+    void *            mAutoStartContext;
+#endif
+
     const char *        mDomainName;
     HostInfo            mHostInfo;
     LinkedList<Service> mServices;
