@@ -622,6 +622,65 @@ exit:
     return error;
 }
 
+otError ResourceRecord::FindRecord(const Message & aMessage,
+                                   uint16_t &      aOffset,
+                                   uint16_t        aNumRecords,
+                                   uint16_t        aIndex,
+                                   const Name &    aName,
+                                   uint16_t        aType,
+                                   ResourceRecord &aRecord,
+                                   uint16_t        aMinRecordSize)
+{
+    // This static method searches in `aMessage` starting from `aOffset`
+    // up to maximum of `aNumRecords`, for the `(aIndex+1)`th
+    // occurrence of a resource record of type `aType` with record name
+    // matching `aName`. It also verifies that the record size is larger
+    // than `aMinRecordSize`. If found, `aMinRecordSize` bytes from the
+    // record are read and copied into `aRecord`. In this case `aOffset`
+    // is updated to point to the last record byte read from the message
+    // (so that the caller can read any remaining fields in the record
+    // data).
+
+    otError  error;
+    uint16_t offset = aOffset;
+    uint16_t recordOffset;
+
+    while (aNumRecords > 0)
+    {
+        SuccessOrExit(error = FindRecord(aMessage, offset, aNumRecords, aName));
+
+        // Save the offset to start of `ResourceRecord` fields.
+        recordOffset = offset;
+
+        error = ReadRecord(aMessage, offset, aType, aRecord, aMinRecordSize);
+
+        if (error == OT_ERROR_NOT_FOUND)
+        {
+            // `ReadRecord()` already updates the `offset` to skip
+            // over a non-matching record.
+            continue;
+        }
+
+        SuccessOrExit(error);
+
+        if (aIndex == 0)
+        {
+            aOffset = offset;
+            ExitNow();
+        }
+
+        aIndex--;
+
+        // Skip over the record.
+        offset = static_cast<uint16_t>(recordOffset + aRecord.GetSize());
+    }
+
+    error = OT_ERROR_NOT_FOUND;
+
+exit:
+    return error;
+}
+
 otError ResourceRecord::ReadRecord(const Message & aMessage,
                                    uint16_t &      aOffset,
                                    uint16_t        aType,
