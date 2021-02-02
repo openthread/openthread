@@ -269,16 +269,14 @@ public:
      * single SRP Update is sent containing all the info).
      *
      * @param[in] aServerSockAddr  The socket address (IPv6 address and port number) of the SRP server.
-     * @param[in] aCallback        The callback to notify of events and changes. Can be nullptr if not needed.
-     * @param[in] aContext         An arbitrary context used with @p aCallback.
      *
      * @retval OT_ERROR_NONE     SRP client operation started successfully or it is already running with same server
      *                           socket address and callback.
-     * @retval OT_ERROR_BUSY     SRP client is busy running with a different socket address and/or callback.
+     * @retval OT_ERROR_BUSY     SRP client is busy running with a different socket address.
      * @retval OT_ERROR_FAILED   Failed to open/connect the client's UDP socket.
      *
      */
-    otError Start(const Ip6::SockAddr &aServerSockAddr, Callback aCallback, void *aContext);
+    otError Start(const Ip6::SockAddr &aServerSockAddr);
 
     /**
      * This method stops the SRP client operation.
@@ -288,6 +286,37 @@ public:
      *
      */
     void Stop(void);
+
+    /**
+     * This method indicates whether the SRP client is running or not.
+     *
+     * @returns TRUE if the SRP client is running, FALSE otherwise.
+     *
+     */
+    bool IsRunning(void) const { return (mState != kStateStopped); }
+
+    /**
+     * This method gets the socket address (IPv6 address and port number) of the SRP server which is being used by SRP
+     * client.
+     *
+     * If the client is not running, the address is unspecified (all zero) with zero port number.
+     *
+     * @returns The SRP server's socket address.
+     *
+     */
+    const Ip6::SockAddr &GetServerAddress(void) const { return mSocket.GetPeerName(); }
+
+    /**
+     * This method sets the callback used to notify caller of events/changes.
+     *
+     * The SRP client allows a single callback to be registered. So consecutive calls to this method will overwrite any
+     * previously set callback functions.
+     *
+     * @param[in] aCallback        The callback to notify of events and changes. Can be nullptr if not needed.
+     * @param[in] aContext         An arbitrary context used with @p aCallback.
+     *
+     */
+    void SetCallback(Callback aCallback, void *aContext);
 
     /**
      * This method gets the lease interval used in SRP update requests.

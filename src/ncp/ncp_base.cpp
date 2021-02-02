@@ -285,7 +285,9 @@ NcpBase::NcpBase(Instance *aInstance)
 #endif
     otThreadRegisterParentResponseCallback(mInstance, &NcpBase::HandleParentResponseInfo, static_cast<void *>(this));
 #endif // OPENTHREAD_FTD
-
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    otSrpClientSetCallback(mInstance, HandleSrpClientCallback, this);
+#endif
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
     mLegacyNodeDidJoin = false;
     mLegacyHandlers    = nullptr;

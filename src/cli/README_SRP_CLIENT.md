@@ -9,6 +9,7 @@ Usage : `srp client [command] ...`
 - [host](#host)
 - [keyleaseinterval](#keyleaseinterval)
 - [leaseinterval](#leaseinterval)
+- [server](#server)
 - [service](#service)
 - [start](#start)
 - [stop](#stop)
@@ -228,6 +229,38 @@ Set the lease interval.
 
 ```bash
 > srp client leaseinterval 3600
+Done
+```
+
+### server
+
+Usage: `srp client server`
+
+Print the server socket address (IPv6 address and port number).
+
+```bash
+> srp client server
+[fd00:0:0:0:d88a:618b:384d:e760]:4724
+Done
+```
+
+### server address
+
+Print the server IPv6 address.
+
+```bash
+> srp client server address
+fd00:0:0:0:d88a:618b:384d:e760
+Done
+```
+
+### server port
+
+Print the server port number
+
+```bash
+> srp client server port
+4724
 Done
 ```
 

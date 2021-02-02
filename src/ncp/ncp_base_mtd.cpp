@@ -3239,7 +3239,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_START>(voi
     SuccessOrExit(error = mDecoder.ReadUint16(serverAddr.mPort));
     SuccessOrExit(error = mDecoder.ReadBool(callbackEnabled));
 
-    SuccessOrExit(error = otSrpClientStart(mInstance, &serverAddr, HandleSrpClientCallback, this));
+    SuccessOrExit(error = otSrpClientStart(mInstance, &serverAddr));
     mSrpClientCallbackEnabled = callbackEnabled;
 
 exit:
