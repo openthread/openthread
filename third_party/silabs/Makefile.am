@@ -89,6 +89,7 @@ SILABS_MBEDTLS_CPPFLAGS                                                         
     -I$(SILABS_MBEDTLS_DIR)/include/mbedtls                                                 \
     -I$(SILABS_MBEDTLS_DIR)/library                                                         \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_alt/include                    \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/config         \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/inc            \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/inc/configs    \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_psa_driver/inc                 \
@@ -305,6 +306,7 @@ SILABS_EFR32MG21_SOURCES                                                        
 
 libsilabs_efr32mg1_sdk_a_CPPFLAGS                                                             = \
     $(SILABS_EFR32MG1_CPPFLAGS)                                                                 \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -315,6 +317,7 @@ libsilabs_efr32mg1_sdk_a_SOURCES                                                
 
 libsilabs_efr32mg12_sdk_a_CPPFLAGS                                                            = \
     $(SILABS_EFR32MG12_CPPFLAGS)                                                                \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -325,6 +328,7 @@ libsilabs_efr32mg12_sdk_a_SOURCES                                               
 
 libsilabs_efr32mg13_sdk_a_CPPFLAGS                                                            = \
     $(SILABS_EFR32MG13_CPPFLAGS)                                                                \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -335,6 +339,7 @@ libsilabs_efr32mg13_sdk_a_SOURCES                                               
 
 libsilabs_efr32mg21_sdk_a_CPPFLAGS                                                            = \
     $(SILABS_EFR32MG21_CPPFLAGS)                                                                \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
