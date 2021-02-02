@@ -144,6 +144,8 @@ LEADER_NOTIFY_SED_BY_CHILD_UPDATE_REQUEST = True
 THREAD_VERSION_1_1 = 2
 THREAD_VERSION_1_2 = 3
 
+BORDER_AGENT_UDP_PORT = 49191
+
 
 def create_default_network_data_prefix_sub_tlvs_factories():
     return {

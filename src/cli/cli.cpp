@@ -1538,10 +1538,9 @@ void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressRes
             OutputFormat(" TTL:%u ", ttl);
             index++;
         }
-
-        OutputLine("");
     }
 
+    OutputLine("");
     OutputResult(aError);
 }
 
