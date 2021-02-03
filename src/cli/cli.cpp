@@ -111,7 +111,8 @@ constexpr Interpreter::Command Interpreter::sCommands[];
 Interpreter *Interpreter::sInterpreter = nullptr;
 
 Interpreter::Interpreter(Instance *aInstance)
-    : mUserCommands(nullptr)
+    : mInstance(aInstance)
+    , mUserCommands(nullptr)
     , mUserCommandsLength(0)
     , mPingLength(kDefaultPingLength)
     , mPingCount(kDefaultPingCount)
@@ -147,7 +148,6 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     , mSrpServer(*this)
 #endif
-    , mInstance(aInstance)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);

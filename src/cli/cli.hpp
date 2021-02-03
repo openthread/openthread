@@ -775,6 +775,7 @@ private:
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 
+    Instance *          mInstance;
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
@@ -823,8 +824,6 @@ private:
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     SrpServer mSrpServer;
 #endif
-
-    Instance *mInstance;
 };
 
 } // namespace Cli
