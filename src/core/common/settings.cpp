@@ -41,7 +41,7 @@
 #include "common/logging.hpp"
 #include "meshcop/dataset.hpp"
 #include "thread/mle.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 // This array contains critical keys that should be stored in the secure area.

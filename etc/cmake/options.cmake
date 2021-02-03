@@ -144,7 +144,7 @@ endif()
 
 option(OT_S2S "enable S2S")
 if(OT_S2S)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE=1")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE=1")
 endif()
 
 option(OT_DATASET_UPDATER "enable dataset updater support")

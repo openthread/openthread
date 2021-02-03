@@ -91,7 +91,7 @@
 #include "thread/link_metrics.hpp"
 #endif
 
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 

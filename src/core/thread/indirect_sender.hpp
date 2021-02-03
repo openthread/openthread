@@ -44,7 +44,7 @@
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
 #include "thread/mle_types.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 #include "thread/src_match_controller.hpp"
 
 namespace ot {

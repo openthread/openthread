@@ -42,9 +42,12 @@
 /**
  * @def OPENTHREAD_MTD_S2S
  *
- * This is a alias representing if `OPENTHREAD_MTD` and `OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE` are both enabled.
+ * This is a alias representing if `OPENTHREAD_MTD` and `OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE` are both
+ * enabled.
  *
  */
-#define OPENTHREAD_MTD_S2S OPENTHREAD_MTD &&OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE
+#define OPENTHREAD_MTD_S2S \
+    OPENTHREAD_MTD         \
+    &&OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
 
 #endif // S2S_HPP_

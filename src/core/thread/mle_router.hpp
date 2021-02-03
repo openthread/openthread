@@ -51,7 +51,7 @@
 #include "thread/mle.hpp"
 #include "thread/mle_tlvs.hpp"
 #include "thread/router_table.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/topology.hpp"
 

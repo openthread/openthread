@@ -581,6 +581,7 @@ openthread_core_files = [
   "thread/radio_selector.hpp",
   "thread/router_table.cpp",
   "thread/router_table.hpp",
+  "thread/sed_to_sed.hpp",
   "thread/src_match_controller.cpp",
   "thread/src_match_controller.hpp",
   "thread/thread_netif.cpp",

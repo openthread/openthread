@@ -53,7 +53,7 @@
 #include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 

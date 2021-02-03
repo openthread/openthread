@@ -418,17 +418,17 @@
 #endif
 
 /*
- * @def OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE
+ * @def OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
  *
  * SED-to-SED option.
  *
  * This is an experimental feature. This feature enables an SED to do CSL transmission (as CSL Transmitter) and
- * indirect transmission, thus enabling SED to SED communication. When an SED is connected to another SED, they are
+ * csl reception, thus enabling SED to SED communication. When an SED is connected to another SED, they are
  * detached and not in any Thread network.
  *
  */
-#ifndef OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE
-#define OPENTHREAD_CONFIG_MAC_SED_TO_SED_ENABLE 0
+#ifndef OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE 0
 #endif
 
 #endif // CONFIG_MAC_H_

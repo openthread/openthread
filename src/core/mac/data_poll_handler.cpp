@@ -37,7 +37,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 

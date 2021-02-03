@@ -54,7 +54,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/radio_selector.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 

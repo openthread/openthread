@@ -50,7 +50,7 @@
 #include "thread/indirect_sender.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {

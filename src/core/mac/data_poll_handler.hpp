@@ -43,7 +43,7 @@
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 

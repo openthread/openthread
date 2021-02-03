@@ -40,7 +40,7 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
-#include "thread/s2s.hpp"
+#include "thread/sed_to_sed.hpp"
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
