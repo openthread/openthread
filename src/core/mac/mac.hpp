@@ -79,7 +79,7 @@ enum
     kDataPollTimeout = 100, ///< Timeout for receiving Data Frame (milliseconds).
     kSleepDelay      = 300, ///< Max sleep delay when frame is pending (milliseconds).
 
-    kScanDurationDefault = 300, ///< Default interval between channels (milliseconds).
+    kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION, ///< Default interval between channels (milliseconds).
 
     kMaxCsmaBackoffsDirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
