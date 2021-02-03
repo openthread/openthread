@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/platform/settings.h>
+
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -80,8 +82,8 @@ public:
     /**
      * This method sets the critical keys that should be stored in a secure area.
      *
-     * @param[in]  aKeys        A pointer to the value of the critical keys.
-     * @param[in]  aKeysLength  The length of the keys pointed to by @p akeys.
+     * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
+     * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
      *
      */
     void SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength);
@@ -587,25 +589,6 @@ public:
         uint8_t mDadCounter; ///< Dad Counter used to resolve address conflict in Thread 1.2 DUA feature.
     } OT_TOOL_PACKED_END;
 
-    /**
-     * This enumeration defines the keys of settings.
-     *
-     */
-    enum Key
-    {
-        kKeyActiveDataset     = 0x0001, ///< Active Operational Dataset
-        kKeyPendingDataset    = 0x0002, ///< Pending Operational Dataset
-        kKeyNetworkInfo       = 0x0003, ///< Thread network information
-        kKeyParentInfo        = 0x0004, ///< Parent information
-        kKeyChildInfo         = 0x0005, ///< Child information
-        kKeyReserved          = 0x0006, ///< Reserved (previously auto-start)
-        kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
-        kKeyDadInfo           = 0x0008, ///< Duplicate Address Detection (DAD) information.
-        kKeyOmrPrefix         = 0x0009, ///< Off-mesh routable (OMR) prefix.
-        kKeyOnLinkPrefix      = 0x000a, ///< On-link prefix for infrastructure link.
-        kKeySrpEcdsaKey       = 0x000b, ///< SRP client ECDSA public/private key pair.
-    };
-
 protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -796,7 +779,7 @@ public:
      */
     otError SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
     {
-        return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+        return Save(OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY, &aKey, sizeof(Utils::Slaac::IidSecretKey));
     }
 
     /**
@@ -813,7 +796,7 @@ public:
     {
         uint16_t length = sizeof(aKey);
 
-        return Read(kKeySlaacIidSecretKey, &aKey, length);
+        return Read(OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY, &aKey, length);
     }
 
     /**
@@ -823,7 +806,7 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
      *
      */
-    otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
+    otError DeleteSlaacIidSecretKey(void) { return Delete(OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY); }
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
@@ -1120,8 +1103,6 @@ private:
     otError Save(Key aKey, const void *aValue, uint16_t aSize);
     otError Add(Key aKey, const void *aValue, uint16_t aSize);
     otError Delete(Key aKey);
-
-    const uint16_t mCriticalKeys[3] = {kKeyActiveDataset, kKeyPendingDataset, kKeySrpEcdsaKey};
 };
 
 } // namespace ot

@@ -169,7 +169,7 @@ void otPlatSettingsInit(otInstance *aInstance)
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
-    otPlatSecureSettingsInit(aInstance);
+    otPosixSecureSettingsInit(aInstance);
 #endif
 
     {
@@ -218,7 +218,7 @@ void otPlatSettingsDeinit(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
-    otPlatSecureSettingsDeinit(aInstance);
+    otPosixSecureSettingsDeinit(aInstance);
 #endif
 
     assert(sSettingsFd != -1);
@@ -236,7 +236,7 @@ otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
     if (isCriticalKey(aKey))
     {
-        ExitNow(error = otPlatSecureSettingsGet(aInstance, aKey, aIndex, aValue, aValueLength));
+        ExitNow(error = otPosixSecureSettingsGet(aInstance, aKey, aIndex, aValue, aValueLength));
     }
 #endif
 
@@ -297,7 +297,7 @@ otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
     if (isCriticalKey(aKey))
     {
-        ExitNow(error = otPlatSecureSettingsSet(aInstance, aKey, aValue, aValueLength));
+        ExitNow(error = otPosixSecureSettingsSet(aInstance, aKey, aValue, aValueLength));
     }
 #endif
 
@@ -336,7 +336,7 @@ otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *a
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
     if (isCriticalKey(aKey))
     {
-        ExitNow(error = otPlatSecureSettingsAdd(aInstance, aKey, aValue, aValueLength));
+        ExitNow(error = otPosixSecureSettingsAdd(aInstance, aKey, aValue, aValueLength));
     }
 #endif
 
@@ -366,7 +366,7 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
     if (isCriticalKey(aKey))
     {
-        error = otPlatSecureSettingsDelete(aInstance, aKey, aIndex);
+        error = otPosixSecureSettingsDelete(aInstance, aKey, aIndex);
     }
     else
 #endif
@@ -475,7 +475,7 @@ void otPlatSettingsWipe(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 #if OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
-    otPlatSecureSettingsWipe(aInstance);
+    otPosixSecureSettingsWipe(aInstance);
 #endif
 
     VerifyOrDie(0 == ftruncate(sSettingsFd, 0), OT_EXIT_ERROR_ERRNO);

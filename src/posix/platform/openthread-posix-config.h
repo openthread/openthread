@@ -143,7 +143,7 @@
 /**
  * @def OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
  *
- * Define as 1 to enable the secure settings. When defined to 1, the platform MUST implement the otPlatSecureSetting*
+ * Define as 1 to enable the secure settings. When defined to 1, the platform MUST implement the otPosixSecureSetting*
  * APIs defined in 'src/posix/platform/include/openthread/platform/secure_settings.h'.
  *
  */

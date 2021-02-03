@@ -43,6 +43,9 @@
 #include "thread/mle.hpp"
 
 namespace ot {
+// This array contains critical keys that should be stored in the secure area.
+static const uint16_t kCriticalKeys[] = {OT_SETTINGS_KEY_ACTIVE_DATASET, OT_SETTINGS_KEY_PENDING_DATASET,
+                                         OT_SETTINGS_KEY_SRP_ECDSA_KEY};
 
 // LCOV_EXCL_START
 
@@ -117,14 +120,14 @@ void SettingsDriver::Init(void)
     otPlatSettingsInit(&GetInstance());
 }
 
-void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
-{
-    otPlatSettingsSetCriticalKeys(&GetInstance(), aKeys, aKeysLength);
-}
-
 void SettingsDriver::Deinit(void)
 {
     otPlatSettingsDeinit(&GetInstance());
+}
+
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    otPlatSettingsSetCriticalKeys(&GetInstance(), aKeys, aKeysLength);
 }
 
 otError SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
@@ -165,14 +168,14 @@ void SettingsDriver::Init(void)
     mFlash.Init();
 }
 
+void SettingsDriver::Deinit(void)
+{
+}
+
 void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
 {
     OT_UNUSED_VARIABLE(aKeys);
     OT_UNUSED_VARIABLE(aKeysLength);
-}
-
-void SettingsDriver::Deinit(void)
-{
 }
 
 otError SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
@@ -205,7 +208,7 @@ void SettingsDriver::Wipe(void)
 void Settings::Init(void)
 {
     Get<SettingsDriver>().Init();
-    Get<SettingsDriver>().SetCriticalKeys(mCriticalKeys, OT_ARRAY_LENGTH(mCriticalKeys));
+    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, OT_ARRAY_LENGTH(kCriticalKeys));
 }
 
 void Settings::Deinit(void)
@@ -221,7 +224,8 @@ void Settings::Wipe(void)
 
 otError Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset)
 {
-    otError error = Save(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), aDataset.GetSize());
+    otError error = Save(aIsActive ? OT_SETTINGS_KEY_ACTIVE_DATASET : OT_SETTINGS_KEY_PENDING_DATASET,
+                         aDataset.GetBytes(), aDataset.GetSize());
 
     LogFailure(error, "saving OperationalDataset", false);
     return error;
@@ -232,7 +236,8 @@ otError Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aData
     otError  error  = OT_ERROR_NONE;
     uint16_t length = MeshCoP::Dataset::kMaxSize;
 
-    SuccessOrExit(error = Read(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), length));
+    SuccessOrExit(error = Read(aIsActive ? OT_SETTINGS_KEY_ACTIVE_DATASET : OT_SETTINGS_KEY_PENDING_DATASET,
+                               aDataset.GetBytes(), length));
     VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = OT_ERROR_NOT_FOUND);
 
     aDataset.SetSize(length);
@@ -243,7 +248,7 @@ exit:
 
 otError Settings::DeleteOperationalDataset(bool aIsActive)
 {
-    otError error = Delete(aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    otError error = Delete(aIsActive ? OT_SETTINGS_KEY_ACTIVE_DATASET : OT_SETTINGS_KEY_PENDING_DATASET);
 
     LogFailure(error, "deleting OperationalDataset", true);
 
@@ -256,7 +261,7 @@ otError Settings::ReadNetworkInfo(NetworkInfo &aNetworkInfo) const
     uint16_t length = sizeof(NetworkInfo);
 
     aNetworkInfo.Init();
-    SuccessOrExit(error = Read(kKeyNetworkInfo, &aNetworkInfo, length));
+    SuccessOrExit(error = Read(OT_SETTINGS_KEY_NETWORK_INFO, &aNetworkInfo, length));
     LogNetworkInfo("Read", aNetworkInfo);
 
 exit:
@@ -269,14 +274,14 @@ otError Settings::SaveNetworkInfo(const NetworkInfo &aNetworkInfo)
     NetworkInfo prevNetworkInfo;
     uint16_t    length = sizeof(prevNetworkInfo);
 
-    if ((Read(kKeyNetworkInfo, &prevNetworkInfo, length) == OT_ERROR_NONE) && (length == sizeof(NetworkInfo)) &&
-        (prevNetworkInfo == aNetworkInfo))
+    if ((Read(OT_SETTINGS_KEY_NETWORK_INFO, &prevNetworkInfo, length) == OT_ERROR_NONE) &&
+        (length == sizeof(NetworkInfo)) && (prevNetworkInfo == aNetworkInfo))
     {
         LogNetworkInfo("Re-saved", aNetworkInfo);
         ExitNow();
     }
 
-    SuccessOrExit(error = Save(kKeyNetworkInfo, &aNetworkInfo, sizeof(NetworkInfo)));
+    SuccessOrExit(error = Save(OT_SETTINGS_KEY_NETWORK_INFO, &aNetworkInfo, sizeof(NetworkInfo)));
     LogNetworkInfo("Saved", aNetworkInfo);
 
 exit:
@@ -288,7 +293,7 @@ otError Settings::DeleteNetworkInfo(void)
 {
     otError error;
 
-    SuccessOrExit(error = Delete(kKeyNetworkInfo));
+    SuccessOrExit(error = Delete(OT_SETTINGS_KEY_NETWORK_INFO));
     otLogInfoCore("Non-volatile: Deleted NetworkInfo");
 
 exit:
@@ -302,7 +307,7 @@ otError Settings::ReadParentInfo(ParentInfo &aParentInfo) const
     uint16_t length = sizeof(ParentInfo);
 
     aParentInfo.Init();
-    SuccessOrExit(error = Read(kKeyParentInfo, &aParentInfo, length));
+    SuccessOrExit(error = Read(OT_SETTINGS_KEY_PARENT_INFO, &aParentInfo, length));
     LogParentInfo("Read", aParentInfo);
 
 exit:
@@ -315,14 +320,14 @@ otError Settings::SaveParentInfo(const ParentInfo &aParentInfo)
     ParentInfo prevParentInfo;
     uint16_t   length = sizeof(ParentInfo);
 
-    if ((Read(kKeyParentInfo, &prevParentInfo, length) == OT_ERROR_NONE) && (length == sizeof(ParentInfo)) &&
-        (prevParentInfo == aParentInfo))
+    if ((Read(OT_SETTINGS_KEY_PARENT_INFO, &prevParentInfo, length) == OT_ERROR_NONE) &&
+        (length == sizeof(ParentInfo)) && (prevParentInfo == aParentInfo))
     {
         LogParentInfo("Re-saved", aParentInfo);
         ExitNow();
     }
 
-    SuccessOrExit(error = Save(kKeyParentInfo, &aParentInfo, sizeof(ParentInfo)));
+    SuccessOrExit(error = Save(OT_SETTINGS_KEY_PARENT_INFO, &aParentInfo, sizeof(ParentInfo)));
     LogParentInfo("Saved", aParentInfo);
 
 exit:
@@ -334,7 +339,7 @@ otError Settings::DeleteParentInfo(void)
 {
     otError error;
 
-    SuccessOrExit(error = Delete(kKeyParentInfo));
+    SuccessOrExit(error = Delete(OT_SETTINGS_KEY_PARENT_INFO));
     otLogInfoCore("Non-volatile: Deleted ParentInfo");
 
 exit:
@@ -346,7 +351,7 @@ otError Settings::AddChildInfo(const ChildInfo &aChildInfo)
 {
     otError error;
 
-    SuccessOrExit(error = Add(kKeyChildInfo, &aChildInfo, sizeof(aChildInfo)));
+    SuccessOrExit(error = Add(OT_SETTINGS_KEY_CHILD_INFO, &aChildInfo, sizeof(aChildInfo)));
     LogChildInfo("Added", aChildInfo);
 
 exit:
@@ -358,7 +363,7 @@ otError Settings::DeleteAllChildInfo(void)
 {
     otError error;
 
-    SuccessOrExit(error = Delete(kKeyChildInfo));
+    SuccessOrExit(error = Delete(OT_SETTINGS_KEY_CHILD_INFO));
     otLogInfoCore("Non-volatile: Deleted all ChildInfo");
 
 exit:
@@ -388,7 +393,7 @@ otError Settings::ChildInfoIterator::Delete(void)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(!mIsDone, error = OT_ERROR_INVALID_STATE);
-    SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyChildInfo, mIndex));
+    SuccessOrExit(error = Get<SettingsDriver>().Delete(OT_SETTINGS_KEY_CHILD_INFO, mIndex));
     LogChildInfo("Removed", mChildInfo);
 
 exit:
@@ -402,8 +407,8 @@ void Settings::ChildInfoIterator::Read(void)
     otError  error;
 
     mChildInfo.Init();
-    SuccessOrExit(
-        error = Get<SettingsDriver>().Get(kKeyChildInfo, mIndex, reinterpret_cast<uint8_t *>(&mChildInfo), &length));
+    SuccessOrExit(error = Get<SettingsDriver>().Get(OT_SETTINGS_KEY_CHILD_INFO, mIndex,
+                                                    reinterpret_cast<uint8_t *>(&mChildInfo), &length));
     LogChildInfo("Read", mChildInfo);
 
 exit:
@@ -417,7 +422,7 @@ otError Settings::ReadDadInfo(DadInfo &aDadInfo) const
     uint16_t length = sizeof(DadInfo);
 
     aDadInfo.Init();
-    SuccessOrExit(error = Read(kKeyDadInfo, &aDadInfo, length));
+    SuccessOrExit(error = Read(OT_SETTINGS_KEY_DAD_INFO, &aDadInfo, length));
     LogDadInfo("Read", aDadInfo);
 
 exit:
@@ -430,14 +435,14 @@ otError Settings::SaveDadInfo(const DadInfo &aDadInfo)
     DadInfo  prevDadInfo;
     uint16_t length = sizeof(DadInfo);
 
-    if ((Read(kKeyDadInfo, &prevDadInfo, length) == OT_ERROR_NONE) && (length == sizeof(DadInfo)) &&
+    if ((Read(OT_SETTINGS_KEY_DAD_INFO, &prevDadInfo, length) == OT_ERROR_NONE) && (length == sizeof(DadInfo)) &&
         (prevDadInfo == aDadInfo))
     {
         LogDadInfo("Re-saved", aDadInfo);
         ExitNow();
     }
 
-    SuccessOrExit(error = Save(kKeyDadInfo, &aDadInfo, sizeof(DadInfo)));
+    SuccessOrExit(error = Save(OT_SETTINGS_KEY_DAD_INFO, &aDadInfo, sizeof(DadInfo)));
     LogDadInfo("Saved", aDadInfo);
 
 exit:
@@ -449,7 +454,7 @@ otError Settings::DeleteDadInfo(void)
 {
     otError error;
 
-    SuccessOrExit(error = Delete(kKeyDadInfo));
+    SuccessOrExit(error = Delete(OT_SETTINGS_KEY_DAD_INFO));
     otLogInfoCore("Non-volatile: Deleted DadInfo");
 
 exit:
@@ -465,14 +470,14 @@ otError Settings::SaveOmrPrefix(const Ip6::Prefix &aOmrPrefix)
     Ip6::Prefix prevOmrPrefix;
     uint16_t    length = sizeof(prevOmrPrefix);
 
-    if ((Read(kKeyOmrPrefix, &prevOmrPrefix, length) == OT_ERROR_NONE) && (length == sizeof(prevOmrPrefix)) &&
-        (prevOmrPrefix == aOmrPrefix))
+    if ((Read(OT_SETTINGS_KEY_OMR_PREFIX, &prevOmrPrefix, length) == OT_ERROR_NONE) &&
+        (length == sizeof(prevOmrPrefix)) && (prevOmrPrefix == aOmrPrefix))
     {
         LogPrefix("Re-saved", "OMR prefix", aOmrPrefix);
         ExitNow();
     }
 
-    SuccessOrExit(error = Save(kKeyOmrPrefix, &aOmrPrefix, sizeof(aOmrPrefix)));
+    SuccessOrExit(error = Save(OT_SETTINGS_KEY_OMR_PREFIX, &aOmrPrefix, sizeof(aOmrPrefix)));
     LogPrefix("Saved", "OMR prefix", aOmrPrefix);
 
 exit:
@@ -486,7 +491,7 @@ otError Settings::ReadOmrPrefix(Ip6::Prefix &aOmrPrefix) const
     uint16_t length = sizeof(aOmrPrefix);
 
     aOmrPrefix.Clear();
-    SuccessOrExit(error = Read(kKeyOmrPrefix, &aOmrPrefix, length));
+    SuccessOrExit(error = Read(OT_SETTINGS_KEY_OMR_PREFIX, &aOmrPrefix, length));
     LogPrefix("Read", "OMR prefix", aOmrPrefix);
 
 exit:
@@ -499,14 +504,14 @@ otError Settings::SaveOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
     Ip6::Prefix prevOnLinkPrefix;
     uint16_t    length = sizeof(prevOnLinkPrefix);
 
-    if ((Read(kKeyOnLinkPrefix, &prevOnLinkPrefix, length) == OT_ERROR_NONE) && (length == sizeof(prevOnLinkPrefix)) &&
-        (prevOnLinkPrefix == aOnLinkPrefix))
+    if ((Read(OT_SETTINGS_KEY_ON_LINK_PREFIX, &prevOnLinkPrefix, length) == OT_ERROR_NONE) &&
+        (length == sizeof(prevOnLinkPrefix)) && (prevOnLinkPrefix == aOnLinkPrefix))
     {
         LogPrefix("Re-saved", "on-link prefix", aOnLinkPrefix);
         ExitNow();
     }
 
-    SuccessOrExit(error = Save(kKeyOnLinkPrefix, &aOnLinkPrefix, sizeof(aOnLinkPrefix)));
+    SuccessOrExit(error = Save(OT_SETTINGS_KEY_ON_LINK_PREFIX, &aOnLinkPrefix, sizeof(aOnLinkPrefix)));
     LogPrefix("Saved", "on-link prefix", aOnLinkPrefix);
 
 exit:
@@ -520,7 +525,7 @@ otError Settings::ReadOnLinkPrefix(Ip6::Prefix &aOnLinkPrefix) const
     uint16_t length = sizeof(aOnLinkPrefix);
 
     aOnLinkPrefix.Clear();
-    SuccessOrExit(error = Read(kKeyOnLinkPrefix, &aOnLinkPrefix, length));
+    SuccessOrExit(error = Read(OT_SETTINGS_KEY_ON_LINK_PREFIX, &aOnLinkPrefix, length));
     LogPrefix("Read", "on-link prefix", aOnLinkPrefix);
 
 exit:
@@ -534,7 +539,7 @@ otError Settings::SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = Save(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), aKeyPair.GetDerLength()));
+    SuccessOrExit(error = Save(OT_SETTINGS_KEY_SRP_ECDSA_KEY, aKeyPair.GetDerBytes(), aKeyPair.GetDerLength()));
     otLogInfoCore("Non-volatile: Saved SRP key");
 
 exit:
@@ -547,7 +552,7 @@ otError Settings::ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const
     otError  error;
     uint16_t length = Crypto::Ecdsa::P256::KeyPair::kMaxDerSize;
 
-    SuccessOrExit(error = Read(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), length));
+    SuccessOrExit(error = Read(OT_SETTINGS_KEY_SRP_ECDSA_KEY, aKeyPair.GetDerBytes(), length));
     VerifyOrExit(length <= Crypto::Ecdsa::P256::KeyPair::kMaxDerSize, error = OT_ERROR_NOT_FOUND);
     aKeyPair.SetDerLength(static_cast<uint8_t>(length));
     otLogInfoCore("Non-volatile: Read SRP key");
@@ -560,7 +565,7 @@ otError Settings::DeleteSrpKey(void)
 {
     otError error;
 
-    SuccessOrExit(error = Delete(kKeySrpEcdsaKey));
+    SuccessOrExit(error = Delete(OT_SETTINGS_KEY_SRP_ECDSA_KEY));
     otLogInfoCore("Non-volatile: Deleted SRP key");
 
 exit:

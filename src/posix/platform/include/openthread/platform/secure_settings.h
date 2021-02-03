@@ -57,7 +57,7 @@ extern "C" {
  * @param[in]  aInstance The OpenThread instance structure.
  *
  */
-void otPlatSecureSettingsInit(otInstance *aInstance);
+void otPosixSecureSettingsInit(otInstance *aInstance);
 
 /**
  * This function performs any de-initialization for the secure settings subsystem, if necessary.
@@ -65,7 +65,7 @@ void otPlatSecureSettingsInit(otInstance *aInstance);
  * @param[in]  aInstance The OpenThread instance structure.
  *
  */
-void otPlatSecureSettingsDeinit(otInstance *aInstance);
+void otPosixSecureSettingsDeinit(otInstance *aInstance);
 
 /**
  * This function fetches the value of the setting identified by aKey and write it to the memory pointed to by aValue.
@@ -94,11 +94,11 @@ void otPlatSecureSettingsDeinit(otInstance *aInstance);
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  *
  */
-otError otPlatSecureSettingsGet(otInstance *aInstance,
-                                uint16_t    aKey,
-                                int         aIndex,
-                                uint8_t *   aValue,
-                                uint16_t *  aValueLength);
+otError otPosixSecureSettingsGet(otInstance *aInstance,
+                                 uint16_t    aKey,
+                                 int         aIndex,
+                                 uint8_t *   aValue,
+                                 uint16_t *  aValueLength);
 
 /**
  * This function sets or replaces the value of a setting identified by aKey. If there was more than one value
@@ -117,7 +117,7 @@ otError otPlatSecureSettingsGet(otInstance *aInstance,
  * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
  *
  */
-otError otPlatSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+otError otPosixSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /**
  * This function adds the value to a setting identified by aKey, without replacing any existing values.
@@ -139,7 +139,7 @@ otError otPlatSecureSettingsSet(otInstance *aInstance, uint16_t aKey, const uint
  * @retval OT_ERROR_NO_BUFS          No space remaining to store the given setting.
  *
  */
-otError otPlatSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+otError otPosixSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
 /**
  * This function deletes a specific value from the setting identified by aKey from the secure settings store.
@@ -156,7 +156,7 @@ otError otPlatSecureSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not implemented on this platform.
  *
  */
-otError otPlatSecureSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
+otError otPosixSecureSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex);
 
 /**
  * This function deletes all settings from the secure settings store, resetting it to its initial factory state.
@@ -164,7 +164,7 @@ otError otPlatSecureSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIn
  * @param[in] aInstance  The OpenThread instance structure.
  *
  */
-void otPlatSecureSettingsWipe(otInstance *aInstance);
+void otPosixSecureSettingsWipe(otInstance *aInstance);
 
 /**
  * @}
