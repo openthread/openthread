@@ -407,4 +407,14 @@
 #define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 2
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SCAN_DURATION
+ *
+ * This setting configures the default scan duration in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SCAN_DURATION
+#define OPENTHREAD_CONFIG_MAC_SCAN_DURATION 300
+#endif
+
 #endif // CONFIG_MAC_H_
