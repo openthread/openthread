@@ -77,6 +77,11 @@ typedef struct otCachedSettings_s
 
 static otCachedSettings_t otCachedSettings;
 
+/* Upper layer relies on txpower could be set before receive, but MAC have per-channel config for it.
+   Store txpower until channel set in Receive(). */
+#define PENDING_TX_POWER_NONE (-1)
+static int8_t pendingTxPower = PENDING_TX_POWER_NONE;
+
 static uint8_t sScanstate         = 0;
 static int8_t  sLastReceivedPower = 127;
 
@@ -150,13 +155,15 @@ otError otPlatRadioSleep(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    if (sState == OT_RADIO_STATE_RECEIVE)
+    otError error = OT_ERROR_INVALID_STATE;
+
+    if (sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_SLEEP)
     {
         qorvoRadioSetRxOnWhenIdle(false);
+        error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
     }
-
-    return OT_ERROR_NONE;
+    return error;
 }
 
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
@@ -168,6 +175,11 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     if ((sState != OT_RADIO_STATE_DISABLED) && (sScanstate == 0))
     {
         qorvoRadioSetCurrentChannel(aChannel);
+        if (pendingTxPower != PENDING_TX_POWER_NONE)
+        {
+            qorvoRadioSetTransmitPower(pendingTxPower);
+            pendingTxPower = PENDING_TX_POWER_NONE;
+        }
         error = OT_ERROR_NONE;
     }
 
@@ -183,8 +195,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aPacket)
 {
-    otError err = OT_ERROR_NONE;
-
+    otError err    = OT_ERROR_NONE;
     pQorvoInstance = aInstance;
 
     otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, err = OT_ERROR_INVALID_STATE);
@@ -328,23 +339,54 @@ void cbQorvoRadioEnergyScanDone(int8_t aEnergyScanMaxRssi)
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
+
+    otError result;
+
+    if (aPower == NULL)
     {
-        return OT_ERROR_INVALID_STATE;
+        return OT_ERROR_INVALID_ARGS;
     }
 
-    return qorvoRadioGetTransmitPower(aPower);
+    if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
+    {
+        *aPower = (pendingTxPower == PENDING_TX_POWER_NONE) ? 0 : pendingTxPower;
+        return OT_ERROR_NONE;
+    }
+
+    result = qorvoRadioGetTransmitPower(aPower);
+
+    if (result == OT_ERROR_INVALID_STATE)
+    {
+        // Channel was not set, so txpower is ambigious
+        *aPower = (pendingTxPower == PENDING_TX_POWER_NONE) ? 0 : pendingTxPower;
+        return OT_ERROR_NONE;
+    }
+
+    return result;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
+
+    otError result;
+
     if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
     {
-        return OT_ERROR_INVALID_STATE;
+        pendingTxPower = aPower;
+        return OT_ERROR_NONE;
     }
 
-    return qorvoRadioSetTransmitPower(aPower);
+    result = qorvoRadioSetTransmitPower(aPower);
+
+    if (result == OT_ERROR_INVALID_STATE)
+    {
+        // Channel was not set, so txpower is ambigious
+        pendingTxPower = aPower;
+        result         = OT_ERROR_NONE;
+    }
+
+    return result;
 }
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)

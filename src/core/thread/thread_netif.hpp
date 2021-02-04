@@ -64,6 +64,10 @@
 #include "thread/dua_manager.hpp"
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#include "net/srp_server.hpp"
+#endif
+
 #include "meshcop/dataset_manager.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
@@ -79,6 +83,7 @@
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
+#include "net/srp_client.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
 #include "thread/discover_scanner.hpp"
@@ -196,10 +201,13 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Dns::Client mDnsClient;
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Srp::Client mSrpClient;
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;
-#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+#endif
     MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter             mIp6Filter;
@@ -262,6 +270,10 @@ private:
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     DuaManager mDuaManager;
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Srp::Server mSrpServer;
+#endif
+
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;
     AnnounceBeginServer        mAnnounceBegin;

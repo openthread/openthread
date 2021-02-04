@@ -1009,12 +1009,14 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
 
     if (mIsReceiveIp6FilterEnabled)
     {
+#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
         bool isLocator = Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) &&
                          aMessageInfo.GetSockAddr().GetIid().IsLocator();
 
         VerifyOrExit(!isLocator || aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
                      error = OT_ERROR_NO_ROUTE);
+#endif
 
         switch (aIpProto)
         {
@@ -1033,30 +1035,10 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
         case kProtoUdp:
         {
             Udp::Header udp;
-            uint16_t    destPort;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
+            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = OT_ERROR_NO_ROUTE);
 
-            destPort = udp.GetDestinationPort();
-
-            if ((destPort == Mle::kUdpPort) &&
-                (aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()))
-            {
-                // do not pass MLE messages
-                ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
-            else if ((destPort == Tmf::kUdpPort) && Get<Tmf::TmfAgent>().IsTmfMessage(aMessageInfo))
-            {
-                // do not pass TMF messages
-                ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
-
-#if OPENTHREAD_FTD
-            if (destPort == Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
-            {
-                ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
-#endif
             break;
         }
 

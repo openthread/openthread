@@ -143,6 +143,8 @@ SOURCES_COMMON                                  = \
     api/random_noncrypto_api.cpp                  \
     api/server_api.cpp                            \
     api/sntp_api.cpp                              \
+    api/srp_client_api.cpp                        \
+    api/srp_server_api.cpp                        \
     api/tasklet_api.cpp                           \
     api/thread_api.cpp                            \
     api/thread_ftd_api.cpp                        \
@@ -221,6 +223,8 @@ SOURCES_COMMON                                  = \
     net/ip6_mpl.cpp                               \
     net/netif.cpp                                 \
     net/sntp_client.cpp                           \
+    net/srp_client.cpp                            \
+    net/srp_server.cpp                            \
     net/udp6.cpp                                  \
     radio/radio.cpp                               \
     radio/radio_callbacks.cpp                     \
@@ -412,6 +416,8 @@ HEADERS_COMMON                                  = \
     config/platform.h                             \
     config/radio_link.h                           \
     config/sntp_client.h                          \
+    config/srp_client.h                           \
+    config/srp_server.h                           \
     config/time_sync.h                            \
     config/tmf.h                                  \
     crypto/aes_ccm.hpp                            \
@@ -463,6 +469,8 @@ HEADERS_COMMON                                  = \
     net/netif.hpp                                 \
     net/sntp_client.hpp                           \
     net/socket.hpp                                \
+    net/srp_client.hpp                            \
+    net/srp_server.hpp                            \
     net/tcp.hpp                                   \
     net/udp6.hpp                                  \
     radio/radio.hpp                               \

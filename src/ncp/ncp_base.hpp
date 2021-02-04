@@ -50,6 +50,9 @@
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 #include <openthread/multi_radio.h>
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#include <openthread/srp_client.h>
+#endif
 
 #include "changed_props_set.hpp"
 #include "common/instance.hpp"
@@ -594,6 +597,45 @@ protected:
     uint32_t mOutboundInsecureIpFrameCounter; // Number of insecure outbound data/IP frames.
     uint32_t mDroppedOutboundIpFrameCounter;  // Number of dropped outbound data/IP frames.
     uint32_t mDroppedInboundIpFrameCounter;   // Number of dropped inbound data/IP frames.
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    enum : uint8_t
+    {
+        kSrpClientMaxServices      = OPENTHREAD_CONFIG_NCP_SRP_CLIENT_MAX_SERVICES,
+        kSrpClientMaxHostAddresses = OPENTHREAD_CONFIG_NCP_SRP_CLIENT_MAX_HOST_ADDRESSES,
+        kSrpClientNameSize         = 64,
+    };
+
+    struct SrpClientService
+    {
+        void MarkAsNotInUse(void) { mService.mNext = &mService; }
+        bool IsInUse(void) const { return (mService.mNext != &mService); }
+
+        otSrpClientService mService;
+        char               mInstanceName[kSrpClientNameSize];
+        char               mServiceName[kSrpClientNameSize];
+    };
+
+    otError EncodeSrpClientHostInfo(const otSrpClientHostInfo &aHostInfo);
+    otError EncodeSrpClientServices(const otSrpClientService *aServices);
+
+    static void HandleSrpClientCallback(otError                    aError,
+                                        const otSrpClientHostInfo *aHostInfo,
+                                        const otSrpClientService * aServices,
+                                        const otSrpClientService * aRemovedServices,
+                                        void *                     aContext);
+    void        HandleSrpClientCallback(otError                    aError,
+                                        const otSrpClientHostInfo *aHostInfo,
+                                        const otSrpClientService * aServices,
+                                        const otSrpClientService * aRemovedServices);
+
+    char             mSrpClientHostName[kSrpClientNameSize];
+    SrpClientService mSrpClientServicePool[kSrpClientMaxServices];
+    otIp6Address     mSrpClientHostAddresses[kSrpClientMaxHostAddresses];
+    uint8_t          mSrpClientNumHostAddresses;
+    bool             mSrpClientCallbackEnabled;
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE
     const otNcpLegacyHandlers *mLegacyHandlers;
     uint8_t                    mLegacyUlaPrefix[OT_NCP_LEGACY_ULA_PREFIX_LENGTH];

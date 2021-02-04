@@ -68,7 +68,6 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
         ./script/test build
     - name: Run
       run: |
@@ -111,6 +110,7 @@ jobs:
       THREAD_VERSION: 1.2
       MAC_FILTER: 1
       INTER_OP: 1
+      INTER_OP_BBR: 0
     steps:
     - uses: actions/checkout@v2
       with:
@@ -254,7 +254,7 @@ jobs:
       MULTIPLY: 1
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
-      # The border routing and DUA feature can coexist, but current wireshark
+      # The Border Routing and DUA feature can coexist, but current wireshark
       # packet verification can't handle it because of the order of context ID
       # of OMR prefix and Domain prefix is not deterministic.
       BORDER_ROUTING: 0

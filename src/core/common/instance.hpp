@@ -696,6 +696,13 @@ template <> inline Dns::Client &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+template <> inline Srp::Client &Instance::Get(void)
+{
+    return mThreadNetif.mSrpClient;
+}
+#endif
+
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 {
@@ -859,6 +866,13 @@ template <> inline Utils::Otns &Instance::Get(void)
 template <> inline BorderRouter::RoutingManager &Instance::Get(void)
 {
     return mRoutingManager;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+template <> inline Srp::Server &Instance::Get(void)
+{
+    return mThreadNetif.mSrpServer;
 }
 #endif
 

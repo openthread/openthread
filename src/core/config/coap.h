@@ -68,6 +68,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+ *
+ * Define to 1 to enable the CoAP Block-Wise Transfer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+#define OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH
+ *
+ * This setting configures the maximum length of one block during a CoAP Block-Wise Transfer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH
+#define OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH 1024
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
  *
  * Define to 1 to enable the CoAP Secure API.

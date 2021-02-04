@@ -47,6 +47,9 @@
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#include "crypto/ecdsa.hpp"
+#endif
 
 namespace ot {
 
@@ -591,6 +594,7 @@ public:
         kKeyDadInfo           = 0x0008, ///< Duplicate Address Detection (DAD) information.
         kKeyOmrPrefix         = 0x0009, ///< Off-mesh routable (OMR) prefix.
         kKeyOnLinkPrefix      = 0x000a, ///< On-link prefix for infrastructure link.
+        kKeySrpEcdsaKey       = 0x000b, ///< SRP client ECDSA public/private key pair.
     };
 
 protected:
@@ -1055,6 +1059,40 @@ public:
      */
     otError ReadOnLinkPrefix(Ip6::Prefix &aOnLinkPrefix) const;
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    /**
+     * This method saves SRP client ECDSA key pair.
+     *
+     * @param[in]   aKeyPair              A reference to an SRP ECDSA key-pair to save.
+     *
+     * @retval OT_ERROR_NONE              Successfully saved key-pair information in settings.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair);
+
+    /**
+     * This method reads SRP client ECDSA key pair.
+     *
+     * @param[out]   aKeyPair             A reference to a ECDA `KeyPair` to output the read content.
+     *
+     * @retval OT_ERROR_NONE              Successfully read key-pair information.
+     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
+     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     *
+     */
+    otError ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const;
+
+    /**
+     * This method deletes SRP client ECDSA key pair from settings.
+     *
+     * @retval OT_ERROR_NONE             Successfully deleted the value.
+     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     *
+     */
+    otError DeleteSrpKey(void);
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 private:
     class ChildInfoIteratorBuilder : public InstanceLocator

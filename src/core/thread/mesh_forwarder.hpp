@@ -235,12 +235,6 @@ public:
     void SetDiscoverParameters(const Mac::ChannelMask &aScanChannels);
 
     /**
-     * This method frees any indirect messages queued for children that are no longer attached.
-     *
-     */
-    void UpdateIndirectMessages(void);
-
-    /**
      * This method frees any messages queued for an existing child.
      *
      * @param[in]  aChild    A reference to the child.

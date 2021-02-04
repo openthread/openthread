@@ -51,6 +51,12 @@ set(COMMON_NCP_SOURCES
     ncp_base_ftd.cpp
     ncp_base_mtd.cpp
 )
+option(OT_NCP_SPI "enable NCP SPI support")
+if(OT_NCP_SPI)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_SPI_ENABLE=1")
+else()
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1")
+endif()
 
 if(OT_FTD)
     include(ftd.cmake)

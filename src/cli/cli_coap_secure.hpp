@@ -111,6 +111,27 @@ private:
     static void HandleResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
     void        HandleResponse(otMessage *aMessage, const otMessageInfo *aMessageInfo, otError aError);
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+    static otError BlockwiseReceiveHook(void *         aContext,
+                                        const uint8_t *aBlock,
+                                        uint32_t       aPosition,
+                                        uint16_t       aBlockLength,
+                                        bool           aMore,
+                                        uint32_t       aTotalLength);
+    otError        BlockwiseReceiveHook(const uint8_t *aBlock,
+                                        uint32_t       aPosition,
+                                        uint16_t       aBlockLength,
+                                        bool           aMore,
+                                        uint32_t       aTotalLength);
+    static otError BlockwiseTransmitHook(void *    aContext,
+                                         uint8_t * aBlock,
+                                         uint32_t  aPosition,
+                                         uint16_t *aBlockLength,
+                                         bool *    aMore);
+    otError        BlockwiseTransmitHook(uint8_t *aBlock, uint32_t aPosition, uint16_t *aBlockLength, bool *aMore);
+#endif
+
 #if CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
     static void DefaultHandler(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        DefaultHandler(otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -143,9 +164,13 @@ private:
 
     Interpreter &mInterpreter;
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    otCoapBlockwiseResource mResource;
+#else
     otCoapResource mResource;
-    char           mUriPath[kMaxUriLength];
-    char           mResourceContent[kMaxBufferSize];
+#endif
+    char mUriPath[kMaxUriLength];
+    char mResourceContent[kMaxBufferSize];
 
     bool    mShutdownFlag;
     bool    mUseCertificate;
@@ -153,6 +178,9 @@ private:
     uint8_t mPskLength;
     uint8_t mPskId[kPskIdMaxLength];
     uint8_t mPskIdLength;
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    uint32_t mBlockCount;
+#endif
 };
 
 } // namespace Cli

@@ -236,6 +236,19 @@ public:
 class SockAddr : public otSockAddr, public Clearable<SockAddr>
 {
 public:
+    enum
+    {
+        // The socket address string length is:
+        // len('[') + len(mAddress) + len(']') + len(':') + len(mPort)
+        kIp6SocketAddressStringSize = 1 + Address::kIp6AddressStringSize + 1 + 1 + 5,
+    };
+
+    /**
+     * This type defines the fixed-length `String` object returned from `ToString()`.
+     *
+     */
+    typedef String<kIp6SocketAddressStringSize> InfoString;
+
     /**
      * This constructor initializes the socket address (all fields are set to zero).
      *
@@ -282,6 +295,40 @@ public:
      *
      */
     const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
+
+    /**
+     * This method returns the socket address port number.
+     *
+     * @returns The port number
+     *
+     */
+    uint16_t GetPort(void) const { return mPort; }
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two `SockAddr` instances are equal (same address
+     * and port number).
+     *
+     * @param[in]  aOther  The other `SockAddr` instance to compare with.
+     *
+     * @retval TRUE   If the two `SockAddr` instances are equal.
+     * @retval FALSE  If the two `SockAddr` instances not equal.
+     *
+     */
+    bool operator==(const SockAddr &aOther) const
+    {
+        return (GetPort() == aOther.GetPort()) && (GetAddress() == aOther.GetAddress());
+    }
+
+    /**
+     * This method overloads operator `!=` to evaluate whether or not two `SockAddr` instances are unequal.
+     *
+     * @param[in]  aOther  The other `SockAddr` instance to compare with.
+     *
+     * @retval TRUE   If the two `SockAddr` instances are not equal.
+     * @retval FALSE  If the two `SockAddr` instances are equal.
+     *
+     */
+    bool operator!=(const SockAddr &aOther) const { return !(*this == aOther); }
 };
 
 /**

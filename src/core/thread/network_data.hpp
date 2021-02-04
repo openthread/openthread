@@ -157,6 +157,14 @@ public:
      */
     Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
 
+    /**
+     * This method sets the prefix.
+     *
+     * @param[in]  aPrefix  The prefix to set to.
+     *
+     */
+    void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
+
 private:
     void SetFrom(Instance &           aInstance,
                  const PrefixTlv &    aPrefixTlv,
@@ -968,13 +976,6 @@ protected:
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
 
 private:
-    enum
-    {
-        kDataResubmitDelay  = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds) if the device itself is the server.
-        kProxyResubmitDelay = 5000,   ///< Resubmit delay (milliseconds) if deregister as the child server proxy.
-
-    };
-
     class NetworkDataIterator
     {
     public:

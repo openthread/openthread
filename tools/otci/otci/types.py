@@ -44,7 +44,7 @@ class Rloc16(int):
     """Represents a RLOC16."""
 
     def __repr__(self):
-        return hex(self)
+        return '0x%04x' % self
 
 
 class PartitionId(int):
@@ -121,6 +121,14 @@ class Ip6Prefix(ipaddress.IPv6Network):
 
 SecurityPolicy = namedtuple('SecurityPolicy', ['rotation_time', 'flags'])
 """Represents a Security Policy configuration."""
+
+
+class RouterTableEntry(dict):
+
+    @property
+    def is_link_established(self):
+        return bool(self['link'])
+
 
 if __name__ == '__main__':
     assert Ip6Addr('2001:0:0:0:0:0:0:1') == '2001::1'

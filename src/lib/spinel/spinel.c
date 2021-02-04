@@ -2003,6 +2003,46 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "NEIGHBOR_TABLE_MULTI_RADIO_INFO";
         break;
 
+    case SPINEL_PROP_SRP_CLIENT_START:
+        ret = "SRP_CLIENT_START";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_LEASE_INTERVAL:
+        ret = "SRP_CLIENT_LEASE_INTERVAL";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_KEY_LEASE_INTERVAL:
+        ret = "SRP_CLIENT_KEY_LEASE_INTERVAL";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_HOST_INFO:
+        ret = "SRP_CLIENT_HOST_INFO";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_HOST_NAME:
+        ret = "SRP_CLIENT_HOST_NAME";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_HOST_ADDRESSES:
+        ret = "SRP_CLIENT_HOST_ADDRESSES";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_SERVICES:
+        ret = "SRP_CLIENT_SERVICES";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_REMOVE:
+        ret = "SRP_CLIENT_HOST_SERVICES_REMOVE";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_CLEAR:
+        ret = "SRP_CLIENT_HOST_SERVICES_CLEAR";
+        break;
+
+    case SPINEL_PROP_SRP_CLIENT_EVENT:
+        ret = "SRP_CLIENT_EVENT";
+        break;
+
     case SPINEL_PROP_SERVER_ALLOW_LOCAL_DATA_CHANGE:
         ret = "SERVER_ALLOW_LOCAL_DATA_CHANGE";
         break;
@@ -2693,6 +2733,10 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
 
     case SPINEL_CAP_MULTI_RADIO:
         ret = "MULTI_RADIO";
+        break;
+
+    case SPINEL_CAP_SRP_CLIENT:
+        ret = "SRP_CLIENT";
         break;
 
     case SPINEL_CAP_ERROR_RATE_TRACKING:

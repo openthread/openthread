@@ -111,7 +111,8 @@ constexpr Interpreter::Command Interpreter::sCommands[];
 Interpreter *Interpreter::sInterpreter = nullptr;
 
 Interpreter::Interpreter(Instance *aInstance)
-    : mUserCommands(nullptr)
+    : mInstance(aInstance)
+    , mUserCommands(nullptr)
     , mUserCommandsLength(0)
     , mPingLength(kDefaultPingLength)
     , mPingCount(kDefaultPingCount)
@@ -141,7 +142,12 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
 #endif
-    , mInstance(aInstance)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClient(*this)
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(*this)
+#endif
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
@@ -175,9 +181,9 @@ void Interpreter::OutputResult(otError aError)
     }
 }
 
-void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+void Interpreter::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
 {
-    for (int i = 0; i < aLength; i++)
+    for (uint16_t i = 0; i < aLength; i++)
     {
         OutputFormat("%02x", aBytes[i]);
     }
@@ -270,6 +276,34 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError Interpreter::ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error  = OT_ERROR_NONE;
+    bool    enable = false;
+
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "enable") == 0)
+    {
+        enable = true;
+    }
+    else if (strcmp(aArgs[0], "disable") == 0)
+    {
+        enable = false;
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+    SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, enable));
+
+exit:
+    return error;
+}
+#endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
@@ -3840,6 +3874,42 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     OutputResult(OT_ERROR_NONE);
 }
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+otError Interpreter::ProcessSrp(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+        OutputLine("client");
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+        OutputLine("server");
+#endif
+        ExitNow();
+    }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    if (strcmp(aArgs[0], "client") == 0)
+    {
+        ExitNow(error = mSrpClient.Process(aArgsLength - 1, aArgs + 1));
+    }
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    if (strcmp(aArgs[0], "server") == 0)
+    {
+        ExitNow(error = mSrpServer.Process(aArgsLength - 1, aArgs + 1));
+    }
+#endif
+
+    error = OT_ERROR_INVALID_COMMAND;
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 otError Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
 {

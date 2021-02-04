@@ -38,6 +38,7 @@
 #include "openthread/platform/settings.h"
 
 #include <utils/code_utils.h>
+#include <utils/settings.h>
 
 #include "settings_qorvo.h"
 
