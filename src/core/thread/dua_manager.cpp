@@ -396,6 +396,11 @@ void DuaManager::HandleTimeTick(void)
     UpdateTimeTickerRegistration();
 }
 
+void DuaManager::HandleRegistrationTask(Tasklet &aTasklet)
+{
+    aTasklet.Get<DuaManager>().PerformNextRegistration();
+}
+
 void DuaManager::UpdateTimeTickerRegistration(void)
 {
     if (mDelay.mValue == 0)
