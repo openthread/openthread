@@ -190,7 +190,7 @@ private:
 
     void HandleTimeTick(void);
 
-    static void HandleRegistrationTask(Tasklet &aTasklet) { aTasklet.GetOwner<DuaManager>().PerformNextRegistration(); }
+    static void HandleRegistrationTask(Tasklet &aTasklet) { aTasklet.Get<DuaManager>().PerformNextRegistration(); }
 
     void UpdateTimeTickerRegistration(void);
 

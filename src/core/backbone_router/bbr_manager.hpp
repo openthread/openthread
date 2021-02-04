@@ -229,7 +229,7 @@ private:
 #endif
     void HandleNotifierEvents(Events aEvents);
 
-    static void HandleTimer(Timer &aTimer) { aTimer.GetOwner<Manager>().HandleTimer(); }
+    static void HandleTimer(Timer &aTimer) { aTimer.Get<Manager>().HandleTimer(); }
     void        HandleTimer(void);
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE

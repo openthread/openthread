@@ -62,7 +62,7 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMaskIndex(0)
     , mSampleCount(0)
-    , mTimer(aInstance, ChannelMonitor::HandleTimer, this)
+    , mTimer(aInstance, ChannelMonitor::HandleTimer)
 {
     memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 }
@@ -114,7 +114,7 @@ exit:
 
 void ChannelMonitor::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ChannelMonitor>().HandleTimer();
+    aTimer.Get<ChannelMonitor>().HandleTimer();
 }
 
 void ChannelMonitor::HandleTimer(void)

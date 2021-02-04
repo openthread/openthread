@@ -67,7 +67,7 @@ Ip6::Ip6(Instance &aInstance)
     , mIsReceiveIp6FilterEnabled(false)
     , mReceiveIp6DatagramCallback(nullptr)
     , mReceiveIp6DatagramCallbackContext(nullptr)
-    , mSendQueueTask(aInstance, Ip6::HandleSendQueue, this)
+    , mSendQueueTask(aInstance, Ip6::HandleSendQueue)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
@@ -525,7 +525,7 @@ exit:
 
 void Ip6::HandleSendQueue(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Ip6>().HandleSendQueue();
+    aTasklet.Get<Ip6>().HandleSendQueue();
 }
 
 void Ip6::HandleSendQueue(void)

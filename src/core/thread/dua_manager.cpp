@@ -51,7 +51,7 @@ namespace ot {
 
 DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask, this)
+    , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask)
     , mDuaNotification(UriPath::kDuaRegistrationNotify, &DuaManager::HandleDuaNotification, this)
     , mIsDuaPending(false)
 #if OPENTHREAD_CONFIG_DUA_ENABLE

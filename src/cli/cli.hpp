@@ -596,7 +596,7 @@ private:
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
-    static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
+    static Interpreter &GetOwner(InstanceLocator &aInsatnceLocator);
 
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
