@@ -141,6 +141,11 @@ void Manager::HandleNotifierEvents(Events aEvents)
     }
 }
 
+void Manager::HandleTimer(Timer &aTimer)
+{
+    aTimer.Get<Manager>().HandleTimer();
+}
+
 void Manager::HandleTimer(void)
 {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
