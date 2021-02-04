@@ -51,7 +51,7 @@ jobs:
       COVERAGE: 1
       MULTIPLY: 1
       PYTHONUNBUFFERED: 1
-      MAX_JOBS: 10
+      MAX_JOBS: 3
       VERBOSE: 1
     steps:
     - uses: actions/checkout@v2
