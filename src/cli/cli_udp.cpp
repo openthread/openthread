@@ -214,7 +214,7 @@ otError UdpExample::ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.OutputLine(mLinkSecurityEnabled ? "Enabled" : "Disabled");
+        mInterpreter.OutputEnabledDisabledStatus(mLinkSecurityEnabled);
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {

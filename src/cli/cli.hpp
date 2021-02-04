@@ -259,6 +259,14 @@ public:
     void OutputResult(otError aError);
 
     /**
+     * This method delivers "Enabled" or "Disabled" status to the CLI client (it also appends newline `\r\n`).
+     *
+     * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
+     *
+     */
+    void OutputEnabledDisabledStatus(bool aEnabled);
+
+    /**
      * This method sets the user command table.
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
