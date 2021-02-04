@@ -589,6 +589,25 @@ public:
         uint8_t mDadCounter; ///< Dad Counter used to resolve address conflict in Thread 1.2 DUA feature.
     } OT_TOOL_PACKED_END;
 
+    /**
+     * This enumeration defines the keys of settings.
+     *
+     */
+    enum Key
+    {
+        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
+        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
+        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
+        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
+        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
+        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
+        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
+        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
+        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
+        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+    };
+
 protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -779,7 +798,7 @@ public:
      */
     otError SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
     {
-        return Save(OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+        return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
     }
 
     /**
@@ -796,7 +815,7 @@ public:
     {
         uint16_t length = sizeof(aKey);
 
-        return Read(OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY, &aKey, length);
+        return Read(kKeySlaacIidSecretKey, &aKey, length);
     }
 
     /**
@@ -806,7 +825,7 @@ public:
      * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
      *
      */
-    otError DeleteSlaacIidSecretKey(void) { return Delete(OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY); }
+    otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 

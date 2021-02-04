@@ -58,7 +58,7 @@ extern "C" {
  *       information, the developer MUST add the key to the array `kCriticalKeys`.
  *
  */
-enum Key
+enum
 {
     OT_SETTINGS_KEY_ACTIVE_DATASET  = 0x0001, ///< Active Operational Dataset
     OT_SETTINGS_KEY_PENDING_DATASET = 0x0002, ///< Pending Operational Dataset
