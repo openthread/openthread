@@ -264,6 +264,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
+    src/core/net/socket.cpp                                 \
     src/core/net/srp_client.cpp                             \
     src/core/net/srp_server.cpp                             \
     src/core/net/udp6.cpp                                   \

@@ -146,6 +146,7 @@ set(COMMON_SOURCES
     net/ip6_mpl.cpp
     net/netif.cpp
     net/sntp_client.cpp
+    net/socket.cpp
     net/srp_client.cpp
     net/srp_server.cpp
     net/udp6.cpp
