@@ -217,6 +217,7 @@ do_cert()
 
     [[ ! -d tmp ]] || rm -rvf tmp
     PYTHONUNBUFFERED=1 "$@"
+    exit 0
 }
 
 do_cert_suite()
