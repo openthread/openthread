@@ -189,19 +189,14 @@ typedef void (*otSrpClientCallback)(otError                    aError,
  *
  * @param[in] aInstance        A pointer to the OpenThread instance.
  * @param[in] aServerSockAddr  The socket address (IPv6 address and port number) of the SRP server.
- * @param[in] aCallback        The callback which is used to notify events and changes. Can be NULL if not needed.
- * @param[in] aContext         An arbitrary context used with @p aCallback.
  *
  * @retval OT_ERROR_NONE       SRP client operation started successfully or it is already running with same server
  *                             socket address and callback.
- * @retval OT_ERROR_BUSY       SRP client is busy running with a different socket address and/or callback.
+ * @retval OT_ERROR_BUSY       SRP client is busy running with a different socket address.
  * @retval OT_ERROR_FAILED     Failed to open/connect the client's UDP socket.
  *
  */
-otError otSrpClientStart(otInstance *        aInstance,
-                         const otSockAddr *  aServerSockAddr,
-                         otSrpClientCallback aCallback,
-                         void *              aContext);
+otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAddr);
 
 /**
  * This function stops the SRP client operation.
@@ -213,6 +208,42 @@ otError otSrpClientStart(otInstance *        aInstance,
  *
  */
 void otSrpClientStop(otInstance *aInstance);
+
+/**
+ * This function indicates whether the SRP client is running or not.
+ *
+ * @param[in] aInstance       A pointer to the OpenThread instance.
+ *
+ * @returns TRUE if the SRP client is running, FALSE otherwise.
+ *
+ */
+bool otSrpClientIsRunning(otInstance *aInstance);
+
+/**
+ * This function gets the socket address (IPv6 address and port number) of the SRP server which is being used by SRP
+ * client.
+ *
+ * If the client is not running, the address is unspecified (all zero) with zero port number.
+ *
+ * @param[in] aInstance       A pointer to the OpenThread instance.
+ *
+ * @returns A pointer to the SRP server's socket address (is always non-NULL).
+ *
+ */
+const otSockAddr *otSrpClientGetServerAddress(otInstance *aInstance);
+
+/**
+ * This function sets the callback to notify caller of events/changes from SRP client.
+ *
+ * The SRP client allows a single callback to be registered. So consecutive calls to this function will overwrite any
+ * previously set callback functions.
+ *
+ * @param[in] aInstance   A pointer to the OpenThread instance.
+ * @param[in] aCallback   The callback to notify of events and changes. Can be NULL if not needed.
+ * @param[in] aContext    An arbitrary context used with @p aCallback.
+ *
+ */
+void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback, void *aContext);
 
 /**
  * This function gets the lease interval used in SRP update requests.

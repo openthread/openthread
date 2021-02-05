@@ -164,14 +164,13 @@ Client::Client(Instance &aInstance)
     static_assert(kRemoved == 7, "kRemoved value is not correct");
 }
 
-otError Client::Start(const Ip6::SockAddr &aServerSockAddr, Callback aCallback, void *aContext)
+otError Client::Start(const Ip6::SockAddr &aServerSockAddr)
 {
     otError error = OT_ERROR_NONE;
 
     if (GetState() != kStateStopped)
     {
         VerifyOrExit(aServerSockAddr == mSocket.GetPeerName(), error = OT_ERROR_BUSY);
-        VerifyOrExit((mCallback == aCallback) && (mCallbackContext == aContext), error = OT_ERROR_BUSY);
         ExitNow();
     }
 
@@ -181,8 +180,6 @@ otError Client::Start(const Ip6::SockAddr &aServerSockAddr, Callback aCallback, 
     otLogInfoSrp("[client] Starting, server [%s]:%d", aServerSockAddr.GetAddress().ToString().AsCString(),
                  aServerSockAddr.mPort);
 
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
     Resume();
 
 exit:
@@ -228,6 +225,12 @@ void Client::Stop(void)
 
 exit:
     return;
+}
+
+void Client::SetCallback(Callback aCallback, void *aContext)
+{
+    mCallback        = aCallback;
+    mCallbackContext = aContext;
 }
 
 void Client::Resume(void)

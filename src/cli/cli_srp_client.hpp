@@ -105,6 +105,7 @@ private:
     otError ProcessHost(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessLeaseInterval(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessKeyLeaseInterval(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessServer(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessService(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
@@ -129,6 +130,7 @@ private:
         {"host", &SrpClient::ProcessHost},
         {"keyleaseinterval", &SrpClient::ProcessKeyLeaseInterval},
         {"leaseinterval", &SrpClient::ProcessLeaseInterval},
+        {"server", &SrpClient::ProcessServer},
         {"service", &SrpClient::ProcessService},
         {"start", &SrpClient::ProcessStart},
         {"stop", &SrpClient::ProcessStop},

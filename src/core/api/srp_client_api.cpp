@@ -43,14 +43,11 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
-otError otSrpClientStart(otInstance *        aInstance,
-                         const otSockAddr *  aServerSockAddr,
-                         otSrpClientCallback aCallback,
-                         void *              aContext)
+otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAddr)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Srp::Client>().Start(*static_cast<const Ip6::SockAddr *>(aServerSockAddr), aCallback, aContext);
+    return instance.Get<Srp::Client>().Start(*static_cast<const Ip6::SockAddr *>(aServerSockAddr));
 }
 
 void otSrpClientStop(otInstance *aInstance)
@@ -58,6 +55,27 @@ void otSrpClientStop(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<Srp::Client>().Stop();
+}
+
+bool otSrpClientIsRunning(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Client>().IsRunning();
+}
+
+const otSockAddr *otSrpClientGetServerAddress(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.Get<Srp::Client>().GetServerAddress();
+}
+
+void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback, void *aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Srp::Client>().SetCallback(aCallback, aContext);
 }
 
 uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance)
