@@ -299,6 +299,7 @@ cc_library_static {
         "src/core/net/ip6_headers.cpp",
         "src/core/net/ip6_mpl.cpp",
         "src/core/net/netif.cpp",
+        "src/core/net/socket.cpp",
         "src/core/net/udp6.cpp",
         "src/core/radio/radio.cpp",
         "src/core/radio/radio_callbacks.cpp",

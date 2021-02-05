@@ -177,8 +177,7 @@ otError Client::Start(const Ip6::SockAddr &aServerSockAddr)
     SuccessOrExit(error = mSocket.Open(Client::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Connect(aServerSockAddr));
 
-    otLogInfoSrp("[client] Starting, server [%s]:%d", aServerSockAddr.GetAddress().ToString().AsCString(),
-                 aServerSockAddr.mPort);
+    otLogInfoSrp("[client] Starting, server %s", aServerSockAddr.ToString().AsCString());
 
     Resume();
 

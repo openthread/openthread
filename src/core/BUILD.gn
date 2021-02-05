@@ -486,6 +486,7 @@ openthread_core_files = [
   "net/netif.hpp",
   "net/sntp_client.cpp",
   "net/sntp_client.hpp",
+  "net/socket.cpp",
   "net/socket.hpp",
   "net/srp_client.cpp",
   "net/srp_client.hpp",
