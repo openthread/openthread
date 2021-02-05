@@ -151,8 +151,8 @@ class SrpNameConflicts(thread_cert.TestCase):
 
         # It is expected that the registration will be rejected.
         client_2_service = client_2.srp_client_get_services()[0]
-        self.assertEqual(client_2_service['state'], 'Adding')
-        self.assertEqual(client_2.srp_client_get_host_state(), 'ToAdd')
+        self.assertNotEqual(client_2_service['state'], 'Registered')
+        self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
 
         self.assertEqual(len(server.srp_server_get_services()), 1)
         self.assertEqual(len(server.srp_server_get_hosts()), 1)
@@ -172,8 +172,8 @@ class SrpNameConflicts(thread_cert.TestCase):
 
         # It is expected that the registration will be rejected.
         client_2_service = client_2.srp_client_get_services()[0]
-        self.assertEqual(client_2_service['state'], 'Adding')
-        self.assertEqual(client_2.srp_client_get_host_state(), 'ToAdd')
+        self.assertNotEqual(client_2_service['state'], 'Registered')
+        self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
 
         self.assertEqual(len(server.srp_server_get_services()), 1)
         self.assertEqual(len(server.srp_server_get_hosts()), 1)
@@ -225,8 +225,8 @@ class SrpNameConflicts(thread_cert.TestCase):
 
         # It is expected that the registration will be rejected.
         client_2_service = client_2.srp_client_get_services()[0]
-        self.assertEqual(client_2_service['state'], 'Adding')
-        self.assertEqual(client_2.srp_client_get_host_state(), 'ToAdd')
+        self.assertNotEqual(client_2_service['state'], 'Registered')
+        self.assertNotEqual(client_2.srp_client_get_host_state(), 'Registered')
 
         # The service 'my-service-1' is removed but its name is retained.
         # This is why we can see the service record on the SRP server.
