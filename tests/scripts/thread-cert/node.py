@@ -305,6 +305,7 @@ class OtCli:
             if 'RADIO_DEVICE_1_1' in os.environ:
                 cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
+                self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
 
@@ -373,6 +374,7 @@ class OtCli:
             if 'RADIO_DEVICE_1_1' in os.environ:
                 args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
                                                                                         nodeid)
+                self.is_posix = True
             else:
                 args = ''
 
@@ -428,11 +430,11 @@ class NodeImpl:
         self.name = name or ('Node%d' % nodeid)
         self.is_posix = False
 
-        super().__init__(nodeid, **kwargs)
-
         self.simulator = simulator
         if self.simulator:
             self.simulator.add_node(self)
+
+        super().__init__(nodeid, **kwargs)
 
         self.set_extpanid(config.EXTENDED_PANID)
         self.set_addr64('%016x' % (thread_cert.EXTENDED_ADDRESS_BASE + nodeid))
