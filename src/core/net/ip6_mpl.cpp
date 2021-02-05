@@ -46,11 +46,11 @@ namespace Ip6 {
 Mpl::Mpl(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mMatchingAddress(nullptr)
-    , mSeedSetTimer(aInstance, Mpl::HandleSeedSetTimer, this)
+    , mSeedSetTimer(aInstance, Mpl::HandleSeedSetTimer)
     , mSeedId(0)
     , mSequence(0)
 #if OPENTHREAD_FTD
-    , mRetransmissionTimer(aInstance, Mpl::HandleRetransmissionTimer, this)
+    , mRetransmissionTimer(aInstance, Mpl::HandleRetransmissionTimer)
     , mTimerExpirations(0)
 #endif
 {
@@ -264,7 +264,7 @@ exit:
 
 void Mpl::HandleSeedSetTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mpl>().HandleSeedSetTimer();
+    aTimer.Get<Mpl>().HandleSeedSetTimer();
 }
 
 void Mpl::HandleSeedSetTimer(void)
@@ -337,7 +337,7 @@ exit:
 
 void Mpl::HandleRetransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mpl>().HandleRetransmissionTimer();
+    aTimer.Get<Mpl>().HandleRetransmissionTimer();
 }
 
 void Mpl::HandleRetransmissionTimer(void)

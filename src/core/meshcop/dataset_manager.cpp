@@ -55,7 +55,7 @@ DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::
     , mLocal(aInstance, aType)
     , mTimestampValid(false)
     , mCoapPending(false)
-    , mTimer(aInstance, aTimerHandler, this)
+    , mTimer(aInstance, aTimerHandler)
 {
     mTimestamp.Init();
 }
@@ -694,12 +694,12 @@ void ActiveDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &a
 
 void ActiveDataset::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ActiveDataset>().HandleTimer();
+    aTimer.Get<ActiveDataset>().HandleTimer();
 }
 
 PendingDataset::PendingDataset(Instance &aInstance)
     : DatasetManager(aInstance, Dataset::kPending, PendingDataset::HandleTimer)
-    , mDelayTimer(aInstance, PendingDataset::HandleDelayTimer, this)
+    , mDelayTimer(aInstance, PendingDataset::HandleDelayTimer)
     , mResourceGet(UriPath::kPendingGet, &PendingDataset::HandleGet, this)
 #if OPENTHREAD_FTD
     , mResourceSet(UriPath::kPendingSet, &PendingDataset::HandleSet, this)
@@ -785,7 +785,7 @@ void PendingDataset::StartDelayTimer(void)
 
 void PendingDataset::HandleDelayTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<PendingDataset>().HandleDelayTimer();
+    aTimer.Get<PendingDataset>().HandleDelayTimer();
 }
 
 void PendingDataset::HandleDelayTimer(void)
@@ -834,7 +834,7 @@ void PendingDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &
 
 void PendingDataset::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<PendingDataset>().HandleTimer();
+    aTimer.Get<PendingDataset>().HandleTimer();
 }
 
 } // namespace MeshCoP

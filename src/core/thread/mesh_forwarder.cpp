@@ -89,7 +89,7 @@ MeshForwarder::MeshForwarder(Instance &aInstance)
     , mEnabled(false)
     , mTxPaused(false)
     , mSendBusy(false)
-    , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask, this)
+    , mScheduleTransmissionTask(aInstance, MeshForwarder::ScheduleTransmissionTask)
 #if OPENTHREAD_FTD
     , mIndirectSender(aInstance)
 #endif
@@ -229,7 +229,7 @@ void MeshForwarder::ResumeMessageTransmissions(void)
 
 void MeshForwarder::ScheduleTransmissionTask(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<MeshForwarder>().ScheduleTransmissionTask();
+    aTasklet.Get<MeshForwarder>().ScheduleTransmissionTask();
 }
 
 void MeshForwarder::ScheduleTransmissionTask(void)

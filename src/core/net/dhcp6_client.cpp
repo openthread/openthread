@@ -50,7 +50,7 @@ namespace Dhcp6 {
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mTrickleTimer(aInstance, Client::HandleTrickleTimer, nullptr, this)
+    , mTrickleTimer(aInstance, Client::HandleTrickleTimer, nullptr)
     , mStartTime(0)
     , mIdentityAssociationCurrent(nullptr)
 {
@@ -216,7 +216,7 @@ exit:
 
 bool Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
 {
-    return aTrickleTimer.GetOwner<Client>().HandleTrickleTimer();
+    return aTrickleTimer.Get<Client>().HandleTrickleTimer();
 }
 
 bool Client::HandleTrickleTimer(void)

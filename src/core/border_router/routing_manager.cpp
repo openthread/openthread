@@ -65,10 +65,10 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mAdvertisedOmrPrefixNum(0)
     , mAdvertisedOnLinkPrefix(nullptr)
     , mDiscoveredPrefixNum(0)
-    , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer, this)
-    , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer, this)
+    , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
+    , mRouterAdvertisementTimer(aInstance, HandleRouterAdvertisementTimer)
     , mRouterAdvertisementCount(0)
-    , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer, this)
+    , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
 {
     mLocalOmrPrefix.Clear();
@@ -772,7 +772,7 @@ bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
 
 void RoutingManager::HandleRouterAdvertisementTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<RoutingManager>().HandleRouterAdvertisementTimer();
+    aTimer.Get<RoutingManager>().HandleRouterAdvertisementTimer();
 }
 
 void RoutingManager::HandleRouterAdvertisementTimer(void)
@@ -784,7 +784,7 @@ void RoutingManager::HandleRouterAdvertisementTimer(void)
 
 void RoutingManager::HandleRouterSolicitTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<RoutingManager>().HandleRouterSolicitTimer();
+    aTimer.Get<RoutingManager>().HandleRouterSolicitTimer();
 }
 
 void RoutingManager::HandleRouterSolicitTimer(void)
@@ -824,7 +824,7 @@ void RoutingManager::HandleRouterSolicitTimer(void)
 
 void RoutingManager::HandleDiscoveredPrefixInvalidTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<RoutingManager>().HandleDiscoveredPrefixInvalidTimer();
+    aTimer.Get<RoutingManager>().HandleDiscoveredPrefixInvalidTimer();
 }
 
 void RoutingManager::HandleDiscoveredPrefixInvalidTimer(void)

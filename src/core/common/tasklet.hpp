@@ -61,7 +61,7 @@ class TaskletScheduler;
  * This class is used to represent a tasklet.
  *
  */
-class Tasklet : public InstanceLocator, public OwnerLocator
+class Tasklet : public InstanceLocator
 {
     friend class TaskletScheduler;
 
@@ -79,10 +79,9 @@ public:
      *
      * @param[in]  aInstance   A reference to the OpenThread instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
-     * @param[in]  aOwner      A pointer to owner of this `Tasklet` object.
      *
      */
-    Tasklet(Instance &aInstance, Handler aHandler, void *aOwner);
+    Tasklet(Instance &aInstance, Handler aHandler);
 
     /**
      * This method puts the tasklet on the tasklet scheduler run queue.
@@ -129,7 +128,7 @@ public:
      *
      */
     TaskletContext(Instance &aInstance, Handler aHandler, void *aContext)
-        : Tasklet(aInstance, aHandler, aContext)
+        : Tasklet(aInstance, aHandler)
         , mContext(aContext)
     {
     }

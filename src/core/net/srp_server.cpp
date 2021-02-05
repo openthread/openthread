@@ -85,8 +85,8 @@ Server::Server(Instance &aInstance)
     , mMaxLease(kDefaultMaxLease)
     , mMinKeyLease(kDefaultMinKeyLease)
     , mMaxKeyLease(kDefaultMaxKeyLease)
-    , mLeaseTimer(aInstance, HandleLeaseTimer, this)
-    , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer, this)
+    , mLeaseTimer(aInstance, HandleLeaseTimer)
+    , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
     , mEnabled(false)
 {
     IgnoreError(SetDomain(kDefaultDomain));
@@ -1130,7 +1130,7 @@ exit:
 
 void Server::HandleLeaseTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Server>().HandleLeaseTimer();
+    aTimer.Get<Server>().HandleLeaseTimer();
 }
 
 void Server::HandleLeaseTimer(void)
@@ -1250,7 +1250,7 @@ void Server::HandleLeaseTimer(void)
 
 void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Server>().HandleOutstandingUpdatesTimer();
+    aTimer.Get<Server>().HandleOutstandingUpdatesTimer();
 }
 
 void Server::HandleOutstandingUpdatesTimer(void)
