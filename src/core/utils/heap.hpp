@@ -37,6 +37,8 @@
 
 #include "openthread-core-config.h"
 
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -352,5 +354,7 @@ private:
 
 } // namespace Utils
 } // namespace ot
+
+#endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #endif // OT_HEAP_HPP_

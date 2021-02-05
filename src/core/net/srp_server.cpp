@@ -42,7 +42,6 @@
 #include "net/dns_headers.hpp"
 #include "thread/network_data_service.hpp"
 #include "thread/thread_netif.hpp"
-#include "utils/heap.hpp"
 
 namespace ot {
 namespace Srp {
@@ -94,7 +93,7 @@ Server::Server(Instance &aInstance)
 
 Server::~Server(void)
 {
-    GetInstance().HeapFree(mDomain);
+    Instance::HeapFree(mDomain);
 }
 
 void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
@@ -182,7 +181,7 @@ otError Server::SetDomain(const char *aDomain)
         appendTrailingDot = 1;
     }
 
-    buf = static_cast<char *>(GetInstance().HeapCAlloc(1, length + appendTrailingDot + 1));
+    buf = static_cast<char *>(Instance::HeapCAlloc(1, length + appendTrailingDot + 1));
     VerifyOrExit(buf != nullptr, error = OT_ERROR_NO_BUFS);
 
     strcpy(buf, aDomain);
@@ -191,13 +190,13 @@ otError Server::SetDomain(const char *aDomain)
         buf[length]     = '.';
         buf[length + 1] = '\0';
     }
-    GetInstance().HeapFree(mDomain);
+    Instance::HeapFree(mDomain);
     mDomain = buf;
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        GetInstance().HeapFree(buf);
+        Instance::HeapFree(buf);
     }
     return error;
 }
@@ -531,7 +530,7 @@ void Server::HandleDnsUpdate(Message &                aMessage,
     // Per 2.3.2 of SRP draft 6, no prerequisites should be included in a SRP update.
     VerifyOrExit(aDnsHeader.GetPrerequisiteRecordCount() == 0, error = OT_ERROR_FAILED);
 
-    host = Host::New(GetInstance());
+    host = Host::New();
     VerifyOrExit(host != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = ProcessUpdateSection(*host, aMessage, aDnsHeader, zone, aOffset));
 
@@ -1261,15 +1260,15 @@ void Server::HandleOutstandingUpdatesTimer(void)
     }
 }
 
-Server::Service *Server::Service::New(Instance &aInstance, const char *aFullName)
+Server::Service *Server::Service::New(const char *aFullName)
 {
     void *   buf;
     Service *service = nullptr;
 
-    buf = aInstance.HeapCAlloc(1, sizeof(Service));
+    buf = Instance::HeapCAlloc(1, sizeof(Service));
     VerifyOrExit(buf != nullptr);
 
-    service = new (buf) Service(aInstance);
+    service = new (buf) Service();
     if (service->SetFullName(aFullName) != OT_ERROR_NONE)
     {
         service->Free();
@@ -1282,14 +1281,13 @@ exit:
 
 void Server::Service::Free(void)
 {
-    GetInstance().HeapFree(mFullName);
-    GetInstance().HeapFree(mTxtData);
-    GetInstance().HeapFree(this);
+    Instance::HeapFree(mFullName);
+    Instance::HeapFree(mTxtData);
+    Instance::HeapFree(this);
 }
 
-Server::Service::Service(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mFullName(nullptr)
+Server::Service::Service(void)
+    : mFullName(nullptr)
     , mPriority(0)
     , mWeight(0)
     , mPort(0)
@@ -1306,12 +1304,12 @@ otError Server::Service::SetFullName(const char *aFullName)
     OT_ASSERT(aFullName != nullptr);
 
     otError error    = OT_ERROR_NONE;
-    char *  nameCopy = static_cast<char *>(GetInstance().HeapCAlloc(1, strlen(aFullName) + 1));
+    char *  nameCopy = static_cast<char *>(Instance::HeapCAlloc(1, strlen(aFullName) + 1));
 
     VerifyOrExit(nameCopy != nullptr, error = OT_ERROR_NO_BUFS);
     strcpy(nameCopy, aFullName);
 
-    GetInstance().HeapFree(mFullName);
+    Instance::HeapFree(mFullName);
     mFullName = nameCopy;
 
 exit:
@@ -1341,12 +1339,12 @@ otError Server::Service::SetTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLe
     otError  error = OT_ERROR_NONE;
     uint8_t *txtData;
 
-    txtData = static_cast<uint8_t *>(GetInstance().HeapCAlloc(1, aTxtDataLength));
+    txtData = static_cast<uint8_t *>(Instance::HeapCAlloc(1, aTxtDataLength));
     VerifyOrExit(txtData != nullptr, error = OT_ERROR_NO_BUFS);
 
     memcpy(txtData, aTxtData, aTxtDataLength);
 
-    GetInstance().HeapFree(mTxtData);
+    Instance::HeapFree(mTxtData);
     mTxtData   = txtData;
     mTxtLength = aTxtDataLength;
 
@@ -1362,12 +1360,12 @@ otError Server::Service::SetTxtDataFromMessage(const Message &aMessage, uint16_t
     otError  error = OT_ERROR_NONE;
     uint8_t *txtData;
 
-    txtData = static_cast<uint8_t *>(GetInstance().HeapCAlloc(1, aLength));
+    txtData = static_cast<uint8_t *>(Instance::HeapCAlloc(1, aLength));
     VerifyOrExit(txtData != nullptr, error = OT_ERROR_NO_BUFS);
     VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = OT_ERROR_PARSE);
     VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength), error = OT_ERROR_PARSE);
 
-    GetInstance().HeapFree(mTxtData);
+    Instance::HeapFree(mTxtData);
     mTxtData   = txtData;
     mTxtLength = aLength;
 
@@ -1376,7 +1374,7 @@ otError Server::Service::SetTxtDataFromMessage(const Message &aMessage, uint16_t
 exit:
     if (error != OT_ERROR_NONE)
     {
-        GetInstance().HeapFree(txtData);
+        Instance::HeapFree(txtData);
     }
 
     return error;
@@ -1385,7 +1383,7 @@ exit:
 void Server::Service::ClearResources(void)
 {
     mPort = 0;
-    GetInstance().HeapFree(mTxtData);
+    Instance::HeapFree(mTxtData);
     mTxtData   = nullptr;
     mTxtLength = 0;
 }
@@ -1418,15 +1416,15 @@ bool Server::Service::Matches(const char *aFullName) const
     return (mFullName != nullptr) && (strcmp(mFullName, aFullName) == 0);
 }
 
-Server::Host *Server::Host::New(Instance &aInstance)
+Server::Host *Server::Host::New(void)
 {
     void *buf;
     Host *host = nullptr;
 
-    buf = aInstance.HeapCAlloc(1, sizeof(Host));
+    buf = Instance::HeapCAlloc(1, sizeof(Host));
     VerifyOrExit(buf != nullptr);
 
-    host = new (buf) Host(aInstance);
+    host = new (buf) Host();
 
 exit:
     return host;
@@ -1435,13 +1433,12 @@ exit:
 void Server::Host::Free(void)
 {
     RemoveAndFreeAllServices();
-    GetInstance().HeapFree(mFullName);
-    GetInstance().HeapFree(this);
+    Instance::HeapFree(mFullName);
+    Instance::HeapFree(this);
 }
 
-Server::Host::Host(Instance &aInstance)
-    : InstanceLocator(aInstance)
-    , mFullName(nullptr)
+Server::Host::Host(void)
+    : mFullName(nullptr)
     , mAddressesNum(0)
     , mNext(nullptr)
     , mLease(0)
@@ -1456,14 +1453,14 @@ otError Server::Host::SetFullName(const char *aFullName)
     OT_ASSERT(aFullName != nullptr);
 
     otError error    = OT_ERROR_NONE;
-    char *  nameCopy = static_cast<char *>(GetInstance().HeapCAlloc(1, strlen(aFullName) + 1));
+    char *  nameCopy = static_cast<char *>(Instance::HeapCAlloc(1, strlen(aFullName) + 1));
 
     VerifyOrExit(nameCopy != nullptr, error = OT_ERROR_NO_BUFS);
     strcpy(nameCopy, aFullName);
 
     if (mFullName != nullptr)
     {
-        GetInstance().HeapFree(mFullName);
+        Instance::HeapFree(mFullName);
     }
     mFullName = nameCopy;
 
@@ -1508,7 +1505,7 @@ Server::Service *Server::Host::AddService(const char *aFullName)
 
     VerifyOrExit(service == nullptr);
 
-    service = Service::New(GetInstance(), aFullName);
+    service = Service::New(aFullName);
     if (service != nullptr)
     {
         IgnoreError(mServices.Add(*service));
@@ -1626,7 +1623,7 @@ exit:
 
 void Server::UpdateMetadata::Free(void)
 {
-    GetInstance().HeapFree(this);
+    Instance::HeapFree(this);
 }
 
 Server::UpdateMetadata::UpdateMetadata(Instance &               aInstance,

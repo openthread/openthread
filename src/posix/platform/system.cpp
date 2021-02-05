@@ -92,10 +92,6 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
     platformRandomInit();
 
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    otHeapSetCAllocFree(calloc, free);
-#endif
-
     instance = otInstanceInitSingle();
     assert(instance != nullptr);
 
