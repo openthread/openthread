@@ -1317,11 +1317,6 @@ exit:
     return error;
 }
 
-otError Server::Service::GetNextTxtEntry(Dns::TxtRecord::TxtIterator &aIterator, Dns::TxtEntry &aTxtEntry) const
-{
-    return Dns::TxtRecord::GetNextTxtEntry(mTxtData, mTxtLength, aIterator, aTxtEntry);
-}
-
 TimeMilli Server::Service::GetExpireTime(void) const
 {
     OT_ASSERT(!mIsDeleted);

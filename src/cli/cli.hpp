@@ -557,6 +557,8 @@ private:
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 
+    void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     otError     GetDnsConfig(uint8_t aArgsLength, char *aArgs[], otDnsQueryConfig *&aConfig, uint8_t aStartArgsIndex);
     static void HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);

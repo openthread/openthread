@@ -1099,6 +1099,209 @@ void TestHeaderAndResourceRecords(void)
     testFreeInstance(instance);
 }
 
+void TestDnsTxtEntry(void)
+{
+    enum
+    {
+        kMaxTxtDataSize = 255,
+    };
+
+    struct EncodedTxtData
+    {
+        const uint8_t *mData;
+        uint8_t        mLength;
+    };
+
+    const char    kKey1[]   = "key";
+    const uint8_t kValue1[] = {'v', 'a', 'l', 'u', 'e'};
+
+    const char    kKey2[]   = "E";
+    const uint8_t kValue2[] = {'m', 'c', '^', '2'};
+
+    const char    kKey3[]   = "space key";
+    const uint8_t kValue3[] = {'=', 0, '='};
+
+    const char    kKey4[]   = "123456789"; // Max recommended length key
+    const uint8_t kValue4[] = {0};
+
+    const char    kKey5[]   = "1234567890"; // Longer than recommended key
+    const uint8_t kValue5[] = {'a'};
+
+    const char kKey6[] = "boolKey";  // Should be encoded as "boolKey" (without `=`).
+    const char kKey7[] = "emptyKey"; // Should be encoded as "emptyKey=".
+
+    // Invalid key
+    const char kShortKey[] = "";
+
+    const uint8_t kEncodedTxt1[] = {9, 'k', 'e', 'y', '=', 'v', 'a', 'l', 'u', 'e'};
+    const uint8_t kEncodedTxt2[] = {6, 'E', '=', 'm', 'c', '^', '2'};
+    const uint8_t kEncodedTxt3[] = {13, 's', 'p', 'a', 'c', 'e', ' ', 'k', 'e', 'y', '=', '=', 0, '='};
+    const uint8_t kEncodedTxt4[] = {11, '1', '2', '3', '4', '5', '6', '7', '8', '9', '=', 0};
+    const uint8_t kEncodedTxt5[] = {12, '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '=', 'a'};
+    const uint8_t kEncodedTxt6[] = {7, 'b', 'o', 'o', 'l', 'K', 'e', 'y'};
+    const uint8_t kEncodedTxt7[] = {9, 'e', 'm', 'p', 't', 'y', 'K', 'e', 'y', '='};
+
+    const uint8_t kInvalidEncodedTxt1[] = {4, 'a', '=', 'b'}; // Incorrect length
+
+    // Special encoded txt data with zero strings and string starting
+    // with '=' (missing key) whcih should be skipped over silently.
+    const uint8_t kSpecialEncodedTxt[] = {0, 0, 3, 'A', '=', 'B', 2, '=', 'C', 3, 'D', '=', 'E', 3, '=', '1', '2'};
+
+    const Dns::TxtEntry kTxtEntries[] = {
+        Dns::TxtEntry(kKey1, kValue1, sizeof(kValue1)),
+        Dns::TxtEntry(kKey2, kValue2, sizeof(kValue2)),
+        Dns::TxtEntry(kKey3, kValue3, sizeof(kValue3)),
+        Dns::TxtEntry(kKey4, kValue4, sizeof(kValue4)),
+        Dns::TxtEntry(kKey5, kValue5, sizeof(kValue5)),
+        Dns::TxtEntry(kKey6, nullptr, 0),
+        Dns::TxtEntry(kKey7, kValue1, 0),
+    };
+
+    const EncodedTxtData kEncodedTxtData[] = {
+        {kEncodedTxt1, sizeof(kEncodedTxt1)}, {kEncodedTxt2, sizeof(kEncodedTxt2)},
+        {kEncodedTxt3, sizeof(kEncodedTxt3)}, {kEncodedTxt4, sizeof(kEncodedTxt4)},
+        {kEncodedTxt5, sizeof(kEncodedTxt5)}, {kEncodedTxt6, sizeof(kEncodedTxt6)},
+        {kEncodedTxt7, sizeof(kEncodedTxt7)}};
+
+    Instance *              instance;
+    MessagePool *           messagePool;
+    Message *               message;
+    uint8_t                 txtData[kMaxTxtDataSize];
+    uint16_t                txtDataLength;
+    uint8_t                 index;
+    Dns::TxtEntry           txtEntry;
+    Dns::TxtEntry::Iterator iterator;
+
+    printf("================================================================\n");
+    printf("TestDnsTxtEntry()\n");
+
+    instance = static_cast<Instance *>(testInitInstance());
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
+
+    messagePool = &instance->Get<MessagePool>();
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(kTxtEntries, OT_ARRAY_LENGTH(kTxtEntries), *message),
+                  "TxtEntry::AppendEntries() failed");
+
+    txtDataLength = message->GetLength();
+    VerifyOrQuit(txtDataLength < kMaxTxtDataSize, "TXT data is too long");
+
+    SuccessOrQuit(message->Read(0, txtData, txtDataLength), "Failed to read txt data from message");
+    DumpBuffer("txt data", txtData, txtDataLength);
+
+    index = 0;
+    for (const EncodedTxtData &encodedData : kEncodedTxtData)
+    {
+        VerifyOrQuit(memcmp(&txtData[index], encodedData.mData, encodedData.mLength) == 0,
+                     "TxtData is incorrectly encoded");
+        index += encodedData.mLength;
+    }
+
+    iterator.Init(txtData, txtDataLength);
+
+    for (const Dns::TxtEntry &expectedTxtEntry : kTxtEntries)
+    {
+        uint8_t expectedKeyLength = static_cast<uint8_t>(strlen(expectedTxtEntry.mKey));
+
+        SuccessOrQuit(iterator.GetNextEntry(txtEntry), "TxtEntry::GetNextEntry() failed");
+        printf("key:\"%s\" valueLen:%d\n", txtEntry.mKey != nullptr ? txtEntry.mKey : "(null)", txtEntry.mValueLength);
+
+        if (expectedKeyLength > Dns::TxtEntry::kMaxKeyLength)
+        {
+            // When the key is longer than recommended max key length,
+            // the full encoded string is returned in `mValue` and
+            // `mValueLength` and `mKey` should be set to  `nullptr`.
+
+            VerifyOrQuit(txtEntry.mKey == nullptr, "TxtEntry key does not match expected value for long key");
+            VerifyOrQuit(txtEntry.mValueLength == expectedKeyLength + expectedTxtEntry.mValueLength + sizeof(char),
+                         "TxtEntry value length is incorrect for long key");
+            VerifyOrQuit(memcmp(txtEntry.mValue, expectedTxtEntry.mKey, expectedKeyLength) == 0,
+                         "txtEntry value does match expected content");
+            VerifyOrQuit(txtEntry.mValue[expectedKeyLength] == static_cast<uint8_t>('='),
+                         "txtEntry value does match expected content");
+            VerifyOrQuit(memcmp(&txtEntry.mValue[expectedKeyLength + sizeof(uint8_t)], expectedTxtEntry.mValue,
+                                expectedTxtEntry.mValueLength) == 0,
+                         "txtEntry value does match expected content");
+            continue;
+        }
+
+        VerifyOrQuit(strcmp(txtEntry.mKey, expectedTxtEntry.mKey) == 0, "TxtEntry key does not match expected value");
+        VerifyOrQuit(txtEntry.mValueLength == expectedTxtEntry.mValueLength,
+                     "TxtEntry value length does not match expected value");
+
+        if (txtEntry.mValueLength != 0)
+        {
+            VerifyOrQuit(memcmp(txtEntry.mValue, expectedTxtEntry.mValue, txtEntry.mValueLength) == 0,
+                         "TxtEntry value does not match expected content");
+        }
+        else
+        {
+            // Ensure both `txtEntry.mKey` and `expectedTxtEntry.mKey` are
+            // null or both are non-null (for boolean or empty keys).
+            VerifyOrQuit((txtEntry.mKey == nullptr) == (expectedTxtEntry.mKey == nullptr),
+                         "TxtEntry value does not match expected value for bool or empty key");
+        }
+    }
+
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_NOT_FOUND, "GetNextEntry() returned unexpected entry");
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_NOT_FOUND, "GetNextEntry() succeeded after done");
+
+    // Verify `AppendEntries()` correctly rejecting invalid key
+    txtEntry.mValue       = kValue1;
+    txtEntry.mValueLength = sizeof(kValue1);
+    txtEntry.mKey         = kShortKey;
+    VerifyOrQuit(Dns::TxtEntry::AppendEntries(&txtEntry, 1, *message) == OT_ERROR_INVALID_ARGS,
+                 "AppendEntries() did not fail with invalid key");
+
+    // Verify appending empty txt data
+
+    SuccessOrQuit(message->SetLength(0), "Message::SetLength() failed");
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(nullptr, 0, *message), "AppendEntries() failed with empty array");
+    txtDataLength = message->GetLength();
+    VerifyOrQuit(txtDataLength == sizeof(uint8_t), "Data length is incorrect with empty array");
+    SuccessOrQuit(message->Read(0, txtData, txtDataLength), "Failed to read txt data from message");
+    VerifyOrQuit(txtData[0] == 0, "Data is invalid with empty array");
+
+    SuccessOrQuit(message->SetLength(0), "Message::SetLength() failed");
+    txtEntry.mKey         = nullptr;
+    txtEntry.mValue       = nullptr;
+    txtEntry.mValueLength = 0;
+    SuccessOrQuit(Dns::TxtEntry::AppendEntries(&txtEntry, 1, *message), "AppendEntries() failed with empty entry");
+    txtDataLength = message->GetLength();
+    VerifyOrQuit(txtDataLength == sizeof(uint8_t), "Data length is incorrect with empty entry");
+    SuccessOrQuit(message->Read(0, txtData, txtDataLength), "Failed to read txt data from message");
+    VerifyOrQuit(txtData[0] == 0, "Data is invalid with empty entry");
+
+    // Verify `Iterator` behavior with invalid txt data.
+
+    iterator.Init(kInvalidEncodedTxt1, sizeof(kInvalidEncodedTxt1));
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_PARSE, "GetNextEntry() did not fail with invalid data");
+
+    // Verify `GetNextEntry()` correctly skipping over empty strings and
+    // strings starting with '=' (missing key) in encoded txt.
+    //
+    // kSpecialEncodedTxt:
+    // { 0, 3, 'A', '=', 'B', 2, '=', 'C', 3, 'D', '=', 'E', 3, '=', '1', '2' }
+
+    iterator.Init(kSpecialEncodedTxt, sizeof(kSpecialEncodedTxt));
+
+    // We should get "A=B` (or key="A", and value="B")
+    SuccessOrQuit(iterator.GetNextEntry(txtEntry), "GetNextEntry() failed");
+    VerifyOrQuit((txtEntry.mKey[0] == 'A') && (txtEntry.mKey[1] == '\0'), "GetNextEntry() got incorrect key");
+    VerifyOrQuit((txtEntry.mValueLength == 1) && (txtEntry.mValue[0] == 'B'), "GetNextEntry() got incorrect value");
+
+    // We should get "D=E` (or key="D", and value="E")
+    SuccessOrQuit(iterator.GetNextEntry(txtEntry), "GetNextEntry() failed");
+    VerifyOrQuit((txtEntry.mKey[0] == 'D') && (txtEntry.mKey[1] == '\0'), "GetNextEntry() got incorrect key");
+    VerifyOrQuit((txtEntry.mValueLength == 1) && (txtEntry.mValue[0] == 'E'), "GetNextEntry() got incorrect value");
+
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_NOT_FOUND, "GetNextEntry() returned extra entry");
+
+    message->Free();
+    testFreeInstance(instance);
+}
+
 } // namespace ot
 
 int main(void)
@@ -1106,6 +1309,7 @@ int main(void)
     ot::TestDnsName();
     ot::TestDnsCompressedName();
     ot::TestHeaderAndResourceRecords();
+    ot::TestDnsTxtEntry();
 
     printf("All tests passed\n");
     return 0;

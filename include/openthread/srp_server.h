@@ -304,20 +304,15 @@ uint16_t otSrpServerServiceGetWeight(const otSrpServerService *aService);
 uint16_t otSrpServerServiceGetPriority(const otSrpServerService *aService);
 
 /**
- * This method returns the next TXT entry of the service instance.
+ * This function returns the TXT record data of the service instance.
  *
- * @param[in]     aService   A pointer to the SRP service.
- * @param[inout]  aIterator  A pointer to the TXT iterator context. To get the first
- *                           TXT entry, it should be set to OT_DNS_TXT_ITERATOR_INIT.
- * @param[out]    aTxtEntry  A pointer to where the TXT entry will be placed.
+ * @param[in]  aService        A pointer to the SRP service.
+ * @param[out] aDataLength     A pointer to return the TXT record data length. MUST NOT be NULL.
  *
- * @retval OT_ERROR_NONE       Successfully found the next TXT entry.
- * @retval OT_ERROR_NOT_FOUND  No subsequent TXT entry exists in the service.
+ * @returns A pointer to the buffer containing the TXT record data (the TXT data length is returned in @p aDataLength).
  *
  */
-otError otSrpServerServiceGetNextTxtEntry(const otSrpServerService *aService,
-                                          otDnsTxtIterator *        aIterator,
-                                          otDnsTxtEntry *           aTxtEntry);
+const uint8_t *otSrpServerServiceGetTxtData(const otSrpServerService *aService, uint16_t *aDataLength);
 
 /**
  * This method returns the host which the service instance reside on.

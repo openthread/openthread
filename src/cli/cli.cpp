@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <openthread/diag.h>
+#include <openthread/dns.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
 #include <openthread/logging.h>
@@ -1334,6 +1335,51 @@ exit:
     return error;
 }
 
+void Interpreter::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
+{
+    otDnsTxtEntry         entry;
+    otDnsTxtEntryIterator iterator;
+    bool                  isFirst = true;
+
+    otDnsInitTxtEntryIterator(&iterator, aTxtData, aTxtDataLength);
+
+    OutputFormat("[");
+
+    while (otDnsGetNextTxtEntry(&iterator, &entry) == OT_ERROR_NONE)
+    {
+        if (!isFirst)
+        {
+            OutputFormat(", ");
+        }
+
+        if (entry.mKey == nullptr)
+        {
+            // A null `mKey` indicates that the key in the entry is
+            // longer than the recommended max key length, so the entry
+            // could not be parsed. In this case, the whole entry is
+            // returned encoded in `mValue`.
+
+            OutputFormat("[");
+            OutputBytes(entry.mValue, entry.mValueLength);
+            OutputFormat("]");
+        }
+        else
+        {
+            OutputFormat("%s", entry.mKey);
+
+            if (entry.mValue != nullptr)
+            {
+                OutputFormat("=");
+                OutputBytes(entry.mValue, entry.mValueLength);
+            }
+        }
+
+        isFirst = false;
+    }
+
+    OutputFormat("]");
+}
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 otError Interpreter::GetDnsConfig(uint8_t            aArgsLength,
@@ -1473,9 +1519,9 @@ void Interpreter::OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceIn
     OutputFormat(aIndentSize, "HostAddress:");
     OutputIp6Address(aServiceInfo.mHostAddress);
     OutputLine(" TTL:%u", aServiceInfo.mHostAddressTtl);
-    OutputFormat(aIndentSize, "TXT-Data:(len:%d) [", aServiceInfo.mTxtDataSize);
-    OutputBytes(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
-    OutputFormat("] TTL:%u", aServiceInfo.mTxtDataTtl);
+    OutputFormat(aIndentSize, "TXT:");
+    OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+    OutputLine(" TTL:%u", aServiceInfo.mTxtDataTtl);
 }
 
 void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
