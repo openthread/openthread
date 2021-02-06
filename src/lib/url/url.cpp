@@ -155,7 +155,7 @@ void TestSimpleNoQueryString(void)
 
 void TestEmptyValue(void)
 {
-    char         url[] = "spinel:///dev/ttyUSB0?rtxcts&baudrate=115200&verbose&verbose&verbose";
+    char         url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=115200&verbose&verbose&verbose";
     ot::Url::Url args;
     const char * arg = nullptr;
 
