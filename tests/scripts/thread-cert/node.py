@@ -2429,6 +2429,87 @@ class NodeImpl:
 
         return list(zip(ip, ttl))
 
+    def dns_resolve_service(self, instance, service, server=None, port=53):
+        cmd = f'dns service {instance} {service}'
+        if server is not None:
+            cmd += f' {server} {port}'
+
+        self.send_command(cmd)
+        self.simulator.go(10)
+        output = self._expect_command_output(cmd)
+
+        # Example output:
+        # DNS service resolution response for ins2 for service _ipps._tcp.default.service.arpa.
+        # Port:22222, Priority:2, Weight:2, TTL:7155
+        # Host:host2.default.service.arpa.
+        # HostAddress:0:0:0:0:0:0:0:0 TTL:0
+        # TXT-Data:(len:1) [00] TTL:7155
+        # Done
+
+        m = re.match(
+            r'.*Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s+Host:(.*?)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT-Data:\(len:\d+\) \[(.*?)\] TTL:(\d+)',
+            '\r'.join(output))
+        if m:
+            port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl = m.groups()
+            return {
+                'port': int(port),
+                'priority': int(priority),
+                'weight': int(weight),
+                'host': hostname,
+                'address': address,
+                'txt_data': self.__parse_hex_string(txt_data),
+                'srv_ttl': int(srv_ttl),
+                'txt_ttl': int(txt_ttl),
+                'aaaa_ttl': int(aaaa_ttl),
+            }
+        else:
+            raise Exception('dns resolve service failed: %s.%s' % (instance, service))
+
+    @staticmethod
+    def __parse_hex_string(hexstr: str) -> bytes:
+        assert (len(hexstr) % 2 == 0)
+        return bytes(int(hexstr[i:i + 2], 16) for i in range(0, len(hexstr), 2))
+
+    def dns_browse(self, service_name, server=None, port=53):
+        cmd = f'dns browse {service_name}'
+        if server is not None:
+            cmd += f' {server} {port}'
+
+        self.send_command(cmd)
+        self.simulator.go(10)
+        output = '\n'.join(self._expect_command_output(cmd))
+
+        # Example output:
+        # ins2
+        #     Port:22222, Priority:2, Weight:2, TTL:7175
+        #     Host:host2.default.service.arpa.
+        #     HostAddress:fd00:db8:0:0:3205:28dd:5b87:6a63 TTL:7175
+        #     TXT-Data:(len:1) [00] TTL:7175
+        # ins1
+        #     Port:11111, Priority:1, Weight:1, TTL:7170
+        #     Host:host1.default.service.arpa.
+        #     HostAddress:fd00:db8:0:0:39f4:d9:eb4f:778 TTL:7170
+        #     TXT-Data:(len:1) [00] TTL:7170
+        # Done
+
+        result = {}
+        for ins, port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl in re.findall(
+                r'(.*?)\s+Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s*Host:(\S+)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT-Data:\(len:\d+\) \[(.*?)\] TTL:(\d+)',
+                output):
+            result[ins] = {
+                'port': int(port),
+                'priority': int(priority),
+                'weight': int(weight),
+                'host': hostname,
+                'address': address,
+                'txt_data': self.__parse_hex_string(txt_data),
+                'srv_ttl': int(srv_ttl),
+                'txt_ttl': int(txt_ttl),
+                'aaaa_ttl': int(aaaa_ttl),
+            }
+
+        return result
+
 
 class Node(NodeImpl, OtCli):
     pass

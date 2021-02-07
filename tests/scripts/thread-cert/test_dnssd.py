@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 import ipaddress
+import typing
 import unittest
 
 import thread_cert
@@ -88,13 +89,68 @@ class TestDnssd(thread_cert.TestCase):
         self._config_srp_client_services(CLIENT2, 'ins2', 'host2', 22222, 2, 2, client2_addrs)
 
         # Test AAAA query using DNS client
-        response = self.nodes[CLIENT1].dns_resolve(f"host1.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
-        self.assertIn(ipaddress.IPv6Address(response[0][0]), map(ipaddress.IPv6Address, client1_addrs))
+        answers = self.nodes[CLIENT1].dns_resolve(f"host1.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
+        self.assertEqual(set(ipaddress.IPv6Address(ip) for ip, _ in answers),
+                         set(map(ipaddress.IPv6Address, client1_addrs)))
 
-        response = self.nodes[CLIENT1].dns_resolve(f"host2.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
-        self.assertIn(ipaddress.IPv6Address(response[0][0]), map(ipaddress.IPv6Address, client2_addrs))
+        answers = self.nodes[CLIENT1].dns_resolve(f"host2.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
+        self.assertEqual(set(ipaddress.IPv6Address(ip) for ip, _ in answers),
+                         set(map(ipaddress.IPv6Address, client2_addrs)))
 
-        # TODO: test other query types using DNS-SD client
+        service_instances = self.nodes[CLIENT1].dns_browse(f'{SERVICE}.{DOMAIN}', self.nodes[SERVER].get_mleid(), 53)
+        self.assertEqual({'ins1', 'ins2'}, set(service_instances.keys()), service_instances)
+
+        instance1_verify_info = {
+            'port': 11111,
+            'priority': 1,
+            'weight': 1,
+            'host': 'host1.default.service.arpa.',
+            'address': client1_addrs,
+            'txt_data': b'\x00',
+            'srv_ttl': lambda x: x > 0,
+            'txt_ttl': lambda x: x > 0,
+            'aaaa_ttl': lambda x: x > 0,
+        }
+
+        instance2_verify_info = {
+            'port': 22222,
+            'priority': 2,
+            'weight': 2,
+            'host': 'host2.default.service.arpa.',
+            'address': client2_addrs,
+            'txt_data': b'\x00',
+            'srv_ttl': lambda x: x > 0,
+            'txt_ttl': lambda x: x > 0,
+            'aaaa_ttl': lambda x: x > 0,
+        }
+
+        self._assert_service_instance_equal(service_instances['ins1'], instance1_verify_info)
+        self._assert_service_instance_equal(service_instances['ins2'], instance2_verify_info)
+
+        service_instance = self.nodes[CLIENT1].dns_resolve_service('ins1', f'{SERVICE}.{DOMAIN}',
+                                                                   self.nodes[SERVER].get_mleid(), 53)
+        self._assert_service_instance_equal(service_instance, instance1_verify_info)
+
+        service_instance = self.nodes[CLIENT1].dns_resolve_service('ins2', f'{SERVICE}.{DOMAIN}',
+                                                                   self.nodes[SERVER].get_mleid(), 53)
+        self._assert_service_instance_equal(service_instance, instance2_verify_info)
+
+    def _assert_service_instance_equal(self, instance, info):
+        for f in ('port', 'priority', 'weight', 'host', 'txt_data'):
+            self.assertEqual(instance[f], info[f], instance)
+
+        verify_addresses = info['address']
+        if not isinstance(verify_addresses, typing.Collection):
+            verify_addresses = [verify_addresses]
+        self.assertIn(ipaddress.IPv6Address(instance['address']), map(ipaddress.IPv6Address, verify_addresses),
+                      instance)
+
+        for ttl_f in ('srv_ttl', 'txt_ttl', 'aaaa_ttl'):
+            check_ttl = info[ttl_f]
+            if not callable(check_ttl):
+                check_ttl = lambda x: x == check_ttl
+
+            self.assertTrue(check_ttl(instance[ttl_f]), instance)
 
     def _config_srp_client_services(self, client, instancename, hostname, port, priority, weight, addrs):
         self.nodes[client].netdata_show()
