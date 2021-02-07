@@ -1960,7 +1960,7 @@ class NodeImpl:
 
         cmd += ' block-%d' % size
 
-        if count is not 0:
+        if count != 0:
             cmd += ' %d' % count
 
         self.send_command(cmd)
