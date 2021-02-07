@@ -82,6 +82,9 @@ Mac::Mac(Instance &aInstance)
     , mPendingTransmitDataDirect(false)
 #if OPENTHREAD_FTD
     , mPendingTransmitDataIndirect(false)
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    , mPendingTransmitDataCsl(false)
+#endif
 #endif
     , mPendingTransmitPoll(false)
     , mPendingTransmitOobFrame(false)

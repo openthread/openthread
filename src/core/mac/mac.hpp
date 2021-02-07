@@ -883,9 +883,9 @@ private:
     bool mPendingTransmitDataDirect : 1;
 #if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     bool mPendingTransmitDataCsl : 1;
+#endif
 #endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
