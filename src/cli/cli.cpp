@@ -120,7 +120,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mPingHopLimit(0)
     , mPingAllowZeroHopLimit(false)
     , mPingIdentifier(0)
-    , mPingTimer(*aInstance, Interpreter::HandlePingTimer, this)
+    , mPingTimer(*aInstance, Interpreter::HandlePingTimer)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mResolvingInProgress(false)
 #endif
@@ -4821,16 +4821,10 @@ void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength
     mUserCommandsContext = aContext;
 }
 
-Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
+Interpreter &Interpreter::GetOwner(InstanceLocator &aInstanceLocator)
 {
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Interpreter &interpreter = (aOwnerLocator.GetOwner<Interpreter>());
-#else
-    OT_UNUSED_VARIABLE(aOwnerLocator);
-
-    Interpreter &interpreter = Interpreter::GetInterpreter();
-#endif
-    return interpreter;
+    OT_UNUSED_VARIABLE(aInstanceLocator);
+    return Interpreter::GetInterpreter();
 }
 
 void Interpreter::SignalPingRequest(const Ip6::Address &aPeerAddress,

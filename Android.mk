@@ -264,6 +264,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
+    src/core/net/socket.cpp                                 \
     src/core/net/srp_client.cpp                             \
     src/core/net/srp_server.cpp                             \
     src/core/net/udp6.cpp                                   \
@@ -299,6 +300,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/network_data_leader_ftd.cpp             \
     src/core/thread/network_data_local.cpp                  \
     src/core/thread/network_data_notifier.cpp               \
+    src/core/thread/network_data_service.cpp                \
     src/core/thread/network_diagnostic.cpp                  \
     src/core/thread/panid_query_server.cpp                  \
     src/core/thread/radio_selector.cpp                      \

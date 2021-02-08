@@ -44,9 +44,8 @@ TrickleTimer::TrickleTimer(Instance &aInstance,
                            uint32_t aRedundancyConstant,
 #endif
                            Handler aTransmitHandler,
-                           Handler aIntervalExpiredHandler,
-                           void *  aOwner)
-    : TimerMilli(aInstance, TrickleTimer::HandleTimer, aOwner)
+                           Handler aIntervalExpiredHandler)
+    : TimerMilli(aInstance, TrickleTimer::HandleTimer)
 #ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     , mRedundancyConstant(aRedundancyConstant)
     , mCounter(0)

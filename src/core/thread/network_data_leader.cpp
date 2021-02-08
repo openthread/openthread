@@ -93,57 +93,6 @@ exit:
     return error;
 }
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-otError LeaderBase::GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig) const
-{
-    otError                         error          = OT_ERROR_NOT_FOUND;
-    uint8_t                         serviceData    = ServiceTlv::kServiceDataBackboneRouter;
-    const ServerTlv *               rvalServerTlv  = nullptr;
-    const BackboneRouterServerData *rvalServerData = nullptr;
-    const ServiceTlv *              serviceTlv;
-    const ServerTlv *               serverTlv;
-
-    serviceTlv = Get<Leader>().FindService(ServiceTlv::kThreadEnterpriseNumber, &serviceData, sizeof(serviceData));
-
-    VerifyOrExit(serviceTlv != nullptr, aConfig.mServer16 = Mac::kShortAddrInvalid);
-
-    for (const NetworkDataTlv *start                                                      = serviceTlv->GetSubTlvs();
-         (serverTlv = FindTlv<ServerTlv>(start, serviceTlv->GetNext())) != nullptr; start = serverTlv->GetNext())
-    {
-        const BackboneRouterServerData *serverData;
-
-        if (serverTlv->GetServerDataLength() < sizeof(BackboneRouterServerData))
-        {
-            continue;
-        }
-
-        serverData = reinterpret_cast<const BackboneRouterServerData *>(serverTlv->GetServerData());
-
-        if (rvalServerTlv == nullptr ||
-            (serverTlv->GetServer16() == Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId())) ||
-            serverData->GetSequenceNumber() > rvalServerData->GetSequenceNumber() ||
-            (serverData->GetSequenceNumber() == rvalServerData->GetSequenceNumber() &&
-             serverTlv->GetServer16() > rvalServerTlv->GetServer16()))
-        {
-            rvalServerTlv  = serverTlv;
-            rvalServerData = serverData;
-        }
-    }
-
-    VerifyOrExit(rvalServerTlv != nullptr);
-
-    aConfig.mServer16            = rvalServerTlv->GetServer16();
-    aConfig.mSequenceNumber      = rvalServerData->GetSequenceNumber();
-    aConfig.mReregistrationDelay = rvalServerData->GetReregistrationDelay();
-    aConfig.mMlrTimeout          = rvalServerData->GetMlrTimeout();
-
-    error = OT_ERROR_NONE;
-
-exit:
-    return error;
-}
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
 const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
     const PrefixTlv *prefixTlv;

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,56 +28,18 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the SRP (Service Registration Protocol) Server.
- *
+ *   This file implements the IPv6 sockets related functionality.
  */
 
-#ifndef CONFIG_SRP_SERVER_H_
-#define CONFIG_SRP_SERVER_H_
+#include "socket.hpp"
 
-/**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
- *
- * Define to 1 to enable SRP Server support.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-#define OPENTHREAD_CONFIG_SRP_SERVER_ENABLE 0
-#endif
+namespace ot {
+namespace Ip6 {
 
-/**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER
- *
- * Specifies the Thread Network Data Service number for SRP Server.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER
-#define OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER 0x5du
-#endif
+SockAddr::InfoString SockAddr::ToString(void) const
+{
+    return InfoString("[%s]:%u", GetAddress().ToString().AsCString(), GetPort());
+}
 
-/**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT
- *
- * Specifies the timeout value (in milliseconds) for the service update handler.
- *
- * The default timeout value is the sum of the maximum total mDNS probing delays
- * and a loose IPC timeout of 250ms. It is recommended that this configuration should
- * not use a value smaller than the default value here, if an Advertising Proxy is used
- * to handle the service update events.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT
-#define OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT ((4 * 250u) + 250u)
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM
- *
- * Specifies the maximum number of addresses the SRP server can handle for a host.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM
-#define OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM 2
-#endif
-
-#endif // CONFIG_SRP_SERVER_H_
+} // namespace Ip6
+} // namespace ot

@@ -76,6 +76,8 @@ SrpClient::SrpClient(Interpreter &aInterpreter)
     }
 
     memset(mHostAddresses, 0, sizeof(mHostAddresses));
+
+    otSrpClientSetCallback(mInterpreter.mInstance, SrpClient::HandleCallback, this);
 }
 
 otError SrpClient::Process(uint8_t aArgsLength, char *aArgs[])
@@ -269,6 +271,39 @@ exit:
     return error;
 }
 
+otError SrpClient::ProcessServer(uint8_t aArgsLength, char *aArgs[])
+{
+    otError           error          = OT_ERROR_NONE;
+    const otSockAddr *serverSockAddr = otSrpClientGetServerAddress(mInterpreter.mInstance);
+
+    if (aArgsLength == 0)
+    {
+        mInterpreter.OutputFormat("[");
+        mInterpreter.OutputIp6Address(serverSockAddr->mAddress);
+        mInterpreter.OutputLine("]:%u", serverSockAddr->mPort);
+        ExitNow();
+    }
+
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "address") == 0)
+    {
+        mInterpreter.OutputIp6Address(serverSockAddr->mAddress);
+        mInterpreter.OutputLine("");
+    }
+    else if (strcmp(aArgs[0], "port") == 0)
+    {
+        mInterpreter.OutputLine("%u", serverSockAddr->mPort);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+exit:
+    return error;
+}
+
 otError SrpClient::ProcessService(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -422,7 +457,7 @@ otError SrpClient::ProcessStart(uint8_t aArgsLength, char *aArgs[])
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], serverSockAddr.mAddress));
     SuccessOrExit(error = ParseAsUint16(aArgs[1], serverSockAddr.mPort));
 
-    error = otSrpClientStart(mInterpreter.mInstance, &serverSockAddr, SrpClient::HandleCallback, this);
+    error = otSrpClientStart(mInterpreter.mInstance, &serverSockAddr);
 
 exit:
     return error;

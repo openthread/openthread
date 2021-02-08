@@ -62,7 +62,7 @@ TimeSync::TimeSync(Instance &aInstance)
     , mNetworkTimeOffset(0)
     , mTimeSyncCallback(nullptr)
     , mTimeSyncCallbackContext(nullptr)
-    , mTimer(aInstance, HandleTimeout, this)
+    , mTimer(aInstance, HandleTimeout)
     , mCurrentStatus(OT_NETWORK_TIME_UNSYNCHRONIZED)
 {
     CheckAndHandleChanges(false);
@@ -210,7 +210,7 @@ void TimeSync::HandleTimeout(void)
 
 void TimeSync::HandleTimeout(Timer &aTimer)
 {
-    aTimer.GetOwner<TimeSync>().HandleTimeout();
+    aTimer.Get<TimeSync>().HandleTimeout();
 }
 
 void TimeSync::CheckAndHandleChanges(bool aTimeUpdated)

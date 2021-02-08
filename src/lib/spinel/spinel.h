@@ -1189,6 +1189,7 @@ enum
     SPINEL_CAP_THREAD_JOINER        = (SPINEL_CAP_THREAD__BEGIN + 3),
     SPINEL_CAP_THREAD_BORDER_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 4),
     SPINEL_CAP_THREAD_SERVICE       = (SPINEL_CAP_THREAD__BEGIN + 5),
+    SPINEL_CAP_THREAD_CSL_RECEIVER  = (SPINEL_CAP_THREAD__BEGIN + 6),
     SPINEL_CAP_THREAD__END          = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -2896,6 +2897,32 @@ enum
      *
      */
     SPINEL_PROP_THREAD_NEW_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 40,
+
+    /// MAC CSL Period
+    /** Format: `S`
+     * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
+     *
+     * The CSL period in units of 10 symbols. Value of 0 indicates that CSL should be disabled.
+     */
+    SPINEL_PROP_THREAD_CSL_PERIOD = SPINEL_PROP_THREAD_EXT__BEGIN + 41,
+
+    /// MAC CSL Timeout
+    /** Format: `L`
+     * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
+     *
+     * The CSL timeout in seconds.
+     */
+    SPINEL_PROP_THREAD_CSL_TIMEOUT = SPINEL_PROP_THREAD_EXT__BEGIN + 42,
+
+    /// MAC CSL Channel
+    /** Format: `C`
+     * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
+     *
+     * The CSL channel as described in chapter 4.6.5.1.2 of the Thread v1.2.0 Specification.
+     * Value of 0 means that CSL reception (if enabled) occurs on the Thread Network channel.
+     * Value from range [11,26] is an alternative channel on which a CSL reception occurs.
+     */
+    SPINEL_PROP_THREAD_CSL_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 43,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

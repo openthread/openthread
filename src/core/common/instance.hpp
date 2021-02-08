@@ -42,7 +42,7 @@
 #include <openthread/error.h>
 #include <openthread/heap.h>
 #include <openthread/platform/logging.h>
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #include <openthread/platform/memory.h>
 #endif
 
@@ -60,18 +60,16 @@
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "common/code_utils.hpp"
-#include "crypto/mbedtls.hpp"
-#include "thread/tmf.hpp"
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-#include "utils/heap.hpp"
-#endif
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
+#include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
+#include "thread/tmf.hpp"
+#include "utils/heap.hpp"
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include "utils/channel_manager.hpp"
 #endif
@@ -247,28 +245,11 @@ public:
     otError ErasePersistentInfo(void);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    void HeapFree(void *aPointer)
-    {
-        OT_ASSERT(mFree != nullptr);
-
-        mFree(aPointer);
-    }
-
-    void *HeapCAlloc(size_t aCount, size_t aSize)
-    {
-        OT_ASSERT(mCAlloc != nullptr);
-
-        return mCAlloc(aCount, aSize);
-    }
-
-    static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
-    {
-        mFree   = aFree;
-        mCAlloc = aCAlloc;
-    }
-#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
-    void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
+    static void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
+    static void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
+#else
+    static void  HeapFree(void *aPointer) { sHeap.Free(aPointer); }
+    static void *HeapCAlloc(size_t aCount, size_t aSize) { return sHeap.CAlloc(aCount, aSize); }
 
     /**
      * This method returns a reference to the Heap object.
@@ -276,10 +257,7 @@ public:
      * @returns A reference to the Heap object.
      *
      */
-    Utils::Heap &GetHeap(void) { return mHeap; }
-#else
-    void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
-    void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
+    Utils::Heap &GetHeap(void) { return sHeap; }
 #endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -338,11 +316,8 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    static otHeapFreeFn   mFree;
-    static otHeapCAllocFn mCAlloc;
-#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Utils::Heap  mHeap;
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static Utils::Heap sHeap;
 #endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -630,6 +605,11 @@ template <> inline NetworkData::Notifier &Instance::Get(void)
     return mThreadNetif.mNetworkDataNotifier;
 }
 #endif
+
+template <> inline NetworkData::Service::Manager &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataServiceManager;
+}
 
 template <> inline Ip6::Udp &Instance::Get(void)
 {

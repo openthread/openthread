@@ -50,7 +50,7 @@ namespace Dns {
 
 Client::Client(Instance &aInstance)
     : mSocket(aInstance)
-    , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer, this)
+    , mRetransmissionTimer(aInstance, Client::HandleRetransmissionTimer)
 {
 }
 
@@ -270,7 +270,7 @@ void Client::FinalizeDnsTransaction(Message &            aQuery,
 
 void Client::HandleRetransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Client>().HandleRetransmissionTimer();
+    aTimer.Get<Client>().HandleRetransmissionTimer();
 }
 
 void Client::HandleRetransmissionTimer(void)

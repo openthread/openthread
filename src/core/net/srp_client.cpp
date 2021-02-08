@@ -144,7 +144,7 @@ Client::Client(Instance &aInstance)
     , mCallback(nullptr)
     , mCallbackContext(nullptr)
     , mDomainName(kDefaultDomainName)
-    , mTimer(aInstance, Client::HandleTimer, this)
+    , mTimer(aInstance, Client::HandleTimer)
 {
     mHostInfo.Init();
 
@@ -164,25 +164,21 @@ Client::Client(Instance &aInstance)
     static_assert(kRemoved == 7, "kRemoved value is not correct");
 }
 
-otError Client::Start(const Ip6::SockAddr &aServerSockAddr, Callback aCallback, void *aContext)
+otError Client::Start(const Ip6::SockAddr &aServerSockAddr)
 {
     otError error = OT_ERROR_NONE;
 
     if (GetState() != kStateStopped)
     {
         VerifyOrExit(aServerSockAddr == mSocket.GetPeerName(), error = OT_ERROR_BUSY);
-        VerifyOrExit((mCallback == aCallback) && (mCallbackContext == aContext), error = OT_ERROR_BUSY);
         ExitNow();
     }
 
     SuccessOrExit(error = mSocket.Open(Client::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Connect(aServerSockAddr));
 
-    otLogInfoSrp("[client] Starting, server [%s]:%d", aServerSockAddr.GetAddress().ToString().AsCString(),
-                 aServerSockAddr.mPort);
+    otLogInfoSrp("[client] Starting, server %s", aServerSockAddr.ToString().AsCString());
 
-    mCallback        = aCallback;
-    mCallbackContext = aContext;
     Resume();
 
 exit:
@@ -228,6 +224,12 @@ void Client::Stop(void)
 
 exit:
     return;
+}
+
+void Client::SetCallback(Callback aCallback, void *aContext)
+{
+    mCallback        = aCallback;
+    mCallbackContext = aContext;
 }
 
 void Client::Resume(void)
@@ -1396,7 +1398,7 @@ bool Client::ShouldRenewEarly(const Service &aService) const
 
 void Client::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Client>().HandleTimer();
+    aTimer.Get<Client>().HandleTimer();
 }
 
 void Client::HandleTimer(void)

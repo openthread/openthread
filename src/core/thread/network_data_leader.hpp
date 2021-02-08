@@ -38,10 +38,6 @@
 
 #include <stdint.h>
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#include "backbone_router/bbr_leader.hpp"
-#endif
-
 #include "coap/coap.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
@@ -288,19 +284,6 @@ public:
                          uint8_t        aServiceDataLength,
                          bool           aServerStable,
                          uint8_t &      aServiceId) const;
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-    /**
-     * This method gets the Primary Backbone Router (PBBR) in the Thread Network.
-     *
-     * @param[out]  aConfig      The Primary Backbone Router configuration.
-     *
-     * @retval OT_ERROR_NONE       Successfully got the Primary Backbone Router configuration.
-     * @retval OT_ERROR_NOT_FOUND  No Backbone Router Service in the Thread Network.
-     *
-     */
-    otError GetBackboneRouterPrimary(BackboneRouter::BackboneRouterConfig &aConfig) const;
-#endif
 
 protected:
     uint8_t mStableVersion;

@@ -76,6 +76,10 @@ namespace ot {
  */
 namespace NetworkData {
 
+namespace Service {
+class Manager;
+}
+
 /**
  * @addtogroup core-netdata-core
  *
@@ -264,6 +268,8 @@ private:
  */
 class NetworkData : public InstanceLocator
 {
+    friend class Service::Manager;
+
 public:
     enum
     {

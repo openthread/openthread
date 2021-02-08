@@ -49,29 +49,15 @@
 namespace ot {
 namespace Crypto {
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
-
-static void *CAlloc(size_t aCount, size_t aSize)
-{
-    return Instance::Get().HeapCAlloc(aCount, aSize);
-}
-
-static void Free(void *aPointer)
-{
-    Instance::Get().HeapFree(aPointer);
-}
-
-#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
-
 MbedTls::MbedTls(void)
 {
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+#if OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
 #ifdef MBEDTLS_DEBUG_C
     // mbedTLS's debug level is almost the same as OpenThread's
     mbedtls_debug_set_threshold(OPENTHREAD_CONFIG_LOG_LEVEL);
 #endif
-    mbedtls_platform_set_calloc_free(CAlloc, Free);
-#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE && OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
+    mbedtls_platform_set_calloc_free(Instance::HeapCAlloc, Instance::HeapFree);
+#endif // OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
 }
 
 otError MbedTls::MapError(int aMbedTlsError)

@@ -170,9 +170,6 @@ void otSysInit(int argc, char *argv[])
 
     __disable_irq();
 
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    otHeapSetCAllocFree(sl_calloc, sl_free);
-#endif
 #undef FIXED_EXCEPTION
 #define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
 #define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \

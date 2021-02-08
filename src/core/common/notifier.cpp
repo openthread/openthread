@@ -43,7 +43,7 @@ namespace ot {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTask(aInstance, Notifier::EmitEvents, this)
+    , mTask(aInstance, Notifier::EmitEvents)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -117,7 +117,7 @@ void Notifier::SignalIfFirst(Event aEvent)
 
 void Notifier::EmitEvents(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Notifier>().EmitEvents();
+    aTasklet.Get<Notifier>().EmitEvents();
 }
 
 void Notifier::EmitEvents(void)

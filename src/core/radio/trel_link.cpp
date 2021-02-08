@@ -49,8 +49,8 @@ Link::Link(Instance &aInstance)
     , mRxChannel(0)
     , mPanId(Mac::kPanIdBroadcast)
     , mTxPacketNumber(0)
-    , mTxTasklet(aInstance, HandleTxTasklet, this)
-    , mTimer(aInstance, HandleTimer, this)
+    , mTxTasklet(aInstance, HandleTxTasklet)
+    , mTimer(aInstance, HandleTimer)
     , mInterface(aInstance)
 {
     memset(&mTxFrame, 0, sizeof(mTxFrame));
@@ -115,7 +115,7 @@ void Link::Send(void)
 
 void Link::HandleTxTasklet(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Link>().HandleTxTasklet();
+    aTasklet.Get<Link>().HandleTxTasklet();
 }
 
 void Link::HandleTxTasklet(void)
@@ -248,7 +248,7 @@ void Link::InvokeSendDone(otError aError, Mac::RxFrame *aAckFrame)
 
 void Link::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Link>().HandleTimer();
+    aTimer.Get<Link>().HandleTimer();
 }
 
 void Link::HandleTimer(void)

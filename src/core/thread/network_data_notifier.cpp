@@ -46,7 +46,7 @@ namespace NetworkData {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, Notifier::HandleTimer, this)
+    , mTimer(aInstance, Notifier::HandleTimer)
     , mNextDelay(0)
     , mWaitingForResponse(false)
 {
@@ -115,7 +115,7 @@ void Notifier::HandleNotifierEvents(Events aEvents)
 
 void Notifier::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Notifier>().HandleTimer();
+    aTimer.Get<Notifier>().HandleTimer();
 }
 
 void Notifier::HandleTimer(void)
