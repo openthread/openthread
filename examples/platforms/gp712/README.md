@@ -4,7 +4,7 @@ This directory contains example platform drivers for Qorvo gp712 on RPi.
 
 ## Toolchain
 
-This example use the GNU GCC toolchain on the Raspberry Pi. To build on the Pi:
+This example uses the GNU GCC toolchain on the Raspberry Pi. To build on the Pi:
 
 1. Download the repo to the Pi
 2. go to the subfolder in the openthread repo: third_party/nlbuild-autotools/repo/tools/packages and enter this command:

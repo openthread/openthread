@@ -66,6 +66,8 @@ set(COMMON_SOURCES
     api/random_noncrypto_api.cpp
     api/server_api.cpp
     api/sntp_api.cpp
+    api/srp_client_api.cpp
+    api/srp_server_api.cpp
     api/tasklet_api.cpp
     api/thread_api.cpp
     api/thread_ftd_api.cpp
@@ -144,6 +146,9 @@ set(COMMON_SOURCES
     net/ip6_mpl.cpp
     net/netif.cpp
     net/sntp_client.cpp
+    net/socket.cpp
+    net/srp_client.cpp
+    net/srp_server.cpp
     net/udp6.cpp
     radio/radio.cpp
     radio/radio_callbacks.cpp
@@ -177,6 +182,7 @@ set(COMMON_SOURCES
     thread/network_data_leader_ftd.cpp
     thread/network_data_local.cpp
     thread/network_data_notifier.cpp
+    thread/network_data_service.cpp
     thread/network_diagnostic.cpp
     thread/panid_query_server.cpp
     thread/radio_selector.cpp

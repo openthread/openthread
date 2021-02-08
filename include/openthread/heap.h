@@ -51,27 +51,6 @@ extern "C" {
  *
  */
 
-/**
- * Function pointer used to set external CAlloc function for OpenThread.
- *
- * @param[in]   aCount  Number of allocate units.
- * @param[in]   aSize   Unit size in bytes.
- *
- * @returns A pointer to the allocated memory.
- *
- * @retval  NULL    Indicates not enough memory.
- *
- */
-typedef void *(*otHeapCAllocFn)(size_t aCount, size_t aSize);
-
-/**
- * Function pointer used to set external Free function for OpenThread.
- *
- * @param[in]   aPointer    A pointer to the memory to free.
- *
- */
-typedef void (*otHeapFreeFn)(void *aPointer);
-
 // This is a temporary API and would be removed after moving heap to platform.
 // TODO: Remove after moving heap to platform.
 /**
@@ -87,18 +66,6 @@ void *otHeapCAlloc(size_t aCount, size_t aSize);
  *
  */
 void otHeapFree(void *aPointer);
-
-/**
- * This function sets the external heap CAlloc and Free
- * functions to be used by the OpenThread stack.
- *
- * This function must be used before invoking instance initialization.
- *
- * @param[in]  aCAlloc  A pointer to external CAlloc function.
- * @param[in]  aFree    A pointer to external Free function.
- *
- */
-void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree);
 
 /**
  * @}

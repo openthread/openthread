@@ -174,6 +174,7 @@ void otSysInit(int argc, char *argv[])
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     otHeapSetCAllocFree(sl_calloc, sl_free);
 #endif
+
     CHIP_Init();
     sl_device_init_nvic();
     halInitChipSpecific();

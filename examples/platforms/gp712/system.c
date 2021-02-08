@@ -54,7 +54,7 @@ otInstance *localInstance = NULL;
 int    gArgumentsCount = 0;
 char **gArguments      = NULL;
 
-bool qorvoPlatGotoSleepCheck(void)
+uint8_t qorvoPlatGotoSleepCheck(void)
 {
     bool canGotoSleep = false;
 

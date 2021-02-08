@@ -66,7 +66,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKeyRotationTime(kDefaultKeyRotationTime)
     , mKeySwitchGuardTime(kDefaultKeySwitchGuardTime)
     , mKeySwitchGuardEnabled(false)
-    , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer, this)
+    , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer)
     , mKekFrameCounter(0)
     , mSecurityPolicyFlags(kDefaultSecurityPolicyFlags)
     , mIsPskcSet(false)
@@ -323,7 +323,7 @@ void KeyManager::StartKeyRotationTimer(void)
 
 void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<KeyManager>().HandleKeyRotationTimer();
+    aTimer.Get<KeyManager>().HandleKeyRotationTimer();
 }
 
 void KeyManager::HandleKeyRotationTimer(void)

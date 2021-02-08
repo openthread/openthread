@@ -76,6 +76,10 @@ namespace ot {
  */
 namespace NetworkData {
 
+namespace Service {
+class Manager;
+}
+
 /**
  * @addtogroup core-netdata-core
  *
@@ -264,6 +268,8 @@ private:
  */
 class NetworkData : public InstanceLocator
 {
+    friend class Service::Manager;
+
 public:
     enum
     {
@@ -976,13 +982,6 @@ protected:
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
 
 private:
-    enum
-    {
-        kDataResubmitDelay  = 300000, ///< DATA_RESUBMIT_DELAY (milliseconds) if the device itself is the server.
-        kProxyResubmitDelay = 5000,   ///< Resubmit delay (milliseconds) if deregister as the child server proxy.
-
-    };
-
     class NetworkDataIterator
     {
     public:

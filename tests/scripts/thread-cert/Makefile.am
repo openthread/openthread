@@ -154,6 +154,7 @@ EXTRA_DIST                                                         = \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
+    test_coap_block.py                                               \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
@@ -170,6 +171,9 @@ EXTRA_DIST                                                         = \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
+    test_srp_lease.py                                                \
+    test_srp_name_conflicts.py                                       \
+    test_srp_register_single_service.py                              \
     thread_cert.py                                                   \
     tlvs_parsing.py                                                  \
     thread_cert.py                                                   \
@@ -202,6 +206,7 @@ check_SCRIPTS                                                      = \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
+    test_coap_block.py                                               \
     test_common.py                                                   \
     test_crypto.py                                                   \
     test_diag.py                                                     \
@@ -218,6 +223,9 @@ check_SCRIPTS                                                      = \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
+    test_srp_lease.py                                                \
+    test_srp_name_conflicts.py                                       \
+    test_srp_register_single_service.py                              \
     Cert_5_1_01_RouterAttach.py                                      \
     Cert_5_1_02_ChildAddressTimeout.py                               \
     Cert_5_1_03_RouterAddressReallocation.py                         \

@@ -86,7 +86,6 @@ public:
      * @param[in]  aRedundancyConstant      The redundancy constant for the timer, also known as `k`.
      * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
      * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
-     * @param[in]  aOwner                   A pointer to owner of the `TrickleTimer` object.
      *
      */
     TrickleTimer(Instance &aInstance,
@@ -94,8 +93,7 @@ public:
                  uint32_t aRedundancyConstant,
 #endif
                  Handler aTransmitHandler,
-                 Handler aIntervalExpiredHandler,
-                 void *  aOwner);
+                 Handler aIntervalExpiredHandler);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.

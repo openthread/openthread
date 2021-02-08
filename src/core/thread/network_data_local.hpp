@@ -146,12 +146,12 @@ public:
      * @param[in]  aServiceData        A pointer to the service data.
      * @param[in]  aServiceDataLength  The length of @p aServiceData in bytes.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     * @retval OT_ERROR_NONE       Successfully removed the Service entry.
+     * @retval OT_ERROR_NOT_FOUND  Could not find the Service entry.
      *
      */
     otError RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
-#endif
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     /**
      * This method sends a Server Data Notification message to the Leader.

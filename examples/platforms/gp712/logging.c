@@ -28,7 +28,6 @@
 
 #include "platform_qorvo.h"
 #include <openthread-core-config.h>
-#include <openthread/config.h>
 
 #include <ctype.h>
 #include <inttypes.h>

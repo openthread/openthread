@@ -63,7 +63,7 @@ Manager::Manager(Instance &aInstance)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     , mMulticastListenersTable(aInstance)
 #endif
-    , mTimer(aInstance, Manager::HandleTimer, this)
+    , mTimer(aInstance, Manager::HandleTimer)
     , mBackboneTmfAgent(aInstance)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
@@ -139,6 +139,11 @@ void Manager::HandleNotifierEvents(Events aEvents)
             }
         }
     }
+}
+
+void Manager::HandleTimer(Timer &aTimer)
+{
+    aTimer.Get<Manager>().HandleTimer();
 }
 
 void Manager::HandleTimer(void)

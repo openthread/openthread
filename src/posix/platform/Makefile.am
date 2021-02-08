@@ -50,6 +50,7 @@ libopenthread_posix_a_SOURCES             = \
     hdlc_interface.cpp                      \
     infra_if.cpp                            \
     logging.cpp                             \
+    memory.cpp                              \
     misc.cpp                                \
     multicast_routing.cpp                   \
     netif.cpp                               \

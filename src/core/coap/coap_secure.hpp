@@ -272,6 +272,57 @@ public:
 
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    /**
+     * This method sends a CoAP message over secure DTLS connection.
+     *
+     * If a response for a request is expected, respective function and context information should be provided.
+     * If no response is expected, these arguments should be NULL pointers.
+     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
+     * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
+     *
+     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     *
+     */
+    otError SendMessage(Message &                   aMessage,
+                        ResponseHandler             aHandler      = nullptr,
+                        void *                      aContext      = nullptr,
+                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
+
+    /**
+     * This method sends a CoAP message over secure DTLS connection.
+     *
+     * If a response for a request is expected, respective function and context information should be provided.
+     * If no response is expected, these arguments should be NULL pointers.
+     * If Message Id was not set in the header (equal to 0), this function will assign unique Message Id to the message.
+     *
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
+     * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
+     * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
+     *
+     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
+     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
+     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     *
+     */
+    otError SendMessage(Message &                   aMessage,
+                        const Ip6::MessageInfo &    aMessageInfo,
+                        ResponseHandler             aHandler      = nullptr,
+                        void *                      aContext      = nullptr,
+                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
+#else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
      * This method sends a CoAP message over secure DTLS connection.
      *
@@ -311,6 +362,7 @@ public:
                         const Ip6::MessageInfo &aMessageInfo,
                         ResponseHandler         aHandler = nullptr,
                         void *                  aContext = nullptr);
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
      * This method is used to pass UDP messages to the secure CoAP server.

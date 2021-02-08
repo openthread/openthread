@@ -43,7 +43,7 @@ namespace ot {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTask(aInstance, Notifier::EmitEvents, this)
+    , mTask(aInstance, Notifier::EmitEvents)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -117,7 +117,7 @@ void Notifier::SignalIfFirst(Event aEvent)
 
 void Notifier::EmitEvents(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Notifier>().EmitEvents();
+    aTasklet.Get<Notifier>().EmitEvents();
 }
 
 void Notifier::EmitEvents(void)
@@ -182,6 +182,12 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Get<Srp::Server>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Get<Srp::Client>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)

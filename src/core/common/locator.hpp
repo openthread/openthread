@@ -162,54 +162,6 @@ protected:
 };
 
 /**
- * This class implements a locator for owner of an object.
- *
- * This is used as the base class for objects that provide a callback (e.g., `Timer` or `Tasklet`).
- *
- */
-class OwnerLocator
-{
-public:
-    /**
-     * This template method returns a reference to the owner object.
-     *
-     * The caller needs to provide the `OwnerType` as part of the template type.
-     *
-     * @returns A reference to the owner of this object.
-     *
-     */
-    template <typename OwnerType> OwnerType &GetOwner(void)
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    {
-        return *static_cast<OwnerType *>(mOwner);
-    }
-#else
-    // Implemented in `locator-getters.hpp`
-    ;
-#endif
-
-protected:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aOwner   A pointer to the owner object (as `void *`).
-     *
-     */
-    explicit OwnerLocator(void *aOwner)
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-        : mOwner(aOwner)
-#endif
-    {
-        OT_UNUSED_VARIABLE(aOwner);
-    }
-
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-private:
-    void *mOwner;
-#endif
-};
-
-/**
  * @}
  *
  */

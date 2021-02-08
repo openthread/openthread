@@ -345,10 +345,7 @@ public:
      * @param[in] aMode   A mode TLV bitmask to initialize the `DeviceMode` object.
      *
      */
-    explicit DeviceMode(uint8_t aMode)
-        : mMode(aMode)
-    {
-    }
+    explicit DeviceMode(uint8_t aMode) { Set(aMode); }
 
     /**
      * This constructor initializes a `DeviceMode` object from a given mode configuration structure.

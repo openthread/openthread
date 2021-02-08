@@ -27,8 +27,15 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+proc skip_on_macos {} {
+    set OSTYPE [lindex $::tcl_platform(os) 0]
+
+    if { $OSTYPE == "Darwin" } {
+        exit 77
+    }
+}
+
 proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
-    set result 0
     set timeout 1
     for {set i 0} {$i < 20} {incr i} {
         if {$command != ""} {
@@ -37,22 +44,17 @@ proc wait_for {command success {failure {[\r\n]FAILURE_NOT_EXPECTED[\r\n]}}} {
 
         expect {
             -re $success {
-                set result 1
+                return 0
             }
             -re $failure {
-                error "Got failure in wait_for"
+                fail "Failed due to '$failure' found"
             }
             timeout {
                 # Do nothing
             }
         }
-        if {$result == 1} {
-            break
-        }
     }
-    if {$result == 0} {
-        error "Timed out in wait_for"
-    }
+    fail "Failed due to '$success' not found"
 }
 
 proc expect_line {line} {
@@ -107,7 +109,7 @@ proc spawn_node {id {type ""} {radio_url ""}} {
     }
 
     expect_after {
-        timeout { error "Timed out" }
+        timeout { fail "Timed out" }
     }
 
     set spawn_ids($id) $spawn_id
@@ -123,12 +125,6 @@ proc switch_node {id} {
     set spawn_id $spawn_ids($id)
 }
 
-proc dispose_node {id} {
-    switch_node $id
-    send "\x04"
-    expect eof
-}
-
 proc setup_leader {} {
     send "dataset init new\n"
     expect_line "Done"
@@ -142,6 +138,12 @@ proc setup_leader {} {
     expect_line "Done"
     wait_for "state" "leader"
     expect_line "Done"
+}
+
+proc dispose_node {id} {
+    switch_node $id
+    send "\x04"
+    expect eof
 }
 
 proc dispose_all {} {
@@ -186,6 +188,11 @@ proc setup_default_network {} {
     expect_line "Done"
     send "masterkey 00112233445566778899aabbccddeeff\n"
     expect_line "Done"
+}
+
+proc fail {message} {
+    dispose_all
+    error $message
 }
 
 set timeout 10

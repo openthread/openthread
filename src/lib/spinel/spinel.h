@@ -718,6 +718,32 @@ enum
     SPINEL_RADIO_LINK_TREL_UDP6     = 1,
 };
 
+typedef enum
+{
+    SPINEL_SRP_CLIENT_ITEM_STATE_TO_ADD     = 0, // Item to be added/registered.
+    SPINEL_SRP_CLIENT_ITEM_STATE_ADDING     = 1, // Item is being added/registered.
+    SPINEL_SRP_CLIENT_ITEM_STATE_TO_REFRESH = 2, // Item to be refreshed (re-register to renew lease).
+    SPINEL_SRP_CLIENT_ITEM_STATE_REFRESHING = 3, // Item is being refreshed.
+    SPINEL_SRP_CLIENT_ITEM_STATE_TO_REMOVE  = 4, // Item to be removed.
+    SPINEL_SRP_CLIENT_ITEM_STATE_REMOVING   = 5, // Item is being removed.
+    SPINEL_SRP_CLIENT_ITEM_STATE_REGISTERED = 6, // Item is registered with server.
+    SPINEL_SRP_CLIENT_ITEM_STATE_REMOVED    = 7, // Item is removed.
+} spinel_srp_client_item_state_t;
+
+typedef enum
+{
+    SPINEL_SRP_CLIENT_ERROR_NONE             = 0, // No error.
+    SPINEL_SRP_CLIENT_ERROR_PARSE            = 1, // Server unable to interpret due to format error.
+    SPINEL_SRP_CLIENT_ERROR_FAILED           = 2, // Server encountered an internal failure.
+    SPINEL_SRP_CLIENT_ERROR_NOT_FOUND        = 3, // Name that ought to exist, does not exists.
+    SPINEL_SRP_CLIENT_ERROR_NOT_IMPLEMENTED  = 4, // Server does not support the query type.
+    SPINEL_SRP_CLIENT_ERROR_SECURITY         = 5, // Service is not authoritative for zone.
+    SPINEL_SRP_CLIENT_ERROR_DUPLICATED       = 6, // Some name that ought not to exist, does exist.
+    SPINEL_SRP_CLIENT_ERROR_RESPONSE_TIMEOUT = 7, // Timed out waiting for response from server (client would retry).
+    SPINEL_SRP_CLIENT_ERROR_INVALID_ARGS     = 8, // Invalid args (e.g., bad service name or TXT-DATA).
+    SPINEL_SRP_CLIENT_ERROR_NO_BUFS          = 9, // No buffer to send the SRP update message.
+} spinel_srp_client_error_t;
+
 typedef struct
 {
     uint8_t bytes[8];
@@ -1153,6 +1179,7 @@ enum
     SPINEL_CAP_RADIO_COEX              = (SPINEL_CAP_OPENTHREAD__BEGIN + 11),
     SPINEL_CAP_MAC_RETRY_HISTOGRAM     = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
     SPINEL_CAP_MULTI_RADIO             = (SPINEL_CAP_OPENTHREAD__BEGIN + 13),
+    SPINEL_CAP_SRP_CLIENT              = (SPINEL_CAP_OPENTHREAD__BEGIN + 14),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -1162,6 +1189,7 @@ enum
     SPINEL_CAP_THREAD_JOINER        = (SPINEL_CAP_THREAD__BEGIN + 3),
     SPINEL_CAP_THREAD_BORDER_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 4),
     SPINEL_CAP_THREAD_SERVICE       = (SPINEL_CAP_THREAD__BEGIN + 5),
+    SPINEL_CAP_THREAD_CSL_RECEIVER  = (SPINEL_CAP_THREAD__BEGIN + 6),
     SPINEL_CAP_THREAD__END          = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
@@ -2870,6 +2898,32 @@ enum
      */
     SPINEL_PROP_THREAD_NEW_DATASET = SPINEL_PROP_THREAD_EXT__BEGIN + 40,
 
+    /// MAC CSL Period
+    /** Format: `S`
+     * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
+     *
+     * The CSL period in units of 10 symbols. Value of 0 indicates that CSL should be disabled.
+     */
+    SPINEL_PROP_THREAD_CSL_PERIOD = SPINEL_PROP_THREAD_EXT__BEGIN + 41,
+
+    /// MAC CSL Timeout
+    /** Format: `L`
+     * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
+     *
+     * The CSL timeout in seconds.
+     */
+    SPINEL_PROP_THREAD_CSL_TIMEOUT = SPINEL_PROP_THREAD_EXT__BEGIN + 42,
+
+    /// MAC CSL Channel
+    /** Format: `C`
+     * Required capability: `SPINEL_CAP_THREAD_CSL_RECEIVER`
+     *
+     * The CSL channel as described in chapter 4.6.5.1.2 of the Thread v1.2.0 Specification.
+     * Value of 0 means that CSL reception (if enabled) occurs on the Thread Network channel.
+     * Value from range [11,26] is an alternative channel on which a CSL reception occurs.
+     */
+    SPINEL_PROP_THREAD_CSL_CHANNEL = SPINEL_PROP_THREAD_EXT__BEGIN + 43,
+
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
     SPINEL_PROP_IPV6__BEGIN = 0x60,
@@ -3636,6 +3690,143 @@ enum
      *
      */
     SPINEL_PROP_NEIGHBOR_TABLE_MULTI_RADIO_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 16,
+
+    /// SRP Client Start
+    /** Format: `b(6Sb)` - Write only
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * Writing to this property allows user to start or stop the SRP client operation with a given SRP server.
+     *
+     * Written value format is:
+     *
+     *   `b` : TRUE to start the client, FALSE to stop the client.
+     *
+     * When used to start the SRP client, the following fields should also be included:
+     *
+     *   `6` : SRP server IPv6 address.
+     *   `U` : SRP server port number.
+     *   `b` : Boolean to indicate whether or not to emit SRP client events (using `SPINEL_PROP_SRP_CLIENT_EVENT`).
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_START = SPINEL_PROP_OPENTHREAD__BEGIN + 17,
+
+    /// SRP Client Lease Interval
+    /** Format: `L` - Read/Write
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * The lease interval used in SRP update requests (in seconds).
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_LEASE_INTERVAL = SPINEL_PROP_OPENTHREAD__BEGIN + 18,
+
+    /// SRP Client Key Lease Interval
+    /** Format: `L` - Read/Write
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * The key lease interval used in SRP update requests (in seconds).
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_KEY_LEASE_INTERVAL = SPINEL_PROP_OPENTHREAD__BEGIN + 19,
+
+    /// SRP Client Host Info
+    /** Format: `UCt(A(6))` - Read only
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * Format is:
+     *
+     *   `U`       : The host name.
+     *   `C`       : The host state (values from `spinel_srp_client_item_state_t`).
+     *   `t(A(6))` : Structure containing array of host IPv6 addresses.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_HOST_INFO = SPINEL_PROP_OPENTHREAD__BEGIN + 20,
+
+    /// SRP Client Host Name (label).
+    /** Format: `U` - Read/Write
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_HOST_NAME = SPINEL_PROP_OPENTHREAD__BEGIN + 21,
+
+    /// SRP Client Host Addresses
+    /** Format: `A(6)` - Read/Write
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_HOST_ADDRESSES = SPINEL_PROP_OPENTHREAD__BEGIN + 22,
+
+    /// SRP Client Services
+    /** Format: `A(t(UUSSSd))` - Read/Insert/Remove
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * This property provide a list/array of services. Data per item is
+     *
+     *   `U` : The service name labels (e.g., "_chip._udp", not the full domain name.
+     *   `U` : The service instance name label (not the full name).
+     *   `S` : The service port number.
+     *   `S` : The service priority.
+     *   `S` : The service weight.
+     *
+     * During remove operation, only service name and service instance name would be used.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_SERVICES = SPINEL_PROP_OPENTHREAD__BEGIN + 23,
+
+    /// SRP Client Host And Services Remove
+    /** Format: `b` : Write only
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * Writing to this property starts the remove process of the host info and all services.
+     * Please see `otSrpClientRemoveHostAndServices()` for more details.
+     *
+     * Format is:
+     *
+     *    `b` : A boolean indicating whether or not the host key lease should also be removed.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_REMOVE = SPINEL_PROP_OPENTHREAD__BEGIN + 24,
+
+    /// SRP Client Host And Services Clear
+    /** Format: Empty : Write only
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * Writing to this property clears all host info and all the services.
+     * Please see `otSrpClientClearHostAndServices()` for more details.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_CLEAR = SPINEL_PROP_OPENTHREAD__BEGIN + 25,
+
+    /// SRP Client Event
+    /** Format: t() : Asynchronous event only
+     * Required capability: `SPINEL_CAP_SRP_CLIENT`.
+     *
+     * This property is asynchronously emitted when there is an event from SRP client notifying some state changes or
+     * errors.
+     *
+     * The general format of this property is as follows:
+     *
+     *    `S` : Error code (see `spinel_srp_client_error_t` enumeration).
+     *    `d` : Host info data.
+     *    `d` : Active services.
+     *    `d` : Removed services.
+     *
+     * The host info data contains:
+     *
+     *   `U`       : The host name.
+     *   `C`       : The host state (values from `spinel_srp_client_item_state_t`).
+     *   `t(A(6))` : Structure containing array of host IPv6 addresses.
+     *
+     * The active or removed services data is an array of services `A(t(UUSSSd))` with each service format:
+     *
+     *   `U` : The service name labels (e.g., "_chip._udp", not the full domain name.
+     *   `U` : The service instance name label (not the full name).
+     *   `S` : The service port number.
+     *   `S` : The service priority.
+     *   `S` : The service weight.
+     *   `d` : The encoded TXT-DATA.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_EVENT = SPINEL_PROP_OPENTHREAD__BEGIN + 26,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 

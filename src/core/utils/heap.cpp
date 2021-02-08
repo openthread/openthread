@@ -34,6 +34,8 @@
 
 #include "heap.hpp"
 
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
 #include <string.h>
 
 #include "common/code_utils.hpp"
@@ -217,3 +219,5 @@ void Heap::Free(void *aPointer)
 
 } // namespace Utils
 } // namespace ot
+
+#endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE

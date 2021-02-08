@@ -27,13 +27,9 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set OSTYPE [lindex $tcl_platform(os) 0]
-
-if { $OSTYPE == "Darwin" } {
-    exit 77
-}
-
 source "tests/scripts/expect/_common.exp"
+
+skip_on_macos
 
 spawn_node 1
 
