@@ -262,6 +262,86 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_CHANNEL>(v
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(void)
+{
+    otError      error = OT_ERROR_NONE;
+    otIp6Address addresses[kIPv6AddressesNumMax];
+    uint8_t      addressesCount = 0U;
+    bool         timeoutPresent = false;
+    uint32_t     timeout;
+
+    SuccessOrExit(error = mDecoder.OpenStruct());
+
+    while (mDecoder.GetRemainingLengthInStruct())
+    {
+        VerifyOrExit(addressesCount < kIPv6AddressesNumMax, error = OT_ERROR_PARSE);
+        SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
+        ++addressesCount;
+    }
+
+    SuccessOrExit(error = mDecoder.CloseStruct());
+
+    while (mDecoder.GetRemainingLengthInStruct())
+    {
+        SuccessOrExit(error = mDecoder.OpenStruct());
+
+        uint8_t paramId;
+        SuccessOrExit(error = mDecoder.ReadUint8(paramId));
+
+        switch (paramId)
+        {
+        case SPINEL_THREAD_MLR_PARAMID_TIMEOUT:
+            SuccessOrExit(error = mDecoder.ReadUint32(timeout));
+            timeoutPresent = true;
+            break;
+
+        default:
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+        SuccessOrExit(error = mDecoder.CloseStruct());
+    }
+
+    SuccessOrExit(error = otIp6RegisterMulticastListeners(mInstance, addresses, addressesCount,
+                                                          timeoutPresent ? &timeout : nullptr,
+                                                          &NcpBase::HandleMlrRegResult_Jump, this));
+exit:
+    return error;
+}
+
+void NcpBase::HandleMlrRegResult_Jump(void *              aContext,
+                                      otError             aError,
+                                      uint8_t             aMlrStatus,
+                                      const otIp6Address *aFailedAddresses,
+                                      uint8_t             aFailedAddressNum)
+{
+    static_cast<NcpBase *>(aContext)->HandleMlrRegResult(aError, aMlrStatus, aFailedAddresses, aFailedAddressNum);
+}
+
+void NcpBase::HandleMlrRegResult(otError             aError,
+                                 uint8_t             aMlrStatus,
+                                 const otIp6Address *aFailedAddresses,
+                                 uint8_t             aFailedAddressNum)
+{
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_THREAD_MLR_RESPONSE));
+
+    SuccessOrExit(mEncoder.WriteUint8(ThreadErrorToSpinelStatus(aError)));
+    SuccessOrExit(mEncoder.WriteUint8(aMlrStatus));
+
+    for (size_t i = 0U; i < aFailedAddressNum; ++i)
+    {
+        SuccessOrExit(mEncoder.WriteIp6Address(aFailedAddresses[i]));
+    }
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY>(void)
 {
