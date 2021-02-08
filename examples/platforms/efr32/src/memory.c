@@ -30,12 +30,10 @@
 #include "platform-efr32.h"
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-#include <stdlib.h>
-
 #include <openthread/platform/memory.h>
 
 #include "sl_malloc.h"
-//#include "openthread/heap.h"
+
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return sl_calloc(aNum, aSize);
