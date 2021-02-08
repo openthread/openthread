@@ -39,7 +39,9 @@ import config
 
 THREAD_VERSION = os.getenv('THREAD_VERSION')
 VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', '1'))
-MAX_JOBS = multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10
+_DEFAULT_MAX_JOBS = multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10
+MAX_JOBS = int(os.getenv('MAX_JOBS', _DEFAULT_MAX_JOBS))
+OTBR_CERT = int(os.getenv('OTBR_CERT', '0'))
 
 _BACKBONE_TESTS_DIR = 'tests/scripts/thread-cert/backbone'
 
@@ -118,6 +120,9 @@ def parse_args():
 
 
 def check_has_backbone_tests(scripts):
+    if OTBR_CERT:
+        return True
+
     for script in scripts:
         relpath = os.path.relpath(script, _BACKBONE_TESTS_DIR)
         if not relpath.startswith('..'):
