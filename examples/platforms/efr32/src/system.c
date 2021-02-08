@@ -59,11 +59,6 @@
 #include "sl_device_init_nvic.h"
 #include "sl_mpu.h"
 #include "sl_sleeptimer.h"
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-#include "sl_malloc.h"
-#include "openthread/heap.h"
-#endif
-
 #include "platform-efr32.h"
 
 #if (HAL_FEM_ENABLE)
@@ -170,10 +165,6 @@ void otSysInit(int argc, char *argv[])
     sl_status_t status;
 
     __disable_irq();
-
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    otHeapSetCAllocFree(sl_calloc, sl_free);
-#endif
 
     CHIP_Init();
     sl_device_init_nvic();

@@ -131,6 +131,7 @@ PLATFORM_COMMON_SOURCES_LIST                                                  = 
     src/fem-control.c                                                           \
     src/flash.c                                                                 \
     src/logging.c                                                               \
+    src/memory.c                                                                \
     src/misc.c                                                                  \
     src/openthread-core-efr32-config-check.h                                    \
     src/openthread-core-efr32-config.h                                          \
