@@ -55,11 +55,11 @@
 #include "em_system.h"
 #include "hal-config.h"
 #include "hal_common.h"
+#include "platform-efr32.h"
 #include "rail.h"
 #include "sl_device_init_nvic.h"
 #include "sl_mpu.h"
 #include "sl_sleeptimer.h"
-#include "platform-efr32.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
