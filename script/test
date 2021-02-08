@@ -32,7 +32,7 @@
 
 set -euo pipefail
 
-readonly OT_BUILDDIR="${PWD}/build"
+readonly OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
 readonly OT_SRCDIR="${PWD}"
 
 readonly COLOR_PASS='\033[0;32m'
@@ -365,6 +365,8 @@ ENVIRONMENTS:
                     'rcp-ncp' for NCP on POSIX platform.
                     The default is 'cli'.
     OT_NATIVE_IP    1 to enable platform UDP and netif on POSIX platform. The default is 0.
+    OT_BUILDDIR     The output directory for cmake build. By default the directory is './build'. For example,
+                    'OT_BUILDDIR=\${PWD}/my_awesome_build ./script/test clean build'.
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default value is 0 when running expect tests,
                     otherwise default value is 1.
