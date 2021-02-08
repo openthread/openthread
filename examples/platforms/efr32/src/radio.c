@@ -2651,3 +2651,4 @@ void initAntenna(void)
     (void)RAIL_ConfigAntenna(RAIL_EFR32_HANDLE, &halAntennaConfig);
 #endif
 }
+
