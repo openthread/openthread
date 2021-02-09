@@ -4,6 +4,9 @@ This directory contains example platform drivers for the [NXP JN5189][jn5189] ba
 
 The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 
+[jn5189]: https://www.nxp.com/products/wireless/thread/jn5189-88-t-high-performance-and-ultra-low-power-mcus-for-zigbee-and-thread-with-built-in-nfc-option:JN5189_88_T
+[jn5189-dk006]: https://www.nxp.com/document/guide/getting-started-with-jn5189:GS-JN5189
+
 ## Toolchain
 
 OpenThread environment is suited to be run on a Linux-based OS. Recommended OS is Ubuntu 18.04.2 LTS. Download and install the [MCUXpresso IDE][mcuxpresso ide].
@@ -35,24 +38,110 @@ After a successful build, the `elf` files are found in `<path-to-openthread>/out
 
 ## Flash Binaries
 
-Connect to the board by plugging a mini-USB cable to the connector marked with TARGET on the DK6 board. This connector is situated on the same side with the power connector.
+OpenThread example application compiled binaries can be found in `<path-to-openthread>/output/jn5189/bin` and include FTD (Full Thread Device), MTD (Minimal Thread Device), variants of CLI and NCP/RCP applications. If only flashing is needed then DK6 Flash Programmer can be used. Otherwise, if also debugging capabilities are needed then MCUXpresso IDE should be used.
 
-OpenThread example application compiled binaries can be found in `<path-to-openthread>/output/jn5189/bin` and include FTD (Full Thread Device) and MTD (Minimal Thread Device) variants of CLI and NCP applications. The compiled binaries can be flashed onto the JN5189 using MCUXpresso IDE. This requires the following steps:
+### Using DK6Programmer
 
-1. Import the JN5189 SDK into MCUXpresso IDE. This can be done by dragging and dropping the SDK archive into MCUXpresso IDE's Installed SDKs tab. The archive for SDK_2.6.0_JN5189DK6 is available for download at https://mcuxpresso.nxp.com/en/welcome
-2. In MCUXpresso IDE, go to File->Import->C/C++->"Existing Code as Makefile Project" and click Next.
-3. Select the OpenThread folder as the "Existing Code Location". In the "Toolchain for Indexer Settings" list, be sure to keep the setting to <none>. Click Finish.
-4. Right click on the newly created openthread project in the Workspace and go to Properties->"C/C++ Build"->"MCU Settings". Select the JN518x from the SDK MCUs list.
-5. Go to C/C++ Build->"Tool Chain Editor" and untick the "Display compatible toolchains only" checkbox. In the drop-down menu named "Current toolchain", select "NXP MCU Tools". Click "Apply and Close".
-6. Right click on the openthread project and select "Debug As"->"MCUXpresso IDE LinkServer (inc. CMSIS-DAP) probes"
-7. A window to select the binary will appear. Select "output/jn5189/bin/ot-<application>" and click Ok.
-8. Under the menu bar, towards the center of the screen, there is a green bug icon with a drop-down arrow next to it. Click on the arrow and select "Debug Configurations".
-9. In the right side of the Debug Configurations window, go to "C/C++ (NXP Semiconductors) MCU Application"->"openthread LinkServer Default".
-10. Make sure that in the "C/C++ Application:" text box contains "output\jn5189\bin\ot-<application>" path.
-11. Go to "GUI Flash Tool" tab. In "Target Operations"->Program->Options, select "bin" as the "Format to use for programming". Make sure the "Base address" is 0x0.
-12. Click Debug.
-13. A pop-up window entitled "Errors in Workspace" will appear. Click Proceed.
-14. The board is now flashed.
+Connect to the DK6 board by plugging a mini-USB cable to the connector marked with _FTDI USB_. Also, make sure that jumpers JP4/JP7 are situated in the middle position (_JN UART0 - FTDI_).
+
+![DK6_FTDI](../images/dk6_ftdi.jpg)
+
+DK6 Flash Programmer can be found inside the [SDK][sdk_mcux] at path `tools/JN-SW-4407-DK6-Flash-Programmer`. This is a Windows application that can be installed using the .exe file. Once the application is installed, the COM port for JN5189 must be identified:
+
+```
+C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe  --list
+Available connections:
+COM29
+```
+
+Once the COM port is identified, the required binary can be flashed:
+
+```
+C:\nxp\DK6ProductionFlashProgrammer>DK6Programmer.exe -s COM29 -p ot-rcp.bin
+```
+
+[sdk_mcux]: https://mcuxpresso.nxp.com/en/welcome
+
+### Using MCUXpresso IDE
+
+Connect to the DK6 board by plugging a mini-USB cable to the connector marked with _TARGET_. Also, make sure that jumpers JP4/JP7 are situated in the leftmost position (_LPC-JN UART0_).
+
+![DK6_BOARD_FTDI](../images/dk6_lpc.jpg)
+
+In order to flash the application for debugging we recommend using [MCUXpresso IDE (version >= 11.0.0)](https://www.nxp.com/design/software/development-software/mcuxpresso-software-and-tools-/mcuxpresso-integrated-development-environment-ide:MCUXpresso-IDE?tab=Design_Tools_Tab).
+
+- Import the previously downloaded NXP SDK into MCUXpresso IDE. This can be done by drag-and-dropping the SDK archive into MCUXpresso IDE's _Installed SDKs_ tab:
+
+![Installed_SDKS](../images/installed_sdks.JPG)
+
+- Import OpenThread repo in MCUXpresso IDE as Makefile Project. Use _none_ as _Toolchain for Indexer Settings_:
+
+```
+File -> Import -> C/C++ -> Existing Code as Makefile Project
+```
+
+- Configure MCU Settings:
+
+```
+Right click on the Project -> Properties -> C/C++ Build -> MCU Settings -> Select K32W061 -> Apply & Close
+```
+
+![MCU_Sett](../images/mcu_settings.JPG)
+
+- Configure the toolchain editor:
+
+```
+Right click on the Project -> C/C++ Build-> Tool Chain Editor -> NXP MCU Tools -> Apply & Close
+```
+
+![MCU_Sett](../images/toolchain.JPG)
+
+- Create a debug configuration:
+
+```
+Right click on the Project -> Debug -> As->MCUXpresso IDE LinkServer (inc. CMSIS-DAP) probes -> OK -> Select elf file
+```
+
+![debug_1](../images/debug_conf1.JPG)
+
+- Set the _Connect script_ for the debug configuration to _QN9090connect.scp_ from the dropdown list:
+
+```
+Right click on the Project -> Debug As -> Debug configurations... -> LinkServer Debugger
+```
+
+![connect](../images/gdbdebugger.JPG)
+
+- Set the _Initialization Commands_ to:
+
+```
+Right click on the Project -> Debug As -> Debug configurations... -> Startup
+
+set non-stop on
+set pagination off
+set mi-async
+set remotetimeout 60000
+##target_extended_remote##
+set mem inaccessible-by-default ${mem.access}
+mon ondisconnect ${ondisconnect}
+set arm force-mode thumb
+${load}
+```
+
+![init](../images/startup.JPG)
+
+- Set the _vector.catch_ value to _false_ inside the .launch file:
+
+```
+Right click on the Project -> Utilities -> Open Directory Browser here -> edit *.launch file:
+
+<booleanAttribute key="vector.catch" value="false"/>
+
+```
+
+- Debug using the newly created configuration file:
+
+![debug](../images/debug_start.JPG)
 
 [cmsis-dap]: https://os.mbed.com/handbook/CMSIS-DAP
 

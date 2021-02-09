@@ -5,55 +5,26 @@ import re
 import argparse
 import subprocess
 import struct
-from Crypto.Signature import pkcs1_15
-from Crypto.PublicKey import RSA
-from Crypto.Hash import SHA256
-from Crypto.Util import number
 import binascii
 import os
-import StringIO
+import sys
+
+from io import StringIO
 
 def auto_int(x):
    return int(x, 0)
 
-parser = argparse.ArgumentParser(description='DK6 Image Header Generator')
-parser.add_argument('in_file', help="Binary to be post-processed: generating header and optionally appending certificate and/or signature.")
-parser.add_argument('out_file', nargs='?')
-parser.add_argument('-g', '--signature_path', help="Sets directory from which certificate and private key are to be retrieved")
-parser.add_argument('-k', '--key', action='store_true', help="2048 bits RSA private key in PEM format used to sign the full image. If -c option is used the full image includes the certificate + the signature of the certificate. The key shall be located in the same directory as the image_tool script. See priv_key.pem example.")
-parser.add_argument('-p', '--password',help="This is the pass phrase from which the encryption key is derived. This parameter is only required if key provided through the -k option is a PEM encrypted key.")
-parser.add_argument('-c', '--certificate', action='store_true', help="When option is selected, the certificate cert.bin is appended to the image.")
-parser.add_argument('-i', '--image_identifier', type=int, help="This parameter is to set the archive identifier. 0: SSBL or legacy JN518x/QN9090 applications, loaded at 0x00000000. 1: application (ZB) loaded at address 0x00004000 by default. 2: application (BLE) image loaded at address 0x00053000 by default")
-parser.add_argument('-a', '--appcore_image', action='store_true',help="This parameter is only relevant if dual application (app1 image) shall reside in flash. Do not use in conjunction with -i option.")
-parser.add_argument('-t', '--target_addr', type=int, help="Target address of image. Used in conjunction with -i option to override the default set by image identifier, or with -a option to specify address of the appcore image (app1 image).")
-parser.add_argument('-s', '--stated_size', type=int, help="This is the stated size of the image in bytes. Default is 0x48000.")
-parser.add_argument('-v', '--version', type=auto_int, default=0, help="Image version. Default is 0.")
-parser.add_argument('-b', '--verbose', type=int, default=0, help="verbosity level. Default is 0.")
-parser.add_argument('-cl', '--compatibility_list', help="Compatibility list")
-parser.add_argument('-sota', '--sota_number_of_blob', type=int, help="This parameter is used to generate the image directory command to be provisioned")
-parser.add_argument('-bid', '--blob_id', type=auto_int, help="This parameter is to add a blob id. Can be used only if the sota arg is given")
-
-
-JN518x_ES1 = 0
-args = parser.parse_args()
-
-elf_file_name = args.in_file
-bin_file_name = elf_file_name.split(".")[0]+'_temp.bin'
-
-if args.out_file is None:
-    args.out_file = elf_file_name
-
-verbose = args.verbose != 0
 
 
 def get_symbol_value(file, symb_name):
     val = 0
 
     objdump = subprocess.check_output(['arm-none-eabi-objdump', '--syms', file])
+    objdump = objdump.decode('utf-8')
 
     symb_re = re.compile(r'^([0-9a-f]{8})[\s\S]+[\s]+([0-9a-f]{8})\s([\w\.]+)')
 
-    for ln in StringIO.StringIO(objdump):
+    for ln in StringIO(objdump):
         m = symb_re.match(ln)
         if m:
             if m.group(3) == symb_name:
@@ -68,6 +39,7 @@ def parse_sections(file):
     Section = namedtuple('Section', ['idx', 'name', 'size', 'vma', 'lma', 'offset', 'align', 'flags'])
 
     objdump = subprocess.check_output(['arm-none-eabi-objdump', '-h', file])
+    objdump = objdump.decode('utf-8')
 
     section_re = re.compile(r'(?P<idx>[0-9]+)\s'
                             r'(?P<name>.{13,})s*'
@@ -76,7 +48,7 @@ def parse_sections(file):
                             r'(?P<lma>[0-9a-f]{8})\s*'
                             r'(?P<offset>[0-9a-f]{8})\s*'
                             r'(?P<align>[0-9*]*)\s*'
-                            r'(?P<flags>[[[\w]*[, [\w]*]*)')
+                            r'(?P<flags>[\[[\w]*[, [\w]*]*)')
 
     for match in re.finditer(section_re, objdump):
         sec_dict = match.groupdict()
@@ -105,7 +77,7 @@ def print_sota_img_directory_cmd(blobNumber):
     nbBlobFound = 0
     sota_final_print = ""
     sota_final_print += "=================> SOTA information\n"
-    # Generate the image directory command that will be used to provison the device
+    # Generate the image directory command that will be used to provision the device
     valueToPrint = ".\\DK6Programmer.exe -V5 -s <COM_PORT> -P 1000000 -w PSECT:64@0x160="
     for i in range(1,9):
         bootable = "00"
@@ -118,10 +90,10 @@ def print_sota_img_directory_cmd(blobNumber):
         blobStatedSize = get_symbol_value(elf_file_name, "m_blob"+str(i)+"_size")
         if position_in_flash != "00" and blobStatedSize != 0:
             nbBlobFound=nbBlobFound+1
-            sota_final_print += "Position in flash = "+ position_in_flash+" - targetAddr = 0x" +blobTargetAddr+ "\n"
+            sota_final_print += "Position in flash = " + position_in_flash+" - targetAddr = 0x" +blobTargetAddr+ "\n"
         blobTargetAddr = reverseString2by2(blobTargetAddr, len(blobTargetAddr))
         blobNbPage = blobStatedSize/512
-        blobNbPage = '%0*X' % (4,blobNbPage)
+        blobNbPage = '%0*X' % (4,int(blobNbPage))
         blobNbPage = reverseString2by2(blobNbPage, len(blobNbPage))
         if blobStatedSize != 0:
             valueToPrint = valueToPrint + blobTargetAddr + blobNbPage + bootable + position_in_flash
@@ -131,13 +103,13 @@ def print_sota_img_directory_cmd(blobNumber):
     sota_final_print += valueToPrint
     sota_final_print += "=================> (end) SOTA information"
     if nbBlobFound == blobNumber:
-        print sota_final_print
+        print(sota_final_print)
 
 #
 # JN518x ES1 version
 ######################
-if JN518x_ES1 == 1: # deprecated
-
+def BuildImageElfDeprecated(args, elf_file_name, bin_file_name, verbose):
+    error = 0
     BOOT_BLOCK_MARKER = 0xBB0110BB
 
     header_struct     = struct.Struct('<7LLLLL')
@@ -147,7 +119,7 @@ if JN518x_ES1 == 1: # deprecated
 
     last_section = None
 
-    for name, section in sections.iteritems():
+    for _, section in sections.items():
         if 'LOAD' in section.flags:
             if last_section is None or section.lma > last_section.lma:
                 if section.size > 0:
@@ -172,7 +144,7 @@ if JN518x_ES1 == 1: # deprecated
 
     first_section = None
 
-    for name, section in sections.iteritems():
+    for _, section in sections.items():
         if 'LOAD' in section.flags:
             if first_section is None or section.lma < first_section.lma:
                 first_section = section
@@ -196,65 +168,82 @@ if JN518x_ES1 == 1: # deprecated
         #fields[9]  = 0x98447902
         fields[10] = image_size
 
-        print "Writing checksum {:08x} to file {:s}".format(vectsum, args.out_file)
+        print("Writing checksum {:08x} to file {:s}".format(vectsum, args.out_file))
 
         elf_file.seek(first_section.offset)
         elf_file.write(header_struct.pack(*fields))
+    return error
 
 #
 # JN518x ES2 version
 ######################
-else:
+def BuildImageElf(args, elf_bin_file, bin_file_name, verbose):
     is_signature = False
     error = 0
     if args.signature_path is not None:
-        sign_dir_path = os.path.join(os.path.dirname(__file__), args.signature_path)
-        priv_key_file_path = os.path.join(sign_dir_path, 'priv_key.pem')
-        cert_file_path = os.path.join(sign_dir_path, 'cert.bin')
+       sign_dir_path = args.signature_path
+       if os.path.isdir(sign_dir_path) == False:
+          sign_dir_path = os.path.join(os.path.dirname(__file__), args.signature_path)
+          if os.path.isdir(sign_dir_path) == False:
+             error = 1
+          else:
+             error = 0
+       else:
+          error = 0
+       priv_key_file_path = os.path.join(sign_dir_path, 'priv_key.pem')
+       cert_file_path = os.path.join(sign_dir_path, 'cert.bin')
     else:
         sign_dir_path = os.path.join(os.path.dirname(__file__), '')
         priv_key_file_path = os.path.join(sign_dir_path, 'testkey_es2.pem')
         cert_file_path = os.path.join(sign_dir_path, 'certif_es2')
 
     if args.key is True:
+        from Crypto.Signature import pkcs1_15
+        from Crypto.PublicKey import RSA
+        from Crypto.Hash import SHA256
+        from Crypto.Util import number
+
         key_file_path = priv_key_file_path
         if verbose:
-            print "key path is " + key_file_path
+            print("key path is " + key_file_path)
         if (os.path.isfile(key_file_path)):
             key_file=open(key_file_path, 'r')
             key = RSA.importKey(key_file.read(), args.password)
-            print "Private RSA key processing..."
+            print("Private RSA key processing...")
             is_signature = True
+        else:
+           print("Private key file not found")
+           error = 1
 
     compatibility_struct     = struct.Struct('<2L')
     compatibility_len_struct = struct.Struct('<L')
     if args.compatibility_list is not None:
-        print "Compatibility list:"
+        print("Compatibility list:")
         if verbose:
-            print "    {}".format(args.compatibility_list)
-        compatibility_list = [map(auto_int, compatibility_item.split(",")) for compatibility_item in args.compatibility_list.split(";")]
-        print "    Length: {}".format(len(compatibility_list))
+            print("    {}".format(args.compatibility_list))
+        compatibility_list = [list(map(auto_int, compatibility_item.split(","))) for compatibility_item in args.compatibility_list.split(";")]
+        print("    Length: {}".format(len(compatibility_list)))
         for i in range(len(compatibility_list)):
             item = compatibility_list[i]
             for j in range(len(item)):
                 if j ==1:
                     blobIdCompatibilityList = "     Blob ID 0x="  + '%0*X' % (8,item[j-1])
-                    print "Blob ID =0x"+'%0*X' % (4,item[j-1]) +" - version =0x"+'%0*X' % (8,item[j])
+                    print("Blob ID =0x"+'%0*X' % (4,item[j-1]) +" - version =0x"+'%0*X' % (8,item[j]))
         compatibility_len = len(compatibility_list) * compatibility_struct.size + compatibility_len_struct.size
         if verbose:
-            print "    {}".format(compatibility_len)
+            print("    {}".format(compatibility_len))
     else:
         compatibility_list = []
         compatibility_len = 0
-        print "No compatibility list"
+        print("No compatibility list")
 
     # make sure that the compatibility list is added and equals to nb_blob - 1
-    if args.sota_number_of_blob is not None and (compatibility_len/compatibility_struct.size) != args.sota_number_of_blob-1:
-        print "!!! Error the compatibility list length must be = to the number of blobs -1 : "+str(compatibility_len/compatibility_struct.size)+"(len) != "+ str(args.sota_number_of_blob-1)
+    if args.sota_number_of_blob is not None and (compatibility_len//compatibility_struct.size) != args.sota_number_of_blob-1:
+        print("!!! Error the compatibility list length must be = to the number of blobs -1 : "+str(compatibility_len/compatibility_struct.size)+"(len) != "+ str(args.sota_number_of_blob-1))
         error = 1
     #make sure that the blob ID is given
     if args.sota_number_of_blob is not None and args.blob_id is None:
-        print "!!! Error the blob ID is missing"
+        print("!!! Error the blob ID is missing")
         error = 1
 
     bin_output = subprocess.check_output(['arm-none-eabi-objcopy', '-O', 'binary', elf_file_name, bin_file_name])
@@ -283,7 +272,7 @@ else:
         image_iden = 0
 
     if verbose:
-        print "Image Identifier is {:d}".format(image_iden)
+        print("Image Identifier is {:d}".format(image_iden))
 
    #Default value initialization
     image_addr = 0
@@ -306,7 +295,7 @@ else:
     if args.sota_number_of_blob is not None:
         if args.image_identifier is None:
             image_iden = get_symbol_value(elf_file_name, '__blob_position__')
-            print "Blob position in flash = #"+str(image_iden)
+            print("Blob position in flash = #"+str(image_iden))
 
     img_header_marker = IMAGE_HEADER_MARKER + image_iden
 
@@ -319,15 +308,15 @@ else:
         img_header_marker  = IMAGE_HEADER_APP_CORE
 
     if verbose:
-        print "image_iden=%d image_addr=%x" % (image_iden, image_addr)
-        print "stated_size=%d" % (stated_size)
-        print "version=0x%0*X" % (8,args.version)
-        print "boot_block_marker=%x" % (boot_block_marker)
+        print("image_iden=%d image_addr=0x%0*X" % (image_iden, 8, image_addr))
+        print("stated_size=%d" % (stated_size))
+        print("version=0x%0*X" % (8,args.version))
+        print("boot_block_marker=0x%0*X" % (8, boot_block_marker))
 
     sections = parse_sections(elf_file_name)
 
     last_section = None
-    for name, section in sections.iteritems():
+    for _, section in sections.items():
         if 'LOAD' in section.flags:
             if last_section is None or section.lma > last_section.lma:
                 if section.size > 0:
@@ -336,9 +325,9 @@ else:
     # IAR toolchain uses odd section names that contain spaces
     # the regexp now may now return trailing spaces too, need to strip them
     last_section_name = last_section.name.rstrip()
-    # and add quotes around the section name 
+    # and add quotes around the section name
     last_section_name = r"%s" % (last_section_name)
-	
+
     boot_block_offset = last_section.lma + last_section.size + compatibility_len - image_addr
 
     # Correction for image size not being multiple of 4 (IAR)
@@ -346,15 +335,15 @@ else:
     padding_bytes = bytearray(padding_len)
     boot_block_offset = boot_block_offset + padding_len
 
-    print "boot block offset =%x" % (boot_block_offset)
+    print("boot block offset = %x" % (boot_block_offset))
     if verbose:
-        print "Last Section LMA={:08x} Size={:08x}".format(last_section.lma, last_section.size)
-        print "ImageAddress={:08x}".format(image_addr)
+        print("Last Section LMA={:08x} Size={:08x}".format(last_section.lma, last_section.size))
+        print("ImageAddress={:08x}".format(image_addr))
 
     first_section = None
 
-    for name, section in sections.iteritems():
-        # print "Section: {:s} {:s} {:x} {:x}".format(name, section.flags, section.lma, section.size)
+    for _, section in sections.items():
+        # print("Section: {:s} {:s} {:x} {:x}".format(name, section.flags, section.lma, section.size))
         if 'LOAD' in section.flags:
             if first_section is None or section.lma < first_section.lma:
                 first_section = section
@@ -379,7 +368,7 @@ else:
         try:
             if verbose:
                 for i in range(10):
-                    print "Header[{:d}]= {:08x}".format(i, fields[i])
+                    print("Header[{:d}]= {:08x}".format(i, fields[i]))
             values = head_struct.pack(fields[0],
                                   fields[1],
                                   fields[2],
@@ -394,12 +383,12 @@ else:
         except:
             error = 1
 
-        print "Writing checksum {:08x} to file {:s}".format(vectsum, args.out_file)
-        print "Writing CRC32 of header {:08x} to file {:s}".format(fields[10], args.out_file)
+        print("Writing checksum {:08x} to file {:s}".format(vectsum, args.out_file))
+        print("Writing CRC32 of header {:08x} to file {:s}".format(fields[10], args.out_file))
 
 
         elf_file.seek(first_section.offset)
-        header = header_struct.pack(*fields);
+        header = header_struct.pack(*fields)
         elf_file.write(header)
 
     dump_section = subprocess.check_output(['arm-none-eabi-objcopy',
@@ -407,33 +396,35 @@ else:
                                             '%s=data.bin' % last_section_name,
                                             args.out_file])
 
-    certificate = ""
-    certificate_offset = 0
-    signature = ""
     compatibility = ""
     compatibility_offset = 0
 
     if args.compatibility_list is not None:
         compatibility_offset = last_section.lma + last_section.size - image_addr
-        compatibility = compatibility_len_struct.pack(len(compatibility_list)) + ''.join([compatibility_struct.pack(*compatibility_item) for compatibility_item in compatibility_list])
-        print "Compatibility processing..."
+        compatibility = compatibility_len_struct.pack(len(compatibility_list)) + b''.join([compatibility_struct.pack(*compatibility_item) for compatibility_item in compatibility_list])
+        print("Compatibility processing...")
 
+    certificate = ""
+    certificate_offset = 0
+    signature = ""
     if (args.certificate is True):
         certificate_offset = boot_block_offset + boot_block_struct.size
         certif_file_path = cert_file_path
         if verbose:
-            print "Cert key path is " + cert_file_path
+           print("Cert key path is " + cert_file_path)
         if (os.path.isfile(certif_file_path)):
-            certif_file=open(certif_file_path, 'rb')
-            certificate = certif_file.read()
+           certif_file=open(certif_file_path, 'rb')
+           certificate = certif_file.read()
 
-        print "Certificate processing..."
-        if len(certificate) != (40+256+256):
-            print "Certificate error"
-            error = 1
+           print("Certificate processing...")
+           expected_cert_len = 40+256+256
+           actual_len = len(certificate)
+           if  actual_len != expected_cert_len:
+              print("Certificate error expected expected %d got %d" % (expected_cert_len, actual_len))
+              error = 1
 
     if verbose:
-        print "stated size is {:08x} ({})".format(stated_size,stated_size)
+        print("stated size is {:08x} ({})".format(stated_size,stated_size))
 
     if args.appcore_image is True:
         boot_block_id = 1
@@ -443,10 +434,12 @@ else:
     if args.blob_id is not None:
         boot_block_id = args.blob_id
 
+    img_total_len = boot_block_offset + boot_block_struct.size + len(certificate)
+
     boot_block = boot_block_struct.pack(boot_block_marker,
                                         boot_block_id,
                                         image_addr,
-                                        boot_block_offset + boot_block_struct.size + len(certificate), # padding already included in the boot_block_offset
+                                        img_total_len, # padding already included in the boot_block_offset
                                         stated_size,
                                         certificate_offset,
                                         compatibility_offset,
@@ -463,13 +456,19 @@ else:
 
         signer = pkcs1_15.new(key)
         signature = signer.sign(hash)
-
-        print "Signature processing..."
+        img_total_len = img_total_len + len(signature)
+        print("Signature processing...")
 
     with open('data.bin', 'ab') as out_file:
-        out_file.write(compatibility+padding_bytes+boot_block+certificate+signature)
+        if isinstance(compatibility,str):
+            compatibility = bytes(compatibility, 'utf-8')
+        if isinstance(certificate,str):
+            certificate = bytes(certificate, 'utf-8')
+        if isinstance(signature,str):
+            signature = bytes(signature, 'utf-8')
+        out_file.write(compatibility + padding_bytes + boot_block + certificate + signature)
     if verbose:
-        print "Updating last section " + last_section.name
+        print("Updating last section " + last_section.name)
 
     update_section = subprocess.check_output(['arm-none-eabi-objcopy',
                                               '--update-section',
@@ -487,17 +486,53 @@ else:
                                           elf_file_name,
                                           bin_file_name])
 
-    print "Binary size is {:08x} ({})".format(os.stat(bin_file_name).st_size,os.stat(bin_file_name).st_size)
+    out_file_sz = os.stat(bin_file_name).st_size
+    print("Binary size is {:08x} ({})".format(out_file_sz, out_file_sz))
 
     if args.sota_number_of_blob is not None:
         print_sota_img_directory_cmd(args.sota_number_of_blob)
 
-    if os.stat(bin_file_name).st_size > stated_size:
-        print "Error: Binary file size ({:08x}) must be less or equal to stated size {:08x}".format(os.stat(bin_file_name).st_size, stated_size)
+    if out_file_sz > stated_size:
+        print("Error: Binary file size ({:08x}) must be less or equal to stated size {:08x}".format(os.stat(bin_file_name).st_size, stated_size))
         error = 1
+    if out_file_sz != img_total_len:
+        print("File size %d different from expected %d" %  (out_file_sz, img_total_len))
+        error = 1
+    return error
 
-    if error != 0:
-        os.remove(elf_file_name)
-        os.remove(out_file_path)
 
-    os.remove(bin_file_name)
+parser = argparse.ArgumentParser(description='DK6 Image Header Generator')
+parser.add_argument('in_file', help="Binary to be post-processed: generating header and optionally appending certificate and/or signature.")
+parser.add_argument('out_file', nargs='?')
+parser.add_argument('-g', '--signature_path', help="Sets directory from which certificate and private key are to be retrieved")
+parser.add_argument('-k', '--key', action='store_true', help="2048 bits RSA private key in PEM format used to sign the full image. If -c option is used the full image includes the certificate + the signature of the certificate. The key shall be located in the same directory as the image_tool script. See priv_key.pem example.")
+parser.add_argument('-p', '--password',help="This is the pass phrase from which the encryption key is derived. This parameter is only required if key provided through the -k option is a PEM encrypted key.")
+parser.add_argument('-c', '--certificate', action='store_true', help="When option is selected, the certificate cert.bin is appended to the image.")
+parser.add_argument('-i', '--image_identifier', type=int, help="This parameter is to set the archive identifier. 0: SSBL or legacy JN518x/QN9090 applications, loaded at 0x00000000. 1: application (ZB) loaded at address 0x00004000 by default. 2: application (BLE) image loaded at address 0x00053000 by default")
+parser.add_argument('-a', '--appcore_image', action='store_true',help="This parameter is only relevant if dual application (app1 image) shall reside in flash. Do not use in conjunction with -i option.")
+parser.add_argument('-t', '--target_addr', type=int, help="Target address of image. Used in conjunction with -i option to override the default set by image identifier, or with -a option to specify address of the appcore image (app1 image).")
+parser.add_argument('-s', '--stated_size', type=int, help="This is the stated size of the image in bytes. Default is 0x48000.")
+parser.add_argument('-v', '--version', type=auto_int, default=0, help="Image version. Default is 0.")
+parser.add_argument('-b', '--verbose', type=int, default=0, help="verbosity level. Default is 0.")
+parser.add_argument('-cl', '--compatibility_list', help="Compatibility list")
+parser.add_argument('-sota', '--sota_number_of_blob', type=int, help="This parameter is used to generate the image directory command to be provisioned")
+parser.add_argument('-bid', '--blob_id', type=auto_int, help="This parameter is to add a blob id. Can be used only if the sota arg is given")
+
+
+args = parser.parse_args()
+
+elf_file_name = args.in_file
+bin_file_name = elf_file_name.split(".")[0]+'_temp.bin'
+
+if args.out_file is None:
+    args.out_file = elf_file_name
+verbose = args.verbose != 0
+
+out_file_path = args.out_file
+
+error = BuildImageElf(args, elf_file_name, bin_file_name, verbose)
+
+if error != 0:
+    os.remove(elf_file_name)
+    os.remove(out_file_path)
+os.remove(bin_file_name)

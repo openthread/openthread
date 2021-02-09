@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2019 NXP
+# Copyright 2019-2020 NXP
 # All rights reserved.
 #
 # SPDX-License-Identifier: BSD-3-Clause
@@ -25,17 +25,17 @@ function is_linux_package_installed()
 
 function is_python_package_installed()
 {
-	pip list --format=columns | grep -F ${1} &> /dev/null
+	pip3 list --format=columns | grep -F ${1} &> /dev/null
 
 	if [ $? -ne 0 ]; then
         echo "Python package ** ${1} ** is not installed! Please install it then recompile."
-        echo "Installation command: pip install ${1}"
+        echo "Installation command: pip3 install ${1}"
 		exit 1
 	fi
 }
 
-is_linux_package_installed "python"
-is_linux_package_installed "python-pip"
+is_linux_package_installed "python3"
+is_linux_package_installed "python3-pip"
 is_python_package_installed "pycrypto"
 is_python_package_installed "pycryptodome"
 
@@ -50,7 +50,7 @@ if [ "$#" -eq 1 ]; then
 		MIME_SET="$(file -ib $FILENAME)"
 
 		if [[ $MIME_SET == *"$MIME_PATTERN"* ]]; then
-			python $SIGNING_TOOL $FILENAME
+			python3 $SIGNING_TOOL $FILENAME
 			arm-none-eabi-objcopy -O binary $FILENAME $FILENAME.bin
 		fi
 	done
