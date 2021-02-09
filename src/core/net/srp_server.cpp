@@ -1254,6 +1254,7 @@ void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
 
 void Server::HandleOutstandingUpdatesTimer(void)
 {
+    otLogInfoSrp("[server] outstanding service update timeout");
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
     {
         HandleAdvertisingResult(mOutstandingUpdates.GetTail(), OT_ERROR_RESPONSE_TIMEOUT);

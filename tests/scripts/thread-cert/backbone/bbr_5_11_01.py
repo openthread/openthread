@@ -91,6 +91,11 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', self.nodes[ROUTER2].get_state())
 
+        # The OTBR docker enables SRP Server by default, lets explicitly
+        # disable SRP server to avoid Network Data population.
+        # TODO: Enhance the test script to tolerate additional Sertivce TLV
+        # in Network Data.
+        self.nodes[BR_1].srp_server_set_enabled(False)
         self.nodes[BR_1].start()
         self.simulator.go(5)
         self.assertEqual('router', self.nodes[BR_1].get_state())
