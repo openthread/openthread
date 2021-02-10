@@ -102,7 +102,7 @@ otError SrpClient::ProcessCallback(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.OutputLine(mCallbackEnabled ? "Enabled" : "Disabled");
+        mInterpreter.OutputEnabledDisabledStatus(mCallbackEnabled);
         ExitNow();
     }
 

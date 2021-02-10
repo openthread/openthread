@@ -189,6 +189,11 @@ void Interpreter::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
     }
 }
 
+void Interpreter::OutputEnabledDisabledStatus(bool aEnabled)
+{
+    OutputLine(aEnabled ? "Enabled" : "Disabled");
+}
+
 int Interpreter::OutputIp6Address(const otIp6Address &aAddress)
 {
     return OutputFormat(
@@ -1083,7 +1088,7 @@ otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine(otPlatRadioIsCoexEnabled(mInstance) ? "Enabled" : "Disabled");
+        OutputEnabledDisabledStatus(otPlatRadioIsCoexEnabled(mInstance));
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -1792,14 +1797,7 @@ otError Interpreter::ProcessMulticastPromiscuous(uint8_t aArgsLength, char *aArg
 
     if (aArgsLength == 0)
     {
-        if (otIp6IsMulticastPromiscuousEnabled(mInstance))
-        {
-            OutputLine("Enabled");
-        }
-        else
-        {
-            OutputLine("Disabled");
-        }
+        OutputEnabledDisabledStatus(otIp6IsMulticastPromiscuousEnabled(mInstance));
     }
     else
     {
@@ -3062,14 +3060,7 @@ otError Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        if (otLinkIsPromiscuous(mInstance) && otPlatRadioGetPromiscuous(mInstance))
-        {
-            OutputLine("Enabled");
-        }
-        else
-        {
-            OutputLine("Disabled");
-        }
+        OutputEnabledDisabledStatus(otLinkIsPromiscuous(mInstance) && otPlatRadioGetPromiscuous(mInstance));
     }
     else
     {
@@ -3616,14 +3607,7 @@ otError Interpreter::ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        if (otThreadIsRouterEligible(mInstance))
-        {
-            OutputLine("Enabled");
-        }
-        else
-        {
-            OutputLine("Disabled");
-        }
+        OutputEnabledDisabledStatus(otThreadIsRouterEligible(mInstance));
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
