@@ -29,6 +29,9 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 include $(top_srcdir)/examples/platforms/efr32/efr32_platform_defs.am
 
+# ==============================================================================
+# Which libraries to build
+# ==============================================================================
 lib_LIBRARIES = $(NULL)
 
 if !OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
@@ -61,6 +64,9 @@ lib_LIBRARIES                                                                += 
     $(NULL)
 endif
 
+# ==============================================================================
+# Compiler flags
+# ==============================================================================
 
 # Do not enable -Wshadow for Silicon Labs SDK sources
 override CFLAGS    := $(filter-out -Wshadow,$(CFLAGS))
@@ -70,87 +76,77 @@ override CXXFLAGS  := $(filter-out -Wshadow,$(CXXFLAGS))
 override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
 override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
 
-# =============================================================================
 
-SILABS_MBEDTLS_DIR = $(SDK_SRC_DIR)/util/third_party/mbedtls
+# ==============================================================================
+# Silabs Gecko SDK mbedtls
+# ==============================================================================
 
-SILABS_MBEDTLS_CPPFLAGS                                                       = \
-    $(MBEDTLS_CPPFLAGS)                                                         \
-    -I$(SILABS_MBEDTLS_DIR)/configs                                             \
-    -I$(SILABS_MBEDTLS_DIR)/include                                             \
-    -I$(SILABS_MBEDTLS_DIR)/sl_crypto/include                                   \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                             \
-    -I$(SDK_SRC_DIR)/util/silicon_labs/silabs_core/memory_manager               \
-    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/se_manager/inc/       \
-    -I$(SDK_SRC_DIR)/platform/common/inc/                                       \
+SILABS_MBEDTLS_DIR = $(SDK_SRC_DIR)/util/third_party/crypto/mbedtls
+
+SILABS_MBEDTLS_CPPFLAGS                                                                   = \
+    $(MBEDTLS_CPPFLAGS)                                                                     \
+    -I$(SILABS_MBEDTLS_DIR)/include                                                         \
+    -I$(SILABS_MBEDTLS_DIR)/include/mbedtls                                                 \
+    -I$(SILABS_MBEDTLS_DIR)/library                                                         \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_alt/include                    \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/config         \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/inc            \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/inc/configs    \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_psa_driver/inc                 \
+    -I$(SDK_SRC_DIR)/util/silicon_labs/silabs_core/memory_manager                           \
+    -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                                 \
+    -I$(SDK_SRC_DIR)/platform/common/inc/                                                   \
+    -I$(SDK_SRC_DIR)/platform/emlib/inc                                                     \
+    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                                         \
     $(NULL)
 
-SILABS_MBEDTLS_SOURCES                                                                          = \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_crypto.c                                                 \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/aes.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/asn1parse.c                                   \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/asn1write.c                                   \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/base64.c                                      \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/bignum.c                                      \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ccm.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/cipher_wrap.c                                 \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/cipher.c                                      \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/cmac.c                                        \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ctr_drbg.c                                    \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/des.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecdh.c                                        \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecdsa.c                                       \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecjpake.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecp_curves.c                                  \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecp.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/entropy.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/error.c                                       \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/md_wrap.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/md.c                                          \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/oid.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/pem.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/pk_wrap.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/pk.c                                          \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/pkparse.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/platform_util.c                               \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/rsa_internal.c                                \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/rsa.c                                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/sha1.c                                        \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/sha256.c                                      \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/sha512.c                                      \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_cache.c                                   \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_ciphersuites.c                            \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_cli.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_cookie.c                                  \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_srv.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_ticket.c                                  \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ssl_tls.c                                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/threading.c                                   \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509_create.c                                 \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509_crl.c                                    \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509_crt.c                                    \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509_csr.c                                    \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509.c                                        \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509write_crt.c                               \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/x509write_csr.c                               \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c                            \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c                            \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_management.c                     \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_sha.c                            \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/entropy_adc.c                           \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/entropy_rail.c                          \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_aes.c                                \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_ccm.c                                \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_cmac.c                               \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_ecp.c                                \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_jpake.c                              \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_management.c                         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_sha.c                                \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/se_trng.c                               \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/shax.c                                  \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/sl_mbedtls.c                            \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/trng.c                                  \
-    gecko_sdk_suite/v3.0/util/silicon_labs/silabs_core/memory_manager/sl_malloc.c                       \
+SILABS_MBEDTLS_SOURCES                                                                    = \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/aes.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/asn1parse.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/asn1write.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/base64.c                   \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/bignum.c                   \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ccm.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/cipher_wrap.c              \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/cipher.c                   \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/cmac.c                     \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ctr_drbg.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/des.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ecdh.c                     \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ecdsa.c                    \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ecjpake.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ecp_curves.c               \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ecp.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/entropy.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/error.c                    \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/md.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/oid.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/pem.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/pk_wrap.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/pk.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/pkparse.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/platform_util.c            \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/platform.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/rsa_internal.c             \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/rsa.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/sha256.c                   \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_cache.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_ciphersuites.c         \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_cli.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_cookie.c               \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_msg.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_srv.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_ticket.c               \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/ssl_tls.c                  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/threading.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509_create.c              \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509_crl.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509_crt.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509_csr.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509.c                     \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509write_crt.c            \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/mbedtls/library/x509write_csr.c            \
+    gecko_sdk_suite/v3.1/util/silicon_labs/silabs_core/memory_manager/sl_malloc.c           \
     $(NULL)
 
 libsilabs_mbedtls_a_CPPFLAGS                                                  = \
@@ -162,7 +158,9 @@ libsilabs_mbedtls_a_SOURCES                                                   = 
     $(NULL)
 
 
-# =============================================================================
+# ==============================================================================
+# Gecko SDK
+# ==============================================================================
 
 COMMONCPPFLAGS                                                                = \
     -I$(srcdir)                                                                 \
@@ -179,70 +177,136 @@ COMMONCPPFLAGS                                                                = 
     -Wno-missing-field-initializers                                             \
     $(NULL)
 
-SILABS_COMMON_SOURCES                                                                   = \
-    rail_config/rail_config.c                                                             \
-    gecko_sdk_suite/v3.0/hardware/kit/common/bsp/bsp_bcc.c                                \
-    gecko_sdk_suite/v3.0/hardware/kit/common/bsp/bsp_init.c                               \
-    gecko_sdk_suite/v3.0/hardware/kit/common/bsp/bsp_stk.c                                \
-    gecko_sdk_suite/v3.0/hardware/kit/common/bsp/bsp_stk_leds.c                           \
-    gecko_sdk_suite/v3.0/platform/emdrv/dmadrv/src/dmadrv.c                               \
-    gecko_sdk_suite/v3.0/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                 \
-    gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_default_common_linker.c             \
-    gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_hal_flash.c                         \
-    gecko_sdk_suite/v3.0/platform/emdrv/nvm3/src/nvm3_lock.c                              \
-    gecko_sdk_suite/v3.0/platform/emdrv/uartdrv/src/uartdrv.c                             \
-    gecko_sdk_suite/v3.0/platform/emdrv/ustimer/src/ustimer.c                             \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_adc.c                                      \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_cmu.c                                      \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_core.c                                     \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_emu.c                                      \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_gpio.c                                     \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_ldma.c                                     \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_leuart.c                                   \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_msc.c                                      \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_rmu.c                                      \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_rtcc.c                                     \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_system.c                                   \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_timer.c                                    \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_usart.c                                    \
-    gecko_sdk_suite/v3.0/platform/radio/rail_lib/hal/efr32/hal_efr.c                      \
-    gecko_sdk_suite/v3.0/platform/radio/rail_lib/hal/hal_common.c                         \
-    gecko_sdk_suite/v3.0/platform/radio/rail_lib/plugin/pa-conversions/pa_conversions_efr32.c \
-    gecko_sdk_suite/v3.0/platform/service/mpu/src/sl_mpu.c                                \
-    gecko_sdk_suite/v3.0/platform/service/sleeptimer/src/sl_sleeptimer.c                  \
-    gecko_sdk_suite/v3.0/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c         \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/library/ecp.c                           \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_aes.c              \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_ecp.c              \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_management.c       \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/crypto_sha.c              \
-    gecko_sdk_suite/v3.0/util/third_party/mbedtls/sl_crypto/src/shax.c                    \
+SILABS_COMMON_SOURCES                                                                                 = \
+    rail_config/rail_config.c                                                                           \
+    gecko_sdk_suite/v3.1/hardware/kit/common/bsp/bsp_bcc.c                                              \
+    gecko_sdk_suite/v3.1/hardware/kit/common/bsp/bsp_init.c                                             \
+    gecko_sdk_suite/v3.1/hardware/kit/common/bsp/bsp_stk.c                                              \
+    gecko_sdk_suite/v3.1/hardware/kit/common/bsp/bsp_stk_leds.c                                         \
+    gecko_sdk_suite/v3.1/platform/emdrv/dmadrv/src/dmadrv.c                                             \
+    gecko_sdk_suite/v3.1/platform/emdrv/gpiointerrupt/src/gpiointerrupt.c                               \
+    gecko_sdk_suite/v3.1/platform/emdrv/nvm3/src/nvm3_default_common_linker.c                           \
+    gecko_sdk_suite/v3.1/platform/emdrv/nvm3/src/nvm3_hal_flash.c                                       \
+    gecko_sdk_suite/v3.1/platform/emdrv/nvm3/src/nvm3_lock.c                                            \
+    gecko_sdk_suite/v3.1/platform/emdrv/uartdrv/src/uartdrv.c                                           \
+    gecko_sdk_suite/v3.1/platform/emdrv/ustimer/src/ustimer.c                                           \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_cmu.c                                                    \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_core.c                                                   \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_emu.c                                                    \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_gpio.c                                                   \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_ldma.c                                                   \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_msc.c                                                    \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_rmu.c                                                    \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_rtcc.c                                                   \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_system.c                                                 \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_timer.c                                                  \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_usart.c                                                  \
+    gecko_sdk_suite/v3.1/platform/radio/rail_lib/hal/efr32/hal_efr.c                                    \
+    gecko_sdk_suite/v3.1/platform/radio/rail_lib/hal/hal_common.c                                       \
+    gecko_sdk_suite/v3.1/platform/radio/rail_lib/plugin/pa-conversions/pa_conversions_efr32.c           \
+    gecko_sdk_suite/v3.1/platform/service/mpu/src/sl_mpu.c                                              \
+    gecko_sdk_suite/v3.1/platform/service/device_init/src/sl_device_init_nvic.c                         \
+    gecko_sdk_suite/v3.1/platform/service/sleeptimer/src/sl_sleeptimer.c                                \
+    gecko_sdk_suite/v3.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_rtcc.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_alt/source/sl_entropy.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_alt/source/sl_mbedtls.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/mbedtls_sha.c      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_psa_driver_init.c   \
     $(NULL)
 
+
+# ==============================================================================
+# Series-level _SOURCES
+# ==============================================================================
+SILABS_EFR32MG1X_SOURCES                                                                                              = \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_adc.c                                                                    \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_crypto.c                                                                 \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_leuart.c                                                                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/crypto_aes.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/crypto_ecp.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/crypto_management.c                     \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_crypto_transparent_driver_aead.c    \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_crypto_transparent_driver_cipher.c  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_crypto_transparent_driver_hash.c    \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_crypto_transparent_driver_mac.c     \
+    $(NULL)
+
+SILABS_EFR32MG2X_SOURCES                                                                                          = \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_burtc.c                                                              \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_prs.c                                                                \
+    gecko_sdk_suite/v3.1/platform/emlib/src/em_se.c                                                                 \
+    gecko_sdk_suite/v3.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_burtc.c                                  \
+    gecko_sdk_suite/v3.1/platform/service/sleeptimer/src/sl_sleeptimer_hal_prortc.c                                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_attestation.c            \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_cipher.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_entropy.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_hash.c                   \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_key_derivation.c         \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_key_handling.c           \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_signature.c              \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager_util.c                   \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/se_manager/src/sl_se_manager.c                        \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_alt/source/sl_se_management.c                      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/mbedtls_cmac.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/mbedtls_ecdsa_ecdh.c           \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/se_aes.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/se_ccm.c                       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/src/se_jpake.c                     \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_aead.c                \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_builtin_keys.c        \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_cipher.c              \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_key_derivation.c      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_key_management.c      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_mac.c                 \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_driver_signature.c           \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_opaque_driver_aead.c         \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_opaque_driver_cipher.c       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_opaque_driver_mac.c          \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_opaque_key_derivation.c      \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_transparent_driver_aead.c    \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_transparent_driver_cipher.c  \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_transparent_driver_hash.c    \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_transparent_driver_mac.c     \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/src/sli_se_transparent_key_derivation.c \
+    $(NULL)
+
+
+# ==============================================================================
+# Platform-level _SOURCES
+# ==============================================================================
+
 SILABS_EFR32MG1_SOURCES                                                                           = \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG1P/Source/system_efr32mg1p.c            \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG1P/Source/GCC/startup_efr32mg1p.c       \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG1P/Source/system_efr32mg1p.c            \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG1P/Source/GCC/startup_efr32mg1p.c       \
+    gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_alt/source/sl_entropy_adc.c        \
+    $(SILABS_EFR32MG1X_SOURCES)                                                                     \
     $(NULL)
 
 SILABS_EFR32MG12_SOURCES                                                                          = \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c          \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c     \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG12P/Source/system_efr32mg12p.c          \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG12P/Source/GCC/startup_efr32mg12p.c     \
+    $(SILABS_EFR32MG1X_SOURCES)                                                                     \
     $(NULL)
 
-SILABS_EFR32MG13_SOURCES                                                                           = \
-    gecko_sdk_suite/v3.0/hardware/kit/common/drivers/mx25flash_spi.c                                 \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG13P/Source/system_efr32mg13p.c           \
-    gecko_sdk_suite/v3.0//platform/Device/SiliconLabs/EFR32MG13P/Source/GCC/startup_efr32mg13p.c     \
+SILABS_EFR32MG13_SOURCES                                                                          = \
+    gecko_sdk_suite/v3.1/hardware/kit/common/drivers/mx25flash_spi.c                                \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG13P/Source/system_efr32mg13p.c          \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG13P/Source/GCC/startup_efr32mg13p.c     \
+    $(SILABS_EFR32MG1X_SOURCES)                                                                     \
     $(NULL)
 
 SILABS_EFR32MG21_SOURCES                                                                      = \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG21/Source/system_efr32mg21.c        \
-    gecko_sdk_suite/v3.0/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/startup_efr32mg21.c   \
-    gecko_sdk_suite/v3.0/platform/emlib/src/em_se.c                                             \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG21/Source/system_efr32mg21.c        \
+    gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG21/Source/GCC/startup_efr32mg21.c   \
+    $(SILABS_EFR32MG2X_SOURCES)
     $(NULL)
+
+
+# ==============================================================================
 
 libsilabs_efr32mg1_sdk_a_CPPFLAGS                                                             = \
     $(SILABS_EFR32MG1_CPPFLAGS)                                                                 \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -253,6 +317,7 @@ libsilabs_efr32mg1_sdk_a_SOURCES                                                
 
 libsilabs_efr32mg12_sdk_a_CPPFLAGS                                                            = \
     $(SILABS_EFR32MG12_CPPFLAGS)                                                                \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -263,6 +328,7 @@ libsilabs_efr32mg12_sdk_a_SOURCES                                               
 
 libsilabs_efr32mg13_sdk_a_CPPFLAGS                                                            = \
     $(SILABS_EFR32MG13_CPPFLAGS)                                                                \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -273,6 +339,7 @@ libsilabs_efr32mg13_sdk_a_SOURCES                                               
 
 libsilabs_efr32mg21_sdk_a_CPPFLAGS                                                            = \
     $(SILABS_EFR32MG21_CPPFLAGS)                                                                \
+    $(SILABS_MBEDTLS_CPPFLAGS)                                                                  \
     $(COMMONCPPFLAGS)                                                                           \
     $(NULL)
 
@@ -282,7 +349,7 @@ libsilabs_efr32mg21_sdk_a_SOURCES                                               
     $(NULL)
 
 noinst_HEADERS                                                                                = \
-        $(NULL)
+    $(NULL)
 
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
