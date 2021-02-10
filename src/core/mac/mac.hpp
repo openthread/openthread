@@ -221,7 +221,7 @@ public:
      */
     void RequestIndirectFrameTransmission(void);
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * This method requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
      *
@@ -792,7 +792,7 @@ private:
         kOperationTransmitDataDirect,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
 #endif
 #endif
@@ -919,9 +919,9 @@ private:
     uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
+#endif
 #endif
 
     union
