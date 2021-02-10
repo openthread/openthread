@@ -683,6 +683,13 @@ template <> inline Srp::Client &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void)
+{
+    return mThreadNetif.mDnssdServer;
+}
+#endif
+
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 template <> inline NetworkDiagnostic::NetworkDiagnostic &Instance::Get(void)
 {
