@@ -90,7 +90,7 @@ public:
     class ChildInfo
     {
         friend class DataPollHandler;
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         friend class CslTxScheduler;
 #endif
 
