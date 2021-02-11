@@ -1336,37 +1336,36 @@ exit:
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
-otError Interpreter::GetDnsServerAddress(uint8_t     aArgsLength,
-                                         char *      aArgs[],
-                                         otSockAddr &aAddress,
-                                         uint8_t     aStartArgsIndex)
+otError Interpreter::GetDnsConfig(uint8_t            aArgsLength,
+                                  char *             aArgs[],
+                                  otDnsQueryConfig *&aConfig,
+                                  uint8_t            aStartArgsIndex)
 {
-    // This method gets the optional server address from given `aArgs`
-    // after the `aStartArgsIndex`. The format `[server IPv6 address]
-    // [server port]`.
+    // This method gets the optional config from given `aArgs` after the
+    // `aStartArgsIndex`. The format: `[server IPv6 address] [server
+    // port] [timeout] [max tx attempt] [recursion desired]`.
 
     otError error = OT_ERROR_NONE;
+    bool    recursionDesired;
 
-    VerifyOrExit(aArgsLength >= aStartArgsIndex, error = OT_ERROR_INVALID_ARGS);
+    memset(aConfig, 0, sizeof(otDnsQueryConfig));
 
-    if (aArgsLength > aStartArgsIndex)
-    {
-        SuccessOrExit(error = ParseAsIp6Address(aArgs[aStartArgsIndex], aAddress.mAddress));
-    }
-    else
-    {
-        // Use IPv6 address of default DNS server.
-        SuccessOrExit(error = otIp6AddressFromString(OT_DNS_DEFAULT_SERVER_IP, &aAddress.mAddress));
-    }
+    VerifyOrExit(aArgsLength > aStartArgsIndex, aConfig = nullptr);
 
-    if (aArgsLength > aStartArgsIndex + 1)
-    {
-        SuccessOrExit(error = ParseAsUint16(aArgs[aStartArgsIndex + 1], aAddress.mPort));
-    }
-    else
-    {
-        aAddress.mPort = OT_DNS_DEFAULT_SERVER_PORT;
-    }
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[aStartArgsIndex], aConfig->mServerSockAddr.mAddress));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 1);
+    SuccessOrExit(error = ParseAsUint16(aArgs[aStartArgsIndex + 1], aConfig->mServerSockAddr.mPort));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 2);
+    SuccessOrExit(error = ParseAsUint32(aArgs[aStartArgsIndex + 2], aConfig->mResponseTimeout));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 3);
+    SuccessOrExit(error = ParseAsUint8(aArgs[aStartArgsIndex + 3], aConfig->mMaxTxAttempts));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 4);
+    SuccessOrExit(error = ParseAsBool(aArgs[aStartArgsIndex + 4], recursionDesired));
+    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
 
 exit:
     return error;
@@ -1374,37 +1373,59 @@ exit:
 
 otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
 {
-    otError    error = OT_ERROR_NONE;
-    otSockAddr serverSockAddr;
+    otError           error = OT_ERROR_NONE;
+    otDnsQueryConfig  queryConfig;
+    otDnsQueryConfig *config = &queryConfig;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(aArgs[0], "resolve") == 0)
+    if (strcmp(aArgs[0], "config") == 0)
     {
-        SuccessOrExit(error = GetDnsServerAddress(aArgsLength, aArgs, serverSockAddr, 2));
-        SuccessOrExit(error = otDnsClientResolveAddress(mInstance, &serverSockAddr, aArgs[1], /* aNoRecursion */ false,
-                                                        &Interpreter::HandleDnsAddressResponse, this));
+        if (aArgsLength == 1)
+        {
+            const otDnsQueryConfig *defaultConfig = otDnsClientGetDefaultConfig(mInstance);
+
+            OutputFormat("Server: [");
+            OutputIp6Address(defaultConfig->mServerSockAddr.mAddress);
+            OutputLine("]:%d", defaultConfig->mServerSockAddr.mPort);
+            OutputLine("ResponseTimeout: %u ms", defaultConfig->mResponseTimeout);
+            OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
+            OutputLine("RecursionDesired: %s",
+                       (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
+        }
+        else
+        {
+            SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 1));
+            otDnsClientSetDefaultConfig(mInstance, config);
+        }
+    }
+    else if (strcmp(aArgs[0], "resolve") == 0)
+    {
+        SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 2));
+        SuccessOrExit(error = otDnsClientResolveAddress(mInstance, aArgs[1], &Interpreter::HandleDnsAddressResponse,
+                                                        this, config));
+        error = OT_ERROR_PENDING;
     }
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     else if (strcmp(aArgs[0], "browse") == 0)
     {
-        SuccessOrExit(error = GetDnsServerAddress(aArgsLength, aArgs, serverSockAddr, 2));
-        SuccessOrExit(error = otDnsClientBrowse(mInstance, &serverSockAddr, aArgs[1],
-                                                &Interpreter::HandleDnsBrowseResponse, this));
+        SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 2));
+        SuccessOrExit(error =
+                          otDnsClientBrowse(mInstance, aArgs[1], &Interpreter::HandleDnsBrowseResponse, this, config));
+        error = OT_ERROR_PENDING;
     }
     else if (strcmp(aArgs[0], "service") == 0)
     {
-        SuccessOrExit(error = GetDnsServerAddress(aArgsLength, aArgs, serverSockAddr, 3));
-        SuccessOrExit(error = otDnsClientResolveService(mInstance, &serverSockAddr, aArgs[1], aArgs[2],
-                                                        &Interpreter::HandleDnsServiceResponse, this));
+        SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 3));
+        SuccessOrExit(error = otDnsClientResolveService(mInstance, aArgs[1], aArgs[2],
+                                                        &Interpreter::HandleDnsServiceResponse, this, config));
+        error = OT_ERROR_PENDING;
     }
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
-
-    error = OT_ERROR_PENDING;
 
 exit:
     return error;

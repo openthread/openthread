@@ -86,6 +86,106 @@ class Client : public InstanceLocator, private NonCopyable
     typedef Message Query; // `Message` is used to save `Query` related info.
 
 public:
+    /**
+     * This type represents a DNS query configuration (e.g., server address, response wait timeout, etc).
+     *
+     */
+    class QueryConfig : public otDnsQueryConfig, public Clearable<QueryConfig>
+    {
+        friend class Client;
+
+    public:
+        /**
+         * This enumeration type represents the "Recursion Desired" (RD) flag in a `otDnsQueryConfig`.
+         *
+         */
+        enum RecursionFlag
+        {
+            kFlagUnspecified      = OT_DNS_FLAG_UNSPECIFIED,       ///< The flag is not specified.
+            kFlagRecursionDesired = OT_DNS_FLAG_RECURSION_DESIRED, ///< Server can resolve the query recursively.
+            kFlagNoRecursion      = OT_DNS_FLAG_NO_RECURSION,      ///< Server can not resolve the query recursively.
+        };
+
+        /**
+         * This is the default constructor for `QueryConfig` object.
+         *
+         */
+        QueryConfig(void) = default;
+
+        /**
+         * This method gets the server socket address (IPv6 address and port number).
+         *
+         * @returns The server socket address.
+         *
+         */
+        const Ip6::SockAddr &GetServerSockAddr(void) const
+        {
+            return static_cast<const Ip6::SockAddr &>(mServerSockAddr);
+        }
+
+        /**
+         * This method gets the wait time to receive response from server (in msec).
+         *
+         * @returns The timeout interval in msec.
+         *
+         */
+        uint32_t GetResponseTimeout(void) const { return mResponseTimeout; }
+
+        /**
+         * This method gets the maximum number of query transmit attempts before reporting failure.
+         *
+         * @returns The maximum number of query transmit attempts.
+         *
+         */
+        uint8_t GetMaxTxAttempts(void) const { return mMaxTxAttempts; }
+
+        /**
+         * This method gets the recursion flag indicating whether the server can resolve the query recursively or not.
+         *
+         * @returns The recursion flag.
+         *
+         */
+        RecursionFlag GetRecursionFlag(void) const { return static_cast<RecursionFlag>(mRecursionFlag); }
+
+    private:
+        enum : uint32_t
+        {
+            kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT, // in msec
+        };
+
+        enum : uint16_t
+        {
+            kDefaultServerPort = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT,
+        };
+
+        enum : uint8_t
+        {
+            kDefaultMaxTxAttempts = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS,
+        };
+
+        enum : bool
+        {
+            kDefaultRecursionDesired = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG,
+        };
+
+        enum InitMode : uint8_t
+        {
+            kInitFromDefaults,
+        };
+
+        static const char kDefaultServerAddressString[];
+
+        explicit QueryConfig(InitMode aMode);
+
+        Ip6::SockAddr &GetServerSockAddr(void) { return static_cast<Ip6::SockAddr &>(mServerSockAddr); }
+
+        void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
+        void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
+        void SetRecursionFlag(RecursionFlag aFlag) { mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag); }
+
+        void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
+    };
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     /**
      * This structure provides info for a DNS service instance.
@@ -409,13 +509,42 @@ public:
     void Stop(void);
 
     /**
+     * This method gets the current default query config being used by DNS client.
+     *
+     * @returns The current default query config.
+     *
+     */
+    const QueryConfig &GetDefaultConfig(void) const { return mDefaultConfig; }
+
+    /**
+     * This method sets the default query config.
+     *
+     * @param[in] aQueryConfig   The new default query config.
+     *
+     */
+    void SetDefaultConfig(const QueryConfig &aQueryConfig);
+
+    /**
+     * This method resets the default config to the config used when the OpenThread stack starts.
+     *
+     * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
+     * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
+     * etc. (see `config/dns_clinet.h` for all related config options).
+     *
+     */
+    void ResetDefaultConfig(void);
+
+    /**
      * This method sends an address resolution DNS query for AAAA (IPv6) record for a given host name.
      *
-     * @param[in]  aServerSockAddr  The server socket address.
+     * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
+     * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
+     * The unspecified fields are then replaced by the values from the default config.
+     *
      * @param[in]  aHostName        The host name for which to query the address (MUST NOT be `nullptr`).
-     * @param[in]  aNoRecursion     Indicates whether name server can resolve the query recursively or not.
      * @param[in]  aCallback        A callback function pointer to report the result of query.
      * @param[in]  aContext         A pointer to arbitrary context information passed to @p aCallback.
+     * @param[in]  aConfig          The config to use for this query.
      *
      * @retval OT_ERROR_NONE            Successfully sent DNS query.
      * @retval OT_ERROR_NO_BUFS         Failed to allocate retransmission data.
@@ -423,59 +552,62 @@ public:
      * @retval OT_ERROR_INVALID_STATE   Cannot send query since Thread interface is not up.
      *
      */
-    otError ResolveAddress(const Ip6::SockAddr &aServerSockAddr,
-                           const char *         aHostName,
-                           bool                 aNoRecursion,
-                           AddressCallback      aCallback,
-                           void *               aContext);
+    otError ResolveAddress(const char *       aHostName,
+                           AddressCallback    aCallback,
+                           void *             aContext,
+                           const QueryConfig *aConfig = nullptr);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
     /**
      * This method sends a browse (service instance enumeration) DNS query for a given service name.
      *
-     * @param[in]  aServerSockAddr  The server socket address.
+     * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
+     * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
+     * The unspecified fields are then replaced by the values from the default config.
+     *
      * @param[in]  aServiceName     The service name to query for (MUST NOT be `nullptr`).
      * @param[in]  aCallback        The callback to report the response or errors (such as time-out).
      * @param[in]  aContext         A pointer to arbitrary context information.
+     * @param[in]  aConfig          The config to use for this query.
      *
      * @retval OT_ERROR_NONE        Query sent successfully. @p aCallback will be invoked to report the status.
      * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
      *
      */
-    otError Browse(const Ip6::SockAddr &aServerSockAddr,
-                   const char *         aServiceName,
-                   BrowseCallback       aCallback,
-                   void *               aContext);
+    otError Browse(const char *       aServiceName,
+                   BrowseCallback     aCallback,
+                   void *             aContext,
+                   const QueryConfig *aConfig = nullptr);
 
     /**
-     * This function sends a DNS service instance resolution query for a given service instance.
+     * This method sends a DNS service instance resolution query for a given service instance.
+     *
+     * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
+     * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
+     * The unspecified fields are then replaced by the values from the default config.
+
      *
      * @param[in]  aServerSockAddr  The server socket address.
      * @param[in]  aInstanceLabel   The service instance label.
      * @param[in]  aServiceName     The service name (together with @p aInstanceLabel form full instance name).
      * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext         A pointer to arbitrary context information.
+     * @param[in]  aConfig          The config to use for this query.
      *
      * @retval OT_ERROR_NONE        Query sent successfully. @p aCallback will be invoked to report the status.
      * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
      *
      */
-    otError ResolveService(const Ip6::SockAddr &aServerSockAddr,
-                           const char *         aInstanceLabel,
+    otError ResolveService(const char *         aInstanceLabel,
                            const char *         aServiceName,
                            otDnsServiceCallback aCallback,
-                           void *               aContext);
+                           void *               aContext,
+                           const QueryConfig *  aConfig = nullptr);
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 private:
-    enum
-    {
-        kResponseTimeout = OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT, // in msec
-        kMaxRetransmit   = OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT,
-    };
-
     enum QueryType : uint8_t
     {
         kAddressQuery, // Address resolution.
@@ -500,14 +632,13 @@ private:
     {
         void ReadFrom(const Query &aQuery) { IgnoreError(aQuery.Read(0, *this)); }
 
-        QueryType     mQueryType;
-        uint16_t      mMessageId;
-        Ip6::SockAddr mServerSockAddr;
-        Callback      mCallback;
-        void *        mCallbackContext;
-        TimeMilli     mRetransmissionTime;
-        uint8_t       mRetransmissionCount;
-        bool          mNoRecursion;
+        QueryType   mQueryType;
+        uint16_t    mMessageId;
+        Callback    mCallback;
+        void *      mCallbackContext;
+        TimeMilli   mRetransmissionTime;
+        QueryConfig mConfig;
+        uint8_t     mTransmissionCount;
         // Followed by the name (service, host, instance) encoded as a `Dns::Name`.
     };
 
@@ -516,11 +647,11 @@ private:
         kNameOffsetInQuery = sizeof(QueryInfo),
     };
 
-    otError     StartQuery(QueryInfo &          aInfo,
-                           const Ip6::SockAddr &aServerSockAddr,
-                           const char *         aLabel,
-                           const char *         aName,
-                           void *               aContext);
+    otError     StartQuery(QueryInfo &        aInfo,
+                           const QueryConfig *aConfig,
+                           const char *       aLabel,
+                           const char *       aName,
+                           void *             aContext);
     otError     AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
     void        FreeQuery(Query &aQuery);
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
@@ -549,6 +680,7 @@ private:
     Ip6::Udp::Socket mSocket;
     QueryList        mQueries;
     TimerMilli       mTimer;
+    QueryConfig      mDefaultConfig;
 };
 
 } // namespace Dns

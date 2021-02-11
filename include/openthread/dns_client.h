@@ -55,9 +55,65 @@ extern "C" {
  *
  */
 
-#define OT_DNS_DEFAULT_SERVER_PORT 53 ///< The default DNS Server port.
+/**
+ * This enumeration type represents the "Recursion Desired" (RD) flag in an `otDnsQueryConfig`.
+ *
+ */
+typedef enum
+{
+    OT_DNS_FLAG_UNSPECIFIED       = 0, ///< Indicates the flag is not specified.
+    OT_DNS_FLAG_RECURSION_DESIRED = 1, ///< Indicates DNS name server can resolve the query recursively.
+    OT_DNS_FLAG_NO_RECURSION      = 2, ///< Indicates DNS name server can not resolve the query recursively.
+} otDnsRecursionFlag;
 
-#define OT_DNS_DEFAULT_SERVER_IP "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
+/**
+ * This structure represents a DNS query configuration.
+ *
+ * Any of the fields in this structure can be set to zero to indicate that it is not specified. How the unspecified
+ * fields are treated is determined by the function which uses the instance of `otDnsQueryConfig`.
+ *
+ */
+typedef struct otDnsQueryConfig
+{
+    otSockAddr         mServerSockAddr;  ///< Server address (IPv6 address/port). All zero or zero port for unspecified.
+    uint32_t           mResponseTimeout; ///< Wait time (in msec) to rx response. Zero indicates unspecified value.
+    uint8_t            mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
+    otDnsRecursionFlag mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
+} otDnsQueryConfig;
+
+/**
+ * This function gets the current default query config used by DNS client.
+ *
+ * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
+ * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, `_DEFAULT_RESPONSE_TIMEOUT`, etc.
+ * (see `config/dns_clinet.h` for all related config options).
+ *
+ * @param[in]  aInstance        A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to the current default config being used by DNS client.
+ *
+ */
+const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance);
+
+/**
+ * This function sets the default query config on DNS client.
+ *
+ * @note Any ongoing query will continue to use the config from when it was started. The new default config will be
+ * used for any future DNS queries.
+ *
+ * The @p aConfig can be NULL. In this case the default config will be set to the defaults from OT config options
+ * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}`. This resets the default query config back to to the config when the
+ * OpenThread stack starts.
+ *
+ * In a non-NULL @p aConfig, caller can choose to leave some of the fields in `otDnsQueryConfig` instance unspecified
+ * (value zero). The unspecified fields are replaced by the corresponding OT config option definitions
+ * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aConfig     A pointer to the new query config to use as default.
+ *
+ */
+void otDnsClientSetDefaultConfig(otInstance *aInstance, const otDnsQueryConfig *aConfig);
 
 /**
  * This type is an opaque representation of a response to an address resolution DNS query.
@@ -110,23 +166,25 @@ typedef void (*otDnsAddressCallback)(otError aError, const otDnsAddressResponse 
 /**
  * This function sends an address resolution DNS query for AAAA (IPv6) record(s) for a given host name.
  *
+ * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
+ * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
+ * unspecified fields are then replaced by the values from the default config.
+ *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aServerSockAddr  A pointer to the server socket address.
  * @param[in]  aHostName        The host name for which to query the address (MUST NOT be NULL).
- * @param[in]  aNoRecursion     Indicates whether name server can resolve the query recursively or not.
  * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
  * @param[in]  aContext         A pointer to arbitrary context information.
+ * @param[in]  aConfig          A pointer to the config to use for this query.
  *
  * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the status.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
  *
  */
-otError otDnsClientResolveAddress(otInstance *         aInstance,
-                                  const otSockAddr *   aServerSockAddr,
-                                  const char *         aHostName,
-                                  bool                 aNoRecursion,
-                                  otDnsAddressCallback aCallback,
-                                  void *               aContext);
+otError otDnsClientResolveAddress(otInstance *            aInstance,
+                                  const char *            aHostName,
+                                  otDnsAddressCallback    aCallback,
+                                  void *                  aContext,
+                                  const otDnsQueryConfig *aConfig);
 
 /**
  * This function gets the full host name associated with an address resolution DNS response.
@@ -220,21 +278,25 @@ typedef struct otDnsServiceInfo
  *
  * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
  *
+ * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
+ * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
+ * unspecified fields are then replaced by the values from the default config.
+ *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aServerSockAddr  A pointer to the server socket address.
  * @param[in]  aServiceName     The service name to query for (MUST NOT be NULL).
  * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
  * @param[in]  aContext         A pointer to arbitrary context information.
+ * @param[in]  aConfig          A pointer to the config to use for this query.
  *
  * @retval OT_ERROR_NONE        Query sent successfully. @p aCallback will be invoked to report the status.
  * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
  *
  */
-otError otDnsClientBrowse(otInstance *        aInstance,
-                          const otSockAddr *  aServerSockAddr,
-                          const char *        aServiceName,
-                          otDnsBrowseCallback aCallback,
-                          void *              aContext);
+otError otDnsClientBrowse(otInstance *            aInstance,
+                          const char *            aServiceName,
+                          otDnsBrowseCallback     aCallback,
+                          void *                  aContext,
+                          const otDnsQueryConfig *aConfig);
 
 /**
  * This function gets the service name associated with a DNS browse (service instance enumeration) response.
@@ -368,23 +430,27 @@ typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse 
  *
  * This function is available when `OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE` is enabled.
  *
+ * The @p aConfig can be NULL. In this case the default config (from `otDnsClientGetDefaultConfig()`) will be used as
+ * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
+ * unspecified fields are then replaced by the values from the default config.
+ *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aServerSockAddr  A pointer to the server socket address.
  * @param[in]  aInstanceLabel   The service instance label.
  * @param[in]  aServiceName     The service name (together with @p aInstanceLabel form full instance name).
  * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
  * @param[in]  aContext         A pointer to arbitrary context information.
+ * @param[in]  aConfig          A pointer to the config to use for this query.
  *
  * @retval OT_ERROR_NONE        Query sent successfully. @p aCallback will be invoked to report the status.
  * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
  *
  */
-otError otDnsClientResolveService(otInstance *         aInstance,
-                                  const otSockAddr *   aServerSockAddr,
-                                  const char *         aInstanceLabel,
-                                  const char *         aServiceName,
-                                  otDnsServiceCallback aCallback,
-                                  void *               aContext);
+otError otDnsClientResolveService(otInstance *            aInstance,
+                                  const char *            aInstanceLabel,
+                                  const char *            aServiceName,
+                                  otDnsServiceCallback    aCallback,
+                                  void *                  aContext,
+                                  const otDnsQueryConfig *aConfig);
 
 /**
  * This function gets the service instance name associated with a DNS service instance resolution response.
