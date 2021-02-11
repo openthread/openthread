@@ -323,11 +323,8 @@ public:
      *
      * @param[out]  aConfig      The Primary Backbone Router configuration.
      *
-     * @retval OT_ERROR_NONE       Successfully got the Primary Backbone Router configuration.
-     * @retval OT_ERROR_NOT_FOUND  No Backbone Router Service in the Thread Network.
-     *
      */
-    otError GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const;
+    void GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const;
 #endif
 
     /**
