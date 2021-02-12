@@ -167,4 +167,14 @@
 #define OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_UART_TX_FLUSH_TIMEOUT_MS
+ *
+ * Maximum time to wait for a flush to complete in otPlatUartFlush().
+ *
+ * Value is in milliseconds
+ *
+ */
+#define OPENTHREAD_CONFIG_UART_TX_FLUSH_TIMEOUT_MS 500
+
 #endif // OPENTHREAD_CORE_EFR32_CONFIG_H_
