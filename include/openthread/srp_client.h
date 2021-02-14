@@ -130,27 +130,27 @@ typedef struct otSrpClientService
  *
  * If the server rejects an SRP update request, the DNS response code (RFC 2136) is mapped to the following errors:
  *
- *    (0)  NOERROR   Success (no error condition)                    -> OT_ERROR_NONE
- *    (1)  FORMERR   Server unable to interpret due to format error  -> OT_ERROR_PARSE
- *    (2)  SERVFAIL  Server encountered an internal failure          -> OT_ERROR_FAILED
- *    (3)  NXDOMAIN  Name that ought to exist, does not exist        -> OT_ERROR_NOT_FOUND
- *    (4)  NOTIMP    Server does not support the query type (OpCode) -> OT_ERROR_NOT_IMPLEMENTED
- *    (5)  REFUSED   Server refused for policy/security reasons      -> OT_ERROR_SECURITY
- *    (6)  YXDOMAIN  Some name that ought not to exist, does exist   -> OT_ERROR_DUPLICATED
- *    (7)  YXRRSET   Some RRset that ought not to exist, does exist  -> OT_ERROR_DUPLICATED
- *    (8)  NXRRSET   Some RRset that ought to exist, does not exist  -> OT_ERROR_NOT_FOUND
- *    (9)  NOTAUTH   Service is not authoritative for zone           -> OT_ERROR_SECURITY
- *    (10) NOTZONE   A name is not in the zone                       -> OT_ERROR_PARSE
- *    (20) BADNAME   Bad name                                        -> OT_ERROR_PARSE
- *    (21) BADALG    Bad algorithm                                   -> OT_ERROR_SECURITY
- *    (22) BADTRUN   Bad truncation                                  -> OT_ERROR_PARSE
- *    Other response codes                                           -> OT_ERROR_FAILED
+ *  - (0)  NOERROR   Success (no error condition)                    -> OT_ERROR_NONE
+ *  - (1)  FORMERR   Server unable to interpret due to format error  -> OT_ERROR_PARSE
+ *  - (2)  SERVFAIL  Server encountered an internal failure          -> OT_ERROR_FAILED
+ *  - (3)  NXDOMAIN  Name that ought to exist, does not exist        -> OT_ERROR_NOT_FOUND
+ *  - (4)  NOTIMP    Server does not support the query type (OpCode) -> OT_ERROR_NOT_IMPLEMENTED
+ *  - (5)  REFUSED   Server refused for policy/security reasons      -> OT_ERROR_SECURITY
+ *  - (6)  YXDOMAIN  Some name that ought not to exist, does exist   -> OT_ERROR_DUPLICATED
+ *  - (7)  YXRRSET   Some RRset that ought not to exist, does exist  -> OT_ERROR_DUPLICATED
+ *  - (8)  NXRRSET   Some RRset that ought to exist, does not exist  -> OT_ERROR_NOT_FOUND
+ *  - (9)  NOTAUTH   Service is not authoritative for zone           -> OT_ERROR_SECURITY
+ *  - (10) NOTZONE   A name is not in the zone                       -> OT_ERROR_PARSE
+ *  - (20) BADNAME   Bad name                                        -> OT_ERROR_PARSE
+ *  - (21) BADALG    Bad algorithm                                   -> OT_ERROR_SECURITY
+ *  - (22) BADTRUN   Bad truncation                                  -> OT_ERROR_PARSE
+ *  - Other response codes                                           -> OT_ERROR_FAILED
  *
  * The following errors are also possible:
  *
- *    OT_ERROR_RESPONSE_TIMEOUT : Timed out waiting for response from server (client would continue to retry).
- *    OT_ERROR_INVALID_ARGS     : The provided service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
- *    OT_ERROR_NO_BUFS          : Insufficient buffer to prepare or send the update message.
+ *  - OT_ERROR_RESPONSE_TIMEOUT : Timed out waiting for response from server (client would continue to retry).
+ *  - OT_ERROR_INVALID_ARGS     : The provided service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
+ *  - OT_ERROR_NO_BUFS          : Insufficient buffer to prepare or send the update message.
  *
  * Note that in case of any failure, the client continues the operation, i.e. it prepares and (re)transmits the SRP
  * update message to the server, after some wait interval. The retry wait interval starts from the minimum value and

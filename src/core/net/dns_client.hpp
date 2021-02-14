@@ -260,12 +260,12 @@ public:
          * enumerated (note that it is a SHOULD and not a MUST requirement). This method tries to retrieve this info
          * for a given service instance.
          *
-         * If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned.
-         * If a matching SRV record is found, @p aServiceInfo is updated returning `OT_ERROR_NONE`.
-         * If no matching TXT record is found, `mTxtDataSize` in @p aServiceInfo is set to zero.
-         * If no matching AAAA record is found, `mHostAddress is set to all zero or unspecified address.
-         * If there are multiple AAAA records for the host name `mHostAddress` is set to the first one.
-         * The other addresses can be retrieved using `GetHostAddress()` method.
+         * - If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned.
+         * - If a matching SRV record is found, @p aServiceInfo is updated returning `OT_ERROR_NONE`.
+         * - If no matching TXT record is found, `mTxtDataSize` in @p aServiceInfo is set to zero.
+         * - If no matching AAAA record is found, `mHostAddress is set to all zero or unspecified address.
+         * - If there are multiple AAAA records for the host name `mHostAddress` is set to the first one. The other
+         *   addresses can be retrieved using `GetHostAddress()` method.
          *
          * @param[in]  aInstanceLabel     The service instance label (MUST NOT be `nullptr`).
          * @param[out] aServiceInfo       A `ServiceInfo` to output the service instance information.
@@ -344,12 +344,12 @@ public:
          *
          * This method MUST only be used from `ServiceCallback`.
          *
-         * If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned.
-         * If a matching SRV record is found, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
-         * If no matching TXT record is found, `mTxtDataSize` in @p aServiceInfo is set to zero.
-         * If no matching AAAA record is found, `mHostAddress is set to all zero or unspecified address.
-         * If there are multiple AAAA records for the host name, `mHostAddress` is set to the first one.
-         * The other addresses can be retrieved using `GetHostAddress()` method.
+         * - If no matching SRV record is found, `OT_ERROR_NOT_FOUND` is returned.
+         * - If a matching SRV record is found, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
+         * - If no matching TXT record is found, `mTxtDataSize` in @p aServiceInfo is set to zero.
+         * - If no matching AAAA record is found, `mHostAddress is set to all zero or unspecified address.
+         * - If there are multiple AAAA records for the host name, `mHostAddress` is set to the first one. The other
+         *   addresses can be retrieved using `GetHostAddress()` method.
          *
          * @param[out] aServiceInfo       A `ServiceInfo` to output the service instance information
          *
