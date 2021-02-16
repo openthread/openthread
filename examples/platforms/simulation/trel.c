@@ -46,34 +46,63 @@
 
 #define TREL_MAX_PENDING_TX 5
 
-typedef struct PendingTx
+OT_TOOL_PACKED_BEGIN
+struct PacketHeader
 {
-    uint8_t      mPacketBuffer[TREL_MAX_PACKET_SIZE];
-    uint16_t     mPacketLength;
+    otIp6Address mSrcIp6Address;
     otIp6Address mDestIp6Address;
-} PendingTx;
+    uint16_t     mPort;
+} OT_TOOL_PACKED_END;
 
-static uint8_t   sNumPendingTx = 0;
-static PendingTx sPendingTx[TREL_MAX_PENDING_TX];
+typedef struct PacketHeader PacketHeader;
 
-static int      sTxFd       = -1;
-static int      sRxFd       = -1;
-static uint16_t sPortOffset = 0;
-static bool     sEnabled    = true;
+OT_TOOL_PACKED_BEGIN
+struct Packet
+{
+    PacketHeader mHeader;
+    uint8_t      mPayload[TREL_MAX_PACKET_SIZE];
+    uint16_t     mLength; // Total packet length including the header.
+} OT_TOOL_PACKED_END;
+
+typedef struct Packet Packet;
+
+static uint8_t sNumPendingTx = 0;
+static Packet  sPendingTx[TREL_MAX_PENDING_TX];
+
+static int          sTxFd       = -1;
+static int          sRxFd       = -1;
+static uint16_t     sPortOffset = 0;
+static bool         sEnabled    = true;
+static otIp6Address sUnicastAddress;
+static otIp6Address sMulticastAddress;
+static uint16_t     sUdpPort;
 
 #if DEBUG_LOG
-static void dumpBuffer(const uint8_t *aBuffer, uint16_t aLength)
+static void dumpBuffer(const void *aBuffer, uint16_t aLength)
 {
+    const uint8_t *buffer = (const uint8_t *)aBuffer;
     fprintf(stderr, "[ (len:%d) ", aLength);
 
     while (aLength--)
     {
-        fprintf(stderr, "%02x ", *aBuffer++);
+        fprintf(stderr, "%02x ", *buffer++);
     }
 
     fprintf(stderr, "]");
 }
+
+static const char *ip6AddrToString(const void *aAddress)
+{
+    static char string[INET6_ADDRSTRLEN];
+
+    return inet_ntop(AF_INET6, aAddress, string, sizeof(string));
+}
 #endif
+
+static bool ip6AddrsAreEqual(const otIp6Address *aFirst, const otIp6Address *aSecond)
+{
+    return (memcmp(aFirst, aSecond, sizeof(otIp6Address)) == 0);
+}
 
 static void initFds(void)
 {
@@ -148,7 +177,7 @@ static void deinitFds(void)
     }
 }
 
-void sendPendingTxPackets(void)
+static void sendPendingTxPackets(void)
 {
     ssize_t            rval;
     struct sockaddr_in sockaddr;
@@ -163,12 +192,11 @@ void sendPendingTxPackets(void)
     {
 #if DEBUG_LOG
         fprintf(stderr, "\n[trel-udp] Sending packet (num:%d)", i);
-        dumpBuffer(sPendingTx[i].mPacketBuffer, sPendingTx[i].mPacketLength);
+        dumpBuffer(&sPendingTx[i], sPendingTx[i].mLength);
         fprintf(stderr, "\n");
 #endif
 
-        rval = sendto(sTxFd, sPendingTx[i].mPacketBuffer, sPendingTx[i].mPacketLength, 0, (struct sockaddr *)&sockaddr,
-                      sizeof(sockaddr));
+        rval = sendto(sTxFd, &sPendingTx[i], sPendingTx[i].mLength, 0, (struct sockaddr *)&sockaddr, sizeof(sockaddr));
 
         if (rval < 0)
         {
@@ -183,23 +211,41 @@ void sendPendingTxPackets(void)
 //---------------------------------------------------------------------------------------------------------------------
 // otPlatTrel
 
-void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddress, uint16_t aPort)
+void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddress, uint16_t aUdpPort)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aUnicastAddress);
-    OT_UNUSED_VARIABLE(aPort);
+
+    sUnicastAddress = *aUnicastAddress;
+    sUdpPort        = aUdpPort;
+
+#if DEBUG_LOG
+    fprintf(stderr, "\n[trel-udp6] otPlatTrelUdp6Init(aUnicastAddress:%s, aUdpPort:%d)\n",
+            ip6AddrToString(aUnicastAddress), aUdpPort);
+#endif
 }
 
 void otPlatTrelUdp6UpdateAddress(otInstance *aInstance, const otIp6Address *aUnicastAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aUnicastAddress);
+
+    sUnicastAddress = *aUnicastAddress;
+
+#if DEBUG_LOG
+    fprintf(stderr, "\n[trel-udp6] otPlatTrelUdp6UpdateAddress(aUnicastAddress:%s)\n",
+            ip6AddrToString(aUnicastAddress));
+#endif
 }
 
 void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aMulticastAddress)
 {
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aMulticastAddress);
+
+    sMulticastAddress = *aMulticastAddress;
+
+#if DEBUG_LOG
+    fprintf(stderr, "\n[trel-udp6] otPlatTrelUdp6SubscribeMulticastAddress(aMulticastAddress:%s)\n",
+            ip6AddrToString(aMulticastAddress));
+#endif
 }
 
 otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
@@ -208,16 +254,20 @@ otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
                              const otIp6Address *aDestAddress)
 {
     otError error = OT_ERROR_NONE;
+    Packet *packet;
 
     OT_UNUSED_VARIABLE(aInstance);
 
     otEXPECT(sEnabled);
     otEXPECT_ACTION(sNumPendingTx < TREL_MAX_PENDING_TX, error = OT_ERROR_ABORT);
+    otEXPECT_ACTION(aLength <= TREL_MAX_PACKET_SIZE, error = OT_ERROR_ABORT);
 
-    memcpy(sPendingTx[sNumPendingTx].mPacketBuffer, aBuffer, aLength);
-    sPendingTx[sNumPendingTx].mPacketLength = aLength;
-    memcpy(&sPendingTx[sNumPendingTx].mDestIp6Address, aDestAddress, sizeof(otIp6Address));
-    sNumPendingTx++;
+    packet                          = &sPendingTx[sNumPendingTx++];
+    packet->mHeader.mSrcIp6Address  = sUnicastAddress;
+    packet->mHeader.mDestIp6Address = *aDestAddress;
+    packet->mHeader.mPort           = sUdpPort;
+    packet->mLength                 = aLength + sizeof(PacketHeader);
+    memcpy(packet->mPayload, aBuffer, aLength);
 
 exit:
     return error;
@@ -306,11 +356,10 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
 
     if (FD_ISSET(sRxFd, aReadFdSet))
     {
-        uint8_t  rxPacketBuffer[TREL_MAX_PACKET_SIZE];
-        uint16_t rxPacketLength;
-        ssize_t  rval;
+        Packet  rxPacket;
+        ssize_t rval;
 
-        rval = recvfrom(sRxFd, (char *)rxPacketBuffer, sizeof(rxPacketBuffer), 0, NULL, NULL);
+        rval = recvfrom(sRxFd, (char *)&rxPacket, sizeof(rxPacket) - sizeof(rxPacket.mLength), 0, NULL, NULL);
 
         if (rval < 0)
         {
@@ -318,16 +367,21 @@ void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const 
             exit(EXIT_FAILURE);
         }
 
-        rxPacketLength = (uint16_t)(rval);
+        rxPacket.mLength = (uint16_t)(rval);
 
 #if DEBUG_LOG
         fprintf(stderr, "\n[trel-udp6] recvdPacket()");
-        dumpBuffer(rxPacketBuffer, rxPacketLength);
+        fprintf(stderr, " src:%s", ip6AddrToString(&rxPacket.mHeader.mSrcIp6Address));
+        fprintf(stderr, " dst:%s", ip6AddrToString(&rxPacket.mHeader.mDestIp6Address));
+        fprintf(stderr, " port:%u ", rxPacket.mHeader.mPort);
+        dumpBuffer(&rxPacket, rxPacket.mLength);
         fprintf(stderr, "\n");
 #endif
-        if (sEnabled)
+        if (sEnabled && (rxPacket.mHeader.mPort == sUdpPort) &&
+            (ip6AddrsAreEqual(&rxPacket.mHeader.mDestIp6Address, &sUnicastAddress) ||
+             ip6AddrsAreEqual(&rxPacket.mHeader.mDestIp6Address, &sMulticastAddress)))
         {
-            otPlatTrelUdp6HandleReceived(aInstance, rxPacketBuffer, rxPacketLength);
+            otPlatTrelUdp6HandleReceived(aInstance, rxPacket.mPayload, rxPacket.mLength - sizeof(PacketHeader));
         }
     }
 }
