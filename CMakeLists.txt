@@ -194,4 +194,8 @@ endif()
 
 add_subdirectory(tests)
 
-add_custom_target(print-ot-config ALL COMMAND echo -e "$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,\"\\n\">")
+add_custom_target(print-ot-config ALL
+                  COMMAND ${CMAKE_COMMAND}
+                  -DLIST="$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>"
+                  -P ${PROJECT_SOURCE_DIR}/etc/cmake/print.cmake
+)
