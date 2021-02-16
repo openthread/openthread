@@ -31,19 +31,23 @@
  *   This file implements the OpenThread platform abstraction for UART communication.
  *
  */
-
 #include <stddef.h>
 #include <string.h>
 
 #include "openthread-system.h"
+#include <openthread-core-config.h>
 #include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
 
+#include "ecode.h"
 #include "em_core.h"
+#include "sl_sleeptimer.h"
+#include "sl_status.h"
 #include "uartdrv.h"
 
 #include "hal-config.h"
+#include "platform-efr32.h"
 #include "sl_uartdrv_usart_vcom_config.h"
 
 #define HELPER1(x) USART##x##_RX_IRQn
@@ -103,11 +107,10 @@ static UARTDRV_Handle_t     sUartHandle = &sUartHandleData;
 // In order to reduce the probability of data loss due to disabled interrupts, we use
 // two duplicate receive buffers so we can always have one "active" receive request.
 #define RECEIVE_BUFFER_SIZE 128
-static uint8_t           sReceiveBuffer1[RECEIVE_BUFFER_SIZE];
-static uint8_t           sReceiveBuffer2[RECEIVE_BUFFER_SIZE];
-static const uint8_t *   sTransmitBuffer = NULL;
-static volatile uint16_t sTransmitLength = 0;
-static uint8_t           lastCount       = 0;
+static uint8_t       sReceiveBuffer1[RECEIVE_BUFFER_SIZE];
+static uint8_t       sReceiveBuffer2[RECEIVE_BUFFER_SIZE];
+static uint8_t       lastCount           = 0;
+static volatile bool sCheckForTxComplete = false;
 
 typedef struct ReceiveFifo_t
 {
@@ -122,6 +125,7 @@ typedef struct ReceiveFifo_t
 static ReceiveFifo_t sReceiveFifo;
 
 static void processReceive(void);
+static void processTransmit(void);
 
 static void receiveDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aData, UARTDRV_Count_t aCount)
 {
@@ -146,7 +150,9 @@ static void transmitDone(UARTDRV_Handle_t aHandle, Ecode_t aStatus, uint8_t *aDa
     OT_UNUSED_VARIABLE(aData);
     OT_UNUSED_VARIABLE(aCount);
 
-    sTransmitLength = 0;
+    // This value will be used later in processTransmit() to call otPlatUartSendDone()
+    sCheckForTxComplete = true;
+
     otSysEventSignalPending();
 }
 
@@ -184,16 +190,67 @@ static void processReceive(void)
     }
 }
 
+static void flushTimeoutAlarmCallback(sl_sleeptimer_timer_handle_t *aHandle, void *aData)
+{
+    OT_UNUSED_VARIABLE(aHandle);
+    OT_UNUSED_VARIABLE(aData);
+    bool *flushTimedOut = (bool *)aData;
+    *flushTimedOut      = true;
+}
+
 otError otPlatUartFlush(void)
 {
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError                      error         = OT_ERROR_NONE;
+    sl_status_t                  status        = SL_STATUS_OK;
+    volatile bool                flushTimedOut = false;
+    sl_sleeptimer_timer_handle_t flushTimer;
+
+    // Start flush timeout timer
+    status = sl_sleeptimer_start_timer_ms(&flushTimer, OPENTHREAD_CONFIG_EFR32_UART_TX_FLUSH_TIMEOUT_MS,
+                                          flushTimeoutAlarmCallback, NULL, 0,
+                                          SL_SLEEPTIMER_NO_HIGH_PRECISION_HF_CLOCKS_REQUIRED_FLAG);
+    otEXPECT_ACTION(status == SL_STATUS_OK, error = OT_ERROR_FAILED);
+
+    // Block until DMA has finished transmitting every buffer in sUartTxQueue and becomes idle
+    uint8_t transmitQueueDepth = 0;
+    bool    uartFullyFlushed   = false;
+    bool    uartIdle           = false;
+
+    do
+    {
+        // Check both peripheral status and queue depth
+        transmitQueueDepth = UARTDRV_GetTransmitDepth(sUartHandle);
+        uartIdle           = UARTDRV_GetPeripheralStatus(sUartHandle) & (UARTDRV_STATUS_TXIDLE | UARTDRV_STATUS_TXC);
+        uartFullyFlushed   = uartIdle && (transmitQueueDepth == 0);
+    } while (!uartFullyFlushed && !flushTimedOut);
+
+    sl_sleeptimer_stop_timer(&flushTimer);
+
+    if (flushTimedOut)
+    {
+        // Abort all transmits
+        UARTDRV_Abort(sUartHandle, uartdrvAbortTransmit);
+    }
+
+exit:
+    return error;
 }
 
 static void processTransmit(void)
 {
-    if (sTransmitBuffer != NULL && sTransmitLength == 0)
+    // NOTE: This check needs to be done in here and cannot be done in transmitDone because the transmit may not be
+    // fully complete when the transmitDone callback is called.
+    if (!sCheckForTxComplete)
     {
-        sTransmitBuffer = NULL;
+        return;
+    }
+
+    bool    queueEmpty = UARTDRV_GetPeripheralStatus(sUartHandle) & (UARTDRV_STATUS_TXIDLE | UARTDRV_STATUS_TXC);
+    uint8_t transmitQueueDepth = UARTDRV_GetTransmitDepth(sUartHandle);
+
+    if (transmitQueueDepth == 0 && queueEmpty)
+    {
+        sCheckForTxComplete = false;
         otPlatUartSendDone();
     }
 }
@@ -232,14 +289,18 @@ otError otPlatUartDisable(void)
 
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    otError error = OT_ERROR_NONE;
+    otError error  = OT_ERROR_NONE;
+    Ecode_t status = ECODE_EMDRV_UARTDRV_OK;
 
-    otEXPECT_ACTION(sTransmitBuffer == NULL, error = OT_ERROR_BUSY);
+    // Ensure that no ongoing transmits have started finishing.
+    // This prevents queued buffers from being modified before they are transmitted
+    if (sCheckForTxComplete)
+    {
+        otPlatUartFlush();
+    }
 
-    sTransmitBuffer = aBuf;
-    sTransmitLength = aBufLength;
-
-    UARTDRV_Transmit(sUartHandle, (uint8_t *)sTransmitBuffer, sTransmitLength, transmitDone);
+    status = UARTDRV_Transmit(sUartHandle, (uint8_t *)aBuf, aBufLength, transmitDone);
+    otEXPECT_ACTION(status == ECODE_EMDRV_UARTDRV_OK, error = OT_ERROR_FAILED);
 
 exit:
     return error;
