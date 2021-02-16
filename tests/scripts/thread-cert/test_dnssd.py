@@ -88,11 +88,11 @@ class TestDnssd(thread_cert.TestCase):
         self._config_srp_client_services(CLIENT2, 'ins2', 'host2', 22222, 2, 2, client2_addrs)
 
         # Test AAAA query using DNS client
-        ip, ttl = self.nodes[CLIENT1].dns_resolve(f"host1.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
-        self.assertIn(ipaddress.IPv6Address(ip), map(ipaddress.IPv6Address, client1_addrs))
+        response = self.nodes[CLIENT1].dns_resolve(f"host1.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
+        self.assertIn(ipaddress.IPv6Address(response[0][0]), map(ipaddress.IPv6Address, client1_addrs))
 
-        ip, ttl = self.nodes[CLIENT1].dns_resolve(f"host2.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
-        self.assertIn(ipaddress.IPv6Address(ip), map(ipaddress.IPv6Address, client2_addrs))
+        response = self.nodes[CLIENT1].dns_resolve(f"host2.{DOMAIN}", self.nodes[SERVER].get_mleid(), 53)
+        self.assertIn(ipaddress.IPv6Address(response[0][0]), map(ipaddress.IPv6Address, client2_addrs))
 
         # TODO: test other query types using DNS-SD client
 

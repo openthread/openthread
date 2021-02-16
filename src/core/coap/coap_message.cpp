@@ -200,7 +200,7 @@ otError Message::AppendUintOption(uint16_t aNumber, uint32_t aValue)
 
     Encoding::BigEndian::WriteUint32(aValue, buffer);
 
-    while (value[0] == 0 && length > 0)
+    while ((length > 0) && (value[0] == 0))
     {
         value++;
         length--;

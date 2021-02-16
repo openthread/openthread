@@ -182,7 +182,7 @@ void ThreadNetif::Down(void)
     VerifyOrExit(mIsUp);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    IgnoreError(Get<Dns::Client>().Stop());
+    Get<Dns::Client>().Stop();
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     IgnoreError(Get<Sntp::Client>().Stop());
