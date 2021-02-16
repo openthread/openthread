@@ -424,6 +424,10 @@ private:
                                    uint8_t             aFailedAddressNum);
 #endif
     otError ProcessMode(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMultiRadio(uint8_t aArgsLength, char *aArgsp[]);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
+#endif
 #if OPENTHREAD_FTD
     otError ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -711,6 +715,7 @@ private:
         {"mlr", &Interpreter::ProcessMlr},
 #endif
         {"mode", &Interpreter::ProcessMode},
+        {"multiradio", &Interpreter::ProcessMultiRadio},
 #if OPENTHREAD_FTD
         {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
