@@ -207,7 +207,7 @@ otError otPlatUartFlush(void)
 
     // Start flush timeout timer
     status =
-        sl_sleeptimer_start_timer_ms(&flushTimer, OPENTHREAD_CONFIG_UART_TX_FLUSH_TIMEOUT_MS, flushTimeoutAlarmCallback,
+        sl_sleeptimer_start_timer_ms(&flushTimer, OPENTHREAD_CONFIG_EFR32_UART_TX_FLUSH_TIMEOUT_MS, flushTimeoutAlarmCallback,
                                      NULL, 0, SL_SLEEPTIMER_NO_HIGH_PRECISION_HF_CLOCKS_REQUIRED_FLAG);
     otEXPECT_ACTION(status == SL_STATUS_OK, error = OT_ERROR_FAILED);
 

@@ -168,13 +168,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_UART_TX_FLUSH_TIMEOUT_MS
+ * @def OPENTHREAD_CONFIG_EFR32_UART_TX_FLUSH_TIMEOUT_MS
  *
  * Maximum time to wait for a flush to complete in otPlatUartFlush().
  *
  * Value is in milliseconds
  *
  */
-#define OPENTHREAD_CONFIG_UART_TX_FLUSH_TIMEOUT_MS 500
+#define OPENTHREAD_CONFIG_EFR32_UART_TX_FLUSH_TIMEOUT_MS 500
 
 #endif // OPENTHREAD_CORE_EFR32_CONFIG_H_
