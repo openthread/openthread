@@ -943,7 +943,8 @@ static inline otError otCoapSendRequestBlockWise(otInstance *                aIn
                                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    return otCoapSendRequestBlockWiseWithParameters(aInstance, aMessage, aMessageInfo, aHandler, aContext, nullptr,
+    // NOLINTNEXTLINE(modernize-use-nullptr)
+    return otCoapSendRequestBlockWiseWithParameters(aInstance, aMessage, aMessageInfo, aHandler, aContext, NULL,
                                                     aTransmitHook, aReceiveHook);
 }
 
@@ -1104,8 +1105,8 @@ static inline otError otCoapSendResponseBlockWise(otInstance *                aI
                                                   void *                      aContext,
                                                   otCoapBlockwiseTransmitHook aTransmitHook)
 {
-    return otCoapSendResponseBlockWiseWithParameters(aInstance, aMessage, aMessageInfo, nullptr, aContext,
-                                                     aTransmitHook);
+    // NOLINTNEXTLINE(modernize-use-nullptr)
+    return otCoapSendResponseBlockWiseWithParameters(aInstance, aMessage, aMessageInfo, NULL, aContext, aTransmitHook);
 }
 
 /**
