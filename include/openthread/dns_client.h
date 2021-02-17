@@ -88,21 +88,21 @@ typedef struct otDnsAddressResponse otDnsAddressResponse;
  *
  * If the server rejects the address resolution request the error code from server is mapped as follow:
  *
- *    (0)  NOERROR   Success (no error condition)                    -> OT_ERROR_NONE
- *    (1)  FORMERR   Server unable to interpret due to format error  -> OT_ERROR_PARSE
- *    (2)  SERVFAIL  Server encountered an internal failure          -> OT_ERROR_FAILED
- *    (3)  NXDOMAIN  Name that ought to exist, does not exist        -> OT_ERROR_NOT_FOUND
- *    (4)  NOTIMP    Server does not support the query type (OpCode) -> OT_ERROR_NOT_IMPLEMENTED
- *    (5)  REFUSED   Server refused for policy/security reasons      -> OT_ERROR_SECURITY
- *    (6)  YXDOMAIN  Some name that ought not to exist, does exist   -> OT_ERROR_DUPLICATED
- *    (7)  YXRRSET   Some RRset that ought not to exist, does exist  -> OT_ERROR_DUPLICATED
- *    (8)  NXRRSET   Some RRset that ought to exist, does not exist  -> OT_ERROR_NOT_FOUND
- *    (9)  NOTAUTH   Service is not authoritative for zone           -> OT_ERROR_SECURITY
- *    (10) NOTZONE   A name is not in the zone                       -> OT_ERROR_PARSE
- *    (20) BADNAME   Bad name                                        -> OT_ERROR_PARSE
- *    (21) BADALG    Bad algorithm                                   -> OT_ERROR_SECURITY
- *    (22) BADTRUN   Bad truncation                                  -> OT_ERROR_PARSE
- *    Other response codes                                           -> OT_ERROR_FAILED
+ *  - (0)  NOERROR   Success (no error condition)                    -> OT_ERROR_NONE
+ *  - (1)  FORMERR   Server unable to interpret due to format error  -> OT_ERROR_PARSE
+ *  - (2)  SERVFAIL  Server encountered an internal failure          -> OT_ERROR_FAILED
+ *  - (3)  NXDOMAIN  Name that ought to exist, does not exist        -> OT_ERROR_NOT_FOUND
+ *  - (4)  NOTIMP    Server does not support the query type (OpCode) -> OT_ERROR_NOT_IMPLEMENTED
+ *  - (5)  REFUSED   Server refused for policy/security reasons      -> OT_ERROR_SECURITY
+ *  - (6)  YXDOMAIN  Some name that ought not to exist, does exist   -> OT_ERROR_DUPLICATED
+ *  - (7)  YXRRSET   Some RRset that ought not to exist, does exist  -> OT_ERROR_DUPLICATED
+ *  - (8)  NXRRSET   Some RRset that ought to exist, does not exist  -> OT_ERROR_NOT_FOUND
+ *  - (9)  NOTAUTH   Service is not authoritative for zone           -> OT_ERROR_SECURITY
+ *  - (10) NOTZONE   A name is not in the zone                       -> OT_ERROR_PARSE
+ *  - (20) BADNAME   Bad name                                        -> OT_ERROR_PARSE
+ *  - (21) BADALG    Bad algorithm                                   -> OT_ERROR_SECURITY
+ *  - (22) BADTRUN   Bad truncation                                  -> OT_ERROR_PARSE
+ *  - Other response codes                                           -> OT_ERROR_FAILED
  *
  */
 typedef void (*otDnsAddressCallback)(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
@@ -289,12 +289,12 @@ otError otDnsBrowseResponseGetServiceInstance(const otDnsBrowseResponse *aRespon
  * (note that it is a SHOULD and not a MUST requirement). This function tries to retrieve this info for a given service
  * instance when available.
  *
- * If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
- * If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
- * If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
- * If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
- * If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
- * other addresses can be retrieved using `otDnsBrowseResponseGetHostAddress()`.
+ * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
+ * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
+ * - If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
+ * - If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
+ * - If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
+ *   other addresses can be retrieved using `otDnsBrowseResponseGetHostAddress()`.
  *
  * @param[in]  aResponse          A pointer to the response.
  * @param[in]  aInstanceLabel     The service instance label (MUST NOT be NULL).
@@ -413,12 +413,12 @@ otError otDnsServiceResponseGetServiceName(const otDnsServiceResponse *aResponse
  *
  * This function MUST only be used from `otDnsServiceCallback`.
  *
- * If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
- * If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
- * If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
- * If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
- * If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
- * other addresses can be retrieved using `otDnsServiceResponseGetHostAddress()`.
+ * - If no matching SRV record is found in @p aResponse, `OT_ERROR_NOT_FOUND` is returned.
+ * - If a matching SRV record is found in @p aResponse, @p aServiceInfo is updated and `OT_ERROR_NONE` is returned.
+ * - If no matching TXT record is found in @p aResponse, `mTxtDataSize` in @p aServiceInfo is set to zero.
+ * - If no matching AAAA record is found in @p aResponse, `mHostAddress is set to all zero or unspecified address.
+ * - If there are multiple AAAA records for the host name in @p aResponse, `mHostAddress` is set to the first one. The
+ *   other addresses can be retrieved using `otDnsServiceResponseGetHostAddress()`.
  *
  * @param[in]  aResponse          A pointer to the response.
  * @param[out] aServiceInfo       A `ServiceInfo` to output the service instance information (MUST NOT be NULL).
