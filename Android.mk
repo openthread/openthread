@@ -158,11 +158,13 @@ endif
 LOCAL_SRC_FILES                                          := \
     src/core/api/backbone_router_api.cpp                    \
     src/core/api/backbone_router_ftd_api.cpp                \
+    src/core/api/border_agent_api.cpp                       \
     src/core/api/border_router_api.cpp                      \
     src/core/api/channel_manager_api.cpp                    \
     src/core/api/channel_monitor_api.cpp                    \
     src/core/api/child_supervision_api.cpp                  \
     src/core/api/coap_api.cpp                               \
+    src/core/api/coap_secure_api.cpp                        \
     src/core/api/commissioner_api.cpp                       \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
@@ -170,6 +172,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/dataset_updater_api.cpp                    \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
+    src/core/api/entropy_api.cpp                            \
+    src/core/api/heap_api.cpp                               \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
     src/core/api/ip6_api.cpp                                \
@@ -183,9 +187,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/multi_radio_api.cpp                        \
     src/core/api/netdata_api.cpp                            \
     src/core/api/netdiag_api.cpp                            \
+    src/core/api/network_time_api.cpp                       \
     src/core/api/random_crypto_api.cpp                      \
     src/core/api/random_noncrypto_api.cpp                   \
     src/core/api/server_api.cpp                             \
+    src/core/api/sntp_api.cpp                               \
     src/core/api/srp_client_api.cpp                         \
     src/core/api/srp_server_api.cpp                         \
     src/core/api/tasklet_api.cpp                            \
@@ -229,6 +235,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/channel_mask.cpp                           \
     src/core/mac/data_poll_handler.cpp                      \
     src/core/mac/data_poll_sender.cpp                       \
+    src/core/mac/link_raw.cpp                               \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
@@ -265,6 +272,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
+    src/core/net/sntp_client.cpp                            \
     src/core/net/socket.cpp                                 \
     src/core/net/srp_client.cpp                             \
     src/core/net/srp_server.cpp                             \
@@ -308,6 +316,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
+    src/core/thread/time_sync_service.cpp                   \
     src/core/thread/tmf.cpp                                 \
     src/core/thread/topology.cpp                            \
     src/core/thread/uri_paths.cpp                           \
@@ -315,9 +324,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
     src/core/utils/dataset_updater.cpp                      \
+    src/core/utils/flash.cpp                                \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
     src/core/utils/lookup_table.cpp                         \
+    src/core/utils/otns.cpp                                 \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \

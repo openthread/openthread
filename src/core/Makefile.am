@@ -110,6 +110,7 @@ libopenthread_mtd_a_CPPFLAGS               = \
 SOURCES_COMMON                                  = \
     api/backbone_router_api.cpp                   \
     api/backbone_router_ftd_api.cpp               \
+    api/border_agent_api.cpp                      \
     api/border_router_api.cpp                     \
     api/channel_manager_api.cpp                   \
     api/channel_monitor_api.cpp                   \

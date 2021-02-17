@@ -501,6 +501,7 @@ openthread_core_files = [
   "net/tcp.hpp",
   "net/udp6.cpp",
   "net/udp6.hpp",
+  "radio/max_power_table.hpp",
   "radio/radio.cpp",
   "radio/radio.hpp",
   "radio/radio_callbacks.cpp",
