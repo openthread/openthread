@@ -72,7 +72,7 @@ otError SrpServer::ProcessDomain(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        mInterpreter.OutputLine(otSrpServerGetDomain(mInterpreter.mInstance));
+        mInterpreter.OutputLine("%s", otSrpServerGetDomain(mInterpreter.mInstance));
     }
 
 exit:
@@ -135,7 +135,7 @@ otError SrpServer::ProcessHost(uint8_t aArgsLength, char *aArgs[])
         uint8_t             addressesNum;
         bool                isDeleted = otSrpServerHostIsDeleted(host);
 
-        mInterpreter.OutputLine(otSrpServerHostGetFullName(host));
+        mInterpreter.OutputLine("%s", otSrpServerHostGetFullName(host));
         mInterpreter.OutputLine(Interpreter::kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
         if (isDeleted)
         {
@@ -228,7 +228,7 @@ otError SrpServer::ProcessService(uint8_t aArgsLength, char *aArgs[])
         {
             bool isDeleted = otSrpServerServiceIsDeleted(service);
 
-            mInterpreter.OutputLine(otSrpServerServiceGetFullName(service));
+            mInterpreter.OutputLine("%s", otSrpServerServiceGetFullName(service));
             mInterpreter.OutputLine(Interpreter::kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
             if (isDeleted)
             {
