@@ -74,7 +74,7 @@ libopenthread_qpg6095_a_LIBADD                  = \
     $(shell find $(top_builddir)/examples/platforms/utils $(Dash)type f $(Dash)name "*.o")
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                = $(wildcard *.gcda *.gcno)
+CLEANFILES                                      = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
