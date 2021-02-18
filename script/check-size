@@ -115,6 +115,7 @@ size_nrf52840_version()
         "DIAGNOSTIC=1"
         "DISABLE_DOC=1"
         "DNS_CLIENT=1"
+        "DNSSD_SERVER=1"
         "ECDSA=1"
         "FULL_LOGS=1"
         "JAM_DETECTION=1"

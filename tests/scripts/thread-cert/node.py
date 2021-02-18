@@ -39,6 +39,7 @@ import time
 import traceback
 import unittest
 from typing import Union, Dict, Optional, List
+from zeroconf import Zeroconf, ServiceInfo
 
 import pexpect
 import pexpect.popen_spawn
@@ -217,9 +218,91 @@ class OtbrDocker:
             else:
                 return lines
 
+    def dns_dig(self, server: str, name: str, qtype: str):
+        """
+        Run dig command to query a DNS server.
+
+        Args:
+            server: the server address.
+            name: the name to query.
+            qtype: the query type (e.g. AAAA, PTR, TXT, SRV).
+
+        Returns:
+            The dig result similar as below:
+            {
+                "opcode": "QUERY",
+                "status": "NOERROR",
+                "id": "64144",
+                "QUESTION": [
+                    ('google.com.', 'IN', 'AAAA')
+                ],
+                "ANSWER": [
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::71'),
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::8a'),
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::66'),
+                    ('google.com.', 107,	'IN', 'AAAA', '2404:6800:4008:c00::8b'),
+                ],
+                "ADDITIONAL": [
+                ],
+            }
+        """
+        output = self.bash(f'dig -6 @{server} {name} {qtype}')
+
+        section = None
+        dig_result = {
+            'QUESTION': [],
+            'ANSWER': [],
+            'ADDITIONAL': [],
+        }
+
+        for line in output:
+            line = line.strip()
+
+            if line.startswith(';; ->>HEADER<<- '):
+                headers = line[len(';; ->>HEADER<<- '):].split(', ')
+                for header in headers:
+                    key, val = header.split(': ')
+                    dig_result[key] = val
+
+                continue
+
+            if line == ';; QUESTION SECTION:':
+                section = 'QUESTION'
+                continue
+            elif line == ';; ANSWER SECTION:':
+                section = 'ANSWER'
+                continue
+            elif line == ';; ADDITIONAL SECTION:':
+                section = 'ADDITIONAL'
+                continue
+            elif section and not line:
+                section = None
+                continue
+
+            if section:
+                assert line
+
+                if section == 'QUESTION':
+                    assert line.startswith(';')
+                    line = line[1:]
+
+                record = list(line.split())
+
+                if section != 'QUESTION':
+                    record[1] = int(record[1])
+                    if record[3] == 'SRV':
+                        record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
+
+                dig_result[section].append(tuple(record))
+
+        return dig_result
+
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
+
+        # Zeroconf complains that there is not enough BUFS to subscribe multicast groups.
+        self.bash('sysctl net.ipv4.igmp_max_memberships=1024')
 
 
 class OtCli:
@@ -866,8 +949,8 @@ class NodeImpl:
         self.send_command(f'srp client host clear')
         self._expect_done()
 
-    def srp_client_set_host_address(self, address):
-        self.send_command(f'srp client host address {address}')
+    def srp_client_set_host_address(self, *addrs: str):
+        self.send_command(f'srp client host address {" ".join(addrs)}')
         self._expect_done()
 
     def srp_client_get_host_address(self):
@@ -2329,6 +2412,23 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def dns_resolve(self, hostname, server=None, port=53):
+        cmd = f'dns resolve {hostname}'
+        if server is not None:
+            cmd += f' {server} {port}'
+
+        self.send_command(cmd)
+        self.simulator.go(10)
+        output = self._expect_command_output(cmd)
+        dns_resp = output[0]
+        # example output: "DNS response for host1.default.service.arpa. - fd00:db8:0:0:fd3d:d471:1e8c:b60 TTL:7190 "
+        #                 " fd00:db8:0:0:0:ff:fe00:9000 TTL:7190"
+        addrs = dns_resp.strip().split(' - ')[1].split(' ')
+        ip = [item.strip() for item in addrs[::2]]
+        ttl = [int(item.split('TTL:')[1]) for item in addrs[1::2]]
+
+        return list(zip(ip, ttl))
+
 
 class Node(NodeImpl, OtCli):
     pass
@@ -2426,6 +2526,41 @@ class LinuxHost():
         self.bash('ip -6 neigh list nud all dev %s | cut -d " " -f1 | sudo xargs -I{} ip -6 neigh delete {} dev %s' %
                   (self.ETH_DEV, self.ETH_DEV))
         self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
+
+    def discover_mdns_service(self, instance, name, host_name, timeout=2):
+        """ Discover/resolve the mDNS service on ethernet.
+
+        :param instance: the service instance name.
+        :param name: the service name in format of '<service-name>.<protocol>'.
+        :param host_name: the host name this service points to. The domain
+                          should not be included.
+        :param timeout: timeout value in seconds before returning.
+        :return: a dict of service properties or None.
+
+        The return value is a dict with the same key/values of srp_server_get_service
+        except that we don't have a `deleted` field here.
+        """
+        zeroconf = Zeroconf()
+        timeout *= 1000  # Zeroconf use timeout in milliseconds.
+        try:
+            info = ServiceInfo(type_=f'{name}.local.', name=f'{instance}.{name}.local.', server=f'{host_name}.local.')
+            while timeout > 0 and not info.parsed_addresses():
+                info.request(zeroconf, 500)
+                timeout -= 500
+            if info.parsed_addresses():
+                return {
+                    'fullname': info.name,
+                    'instance': info.get_name(),
+                    'name': name,
+                    'port': info.port,
+                    'weight': info.weight,
+                    'priority': info.priority,
+                    'host_fullname': info.server,
+                    'host': host_name,
+                    'addresses': info.parsed_addresses()
+                }
+        finally:
+            zeroconf.close()
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):

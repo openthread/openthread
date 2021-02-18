@@ -948,6 +948,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetLinkAckFrameCounter(linkFrameCounter);
     router->SetMleFrameCounter(mleFrameCounter);
     router->SetLastHeard(TimerMilli::GetNow());
+    router->SetVersion(static_cast<uint8_t>(version));
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                      DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
@@ -1789,7 +1790,7 @@ void MleRouter::HandleTimeTick(void)
             OT_UNREACHABLE_CODE(break);
         }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (child.IsCslSynchronized() &&
             TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslTimeout()))
         {
@@ -2449,7 +2450,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (child->IsCslSynchronized())
     {
         CslChannelTlv cslChannel;
@@ -2470,7 +2471,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
             child->SetCslChannel(0);
         }
     }
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     child->SetLastHeard(TimerMilli::GetNow());
 
@@ -2481,7 +2482,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
         childDidChange = true;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (child->IsRxOnWhenIdle())
         {
             // Clear CSL synchronization state

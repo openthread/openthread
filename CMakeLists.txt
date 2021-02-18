@@ -190,7 +190,12 @@ add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
 if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()
-    add_subdirectory(tests)
 endif()
 
-add_custom_target(print-ot-config ALL COMMAND echo -e "$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,\"\\n\">")
+add_subdirectory(tests)
+
+add_custom_target(print-ot-config ALL
+                  COMMAND ${CMAKE_COMMAND}
+                  -DLIST="$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>"
+                  -P ${PROJECT_SOURCE_DIR}/etc/cmake/print.cmake
+)

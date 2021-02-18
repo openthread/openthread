@@ -544,7 +544,7 @@ template <> inline DataPollHandler &Instance::Get(void)
     return mThreadNetif.mMeshForwarder.mIndirectSender.mDataPollHandler;
 }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 template <> inline CslTxScheduler &Instance::Get(void)
 {
     return mThreadNetif.mMeshForwarder.mIndirectSender.mCslTxScheduler;
@@ -680,6 +680,13 @@ template <> inline Dns::Client &Instance::Get(void)
 template <> inline Srp::Client &Instance::Get(void)
 {
     return mThreadNetif.mSrpClient;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void)
+{
+    return mThreadNetif.mDnssdServer;
 }
 #endif
 

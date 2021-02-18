@@ -80,6 +80,7 @@
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
 #include "net/dns_client.hpp"
+#include "net/dnssd_server.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
@@ -205,6 +206,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Srp::Client mSrpClient;
+#endif
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    Dns::ServiceDiscovery::Server mDnssdServer;
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;

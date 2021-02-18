@@ -1835,6 +1835,10 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         ret = "SPINEL_PROP_THREAD_CSL_CHANNEL";
         break;
 
+    case SPINEL_PROP_THREAD_DOMAIN_NAME:
+        ret = "SPINEL_PROP_THREAD_DOMAIN_NAME";
+        break;
+
     case SPINEL_PROP_MESHCOP_JOINER_STATE:
         ret = "MESHCOP_JOINER_STATE";
         break;
@@ -2689,6 +2693,10 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
 
     case SPINEL_CAP_NET_THREAD_1_1:
         ret = "NET_THREAD_1_1";
+        break;
+
+    case SPINEL_CAP_NET_THREAD_1_2:
+        ret = "NET_THREAD_1_2";
         break;
 
     case SPINEL_CAP_RCP_API_VERSION:

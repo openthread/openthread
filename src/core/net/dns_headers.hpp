@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include <openthread/dns.h>
+#include <openthread/dns_client.h>
 
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
@@ -490,9 +491,34 @@ class Name : public Clearable<Name>
 public:
     enum : uint8_t
     {
-        kMaxLabelLength   = 63,  ///< Max number of characters in a label.
-        kMaxLength        = 254, ///< Max number of characters in a name.
-        kMaxEncodedLength = 255, ///< Max length of an encoded name.
+        /**
+         * Max size (number of chars) in a name string array (includes null char at the end of string).
+         *
+         */
+        kMaxNameSize = OT_DNS_MAX_NAME_SIZE,
+
+        /**
+         * Maximum length in a name string (does not include null char at the end of string).
+         *
+         */
+        kMaxNameLength = kMaxNameSize - 1,
+
+        /**
+         * Max size (number of chars) in a label string array (includes null char at the end of the string).
+         *
+         */
+        kMaxLabelSize = OT_DNS_MAX_LABEL_SIZE,
+
+        /**
+         * Maximum length in a label string (does not include null char at the end of string).
+         *
+         */
+        kMaxLabelLength = kMaxLabelSize - 1,
+    };
+
+    enum : char
+    {
+        kLabelSeperatorChar = '.',
     };
 
     /**
@@ -648,6 +674,26 @@ public:
     static otError AppendLabel(const char *aLabel, Message &aMessage);
 
     /**
+     * This static method encodes and appends a single name label of specified length to a message.
+     *
+     * The @p aLabel is assumed to contain a single name label of given @p aLength.  @p aLabel must not contain
+     * '\0' characters within the length @p aLength. Unlike `AppendMultipleLabels()` which parses the label string
+     * and treats it as sequence of multiple (dot-separated) labels, this method always appends @p aLabel as a single
+     * whole label. This allows the label string to even contain dot '.' character, which, for example, is useful for
+     * "Service Instance Names" where <Instance> portion is a user-friendly name and can contain dot characters.
+     *
+     * @param[in] aLabel         The label string to append. MUST NOT be nullptr.
+     * @param[in] aLength        The length of the label to append.
+     * @param[in] aMessage       The message to append to.
+     *
+     * @retval OT_ERROR_NONE          Successfully encoded and appended the name label to @p aMessage.
+     * @retval OT_ERROR_INVALID_ARGS  @p aLabel is not valid (e.g., label length is not within valid range).
+     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     *
+     */
+    static otError AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
+
+    /**
      * This static method encodes and appends a sequence of name labels to a given message.
      *
      * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
@@ -668,6 +714,33 @@ public:
      *
      */
     static otError AppendMultipleLabels(const char *aLabels, Message &aMessage);
+
+    /**
+     * This static method encodes and appends a sequence of name labels within the specified length to a given message.
+     * This method stops appending labels if @p aLength characters are read or '\0' is found before @p aLength
+     * characters.
+     *
+     * This method is useful for appending a number of labels of the name instead of appending all labels.
+     *
+     * The @p aLabels must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
+     * E.g., "_http._tcp", "_http._tcp." (same as previous one), "host-1.test".
+     *
+     * This method validates that the @p aLabels is a valid name format, i.e., no empty label, and labels are
+     * `kMaxLabelLength` (63) characters or less.
+     *
+     * @note This method NEVER adds a label terminator (empty label) to the message, even in the case where @p aLabels
+     * ends with a dot character, e.g., "host-1.test." is treated same as "host-1.test".
+     *
+     * @param[in]  aLabels            A name label string. Can be nullptr (then treated as "").
+     * @param[in]  aLength            The max length of the name labels to encode.
+     * @param[in]  aMessage           The message to which to append the encoded name.
+     *
+     * @retval OT_ERROR_NONE          Successfully encoded and appended the name label(s) to @p aMessage.
+     * @retval OT_ERROR_INVALID_ARGS  Name label @p aLabels is not valid.
+     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     *
+     */
+    static otError AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage);
 
     /**
      * This static method appends a name label terminator to a message.
@@ -906,8 +979,7 @@ public:
 private:
     enum : char
     {
-        kNullChar           = '\0',
-        kLabelSeperatorChar = '.',
+        kNullChar = '\0',
     };
 
     enum : uint8_t
@@ -921,6 +993,8 @@ private:
         kLabelTypeMask    = 0xc0, // 0b1100_0000 (first two bits)
         kTextLabelType    = 0x00, // Text label type (00)
         kPointerLabelType = 0xc0, // Pointer label type - compressed name (11)
+
+        kMaxEncodedLength = 255, ///< Max length of an encoded name.
     };
 
     enum : uint16_t
@@ -955,8 +1029,6 @@ private:
         uint16_t       mNextLabelOffset;  // Offset in `mMessage` to the start of the next label.
         uint16_t       mNameEndOffset;    // Offset in `mMessage` to the byte after the end of domain name field.
     };
-
-    static otError AppendLabel(const char *aLabel, uint8_t aLabelLength, Message &aMessage);
 
     Name(const char *aString, const Message *aMessage, uint16_t aOffset)
         : mString(aString)
@@ -1036,17 +1108,18 @@ public:
      */
     enum : uint16_t
     {
-        kTypeZero = 0,   ///< Zero is used as a special indicator for the SIG RR (SIG(0) from RFC 2931).
-        kTypeA    = 1,   ///< Address record (IPv4).
-        kTypeSoa  = 6,   ///< Start of (zone of) authority.
-        kTypePtr  = 12,  ///< PTR record.
-        kTypeTxt  = 16,  ///< TXT record.
-        kTypeSig  = 24,  ///< SIG record.
-        kTypeKey  = 25,  ///< KEY record.
-        kTypeAaaa = 28,  ///< IPv6 address record.
-        kTypeSrv  = 33,  ///< SRV locator record.
-        kTypeOpt  = 41,  ///< Option record.
-        kTypeAny  = 255, ///< ANY record.
+        kTypeZero  = 0,   ///< Zero is used as a special indicator for the SIG RR (SIG(0) from RFC 2931).
+        kTypeA     = 1,   ///< Address record (IPv4).
+        kTypeSoa   = 6,   ///< Start of (zone of) authority.
+        kTypeCname = 5,   ///< CNAME record.
+        kTypePtr   = 12,  ///< PTR record.
+        kTypeTxt   = 16,  ///< TXT record.
+        kTypeSig   = 24,  ///< SIG record.
+        kTypeKey   = 25,  ///< KEY record.
+        kTypeAaaa  = 28,  ///< IPv6 address record.
+        kTypeSrv   = 33,  ///< SRV locator record.
+        kTypeOpt   = 41,  ///< Option record.
+        kTypeAny   = 255, ///< ANY record.
     };
 
     /**
@@ -1321,6 +1394,60 @@ private:
     uint16_t mClass;  // The class of the data in RDATA section.
     uint32_t mTtl;    // Specifies the maximum time that the resource record may be cached.
     uint16_t mLength; // The length of RDATA section in bytes.
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Resource Record body format of CNAME type.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CnameRecord : public ResourceRecord
+{
+public:
+    enum : uint16_t
+    {
+        kType = kTypeCname, ///< The CNAME record type.
+    };
+
+    /**
+     * This method initializes the CNAME Resource Record by setting its type and class.
+     *
+     * Other record fields (TTL, length) remain unchanged/uninitialized.
+     *
+     * @param[in] aClass  The class of the resource record (default is `kClassInternet`).
+     *
+     */
+    void Init(uint16_t aClass = kClassInternet) { ResourceRecord::Init(kTypeCname, aClass); }
+
+    /**
+     * This method parses and reads the CNAME alias name from a message.
+     *
+     * This method also verifies that the CNAME record is well-formed (e.g., the record data length `GetLength()`
+     * matches the CNAME encoded name).
+     *
+     * @param[in]     aMessage          The message to read from. `aMessage.GetOffset()` MUST point to the start of
+     *                                  DNS header.
+     * @param[inout]  aOffset           On input, the offset in @p aMessage to start of CNAME name field.
+     *                                  On exit when successfully read, @p aOffset is updated to point to the byte
+     *                                  after the entire PTR record (skipping over the record).
+     * @param[out]    aNameBuffer       A pointer to a char array to output the read name as a null-terminated C string
+     *                                  (MUST NOT be nullptr).
+     * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
+     *
+     * @retval OT_ERROR_NONE            The CNAME name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval OT_ERROR_PARSE           The CNAME record in @p aMessage could not be parsed (invalid format).
+     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     *
+     */
+    otError ReadCanonicalName(const Message &aMessage,
+                              uint16_t &     aOffset,
+                              char *         aNameBuffer,
+                              uint16_t       aNameBufferSize) const
+    {
+        return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(CnameRecord),
+                                        aNameBuffer, aNameBufferSize, /* aSkipRecord */ true);
+    }
 
 } OT_TOOL_PACKED_END;
 
@@ -2375,6 +2502,12 @@ class Question
 {
 public:
     /**
+     * Default constructor for Question
+     *
+     */
+    Question(void) = default;
+
+    /**
      * Constructor for Question.
      *
      */
@@ -2416,21 +2549,9 @@ public:
      */
     void SetClass(uint16_t aClass) { mClass = HostSwap16(aClass); }
 
-    /**
-     * This method appends the question data to the message.
-     *
-     * @param[in]  aMessage  A reference to the message.
-     *
-     * @retval OT_ERROR_NONE     Successfully appended the question data.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
-     *
-     */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-
 private:
     uint16_t mType;  // The type of the data in question section.
     uint16_t mClass; // The class of the data in question section.
-
 } OT_TOOL_PACKED_END;
 
 /**

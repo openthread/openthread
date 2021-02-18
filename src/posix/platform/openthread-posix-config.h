@@ -140,6 +140,17 @@
 #define OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE (OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS * 10)
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
+ *
+ * Define as 1 to enable the secure settings. When defined to 1, the platform MUST implement the otPosixSecureSetting*
+ * APIs defined in 'src/posix/platform/include/openthread/platform/secure_settings.h'.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE 0
+#endif
+
 #ifdef __APPLE__
 
 /**

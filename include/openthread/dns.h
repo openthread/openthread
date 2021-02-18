@@ -29,14 +29,13 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level dns functions for the OpenThread library.
+ *  This file defines the top-level DNS functions for the OpenThread library.
  */
 
 #ifndef OPENTHREAD_DNS_H_
 #define OPENTHREAD_DNS_H_
 
-#include <openthread/ip6.h>
-#include <openthread/message.h>
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,10 +51,9 @@ extern "C" {
  *
  */
 
-#define OT_DNS_MAX_HOSTNAME_LENGTH 62 ///< Maximum allowed hostname length (maximum label size - 1 for compression).
+#define OT_DNS_MAX_NAME_SIZE 255 ///< Maximum name string size (includes null char at the end of string).
 
-#define OT_DNS_DEFAULT_SERVER_IP "2001:4860:4860::8888" ///< Defines default DNS Server address - Google DNS.
-#define OT_DNS_DEFAULT_SERVER_PORT 53                   ///< Defines default DNS Server port.
+#define OT_DNS_MAX_LABEL_SIZE 64 ///< Maximum label string size (include null char at the end of string)
 
 /**
  * Initializer for otDnsTxtIterator.
@@ -95,56 +93,6 @@ typedef struct otDnsTxtEntry
     uint16_t       mValueLength; ///< Number of bytes in `mValue` buffer.
     uint8_t mKeyLength; ///< Number of bytes in `mKey` buffer. MUST be set even if `mKey` is a null-terminated string.
 } otDnsTxtEntry;
-
-/**
- * This structure implements DNS Query parameters.
- *
- */
-typedef struct otDnsQuery
-{
-    const char *         mHostname;    ///< Identifies hostname to be found. It shall not change during resolving.
-    const otMessageInfo *mMessageInfo; ///< A reference to the message info related with DNS Server.
-    bool                 mNoRecursion; ///< If cleared, it directs name server to pursue the query recursively.
-} otDnsQuery;
-
-/**
- * This function pointer is called when a DNS response is received.
- *
- * @param[in]  aContext   A pointer to application-specific context.
- * @param[in]  aHostname  Identifies hostname related with DNS response.
- * @param[in]  aAddress   A pointer to the IPv6 address received in DNS response. May be null.
- * @param[in]  aTtl       Specifies the maximum time in seconds that the resource record may be cached.
- * @param[in]  aResult    A result of the DNS transaction.
- *
- * @retval  OT_ERROR_NONE              A response was received successfully and IPv6 address is provided
- *                                     in @p aAddress.
- * @retval  OT_ERROR_ABORT             A DNS transaction was aborted by stack.
- * @retval  OT_ERROR_RESPONSE_TIMEOUT  No DNS response has been received within timeout.
- * @retval  OT_ERROR_NOT_FOUND         A response was received but no IPv6 address has been found.
- * @retval  OT_ERROR_FAILED            A response was received but status code is different than success.
- *
- */
-typedef void (*otDnsResponseHandler)(void *              aContext,
-                                     const char *        aHostname,
-                                     const otIp6Address *aAddress,
-                                     uint32_t            aTtl,
-                                     otError             aResult);
-
-/**
- * This function sends a DNS query for AAAA (IPv6) record.
- *
- * This function is available only if feature `OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE` is enabled.
- *
- * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aQuery      A pointer to specify DNS query parameters.
- * @param[in]  aHandler    A function pointer that shall be called on response reception or time-out.
- * @param[in]  aContext    A pointer to arbitrary context information.
- *
- */
-otError otDnsClientQuery(otInstance *         aInstance,
-                         const otDnsQuery *   aQuery,
-                         otDnsResponseHandler aHandler,
-                         void *               aContext);
 
 /**
  * @}

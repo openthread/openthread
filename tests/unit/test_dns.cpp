@@ -42,9 +42,8 @@ void TestDnsName(void)
 {
     enum
     {
-        kMaxSize   = 300,
-        kLabelSize = 64,
-        kNameSize  = 256,
+        kMaxSize       = 300,
+        kMaxNameLength = Dns::Name::kMaxNameSize - 1,
     };
 
     struct TestName
@@ -62,9 +61,9 @@ void TestDnsName(void)
     uint8_t      buffer[kMaxSize];
     uint16_t     len;
     uint16_t     offset;
-    char         label[kLabelSize];
+    char         label[Dns::Name::kMaxLabelSize];
     uint8_t      labelLength;
-    char         name[kNameSize];
+    char         name[Dns::Name::kMaxNameSize];
 
     static const uint8_t kEncodedName1[] = {7, 'e', 'x', 'a', 'm', 'p', 'l', 'e', 3, 'c', 'o', 'm', 0};
     static const uint8_t kEncodedName2[] = {3, 'f', 'o', 'o', 1, 'a', 2, 'b', 'b', 3, 'e', 'd', 'u', 0};
@@ -297,11 +296,11 @@ void TestDnsName(void)
     {
         if (maxLengthName[strlen(maxLengthName) - 1] == '.')
         {
-            VerifyOrQuit(strlen(maxLengthName) == Dns::Name::kMaxLength, "invalid max length string");
+            VerifyOrQuit(strlen(maxLengthName) == kMaxNameLength, "invalid max length string");
         }
         else
         {
-            VerifyOrQuit(strlen(maxLengthName) == Dns::Name::kMaxLength - 1, "invalid max length string");
+            VerifyOrQuit(strlen(maxLengthName) == kMaxNameLength - 1, "invalid max length string");
         }
 
         IgnoreError(message->SetLength(0));
@@ -742,8 +741,8 @@ void TestHeaderAndResourceRecords(void)
     Dns::ResourceRecord record;
     Ip6::Address        hostAddress;
 
-    char    label[Dns::Name::kMaxLabelLength + 1];
-    char    name[Dns::Name::kMaxLength];
+    char    label[Dns::Name::kMaxLabelSize];
+    char    name[Dns::Name::kMaxNameSize];
     uint8_t buffer[kMaxSize];
 
     printf("================================================================\n");

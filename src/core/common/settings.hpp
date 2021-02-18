@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/platform/settings.h>
+
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -76,6 +78,15 @@ public:
      *
      */
     void Deinit(void);
+
+    /**
+     * This method sets the critical keys that should be stored in a secure area.
+     *
+     * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
+     * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
+     *
+     */
+    void SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength);
 
     /**
      * This method adds a value to @p aKey.
@@ -584,17 +595,17 @@ public:
      */
     enum Key
     {
-        kKeyActiveDataset     = 0x0001, ///< Active Operational Dataset
-        kKeyPendingDataset    = 0x0002, ///< Pending Operational Dataset
-        kKeyNetworkInfo       = 0x0003, ///< Thread network information
-        kKeyParentInfo        = 0x0004, ///< Parent information
-        kKeyChildInfo         = 0x0005, ///< Child information
-        kKeyReserved          = 0x0006, ///< Reserved (previously auto-start)
-        kKeySlaacIidSecretKey = 0x0007, ///< Secret key used by SLAAC module for generating semantically opaque IID
-        kKeyDadInfo           = 0x0008, ///< Duplicate Address Detection (DAD) information.
-        kKeyOmrPrefix         = 0x0009, ///< Off-mesh routable (OMR) prefix.
-        kKeyOnLinkPrefix      = 0x000a, ///< On-link prefix for infrastructure link.
-        kKeySrpEcdsaKey       = 0x000b, ///< SRP client ECDSA public/private key pair.
+        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
+        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
+        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
+        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
+        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
+        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
+        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
+        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
+        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
+        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
     };
 
 protected:

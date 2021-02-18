@@ -758,6 +758,30 @@ Send DNS Query to obtain IPv6 address for given hostname. The latter two paramet
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
 
+### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\]
+
+Send a browse (service instance enumeration) DNS query to get the list of services for given service-name.
+
+```bash
+> dns browse _service._udp.example.com
+DNS browse response for _service._udp.example.com.
+inst1
+    Port:1234, Priority:1, Weight:2, TTL:7200
+    Host:host.example.com.
+    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+    TXT-Data:(len:11) [096b65793d76616c756500] TTL:7300
+instance2
+    Port:1234, Priority:1, Weight:2, TTL:7200
+    Host:host.example.com.
+    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+    TXT-Data:(len:11) [096b65793d76616c756500] TTL:7300
+Done
+```
+
+### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\]
+
+Send a service instance resolution DNS query for a given service instance. Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
+
 ### domainname
 
 Get the Thread Domain Name for Thread 1.2 device.

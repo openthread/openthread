@@ -41,7 +41,7 @@
 #include <stdarg.h>
 
 #include <openthread/cli.h>
-#include <openthread/dns.h>
+#include <openthread/dns_client.h>
 #include <openthread/ip6.h>
 #include <openthread/sntp.h>
 #include <openthread/udp.h>
@@ -257,6 +257,14 @@ public:
      *
      */
     void OutputResult(otError aError);
+
+    /**
+     * This method delivers "Enabled" or "Disabled" status to the CLI client (it also appends newline `\r\n`).
+     *
+     * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
+     *
+     */
+    void OutputEnabledDisabledStatus(bool aEnabled);
 
     /**
      * This method sets the user command table.
@@ -546,11 +554,16 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    static void HandleDnsResponse(void *              aContext,
-                                  const char *        aHostname,
-                                  const otIp6Address *aAddress,
-                                  uint32_t            aTtl,
-                                  otError             aResult);
+    otError     GetDnsServerAddress(uint8_t aArgsLength, char *aArgs[], otSockAddr &aAddress, uint8_t aStartArgsIndex);
+    static void HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
+    void        HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    void        OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo);
+    static void HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
+    void        HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse);
+    static void HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
+    void        HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse);
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -562,9 +575,6 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    void HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult);
-#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
@@ -788,11 +798,6 @@ private:
     otIp6Address        mPingDestAddress;
     TimerMilli          mPingTimer;
     otIcmp6Handler      mIcmpHandler;
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    bool mResolvingInProgress;
-    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
-#endif
-
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif

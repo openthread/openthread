@@ -30,7 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # ==============================================================================
 # General variables
 # ==============================================================================
-SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.0
+SDK_SRC_DIR = $(top_srcdir)/third_party/silabs/gecko_sdk_suite/v3.1
 
 EFR32_PLATFORM = $(subst /,,$(exec_prefix))
 # NOTE: This is a work-around that sets EFR32_PLATFORM to the correct platform name.
@@ -67,6 +67,8 @@ override CXXFLAGS := $(filter-out -Wundef,$(CXXFLAGS))
 # ==============================================================================
 SILABS_GSDK_CPPFLAGS                                                          = \
     -I$(SDK_SRC_DIR)                                                            \
+    -I$(SDK_SRC_DIR)/hardware/board/config/$(BOARD_LOWERCASE)_brd4001a          \
+    -I$(SDK_SRC_DIR)/hardware/board/config/$(BOARD_LOWERCASE)                   \
     -I$(SDK_SRC_DIR)/hardware/kit/$(PLATFORM_UPPERCASE)_$(BOARD_UPPERCASE)/config \
     -I$(SDK_SRC_DIR)/hardware/kit/common/bsp                                    \
     -I$(SDK_SRC_DIR)/hardware/kit/common/drivers                                \
@@ -98,9 +100,6 @@ SILABS_GSDK_CPPFLAGS                                                          = 
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/config                         \
     -I$(SDK_SRC_DIR)/platform/service/sleeptimer/inc                            \
     -I$(SDK_SRC_DIR)/util/plugin/plugin-common/fem-control                      \
-    -I$(SDK_SRC_DIR)/util/third_party/mbedtls/configs                           \
-    -I$(SDK_SRC_DIR)/util/third_party/mbedtls/include                           \
-    -I$(SDK_SRC_DIR)/util/third_party/mbedtls/sl_crypto/include                 \
     $(NULL)
 
 
@@ -117,6 +116,8 @@ SILABS_EFR32MG2X_CPPFLAGS                                                     = 
     -I$(SDK_SRC_DIR)/platform/emdrv/nvm3/config/s2                              \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/efr32xg2x               \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/plugin/pa-conversions/efr32xg21/config \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/se_manager/inc        \
+    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/se_manager/src        \
     $(NULL)
 
 
@@ -130,6 +131,7 @@ PLATFORM_COMMON_SOURCES_LIST                                                  = 
     src/fem-control.c                                                           \
     src/flash.c                                                                 \
     src/logging.c                                                               \
+    src/memory.c                                                                \
     src/misc.c                                                                  \
     src/openthread-core-efr32-config-check.h                                    \
     src/openthread-core-efr32-config.h                                          \
