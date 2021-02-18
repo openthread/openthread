@@ -57,6 +57,8 @@
 
 #include <openthread/cli.h>
 
+#include "common/code_utils.hpp"
+
 #include "openthread-core-config.h"
 #include "platform-posix.h"
 
@@ -95,7 +97,10 @@ void otxConsoleInit(otInstance *aInstance)
     rl_instream           = stdin;
     rl_outstream          = stdout;
     rl_inhibit_completion = true;
-    sReadFd               = fileno(rl_instream);
+
+    rl_set_screen_size(0, OT_MAX(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH, OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE));
+
+    sReadFd = fileno(rl_instream);
     rl_callback_handler_install(sPrompt, InputCallback);
     otCliConsoleInit(aInstance, OutputCallback, nullptr);
 }
