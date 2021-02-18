@@ -345,8 +345,13 @@ class OtCli:
         # Default command if no match below, will be overridden if below conditions are met.
         cmd = './ot-cli-%s' % (mode)
 
+        # For Thread 1.2 MTD node, use ot-cli-mtd build regardless of OT_CLI_PATH
+        if self.version == '1.2' and mode == 'mtd' and 'top_builddir' in os.environ:
+            srcdir = os.environ['top_builddir']
+            cmd = '%s/examples/apps/cli/ot-cli-%s %d' % (srcdir, mode, nodeid)
+
         # If Thread version of node matches the testing environment version.
-        if self.version == self.env_version:
+        elif self.version == self.env_version:
             # Load Thread 1.2 BBR device when testing Thread 1.2 scenarios
             # which requires device with Backbone functionality.
             if self.version == '1.2' and self.is_bbr:
@@ -367,6 +372,7 @@ class OtCli:
             if 'RADIO_DEVICE' in os.environ:
                 cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
                                                                                            nodeid)
+                self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
 
@@ -382,6 +388,7 @@ class OtCli:
             if 'RADIO_DEVICE_1_1' in os.environ:
                 cmd += ' --real-time-signal=+1 -v spinel+hdlc+uart://%s?forkpty-arg=%d' % (
                     os.environ['RADIO_DEVICE_1_1'], nodeid)
+                self.is_posix = True
             else:
                 cmd += ' %d' % nodeid
 
@@ -410,6 +417,7 @@ class OtCli:
             if 'RADIO_DEVICE' in os.environ:
                 args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE'],
                                                                                         nodeid)
+                self.is_posix = True
             else:
                 args = ''
 
@@ -449,6 +457,7 @@ class OtCli:
             if 'RADIO_DEVICE_1_1' in os.environ:
                 args = ' --real-time-signal=+1 spinel+hdlc+uart://%s?forkpty-arg=%d' % (os.environ['RADIO_DEVICE_1_1'],
                                                                                         nodeid)
+                self.is_posix = True
             else:
                 args = ''
 
@@ -502,6 +511,7 @@ class NodeImpl:
     def __init__(self, nodeid, name=None, simulator=None, **kwargs):
         self.nodeid = nodeid
         self.name = name or ('Node%d' % nodeid)
+        self.is_posix = False
 
         self.simulator = simulator
         if self.simulator:

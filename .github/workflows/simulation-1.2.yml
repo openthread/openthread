@@ -358,6 +358,64 @@ jobs:
         name: cov-thread-border-router
         path: tmp/coverage.info
 
+  thread-1-2-posix:
+    runs-on: ubuntu-20.04
+    env:
+      COVERAGE: 1
+      PYTHONUNBUFFERED: 1
+      READLINE: readline
+      THREAD_VERSION: 1.2
+      OT_NODE_TYPE: rcp
+      USE_MTD: 1
+      VIRTUAL_TIME: 1
+      INTER_OP: 1
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get --no-install-recommends install -y libreadline6-dev g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
+        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+    - name: Build
+      run: |
+        ./script/test build
+    - name: Run
+      run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        ./script/test cert tests/scripts/thread-cert/v1_2_LowPower_5_3_01_SSEDAttachment.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_LowPower_6_1_07_PreferringARouterOverAReed.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_csl_transmission.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_enhanced_frame_pending.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: thread-1-2-posix-pcaps
+        path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-thread-1-2-posix
+        path: |
+            ./ot-core-dump/*
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-thread-1-2-posix
+        path: tmp/coverage.info
+
   upload-coverage:
     needs:
     - thread-1-2
@@ -366,6 +424,7 @@ jobs:
     - expects
     - thread-1-2-backbone
     - thread-border-router
+    - thread-1-2-posix
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
