@@ -150,10 +150,6 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
                      response = Header::kResponseNotImplemented);
 
-        VerifyOrExit(question.GetClass() == ResourceRecord::kClassInternet ||
-                         question.GetClass() == ResourceRecord::kClassAny,
-                     response = Header::kResponseNotImplemented);
-
         VerifyOrExit(OT_ERROR_NONE == FindNameComponents(name, compressInfo.GetDomainName(), nameComponentsOffsetInfo),
                      response = Header::kResponseNameError);
 
@@ -175,12 +171,13 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
             resolveAdditional &= ~kResolveAdditionalAaaa;
             break;
         default:
-            ExitNow(response = Header::kResponseNameError);
+            ExitNow(response = Header::kResponseNotImplemented);
         }
 
         SuccessOrExit(error = AppendQuestion(name, question, aResponse, compressInfo));
-        responseHeader.SetQuestionCount(i + 1);
     }
+
+    responseHeader.SetQuestionCount(aRequestHeader.GetQuestionCount());
 
     // Answer the questions
     readOffset = sizeof(Header);
@@ -188,9 +185,8 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
     {
         uint8_t resolveKind = kResolveAnswer;
 
-        VerifyOrExit(OT_ERROR_NONE == Dns::Name::ReadName(aMessage, readOffset, name, sizeof(name)),
-                     response = Header::kResponseFormatError);
-        VerifyOrExit(OT_ERROR_NONE == aMessage.Read(readOffset, question), response = Header::kResponseFormatError);
+        IgnoreError(Dns::Name::ReadName(aMessage, readOffset, name, sizeof(name)));
+        IgnoreError(aMessage.Read(readOffset, question));
         readOffset += sizeof(question);
 
         response = ResolveQuestion(name, question, responseHeader, aResponse, compressInfo, resolveKind);
@@ -199,16 +195,14 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
                      aRequestHeader.GetMessageId(), name, question.GetClass(), question.GetType(), response);
     }
 
-    // Answer the questions with additional RRs if there is only one question
+    // Answer the questions with additional RRs if required
+    VerifyOrExit(resolveAdditional != kResolveNone);
 
     readOffset = sizeof(Header);
     for (uint16_t i = 0; i < aRequestHeader.GetQuestionCount(); i++)
     {
-        VerifyOrExit(resolveAdditional != 0);
-
-        VerifyOrExit(OT_ERROR_NONE == Dns::Name::ReadName(aMessage, readOffset, name, sizeof(name)),
-                     response = Header::kResponseFormatError);
-        VerifyOrExit(OT_ERROR_NONE == aMessage.Read(readOffset, question), response = Header::kResponseFormatError);
+        IgnoreError(Dns::Name::ReadName(aMessage, readOffset, name, sizeof(name)));
+        IgnoreError(aMessage.Read(readOffset, question));
         readOffset += sizeof(question);
 
         VerifyOrExit(Header::kResponseServerFailure !=

@@ -91,6 +91,7 @@ private:
 
     enum : uint8_t
     {
+        kResolveNone           = 0,
         kResolveAnswer         = 1u << 0,
         kResolveAdditionalSrv  = 1u << 1,
         kResolveAdditionalTxt  = 1u << 2,
@@ -190,11 +191,11 @@ private:
         }
 
     private:
-        const char *const mDomainName;   // The serialized domain name (must NOT be nullptr)
-        const char *      mServiceName;  // The serialized service name (must NOT be nullptr for PTR/SRV/TXT queries)
-        const char *      mInstanceName; // The serialized instance name or nullptr (only support one instance name)
-        const char *      mHostName;     // The serialized host name or nullptr (only support one host name)
-        uint16_t          mDomainNameOffset;   // Offset of domain name serialization into the response message.
+        const char *const mDomainName;       // The serialized domain name
+        const char *      mServiceName;      // The serialized service name (only support one service name)
+        const char *      mInstanceName;     // The serialized instance name or nullptr (only support one instance name)
+        const char *      mHostName;         // The serialized host name or nullptr (only support one host name)
+        uint16_t          mDomainNameOffset; // Offset of domain name serialization into the response message.
         uint16_t          mServiceNameOffset;  // Offset of service name serialization into the response message.
         uint16_t          mInstanceNameOffset; // Offset of instance name serialization into the response message.
         uint16_t          mHostNameOffset;     // Offset of host name serialization into the response message.

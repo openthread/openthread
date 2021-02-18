@@ -2430,6 +2430,22 @@ class NodeImpl:
         return list(zip(ip, ttl))
 
     def dns_resolve_service(self, instance, service, server=None, port=53):
+        """
+        Resolves the service instance and returns the instance information as a dict.
+        
+        Example return value: 
+            {
+                'port': 12345,
+                'priority': 0,
+                'weight': 0,
+                'host': 'ins1._ipps._tcp.default.service.arpa.',
+                'address': '2001::1',
+                'txt_data': b'\x00',
+                'srv_ttl': 7100,
+                'txt_ttl': 7100,
+                'aaaa_ttl': 7100,
+            }
+        """
         cmd = f'dns service {instance} {service}'
         if server is not None:
             cmd += f' {server} {port}'
@@ -2471,6 +2487,35 @@ class NodeImpl:
         return bytes(int(hexstr[i:i + 2], 16) for i in range(0, len(hexstr), 2))
 
     def dns_browse(self, service_name, server=None, port=53):
+        """
+        Browse the service and returns the instances.
+
+        Example return value:
+            {
+                'ins1': {
+                    'port': 12345,
+                    'priority': 1,
+                    'weight': 1,
+                    'host': 'ins1._ipps._tcp.default.service.arpa.',
+                    'address': '2001::1',
+                    'txt_data': b'\x00',
+                    'srv_ttl': 7100,
+                    'txt_ttl': 7100,
+                    'aaaa_ttl': 7100,
+                },
+                'ins2': {
+                    'port': 12345,
+                    'priority': 2,
+                    'weight': 2,
+                    'host': 'ins2._ipps._tcp.default.service.arpa.',
+                    'address': '2001::2',
+                    'txt_data': b'\x00',
+                    'srv_ttl': 7100,
+                    'txt_ttl': 7100,
+                    'aaaa_ttl': 7100,
+                }
+            }
+        """
         cmd = f'dns browse {service_name}'
         if server is not None:
             cmd += f' {server} {port}'
