@@ -189,7 +189,7 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
         IgnoreError(aMessage.Read(readOffset, question));
         readOffset += sizeof(question);
 
-        response = ResolveQuestion(name, question, responseHeader, aResponse, compressInfo, resolveKind);
+        response = ResolveQuestion(name, question, responseHeader, aResponse, resolveKind, compressInfo);
 
         otLogInfoDns("[server] ANSWER: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d",
                      aRequestHeader.GetMessageId(), name, question.GetClass(), question.GetType(), response);
@@ -206,7 +206,7 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
         readOffset += sizeof(question);
 
         VerifyOrExit(Header::kResponseServerFailure !=
-                         ResolveQuestion(name, question, responseHeader, aResponse, compressInfo, resolveAdditional),
+                         ResolveQuestion(name, question, responseHeader, aResponse, resolveAdditional, compressInfo),
                      response = Header::kResponseServerFailure);
 
         otLogInfoDns("[server] ADDITIONAL: TRANSACTION=0x%04x, QUESTION=[%s %d %d], RCODE=%d",
@@ -233,8 +233,8 @@ Header::Response Server::ResolveQuestion(const char *      aName,
                                          const Question &  aQuestion,
                                          Header &          aResponseHeader,
                                          Message &         aResponseMessage,
-                                         NameCompressInfo &aCompressInfo,
-                                         uint8_t           aResolveKind)
+                                         uint8_t           aResolveKind,
+                                         NameCompressInfo &aCompressInfo)
 {
     OT_UNUSED_VARIABLE(aName);
     OT_UNUSED_VARIABLE(aQuestion);
@@ -376,7 +376,7 @@ otError Server::AppendServiceName(Message &aMessage, const char *aName, NameComp
         uint16_t domainCompressOffset = aCompressInfo.GetDomainNameOffset();
 
         serviceCompressOffset = aMessage.GetLength();
-        aCompressInfo.SetHostNameOffset(serviceCompressOffset, aName);
+        aCompressInfo.SetServiceNameOffset(serviceCompressOffset, aName);
 
         if (domainCompressOffset == NameCompressInfo::kUnknownOffset)
         {

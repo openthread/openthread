@@ -191,11 +191,11 @@ private:
         }
 
     private:
-        const char *const mDomainName;       // The serialized domain name
-        const char *      mServiceName;      // The serialized service name (only support one service name)
-        const char *      mInstanceName;     // The serialized instance name or nullptr (only support one instance name)
-        const char *      mHostName;         // The serialized host name or nullptr (only support one host name)
-        uint16_t          mDomainNameOffset; // Offset of domain name serialization into the response message.
+        const char *const mDomainName;   // The serialized domain name.
+        const char *      mServiceName;  // The serialized service name (only support one service name).
+        const char *      mInstanceName; // The serialized instance name or nullptr (only support one instance name).
+        const char *      mHostName;     // The serialized host name or nullptr (only support one host name).
+        uint16_t          mDomainNameOffset;   // Offset of domain name serialization into the response message.
         uint16_t          mServiceNameOffset;  // Offset of service name serialization into the response message.
         uint16_t          mInstanceNameOffset; // Offset of instance name serialization into the response message.
         uint16_t          mHostNameOffset;     // Offset of host name serialization into the response message.
@@ -240,8 +240,8 @@ private:
                                      const Question &  aQuestion,
                                      Header &          aResponseHeader,
                                      Message &         aResponseMessage,
-                                     NameCompressInfo &aCompressInfo,
-                                     uint8_t           aResolveKind);
+                                     uint8_t           aResolveKind,
+                                     NameCompressInfo &aCompressInfo);
     static otError   AppendQuestion(const char *      aName,
                                     const Question &  aQuestion,
                                     Message &         aMessage,
