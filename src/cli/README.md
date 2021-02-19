@@ -67,6 +67,7 @@ Done
 - [masterkey](#masterkey)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
+- [multiradio](#multiradio)
 - [neighbor](#neighbor-list)
 - [netdata](README_NETDATA.md)
 - [netstat](#netstat)
@@ -1401,6 +1402,43 @@ Done
 
 ```bash
 > mode -
+Done
+```
+
+### multiradio
+
+Get the list of supported radio links by the device.
+
+This command is always available, even when only a single radio is supported by the device.
+
+```bash
+> multiradio
+[15.4, TREL]
+Done
+```
+
+### multiradio neighbor list
+
+Get the list of neighbors and their supported radios and their preference.
+
+This command is only available when device supports more than one radio link.
+
+```bash
+> multiradio neighbor list
+ExtAddr:3a65bc38dbe4a5be, RLOC16:0xcc00, Radios:[15.4(255), TREL(255)]
+ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
+Done
+```
+
+### multiradio neighbor \<ext address\>
+
+Get the radio info for specific neighbor with a given extended address.
+
+This command is only available when device supports more than one radio link.
+
+```bash
+> multiradio neighbor 3a65bc38dbe4a5be
+[15.4(255), TREL(255)]
 Done
 ```
 

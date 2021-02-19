@@ -2639,6 +2639,94 @@ exit:
     return error;
 }
 
+otError Interpreter::ProcessMultiRadio(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(aArgs);
+
+    if (aArgsLength == 0)
+    {
+        bool isFirst = true;
+
+        OutputFormat("[");
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        OutputFormat("15.4");
+        isFirst = false;
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        OutputFormat("%sTREL", isFirst ? "" : ", ");
+#endif
+        OutputLine("]");
+
+        OT_UNUSED_VARIABLE(isFirst);
+    }
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    else if (strcmp(aArgs[0], "neighbor") == 0)
+    {
+        otMultiRadioNeighborInfo multiRadioInfo;
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        if (strcmp(aArgs[1], "list") == 0)
+        {
+            otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+            otNeighborInfo         neighInfo;
+
+            while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighInfo) == OT_ERROR_NONE)
+            {
+                if (otMultiRadioGetNeighborInfo(mInstance, &neighInfo.mExtAddress, &multiRadioInfo) != OT_ERROR_NONE)
+                {
+                    continue;
+                }
+
+                OutputFormat("ExtAddr:");
+                OutputExtAddress(neighInfo.mExtAddress);
+                OutputFormat(", RLOC16:0x%04x, Radios:", neighInfo.mRloc16);
+                OutputMultiRadioInfo(multiRadioInfo);
+            }
+        }
+        else
+        {
+            otExtAddress extAddress;
+
+            SuccessOrExit(error = ParseAsHexString(aArgs[1], extAddress.m8));
+            SuccessOrExit(error = otMultiRadioGetNeighborInfo(mInstance, &extAddress, &multiRadioInfo));
+            OutputMultiRadioInfo(multiRadioInfo);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+void Interpreter::OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo)
+{
+    bool isFirst = true;
+
+    OutputFormat("[");
+
+    if (aMultiRadioInfo.mSupportsIeee802154)
+    {
+        OutputFormat("15.4(%d)", aMultiRadioInfo.mIeee802154Info.mPreference);
+        isFirst = false;
+    }
+
+    if (aMultiRadioInfo.mSupportsTrelUdp6)
+    {
+        OutputFormat("%sTREL(%d)", isFirst ? "" : ", ", aMultiRadioInfo.mTrelUdp6Info.mPreference);
+    }
+
+    OutputLine("]");
+}
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
 {
