@@ -83,17 +83,18 @@ otError Manager::GetServiceId(uint8_t aServiceNumber, bool aServerStable, uint8_
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-otError Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const
+void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig &aConfig) const
 {
-    otError                           error          = OT_ERROR_NOT_FOUND;
     const uint8_t                     serviceData    = BackboneRouter::kServiceNumber;
     const ServerTlv *                 rvalServerTlv  = nullptr;
     const BackboneRouter::ServerData *rvalServerData = nullptr;
     Iterator                          iterator;
 
+    aConfig.mServer16 = Mac::kShortAddrInvalid;
+
     iterator.mServiceTlv = Get<Leader>().FindService(kThreadEnterpriseNumber, &serviceData, sizeof(serviceData));
 
-    VerifyOrExit(iterator.mServiceTlv != nullptr, aConfig.mServer16 = Mac::kShortAddrInvalid);
+    VerifyOrExit(iterator.mServiceTlv != nullptr);
 
     while (IterateToNextServer(iterator) == OT_ERROR_NONE)
     {
@@ -125,10 +126,8 @@ otError Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConf
     aConfig.mReregistrationDelay = rvalServerData->GetReregistrationDelay();
     aConfig.mMlrTimeout          = rvalServerData->GetMlrTimeout();
 
-    error = OT_ERROR_NONE;
-
 exit:
-    return error;
+    return;
 }
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

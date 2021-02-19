@@ -180,7 +180,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     State                state;
     uint32_t             origMlrTimeout;
 
-    IgnoreError(Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config));
+    Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config);
 
     if (config.mServer16 != mConfig.mServer16)
     {
