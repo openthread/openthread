@@ -47,6 +47,56 @@ namespace ot {
 namespace Dns {
 
 //---------------------------------------------------------------------------------------------------------------------
+// Client::QueryConfig
+
+const char Client::QueryConfig::kDefaultServerAddressString[] = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS;
+
+Client::QueryConfig::QueryConfig(InitMode aMode)
+{
+    OT_UNUSED_VARIABLE(aMode);
+
+    IgnoreError(GetServerSockAddr().GetAddress().FromString(kDefaultServerAddressString));
+    GetServerSockAddr().SetPort(kDefaultServerPort);
+    SetResponseTimeout(kDefaultResponseTimeout);
+    SetMaxTxAttempts(kDefaultMaxTxAttempts);
+    SetRecursionFlag(kDefaultRecursionDesired ? kFlagRecursionDesired : kFlagNoRecursion);
+}
+
+void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig)
+{
+    // This method sets the config from `aConfig` replacing any
+    // unspecified fields (value zero) with the fields from
+    // `aDefaultConfig`.
+
+    *this = aConfig;
+
+    if (GetServerSockAddr().GetAddress().IsUnspecified())
+    {
+        GetServerSockAddr().GetAddress() = aDefaultConfig.GetServerSockAddr().GetAddress();
+    }
+
+    if (GetServerSockAddr().GetPort() == 0)
+    {
+        GetServerSockAddr().SetPort(aDefaultConfig.GetServerSockAddr().GetPort());
+    }
+
+    if (GetResponseTimeout() == 0)
+    {
+        SetResponseTimeout(aDefaultConfig.GetResponseTimeout());
+    }
+
+    if (GetMaxTxAttempts() == 0)
+    {
+        SetMaxTxAttempts(aDefaultConfig.GetMaxTxAttempts());
+    }
+
+    if (GetRecursionFlag() == kFlagUnspecified)
+    {
+        SetRecursionFlag(aDefaultConfig.GetRecursionFlag());
+    }
+}
+
+//---------------------------------------------------------------------------------------------------------------------
 // Client::Response
 
 void Client::Response::SelectSection(Section aSection, uint16_t &aOffset, uint16_t &aNumRecord) const
@@ -386,6 +436,7 @@ Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
     , mTimer(aInstance, Client::HandleTimer)
+    , mDefaultConfig(QueryConfig::kInitFromDefaults)
 {
     static_assert(kAddressQuery == 0, "kAddressQuery value is not correct");
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -417,28 +468,35 @@ void Client::Stop(void)
     IgnoreError(mSocket.Close());
 }
 
-otError Client::ResolveAddress(const Ip6::SockAddr &aServerSockAddr,
-                               const char *         aHostName,
-                               bool                 aNoRecursion,
-                               AddressCallback      aCallback,
-                               void *               aContext)
+void Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
+{
+    QueryConfig startingDefault(QueryConfig::kInitFromDefaults);
+
+    mDefaultConfig.SetFrom(aQueryConfig, startingDefault);
+}
+
+void Client::ResetDefaultConfig(void)
+{
+    mDefaultConfig = QueryConfig(QueryConfig::kInitFromDefaults);
+}
+
+otError Client::ResolveAddress(const char *       aHostName,
+                               AddressCallback    aCallback,
+                               void *             aContext,
+                               const QueryConfig *aConfig)
 {
     QueryInfo info;
 
     info.Clear();
     info.mQueryType                 = kAddressQuery;
-    info.mNoRecursion               = aNoRecursion;
     info.mCallback.mAddressCallback = aCallback;
 
-    return StartQuery(info, aServerSockAddr, nullptr, aHostName, aContext);
+    return StartQuery(info, aConfig, nullptr, aHostName, aContext);
 }
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
-otError Client::Browse(const Ip6::SockAddr &aServerSockAddr,
-                       const char *         aServiceName,
-                       BrowseCallback       aCallback,
-                       void *               aContext)
+otError Client::Browse(const char *aServiceName, BrowseCallback aCallback, void *aContext, const QueryConfig *aConfig)
 {
     QueryInfo info;
 
@@ -446,14 +504,14 @@ otError Client::Browse(const Ip6::SockAddr &aServerSockAddr,
     info.mQueryType                = kBrowseQuery;
     info.mCallback.mBrowseCallback = aCallback;
 
-    return StartQuery(info, aServerSockAddr, nullptr, aServiceName, aContext);
+    return StartQuery(info, aConfig, nullptr, aServiceName, aContext);
 }
 
-otError Client::ResolveService(const Ip6::SockAddr &aServerSockAddr,
-                               const char *         aInstanceLabel,
-                               const char *         aServiceName,
-                               ServiceCallback      aCallback,
-                               void *               aContext)
+otError Client::ResolveService(const char *       aInstanceLabel,
+                               const char *       aServiceName,
+                               ServiceCallback    aCallback,
+                               void *             aContext,
+                               const QueryConfig *aConfig)
 {
     QueryInfo info;
 
@@ -461,16 +519,16 @@ otError Client::ResolveService(const Ip6::SockAddr &aServerSockAddr,
     info.mQueryType                 = kServiceQuery;
     info.mCallback.mServiceCallback = aCallback;
 
-    return StartQuery(info, aServerSockAddr, aInstanceLabel, aServiceName, aContext);
+    return StartQuery(info, aConfig, aInstanceLabel, aServiceName, aContext);
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
-otError Client::StartQuery(QueryInfo &          aInfo,
-                           const Ip6::SockAddr &aServerSockAddr,
-                           const char *         aLabel,
-                           const char *         aName,
-                           void *               aContext)
+otError Client::StartQuery(QueryInfo &        aInfo,
+                           const QueryConfig *aConfig,
+                           const char *       aLabel,
+                           const char *       aName,
+                           void *             aContext)
 {
     // This method assumes that `mQueryType` and `mCallback` to be
     // already set by caller on `aInfo`. The `aLabel` can be `nullptr`
@@ -482,7 +540,19 @@ otError Client::StartQuery(QueryInfo &          aInfo,
 
     VerifyOrExit(mSocket.IsBound(), error = OT_ERROR_INVALID_STATE);
 
-    aInfo.mServerSockAddr  = aServerSockAddr;
+    if (aConfig == nullptr)
+    {
+        aInfo.mConfig = mDefaultConfig;
+    }
+    else
+    {
+        // To form the config for this query, replace any unspecified
+        // fields (zero value) in the given `aConfig` with the fields
+        // from `mDefaultConfig`.
+
+        aInfo.mConfig.SetFrom(*aConfig, mDefaultConfig);
+    }
+
     aInfo.mCallbackContext = aContext;
 
     SuccessOrExit(error = AllocateQuery(aInfo, aLabel, aName, query));
@@ -544,7 +614,8 @@ void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     Header           header;
     Ip6::MessageInfo messageInfo;
 
-    aInfo.mRetransmissionTime = TimerMilli::GetNow() + kResponseTimeout;
+    aInfo.mTransmissionCount++;
+    aInfo.mRetransmissionTime = TimerMilli::GetNow() + aInfo.mConfig.GetResponseTimeout();
 
     if (aInfo.mMessageId == 0)
     {
@@ -563,7 +634,7 @@ void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
     header.SetType(Header::kTypeQuery);
     header.SetQueryType(Header::kQueryTypeStandard);
 
-    if (!aInfo.mNoRecursion)
+    if (aInfo.mConfig.GetRecursionFlag() == QueryConfig::kFlagRecursionDesired)
     {
         header.SetRecursionDesiredFlag();
     }
@@ -583,8 +654,8 @@ void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
         SuccessOrExit(error = message->Append(Question(kQuestionRecordTypes[aInfo.mQueryType][num])));
     }
 
-    messageInfo.SetPeerAddr(aInfo.mServerSockAddr.GetAddress());
-    messageInfo.SetPeerPort(aInfo.mServerSockAddr.GetPort());
+    messageInfo.SetPeerAddr(aInfo.mConfig.GetServerSockAddr().GetAddress());
+    messageInfo.SetPeerPort(aInfo.mConfig.GetServerSockAddr().GetPort());
 
     SuccessOrExit(error = mSocket.SendTo(*message, messageInfo));
 
@@ -794,13 +865,12 @@ void Client::HandleTimer(void)
 
         if (now >= info.mRetransmissionTime)
         {
-            if (info.mRetransmissionCount >= kMaxRetransmit)
+            if (info.mTransmissionCount >= info.mConfig.GetMaxTxAttempts())
             {
                 FinalizeQuery(*query, OT_ERROR_RESPONSE_TIMEOUT);
                 continue;
             }
 
-            info.mRetransmissionCount++;
             SendQuery(*query, info, /* aUpdateTimer */ false);
         }
 

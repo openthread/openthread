@@ -41,7 +41,7 @@ Done
 - [delaytimermin](#delaytimermin)
 - [diag](#diag)
 - [discover](#discover-channel)
-- [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+- [dns](#dns-config)
 - [domainname](#domainname)
 - [dua](#dua-iid)
 - [eidcache](#eidcache)
@@ -747,21 +747,68 @@ Perform an MLE Discovery operation.
 Done
 ```
 
-### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\]
+### dns config
 
-Send DNS Query to obtain IPv6 address for given hostname. The latter two parameters have following default values:
+Get the default query config used by DNS client.
 
-- DNS server IP: 2001:4860:4860::8888 (Google DNS Server)
-- DNS server port: 53
+The config includes the server IPv6 address and port, response timeout in msec (wait time to rx response), maximum tx attempts before reporting failure, boolean flag to indicate whether the server can resolve the query recursively or not.
+
+```bash
+> dns config
+Server: [fd00:0:0:0:0:0:0:1]:1234
+ResponseTimeout: 5000 ms
+MaxTxAttempts: 2
+RecursionDesired: no
+Done
+>
+```
+
+### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Set the default query config.
+
+```bash
+> dns config fd00::1 1234 5000 2 0
+Done
+
+> dns config
+Server: [fd00:0:0:0:0:0:0:1]:1234
+ResponseTimeout: 5000 ms
+MaxTxAttempts: 2
+RecursionDesired: no
+Done
+```
+
+We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+
+```bash
+> dns config fd00::2
+Done
+
+> dns config
+Server: [fd00:0:0:0:0:0:0:2]:53
+ResponseTimeout: 3000 ms
+MaxTxAttempts: 3
+RecursionDesired: yes
+Done
+```
+
+### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send DNS Query to obtain IPv6 address for given hostname.
+
+The parameters after `hostname` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ```bash
 > dns resolve ipv6.google.com
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
 
-### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\]
+### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
 
 Send a browse (service instance enumeration) DNS query to get the list of services for given service-name.
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ```bash
 > dns browse _service._udp.example.com
@@ -779,9 +826,11 @@ instance2
 Done
 ```
 
-### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\]
+### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
 
 Send a service instance resolution DNS query for a given service instance. Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ### domainname
 
