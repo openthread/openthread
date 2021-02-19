@@ -78,6 +78,29 @@ void otSrpClientSetCallback(otInstance *aInstance, otSrpClientCallback aCallback
     instance.Get<Srp::Client>().SetCallback(aCallback, aContext);
 }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+void otSrpClientEnableAutoStartMode(otInstance *aInstance, otSrpClientAutoStartCallback aCallback, void *aContext)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Srp::Client>().EnableAutoStartMode(aCallback, aContext);
+}
+
+void otSrpClientDisableAutoStartMode(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Srp::Client>().DisableAutoStartMode();
+}
+
+bool otSrpClientIsAutoStartModeEnabled(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Client>().IsAutoStartModeEnabled();
+}
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+
 uint32_t otSrpClientGetLeaseInterval(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

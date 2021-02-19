@@ -46,6 +46,31 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+ *
+ * Define to 1 to enable SRP Client auto-start feature and its APIs.
+ *
+ * When enabled, the SRP client can be configured to automatically start when it detects the presence of an SRP server
+ *  (by monitoring the Thread Network Data for SRP Server Service entries).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+#define OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE
+ *
+ * Define the default mode (enabled or disabled) of auto-start mode.
+ *
+ * This config is applicable/used only when `OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE
+#define OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
  *
  * Define to 1 for the SRP client implementation to provide APIs that get/set the domain name.

@@ -100,6 +100,7 @@ private:
         otError (SrpClient::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
+    otError ProcessAutoStart(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessCallback(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessHost(uint8_t aArgsLength, char *aArgs[]);
@@ -108,6 +109,7 @@ private:
     otError ProcessServer(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessService(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessState(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
 
     void OutputHostInfo(uint8_t aIndentSize, const otSrpClientHostInfo &aHostInfo);
@@ -125,6 +127,7 @@ private:
                                const otSrpClientService * aRemovedServices);
 
     static constexpr Command sCommands[] = {
+        {"autostart", &SrpClient::ProcessAutoStart},
         {"callback", &SrpClient::ProcessCallback},
         {"help", &SrpClient::ProcessHelp},
         {"host", &SrpClient::ProcessHost},
@@ -133,6 +136,7 @@ private:
         {"server", &SrpClient::ProcessServer},
         {"service", &SrpClient::ProcessService},
         {"start", &SrpClient::ProcessStart},
+        {"state", &SrpClient::ProcessState},
         {"stop", &SrpClient::ProcessStop},
     };
 
