@@ -798,38 +798,114 @@ exit:
     return error;
 }
 
+void TxtEntry::Iterator::Init(const uint8_t *aTxtData, uint16_t aTxtDataLength)
+{
+    SetTxtData(aTxtData);
+    SetTxtDataLength(aTxtDataLength);
+    SetTxtDataPosition(0);
+}
+
+otError TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
+{
+    otError     error = OT_ERROR_NONE;
+    uint8_t     length;
+    uint8_t     index;
+    const char *cur;
+    char *      keyBuffer = GetKeyBuffer();
+
+    static_assert(sizeof(mChar) == TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
+
+    VerifyOrExit(GetTxtData() != nullptr, error = OT_ERROR_PARSE);
+
+    aEntry.mKey = keyBuffer;
+
+    while ((cur = GetTxtData() + GetTxtDataPosition()) < GetTxtDataEnd())
+    {
+        length = static_cast<uint8_t>(*cur);
+
+        cur++;
+        VerifyOrExit(cur + length <= GetTxtDataEnd(), error = OT_ERROR_PARSE);
+        IncreaseTxtDataPosition(sizeof(uint8_t) + length);
+
+        // Silently skip over an empty string or if the string starts with
+        // a `=` character (i.e., missing key) - RFC 6763 - section 6.4.
+
+        if ((length == 0) || (cur[0] == kKeyValueSeparator))
+        {
+            continue;
+        }
+
+        for (index = 0; index < length; index++)
+        {
+            if (cur[index] == kKeyValueSeparator)
+            {
+                keyBuffer[index++]  = kNullChar; // Increment index to skip over `=`.
+                aEntry.mValue       = reinterpret_cast<const uint8_t *>(&cur[index]);
+                aEntry.mValueLength = length - index;
+                ExitNow();
+            }
+
+            if (index >= kMaxKeyLength)
+            {
+                // The key is larger than recommended max key length.
+                // In this case, we return the full encoded string in
+                // `mValue` and `mValueLength` and set `mKey` to
+                // `nullptr`.
+
+                aEntry.mKey         = nullptr;
+                aEntry.mValue       = reinterpret_cast<const uint8_t *>(cur);
+                aEntry.mValueLength = length;
+                ExitNow();
+            }
+
+            keyBuffer[index] = cur[index];
+        }
+
+        // If we reach the end of the string without finding `=` then
+        // it is a boolean key attribute (encoded as "key").
+
+        keyBuffer[index]    = kNullChar;
+        aEntry.mValue       = nullptr;
+        aEntry.mValueLength = 0;
+        ExitNow();
+    }
+
+    error = OT_ERROR_NOT_FOUND;
+
+exit:
+    return error;
+}
+
 otError TxtEntry::AppendTo(Message &aMessage) const
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t length;
+    otError  error = OT_ERROR_NONE;
+    uint16_t keyLength;
 
     if (mKey == nullptr)
     {
-        VerifyOrExit(mValue != nullptr);
+        VerifyOrExit((mValue != nullptr) && (mValueLength != 0));
         error = aMessage.AppendBytes(mValue, mValueLength);
         ExitNow();
     }
 
-    length = mKeyLength;
+    keyLength = StringLength(mKey, static_cast<uint16_t>(kMaxKeyValueEncodedSize) + 1);
 
-    VerifyOrExit(length <= kMaxKeyLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(kMinKeyLength <= keyLength, error = OT_ERROR_INVALID_ARGS);
 
     if (mValue == nullptr)
     {
         // Treat as a boolean attribute and encoded as "key" (with no `=`).
-        SuccessOrExit(error = aMessage.Append(length));
-        error = aMessage.AppendBytes(mKey, length);
+        SuccessOrExit(error = aMessage.Append<uint8_t>(static_cast<uint8_t>(keyLength)));
+        error = aMessage.AppendBytes(mKey, keyLength);
         ExitNow();
     }
 
     // Treat as key/value and encode as "key=value", value may be empty.
 
-    VerifyOrExit(mValueLength + length + sizeof(char) <= kMaxKeyValueEncodedSize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mValueLength + keyLength + sizeof(char) <= kMaxKeyValueEncodedSize, error = OT_ERROR_INVALID_ARGS);
 
-    length += static_cast<uint8_t>(mValueLength + sizeof(char));
-
-    SuccessOrExit(error = aMessage.Append(length));
-    SuccessOrExit(error = aMessage.AppendBytes(mKey, length));
+    SuccessOrExit(error = aMessage.Append<uint8_t>(static_cast<uint8_t>(keyLength + mValueLength + sizeof(char))));
+    SuccessOrExit(error = aMessage.AppendBytes(mKey, keyLength));
     SuccessOrExit(error = aMessage.Append<char>(kKeyValueSeparator));
     error = aMessage.AppendBytes(mValue, mValueLength);
 
@@ -960,52 +1036,6 @@ bool TxtRecord::VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength)
 
 exit:
     return valid;
-}
-
-otError TxtRecord::GetNextTxtEntry(const uint8_t *aTxtData,
-                                   uint16_t       aTxtLength,
-                                   TxtIterator &  aIterator,
-                                   TxtEntry &     aTxtEntry)
-{
-    otError error = OT_ERROR_NONE;
-
-    for (uint16_t i = aIterator; i < aTxtLength;)
-    {
-        uint8_t length = aTxtData[i++];
-
-        OT_ASSERT(i + length <= aTxtLength);
-        aTxtEntry.mKey         = reinterpret_cast<const char *>(aTxtData + i);
-        aTxtEntry.mKeyLength   = length;
-        aTxtEntry.mValue       = nullptr;
-        aTxtEntry.mValueLength = 0;
-
-        for (uint8_t j = 0; j < length; ++j)
-        {
-            if (aTxtData[i + j] == TxtEntry::kKeyValueSeparator)
-            {
-                aTxtEntry.mKeyLength   = j;
-                aTxtEntry.mValue       = aTxtData + i + j + 1;
-                aTxtEntry.mValueLength = length - j - 1;
-                break;
-            }
-        }
-
-        i += length;
-
-        // Per RFC 6763, a TXT entry with empty key MUST be silently ignored.
-        if (aTxtEntry.mKeyLength == 0)
-        {
-            continue;
-        }
-
-        aIterator = i;
-        ExitNow();
-    }
-
-    error = OT_ERROR_NOT_FOUND;
-
-exit:
-    return error;
 }
 
 } // namespace Dns

@@ -817,12 +817,12 @@ inst1
     Port:1234, Priority:1, Weight:2, TTL:7200
     Host:host.example.com.
     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
-    TXT-Data:(len:11) [096b65793d76616c756500] TTL:7300
+    TXT:[a=6531, b=6c12] TTL:7300
 instance2
     Port:1234, Priority:1, Weight:2, TTL:7200
     Host:host.example.com.
     HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
-    TXT-Data:(len:11) [096b65793d76616c756500] TTL:7300
+    TXT:[a=1234] TTL:7300
 Done
 ```
 

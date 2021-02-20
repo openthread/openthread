@@ -2460,15 +2460,15 @@ class NodeImpl:
     def dns_resolve_service(self, instance, service, server=None, port=53):
         """
         Resolves the service instance and returns the instance information as a dict.
-        
-        Example return value: 
+
+        Example return value:
             {
                 'port': 12345,
                 'priority': 0,
                 'weight': 0,
                 'host': 'ins1._ipps._tcp.default.service.arpa.',
                 'address': '2001::1',
-                'txt_data': b'\x00',
+                'txt_data': 'a=00, b=02bb',
                 'srv_ttl': 7100,
                 'txt_ttl': 7100,
                 'aaaa_ttl': 7100,
@@ -2487,11 +2487,11 @@ class NodeImpl:
         # Port:22222, Priority:2, Weight:2, TTL:7155
         # Host:host2.default.service.arpa.
         # HostAddress:0:0:0:0:0:0:0:0 TTL:0
-        # TXT-Data:(len:1) [00] TTL:7155
+        # TXT:[a=00, b=02bb] TTL:7155
         # Done
 
         m = re.match(
-            r'.*Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s+Host:(.*?)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT-Data:\(len:\d+\) \[(.*?)\] TTL:(\d+)',
+            r'.*Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s+Host:(.*?)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT:\[(.*?)\] TTL:(\d+)',
             '\r'.join(output))
         if m:
             port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl = m.groups()
@@ -2501,7 +2501,7 @@ class NodeImpl:
                 'weight': int(weight),
                 'host': hostname,
                 'address': address,
-                'txt_data': self.__parse_hex_string(txt_data),
+                'txt_data': txt_data,
                 'srv_ttl': int(srv_ttl),
                 'txt_ttl': int(txt_ttl),
                 'aaaa_ttl': int(aaaa_ttl),
@@ -2526,7 +2526,7 @@ class NodeImpl:
                     'weight': 1,
                     'host': 'ins1._ipps._tcp.default.service.arpa.',
                     'address': '2001::1',
-                    'txt_data': b'\x00',
+                    'txt_data': 'a=00, b=11cf',
                     'srv_ttl': 7100,
                     'txt_ttl': 7100,
                     'aaaa_ttl': 7100,
@@ -2537,7 +2537,7 @@ class NodeImpl:
                     'weight': 2,
                     'host': 'ins2._ipps._tcp.default.service.arpa.',
                     'address': '2001::2',
-                    'txt_data': b'\x00',
+                    'txt_data': 'a=01, b=23dd',
                     'srv_ttl': 7100,
                     'txt_ttl': 7100,
                     'aaaa_ttl': 7100,
@@ -2557,17 +2557,17 @@ class NodeImpl:
         #     Port:22222, Priority:2, Weight:2, TTL:7175
         #     Host:host2.default.service.arpa.
         #     HostAddress:fd00:db8:0:0:3205:28dd:5b87:6a63 TTL:7175
-        #     TXT-Data:(len:1) [00] TTL:7175
+        #     TXT:[a=00, b=11cf] TTL:7175
         # ins1
         #     Port:11111, Priority:1, Weight:1, TTL:7170
         #     Host:host1.default.service.arpa.
         #     HostAddress:fd00:db8:0:0:39f4:d9:eb4f:778 TTL:7170
-        #     TXT-Data:(len:1) [00] TTL:7170
+        #     TXT:[a=01, b=23dd] TTL:7170
         # Done
 
         result = {}
         for ins, port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl in re.findall(
-                r'(.*?)\s+Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s*Host:(\S+)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT-Data:\(len:\d+\) \[(.*?)\] TTL:(\d+)',
+                r'(.*?)\s+Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s*Host:(\S+)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT:\[(.*?)\] TTL:(\d+)',
                 output):
             result[ins] = {
                 'port': int(port),
@@ -2575,7 +2575,7 @@ class NodeImpl:
                 'weight': int(weight),
                 'host': hostname,
                 'address': address,
-                'txt_data': self.__parse_hex_string(txt_data),
+                'txt_data': txt_data,
                 'srv_ttl': int(srv_ttl),
                 'txt_ttl': int(txt_ttl),
                 'aaaa_ttl': int(aaaa_ttl),

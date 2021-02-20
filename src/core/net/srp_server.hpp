@@ -150,17 +150,20 @@ public:
         uint16_t GetPriority(void) const { return mPriority; }
 
         /**
-         * This method returns the next TXT entry of the service instance.
+         * This method returns the TXT record data of the service instance.
          *
-         * @param[inout]  aIterator  A pointer to the TXT iterator context. To get the first
-         *                           TXT entry, it should be set to OT_DNS_TXT_ITERATOR_INIT.
-         * @param[out]    aTxtEntry  A pointer to where the TXT entry will be placed.
-         *
-         * @retval OT_ERROR_NONE       Successfully found the next TXT entry.
-         * @retval OT_ERROR_NOT_FOUND  No subsequent TXT entry exists in the service.
+         * @returns A pointer to the buffer containing the TXT record data.
          *
          */
-        otError GetNextTxtEntry(Dns::TxtRecord::TxtIterator &aIterator, Dns::TxtEntry &aTxtEntry) const;
+        const uint8_t *GetTxtData(void) const { return mTxtData; }
+
+        /**
+         * This method returns the TXT recored data length of the service instance.
+         *
+         * @return The TXT record data length (number of bytes in buffer returned from `GetTxtData()`).
+         *
+         */
+        uint16_t GetTxtDataLength(void) const { return mTxtLength; }
 
         /**
          * This method returns the host which the service instance reside on.

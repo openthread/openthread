@@ -675,28 +675,16 @@ otError Server::AppendTxtRecord(Message &                   aMessage,
                                 uint32_t                    aTtl,
                                 NameCompressInfo &          aCompressInfo)
 {
-    TxtRecord                   txtRecord;
-    otError                     error;
-    Dns::TxtRecord::TxtIterator txtIterator = OT_DNS_TXT_ITERATOR_INIT;
-    Dns::TxtEntry               txtEntry;
-    uint16_t                    recordOffset;
-    bool                        hasAnyTxtEntry = false;
+    otError   error;
+    uint16_t  recordOffset;
+    TxtRecord txtRecord;
 
     SuccessOrExit(error = AppendInstanceName(aMessage, aInstanceName, aCompressInfo));
 
     recordOffset = aMessage.GetLength();
     SuccessOrExit(error = aMessage.SetLength(recordOffset + sizeof(txtRecord)));
 
-    while (aService.GetNextTxtEntry(txtIterator, txtEntry) == OT_ERROR_NONE)
-    {
-        SuccessOrExit(error = txtEntry.AppendTo(aMessage));
-        hasAnyTxtEntry = true;
-    }
-
-    if (!hasAnyTxtEntry)
-    {
-        SuccessOrExit(error = aMessage.Append<uint8_t>(0));
-    }
+    SuccessOrExit(error = aMessage.AppendBytes(aService.GetTxtData(), aService.GetTxtDataLength()));
 
     txtRecord.Init();
     txtRecord.SetTtl(aTtl);

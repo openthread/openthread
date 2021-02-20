@@ -38,8 +38,19 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "net/dns_client.hpp"
+#include "net/dns_headers.hpp"
 
 using namespace ot;
+
+void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *aTxtData, uint16_t aTxtDataLength)
+{
+    static_cast<Dns::TxtEntry::Iterator *>(aIterator)->Init(aTxtData, aTxtDataLength);
+}
+
+otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aEntry)
+{
+    return static_cast<Dns::TxtEntry::Iterator *>(aIterator)->GetNextEntry(*static_cast<Dns::TxtEntry *>(aEntry));
+}
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
