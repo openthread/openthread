@@ -746,35 +746,6 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    /**
-     * This method appends header IEs to a TX-frame according to its
-     * frame control field and if time sync is enabled.
-     *
-     * @param[in]      aIsTimeSync  A boolean indicates if time sync is being used.
-     * @param[in,out]  aFrame       A reference to the TX-frame to which the IEs will be appended.
-     *
-     * @retval OT_ERROR_NONE       If append header IEs successfully.
-     * @retval OT_ERROR_NOT_FOUND  If cannot find header IE position in the frame.
-     *
-     */
-    otError AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const;
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
-    /**
-     * This method updates frame control field.
-     *
-     * If the frame would contain header IEs, IE present field would be set.
-     * If this is a CSL transmission frame or header IE is present in this frame,
-     * the version should be set to 2015. Otherwise, the version would be set to 2006.
-     *
-     * @param[in]   aNeighbor    A pointer to the destination device, could be `nullptr`.
-     * @param[in]   aIsTimeSync  A boolean indicates if time sync is being used.
-     * @param[out]  aFcf         A reference to the frame control field to set.
-     *
-     */
-    void UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const;
-
 private:
     enum
     {

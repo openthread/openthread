@@ -72,6 +72,15 @@ public:
     void Init(void) { mFields.m16 = 0; }
 
     /**
+     * This method initializes the Header IE with Id and Length.
+     *
+     * @param[in]  aID      The IE Element Id.
+     * @param[in]  aLength  The IE content length.
+     *
+     */
+    void Init(uint16_t aId, uint8_t aLen);
+
+    /**
      * This method returns the IE Element Id.
      *
      * @returns the IE Element Id.
@@ -144,6 +153,11 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
+    enum
+    {
+        kHeaderIeId = 0x00,
+    };
+
     /**
      * This method returns the Vendor OUI.
      *
@@ -205,6 +219,11 @@ public:
         kVendorIeTime = 0x01,
     };
 
+    enum
+    {
+        kHeaderIeId = VendorIeHeader::kHeaderIeId,
+    };
+
     /**
      * This method initializes the time IE.
      *
@@ -257,6 +276,11 @@ private:
 class ThreadIe
 {
 public:
+    enum
+    {
+        kHeaderIeId = VendorIeHeader::kHeaderIeId,
+    };
+
     enum : uint32_t
     {
         kVendorOuiThreadCompanyId = 0xeab89b,
@@ -347,10 +371,6 @@ public:
         kMacCmdBeaconRequest              = 7,
         kMacCmdCoordinatorRealignment     = 8,
         kMacCmdGtsRequest                 = 9,
-
-        kHeaderIeVendor       = 0x00,
-        kHeaderIeCsl          = 0x1a,
-        kHeaderIeTermination2 = 0x7f,
 
         kImmAckLength = kFcfSize + kDsnSize + k154FcsSize,
 
@@ -923,16 +943,21 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
-     * This method appends Header IEs to MAC header.
+     * This template method appends an Header IE at specified index in this frame.
      *
-     * @param[in]   aIeList  The pointer to the Header IEs array.
-     * @param[in]   aIeCount The number of Header IEs in the array.
+     * @param[in/out]   aIndex  The index to append IE. If `aIndex` is `0` on input, this method would find the index
+     *                          for the first IE and append the IE at that position. If the position is not found
+     *                          successfully, `aIndex` will be set to `kInvalidIndex`. Otherwise the IE will be
+     *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
+     *                          IE just appended.
      *
-     * @retval OT_ERROR_NONE    Successfully appended the Header IEs.
-     * @retval OT_ERROR_FAILED  If IE Present bit is not set.
+     * Tye template type `T` should be a IE type and contain a enum `kHeaderIeId` which equals to the Id of that IE.
+     *
+     * @retval OT_ERROR_NONE       Successfully appended the Header IE.
+     * @retval OT_ERROR_NOT_FOUND  The position for first IE is not found.
      *
      */
-    otError AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount);
+    template <typename T> otError AppendHeaderIeAt(uint8_t &aIndex);
 
     /**
      * This method returns a pointer to the Header IE.
@@ -1091,6 +1116,8 @@ protected:
     uint8_t FindPayloadIndex(void) const;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
+
+    template <typename T> void InitIeContentAt(uint8_t &aIndex);
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
@@ -1642,6 +1669,11 @@ OT_TOOL_PACKED_BEGIN
 class CslIe
 {
 public:
+    enum
+    {
+        kHeaderIeId = 0x1a,
+    };
+
     /**
      * This method returns the CSL Period.
      *
@@ -1678,6 +1710,21 @@ private:
     uint16_t mPhase;
     uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Termination2 IE.
+ *
+ * This class is empty for template Specialization.
+ *
+ */
+class Termination2Ie
+{
+public:
+    enum
+    {
+        kHeaderIeId = 0x7f,
+    };
+};
 
 /**
  * @}
