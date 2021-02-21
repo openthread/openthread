@@ -2592,6 +2592,18 @@ class LinuxHost():
     PING_RESPONSE_PATTERN = re.compile(r'\d+ bytes from .*:.*')
     ETH_DEV = config.BACKBONE_IFNAME
 
+    def enable_ether(self):
+        """Enable the ethernet interface.
+        """
+
+        self.bash(f'ifconfig {self.ETH_DEV} up')
+
+    def disable_ether(self):
+        """Disable the ethernet interface.
+        """
+
+        self.bash(f'ifconfig {self.ETH_DEV} down')
+
     def get_ether_addrs(self):
         output = self.bash(f'ip -6 addr list dev {self.ETH_DEV}')
 

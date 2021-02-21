@@ -45,24 +45,30 @@
 #include <netinet/in.h>
 #include <netinet/icmp6.h>
 // clang-format on
+#include <sys/ioctl.h>
 #include <sys/types.h>
 #include <unistd.h>
+#ifdef __linux__
+#include <linux/rtnetlink.h>
+#endif
 
+#include <openthread/border_router.h>
 #include <openthread/platform/infra_if.h>
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
 
 static char         sInfraIfName[IFNAMSIZ];
 static uint32_t     sInfraIfIndex       = 0;
 static int          sInfraIfIcmp6Socket = -1;
+static int          sNetLinkSocket      = -1;
 static otIp6Address sInfraIfLinkLocalAddr;
 
-const otIp6Address *otPlatInfraIfGetLinkLocalAddress(uint32_t aInfraIfIndex)
-{
-    VerifyOrDie(aInfraIfIndex == sInfraIfIndex, OT_EXIT_FAILURE);
-    return &sInfraIfLinkLocalAddr;
-}
+static int  CreateIcmp6Socket(void);
+static int  CreateNetLinkSocket(void);
+static void ReceiveNetLinkMessage(otInstance *aInstance);
+static void ReceiveIcmp6Message(otInstance *aInstance);
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
@@ -138,10 +144,10 @@ exit:
     return error;
 }
 
-static otError InitLinkLocalAddress(void)
+const otIp6Address *platformInfraIfGetLinkLocalAddress(void)
 {
-    otError         error;
-    struct ifaddrs *ifAddrs = nullptr;
+    const otIp6Address *ret     = nullptr;
+    struct ifaddrs *    ifAddrs = nullptr;
 
     VerifyOrDie(getifaddrs(&ifAddrs) != -1, OT_EXIT_ERROR_ERRNO);
 
@@ -158,51 +164,50 @@ static otError InitLinkLocalAddress(void)
         if (IN6_IS_ADDR_LINKLOCAL(&ip6Addr->sin6_addr))
         {
             memcpy(&sInfraIfLinkLocalAddr, &ip6Addr->sin6_addr, sizeof(sInfraIfLinkLocalAddr));
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(ret = &sInfraIfLinkLocalAddr);
         }
     }
 
-    otLogCritPlat("cannot find IPv6 link-local address for interface %s", sInfraIfName);
-    error = OT_ERROR_NOT_FOUND;
+    otLogWarnPlat("cannot find IPv6 link-local address for interface %s", sInfraIfName);
 
 exit:
     freeifaddrs(ifAddrs);
-    return error;
+    return ret;
 }
 
-void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
+bool platformInfraIfIsRunning(void)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    int          sock;
+    struct ifreq ifReq;
 
+    OT_ASSERT(sInfraIfIndex != 0);
+
+    sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
+
+    memset(&ifReq, 0, sizeof(ifReq));
+    strncpy(ifReq.ifr_name, sInfraIfName, sizeof(ifReq.ifr_name));
+    VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
+
+    close(sock);
+
+    return (ifReq.ifr_flags & IFF_RUNNING);
+}
+
+static int CreateIcmp6Socket(void)
+{
     int                 sock;
+    int                 rval;
     struct icmp6_filter filter;
-    ssize_t             rval;
     const int           kEnable             = 1;
     const int           kIpv6ChecksumOffset = 2;
     const int           kHopLimit           = 255;
-    uint32_t            ifIndex             = 0;
-
-    if (strlen(aIfName) >= sizeof(sInfraIfName))
-    {
-        otLogCritPlat("infra interface name '%s' is too long", aIfName);
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    strcpy(sInfraIfName, aIfName);
-
-    // Initializes the infra interface.
-    ifIndex = if_nametoindex(aIfName);
-    if (ifIndex == 0)
-    {
-        otLogCritPlat("failed to get the index for infra interface %s: %s", aIfName, strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
-    sInfraIfIndex = ifIndex;
 
     // Initializes the ICMPv6 socket.
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
-    // Only accept router advertisements and router solicits.
+    // Only accept router advertisements and solicitations.
     ICMP6_FILTER_SETBLOCKALL(&filter);
     ICMP6_FILTER_SETPASS(ND_ROUTER_SOLICIT, &filter);
     ICMP6_FILTER_SETPASS(ND_ROUTER_ADVERT, &filter);
@@ -231,15 +236,43 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &kHopLimit, sizeof(kHopLimit));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
+    return sock;
+}
+
+uint32_t platformInfraIfInit(otInstance *aInstance, const char *aIfName)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    ssize_t  rval;
+    uint32_t ifIndex = 0;
+
+    if (strlen(aIfName) >= sizeof(sInfraIfName))
+    {
+        otLogCritPlat("infra interface name '%s' is too long", aIfName);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+    strcpy(sInfraIfName, aIfName);
+
+    // Initializes the infra interface.
+    ifIndex = if_nametoindex(aIfName);
+    if (ifIndex == 0)
+    {
+        otLogCritPlat("failed to get the index for infra interface %s", aIfName);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+    sInfraIfIndex = ifIndex;
+
+    sInfraIfIcmp6Socket = CreateIcmp6Socket();
 #ifdef __linux__
-    rval = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, sInfraIfName, strlen(sInfraIfName));
+    rval = setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, sInfraIfName, strlen(sInfraIfName));
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
-    rval = setsockopt(sock, IPPROTO_IP, IP_BOUND_IF, &sInfraIfIndex, sizeof(sInfraIfIndex));
+    rval = setsockopt(sInfraIfIcmp6Socket, IPPROTO_IP, IP_BOUND_IF, &sInfraIfIndex, sizeof(sInfraIfIndex));
 #endif // __linux__
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
-    sInfraIfIcmp6Socket = sock;
-    SuccessOrDie(InitLinkLocalAddress());
+    sNetLinkSocket = CreateNetLinkSocket();
+
+    return sInfraIfIndex;
 }
 
 void platformInfraIfDeinit(void)
@@ -250,21 +283,97 @@ void platformInfraIfDeinit(void)
         sInfraIfIcmp6Socket = -1;
     }
 
+    if (sNetLinkSocket != -1)
+    {
+        close(sNetLinkSocket);
+        sNetLinkSocket = -1;
+    }
+
     sInfraIfIndex = 0;
 }
 
 void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
 {
     VerifyOrExit(sInfraIfIcmp6Socket != -1);
+    VerifyOrExit(sNetLinkSocket != -1);
 
     FD_SET(sInfraIfIcmp6Socket, &aReadFdSet);
     aMaxFd = OT_MAX(aMaxFd, sInfraIfIcmp6Socket);
+
+    FD_SET(sNetLinkSocket, &aReadFdSet);
+    aMaxFd = OT_MAX(aMaxFd, sNetLinkSocket);
 
 exit:
     return;
 }
 
-void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
+// Create a net-link socket that subscribes to link & addresses events.
+static int CreateNetLinkSocket(void)
+{
+    int                sock;
+    int                rval;
+    struct sockaddr_nl addr;
+
+    sock = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
+
+    memset(&addr, 0, sizeof(addr));
+    addr.nl_family = AF_NETLINK;
+    addr.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
+    addr.nl_pid    = getpid();
+
+    rval = bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
+
+    return sock;
+}
+
+static void ReceiveNetLinkMessage(otInstance *aInstance)
+{
+    const size_t kMaxNetLinkBufSize = 8192;
+    ssize_t      len;
+    union
+    {
+        nlmsghdr mHeader;
+        uint8_t  mBuffer[kMaxNetLinkBufSize];
+    } msgBuffer;
+
+    len = recv(sNetLinkSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
+    if (len < 0)
+    {
+        otLogCritPlat("failed to receive netlink message: %s", strerror(errno));
+        ExitNow();
+    }
+
+    for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, static_cast<size_t>(len));
+         header                  = NLMSG_NEXT(header, len))
+    {
+        switch (header->nlmsg_type)
+        {
+        case RTM_NEWLINK:
+        case RTM_DELLINK:
+        case RTM_NEWADDR:
+        case RTM_DELADDR:
+            SuccessOrDie(otPlatInfraIfStateChanged(aInstance, sInfraIfIndex, platformInfraIfIsRunning(),
+                                                   platformInfraIfGetLinkLocalAddress()));
+            break;
+        case NLMSG_ERROR:
+        {
+            struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(header));
+
+            OT_UNUSED_VARIABLE(errMsg);
+            otLogWarnPlat("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
+        }
+        default:
+            break;
+        }
+    }
+
+exit:
+    return;
+}
+
+static void ReceiveIcmp6Message(otInstance *aInstance)
 {
     otError  error = OT_ERROR_NONE;
     uint8_t  buffer[1500];
@@ -280,10 +389,6 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
 
     struct sockaddr_in6 srcAddr;
     struct in6_addr     dstAddr;
-
-    // It is not an error when there is no input data on the socket.
-    VerifyOrExit(sInfraIfIcmp6Socket != -1);
-    VerifyOrExit(FD_ISSET(sInfraIfIcmp6Socket, &aReadFdSet));
 
     memset(&srcAddr, 0, sizeof(srcAddr));
     memset(&dstAddr, 0, sizeof(dstAddr));
@@ -340,8 +445,23 @@ exit:
     }
 }
 
-uint32_t platformInfraIfGetIndex(void)
+void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
 {
-    return sInfraIfIndex;
+    VerifyOrExit(sInfraIfIcmp6Socket != -1);
+    VerifyOrExit(sNetLinkSocket != -1);
+
+    if (FD_ISSET(sInfraIfIcmp6Socket, &aReadFdSet))
+    {
+        ReceiveIcmp6Message(aInstance);
+    }
+
+    if (FD_ISSET(sNetLinkSocket, &aReadFdSet))
+    {
+        ReceiveNetLinkMessage(aInstance);
+    }
+
+exit:
+    return;
 }
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

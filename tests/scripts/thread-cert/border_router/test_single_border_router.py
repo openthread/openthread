@@ -255,6 +255,60 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                               backbone=True))
 
+        #
+        # Case 4. The Routing Manager should be stopped if the infra interface went down.
+        #
+
+        self.nodes[BR1].disable_ether()
+
+        self.simulator.go(10)
+        self.collect_ipaddrs()
+
+        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
+        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
+        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+
+        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 0)
+        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 0)
+        self.assertTrue(len(self.nodes[BR1].get_routes()) == 0)
+        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 0)
+        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 0)
+        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 0)
+
+        self.nodes[BR1].enable_ether()
+
+        # It takes around 10 seconds to start sending RA messages.
+        self.simulator.go(15)
+        self.collect_ipaddrs()
+
+        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
+        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
+        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+
+        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
+        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
+        self.assertTrue(len(self.nodes[BR1].get_routes()) == 1)
+        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 1)
+
+        # The same local OMR and on-link prefix should be re-registered.
+        self.assertEqual(omr_prefix, self.nodes[BR1].get_prefixes()[0])
+        self.assertEqual(omr_prefix, self.nodes[ROUTER1].get_prefixes()[0])
+        self.assertEqual(external_route, self.nodes[BR1].get_routes()[0])
+        self.assertEqual(external_route, self.nodes[ROUTER1].get_routes()[0])
+
+        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+
+        self.assertEqual(br1_omr_address, self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
+        self.assertEqual(router1_omr_address, self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
+        self.assertEqual(host_ula_address, self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
+
+        # Router1 can ping to/from the Host on infra link.
+        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                                              backbone=True))
+
 
 if __name__ == '__main__':
     unittest.main()
