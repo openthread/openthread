@@ -1,6 +1,5 @@
-#!/usr/bin/expect -f
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,22 +26,17 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-source "tests/scripts/expect/_common.exp"
-source "tests/scripts/expect/_multinode.exp"
 
-spawn_node 1
+# Purpose of this CMake script is to support printing of properties fetched
+# using a generator expression.
+#
+# Depending on the generator in use, Ninja, Makefile, other, it is not possible
+# to always ensure proper new line on all platforms when calling echo.
+# The print.cmake handles this issue by taking a CMake list and prints each item
+# in the list on a new line.
+#
+# This script can be invoked as: `cmake -DLIST="itemA;itemB;..." -P print.cmake`
 
-spawn_node 2 mtd
-send "csl period 5000\n"
-expect_line "Done"
-
-setup_two_nodes "-" false
-
-switch_node 1
-set addr [get_ipaddr "mleid"]
-
-switch_node 2
-send "ping $addr\n"
-expect "16 bytes from $addr: icmp_seq=1"
-
-dispose_all
+foreach(item ${LIST})
+  execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${item})
+endforeach()

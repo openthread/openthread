@@ -33,7 +33,7 @@
 
 set -euxo pipefail
 
-install_packages_apt_pretty_format()
+install_packages_pretty_format()
 {
     echo 'Installing pretty tools useful for code contributions...'
 
@@ -44,7 +44,7 @@ install_packages_apt_pretty_format()
     python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
 
     # add mdv for local size report
-    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is useful if you plan to contribute markdown to the OpenThread project.'
+    python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
 
     # add shfmt for shell pretty, try brew only because snap does not support home directory not being /home and doesn't work in docker.
     command -v shfmt || brew install shfmt || echo 'WARNING: could not install shfmt, which is useful if you plan to contribute shell scripts to the OpenThread project.'
@@ -68,13 +68,13 @@ install_packages_apt()
         sudo apt-get --no-install-recommends install -y ca-certificates wget
         (cd /tmp \
             && wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
-            && tar xjf gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
+            && tar xjf gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 -C /opt \
             && rm gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
-            && sudo ln -s /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
+            && sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
     fi
 
     if [ "$PLATFORM" != "Raspbian" ]; then
-        install_packages_apt_pretty_format
+        install_packages_pretty_format
     fi
 }
 
@@ -136,8 +136,6 @@ install_packages()
         PM=opkg
     elif command -v brew; then
         PM=brew
-    elif command -v pretty-format; then
-        PM=apt-pretty-format
     fi
     install_packages_$PM
 }

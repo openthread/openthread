@@ -28,6 +28,8 @@
 
 LOCAL_PATH := $(call my-dir)
 
+ifeq ($(OPENTHREAD_ENABLE_ANDROID_MK),1)
+
 OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 
@@ -145,14 +147,24 @@ LOCAL_CPPFLAGS                                                              := \
     -pedantic-errors                                                           \
     $(NULL)
 
+ifeq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+
+LOCAL_CFLAGS                                             += \
+    -DOPENTHREAD_ENABLE_ANDROID_NDK=1                       \
+    $(NULL)
+endif
+
 LOCAL_SRC_FILES                                          := \
     src/core/api/backbone_router_api.cpp                    \
     src/core/api/backbone_router_ftd_api.cpp                \
+    src/core/api/border_agent_api.cpp                       \
     src/core/api/border_router_api.cpp                      \
     src/core/api/channel_manager_api.cpp                    \
     src/core/api/channel_monitor_api.cpp                    \
     src/core/api/child_supervision_api.cpp                  \
     src/core/api/coap_api.cpp                               \
+    src/core/api/coap_secure_api.cpp                        \
     src/core/api/commissioner_api.cpp                       \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
@@ -160,6 +172,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/dataset_updater_api.cpp                    \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
+    src/core/api/entropy_api.cpp                            \
+    src/core/api/heap_api.cpp                               \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
     src/core/api/ip6_api.cpp                                \
@@ -173,9 +187,13 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/multi_radio_api.cpp                        \
     src/core/api/netdata_api.cpp                            \
     src/core/api/netdiag_api.cpp                            \
+    src/core/api/network_time_api.cpp                       \
     src/core/api/random_crypto_api.cpp                      \
     src/core/api/random_noncrypto_api.cpp                   \
     src/core/api/server_api.cpp                             \
+    src/core/api/sntp_api.cpp                               \
+    src/core/api/srp_client_api.cpp                         \
+    src/core/api/srp_server_api.cpp                         \
     src/core/api/tasklet_api.cpp                            \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
@@ -217,6 +235,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/channel_mask.cpp                           \
     src/core/mac/data_poll_handler.cpp                      \
     src/core/mac/data_poll_sender.cpp                       \
+    src/core/mac/link_raw.cpp                               \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
@@ -245,6 +264,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/dhcp6_server.cpp                           \
     src/core/net/dns_client.cpp                             \
     src/core/net/dns_headers.cpp                            \
+    src/core/net/dnssd_server.cpp                           \
     src/core/net/icmp6.cpp                                  \
     src/core/net/ip6.cpp                                    \
     src/core/net/ip6_address.cpp                            \
@@ -252,6 +272,10 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
+    src/core/net/sntp_client.cpp                            \
+    src/core/net/socket.cpp                                 \
+    src/core/net/srp_client.cpp                             \
+    src/core/net/srp_server.cpp                             \
     src/core/net/udp6.cpp                                   \
     src/core/radio/radio.cpp                                \
     src/core/radio/radio_callbacks.cpp                      \
@@ -285,12 +309,14 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/network_data_leader_ftd.cpp             \
     src/core/thread/network_data_local.cpp                  \
     src/core/thread/network_data_notifier.cpp               \
+    src/core/thread/network_data_service.cpp                \
     src/core/thread/network_diagnostic.cpp                  \
     src/core/thread/panid_query_server.cpp                  \
     src/core/thread/radio_selector.cpp                      \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
+    src/core/thread/time_sync_service.cpp                   \
     src/core/thread/tmf.cpp                                 \
     src/core/thread/topology.cpp                            \
     src/core/thread/uri_paths.cpp                           \
@@ -298,9 +324,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
     src/core/utils/dataset_updater.cpp                      \
+    src/core/utils/flash.cpp                                \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
     src/core/utils/lookup_table.cpp                         \
+    src/core/utils/otns.cpp                                 \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \
@@ -408,6 +436,8 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_joiner.cpp                    \
     src/cli/cli_network_data.cpp              \
+    src/cli/cli_srp_client.cpp                \
+    src/cli/cli_srp_server.cpp                \
     src/cli/cli_uart.cpp                      \
     src/cli/cli_udp.cpp                       \
     $(NULL)
@@ -418,6 +448,10 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-cli
 LOCAL_MODULE_TAGS := eng
+
+ifneq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+endif
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -499,6 +533,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := ot-ncp
 LOCAL_MODULE_TAGS := eng
 
+ifneq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+endif
+
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
@@ -569,3 +607,5 @@ endif # ($(USE_OTBR_DAEMON), 1)
 ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
 include $(OPENTHREAD_PROJECT_ANDROID_MK)
 endif
+
+endif # ($(OPENTHREAD_ENABLE_ANDROID_MK),1)

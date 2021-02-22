@@ -30,17 +30,17 @@
 # qpg7015m platform-specific Makefile
 #
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/qpg7015m/libopenthread-qpg7015m.a \
+LDADD_COMMON                                                                += \
+    $(top_builddir)/examples/platforms/qpg7015m/libopenthread-qpg7015m.a       \
     $(NULL)
 if OPENTHREAD_ENABLE_FTD
-LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/repo/qpg7015m/libQorvoQPG7015M_ftd.a      \
+LDADD_COMMON                                                                += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg7015m/lib/libQorvoQPG7015M_ftd.a   \
     $(NULL)
-endif # OPENTHREAD_ENABLE_FTD
+else # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
-LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/repo/qpg7015m/libQorvoQPG7015M_mtd.a      \
+LDADD_COMMON                                                                += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg7015m/lib/libQorvoQPG7015M_mtd.a   \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
-
+endif

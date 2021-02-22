@@ -48,7 +48,7 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandler(nullptr)
     , mHandlerContext(nullptr)
-    , mTimer(aInstance, DiscoverScanner::HandleTimer, this)
+    , mTimer(aInstance, DiscoverScanner::HandleTimer)
     , mFilterIndexes()
     , mState(kStateIdle)
     , mScanChannel(0)
@@ -234,7 +234,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
         mTimer.Stop();
         Get<MeshForwarder>().ResumeMessageTransmissions();
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kStateScanDone:
         Get<Mac::Mac>().ClearTemporaryChannel();
@@ -258,7 +258,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
 
 void DiscoverScanner::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<DiscoverScanner>().HandleTimer();
+    aTimer.Get<DiscoverScanner>().HandleTimer();
 }
 
 void DiscoverScanner::HandleTimer(void)

@@ -51,7 +51,7 @@ openthread_headers                      = \
     openthread/dataset_ftd.h              \
     openthread/dataset_updater.h          \
     openthread/diag.h                     \
-    openthread/dns.h                      \
+    openthread/dns_client.h               \
     openthread/entropy.h                  \
     openthread/error.h                    \
     openthread/heap.h                     \
@@ -74,6 +74,8 @@ openthread_headers                      = \
     openthread/random_noncrypto.h         \
     openthread/server.h                   \
     openthread/sntp.h                     \
+    openthread/srp_client.h               \
+    openthread/srp_server.h               \
     openthread/tasklet.h                  \
     openthread/thread.h                   \
     openthread/thread_ftd.h               \

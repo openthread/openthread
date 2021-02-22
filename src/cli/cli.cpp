@@ -38,6 +38,7 @@
 #include <string.h>
 
 #include <openthread/diag.h>
+#include <openthread/dns.h>
 #include <openthread/icmp6.h>
 #include <openthread/link.h>
 #include <openthread/logging.h>
@@ -111,7 +112,8 @@ constexpr Interpreter::Command Interpreter::sCommands[];
 Interpreter *Interpreter::sInterpreter = nullptr;
 
 Interpreter::Interpreter(Instance *aInstance)
-    : mUserCommands(nullptr)
+    : mInstance(aInstance)
+    , mUserCommands(nullptr)
     , mUserCommandsLength(0)
     , mPingLength(kDefaultPingLength)
     , mPingCount(kDefaultPingCount)
@@ -119,10 +121,7 @@ Interpreter::Interpreter(Instance *aInstance)
     , mPingHopLimit(0)
     , mPingAllowZeroHopLimit(false)
     , mPingIdentifier(0)
-    , mPingTimer(*aInstance, Interpreter::HandlePingTimer, this)
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    , mResolvingInProgress(false)
-#endif
+    , mPingTimer(*aInstance, Interpreter::HandlePingTimer)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
@@ -141,7 +140,12 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
     , mJoiner(*this)
 #endif
-    , mInstance(aInstance)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClient(*this)
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(*this)
+#endif
 {
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
@@ -153,10 +157,6 @@ Interpreter::Interpreter(Instance *aInstance)
     mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
     mIcmpHandler.mContext         = this;
     IgnoreError(otIcmp6RegisterHandler(mInstance, &mIcmpHandler));
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    memset(mResolvingHostname, 0, sizeof(mResolvingHostname));
-#endif
 }
 
 void Interpreter::OutputResult(otError aError)
@@ -175,12 +175,17 @@ void Interpreter::OutputResult(otError aError)
     }
 }
 
-void Interpreter::OutputBytes(const uint8_t *aBytes, uint8_t aLength)
+void Interpreter::OutputBytes(const uint8_t *aBytes, uint16_t aLength)
 {
-    for (int i = 0; i < aLength; i++)
+    for (uint16_t i = 0; i < aLength; i++)
     {
         OutputFormat("%02x", aBytes[i]);
     }
+}
+
+void Interpreter::OutputEnabledDisabledStatus(bool aEnabled)
+{
+    OutputLine(aEnabled ? "Enabled" : "Disabled");
 }
 
 int Interpreter::OutputIp6Address(const otIp6Address &aAddress)
@@ -270,6 +275,34 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError Interpreter::ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error  = OT_ERROR_NONE;
+    bool    enable = false;
+
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    if (strcmp(aArgs[0], "enable") == 0)
+    {
+        enable = true;
+    }
+    else if (strcmp(aArgs[0], "disable") == 0)
+    {
+        enable = false;
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+    SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, enable));
+
+exit:
+    return error;
+}
+#endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[])
@@ -1049,7 +1082,7 @@ otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputLine(otPlatRadioIsCoexEnabled(mInstance) ? "Enabled" : "Disabled");
+        OutputEnabledDisabledStatus(otPlatRadioIsCoexEnabled(mInstance));
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -1302,87 +1335,271 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
+void Interpreter::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
 {
-    otError          error = OT_ERROR_NONE;
-    uint16_t         port  = OT_DNS_DEFAULT_SERVER_PORT;
-    Ip6::MessageInfo messageInfo;
-    otDnsQuery       query;
+    otDnsTxtEntry         entry;
+    otDnsTxtEntryIterator iterator;
+    bool                  isFirst = true;
 
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+    otDnsInitTxtEntryIterator(&iterator, aTxtData, aTxtDataLength);
 
-    if (strcmp(aArgs[0], "resolve") == 0)
+    OutputFormat("[");
+
+    while (otDnsGetNextTxtEntry(&iterator, &entry) == OT_ERROR_NONE)
     {
-        VerifyOrExit(!mResolvingInProgress, error = OT_ERROR_BUSY);
-        VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
-        VerifyOrExit(strlen(aArgs[1]) < OT_DNS_MAX_HOSTNAME_LENGTH, error = OT_ERROR_INVALID_ARGS);
-
-        strcpy(mResolvingHostname, aArgs[1]);
-
-        if (aArgsLength > 2)
+        if (!isFirst)
         {
-            SuccessOrExit(error = ParseAsIp6Address(aArgs[2], messageInfo.GetPeerAddr()));
+            OutputFormat(", ");
+        }
+
+        if (entry.mKey == nullptr)
+        {
+            // A null `mKey` indicates that the key in the entry is
+            // longer than the recommended max key length, so the entry
+            // could not be parsed. In this case, the whole entry is
+            // returned encoded in `mValue`.
+
+            OutputFormat("[");
+            OutputBytes(entry.mValue, entry.mValueLength);
+            OutputFormat("]");
         }
         else
         {
-            // Use IPv6 address of default DNS server.
-            SuccessOrExit(error = messageInfo.GetPeerAddr().FromString(OT_DNS_DEFAULT_SERVER_IP));
+            OutputFormat("%s", entry.mKey);
+
+            if (entry.mValue != nullptr)
+            {
+                OutputFormat("=");
+                OutputBytes(entry.mValue, entry.mValueLength);
+            }
         }
 
-        if (aArgsLength > 3)
-        {
-            SuccessOrExit(error = ParseAsUint16(aArgs[3], port));
-        }
-
-        messageInfo.SetPeerPort(port);
-
-        query.mHostname    = mResolvingHostname;
-        query.mMessageInfo = static_cast<const otMessageInfo *>(&messageInfo);
-        query.mNoRecursion = false;
-
-        SuccessOrExit(error = otDnsClientQuery(mInstance, &query, &Interpreter::HandleDnsResponse, this));
-
-        mResolvingInProgress = true;
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+        isFirst = false;
     }
 
-    error = OT_ERROR_PENDING;
+    OutputFormat("]");
+}
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
+otError Interpreter::GetDnsConfig(uint8_t            aArgsLength,
+                                  char *             aArgs[],
+                                  otDnsQueryConfig *&aConfig,
+                                  uint8_t            aStartArgsIndex)
+{
+    // This method gets the optional config from given `aArgs` after the
+    // `aStartArgsIndex`. The format: `[server IPv6 address] [server
+    // port] [timeout] [max tx attempt] [recursion desired]`.
+
+    otError error = OT_ERROR_NONE;
+    bool    recursionDesired;
+
+    memset(aConfig, 0, sizeof(otDnsQueryConfig));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex, aConfig = nullptr);
+
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[aStartArgsIndex], aConfig->mServerSockAddr.mAddress));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 1);
+    SuccessOrExit(error = ParseAsUint16(aArgs[aStartArgsIndex + 1], aConfig->mServerSockAddr.mPort));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 2);
+    SuccessOrExit(error = ParseAsUint32(aArgs[aStartArgsIndex + 2], aConfig->mResponseTimeout));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 3);
+    SuccessOrExit(error = ParseAsUint8(aArgs[aStartArgsIndex + 3], aConfig->mMaxTxAttempts));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 4);
+    SuccessOrExit(error = ParseAsBool(aArgs[aStartArgsIndex + 4], recursionDesired));
+    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
 
 exit:
     return error;
 }
 
-void Interpreter::HandleDnsResponse(void *              aContext,
-                                    const char *        aHostname,
-                                    const otIp6Address *aAddress,
-                                    uint32_t            aTtl,
-                                    otError             aResult)
+otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
 {
-    static_cast<Interpreter *>(aContext)->HandleDnsResponse(aHostname, static_cast<const Ip6::Address *>(aAddress),
-                                                            aTtl, aResult);
-}
+    otError           error = OT_ERROR_NONE;
+    otDnsQueryConfig  queryConfig;
+    otDnsQueryConfig *config = &queryConfig;
 
-void Interpreter::HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult)
-{
-    OutputFormat("DNS response for %s - ", aHostname);
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if (aResult == OT_ERROR_NONE)
+    if (strcmp(aArgs[0], "config") == 0)
     {
-        if (aAddress != nullptr)
+        if (aArgsLength == 1)
         {
-            OutputIp6Address(*aAddress);
+            const otDnsQueryConfig *defaultConfig = otDnsClientGetDefaultConfig(mInstance);
+
+            OutputFormat("Server: [");
+            OutputIp6Address(defaultConfig->mServerSockAddr.mAddress);
+            OutputLine("]:%d", defaultConfig->mServerSockAddr.mPort);
+            OutputLine("ResponseTimeout: %u ms", defaultConfig->mResponseTimeout);
+            OutputLine("MaxTxAttempts: %u", defaultConfig->mMaxTxAttempts);
+            OutputLine("RecursionDesired: %s",
+                       (defaultConfig->mRecursionFlag == OT_DNS_FLAG_RECURSION_DESIRED) ? "yes" : "no");
         }
-        OutputLine(" TTL: %d", aTtl);
+        else
+        {
+            SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 1));
+            otDnsClientSetDefaultConfig(mInstance, config);
+        }
+    }
+    else if (strcmp(aArgs[0], "resolve") == 0)
+    {
+        SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 2));
+        SuccessOrExit(error = otDnsClientResolveAddress(mInstance, aArgs[1], &Interpreter::HandleDnsAddressResponse,
+                                                        this, config));
+        error = OT_ERROR_PENDING;
+    }
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    else if (strcmp(aArgs[0], "browse") == 0)
+    {
+        SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 2));
+        SuccessOrExit(error =
+                          otDnsClientBrowse(mInstance, aArgs[1], &Interpreter::HandleDnsBrowseResponse, this, config));
+        error = OT_ERROR_PENDING;
+    }
+    else if (strcmp(aArgs[0], "service") == 0)
+    {
+        SuccessOrExit(error = GetDnsConfig(aArgsLength, aArgs, config, 3));
+        SuccessOrExit(error = otDnsClientResolveService(mInstance, aArgs[1], aArgs[2],
+                                                        &Interpreter::HandleDnsServiceResponse, this, config));
+        error = OT_ERROR_PENDING;
+    }
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
 
-    OutputResult(aResult);
-
-    mResolvingInProgress = false;
+exit:
+    return error;
 }
+
+void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDnsAddressResponse(aError, aResponse);
+}
+
+void Interpreter::HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse)
+{
+    char         hostName[OT_DNS_MAX_NAME_SIZE];
+    otIp6Address address;
+    uint32_t     ttl;
+
+    IgnoreError(otDnsAddressResponseGetHostName(aResponse, hostName, sizeof(hostName)));
+
+    OutputFormat("DNS response for %s - ", hostName);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        uint16_t index = 0;
+
+        while (otDnsAddressResponseGetAddress(aResponse, index, &address, &ttl) == OT_ERROR_NONE)
+        {
+            OutputIp6Address(address);
+            OutputFormat(" TTL:%u ", ttl);
+            index++;
+        }
+
+        OutputLine("");
+    }
+
+    OutputResult(aError);
+}
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+
+void Interpreter::OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo)
+{
+    OutputLine(aIndentSize, "Port:%d, Priority:%d, Weight:%d, TTL:%u", aServiceInfo.mPort, aServiceInfo.mPriority,
+               aServiceInfo.mWeight, aServiceInfo.mTtl);
+    OutputLine(aIndentSize, "Host:%s", aServiceInfo.mHostNameBuffer);
+    OutputFormat(aIndentSize, "HostAddress:");
+    OutputIp6Address(aServiceInfo.mHostAddress);
+    OutputLine(" TTL:%u", aServiceInfo.mHostAddressTtl);
+    OutputFormat(aIndentSize, "TXT:");
+    OutputDnsTxtData(aServiceInfo.mTxtData, aServiceInfo.mTxtDataSize);
+    OutputLine(" TTL:%u", aServiceInfo.mTxtDataTtl);
+}
+
+void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDnsBrowseResponse(aError, aResponse);
+}
+
+void Interpreter::HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse)
+{
+    char             name[OT_DNS_MAX_NAME_SIZE];
+    char             label[OT_DNS_MAX_LABEL_SIZE];
+    uint8_t          txtBuffer[255];
+    otDnsServiceInfo serviceInfo;
+
+    IgnoreError(otDnsBrowseResponseGetServiceName(aResponse, name, sizeof(name)));
+
+    OutputLine("DNS browse response for %s", name);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        uint16_t index = 0;
+
+        while (otDnsBrowseResponseGetServiceInstance(aResponse, index, label, sizeof(label)) == OT_ERROR_NONE)
+        {
+            OutputLine("%s", label);
+            index++;
+
+            serviceInfo.mHostNameBuffer     = name;
+            serviceInfo.mHostNameBufferSize = sizeof(name);
+            serviceInfo.mTxtData            = txtBuffer;
+            serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+            if (otDnsBrowseResponseGetServiceInfo(aResponse, label, &serviceInfo) == OT_ERROR_NONE)
+            {
+                OutputDnsServiceInfo(kIndentSize, serviceInfo);
+            }
+
+            OutputLine("");
+        }
+    }
+
+    OutputResult(aError);
+}
+
+void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandleDnsServiceResponse(aError, aResponse);
+}
+
+void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse)
+{
+    char             name[OT_DNS_MAX_NAME_SIZE];
+    char             label[OT_DNS_MAX_LABEL_SIZE];
+    uint8_t          txtBuffer[255];
+    otDnsServiceInfo serviceInfo;
+
+    IgnoreError(otDnsServiceResponseGetServiceName(aResponse, label, sizeof(label), name, sizeof(name)));
+
+    OutputLine("DNS service resolution response for %s for service %s", label, name);
+
+    if (aError == OT_ERROR_NONE)
+    {
+        serviceInfo.mHostNameBuffer     = name;
+        serviceInfo.mHostNameBufferSize = sizeof(name);
+        serviceInfo.mTxtData            = txtBuffer;
+        serviceInfo.mTxtDataSize        = sizeof(txtBuffer);
+
+        if (otDnsServiceResponseGetServiceInfo(aResponse, &serviceInfo) == OT_ERROR_NONE)
+        {
+            OutputDnsServiceInfo(/* aIndetSize */ 0, serviceInfo);
+            OutputLine("");
+        }
+    }
+
+    OutputResult(aError);
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #if OPENTHREAD_FTD
@@ -1758,14 +1975,7 @@ otError Interpreter::ProcessMulticastPromiscuous(uint8_t aArgsLength, char *aArg
 
     if (aArgsLength == 0)
     {
-        if (otIp6IsMulticastPromiscuousEnabled(mInstance))
-        {
-            OutputLine("Enabled");
-        }
-        else
-        {
-            OutputLine("Disabled");
-        }
+        OutputEnabledDisabledStatus(otIp6IsMulticastPromiscuousEnabled(mInstance));
     }
     else
     {
@@ -2496,6 +2706,94 @@ exit:
     return error;
 }
 
+otError Interpreter::ProcessMultiRadio(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(aArgs);
+
+    if (aArgsLength == 0)
+    {
+        bool isFirst = true;
+
+        OutputFormat("[");
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+        OutputFormat("15.4");
+        isFirst = false;
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        OutputFormat("%sTREL", isFirst ? "" : ", ");
+#endif
+        OutputLine("]");
+
+        OT_UNUSED_VARIABLE(isFirst);
+    }
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    else if (strcmp(aArgs[0], "neighbor") == 0)
+    {
+        otMultiRadioNeighborInfo multiRadioInfo;
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        if (strcmp(aArgs[1], "list") == 0)
+        {
+            otNeighborInfoIterator iterator = OT_NEIGHBOR_INFO_ITERATOR_INIT;
+            otNeighborInfo         neighInfo;
+
+            while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighInfo) == OT_ERROR_NONE)
+            {
+                if (otMultiRadioGetNeighborInfo(mInstance, &neighInfo.mExtAddress, &multiRadioInfo) != OT_ERROR_NONE)
+                {
+                    continue;
+                }
+
+                OutputFormat("ExtAddr:");
+                OutputExtAddress(neighInfo.mExtAddress);
+                OutputFormat(", RLOC16:0x%04x, Radios:", neighInfo.mRloc16);
+                OutputMultiRadioInfo(multiRadioInfo);
+            }
+        }
+        else
+        {
+            otExtAddress extAddress;
+
+            SuccessOrExit(error = ParseAsHexString(aArgs[1], extAddress.m8));
+            SuccessOrExit(error = otMultiRadioGetNeighborInfo(mInstance, &extAddress, &multiRadioInfo));
+            OutputMultiRadioInfo(multiRadioInfo);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+void Interpreter::OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo)
+{
+    bool isFirst = true;
+
+    OutputFormat("[");
+
+    if (aMultiRadioInfo.mSupportsIeee802154)
+    {
+        OutputFormat("15.4(%d)", aMultiRadioInfo.mIeee802154Info.mPreference);
+        isFirst = false;
+    }
+
+    if (aMultiRadioInfo.mSupportsTrelUdp6)
+    {
+        OutputFormat("%sTREL(%d)", isFirst ? "" : ", ", aMultiRadioInfo.mTrelUdp6Info.mPreference);
+    }
+
+    OutputLine("]");
+}
+#endif // OPENTHREAD_CONFIG_MULTI_RADIO
+
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, char *aArgs[])
 {
@@ -3028,14 +3326,7 @@ otError Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        if (otLinkIsPromiscuous(mInstance) && otPlatRadioGetPromiscuous(mInstance))
-        {
-            OutputLine("Enabled");
-        }
-        else
-        {
-            OutputLine("Disabled");
-        }
+        OutputEnabledDisabledStatus(otLinkIsPromiscuous(mInstance) && otPlatRadioGetPromiscuous(mInstance));
     }
     else
     {
@@ -3582,14 +3873,7 @@ otError Interpreter::ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        if (otThreadIsRouterEligible(mInstance))
-        {
-            OutputLine("Enabled");
-        }
-        else
-        {
-            OutputLine("Disabled");
-        }
+        OutputEnabledDisabledStatus(otThreadIsRouterEligible(mInstance));
     }
     else if (strcmp(aArgs[0], "enable") == 0)
     {
@@ -3840,6 +4124,42 @@ void Interpreter::HandleSntpResponse(uint64_t aTime, otError aResult)
     OutputResult(OT_ERROR_NONE);
 }
 #endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+otError Interpreter::ProcessSrp(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+        OutputLine("client");
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+        OutputLine("server");
+#endif
+        ExitNow();
+    }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    if (strcmp(aArgs[0], "client") == 0)
+    {
+        ExitNow(error = mSrpClient.Process(aArgsLength - 1, aArgs + 1));
+    }
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    if (strcmp(aArgs[0], "server") == 0)
+    {
+        ExitNow(error = mSrpServer.Process(aArgsLength - 1, aArgs + 1));
+    }
+#endif
+
+    error = OT_ERROR_INVALID_COMMAND;
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 otError Interpreter::ProcessState(uint8_t aArgsLength, char *aArgs[])
 {
@@ -4751,16 +5071,10 @@ void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength
     mUserCommandsContext = aContext;
 }
 
-Interpreter &Interpreter::GetOwner(OwnerLocator &aOwnerLocator)
+Interpreter &Interpreter::GetOwner(InstanceLocator &aInstanceLocator)
 {
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Interpreter &interpreter = (aOwnerLocator.GetOwner<Interpreter>());
-#else
-    OT_UNUSED_VARIABLE(aOwnerLocator);
-
-    Interpreter &interpreter = Interpreter::GetInterpreter();
-#endif
-    return interpreter;
+    OT_UNUSED_VARIABLE(aInstanceLocator);
+    return Interpreter::GetInterpreter();
 }
 
 void Interpreter::SignalPingRequest(const Ip6::Address &aPeerAddress,

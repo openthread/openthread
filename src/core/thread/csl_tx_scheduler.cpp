@@ -28,7 +28,7 @@
 
 #include "csl_tx_scheduler.hpp"
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
@@ -254,7 +254,8 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
             aChild.ResetCslTxAttempts();
         }
 
-        // Fall through
+        OT_FALL_THROUGH;
+
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
     case OT_ERROR_ABORT:
 
@@ -295,4 +296,4 @@ exit:
 
 } // namespace ot
 
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE

@@ -51,6 +51,11 @@ void Message::Init(void)
     GetHelpData().mHeaderLength = kMinHeaderLength;
 
     IgnoreError(SetLength(GetHelpData().mHeaderLength));
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    SetBlockWiseBlockNumber(0);
+    SetMoreBlocksFlag(false);
+    SetBlockWiseBlockSize(OT_COAP_OPTION_BLOCK_SZX_16);
+#endif
 }
 
 void Message::Init(Type aType, Code aCode)
@@ -195,7 +200,7 @@ otError Message::AppendUintOption(uint16_t aNumber, uint32_t aValue)
 
     Encoding::BigEndian::WriteUint32(aValue, buffer);
 
-    while (value[0] == 0 && length > 0)
+    while ((length > 0) && (value[0] == 0))
     {
         value++;
         length--;
@@ -258,13 +263,13 @@ exit:
     return error;
 }
 
-otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize)
+otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize)
 {
     otError  error   = OT_ERROR_NONE;
     uint32_t encoded = aSize;
 
     VerifyOrExit(aType == kBlockType1 || aType == kBlockType2, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aSize <= OT_COAP_BLOCK_SIZE_1024, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aSize <= OT_COAP_OPTION_BLOCK_SZX_1024, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aNum < kBlockNumMax, error = OT_ERROR_INVALID_ARGS);
 
     encoded |= static_cast<uint32_t>(aMore << kBlockMOffset);
@@ -275,6 +280,49 @@ otError Message::AppendBlockOption(Message::BlockType aType, uint32_t aNum, bool
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+otError Message::ReadBlockOptionValues(uint16_t aBlockType)
+{
+    otError          error                     = OT_ERROR_NONE;
+    uint8_t          buf[kMaxOptionHeaderSize] = {0};
+    Option::Iterator iterator;
+
+    VerifyOrExit((aBlockType == kOptionBlock1) || (aBlockType == kOptionBlock2), error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = iterator.Init(*this, aBlockType));
+    SuccessOrExit(error = iterator.ReadOptionValue(buf));
+
+    SetBlockWiseBlockNumber(0);
+    SetMoreBlocksFlag(false);
+
+    switch (iterator.GetOption()->GetLength())
+    {
+    case 0:
+    case 1:
+        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] & 0xf0) >> 4));
+        SetMoreBlocksFlag(static_cast<bool>((buf[0] & 0x08) >> 3 == 1));
+        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[0] & 0x07));
+        break;
+    case 2:
+        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 4) + ((buf[1] & 0xf0) >> 4)));
+        SetMoreBlocksFlag(static_cast<bool>((buf[1] & 0x08) >> 3 == 1));
+        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[1] & 0x07));
+        break;
+    case 3:
+        SetBlockWiseBlockNumber(static_cast<uint32_t>((buf[0] << 12) + (buf[1] << 4) + ((buf[2] & 0xf0) >> 4)));
+        SetMoreBlocksFlag(static_cast<bool>((buf[2] & 0x08) >> 3 == 1));
+        SetBlockWiseBlockSize(static_cast<otCoapBlockSzx>(buf[2] & 0x07));
+        break;
+    default:
+        error = OT_ERROR_INVALID_ARGS;
+        break;
+    }
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 otError Message::SetPayloadMarker(void)
 {

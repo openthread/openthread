@@ -111,7 +111,7 @@ Buffer *MessagePool::NewBuffer(Message::Priority aPriority)
 
     while ((
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-               buffer = static_cast<Buffer *>(GetInstance().HeapCAlloc(sizeof(Buffer), 1))
+               buffer = static_cast<Buffer *>(Instance::HeapCAlloc(1, sizeof(Buffer)))
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
                buffer = static_cast<Buffer *>(otPlatMessagePoolNew(&GetInstance()))
 #else
@@ -143,7 +143,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     {
         Buffer *next = aBuffer->GetNextBuffer();
 #if OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
-        GetInstance().HeapFree(aBuffer);
+        Instance::HeapFree(aBuffer);
 #elif OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT
         otPlatMessagePoolFree(&GetInstance(), aBuffer);
 #else
@@ -523,6 +523,48 @@ uint16_t Message::ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) cons
 otError Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
 {
     return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? OT_ERROR_NONE : OT_ERROR_PARSE;
+}
+
+bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const
+{
+    uint16_t       bytesToCompare = aLength;
+    const uint8_t *bufPtr         = reinterpret_cast<const uint8_t *>(aBuf);
+    Chunk          chunk;
+
+    GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        VerifyOrExit(memcmp(bufPtr, chunk.GetData(), chunk.GetLength()) == 0);
+        bufPtr += chunk.GetLength();
+        bytesToCompare -= chunk.GetLength();
+        GetNextChunk(aLength, chunk);
+    }
+
+exit:
+    return (bytesToCompare == 0);
+}
+
+bool Message::CompareBytes(uint16_t       aOffset,
+                           const Message &aOtherMessage,
+                           uint16_t       aOtherOffset,
+                           uint16_t       aLength) const
+{
+    uint16_t bytesToCompare = aLength;
+    Chunk    chunk;
+
+    GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        VerifyOrExit(aOtherMessage.CompareBytes(aOtherOffset, chunk.GetData(), chunk.GetLength()));
+        aOtherOffset += chunk.GetLength();
+        bytesToCompare -= chunk.GetLength();
+        GetNextChunk(aLength, chunk);
+    }
+
+exit:
+    return (bytesToCompare == 0);
 }
 
 void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)

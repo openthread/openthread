@@ -234,7 +234,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = aChild.IsFullNetworkData();
     mIsStateRestoring   = aChild.IsStateRestoring();
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
     mIsCslSynced = false;
@@ -255,13 +255,13 @@ void Child::AddressIterator::Update(void)
 {
     const Ip6::Address *address;
 
+    if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
+    {
+        mIndex++;
+    }
+
     while (true)
     {
-        if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
-        {
-            mIndex++;
-        }
-
         address = GetAddress();
 
         VerifyOrExit((address != nullptr) && !address->IsUnspecified(), mIndex = kMaxIndex);

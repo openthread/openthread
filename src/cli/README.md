@@ -22,6 +22,7 @@ Done
 ## OpenThread Command List
 
 - [bbr](#bbr)
+- [br](#br)
 - [bufferinfo](#bufferinfo)
 - [ccathreshold](#ccathreshold)
 - [channel](#channel)
@@ -40,7 +41,7 @@ Done
 - [delaytimermin](#delaytimermin)
 - [diag](#diag)
 - [discover](#discover-channel)
-- [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+- [dns](#dns-config)
 - [domainname](#domainname)
 - [dua](#dua-iid)
 - [eidcache](#eidcache)
@@ -66,6 +67,7 @@ Done
 - [masterkey](#masterkey)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
+- [multiradio](#multiradio)
 - [neighbor](#neighbor-list)
 - [netdata](README_NETDATA.md)
 - [netstat](#netstat)
@@ -99,6 +101,7 @@ Done
 - [singleton](#singleton)
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
+- [srp](README_SRP.md)
 - [thread](#thread-start)
 - [txpower](#txpower)
 - [unsecureport](#unsecureport-add-port)
@@ -309,6 +312,20 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 
 ```bash
 > bbr jitter 10
+Done
+```
+
+### br
+
+Enbale/disable the Border Routing functionality.
+
+```bash
+> br enable
+Done
+```
+
+```bash
+> br disable
 Done
 ```
 
@@ -730,17 +747,90 @@ Perform an MLE Discovery operation.
 Done
 ```
 
-### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\]
+### dns config
 
-Send DNS Query to obtain IPv6 address for given hostname. The latter two parameters have following default values:
+Get the default query config used by DNS client.
 
-- DNS server IP: 2001:4860:4860::8888 (Google DNS Server)
-- DNS server port: 53
+The config includes the server IPv6 address and port, response timeout in msec (wait time to rx response), maximum tx attempts before reporting failure, boolean flag to indicate whether the server can resolve the query recursively or not.
+
+```bash
+> dns config
+Server: [fd00:0:0:0:0:0:0:1]:1234
+ResponseTimeout: 5000 ms
+MaxTxAttempts: 2
+RecursionDesired: no
+Done
+>
+```
+
+### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Set the default query config.
+
+```bash
+> dns config fd00::1 1234 5000 2 0
+Done
+
+> dns config
+Server: [fd00:0:0:0:0:0:0:1]:1234
+ResponseTimeout: 5000 ms
+MaxTxAttempts: 2
+RecursionDesired: no
+Done
+```
+
+We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+
+```bash
+> dns config fd00::2
+Done
+
+> dns config
+Server: [fd00:0:0:0:0:0:0:2]:53
+ResponseTimeout: 3000 ms
+MaxTxAttempts: 3
+RecursionDesired: yes
+Done
+```
+
+### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send DNS Query to obtain IPv6 address for given hostname.
+
+The parameters after `hostname` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ```bash
 > dns resolve ipv6.google.com
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
+
+### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send a browse (service instance enumeration) DNS query to get the list of services for given service-name.
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+```bash
+> dns browse _service._udp.example.com
+DNS browse response for _service._udp.example.com.
+inst1
+    Port:1234, Priority:1, Weight:2, TTL:7200
+    Host:host.example.com.
+    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+    TXT:[a=6531, b=6c12] TTL:7300
+instance2
+    Port:1234, Priority:1, Weight:2, TTL:7200
+    Host:host.example.com.
+    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+    TXT:[a=1234] TTL:7300
+Done
+```
+
+### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send a service instance resolution DNS query for a given service instance. Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ### domainname
 
@@ -1361,6 +1451,43 @@ Done
 
 ```bash
 > mode -
+Done
+```
+
+### multiradio
+
+Get the list of supported radio links by the device.
+
+This command is always available, even when only a single radio is supported by the device.
+
+```bash
+> multiradio
+[15.4, TREL]
+Done
+```
+
+### multiradio neighbor list
+
+Get the list of neighbors and their supported radios and their preference.
+
+This command is only available when device supports more than one radio link.
+
+```bash
+> multiradio neighbor list
+ExtAddr:3a65bc38dbe4a5be, RLOC16:0xcc00, Radios:[15.4(255), TREL(255)]
+ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
+Done
+```
+
+### multiradio neighbor \<ext address\>
+
+Get the radio info for specific neighbor with a given extended address.
+
+This command is only available when device supports more than one radio link.
+
+```bash
+> multiradio neighbor 3a65bc38dbe4a5be
+[15.4(255), TREL(255)]
 Done
 ```
 

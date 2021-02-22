@@ -82,7 +82,7 @@ NcpSpi::NcpSpi(Instance *aInstance)
     , mTxState(kTxStateIdle)
     , mHandlingRxFrame(false)
     , mResetFlag(true)
-    , mPrepareTxFrameTask(*aInstance, NcpSpi::PrepareTxFrame, this)
+    , mPrepareTxFrameTask(*aInstance, NcpSpi::PrepareTxFrame)
     , mSendFrameLength(0)
 {
     SpiFrame sendFrame(mSendFrame);
@@ -326,7 +326,7 @@ void NcpSpi::PrepareTxFrame(void)
     case kTxStateHandlingSendDone:
         mTxState = kTxStateIdle;
 
-        // Fall through
+        OT_FALL_THROUGH;
         // to next case to prepare the next frame (if any).
 
     case kTxStateIdle:

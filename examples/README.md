@@ -32,6 +32,7 @@ This page lists the available common switches with description. Unless stated ot
 | DEBUG_UART | not implemented | Enables the Debug UART platform feature. |
 | DEBUG_UART_LOG | not implemented | Enables the log output for the debug UART. Requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART to be enabled. |
 | DNS_CLIENT | OT_DNS_CLIENT | Enables support for DNS client. Enable this switch on a device that sends a DNS query for AAAA (IPv6) record. |
+| DNSSD_SERVER | OT_DNSSD_SERVER | Enables support for DNS-SD server. DNS-SD server use service information from local SRP server to resolve DNS-SD query questions. |
 | DUA | OT_DUA | Enables the Domain Unicast Address feature for Thread 1.2. |
 | DYNAMIC_LOG_LEVEL | not implemented | Enables the dynamic log level feature. Enable this switch if OpenThread log level is required to be set at runtime. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
@@ -56,6 +57,8 @@ This page lists the available common switches with description. Unless stated ot
 | SLAAC | OT_SLAAC | Enables support for adding auto-configured SLAAC addresses by OpenThread. This feature is enabled by default. |
 | SNTP_CLIENT | OT_SNTP_CLIENT | Enables support for SNTP Client. |
 | SPINEL_ENCRYPTER_LIBS | not implemented | Specifies library files (absolute paths) for implementing the NCP Spinel Encrypter. |
+| SRP_CLIENT | OT_SRP_CLIENT | Enable support for SRP client. |
+| SRP_SERVER | OT_SRP_SERVER | Enable support for SRP server. |
 | THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 (default) / 1.2). For example, set to `1.2` for Thread 1.2. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |

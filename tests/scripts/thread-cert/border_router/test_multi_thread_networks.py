@@ -33,63 +33,64 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies that a single OMR and on-link prefix is chosen
-#   and advertised when there are multiple Border Routers in the same
-#   Thread and infrastructure network.
+#   This test verifies bi-directional connectivity accross multiple Thread networks.
 #
 # Topology:
-#    ----------------(eth)------------------
-#           |                  |     |
-#          BR1 (Leader) ----- BR2   HOST
-#           |
-#          ED1
+#    -------------(eth)----------------
+#           |               |
+#          BR1             BR2
+#           |               |
+#        ROUTER1         ROUTER2
+#
+#     Thread Net1       Thread Net2
 #
 
 BR1 = 1
 ROUTER1 = 2
 BR2 = 3
-HOST = 4
+ROUTER2 = 4
 
 CHANNEL1 = 18
+CHANNEL2 = 19
 
 
-class MultiBorderRouters(thread_cert.TestCase):
+class MultiThreadNetworks(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'allowlist': [ROUTER1, BR2],
+            'allowlist': [ROUTER1],
             'is_otbr': True,
             'version': '1.2',
             'channel': CHANNEL1,
-            'router_selection_jitter': 2,
+            'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'Router_1',
             'allowlist': [BR1],
             'version': '1.2',
             'channel': CHANNEL1,
-            'router_selection_jitter': 2,
+            'router_selection_jitter': 1,
         },
         BR2: {
             'name': 'BR_2',
-            'allowlist': [BR1],
+            'allowlist': [ROUTER2],
             'is_otbr': True,
             'version': '1.2',
-            'channel': CHANNEL1,
-            'router_selection_jitter': 2,
+            'channel': CHANNEL2,
+            'router_selection_jitter': 1,
         },
-        HOST: {
-            'name': 'Host',
-            'is_host': True
+        ROUTER2: {
+            'name': 'Router_2',
+            'allowlist': [BR2],
+            'version': '1.2',
+            'channel': CHANNEL2,
+            'router_selection_jitter': 1,
         },
     }
 
     def test(self):
-        self.nodes[HOST].start(start_radvd=True, prefix=config.ONLINK_PREFIX, slaac=True)
-        self.simulator.go(5)
-
         self.nodes[BR1].start()
         self.simulator.go(5)
         self.assertEqual('leader', self.nodes[BR1].get_state())
@@ -100,38 +101,48 @@ class MultiBorderRouters(thread_cert.TestCase):
 
         self.nodes[BR2].start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[BR2].get_state())
+        self.assertEqual('leader', self.nodes[BR2].get_state())
 
-        self.simulator.go(10)
+        self.nodes[ROUTER2].start()
+        self.simulator.go(5)
+        self.assertEqual('router', self.nodes[ROUTER2].get_state())
+
         self.collect_ipaddrs()
 
         logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
         logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
         logging.info("BR2     addrs: %r", self.nodes[BR2].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
-
-        self.assertGreaterEqual(len(self.nodes[HOST].get_addrs()), 2)
+        logging.info("ROUTER2 addrs: %r", self.nodes[ROUTER2].get_addrs())
 
         self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
         self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
         self.assertTrue(len(self.nodes[BR2].get_prefixes()) == 1)
+        self.assertTrue(len(self.nodes[ROUTER2].get_prefixes()) == 1)
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        br1_omr_prefix = self.nodes[BR1].get_prefixes()[0]
+        br2_omr_prefix = self.nodes[BR2].get_prefixes()[0]
+
+        self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
+
+        # Each BR should independently register an external route for the on-link prefix
+        # and OMR prefix in another Thread Network.
+        self.assertTrue(len(self.nodes[BR1].get_routes()) == 2)
+        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 2)
+        self.assertTrue(len(self.nodes[BR2].get_routes()) == 2)
+        self.assertTrue(len(self.nodes[ROUTER2].get_routes()) == 2)
+
+        br1_external_routes = self.nodes[BR1].get_routes()
+        br2_external_routes = self.nodes[BR2].get_routes()
+
+        br1_external_routes.sort()
+        br2_external_routes.sort()
+        self.assertNotEqual(br1_external_routes, br2_external_routes)
+
         self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[BR2].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertTrue(len(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
 
-        # Router1 and BR2 can ping each other inside the Thread network.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[BR2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-        self.assertTrue(self.nodes[BR2].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-
-        # Both Router1 and BR2 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
-        self.assertTrue(self.nodes[BR2].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[BR2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.assertTrue(self.nodes[ROUTER2].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
 
 
 if __name__ == '__main__':

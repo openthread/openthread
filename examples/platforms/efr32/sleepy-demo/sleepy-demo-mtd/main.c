@@ -211,7 +211,7 @@ void handleNetifStateChanged(uint32_t aFlags, void *aContext)
             config.mDeviceType   = 0;
             config.mNetworkData  = 0;
             otThreadSetLinkMode(instance, config);
-            sAllowDeepSleep = true;
+            sAllowDeepSleep = false;
             break;
 
         case OT_DEVICE_ROLE_DETACHED:

@@ -56,6 +56,7 @@
  * @defgroup api-dns                  DNSv6
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
+ * @defgroup api-srp                  SRP
  * @defgroup api-udp-group            UDP
  *
  * @{
@@ -92,6 +93,7 @@
  * @defgroup api-thread-general       General
  * @brief This module includes functions for all Thread roles.
  * @defgroup api-joiner               Joiner
+ * @defgroup api-operational-dataset  Operational Dataset
  * @defgroup api-thread-router        Router/Leader
  * @brief This module includes functions for Thread Routers and Leaders.
  * @defgroup api-server               Server

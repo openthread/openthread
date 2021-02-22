@@ -87,7 +87,7 @@ template <typename TimerType> class TestTimer : public TimerType
 {
 public:
     explicit TestTimer(ot::Instance &aInstance)
-        : TimerType(aInstance, TestTimer::HandleTimerFired, nullptr)
+        : TimerType(aInstance, TestTimer::HandleTimerFired)
         , mFiredCounter(0)
     {
     }

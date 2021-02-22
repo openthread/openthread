@@ -131,7 +131,9 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
     {
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
-        // Fall through
+
+        OT_FALL_THROUGH;
+
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         property = SPINEL_PROP_THREAD_CHILD_TABLE;
         VerifyOrExit(!aEntry.mInfo.mChild.mIsStateRestoring);
@@ -139,7 +141,9 @@ void NcpBase::HandleNeighborTableChanged(otNeighborTableEvent aEvent, const otNe
 
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
         command = SPINEL_CMD_PROP_VALUE_INSERTED;
-        // Fall through
+
+        OT_FALL_THROUGH;
+
     case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
         property = SPINEL_PROP_THREAD_NEIGHBOR_TABLE;
         break;
@@ -326,6 +330,26 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_MAC_MAX_RETRY_NUMBER_
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_DOMAIN_NAME>(void)
+{
+    return mEncoder.WriteUtf8(otThreadGetDomainName(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_DOMAIN_NAME>(void)
+{
+    otError     error = OT_ERROR_NONE;
+    const char *domainName;
+
+    SuccessOrExit(error = mDecoder.ReadUtf8(domainName));
+
+    error = otThreadSetDomainName(mInstance, domainName);
+
+exit:
+    return error;
+}
+#endif
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {

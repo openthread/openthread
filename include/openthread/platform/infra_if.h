@@ -47,6 +47,16 @@ extern "C" {
 #endif
 
 /**
+ * This method returns the IPv6 link-local address of given infrastructure interface.
+ *
+ * @param[in]   aInfraIfIndex  The index of the infrastructure interface.
+ *
+ * @returns  A pointer to the IPv6 link-local address. NULL if no valid IPv6 link-local address found.
+ *
+ */
+const otIp6Address *otPlatInfraIfGetLinkLocalAddress(uint32_t aInfraIfIndex);
+
+/**
  * This method sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
  *
  * See RFC 4861: https://tools.ietf.org/html/rfc4861.
@@ -82,8 +92,6 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
  *
  * @note  Per RFC 4861, the caller should enforce that the source address MUST be a IPv6 link-local
  *        address and the IP Hop Limit MUST be 255.
- *
- * @note  ICMPv6 message received from @p aInfraIfIndex via multicast loopback should not be passed in.
  *
  */
 extern void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,

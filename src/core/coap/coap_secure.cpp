@@ -118,6 +118,35 @@ void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
     OT_ASSERT(error == OT_ERROR_NONE);
 }
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+otError CoapSecure::SendMessage(Message &                   aMessage,
+                                ResponseHandler             aHandler,
+                                void *                      aContext,
+                                otCoapBlockwiseTransmitHook aTransmitHook,
+                                otCoapBlockwiseReceiveHook  aReceiveHook)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
+
+    error = CoapBase::SendMessage(aMessage, mDtls.GetMessageInfo(), TxParameters::GetDefault(), aHandler, aContext,
+                                  aTransmitHook, aReceiveHook);
+
+exit:
+    return error;
+}
+
+otError CoapSecure::SendMessage(Message &                   aMessage,
+                                const Ip6::MessageInfo &    aMessageInfo,
+                                ResponseHandler             aHandler,
+                                void *                      aContext,
+                                otCoapBlockwiseTransmitHook aTransmitHook,
+                                otCoapBlockwiseReceiveHook  aReceiveHook)
+{
+    return CoapBase::SendMessage(aMessage, aMessageInfo, TxParameters::GetDefault(), aHandler, aContext, aTransmitHook,
+                                 aReceiveHook);
+}
+#else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 otError CoapSecure::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
     otError error = OT_ERROR_NONE;
@@ -137,6 +166,7 @@ otError CoapSecure::SendMessage(Message &               aMessage,
 {
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
 otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {

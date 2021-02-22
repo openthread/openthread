@@ -51,7 +51,7 @@ DatasetUpdater::DatasetUpdater(Instance &aInstance)
     , mWaitInterval(kWaitInterval)
     , mCallback(nullptr)
     , mCallbackContext(nullptr)
-    , mTimer(aInstance, DatasetUpdater::HandleTimer, this)
+    , mTimer(aInstance, DatasetUpdater::HandleTimer)
     , mDataset(nullptr)
 {
 }
@@ -100,7 +100,7 @@ void DatasetUpdater::CancelUpdate(void)
 
 void DatasetUpdater::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<DatasetUpdater>().HandleTimer();
+    aTimer.Get<DatasetUpdater>().HandleTimer();
 }
 
 void DatasetUpdater::HandleTimer(void)

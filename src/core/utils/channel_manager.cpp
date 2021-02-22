@@ -54,7 +54,7 @@ ChannelManager::ChannelManager(Instance &aInstance)
     , mDelay(kMinimumDelay)
     , mChannel(0)
     , mState(kStateIdle)
-    , mTimer(aInstance, ChannelManager::HandleTimer, this)
+    , mTimer(aInstance, ChannelManager::HandleTimer)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
     , mAutoSelectEnabled(false)
 {
@@ -121,7 +121,7 @@ void ChannelManager::StartDatasetUpdate(void)
     case OT_ERROR_INVALID_STATE:
         otLogInfoUtil("ChannelManager: Request to change to channel %d failed. Device is disabled", mChannel);
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     default:
         mState = kStateIdle;
@@ -153,7 +153,7 @@ void ChannelManager::HandleDatasetUpdateDone(otError aError)
 
 void ChannelManager::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ChannelManager>().HandleTimer();
+    aTimer.Get<ChannelManager>().HandleTimer();
 }
 
 void ChannelManager::HandleTimer(void)

@@ -63,15 +63,6 @@ template <typename Type> inline Type &InstanceLocator::Get(void) const
     return GetInstance().Get<Type>();
 }
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-
-template <typename OwnerType> OwnerType &OwnerLocator::GetOwner(void)
-{
-    return Instance::Get().Get<OwnerType>();
-}
-
-#endif
-
 } // namespace ot
 
 #endif // LOCATOR_GETTERS_HPP_

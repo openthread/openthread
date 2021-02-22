@@ -203,10 +203,11 @@ static teRxOption       sRxOpt = E_MMAC_RX_START_NOW | /* RX Options */
                            E_MMAC_RX_ALIGN_NORMAL | E_MMAC_RX_USE_AUTO_ACK | E_MMAC_RX_NO_MALFORMED |
                            E_MMAC_RX_NO_FCS_ERROR | E_MMAC_RX_ADDRESS_MATCH;
 
-tsRxFrameFormat        sTxMacFrame;                      /* TX Frame */
-static tsRxFrameFormat sRxAckFrame;                      /* Frame used for keeping the ACK */
-static otRadioFrame    sRxOtFrame;                       /* Used for TX/RX frame conversion */
-static uint8           sRxData[OT_RADIO_FRAME_MAX_SIZE]; /* mPsdu buffer for sRxOtFrame */
+tsRxFrameFormat         sTxMacFrame;                      /* TX Frame */
+static tsRxFrameFormat  sRxAckFrame;                      /* Frame used for keeping the ACK */
+static otRadioFrame     sRxOtFrame;                       /* Used for TX/RX frame conversion */
+static uint8            sRxData[OT_RADIO_FRAME_MAX_SIZE]; /* mPsdu buffer for sRxOtFrame */
+static tsRxFrameFormat *pLastRxFrame;
 
 static bool         sRadioInitForLp    = FALSE;
 static bool         sPromiscuousEnable = FALSE;
@@ -1277,13 +1278,13 @@ static void K32WEnableReceive(bool_t isNewFrameNeeded)
     {
         if ((pRxFrame = K32WGetFrame(sRxFrame, &sRxFrameIndex)) != NULL)
         {
-            vMMAC_SetRxFrame(pRxFrame);
-            K32WRestartRx();
+            pLastRxFrame = pRxFrame;
+            vMMAC_StartMacReceive(&pRxFrame->sFrameBody, sRxOpt);
         }
     }
     else
     {
-        K32WRestartRx();
+        vMMAC_StartMacReceive(&pLastRxFrame->sFrameBody, sRxOpt);
     }
 }
 

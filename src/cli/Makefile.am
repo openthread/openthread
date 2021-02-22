@@ -158,6 +158,8 @@ SOURCES_COMMON =                      \
     cli_dataset.cpp                   \
     cli_joiner.cpp                    \
     cli_network_data.cpp              \
+    cli_srp_client.cpp                \
+    cli_srp_server.cpp                \
     cli_uart.cpp                      \
     cli_udp.cpp                       \
     $(NULL)
@@ -180,6 +182,8 @@ noinst_HEADERS                      = \
     cli_dataset.hpp                   \
     cli_joiner.hpp                    \
     cli_network_data.hpp              \
+    cli_srp_client.hpp                \
+    cli_srp_server.hpp                \
     cli_uart.hpp                      \
     cli_udp.hpp                       \
     x509_cert_key.hpp                 \

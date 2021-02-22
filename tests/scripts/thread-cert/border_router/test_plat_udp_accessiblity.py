@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,66 +26,41 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-import logging
 import unittest
 
-import config
 import thread_cert
 
 # Test description:
-#   This test verifies bi-directional connectivity accross multiple Thread networks.
+#   This test verifies UDP servers can be accessible using RLOC/ALOC/MLEID/LINK-LOCAL/OMR when PLAT_UDP is enabled.
+#   This test uses SRP server for convince.
 #
 # Topology:
-#    -------------(eth)----------------
-#           |               |
-#          BR1             BR2
-#           |               |
-#          ED1             ED2
+#    -----------(eth)------
+#           |
+#          BR1 (Leader)
+#           |
+#        ROUTER1
 #
-#     Thread Net1       Thread Net2
-#
+
+import config
 
 BR1 = 1
 ROUTER1 = 2
-BR2 = 3
-ROUTER2 = 4
-
-CHANNEL1 = 18
-CHANNEL2 = 19
 
 
-class MultiThreadNetworks(thread_cert.TestCase):
+class TestPlatUdpAccessibility(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'allowlist': [ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'channel': CHANNEL1,
             'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'Router_1',
-            'allowlist': [BR1],
             'version': '1.2',
-            'channel': CHANNEL1,
-            'router_selection_jitter': 1,
-        },
-        BR2: {
-            'name': 'BR_2',
-            'allowlist': [ROUTER2],
-            'is_otbr': True,
-            'version': '1.2',
-            'channel': CHANNEL2,
-            'router_selection_jitter': 1,
-        },
-        ROUTER2: {
-            'name': 'Router_2',
-            'allowlist': [BR2],
-            'version': '1.2',
-            'channel': CHANNEL2,
             'router_selection_jitter': 1,
         },
     }
@@ -94,36 +69,44 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.nodes[BR1].start()
         self.simulator.go(5)
         self.assertEqual('leader', self.nodes[BR1].get_state())
+        self.nodes[BR1].srp_server_set_enabled(True)
 
         self.nodes[ROUTER1].start()
         self.simulator.go(5)
         self.assertEqual('router', self.nodes[ROUTER1].get_state())
 
-        self.nodes[BR2].start()
-        self.simulator.go(5)
-        self.assertEqual('leader', self.nodes[BR2].get_state())
+        # Router1 can ping to/from the Host on infra link.
+        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[BR1].get_rloc()))
 
-        self.nodes[ROUTER2].start()
-        self.simulator.go(5)
-        self.assertEqual('router', self.nodes[ROUTER2].get_state())
+        server_port = self.nodes[BR1].get_srp_server_port()
 
-        self.collect_ipaddrs()
+        self._test_srp_server(self.nodes[BR1].get_mleid(), server_port)
+        self._test_srp_server(self.nodes[BR1].get_linklocal(), server_port)
+        self._test_srp_server(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0], server_port)
+        self._test_srp_server(self.nodes[BR1].get_rloc(), server_port)
+        for server_aloc in self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.ALOC):
+            self._test_srp_server(server_aloc, server_port)
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("BR2     addrs: %r", self.nodes[BR2].get_addrs())
-        logging.info("ROUTER2 addrs: %r", self.nodes[ROUTER2].get_addrs())
+    def _test_srp_server(self, server_addr, server_port):
+        print(f'Testing SRP server: {server_addr}:{server_port}')
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[BR2].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER2].get_prefixes()) == 1)
+        # check if the SRP client can register to the SRP server
+        self.nodes[ROUTER1].srp_client_start(server_addr, server_port)
+        self.nodes[ROUTER1].srp_client_set_host_name('host1')
+        self.nodes[ROUTER1].srp_client_set_host_address(self.nodes[ROUTER1].get_rloc())
+        self.nodes[ROUTER1].srp_client_add_service('ins1', '_ipp._tcp', 11111)
+        self.simulator.go(3)
+        self.assertEqual(self.nodes[ROUTER1].srp_client_get_host_state(), 'Registered')
 
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        # check if the SRP client can remove from the SRP server
+        self.nodes[ROUTER1].srp_client_remove_host('host1')
+        self.nodes[ROUTER1].srp_client_remove_service('ins1', '_ipp._tcp')
+        self.simulator.go(3)
+        self.assertEqual(self.nodes[ROUTER1].srp_client_get_host_state(), 'Removed')
 
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-        self.assertTrue(self.nodes[ROUTER2].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        # stop the SRP client for the next round
+        self.nodes[ROUTER1].srp_client_stop()
+        self.simulator.go(3)
 
 
 if __name__ == '__main__':

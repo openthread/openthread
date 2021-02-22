@@ -115,6 +115,7 @@ size_nrf52840_version()
         "DIAGNOSTIC=1"
         "DISABLE_DOC=1"
         "DNS_CLIENT=1"
+        "DNSSD_SERVER=1"
         "ECDSA=1"
         "FULL_LOGS=1"
         "JAM_DETECTION=1"
@@ -126,6 +127,8 @@ size_nrf52840_version()
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"
+        "SRP_CLIENT=1"
+        "SRP_SERVER=1"
         "TIME_SYNC=1"
         "UDP_FORWARD=1"
     )

@@ -49,7 +49,7 @@ JamDetector::JamDetector(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandler(nullptr)
     , mContext(nullptr)
-    , mTimer(aInstance, JamDetector::HandleTimer, this)
+    , mTimer(aInstance, JamDetector::HandleTimer)
     , mHistoryBitmap(0)
     , mCurSecondStartTime(0)
     , mSampleInterval(0)
@@ -161,7 +161,7 @@ exit:
 
 void JamDetector::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<JamDetector>().HandleTimer();
+    aTimer.Get<JamDetector>().HandleTimer();
 }
 
 void JamDetector::HandleTimer(void)

@@ -144,7 +144,6 @@ class VirtualTime(BaseSimulator):
 
     BLOCK_TIMEOUT = 10
 
-    RADIO_ONLY = os.getenv('RADIO_DEVICE') is not None
     NCP_SIM = os.getenv('NODE_TYPE', 'sim') == 'ncp-sim'
 
     _message_factory = None
@@ -246,7 +245,7 @@ class VirtualTime(BaseSimulator):
         return (addr[0], addr[1] - self.BASE_PORT)
 
     def _core_addr_from(self, nodeid):
-        if self.RADIO_ONLY:
+        if self._nodes[nodeid].is_posix:
             return ('127.0.0.1', self.BASE_PORT + self.port + nodeid)
         else:
             return ('127.0.0.1', self.port + nodeid)
@@ -501,7 +500,7 @@ class VirtualTime(BaseSimulator):
 
     def go(self, duration, nodeid=None):
         assert self.current_time == self._pause_time
-        duration = int(duration) * 1000000
+        duration = int(duration * 1000000)
         dbg_print('running for %d us' % duration)
         self._pause_time += duration
         if nodeid:

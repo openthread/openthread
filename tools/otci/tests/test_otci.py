@@ -252,14 +252,15 @@ class TestOTCI(unittest.TestCase):
         logging.info("leader data: %r", leader.get_leader_data())
         logging.info("leader neighbor list: %r", leader.get_neighbor_list())
         logging.info("leader neighbor table: %r", leader.get_neighbor_table())
-        logging.info("Leader external routes: %r", leader.get_routes())
+        logging.info("Leader external routes: %r", leader.get_local_routes())
         leader.add_route('2002::/64')
         leader.register_network_data()
-        logging.info("Leader external routes: %r", leader.get_routes())
+        logging.info("Leader external routes: %r", leader.get_local_routes())
 
         self.assertEqual(1, len(leader.get_router_list()))
         self.assertEqual(1, len(leader.get_router_table()))
         logging.info("Leader router table: %r", leader.get_router_table())
+        self.assertFalse(list(leader.get_router_table().values())[0].is_link_established)
 
         logging.info('scan: %r', leader.scan())
         logging.info('scan energy: %r', leader.scan_energy())
@@ -272,6 +273,12 @@ class TestOTCI(unittest.TestCase):
 
         logging.info("network data: %r", leader.get_network_data())
         logging.info("network data raw: %r", leader.get_network_data_bytes())
+        self.assertEqual(leader.get_network_data()['prefixes'], leader.get_prefixes())
+        self.assertEqual(leader.get_network_data()['routes'], leader.get_routes())
+        self.assertEqual(leader.get_network_data()['services'], leader.get_services())
+
+        logging.info("local prefixes: %r", leader.get_local_prefixes())
+        logging.info("local routes: %r", leader.get_local_routes())
 
         logging.info('txpower %r', leader.get_txpower())
         leader.set_txpower(-10)
@@ -491,14 +498,17 @@ class TestOTCI(unittest.TestCase):
 
         logging.info("leader neighbor list: %r", leader.get_neighbor_list())
         logging.info("leader neighbor table: %r", leader.get_neighbor_table())
-        logging.info("prefixes: %r", commissioner.get_prefixes())
+        logging.info("prefixes: %r", commissioner.get_local_prefixes())
         commissioner.add_prefix('2001::/64')
         commissioner.register_network_data()
         commissioner.wait(1)
-        logging.info("prefixes: %r", commissioner.get_prefixes())
+        logging.info("prefixes: %r", commissioner.get_local_prefixes())
 
         self.assertEqual(2, len(leader.get_router_list()))
         self.assertEqual(2, len(leader.get_router_table()))
+        logging.info('leader router table: %r', leader.get_router_table())
+        self.assertEqual({False, True},
+                         set(router.is_link_established for router in leader.get_router_table().values()))
 
         self.assertFalse(leader.is_singleton())
 

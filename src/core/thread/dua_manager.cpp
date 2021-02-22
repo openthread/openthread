@@ -51,7 +51,7 @@ namespace ot {
 
 DuaManager::DuaManager(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask, this)
+    , mRegistrationTask(aInstance, DuaManager::HandleRegistrationTask)
     , mDuaNotification(UriPath::kDuaRegistrationNotify, &DuaManager::HandleDuaNotification, this)
     , mIsDuaPending(false)
 #if OPENTHREAD_CONFIG_DUA_ENABLE
@@ -110,7 +110,8 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
         // In case removed for some reason e.g. the kDuaInvalid response from PBBR forcely
         VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()));
 
-        // fall through
+        OT_FALL_THROUGH;
+
     case BackboneRouter::Leader::kDomainPrefixRefreshed:
     case BackboneRouter::Leader::kDomainPrefixAdded:
     {
@@ -395,6 +396,11 @@ void DuaManager::HandleTimeTick(void)
     UpdateTimeTickerRegistration();
 }
 
+void DuaManager::HandleRegistrationTask(Tasklet &aTasklet)
+{
+    aTasklet.Get<DuaManager>().PerformNextRegistration();
+}
+
 void DuaManager::UpdateTimeTickerRegistration(void)
 {
     if (mDelay.mValue == 0)
@@ -508,7 +514,9 @@ void DuaManager::PerformNextRegistration(void)
     mIsDuaPending   = true;
     mRegisteringDua = dua;
 
-    // TODO: (DUA) need update when CSL is enabled.
+    // Generally Thread 1.2 Router would send DUA.req on behalf for DUA registered by its MTD child.
+    // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send DUA.req to PBBR itself.
+    // In this case, Thread 1.2 sleepy end device relies on fast data poll to fetch the response timely.
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
         Get<DataPollSender>().SendFastPolls();

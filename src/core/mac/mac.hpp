@@ -79,7 +79,7 @@ enum
     kDataPollTimeout = 100, ///< Timeout for receiving Data Frame (milliseconds).
     kSleepDelay      = 300, ///< Max sleep delay when frame is pending (milliseconds).
 
-    kScanDurationDefault = 300, ///< Default interval between channels (milliseconds).
+    kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION, ///< Default interval between channels (milliseconds).
 
     kMaxCsmaBackoffsDirect =
         OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
@@ -221,7 +221,7 @@ public:
      */
     void RequestIndirectFrameTransmission(void);
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * This method requests `Mac` to start a CSL tx operation after a delay of @p aDelay time.
      *
@@ -792,7 +792,7 @@ private:
         kOperationTransmitDataDirect,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
 #endif
 #endif
@@ -862,7 +862,7 @@ private:
     uint8_t GetTimeIeOffset(const Frame &aFrame);
 #endif
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
@@ -883,9 +883,9 @@ private:
     bool mPendingTransmitDataDirect : 1;
 #if OPENTHREAD_FTD
     bool mPendingTransmitDataIndirect : 1;
-#endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     bool mPendingTransmitDataCsl : 1;
+#endif
 #endif
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
@@ -919,9 +919,9 @@ private:
     uint8_t     mMaxFrameRetriesDirect;
 #if OPENTHREAD_FTD
     uint8_t mMaxFrameRetriesIndirect;
-#endif
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;
+#endif
 #endif
 
     union

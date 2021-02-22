@@ -38,7 +38,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <openthread/platform/flash.h>
 
 static int sFlashFd = -1;

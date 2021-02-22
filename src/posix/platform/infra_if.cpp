@@ -51,11 +51,18 @@
 #include <openthread/platform/infra_if.h>
 
 #include "common/code_utils.hpp"
+#include "lib/platform/exit_code.h"
 
 static char         sInfraIfName[IFNAMSIZ];
 static uint32_t     sInfraIfIndex       = 0;
 static int          sInfraIfIcmp6Socket = -1;
 static otIp6Address sInfraIfLinkLocalAddr;
+
+const otIp6Address *otPlatInfraIfGetLinkLocalAddress(uint32_t aInfraIfIndex)
+{
+    VerifyOrDie(aInfraIfIndex == sInfraIfIndex, OT_EXIT_FAILURE);
+    return &sInfraIfLinkLocalAddr;
+}
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
@@ -131,15 +138,12 @@ exit:
     return error;
 }
 
-static void InitLinkLocalAddress(void)
+static otError InitLinkLocalAddress(void)
 {
+    otError         error;
     struct ifaddrs *ifAddrs = nullptr;
 
-    if (getifaddrs(&ifAddrs) < 0)
-    {
-        otLogCritPlat("failed to get netif addresses: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(getifaddrs(&ifAddrs) != -1, OT_EXIT_ERROR_ERRNO);
 
     for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
     {
@@ -154,11 +158,16 @@ static void InitLinkLocalAddress(void)
         if (IN6_IS_ADDR_LINKLOCAL(&ip6Addr->sin6_addr))
         {
             memcpy(&sInfraIfLinkLocalAddr, &ip6Addr->sin6_addr, sizeof(sInfraIfLinkLocalAddr));
-            break;
+            ExitNow(error = OT_ERROR_NONE);
         }
     }
 
+    otLogCritPlat("cannot find IPv6 link-local address for interface %s", sInfraIfName);
+    error = OT_ERROR_NOT_FOUND;
+
+exit:
     freeifaddrs(ifAddrs);
+    return error;
 }
 
 void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
@@ -191,11 +200,7 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
 
     // Initializes the ICMPv6 socket.
     sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
-    if (sock < 0)
-    {
-        otLogCritPlat("failed to open ICMPv6 socket: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
     // Only accept router advertisements and router solicits.
     ICMP6_FILTER_SETBLOCKALL(&filter);
@@ -203,55 +208,38 @@ void platformInfraIfInit(otInstance *aInstance, const char *aIfName)
     ICMP6_FILTER_SETPASS(ND_ROUTER_ADVERT, &filter);
 
     rval = setsockopt(sock, IPPROTO_ICMPV6, ICMP6_FILTER, &filter, sizeof(filter));
-    if (rval < 0)
-    {
-        otLogCritPlat("Can't set ICMP6_FILTER: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     // We want a source address and interface index.
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_RECVPKTINFO, &kEnable, sizeof(kEnable));
-    if (rval < 0)
-    {
-        otLogCritPlat("Can't set IPV6_RECVPKTINFO: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
 #ifdef __linux__
     rval = setsockopt(sock, IPPROTO_RAW, IPV6_CHECKSUM, &kIpv6ChecksumOffset, sizeof(kIpv6ChecksumOffset));
 #else
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_CHECKSUM, &kIpv6ChecksumOffset, sizeof(kIpv6ChecksumOffset));
 #endif
-    if (rval < 0)
-    {
-        otLogCritPlat("Can't set IPV6_CHECKSUM: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     // We need to be able to reject RAs arriving from off-link.
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_RECVHOPLIMIT, &kEnable, sizeof(kEnable));
-    if (rval < 0)
-    {
-        otLogCritPlat("Can't set IPV6_RECVHOPLIMIT: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_UNICAST_HOPS, &kHopLimit, sizeof(kHopLimit));
-    if (rval < 0)
-    {
-        otLogCritPlat("Can't set IPV6_UNICAST_HOPS: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &kHopLimit, sizeof(kHopLimit));
-    if (rval < 0)
-    {
-        otLogCritPlat("Can't set IPV6_MULTICAST_HOPS: %s", strerror(errno));
-        DieNow(OT_EXIT_ERROR_ERRNO);
-    }
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
+
+#ifdef __linux__
+    rval = setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, sInfraIfName, strlen(sInfraIfName));
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+    rval = setsockopt(sock, IPPROTO_IP, IP_BOUND_IF, &sInfraIfIndex, sizeof(sInfraIfIndex));
+#endif // __linux__
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     sInfraIfIcmp6Socket = sock;
-    InitLinkLocalAddress();
+    SuccessOrDie(InitLinkLocalAddress());
 }
 
 void platformInfraIfDeinit(void)
@@ -278,7 +266,7 @@ exit:
 
 void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
 {
-    otError  error = OT_ERROR_DROP;
+    otError  error = OT_ERROR_NONE;
     uint8_t  buffer[1500];
     uint16_t bufferLength;
 
@@ -293,6 +281,7 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
     struct sockaddr_in6 srcAddr;
     struct in6_addr     dstAddr;
 
+    // It is not an error when there is no input data on the socket.
     VerifyOrExit(sInfraIfIcmp6Socket != -1);
     VerifyOrExit(FD_ISSET(sInfraIfIcmp6Socket, &aReadFdSet));
 
@@ -312,7 +301,7 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
     if (rval < 0)
     {
         otLogWarnPlat("failed to receive ICMPv6 message: %s", strerror(errno));
-        ExitNow();
+        ExitNow(error = OT_ERROR_DROP);
     }
 
     bufferLength = static_cast<uint16_t>(rval);
@@ -335,23 +324,19 @@ void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
         }
     }
 
-    VerifyOrExit(ifIndex == sInfraIfIndex);
+    VerifyOrExit(ifIndex == sInfraIfIndex, error = OT_ERROR_DROP);
 
     // We currently accept only RA & RS messages for the Border Router and it requires that
     // the hoplimit must be 255 and the source address must be a link-local address.
-    VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr));
+    VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr), error = OT_ERROR_DROP);
 
-    // Drop multicast messages sent by ourselves.
-    VerifyOrExit(!otIp6IsAddressEqual(&sInfraIfLinkLocalAddr, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr)));
     otPlatInfraIfRecvIcmp6Nd(aInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
                              bufferLength);
-
-    error = OT_ERROR_NONE;
 
 exit:
     if (error != OT_ERROR_NONE)
     {
-        otLogDebgPlat("drop ICMPv6 message");
+        otLogDebgPlat("failed to handle ICMPv6 message: %s", otThreadErrorToString(error));
     }
 }
 

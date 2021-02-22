@@ -43,6 +43,9 @@
 #include "thread/mle.hpp"
 
 namespace ot {
+// This array contains critical keys that should be stored in the secure area.
+static const uint16_t kCriticalKeys[] = {SettingsBase::kKeyActiveDataset, SettingsBase::kKeyPendingDataset,
+                                         SettingsBase::kKeySrpEcdsaKey};
 
 // LCOV_EXCL_START
 
@@ -122,6 +125,11 @@ void SettingsDriver::Deinit(void)
     otPlatSettingsDeinit(&GetInstance());
 }
 
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    otPlatSettingsSetCriticalKeys(&GetInstance(), aKeys, aKeysLength);
+}
+
 otError SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return otPlatSettingsAdd(&GetInstance(), aKey, aValue, aValueLength);
@@ -164,6 +172,12 @@ void SettingsDriver::Deinit(void)
 {
 }
 
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    OT_UNUSED_VARIABLE(aKeys);
+    OT_UNUSED_VARIABLE(aKeysLength);
+}
+
 otError SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return mFlash.Add(aKey, aValue, aValueLength);
@@ -194,6 +208,7 @@ void SettingsDriver::Wipe(void)
 void Settings::Init(void)
 {
     Get<SettingsDriver>().Init();
+    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, OT_ARRAY_LENGTH(kCriticalKeys));
 }
 
 void Settings::Deinit(void)
@@ -516,6 +531,48 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
+otError Settings::SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = Save(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), aKeyPair.GetDerLength()));
+    otLogInfoCore("Non-volatile: Saved SRP key");
+
+exit:
+    LogFailure(error, "saving SRP key", false);
+    return error;
+}
+
+otError Settings::ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const
+{
+    otError  error;
+    uint16_t length = Crypto::Ecdsa::P256::KeyPair::kMaxDerSize;
+
+    SuccessOrExit(error = Read(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), length));
+    VerifyOrExit(length <= Crypto::Ecdsa::P256::KeyPair::kMaxDerSize, error = OT_ERROR_NOT_FOUND);
+    aKeyPair.SetDerLength(static_cast<uint8_t>(length));
+    otLogInfoCore("Non-volatile: Read SRP key");
+
+exit:
+    return error;
+}
+
+otError Settings::DeleteSrpKey(void)
+{
+    otError error;
+
+    SuccessOrExit(error = Delete(kKeySrpEcdsaKey));
+    otLogInfoCore("Non-volatile: Deleted SRP key");
+
+exit:
+    LogFailure(error, "deleting SRP key", true);
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 otError Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
 {
     return Get<SettingsDriver>().Get(aKey, 0, reinterpret_cast<uint8_t *>(aBuffer), &aSize);
@@ -537,3 +594,13 @@ otError Settings::Delete(Key aKey)
 }
 
 } // namespace ot
+
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of settings platform APIs
+
+OT_TOOL_WEAK void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeys);
+    OT_UNUSED_VARIABLE(aKeysLength);
+}

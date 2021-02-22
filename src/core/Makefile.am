@@ -110,6 +110,7 @@ libopenthread_mtd_a_CPPFLAGS               = \
 SOURCES_COMMON                                  = \
     api/backbone_router_api.cpp                   \
     api/backbone_router_ftd_api.cpp               \
+    api/border_agent_api.cpp                      \
     api/border_router_api.cpp                     \
     api/channel_manager_api.cpp                   \
     api/channel_monitor_api.cpp                   \
@@ -143,6 +144,8 @@ SOURCES_COMMON                                  = \
     api/random_noncrypto_api.cpp                  \
     api/server_api.cpp                            \
     api/sntp_api.cpp                              \
+    api/srp_client_api.cpp                        \
+    api/srp_server_api.cpp                        \
     api/tasklet_api.cpp                           \
     api/thread_api.cpp                            \
     api/thread_ftd_api.cpp                        \
@@ -213,6 +216,7 @@ SOURCES_COMMON                                  = \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
     net/dns_headers.cpp                           \
+    net/dnssd_server.cpp                          \
     net/icmp6.cpp                                 \
     net/ip6.cpp                                   \
     net/ip6_address.cpp                           \
@@ -221,6 +225,9 @@ SOURCES_COMMON                                  = \
     net/ip6_mpl.cpp                               \
     net/netif.cpp                                 \
     net/sntp_client.cpp                           \
+    net/socket.cpp                                \
+    net/srp_client.cpp                            \
+    net/srp_server.cpp                            \
     net/udp6.cpp                                  \
     radio/radio.cpp                               \
     radio/radio_callbacks.cpp                     \
@@ -254,6 +261,7 @@ SOURCES_COMMON                                  = \
     thread/network_data_leader_ftd.cpp            \
     thread/network_data_local.cpp                 \
     thread/network_data_notifier.cpp              \
+    thread/network_data_service.cpp               \
     thread/network_diagnostic.cpp                 \
     thread/panid_query_server.cpp                 \
     thread/radio_selector.cpp                     \
@@ -399,6 +407,7 @@ HEADERS_COMMON                                  = \
     config/dhcp6_server.h                         \
     config/diag.h                                 \
     config/dns_client.h                           \
+    config/dnssd_server.h                         \
     config/ip6.h                                  \
     config/joiner.h                               \
     config/link_quality.h                         \
@@ -412,6 +421,8 @@ HEADERS_COMMON                                  = \
     config/platform.h                             \
     config/radio_link.h                           \
     config/sntp_client.h                          \
+    config/srp_client.h                           \
+    config/srp_server.h                           \
     config/time_sync.h                            \
     config/tmf.h                                  \
     crypto/aes_ccm.hpp                            \
@@ -454,6 +465,7 @@ HEADERS_COMMON                                  = \
     net/dhcp6_server.hpp                          \
     net/dns_client.hpp                            \
     net/dns_headers.hpp                           \
+    net/dnssd_server.hpp                          \
     net/icmp6.hpp                                 \
     net/ip6.hpp                                   \
     net/ip6_address.hpp                           \
@@ -463,6 +475,8 @@ HEADERS_COMMON                                  = \
     net/netif.hpp                                 \
     net/sntp_client.hpp                           \
     net/socket.hpp                                \
+    net/srp_client.hpp                            \
+    net/srp_server.hpp                            \
     net/tcp.hpp                                   \
     net/udp6.hpp                                  \
     radio/radio.hpp                               \
@@ -498,6 +512,7 @@ HEADERS_COMMON                                  = \
     thread/network_data_leader_ftd.hpp            \
     thread/network_data_local.hpp                 \
     thread/network_data_notifier.hpp              \
+    thread/network_data_service.hpp               \
     thread/network_data_tlvs.hpp                  \
     thread/network_diagnostic.hpp                 \
     thread/network_diagnostic_tlvs.hpp            \

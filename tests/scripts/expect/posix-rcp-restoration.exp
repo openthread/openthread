@@ -31,6 +31,9 @@ source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
 
+# The expect on macOS doesn't support `try` or `file tempfile`.
+skip_on_macos
+
 file tempfile socat_out
 set socat_pid [exec socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$socat_out &]
 while {true} {

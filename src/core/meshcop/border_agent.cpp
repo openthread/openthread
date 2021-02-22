@@ -209,7 +209,7 @@ exit:
         SendErrorMessage(aForwardContext, error);
     }
 
-    GetInstance().HeapFree(&aForwardContext);
+    Instance::HeapFree(&aForwardContext);
 }
 
 template <Coap::Resource BorderAgent::*aResource>
@@ -284,7 +284,7 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mPendingSet(UriPath::kPendingSet, BorderAgent::HandleRequest<&BorderAgent::mPendingSet>, this)
     , mProxyTransmit(UriPath::kProxyTx, BorderAgent::HandleRequest<&BorderAgent::mProxyTransmit>, this)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
-    , mTimer(aInstance, HandleTimeout, this)
+    , mTimer(aInstance, HandleTimeout)
     , mState(kStateStopped)
 {
     mCommissionerAloc.InitAsThreadOriginRealmLocalScope();
@@ -494,7 +494,7 @@ otError BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
         SuccessOrExit(error = Get<Coap::CoapSecure>().SendAck(aMessage, aMessageInfo));
     }
 
-    forwardContext = static_cast<ForwardContext *>(GetInstance().HeapCAlloc(1, sizeof(ForwardContext)));
+    forwardContext = static_cast<ForwardContext *>(Instance::HeapCAlloc(1, sizeof(ForwardContext)));
     VerifyOrExit(forwardContext != nullptr, error = OT_ERROR_NO_BUFS);
 
     forwardContext->Init(GetInstance(), aMessage, aPetition, aSeparate);
@@ -530,7 +530,7 @@ exit:
     {
         if (forwardContext != nullptr)
         {
-            GetInstance().HeapFree(forwardContext);
+            Instance::HeapFree(forwardContext);
         }
 
         FreeMessage(message);
@@ -594,7 +594,7 @@ exit:
 
 void BorderAgent::HandleTimeout(Timer &aTimer)
 {
-    aTimer.GetOwner<BorderAgent>().HandleTimeout();
+    aTimer.Get<BorderAgent>().HandleTimeout();
 }
 
 void BorderAgent::HandleTimeout(void)

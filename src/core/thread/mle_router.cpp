@@ -56,7 +56,7 @@ namespace Mle {
 
 MleRouter::MleRouter(Instance &aInstance)
     : Mle(aInstance)
-    , mAdvertiseTimer(aInstance, MleRouter::HandleAdvertiseTimer, nullptr, this)
+    , mAdvertiseTimer(aInstance, MleRouter::HandleAdvertiseTimer, nullptr)
     , mAddressSolicit(UriPath::kAddressSolicit, &MleRouter::HandleAddressSolicit, this)
     , mAddressRelease(UriPath::kAddressRelease, &MleRouter::HandleAddressRelease, this)
     , mChildTable(aInstance)
@@ -295,7 +295,8 @@ void MleRouter::HandleChildStart(AttachMode aMode)
             RemoveChildren();
         }
 
-        // fall through
+        OT_FALL_THROUGH;
+
     case kAttachBetter:
         if (HasChildren() && mPreviousPartitionIdRouter != mLeaderData.GetPartitionId())
         {
@@ -387,7 +388,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
 
 bool MleRouter::HandleAdvertiseTimer(TrickleTimer &aTimer)
 {
-    return aTimer.GetOwner<MleRouter>().HandleAdvertiseTimer();
+    return aTimer.Get<MleRouter>().HandleAdvertiseTimer();
 }
 
 bool MleRouter::HandleAdvertiseTimer(void)
@@ -824,6 +825,8 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     case Neighbor::kStateInvalid:
         VerifyOrExit((mChallengeTimeout > 0) && (response == mChallenge), error = OT_ERROR_SECURITY);
 
+        OT_FALL_THROUGH;
+
     case Neighbor::kStateValid:
         break;
 
@@ -945,6 +948,7 @@ otError MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetLinkAckFrameCounter(linkFrameCounter);
     router->SetMleFrameCounter(mleFrameCounter);
     router->SetLastHeard(TimerMilli::GetNow());
+    router->SetVersion(static_cast<uint8_t>(version));
     router->SetDeviceMode(DeviceMode(DeviceMode::kModeFullThreadDevice | DeviceMode::kModeRxOnWhenIdle |
                                      DeviceMode::kModeFullNetworkData));
     router->GetLinkInfo().Clear();
@@ -1360,7 +1364,7 @@ otError MleRouter::HandleAdvertisement(const Message &         aMessage,
             mRouterSelectionJitterTimeout = 1 + Random::NonCrypto::GetUint8InRange(0, mRouterSelectionJitter);
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleLeader:
         router = mRouterTable.GetRouter(routerId);
@@ -1737,7 +1741,7 @@ void MleRouter::HandleTimeTick(void)
             ExitNow();
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleRouter:
         // verify path to leader
@@ -1786,7 +1790,7 @@ void MleRouter::HandleTimeTick(void)
             OT_UNREACHABLE_CODE(break);
         }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (child.IsCslSynchronized() &&
             TimerMilli::GetNow() - child.GetCslLastHeard() >= Time::SecToMsec(child.GetCslTimeout()))
         {
@@ -2446,7 +2450,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         ExitNow(error = OT_ERROR_PARSE);
     }
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     if (child->IsCslSynchronized())
     {
         CslChannelTlv cslChannel;
@@ -2467,7 +2471,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
             child->SetCslChannel(0);
         }
     }
-#endif // !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     child->SetLastHeard(TimerMilli::GetNow());
 
@@ -2478,7 +2482,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
         childDidChange = true;
 
-#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         if (child->IsRxOnWhenIdle())
         {
             // Clear CSL synchronization state

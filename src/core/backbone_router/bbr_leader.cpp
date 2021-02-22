@@ -71,13 +71,11 @@ exit:
 
 otError Leader::GetServiceId(uint8_t &aServiceId) const
 {
-    otError error       = OT_ERROR_NONE;
-    uint8_t serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
+    otError error = OT_ERROR_NONE;
 
     VerifyOrExit(HasPrimary(), error = OT_ERROR_NOT_FOUND);
-
-    error = Get<NetworkData::Leader>().GetServiceId(NetworkData::ServiceTlv::kThreadEnterpriseNumber, &serviceData,
-                                                    sizeof(serviceData), true, aServiceId);
+    error = Get<NetworkData::Service::Manager>().GetServiceId<NetworkData::Service::BackboneRouter>(
+        /* aServerStable */ true, aServiceId);
 
 exit:
     return error;
@@ -182,7 +180,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     State                state;
     uint32_t             origMlrTimeout;
 
-    IgnoreError(Get<NetworkData::Leader>().GetBackboneRouterPrimary(config));
+    Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config);
 
     if (config.mServer16 != mConfig.mServer16)
     {

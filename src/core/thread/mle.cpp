@@ -71,9 +71,9 @@ Mle::Mle(Instance &aInstance)
     , mReattachState(kReattachStop)
     , mAttachCounter(0)
     , mAnnounceDelay(kAnnounceTimeout)
-    , mAttachTimer(aInstance, Mle::HandleAttachTimer, this)
-    , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer, this)
-    , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer, this)
+    , mAttachTimer(aInstance, Mle::HandleAttachTimer)
+    , mDelayedResponseTimer(aInstance, Mle::HandleDelayedResponseTimer)
+    , mMessageTransmissionTimer(aInstance, Mle::HandleMessageTransmissionTimer)
     , mParentLeaderCost(0)
     , mParentRequestMode(kAttachAny)
     , mParentPriority(0)
@@ -101,7 +101,7 @@ Mle::Mle(Instance &aInstance)
     , mParentSearchBackoffWasCanceled(false)
     , mParentSearchRecentlyDetached(false)
     , mParentSearchBackoffCancelTime(0)
-    , mParentSearchTimer(aInstance, Mle::HandleParentSearchTimer, this)
+    , mParentSearchTimer(aInstance, Mle::HandleParentSearchTimer)
 #endif
     , mAnnounceChannel(0)
     , mAlternateChannel(0)
@@ -1622,7 +1622,7 @@ exit:
 
 void Mle::HandleAttachTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleAttachTimer();
+    aTimer.Get<Mle>().HandleAttachTimer();
 }
 
 void Mle::HandleAttachTimer(void)
@@ -1726,7 +1726,7 @@ void Mle::HandleAttachTimer(void)
             break;
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kAttachStateAnnounce:
         if (shouldAnnounce)
@@ -1738,7 +1738,7 @@ void Mle::HandleAttachTimer(void)
             }
         }
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kAttachStateChildIdRequest:
         SetAttachState(kAttachStateIdle);
@@ -1858,7 +1858,7 @@ exit:
 
 void Mle::HandleDelayedResponseTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleDelayedResponseTimer();
+    aTimer.Get<Mle>().HandleDelayedResponseTimer();
 }
 
 void Mle::HandleDelayedResponseTimer(void)
@@ -2174,7 +2174,7 @@ exit:
 
 void Mle::HandleMessageTransmissionTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleMessageTransmissionTimer();
+    aTimer.Get<Mle>().HandleMessageTransmissionTimer();
 }
 
 void Mle::HandleMessageTransmissionTimer(void)
@@ -3692,7 +3692,7 @@ void Mle::HandleChildUpdateResponse(const Message &         aMessage,
 
         mRetrieveNewNetworkData = true;
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case kRoleChild:
         // Source Address
@@ -3964,7 +3964,7 @@ exit:
 #if OPENTHREAD_CONFIG_PARENT_SEARCH_ENABLE
 void Mle::HandleParentSearchTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Mle>().HandleParentSearchTimer();
+    aTimer.Get<Mle>().HandleParentSearchTimer();
 }
 
 void Mle::HandleParentSearchTimer(void)

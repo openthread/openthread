@@ -470,6 +470,30 @@
  */
 #define OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE 1
 
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+ *
+ * Define to 1 to enable SRP Client support.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+ *
+ * Define to 1 to enable SRP Server support.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_SERVER_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_CHANGE_ENABLE
+ *
+ * Define to 1 for the SRP client implementation to provides APIs to allow domain name to be set/changed.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE 1
+
 #if OPENTHREAD_RADIO
 /**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE

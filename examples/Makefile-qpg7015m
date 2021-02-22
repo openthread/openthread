@@ -47,12 +47,17 @@ OBJCOPY                         = $(CROSS_COMPILE)objcopy
 
 BuildJobs                      ?= 9
 
-configure_OPTIONS                        += \
-    --disable-tools                         \
-    --enable-cli                            \
-    --enable-ftd                            \
-    --enable-mtd                            \
-    --with-examples=$(PREFIX_LC)            \
+configure_OPTIONS               =     \
+    --disable-tools                   \
+    --enable-cli                      \
+    --enable-ftd                      \
+    --enable-mtd                      \
+    --enable-ncp                      \
+    --enable-cli-app                  \
+    --enable-radio-only               \
+    --with-ncp-vendor-hook-source=no  \
+    --with-ncp-bus=uart               \
+    --with-examples=$(PREFIX_LC)      \
     $(NULL)
 
 ifeq ($(CLI_LOGGING),1)
@@ -100,7 +105,7 @@ LDFLAGS                                  += \
     -Wl,--gc-sections                       \
     -Wl,-Map=$(PREFIX_LC).map               \
     -lrt                                    \
-    -lpthread                               \
+    -pthread                                \
     $(NULL)
 
 ECHO                            := @echo

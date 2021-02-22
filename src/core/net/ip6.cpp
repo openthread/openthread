@@ -67,7 +67,7 @@ Ip6::Ip6(Instance &aInstance)
     , mIsReceiveIp6FilterEnabled(false)
     , mReceiveIp6DatagramCallback(nullptr)
     , mReceiveIp6DatagramCallbackContext(nullptr)
-    , mSendQueueTask(aInstance, Ip6::HandleSendQueue, this)
+    , mSendQueueTask(aInstance, Ip6::HandleSendQueue)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
@@ -525,7 +525,7 @@ exit:
 
 void Ip6::HandleSendQueue(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Ip6>().HandleSendQueue();
+    aTasklet.Get<Ip6>().HandleSendQueue();
 }
 
 void Ip6::HandleSendQueue(void)
@@ -726,7 +726,9 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
 
     if (message == nullptr)
     {
+        otLogDebgIp6("start reassembly");
         VerifyOrExit((message = NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
+        mReassemblyList.Enqueue(*message);
         SuccessOrExit(error = message->SetLength(aMessage.GetOffset()));
 
         message->SetTimeout(kIp6ReassemblyTimeout);
@@ -738,10 +740,6 @@ otError Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMess
         OT_ASSERT(assertValue == aMessage.GetOffset());
 
         Get<TimeTicker>().RegisterReceiver(TimeTicker::kIp6FragmentReassembler);
-
-        mReassemblyList.Enqueue(*message);
-
-        otLogDebgIp6("start reassembly.");
     }
 
     // increase message buffer if necessary
@@ -1009,12 +1007,14 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
 
     if (mIsReceiveIp6FilterEnabled)
     {
+#if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
         bool isLocator = Get<Mle::Mle>().IsMeshLocalAddress(aMessageInfo.GetSockAddr()) &&
                          aMessageInfo.GetSockAddr().GetIid().IsLocator();
 
         VerifyOrExit(!isLocator || aMessageInfo.GetSockAddr().GetIid().IsAnycastServiceLocator(),
                      error = OT_ERROR_NO_ROUTE);
+#endif
 
         switch (aIpProto)
         {
@@ -1033,30 +1033,10 @@ otError Ip6::ProcessReceiveCallback(Message &          aMessage,
         case kProtoUdp:
         {
             Udp::Header udp;
-            uint16_t    destPort;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
+            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = OT_ERROR_NO_ROUTE);
 
-            destPort = udp.GetDestinationPort();
-
-            if ((destPort == Mle::kUdpPort) &&
-                (aMessageInfo.GetSockAddr().IsLinkLocal() || aMessageInfo.GetSockAddr().IsLinkLocalMulticast()))
-            {
-                // do not pass MLE messages
-                ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
-            else if ((destPort == Tmf::kUdpPort) && Get<Tmf::TmfAgent>().IsTmfMessage(aMessageInfo))
-            {
-                // do not pass TMF messages
-                ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
-
-#if OPENTHREAD_FTD
-            if (destPort == Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort())
-            {
-                ExitNow(error = OT_ERROR_NO_ROUTE);
-            }
-#endif
             break;
         }
 

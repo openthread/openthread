@@ -58,6 +58,25 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+ *
+ * Defines whether the TREL UDP6 platform uses netlink socket to add/remove addresses on the TREL netif or `ioctl()`
+ * command.
+ *
+ * When netlink is used Duplicate Address Detection (DAD) is disabled when a new address is added on the netif.
+ *
+ * Use of netlink is enabled by default on linux-based platforms.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
+#ifdef __linux__
+#define OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET 1
+#else
+#define OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET 0
+#endif
+#endif
+
+/**
  * @def OPENTHREAD_POSIX_CONFIG_DAEMON_SOCKET_BASENAME
  *
  * Define socket basename used by POSIX app daemon.
@@ -119,6 +138,17 @@
  */
 #ifndef OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE
 #define OPENTHREAD_POSIX_CONFIG_MAX_MULTICAST_FORWARDING_CACHE_TABLE (OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS * 10)
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
+ *
+ * Define as 1 to enable the secure settings. When defined to 1, the platform MUST implement the otPosixSecureSetting*
+ * APIs defined in 'src/posix/platform/include/openthread/platform/secure_settings.h'.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE 0
 #endif
 
 #ifdef __APPLE__

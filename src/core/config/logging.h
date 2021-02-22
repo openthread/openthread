@@ -220,7 +220,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PLATFORM
-#define OPENTHREAD_CONFIG_LOG_PLATFORM 0
+#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
 #endif
 
 /**
@@ -317,6 +317,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_LOG_SRP
 #define OPENTHREAD_CONFIG_LOG_SRP 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_DNS
+ *
+ * Define to enable DNS region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_DNS
+#define OPENTHREAD_CONFIG_LOG_DNS 1
 #endif
 
 /**

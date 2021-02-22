@@ -37,6 +37,7 @@ project(openthread VERSION ${OT_DEFAULT_VERSION})
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_COVERAGE "enable coverage" OFF)
 set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
+option(OT_MBEDTLS_THREADING "enable mbedtls threading" OFF)
 
 add_library(ot-config INTERFACE)
 
@@ -159,7 +160,10 @@ if(OT_PLATFORM STREQUAL "posix")
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM STREQUAL "external")
     # skip in this case
-elseif(OT_PLATFORM)
+elseif(OT_PLATFORM MATCHES "^nrf*")
+    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/${OT_PLATFORM})
+    add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx")
+else()
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
 endif()
@@ -186,7 +190,12 @@ add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
 if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()
-    add_subdirectory(tests)
 endif()
 
-add_custom_target(print-ot-config ALL COMMAND echo -e "$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,\"\\n\">")
+add_subdirectory(tests)
+
+add_custom_target(print-ot-config ALL
+                  COMMAND ${CMAKE_COMMAND}
+                  -DLIST="$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>"
+                  -P ${PROJECT_SOURCE_DIR}/etc/cmake/print.cmake
+)

@@ -52,7 +52,7 @@ AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHand
     , mJitter(0)
     , mCount(0)
     , mChannel(0)
-    , mTimer(aInstance, aHandler, this)
+    , mTimer(aInstance, aHandler)
 {
 }
 
@@ -116,7 +116,7 @@ AnnounceSender::AnnounceSender(Instance &aInstance)
 
 void AnnounceSender::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AnnounceSender>().AnnounceSenderBase::HandleTimer();
+    aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer();
 }
 
 void AnnounceSender::CheckState(void)
@@ -142,7 +142,7 @@ void AnnounceSender::CheckState(void)
         }
 #endif
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:

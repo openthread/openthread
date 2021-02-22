@@ -40,7 +40,7 @@ libopenthread_qpg7015m_a_CPPFLAGS               = \
     -I$(top_srcdir)/examples/platforms            \
     -I$(top_srcdir)/examples/platforms/qpg7015m   \
     -lrt                                          \
-    -lpthread                                     \
+    -pthread                                      \
     $(NULL)
 
 PLATFORM_SOURCES                                = \
@@ -62,12 +62,12 @@ PLATFORM_SOURCES                                = \
     uart_qorvo.h                                  \
     $(NULL)
 
-libopenthread_qpg7015m_a_SOURCES          = \
-    $(PLATFORM_SOURCES)                     \
+libopenthread_qpg7015m_a_SOURCES                = \
+    $(PLATFORM_SOURCES)                           \
     $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                                = $(wildcard *.gcda *.gcno)
+CLEANFILES                                      = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

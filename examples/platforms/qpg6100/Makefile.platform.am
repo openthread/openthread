@@ -30,25 +30,25 @@
 # qpg6100 platform-specific Makefile
 #
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/qpg6100/libopenthread-qpg6100.a   \
+LDADD_COMMON                                                            += \
+    $(top_builddir)/examples/platforms/qpg6100/libopenthread-qpg6100.a     \
     $(NULL)
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libmbedtls_alt.a             \
+LDADD_COMMON                                                            += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/lib/libmbedtls_alt.a      \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 if OPENTHREAD_ENABLE_FTD
-LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libQorvoQPG6100_ftd.a        \
+LDADD_COMMON                                                            += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/lib/libQorvoQPG6100_ftd.a \
     $(NULL)
-endif # OPENTHREAD_ENABLE_FTD
+else # OPENTHREAD_ENABLE_FTD
 if OPENTHREAD_ENABLE_MTD
-LDADD_COMMON                                                          += \
-    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/libQorvoQPG6100_mtd.a        \
+LDADD_COMMON                                                            += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6100/lib/libQorvoQPG6100_mtd.a \
     $(NULL)
 endif # OPENTHREAD_ENABLE_MTD
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/qpg6100/qpg6100.ld               \
+endif
+LDFLAGS_COMMON                                                          += \
+    -T $(top_srcdir)/third_party/Qorvo/repo/qpg6100/ld/qpg6100.ld          \
     $(NULL)
-

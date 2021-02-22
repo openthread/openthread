@@ -41,6 +41,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/logging.hpp"
 #include "common/random.hpp"
 #include "crypto/mbedtls.hpp"
 
@@ -190,8 +191,19 @@ exit:
 
 void RandomManager::CryptoCtrDrbg::Init(void)
 {
+    int rval;
+
     mbedtls_ctr_drbg_init(&mCtrDrbg);
-    mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), nullptr, 0);
+
+    rval =
+        mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), nullptr, 0);
+
+    if (rval != 0)
+    {
+        otLogCritMbedTls("Failed to seed the CTR DRBG");
+    }
+
+    OT_ASSERT(rval == 0);
 }
 
 void RandomManager::CryptoCtrDrbg::Deinit(void)

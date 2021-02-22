@@ -57,7 +57,7 @@ namespace NetworkData {
 
 Leader::Leader(Instance &aInstance)
     : LeaderBase(aInstance)
-    , mTimer(aInstance, Leader::HandleTimer, this)
+    , mTimer(aInstance, Leader::HandleTimer)
     , mServerData(UriPath::kServerData, &Leader::HandleServerData, this)
     , mCommissioningDataGet(UriPath::kCommissionerGet, &Leader::HandleCommissioningGet, this)
     , mCommissioningDataSet(UriPath::kCommissionerSet, &Leader::HandleCommissioningSet, this)
@@ -1331,7 +1331,7 @@ void Leader::UpdateContextsAfterReset(void)
 
 void Leader::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Leader>().HandleTimer();
+    aTimer.Get<Leader>().HandleTimer();
 }
 
 void Leader::HandleTimer(void)

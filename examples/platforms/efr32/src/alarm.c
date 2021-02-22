@@ -38,6 +38,7 @@
 
 #include "openthread-system.h"
 #include <openthread/config.h>
+#include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include "common/logging.hpp"
@@ -144,4 +145,24 @@ void efr32AlarmProcess(otInstance *aInstance)
             }
         }
     }
+}
+
+uint32_t otPlatAlarmMicroGetNow(void)
+{
+    // TODO microsecond support
+    return otPlatAlarmMilliGetNow();
+}
+
+void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+{
+    // TODO microsecond support
+    return otPlatAlarmMilliStartAt(aInstance, aT0, aDt);
+}
+
+void otPlatAlarmMicroStop(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    sl_sleeptimer_stop_timer(&sl_handle);
+    sIsRunning = false;
 }

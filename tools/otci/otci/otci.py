@@ -37,7 +37,8 @@ from . import connectors
 from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshCommandRunner
 from .connectors import Simulator
 from .errors import UnexpectedCommandOutput, ExpectLineTimeoutError, CommandError, InvalidArgumentsError
-from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix
+from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix, \
+    RouterTableEntry
 from .utils import match_line, constant_property
 
 
@@ -575,7 +576,7 @@ class OTCI(object):
         line = self.__parse_str(self.execute_command('router list'))
         return list(map(RouterId, line.strip().split()))
 
-    def get_router_table(self) -> Dict[RouterId, Dict[str, Any]]:
+    def get_router_table(self) -> Dict[RouterId, RouterTableEntry]:
         """table of routers."""
         output = self.execute_command('router table')
         if len(output) < 2:
@@ -606,7 +607,7 @@ class OTCI(object):
             col = lambda colname: self.__get_table_col(colname, headers, fields)
             id = col('ID')
 
-            table[RouterId(id)] = {
+            table[RouterId(id)] = router = RouterTableEntry({
                 'id': RouterId(id),
                 'rloc16': Rloc16(col('RLOC16'), 16),
                 'next_hop': int(col('Next Hop')),
@@ -615,11 +616,33 @@ class OTCI(object):
                 'lq_out': int(col('LQ Out')),
                 'age': int(col('Age')),
                 'extaddr': col('Extended MAC'),
-            }
+            })
+
+            if 'Link' in headers:
+                router['link'] = int(col('Link'))
+            else:
+                # support older version of OT which does not output `Link` field
+                router['link'] = self.get_router_info(router['id'], silent=True)['link']
 
         return table
 
-    # TODO: router <id>
+    def get_router_info(self, id: int, silent: bool = False) -> RouterTableEntry:
+        cmd = f'router {id}'
+        info = {}
+        output = self.execute_command(cmd, silent=silent)
+        items = [line.strip().split(': ') for line in output]
+
+        headers = [h for h, _ in items]
+        fields = [f for _, f in items]
+        col = lambda colname: self.__get_table_col(colname, headers, fields)
+
+        return RouterTableEntry({
+            'id': RouterId(id),
+            'rloc16': Rloc16(col('Rloc'), 16),
+            'alloc': int(col('Alloc')),
+            'next_hop': int(col('Next Hop'), 16) >> 10,  # convert RLOC16 to Router ID
+            'link': int(col('Link')),
+        })
 
     #
     # Router utilities: Child management
@@ -1016,8 +1039,8 @@ class OTCI(object):
     #
     # Network Data utilities
     #
-    def get_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
-        """Get the prefix list in the local Network Data."""
+    def get_local_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
+        """Get prefixes from local Network Data."""
         output = self.execute_command('prefix')
         return self.__parse_prefixes(output)
 
@@ -1070,11 +1093,25 @@ class OTCI(object):
             else:
                 routes_output.append(line)
 
-        print('routes_output:', routes_output, output)
         netdata['routes'] = self.__parse_routes(routes_output)
         netdata['services'] = self.__parse_services(output)
 
         return netdata
+
+    def get_prefixes(self) -> List[Tuple[Ip6Prefix, str, str, Rloc16]]:
+        """Get network prefixes from Thread Network Data."""
+        network_data = self.get_network_data()
+        return network_data['prefixes']
+
+    def get_routes(self) -> List[Tuple[str, bool, str, Rloc16]]:
+        """Get routes from Thread Network Data."""
+        network_data = self.get_network_data()
+        return network_data['routes']
+
+    def get_services(self) -> List[Tuple[int, bytes, bytes, bool, Rloc16]]:
+        """Get services from Thread Network Data"""
+        network_data = self.get_network_data()
+        return network_data['services']
 
     def __parse_services(self, output: List[str]) -> List[Tuple[int, bytes, bytes, bool, Rloc16]]:
         services = []
@@ -1101,8 +1138,8 @@ class OTCI(object):
         hexstr = self.__parse_str(self.execute_command('netdata show -x'))
         return bytes(int(hexstr[i:i + 2], 16) for i in range(0, len(hexstr), 2))
 
-    def get_routes(self) -> List[Tuple[str, bool, str, Rloc16]]:
-        """Get the external route list in the local Network Data."""
+    def get_local_routes(self) -> List[Tuple[str, bool, str, Rloc16]]:
+        """Get routes from local Network Data."""
         return self.__parse_routes(self.execute_command('route'))
 
     def __parse_routes(self, output: List[str]) -> List[Tuple[str, bool, str, Rloc16]]:

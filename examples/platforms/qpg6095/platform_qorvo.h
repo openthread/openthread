@@ -38,7 +38,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-typedef bool (*qorvoPlatGotoSleepCheckCallback_t)(void);
+typedef uint8_t (*qorvoPlatGotoSleepCheckCallback_t)(void);
 
 /**
  * This function initializes the platform.

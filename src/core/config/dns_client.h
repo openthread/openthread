@@ -46,23 +46,68 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
  *
- * Maximum time that DNS Client waits for response in milliseconds.
+ * Define to 1 to enable DNS based Service Discovery (DNS-SD) client.
  *
  */
-#ifndef OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT
-#define OPENTHREAD_CONFIG_DNS_RESPONSE_TIMEOUT 3000
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE 1
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS
  *
- * Maximum number of retransmissions for DNS client.
+ * Specifies the default DNS server IPv6 address.
+ *
+ * It MUST be a C string representation of the server IPv6 address.
+ *
+ * Default value is set to "2001:4860:4860::8888" which is the Google Public DNS IPv6 address.
  *
  */
-#ifndef OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT
-#define OPENTHREAD_CONFIG_DNS_MAX_RETRANSMIT 2
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS "2001:4860:4860::8888"
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT
+ *
+ * Specifies the default DNS server port number.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT 53
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT
+ *
+ * Specifies the default wait time that DNS client waits for a response from server (in milliseconds).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT 6000
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS
+ *
+ * Specifies the default maximum number of DNS query tx attempts with no response before reporting failure.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS 3
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NO_RECURSION_FLAG
+ *
+ * Specifies the default "recursion desired" flag (indicates whether the server can resolve the query recursively or
+ * not).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG 1
 #endif
 
 #endif // CONFIG_DNS_CLIENT_H_

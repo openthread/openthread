@@ -43,7 +43,7 @@ extern "C" {
 #endif
 
 /**
- * @addtogroup api-dataset-updater
+ * @addtogroup api-operational-dataset
  *
  * @brief
  *   This module includes functions for Dataset Updater.

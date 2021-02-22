@@ -80,7 +80,7 @@ target_link_libraries(openthread-qpg6095
         ${OT_MBEDTLS}
         ot-config
     PUBLIC
-        -T${CMAKE_CURRENT_SOURCE_DIR}/qpg6095.ld
+        -T${PROJECT_SOURCE_DIR}/third_party/Qorvo/repo/qpg6095/ld/qpg6095.ld
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
