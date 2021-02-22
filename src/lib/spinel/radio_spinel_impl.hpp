@@ -38,7 +38,6 @@
 
 #include <openthread/dataset.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/settings.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -418,7 +417,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RestoreDatasetFromNcp(vo
 {
     otError error = OT_ERROR_NONE;
 
-    otPlatSettingsInit(mInstance);
+    Instance::Get().template Get<SettingsDriver>().Init();
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
     SuccessOrExit(
@@ -427,7 +426,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RestoreDatasetFromNcp(vo
         error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
 
 exit:
-    otPlatSettingsDeinit(mInstance);
+    Instance::Get().template Get<SettingsDriver>().Deinit();
     return error;
 }
 
@@ -732,9 +731,9 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
     SuccessOrExit(error = dataset.SetFrom(static_cast<MeshCoP::Dataset::Info &>(opDataset)));
-    SuccessOrExit(error = otPlatSettingsSet(
-                      mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
-                      dataset.GetBytes(), dataset.GetSize()));
+    SuccessOrExit(error = Instance::Get().template Get<SettingsDriver>().Set(
+                      isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset, dataset.GetBytes(),
+                      dataset.GetSize()));
 
 exit:
     return error;
