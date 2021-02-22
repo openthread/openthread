@@ -297,34 +297,26 @@ typedef void (*otReceiveDiagnosticGetCallback)(otError              aError,
                                                void *               aContext);
 
 /**
- * This function registers a callback to provide received raw Network Diagnostic Get response payload.
+ * Send a Network Diagnostic Get request.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
+ * @param[in]  aDestination      A pointer to destination address.
+ * @param[in]  aTlvTypes         An array of Network Diagnostic TLV types.
+ * @param[in]  aCount            Number of types in aTlvTypes.
  * @param[in]  aCallback         A pointer to a function that is called when Network Diagnostic Get response
  *                               is received or NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
- *
- */
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
-                                             otReceiveDiagnosticGetCallback aCallback,
-                                             void *                         aCallbackContext);
-
-/**
- * Send a Network Diagnostic Get request.
- *
- * @param[in]  aInstance      A pointer to an OpenThread instance.
- * @param[in]  aDestination   A pointer to destination address.
- * @param[in]  aTlvTypes      An array of Network Diagnostic TLV types.
- * @param[in]  aCount         Number of types in aTlvTypes.
  *
  * @retval OT_ERROR_NONE    Successfully queued the DIAG_GET.req.
  * @retval OT_ERROR_NO_BUFS Insufficient message buffers available to send DIAG_GET.req.
  *
  */
-otError otThreadSendDiagnosticGet(otInstance *        aInstance,
-                                  const otIp6Address *aDestination,
-                                  const uint8_t       aTlvTypes[],
-                                  uint8_t             aCount);
+otError otThreadSendDiagnosticGet(otInstance *                   aInstance,
+                                  const otIp6Address *           aDestination,
+                                  const uint8_t                  aTlvTypes[],
+                                  uint8_t                        aCount,
+                                  otReceiveDiagnosticGetCallback aCallback,
+                                  void *                         aCallbackContext);
 
 /**
  * Send a Network Diagnostic Reset request.

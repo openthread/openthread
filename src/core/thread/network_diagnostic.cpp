@@ -69,16 +69,11 @@ NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     Get<Tmf::TmfAgent>().AddResource(mDiagnosticReset);
 }
 
-void NetworkDiagnostic::SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback,
-                                                        void *                         aCallbackContext)
-{
-    mReceiveDiagnosticGetCallback        = aCallback;
-    mReceiveDiagnosticGetCallbackContext = aCallbackContext;
-}
-
-otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
-                                             const uint8_t       aTlvTypes[],
-                                             uint8_t             aCount)
+otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDestination,
+                                             const uint8_t                  aTlvTypes[],
+                                             uint8_t                        aCount,
+                                             otReceiveDiagnosticGetCallback aCallback,
+                                             void *                         aCallbackContext)
 {
     otError               error;
     Coap::Message *       message = nullptr;
@@ -121,6 +116,9 @@ otError NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &aDestination,
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, handler, this));
+
+    mReceiveDiagnosticGetCallback        = aCallback;
+    mReceiveDiagnosticGetCallbackContext = aCallbackContext;
 
     otLogInfoNetDiag("Sent diagnostic get");
 

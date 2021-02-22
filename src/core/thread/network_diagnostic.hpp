@@ -82,25 +82,22 @@ public:
     explicit NetworkDiagnostic(Instance &aInstance);
 
     /**
-     * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
-     *
-     * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp or an DIAG_GET.ans
-     *                               is received or nullptr to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     */
-    void SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback, void *aCallbackContext);
-
-    /**
      * This method sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
      * message is sent or the DIAG_GET.req otherwise.
      *
-     * @param[in] aDestination  A reference to the destination address.
-     * @param[in] aTlvTypes     An array of Network Diagnostic TLV types.
-     * @param[in] aCount        Number of types in aTlvTypes
+     * @param[in]  aDestination      A reference to the destination address.
+     * @param[in]  aTlvTypes         An array of Network Diagnostic TLV types.
+     * @param[in]  aCount            Number of types in aTlvTypes.
+     * @param[in]  aCallback         A pointer to a function that is called when Network Diagnostic Get response
+     *                               is received or NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    otError SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+    otError SendDiagnosticGet(const Ip6::Address &           aDestination,
+                              const uint8_t                  aTlvTypes[],
+                              uint8_t                        aCount,
+                              otReceiveDiagnosticGetCallback aCallback,
+                              void *                         aCallbackContext);
 
     /**
      * This method sends Diagnostic Reset request.
