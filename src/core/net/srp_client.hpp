@@ -41,7 +41,7 @@
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "crypto/ecdsa.hpp"
-#include "net/dns_headers.hpp"
+#include "net/dns_types.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 

@@ -38,7 +38,7 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "net/dns_client.hpp"
-#include "net/dns_headers.hpp"
+#include "net/dns_types.hpp"
 
 using namespace ot;
 

@@ -215,7 +215,7 @@ SOURCES_COMMON                                  = \
     net/dhcp6_client.cpp                          \
     net/dhcp6_server.cpp                          \
     net/dns_client.cpp                            \
-    net/dns_headers.cpp                           \
+    net/dns_types.cpp                             \
     net/dnssd_server.cpp                          \
     net/icmp6.cpp                                 \
     net/ip6.cpp                                   \
@@ -464,7 +464,7 @@ HEADERS_COMMON                                  = \
     net/dhcp6_client.hpp                          \
     net/dhcp6_server.hpp                          \
     net/dns_client.hpp                            \
-    net/dns_headers.hpp                           \
+    net/dns_types.hpp                             \
     net/dnssd_server.hpp                          \
     net/icmp6.hpp                                 \
     net/ip6.hpp                                   \

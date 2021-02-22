@@ -31,7 +31,7 @@
  *   This file implements generating and processing of DNS headers and helper functions/methods.
  */
 
-#include "dns_headers.hpp"
+#include "dns_types.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
