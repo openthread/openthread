@@ -434,15 +434,16 @@ typedef void (*otDnsServiceCallback)(otError aError, const otDnsServiceResponse 
  * the config for this query. In a non-NULL @p aConfig, some of the fields can be left unspecified (value zero). The
  * unspecified fields are then replaced by the values from the default config.
  *
- * @param[in]  aInstance        A pointer to an OpenThread instance.
- * @param[in]  aInstanceLabel   The service instance label.
- * @param[in]  aServiceName     The service name (together with @p aInstanceLabel form full instance name).
- * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
- * @param[in]  aContext         A pointer to arbitrary context information.
- * @param[in]  aConfig          A pointer to the config to use for this query.
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[in]  aInstanceLabel     The service instance label.
+ * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
+ * @param[in]  aCallback          A function pointer that shall be called on response reception or time-out.
+ * @param[in]  aContext           A pointer to arbitrary context information.
+ * @param[in]  aConfig            A pointer to the config to use for this query.
  *
- * @retval OT_ERROR_NONE        Query sent successfully. @p aCallback will be invoked to report the status.
- * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
+ * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the status.
+ * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
+ * @retval OT_ERROR_INVALID_ARGS  @p aInstanceLabel is NULL.
  *
  */
 otError otDnsClientResolveService(otInstance *            aInstance,
