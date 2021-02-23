@@ -29,25 +29,34 @@
 /**
  * @file
  * @brief
- *  This file defines the PBKDF2 using CMAC C APIs.
+ *  This file includes definitions for performing Password-Based Key Derivation Function 2 (PBKDF2) using CMAC.
  */
 
-#ifndef PBKDF2_CMAC_H_
-#define PBKDF2_CMAC_H_
+#ifndef PBKDF2_CMAC_HPP_
+#define PBKDF2_CMAC_HPP_
 
 #include "openthread-core-config.h"
 
-#include <stdbool.h>
 #include <stdint.h>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#define OT_PBKDF2_SALT_MAX_LEN 30 // salt prefix (6) + extended panid (8) + network name (16)
+namespace ot {
+namespace Crypto {
+namespace Pbkdf2 {
 
 /**
- * This method perform PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).
+ * @addtogroup core-security
+ *
+ * @{
+ *
+ */
+
+enum : uint16_t
+{
+    kMaxSaltLength = 30, ///< Max SALT length: salt prefix (6) + extended panid (8) + network name (16)
+};
+
+/**
+ * This function performs PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).
  *
  * @param[in]     aPassword          Password to use when generating key.
  * @param[in]     aPasswordLen       Length of password.
@@ -58,16 +67,21 @@ extern "C" {
  * @param[out]    aKey               A pointer to the generated key.
  *
  */
-void otPbkdf2Cmac(const uint8_t *aPassword,
-                  uint16_t       aPasswordLen,
-                  const uint8_t *aSalt,
-                  uint16_t       aSaltLen,
-                  uint32_t       aIterationCounter,
-                  uint16_t       aKeyLen,
-                  uint8_t *      aKey);
+void GenerateKey(const uint8_t *aPassword,
+                 uint16_t       aPasswordLen,
+                 const uint8_t *aSalt,
+                 uint16_t       aSaltLen,
+                 uint32_t       aIterationCounter,
+                 uint16_t       aKeyLen,
+                 uint8_t *      aKey);
 
-#ifdef __cplusplus
-} // extern "C"
-#endif
+/**
+ * @}
+ *
+ */
 
-#endif // PBKDF2_CMAC_H_
+} // namespace Pbkdf2
+} // namespace Crypto
+} // namespace ot
+
+#endif // PBKDF2_CMAC_HPP_

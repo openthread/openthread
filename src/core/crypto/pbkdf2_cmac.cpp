@@ -31,26 +31,29 @@
  *   This file implements PBKDF2 using AES-CMAC-PRF-128
  */
 
-#include "pbkdf2_cmac.h"
+#include "pbkdf2_cmac.hpp"
 
+#include <mbedtls/cmac.h>
 #include <string.h>
 
 #include "common/debug.hpp"
 
-#include <mbedtls/cmac.h>
+namespace ot {
+namespace Crypto {
+namespace Pbkdf2 {
 
 #if OPENTHREAD_FTD
 
-void otPbkdf2Cmac(const uint8_t *aPassword,
-                  uint16_t       aPasswordLen,
-                  const uint8_t *aSalt,
-                  uint16_t       aSaltLen,
-                  uint32_t       aIterationCounter,
-                  uint16_t       aKeyLen,
-                  uint8_t *      aKey)
+void GenerateKey(const uint8_t *aPassword,
+                 uint16_t       aPasswordLen,
+                 const uint8_t *aSalt,
+                 uint16_t       aSaltLen,
+                 uint32_t       aIterationCounter,
+                 uint16_t       aKeyLen,
+                 uint8_t *      aKey)
 {
     const size_t kBlockSize = MBEDTLS_CIPHER_BLKSIZE_MAX;
-    uint8_t      prfInput[OT_PBKDF2_SALT_MAX_LEN + 4]; // Salt || INT(), for U1 calculation
+    uint8_t      prfInput[kMaxSaltLength + 4]; // Salt || INT(), for U1 calculation
     long         prfOne[kBlockSize / sizeof(long)];
     long         prfTwo[kBlockSize / sizeof(long)];
     long         keyBlock[kBlockSize / sizeof(long)];
@@ -112,3 +115,7 @@ void otPbkdf2Cmac(const uint8_t *aPassword,
 }
 
 #endif // OPENTHREAD_FTD
+
+} // namespace Pbkdf2
+} // namespace Crypto
+} // namespace ot
