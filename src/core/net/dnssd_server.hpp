@@ -38,7 +38,7 @@
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
-#include "net/dns_headers.hpp"
+#include "net/dns_types.hpp"
 #include "net/ip6.hpp"
 #include "net/netif.hpp"
 #include "net/srp_server.hpp"

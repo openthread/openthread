@@ -39,7 +39,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
-#include "net/dns_headers.hpp"
+#include "net/dns_types.hpp"
 #include "thread/network_data_service.hpp"
 #include "thread/thread_netif.hpp"
 

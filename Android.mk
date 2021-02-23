@@ -263,7 +263,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/dhcp6_client.cpp                           \
     src/core/net/dhcp6_server.cpp                           \
     src/core/net/dns_client.cpp                             \
-    src/core/net/dns_headers.cpp                            \
+    src/core/net/dns_types.cpp                              \
     src/core/net/dnssd_server.cpp                           \
     src/core/net/icmp6.cpp                                  \
     src/core/net/ip6.cpp                                    \
