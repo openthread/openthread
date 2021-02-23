@@ -586,17 +586,17 @@ public:
      * The @p aConfig can be nullptr. In this case the default config (from `GetDefaultConfig()`) will be used as
      * the config for this query. In a non-nullptr @p aConfig, some of the fields can be left unspecified (value zero).
      * The unspecified fields are then replaced by the values from the default config.
-
      *
-     * @param[in]  aServerSockAddr  The server socket address.
-     * @param[in]  aInstanceLabel   The service instance label.
-     * @param[in]  aServiceName     The service name (together with @p aInstanceLabel form full instance name).
-     * @param[in]  aCallback        A function pointer that shall be called on response reception or time-out.
-     * @param[in]  aContext         A pointer to arbitrary context information.
-     * @param[in]  aConfig          The config to use for this query.
+     * @param[in]  aServerSockAddr    The server socket address.
+     * @param[in]  aInstanceLabel     The service instance label.
+     * @param[in]  aServiceName       The service name (together with @p aInstanceLabel form full instance name).
+     * @param[in]  aCallback          A function pointer that shall be called on response reception or time-out.
+     * @param[in]  aContext           A pointer to arbitrary context information.
+     * @param[in]  aConfig            The config to use for this query.
      *
-     * @retval OT_ERROR_NONE        Query sent successfully. @p aCallback will be invoked to report the status.
-     * @retval OT_ERROR_NO_BUFS     Insufficient buffer to prepare and send query.
+     * @retval OT_ERROR_NONE          Query sent successfully. @p aCallback will be invoked to report the status.
+     * @retval OT_ERROR_NO_BUFS       Insufficient buffer to prepare and send query.
+     * @retval OT_ERROR_INVALID_ARGS  @p aInstanceLabel is `nullptr`.
      *
      */
     otError ResolveService(const char *         aInstanceLabel,

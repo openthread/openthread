@@ -514,12 +514,18 @@ otError Client::ResolveService(const char *       aInstanceLabel,
                                const QueryConfig *aConfig)
 {
     QueryInfo info;
+    otError   error;
+
+    VerifyOrExit(aInstanceLabel != nullptr, error = OT_ERROR_INVALID_ARGS);
 
     info.Clear();
     info.mQueryType                 = kServiceQuery;
     info.mCallback.mServiceCallback = aCallback;
 
-    return StartQuery(info, aConfig, aInstanceLabel, aServiceName, aContext);
+    error = StartQuery(info, aConfig, aInstanceLabel, aServiceName, aContext);
+
+exit:
+    return error;
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
