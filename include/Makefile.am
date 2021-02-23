@@ -43,14 +43,16 @@ openthread_headers                      = \
     openthread/channel_monitor.h          \
     openthread/child_supervision.h        \
     openthread/cli.h                      \
-    openthread/coap_secure.h              \
     openthread/coap.h                     \
+    openthread/coap_secure.h              \
     openthread/commissioner.h             \
+    openthread/config.h                   \
     openthread/crypto.h                   \
     openthread/dataset.h                  \
     openthread/dataset_ftd.h              \
     openthread/dataset_updater.h          \
     openthread/diag.h                     \
+    openthread/dns.h                      \
     openthread/dns_client.h               \
     openthread/entropy.h                  \
     openthread/error.h                    \
@@ -88,23 +90,24 @@ dist_openthread_HEADERS = $(openthread_headers)
 ot_platform_headers                     = \
     openthread/platform/alarm-micro.h     \
     openthread/platform/alarm-milli.h     \
+    openthread/platform/debug_uart.h      \
     openthread/platform/diag.h            \
-    openthread/platform/flash.h           \
     openthread/platform/entropy.h         \
+    openthread/platform/flash.h           \
     openthread/platform/infra_if.h        \
-    openthread/platform/memory.h          \
-    openthread/platform/misc.h            \
     openthread/platform/logging.h         \
+    openthread/platform/memory.h          \
+    openthread/platform/messagepool.h     \
+    openthread/platform/misc.h            \
     openthread/platform/otns.h            \
     openthread/platform/radio.h           \
-    openthread/platform/time.h            \
-    openthread/platform/uart.h            \
-    openthread/platform/udp.h             \
-    openthread/platform/spi-slave.h       \
     openthread/platform/settings.h        \
-    openthread/platform/messagepool.h     \
+    openthread/platform/spi-slave.h       \
+    openthread/platform/time.h            \
     openthread/platform/toolchain.h       \
     openthread/platform/trel-udp6.h       \
+    openthread/platform/uart.h            \
+    openthread/platform/udp.h             \
     $(NULL)
 
 ot_platformdir = $(includedir)/openthread/platform
