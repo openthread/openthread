@@ -2279,7 +2279,7 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements DNS OPT Pseudo Resource Record header for EDNS(0) (RFC 6981 - Section 6.1).
+ * This class implements DNS OPT Pseudo Resource Record header for EDNS(0) (RFC 6891 - Section 6.1).
  *
  */
 OT_TOOL_PACKED_BEGIN
@@ -2332,10 +2332,7 @@ public:
      * @return The upper 8-bit of the extended 12-bit Response Code.
      *
      */
-    uint8_t GetExtendedResponseCode(void) const
-    {
-        return static_cast<uint8_t>((mTtl & kExtRCodeMask) >> kExtRCodeffset);
-    }
+    uint8_t GetExtendedResponseCode(void) const { return GetTtlByteAt(kExtRCodeByteIndex); }
 
     /**
      * This method sets the upper 8-bit of the extended 12-bit Response Code.
@@ -2345,11 +2342,7 @@ public:
      * @param[in] aExtendedResponse The upper 8-bit of the extended 12-bit Response Code.
      *
      */
-    void SetExtnededResponseCode(uint8_t aExtendedResponse)
-    {
-        mTtl &= ~kExtRCodeffset;
-        mTtl |= (static_cast<uint32_t>(aExtendedResponse) << kExtRCodeffset);
-    }
+    void SetExtnededResponseCode(uint8_t aExtendedResponse) { GetTtlByteAt(kExtRCodeByteIndex) = aExtendedResponse; }
 
     /**
      * This method gets the Version field.
@@ -2357,7 +2350,7 @@ public:
      * @returns The version.
      *
      */
-    uint8_t GetVersion(void) const { return static_cast<uint8_t>((mTtl & kVersionMask) >> kVersionOffset); }
+    uint8_t GetVersion(void) const { return GetTtlByteAt(kVersionByteIndex); }
 
     /**
      * This method set the Version field.
@@ -2365,11 +2358,7 @@ public:
      * @param[in] aVersion  The version.
      *
      */
-    void SetVersion(uint8_t aVersion)
-    {
-        mTtl &= ~kVersionMask;
-        mTtl |= (static_cast<uint32_t>(aVersion) << kVersionOffset);
-    }
+    void SetVersion(uint8_t aVersion) { GetTtlByteAt(kVersionByteIndex) = aVersion; }
 
     /**
      * This method indicates whether the DNSSEC OK flag is set or not.
@@ -2377,19 +2366,19 @@ public:
      * @returns True if DNSSEC OK flag is set in the header, false otherwise.
      *
      */
-    bool IsDnsSecurityFlagSet(void) const { return (mTtl & kDnsSecFlag) != 0; }
+    bool IsDnsSecurityFlagSet(void) const { return (GetTtlByteAt(kFlagByteIndex) & kDnsSecFlag) != 0; }
 
     /**
      * This method clears the DNSSEC OK bit flag.
      *
      */
-    void ClearDnsSecurityFlag(void) { mTtl &= ~kDnsSecFlag; }
+    void ClearDnsSecurityFlag(void) { GetTtlByteAt(kFlagByteIndex) &= ~kDnsSecFlag; }
 
     /**
      * This method sets the DNSSEC OK bit flag.
      *
      */
-    void SetDnsSecurityFlag(void) { mTtl |= kDnsSecFlag; }
+    void SetDnsSecurityFlag(void) { GetTtlByteAt(kFlagByteIndex) |= kDnsSecFlag; }
 
 private:
     // The OPT RR re-purposes the existing CLASS and TTL fields in the
@@ -2401,19 +2390,21 @@ private:
     //  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     //  |         EXTENDED-RCODE        |            VERSION            |
     //  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
-    //  | DO|                           Z                               |
+    //  | DO|                Z          |             Z                 |
     //  +---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
     //
     // The variable data part of OPT RR can contain zero of more `Option`.
 
-    enum : uint32_t
+    enum : uint8_t
     {
-        kExtRCodeffset = 24,                    // Extended RCODE field offset.
-        kExtRCodeMask  = 0xf << kExtRCodeffset, // Extended RCODE field mask.
-        kVersionOffset = 16,                    // Version field offset.
-        kVersionMask   = 0xf << kVersionOffset, // Version field mask.
-        kDnsSecFlag    = 1 << 15,               // DnsSec bit flag.
+        kExtRCodeByteIndex = 0,      // Byte index of Extended RCODE within the TTL field.
+        kVersionByteIndex  = 1,      // Byte index of Version within the TTL field.
+        kFlagByteIndex     = 2,      // Byte index of flag byte within the TTL field.
+        kDnsSecFlag        = 1 << 7, // DNSSec OK bit flag.
     };
+
+    uint8_t  GetTtlByteAt(uint8_t aIndex) const { return reinterpret_cast<const uint8_t *>(&mTtl)[aIndex]; }
+    uint8_t &GetTtlByteAt(uint8_t aIndex) { return reinterpret_cast<uint8_t *>(&mTtl)[aIndex]; }
 
 } OT_TOOL_PACKED_END;
 
