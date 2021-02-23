@@ -172,6 +172,11 @@ if(OT_DNSSD_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1")
 endif()
 
+option(OT_DNSSD_SERVER_PORT "specify DNS-SD server port" "")
+if(NOT OT_DNSSD_SERVER_PORT STREQUAL "OFF")
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNSSD_SERVER_PORT=${OT_DNSSD_SERVER_PORT}")
+endif()
+
 option(OT_ECDSA "enable ECDSA support")
 if(OT_ECDSA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ECDSA_ENABLE=1")

@@ -240,6 +240,7 @@ Header::Response Server::ResolveQuestion(const char *      aName,
     OT_UNUSED_VARIABLE(aQuestion);
     OT_UNUSED_VARIABLE(aResponseHeader);
     OT_UNUSED_VARIABLE(aResponseMessage);
+    OT_UNUSED_VARIABLE(aResolveKind);
     OT_UNUSED_VARIABLE(aCompressInfo);
 
     Header::Response response = Header::kResponseNameError;
