@@ -350,7 +350,6 @@ nodist_libopenthread_radio_a_SOURCES       = \
 endif # OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 HEADERS_COMMON                                  = \
-    openthread-core-config.h                      \
     backbone_router/backbone_tmf.hpp              \
     backbone_router/bbr_leader.hpp                \
     backbone_router/bbr_local.hpp                 \
@@ -374,8 +373,8 @@ HEADERS_COMMON                                  = \
     common/instance.hpp                           \
     common/iterator_utils.hpp                     \
     common/linked_list.hpp                        \
-    common/locator.hpp                            \
     common/locator-getters.hpp                    \
+    common/locator.hpp                            \
     common/logging.hpp                            \
     common/message.hpp                            \
     common/new.hpp                                \
@@ -479,6 +478,8 @@ HEADERS_COMMON                                  = \
     net/srp_server.hpp                            \
     net/tcp.hpp                                   \
     net/udp6.hpp                                  \
+    openthread-core-config.h                      \
+    radio/max_power_table.hpp                     \
     radio/radio.hpp                               \
     radio/trel_interface.hpp                      \
     radio/trel_link.hpp                           \
