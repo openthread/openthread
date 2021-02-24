@@ -49,24 +49,17 @@ otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
                                                                 *aIterator, *aNetworkDiagTlv);
 }
 
-void otThreadSetReceiveDiagnosticGetCallback(otInstance *                   aInstance,
-                                             otReceiveDiagnosticGetCallback aCallback,
-                                             void *                         aCallbackContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SetReceiveDiagnosticGetCallback(aCallback, aCallbackContext);
-}
-
-otError otThreadSendDiagnosticGet(otInstance *        aInstance,
-                                  const otIp6Address *aDestination,
-                                  const uint8_t       aTlvTypes[],
-                                  uint8_t             aCount)
+otError otThreadSendDiagnosticGet(otInstance *                   aInstance,
+                                  const otIp6Address *           aDestination,
+                                  const uint8_t                  aTlvTypes[],
+                                  uint8_t                        aCount,
+                                  otReceiveDiagnosticGetCallback aCallback,
+                                  void *                         aCallbackContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticGet(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
+        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount, aCallback, aCallbackContext);
 }
 
 otError otThreadSendDiagnosticReset(otInstance *        aInstance,

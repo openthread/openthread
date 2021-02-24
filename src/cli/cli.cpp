@@ -147,9 +147,6 @@ Interpreter::Interpreter(Instance *aInstance)
     , mSrpServer(*this)
 #endif
 {
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
-    otThreadSetReceiveDiagnosticGetCallback(mInstance, &Interpreter::HandleDiagnosticGetResponse, this);
-#endif
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
@@ -4850,7 +4847,8 @@ otError Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, char *aArgs[]
 
     if (strcmp(aArgs[0], "get") == 0)
     {
-        IgnoreError(otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count));
+        SuccessOrExit(error = otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count,
+                                                        &Interpreter::HandleDiagnosticGetResponse, this));
         ExitNow(error = OT_ERROR_PENDING);
     }
     else if (strcmp(aArgs[0], "reset") == 0)
