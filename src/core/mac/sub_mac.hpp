@@ -523,7 +523,7 @@ private:
 #endif
     };
 
-    enum State
+    enum State : uint8_t
     {
         kStateDisabled,    ///< Radio is disabled.
         kStateSleep,       ///< Radio is in sleep.

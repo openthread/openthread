@@ -2377,56 +2377,39 @@ void Mac::ResetRetrySuccessHistogram()
 
 const char *Mac::OperationToString(Operation aOperation)
 {
-    const char *retval = "";
-
-    switch (aOperation)
-    {
-    case kOperationIdle:
-        retval = "Idle";
-        break;
-
-    case kOperationActiveScan:
-        retval = "ActiveScan";
-        break;
-
-    case kOperationEnergyScan:
-        retval = "EnergyScan";
-        break;
-
-    case kOperationTransmitBeacon:
-        retval = "TransmitBeacon";
-        break;
-
-    case kOperationTransmitDataDirect:
-        retval = "TransmitDataDirect";
-        break;
-
+    static const char *const kOperationStrings[] = {
+        "Idle",               // (0) kOperationIdle
+        "ActiveScan",         // (1) kOperationActiveScan
+        "EnergyScan",         // (2) kOperationEnergyScan
+        "TransmitBeacon",     // (3) kOperationTransmitBeacon
+        "TransmitDataDirect", // (4) kOperationTransmitDataDirect
+        "TransmitPoll",       // (5) kOperationTransmitPoll
+        "WaitingForData",     // (6) kOperationWaitingForData
+        "TransmitOobFrame",   // (7) kOperationTransmitOutOfBandFrame
 #if OPENTHREAD_FTD
-    case kOperationTransmitDataIndirect:
-        retval = "TransmitDataIndirect";
-        break;
+        "TransmitDataIndirect", // (8) kOperationTransmitDataIndirect
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+        "TransmitDataCsl", // (9) kOperationTransmitDataCsl
+#endif
+#endif
+    };
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    case kOperationTransmitDataCsl:
-        retval = "TransmitDataCsl";
-        break;
+    static_assert(kOperationIdle == 0, "kOperationIdle value is incorrect");
+    static_assert(kOperationActiveScan == 1, "kOperationActiveScan value is incorrect");
+    static_assert(kOperationEnergyScan == 2, "kOperationEnergyScan value is incorrect");
+    static_assert(kOperationTransmitBeacon == 3, "kOperationTransmitBeacon value is incorrect");
+    static_assert(kOperationTransmitDataDirect == 4, "kOperationTransmitDataDirect value is incorrect");
+    static_assert(kOperationTransmitPoll == 5, "kOperationTransmitPoll value is incorrect");
+    static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
+    static_assert(kOperationTransmitOutOfBandFrame == 7, "kOperationTransmitOutOfBandFrame value is incorrect");
+#if OPENTHREAD_FTD
+    static_assert(kOperationTransmitDataIndirect == 8, "kOperationTransmitDataIndirect value is incorrect");
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    static_assert(kOperationTransmitDataCsl == 9, "TransmitDataCsl value is incorrect");
 #endif
 #endif
 
-    case kOperationTransmitPoll:
-        retval = "TransmitPoll";
-        break;
-
-    case kOperationWaitingForData:
-        retval = "WaitingForData";
-        break;
-
-    case kOperationTransmitOutOfBandFrame:
-        retval = "TransmitOobFrame";
-        break;
-    }
-
-    return retval;
+    return kOperationStrings[aOperation];
 }
 
 void Mac::LogFrameRxFailure(const RxFrame *aFrame, otError aError) const
