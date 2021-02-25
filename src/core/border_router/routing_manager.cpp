@@ -60,8 +60,9 @@ namespace BorderRouter {
 RoutingManager::RoutingManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIsRunning(false)
+    , mIsEnabled(false)
+    , mInfraIfIsRunning(false)
     , mInfraIfIndex(0)
-    , mEnabled(true) // The routing manager is by default enabled.
     , mAdvertisedOmrPrefixNum(0)
     , mAdvertisedOnLinkPrefix(nullptr)
     , mDiscoveredPrefixNum(0)
@@ -71,6 +72,8 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
 {
+    mInfraIfLinkLocalAddress.Clear();
+
     mLocalOmrPrefix.Clear();
     memset(mAdvertisedOmrPrefixes, 0, sizeof(mAdvertisedOmrPrefixes));
 
@@ -79,11 +82,13 @@ RoutingManager::RoutingManager(Instance &aInstance)
     memset(mDiscoveredPrefixes, 0, sizeof(mDiscoveredPrefixes));
 }
 
-otError RoutingManager::Init(uint32_t aInfraIfIndex)
+otError RoutingManager::Init(uint32_t            aInfraIfIndex,
+                             bool                aInfraIfIsRunning,
+                             const Ip6::Address *aInfraIfLinkLocalAddress)
 {
     otError error;
 
-    OT_ASSERT(!IsInitialized());
+    VerifyOrExit(!IsInitialized(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(aInfraIfIndex > 0, error = OT_ERROR_INVALID_ARGS);
 
     SuccessOrExit(error = LoadOrGenerateRandomOmrPrefix());
@@ -91,7 +96,14 @@ otError RoutingManager::Init(uint32_t aInfraIfIndex)
 
     mInfraIfIndex = aInfraIfIndex;
 
+    // Initialize the infra interface status.
+    SuccessOrExit(error = HandleInfraIfStateChanged(mInfraIfIndex, aInfraIfIsRunning, aInfraIfLinkLocalAddress));
+
 exit:
+    if (error != OT_ERROR_NONE)
+    {
+        mInfraIfIndex = 0;
+    }
     return error;
 }
 
@@ -101,18 +113,10 @@ otError RoutingManager::SetEnabled(bool aEnabled)
 
     VerifyOrExit(IsInitialized(), error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(aEnabled != mEnabled);
+    VerifyOrExit(aEnabled != mIsEnabled);
 
-    mEnabled = aEnabled;
-
-    if (!mEnabled)
-    {
-        Stop();
-    }
-    else if (Get<Mle::MleRouter>().IsAttached())
-    {
-        Start();
-    }
+    mIsEnabled = aEnabled;
+    EvaluateState();
 
 exit:
     return error;
@@ -170,6 +174,18 @@ otError RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 
 exit:
     return error;
+}
+
+void RoutingManager::EvaluateState(void)
+{
+    if (mIsEnabled && Get<Mle::MleRouter>().IsAttached() && mInfraIfIsRunning && mInfraIfLinkLocalAddress.IsLinkLocal())
+    {
+        Start();
+    }
+    else
+    {
+        Stop();
+    }
 }
 
 void RoutingManager::Start(void)
@@ -232,7 +248,7 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
     VerifyOrExit(IsInitialized() && mIsRunning, error = OT_ERROR_DROP);
 
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
-    infraLinkLocalAddr = static_cast<const Ip6::Address *>(otPlatInfraIfGetLinkLocalAddress(mInfraIfIndex));
+    infraLinkLocalAddr = static_cast<const Ip6::Address *>(&mInfraIfLinkLocalAddress);
 
     // Drop any ICMPv6 messages sent from myself.
     VerifyOrExit(infraLinkLocalAddr != nullptr && aSrcAddress != *infraLinkLocalAddr, error = OT_ERROR_DROP);
@@ -260,20 +276,42 @@ exit:
     }
 }
 
+otError RoutingManager::HandleInfraIfStateChanged(uint32_t            aInfraIfIndex,
+                                                  bool                aIsRunning,
+                                                  const Ip6::Address *aLinkLocalAddress)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(IsInitialized(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aLinkLocalAddress == nullptr || aLinkLocalAddress->IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
+
+    otLogInfoBr("infra interface state changed: %s, link-local-addr=%s", aIsRunning ? "RUNNING" : "NOT RUNNING",
+                (aLinkLocalAddress != nullptr) ? aLinkLocalAddress->ToString().AsCString() : "(null)");
+
+    mInfraIfIsRunning = aIsRunning;
+    if (aLinkLocalAddress == nullptr)
+    {
+        mInfraIfLinkLocalAddress.Clear();
+    }
+    else
+    {
+        mInfraIfLinkLocalAddress = *aLinkLocalAddress;
+    }
+
+    EvaluateState();
+
+exit:
+    return error;
+}
+
 void RoutingManager::HandleNotifierEvents(Events aEvents)
 {
     VerifyOrExit(IsInitialized() && IsEnabled());
 
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
-        if (Get<Mle::MleRouter>().IsAttached())
-        {
-            Start();
-        }
-        else
-        {
-            Stop();
-        }
+        EvaluateState();
     }
 
     if (aEvents.Contains(kEventThreadNetdataChanged))

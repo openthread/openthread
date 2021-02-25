@@ -42,6 +42,7 @@
 #include <openthread/heap.h>
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/infra_if.h>
 #include <openthread/platform/otns.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/uart.h>
@@ -100,8 +101,21 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    // Reuse the backbone interface name.
-    platformInfraIfInit(instance, aPlatformConfig->mBackboneInterfaceName);
+    {
+        uint32_t infraIfIndex;
+
+        // Reuse the backbone interface name.
+        if (aPlatformConfig->mBackboneInterfaceName == nullptr || strlen(aPlatformConfig->mBackboneInterfaceName) == 0)
+        {
+            DieNowWithMessage("no infra interface is specified", OT_EXIT_INVALID_ARGUMENTS);
+        }
+
+        infraIfIndex = platformInfraIfInit(instance, aPlatformConfig->mBackboneInterfaceName);
+
+        SuccessOrDie(otBorderRoutingInit(instance, infraIfIndex, platformInfraIfIsRunning(),
+                                         platformInfraIfGetLinkLocalAddress()));
+        SuccessOrDie(otBorderRoutingSetEnabled(instance, /* aEnabled */ true));
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
@@ -112,10 +126,6 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
-#endif
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    SuccessOrDie(otBorderRoutingInit(instance, platformInfraIfGetIndex()));
 #endif
 
     return instance;

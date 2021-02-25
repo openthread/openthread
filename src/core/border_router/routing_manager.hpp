@@ -79,12 +79,16 @@ public:
      * This method initializes the routing manager on given infrastructure interface.
      *
      * @param[in]  aInfraIfIndex  An infrastructure network interface index.
+     * @param[in]  aInfraIfIsRunning         A boolean that indicates whether the infrastructure
+     *                                       interface is running.
+     * @param[in]  aInfraIfLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
+     *                                       interface. NULL if the IPv6 link-local address is missing.
      *
      * @retval  OT_ERROR_NONE          Successfully started the routing manager.
      * @retval  OT_ERROR_INVALID_ARGS  The index of the infra interface is not valid.
      *
      */
-    otError Init(uint32_t aInfraIfIndex);
+    otError Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress);
 
     /**
      * This method enables/disables the Border Routing Manager.
@@ -114,6 +118,24 @@ public:
                           const Ip6::Address &aSrcAddress,
                           const uint8_t *     aBuffer,
                           uint16_t            aBufferLength);
+
+    /**
+     * This method handles infrastructure interface state changes.
+     *
+     * @param[in]  aInfraIfIndex      The index of the infrastructure interface.
+     * @param[in]  aIsRunning         A boolean that indicates whether the infrastructure
+     *                                interface is running.
+     * @param[in]  aLinkLocalAddress  A pointer to the IPv6 link local address of the infrastructure
+     *                                interface. NULL if the IPv6 link local address is lost.
+     *
+     * @retval  OT_ERROR_NONE           Successfully updated the infra interface status.
+     * @retval  OT_ERROR_INVALID_STATE  The Routing Manager is not initialized.
+     * @retval  OT_ERROR_INVALID_ARGS   The @p aInfraIfIndex doesn't match the infra interface the
+     *                                  Routing Manager are initialized with, or the @p aLinkLocalAddress
+     *                                  is not a valid IPv6 link-local address.
+     *
+     */
+    otError HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning, const Ip6::Address *aLinkLocalAddress);
 
 private:
     enum : uint16_t
@@ -161,11 +183,12 @@ private:
         bool        mIsOnLinkPrefix;
     };
 
+    void    EvaluateState(void);
     void    Start(void);
     void    Stop(void);
     void    HandleNotifierEvents(Events aEvents);
     bool    IsInitialized(void) const { return mInfraIfIndex != 0; }
-    bool    IsEnabled(void) const { return mEnabled; }
+    bool    IsEnabled(void) const { return mIsEnabled; }
     otError LoadOrGenerateRandomOmrPrefix(void);
     otError LoadOrGenerateRandomOnLinkPrefix(void);
 
@@ -210,9 +233,28 @@ private:
     static bool     ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
     static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
 
-    bool     mIsRunning;
+    // Indicates whether the Routing Manager is running (started).
+    bool mIsRunning;
+
+    // Indicates whether the Routing manager is enabled.
+    // The Routing Manager will be stopped if we are
+    // disabled.
+    bool mIsEnabled;
+
+    // Indicates whether the infra interface is running.
+    // The Routing Manager will be stopped when the
+    // Infra interface is not running.
+    bool mInfraIfIsRunning;
+
+    // The index of the infra interface on which Router
+    // Advertisement messages will be sent.
     uint32_t mInfraIfIndex;
-    bool     mEnabled;
+
+    // The IPv6 link-local address of the infra interface.
+    // It's UNSPECIFIED if no valid IPv6 link-local address
+    // is associated with the infra interface and the Routing
+    // Manager will be stopped.
+    Ip6::Address mInfraIfLinkLocalAddress;
 
     // The OMR prefix loaded from local persistent storage or randomly generated
     // if non is found in persistent storage.
