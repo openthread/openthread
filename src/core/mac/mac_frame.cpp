@@ -50,6 +50,13 @@ using ot::Encoding::LittleEndian::ReadUint32;
 using ot::Encoding::LittleEndian::WriteUint16;
 using ot::Encoding::LittleEndian::WriteUint32;
 
+void HeaderIe::Init(uint16_t aId, uint8_t aLen)
+{
+    Init();
+    SetId(aId);
+    SetLength(aLen);
+}
+
 void Frame::InitMacHeader(uint16_t aFcf, uint8_t aSecurityControl)
 {
     mLength = CalculateAddrFieldSize(aFcf);
@@ -829,7 +836,7 @@ uint8_t Frame::FindPayloadIndex(void) const
             index += ie->GetLength();
             VerifyOrExit(index + footerLength <= mLength, index = kInvalidIndex);
 
-            if (ie->GetId() == kHeaderIeTermination2)
+            if (ie->GetId() == Termination2Ie::kHeaderIeId)
             {
                 break;
             }
@@ -886,24 +893,58 @@ exit:
     return index;
 }
 
-otError Frame::AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount)
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+template <typename IeType> otError Frame::AppendHeaderIeAt(uint8_t &aIndex)
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t index = FindHeaderIeIndex();
+    otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(error = InitIeHeaderAt(aIndex, IeType::kHeaderIeId, IeType::kIeContentSize));
 
-    for (uint8_t i = 0; i < aIeCount; i++)
-    {
-        memcpy(&mPsdu[index], &aIeList[i], sizeof(HeaderIe));
-
-        index += sizeof(HeaderIe) + aIeList[i].GetLength();
-        mLength += sizeof(HeaderIe) + aIeList[i].GetLength();
-    }
+    InitIeContentAt<IeType>(aIndex);
 
 exit:
     return error;
 }
+
+otError Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aIndex == 0)
+    {
+        aIndex = FindHeaderIeIndex();
+    }
+
+    VerifyOrExit(aIndex != kInvalidIndex, error = OT_ERROR_NOT_FOUND);
+
+    reinterpret_cast<HeaderIe *>(mPsdu + aIndex)->Init(ieId, ieContentSize);
+    aIndex += sizeof(HeaderIe);
+
+    mLength += sizeof(HeaderIe) + ieContentSize;
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+template <> void Frame::InitIeContentAt<TimeIe>(uint8_t &aIndex)
+{
+    reinterpret_cast<TimeIe *>(mPsdu + aIndex)->Init();
+    aIndex += sizeof(TimeIe);
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+template <> void Frame::InitIeContentAt<CslIe>(uint8_t &aIndex)
+{
+    aIndex += sizeof(CslIe);
+}
+#endif
+
+template <> void Frame::InitIeContentAt<Termination2Ie>(uint8_t &aIndex)
+{
+    OT_UNUSED_VARIABLE(aIndex);
+}
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 {
@@ -948,7 +989,7 @@ const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
     {
         const HeaderIe *ie = reinterpret_cast<const HeaderIe *>(&mPsdu[index]);
 
-        if (ie->GetId() == kHeaderIeVendor)
+        if (ie->GetId() == VendorIeHeader::kHeaderIeId)
         {
             const VendorIeHeader *vendorIe =
                 reinterpret_cast<const VendorIeHeader *>(reinterpret_cast<const uint8_t *>(ie) + sizeof(HeaderIe));
@@ -972,7 +1013,7 @@ exit:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 void Frame::SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase)
 {
-    uint8_t *cur = GetHeaderIe(Frame::kHeaderIeCsl);
+    uint8_t *cur = GetHeaderIe(CslIe::kHeaderIeId);
     CslIe *  csl;
 
     VerifyOrExit(cur != nullptr);
@@ -1002,7 +1043,7 @@ const TimeIe *Frame::GetTimeIe(void) const
     const TimeIe * timeIe = nullptr;
     const uint8_t *cur    = nullptr;
 
-    cur = GetHeaderIe(kHeaderIeVendor);
+    cur = GetHeaderIe(VendorIeHeader::kHeaderIeId);
     VerifyOrExit(cur != nullptr);
 
     cur += sizeof(HeaderIe);
@@ -1077,6 +1118,17 @@ uint8_t Frame::GetFcsSize(void) const
 {
     return Trel::Link::kFcsSize;
 }
+#endif
+
+// Explicit instantiation
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+template otError Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+template otError Frame::AppendHeaderIeAt<CslIe>(uint8_t &aIndex);
+#endif
+template otError Frame::AppendHeaderIeAt<Termination2Ie>(uint8_t &aIndex);
 #endif
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)

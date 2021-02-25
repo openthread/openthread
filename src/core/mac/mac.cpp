@@ -903,6 +903,7 @@ TxFrame *Mac::PrepareDataRequest(void)
     TxFrame *frame = nullptr;
     Address  src, dst;
     uint16_t fcf;
+    bool     iePresent = Get<MeshForwarder>().CalcIePresent(nullptr);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioType radio;
@@ -915,7 +916,13 @@ TxFrame *Mac::PrepareDataRequest(void)
 #endif
 
     fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
-    UpdateFrameControlField(nullptr, /* aIsTimeSync */ false, fcf);
+
+    if (iePresent)
+    {
+        fcf |= Frame::kFcfIePresent;
+    }
+
+    fcf |= Get<MeshForwarder>().CalcFrameVersion(Get<NeighborTable>().FindNeighbor(dst), iePresent);
 
     if (dst.IsExtended())
     {
@@ -938,7 +945,10 @@ TxFrame *Mac::PrepareDataRequest(void)
     frame->SetSrcAddr(src);
     frame->SetDstAddr(dst);
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    IgnoreError(AppendHeaderIe(false, *frame));
+    if (iePresent)
+    {
+        Get<MeshForwarder>().AppendHeaderIe(nullptr, *frame);
+    }
 #endif
 
     IgnoreError(frame->SetCommandId(Frame::kMacCmdDataRequest));
@@ -2565,7 +2575,7 @@ bool Mac::IsCslEnabled(void) const
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 void Mac::ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr)
 {
-    const uint8_t *cur   = aFrame.GetHeaderIe(Frame::kHeaderIeCsl);
+    const uint8_t *cur   = aFrame.GetHeaderIe(CslIe::kHeaderIeId);
     Child *        child = Get<ChildTable>().FindChild(aSrcAddr, Child::kInStateAnyExceptInvalid);
     const CslIe *  csl;
 
@@ -2614,110 +2624,6 @@ exit:
     return;
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-otError Mac::AppendHeaderIe(bool aIsTimeSync, TxFrame &aFrame) const
-{
-    OT_UNUSED_VARIABLE(aIsTimeSync);
-
-    const size_t kMaxNumHeaderIe = 3; // TimeSync + CSL + Termination2
-    HeaderIe     ieList[kMaxNumHeaderIe];
-    otError      error   = OT_ERROR_NONE;
-    uint8_t      ieCount = 0;
-
-    VerifyOrExit(aFrame.IsVersion2015() && aFrame.IsIePresent());
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aIsTimeSync)
-    {
-        ieList[ieCount].Init();
-        ieList[ieCount].SetId(Frame::kHeaderIeVendor);
-        ieList[ieCount].SetLength(sizeof(TimeIe));
-        ieCount++;
-    }
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (IsCslEnabled())
-    {
-        OT_ASSERT(aFrame.GetSecurityEnabled());
-
-        aFrame.mInfo.mTxInfo.mCslPresent = true;
-        ieList[ieCount].Init();
-        ieList[ieCount].SetId(Frame::kHeaderIeCsl);
-        ieList[ieCount].SetLength(sizeof(CslIe));
-        ieCount++;
-    }
-    else
-#endif
-    {
-        aFrame.mInfo.mTxInfo.mCslPresent = false;
-    }
-
-    if (ieCount > 0)
-    {
-        ieList[ieCount].Init();
-        ieList[ieCount].SetId(Frame::kHeaderIeTermination2);
-        ieList[ieCount].SetLength(0);
-
-        SuccessOrExit(error = aFrame.AppendHeaderIe(ieList, ++ieCount));
-    }
-
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aIsTimeSync)
-    {
-        uint8_t *cur = aFrame.GetHeaderIe(Frame::kHeaderIeVendor);
-        TimeIe * ie  = reinterpret_cast<TimeIe *>(cur + sizeof(HeaderIe));
-
-        ie->Init();
-    }
-#endif
-
-exit:
-    return error;
-}
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-
-void Mac::UpdateFrameControlField(const Neighbor *aNeighbor, bool aIsTimeSync, uint16_t &aFcf) const
-{
-    OT_UNUSED_VARIABLE(aIsTimeSync);
-    OT_UNUSED_VARIABLE(aNeighbor);
-
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    if (aIsTimeSync)
-    {
-        aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
-    }
-    else
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (IsCslEnabled())
-    {
-        aFcf |= Frame::kFcfFrameVersion2015 | Frame::kFcfIePresent;
-    }
-    else
-#endif
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        if (aNeighbor != nullptr && !Mle::MleRouter::IsActiveRouter(aNeighbor->GetRloc16()) &&
-            static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
-    {
-        aFcf |= Frame::kFcfFrameVersion2015;
-    }
-    else
-#endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-        if (aNeighbor != nullptr && aNeighbor->IsEnhAckProbingActive())
-    {
-        aFcf |= Frame::kFcfFrameVersion2015; ///< Set version to 2015 to fetch Link Metrics data in Enh-ACK.
-    }
-    else
-#endif
-#endif
-    {
-        aFcf |= Frame::kFcfFrameVersion2006;
-    }
-}
 
 } // namespace Mac
 } // namespace ot

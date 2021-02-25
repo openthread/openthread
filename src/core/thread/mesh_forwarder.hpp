@@ -44,6 +44,7 @@
 #include "mac/channel_mask.hpp"
 #include "mac/data_poll_sender.hpp"
 #include "mac/mac.hpp"
+#include "mac/mac_frame.hpp"
 #include "net/ip6.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/indirect_sender.hpp"
@@ -474,6 +475,12 @@ private:
                                     Message::Priority & aPriority);
 
     otError GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
+
+    bool     CalcIePresent(const Message *aMessage);
+    uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    void AppendHeaderIe(const Message *aMessage, Mac::Frame &aFrame);
+#endif
 
     void PauseMessageTransmissions(void) { mTxPaused = true; }
     void ResumeMessageTransmissions(void);

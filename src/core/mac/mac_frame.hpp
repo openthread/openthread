@@ -72,6 +72,15 @@ public:
     void Init(void) { mFields.m16 = 0; }
 
     /**
+     * This method initializes the Header IE with Id and Length.
+     *
+     * @param[in]  aId   The IE Element Id.
+     * @param[in]  aLen  The IE content length.
+     *
+     */
+    void Init(uint16_t aId, uint8_t aLen);
+
+    /**
      * This method returns the IE Element Id.
      *
      * @returns the IE Element Id.
@@ -144,6 +153,12 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = 0x00,
+        kIeContentSize = sizeof(uint8_t) * 4,
+    };
+
     /**
      * This method returns the Vendor OUI.
      *
@@ -205,6 +220,12 @@ public:
         kVendorIeTime = 0x01,
     };
 
+    enum
+    {
+        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
+        kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t),
+    };
+
     /**
      * This method initializes the time IE.
      *
@@ -257,6 +278,12 @@ private:
 class ThreadIe
 {
 public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
+        kIeContentSize = VendorIeHeader::kIeContentSize,
+    };
+
     enum : uint32_t
     {
         kVendorOuiThreadCompanyId = 0xeab89b,
@@ -347,10 +374,6 @@ public:
         kMacCmdBeaconRequest              = 7,
         kMacCmdCoordinatorRealignment     = 8,
         kMacCmdGtsRequest                 = 9,
-
-        kHeaderIeVendor       = 0x00,
-        kHeaderIeCsl          = 0x1a,
-        kHeaderIeTermination2 = 0x7f,
 
         kImmAckLength = kFcfSize + kDsnSize + k154FcsSize,
 
@@ -923,16 +946,22 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
-     * This method appends Header IEs to MAC header.
+     * This template method appends an Header IE at specified index in this frame.
      *
-     * @param[in]   aIeList  The pointer to the Header IEs array.
-     * @param[in]   aIeCount The number of Header IEs in the array.
+     * @param[in,out]   aIndex  The index to append IE. If `aIndex` is `0` on input, this method finds the index
+     *                          for the first IE and appends the IE at that position. If the position is not found
+     *                          successfully, `aIndex` will be set to `kInvalidIndex`. Otherwise the IE will be
+     *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
+     *                          IE just appended.
      *
-     * @retval OT_ERROR_NONE    Successfully appended the Header IEs.
-     * @retval OT_ERROR_FAILED  If IE Present bit is not set.
+     * @tparam  IeType  The Header IE type, it MUST contain an enum `kHeaderIeId` equal to the IE's Id
+     *                  and an enum `kIeContentSize` indicating the IE body's size.
+     *
+     * @retval OT_ERROR_NONE       Successfully appended the Header IE.
+     * @retval OT_ERROR_NOT_FOUND  The position for first IE is not found.
      *
      */
-    otError AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount);
+    template <typename IeType> otError AppendHeaderIeAt(uint8_t &aIndex);
 
     /**
      * This method returns a pointer to the Header IE.
@@ -1091,6 +1120,9 @@ protected:
     uint8_t FindPayloadIndex(void) const;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
+
+    otError                         InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize);
+    template <typename IeType> void InitIeContentAt(uint8_t &aIndex);
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
@@ -1642,6 +1674,12 @@ OT_TOOL_PACKED_BEGIN
 class CslIe
 {
 public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = 0x1a,
+        kIeContentSize = sizeof(uint16_t) * 2,
+    };
+
     /**
      * This method returns the CSL Period.
      *
@@ -1678,6 +1716,22 @@ private:
     uint16_t mPhase;
     uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Termination2 IE.
+ *
+ * This class is empty for template specialization.
+ *
+ */
+class Termination2Ie
+{
+public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = 0x7f,
+        kIeContentSize = 0,
+    };
+};
 
 /**
  * @}
