@@ -584,6 +584,16 @@ public:
     otError SetPriority(Priority aPriority);
 
     /**
+     * This static method convert a `Priority` to a string.
+     *
+     * @param[in] aPriority  The priority level.
+     *
+     * @returns A string representation of @p aPriority.
+     *
+     */
+    static const char *PriorityToString(Priority aPriority);
+
+    /**
      * This method prepends bytes to the front of the message.
      *
      * On success, this method grows the message by @p aLength bytes.
