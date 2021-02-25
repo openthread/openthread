@@ -52,6 +52,8 @@ PORT_OFFSET = int(os.getenv('PORT_OFFSET', "0"))
 
 
 class OtbrDocker:
+    RESET_DELAY = 3
+
     _socat_proc = None
     _ot_rcp_proc = None
     _docker_proc = None
@@ -306,6 +308,8 @@ class OtbrDocker:
 
 
 class OtCli:
+
+    RESET_DELAY = 0.1
 
     def __init__(self, nodeid, is_mtd=False, version=None, is_bbr=False, **kwargs):
         self.verbose = int(float(os.getenv('VERBOSE', 0)))
@@ -1786,7 +1790,7 @@ class NodeImpl:
 
     def reset(self):
         self.send_command('reset')
-        time.sleep(0.1)
+        time.sleep(self.RESET_DELAY)
 
     def set_router_selection_jitter(self, jitter):
         cmd = 'routerselectionjitter %d' % jitter
