@@ -1634,62 +1634,28 @@ exit:
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, otError aError)
 {
-    const char *actionText = "";
+    static const char *const kMessageActionStrings[] = {
+        "Received",                    // (0) kMessageReceive
+        "Sent",                        // (1) kMessageTransmit
+        "Prepping indir tx",           // (2) kMessagePrepareIndirect
+        "Dropping",                    // (3) kMessageDrop
+        "Dropping (reassembly queue)", // (4) kMessageReassemblyDrop
+        "Evicting",                    // (5) kMessageEvict
+    };
 
-    switch (aAction)
-    {
-    case kMessageReceive:
-        actionText = "Received";
-        break;
+    static_assert(kMessageReceive == 0, "kMessageReceive value is incorrect");
+    static_assert(kMessageTransmit == 1, "kMessageTransmit value is incorrect");
+    static_assert(kMessagePrepareIndirect == 2, "kMessagePrepareIndirect value is incorrect");
+    static_assert(kMessageDrop == 3, "kMessageDrop value is incorrect");
+    static_assert(kMessageReassemblyDrop == 4, "kMessageReassemblyDrop value is incorrect");
+    static_assert(kMessageEvict == 5, "kMessageEvict value is incorrect");
 
-    case kMessageTransmit:
-        actionText = (aError == OT_ERROR_NONE) ? "Sent" : "Failed to send";
-        break;
-
-    case kMessagePrepareIndirect:
-        actionText = "Prepping indir tx";
-        break;
-
-    case kMessageDrop:
-        actionText = "Dropping";
-        break;
-
-    case kMessageReassemblyDrop:
-        actionText = "Dropping (reassembly queue)";
-        break;
-
-    case kMessageEvict:
-        actionText = "Evicting";
-        break;
-    }
-
-    return actionText;
+    return (aError == OT_ERROR_NONE) ? kMessageActionStrings[aAction] : "Failed to send";
 }
 
 const char *MeshForwarder::MessagePriorityToString(const Message &aMessage)
 {
-    const char *priorityText = "unknown";
-
-    switch (aMessage.GetPriority())
-    {
-    case Message::kPriorityNet:
-        priorityText = "net";
-        break;
-
-    case Message::kPriorityHigh:
-        priorityText = "high";
-        break;
-
-    case Message::kPriorityNormal:
-        priorityText = "normal";
-        break;
-
-    case Message::kPriorityLow:
-        priorityText = "low";
-        break;
-    }
-
-    return priorityText;
+    return Message::PriorityToString(aMessage.GetPriority());
 }
 
 #if OPENTHREAD_CONFIG_LOG_SRC_DST_IP_ADDRESSES

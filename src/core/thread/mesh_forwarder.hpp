@@ -327,7 +327,7 @@ private:
         kMeshHeaderFrameFcsSize = sizeof(uint16_t),        // Frame FCS size for Mesh Header frame.
     };
 
-    enum MessageAction ///< Defines the action parameter in `LogMessageInfo()` method.
+    enum MessageAction : uint8_t ///< Defines the action parameter in `LogMessageInfo()` method.
     {
         kMessageReceive,         ///< Indicates that the message was received.
         kMessageTransmit,        ///< Indicates that the message was sent.

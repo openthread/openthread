@@ -355,6 +355,23 @@ exit:
     return error;
 }
 
+const char *Message::PriorityToString(Priority aPriority)
+{
+    static const char *const kPriorityStrings[] = {
+        "low",    // (0) kPriorityLow
+        "normal", // (1) kPriorityNormal
+        "high",   // (2) kPriorityHigh
+        "net",    // (3) kPriorityNet
+    };
+
+    static_assert(kPriorityLow == 0, "kPriorityLow value is incorrect");
+    static_assert(kPriorityNormal == 1, "kPriorityNormal value is incorrect");
+    static_assert(kPriorityHigh == 2, "kPriorityHigh value is incorrect");
+    static_assert(kPriorityNet == 3, "kPriorityNet value is incorrect");
+
+    return kPriorityStrings[aPriority];
+}
+
 otError Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {
     otError  error     = OT_ERROR_NONE;
