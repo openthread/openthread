@@ -1565,23 +1565,19 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
     {
         version = Mac::Frame::kFcfFrameVersion2015;
     }
-    else
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        if (aNeighbor != nullptr && !Mle::MleRouter::IsActiveRouter(aNeighbor->GetRloc16()) &&
-            static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
+    else if (aNeighbor != nullptr && !Mle::MleRouter::IsActiveRouter(aNeighbor->GetRloc16()) &&
+             static_cast<const Child *>(aNeighbor)->IsCslSynchronized())
     {
         version = Mac::Frame::kFcfFrameVersion2015;
     }
-    else
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-        if (aNeighbor != nullptr && aNeighbor->IsEnhAckProbingActive())
+    else if (aNeighbor != nullptr && aNeighbor->IsEnhAckProbingActive())
     {
         version |= Mac::Frame::kFcfFrameVersion2015; ///< Set version to 2015 to fetch Link Metrics data in Enh-ACK.
     }
 #endif
-    {
-    }
 
     return version;
 }

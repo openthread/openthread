@@ -894,7 +894,19 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-template <typename T> otError Frame::AppendHeaderIeAt(uint8_t &aIndex)
+template <typename IeType> otError Frame::AppendHeaderIeAt(uint8_t &aIndex)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = InitIeHeaderAt(aIndex, IeType::kHeaderIeId, sizeof(IeType)));
+
+    InitIeContentAt<IeType>(aIndex);
+
+exit:
+    return error;
+}
+
+otError Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize)
 {
     otError error = OT_ERROR_NONE;
 
@@ -905,13 +917,10 @@ template <typename T> otError Frame::AppendHeaderIeAt(uint8_t &aIndex)
 
     VerifyOrExit(aIndex != kInvalidIndex, error = OT_ERROR_NOT_FOUND);
 
-    reinterpret_cast<HeaderIe *>(mPsdu + aIndex)->Init(T::kHeaderIeId, sizeof(T));
+    reinterpret_cast<HeaderIe *>(mPsdu + aIndex)->Init(ieId, ieContentSize);
     aIndex += sizeof(HeaderIe);
 
-    InitIeContentAt<T>(aIndex);
-
-    mLength += sizeof(HeaderIe) + sizeof(T);
-
+    mLength += sizeof(HeaderIe) + ieContentSize;
 exit:
     return error;
 }
@@ -1111,6 +1120,7 @@ uint8_t Frame::GetFcsSize(void) const
 }
 #endif
 
+// Explicit instantiation
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template otError Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);

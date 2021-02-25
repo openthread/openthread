@@ -153,9 +153,10 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
-    enum
+    enum : uint8_t
     {
         kHeaderIeId = 0x00,
+        kIeContentSize = sizeof(uint8_t) * 4,
     };
 
     /**
@@ -222,6 +223,7 @@ public:
     enum
     {
         kHeaderIeId = VendorIeHeader::kHeaderIeId,
+        kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t),
     };
 
     /**
@@ -276,9 +278,10 @@ private:
 class ThreadIe
 {
 public:
-    enum
+    enum : uint8_t
     {
         kHeaderIeId = VendorIeHeader::kHeaderIeId,
+        kIeContentSize = VendorIeHeader::kIeContentSize,
     };
 
     enum : uint32_t
@@ -951,13 +954,13 @@ public:
      *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
      *                          IE just appended.
      *
-     * Tye template type `T` should be a IE type and contain a enum `kHeaderIeId` which equals to the Id of that IE.
+     * @tparam  IeType  The type of a Header IE, it MUST contain a enum `kHeaderIeId` which equals to the Id of that IE.
      *
      * @retval OT_ERROR_NONE       Successfully appended the Header IE.
      * @retval OT_ERROR_NOT_FOUND  The position for first IE is not found.
      *
      */
-    template <typename T> otError AppendHeaderIeAt(uint8_t &aIndex);
+    template <typename IeType> otError AppendHeaderIeAt(uint8_t &aIndex);
 
     /**
      * This method returns a pointer to the Header IE.
@@ -1117,7 +1120,8 @@ protected:
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 
-    template <typename T> void InitIeContentAt(uint8_t &aIndex);
+    otError                         InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize);
+    template <typename IeType> void InitIeContentAt(uint8_t &aIndex);
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
@@ -1669,9 +1673,10 @@ OT_TOOL_PACKED_BEGIN
 class CslIe
 {
 public:
-    enum
+    enum : uint8_t
     {
         kHeaderIeId = 0x1a,
+        kIeContentSize = sizeof(uint16_t) * 2,
     };
 
     /**
@@ -1720,9 +1725,10 @@ private:
 class Termination2Ie
 {
 public:
-    enum
+    enum : uint8_t
     {
         kHeaderIeId = 0x7f,
+        kIeContentSize = 0,
     };
 };
 
