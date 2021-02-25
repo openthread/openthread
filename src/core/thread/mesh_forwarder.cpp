@@ -1575,7 +1575,7 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     else if (aNeighbor != nullptr && aNeighbor->IsEnhAckProbingActive())
     {
-        version |= Mac::Frame::kFcfFrameVersion2015; ///< Set version to 2015 to fetch Link Metrics data in Enh-ACK.
+        version = Mac::Frame::kFcfFrameVersion2015; ///< Set version to 2015 to fetch Link Metrics data in Enh-ACK.
     }
 #endif
 

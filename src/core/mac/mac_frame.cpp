@@ -898,7 +898,7 @@ template <typename IeType> otError Frame::AppendHeaderIeAt(uint8_t &aIndex)
 {
     otError error = OT_ERROR_NONE;
 
-    SuccessOrExit(error = InitIeHeaderAt(aIndex, IeType::kHeaderIeId, sizeof(IeType)));
+    SuccessOrExit(error = InitIeHeaderAt(aIndex, IeType::kHeaderIeId, IeType::kIeContentSize));
 
     InitIeContentAt<IeType>(aIndex);
 

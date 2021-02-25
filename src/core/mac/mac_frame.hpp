@@ -155,7 +155,7 @@ class VendorIeHeader
 public:
     enum : uint8_t
     {
-        kHeaderIeId = 0x00,
+        kHeaderIeId    = 0x00,
         kIeContentSize = sizeof(uint8_t) * 4,
     };
 
@@ -222,7 +222,7 @@ public:
 
     enum
     {
-        kHeaderIeId = VendorIeHeader::kHeaderIeId,
+        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
         kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t),
     };
 
@@ -280,7 +280,7 @@ class ThreadIe
 public:
     enum : uint8_t
     {
-        kHeaderIeId = VendorIeHeader::kHeaderIeId,
+        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
         kIeContentSize = VendorIeHeader::kIeContentSize,
     };
 
@@ -954,7 +954,8 @@ public:
      *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
      *                          IE just appended.
      *
-     * @tparam  IeType  The type of a Header IE, it MUST contain a enum `kHeaderIeId` which equals to the Id of that IE.
+     * @tparam  IeType  The type of a Header IE, it MUST contain an enum `kHeaderIeId` which equals to the Id of that
+     *                  IE and an enum `kIeContentSize` which indicates the IE body's size.
      *
      * @retval OT_ERROR_NONE       Successfully appended the Header IE.
      * @retval OT_ERROR_NOT_FOUND  The position for first IE is not found.
@@ -1675,7 +1676,7 @@ class CslIe
 public:
     enum : uint8_t
     {
-        kHeaderIeId = 0x1a,
+        kHeaderIeId    = 0x1a,
         kIeContentSize = sizeof(uint16_t) * 2,
     };
 
@@ -1727,7 +1728,7 @@ class Termination2Ie
 public:
     enum : uint8_t
     {
-        kHeaderIeId = 0x7f,
+        kHeaderIeId    = 0x7f,
         kIeContentSize = 0,
     };
 };
