@@ -1124,14 +1124,11 @@ uint8_t Frame::GetFcsSize(void) const
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 template otError Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);
-template void    Frame::InitIeContentAt<TimeIe>(uint8_t &aIndex);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 template otError Frame::AppendHeaderIeAt<CslIe>(uint8_t &aIndex);
-template void    Frame::InitIeContentAt<CslIe>(uint8_t &aIndex);
 #endif
 template otError Frame::AppendHeaderIeAt<Termination2Ie>(uint8_t &aIndex);
-template void    Frame::InitIeContentAt<Termination2Ie>(uint8_t &aIndex);
 #endif
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)

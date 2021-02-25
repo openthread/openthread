@@ -74,8 +74,8 @@ public:
     /**
      * This method initializes the Header IE with Id and Length.
      *
-     * @param[in]  aID      The IE Element Id.
-     * @param[in]  aLength  The IE content length.
+     * @param[in]  aId   The IE Element Id.
+     * @param[in]  aLen  The IE content length.
      *
      */
     void Init(uint16_t aId, uint8_t aLen);
@@ -948,14 +948,14 @@ public:
     /**
      * This template method appends an Header IE at specified index in this frame.
      *
-     * @param[in/out]   aIndex  The index to append IE. If `aIndex` is `0` on input, this method would find the index
-     *                          for the first IE and append the IE at that position. If the position is not found
+     * @param[in,out]   aIndex  The index to append IE. If `aIndex` is `0` on input, this method finds the index
+     *                          for the first IE and appends the IE at that position. If the position is not found
      *                          successfully, `aIndex` will be set to `kInvalidIndex`. Otherwise the IE will be
      *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
      *                          IE just appended.
      *
-     * @tparam  IeType  The type of a Header IE, it MUST contain an enum `kHeaderIeId` which equals to the Id of that
-     *                  IE and an enum `kIeContentSize` which indicates the IE body's size.
+     * @tparam  IeType  The Header IE type, it MUST contain an enum `kHeaderIeId` equal to the IE's Id
+     *                  and an enum `kIeContentSize` indicating the IE body's size.
      *
      * @retval OT_ERROR_NONE       Successfully appended the Header IE.
      * @retval OT_ERROR_NOT_FOUND  The position for first IE is not found.
@@ -1720,7 +1720,7 @@ private:
 /**
  * This class implements Termination2 IE.
  *
- * This class is empty for template Specialization.
+ * This class is empty for template specialization.
  *
  */
 class Termination2Ie
