@@ -502,6 +502,11 @@ otError Mle::BecomeChild(AttachMode aMode)
     VerifyOrExit(!IsDisabled(), error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(!IsAttaching(), error = OT_ERROR_BUSY);
 
+    if (!IsDetached())
+    {
+        mAttachCounter = 0;
+    }
+
     if (mReattachState == kReattachStart)
     {
         if (Get<MeshCoP::ActiveDataset>().Restore() == OT_ERROR_NONE)
@@ -652,8 +657,7 @@ void Mle::SetStateChild(uint16_t aRloc16)
     SetRloc16(aRloc16);
     SetRole(kRoleChild);
     SetAttachState(kAttachStateIdle);
-    mAttachTimer.Stop();
-    mAttachCounter       = 0;
+    mAttachTimer.Start(kAttachBackoffDelayToResetCounter);
     mReattachState       = kReattachStop;
     mChildUpdateAttempts = 0;
     mDataRequestAttempts = 0;
@@ -1667,8 +1671,8 @@ void Mle::HandleAttachTimer(void)
     switch (mAttachState)
     {
     case kAttachStateIdle:
-        OT_ASSERT(false);
-        OT_UNREACHABLE_CODE(break);
+        mAttachCounter = 0;
+        break;
 
     case kAttachStateProcessAnnounce:
         ProcessAnnounce();
@@ -3795,6 +3799,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
         mAlternatePanId     = panId;
         SetAttachState(kAttachStateProcessAnnounce);
         mAttachTimer.Start(kAnnounceProcessTimeout);
+        mAttachCounter = 0;
 
         otLogNoteMle("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
