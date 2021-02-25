@@ -41,7 +41,6 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/string.hpp"
-#include "crypto/pbkdf2_cmac.h"
 #include "meshcop/joiner.hpp"
 #include "meshcop/joiner_router.hpp"
 #include "meshcop/meshcop.hpp"

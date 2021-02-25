@@ -38,7 +38,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/string.hpp"
-#include "crypto/pbkdf2_cmac.h"
+#include "crypto/pbkdf2_cmac.hpp"
 #include "crypto/sha256.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -321,7 +321,7 @@ otError GeneratePskc(const char *              aPassPhrase,
 {
     otError    error        = OT_ERROR_NONE;
     const char saltPrefix[] = "Thread";
-    uint8_t    salt[OT_PBKDF2_SALT_MAX_LEN];
+    uint8_t    salt[Crypto::Pbkdf2::kMaxSaltLength];
     uint16_t   saltLen = 0;
     uint16_t   passphraseLen;
     uint8_t    networkNameLen;
@@ -346,8 +346,8 @@ otError GeneratePskc(const char *              aPassPhrase,
     memcpy(salt + saltLen, aNetworkName.GetAsCString(), networkNameLen);
     saltLen += networkNameLen;
 
-    otPbkdf2Cmac(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, reinterpret_cast<const uint8_t *>(salt),
-                 saltLen, 16384, OT_PSKC_MAX_SIZE, aPskc.m8);
+    Crypto::Pbkdf2::GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen, 16384,
+                                OT_PSKC_MAX_SIZE, aPskc.m8);
 
 exit:
     return error;

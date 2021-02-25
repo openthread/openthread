@@ -431,7 +431,7 @@ HEADERS_COMMON                                  = \
     crypto/hkdf_sha256.hpp                        \
     crypto/hmac_sha256.hpp                        \
     crypto/mbedtls.hpp                            \
-    crypto/pbkdf2_cmac.h                          \
+    crypto/pbkdf2_cmac.hpp                        \
     crypto/sha256.hpp                             \
     diags/factory_diags.hpp                       \
     mac/channel_mask.hpp                          \
