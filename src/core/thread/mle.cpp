@@ -4121,132 +4121,116 @@ void Mle::LogError(MessageAction aAction, MessageType aType, otError aError)
 
 const char *Mle::MessageActionToString(MessageAction aAction)
 {
-    const char *str = "Unknown";
+    static const char *const kMessageActionStrings[] = {
+        "Send",           // (0) kMessageSend
+        "Receive",        // (1) kMessageReceive
+        "Delay",          // (2) kMessageDelay
+        "Remove Delayed", // (3) kMessageRemoveDelayed
+    };
 
-    switch (aAction)
-    {
-    case kMessageSend:
-        str = "Send";
-        break;
-    case kMessageReceive:
-        str = "Receive";
-        break;
-    case kMessageDelay:
-        str = "Delay";
-        break;
-    case kMessageRemoveDelayed:
-        str = "Remove Delayed";
-        break;
-    }
+    static_assert(kMessageSend == 0, "kMessageSend value is incorrect");
+    static_assert(kMessageReceive == 1, "kMessageReceive value is incorrect");
+    static_assert(kMessageDelay == 2, "kMessageDelay value is incorrect");
+    static_assert(kMessageRemoveDelayed == 3, "kMessageRemoveDelayed value is incorrect");
 
-    return str;
+    return kMessageActionStrings[aAction];
 }
 
 const char *Mle::MessageTypeToString(MessageType aType)
 {
-    const char *str = "Unknown";
-
-    switch (aType)
-    {
-    case kTypeAdvertisement:
-        str = "Advertisement";
-        break;
-    case kTypeAnnounce:
-        str = "Announce";
-        break;
-    case kTypeChildIdRequest:
-        str = "Child ID Request";
-        break;
-    case kTypeChildIdRequestShort:
-    case kTypeChildIdResponse:
-        str = "Child ID Response";
-        break;
-    case kTypeChildUpdateRequestOfParent:
+    static const char *const kMessageTypeStrings[] = {
+        "Advertisement",         // (0)  kTypeAdvertisement
+        "Announce",              // (1)  kTypeAnnounce
+        "Child ID Request",      // (2)  kTypeChildIdRequest
+        "Child ID Request",      // (3)  kTypeChildIdRequestShort
+        "Child ID Response",     // (4)  kTypeChildIdResponse
+        "Child Update Request",  // (5)  kTypeChildUpdateRequestOfParent
+        "Child Update Response", // (6)  kTypeChildUpdateResponseOfParent
+        "Data Request",          // (7)  kTypeDataRequest
+        "Data Response",         // (8)  kTypeDataResponse
+        "Discovery Request",     // (9)  kTypeDiscoveryRequest
+        "Discovery Response",    // (10) kTypeDiscoveryResponse
+        "delayed message",       // (11) kTypeGenericDelayed
+        "UDP",                   // (12) kTypeGenericUdp
+        "Parent Request",        // (13) kTypeParentRequestToRouters
+        "Parent Request",        // (14) kTypeParentRequestToRoutersReeds
+        "Parent Response",       // (15) kTypeParentResponse
 #if OPENTHREAD_FTD
-    case kTypeChildUpdateRequestOfChild:
-#endif
-        str = "Child Update Request";
-        break;
-    case kTypeChildUpdateResponseOfParent:
-#if OPENTHREAD_FTD
-    case kTypeChildUpdateResponseOfChild:
-    case kTypeChildUpdateResponseOfUnknownChild:
-#endif
-        str = "Child Update Response";
-        break;
-    case kTypeDataRequest:
-        str = "Data Request";
-        break;
-    case kTypeDataResponse:
-        str = "Data Response";
-        break;
-    case kTypeDiscoveryRequest:
-        str = "Discovery Request";
-        break;
-    case kTypeDiscoveryResponse:
-        str = "Discovery Response";
-        break;
-    case kTypeGenericDelayed:
-        str = "delayed message";
-        break;
-    case kTypeGenericUdp:
-        str = "UDP";
-        break;
-    case kTypeParentRequestToRouters:
-    case kTypeParentRequestToRoutersReeds:
-        str = "Parent Request";
-        break;
-    case kTypeParentResponse:
-        str = "Parent Response";
-        break;
-#if OPENTHREAD_FTD
-    case kTypeAddressRelease:
-        str = "Address Release";
-        break;
-    case kTypeAddressReleaseReply:
-        str = "Address Release Reply";
-        break;
-    case kTypeAddressReply:
-        str = "Address Reply";
-        break;
-    case kTypeAddressSolicit:
-        str = "Address Solicit";
-        break;
-    case kTypeLinkAccept:
-        str = "Link Accept";
-        break;
-    case kTypeLinkAcceptAndRequest:
-        str = "Link Accept and Request";
-        break;
-    case kTypeLinkReject:
-        str = "Link Reject";
-        break;
-    case kTypeLinkRequest:
-        str = "Link Request";
-        break;
-    case kTypeParentRequest:
-        str = "Parent Request";
-        break;
+        "Address Release",         // (16) kTypeAddressRelease
+        "Address Release Reply",   // (17) kTypeAddressReleaseReply
+        "Address Reply",           // (18) kTypeAddressReply
+        "Address Solicit",         // (19) kTypeAddressSolicit
+        "Child Update Request",    // (20) kTypeChildUpdateRequestOfChild
+        "Child Update Response",   // (21) kTypeChildUpdateResponseOfChild
+        "Child Update Response",   // (22) kTypeChildUpdateResponseOfUnknownChild
+        "Link Accept",             // (23) kTypeLinkAccept
+        "Link Accept and Request", // (24) kTypeLinkAcceptAndRequest
+        "Link Reject",             // (25) kTypeLinkReject
+        "Link Request",            // (26) kTypeLinkRequest
+        "Parent Request",          // (27) kTypeParentRequest
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    case kTypeTimeSync:
-        str = "Time Sync";
-        break;
+        "Time Sync", // (28) kTypeTimeSync
+#endif
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+        "Link Metrics Management Request",  // (29) kTypeLinkMetricsManagementRequest
+        "Link Metrics Management Response", // (30) kTypeLinkMetricsManagementResponse
+        "Link Probe",                       // (31) kTypeLinkProbe
+#endif
+    };
+
+    static_assert(kTypeAdvertisement == 0, "kTypeAdvertisement value is incorrect");
+    static_assert(kTypeAnnounce == 1, "kTypeAnnounce value is incorrect");
+    static_assert(kTypeChildIdRequest == 2, "kTypeChildIdRequest value is incorrect");
+    static_assert(kTypeChildIdRequestShort == 3, "kTypeChildIdRequestShort value is incorrect");
+    static_assert(kTypeChildIdResponse == 4, "kTypeChildIdResponse value is incorrect");
+    static_assert(kTypeChildUpdateRequestOfParent == 5, "kTypeChildUpdateRequestOfParent value is incorrect");
+    static_assert(kTypeChildUpdateResponseOfParent == 6, "kTypeChildUpdateResponseOfParent value is incorrect");
+    static_assert(kTypeDataRequest == 7, "kTypeDataRequest value is incorrect");
+    static_assert(kTypeDataResponse == 8, "kTypeDataResponse value is incorrect");
+    static_assert(kTypeDiscoveryRequest == 9, "kTypeDiscoveryRequest value is incorrect");
+    static_assert(kTypeDiscoveryResponse == 10, "kTypeDiscoveryResponse value is incorrect");
+    static_assert(kTypeGenericDelayed == 11, "kTypeGenericDelayed value is incorrect");
+    static_assert(kTypeGenericUdp == 12, "kTypeGenericUdp value is incorrect");
+    static_assert(kTypeParentRequestToRouters == 13, "kTypeParentRequestToRouters value is incorrect");
+    static_assert(kTypeParentRequestToRoutersReeds == 14, "kTypeParentRequestToRoutersReeds value is incorrect");
+    static_assert(kTypeParentResponse == 15, "kTypeParentResponse value is incorrect");
+#if OPENTHREAD_FTD
+    static_assert(kTypeAddressRelease == 16, "kTypeAddressRelease value is incorrect");
+    static_assert(kTypeAddressReleaseReply == 17, "kTypeAddressReleaseReply value is incorrect");
+    static_assert(kTypeAddressReply == 18, "kTypeAddressReply value is incorrect");
+    static_assert(kTypeAddressSolicit == 19, "kTypeAddressSolicit value is incorrect");
+    static_assert(kTypeChildUpdateRequestOfChild == 20, "kTypeChildUpdateRequestOfChild value is incorrect");
+    static_assert(kTypeChildUpdateResponseOfChild == 21, "kTypeChildUpdateResponseOfChild value is incorrect");
+    static_assert(kTypeChildUpdateResponseOfUnknownChild == 22, "kTypeChildUpdateResponseOfUnknownChild is incorrect");
+    static_assert(kTypeLinkAccept == 23, "kTypeLinkAccept value is incorrect");
+    static_assert(kTypeLinkAcceptAndRequest == 24, "kTypeLinkAcceptAndRequest value is incorrect");
+    static_assert(kTypeLinkReject == 25, "kTypeLinkReject value is incorrect");
+    static_assert(kTypeLinkRequest == 26, "kTypeLinkRequest value is incorrect");
+    static_assert(kTypeParentRequest == 27, "kTypeParentRequest value is incorrect");
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    static_assert(kTypeTimeSync == 28, "kTypeTimeSync value is incorrect");
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    static_assert(kTypeLinkMetricsManagementRequest == 29, "kTypeLinkMetricsManagementRequest value is incorrect)");
+    static_assert(kTypeLinkMetricsManagementResponse == 30, "kTypeLinkMetricsManagementResponse value is incorrect)");
+    static_assert(kTypeLinkProbe == 31, "kTypeLinkProbe value is incorrect)");
+#endif
+#else // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    static_assert(kTypeLinkMetricsManagementRequest == 28, "kTypeLinkMetricsManagementRequest value is incorrect)");
+    static_assert(kTypeLinkMetricsManagementResponse == 29, "kTypeLinkMetricsManagementResponse value is incorrect)");
+    static_assert(kTypeLinkProbe == 30, "kTypeLinkProbe value is incorrect)");
+#endif
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#else  // OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    static_assert(kTypeLinkMetricsManagementRequest == 16, "kTypeLinkMetricsManagementRequest value is incorrect)");
+    static_assert(kTypeLinkMetricsManagementResponse == 17, "kTypeLinkMetricsManagementResponse value is incorrect)");
+    static_assert(kTypeLinkProbe == 18, "kTypeLinkProbe value is incorrect)");
 #endif
 #endif // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    case kTypeLinkMetricsManagementRequest:
-        str = "Link Metrics Management Request";
-        break;
-    case kTypeLinkMetricsManagementResponse:
-        str = "Link Metrics Management Response";
-        break;
-    case kTypeLinkProbe:
-        str = "Link Probe";
-        break;
-#endif
-    }
 
-    return str;
+    return kMessageTypeStrings[aType];
 }
 
 const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageAction aAction)
@@ -4262,7 +4246,6 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
     case kTypeChildUpdateResponseOfParent:
         str = (aAction == kMessageReceive) ? " from parent" : " to parent";
         break;
-
     case kTypeParentRequestToRouters:
         str = " to routers";
         break;
@@ -4289,32 +4272,21 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
 
 const char *Mle::RoleToString(DeviceRole aRole)
 {
-    const char *roleString = "Unknown";
+    static const char *const kRoleStrings[] = {
+        "Disabled", // (0) kRoleDisabled
+        "Detached", // (1) kRoleDetached
+        "Child",    // (2) kRoleChild
+        "Router",   // (3) kRoleRouter
+        "Leader",   // (4) kRoleLeader
+    };
 
-    switch (aRole)
-    {
-    case kRoleDisabled:
-        roleString = "Disabled";
-        break;
+    static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
+    static_assert(kRoleDetached == 1, "kRoleDetached value is incorrect");
+    static_assert(kRoleChild == 2, "kRoleChild value is incorrect");
+    static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
+    static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
 
-    case kRoleDetached:
-        roleString = "Detached";
-        break;
-
-    case kRoleChild:
-        roleString = "Child";
-        break;
-
-    case kRoleRouter:
-        roleString = "Router";
-        break;
-
-    case kRoleLeader:
-        roleString = "Leader";
-        break;
-    }
-
-    return roleString;
+    return kRoleStrings[aRole];
 }
 
 // LCOV_EXCL_START
@@ -4323,96 +4295,61 @@ const char *Mle::RoleToString(DeviceRole aRole)
 
 const char *Mle::AttachModeToString(AttachMode aMode)
 {
-    const char *str = "unknown";
+    static const char *const kAttachModeStrings[] = {
+        "any-partition",            // (0) kAttachAny
+        "same-partition-try-1",     // (1) kAttachSame1
+        "same-partition-try-2",     // (2) kAttachSame2
+        "better-partition",         // (3) kAttachBetter
+        "same-partition-downgrade", // (4) kAttachSameDowngrade
+    };
 
-    switch (aMode)
-    {
-    case kAttachAny:
-        str = "any-partition";
-        break;
+    static_assert(kAttachAny == 0, "kAttachAny value is incorrect");
+    static_assert(kAttachSame1 == 1, "kAttachSame1 value is incorrect");
+    static_assert(kAttachSame2 == 2, "kAttachSame2 value is incorrect");
+    static_assert(kAttachBetter == 3, "kAttachBetter value is incorrect");
+    static_assert(kAttachSameDowngrade == 4, "kAttachSameDowngrade value is incorrect");
 
-    case kAttachSame1:
-        str = "same-partition-try-1";
-        break;
-
-    case kAttachSame2:
-        str = "same-partition-try-2";
-        break;
-
-    case kAttachBetter:
-        str = "better-partition";
-        break;
-
-    case kAttachSameDowngrade:
-        str = "same-partition-downgrade";
-        break;
-    }
-
-    return str;
+    return kAttachModeStrings[aMode];
 }
 
 const char *Mle::AttachStateToString(AttachState aState)
 {
-    const char *str = "Unknown";
-
-    switch (aState)
-    {
-    case kAttachStateIdle:
-        str = "Idle";
-        break;
-
-    case kAttachStateProcessAnnounce:
-        str = "ProcessAnnounce";
-        break;
-
-    case kAttachStateStart:
-        str = "Start";
-        break;
-
-    case kAttachStateParentRequestRouter:
-        str = "ParentReqRouters";
-        break;
-
-    case kAttachStateParentRequestReed:
-        str = "ParentReqReeds";
-        break;
-
-    case kAttachStateAnnounce:
-        str = "Announce";
-        break;
-
-    case kAttachStateChildIdRequest:
-        str = "ChildIdReq";
-        break;
+    static const char *const kAttachStateStrings[] = {
+        "Idle",             // (0) kAttachStateIdle
+        "ProcessAnnounce",  // (1) kAttachStateProcessAnnounce
+        "Start",            // (2) kAttachStateStart
+        "ParentReqRouters", // (3) kAttachStateParentRequestRouter
+        "ParentReqReeds",   // (4) kAttachStateParentRequestReed
+        "Announce",         // (5) kAttachStateAnnounce
+        "ChildIdReq",       // (6) kAttachStateChildIdRequest
     };
 
-    return str;
+    static_assert(kAttachStateIdle == 0, "kAttachStateIdle value is incorrect");
+    static_assert(kAttachStateProcessAnnounce == 1, "kAttachStateProcessAnnounce value is incorrect");
+    static_assert(kAttachStateStart == 2, "kAttachStateStart value is incorrect");
+    static_assert(kAttachStateParentRequestRouter == 3, "kAttachStateParentRequestRouter value is incorrect");
+    static_assert(kAttachStateParentRequestReed == 4, "kAttachStateParentRequestReed value is incorrect");
+    static_assert(kAttachStateAnnounce == 5, "kAttachStateAnnounce value is incorrect");
+    static_assert(kAttachStateChildIdRequest == 6, "kAttachStateChildIdRequest value is incorrect");
+
+    return kAttachStateStrings[aState];
 }
 
 const char *Mle::ReattachStateToString(ReattachState aState)
 {
-    const char *str = "unknown";
+    static const char *const kReattachStateStrings[] = {
+        "",                                 // (0) kReattachStop
+        "reattaching",                      // (1) kReattachStart
+        "reattaching with Active Dataset",  // (2) kReattachActive
+        "reattaching with Pending Dataset", // (3) kReattachPending
+    };
 
-    switch (aState)
-    {
-    case kReattachStop:
-        str = "";
-        break;
+    static_assert(kReattachStop == 0, "kReattachStop value is incorrect");
+    static_assert(kReattachStart == 1, "kReattachStart value is incorrect");
+    static_assert(kReattachActive == 2, "kReattachActive value is incorrect");
+    static_assert(kReattachPending == 3, "kReattachPending value is incorrect");
 
-    case kReattachStart:
-        str = "reattaching";
-        break;
-
-    case kReattachActive:
-        str = "reattaching with Active Dataset";
-        break;
-
-    case kReattachPending:
-        str = "reattaching with Pending Dataset";
-        break;
-    }
-
-    return str;
+    return kReattachStateStrings[aState];
 }
 
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
