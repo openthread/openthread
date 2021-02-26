@@ -859,66 +859,57 @@ exit:
 
 const char *SubMac::StateToString(State aState)
 {
-    const char *str = "Unknown";
-
-    switch (aState)
-    {
-    case kStateDisabled:
-        str = "Disabled";
-        break;
-    case kStateSleep:
-        str = "Sleep";
-        break;
-    case kStateReceive:
-        str = "Receive";
-        break;
-    case kStateCsmaBackoff:
-        str = "CsmaBackoff";
-        break;
-    case kStateTransmit:
-        str = "Transmit";
-        break;
-    case kStateEnergyScan:
-        str = "EnergyScan";
-        break;
+    static const char *const kStateStrings[] = {
+        "Disabled",    // (0) kStateDisabled
+        "Sleep",       // (1) kStateSleep
+        "Receive",     // (2) kStateReceive
+        "CsmaBackoff", // (3) kStateCsmaBackoff
+        "Transmit",    // (4) kStateTransmit
+        "EnergyScan",  // (5) kStateEnergyScan
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    case kStateCslTransmit:
-        str = "CslTransmit";
-        break;
+        "CslTransmit", // (6) kStateCslTransmit
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kStateCslSample:
-        str = "CslSample";
-        break;
+        "CslSample", // (7) kStateCslSample
 #endif
-    }
+    };
 
-    return str;
+    static_assert(kStateDisabled == 0, "kStateDisabled value is not correct");
+    static_assert(kStateSleep == 1, "kStateSleep value is not correct");
+    static_assert(kStateReceive == 2, "kStateReceive value is not correct");
+    static_assert(kStateCsmaBackoff == 3, "kStateCsmaBackoff value is not correct");
+    static_assert(kStateTransmit == 4, "kStateTransmit value is not correct");
+    static_assert(kStateEnergyScan == 5, "kStateEnergyScan value is not correct");
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    static_assert(kStateCslTransmit == 6, "kStateCslTransmit value is not correct");
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static_assert(kStateCslSample == 7, "kStateCslSample value is not correct");
+#endif
+#else
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    static_assert(kStateCslSample == 6, "kStateCslSample value is not correct");
+#endif
+#endif
+
+    return kStateStrings[aState];
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 const char *SubMac::CslStateToString(CslState aCslState)
 {
-    const char *str = "Unknown";
+    static const char *const kCslStateStrings[] = {
+        "CslIdle",   // (0) kCslIdle
+        "CslSample", // (1) kCslSample
+        "CslSleep",  // (2) kCslSleep
+    };
 
-    switch (aCslState)
-    {
-    case kCslIdle:
-        str = "CslIdle";
-        break;
-    case kCslSample:
-        str = "CslSample";
-        break;
-    case kCslSleep:
-        str = "kCslSleep";
-        break;
-    default:
-        break;
-    }
+    static_assert(kCslIdle == 0, "kCslIdle value is incorrect");
+    static_assert(kCslSample == 1, "kCslSample value is incorrect");
+    static_assert(kCslSleep == 2, "kCslSleep value is incorrect");
 
-    return str;
+    return kCslStateStrings[aCslState];
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
 
 // LCOV_EXCL_STOP
 

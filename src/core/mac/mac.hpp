@@ -754,22 +754,22 @@ private:
         kMaxAcquisitionId  = 0xffff,
     };
 
-    enum Operation
+    enum Operation : uint8_t
     {
         kOperationIdle = 0,
         kOperationActiveScan,
         kOperationEnergyScan,
         kOperationTransmitBeacon,
         kOperationTransmitDataDirect,
+        kOperationTransmitPoll,
+        kOperationWaitingForData,
+        kOperationTransmitOutOfBandFrame,
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
 #endif
 #endif
-        kOperationTransmitPoll,
-        kOperationWaitingForData,
-        kOperationTransmitOutOfBandFrame,
     };
 
 #if OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
