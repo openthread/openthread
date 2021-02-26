@@ -38,7 +38,8 @@
 #include "fsl_port.h"
 #include "platform-kw41z.h"
 #include <stdint.h>
-#include "openthread/platform/uart.h"
+
+#include "utils/uart.h"
 
 otInstance *sInstance;
 

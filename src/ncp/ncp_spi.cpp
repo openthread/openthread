@@ -62,7 +62,7 @@ namespace Ncp {
 
 static OT_DEFINE_ALIGNED_VAR(sNcpRaw, sizeof(NcpSpi), uint64_t);
 
-extern "C" void otNcpInit(otInstance *aInstance)
+extern "C" void otNcpSpiInit(otInstance *aInstance)
 {
     NcpSpi *  ncpSpi   = nullptr;
     Instance *instance = static_cast<Instance *>(aInstance);

@@ -39,8 +39,8 @@
 #include <stdint.h>
 
 #include <utils/code_utils.h>
+#include <utils/uart.h>
 #include <openthread/platform/toolchain.h>
-#include <openthread/platform/uart.h>
 
 #include "openthread-system.h"
 

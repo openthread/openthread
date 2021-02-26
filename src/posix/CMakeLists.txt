@@ -26,10 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_compile_definitions(ot-config INTERFACE
-    OPENTHREAD_CONFIG_UART_CLI_RAW=1
-)
-
 set(COMMON_INCLUDES
     ${OT_PUBLIC_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src

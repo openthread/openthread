@@ -38,10 +38,17 @@
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
-#include <openthread/platform/uart.h>
 
 #include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
+
+static int HdlcSend(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
+
+    return aBufLength;
+}
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -55,7 +62,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     FuzzerPlatformInit();
 
     instance = otInstanceInitSingle();
-    otNcpInit(instance);
+    otNcpHdlcInit(instance, HdlcSend);
     IgnoreError(otLinkSetPanId(instance, panId));
     IgnoreError(otIp6SetEnabled(instance, true));
     IgnoreError(otThreadSetEnabled(instance, true));
@@ -65,7 +72,7 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 
     memcpy(buf, data, size);
 
-    otPlatUartReceived(buf, (uint16_t)size);
+    otNcpHdlcReceive(buf, static_cast<uint16_t>(size));
 
     VerifyOrExit(!FuzzerPlatformResetWasRequested());
 

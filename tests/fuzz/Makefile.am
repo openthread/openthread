@@ -29,10 +29,10 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                              = \
-    cli-uart-received-fuzzer                                \
+    cli-received-fuzzer                                     \
     ip6-send-fuzzer                                         \
     radio-receive-done-fuzzer                               \
-    ncp-uart-received-fuzzer                                \
+    ncp-hdlc-received-fuzzer                                \
     $(NULL)
 
 AM_CPPFLAGS                                               = \
@@ -51,14 +51,14 @@ COMMON_SOURCES                                            = \
     fuzzer_platform.h                                       \
     $(NULL)
 
-cli_uart_received_fuzzer_LDADD                            = \
+cli_received_fuzzer_LDADD                                 = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a         \
     $(COMMON_LDADD)                                         \
     $(NULL)
 
-cli_uart_received_fuzzer_SOURCES                          = \
+cli_received_fuzzer_SOURCES                               = \
     $(COMMON_SOURCES)                                       \
-    cli_uart_received.cpp                                   \
+    cli_received.cpp                                        \
     $(NULL)
 
 ip6_send_fuzzer_LDADD                                     = \
@@ -79,14 +79,14 @@ radio_receive_done_fuzzer_SOURCES                         = \
     radio_receive_done.cpp                                  \
     $(NULL)
 
-ncp_uart_received_fuzzer_LDADD                            = \
+ncp_hdlc_received_fuzzer_LDADD                            = \
     $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a         \
     $(COMMON_LDADD)                                         \
     $(NULL)
 
-ncp_uart_received_fuzzer_SOURCES                          = \
+ncp_hdlc_received_fuzzer_SOURCES                          = \
     $(COMMON_SOURCES)                                       \
-    ncp_uart_received.cpp                                   \
+    ncp_hdlc_received.cpp                                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

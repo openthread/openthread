@@ -36,6 +36,14 @@
 
 #include "openthread-system.h"
 
+/**
+ * This function initializes the NCP app.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+extern void otAppNcpInit(otInstance *aInstance);
+
 #if OPENTHREAD_EXAMPLES_SIMULATION
 #include <setjmp.h>
 #include <unistd.h>
@@ -105,7 +113,7 @@ pseudo_reset:
 #endif
     assert(instance);
 
-    otNcpInit(instance);
+    otAppNcpInit(instance);
 
     while (!otSysPseudoResetWasRequested())
     {

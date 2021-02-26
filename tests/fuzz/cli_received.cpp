@@ -28,6 +28,8 @@
 
 #define MAX_ITERATIONS 100
 
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -38,10 +40,18 @@
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
-#include <openthread/platform/uart.h>
 
 #include "fuzzer_platform.h"
 #include "common/code_utils.hpp"
+
+static int CliOutput(void *aContext, const char *aFormat, va_list aArguments)
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aFormat);
+    OT_UNUSED_VARIABLE(aArguments);
+
+    return vsnprintf(nullptr, 0, aFormat, aArguments);
+}
 
 extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
 {
@@ -55,17 +65,18 @@ extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
     FuzzerPlatformInit();
 
     instance = otInstanceInitSingle();
-    otCliUartInit(instance);
+    otCliInit(instance, CliOutput, nullptr);
     IgnoreError(otLinkSetPanId(instance, panId));
     IgnoreError(otIp6SetEnabled(instance, true));
     IgnoreError(otThreadSetEnabled(instance, true));
     IgnoreError(otThreadBecomeLeader(instance));
 
-    buf = static_cast<uint8_t *>(malloc(size));
+    buf = static_cast<uint8_t *>(malloc(size + 1));
 
     memcpy(buf, data, size);
+    buf[size] = '\0';
 
-    otPlatUartReceived(buf, (uint16_t)size);
+    otCliInputLine(reinterpret_cast<char *>(buf));
 
     VerifyOrExit(!FuzzerPlatformResetWasRequested());
 

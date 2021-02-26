@@ -27,6 +27,7 @@
 #
 
 add_executable(ot-cli-mtd
+    cli_uart.cpp
     main.c
 )
 
@@ -37,6 +38,7 @@ target_link_libraries(ot-cli-mtd PRIVATE
     ${OT_PLATFORM_LIB}
     openthread-mtd
     ${OT_PLATFORM_LIB}
+    openthread-cli-mtd
     ${OT_MBEDTLS}
     ot-config
 )

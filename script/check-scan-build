@@ -102,7 +102,7 @@ do_scan_build()
     scan-build-9 ./configure "${configure_options[@]}"
     scan-build-9 --status-bugs -analyze-headers -v make -j"${OT_BUILD_JOBS}"
 
-    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+    export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
     scan-build-9 ./configure "${configure_options[@]}"
     scan-build-9 --status-bugs -analyze-headers -v make -j"${OT_BUILD_JOBS}"
 }

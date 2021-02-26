@@ -44,7 +44,6 @@
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
-#include <openthread/platform/uart.h>
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 #endif
@@ -110,9 +109,12 @@ namespace Cli {
 constexpr Interpreter::Command Interpreter::sCommands[];
 
 Interpreter *Interpreter::sInterpreter = nullptr;
+static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 
-Interpreter::Interpreter(Instance *aInstance)
+Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : mInstance(aInstance)
+    , mOutputCallback(aCallback)
+    , mOutputContext(aContext)
     , mUserCommands(nullptr)
     , mUserCommandsLength(0)
     , mPingLength(kDefaultPingLength)
@@ -4777,7 +4779,7 @@ otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
     output[sizeof(output) - 1] = '\0';
 
     error = otDiagProcessCmd(mInstance, aArgsLength, aArgs, output, sizeof(output) - 1);
-    Output(output, static_cast<uint16_t>(strlen(output)));
+    OutputFormat("%s", output);
 
     return error;
 }
@@ -5161,24 +5163,33 @@ void Interpreter::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
 
 void Interpreter::OutputSpaces(uint8_t aCount)
 {
-    static const char kSpaces[] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+    char format[sizeof("%256s")];
 
-    while (aCount > 0)
-    {
-        uint8_t len = OT_MIN(aCount, sizeof(kSpaces));
+    snprintf(format, sizeof(format), "%%%us", aCount);
 
-        Output(kSpaces, len);
-        aCount -= len;
-    }
+    OutputFormat(format, "");
 }
 
 int Interpreter::OutputFormatV(const char *aFormat, va_list aArguments)
 {
-    char buf[kMaxLineLength];
+    return mOutputCallback(mOutputContext, aFormat, aArguments);
+}
 
-    vsnprintf(buf, sizeof(buf), aFormat, aArguments);
+void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
+{
+    Instance *instance = static_cast<Instance *>(aInstance);
 
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
+    Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
+}
+
+extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
+{
+    Interpreter::Initialize(aInstance, aCallback, aContext);
+}
+
+extern "C" void otCliInputLine(char *aBuf)
+{
+    Interpreter::GetInterpreter().ProcessLine(aBuf);
 }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
@@ -5197,11 +5208,6 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...)
     va_start(aAp, aFmt);
     Interpreter::GetInterpreter().OutputFormatV(aFmt, aAp);
     va_end(aAp);
-}
-
-extern "C" void otCliOutput(const char *aString, uint16_t aLength)
-{
-    Interpreter::GetInterpreter().Output(aString, aLength);
 }
 
 extern "C" void otCliAppendResult(otError aError)

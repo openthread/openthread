@@ -34,6 +34,7 @@ bin_PROGRAMS                                                           = \
 
 CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/include                                              \
+    -I$(top_srcdir)/src                                                  \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
@@ -49,6 +50,7 @@ LIBTOOLFLAGS_COMMON                                                   += \
 
 SOURCES_COMMON                                                        += \
     main.c                                                               \
+    ncp.c                                                                \
     $(NULL)
 
 LDADD_MBEDTLS                                                          = \

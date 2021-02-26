@@ -426,7 +426,7 @@ protected:
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     static_assert(OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE <=
                       OPENTHREAD_CONFIG_NCP_TX_BUFFER_SIZE - kSpinelCmdHeaderSize - kSpinelPropIdSize,
-                  "diag output buffer should be smaller than NCP UART tx buffer");
+                  "diag output buffer should be smaller than NCP HDLC tx buffer");
 
     otError HandlePropertySet_SPINEL_PROP_NEST_STREAM_MFG(uint8_t aHeader);
 #endif

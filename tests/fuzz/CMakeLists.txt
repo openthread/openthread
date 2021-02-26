@@ -47,22 +47,22 @@ set(COMMON_LIBS
     ot-config
 )
 
-add_executable(cli-uart-received-fuzzer
-    cli_uart_received.cpp
+add_executable(cli-received-fuzzer
+    cli_received.cpp
     ${COMMON_SOURCES}
 )
 
-target_compile_options(cli-uart-received-fuzzer
+target_compile_options(cli-received-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_include_directories(cli-uart-received-fuzzer
+target_include_directories(cli-received-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_link_libraries(cli-uart-received-fuzzer
+target_link_libraries(cli-received-fuzzer
     PRIVATE
         openthread-cli-ftd
         ${COMMON_LIBS}
@@ -108,22 +108,22 @@ target_link_libraries(radio-receive-done-fuzzer
         ${COMMON_LIBS}
 )
 
-add_executable(ncp-uart-received-fuzzer
-    ncp_uart_received.cpp
+add_executable(ncp-hdlc-received-fuzzer
+    ncp_hdlc_received.cpp
     ${COMMON_SOURCES}
 )
 
-target_compile_options(ncp-uart-received-fuzzer
+target_compile_options(ncp-hdlc-received-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_include_directories(ncp-uart-received-fuzzer
+target_include_directories(ncp-hdlc-received-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_link_libraries(ncp-uart-received-fuzzer
+target_link_libraries(ncp-hdlc-received-fuzzer
     PRIVATE
         openthread-ncp-ftd
         ${COMMON_LIBS}

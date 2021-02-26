@@ -34,6 +34,8 @@
 
 #include "ncp_base.hpp"
 
+#include "utils/uart.h"
+
 #include "../../third_party/nxp/JN5189DK6/middleware/wireless/openthread/examples/posix_ota_server/app_ota.h"
 namespace ot {
 namespace Ncp {
@@ -158,20 +160,26 @@ otError NcpBase::VendorSetPropertyHandler(spinel_prop_key_t aPropKey)
 
 //-------------------------------------------------------------------------------------------------------------------
 // When OPENTHREAD_ENABLE_NCP_VENDOR_HOOK is enabled, vendor code is
-// expected to provide the `otNcpInit()` function. The reason behind
+// expected to provide the `otAppNcpInit()` function. The reason behind
 // this is to enable vendor code to define its own sub-class of
-// `NcpBase` or `NcpUart`/`NcpSpi`.
+// `NcpBase` or `NcpHdlc`/`NcpSpi`.
 //
-// Example below show how to add a vendor sub-class over `NcpUart`.
+// Example below show how to add a vendor sub-class over `NcpHdlc`.
 
-#include "ncp_uart.hpp"
+#include "ncp_hdlc.hpp"
 #include "common/new.hpp"
 
-class NcpVendorUart : public ot::Ncp::NcpUart
+class NcpVendorUart : public ot::Ncp::NcpHdlc
 {
+    static int NcpSend(const uint8_t *aBuf, uint16_t aBufLength)
+    {
+        IgnoreError(otPlatUartSend(aBuf, aBufLength));
+        return aBufLength;
+    }
+
 public:
     NcpVendorUart(ot::Instance *aInstance)
-        : ot::Ncp::NcpUart(aInstance)
+        : ot::Ncp::NcpHdlc(aInstance, &NcpVendorUart::NcpSend)
     {}
 
     // Add public/private methods or member variables
@@ -179,7 +187,7 @@ public:
 
 static otDEFINE_ALIGNED_VAR(sNcpVendorRaw, sizeof(NcpVendorUart), uint64_t);
 
-extern "C" void otNcpInit(otInstance *aInstance)
+extern "C" void otAppNcpInit(otInstance *aInstance)
 {
     NcpVendorUart *ncpVendor = NULL;
     ot::Instance * instance  = static_cast<ot::Instance *>(aInstance);
