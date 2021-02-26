@@ -324,7 +324,7 @@ static void efr32CoexInit(void);
 static void tryTxCurrentPacket(void);
 #else
 // Transmit the current outgoing frame.
-void        txCurrentPacket(void);
+void txCurrentPacket(void);
 #define tryTxCurrentPacket txCurrentPacket
 #endif // SL_CATALOG_RAIL_UTIL_COEX_PRESENT
 
