@@ -109,6 +109,8 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
         if (supervisionMessage != nullptr)
         {
             IgnoreError(RemoveMessageFromSleepyChild(*supervisionMessage, aChild));
+            Get<MeshForwarder>().mSendQueue.Dequeue(*supervisionMessage);
+            supervisionMessage->Free();
         }
     }
 
