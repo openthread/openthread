@@ -114,6 +114,15 @@
 #define QUARTER_DBM_IN_DBM 4
 #define US_IN_MS 1000
 
+enum
+{
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT && RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+    EFR32_NUM_BAND_CONFIGS = 2,
+#else
+    EFR32_NUM_BAND_CONFIGS = 1,
+#endif
+};
+
 // Energy Scan
 typedef enum
 {
@@ -156,7 +165,7 @@ static bool         sPromiscuous = false;
 static otRadioState sState       = OT_RADIO_STATE_DISABLED;
 
 static efr32CommonConfig sCommonConfig;
-static efr32BandConfig   sBandConfig;
+static efr32BandConfig   sBandConfig[EFR32_NUM_BAND_CONFIGS];
 static efr32BandConfig * sCurrentBandConfig = NULL;
 
 static int8_t sCcaThresholdDbm = CCA_THRESHOLD_DEFAULT;
@@ -315,7 +324,7 @@ static void efr32CoexInit(void);
 static void tryTxCurrentPacket(void);
 #else
 // Transmit the current outgoing frame.
-void        txCurrentPacket(void);
+void txCurrentPacket(void);
 #define tryTxCurrentPacket txCurrentPacket
 #endif // SL_CATALOG_RAIL_UTIL_COEX_PRESENT
 
@@ -490,14 +499,16 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
     RAIL_Status_t        status;
     RAIL_TxPowerConfig_t txPowerConfig = {SL_RAIL_UTIL_PA_SELECTION_2P4GHZ, SL_RAIL_UTIL_PA_VOLTAGE_MV, 10};
 
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     if (aBandConfig->mChannelConfig != NULL)
     {
         uint16_t firstChannel = RAIL_ConfigChannels(gRailHandle, aBandConfig->mChannelConfig, NULL);
         assert(firstChannel == aBandConfig->mChannelMin);
 
-        // txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG; TO DO:Check this macro
+        txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG;
     }
     else
+#endif // RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     {
 #ifdef SL_CATALOG_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
         status = sl_rail_util_plugin_config_2p4ghz_radio(gRailHandle);
@@ -524,9 +535,13 @@ static efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
     efr32BandConfig *config = NULL;
 
-    if ((sBandConfig.mChannelMin <= aChannel) && (aChannel <= sBandConfig.mChannelMax))
+    for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
     {
-        config = &sBandConfig;
+        if ((sBandConfig[i].mChannelMin <= aChannel) && (aChannel <= sBandConfig[i].mChannelMax))
+        {
+            config = &sBandConfig[i];
+            break;
+        }
     }
 
     return config;
@@ -542,17 +557,20 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
     sCommonConfig.mRailConfig.scheduler = NULL; // only needed for DMP
 #endif
 
-#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
-    sBandConfig.mChannelConfig = NULL;
-    sBandConfig.mChannelMin    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
-    sBandConfig.mChannelMax    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
+    uint8_t index = 0;
 
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
+    sBandConfig[index].mChannelConfig = NULL;
+    sBandConfig[index].mChannelMin    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
+    sBandConfig[index].mChannelMax    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
+
+    index++;
 #endif
 
 #if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
-    sBandConfig.mChannelConfig = channelConfigs[0]; // TO DO: channel config??
-    sBandConfig.mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
-    sBandConfig.mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
+    sBandConfig[index].mChannelConfig = channelConfigs[0]; // TO DO: channel config??
+    sBandConfig[index].mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    sBandConfig[index].mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 #endif
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
@@ -570,7 +588,7 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
 #endif
                   | RAIL_EVENT_CAL_NEEDED));
 
-    efr32RailConfigLoad(&(sBandConfig));
+    efr32RailConfigLoad(&(sBandConfig[0]));
 }
 
 void efr32RadioInit(void)
