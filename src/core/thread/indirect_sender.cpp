@@ -109,8 +109,7 @@ void IndirectSender::AddMessageForSleepyChild(Message &aMessage, Child &aChild)
         if (supervisionMessage != nullptr)
         {
             IgnoreError(RemoveMessageFromSleepyChild(*supervisionMessage, aChild));
-            Get<MeshForwarder>().mSendQueue.Dequeue(*supervisionMessage);
-            supervisionMessage->Free();
+            Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*supervisionMessage);
         }
     }
 
@@ -149,16 +148,7 @@ void IndirectSender::ClearAllMessagesForSleepyChild(Child &aChild)
 
         message->ClearChildMask(Get<ChildTable>().GetChildIndex(aChild));
 
-        if (!message->IsChildPending() && !message->GetDirectTransmission())
-        {
-            if (Get<MeshForwarder>().mSendMessage == message)
-            {
-                Get<MeshForwarder>().mSendMessage = nullptr;
-            }
-
-            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
-            message->Free();
-        }
+        Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*message);
     }
 
     aChild.SetIndirectMessage(nullptr);
@@ -533,11 +523,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
             mSourceMatchController.DecrementMessageCount(aChild);
         }
 
-        if (!message->GetDirectTransmission() && !message->IsChildPending())
-        {
-            Get<MeshForwarder>().mSendQueue.Dequeue(*message);
-            message->Free();
-        }
+        Get<MeshForwarder>().RemoveMessageIfNoPendingTx(*message);
     }
 
     UpdateIndirectMessage(aChild);
