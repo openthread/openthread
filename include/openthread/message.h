@@ -53,12 +53,10 @@ extern "C" {
  */
 
 /**
- * This structure points to an OpenThread message buffer.
+ * This type is an opaque representation of an OpenThread message buffer.
+ *
  */
-typedef struct otMessage
-{
-    struct otMessage *mNext; ///< A pointer to the next Message buffer.
-} otMessage;
+typedef struct otMessage otMessage;
 
 /**
  * This structure represents the message buffer information.

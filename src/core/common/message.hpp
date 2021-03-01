@@ -52,6 +52,14 @@
 #include "thread/child_mask.hpp"
 #include "thread/link_quality.hpp"
 
+/**
+ * This struct represents an opaque (and empty) type for an OpenThread message buffer.
+ *
+ */
+struct otMessage
+{
+};
+
 namespace ot {
 
 namespace Crypto {
@@ -198,9 +206,10 @@ struct MessageMetadata
  * This class represents a Message buffer.
  *
  */
-class Buffer : public otMessage, public LinkedListEntry<Buffer>
+class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
 {
     friend class Message;
+    friend class LinkedListEntry<Buffer>;
 
 public:
     /**
@@ -278,7 +287,7 @@ private:
 
     enum
     {
-        kBufferDataSize     = kBufferSize - sizeof(otMessage),
+        kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer),
         kHeadBufferDataSize = kBufferDataSize - sizeof(MessageMetadata),
     };
 
@@ -298,7 +307,7 @@ protected:
  * This class represents a message.
  *
  */
-class Message : public Buffer
+class Message : public otMessage, public Buffer
 {
     friend class Checksum;
     friend class Crypto::HmacSha256;
