@@ -60,6 +60,10 @@ class Udp;
  *
  */
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE && OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
+#error "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE and OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE must not both be set."
+#endif
+
 /**
  * This class implements core UDP message handling.
  *

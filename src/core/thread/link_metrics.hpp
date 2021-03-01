@@ -38,6 +38,10 @@
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE."
+#endif
+
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 
