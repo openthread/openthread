@@ -213,14 +213,12 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             dig_result = self.nodes[DIGGER].dns_dig(server_addr, host1_full_name, qtype)
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NOTIMP',
-                'QUESTION': [(host1_full_name, 'IN', qtype)],
             })
 
         for service_name in WRONG_SERVICE_NAMES:
             dig_result = self.nodes[DIGGER].dns_dig(server_addr, service_name, 'PTR')
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NXDOMAIN',
-                'QUESTION': [(service_name, 'IN', 'PTR')],
             })
 
     def _config_srp_client_services(self, client, instancename, hostname, port, priority, weight, addrs):
@@ -261,18 +259,23 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         self.assertEqual(dig_result['opcode'], expected_result.get('opcode', 'QUERY'), dig_result)
         self.assertEqual(dig_result['status'], expected_result.get('status', 'NOERROR'), dig_result)
 
-        self.assertEqual(len(dig_result['QUESTION']), len(expected_result.get('QUESTION', [])), dig_result)
-        self.assertEqual(len(dig_result['ANSWER']), len(expected_result.get('ANSWER', [])), dig_result)
-        self.assertEqual(len(dig_result['ADDITIONAL']), len(expected_result.get('ADDITIONAL', [])), dig_result)
+        if 'QUESTION' in expected_result:
+            self.assertEqual(len(dig_result['QUESTION']), len(expected_result['QUESTION']), dig_result)
 
-        for question in expected_result.get('QUESTION', []):
-            self._assert_have_question(dig_result, question)
+            for question in expected_result['QUESTION']:
+                self._assert_have_question(dig_result, question)
 
-        for record in expected_result.get('ANSWER', []):
-            self._assert_have_answer(dig_result, record, additional=False)
+        if 'ANSWER' in expected_result:
+            self.assertEqual(len(dig_result['ANSWER']), len(expected_result['ANSWER']), dig_result)
 
-        for record in expected_result.get('ADDITIONAL', []):
-            self._assert_have_answer(dig_result, record, additional=True)
+            for record in expected_result['ANSWER']:
+                self._assert_have_answer(dig_result, record, additional=False)
+
+        if 'ADDITIONAL' in expected_result:
+            self.assertEqual(len(dig_result['ADDITIONAL']), len(expected_result['ADDITIONAL']), dig_result)
+
+            for record in expected_result['ADDITIONAL']:
+                self._assert_have_answer(dig_result, record, additional=True)
 
         logging.info("dig result matches:\r%s", json.dumps(dig_result, indent=True))
 
