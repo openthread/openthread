@@ -294,16 +294,7 @@ void MeshForwarder::RemoveMessages(Child &aChild, Message::SubType aSubType)
             }
         }
 
-        if (!message->IsChildPending() && !message->GetDirectTransmission())
-        {
-            if (mSendMessage == message)
-            {
-                mSendMessage = nullptr;
-            }
-
-            mSendQueue.Dequeue(*message);
-            message->Free();
-        }
+        RemoveMessageIfNoPendingTx(*message);
     }
 }
 

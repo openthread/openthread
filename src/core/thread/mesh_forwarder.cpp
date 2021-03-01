@@ -974,6 +974,8 @@ exit:
 
 void MeshForwarder::UpdateSendMessage(otError aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor)
 {
+    otError txError = aFrameTxError;
+
     VerifyOrExit(mSendMessage != nullptr);
 
     OT_ASSERT(mSendMessage->GetDirectTransmission());
@@ -998,57 +1000,58 @@ void MeshForwarder::UpdateSendMessage(otError aFrameTxError, Mac::Address &aMacD
     if (mMessageNextOffset < mSendMessage->GetLength())
     {
         mSendMessage->SetOffset(mMessageNextOffset);
+        ExitNow();
     }
-    else
+
+    txError = aFrameTxError;
+
+    mSendMessage->ClearDirectTransmission();
+    mSendMessage->SetOffset(0);
+
+    if (aNeighbor != nullptr)
     {
-        otError txError = aFrameTxError;
-
-        mSendMessage->ClearDirectTransmission();
-        mSendMessage->SetOffset(0);
-
-        if (aNeighbor != nullptr)
-        {
-            aNeighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
-        }
+        aNeighbor->GetLinkInfo().AddMessageTxStatus(mSendMessage->GetTxSuccess());
+    }
 
 #if !OPENTHREAD_CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE
 
-        // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
-        // disabled, all fragment frames of a larger message are
-        // sent even if the transmission of an earlier fragment fail.
-        // Note that `GetTxSuccess() tracks the tx success of the
-        // entire message, while `aFrameTxError` represents the error
-        // status of the last fragment frame transmission.
+    // When `CONFIG_DROP_MESSAGE_ON_FRAGMENT_TX_FAILURE` is
+    // disabled, all fragment frames of a larger message are
+    // sent even if the transmission of an earlier fragment fail.
+    // Note that `GetTxSuccess() tracks the tx success of the
+    // entire message, while `aFrameTxError` represents the error
+    // status of the last fragment frame transmission.
 
-        if (!mSendMessage->GetTxSuccess() && (txError == OT_ERROR_NONE))
-        {
-            txError = OT_ERROR_FAILED;
-        }
+    if (!mSendMessage->GetTxSuccess() && (txError == OT_ERROR_NONE))
+    {
+        txError = OT_ERROR_FAILED;
+    }
 #endif
 
-        LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
+    LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
 
-        if (mSendMessage->GetType() == Message::kTypeIp6)
+    if (mSendMessage->GetType() == Message::kTypeIp6)
+    {
+        if (mSendMessage->GetTxSuccess())
         {
-            if (mSendMessage->GetTxSuccess())
-            {
-                mIpCounters.mTxSuccess++;
-            }
-            else
-            {
-                mIpCounters.mTxFailure++;
-            }
+            mIpCounters.mTxSuccess++;
+        }
+        else
+        {
+            mIpCounters.mTxFailure++;
         }
     }
 
-    if (mSendMessage->GetSubType() == Message::kSubTypeMleDiscoverRequest)
+    switch (mSendMessage->GetSubType())
     {
+    case Message::kSubTypeMleDiscoverRequest:
+        // Note that `HandleDiscoveryRequestFrameTxDone()` may update
+        // `mSendMessage` and mark it again for direct transmission.
         Get<Mle::DiscoverScanner>().HandleDiscoveryRequestFrameTxDone(*mSendMessage);
-    }
+        break;
 
-    if (!mSendMessage->GetDirectTransmission() && !mSendMessage->IsChildPending())
-    {
-        if (mSendMessage->GetSubType() == Message::kSubTypeMleChildIdRequest && mSendMessage->IsLinkSecurityEnabled())
+    case Message::kSubTypeMleChildIdRequest:
+        if (mSendMessage->IsLinkSecurityEnabled())
         {
             // If the Child ID Request requires fragmentation and therefore
             // link layer security, the frame transmission will be aborted.
@@ -1060,14 +1063,33 @@ void MeshForwarder::UpdateSendMessage(otError aFrameTxError, Mac::Address &aMacD
             Get<Mle::Mle>().RequestShorterChildIdRequest();
         }
 
-        mSendQueue.Dequeue(*mSendMessage);
-        mSendMessage->Free();
+        break;
+
+    default:
+        break;
+    }
+
+    RemoveMessageIfNoPendingTx(*mSendMessage);
+
+exit:
+    mScheduleTransmissionTask.Post();
+}
+
+void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
+{
+    VerifyOrExit(!aMessage.GetDirectTransmission() && !aMessage.IsChildPending());
+
+    if (mSendMessage == &aMessage)
+    {
         mSendMessage       = nullptr;
         mMessageNextOffset = 0;
     }
 
+    mSendQueue.Dequeue(aMessage);
+    aMessage.Free();
+
 exit:
-    mScheduleTransmissionTask.Post();
+    return;
 }
 
 void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)

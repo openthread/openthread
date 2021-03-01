@@ -455,6 +455,7 @@ private:
     void          UpdateNeighborLinkFailures(Neighbor &aNeighbor, otError aError, bool aAllowNeighborRemove);
     void          HandleSentFrame(Mac::TxFrame &aFrame, otError aError);
     void          UpdateSendMessage(otError aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
+    void          RemoveMessageIfNoPendingTx(Message &aMessage);
 
     void        HandleTimeTick(void);
     static void ScheduleTransmissionTask(Tasklet &aTasklet);
