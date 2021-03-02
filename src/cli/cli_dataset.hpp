@@ -99,6 +99,12 @@ private:
     otError ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
 
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+    otError     ProcessUpdater(uint8_t aArgsLength, char *aArgs[]);
+    static void HandleDatasetUpdater(otError aError, void *aContext);
+    void        HandleDatasetUpdater(otError aError);
+#endif
+
     static constexpr Command sCommands[] = {
         {"active", &Dataset::ProcessActive},
         {"activetimestamp", &Dataset::ProcessActiveTimestamp},
@@ -121,6 +127,9 @@ private:
         {"pskc", &Dataset::ProcessPskc},
         {"securitypolicy", &Dataset::ProcessSecurityPolicy},
         {"set", &Dataset::ProcessSet},
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+        {"updater", &Dataset::ProcessUpdater},
+#endif
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
