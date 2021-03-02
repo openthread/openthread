@@ -1882,6 +1882,23 @@ class NodeImpl:
         self.send_command('dataset commit pending')
         self._expect_done()
 
+    def start_dataset_updater(self, panid=None, channel=None):
+        self.send_command('dataset clear')
+        self._expect_done()
+
+        if panid is not None:
+            cmd = 'dataset panid %d' % panid
+            self.send_command(cmd)
+            self._expect_done()
+
+        if channel is not None:
+            cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self._expect_done()
+
+        self.send_command('dataset updater start')
+        self._expect_done()
+
     def announce_begin(self, mask, count, period, ipaddr):
         cmd = 'commissioner announce %d %d %d %s' % (
             mask,

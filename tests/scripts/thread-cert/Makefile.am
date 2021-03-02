@@ -157,6 +157,7 @@ EXTRA_DIST                                                         = \
     test_coap_block.py                                               \
     test_common.py                                                   \
     test_crypto.py                                                   \
+    test_dataset_updater.py                                          \
     test_diag.py                                                     \
     test_dnssd.py                                                    \
     test_ipv6.py                                                     \
@@ -211,6 +212,7 @@ check_SCRIPTS                                                      = \
     test_coap_block.py                                               \
     test_common.py                                                   \
     test_crypto.py                                                   \
+    test_dataset_updater.py                                          \
     test_diag.py                                                     \
     test_dnssd.py                                                    \
     test_ipv6.py                                                     \
