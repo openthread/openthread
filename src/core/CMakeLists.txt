@@ -125,6 +125,7 @@ set(COMMON_SOURCES
     meshcop/dataset_local.cpp
     meshcop/dataset_manager.cpp
     meshcop/dataset_manager_ftd.cpp
+    meshcop/dataset_updater.cpp
     meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
     meshcop/joiner.cpp
@@ -198,7 +199,6 @@ set(COMMON_SOURCES
     utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp
-    utils/dataset_updater.cpp
     utils/flash.cpp
     utils/heap.cpp
     utils/jam_detector.cpp

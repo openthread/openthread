@@ -64,6 +64,9 @@
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+#include "meshcop/dataset_updater.hpp"
+#endif
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
@@ -75,9 +78,6 @@
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
-#endif
-#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-#include "utils/dataset_updater.hpp"
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -359,7 +359,7 @@ private:
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-    Utils::DatasetUpdater mDatasetUpdater;
+    MeshCoP::DatasetUpdater mDatasetUpdater;
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -757,7 +757,7 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-template <> inline Utils::DatasetUpdater &Instance::Get(void)
+template <> inline MeshCoP::DatasetUpdater &Instance::Get(void)
 {
     return mDatasetUpdater;
 }

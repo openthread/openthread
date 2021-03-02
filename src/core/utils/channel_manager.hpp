@@ -233,9 +233,6 @@ private:
         // Retry interval to resend Pending Dataset in case of tx failure (in ms).
         kPendingDatasetTxRetryInterval = 20000,
 
-        // Wait time after sending Pending Dataset to check whether the channel was changed (in ms).
-        kChangeCheckWaitInterval = 30000,
-
         // Maximum jitter/wait time to start a requested channel change (in ms).
         kRequestStartJitterInterval = 10000,
 

@@ -68,5 +68,19 @@ int Timestamp::Compare(const Timestamp &aCompare) const
     return rval;
 }
 
+void Timestamp::AdvanceRandomTicks(void)
+{
+    uint16_t ticks = GetTicks();
+
+    ticks += Random::NonCrypto::GetUint32InRange(1, kMaxRandomTicks);
+
+    if (ticks & (kTicksMask >> kTicksOffset))
+    {
+        SetSeconds(GetSeconds() + 1);
+    }
+
+    SetTicks(ticks);
+}
+
 } // namespace MeshCoP
 } // namespace ot

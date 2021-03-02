@@ -286,6 +286,17 @@ protected:
     otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     /**
+     * This method saves the Operational Dataset in non-volatile memory.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     *
+     */
+    otError SaveLocal(const Dataset &aDataset);
+
+    /**
      * This method handles a MGMT_GET request message.
      *
      * @param[in]  aMessage      The CoAP message buffer.
@@ -565,6 +576,17 @@ public:
      *
      */
     otError Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+
+    /**
+     * This method saves the Operational Dataset in non-volatile memory.
+     *
+     * @param[in]  aDataset  The Operational Dataset.
+     *
+     * @retval OT_ERROR_NONE   Successfully applied configuration.
+     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     *
+     */
+    otError Save(const Dataset &aDataset);
 
 #if OPENTHREAD_FTD
     /**
