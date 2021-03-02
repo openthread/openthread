@@ -147,6 +147,7 @@ SOURCES_COMMON                                  = \
     api/server_api.cpp                            \
     api/sntp_api.cpp                              \
     api/srp_client_api.cpp                        \
+    api/srp_client_buffers_api.cpp                \
     api/srp_server_api.cpp                        \
     api/tasklet_api.cpp                           \
     api/thread_api.cpp                            \
@@ -288,6 +289,7 @@ SOURCES_COMMON                                  = \
     utils/parse_cmdline.cpp                       \
     utils/ping_sender.cpp                         \
     utils/slaac_address.cpp                       \
+    utils/srp_client_buffers.cpp                  \
     $(NULL)
 
 EXTRA_DIST                                 = \
@@ -550,6 +552,7 @@ HEADERS_COMMON                                  = \
     utils/parse_cmdline.hpp                       \
     utils/ping_sender.hpp                         \
     utils/slaac_address.hpp                       \
+    utils/srp_client_buffers.hpp                  \
     $(NULL)
 
 noinst_HEADERS                             = \

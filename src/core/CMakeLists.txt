@@ -70,6 +70,7 @@ set(COMMON_SOURCES
     api/server_api.cpp
     api/sntp_api.cpp
     api/srp_client_api.cpp
+    api/srp_client_buffers_api.cpp
     api/srp_server_api.cpp
     api/tasklet_api.cpp
     api/thread_api.cpp
@@ -211,6 +212,7 @@ set(COMMON_SOURCES
     utils/parse_cmdline.cpp
     utils/ping_sender.cpp
     utils/slaac_address.cpp
+    utils/srp_client_buffers.cpp
 )
 
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")
