@@ -1551,10 +1551,9 @@ bool MeshForwarder::CalcIePresent(const Message *aMessage)
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::Frame &aFrame)
 {
-    uint8_t index     = 0;
-    bool    iePresent = false;
-
-    OT_UNUSED_VARIABLE(aMessage);
+    uint8_t index          = 0;
+    bool    iePresent      = false;
+    bool    payloadPresent = (aFrame.GetType() == Mac::Frame::kFcfFrameMacCmd) || (aMessage != nullptr && aMessage->GetLength() != 0);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aMessage != nullptr && aMessage->IsTimeSync())
@@ -1571,8 +1570,9 @@ void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::Frame &aFrame)
     }
 #endif
 
-    if (iePresent)
+    if (iePresent && payloadPresent)
     {
+        // Assume no Payload IE in current implementation
         IgnoreError(aFrame.AppendHeaderIeAt<Mac::Termination2Ie>(index));
     }
 }
