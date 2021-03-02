@@ -77,8 +77,8 @@ static Dns::UpdateHeader::Response ErrorToDnsResponseCode(otError aError)
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mAdvertisingHandler(nullptr)
-    , mAdvertisingHandlerContext(nullptr)
+    , mServiceUpdateHandler(nullptr)
+    , mServiceUpdateHandlerContext(nullptr)
     , mDomain(nullptr)
     , mMinLease(kDefaultMinLease)
     , mMaxLease(kDefaultMaxLease)
@@ -98,8 +98,8 @@ Server::~Server(void)
 
 void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
 {
-    mAdvertisingHandler        = aServiceHandler;
-    mAdvertisingHandlerContext = aServiceHandlerContext;
+    mServiceUpdateHandler        = aServiceHandler;
+    mServiceUpdateHandlerContext = aServiceHandlerContext;
 }
 
 bool Server::IsRunning(void) const
@@ -262,13 +262,13 @@ exit:
     return hasConflicts;
 }
 
-void Server::HandleAdvertisingResult(const Host *aHost, otError aError)
+void Server::HandleServiceUpdateResult(const Host *aHost, otError aError)
 {
     UpdateMetadata *update = mOutstandingUpdates.FindMatching(aHost);
 
     if (update != nullptr)
     {
-        HandleAdvertisingResult(update, aError);
+        HandleServiceUpdateResult(update, aError);
     }
     else
     {
@@ -276,9 +276,9 @@ void Server::HandleAdvertisingResult(const Host *aHost, otError aError)
     }
 }
 
-void Server::HandleAdvertisingResult(UpdateMetadata *aUpdate, otError aError)
+void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, otError aError)
 {
-    HandleSrpUpdateResult(aError, aUpdate->GetDnsHeader(), aUpdate->GetHost(), aUpdate->GetMessageInfo());
+    CommitSrpUpdate(aError, aUpdate->GetDnsHeader(), aUpdate->GetHost(), aUpdate->GetMessageInfo());
 
     IgnoreError(mOutstandingUpdates.Remove(*aUpdate));
     aUpdate->Free();
@@ -293,10 +293,10 @@ void Server::HandleAdvertisingResult(UpdateMetadata *aUpdate, otError aError)
     }
 }
 
-void Server::HandleSrpUpdateResult(otError                  aError,
-                                   const Dns::UpdateHeader &aDnsHeader,
-                                   Host &                   aHost,
-                                   const Ip6::MessageInfo & aMessageInfo)
+void Server::CommitSrpUpdate(otError                  aError,
+                             const Dns::UpdateHeader &aDnsHeader,
+                             Host &                   aHost,
+                             const Ip6::MessageInfo & aMessageInfo)
 {
     Host *   existingHost;
     uint32_t hostLease;
@@ -992,20 +992,20 @@ void Server::HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, cons
 exit:
     if (error != OT_ERROR_NONE)
     {
-        HandleSrpUpdateResult(error, aDnsHeader, *aHost, aMessageInfo);
+        CommitSrpUpdate(error, aDnsHeader, *aHost, aMessageInfo);
     }
-    else if (mAdvertisingHandler != nullptr)
+    else if (mServiceUpdateHandler != nullptr)
     {
         UpdateMetadata *update = UpdateMetadata::New(GetInstance(), aDnsHeader, aHost, aMessageInfo);
 
         IgnoreError(mOutstandingUpdates.Add(*update));
         mOutstandingUpdatesTimer.StartAt(mOutstandingUpdates.GetTail()->GetExpireTime(), 0);
 
-        mAdvertisingHandler(aHost, kDefaultEventsHandlerTimeout, mAdvertisingHandlerContext);
+        mServiceUpdateHandler(aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
     }
     else
     {
-        HandleSrpUpdateResult(OT_ERROR_NONE, aDnsHeader, *aHost, aMessageInfo);
+        CommitSrpUpdate(OT_ERROR_NONE, aDnsHeader, *aHost, aMessageInfo);
     }
 }
 
@@ -1257,7 +1257,7 @@ void Server::HandleOutstandingUpdatesTimer(void)
     otLogInfoSrp("[server] outstanding service update timeout");
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
     {
-        HandleAdvertisingResult(mOutstandingUpdates.GetTail(), OT_ERROR_RESPONSE_TIMEOUT);
+        HandleServiceUpdateResult(mOutstandingUpdates.GetTail(), OT_ERROR_RESPONSE_TIMEOUT);
     }
 }
 
