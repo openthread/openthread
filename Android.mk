@@ -250,6 +250,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/meshcop/dataset_local.cpp                      \
     src/core/meshcop/dataset_manager.cpp                    \
     src/core/meshcop/dataset_manager_ftd.cpp                \
+    src/core/meshcop/dataset_updater.cpp                    \
     src/core/meshcop/dtls.cpp                               \
     src/core/meshcop/energy_scan_client.cpp                 \
     src/core/meshcop/joiner.cpp                             \
@@ -323,7 +324,6 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
-    src/core/utils/dataset_updater.cpp                      \
     src/core/utils/flash.cpp                                \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \

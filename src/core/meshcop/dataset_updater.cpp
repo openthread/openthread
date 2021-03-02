@@ -43,12 +43,10 @@
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
 namespace ot {
-namespace Utils {
+namespace MeshCoP {
 
 DatasetUpdater::DatasetUpdater(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mState(kStateIdle)
-    , mWaitInterval(kWaitInterval)
     , mCallback(nullptr)
     , mCallbackContext(nullptr)
     , mTimer(aInstance, DatasetUpdater::HandleTimer)
@@ -56,16 +54,13 @@ DatasetUpdater::DatasetUpdater(Instance &aInstance)
 {
 }
 
-otError DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset,
-                                      Callback                      aCallback,
-                                      void *                        aContext,
-                                      uint32_t                      aReryWaitInterval)
+otError DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext)
 {
     otError  error   = OT_ERROR_NONE;
     Message *message = nullptr;
 
     VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
+    VerifyOrExit(mDataset == nullptr, error = OT_ERROR_BUSY);
 
     VerifyOrExit(!aDataset.IsActiveTimestampPresent() && !aDataset.IsPendingTimestampPresent(),
                  error = OT_ERROR_INVALID_ARGS);
@@ -77,11 +72,9 @@ otError DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset,
 
     mCallback        = aCallback;
     mCallbackContext = aContext;
-    mWaitInterval    = aReryWaitInterval;
     mDataset         = message;
-    mState           = kStateUpdateRequested;
 
-    PreparePendingDataset();
+    mTimer.Start(1);
 
 exit:
     FreeMessageOnError(message, error);
@@ -90,12 +83,13 @@ exit:
 
 void DatasetUpdater::CancelUpdate(void)
 {
-    if (mState != kStateIdle)
-    {
-        FreeMessage(mDataset);
-        mState = kStateIdle;
-        mTimer.Stop();
-    }
+    VerifyOrExit(mDataset != nullptr);
+
+    FreeMessage(mDataset);
+    mTimer.Stop();
+
+exit:
+    return;
 }
 
 void DatasetUpdater::HandleTimer(Timer &aTimer)
@@ -105,28 +99,20 @@ void DatasetUpdater::HandleTimer(Timer &aTimer)
 
 void DatasetUpdater::HandleTimer(void)
 {
-    switch (mState)
-    {
-    case kStateIdle:
-        break;
-    case kStateUpdateRequested:
-    case kStateSentMgmtPendingDataset:
-        PreparePendingDataset();
-        break;
-    }
+    PreparePendingDataset();
 }
 
 void DatasetUpdater::PreparePendingDataset(void)
 {
+    Dataset                dataset(Dataset::kPending);
+    MeshCoP::Dataset::Info requestedDataset;
     otError                error;
-    MeshCoP::Dataset::Info newDataset;
-    MeshCoP::Dataset::Info curDataset;
 
-    VerifyOrExit(mState != kStateIdle);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
 
-    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), Finish(OT_ERROR_INVALID_STATE));
+    IgnoreError(mDataset->Read(0, requestedDataset));
 
-    error = Get<MeshCoP::ActiveDataset>().Read(curDataset);
+    error = Get<ActiveDataset>().Read(dataset);
 
     if (error != OT_ERROR_NONE)
     {
@@ -136,80 +122,51 @@ void DatasetUpdater::PreparePendingDataset(void)
         // right after the network is formed but before the active
         // dataset is created.
 
-        mState = kStateUpdateRequested;
         mTimer.Start(kRetryInterval);
-        ExitNow();
+        ExitNow(error = OT_ERROR_NONE);
     }
 
-    IgnoreError(mDataset->Read(0, newDataset));
+    IgnoreError(dataset.SetFrom(requestedDataset));
 
-    if (newDataset.IsSubsetOf(curDataset))
+    if (!requestedDataset.IsDelayPresent())
     {
-        // If new requested Dataset is already contained in the current
-        // Active Dataset, no change is required, and we can report the
-        // update to be successful.
+        uint32_t delay = kDefaultDelay;
 
-        Finish(OT_ERROR_NONE);
-        ExitNow();
+        SuccessOrExit(error = dataset.SetTlv(Tlv::kDelayTimer, delay));
     }
 
-    if (newDataset.IsActiveTimestampPresent())
     {
-        // Presence of the active timestamp in the new Dataset
-        // indicates that it is a retry. In this case, we ensure
-        // that the timestamp is ahead of current active dataset.
-        // This covers the case where another device in network
-        // requested a Dataset update after this device.
+        Timestamp timestamp;
 
-        VerifyOrExit(newDataset.GetActiveTimestamp() > curDataset.GetActiveTimestamp(), Finish(OT_ERROR_ALREADY));
-    }
-    else
-    {
-        newDataset.SetActiveTimestamp(curDataset.GetActiveTimestamp() +
-                                      Random::NonCrypto::GetUint32InRange(1, kMaxTimestampIncrease));
-    }
-
-    if (!newDataset.IsDelayPresent())
-    {
-        newDataset.SetDelay(kDefaultDelay);
-    }
-
-    if (!newDataset.IsPendingTimestampPresent())
-    {
-        uint32_t timestampIncrease = Random::NonCrypto::GetUint32InRange(1, kMaxTimestampIncrease);
-
-        if (Get<MeshCoP::PendingDataset>().Read(curDataset) == OT_ERROR_NONE)
+        if (Get<PendingDataset>().GetTimestamp() != nullptr)
         {
-            newDataset.SetPendingTimestamp(curDataset.GetPendingTimestamp() + timestampIncrease);
-        }
-        else
-        {
-            newDataset.SetPendingTimestamp(timestampIncrease);
+            timestamp = *Get<PendingDataset>().GetTimestamp();
         }
 
-        mDataset->Write(0, newDataset);
+        timestamp.AdvanceRandomTicks();
+        dataset.SetTimestamp(timestamp);
     }
 
-    error = Get<MeshCoP::PendingDataset>().SendSetRequest(newDataset, nullptr, 0);
+    {
+        ActiveTimestampTlv *tlv = dataset.GetTlv<ActiveTimestampTlv>();
+        tlv->AdvanceRandomTicks();
+    }
 
-    if (error == OT_ERROR_NONE)
-    {
-        mState = kStateSentMgmtPendingDataset;
-        mTimer.Start(newDataset.GetDelay() + mWaitInterval);
-    }
-    else
-    {
-        mTimer.Start(kRetryInterval);
-    }
+    SuccessOrExit(error = Get<PendingDataset>().Save(dataset));
 
 exit:
-    return;
+    if (error != OT_ERROR_NONE)
+    {
+        Finish(error);
+    }
 }
 
 void DatasetUpdater::Finish(otError aError)
 {
+    OT_ASSERT(mDataset != nullptr);
+
     FreeMessage(mDataset);
-    mState = kStateIdle;
+    mDataset = nullptr;
 
     if (mCallback != nullptr)
     {
@@ -219,21 +176,30 @@ void DatasetUpdater::Finish(otError aError)
 
 void DatasetUpdater::HandleNotifierEvents(Events aEvents)
 {
-    VerifyOrExit(mState == kStateSentMgmtPendingDataset);
+    MeshCoP::Dataset::Info requestedDataset;
+    MeshCoP::Dataset::Info dataset;
 
-    if (aEvents.Contains(kEventActiveDatasetChanged))
+    VerifyOrExit(mDataset != nullptr);
+
+    VerifyOrExit(aEvents.ContainsAny(kEventActiveDatasetChanged | kEventPendingDatasetChanged));
+
+    IgnoreError(mDataset->Read(0, requestedDataset));
+
+    if (aEvents.Contains(kEventActiveDatasetChanged) && Get<MeshCoP::ActiveDataset>().Read(dataset) == OT_ERROR_NONE)
     {
-        MeshCoP::Dataset::Info requestedDataset;
-        MeshCoP::Dataset::Info activeDataset;
-
-        SuccessOrExit(Get<MeshCoP::ActiveDataset>().Read(activeDataset));
-        IgnoreError(mDataset->Read(0, requestedDataset));
-
-        if (requestedDataset.IsSubsetOf(activeDataset))
+        if (requestedDataset.IsSubsetOf(dataset))
         {
             Finish(OT_ERROR_NONE);
         }
-        else if (requestedDataset.GetActiveTimestamp() <= activeDataset.GetActiveTimestamp())
+        else if (requestedDataset.GetActiveTimestamp() <= dataset.GetActiveTimestamp())
+        {
+            Finish(OT_ERROR_ALREADY);
+        }
+    }
+
+    if (aEvents.Contains(kEventPendingDatasetChanged) && Get<MeshCoP::PendingDataset>().Read(dataset) == OT_ERROR_NONE)
+    {
+        if (!requestedDataset.IsSubsetOf(dataset))
         {
             Finish(OT_ERROR_ALREADY);
         }
@@ -243,7 +209,7 @@ exit:
     return;
 }
 
-} // namespace Utils
+} // namespace MeshCoP
 } // namespace ot
 
 #endif // #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD

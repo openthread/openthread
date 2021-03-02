@@ -39,8 +39,8 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
+#include "meshcop/dataset_updater.hpp"
 #include "radio/radio.hpp"
-#include "utils/dataset_updater.hpp"
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
@@ -73,7 +73,6 @@ void ChannelManager::RequestChannelChange(uint8_t aChannel)
     if (mState == kStateChangeInProgress)
     {
         VerifyOrExit(mChannel != aChannel);
-        Get<DatasetUpdater>().CancelUpdate();
     }
 
     mState   = kStateChangeRequested;
@@ -106,7 +105,7 @@ void ChannelManager::StartDatasetUpdate(void)
     dataset.SetChannel(mChannel);
     dataset.SetDelay(Time::SecToMsec(mDelay));
 
-    switch (Get<DatasetUpdater>().RequestUpdate(dataset, HandleDatasetUpdateDone, this, kChangeCheckWaitInterval))
+    switch (Get<MeshCoP::DatasetUpdater>().RequestUpdate(dataset, HandleDatasetUpdateDone, this))
     {
     case OT_ERROR_NONE:
         mState = kStateChangeInProgress;

@@ -202,6 +202,7 @@ SOURCES_COMMON                                  = \
     meshcop/dataset_local.cpp                     \
     meshcop/dataset_manager.cpp                   \
     meshcop/dataset_manager_ftd.cpp               \
+    meshcop/dataset_updater.cpp                   \
     meshcop/dtls.cpp                              \
     meshcop/energy_scan_client.cpp                \
     meshcop/joiner.cpp                            \
@@ -275,7 +276,6 @@ SOURCES_COMMON                                  = \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
-    utils/dataset_updater.cpp                     \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
     utils/jam_detector.cpp                        \
@@ -450,6 +450,7 @@ HEADERS_COMMON                                  = \
     meshcop/dataset.hpp                           \
     meshcop/dataset_local.hpp                     \
     meshcop/dataset_manager.hpp                   \
+    meshcop/dataset_updater.hpp                   \
     meshcop/dtls.hpp                              \
     meshcop/energy_scan_client.hpp                \
     meshcop/joiner.hpp                            \
@@ -531,7 +532,6 @@ HEADERS_COMMON                                  = \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \
-    utils/dataset_updater.hpp                     \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
     utils/jam_detector.hpp                        \

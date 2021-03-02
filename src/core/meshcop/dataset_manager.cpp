@@ -199,6 +199,17 @@ exit:
     return error;
 }
 
+otError DatasetManager::SaveLocal(const Dataset &aDataset)
+{
+    otError error;
+
+    SuccessOrExit(error = mLocal.Save(aDataset));
+    HandleDatasetUpdated();
+
+exit:
+    return error;
+}
+
 void DatasetManager::HandleDatasetUpdated(void)
 {
     switch (Get<Mle::MleRouter>().GetRole())
@@ -739,6 +750,17 @@ otError PendingDataset::Save(const otOperationalDatasetTlvs &aDataset)
     otError error;
 
     SuccessOrExit(error = DatasetManager::Save(aDataset));
+    StartDelayTimer();
+
+exit:
+    return error;
+}
+
+otError PendingDataset::Save(const Dataset &aDataset)
+{
+    otError error;
+
+    SuccessOrExit(error = DatasetManager::SaveLocal(aDataset));
     StartDelayTimer();
 
 exit:

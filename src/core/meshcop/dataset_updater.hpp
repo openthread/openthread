@@ -47,7 +47,7 @@
 #include "meshcop/meshcop_tlvs.hpp"
 
 namespace ot {
-namespace Utils {
+namespace MeshCoP {
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
@@ -93,7 +93,6 @@ public:
      * @param[in]  aDataset                Dataset info containing fields to change.
      * @param[in]  aCallback               A callback to indicate when Dataset update request finishes.
      * @param[in]  aContext                An arbitrary context passed to callback.
-     * @param[in]  aRetryWaitInterval      The wait time after sending Pending dataset before retrying (interval in ms).
      *
      * @retval OT_ERROR_NONE           Dataset update started successfully (@p aCallback will be invoked on completion).
      * @retval OT_ERROR_INVALID_STATE  Device is disabled (MLE is disabled).
@@ -102,10 +101,7 @@ public:
      * @retval OT_ERROR_NO_BUFS        Could not allocated buffer to save Dataset.
      *
      */
-    otError RequestUpdate(const MeshCoP::Dataset::Info &aDataset,
-                          Callback                      aCallback,
-                          void *                        aContext,
-                          uint32_t                      aReryWaitInterval = kWaitInterval);
+    otError RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext);
 
     /**
      * This method cancels an ongoing (if any) Operational Dataset update request.
@@ -120,26 +116,14 @@ public:
      * @retval FALSE   There is no ongoing update.
      *
      */
-    bool IsUpdateOngoing(void) const { return (mState != kStateIdle); }
+    bool IsUpdateOngoing(void) const { return mDataset != nullptr; }
 
 private:
-    enum State : uint8_t
-    {
-        kStateIdle,
-        kStateUpdateRequested,
-        kStateSentMgmtPendingDataset,
-    };
-
     enum : uint32_t
     {
-        // Default delay (in ms) in Pending Dataset.
-        kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY,
+        kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY, // Default delay (in ms) in Pending Dataset.
 
-        // Default wait interval (in ms) after sending Pending Dataset to retry (in addition Dataset Delay)
-        kWaitInterval = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_RETRY_WAIT_INTERVAL,
-
-        kRetryInterval        = 1000, // In ms. Retry interval when preparing and/or sending Pending Dataset fails.
-        kMaxTimestampIncrease = 128,  // Maximum increase of Pending/Active Timestamp during Dataset Update.
+        kRetryInterval = 1000, // In ms. Retry interval when preparing and/or sending Pending Dataset fails.
     };
 
     static void HandleTimer(Timer &aTimer);
@@ -148,8 +132,6 @@ private:
     void        Finish(otError aError);
     void        HandleNotifierEvents(Events aEvents);
 
-    State      mState;
-    uint32_t   mWaitInterval;
     Callback   mCallback;
     void *     mCallbackContext;
     TimerMilli mTimer;
@@ -158,7 +140,7 @@ private:
 
 #endif // (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
-} // namespace Utils
+} // namespace MeshCoP
 } // namespace ot
 
 #endif // DATASET_UPDATER_HPP_
