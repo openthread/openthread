@@ -729,6 +729,8 @@ enum
 
 // Statuses that can be received as a result of:
 // @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD
 enum
 {
     SPINEL_LINK_METRICS_STATUS_SUCCESS                     = 0,
@@ -742,12 +744,24 @@ enum
 // Metric ids used for:
 // @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY
 // @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD
 enum
 {
     THREAD_LINK_METRIC_PDU_COUNT   = 0,
     THREAD_LINK_METRIC_LQI         = 1,
     THREAD_LINK_METRIC_LINK_MARGIN = 2,
     THREAD_LINK_METRIC_RSSI        = 3,
+};
+
+// Frame types used for:
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD
+enum
+{
+    THREAD_FRAME_TYPE_MLE_LINK_PROBE   = 0,
+    THREAD_FRAME_TYPE_MAC_DATA         = 1,
+    THREAD_FRAME_TYPE_MAC_DATA_REQUEST = 2,
+    THREAD_FRAME_TYPE_MAC_ACK          = 3,
 };
 
 // Parameter ids used for:
@@ -3049,6 +3063,100 @@ enum
      *
      */
     SPINEL_PROP_THREAD_LINK_METRICS_PROBE = SPINEL_PROP_THREAD_EXT__BEGIN + 47,
+
+    /// Link metrics Enhanced-ACK Based Probing management
+    /** Format: 6Cd - Write only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 destination address
+     * `C` : Indicate whether to register or clear the probing. `0` - clear, `1` - register
+     * `d` : List of requested metric ids encoded as single bytes (`C`)
+     *
+     *   +---------------+----+
+     *   |    Metric     | Id |
+     *   +---------------+----+
+     *   | LQI           |  1 |
+     *   | Link margin   |  2 |
+     *   | RSSI          |  3 |
+     *   +---------------+----+
+     *
+     * Result of configuration is reported asynchronously to the Host using the
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE.
+     *
+     * Whenever Enh-ACK IE report is received it is passed to the Host using the
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE property.
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK = SPINEL_PROP_THREAD_EXT__BEGIN + 48,
+
+    /// Link metrics Enhanced-ACK Based Probing IE report
+    /** Format: SEA(t(CD)) - Unsolicited notifications only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `S` : Short address of the Probing Subject
+     * `E` : Extended address of the Probing Subject
+     * `A(t(CD))` : Array of structs encoded as following:
+     *   `C` : Metric id
+     *   `D` : Metric value
+     *
+     *   +---------------+----+----------------+
+     *   |    Metric     | Id |  Value format  |
+     *   +---------------+----+----------------+
+     *   | LQI           |  1 | `C` (uint8_t)  |
+     *   | Link margin   |  2 | `C` (uint8_t)  |
+     *   | RSSI          |  3 | `c` (int8_t)   |
+     *   +---------------+----+----------------+
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE = SPINEL_PROP_THREAD_EXT__BEGIN + 49,
+
+    /// Link metrics Forward Tracking Series management
+    /** Format: 6Cdd - Write only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 destination address
+     * `C` : Series id
+     * `d` : List of tracked frame types encoded as single bytes (`C`), if the list is empty
+     *       accounting is stopped and a series is removed
+     * `d` : List of requested metric ids encoded as single bytes (`C`)
+     *
+     *   +------------------+----+
+     *   |    Frame type    | Id |
+     *   +------------------+----+
+     *   | MLE Link Probe   |  0 |
+     *   | MAC Data         |  1 |
+     *   | MAC Data Request |  2 |
+     *   | MAC ACK          |  3 |
+     *   +------------------+----+
+     *
+     *   +---------------+----+
+     *   |    Metric     | Id |
+     *   +---------------+----+
+     *   | Received PDUs |  0 |
+     *   | LQI           |  1 |
+     *   | Link margin   |  2 |
+     *   | RSSI          |  3 |
+     *   +---------------+----+
+     *
+     * Result of configuration is reported asynchronously to the Host using the
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE.
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD = SPINEL_PROP_THREAD_EXT__BEGIN + 50,
+
+    /// Link metrics management response
+    /** Format: 6C - Unsolicited notifications only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 source address
+     * `C` : Received status
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE = SPINEL_PROP_THREAD_EXT__BEGIN + 51,
 
     /// Multicast Listeners Register Request
     /** Format `t(A(6))A(t(CD))` - Write-only

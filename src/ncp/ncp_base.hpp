@@ -346,6 +346,21 @@ protected:
     void HandleLinkMetricsReport(const otIp6Address *       aSource,
                                  const otLinkMetricsValues *aMetricsValues,
                                  uint8_t                    aStatus);
+
+    static void HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource,
+                                                   uint8_t             aStatus,
+                                                   void *              aContext);
+
+    void HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus);
+
+    static void HandleLinkMetricsEnhAckProbingIeReport_Jump(otShortAddress             aShortAddress,
+                                                            const otExtAddress *       aExtAddress,
+                                                            const otLinkMetricsValues *aMetricsValues,
+                                                            void *                     aContext);
+
+    void HandleLinkMetricsEnhAckProbingIeReport(otShortAddress             aShortAddress,
+                                                const otExtAddress *       aExtAddress,
+                                                const otLinkMetricsValues *aMetricsValues);
 #endif
 
     static void HandleMlrRegResult_Jump(void *              aContext,
@@ -373,6 +388,12 @@ protected:
 
 #if OPENTHREAD_FTD
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    otError DecodeLinkMetrics(otLinkMetrics *linkMetrics, bool allowPduCount);
+
+    otError EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValues);
 #endif
 
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
