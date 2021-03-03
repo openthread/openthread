@@ -102,6 +102,24 @@ build_qpg6095()
     "$(dirname "$0")"/cmake-build qpg6095 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
+build_qpg6100()
+{
+    reset_source
+    "$(dirname "$0")"/cmake-build qpg6100 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
+}
+
+build_gp712()
+{
+    reset_source
+    "$(dirname "$0")"/cmake-build gp712 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
+}
+
+build_qpg7015m()
+{
+    reset_source
+    "$(dirname "$0")"/cmake-build qpg7015m "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
+}
+
 build_samr21()
 {
     reset_source
@@ -125,6 +143,9 @@ main()
         build_cc2652
         build_kw41z
         build_qpg6095
+        build_qpg6100
+        build_gp712
+        build_qpg7015m
         build_samr21
         # UART transport
         build_nrf52840 UART_trans
