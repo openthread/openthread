@@ -45,8 +45,13 @@
 #include "thread/network_data_leader.hpp"
 
 namespace ot {
-
 namespace Dhcp6 {
+
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+
+#if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
+#error "OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT requires DHCPv6 server on Border Router side to be enabled."
+#endif
 
 /**
  * @addtogroup core-dhcp6
@@ -218,6 +223,13 @@ private:
     uint8_t     mPrefixAgentsCount;
     uint8_t     mPrefixAgentsMask;
 };
+
+/**
+ * @}
+ *
+ */
+
+#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
 } // namespace Dhcp6
 } // namespace ot

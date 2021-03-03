@@ -51,6 +51,8 @@ namespace ot {
 
 namespace Dhcp6 {
 
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
 /**
  * @addtogroup core-dhcp6
  *
@@ -151,6 +153,19 @@ private:
     IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
     IdentityAssociation *mIdentityAssociationCurrent;
 };
+
+/**
+ * @}
+ *
+ */
+
+#else // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
+#if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
+#error "OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT requires OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE to be also set."
+#endif
+
+#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 } // namespace Dhcp6
 } // namespace ot

@@ -39,6 +39,14 @@
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#error "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
+#endif
+
+#if !OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+#error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
+#endif
+
 #include <openthread/error.h>
 #include <openthread/netdata.h>
 #include <openthread/platform/infra_if.h>

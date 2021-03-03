@@ -38,6 +38,10 @@
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 
+#if OPENTHREAD_CONFIG_MLR_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLR_ENABLE"
+#endif
+
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
