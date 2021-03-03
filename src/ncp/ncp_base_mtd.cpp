@@ -3080,6 +3080,23 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_Q
 exit:
     return error;
 }
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_PROBE>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    struct otIp6Address address;
+    uint8_t             seriesId;
+    uint8_t             length;
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
+    SuccessOrExit(error = mDecoder.ReadUint8(length));
+
+    error = otLinkMetricsSendLinkProbe(mInstance, &address, seriesId, length);
+
+exit:
+    return error;
+}
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)

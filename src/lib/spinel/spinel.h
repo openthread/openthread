@@ -3037,6 +3037,19 @@ enum
      */
     SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT = SPINEL_PROP_THREAD_EXT__BEGIN + 46,
 
+    /// Link metrics probe
+    /** Format `6CC` - Write only
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * Send a MLE Link Probe message to the peer.
+     *
+     * `6` : IPv6 destination address
+     * `C` : The Series ID for which this Probe message targets at
+     * `C` : The length of the Probe message, valid range: [0, 64]
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_PROBE = SPINEL_PROP_THREAD_EXT__BEGIN + 47,
+
     /// Multicast Listeners Register Request
     /** Format `t(A(6))A(t(CD))` - Write-only
      * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
