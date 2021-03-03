@@ -3039,6 +3039,49 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_QUERY>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    struct otIp6Address address;
+    uint8_t             seriesId;
+    const uint8_t *     metrics;
+    uint16_t            metricsLen;
+    otLinkMetrics       linkMetrics = {};
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
+    SuccessOrExit(error = mDecoder.ReadDataWithLen(metrics, metricsLen));
+
+    for (uint8_t i = 0; i < metricsLen; ++i)
+    {
+        switch (metrics[i])
+        {
+        case THREAD_LINK_METRIC_PDU_COUNT:
+            linkMetrics.mPduCount = true;
+            break;
+        case THREAD_LINK_METRIC_LQI:
+            linkMetrics.mLqi = true;
+            break;
+        case THREAD_LINK_METRIC_LINK_MARGIN:
+            linkMetrics.mLinkMargin = true;
+            break;
+        case THREAD_LINK_METRIC_RSSI:
+            linkMetrics.mRssi = true;
+            break;
+        default:
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+    error =
+        otLinkMetricsQuery(mInstance, &address, seriesId, &linkMetrics, &NcpBase::HandleLinkMetricsReport_Jump, this);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)
 {
     uint8_t          numericMode;
@@ -4122,6 +4165,64 @@ void NcpBase::HandleJoinerCallback(otError aError)
     }
 
     mUpdateChangedPropsTask.Post();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address *       aSource,
+                                           const otLinkMetricsValues *aMetricsValues,
+                                           uint8_t                    aStatus,
+                                           void *                     aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleLinkMetricsReport(aSource, aMetricsValues, aStatus);
+}
+
+void NcpBase::HandleLinkMetricsReport(const otIp6Address *       aSource,
+                                      const otLinkMetricsValues *aMetricsValues,
+                                      uint8_t                    aStatus)
+{
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT));
+
+    SuccessOrExit(mEncoder.WriteIp6Address(*aSource));
+    SuccessOrExit(mEncoder.WriteUint8(aStatus));
+
+    if (aMetricsValues->mMetrics.mPduCount)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUint8(THREAD_LINK_METRIC_PDU_COUNT));
+        SuccessOrExit(mEncoder.WriteUint32(aMetricsValues->mPduCountValue));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aMetricsValues->mMetrics.mLqi)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUint8(THREAD_LINK_METRIC_LQI));
+        SuccessOrExit(mEncoder.WriteUint8(aMetricsValues->mLqiValue));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aMetricsValues->mMetrics.mLinkMargin)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUint8(THREAD_LINK_METRIC_LINK_MARGIN));
+        SuccessOrExit(mEncoder.WriteUint8(aMetricsValues->mLinkMarginValue));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    if (aMetricsValues->mMetrics.mRssi)
+    {
+        SuccessOrExit(mEncoder.OpenStruct());
+        SuccessOrExit(mEncoder.WriteUint8(THREAD_LINK_METRIC_RSSI));
+        SuccessOrExit(mEncoder.WriteInt8(aMetricsValues->mRssiValue));
+        SuccessOrExit(mEncoder.CloseStruct());
+    }
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
 }
 #endif
 

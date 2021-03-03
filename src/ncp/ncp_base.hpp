@@ -337,6 +337,17 @@ protected:
     void        HandleJoinerCallback(otError aError);
 #endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    static void HandleLinkMetricsReport_Jump(const otIp6Address *       aSource,
+                                             const otLinkMetricsValues *aMetricsValues,
+                                             uint8_t                    aStatus,
+                                             void *                     aContext);
+
+    void HandleLinkMetricsReport(const otIp6Address *       aSource,
+                                 const otLinkMetricsValues *aMetricsValues,
+                                 uint8_t                    aStatus);
+#endif
+
     static void HandleMlrRegResult_Jump(void *              aContext,
                                         otError             aError,
                                         uint8_t             aMlrStatus,

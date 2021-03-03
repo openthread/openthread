@@ -135,6 +135,14 @@ spinel_status_t NcpBase::ThreadErrorToSpinelStatus(otError aError)
         ret = SPINEL_STATUS_ITEM_NOT_FOUND;
         break;
 
+    case OT_ERROR_UNKNOWN_NEIGHBOR:
+        ret = SPINEL_STATUS_UNKNOWN_NEIGHBOR;
+        break;
+
+    case OT_ERROR_NOT_CAPABLE:
+        ret = SPINEL_STATUS_NOT_CAPABLE;
+        break;
+
     case OT_ERROR_RESPONSE_TIMEOUT:
         ret = SPINEL_STATUS_RESPONSE_TIMEOUT;
         break;
@@ -1924,6 +1932,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SRP_CLIENT));
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_LINK_METRICS));
 #endif
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
