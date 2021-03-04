@@ -212,9 +212,9 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 otError NcpBase::DecodeLinkMetrics(otLinkMetrics *linkMetrics, bool allowPduCount)
 {
-    otError         error = OT_ERROR_NONE;
-    const uint8_t * metrics;
-    uint16_t        metricsLen;
+    otError        error = OT_ERROR_NONE;
+    const uint8_t *metrics;
+    uint16_t       metricsLen;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(metrics, metricsLen));
 
@@ -224,16 +224,16 @@ otError NcpBase::DecodeLinkMetrics(otLinkMetrics *linkMetrics, bool allowPduCoun
         {
         case THREAD_LINK_METRIC_PDU_COUNT:
             VerifyOrExit(allowPduCount, error = OT_ERROR_INVALID_ARGS);
-            linkMetrics->mPduCount = 1;
+            linkMetrics->mPduCount = true;
             break;
         case THREAD_LINK_METRIC_LQI:
-            linkMetrics->mLqi = 1;
+            linkMetrics->mLqi = true;
             break;
         case THREAD_LINK_METRIC_LINK_MARGIN:
-            linkMetrics->mLinkMargin = 1;
+            linkMetrics->mLinkMargin = true;
             break;
         case THREAD_LINK_METRIC_RSSI:
-            linkMetrics->mRssi = 1;
+            linkMetrics->mRssi = true;
             break;
         default:
             ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -3152,10 +3152,10 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK>(void)
 {
-    otError                  error = OT_ERROR_NONE;
-    struct otIp6Address      address;
-    uint8_t                  controlFlags;
-    otLinkMetrics            linkMetrics = {};
+    otError             error = OT_ERROR_NONE;
+    struct otIp6Address address;
+    uint8_t             controlFlags;
+    otLinkMetrics       linkMetrics = {};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(controlFlags));
@@ -3189,16 +3189,16 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
         switch (types[i])
         {
         case THREAD_FRAME_TYPE_MLE_LINK_PROBE:
-            seriesFlags.mLinkProbe = 1;
+            seriesFlags.mLinkProbe = true;
             break;
         case THREAD_FRAME_TYPE_MAC_DATA:
-            seriesFlags.mMacData = 1;
+            seriesFlags.mMacData = true;
             break;
         case THREAD_FRAME_TYPE_MAC_DATA_REQUEST:
-            seriesFlags.mMacDataRequest = 1;
+            seriesFlags.mMacDataRequest = true;
             break;
         case THREAD_FRAME_TYPE_MAC_ACK:
-            seriesFlags.mMacAck = 1;
+            seriesFlags.mMacAck = true;
             break;
         default:
             ExitNow(error = OT_ERROR_INVALID_ARGS);
@@ -4325,9 +4325,7 @@ exit:
     return;
 }
 
-void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource,
-                                                 uint8_t aStatus,
-                                                 void *aContext)
+void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource, uint8_t aStatus, void *aContext)
 {
     static_cast<NcpBase *>(aContext)->HandleLinkMetricsMgmtResponse(aSource, aStatus);
 }
@@ -4351,7 +4349,8 @@ void NcpBase::HandleLinkMetricsEnhAckProbingIeReport_Jump(otShortAddress        
                                                           const otLinkMetricsValues *aMetricsValues,
                                                           void *                     aContext)
 {
-    static_cast<NcpBase *>(aContext)->HandleLinkMetricsEnhAckProbingIeReport(aShortAddress, aExtAddress, aMetricsValues);
+    static_cast<NcpBase *>(aContext)->HandleLinkMetricsEnhAckProbingIeReport(aShortAddress, aExtAddress,
+                                                                             aMetricsValues);
 }
 
 void NcpBase::HandleLinkMetricsEnhAckProbingIeReport(otShortAddress             aShortAddress,

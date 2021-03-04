@@ -347,9 +347,7 @@ protected:
                                  const otLinkMetricsValues *aMetricsValues,
                                  uint8_t                    aStatus);
 
-    static void HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource,
-                                                   uint8_t             aStatus,
-                                                   void *              aContext);
+    static void HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource, uint8_t aStatus, void *aContext);
 
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus);
 
