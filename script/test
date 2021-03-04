@@ -275,7 +275,7 @@ do_build_otbr_docker()
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
-            --build-arg BORDER_ROUTING=1 \
+            --build-arg BORDER_ROUTING="${BORDER_ROUTING}" \
             --build-arg INFRA_IF_NAME=eth0 \
             --build-arg BACKBONE_ROUTER=1 \
             --build-arg REFERENCE_DEVICE=1 \
