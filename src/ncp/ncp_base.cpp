@@ -1931,6 +1931,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SRP_CLIENT));
 #endif
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_DUA));
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 exit:

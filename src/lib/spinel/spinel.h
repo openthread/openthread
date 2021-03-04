@@ -1187,6 +1187,7 @@ enum
     SPINEL_CAP_MAC_RETRY_HISTOGRAM     = (SPINEL_CAP_OPENTHREAD__BEGIN + 12),
     SPINEL_CAP_MULTI_RADIO             = (SPINEL_CAP_OPENTHREAD__BEGIN + 13),
     SPINEL_CAP_SRP_CLIENT              = (SPINEL_CAP_OPENTHREAD__BEGIN + 14),
+    SPINEL_CAP_DUA                     = (SPINEL_CAP_OPENTHREAD__BEGIN + 15),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN        = 1024,
@@ -2943,6 +2944,21 @@ enum
      *
      */
     SPINEL_PROP_THREAD_DOMAIN_NAME = SPINEL_PROP_THREAD_EXT__BEGIN + 44,
+
+    /// Interface Identifier specified for Thread Domain Unicast Address.
+    /** Format: `A(C)` - Read-write
+     *
+     *   `A(C)`: Interface Identifier (8 bytes).
+     *
+     * Required capability: SPINEL_CAP_DUA
+     *
+     * If write to this property is performed without specified parameter
+     * the Interface Identifier of the Thread Domain Unicast Address will be cleared.
+     * If the DUA Interface Identifier is cleared on the NCP device,
+     * the get spinel property command will be returned successfully without specified parameter.
+     *
+     */
+    SPINEL_PROP_THREAD_DUA_ID = SPINEL_PROP_THREAD_EXT__BEGIN + 54,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
