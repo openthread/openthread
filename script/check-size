@@ -157,7 +157,7 @@ size_nrf52840_version()
 
     # new commit
     mkdir -p "${OT_TMP_DIR}/b"
-    git clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/b"
+    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/b"
     rm -rf "${OT_TMP_DIR}/b/openthread/*" # replace openthread submodule with latest commit
     git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/b/openthread"
 

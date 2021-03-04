@@ -44,8 +44,6 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
     - name: Bootstrap
       if: "github.event_name == 'push'"
       run: |
@@ -55,6 +53,7 @@ jobs:
       env:
         OT_BASE_BRANCH: "${{ github.base_ref }}"
         SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export PATH=$PATH:$HOME/.local/bin
         ./script/check-size
