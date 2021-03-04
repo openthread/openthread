@@ -309,6 +309,19 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
                                               backbone=True))
 
+        #
+        # Case 5. Test if the linux host is still reachable if rejoin the network.
+        #
+
+        self.nodes[HOST].disable_ether()
+        self.simulator.go(10)
+        self.nodes[HOST].enable_ether()
+        self.simulator.go(10)
+
+        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
+                                              backbone=True))
+
 
 if __name__ == '__main__':
     unittest.main()
