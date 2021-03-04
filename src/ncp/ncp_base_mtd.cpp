@@ -265,7 +265,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_CHANNEL>(v
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     otBackboneRouterConfig bbrConfig;
 
     SuccessOrExit(error = otBackboneRouterGetPrimary(mInstance, &bbrConfig));

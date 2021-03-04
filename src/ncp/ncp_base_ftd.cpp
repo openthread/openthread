@@ -446,7 +446,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_CONFIG>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     otBackboneRouterConfig bbrConfig;
 
     otBackboneRouterGetConfig(mInstance, &bbrConfig);
@@ -461,7 +461,7 @@ exit:
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_CONFIG>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError                error = OT_ERROR_NONE;
     otBackboneRouterConfig bbrConfig;
 
     SuccessOrExit(error = mDecoder.ReadUint16(bbrConfig.mReregistrationDelay));
