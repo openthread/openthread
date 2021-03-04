@@ -3162,7 +3162,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     SuccessOrExit(error = DecodeLinkMetrics(&linkMetrics, false));
 
     error = otLinkMetricsConfigEnhAckProbing(mInstance, &address, static_cast<otLinkMetricsEnhAckFlags>(controlFlags),
-                                             &linkMetrics, &NcpBase::HandleLinkMetricsMgmtResponse_Jump, this,
+                                             controlFlags ? &linkMetrics : nullptr,
+                                             &NcpBase::HandleLinkMetricsMgmtResponse_Jump, this,
                                              &NcpBase::HandleLinkMetricsEnhAckProbingIeReport_Jump, this);
 
 exit:
