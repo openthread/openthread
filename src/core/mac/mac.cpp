@@ -70,7 +70,7 @@ const otExtendedPanId Mac::sExtendedPanidInit = {
 const char Mac::sNetworkNameInit[] = "OpenThread";
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-const char Mac::sDomainNameInit[] = "Thread";
+const char Mac::sDomainNameInit[] = "DefaultDomain";
 #endif
 
 Mac::Mac(Instance &aInstance)
