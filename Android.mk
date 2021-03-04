@@ -343,6 +343,7 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/infra_if.cpp                         \
     src/posix/platform/logging.cpp                          \
+    src/posix/platform/memory.cpp                           \
     src/posix/platform/misc.cpp                             \
     src/posix/platform/multicast_routing.cpp                \
     src/posix/platform/netif.cpp                            \
