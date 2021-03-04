@@ -36,7 +36,6 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/debug.h>
 #include <mbedtls/entropy.h>
-#include <mbedtls/error.h>
 #include <mbedtls/platform.h>
 #include <mbedtls/threading.h>
 
@@ -44,6 +43,7 @@
 #include <mbedtls/pem.h>
 #endif
 
+#include "common/error.hpp"
 #include "common/instance.hpp"
 
 namespace ot {
@@ -60,9 +60,9 @@ MbedTls::MbedTls(void)
 #endif // OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS_MANAGEMENT
 }
 
-otError MbedTls::MapError(int aMbedTlsError)
+Error MbedTls::MapError(int aMbedTlsError)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     switch (aMbedTlsError)
     {
@@ -102,7 +102,7 @@ otError MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_SSL_BAD_INPUT_DATA:
     case MBEDTLS_ERR_CTR_DRBG_REQUEST_TOO_BIG:
     case MBEDTLS_ERR_CTR_DRBG_INPUT_TOO_BIG:
-        error = OT_ERROR_INVALID_ARGS;
+        error = kErrorInvalidArgs;
         break;
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
@@ -119,7 +119,7 @@ otError MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_SSL_ALLOC_FAILED:
     case MBEDTLS_ERR_SSL_WANT_WRITE:
     case MBEDTLS_ERR_ENTROPY_MAX_SOURCES:
-        error = OT_ERROR_NO_BUFS;
+        error = kErrorNoBufs;
         break;
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
@@ -135,29 +135,29 @@ otError MbedTls::MapError(int aMbedTlsError)
     case MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED:
     case MBEDTLS_ERR_THREADING_BAD_INPUT_DATA:
     case MBEDTLS_ERR_THREADING_MUTEX_ERROR:
-        error = OT_ERROR_SECURITY;
+        error = kErrorSecurity;
         break;
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
     case MBEDTLS_ERR_X509_FATAL_ERROR:
-        error = OT_ERROR_FAILED;
+        error = kErrorFailed;
         break;
 #endif
     case MBEDTLS_ERR_SSL_TIMEOUT:
     case MBEDTLS_ERR_SSL_WANT_READ:
-        error = OT_ERROR_BUSY;
+        error = kErrorBusy;
         break;
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
     case MBEDTLS_ERR_ECP_FEATURE_UNAVAILABLE:
-        error = OT_ERROR_NOT_CAPABLE;
+        error = kErrorNotCapable;
         break;
 #endif
 
     default:
         if (aMbedTlsError < 0)
         {
-            error = OT_ERROR_FAILED;
+            error = kErrorFailed;
         }
 
         break;

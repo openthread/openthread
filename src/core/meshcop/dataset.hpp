@@ -603,10 +603,10 @@ public:
          *
          * @param[in] aInstance    The OpenThread instance.
          *
-         * @retval OT_ERROR_NONE If the Dataset was generated successfully.
+         * @retval kErrorNone If the Dataset was generated successfully.
          *
          */
-        otError GenerateRandom(Instance &aInstance);
+        Error GenerateRandom(Instance &aInstance);
 
         /**
          * This method checks whether the Dataset is a subset of another one, i.e., all the components in the current
@@ -764,11 +764,11 @@ public:
      *
      * @param[in]  aTlv  A reference to the TLV.
      *
-     * @retval OT_ERROR_NONE     Successfully set the TLV.
-     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     * @retval kErrorNone    Successfully set the TLV.
+     * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
      *
      */
-    otError SetTlv(const Tlv &aTlv);
+    Error SetTlv(const Tlv &aTlv);
 
     /**
      * This method sets a TLV with a given TLV Type and Value.
@@ -777,11 +777,11 @@ public:
      * @param[in] aValue    A pointer to TLV Value.
      * @param[in] aLength   The TLV Length in bytes (length of @p aValue).
      *
-     * @retval OT_ERROR_NONE     Successfully set the TLV.
-     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     * @retval kErrorNone    Successfully set the TLV.
+     * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
      *
      */
-    otError SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
+    Error SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength);
 
     /**
      * This template method sets a TLV with a given TLV Type and Value.
@@ -791,11 +791,11 @@ public:
      * @param[in] aType     The TLV Type.
      * @param[in] aValue    The TLV Value (of type `ValueType`).
      *
-     * @retval OT_ERROR_NONE     Successfully set the TLV.
-     * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+     * @retval kErrorNone    Successfully set the TLV.
+     * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
      *
      */
-    template <typename ValueType> otError SetTlv(Tlv::Type aType, const ValueType &aValue)
+    template <typename ValueType> Error SetTlv(Tlv::Type aType, const ValueType &aValue)
     {
         static_assert(!TypeTraits::IsPointer<ValueType>::kValue, "ValueType must not be a pointer");
 
@@ -809,11 +809,11 @@ public:
      * @param[in]  aOffset   The message buffer offset where the dataset starts.
      * @param[in]  aLength   The TLVs length in the message buffer in bytes.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Dataset.
-     * @retval OT_ERROR_INVALID_ARGS  The values of @p aOffset and @p aLength are not valid for @p aMessage.
+     * @retval kErrorNone         Successfully set the Dataset.
+     * @retval kErrorInvalidArgs  The values of @p aOffset and @p aLength are not valid for @p aMessage.
      *
      */
-    otError Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
+    Error Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength);
 
     /**
      * This method sets the Dataset using an existing Dataset.
@@ -831,11 +831,11 @@ public:
      *
      * @param[in]  aDatasetInfo  The input Dataset as `Dataset::Info`.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Dataset.
-     * @retval OT_ERROR_INVALID_ARGS  Dataset is missing Active and/or Pending Timestamp.
+     * @retval kErrorNone         Successfully set the Dataset.
+     * @retval kErrorInvalidArgs  Dataset is missing Active and/or Pending Timestamp.
      *
      */
-    otError SetFrom(const Info &aDatasetInfo);
+    Error SetFrom(const Info &aDatasetInfo);
 
     /**
      * This method sets the Dataset using @p aDataset.
@@ -858,11 +858,11 @@ public:
      *
      * @param[in] aMessage       A message to append to.
      *
-     * @retval OT_ERROR_NONE     Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to append the message with MLE Dataset TLV.
+     * @retval kErrorNone    Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
+     * @retval kErrorNoBufs  Insufficient available buffers to append the message with MLE Dataset TLV.
      *
      */
-    otError AppendMleDatasetTlv(Message &aMessage) const;
+    Error AppendMleDatasetTlv(Message &aMessage) const;
 
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
@@ -870,11 +870,11 @@ public:
      * @param[in]  aInstance           A reference to the OpenThread instance.
      * @param[out] aIsMasterKeyUpdated A pointer to where to place whether master key was updated.
      *
-     * @retval OT_ERROR_NONE   Successfully applied configuration.
-     * @retval OT_ERROR_PARSE  The dataset has at least one TLV with invalid format.
+     * @retval kErrorNone   Successfully applied configuration.
+     * @retval kErrorParse  The dataset has at least one TLV with invalid format.
      *
      */
-    otError ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = nullptr) const;
+    Error ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = nullptr) const;
 
     /**
      * This method converts a Pending Dataset to an Active Dataset.
@@ -943,11 +943,11 @@ private:
  * @param[in] aType     The TLV Type.
  * @param[in] aValue    The TLV value (as `uint16_t`).
  *
- * @retval OT_ERROR_NONE     Successfully set the TLV.
- * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+ * @retval kErrorNone    Successfully set the TLV.
+ * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
  *
  */
-template <> inline otError Dataset::SetTlv(Tlv::Type aType, const uint16_t &aValue)
+template <> inline Error Dataset::SetTlv(Tlv::Type aType, const uint16_t &aValue)
 {
     uint16_t value = Encoding::BigEndian::HostSwap16(aValue);
 
@@ -960,11 +960,11 @@ template <> inline otError Dataset::SetTlv(Tlv::Type aType, const uint16_t &aVal
  * @param[in] aType     The TLV Type.
  * @param[in] aValue    The TLV value (as `uint32_t`).
  *
- * @retval OT_ERROR_NONE     Successfully set the TLV.
- * @retval OT_ERROR_NO_BUFS  Could not set the TLV due to insufficient buffer space.
+ * @retval kErrorNone    Successfully set the TLV.
+ * @retval kErrorNoBufs  Could not set the TLV due to insufficient buffer space.
  *
  */
-template <> inline otError Dataset::SetTlv(Tlv::Type aType, const uint32_t &aValue)
+template <> inline Error Dataset::SetTlv(Tlv::Type aType, const uint32_t &aValue)
 {
     uint32_t value = Encoding::BigEndian::HostSwap32(aValue);
 

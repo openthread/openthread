@@ -85,8 +85,8 @@ otError ParseCmd(char *aCommandString, uint8_t &aArgsLength, char *aArgs[], uint
  * @param[in]  aString   The string to parse.
  * @param[out] aUint8    A reference to an `uint8_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsUint8(const char *aString, uint8_t &aUint8);
@@ -99,8 +99,8 @@ otError ParseAsUint8(const char *aString, uint8_t &aUint8);
  * @param[in]  aString   The string to parse.
  * @param[out] aUint16   A reference to an `uint16_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsUint16(const char *aString, uint16_t &aUint16);
@@ -113,8 +113,8 @@ otError ParseAsUint16(const char *aString, uint16_t &aUint16);
  * @param[in]  aString   The string to parse.
  * @param[out] aUint32   A reference to an `uint32_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsUint32(const char *aString, uint32_t &aUint32);
@@ -127,8 +127,8 @@ otError ParseAsUint32(const char *aString, uint32_t &aUint32);
  * @param[in]  aString   The string to parse.
  * @param[out] aUint64   A reference to an `uint64_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsUint64(const char *aString, uint64_t &aUint64);
@@ -142,8 +142,8 @@ otError ParseAsUint64(const char *aString, uint64_t &aUint64);
  * @param[in]  aString   The string to parse.
  * @param[out] aInt8     A reference to an `int8_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsInt8(const char *aString, int8_t &aInt8);
@@ -157,8 +157,8 @@ otError ParseAsInt8(const char *aString, int8_t &aInt8);
  * @param[in]  aString   The string to parse.
  * @param[out] aInt16    A reference to an `int16_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsInt16(const char *aString, int16_t &aInt16);
@@ -172,8 +172,8 @@ otError ParseAsInt16(const char *aString, int16_t &aInt16);
  * @param[in]  aString   The string to parse.
  * @param[out] aInt32    A reference to an `int32_t` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number (e.g., value out of range).
+ * @retval kErrorNone          The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number (e.g., value out of range).
  *
  */
 otError ParseAsInt32(const char *aString, int32_t &aInt32);
@@ -186,8 +186,8 @@ otError ParseAsInt32(const char *aString, int32_t &aInt32);
  * @param[in]  aString   The string to parse.
  * @param[out] aBool     A reference to a `bool` variable to output the parsed value.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid number.
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid number.
  *
  */
 otError ParseAsBool(const char *aString, bool &aBool);
@@ -200,8 +200,8 @@ otError ParseAsBool(const char *aString, bool &aBool);
  * @param[in]  aString   The string to parse.
  * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid IPv6 address.
+ * @retval kErrorNone          The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid IPv6 address.
  *
  */
 inline otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
@@ -217,8 +217,8 @@ inline otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
  * @param[in]  aString   The string to parse.
  * @param[out] aPrefix   A reference to an `otIp6Prefix` to output the parsed IPv6 prefix.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid IPv6 prefix
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid IPv6 prefix
  *
  */
 otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
@@ -227,16 +227,16 @@ otError ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix);
 /**
  * This function parses a hex string into a byte array of fixed expected size.
  *
- * This function returns `OT_ERROR_NONE` only when the hex string contains exactly @p aSize bytes (after parsing). If
+ * This function returns `kErrorNone` only when the hex string contains exactly @p aSize bytes (after parsing). If
  * there are fewer or more bytes in hex string that @p aSize, the parsed bytes (up to @p aSize) are copied into the
- * `aBuffer` and `OT_ERROR_INVALID_ARGS` is returned.
+ * `aBuffer` and `kErrorInvalidArgs` is returned.
  *
  * @param[in]  aString   The string to parse.
  * @param[out] aBuffer   A pointer to a buffer to output the parsed byte sequence.
  * @param[in]  aSize     The expected size of byte sequence (number of bytes after parsing).
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid hex bytes and/or not @p aSize bytes.
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid hex bytes and/or not @p aSize bytes.
  *
  */
 otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
@@ -244,17 +244,17 @@ otError ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize);
 /**
  * This template function parses a hex string into a a given fixed size array.
  *
- * This function returns `OT_ERROR_NONE` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
+ * This function returns `kErrorNone` only when the hex string contains exactly @p kBufferSize bytes (after parsing).
  * If there are fewer or more bytes in hex string that @p kBufferSize, the parsed bytes (up to @p kBufferSize) are
- * copied into the `aBuffer` and `OT_ERROR_INVALID_ARGS` is returned.
+ * copied into the `aBuffer` and `kErrorInvalidArgs` is returned.
  *
  * @tparam kBufferSize   The byte array size (number of bytes).
  *
  * @param[in]  aString   The string to parse.
  * @param[out] aBuffer   A reference to a byte array to output the parsed byte sequence.
  *
- * @retval OT_ERROR_NONE          The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS  The string does not contain valid hex bytes and/or not @p aSize bytes.
+ * @retval kErrorNone         The string was parsed successfully.
+ * @retval kErrorInvalidArgs  The string does not contain valid hex bytes and/or not @p aSize bytes.
  *
  */
 template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aString, uint8_t (&aBuffer)[kBufferSize])
@@ -275,8 +275,8 @@ template <uint16_t kBufferSize> static otError ParseAsHexString(const char *aStr
  * @param[out]    aBuffer   A pointer to a buffer to output the parsed byte sequence.
  * @param[in]     aMode     Indicates parsing mode whether to allow truncation or not.
  *
- * @retval OT_ERROR_NONE         The string was parsed successfully.
- * @retval OT_ERROR_INVALID_ARGS The string does not contain valid format or too many bytes (if truncation not allowed)
+ * @retval kErrorNone        The string was parsed successfully.
+ * @retval kErrorInvalidArgs The string does not contain valid format or too many bytes (if truncation not allowed)
  *
  */
 otError ParseAsHexString(const char *       aString,

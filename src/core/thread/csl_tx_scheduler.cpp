@@ -42,16 +42,16 @@ CslTxScheduler::Callbacks::Callbacks(Instance &aInstance)
 {
 }
 
-inline otError CslTxScheduler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
-                                                               FrameContext &aContext,
-                                                               Child &       aChild)
+inline Error CslTxScheduler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
+                                                             FrameContext &aContext,
+                                                             Child &       aChild)
 {
     return Get<IndirectSender>().PrepareFrameForChild(aFrame, aContext, aChild);
 }
 
 inline void CslTxScheduler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                                               const FrameContext &aContext,
-                                                              otError             aError,
+                                                              Error               aError,
                                                               Child &             aChild)
 {
     Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
@@ -178,8 +178,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mCslTxChild) == OT_ERROR_NONE,
-                 frame = nullptr);
+    VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mCslTxChild) == kErrorNone, frame = nullptr);
     mCslTxMessage = mCslTxChild->GetIndirectMessage();
     VerifyOrExit(mCslTxMessage != nullptr, frame = nullptr);
 
@@ -217,7 +216,7 @@ exit:
     return frame;
 }
 
-void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError)
+void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 {
     Child *child = mCslTxChild;
 
@@ -232,16 +231,16 @@ exit:
     return;
 }
 
-void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild)
+void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild)
 {
     switch (aError)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
         aChild.ResetCslTxAttempts();
         aChild.ResetIndirectTxAttempts();
         break;
 
-    case OT_ERROR_NO_ACK:
+    case kErrorNoAck:
         aChild.IncrementCslTxAttempts();
 
         otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
@@ -256,8 +255,8 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError,
 
         OT_FALL_THROUGH;
 
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-    case OT_ERROR_ABORT:
+    case kErrorChannelAccessFailure:
+    case kErrorAbort:
 
         // Even if CSL tx attempts count reaches max, the message won't be
         // dropped until indirect tx attempts count reaches max. So here it

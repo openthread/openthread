@@ -66,11 +66,11 @@ public:
     /**
      * This method starts the Backbone TMF agent.
      *
-     * @retval OT_ERROR_NONE    Successfully started the CoAP service.
-     * @retval OT_ERROR_FAILED  Failed to start the Backbone TMF agent.
+     * @retval kErrorNone    Successfully started the CoAP service.
+     * @retval kErrorFailed  Failed to start the Backbone TMF agent.
      *
      */
-    otError Start(void);
+    Error Start(void);
 
     /**
      * This method returns whether @p aMessageInfo meets Backbone Thread Management Framework Addressing Rules.
@@ -98,7 +98,7 @@ public:
     void UnsubscribeMulticast(const Ip6::Address &aAddress);
 
 private:
-    static otError Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 
 } // namespace BackboneRouter

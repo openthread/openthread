@@ -66,7 +66,7 @@ MessagePool::MessagePool(Instance &aInstance)
 
 Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, Message::Priority aPriority)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     Message *message;
 
     VerifyOrExit((message = static_cast<Message *>(NewBuffer(aPriority))) != nullptr);
@@ -81,7 +81,7 @@ Message *MessagePool::New(Message::Type aType, uint16_t aReserveHeader, Message:
     SuccessOrExit(error = message->SetLength(0));
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         Free(message);
         message = nullptr;
@@ -158,7 +158,7 @@ void MessagePool::FreeBuffers(Buffer *aBuffer)
     }
 }
 
-otError MessagePool::ReclaimBuffers(Message::Priority aPriority)
+Error MessagePool::ReclaimBuffers(Message::Priority aPriority)
 {
     return Get<MeshForwarder>().EvictMessage(aPriority);
 }
@@ -201,9 +201,9 @@ Message::Settings::Settings(const otMessageSettings *aSettings)
 {
 }
 
-otError Message::ResizeMessage(uint16_t aLength)
+Error Message::ResizeMessage(uint16_t aLength)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     // add buffers
     Buffer * curBuffer = this;
@@ -215,7 +215,7 @@ otError Message::ResizeMessage(uint16_t aLength)
         if (curBuffer->GetNextBuffer() == nullptr)
         {
             curBuffer->SetNextBuffer(GetMessagePool()->NewBuffer(GetPriority()));
-            VerifyOrExit(curBuffer->GetNextBuffer() != nullptr, error = OT_ERROR_NO_BUFS);
+            VerifyOrExit(curBuffer->GetNextBuffer() != nullptr, error = kErrorNoBufs);
         }
 
         curBuffer = curBuffer->GetNextBuffer();
@@ -262,12 +262,12 @@ exit:
     return next;
 }
 
-otError Message::SetLength(uint16_t aLength)
+Error Message::SetLength(uint16_t aLength)
 {
-    otError  error              = OT_ERROR_NONE;
+    Error    error              = kErrorNone;
     uint16_t totalLengthRequest = GetReserved() + aLength;
 
-    VerifyOrExit(totalLengthRequest >= GetReserved(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(totalLengthRequest >= GetReserved(), error = kErrorInvalidArgs);
 
     SuccessOrExit(error = ResizeMessage(totalLengthRequest));
     GetMetadata().mLength = aLength;
@@ -331,13 +331,13 @@ bool Message::IsSubTypeMle(void) const
     return rval;
 }
 
-otError Message::SetPriority(Priority aPriority)
+Error Message::SetPriority(Priority aPriority)
 {
-    otError        error         = OT_ERROR_NONE;
+    Error          error         = kErrorNone;
     uint8_t        priority      = static_cast<uint8_t>(aPriority);
     PriorityQueue *priorityQueue = nullptr;
 
-    VerifyOrExit(priority < kNumPriorities, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(priority < kNumPriorities, error = kErrorInvalidArgs);
 
     VerifyOrExit(IsInAQueue(), GetMetadata().mPriority = priority);
     VerifyOrExit(GetMetadata().mPriority != priority);
@@ -376,9 +376,9 @@ const char *Message::PriorityToString(Priority aPriority)
     return kPriorityStrings[aPriority];
 }
 
-otError Message::AppendBytes(const void *aBuf, uint16_t aLength)
+Error Message::AppendBytes(const void *aBuf, uint16_t aLength)
 {
-    otError  error     = OT_ERROR_NONE;
+    Error    error     = kErrorNone;
     uint16_t oldLength = GetLength();
 
     SuccessOrExit(error = SetLength(GetLength() + aLength));
@@ -388,14 +388,14 @@ exit:
     return error;
 }
 
-otError Message::PrependBytes(const void *aBuf, uint16_t aLength)
+Error Message::PrependBytes(const void *aBuf, uint16_t aLength)
 {
-    otError error     = OT_ERROR_NONE;
+    Error   error     = kErrorNone;
     Buffer *newBuffer = nullptr;
 
     while (aLength > GetReserved())
     {
-        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(GetPriority())) != nullptr, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((newBuffer = GetMessagePool()->NewBuffer(GetPriority())) != nullptr, error = kErrorNoBufs);
 
         newBuffer->SetNextBuffer(GetNextBuffer());
         SetNextBuffer(newBuffer);
@@ -541,9 +541,9 @@ uint16_t Message::ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) cons
     return static_cast<uint16_t>(bufPtr - reinterpret_cast<uint8_t *>(aBuf));
 }
 
-otError Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
+Error Message::Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const
 {
-    return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? OT_ERROR_NONE : OT_ERROR_PARSE;
+    return (ReadBytes(aOffset, aBuf, aLength) == aLength) ? kErrorNone : kErrorParse;
 }
 
 bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const
@@ -632,12 +632,12 @@ uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, ui
 
 Message *Message::Clone(uint16_t aLength) const
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     Message *messageCopy;
     uint16_t offset;
 
     VerifyOrExit((messageCopy = GetMessagePool()->New(GetType(), GetReserved(), GetPriority())) != nullptr,
-                 error = OT_ERROR_NO_BUFS);
+                 error = kErrorNoBufs);
     SuccessOrExit(error = messageCopy->SetLength(aLength));
     CopyTo(0, 0, aLength, *messageCopy);
 

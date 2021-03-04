@@ -48,6 +48,7 @@ set(COMMON_SOURCES
     api/diags_api.cpp
     api/dns_api.cpp
     api/entropy_api.cpp
+    api/error_api.cpp
     api/heap_api.cpp
     api/icmp6_api.cpp
     api/instance_api.cpp
@@ -86,6 +87,7 @@ set(COMMON_SOURCES
     coap/coap_message.cpp
     coap/coap_secure.cpp
     common/crc16.cpp
+    common/error.cpp
     common/instance.cpp
     common/logging.cpp
     common/message.cpp

@@ -125,6 +125,7 @@ SOURCES_COMMON                                  = \
     api/diags_api.cpp                             \
     api/dns_api.cpp                               \
     api/entropy_api.cpp                           \
+    api/error_api.cpp                             \
     api/heap_api.cpp                              \
     api/icmp6_api.cpp                             \
     api/instance_api.cpp                          \
@@ -163,6 +164,7 @@ SOURCES_COMMON                                  = \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
     common/crc16.cpp                              \
+    common/error.cpp                              \
     common/instance.cpp                           \
     common/logging.cpp                            \
     common/message.cpp                            \
@@ -291,12 +293,14 @@ EXTRA_DIST                                 = \
 
 libopenthread_radio_a_SOURCES              = \
     api/diags_api.cpp                        \
+    api/error_api.cpp                        \
     api/heap_api.cpp                         \
     api/instance_api.cpp                     \
     api/link_raw_api.cpp                     \
     api/logging_api.cpp                      \
     api/random_noncrypto_api.cpp             \
     api/tasklet_api.cpp                      \
+    common/error.cpp                         \
     common/instance.cpp                      \
     common/logging.cpp                       \
     common/random_manager.cpp                \
@@ -369,6 +373,7 @@ HEADERS_COMMON                                  = \
     common/debug.hpp                              \
     common/encoding.hpp                           \
     common/equatable.hpp                          \
+    common/error.hpp                              \
     common/extension.hpp                          \
     common/instance.hpp                           \
     common/iterator_utils.hpp                     \

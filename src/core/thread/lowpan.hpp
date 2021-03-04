@@ -121,15 +121,15 @@ public:
      *
      * @param[in]  aLength  Number of bytes to advance.
      *
-     * @retval OT_ERROR_NONE     Enough buffer space is available to advance the requested number of bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to advance the requested number of bytes.
+     * @retval kErrorNone    Enough buffer space is available to advance the requested number of bytes.
+     * @retval kErrorNoBufs  Insufficient buffer space to advance the requested number of bytes.
      *
      */
-    otError Advance(uint8_t aLength)
+    Error Advance(uint8_t aLength)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
 
-        VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
         mWritePointer += aLength;
 
     exit:
@@ -141,15 +141,15 @@ public:
      *
      * @param[in]  aByte  Byte to write.
      *
-     * @retval  OT_ERROR_NONE     Successfully wrote the byte and updated the pointer.
-     * @retval  OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte.
+     * @retval  kErrorNone     Successfully wrote the byte and updated the pointer.
+     * @retval  kErrorNoBufs  Insufficient buffer space to write the byte.
      *
      */
-    otError Write(uint8_t aByte)
+    Error Write(uint8_t aByte)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
 
-        VerifyOrExit(CanWrite(sizeof(aByte)), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(CanWrite(sizeof(aByte)), error = kErrorNoBufs);
 
         *mWritePointer++ = aByte;
 
@@ -163,15 +163,15 @@ public:
      * @param[in]  aBuf     A pointer to the byte sequence.
      * @param[in]  aLength  Number of bytes to write.
      *
-     * @retval OT_ERROR_NONE     Successfully wrote the byte sequence and updated the pointer.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte sequence.
+     * @retval kErrorNone    Successfully wrote the byte sequence and updated the pointer.
+     * @retval kErrorNoBufs  Insufficient buffer space to write the byte sequence.
      *
      */
-    otError Write(const void *aBuf, uint8_t aLength)
+    Error Write(const void *aBuf, uint8_t aLength)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
 
-        VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
 
         memcpy(mWritePointer, aBuf, aLength);
         mWritePointer += aLength;
@@ -188,18 +188,18 @@ public:
      * @param[in]  aMessage  A message buffer.
      * @param[in]  aLength   Number of bytes to write.
      *
-     * @retval OT_ERROR_NONE     Successfully wrote the byte sequence and updated the pointer.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffer space to write the byte sequence.
+     * @retval kErrorNone    Successfully wrote the byte sequence and updated the pointer.
+     * @retval kErrorNoBufs  Insufficient buffer space to write the byte sequence.
      *
      */
-    otError Write(const Message &aMessage, uint8_t aLength)
+    Error Write(const Message &aMessage, uint8_t aLength)
     {
-        otError error = OT_ERROR_NONE;
-        int     rval;
+        Error error = kErrorNone;
+        int   rval;
 
         OT_UNUSED_VARIABLE(rval);
 
-        VerifyOrExit(CanWrite(aLength), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(CanWrite(aLength), error = kErrorNoBufs);
 
         rval = aMessage.ReadBytes(aMessage.GetOffset(), mWritePointer, aLength);
         OT_ASSERT(rval == aLength);
@@ -254,10 +254,7 @@ public:
      * @returns The size of the compressed header in bytes.
      *
      */
-    otError Compress(Message &           aMessage,
-                     const Mac::Address &aMacSource,
-                     const Mac::Address &aMacDest,
-                     BufferWriter &      aBuf);
+    Error Compress(Message &aMessage, const Mac::Address &aMacSource, const Mac::Address &aMacDest, BufferWriter &aBuf);
 
     /**
      * This method decompresses a LOWPAN_IPHC header.
@@ -361,32 +358,32 @@ private:
         kUdpPortMask     = 3 << 0,
     };
 
-    otError Compress(Message &           aMessage,
-                     const Mac::Address &aMacSource,
-                     const Mac::Address &aMacDest,
-                     BufferWriter &      aBuf,
-                     uint8_t &           aHeaderDepth);
+    Error Compress(Message &           aMessage,
+                   const Mac::Address &aMacSource,
+                   const Mac::Address &aMacDest,
+                   BufferWriter &      aBuf,
+                   uint8_t &           aHeaderDepth);
 
-    otError CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
-    otError CompressSourceIid(const Mac::Address &aMacAddr,
-                              const Ip6::Address &aIpAddr,
-                              const Context &     aContext,
-                              uint16_t &          aHcCtl,
-                              BufferWriter &      aBuf);
-    otError CompressDestinationIid(const Mac::Address &aMacAddr,
-                                   const Ip6::Address &aIpAddr,
-                                   const Context &     aContext,
-                                   uint16_t &          aHcCtl,
-                                   BufferWriter &      aBuf);
-    otError CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf);
-    otError CompressUdp(Message &aMessage, BufferWriter &aBuf);
+    Error CompressExtensionHeader(Message &aMessage, BufferWriter &aBuf, uint8_t &aNextHeader);
+    Error CompressSourceIid(const Mac::Address &aMacAddr,
+                            const Ip6::Address &aIpAddr,
+                            const Context &     aContext,
+                            uint16_t &          aHcCtl,
+                            BufferWriter &      aBuf);
+    Error CompressDestinationIid(const Mac::Address &aMacAddr,
+                                 const Ip6::Address &aIpAddr,
+                                 const Context &     aContext,
+                                 uint16_t &          aHcCtl,
+                                 BufferWriter &      aBuf);
+    Error CompressMulticast(const Ip6::Address &aIpAddr, uint16_t &aHcCtl, BufferWriter &aBuf);
+    Error CompressUdp(Message &aMessage, BufferWriter &aBuf);
 
-    int     DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
-    int     DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
-    otError DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
+    int   DecompressExtensionHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength);
+    int   DecompressUdpHeader(Message &aMessage, const uint8_t *aBuf, uint16_t aBufLength, uint16_t aDatagramLength);
+    Error DispatchToNextHeader(uint8_t aDispatch, uint8_t &aNextHeader);
 
-    static void    CopyContext(const Context &aContext, Ip6::Address &aAddress);
-    static otError ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
+    static void  CopyContext(const Context &aContext, Ip6::Address &aAddress);
+    static Error ComputeIid(const Mac::Address &aMacAddr, const Context &aContext, Ip6::Address &aIpAddress);
 };
 
 /**
@@ -431,11 +428,11 @@ public:
      * @param[in]  aFrameLength  The length of the frame.
      * @param[out] aHeaderLength A reference to a variable to output the parsed header length (on success).
      *
-     * @retval OT_ERROR_NONE     Mesh Header parsed successfully.
-     * @retval OT_ERROR_PARSE    Mesh Header could not be parsed.
+     * @retval kErrorNone     Mesh Header parsed successfully.
+     * @retval kErrorParse    Mesh Header could not be parsed.
      *
      */
-    otError ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
+    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     /**
      * This method parses the Mesh Header from a given message.
@@ -444,11 +441,11 @@ public:
      *
      * @param[in]  aMessage    The message to read from.
      *
-     * @retval OT_ERROR_NONE   Mesh Header parsed successfully.
-     * @retval OT_ERROR_PARSE  Mesh Header could not be parsed.
+     * @retval kErrorNone   Mesh Header parsed successfully.
+     * @retval kErrorParse  Mesh Header could not be parsed.
      *
      */
-    otError ParseFrom(const Message &aMessage);
+    Error ParseFrom(const Message &aMessage);
 
     /**
      * This method parses the Mesh Header from a given message.
@@ -458,11 +455,11 @@ public:
      * @param[in]  aMessage       The message to read from.
      * @param[out] aHeaderLength  A reference to a variable to output the parsed header length (on success).
      *
-     * @retval OT_ERROR_NONE   Mesh Header parsed successfully.
-     * @retval OT_ERROR_PARSE  Mesh Header could not be parsed.
+     * @retval kErrorNone   Mesh Header parsed successfully.
+     * @retval kErrorParse  Mesh Header could not be parsed.
      *
      */
-    otError ParseFrom(const Message &aMessage, uint16_t &aHeaderLength);
+    Error ParseFrom(const Message &aMessage, uint16_t &aHeaderLength);
 
     /**
      * This method returns the the Mesh Header length when written to a frame.
@@ -606,11 +603,11 @@ public:
      * @param[in]  aFrameLength    The length of the frame.
      * @param[out] aHeaderLength   A reference to a variable to output the parsed header length (on success).
      *
-     * @retval OT_ERROR_NONE     Fragment Header parsed successfully.
-     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
+     * @retval kErrorNone     Fragment Header parsed successfully.
+     * @retval kErrorParse    Fragment header could not be parsed from @p aFrame.
      *
      */
-    otError ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
+    Error ParseFrom(const uint8_t *aFrame, uint16_t aFrameLength, uint16_t &aHeaderLength);
 
     /**
      * This method parses the Fragment Header from a message.
@@ -619,11 +616,11 @@ public:
      * @param[in]  aOffset       The offset within the message to start reading from.
      * @param[out] aHeaderLength A reference to a variable to output the parsed header length (on success).
      *
-     * @retval OT_ERROR_NONE     Fragment Header parsed successfully.
-     * @retval OT_ERROR_PARSE    Fragment header could not be parsed from @p aFrame.
+     * @retval kErrorNone     Fragment Header parsed successfully.
+     * @retval kErrorParse    Fragment header could not be parsed from @p aFrame.
      *
      */
-    otError ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t &aHeaderLength);
+    Error ParseFrom(const Message &aMessage, uint16_t aOffset, uint16_t &aHeaderLength);
 
     /**
      * This method returns the Datagram Size value.

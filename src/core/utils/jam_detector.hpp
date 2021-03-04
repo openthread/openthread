@@ -77,20 +77,20 @@ public:
      * @param[in]  aHandler             A pointer to a function called when jamming is detected.
      * @param[in]  aContext             A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE            Successfully started the jamming detection.
-     * @retval OT_ERROR_ALREADY         Jam detection has been started before.
+     * @retval kErrorNone            Successfully started the jamming detection.
+     * @retval kErrorAlready         Jam detection has been started before.
      *
      */
-    otError Start(Handler aHandler, void *aContext);
+    Error Start(Handler aHandler, void *aContext);
 
     /**
      * Stop the jamming detection.
      *
-     * @retval OT_ERROR_NONE            Successfully stopped the jamming detection.
-     * @retval OT_ERROR_ALREADY         Jam detection is already stopped.
+     * @retval kErrorNone            Successfully stopped the jamming detection.
+     * @retval kErrorAlready         Jam detection is already stopped.
      *
      */
-    otError Stop(void);
+    Error Stop(void);
 
     /**
      * Get the Jam Detection Status
@@ -126,11 +126,11 @@ public:
      *
      * @param[in]  aWindow            The Jam Detection window (valid range is 1 to 63)
      *
-     * @retval OT_ERROR_NONE          Successfully set the window.
-     * @retval OT_ERROR_INVALID_ARGS  The given input parameter not within valid range (1-63)
+     * @retval kErrorNone          Successfully set the window.
+     * @retval kErrorInvalidArgs   The given input parameter not within valid range (1-63)
      *
      */
-    otError SetWindow(uint8_t aWindow);
+    Error SetWindow(uint8_t aWindow);
 
     /**
      * Get the Jam Detection Detection Window (in seconds).
@@ -148,11 +148,11 @@ public:
      * @param[in]  aBusyPeriod          The Jam Detection busy period (should be non-zero and
                                         less than or equal to Jam Detection Window)
      *
-     * @retval OT_ERROR_NONE            Successfully set the window.
-     * @retval OT_ERROR_INVALID_ARGS    The given input is not within the valid range.
+     * @retval kErrorNone           Successfully set the window.
+     * @retval kErrorInvalidArgs    The given input is not within the valid range.
      *
      */
-    otError SetBusyPeriod(uint8_t aBusyPeriod);
+    Error SetBusyPeriod(uint8_t aBusyPeriod);
 
     /**
      * Get the Jam Detection Busy Period (in seconds)

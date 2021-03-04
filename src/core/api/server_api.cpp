@@ -73,10 +73,10 @@ otError otServerRemoveService(otInstance *   aInstance,
 
 otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
     error = instance.Get<NetworkData::Local>().GetNextService(*aIterator,
                                                               *static_cast<NetworkData::ServiceConfig *>(aConfig));
@@ -91,7 +91,7 @@ otError otServerRegister(otInstance *aInstance)
 
     instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

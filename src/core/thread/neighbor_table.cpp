@@ -178,9 +178,9 @@ exit:
     return neighbor;
 }
 
-otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     int16_t index;
 
     // Non-negative iterator value gives the Child index into child table
@@ -226,7 +226,7 @@ otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Ne
     }
 
     aIterator = -index;
-    error     = OT_ERROR_NOT_FOUND;
+    error     = kErrorNotFound;
 
 exit:
     return error;
@@ -236,9 +236,9 @@ exit:
 
 #if OPENTHREAD_MTD
 
-otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT);
 
@@ -247,7 +247,7 @@ otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Ne
 
     aNeighInfo.SetFrom(Get<Mle::Mle>().GetParent());
     aNeighInfo.mIsChild = false;
-    error               = OT_ERROR_NONE;
+    error               = kErrorNone;
 
 exit:
     return error;

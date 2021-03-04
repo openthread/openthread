@@ -38,16 +38,16 @@
 namespace ot {
 namespace Tmf {
 
-otError TmfAgent::Start(void)
+Error TmfAgent::Start(void)
 {
     return Coap::Start(kUdpPort, OT_NETIF_THREAD);
 }
 
-otError TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
+Error TmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
     OT_UNUSED_VARIABLE(aMessage);
 
-    return static_cast<TmfAgent *>(aContext)->IsTmfMessage(aMessageInfo) ? OT_ERROR_NONE : OT_ERROR_NOT_TMF;
+    return static_cast<TmfAgent *>(aContext)->IsTmfMessage(aMessageInfo) ? kErrorNone : kErrorNotTmf;
 }
 
 bool TmfAgent::IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const

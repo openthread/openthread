@@ -168,12 +168,12 @@ uint16_t ChildTable::GetNumChildren(Child::StateFilter aFilter) const
     return numChildren;
 }
 
-otError ChildTable::SetMaxChildrenAllowed(uint16_t aMaxChildren)
+Error ChildTable::SetMaxChildrenAllowed(uint16_t aMaxChildren)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aMaxChildren > 0 && aMaxChildren <= kMaxChildren, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(!HasChildren(Child::kInStateAnyExceptInvalid), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aMaxChildren > 0 && aMaxChildren <= kMaxChildren, error = kErrorInvalidArgs);
+    VerifyOrExit(!HasChildren(Child::kInStateAnyExceptInvalid), error = kErrorInvalidState);
 
     mMaxChildrenAllowed = aMaxChildren;
 
@@ -181,9 +181,9 @@ exit:
     return error;
 }
 
-otError ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
+Error ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     Child *  child;
     uint16_t rloc16;
 
@@ -194,7 +194,7 @@ otError ChildTable::GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo)
 
     rloc16 = Get<Mac::Mac>().GetShortAddress() | aChildId;
     child  = FindChild(rloc16, Child::kInStateValidOrRestoring);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(child != nullptr, error = kErrorNotFound);
 
     aChildInfo.SetFrom(*child);
 
@@ -202,13 +202,13 @@ exit:
     return error;
 }
 
-otError ChildTable::GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo)
+Error ChildTable::GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Child * child = nullptr;
+    Error  error = kErrorNone;
+    Child *child = nullptr;
 
     child = GetChildAtIndex(aChildIndex);
-    VerifyOrExit((child != nullptr) && child->IsStateValidOrRestoring(), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((child != nullptr) && child->IsStateValidOrRestoring(), error = kErrorNotFound);
 
     aChildInfo.SetFrom(*child);
 
@@ -218,7 +218,7 @@ exit:
 
 void ChildTable::Restore(void)
 {
-    otError  error          = OT_ERROR_NONE;
+    Error    error          = kErrorNone;
     bool     foundDuplicate = false;
     uint16_t numChildren    = 0;
 
@@ -230,7 +230,7 @@ void ChildTable::Restore(void)
 
         if (child == nullptr)
         {
-            VerifyOrExit((child = GetNewChild()) != nullptr, error = OT_ERROR_NO_BUFS);
+            VerifyOrExit((child = GetNewChild()) != nullptr, error = kErrorNoBufs);
         }
         else
         {
@@ -253,7 +253,7 @@ void ChildTable::Restore(void)
 
 exit:
 
-    if (foundDuplicate || (numChildren > GetMaxChildren()) || (error != OT_ERROR_NONE))
+    if (foundDuplicate || (numChildren > GetMaxChildren()) || (error != kErrorNone))
     {
         // If there is any error, e.g., there are more saved children
         // in non-volatile settings than could be restored or there are
@@ -277,7 +277,7 @@ void ChildTable::RemoveStoredChild(const Child &aChild)
     }
 }
 
-otError ChildTable::StoreChild(const Child &aChild)
+Error ChildTable::StoreChild(const Child &aChild)
 {
     Settings::ChildInfo childInfo;
 

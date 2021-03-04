@@ -127,7 +127,7 @@ void RadioSelector::UpdateOnReceive(Neighbor &aNeighbor, Mac::RadioType aRadioTy
     }
 }
 
-void RadioSelector::UpdateOnSendDone(Mac::TxFrame &aFrame, otError aTxError)
+void RadioSelector::UpdateOnSendDone(Mac::TxFrame &aFrame, Error aTxError)
 {
     otLogLevel     logLevel  = OT_LOG_LEVEL_INFO;
     Mac::RadioType radioType = aFrame.GetRadioType();
@@ -140,7 +140,7 @@ void RadioSelector::UpdateOnSendDone(Mac::TxFrame &aFrame, otError aTxError)
         // TREL radio link uses deferred ack model. We ignore
         // `SendDone` event from `Mac` layer with success status and
         // wait for deferred ack callback.
-        VerifyOrExit(aTxError != OT_ERROR_NONE);
+        VerifyOrExit(aTxError != kErrorNone);
     }
 #endif
 
@@ -152,15 +152,14 @@ void RadioSelector::UpdateOnSendDone(Mac::TxFrame &aFrame, otError aTxError)
 
     if (neighbor->GetSupportedRadioTypes().Contains(radioType))
     {
-        logLevel =
-            UpdatePreference(*neighbor, radioType,
-                             (aTxError == OT_ERROR_NONE) ? kPreferenceChangeOnTxSuccess : kPreferenceChangeOnTxError);
+        logLevel = UpdatePreference(
+            *neighbor, radioType, (aTxError == kErrorNone) ? kPreferenceChangeOnTxSuccess : kPreferenceChangeOnTxError);
 
-        Log(logLevel, (aTxError == OT_ERROR_NONE) ? "UpdateOnTxSucc" : "UpdateOnTxErr", radioType, *neighbor);
+        Log(logLevel, (aTxError == kErrorNone) ? "UpdateOnTxSucc" : "UpdateOnTxErr", radioType, *neighbor);
     }
     else
     {
-        VerifyOrExit(aTxError == OT_ERROR_NONE);
+        VerifyOrExit(aTxError == kErrorNone);
         neighbor->AddSupportedRadioType(radioType);
         neighbor->SetRadioPreference(radioType, kInitPreference);
 
@@ -172,7 +171,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void RadioSelector::UpdateOnDeferredAck(Neighbor &aNeighbor, otError aTxError, bool &aAllowNeighborRemove)
+void RadioSelector::UpdateOnDeferredAck(Neighbor &aNeighbor, Error aTxError, bool &aAllowNeighborRemove)
 {
     otLogLevel logLevel = OT_LOG_LEVEL_INFO;
 
@@ -181,10 +180,10 @@ void RadioSelector::UpdateOnDeferredAck(Neighbor &aNeighbor, otError aTxError, b
     if (aNeighbor.GetSupportedRadioTypes().Contains(Mac::kRadioTypeTrel))
     {
         logLevel = UpdatePreference(aNeighbor, Mac::kRadioTypeTrel,
-                                    (aTxError == OT_ERROR_NONE) ? kPreferenceChangeOnDeferredAckSuccess
-                                                                : kPreferenceChangeOnDeferredAckTimeout);
+                                    (aTxError == kErrorNone) ? kPreferenceChangeOnDeferredAckSuccess
+                                                             : kPreferenceChangeOnDeferredAckTimeout);
 
-        Log(logLevel, (aTxError == OT_ERROR_NONE) ? "UpdateOnDefAckSucc" : "UpdateOnDefAckFail", Mac::kRadioTypeTrel,
+        Log(logLevel, (aTxError == kErrorNone) ? "UpdateOnDefAckSucc" : "UpdateOnDefAckFail", Mac::kRadioTypeTrel,
             aNeighbor);
 
         // In case of deferred ack timeout, we check if the neighbor
@@ -192,7 +191,7 @@ void RadioSelector::UpdateOnDeferredAck(Neighbor &aNeighbor, otError aTxError, b
         // tx. If it it does, we set `aAllowNeighborRemove` to `false`
         // to ensure neighbor is not removed yet.
 
-        VerifyOrExit(aTxError != OT_ERROR_NONE);
+        VerifyOrExit(aTxError != kErrorNone);
 
         for (Mac::RadioType radio : sRadioSelectionOrder)
         {
@@ -206,7 +205,7 @@ void RadioSelector::UpdateOnDeferredAck(Neighbor &aNeighbor, otError aTxError, b
     }
     else
     {
-        VerifyOrExit(aTxError == OT_ERROR_NONE);
+        VerifyOrExit(aTxError == kErrorNone);
         aNeighbor.AddSupportedRadioType(Mac::kRadioTypeTrel);
         aNeighbor.SetRadioPreference(Mac::kRadioTypeTrel, kInitPreference);
 

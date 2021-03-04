@@ -124,7 +124,7 @@ Mac::Mac(Instance &aInstance)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    , mTxError(OT_ERROR_NONE)
+    , mTxError(kErrorNone)
 #endif
 {
     ExtAddress randomExtAddress;
@@ -149,12 +149,12 @@ Mac::Mac(Instance &aInstance)
     SetShortAddress(GetShortAddress());
 }
 
-otError Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
+Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = kErrorBusy);
 
     mActiveScanHandler  = aHandler;
     mScanHandlerContext = aContext;
@@ -170,12 +170,12 @@ exit:
     return error;
 }
 
-otError Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
+Error Mac::EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = OT_ERROR_BUSY);
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(!IsActiveScanInProgress() && !IsEnergyScanInProgress(), error = kErrorBusy);
 
     mEnergyScanHandler  = aHandler;
     mScanHandlerContext = aContext;
@@ -231,9 +231,9 @@ bool Mac::IsInTransmitState(void) const
     return retval;
 }
 
-otError Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
+Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
 {
-    otError              error = OT_ERROR_NONE;
+    Error                error = kErrorNone;
     Address              address;
     const Beacon *       beacon        = nullptr;
     const BeaconPayload *beaconPayload = nullptr;
@@ -241,14 +241,14 @@ otError Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, Active
 
     memset(&aResult, 0, sizeof(ActiveScanResult));
 
-    VerifyOrExit(aBeaconFrame != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aBeaconFrame != nullptr, error = kErrorInvalidArgs);
 
-    VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = OT_ERROR_PARSE);
+    VerifyOrExit(aBeaconFrame->GetType() == Frame::kFcfFrameBeacon, error = kErrorParse);
     SuccessOrExit(error = aBeaconFrame->GetSrcAddr(address));
-    VerifyOrExit(address.IsExtended(), error = OT_ERROR_PARSE);
+    VerifyOrExit(address.IsExtended(), error = kErrorParse);
     aResult.mExtAddress = address.GetExtended();
 
-    if (OT_ERROR_NONE != aBeaconFrame->GetSrcPanId(aResult.mPanId))
+    if (kErrorNone != aBeaconFrame->GetSrcPanId(aResult.mPanId))
     {
         IgnoreError(aBeaconFrame->GetDstPanId(aResult.mPanId));
     }
@@ -268,7 +268,7 @@ otError Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, Active
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
         IgnoreError(static_cast<NetworkName &>(aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
-        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = OT_ERROR_PARSE);
+        VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
         aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
     }
 
@@ -278,11 +278,11 @@ exit:
     return error;
 }
 
-otError Mac::UpdateScanChannel(void)
+Error Mac::UpdateScanChannel(void)
 {
-    otError error;
+    Error error;
 
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_ABORT);
+    VerifyOrExit(IsEnabled(), error = kErrorAbort);
 
     error = mScanChannelMask.GetNextChannel(mScanChannel);
 
@@ -292,7 +292,7 @@ exit:
 
 void Mac::PerformActiveScan(void)
 {
-    if (UpdateScanChannel() == OT_ERROR_NONE)
+    if (UpdateScanChannel() == kErrorNone)
     {
         // If there are more channels to scan, send the beacon request.
         BeginTransmit();
@@ -328,7 +328,7 @@ exit:
 
 void Mac::PerformEnergyScan(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     SuccessOrExit(error = UpdateScanChannel());
 
@@ -348,7 +348,7 @@ void Mac::PerformEnergyScan(void)
 
 exit:
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         FinishOperation();
 
@@ -420,11 +420,11 @@ exit:
     return;
 }
 
-otError Mac::SetPanChannel(uint8_t aChannel)
+Error Mac::SetPanChannel(uint8_t aChannel)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
     SuccessOrExit(Get<Notifier>().Update(mPanChannel, aChannel, kEventThreadChannelChanged));
 
@@ -440,11 +440,11 @@ exit:
     return error;
 }
 
-otError Mac::SetTemporaryChannel(uint8_t aChannel)
+Error Mac::SetTemporaryChannel(uint8_t aChannel)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mSupportedChannelMask.ContainsChannel(aChannel), error = kErrorInvalidArgs);
 
     mUsingTemporaryChannel = true;
     mRadioChannel          = aChannel;
@@ -473,7 +473,7 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
     IgnoreError(Get<Notifier>().Update(mSupportedChannelMask, newMask, kEventSupportedChannelMaskChanged));
 }
 
-otError Mac::SetNetworkName(const char *aNameString)
+Error Mac::SetNetworkName(const char *aNameString)
 {
     // When setting Network Name from a string, we treat it as `NameData`
     // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
@@ -481,12 +481,12 @@ otError Mac::SetNetworkName(const char *aNameString)
     // the name's length and ensure that the name fits in `kMaxSize`
     // chars. The `+ 1` ensures that a `aNameString` with length
     // longer than `kMaxSize` is correctly rejected (returning error
-    // `OT_ERROR_INVALID_ARGS`).
+    // `kErrorInvalidArgs`).
 
-    otError  error;
+    Error    error;
     NameData data(aNameString, NetworkName::kMaxSize + 1);
 
-    VerifyOrExit(IsValidUtf8String(aNameString), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
 
     error = SetNetworkName(data);
 
@@ -494,14 +494,14 @@ exit:
     return error;
 }
 
-otError Mac::SetNetworkName(const NameData &aNameData)
+Error Mac::SetNetworkName(const NameData &aNameData)
 {
-    otError error = mNetworkName.Set(aNameData);
+    Error error = mNetworkName.Set(aNameData);
 
-    if (error == OT_ERROR_ALREADY)
+    if (error == kErrorAlready)
     {
         Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
-        error = OT_ERROR_NONE;
+        error = kErrorNone;
         ExitNow();
     }
 
@@ -513,7 +513,7 @@ exit:
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-otError Mac::SetDomainName(const char *aNameString)
+Error Mac::SetDomainName(const char *aNameString)
 {
     // When setting Domain Name from a string, we treat it as `NameData`
     // with `kMaxSize + 1` chars. `DomainName::Set(data)` will look
@@ -521,12 +521,12 @@ otError Mac::SetDomainName(const char *aNameString)
     // the name's length and ensure that the name fits in `kMaxSize`
     // chars. The `+ 1` ensures that a `aNameString` with length
     // longer than `kMaxSize` is correctly rejected (returning error
-    // `OT_ERROR_INVALID_ARGS`).
+    // `kErrorInvalidArgs`).
 
-    otError  error;
+    Error    error;
     NameData data(aNameString, DomainName::kMaxSize + 1);
 
-    VerifyOrExit(IsValidUtf8String(aNameString), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
 
     error = SetDomainName(data);
 
@@ -534,13 +534,13 @@ exit:
     return error;
 }
 
-otError Mac::SetDomainName(const NameData &aNameData)
+Error Mac::SetDomainName(const NameData &aNameData)
 {
-    otError error = mDomainName.Set(aNameData);
+    Error error = mDomainName.Set(aNameData);
 
-    if (error == OT_ERROR_ALREADY)
+    if (error == kErrorAlready)
     {
-        error = OT_ERROR_NONE;
+        error = kErrorNone;
     }
 
     return error;
@@ -599,14 +599,13 @@ exit:
 #endif
 #endif // OPENTHREAD_FTD
 
-otError Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
+Error Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aOobFrame != nullptr, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mPendingTransmitOobFrame && (mOperation != kOperationTransmitOutOfBandFrame),
-                 error = OT_ERROR_ALREADY);
+    VerifyOrExit(aOobFrame != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(!mPendingTransmitOobFrame && (mOperation != kOperationTransmitOutOfBandFrame), error = kErrorAlready);
 
     mOobFrame = static_cast<TxFrame *>(aOobFrame);
 
@@ -616,12 +615,12 @@ exit:
     return error;
 }
 
-otError Mac::RequestDataPollTransmission(void)
+Error Mac::RequestDataPollTransmission(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!mPendingTransmitPoll && (mOperation != kOperationTransmitPoll), error = OT_ERROR_ALREADY);
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
+    VerifyOrExit(!mPendingTransmitPoll && (mOperation != kOperationTransmitPoll), error = kErrorAlready);
 
     // We ensure data frame and data poll tx requests are handled in the
     // order they are requested. So if we have a pending direct data frame
@@ -1149,7 +1148,7 @@ void Mac::BeginTransmit(void)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     mTxPendingRadioLinks.Clear();
-    mTxError = OT_ERROR_ABORT;
+    mTxError = kErrorAbort;
 #endif
 
     VerifyOrExit(IsEnabled());
@@ -1300,15 +1299,15 @@ void Mac::BeginTransmit(void)
     mTxPendingRadioLinks = txFrames.GetSelectedRadioTypes();
 
     // If the "required radio type set" is empty,`mTxError` starts as
-    // `OT_ERROR_ABORT`. In this case, successful tx over any radio
+    // `kErrorAbort`. In this case, successful tx over any radio
     // link is sufficient for overall tx to be considered successful.
     // When the "required radio type set" is not empty, `mTxError`
-    // starts as `OT_ERROR_NONE` and we update it if tx over any link
+    // starts as `kErrorNone` and we update it if tx over any link
     // in the required set fails.
 
     if (!txFrames.GetRequiredRadioTypes().IsEmpty())
     {
-        mTxError = OT_ERROR_NONE;
+        mTxError = kErrorNone;
     }
 #endif
 
@@ -1338,7 +1337,7 @@ exit:
 
         frame = &txFrames.GetBroadcastTxFrame();
         frame->SetLength(0);
-        HandleTransmitDone(*frame, nullptr, OT_ERROR_ABORT);
+        HandleTransmitDone(*frame, nullptr, kErrorAbort);
     }
 }
 
@@ -1365,7 +1364,7 @@ void Mac::RecordCcaStatus(bool aCcaSuccess, uint8_t aChannel)
 
 void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
                                     const RxFrame *aAckFrame,
-                                    otError        aError,
+                                    Error          aError,
                                     uint8_t        aRetryCount,
                                     bool           aWillRetx)
 {
@@ -1390,12 +1389,12 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
         switch (aError)
         {
-        case OT_ERROR_NO_ACK:
+        case kErrorNoAck:
             frameTxSuccess = false;
 
             OT_FALL_THROUGH;
 
-        case OT_ERROR_NONE:
+        case kErrorNone:
             neighbor->GetLinkInfo().AddFrameTxStatus(frameTxSuccess);
             break;
 
@@ -1406,7 +1405,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     // Log frame transmission failure.
 
-    if (aError != OT_ERROR_NONE)
+    if (aError != kErrorNone)
     {
         LogFrameTxFailure(aFrame, aError, aRetryCount, aWillRetx);
         otDumpDebgMac("TX ERR", aFrame.GetHeader(), 16);
@@ -1425,7 +1424,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     // Update neighbor's RSSI link info from the received Ack.
 
-    if ((aError == OT_ERROR_NONE) && ackRequested && (aAckFrame != nullptr) && (neighbor != nullptr))
+    if ((aError == kErrorNone) && ackRequested && (aAckFrame != nullptr) && (neighbor != nullptr))
     {
         neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
@@ -1447,12 +1446,12 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
 
     mCounters.mTxTotal++;
 
-    if (aError == OT_ERROR_ABORT)
+    if (aError == kErrorAbort)
     {
         mCounters.mTxErrAbort++;
     }
 
-    if (aError == OT_ERROR_CHANNEL_ACCESS_FAILURE)
+    if (aError == kErrorChannelAccessFailure)
     {
         mCounters.mTxErrBusyChannel++;
     }
@@ -1461,7 +1460,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     {
         mCounters.mTxAckRequested++;
 
-        if (aError == OT_ERROR_NONE)
+        if (aError == kErrorNone)
         {
             mCounters.mTxAcked++;
         }
@@ -1484,7 +1483,7 @@ exit:
     return;
 }
 
-void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
+void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (!aFrame.IsEmpty()
@@ -1522,10 +1521,10 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
         // Verify Enh-ACK integrity by checking its MIC
-        if ((aError == OT_ERROR_NONE) && (aAckFrame != nullptr) &&
-            (ProcessEnhAckSecurity(aFrame, *aAckFrame) != OT_ERROR_NONE))
+        if ((aError == kErrorNone) && (aAckFrame != nullptr) &&
+            (ProcessEnhAckSecurity(aFrame, *aAckFrame) != kErrorNone))
         {
-            aError = OT_ERROR_NO_ACK;
+            aError = kErrorNoAck;
         }
 #endif
     }
@@ -1544,10 +1543,10 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
             // If the "required radio type set" is empty, successful
             // tx over any radio link is sufficient for overall tx to
             // be considered successful. In this case `mTxError`
-            // starts as `OT_ERROR_ABORT` and we update it only when
-            // it is not already `OT_ERROR_NONE`.
+            // starts as `kErrorAbort` and we update it only when
+            // it is not already `kErrorNone`.
 
-            if (mTxError != OT_ERROR_NONE)
+            if (mTxError != kErrorNone)
             {
                 mTxError = aError;
             }
@@ -1557,13 +1556,13 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
             // When the "required radio type set" is not empty we
             // expect the successful frame tx on all links in this set
             // to consider the overall tx successful. In this case,
-            // `mTxError` starts as `OT_ERROR_NONE` and we update it
+            // `mTxError` starts as `kErrorNone` and we update it
             // if tx over any link in the set fails.
 
-            if (requriedRadios.Contains(radio) && (aError != OT_ERROR_NONE))
+            if (requriedRadios.Contains(radio) && (aError != kErrorNone))
             {
                 otLogDebgMac("Frame tx failed on required radio link %s with error %s", RadioTypeToString(radio),
-                             otThreadErrorToString(aError));
+                             ErrorToString(aError));
 
                 mTxError = aError;
             }
@@ -1597,7 +1596,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
     case kOperationTransmitPoll:
         OT_ASSERT(aFrame.IsEmpty() || aFrame.GetAckRequest());
 
-        if ((aError == OT_ERROR_NONE) && (aAckFrame != nullptr))
+        if ((aError == kErrorNone) && (aAckFrame != nullptr))
         {
             bool framePending = aAckFrame->GetFramePending();
 
@@ -1618,7 +1617,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
     case kOperationTransmitDataDirect:
         mCounters.mTxData++;
 
-        if (aError != OT_ERROR_NONE)
+        if (aError != kErrorNone)
         {
             mCounters.mTxDirectMaxRetryExpiry++;
         }
@@ -1633,7 +1632,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        if (aError == OT_ERROR_NONE && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
+        if (aError == kErrorNone && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
             aFrame.GetSecurityEnabled() && aAckFrame != nullptr)
         {
             Get<DataPollSender>().ProcessFrame(*aAckFrame);
@@ -1657,7 +1656,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError
     case kOperationTransmitDataIndirect:
         mCounters.mTxData++;
 
-        if (aError != OT_ERROR_NONE)
+        if (aError != kErrorNone)
         {
             mCounters.mTxIndirectMaxRetryExpiry++;
         }
@@ -1738,10 +1737,10 @@ void Mac::HandleTimer(void)
     }
 }
 
-otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
+Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
     KeyManager &      keyManager = Get<KeyManager>();
-    otError           error      = OT_ERROR_SECURITY;
+    Error             error      = kErrorSecurity;
     uint8_t           securityLevel;
     uint8_t           keyIdMode;
     uint32_t          frameCounter;
@@ -1750,7 +1749,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
     const Key *       macKey;
     const ExtAddress *extAddress;
 
-    VerifyOrExit(aFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
+    VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
 
     IgnoreError(aFrame.GetSecurityLevel(securityLevel));
     VerifyOrExit(securityLevel == Frame::kSecEncMic32);
@@ -1813,7 +1812,7 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
 #endif
 
                 // If frame counter is one off, then frame is a duplicate.
-                VerifyOrExit((frameCounter + 1) != neighborFrameCounter, error = OT_ERROR_DUPLICATED);
+                VerifyOrExit((frameCounter + 1) != neighborFrameCounter, error = kErrorDuplicated);
 
                 VerifyOrExit(frameCounter >= neighborFrameCounter);
             }
@@ -1867,16 +1866,16 @@ otError Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Ne
         }
     }
 
-    error = OT_ERROR_NONE;
+    error = kErrorNone;
 
 exit:
     return error;
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
+Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 {
-    otError     error = OT_ERROR_SECURITY;
+    Error       error = kErrorSecurity;
     uint8_t     securityLevel;
     uint8_t     txKeyId;
     uint8_t     ackKeyId;
@@ -1888,14 +1887,14 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     KeyManager &keyManager = Get<KeyManager>();
     const Key * macKey;
 
-    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = OT_ERROR_NONE);
+    VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());
 
     IgnoreError(aAckFrame.GetSecurityLevel(securityLevel));
     VerifyOrExit(securityLevel == Frame::kSecEncMic32);
 
     IgnoreError(aAckFrame.GetKeyIdMode(keyIdMode));
-    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, error = OT_ERROR_NONE);
+    VerifyOrExit(keyIdMode == Frame::kKeyIdMode1, error = kErrorNone);
 
     IgnoreError(aTxFrame.GetKeyId(txKeyId));
     IgnoreError(aAckFrame.GetKeyId(ackKeyId));
@@ -1962,7 +1961,7 @@ otError Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     }
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         otLogInfoMac("Frame tx attempt failed, error: Enh-ACK security check fail");
     }
@@ -1971,19 +1970,19 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
+void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
 {
     Address   srcaddr;
     Address   dstaddr;
     PanId     panid;
     Neighbor *neighbor;
-    otError   error = aError;
+    Error     error = aError;
 
     mCounters.mRxTotal++;
 
     SuccessOrExit(error);
-    VerifyOrExit(aFrame != nullptr, error = OT_ERROR_NO_FRAME_RECEIVED);
-    VerifyOrExit(IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(aFrame != nullptr, error = kErrorNoFrameReceived);
+    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
 
     // Ensure we have a valid frame before attempting to read any contents of
     // the buffer received from the radio.
@@ -2001,7 +2000,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     case Address::kTypeShort:
         VerifyOrExit((mRxOnWhenIdle && dstaddr.IsBroadcast()) || dstaddr.GetShort() == GetShortAddress(),
-                     error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
+                     error = kErrorDestinationAddressFiltered);
 
 #if OPENTHREAD_FTD
         // Allow multicasts from neighbor routers if FTD
@@ -2014,14 +2013,14 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
         break;
 
     case Address::kTypeExtended:
-        VerifyOrExit(dstaddr.GetExtended() == GetExtAddress(), error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
+        VerifyOrExit(dstaddr.GetExtended() == GetExtAddress(), error = kErrorDestinationAddressFiltered);
         break;
     }
 
     // Verify destination PAN ID if present
-    if (OT_ERROR_NONE == aFrame->GetDstPanId(panid))
+    if (kErrorNone == aFrame->GetDstPanId(panid))
     {
-        VerifyOrExit(panid == kShortAddrBroadcast || panid == mPanId, error = OT_ERROR_DESTINATION_ADDRESS_FILTERED);
+        VerifyOrExit(panid == kShortAddrBroadcast || panid == mPanId, error = kErrorDestinationAddressFiltered);
     }
 
     // Source Address Filtering
@@ -2033,7 +2032,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     case Address::kTypeShort:
         otLogDebgMac("Received frame from short address 0x%04x", srcaddr.GetShort());
 
-        VerifyOrExit(neighbor != nullptr, error = OT_ERROR_UNKNOWN_NEIGHBOR);
+        VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
 
         srcaddr.SetExtended(neighbor->GetExtAddress());
 
@@ -2042,7 +2041,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     case Address::kTypeExtended:
 
         // Duplicate Address Protection
-        VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = OT_ERROR_INVALID_SOURCE_ADDRESS);
+        VerifyOrExit(srcaddr.GetExtended() != GetExtAddress(), error = kErrorInvalidSourceAddress);
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
         {
@@ -2080,7 +2079,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
     switch (error)
     {
-    case OT_ERROR_DUPLICATED:
+    case kErrorDuplicated:
 
         // Allow a duplicate received frame pass, only if the
         // current operation is `kOperationWaitingForData` (i.e.,
@@ -2099,7 +2098,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
         OT_FALL_THROUGH;
 
-    case OT_ERROR_NONE:
+    case kErrorNone:
         break;
 
     default:
@@ -2139,11 +2138,11 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
                 case Neighbor::kStateChildUpdateRequest:
 
                     // Only accept a "MAC Data Request" frame from a child being restored.
-                    VerifyOrExit(aFrame->IsDataRequestCommand(), error = OT_ERROR_DROP);
+                    VerifyOrExit(aFrame->IsDataRequestCommand(), error = kErrorDrop);
                     break;
 
                 default:
-                    ExitNow(error = OT_ERROR_UNKNOWN_NEIGHBOR);
+                    ExitNow(error = kErrorUnknownNeighbor);
                 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2 && OPENTHREAD_FTD
@@ -2214,7 +2213,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
     case Frame::kFcfFrameMacCmd:
         if (HandleMacCommand(*aFrame)) // returns `true` when handled
         {
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
 
         break;
@@ -2239,41 +2238,41 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, otError aError)
 
 exit:
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         LogFrameRxFailure(aFrame, error);
 
         switch (error)
         {
-        case OT_ERROR_SECURITY:
+        case kErrorSecurity:
             mCounters.mRxErrSec++;
             break;
 
-        case OT_ERROR_FCS:
+        case kErrorFcs:
             mCounters.mRxErrFcs++;
             break;
 
-        case OT_ERROR_NO_FRAME_RECEIVED:
+        case kErrorNoFrameReceived:
             mCounters.mRxErrNoFrame++;
             break;
 
-        case OT_ERROR_UNKNOWN_NEIGHBOR:
+        case kErrorUnknownNeighbor:
             mCounters.mRxErrUnknownNeighbor++;
             break;
 
-        case OT_ERROR_INVALID_SOURCE_ADDRESS:
+        case kErrorInvalidSourceAddress:
             mCounters.mRxErrInvalidSrcAddr++;
             break;
 
-        case OT_ERROR_ADDRESS_FILTERED:
+        case kErrorAddressFiltered:
             mCounters.mRxAddressFiltered++;
             break;
 
-        case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
+        case kErrorDestinationAddressFiltered:
             mCounters.mRxDestAddrFiltered++;
             break;
 
-        case OT_ERROR_DUPLICATED:
+        case kErrorDuplicated:
             mCounters.mRxDuplicated++;
             break;
 
@@ -2412,15 +2411,15 @@ const char *Mac::OperationToString(Operation aOperation)
     return kOperationStrings[aOperation];
 }
 
-void Mac::LogFrameRxFailure(const RxFrame *aFrame, otError aError) const
+void Mac::LogFrameRxFailure(const RxFrame *aFrame, Error aError) const
 {
     otLogLevel logLevel;
 
     switch (aError)
     {
-    case OT_ERROR_ABORT:
-    case OT_ERROR_NO_FRAME_RECEIVED:
-    case OT_ERROR_DESTINATION_ADDRESS_FILTERED:
+    case kErrorAbort:
+    case kErrorNoFrameReceived:
+    case kErrorDestinationAddressFiltered:
         logLevel = OT_LOG_LEVEL_DEBG;
         break;
 
@@ -2431,16 +2430,15 @@ void Mac::LogFrameRxFailure(const RxFrame *aFrame, otError aError) const
 
     if (aFrame == nullptr)
     {
-        otLogMac(logLevel, "Frame rx failed, error:%s", otThreadErrorToString(aError));
+        otLogMac(logLevel, "Frame rx failed, error:%s", ErrorToString(aError));
     }
     else
     {
-        otLogMac(logLevel, "Frame rx failed, error:%s, %s", otThreadErrorToString(aError),
-                 aFrame->ToInfoString().AsCString());
+        otLogMac(logLevel, "Frame rx failed, error:%s, %s", ErrorToString(aError), aFrame->ToInfoString().AsCString());
     }
 }
 
-void Mac::LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const
+void Mac::LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE && OPENTHREAD_CONFIG_MULTI_RADIO
     if (aFrame.GetRadioType() == kRadioTypeIeee802154)
@@ -2453,12 +2451,12 @@ void Mac::LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetr
         uint8_t maxAttempts = aFrame.GetMaxFrameRetries() + 1;
         uint8_t curAttempt  = aWillRetx ? (aRetryCount + 1) : maxAttempts;
 
-        otLogInfoMac("Frame tx attempt %d/%d failed, error:%s, %s", curAttempt, maxAttempts,
-                     otThreadErrorToString(aError), aFrame.ToInfoString().AsCString());
+        otLogInfoMac("Frame tx attempt %d/%d failed, error:%s, %s", curAttempt, maxAttempts, ErrorToString(aError),
+                     aFrame.ToInfoString().AsCString());
     }
     else
     {
-        otLogInfoMac("Frame tx failed, error:%s, %s", otThreadErrorToString(aError), aFrame.ToInfoString().AsCString());
+        otLogInfoMac("Frame tx failed, error:%s, %s", ErrorToString(aError), aFrame.ToInfoString().AsCString());
     }
 }
 
@@ -2469,7 +2467,7 @@ void Mac::LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload
 
 #else // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
-void Mac::LogFrameRxFailure(const RxFrame *, otError) const
+void Mac::LogFrameRxFailure(const RxFrame *, Error) const
 {
 }
 
@@ -2477,7 +2475,7 @@ void Mac::LogBeacon(const char *, const BeaconPayload &) const
 {
 }
 
-void Mac::LogFrameTxFailure(const TxFrame &, otError, uint8_t, bool) const
+void Mac::LogFrameTxFailure(const TxFrame &, Error, uint8_t, bool) const
 {
 }
 

@@ -100,38 +100,38 @@ class HmacSha256;
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `otError` indicates an error.
+ * This macro frees a given message buffer if a given `Error` indicates an error.
  *
  * The parameter @p aMessage can be nullptr in which case this macro does nothing.
  *
  * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
- * @param[in] aError      The `otError` to check.
+ * @param[in] aError      The `Error` to check.
  *
  */
-#define FreeMessageOnError(aMessage, aError)                        \
-    do                                                              \
-    {                                                               \
-        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
-        {                                                           \
-            (aMessage)->Free();                                     \
-        }                                                           \
+#define FreeMessageOnError(aMessage, aError)                     \
+    do                                                           \
+    {                                                            \
+        if (((aError) != kErrorNone) && ((aMessage) != nullptr)) \
+        {                                                        \
+            (aMessage)->Free();                                  \
+        }                                                        \
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `otError` indicates an error and sets the `aMessage` to `nullptr`.
+ * This macro frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
  *
  * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
- * @param[in] aError      The `otError` to check.
+ * @param[in] aError      The `Error` to check.
  *
  */
-#define FreeAndNullMessageOnError(aMessage, aError)                 \
-    do                                                              \
-    {                                                               \
-        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
-        {                                                           \
-            (aMessage)->Free();                                     \
-            (aMessage) = nullptr;                                   \
-        }                                                           \
+#define FreeAndNullMessageOnError(aMessage, aError)              \
+    do                                                           \
+    {                                                            \
+        if (((aError) != kErrorNone) && ((aMessage) != nullptr)) \
+        {                                                        \
+            (aMessage)->Free();                                  \
+            (aMessage) = nullptr;                                \
+        }                                                        \
     } while (false)
 
 enum
@@ -477,11 +477,11 @@ public:
      *
      * @param[in]  aLength  Requested number of bytes in the message.
      *
-     * @retval OT_ERROR_NONE     Successfully set the length of the message.
-     * @retval OT_ERROR_NO_BUFS  Failed to grow the size of the message because insufficient buffers were available.
+     * @retval kErrorNone    Successfully set the length of the message.
+     * @retval kErrorNoBufs  Failed to grow the size of the message because insufficient buffers were available.
      *
      */
-    otError SetLength(uint16_t aLength);
+    Error SetLength(uint16_t aLength);
 
     /**
      * This method returns the number of buffers in the message.
@@ -586,11 +586,11 @@ public:
      *
      * @param[in]  aPriority  The message priority level.
      *
-     * @retval OT_ERROR_NONE           Successfully set the priority for the message.
-     * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
+     * @retval kErrorNone          Successfully set the priority for the message.
+     * @retval kErrorInvalidArgs   Priority level is not invalid.
      *
      */
-    otError SetPriority(Priority aPriority);
+    Error SetPriority(Priority aPriority);
 
     /**
      * This static method convert a `Priority` to a string.
@@ -610,11 +610,11 @@ public:
      * @param[in]  aBuf     A pointer to a data buffer (can be `nullptr` to grow message without writing bytes).
      * @param[in]  aLength  The number of bytes to prepend.
      *
-     * @retval OT_ERROR_NONE     Successfully prepended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
+     * @retval kErrorNone    Successfully prepended the bytes.
+     * @retval kErrorNoBufs  Not enough reserved bytes in the message.
      *
      */
-    otError PrependBytes(const void *aBuf, uint16_t aLength);
+    Error PrependBytes(const void *aBuf, uint16_t aLength);
 
     /**
      * This method prepends an object to the front of the message.
@@ -625,11 +625,11 @@ public:
      *
      * @param[in] aObject      A reference to the object to prepend to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully prepended the object.
-     * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
+     * @retval kErrorNone    Successfully prepended the object.
+     * @retval kErrorNoBufs  Not enough reserved bytes in the message.
      *
      */
-    template <typename ObjectType> otError Prepend(const ObjectType &aObject)
+    template <typename ObjectType> Error Prepend(const ObjectType &aObject)
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -652,11 +652,11 @@ public:
      * @param[in]  aBuf     A pointer to a data buffer (MUST not be `nullptr`).
      * @param[in]  aLength  The number of bytes to append.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     * @retval kErrorNone    Successfully appended the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendBytes(const void *aBuf, uint16_t aLength);
+    Error AppendBytes(const void *aBuf, uint16_t aLength);
 
     /**
      * This method appends an object to the end of the message.
@@ -667,11 +667,11 @@ public:
      *
      * @param[in] aObject      A reference to the object to append to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the object.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     * @retval kErrorNone    Successfully appended the object.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
      *
      */
-    template <typename ObjectType> otError Append(const ObjectType &aObject)
+    template <typename ObjectType> Error Append(const ObjectType &aObject)
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -694,23 +694,23 @@ public:
      * This method reads a given number of bytes from the message.
      *
      * If there are fewer bytes available in the message than the requested read length, the available bytes will be
-     * read and copied into @p aBuf. In this case `OT_ERROR_PARSE` will be returned.
+     * read and copied into @p aBuf. In this case `kErrorParse` will be returned.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
      * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
      * @param[in]  aLength  Number of bytes to read.
      *
-     * @retval OT_ERROR_NONE     @p aLength bytes were successfully read from message.
-     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     * @retval kErrorNone     @p aLength bytes were successfully read from message.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object.
      *
      */
-    otError Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
+    Error Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 
     /**
      * This method reads an object from the message.
      *
      * If there are fewer bytes available in the message than the requested object size, the available bytes will be
-     * read and copied into @p aObject (@p aObject will be read partially). In this case `OT_ERROR_PARSE` will
+     * read and copied into @p aObject (@p aObject will be read partially). In this case `kErrorParse` will
      * be returned.
      *
      * @tparam     ObjectType   The object type to read from the message.
@@ -718,11 +718,11 @@ public:
      * @param[in]  aOffset      Byte offset within the message to begin reading.
      * @param[out] aObject      A reference to the object to read into.
      *
-     * @retval OT_ERROR_NONE     Object @p aObject was successfully read from message.
-     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     * @retval kErrorNone     Object @p aObject was successfully read from message.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object.
      *
      */
-    template <typename ObjectType> otError Read(uint16_t aOffset, ObjectType &aObject) const
+    template <typename ObjectType> Error Read(uint16_t aOffset, ObjectType &aObject) const
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -1333,11 +1333,11 @@ private:
      *
      * @param[in]  aLength  The number of bytes that the message buffer needs to handle.
      *
-     * @retval OT_ERROR_NONE     Successfully resized the message.
-     * @retval OT_ERROR_NO_BUFS  Could not grow the message due to insufficient available message buffers.
+     * @retval kErrorNone    Successfully resized the message.
+     * @retval kErrorNoBufs  Could not grow the message due to insufficient available message buffers.
      *
      */
-    otError ResizeMessage(uint16_t aLength);
+    Error ResizeMessage(uint16_t aLength);
 
 private:
     struct Chunk
@@ -1627,7 +1627,7 @@ public:
 private:
     Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);
-    otError ReclaimBuffers(Message::Priority aPriority);
+    Error   ReclaimBuffers(Message::Priority aPriority);
 
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
     uint16_t                  mNumFreeBuffers;

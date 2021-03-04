@@ -168,12 +168,12 @@ private:
 
     void SetState(State aState);
     void BeginTransmit(void);
-    void InvokeSendDone(otError aError) { InvokeSendDone(aError, nullptr); }
-    void InvokeSendDone(otError aError, Mac::RxFrame *aAckFrame);
+    void InvokeSendDone(Error aError) { InvokeSendDone(aError, nullptr); }
+    void InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame);
     void ProcessReceivedPacket(Packet &aPacket);
     void HandleAck(Packet &aAckPacket);
     void SendAck(Packet &aRxPacket);
-    void ReportDeferredAckStatus(Neighbor &aNeighbor, otError aError);
+    void ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError);
     void HandleTimer(Neighbor &aNeighbor);
 
     static void HandleTxTasklet(Tasklet &aTasklet);

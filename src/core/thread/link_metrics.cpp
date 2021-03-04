@@ -112,17 +112,17 @@ LinkMetrics::LinkMetrics(Instance &aInstance)
 {
 }
 
-otError LinkMetrics::LinkMetricsQuery(const Ip6::Address & aDestination,
-                                      uint8_t              aSeriesId,
-                                      const otLinkMetrics *aLinkMetricsFlags)
+Error LinkMetrics::LinkMetricsQuery(const Ip6::Address & aDestination,
+                                    uint8_t              aSeriesId,
+                                    const otLinkMetrics *aLinkMetricsFlags)
 {
-    otError                error;
+    Error                  error;
     LinkMetricsTypeIdFlags typeIdFlags[kMaxTypeIdFlags];
     uint8_t                typeIdFlagsCount = 0;
     Neighbor *             neighbor         = GetNeighborFromLinkLocalAddr(aDestination);
 
-    VerifyOrExit(neighbor != nullptr, error = OT_ERROR_UNKNOWN_NEIGHBOR);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
 
     if (aLinkMetricsFlags != nullptr)
     {
@@ -131,7 +131,7 @@ otError LinkMetrics::LinkMetricsQuery(const Ip6::Address & aDestination,
 
     if (aSeriesId != 0)
     {
-        VerifyOrExit(typeIdFlagsCount == 0, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(typeIdFlagsCount == 0, error = kErrorInvalidArgs);
     }
 
     error = SendLinkMetricsQuery(aDestination, aSeriesId, typeIdFlags, typeIdFlagsCount);
@@ -140,12 +140,12 @@ exit:
     return error;
 }
 
-otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
-                                                          uint8_t                         aSeriesId,
-                                                          const otLinkMetricsSeriesFlags &aSeriesFlags,
-                                                          const otLinkMetrics *           aLinkMetricsFlags)
+Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
+                                                        uint8_t                         aSeriesId,
+                                                        const otLinkMetricsSeriesFlags &aSeriesFlags,
+                                                        const otLinkMetrics *           aLinkMetricsFlags)
 {
-    otError      error = OT_ERROR_NONE;
+    Error        error = kErrorNone;
     uint8_t      subTlvs[sizeof(Tlv) + sizeof(uint8_t) * 2 + sizeof(LinkMetricsTypeIdFlags) * kMaxTypeIdFlags];
     Tlv *        forwardProbingRegistrationSubTlv = reinterpret_cast<Tlv *>(subTlvs);
     SeriesFlags *seriesFlags       = reinterpret_cast<SeriesFlags *>(subTlvs + sizeof(Tlv) + sizeof(aSeriesId));
@@ -153,8 +153,8 @@ otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &  
     uint8_t      typeIdFlagsCount  = 0;
     Neighbor *   neighbor          = GetNeighborFromLinkLocalAddr(aDestination);
 
-    VerifyOrExit(neighbor != nullptr, error = OT_ERROR_UNKNOWN_NEIGHBOR);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
 
     // Directly transform `aLinkMetricsFlags` into LinkMetricsTypeIdFlags and put them into `subTlvs`
     if (aLinkMetricsFlags != nullptr)
@@ -163,7 +163,7 @@ otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &  
             reinterpret_cast<LinkMetricsTypeIdFlags *>(subTlvs + typeIdFlagsOffset), *aLinkMetricsFlags);
     }
 
-    VerifyOrExit(aSeriesId > kQueryIdSingleProbe, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aSeriesId > kQueryIdSingleProbe, error = kErrorInvalidArgs);
 
     forwardProbingRegistrationSubTlv->SetType(kForwardProbingRegistration);
     forwardProbingRegistrationSubTlv->SetLength(
@@ -179,26 +179,25 @@ otError LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &  
                                                                    forwardProbingRegistrationSubTlv->GetSize());
 
 exit:
-    otLogDebgMle("SendMgmtRequestForwardTrackingSeries, error:%s, Series ID:%u", otThreadErrorToString(error),
-                 aSeriesId);
+    otLogDebgMle("SendMgmtRequestForwardTrackingSeries, error:%s, Series ID:%u", ErrorToString(error), aSeriesId);
     return error;
 }
 
-otError LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &           aDestination,
-                                                  const otLinkMetricsEnhAckFlags aEnhAckFlags,
-                                                  const otLinkMetrics *          aLinkMetricsFlags)
+Error LinkMetrics::SendMgmtRequestEnhAckProbing(const Ip6::Address &           aDestination,
+                                                const otLinkMetricsEnhAckFlags aEnhAckFlags,
+                                                const otLinkMetrics *          aLinkMetricsFlags)
 {
-    otError                              error = OT_ERROR_NONE;
+    Error                                error = kErrorNone;
     EnhAckLinkMetricsConfigurationSubTlv enhAckLinkMetricsConfigurationSubTlv;
     Mac::Address                         macAddress;
     Neighbor *                           neighbor = GetNeighborFromLinkLocalAddr(aDestination);
 
-    VerifyOrExit(neighbor != nullptr, error = OT_ERROR_UNKNOWN_NEIGHBOR);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
 
     if (aEnhAckFlags == OT_LINK_METRICS_ENH_ACK_CLEAR)
     {
-        VerifyOrExit(aLinkMetricsFlags == nullptr, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aLinkMetricsFlags == nullptr, error = kErrorInvalidArgs);
     }
 
     enhAckLinkMetricsConfigurationSubTlv.SetEnhAckFlags(aEnhAckFlags);
@@ -227,28 +226,28 @@ exit:
     return error;
 }
 
-otError LinkMetrics::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength)
+Error LinkMetrics::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength)
 {
-    otError   error = OT_ERROR_NONE;
+    Error     error = kErrorNone;
     uint8_t   buf[kLinkProbeMaxLen];
     Neighbor *neighbor = GetNeighborFromLinkLocalAddr(aDestination);
 
-    VerifyOrExit(neighbor != nullptr, error = OT_ERROR_UNKNOWN_NEIGHBOR);
-    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = OT_ERROR_NOT_CAPABLE);
+    VerifyOrExit(neighbor != nullptr, error = kErrorUnknownNeighbor);
+    VerifyOrExit(neighbor->IsThreadVersion1p2(), error = kErrorNotCapable);
 
     VerifyOrExit(aLength <= LinkMetrics::kLinkProbeMaxLen && aSeriesId != kQueryIdSingleProbe &&
                      aSeriesId != kSeriesIdAllSeries,
-                 error = OT_ERROR_INVALID_ARGS);
+                 error = kErrorInvalidArgs);
 
     error = Get<Mle::MleRouter>().SendLinkProbe(aDestination, aSeriesId, buf, aLength);
 exit:
-    otLogDebgMle("SendLinkProbe, error:%s, Series ID:%u", otThreadErrorToString(error), aSeriesId);
+    otLogDebgMle("SendLinkProbe, error:%s, Series ID:%u", ErrorToString(error), aSeriesId);
     return error;
 }
 
-otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor)
+Error LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor)
 {
-    otError             error = OT_ERROR_NONE;
+    Error               error = kErrorNone;
     Tlv                 tlv;
     uint8_t             queryId;
     bool                hasQueryId  = false;
@@ -289,7 +288,7 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
         offset += tlv.GetSize();
     }
 
-    VerifyOrExit(hasQueryId, error = OT_ERROR_PARSE);
+    VerifyOrExit(hasQueryId, error = kErrorParse);
 
     // Link Metrics Report TLV
     tlv.SetType(Mle::Tlv::kLinkMetricsReport);
@@ -339,15 +338,15 @@ otError LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &a
     aMessage.Write(startOffset, tlv);
 
 exit:
-    otLogDebgMle("AppendLinkMetricsReport, error:%s", otThreadErrorToString(error));
+    otLogDebgMle("AppendLinkMetricsReport, error:%s", ErrorToString(error));
     return error;
 }
 
-otError LinkMetrics::HandleLinkMetricsManagementRequest(const Message &    aMessage,
-                                                        Neighbor &         aNeighbor,
-                                                        LinkMetricsStatus &aStatus)
+Error LinkMetrics::HandleLinkMetricsManagementRequest(const Message &    aMessage,
+                                                      Neighbor &         aNeighbor,
+                                                      LinkMetricsStatus &aStatus)
 {
-    otError                error = OT_ERROR_NONE;
+    Error                  error = kErrorNone;
     Tlv                    tlv;
     uint8_t                seriesId;
     SeriesFlags            seriesFlags;
@@ -371,8 +370,8 @@ otError LinkMetrics::HandleLinkMetricsManagementRequest(const Message &    aMess
         switch (tlv.GetType())
         {
         case kForwardProbingRegistration:
-            VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = OT_ERROR_PARSE);
-            VerifyOrExit(tlv.GetLength() >= sizeof(seriesId) + sizeof(seriesFlags), error = OT_ERROR_PARSE);
+            VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = kErrorParse);
+            VerifyOrExit(tlv.GetLength() >= sizeof(seriesId) + sizeof(seriesFlags), error = kErrorParse);
             SuccessOrExit(aMessage.Read(pos, seriesId));
             pos += sizeof(seriesId);
             SuccessOrExit(aMessage.Read(pos, seriesFlags));
@@ -383,8 +382,8 @@ otError LinkMetrics::HandleLinkMetricsManagementRequest(const Message &    aMess
             break;
 
         case kEnhancedACKConfiguration:
-            VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = OT_ERROR_PARSE);
-            VerifyOrExit(tlv.GetLength() >= sizeof(LinkMetricsEnhAckFlags), error = OT_ERROR_PARSE);
+            VerifyOrExit(!hasForwardProbingRegistrationTlv && !hasEnhAckProbingTlv, error = kErrorParse);
+            VerifyOrExit(tlv.GetLength() >= sizeof(LinkMetricsEnhAckFlags), error = kErrorParse);
             SuccessOrExit(aMessage.Read(pos, enhAckFlags));
             pos += sizeof(enhAckFlags);
             SuccessOrExit(error = ReadTypeIdFlagsFromMessage(
@@ -412,9 +411,9 @@ exit:
     return error;
 }
 
-otError LinkMetrics::HandleLinkMetricsManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
+Error LinkMetrics::HandleLinkMetricsManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
 {
-    otError           error = OT_ERROR_NONE;
+    Error             error = kErrorNone;
     Tlv               tlv;
     uint16_t          offset;
     uint16_t          length;
@@ -433,8 +432,8 @@ otError LinkMetrics::HandleLinkMetricsManagementResponse(const Message &aMessage
         switch (tlv.GetType())
         {
         case kLinkMetricsStatus:
-            VerifyOrExit(!hasStatus, error = OT_ERROR_PARSE);
-            VerifyOrExit(tlv.GetLength() == sizeof(status), error = OT_ERROR_PARSE);
+            VerifyOrExit(!hasStatus, error = kErrorParse);
+            VerifyOrExit(tlv.GetLength() == sizeof(status), error = kErrorParse);
             SuccessOrExit(aMessage.Read(offset + index + sizeof(tlv), status));
             hasStatus = true;
             break;
@@ -446,7 +445,7 @@ otError LinkMetrics::HandleLinkMetricsManagementResponse(const Message &aMessage
         index += tlv.GetSize();
     }
 
-    VerifyOrExit(hasStatus, error = OT_ERROR_PARSE);
+    VerifyOrExit(hasStatus, error = kErrorParse);
 
     mLinkMetricsMgmtResponseCallback(&aAddress, status, mLinkMetricsMgmtResponseCallbackContext);
 
@@ -459,7 +458,7 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
                                           uint16_t            aLength,
                                           const Ip6::Address &aAddress)
 {
-    otError                error = OT_ERROR_NONE;
+    Error                  error = kErrorNone;
     otLinkMetricsValues    metricsValues;
     uint8_t                metricsRawValue;
     uint16_t               pos    = aOffset;
@@ -482,14 +481,14 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
         VerifyOrExit(tlv.GetType() == kLinkMetricsReportSub);
         pos += sizeof(Tlv);
 
-        VerifyOrExit(pos + tlv.GetLength() <= endPos, error = OT_ERROR_PARSE);
+        VerifyOrExit(pos + tlv.GetLength() <= endPos, error = kErrorParse);
 
         switch (tlv.GetType())
         {
         case kLinkMetricsStatus:
             VerifyOrExit(!hasStatus && !hasReport,
-                         error = OT_ERROR_DROP); // There should be either: one Status TLV or some Report-Sub TLVs
-            VerifyOrExit(tlv.GetLength() == sizeof(status), error = OT_ERROR_PARSE);
+                         error = kErrorDrop); // There should be either: one Status TLV or some Report-Sub TLVs
+            VerifyOrExit(tlv.GetLength() == sizeof(status), error = kErrorParse);
             SuccessOrExit(aMessage.Read(pos, status));
             hasStatus = true;
             pos += sizeof(status);
@@ -497,8 +496,8 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
 
         case kLinkMetricsReportSub:
             VerifyOrExit(!hasStatus,
-                         error = OT_ERROR_DROP); // There shouldn't be any Report-Sub TLV when there's a Status TLV
-            VerifyOrExit(tlv.GetLength() > sizeof(typeIdFlags), error = OT_ERROR_PARSE);
+                         error = kErrorDrop); // There shouldn't be any Report-Sub TLV when there's a Status TLV
+            VerifyOrExit(tlv.GetLength() > sizeof(typeIdFlags), error = kErrorParse);
             SuccessOrExit(aMessage.Read(pos, typeIdFlags));
             if (typeIdFlags.IsExtendedFlagSet())
             {
@@ -560,20 +559,20 @@ void LinkMetrics::HandleLinkMetricsReport(const Message &     aMessage,
     }
 
 exit:
-    otLogDebgMle("HandleLinkMetricsReport, error:%s", otThreadErrorToString(error));
+    otLogDebgMle("HandleLinkMetricsReport, error:%s", ErrorToString(error));
     return;
 }
 
-otError LinkMetrics::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId)
+Error LinkMetrics::HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     uint16_t offset;
     uint16_t length;
 
     SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Mle::Tlv::Type::kLinkProbe, offset, length));
-    VerifyOrExit(length >= sizeof(aSeriesId), error = OT_ERROR_PARSE);
+    VerifyOrExit(length >= sizeof(aSeriesId), error = kErrorParse);
     SuccessOrExit(error = aMessage.Read(offset, aSeriesId));
-    VerifyOrExit(aSeriesId >= kQueryIdSingleProbe && aSeriesId <= kSeriesIdAllSeries, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aSeriesId >= kQueryIdSingleProbe && aSeriesId <= kSeriesIdAllSeries, error = kErrorInvalidArgs);
 
 exit:
     return error;
@@ -628,12 +627,12 @@ exit:
     return;
 }
 
-otError LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &          aDestination,
-                                          uint8_t                       aSeriesId,
-                                          const LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                          uint8_t                       aTypeIdFlagsCount)
+Error LinkMetrics::SendLinkMetricsQuery(const Ip6::Address &          aDestination,
+                                        uint8_t                       aSeriesId,
+                                        const LinkMetricsTypeIdFlags *aTypeIdFlags,
+                                        uint8_t                       aTypeIdFlagsCount)
 {
-    otError                    error = OT_ERROR_NONE;
+    Error                      error = kErrorNone;
     LinkMetricsQueryOptionsTlv linkMetricsQueryOptionsTlv;
     uint8_t                    length = 0;
     static const uint8_t       tlvs[] = {Mle::Tlv::kLinkMetricsReport};
@@ -719,7 +718,7 @@ LinkMetrics::LinkMetricsStatus LinkMetrics::ConfigureEnhAckProbing(LinkMetricsEn
                                                                    Neighbor &             aNeighbor)
 {
     LinkMetricsStatus status = kLinkMetricsStatusSuccess;
-    otError           error  = OT_ERROR_NONE;
+    Error             error  = kErrorNone;
 
     VerifyOrExit(!aLinkMetrics.mReserved, status = kLinkMetricsStatusCannotSupportNewSeries);
 
@@ -744,7 +743,7 @@ LinkMetrics::LinkMetricsStatus LinkMetrics::ConfigureEnhAckProbing(LinkMetricsEn
         status = kLinkMetricsStatusOtherError;
     }
 
-    VerifyOrExit(error == OT_ERROR_NONE, status = kLinkMetricsStatusOtherError);
+    VerifyOrExit(error == kErrorNone, status = kLinkMetricsStatusOtherError);
 
 exit:
     return status;
@@ -763,12 +762,12 @@ exit:
     return neighbor;
 }
 
-otError LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                                uint8_t        aStartPos,
-                                                uint8_t        aEndPos,
-                                                otLinkMetrics &aLinkMetrics)
+Error LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
+                                              uint8_t        aStartPos,
+                                              uint8_t        aEndPos,
+                                              otLinkMetrics &aLinkMetrics)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     memset(&aLinkMetrics, 0, sizeof(aLinkMetrics));
 
@@ -781,22 +780,22 @@ otError LinkMetrics::ReadTypeIdFlagsFromMessage(const Message &aMessage,
         switch (typeIdFlags.GetRawValue())
         {
         case kTypeIdFlagPdu:
-            VerifyOrExit(!aLinkMetrics.mPduCount, error = OT_ERROR_PARSE);
+            VerifyOrExit(!aLinkMetrics.mPduCount, error = kErrorParse);
             aLinkMetrics.mPduCount = true;
             break;
 
         case kTypeIdFlagLqi:
-            VerifyOrExit(!aLinkMetrics.mLqi, error = OT_ERROR_PARSE);
+            VerifyOrExit(!aLinkMetrics.mLqi, error = kErrorParse);
             aLinkMetrics.mLqi = true;
             break;
 
         case kTypeIdFlagLinkMargin:
-            VerifyOrExit(!aLinkMetrics.mLinkMargin, error = OT_ERROR_PARSE);
+            VerifyOrExit(!aLinkMetrics.mLinkMargin, error = kErrorParse);
             aLinkMetrics.mLinkMargin = true;
             break;
 
         case kTypeIdFlagRssi:
-            VerifyOrExit(!aLinkMetrics.mRssi, error = OT_ERROR_PARSE);
+            VerifyOrExit(!aLinkMetrics.mRssi, error = kErrorParse);
             aLinkMetrics.mRssi = true;
             break;
 
@@ -817,11 +816,9 @@ exit:
     return error;
 }
 
-otError LinkMetrics::AppendReportSubTlvToMessage(Message &                  aMessage,
-                                                 uint8_t &                  aLength,
-                                                 const otLinkMetricsValues &aValues)
+Error LinkMetrics::AppendReportSubTlvToMessage(Message &aMessage, uint8_t &aLength, const otLinkMetricsValues &aValues)
 {
-    otError                 error = OT_ERROR_NONE;
+    Error                   error = kErrorNone;
     LinkMetricsReportSubTlv metric;
 
     aLength = 0;
@@ -867,10 +864,10 @@ exit:
     return error;
 }
 
-otError LinkMetrics::AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, LinkMetricsStatus aStatus)
+Error LinkMetrics::AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, LinkMetricsStatus aStatus)
 {
-    otError error = OT_ERROR_NONE;
-    Tlv     statusTlv;
+    Error error = kErrorNone;
+    Tlv   statusTlv;
 
     statusTlv.SetType(kLinkMetricsStatus);
     statusTlv.SetLength(sizeof(uint8_t));
