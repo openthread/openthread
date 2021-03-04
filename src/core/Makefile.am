@@ -408,6 +408,7 @@ HEADERS_COMMON                                  = \
     config/diag.h                                 \
     config/dns_client.h                           \
     config/dnssd_server.h                         \
+    config/dtls.h                                 \
     config/ip6.h                                  \
     config/joiner.h                               \
     config/link_quality.h                         \

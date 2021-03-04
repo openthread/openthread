@@ -781,7 +781,7 @@ void Dtls::HandleTimer(void)
 
 void Dtls::Process(void)
 {
-    uint8_t buf[MBEDTLS_SSL_MAX_CONTENT_LEN];
+    uint8_t buf[OPENTHREAD_CONFIG_DTLS_MAX_CONTENT_LEN];
     bool    shouldDisconnect = false;
     int     rval;
 
