@@ -82,6 +82,7 @@ SRP_CLIENT                ?= 0
 SRP_SERVER                ?= 0
 THREAD_VERSION            ?= 1.1
 TIME_SYNC                 ?= 0
+TREL                      ?= 0
 UDP_FORWARD               ?= 0
 RCP_RESTORATION_MAX_COUNT ?= 0
 
@@ -296,6 +297,10 @@ endif
 
 ifeq ($(TIME_SYNC),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1 -DOPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT=1
+endif
+
+ifeq ($(TREL),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1
 endif
 
 ifeq ($(UDP_FORWARD),1)
