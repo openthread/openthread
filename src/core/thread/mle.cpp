@@ -4138,8 +4138,13 @@ const char *Mle::MessageActionToString(MessageAction aAction)
 
 const char *Mle::MessageTypeToString(MessageType aType)
 {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wc99-designator"
+#else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
+#endif
     static const char *const kMessageTypeStrings[] = {
         [kTypeAdvertisement]               = "Advertisement",
         [kTypeAnnounce]                    = "Announce",
@@ -4180,7 +4185,11 @@ const char *Mle::MessageTypeToString(MessageType aType)
         [kTypeLinkProbe]                     = "Link Probe",
 #endif
     };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#else
 #pragma GCC diagnostic pop
+#endif
 
     static_assert(OT_ARRAY_LENGTH(kMessageTypeStrings) == kNumberOfMessageType,
                   "Message type string array size does not match");
