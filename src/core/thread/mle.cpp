@@ -4140,7 +4140,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
 {
 #if defined(__clang__)
 #pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wc99-designator"
+#pragma clang diagnostic ignored "-Wc99-extensions"
 #else
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wpedantic"
