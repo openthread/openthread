@@ -330,9 +330,12 @@ void NcpBase::HandleMlrRegResult(otError             aError,
     SuccessOrExit(mEncoder.WriteUint8(ThreadErrorToSpinelStatus(aError)));
     SuccessOrExit(mEncoder.WriteUint8(aMlrStatus));
 
-    for (size_t i = 0U; i < aFailedAddressNum; ++i)
+    if (aError == OT_ERROR_NONE)
     {
-        SuccessOrExit(mEncoder.WriteIp6Address(aFailedAddresses[i]));
+        for (uint8_t i = 0U; i < aFailedAddressNum; ++i)
+        {
+            SuccessOrExit(mEncoder.WriteIp6Address(aFailedAddresses[i]));
+        }
     }
 
     SuccessOrExit(mEncoder.EndFrame());
