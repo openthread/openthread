@@ -4138,98 +4138,52 @@ const char *Mle::MessageActionToString(MessageAction aAction)
 
 const char *Mle::MessageTypeToString(MessageType aType)
 {
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpedantic"
     static const char *const kMessageTypeStrings[] = {
-        "Advertisement",         // (0)  kTypeAdvertisement
-        "Announce",              // (1)  kTypeAnnounce
-        "Child ID Request",      // (2)  kTypeChildIdRequest
-        "Child ID Request",      // (3)  kTypeChildIdRequestShort
-        "Child ID Response",     // (4)  kTypeChildIdResponse
-        "Child Update Request",  // (5)  kTypeChildUpdateRequestOfParent
-        "Child Update Response", // (6)  kTypeChildUpdateResponseOfParent
-        "Data Request",          // (7)  kTypeDataRequest
-        "Data Response",         // (8)  kTypeDataResponse
-        "Discovery Request",     // (9)  kTypeDiscoveryRequest
-        "Discovery Response",    // (10) kTypeDiscoveryResponse
-        "delayed message",       // (11) kTypeGenericDelayed
-        "UDP",                   // (12) kTypeGenericUdp
-        "Parent Request",        // (13) kTypeParentRequestToRouters
-        "Parent Request",        // (14) kTypeParentRequestToRoutersReeds
-        "Parent Response",       // (15) kTypeParentResponse
+        [kTypeAdvertisement]               = "Advertisement",
+        [kTypeAnnounce]                    = "Announce",
+        [kTypeChildIdRequest]              = "Child ID Request",
+        [kTypeChildIdRequestShort]         = "Child ID Request",
+        [kTypeChildIdResponse]             = "Child ID Response",
+        [kTypeChildUpdateRequestOfParent]  = "Child Update Request",
+        [kTypeChildUpdateResponseOfParent] = "Child Update Response",
+        [kTypeDataRequest]                 = "Data Request",
+        [kTypeDataResponse]                = "Data Response",
+        [kTypeDiscoveryRequest]            = "Discovery Request",
+        [kTypeDiscoveryResponse]           = "Discovery Response",
+        [kTypeGenericDelayed]              = "delayed message",
+        [kTypeGenericUdp]                  = "UDP",
+        [kTypeParentRequestToRouters]      = "Parent Request",
+        [kTypeParentRequestToRoutersReeds] = "Parent Request",
+        [kTypeParentResponse]              = "Parent Response",
 #if OPENTHREAD_FTD
-        "Address Release",         // (16) kTypeAddressRelease
-        "Address Release Reply",   // (17) kTypeAddressReleaseReply
-        "Address Reply",           // (18) kTypeAddressReply
-        "Address Solicit",         // (19) kTypeAddressSolicit
-        "Child Update Request",    // (20) kTypeChildUpdateRequestOfChild
-        "Child Update Response",   // (21) kTypeChildUpdateResponseOfChild
-        "Child Update Response",   // (22) kTypeChildUpdateResponseOfUnknownChild
-        "Link Accept",             // (23) kTypeLinkAccept
-        "Link Accept and Request", // (24) kTypeLinkAcceptAndRequest
-        "Link Reject",             // (25) kTypeLinkReject
-        "Link Request",            // (26) kTypeLinkRequest
-        "Parent Request",          // (27) kTypeParentRequest
+        [kTypeAddressRelease]                    = "Address Release",
+        [kTypeAddressReleaseReply]               = "Address Release Reply",
+        [kTypeAddressReply]                      = "Address Reply",
+        [kTypeAddressSolicit]                    = "Address Solicit",
+        [kTypeChildUpdateRequestOfChild]         = "Child Update Request",
+        [kTypeChildUpdateResponseOfChild]        = "Child Update Response",
+        [kTypeChildUpdateResponseOfUnknownChild] = "Child Update Response",
+        [kTypeLinkAccept]                        = "Link Accept",
+        [kTypeLinkAcceptAndRequest]              = "Link Accept and Request",
+        [kTypeLinkReject]                        = "Link Reject",
+        [kTypeLinkRequest]                       = "Link Request",
+        [kTypeParentRequest]                     = "Parent Request",
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-        "Time Sync", // (28) kTypeTimeSync
+        [kTypeTimeSync] = "Time Sync",
 #endif
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-        "Link Metrics Management Request",  // (29) kTypeLinkMetricsManagementRequest
-        "Link Metrics Management Response", // (30) kTypeLinkMetricsManagementResponse
-        "Link Probe",                       // (31) kTypeLinkProbe
+        [kTypeLinkMetricsManagementRequest]  = "Link Metrics Management Request",
+        [kTypeLinkMetricsManagementResponse] = "Link Metrics Management Response",
+        [kTypeLinkProbe]                     = "Link Probe",
 #endif
     };
+#pragma GCC diagnostic pop
 
-    static_assert(kTypeAdvertisement == 0, "kTypeAdvertisement value is incorrect");
-    static_assert(kTypeAnnounce == 1, "kTypeAnnounce value is incorrect");
-    static_assert(kTypeChildIdRequest == 2, "kTypeChildIdRequest value is incorrect");
-    static_assert(kTypeChildIdRequestShort == 3, "kTypeChildIdRequestShort value is incorrect");
-    static_assert(kTypeChildIdResponse == 4, "kTypeChildIdResponse value is incorrect");
-    static_assert(kTypeChildUpdateRequestOfParent == 5, "kTypeChildUpdateRequestOfParent value is incorrect");
-    static_assert(kTypeChildUpdateResponseOfParent == 6, "kTypeChildUpdateResponseOfParent value is incorrect");
-    static_assert(kTypeDataRequest == 7, "kTypeDataRequest value is incorrect");
-    static_assert(kTypeDataResponse == 8, "kTypeDataResponse value is incorrect");
-    static_assert(kTypeDiscoveryRequest == 9, "kTypeDiscoveryRequest value is incorrect");
-    static_assert(kTypeDiscoveryResponse == 10, "kTypeDiscoveryResponse value is incorrect");
-    static_assert(kTypeGenericDelayed == 11, "kTypeGenericDelayed value is incorrect");
-    static_assert(kTypeGenericUdp == 12, "kTypeGenericUdp value is incorrect");
-    static_assert(kTypeParentRequestToRouters == 13, "kTypeParentRequestToRouters value is incorrect");
-    static_assert(kTypeParentRequestToRoutersReeds == 14, "kTypeParentRequestToRoutersReeds value is incorrect");
-    static_assert(kTypeParentResponse == 15, "kTypeParentResponse value is incorrect");
-#if OPENTHREAD_FTD
-    static_assert(kTypeAddressRelease == 16, "kTypeAddressRelease value is incorrect");
-    static_assert(kTypeAddressReleaseReply == 17, "kTypeAddressReleaseReply value is incorrect");
-    static_assert(kTypeAddressReply == 18, "kTypeAddressReply value is incorrect");
-    static_assert(kTypeAddressSolicit == 19, "kTypeAddressSolicit value is incorrect");
-    static_assert(kTypeChildUpdateRequestOfChild == 20, "kTypeChildUpdateRequestOfChild value is incorrect");
-    static_assert(kTypeChildUpdateResponseOfChild == 21, "kTypeChildUpdateResponseOfChild value is incorrect");
-    static_assert(kTypeChildUpdateResponseOfUnknownChild == 22, "kTypeChildUpdateResponseOfUnknownChild is incorrect");
-    static_assert(kTypeLinkAccept == 23, "kTypeLinkAccept value is incorrect");
-    static_assert(kTypeLinkAcceptAndRequest == 24, "kTypeLinkAcceptAndRequest value is incorrect");
-    static_assert(kTypeLinkReject == 25, "kTypeLinkReject value is incorrect");
-    static_assert(kTypeLinkRequest == 26, "kTypeLinkRequest value is incorrect");
-    static_assert(kTypeParentRequest == 27, "kTypeParentRequest value is incorrect");
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    static_assert(kTypeTimeSync == 28, "kTypeTimeSync value is incorrect");
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    static_assert(kTypeLinkMetricsManagementRequest == 29, "kTypeLinkMetricsManagementRequest value is incorrect)");
-    static_assert(kTypeLinkMetricsManagementResponse == 30, "kTypeLinkMetricsManagementResponse value is incorrect)");
-    static_assert(kTypeLinkProbe == 31, "kTypeLinkProbe value is incorrect)");
-#endif
-#else // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    static_assert(kTypeLinkMetricsManagementRequest == 28, "kTypeLinkMetricsManagementRequest value is incorrect)");
-    static_assert(kTypeLinkMetricsManagementResponse == 29, "kTypeLinkMetricsManagementResponse value is incorrect)");
-    static_assert(kTypeLinkProbe == 30, "kTypeLinkProbe value is incorrect)");
-#endif
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#else  // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    static_assert(kTypeLinkMetricsManagementRequest == 16, "kTypeLinkMetricsManagementRequest value is incorrect)");
-    static_assert(kTypeLinkMetricsManagementResponse == 17, "kTypeLinkMetricsManagementResponse value is incorrect)");
-    static_assert(kTypeLinkProbe == 18, "kTypeLinkProbe value is incorrect)");
-#endif
-#endif // OPENTHREAD_FTD
-
+    static_assert(OT_ARRAY_LENGTH(kMessageTypeStrings) == kNumberOfMessageType,
+                  "Message type string array size does not match");
     return kMessageTypeStrings[aType];
 }
 

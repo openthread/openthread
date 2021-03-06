@@ -805,7 +805,7 @@ protected:
      */
     enum MessageType : uint8_t
     {
-        kTypeAdvertisement,
+        kTypeAdvertisement = 0,
         kTypeAnnounce,
         kTypeChildIdRequest,
         kTypeChildIdRequestShort,
@@ -843,6 +843,7 @@ protected:
         kTypeLinkMetricsManagementResponse,
         kTypeLinkProbe,
 #endif
+        kNumberOfMessageType, // Make sure this one is at the bottom of the enum
     };
 
     /**
