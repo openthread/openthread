@@ -4783,17 +4783,17 @@ otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
 }
 #endif
 
-void Interpreter::ProcessLine(char *aBuf, uint16_t aBufLength)
+void Interpreter::ProcessLine(char *aBuf)
 {
     char *         args[kMaxArgs] = {nullptr};
     uint8_t        argsLength;
     const Command *command;
 
-    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, aBufLength + 1) <= aBufLength);
+    VerifyOrExit(aBuf != nullptr && StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1);
 
     VerifyOrExit(Utils::CmdLineParser::ParseCmd(aBuf, argsLength, args, kMaxArgs) == OT_ERROR_NONE,
                  OutputLine("Error: too many args (max %d)", kMaxArgs));
-    VerifyOrExit(argsLength >= 1, OutputLine("Error: no given command."));
+    VerifyOrExit(argsLength >= 1);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     VerifyOrExit((!otDiagIsEnabled(mInstance) || (strcmp(args[0], "diag") == 0)),

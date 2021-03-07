@@ -70,12 +70,10 @@ static void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
     {
-        size_t len;
-
-        if ((len = strlen(aLine)) > 0)
+        if (aLine[0] != '\0')
         {
             add_history(aLine);
-            otCliConsoleInputLine(aLine, (uint16_t)len);
+            otCliConsoleInputLine(aLine);
         }
         free(aLine);
     }
