@@ -1158,7 +1158,7 @@ struct spinel_cstr
         (uint32_t) PREFIX##VALUE, #VALUE \
     }
 
-const char *spinel_to_cstr(const struct spinel_cstr *table, uint32_t val)
+static const char *spinel_to_cstr(const struct spinel_cstr *table, uint32_t val)
 {
     int i;
 
