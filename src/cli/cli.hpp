@@ -125,10 +125,9 @@ public:
      * This method interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
-     * @param[in]  aBufLength  The length of the string in bytes.
      *
      */
-    void ProcessLine(char *aBuf, uint16_t aBufLength);
+    void ProcessLine(char *aBuf);
 
     /**
      * This method delivers raw characters to the client.

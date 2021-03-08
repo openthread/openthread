@@ -227,7 +227,7 @@ otError Uart::ProcessCommand(void)
 #endif
     if (mRxLength > 0)
     {
-        ProcessLine(mRxBuffer, mRxLength);
+        ProcessLine(mRxBuffer);
     }
 
     mRxLength = 0;

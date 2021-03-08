@@ -92,11 +92,10 @@ void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallbac
 /**
  * This method is called to feed in a console input line.
  *
- * @param[in]  aBuf        A pointer to a buffer with an input.
- * @param[in]  aBufLength  A length of the input data stored in the buffer.
+ * @param[in]  aBuf        A pointer to a null-terminated string.
  *
  */
-void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
+void otCliConsoleInputLine(char *aBuf);
 
 /**
  * Initialize the CLI UART module.
