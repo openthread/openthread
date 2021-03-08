@@ -327,7 +327,7 @@ void NcpBase::HandleMlrRegResult(otError             aError,
     SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
                                       SPINEL_PROP_THREAD_MLR_RESPONSE));
 
-    SuccessOrExit(mEncoder.WriteUint8(ThreadErrorToSpinelStatus(aError)));
+    SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(ThreadErrorToSpinelStatus(aError))));
     SuccessOrExit(mEncoder.WriteUint8(aMlrStatus));
 
     if (aError == OT_ERROR_NONE)
