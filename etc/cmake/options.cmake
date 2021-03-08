@@ -302,6 +302,11 @@ if(OT_TIME_SYNC)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1")
 endif()
 
+option(OT_TREL "enable TREL radio link for Thread over Infrastructure feature")
+if (OT_TREL)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
+endif()
+
 option(OT_UDP_FORWARD "enable UDP forward support")
 if(OT_UDP_FORWARD)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1")

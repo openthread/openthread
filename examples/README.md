@@ -61,4 +61,5 @@ This page lists the available common switches with description. Unless stated ot
 | SRP_SERVER | OT_SRP_SERVER | Enable support for SRP server. |
 | THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 (default) / 1.2). For example, set to `1.2` for Thread 1.2. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
+| TREL | OT_TREL | Enables TREL radio link for Thread over Infrastructure feature. |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |
