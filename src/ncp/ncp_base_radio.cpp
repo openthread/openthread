@@ -148,8 +148,9 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
 
     if (mCurTransmitTID)
     {
-        uint8_t header       = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
-        bool    framePending = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
+        uint8_t header = SPINEL_HEADER_FLAG | mCurTransmitTID;
+        header |= static_cast<uint8_t>(mCurCommandIID << SPINEL_HEADER_IID_SHIFT);
+        bool framePending = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
@@ -440,9 +441,6 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 
     SuccessOrExit(error = DecodeStreamRawTxRequest(*frame));
 
-    // Cache the transaction ID for async response
-    mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
-
     // Pass frame to the radio layer. Note, this fails if we
     // haven't enabled raw stream or are already transmitting.
     error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone);
@@ -451,11 +449,16 @@ exit:
 
     if (error == OT_ERROR_NONE)
     {
-        // Don't do anything here yet. We will complete the transaction when we get a transmit done callback
+        // Cache the transaction ID for async response
+        mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
     }
     else
     {
-        error = WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error));
+        // If we fail to report the error now, it will be reported later in HandleReceive() of ncp_base.cpp.
+        if (WriteLastStatusFrame(aHeader, ThreadErrorToSpinelStatus(error)) == OT_ERROR_NONE)
+        {
+            return OT_ERROR_NONE;
+        }
     }
 
     return error;

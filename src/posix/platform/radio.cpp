@@ -96,14 +96,24 @@ void platformRadioInit(otUrl *aRadioUrl)
     bool                 resetRadio             = (radioUrl.GetValue("no-reset") == nullptr);
     bool                 restoreDataset         = (radioUrl.GetValue("ncp-dataset") != nullptr);
     bool                 skipCompatibilityCheck = (radioUrl.GetValue("skip-rcp-compatibility-check") != nullptr);
+    spinel_iid_t         iid                    = 0;
+    const char *         iidString              = radioUrl.GetValue("iid");
     const char *         parameterValue;
     const char *         region;
 #if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     const char *maxPowerTable;
 #endif
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    VerifyOrDie(iidString != nullptr, OT_EXIT_INVALID_ARGUMENTS);
+    iid = static_cast<spinel_iid_t>(atoi(iidString));
+    VerifyOrDie(iid != 0 && iid <= SPINEL_HEADER_IID_MAX, OT_EXIT_INVALID_ARGUMENTS);
+#else
+    VerifyOrDie(iidString == nullptr, OT_EXIT_INVALID_ARGUMENTS);
+#endif
+
     SuccessOrDie(sRadioSpinel.GetSpinelInterface().Init(radioUrl));
-    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck);
+    sRadioSpinel.Init(resetRadio, restoreDataset, skipCompatibilityCheck, iid);
 
     parameterValue = radioUrl.GetValue("fem-lnagain");
     if (parameterValue != nullptr)

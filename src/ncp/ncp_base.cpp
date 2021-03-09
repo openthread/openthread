@@ -216,7 +216,9 @@ NcpBase::NcpBase(Instance *aInstance)
     , mAllowPeekDelegate(nullptr)
     , mAllowPokeDelegate(nullptr)
 #endif
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE == 0
     , mNextExpectedTid(0)
+#endif
     , mResponseQueueHead(0)
     , mResponseQueueTail(0)
     , mAllowLocalNetworkDataChange(false)
@@ -231,6 +233,7 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_FTD
     , mPreferredRouteId(0)
 #endif
+    , mCurCommandIID(0)
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mCurTransmitTID(0)
     , mCurScanChannel(kInvalidScanChannel)
@@ -301,11 +304,20 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     aInstance->Get<Extension::ExtensionBase>().SignalNcpInit(*this);
 #endif
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    memset(mNextExpectedTid, 0, sizeof(mNextExpectedTid));
+#endif
 }
 
 NcpBase *NcpBase::GetNcpInstance(void)
 {
     return sNcpInstance;
+}
+
+spinel_iid_t NcpBase::GetIid(void)
+{
+    return mCurCommandIID;
 }
 
 void NcpBase::ResetCounters(void)
@@ -356,8 +368,13 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
 
     mRxSpinelFrameCounter++;
 
-    // We only support IID zero for now.
-    if (SPINEL_HEADER_GET_IID(header) != 0)
+    mCurCommandIID = SPINEL_HEADER_GET_IID(header);
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    if (mCurCommandIID == 0 || mCurCommandIID > SPINEL_HEADER_IID_MAX)
+#else
+    if (mCurCommandIID != 0)
+#endif
     {
         IgnoreError(WriteLastStatusFrame(header, SPINEL_STATUS_INVALID_INTERFACE));
         ExitNow();
@@ -386,12 +403,21 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
 
     tid = SPINEL_HEADER_GET_TID(header);
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    if ((mNextExpectedTid[mCurCommandIID] != 0) && (tid != mNextExpectedTid[mCurCommandIID]))
+    {
+        mRxSpinelOutOfOrderTidCounter++;
+    }
+
+    mNextExpectedTid[mCurCommandIID] = SPINEL_GET_NEXT_TID(tid);
+#else
     if ((mNextExpectedTid != 0) && (tid != mNextExpectedTid))
     {
         mRxSpinelOutOfOrderTidCounter++;
     }
 
     mNextExpectedTid = SPINEL_GET_NEXT_TID(tid);
+#endif
 
 exit:
     mDisableStreamWrite = false;
@@ -706,6 +732,7 @@ uint8_t NcpBase::GetWrappedResponseQueueIndex(uint8_t aPosition)
 otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus)
 {
     otError        error = OT_ERROR_NONE;
+    spinel_iid_t   iid   = SPINEL_HEADER_GET_IID(aHeader);
     spinel_tid_t   tid   = SPINEL_HEADER_GET_TID(aHeader);
     ResponseEntry *entry;
 
@@ -738,13 +765,17 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
     // get an out of sequence TID, check if we already have a response
     // queued for this TID and if so mark the old entry as deleted.
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    if (tid != mNextExpectedTid[iid])
+#else
     if (tid != mNextExpectedTid)
+#endif
     {
         for (uint8_t cur = mResponseQueueHead; cur < mResponseQueueTail; cur++)
         {
             entry = &mResponseQueue[GetWrappedResponseQueueIndex(cur)];
 
-            if (entry->mIsInUse && (entry->mTid == tid))
+            if (entry->mIsInUse && (entry->mIid == iid) && (entry->mTid == tid))
             {
                 // Entry is just marked here and will be removed
                 // from `SendQueuedResponses()`.
@@ -759,6 +790,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
 
     entry = &mResponseQueue[GetWrappedResponseQueueIndex(mResponseQueueTail)];
 
+    entry->mIid             = iid;
     entry->mTid             = tid;
     entry->mIsInUse         = true;
     entry->mType            = aType;
@@ -780,8 +812,8 @@ otError NcpBase::SendQueuedResponses(void)
 
         if (entry.mIsInUse)
         {
-            uint8_t header = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0;
-
+            uint8_t header = SPINEL_HEADER_FLAG;
+            header |= static_cast<uint8_t>(entry.mIid << SPINEL_HEADER_IID_SHIFT);
             header |= static_cast<uint8_t>(entry.mTid << SPINEL_HEADER_TID_SHIFT);
 
             if (entry.mType == kResponseTypeLastStatus)
@@ -2556,6 +2588,11 @@ otError otNcpStreamWrite(int aStreamId, const uint8_t *aDataPtr, int aDataLen)
     }
 
     return error;
+}
+
+extern "C" spinel_iid_t otNcpPlatGetIid()
+{
+    return ot::Ncp::NcpBase::GetNcpInstance()->GetIid();
 }
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP)

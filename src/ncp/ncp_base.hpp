@@ -91,6 +91,14 @@ public:
     static NcpBase *GetNcpInstance(void);
 
     /**
+     * This method returns the IID of the current spinel command.
+     *
+     * @returns IID.
+     *
+     */
+    spinel_iid_t GetIid(void);
+
+    /**
      * This method sends data to host via specific stream.
      *
      *
@@ -200,6 +208,7 @@ protected:
      */
     struct ResponseEntry
     {
+        uint8_t      mIid : 2;              ///< Spinel interface id.
         uint8_t      mTid : 4;              ///< Spinel transaction id.
         bool         mIsInUse : 1;          ///< `true` if this entry is in use, `false` otherwise.
         ResponseType mType : 2;             ///< Response type.
@@ -559,7 +568,11 @@ protected:
 
     uint8_t mTxBuffer[kTxBufferSize];
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    spinel_tid_t mNextExpectedTid[4];
+#else
     spinel_tid_t mNextExpectedTid;
+#endif
 
     uint8_t       mResponseQueueHead;
     uint8_t       mResponseQueueTail;
@@ -581,6 +594,8 @@ protected:
 #endif
     uint8_t mPreferredRouteId;
 #endif
+
+    uint8_t mCurCommandIID;
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     uint8_t mCurTransmitTID;

@@ -183,6 +183,7 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
     , mPropertyFormat(nullptr)
     , mExpectedCommand(0)
     , mError(OT_ERROR_NONE)
+    , mIid(0)
     , mTransmitFrame(nullptr)
     , mShortAddress(0)
     , mPanId(0xffff)
@@ -219,9 +220,10 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
-                                                          bool aRestoreDatasetFromNcp,
-                                                          bool aSkipRcpCompatibilityCheck)
+void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool         aResetRadio,
+                                                          bool         aRestoreDatasetFromNcp,
+                                                          bool         aSkipRcpCompatibilityCheck,
+                                                          spinel_iid_t aIid)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -230,13 +232,18 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
     mResetRadioOnStartup = aResetRadio;
 #endif
 
+    mIid = aIid;
+
     if (aResetRadio)
     {
         SuccessOrExit(error = SendReset());
+        SuccessOrExit(error = WaitResponse());
+        VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
     }
-
-    SuccessOrExit(error = WaitResponse());
-    VerifyOrExit(mIsReady, error = OT_ERROR_FAILED);
+    else
+    {
+        mIsReady = true;
+    }
 
     SuccessOrExit(error = CheckSpinelVersion());
     SuccessOrExit(error = Get(SPINEL_PROP_NCP_VERSION, SPINEL_DATATYPE_UTF8_S, mVersion, sizeof(mVersion)));
@@ -447,9 +454,15 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleReceivedFrame(void)
 
     unpacked = spinel_datatype_unpack(mRxFrameBuffer.GetFrame(), mRxFrameBuffer.GetLength(), "C", &header);
 
-    VerifyOrExit(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG &&
-                     SPINEL_HEADER_GET_IID(header) == 0,
-                 error = OT_ERROR_PARSE);
+    // Accept spinel messages with the correct IID or broadcast IID 0.
+    spinel_iid_t iid = SPINEL_HEADER_GET_IID(header);
+    if (iid != 0 && iid != mIid)
+    {
+        otLogDebgPlat("Discarding spinel message with IID=%u", iid);
+        mRxFrameBuffer.DiscardFrame();
+        ExitNow();
+    }
+    VerifyOrExit(unpacked > 0 && (header & SPINEL_HEADER_FLAG) == SPINEL_HEADER_FLAG, error = OT_ERROR_PARSE);
 
     if (SPINEL_HEADER_GET_TID(header) == 0)
     {
@@ -558,6 +571,9 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleResponse(const uint8_
     rval = spinel_datatype_unpack(aBuffer, aLength, "CiiD", &header, &cmd, &key, &data, &len);
     VerifyOrExit(rval > 0 && cmd >= SPINEL_CMD_PROP_VALUE_IS && cmd <= SPINEL_CMD_PROP_VALUE_REMOVED,
                  error = OT_ERROR_PARSE);
+
+    otLogDebgPlat("Spinel resp: cmd:%s, prop:%s, iid:%02x, tid:%02x\n", spinel_command_to_cstr(cmd),
+                  spinel_prop_key_to_cstr(key), SPINEL_HEADER_GET_IID(header), SPINEL_HEADER_GET_TID(header));
 
     if (mWaitingTid == SPINEL_HEADER_GET_TID(header))
     {
@@ -1699,9 +1715,12 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SendCommand(uint32_t    
     spinel_ssize_t packed;
     uint16_t       offset;
 
+    otLogDebgPlat("Spinel send: cmd:%s: prop:%s, iid:%02x, tid:%02x\n", spinel_command_to_cstr(aCommand),
+                  spinel_prop_key_to_cstr(aKey), mIid, tid);
+
     // Pack the header, command and key
-    packed = spinel_datatype_pack(buffer, sizeof(buffer), "Cii", SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | tid,
-                                  aCommand, aKey);
+    packed = spinel_datatype_pack(buffer, sizeof(buffer), "Cii",
+                                  SPINEL_HEADER_FLAG | (mIid << SPINEL_HEADER_IID_SHIFT) | tid, aCommand, aKey);
 
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
@@ -1835,21 +1854,21 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
-    unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
-    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
-
-    aBuffer += unpacked;
-    aLength -= static_cast<uint16_t>(unpacked);
-
     if (status == SPINEL_STATUS_OK)
     {
+        unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &framePending);
+        VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+        aBuffer += unpacked;
+        aLength -= static_cast<uint16_t>(unpacked);
+
         SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength, unpacked));
         aBuffer += unpacked;
         aLength -= static_cast<uint16_t>(unpacked);
     }
     else
     {
-        error = SpinelStatusToOtError(status);
+        ExitNow(error = SpinelStatusToOtError(status));
     }
 
     if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
@@ -2208,9 +2227,12 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     if (mResetRadioOnStartup)
     {
         SuccessOrDie(SendReset());
+        SuccessOrDie(WaitResponse());
     }
-
-    SuccessOrDie(WaitResponse());
+    else
+    {
+        mIsReady = true;
+    }
 
     SuccessOrDie(Set(SPINEL_PROP_PHY_ENABLED, SPINEL_DATATYPE_BOOL_S, true));
     mState = kStateSleep;
@@ -2301,6 +2323,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
+#if OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
     for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
     {
         int8_t power = mMaxPowerTable.GetTransmitPower(channel);
@@ -2316,6 +2339,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
             }
         }
     }
+#endif // OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE
 
     CalcRcpTimeOffset();
 }

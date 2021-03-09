@@ -288,7 +288,11 @@ otError SubMac::Send(void)
 #endif
     case kStateTransmit:
     case kStateEnergyScan:
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+        ExitNow(error = OT_ERROR_BUSY);
+#else
         ExitNow(error = OT_ERROR_INVALID_STATE);
+#endif
         OT_UNREACHABLE_CODE(break);
 
     case kStateSleep:
@@ -476,6 +480,10 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
         // since there may be no CCA check performed by radio.
         break;
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    // Treat a busy RCP like a channel access failure
+    case OT_ERROR_BUSY:
+#endif
     case OT_ERROR_CHANNEL_ACCESS_FAILURE:
         ccaSuccess = false;
 
@@ -710,7 +718,12 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 {
     bool swCsma = true;
 
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+    // Use software csma to perform retries in case of a busy RCP
+    goto exit;
+#else
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
+#endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());

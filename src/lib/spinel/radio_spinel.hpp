@@ -118,9 +118,10 @@ public:
      *                                         (only used when attempts to upgrade from NCP to RCP mode),
      *                                         FALSE otherwise.
      * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
+     * @param[in]  aIid                        The IID of the Host Application.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck, spinel_iid_t aIid);
 
     /**
      * Deinitialize this radio transceiver.
@@ -939,6 +940,7 @@ private:
     va_list           mPropertyArgs;    ///< The arguments pack or unpack spinel property of current transaction.
     uint32_t          mExpectedCommand; ///< Expected response command of current transaction.
     otError           mError;           ///< The result of current transaction.
+    spinel_iid_t      mIid;             ///< The spinel interface id used by this process.
 
     uint8_t       mRxPsdu[OT_RADIO_FRAME_MAX_SIZE];
     uint8_t       mTxPsdu[OT_RADIO_FRAME_MAX_SIZE];
