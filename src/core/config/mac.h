@@ -423,7 +423,7 @@
  * SED-to-SED option.
  *
  * This is an experimental feature. This feature enables an SED to do CSL transmission (as CSL Transmitter) and
- * csl reception, thus enabling SED to SED communication. When an SED is connected to another SED, they are
+ * CSL reception, thus enabling SED to SED communication. When an SED is connected to another SED, they are
  * detached and not in any Thread network.
  *
  */

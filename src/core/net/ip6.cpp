@@ -1307,7 +1307,7 @@ start:
         }
 
         // `SendMessage()` takes custody of message in the success case
-        SuccessOrExit(error = Get<ThreadNetif>().SendMessage(aMessage));
+        Get<ThreadNetif>().SendMessage(aMessage);
         shouldFreeMessage = false;
     }
 

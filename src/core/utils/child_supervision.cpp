@@ -91,7 +91,7 @@ void ChildSupervisor::SendMessage(Child &aChild)
     childIndex = Get<ChildTable>().GetChildIndex(aChild);
     SuccessOrExit(message->Append(childIndex));
 
-    SuccessOrExit(Get<ThreadNetif>().SendMessage(*message));
+    Get<ThreadNetif>().SendMessage(*message);
     message = nullptr;
 
     otLogInfoUtil("Sending supervision message to child 0x%04x", aChild.GetRloc16());

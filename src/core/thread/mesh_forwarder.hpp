@@ -182,12 +182,8 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the message.
-     * @retval OT_ERROR_ALREADY  The message was already enqueued.
-     * @retval OT_ERROR_DROP     The message could not be sent and should be dropped.
-     *
      */
-    otError SendMessage(Message &aMessage);
+    void SendMessage(Message &aMessage);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**

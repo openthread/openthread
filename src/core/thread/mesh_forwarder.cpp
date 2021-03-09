@@ -153,7 +153,7 @@ exit:
     return;
 }
 
-otError MeshForwarder::SendMessage(Message &aMessage)
+void MeshForwarder::SendMessage(Message &aMessage)
 {
 #if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
@@ -245,8 +245,6 @@ otError MeshForwarder::SendMessage(Message &aMessage)
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
     mScheduleTransmissionTask.Post();
-
-    return OT_ERROR_NONE;
 }
 
 void MeshForwarder::PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest)
@@ -1620,7 +1618,7 @@ otError MeshForwarder::SendEmptyMessage(void)
     message = Get<MessagePool>().New(Message::kTypeMacEmptyData, 0);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
-    SuccessOrExit(error = SendMessage(*message));
+    SendMessage(*message);
 
 exit:
     FreeMessageOnError(message, error);

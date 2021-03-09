@@ -46,8 +46,10 @@
  * enabled.
  *
  */
-#define OPENTHREAD_MTD_S2S \
-    OPENTHREAD_MTD         \
-    &&OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE
+#ifdef OPENTHREAD_MTD_S2S
+#error \
+    "OPENTHREAD_MTD_S2S should not be directly defined. Use `OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE` to enable SSED to SSED link instead."
+#endif
+#define OPENTHREAD_MTD_S2S (OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE)
 
 #endif // S2S_HPP_

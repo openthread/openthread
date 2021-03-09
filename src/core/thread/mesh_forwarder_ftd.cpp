@@ -586,7 +586,7 @@ void MeshForwarder::HandleMesh(uint8_t *             aFrame,
         message->ClearRadioType();
 #endif
 
-        IgnoreError(SendMessage(*message));
+        SendMessage(*message);
     }
 
 exit:

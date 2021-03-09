@@ -161,10 +161,8 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully submitted the message to the interface.
-     *
      */
-    otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    void SendMessage(Message &aMessage) { mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
