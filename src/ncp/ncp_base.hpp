@@ -456,8 +456,8 @@ protected:
     void StartLegacy(void);
     void StopLegacy(void);
 #else
-    void StartLegacy(void) {}
-    void StopLegacy(void) {}
+    void         StartLegacy(void) {}
+    void         StopLegacy(void) {}
 #endif
 
     static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);
