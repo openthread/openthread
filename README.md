@@ -17,16 +17,16 @@ More information about Thread can be found at [threadgroup.org](http://threadgro
 [thread]: http://threadgroup.org/technology/ourtechnology
 [ot-repo]: https://github.com/openthread/openthread
 [ot-logo]: doc/images/openthread_logo.png
-[ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amaster+event%3Apush
-[ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=master&event=push
-[ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amaster+event%3Apush
-[ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=master&event=push
-[ot-gh-action-docker]: https://github.com/openthread/openthread/actions?query=workflow%3ADocker+branch%3Amaster+event%3Apush
-[ot-gh-action-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=master&event=push
+[ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amain+event%3Apush
+[ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=main&event=push
+[ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amain+event%3Apush
+[ot-gh-action-simulation-svg]: https://github.com/openthread/openthread/workflows/Simulation/badge.svg?branch=main&event=push
+[ot-gh-action-docker]: https://github.com/openthread/openthread/actions?query=workflow%3ADocker+branch%3Amain+event%3Apush
+[ot-gh-action-docker-svg]: https://github.com/openthread/openthread/workflows/Docker/badge.svg?branch=main&event=push
 [ot-lgtm]: https://lgtm.com/projects/g/openthread/openthread/context:cpp
 [ot-lgtm-svg]: https://img.shields.io/lgtm/grade/cpp/g/openthread/openthread.svg?logo=lgtm&logoWidth=18
 [ot-codecov]: https://codecov.io/gh/openthread/openthread
-[ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/master/graph/badge.svg
+[ot-codecov-svg]: https://codecov.io/gh/openthread/openthread/branch/main/graph/badge.svg
 
 # Who supports OpenThread?
 
@@ -51,9 +51,9 @@ If you're interested in contributing to OpenThread, read on.
 
 # Contributing
 
-We would love for you to contribute to OpenThread and help make it even better than it is today! See our [Contributing Guidelines](https://github.com/openthread/openthread/blob/master/CONTRIBUTING.md) for more information.
+We would love for you to contribute to OpenThread and help make it even better than it is today! See our [Contributing Guidelines](https://github.com/openthread/openthread/blob/main/CONTRIBUTING.md) for more information.
 
-Contributors are required to abide by our [Code of Conduct](https://github.com/openthread/openthread/blob/master/CODE_OF_CONDUCT.md) and [Coding Conventions and Style Guide](https://github.com/openthread/openthread/blob/master/STYLE_GUIDE.md).
+Contributors are required to abide by our [Code of Conduct](https://github.com/openthread/openthread/blob/main/CODE_OF_CONDUCT.md) and [Coding Conventions and Style Guide](https://github.com/openthread/openthread/blob/main/STYLE_GUIDE.md).
 
 # Versioning
 
@@ -61,7 +61,7 @@ OpenThread follows the [Semantic Versioning guidelines](http://semver.org/) for 
 
 # License
 
-OpenThread is released under the [BSD 3-Clause license](https://github.com/openthread/openthread/blob/master/LICENSE). See the [`LICENSE`](https://github.com/openthread/openthread/blob/master/LICENSE) file for more information.
+OpenThread is released under the [BSD 3-Clause license](https://github.com/openthread/openthread/blob/main/LICENSE). See the [`LICENSE`](https://github.com/openthread/openthread/blob/main/LICENSE) file for more information.
 
 Please only use the OpenThread name and marks when accurately referencing this software distribution. Do not use the marks in a way that suggests you are endorsed by or otherwise affiliated with Nest, Google, or The Thread Group.
 

@@ -183,7 +183,7 @@ $ make -f examples/Makefile-efr32mg21 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHC
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[cli]: https://github.com/openthread/openthread/blob/main/src/cli/README.md
 
 ## Verification
 
