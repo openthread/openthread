@@ -679,7 +679,7 @@ private:
         {"eidcache", &Interpreter::ProcessEidCache},
 #endif
         {"eui64", &Interpreter::ProcessEui64},
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
         {"exit", &Interpreter::ProcessExit},
 #endif
         {"extaddr", &Interpreter::ProcessExtAddress},

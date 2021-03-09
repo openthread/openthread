@@ -1662,7 +1662,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
 otError Interpreter::ProcessExit(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
