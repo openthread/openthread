@@ -38,11 +38,15 @@ apply_dependencies()
 
     project_name=$(git remote get-url origin | grep -oE '[^/:]+/[^/:]+\.git$' | cut -d. -f1)
     echo "project name: ${project_name}"
+
+    git config user.name || git config user.name 'OpenThread Git'
+    git config user.email || git config user.email 'git@openthread'
+
     while read -r dependency; do
         echo "${dependency}"
         depends_on_pr="$(echo "${dependency}" | tr -d '\r\n' | cut -d# -f2)"
         echo "pr: #${depends_on_pr}"
-        git pull origin "pull/${depends_on_pr}/merge"
+        git pull --no-edit origin "pull/${depends_on_pr}/merge"
     done < <(grep -E "^Depends-On: *${project_name}" || true)
 }
 
