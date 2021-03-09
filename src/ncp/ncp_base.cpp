@@ -1935,6 +1935,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_DUA));
 #endif
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_BACKBONE_ROUTER));
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 exit:

@@ -33,6 +33,9 @@
 #include "ncp_base.hpp"
 #include <openthread/config.h>
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include <openthread/backbone_router_ftd.h>
+#endif
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
 #include <openthread/channel_manager.h>
 #endif
@@ -397,6 +400,105 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE>(void)
+{
+    uint8_t state = SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED;
+
+    switch (otBackboneRouterGetState(mInstance))
+    {
+    case OT_BACKBONE_ROUTER_STATE_DISABLED:
+        state = SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED;
+        break;
+
+    case OT_BACKBONE_ROUTER_STATE_SECONDARY:
+        state = SPINEL_THREAD_BACKBONE_ROUTER_STATE_SECONDARY;
+        break;
+
+    case OT_BACKBONE_ROUTER_STATE_PRIMARY:
+        state = SPINEL_THREAD_BACKBONE_ROUTER_STATE_PRIMARY;
+        break;
+    }
+
+    return mEncoder.WriteUint8(state);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE>(void)
+{
+    uint8_t state;
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(state));
+
+    if (state)
+    {
+        otBackboneRouterSetEnabled(mInstance, true);
+    }
+    else
+    {
+        otBackboneRouterSetEnabled(mInstance, false);
+    }
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_CONFIG>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otBackboneRouterConfig bbrConfig;
+
+    otBackboneRouterGetConfig(mInstance, &bbrConfig);
+
+    SuccessOrExit(error = mEncoder.WriteUint16(bbrConfig.mReregistrationDelay));
+    SuccessOrExit(error = mEncoder.WriteUint32(bbrConfig.mMlrTimeout));
+    SuccessOrExit(error = mEncoder.WriteUint8(bbrConfig.mSequenceNumber));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_CONFIG>(void)
+{
+    otError                error = OT_ERROR_NONE;
+    otBackboneRouterConfig bbrConfig;
+
+    SuccessOrExit(error = mDecoder.ReadUint16(bbrConfig.mReregistrationDelay));
+    SuccessOrExit(error = mDecoder.ReadUint32(bbrConfig.mMlrTimeout));
+    SuccessOrExit(error = mDecoder.ReadUint8(bbrConfig.mSequenceNumber));
+
+    SuccessOrExit(error = otBackboneRouterSetConfig(mInstance, &bbrConfig));
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTER>(void)
+{
+    return otBackboneRouterRegister(mInstance);
+}
+
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTRATION_JITTER>(void)
+{
+    uint8_t jitter = otBackboneRouterGetRegistrationJitter(mInstance);
+
+    return mEncoder.WriteUint8(jitter);
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTRATION_JITTER>(void)
+{
+    otError error = OT_ERROR_NONE;
+    uint8_t jitter;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(jitter));
+
+    otBackboneRouterSetRegistrationJitter(mInstance, jitter);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {

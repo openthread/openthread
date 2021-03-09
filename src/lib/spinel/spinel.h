@@ -724,6 +724,15 @@ enum
     SPINEL_RADIO_LINK_TREL_UDP6     = 1,
 };
 
+// Backbone Router states used for:
+// @ref SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE
+enum
+{
+    SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED  = 0,
+    SPINEL_THREAD_BACKBONE_ROUTER_STATE_SECONDARY = 1,
+    SPINEL_THREAD_BACKBONE_ROUTER_STATE_PRIMARY   = 2,
+};
+
 typedef enum
 {
     SPINEL_SRP_CLIENT_ITEM_STATE_TO_ADD     = 0, // Item to be added/registered.
@@ -1190,15 +1199,16 @@ enum
     SPINEL_CAP_DUA                     = (SPINEL_CAP_OPENTHREAD__BEGIN + 15),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
-    SPINEL_CAP_THREAD__BEGIN        = 1024,
-    SPINEL_CAP_THREAD_COMMISSIONER  = (SPINEL_CAP_THREAD__BEGIN + 0),
-    SPINEL_CAP_THREAD_TMF_PROXY     = (SPINEL_CAP_THREAD__BEGIN + 1),
-    SPINEL_CAP_THREAD_UDP_FORWARD   = (SPINEL_CAP_THREAD__BEGIN + 2),
-    SPINEL_CAP_THREAD_JOINER        = (SPINEL_CAP_THREAD__BEGIN + 3),
-    SPINEL_CAP_THREAD_BORDER_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 4),
-    SPINEL_CAP_THREAD_SERVICE       = (SPINEL_CAP_THREAD__BEGIN + 5),
-    SPINEL_CAP_THREAD_CSL_RECEIVER  = (SPINEL_CAP_THREAD__BEGIN + 6),
-    SPINEL_CAP_THREAD__END          = 1152,
+    SPINEL_CAP_THREAD__BEGIN          = 1024,
+    SPINEL_CAP_THREAD_COMMISSIONER    = (SPINEL_CAP_THREAD__BEGIN + 0),
+    SPINEL_CAP_THREAD_TMF_PROXY       = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD_UDP_FORWARD     = (SPINEL_CAP_THREAD__BEGIN + 2),
+    SPINEL_CAP_THREAD_JOINER          = (SPINEL_CAP_THREAD__BEGIN + 3),
+    SPINEL_CAP_THREAD_BORDER_ROUTER   = (SPINEL_CAP_THREAD__BEGIN + 4),
+    SPINEL_CAP_THREAD_SERVICE         = (SPINEL_CAP_THREAD__BEGIN + 5),
+    SPINEL_CAP_THREAD_CSL_RECEIVER    = (SPINEL_CAP_THREAD__BEGIN + 6),
+    SPINEL_CAP_THREAD_BACKBONE_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 8),
+    SPINEL_CAP_THREAD__END            = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
     SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
@@ -2959,6 +2969,63 @@ enum
      *
      */
     SPINEL_PROP_THREAD_DUA_ID = SPINEL_PROP_THREAD_EXT__BEGIN + 54,
+
+    /// Thread 1.2 Primary Backbone Router information in the Thread Network.
+    /** Format: `SSLC` - Read-Only
+     *
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * `S`: Server.
+     * `S`: Reregistration Delay (in seconds).
+     * `L`: Multicast Listener Registration Timeout (in seconds).
+     * `C`: Sequence Number.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY = SPINEL_PROP_THREAD_EXT__BEGIN + 55,
+
+    /// Thread 1.2 Backbone Router local state.
+    /** Format: `C` - Read-Write
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * The valid values are specified by SPINEL_THREAD_BACKBONE_ROUTER_STATE_<state> enumeration.
+     * Backbone functionality will be disabled if SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED
+     * is writted to this property, enabled otherwise.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE = SPINEL_PROP_THREAD_EXT__BEGIN + 56,
+
+    /// Local Thread 1.2 Backbone Router configuration.
+    /** Format: SLC - Read-Write
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * `S`: Reregistration Delay (in seconds).
+     * `L`: Multicast Listener Registration Timeout (in seconds).
+     * `C`: Sequence Number.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_CONFIG = SPINEL_PROP_THREAD_EXT__BEGIN + 57,
+
+    /// Register local Thread 1.2 Backbone Router configuration.
+    /** Format: Empty (Write only).
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * Writing to this property (with any value) will register local Backbone Router configuration.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTER = SPINEL_PROP_THREAD_EXT__BEGIN + 58,
+
+    /// Thread 1.2 Backbone Router registration jitter.
+    /** Format: `C` - Read-Write
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * `C`: Backbone Router registration jitter.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTRATION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 59,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 
