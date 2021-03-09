@@ -125,4 +125,4 @@ Compiled binaries may be flashed onto the MKW41Z512 using drag-and-drop into the
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[cli]: https://github.com/openthread/openthread/blob/main/src/cli/README.md
