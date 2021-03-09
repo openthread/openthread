@@ -132,7 +132,7 @@ otError Server::SetLeaseRange(uint32_t aMinLease, uint32_t aMaxLease, uint32_t a
 
     // TODO: Support longer LEASE.
     // We use milliseconds timer for LEASE & KEY-LEASE, this is to avoid overflow.
-    VerifyOrExit(aMaxKeyLease <= TimerMilli::kMaxDelay / 1000, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aMaxKeyLease <= Time::MsecToSec(TimerMilli::kMaxDelay), error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aMinLease <= aMaxLease, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aMinKeyLease <= aMaxKeyLease, error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aMinLease <= aMinKeyLease, error = OT_ERROR_INVALID_ARGS);
@@ -214,11 +214,41 @@ void Server::AddHost(Host *aHost)
     IgnoreError(mHosts.Add(*aHost));
 }
 
-void Server::RemoveAndFreeHost(Host *aHost)
+void Server::RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandler)
 {
-    otLogInfoSrp("[server] fully remove host %s", aHost->GetFullName());
-    IgnoreError(mHosts.Remove(*aHost));
-    aHost->Free();
+    VerifyOrExit(aHost != nullptr);
+
+    aHost->mLease = 0;
+    aHost->ClearResources();
+
+    if (aRetainName)
+    {
+        otLogInfoSrp("[server] remove host '%s' (but retain its name)", aHost->mFullName);
+    }
+    else
+    {
+        aHost->mKeyLease = 0;
+        IgnoreError(mHosts.Remove(*aHost));
+        otLogInfoSrp("[server] fully remove host '%s'", aHost->mFullName);
+    }
+
+    if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
+    {
+        mServiceUpdateHandler(aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        // We don't wait for the reply from the service update handler,
+        // but always remove the host (and its services) regardless of
+        // host/service update result. Because removing a host should fail
+        // only when there is system failure of the platform mDNS implementation
+        // and in which case the host is not expected to be still registered.
+    }
+
+    if (!aRetainName)
+    {
+        aHost->Free();
+    }
+
+exit:
+    return;
 }
 
 const Server::Service *Server::FindService(const char *aFullName) const
@@ -321,25 +351,17 @@ void Server::CommitSrpUpdate(otError                  aError,
         if (aHost.GetKeyLease() == 0)
         {
             otLogInfoSrp("[server] remove key of host %s", aHost.GetFullName());
-
-            if (existingHost != nullptr)
-            {
-                RemoveAndFreeHost(existingHost);
-            }
+            RemoveHost(existingHost, /* aRetainName */ false, /* aNotifyServiceHandler */ false);
         }
         else if (existingHost != nullptr)
         {
             Service *service = nullptr;
 
-            existingHost->SetLease(aHost.GetLease());
             existingHost->SetKeyLease(aHost.GetKeyLease());
-
-            // Clear all resources associated to this host and its services.
-            existingHost->ClearResources();
-            otLogInfoSrp("[server] remove host '%s' (but retain its name)", existingHost->GetFullName());
+            RemoveHost(existingHost, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             while ((service = existingHost->GetNextService(service)) != nullptr)
             {
-                service->DeleteResourcesButRetainName();
+                existingHost->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
         }
 
@@ -360,10 +382,7 @@ void Server::CommitSrpUpdate(otError                  aError,
 
             if (service->mIsDeleted)
             {
-                if (existingService != nullptr)
-                {
-                    existingService->DeleteResourcesButRetainName();
-                }
+                existingHost->RemoveService(existingService, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
             else
             {
@@ -428,9 +447,11 @@ void Server::Stop(void)
 
     while (!mHosts.IsEmpty())
     {
-        mHosts.Pop()->Free();
+        RemoveHost(mHosts.GetHead(), /* aRetainName */ false, /* aNotifyServiceHandler */ true);
     }
 
+    // TODO: We should cancel any oustanding service updates, but current
+    // OTBR mDNS publisher cannot properly handle it.
     while (!mOutstandingUpdates.IsEmpty())
     {
         mOutstandingUpdates.Pop()->Free();
@@ -530,7 +551,7 @@ void Server::HandleDnsUpdate(Message &                aMessage,
     // Per 2.3.2 of SRP draft 6, no prerequisites should be included in a SRP update.
     VerifyOrExit(aDnsHeader.GetPrerequisiteRecordCount() == 0, error = OT_ERROR_FAILED);
 
-    host = Host::New();
+    host = Host::New(GetInstance());
     VerifyOrExit(host != nullptr, error = OT_ERROR_NO_BUFS);
     SuccessOrExit(error = ProcessUpdateSection(*host, aMessage, aDnsHeader, zone, aOffset));
 
@@ -1147,7 +1168,7 @@ void Server::HandleLeaseTimer(void)
             otLogInfoSrp("[server] KEY LEASE of host %s expired", host->GetFullName());
 
             // Removes the whole host and all services if the KEY RR expired.
-            RemoveAndFreeHost(host);
+            RemoveHost(host, /* aRetainName */ false, /* aNotifyServiceHandler */ true);
         }
         else if (host->IsDeleted())
         {
@@ -1168,7 +1189,7 @@ void Server::HandleLeaseTimer(void)
                 if (service->GetKeyExpireTime() <= now)
                 {
                     otLogInfoSrp("[server] KEY LEASE of service %s expired", service->mFullName);
-                    host->RemoveAndFreeService(service);
+                    host->RemoveService(service, /* aRetainName */ false, /* aNotifyServiceHandler */ true);
                 }
                 else
                 {
@@ -1185,10 +1206,10 @@ void Server::HandleLeaseTimer(void)
             otLogInfoSrp("[server] LEASE of host %s expired", host->GetFullName());
 
             // If the host expired, delete all resources of this host and its services.
-            host->DeleteResourcesButRetainName();
+            RemoveHost(host, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
             while ((service = host->GetNextService(service)) != nullptr)
             {
-                service->DeleteResourcesButRetainName();
+                host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
             }
 
             earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
@@ -1216,8 +1237,8 @@ void Server::HandleLeaseTimer(void)
                 {
                     otLogInfoSrp("[server] LEASE of service %s expired", service->mFullName);
 
-                    // The service gets expired, delete it.
-                    service->DeleteResourcesButRetainName();
+                    // The service is expired, delete it.
+                    host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
                     earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
                 }
                 else
@@ -1236,7 +1257,7 @@ void Server::HandleLeaseTimer(void)
     {
         if (!mLeaseTimer.IsRunning() || earliestExpireTime <= mLeaseTimer.GetFireTime())
         {
-            otLogInfoSrp("[server] lease timer is scheduled for %u seconds", (earliestExpireTime - now) / 1000);
+            otLogInfoSrp("[server] lease timer is scheduled for %u seconds", Time::MsecToSec(earliestExpireTime - now));
             mLeaseTimer.StartAt(earliestExpireTime, 0);
         }
     }
@@ -1384,13 +1405,6 @@ void Server::Service::ClearResources(void)
     mTxtLength = 0;
 }
 
-void Server::Service::DeleteResourcesButRetainName(void)
-{
-    mIsDeleted = true;
-    ClearResources();
-    otLogInfoSrp("[server] remove service '%s' (but retain its name)", mFullName);
-}
-
 otError Server::Service::CopyResourcesFrom(const Service &aService)
 {
     otError error;
@@ -1426,7 +1440,7 @@ bool Server::Service::MatchesServiceName(const char *aServiceName) const
     return j == 0 && i > 0 && mFullName[i - 1] == '.';
 }
 
-Server::Host *Server::Host::New(void)
+Server::Host *Server::Host::New(Instance &aInstance)
 {
     void *buf;
     Host *host = nullptr;
@@ -1434,7 +1448,7 @@ Server::Host *Server::Host::New(void)
     buf = Instance::HeapCAlloc(1, sizeof(Host));
     VerifyOrExit(buf != nullptr);
 
-    host = new (buf) Host();
+    host = new (buf) Host(aInstance);
 
 exit:
     return host;
@@ -1442,13 +1456,14 @@ exit:
 
 void Server::Host::Free(void)
 {
-    RemoveAndFreeAllServices();
+    FreeAllServices();
     Instance::HeapFree(mFullName);
     Instance::HeapFree(this);
 }
 
-Server::Host::Host(void)
-    : mFullName(nullptr)
+Server::Host::Host(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mFullName(nullptr)
     , mAddressesNum(0)
     , mNext(nullptr)
     , mLease(0)
@@ -1526,34 +1541,67 @@ exit:
     return service;
 }
 
-void Server::Host::RemoveAndFreeService(Service *aService)
+void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler)
 {
-    if (aService != nullptr)
+    const Server &server = Get<Server>();
+
+    VerifyOrExit(aService != nullptr);
+
+    aService->mIsDeleted = true;
+
+    if (aRetainName)
     {
-        IgnoreError(mServices.Remove(*aService));
+        aService->ClearResources();
+        otLogInfoSrp("[server] remove service '%s' (but retain its name)", aService->mFullName);
+    }
+    else
+    {
+        otLogInfoSrp("[server] fully remove service '%s'", aService->mFullName);
+    }
+
+    IgnoreError(mServices.Remove(*aService));
+
+    if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
+    {
+        LinkedList<Service> remainingServices = mServices;
+
+        mServices.Clear();
+        IgnoreError(mServices.Add(*aService));
+
+        server.mServiceUpdateHandler(this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
+        // We don't wait for the reply from the service update handler,
+        // but always remove the service regardless of service update result.
+        // Because removing a service should fail only when there is system
+        // failure of the platform mDNS implementation and in which case the
+        // service is not expected to be still registered.
+
+        mServices = remainingServices;
+    }
+
+    if (aRetainName)
+    {
+        IgnoreError(mServices.Add(*aService));
+    }
+    else
+    {
         aService->Free();
     }
+
+exit:
+    return;
 }
 
-void Server::Host::RemoveAndFreeAllServices(void)
+void Server::Host::FreeAllServices(void)
 {
     while (!mServices.IsEmpty())
     {
-        RemoveAndFreeService(mServices.GetHead());
+        RemoveService(mServices.GetHead(), /* aRetainName */ false, /* aNotifyServiceHandler */ false);
     }
 }
 
 void Server::Host::ClearResources(void)
 {
     mAddressesNum = 0;
-}
-
-void Server::Host::DeleteResourcesButRetainName(void)
-{
-    // Mark the host as deleted.
-    mLease = 0;
-    ClearResources();
-    otLogInfoSrp("[server] remove host '%s' (but retain its name)", mFullName);
 }
 
 void Server::Host::CopyResourcesFrom(const Host &aHost)
