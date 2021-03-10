@@ -86,6 +86,7 @@ void DatasetUpdater::CancelUpdate(void)
     VerifyOrExit(mDataset != nullptr);
 
     FreeMessage(mDataset);
+    mDataset = nullptr;
     mTimer.Stop();
 
 exit:
