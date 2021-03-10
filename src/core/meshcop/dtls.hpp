@@ -414,7 +414,7 @@ private:
     uint8_t mPskLength;
 
     static const mbedtls_ecp_group_id sCurves[];
-#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
     static const int sHashes[];
 #endif
 
