@@ -50,6 +50,7 @@
 #include "thread/indirect_sender.hpp"
 #include "thread/lowpan.hpp"
 #include "thread/network_data_leader.hpp"
+#include "thread/sed_to_sed.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {
@@ -181,12 +182,8 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the message.
-     * @retval OT_ERROR_ALREADY  The message was already enqueued.
-     * @retval OT_ERROR_DROP     The message could not be sent and should be dropped.
-     *
      */
-    otError SendMessage(Message &aMessage);
+    void SendMessage(Message &aMessage);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     /**
@@ -571,7 +568,9 @@ private:
 #if OPENTHREAD_FTD
     FragmentPriorityList mFragmentPriorityList;
     PriorityQueue        mResolvingQueue;
-    IndirectSender       mIndirectSender;
+#endif
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
+    IndirectSender mIndirectSender;
 #endif
 
     DataPollSender mDataPollSender;

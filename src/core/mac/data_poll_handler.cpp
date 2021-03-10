@@ -31,16 +31,17 @@
  *   This file includes the implementation for handling of data polls and indirect frame transmission.
  */
 
-#if OPENTHREAD_FTD
-
 #include "data_poll_handler.hpp"
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 DataPollHandler::Callbacks::Callbacks(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -321,6 +322,6 @@ void DataPollHandler::ProcessPendingPolls(void)
     }
 }
 
-} // namespace ot
+#endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
-#endif // #if OPENTHREAD_FTD
+} // namespace ot

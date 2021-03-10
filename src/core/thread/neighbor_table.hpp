@@ -38,6 +38,7 @@
 
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "thread/sed_to_sed.hpp"
 #include "thread/topology.hpp"
 
 namespace ot {

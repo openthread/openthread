@@ -484,22 +484,6 @@ public:
         void SetExtAddress(const Mac::ExtAddress &aExtAddress) { mExtAddress = aExtAddress; }
 
         /**
-         * This method returns the child timeout.
-         *
-         * @returns The child timeout.
-         *
-         */
-        uint32_t GetTimeout(void) const { return Encoding::LittleEndian::HostSwap32(mTimeout); }
-
-        /**
-         * This method sets the child timeout.
-         *
-         * @param[in] aTimeout  The child timeout.
-         *
-         */
-        void SetTimeout(uint32_t aTimeout) { mTimeout = Encoding::LittleEndian::HostSwap32(aTimeout); }
-
-        /**
          * This method returns the RLOC16.
          *
          * @returns The RLOC16.
@@ -547,12 +531,32 @@ public:
          */
         void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
 
+#if OPENTHREAD_FTD
+        /**
+         * This method returns the child timeout.
+         *
+         * @returns The child timeout.
+         *
+         */
+        uint32_t GetTimeout(void) const { return Encoding::LittleEndian::HostSwap32(mTimeout); }
+
+        /**
+         * This method sets the child timeout.
+         *
+         * @param[in] aTimeout  The child timeout.
+         *
+         */
+        void SetTimeout(uint32_t aTimeout) { mTimeout = Encoding::LittleEndian::HostSwap32(aTimeout); }
+#endif // OPENTHREAD_FTD
+
     private:
         Mac::ExtAddress mExtAddress; ///< Extended Address
-        uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
         uint16_t        mVersion;    ///< Version
+#if OPENTHREAD_FTD
+        uint32_t mTimeout; ///< Timeout
+#endif
     } OT_TOOL_PACKED_END;
 
     /**

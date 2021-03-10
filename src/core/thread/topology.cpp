@@ -214,27 +214,30 @@ const char *Neighbor::StateToString(State aState)
     return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "Unknown";
 }
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();
-    mExtAddress         = aChild.GetExtAddress();
+    mExtAddress       = aChild.GetExtAddress();
+    mRloc16           = aChild.GetRloc16();
+    mChildId          = Mle::Mle::ChildIdFromRloc16(aChild.GetRloc16());
+    mAge              = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
+    mLinkQualityIn    = aChild.GetLinkInfo().GetLinkQuality();
+    mAverageRssi      = aChild.GetLinkInfo().GetAverageRss();
+    mLastRssi         = aChild.GetLinkInfo().GetLastRss();
+    mFrameErrorRate   = aChild.GetLinkInfo().GetFrameErrorRate();
+    mMessageErrorRate = aChild.GetLinkInfo().GetMessageErrorRate();
+    mQueuedMessageCnt = aChild.GetIndirectMessageCount();
+    mVersion          = aChild.GetVersion();
+    mRxOnWhenIdle     = aChild.IsRxOnWhenIdle();
+    mFullThreadDevice = aChild.IsFullThreadDevice();
+    mFullNetworkData  = aChild.IsFullNetworkData();
+    mIsStateRestoring = aChild.IsStateRestoring();
+#if OPENTHREAD_FTD
     mTimeout            = aChild.GetTimeout();
-    mRloc16             = aChild.GetRloc16();
-    mChildId            = Mle::Mle::ChildIdFromRloc16(aChild.GetRloc16());
     mNetworkDataVersion = aChild.GetNetworkDataVersion();
-    mAge                = Time::MsecToSec(TimerMilli::GetNow() - aChild.GetLastHeard());
-    mLinkQualityIn      = aChild.GetLinkInfo().GetLinkQuality();
-    mAverageRssi        = aChild.GetLinkInfo().GetAverageRss();
-    mLastRssi           = aChild.GetLinkInfo().GetLastRss();
-    mFrameErrorRate     = aChild.GetLinkInfo().GetFrameErrorRate();
-    mMessageErrorRate   = aChild.GetLinkInfo().GetMessageErrorRate();
-    mQueuedMessageCnt   = aChild.GetIndirectMessageCount();
-    mVersion            = aChild.GetVersion();
-    mRxOnWhenIdle       = aChild.IsRxOnWhenIdle();
-    mFullThreadDevice   = aChild.IsFullThreadDevice();
-    mFullNetworkData    = aChild.IsFullNetworkData();
-    mIsStateRestoring   = aChild.IsStateRestoring();
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
     mIsCslSynced = false;
@@ -255,10 +258,12 @@ void Child::AddressIterator::Update(void)
 {
     const Ip6::Address *address;
 
+#if OPENTHREAD_FTD
     if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
     {
         mIndex++;
     }
+#endif
 
     while (true)
     {
@@ -284,25 +289,14 @@ void Child::Clear(void)
 
 void Child::ClearIp6Addresses(void)
 {
-    mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD
+    mMeshLocalIid.Clear();
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterMask.Clear();
     mMlrRegisteredMask.Clear();
 #endif
-}
-
-otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
-{
-    otError error = OT_ERROR_NONE;
-
-    VerifyOrExit(!mMeshLocalIid.IsUnspecified(), error = OT_ERROR_NOT_FOUND);
-
-    aAddress.SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
-    aAddress.SetIid(mMeshLocalIid);
-
-exit:
-    return error;
+#endif
 }
 
 otError Child::AddIp6Address(const Ip6::Address &aAddress)
@@ -311,12 +305,14 @@ otError Child::AddIp6Address(const Ip6::Address &aAddress)
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
 
+#if OPENTHREAD_FTD
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         VerifyOrExit(mMeshLocalIid.IsUnspecified(), error = OT_ERROR_ALREADY);
         mMeshLocalIid = aAddress.GetIid();
         ExitNow();
     }
+#endif
 
     for (Ip6::Address &ip6Address : mIp6Address)
     {
@@ -342,6 +338,7 @@ otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
     VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
 
+#if OPENTHREAD_FTD
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         if (aAddress.GetIid() == mMeshLocalIid)
@@ -352,6 +349,7 @@ otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
         ExitNow();
     }
+#endif
 
     for (index = 0; index < kNumIp6Addresses; index++)
     {
@@ -383,11 +381,13 @@ bool Child::HasIp6Address(const Ip6::Address &aAddress) const
 
     VerifyOrExit(!aAddress.IsUnspecified());
 
+#if OPENTHREAD_FTD
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         retval = (aAddress.GetIid() == mMeshLocalIid);
         ExitNow();
     }
+#endif
 
     for (const Ip6::Address &ip6Address : mIp6Address)
     {
@@ -403,7 +403,21 @@ exit:
     return retval;
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD
+otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(!mMeshLocalIid.IsUnspecified(), error = OT_ERROR_NOT_FOUND);
+
+    aAddress.SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    aAddress.SetIid(mMeshLocalIid);
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 const Ip6::Address *Child::GetDomainUnicastAddress(void) const
 {
     const Ip6::Address *addr = nullptr;
@@ -428,7 +442,7 @@ void Child::GenerateChallenge(void)
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
 }
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 {
     bool has = false;
@@ -471,7 +485,9 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
     mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
     mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
 }
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 void Router::Info::SetFrom(const Router &aRouter)
 {

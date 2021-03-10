@@ -255,6 +255,7 @@ exit:
 
 #endif
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 {
     if (mCallback != nullptr)
@@ -301,5 +302,6 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         break;
     }
 }
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 } // namespace ot

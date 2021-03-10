@@ -44,6 +44,7 @@
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/sed_to_sed.hpp"
 #include "thread/src_match_controller.hpp"
 
 namespace ot {
@@ -57,6 +58,8 @@ namespace ot {
  * @{
  */
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
+
 class Child;
 
 /**
@@ -67,7 +70,7 @@ class IndirectSender : public InstanceLocator, public IndirectSenderBase, privat
 {
     friend class Instance;
     friend class DataPollHandler::Callbacks;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     friend class CslTxScheduler::Callbacks;
 #endif
 
@@ -182,6 +185,7 @@ public:
      */
     void ClearAllMessagesForSleepyChild(Child &aChild);
 
+#if OPENTHREAD_FTD
     /**
      * This method sets whether to use the extended or short address for a child.
      *
@@ -190,6 +194,7 @@ public:
      *
      */
     void SetChildUseShortAddress(Child &aChild, bool aUseShortAddress);
+#endif
 
     /**
      * This method handles a child mode change and updates any queued messages for the child accordingly.
@@ -228,7 +233,7 @@ private:
     bool                  mEnabled;
     SourceMatchController mSourceMatchController;
     DataPollHandler       mDataPollHandler;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     CslTxScheduler mCslTxScheduler;
 #endif
 };
@@ -237,6 +242,8 @@ private:
  * @}
  *
  */
+
+#endif // OPENTRHEAD_FTD || OPENTHREAD_MTD_S2S
 
 } // namespace ot
 

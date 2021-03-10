@@ -38,6 +38,7 @@
 #include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/indirect_sender_frame_context.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 
@@ -50,7 +51,7 @@ namespace ot {
  * @{
  */
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD_S2S) && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 class Child;
 
@@ -208,7 +209,7 @@ private:
     Callbacks               mCallbacks;
 };
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // (OPENTHREAD_FTD || OPENTHREAD_MTD_S2S) && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}

@@ -522,6 +522,7 @@ HEADERS_COMMON                                  = \
     thread/panid_query_server.hpp                 \
     thread/radio_selector.hpp                     \
     thread/router_table.hpp                       \
+    thread/sed_to_sed.hpp                         \
     thread/src_match_controller.hpp               \
     thread/thread_netif.hpp                       \
     thread/thread_tlvs.hpp                        \

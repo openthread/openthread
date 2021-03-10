@@ -54,6 +54,7 @@
 #include "thread/mle_tlvs.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/radio_selector.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 
@@ -814,14 +815,21 @@ private:
 #endif
 };
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 /**
  * This class represents a Thread Child.
+ *
+ * This class has different versions for FTD and MTD:
+ * - For FTD, this class completely represents a Thread Child;
+ * - For MTD, this class is a subset of its FTD version. It is not technically a child. The class is reused for MTD to
+ *   do indirect transmission. So the data members and methods for indirect transmission remain in the MTD version and
+ *   those for Child usage are disposed.
  *
  */
 class Child : public Neighbor,
               public IndirectSender::ChildInfo,
               public DataPollHandler::ChildInfo
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ,
               public CslTxScheduler::ChildInfo
 #endif
@@ -1027,6 +1035,7 @@ public:
      */
     void ClearIp6Addresses(void);
 
+#if OPENTHREAD_FTD
     /**
      * This method gets the mesh-local IPv6 address.
      *
@@ -1045,6 +1054,7 @@ public:
      *
      */
     const Ip6::InterfaceIdentifier &GetMeshLocalIid(void) const { return mMeshLocalIid; }
+#endif // OPENTHREAD_FTD
 
     /**
      * This method enables range-based `for` loop iteration over all (or a subset of) IPv6 addresses.
@@ -1104,7 +1114,8 @@ public:
      */
     bool HasIp6Address(const Ip6::Address &aAddress) const;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     /**
      * This method retrieves the Domain Unicast Address registered by the child.
      *
@@ -1217,7 +1228,7 @@ public:
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
      * This method returns MLR state of an Ip6 multicast address.
      *
@@ -1269,7 +1280,9 @@ public:
      *
      */
     bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+
+#endif // OPENTHREAD_FTD
 
 private:
 #if OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD < 2
@@ -1300,16 +1313,17 @@ private:
         Ip6::Address::TypeFilter mFilter;
     };
 
-    Ip6::InterfaceIdentifier mMeshLocalIid;                 ///< IPv6 address IID for mesh-local address
-    Ip6::Address             mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
-    uint32_t                 mTimeout;                      ///< Child timeout
+    Ip6::Address mIp6Address[kNumIp6Addresses]; ///< Registered IPv6 addresses
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD
+    Ip6::InterfaceIdentifier mMeshLocalIid;       ///< IPv6 address IID for mesh-local address
+    uint32_t                 mTimeout;            ///< Child timeout
+    uint8_t                  mNetworkDataVersion; ///< Current Network Data version
+
+#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     ChildIp6AddressMask mMlrToRegisterMask;
     ChildIp6AddressMask mMlrRegisteredMask;
 #endif
-
-    uint8_t mNetworkDataVersion; ///< Current Network Data version
 
     union
     {
@@ -1321,8 +1335,12 @@ private:
     uint16_t mSecondsSinceSupervision; ///< Number of seconds since last supervision of the child.
 #endif
 
+#endif // OPENTHREAD_FTD
+
     static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 /**
  * This class represents a Thread Router

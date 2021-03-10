@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,34 +28,28 @@
 
 /**
  * @file
- *   This file implements MTD-specific mesh forwarding of IPv6/6LoWPAN messages.
+ *   This file includes definitions for SED-to-SED feature.
+ *
+ *   Note that this is not a config file. DO NOT add it to core config file.
+ *
  */
 
-#if OPENTHREAD_MTD
+#ifndef S2S_HPP_
+#define S2S_HPP_
 
-#include "mesh_forwarder.hpp"
+#include "openthread-core-config.h"
 
-#include "common/locator-getters.hpp"
+/**
+ * @def OPENTHREAD_MTD_S2S
+ *
+ * This is a alias representing if `OPENTHREAD_MTD` and `OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE` are both
+ * enabled.
+ *
+ */
+#ifdef OPENTHREAD_MTD_S2S
+#error \
+    "OPENTHREAD_MTD_S2S should not be directly defined. Use `OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE` to enable SSED to SSED link instead."
+#endif
+#define OPENTHREAD_MTD_S2S (OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_SSED_TO_SSED_LINK_ENABLE)
 
-namespace ot {
-
-otError MeshForwarder::EvictMessage(Message::Priority aPriority)
-{
-    otError  error = OT_ERROR_NOT_FOUND;
-    Message *message;
-
-    VerifyOrExit((message = mSendQueue.GetTail()) != nullptr);
-
-    if (message->GetPriority() < static_cast<uint8_t>(aPriority))
-    {
-        RemoveMessage(*message);
-        ExitNow(error = OT_ERROR_NONE);
-    }
-
-exit:
-    return error;
-}
-
-} // namespace ot
-
-#endif // OPENTHREAD_MTD
+#endif // S2S_HPP_

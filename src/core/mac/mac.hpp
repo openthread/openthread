@@ -53,6 +53,7 @@
 #include "radio/trel_link.hpp"
 #include "thread/key_manager.hpp"
 #include "thread/link_quality.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 
@@ -214,7 +215,7 @@ public:
      */
     void RequestDirectFrameTransmission(void);
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
     /**
      * This method requests an indirect data frame transmission.
      *
@@ -545,7 +546,7 @@ public:
      */
     bool IsEnergyScanInProgress(void) const { return (mOperation == kOperationEnergyScan) || (mPendingEnergyScan); }
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
     /**
      * This method indicates whether the MAC layer is performing an indirect transmission (in middle of a tx).
      *
@@ -764,7 +765,7 @@ private:
         kOperationTransmitPoll,
         kOperationWaitingForData,
         kOperationTransmitOutOfBandFrame,
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
         kOperationTransmitDataIndirect,
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kOperationTransmitDataCsl,
@@ -852,7 +853,7 @@ private:
     bool mPendingEnergyScan : 1;
     bool mPendingTransmitBeacon : 1;
     bool mPendingTransmitDataDirect : 1;
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
     bool mPendingTransmitDataIndirect : 1;
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     bool mPendingTransmitDataCsl : 1;
@@ -888,7 +889,7 @@ private:
     uint16_t    mScanDuration;
     ChannelMask mScanChannelMask;
     uint8_t     mMaxFrameRetriesDirect;
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
     uint8_t mMaxFrameRetriesIndirect;
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     TimeMilli mCslTxFireTime;

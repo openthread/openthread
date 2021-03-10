@@ -39,7 +39,7 @@
 
 namespace ot {
 
-#if OPENTHREAD_FTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter)
     : InstanceLocator(aInstance)
@@ -147,6 +147,41 @@ Child *ChildTable::FindChild(const Mac::Address &aMacAddress, Child::StateFilter
     return FindChild(Child::AddressMatcher(aMacAddress, aFilter));
 }
 
+Child *ChildTable::FindChild(const Ip6::Address &aIp6Address, Child::StateFilter aFilter)
+{
+    Child *      child = mChildren;
+    Mac::Address macAddress;
+
+    if (aIp6Address.IsLinkLocal())
+    {
+        aIp6Address.GetIid().ConvertToMacAddress(macAddress);
+    }
+
+    if (Get<Mle::Mle>().IsRoutingLocator(aIp6Address))
+    {
+        macAddress.SetShort(aIp6Address.GetIid().GetLocator());
+    }
+
+    if (!macAddress.IsNone())
+    {
+        child = FindChild(Neighbor::AddressMatcher(macAddress, aFilter));
+        ExitNow();
+    }
+
+    for (uint16_t num = mMaxChildrenAllowed; num != 0; num--, child++)
+    {
+        if (child->MatchesFilter(aFilter) && child->HasIp6Address(aIp6Address))
+        {
+            ExitNow();
+        }
+    }
+
+    child = nullptr;
+
+exit:
+    return child;
+}
+
 bool ChildTable::HasChildren(Child::StateFilter aFilter) const
 {
     return (FindChild(Child::AddressMatcher(aFilter)) != nullptr);
@@ -242,12 +277,14 @@ void ChildTable::Restore(void)
         child->SetExtAddress(childInfo.GetExtAddress());
         child->GetLinkInfo().Clear();
         child->SetRloc16(childInfo.GetRloc16());
-        child->SetTimeout(childInfo.GetTimeout());
         child->SetDeviceMode(Mle::DeviceMode(childInfo.GetMode()));
         child->SetState(Neighbor::kStateRestored);
         child->SetLastHeard(TimerMilli::GetNow());
         child->SetVersion(static_cast<uint8_t>(childInfo.GetVersion()));
+#if OPENTHREAD_FTD
+        child->SetTimeout(childInfo.GetTimeout());
         Get<IndirectSender>().SetChildUseShortAddress(*child, true);
+#endif // OPENTHREAD_FTD
         numChildren++;
     }
 
@@ -285,10 +322,12 @@ otError ChildTable::StoreChild(const Child &aChild)
 
     childInfo.Init();
     childInfo.SetExtAddress(aChild.GetExtAddress());
-    childInfo.SetTimeout(aChild.GetTimeout());
     childInfo.SetRloc16(aChild.GetRloc16());
     childInfo.SetMode(aChild.GetDeviceMode().Get());
     childInfo.SetVersion(aChild.GetVersion());
+#if OPENTHREAD_FTD
+    childInfo.SetTimeout(aChild.GetTimeout());
+#endif
 
     return Get<Settings>().AddChildInfo(childInfo);
 }
@@ -330,6 +369,6 @@ bool ChildTable::HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) cons
     return hasChild;
 }
 
-#endif // OPENTHREAD_FTD
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD_S2S
 
 } // namespace ot

@@ -41,6 +41,7 @@
 #include "common/logging.hpp"
 #include "meshcop/dataset.hpp"
 #include "thread/mle.hpp"
+#include "thread/sed_to_sed.hpp"
 
 namespace ot {
 // This array contains critical keys that should be stored in the secure area.
@@ -73,9 +74,18 @@ void SettingsBase::LogParentInfo(const char *aAction, const ParentInfo &aParentI
 
 void SettingsBase::LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const
 {
+#if OPENTHREAD_FTD
     otLogInfoCore("Non-volatile: %s ChildInfo {rloc:0x%04x, extaddr:%s, timeout:%u, mode:0x%02x, version:%hu}", aAction,
                   aChildInfo.GetRloc16(), aChildInfo.GetExtAddress().ToString().AsCString(), aChildInfo.GetTimeout(),
                   aChildInfo.GetMode(), aChildInfo.GetVersion());
+#elif OPENTHREAD_MTD_S2S
+    otLogInfoCore("Non-volatile: %s Sed Peer Info {rloc:0x%04x, extaddr:%s, mode:0x%02x, version:%hu}", aAction,
+                  aChildInfo.GetRloc16(), aChildInfo.GetExtAddress().ToString().AsCString(), aChildInfo.GetMode(),
+                  aChildInfo.GetVersion());
+#else
+    OT_UNUSED_VARIABLE(aAction);
+    OT_UNUSED_VARIABLE(aChildInfo);
+#endif
 }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
