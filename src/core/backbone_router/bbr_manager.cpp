@@ -129,14 +129,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
             error = mBackboneTmfAgent.Start();
 
-            if (error != OT_ERROR_NONE)
-            {
-                otLogCritBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
-            }
-            else
-            {
-                otLogInfoBbr("Start Backbone TMF agent: %s", otThreadErrorToString(error));
-            }
+            otLogResultBbr(error, "Start Backbone TMF agent");
         }
     }
 }
