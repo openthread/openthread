@@ -382,6 +382,14 @@ public:
     explicit ActiveDataset(Instance &aInstance);
 
     /**
+     * This method indicates whether the Active Dataset is saved.
+     *
+     * @return TRUE   if the Active Dataset is saved.
+     * @return FALSE  if no Active Dataset is saved.
+     */
+    bool IsSaved(void) const;
+
+    /**
      * This method indicates whether the Active Dataset is partially complete.
      *
      * This method is primarily used to determine whether a user has supplied a partial Active Dataset for use
@@ -478,16 +486,6 @@ public:
      *
      */
     void StopLeader(void);
-
-    /**
-     * This method generate a default Active Operational Dataset.
-     *
-     * @retval OT_ERROR_NONE           Successfully generated an Active Operational Dataset.
-     * @retval OT_ERROR_ALREADY        A valid Active Operational Dataset already exists.
-     * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
-     *
-     */
-    otError GenerateLocal(void);
 #endif
 
 private:
