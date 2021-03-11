@@ -182,7 +182,7 @@ bool platformInfraIfIsRunning(void)
 
     OT_ASSERT(sInfraIfIndex != 0);
 
-    sock = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    sock = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketBlock);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifReq, 0, sizeof(ifReq));
@@ -204,7 +204,7 @@ static int CreateIcmp6Socket(void)
     const int           kHopLimit           = 255;
 
     // Initializes the ICMPv6 socket.
-    sock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    sock = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketBlock);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
     // Only accept router advertisements and solicitations.
@@ -314,7 +314,7 @@ static int CreateNetLinkSocket(void)
     int                rval;
     struct sockaddr_nl addr;
 
-    sock = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    sock = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketBlock);
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
     memset(&addr, 0, sizeof(addr));
