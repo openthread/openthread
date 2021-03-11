@@ -178,6 +178,7 @@ exit:
 
 void Client::Stop(void)
 {
+    mTrickleTimer.Stop();
     IgnoreError(mSocket.Close());
 }
 
@@ -223,6 +224,8 @@ bool Client::HandleTrickleTimer(void)
 {
     bool rval = true;
 
+    OT_ASSERT(mSocket.IsBound());
+
     VerifyOrExit(mIdentityAssociationCurrent != nullptr, rval = false);
 
     switch (mIdentityAssociationCurrent->mStatus)
@@ -242,7 +245,6 @@ bool Client::HandleTrickleTimer(void)
 
         if (!ProcessNextIdentityAssociation())
         {
-            mTrickleTimer.Stop();
             Stop();
             rval = false;
         }
