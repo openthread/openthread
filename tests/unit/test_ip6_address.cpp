@@ -252,6 +252,7 @@ void TestIp6Prefix(void)
             VerifyOrQuit(!address2.MatchesPrefix(prefix), "Address::MatchedPrefix() failed");
 
             VerifyOrQuit(prefix == prefix, "Prefix::operator==() failed");
+            VerifyOrQuit(!(prefix < prefix), "Prefix::operator<() failed");
 
             for (uint8_t subPrefixLength = 1; subPrefixLength <= prefixLength; subPrefixLength++)
             {
@@ -266,13 +267,36 @@ void TestIp6Prefix(void)
                     VerifyOrQuit(prefix == subPrefix, "Prefix::operator==() failed");
                     VerifyOrQuit(prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()),
                                  "Prefix::IsEqual() failed");
+                    VerifyOrQuit(!(subPrefix < prefix), "Prefix::operator<() failed");
                 }
                 else
                 {
                     VerifyOrQuit(prefix != subPrefix, "Prefix::operator!= failed");
                     VerifyOrQuit(!prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()),
                                  "Prefix::IsEqual() failed");
+                    VerifyOrQuit(subPrefix < prefix, "Prefix::operator<() failed");
                 }
+            }
+
+            for (uint8_t bitNumber = 0; bitNumber < prefixLength; bitNumber++)
+            {
+                ot::Ip6::Prefix prefix2;
+                uint8_t         mask  = static_cast<uint8_t>(1U << (7 - (bitNumber & 7)));
+                uint8_t         index = (bitNumber / 8);
+                bool            isPrefixSmaller;
+
+                prefix2 = prefix;
+                VerifyOrQuit(prefix == prefix2, "Prefix::operator==() failed");
+
+                // Flip the `bitNumber` bit between `prefix` and `prefix2`
+
+                prefix2.mPrefix.mFields.m8[index] ^= mask;
+                VerifyOrQuit(prefix != prefix2, "Prefix::operator==() failed");
+
+                isPrefixSmaller = ((prefix.GetBytes()[index] & mask) == 0);
+
+                VerifyOrQuit((prefix < prefix2) == isPrefixSmaller, "Prefix::operator<() failed");
+                VerifyOrQuit((prefix2 < prefix) == !isPrefixSmaller, "Prefix::operator<() failed");
             }
         }
     }

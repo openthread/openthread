@@ -70,6 +70,23 @@ bool Prefix::IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const
     return (mLength == aPrefixLength) && (MatchLength(GetBytes(), aPrefixBytes, GetBytesSize()) >= mLength);
 }
 
+bool Prefix::operator<(const Prefix &aOther) const
+{
+    bool    isSmaller;
+    uint8_t matchedLength;
+
+    VerifyOrExit(GetLength() == aOther.GetLength(), isSmaller = GetLength() < aOther.GetLength());
+
+    matchedLength = MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize());
+
+    VerifyOrExit(matchedLength < GetLength(), isSmaller = false);
+
+    isSmaller = GetBytes()[matchedLength / CHAR_BIT] < aOther.GetBytes()[matchedLength / CHAR_BIT];
+
+exit:
+    return isSmaller;
+}
+
 uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxSize)
 {
     uint8_t matchedLength = 0;
