@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,58 +26,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(gp712-driver INTERFACE)
+set(CMAKE_SYSTEM_NAME              Generic)
+set(CMAKE_SYSTEM_PROCESSOR         ARM)
 
-if (OT_MTD)
-    target_link_libraries(gp712-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/gp712/lib/libQorvoGP712_mtd.a
-    )
-else()
-    target_link_libraries(gp712-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/gp712/lib/libQorvoGP712_ftd.a
-    )
-endif()
+set(CMAKE_C_COMPILER               arm-linux-gnueabihf-gcc)
+set(CMAKE_CXX_COMPILER             arm-linux-gnueabihf-g++)
+set(CMAKE_ASM_COMPILER             arm-linux-gnueabihf-as)
+set(CMAKE_RANLIB                   arm-linux-gnueabihf-ranlib)
 
-add_library(qpg6095-driver INTERFACE)
+set(COMMON_C_FLAGS                 "-fdata-sections -ffunction-sections")
 
-if (OT_MTD)
-    target_link_libraries(qpg6095-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6095/lib/libQorvoQPG6095_mtd.a
-    )
-else()
-    target_link_libraries(qpg6095-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6095/lib/libQorvoQPG6095_ftd.a
-    )
-endif()
 
-add_library(qpg6100-driver INTERFACE)
-
-if (OT_MTD)
-    target_link_libraries(qpg6100-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6100/lib/libQorvoQPG6100_mtd.a
-    )
-else()
-    target_link_libraries(qpg6100-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg6100/lib/libQorvoQPG6100_ftd.a
-    )
-endif()
-
-add_library(qpg7015m-driver INTERFACE)
-
-if (OT_MTD)
-    target_link_libraries(qpg7015m-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/lib/libQorvoQPG7015M_mtd.a
-    )
-else()
-    target_link_libraries(qpg7015m-driver
-        INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/lib/libQorvoQPG7015M_ftd.a
-    )
-endif()
+set(CMAKE_C_FLAGS_INIT             "${COMMON_C_FLAGS} -std=gnu99")
+set(CMAKE_CXX_FLAGS_INIT           "${COMMON_C_FLAGS} -fno-exceptions -fno-rtti")
+set(CMAKE_ASM_FLAGS_INIT           "${COMMON_C_FLAGS}")
+set(CMAKE_EXE_LINKER_FLAGS_INIT    "${COMMON_C_FLAGS}")

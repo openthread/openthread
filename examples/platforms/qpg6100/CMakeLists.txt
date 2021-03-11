@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,19 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-qpg6095" PARENT_SCOPE)
+set(OT_PLATFORM_LIB "openthread-qpg6100" PARENT_SCOPE)
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-qpg6095-config.h")
+    set(OT_CONFIG "openthread-core-qpg6100-config.h")
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-qpg6095-config-check.h\""
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-qpg6100-config-check.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
-target_compile_definitions(ot-config INTERFACE "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
+target_compile_definitions(ot-config INTERFACE "MBEDTLS_USER_CONFIG_FILE=\"qpg6100-mbedtls-config.h\"")
 
 list(APPEND OT_PUBLIC_INCLUDES
     "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
@@ -55,7 +55,7 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-qpg6095
+add_library(openthread-qpg6100
     alarm.c
     diag.c
     entropy.c
@@ -68,35 +68,35 @@ add_library(openthread-qpg6095
 )
 
 set_target_properties(
-    openthread-qpg6095
+    openthread-qpg6100
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
-target_link_libraries(openthread-qpg6095
+target_link_libraries(openthread-qpg6100
     PRIVATE
-        qpg6095-driver
+        qpg6100-driver
         ${OT_MBEDTLS}
         ot-config
     PUBLIC
-        -T${PROJECT_SOURCE_DIR}/third_party/Qorvo/repo/qpg6095/ld/qpg6095.ld
+        -T${PROJECT_SOURCE_DIR}/third_party/Qorvo/repo/qpg6100/ld/qpg6100.ld
         -nostdlib
         -Wl,--gc-sections
         -Wl,-Map=$<TARGET_PROPERTY:NAME>.map,--cref
 )
 
-target_compile_definitions(openthread-qpg6095
+target_compile_definitions(openthread-qpg6100
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-qpg6095
+target_compile_options(openthread-qpg6100
     PRIVATE
         ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-qpg6095
+target_include_directories(openthread-qpg6100
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core

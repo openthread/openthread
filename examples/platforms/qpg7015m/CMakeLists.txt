@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,23 +26,24 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(OT_PLATFORM_LIB "openthread-qpg6095" PARENT_SCOPE)
+set(OT_PLATFORM_LIB "openthread-qpg7015m" PARENT_SCOPE)
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-qpg6095-config.h")
+    set(OT_CONFIG "openthread-core-qpg7015m-config.h")
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-qpg6095-config-check.h\""
+    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-qpg7015m-config-check.h\""
 )
+
+list(APPEND OT_PLATFORM_DEFINES
+    "_BSD_SOURCE=1"
+    "_DEFAULT_SOURCE=1"
+)
+
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
-target_compile_definitions(ot-config INTERFACE "MBEDTLS_USER_CONFIG_FILE=\"qpg6095-mbedtls-config.h\"")
-
-list(APPEND OT_PUBLIC_INCLUDES
-    "${CMAKE_CURRENT_SOURCE_DIR}/crypto"
-)
 set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 
 if(OT_CFLAGS MATCHES "-pedantic-errors")
@@ -55,48 +56,48 @@ endif()
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-qpg6095
+add_library(openthread-qpg7015m
     alarm.c
-    diag.c
+    diag.c     
     entropy.c
+    flash.c
     logging.c
     misc.c
-    platform.c
     radio.c
-    settings.cpp
-    uart.c
+    system.c
+    uart-posix.c
 )
 
 set_target_properties(
-    openthread-qpg6095
+    openthread-qpg7015m
     PROPERTIES
         C_STANDARD 99
         CXX_STANDARD 11
 )
 
-target_link_libraries(openthread-qpg6095
+target_link_libraries(openthread-qpg7015m
     PRIVATE
-        qpg6095-driver
+        qpg7015m-driver
         ${OT_MBEDTLS}
         ot-config
     PUBLIC
-        -T${PROJECT_SOURCE_DIR}/third_party/Qorvo/repo/qpg6095/ld/qpg6095.ld
-        -nostdlib
+        -lrt
+        -pthread
         -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map,--cref
+        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
-target_compile_definitions(openthread-qpg6095
+target_compile_definitions(openthread-qpg7015m
     PUBLIC
         ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(openthread-qpg6095
+target_compile_options(openthread-qpg7015m
     PRIVATE
         ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-qpg6095
+target_include_directories(openthread-qpg7015m
     PRIVATE
         ${OT_PUBLIC_INCLUDES}
         ${PROJECT_SOURCE_DIR}/src/core

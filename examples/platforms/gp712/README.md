@@ -26,6 +26,22 @@ $ REFERENCE_DEVICE=1 CLI_LOGGING=1 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP6_
 
 After a successful build, the `elf` files are found in `<path-to-openthread>/output/gp712/bin`.
 
+## Cmake build
+
+Make sure arm-linux-gnueabihf-gcc compiler installed in `$PATH`
+
+```bash
+cd <path-to-openthread>
+./script/cmake-build gp712
+```
+
+After a successful build, binary files will be generated:
+
+```
+./build/gp712/examples/apps/ncp/ot-rcp
+./build/gp712/examples/apps/cli/ot-cli-ftd
+```
+
 ##
 
 ## Interact

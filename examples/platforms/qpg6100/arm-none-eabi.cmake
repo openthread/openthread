@@ -1,0 +1,1 @@
+../qpg6095/arm-none-eabi.cmake
