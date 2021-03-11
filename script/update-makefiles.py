@@ -160,19 +160,6 @@ update_build_file(android_mk_file, start_string, end_string, formatted_list)
 print("Updated " + android_mk_file)
 
 #----------------------------------------------------------------------------------------------
-# Update Android.bp file
-
-android_bp_file = "./Android.bp"
-
-formatted_list = ["        \"{}\",\n".format(file_name) for file_name in core_cpp_files]
-search_string = "    name: \"ot-core\","
-start_string = "    srcs: [\n"
-end_string = "        \"src/lib/hdlc/hdlc.cpp\","
-update_build_file(android_bp_file, start_string, end_string, formatted_list, search_string)
-
-print("Updated " + android_bp_file)
-
-#----------------------------------------------------------------------------------------------
 # Update Makefile.am files
 
 core_makefile_am_file = "./src/core/Makefile.am"
