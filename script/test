@@ -262,16 +262,8 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_MDNS=mDNSResponder -DOTBR_SRP_ADVERTISING_PROXY=ON -DOTBR_DUA_ROUTING=ON"
+    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_DUA_ROUTING=ON"
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
-
-    # Always enable SRP server for OTBR.
-    # TODO: enable SRP server inside OTBR after this PR merged.
-    otbr_options="${otbr_options} -DOT_SRP_SERVER=ON -DOT_SERVICE=ON -DOT_ECDSA=ON"
-
-    if [[ ${BORDER_ROUTING} == "1" ]]; then
-        otbr_options="${otbr_options} -DOT_BORDER_ROUTING=ON"
-    fi
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
     otdir=$(pwd)
@@ -283,6 +275,8 @@ do_build_otbr_docker()
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
+            --build-arg BORDER_ROUTING="${BORDER_ROUTING}" \
+            --build-arg INFRA_IF_NAME=eth0 \
             --build-arg BACKBONE_ROUTER=1 \
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
