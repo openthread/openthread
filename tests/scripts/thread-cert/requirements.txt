@@ -2,4 +2,3 @@ ipaddress
 pexpect
 pycryptodome
 pyshark==0.4.2.11
-zeroconf
