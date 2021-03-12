@@ -70,6 +70,7 @@ MLR                       ?= 0
 MTD_NETDIAG               ?= 0
 MULTIPLE_INSTANCE         ?= 0
 OTNS                      ?= 0
+PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
 REFERENCE_DEVICE          ?= 0
 SERVICE                   ?= 0
@@ -253,6 +254,10 @@ endif
 
 ifeq ($(MULTIPLE_INSTANCE),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1
+endif
+
+ifeq ($(PING_SENDER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1
 endif
 
 ifeq ($(PLATFORM_UDP),1)

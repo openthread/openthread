@@ -141,6 +141,7 @@ SOURCES_COMMON                                  = \
     api/netdata_api.cpp                           \
     api/netdiag_api.cpp                           \
     api/network_time_api.cpp                      \
+    api/ping_sender_api.cpp                       \
     api/random_crypto_api.cpp                     \
     api/random_noncrypto_api.cpp                  \
     api/server_api.cpp                            \
@@ -284,6 +285,7 @@ SOURCES_COMMON                                  = \
     utils/lookup_table.cpp                        \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
+    utils/ping_sender.cpp                         \
     utils/slaac_address.cpp                       \
     $(NULL)
 
@@ -423,6 +425,7 @@ HEADERS_COMMON                                  = \
     config/openthread-core-config-check.h         \
     config/openthread-core-default-config.h       \
     config/parent_search.h                        \
+    config/ping_sender.h                          \
     config/platform.h                             \
     config/radio_link.h                           \
     config/sntp_client.h                          \
@@ -543,6 +546,7 @@ HEADERS_COMMON                                  = \
     utils/lookup_table.hpp                        \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
+    utils/ping_sender.hpp                         \
     utils/slaac_address.hpp                       \
     $(NULL)
 

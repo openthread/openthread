@@ -63,6 +63,7 @@ build_simulation()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_SERVICE=ON"
         "-DOT_ECDSA=ON"
+        "-DOT_PING_SENDER=ON"
         "-DOT_DNSSD_SERVER=ON"
         "-DOT_DNS_CLIENT=ON"
     )
