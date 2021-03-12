@@ -2565,7 +2565,19 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
  * @param[in]  ...       Arguments for the format specification.
  *
  */
-#define otLogResultPlat(aError, ...) _otLogResult(Plat, aError, OT_FIRST_ARG(__VA_ARGS__) OT_REST_ARGS(__VA_ARGS__))
+#define otLogResultPlat(aError, ...) _otLogResult(Plat, aError, __VA_ARGS__)
+
+/**
+ * @def otLogResultBbr
+ *
+ * This function generates a log for the BBR region according to the error result. If @p aError is `OT_ERROR_NONE`, the
+ * log level is info. Otherwise the log level is warn.
+ *
+ * @param[in]  aError    The error result.
+ * @param[in]  ...       Arguments for the format specification.
+ *
+ */
+#define otLogResultBbr(aError, ...) _otLogResult(Bbr, aError, __VA_ARGS__)
 
 #ifdef __cplusplus
 }
