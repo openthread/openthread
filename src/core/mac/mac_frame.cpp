@@ -564,7 +564,7 @@ Error Frame::GetKeyId(uint8_t &aKeyId) const
     uint8_t keySourceLength;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
 
@@ -590,6 +590,7 @@ Error Frame::GetCommandId(uint8_t &aCommandId) const
 {
     Error   error = kErrorNone;
     uint8_t index = FindPayloadIndex();
+
     VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     aCommandId = mPsdu[IsVersion2015() ? index : (index - 1)];
