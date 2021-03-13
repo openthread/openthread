@@ -92,7 +92,7 @@ target_compile_definitions(ot-config INTERFACE
     "PACKAGE_VERSION=\"${OT_VERSION}\""
 )
 
-set(OT_THREAD_VERSION "1.1" CACHE STRING "Thread version chosen by the user at configure time")
+set(OT_THREAD_VERSION "1.2" CACHE STRING "Thread version chosen by the user at configure time")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2")
 if(${OT_THREAD_VERSION} EQUAL "1.1")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1")

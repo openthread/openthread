@@ -47,7 +47,7 @@
 #endif
 
 #ifndef OPENTHREAD_CONFIG_THREAD_VERSION
-#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_1
+#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_2
 #endif
 
 #include "config/openthread-core-default-config.h"

@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-name: Simulation
+name: Simulation 1.1
 
 on: [push, pull_request]
 
@@ -46,6 +46,7 @@ jobs:
       CC: clang
       CXX: clang++
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
@@ -72,6 +73,7 @@ jobs:
       LDFLAGS: -m32
       COVERAGE: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
       MAX_NETWORK_SIZE: 999
@@ -120,9 +122,10 @@ jobs:
   packet-verification:
     runs-on: ubuntu-20.04
     env:
-      REFERENCE_DEVICE: 1
-      VIRTUAL_TIME: 1
       PACKET_VERIFICATION: 1
+      REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
+      VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
       with:
@@ -167,6 +170,7 @@ jobs:
       LDFLAGS: -m32
       COVERAGE: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
@@ -208,6 +212,7 @@ jobs:
       LDFLAGS: -m32
       COVERAGE: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       USE_MTD: 1
       VIRTUAL_TIME: 1
       MESSAGE_USE_HEAP: ${{ matrix.message_use_heap }}
@@ -248,6 +253,7 @@ jobs:
       LDFLAGS: -m32
       COVERAGE: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       TIME_SYNC: 1
       VIRTUAL_TIME: 1
     steps:
@@ -284,6 +290,7 @@ jobs:
     env:
       CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
+      THREAD_VERSION: 1.1
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -316,6 +323,8 @@ jobs:
 
   external-commissioner:
     runs-on: ubuntu-20.04
+    env:
+      THREAD_VERSION: 1.1
     steps:
     - uses: actions/checkout@v2
       with:
@@ -361,6 +370,7 @@ jobs:
       COVERAGE: 1
       MULTIPLE_INSTANCE: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
@@ -400,6 +410,7 @@ jobs:
       NODE_TYPE: ncp-sim
       PYTHONUNBUFFERED: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
     steps:
     - uses: actions/checkout@v2
@@ -438,6 +449,7 @@ jobs:
       NODE_TYPE: ncp-sim
       PYTHONUNBUFFERED: 1
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       CC: clang
       CXX: clang++
