@@ -56,8 +56,13 @@ build_cc1352()
 
 build_cc2538()
 {
+    local options=(
+        # cc2538 does not have enough resources to support Thread 1.2
+        "-DOT_THREAD_VERSION=1.1"
+    )
+
     reset_source
-    "$(dirname "$0")"/cmake-build cc2538 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
+    "$(dirname "$0")"/cmake-build cc2538 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}" "${options[@]}"
 }
 
 build_cc2650()

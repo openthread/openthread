@@ -47,6 +47,7 @@ jobs:
       CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15 -DOPENTHREAD_CONFIG_MAC_SCAN_DURATION=500
       CC: clang
       CXX: clang++
+      THREAD_VERSION: 1.1
     steps:
     - uses: actions/checkout@v2
     - name: Bootstrap
@@ -142,6 +143,7 @@ jobs:
       PYTHONUNBUFFERED: 1
       READLINE: readline
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
     steps:
@@ -182,6 +184,7 @@ jobs:
       PYTHONUNBUFFERED: 1
       READLINE: readline
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
     steps:
