@@ -2126,7 +2126,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
     localTxTimestamp = otPlatTimeGet();
 
     // Dummy timestamp payload to make request length same as response
-    error = GetWithParam(SPINEL_PROP_RCP_TIMESTAMP, buffer, packed, SPINEL_DATATYPE_UINT64_S, &remoteTimestamp);
+    error = GetWithParam(SPINEL_PROP_RCP_TIMESTAMP, buffer, static_cast<spinel_size_t>(packed),
+                         SPINEL_DATATYPE_UINT64_S, &remoteTimestamp);
 
     localRxTimestamp = otPlatTimeGet();
 
