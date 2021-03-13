@@ -163,12 +163,12 @@ uint32_t CslTxScheduler::GetNextCslTransmissionDelay(const Child &aChild, uint32
     return static_cast<uint32_t>(nextTxWindow - radioNow - mCslFrameRequestAheadUs);
 }
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
 Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
 {
     Mac::TxFrame *frame = nullptr;
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    uint32_t txDelay;
+    uint32_t      txDelay;
 
     VerifyOrExit(mCslTxChild != nullptr);
 
@@ -212,9 +212,17 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame->SetCsmaCaEnabled(false);
 
 exit:
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     return frame;
 }
+
+#else // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+
+Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &)
+{
+    return nullptr;
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 {
