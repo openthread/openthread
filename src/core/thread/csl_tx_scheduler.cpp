@@ -173,7 +173,7 @@ Mac::TxFrame *CslTxScheduler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     VerifyOrExit(mCslTxChild != nullptr);
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    frame = &aTxFrames.GetTxFrame(kRadioTypeIeee802154);
+    frame = &aTxFrames.GetTxFrame(Mac::kRadioTypeIeee802154);
 #else
     frame = &aTxFrames.GetTxFrame();
 #endif
