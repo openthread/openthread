@@ -570,9 +570,8 @@ exit:
 void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
-    Error error;
 
-    OT_UNUSED_VARIABLE(error);
+    Error error;
 
     VerifyOrExit(aMessage.IsPostRequest(), error = kErrorParse);
 
@@ -584,6 +583,7 @@ void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::Messa
     error = ProcessDuaResponse(aMessage);
 
 exit:
+    OT_UNUSED_VARIABLE(error);
     otLogInfoDua("Received DUA.ntf: %d", ErrorToString(error));
 }
 
