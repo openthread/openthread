@@ -1188,7 +1188,9 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 void nrf_802154_tx_started(const uint8_t *aFrame)
 {
     bool processSecurity = false;
+
     assert(aFrame == sTransmitPsdu);
+    OT_UNUSED_VARIABLE(aFrame);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)
