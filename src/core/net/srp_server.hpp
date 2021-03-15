@@ -217,7 +217,6 @@ public:
         otError SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
         otError CopyResourcesFrom(const Service &aService);
         void    ClearResources(void);
-        void    DeleteResourcesButRetainName(void);
 
         char *           mFullName;
         uint16_t         mPriority;
@@ -235,7 +234,7 @@ public:
      * This class implements the Host which registers services on the SRP server.
      *
      */
-    class Host : public LinkedListEntry<Host>, private NonCopyable
+    class Host : public LinkedListEntry<Host>, public InstanceLocator, private NonCopyable
     {
         friend class LinkedListEntry<Host>;
         friend class Server;
@@ -244,11 +243,13 @@ public:
         /**
          * This method creates a new Host object.
          *
+         * @param[in]  aInstance  A reference to the OpenThread instance.
+         *
          * @returns  A pointer to the newly created Host object, nullptr if
          *           cannot allocate memory for the object.
          *
          */
-        static Host *New(void);
+        static Host *New(Instance &aInstance);
 
         /**
          * This method Frees the Host object.
@@ -359,17 +360,16 @@ public:
             kMaxAddressesNum = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM,
         };
 
-        explicit Host(void);
+        explicit Host(Instance &aInstance);
         otError  SetFullName(const char *aFullName);
         void     SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void     SetLease(uint32_t aLease);
         void     SetKeyLease(uint32_t aKeyLease);
         Service *GetNextService(Service *aService) { return aService ? aService->GetNext() : mServices.GetHead(); }
         Service *AddService(const char *aFullName);
-        void     RemoveAndFreeService(Service *aService);
-        void     RemoveAndFreeAllServices(void);
+        void     RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler);
+        void     FreeAllServices(void);
         void     ClearResources(void);
-        void     DeleteResourcesButRetainName(void);
         void     CopyResourcesFrom(const Host &aHost);
         Service *FindService(const char *aFullName);
         const Service *FindService(const char *aFullName) const;
@@ -597,7 +597,7 @@ private:
 
     void        HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, const Ip6::MessageInfo &aMessageInfo);
     void        AddHost(Host *aHost);
-    void        RemoveAndFreeHost(Host *aHost);
+    void        RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandler);
     bool        HasNameConflictsWith(Host &aHost) const;
     void        SendResponse(const Dns::UpdateHeader &   aHeader,
                              Dns::UpdateHeader::Response aResponseCode,
