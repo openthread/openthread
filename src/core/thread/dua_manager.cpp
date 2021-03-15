@@ -429,17 +429,24 @@ void DuaManager::PerformNextRegistration(void)
 
     // Only send DUA.req when necessary
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD
     VerifyOrExit(mle.IsRouterOrLeader() || !mle.IsExpectedToBecomeRouter(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0) ||
-                     (mChildDuaMask.HasAny() && mChildDuaMask != mChildDuaRegisteredMask),
-                 error = OT_ERROR_NOT_FOUND);
-#else
-    VerifyOrExit(mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0, error = OT_ERROR_NOT_FOUND);
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-
+#endif
     VerifyOrExit(mle.IsFullThreadDevice() || mle.GetParent().IsThreadVersion1p1(), error = OT_ERROR_INVALID_STATE);
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
+
+    {
+        bool needReg = false;
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
+        needReg = (mDuaState == kToRegister && mDelay.mFields.mRegistrationDelay == 0);
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+        needReg = needReg || (mChildDuaMask.HasAny() && mChildDuaMask != mChildDuaRegisteredMask);
+#endif
+        VerifyOrExit(needReg, error = OT_ERROR_NOT_FOUND);
+    }
 
     // Prepare DUA.req
     VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
