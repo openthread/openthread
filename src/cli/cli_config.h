@@ -37,6 +37,15 @@
 
 #include "openthread-core-config.h"
 
+#ifndef OPENTHREAD_POSIX
+#if defined(__ANDROID__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || \
+    defined(__unix__)
+#define OPENTHREAD_POSIX 1
+#else
+#define OPENTHREAD_POSIX 0
+#endif
+#endif
+
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
