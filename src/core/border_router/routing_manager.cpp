@@ -1122,12 +1122,18 @@ bool RoutingManager::AddDiscoveredPrefix(const Ip6::Prefix &aPrefix,
 
         SuccessOrExit(AddExternalRoute(aPrefix, aRoutePreference));
 
-        if (aIsOnLinkPrefix)
+        if (aIsOnLinkPrefix && mRouterSolicitCount > 0)
         {
             // Stop Router Solicitation if we discovered a valid on-link prefix.
             // Otherwise, we wait till the Router Solicitation process times out.
             // So the maximum delay before the Border Router starts advertising
-            // its own on-link prefix is 9 (4 + 4 + 1) seconds.
+            // its own on-link prefix is 10 seconds = RS_DELAY (1) + RS_INTERNAL (4)
+            // + RS_INTERVAL (4) + RS_DELAY (1).
+            //
+            // Always send at least one RS message so that all BRs will respond.
+            // Consider that there are multiple BRs on the infra link, we may not learn
+            // RIOs of other BRs if the router discovery process is stopped immediately
+            // before sending any RS messages because of receiving an unsolicited RA.
             mRouterSolicitTimer.Stop();
         }
 
