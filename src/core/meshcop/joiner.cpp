@@ -33,6 +33,8 @@
 
 #include "joiner.hpp"
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+
 #include <stdio.h>
 
 #include "common/code_utils.hpp"
@@ -47,8 +49,6 @@
 #include "thread/thread_netif.hpp"
 #include "thread/uri_paths.hpp"
 #include "utils/otns.hpp"
-
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
 
 namespace ot {
 namespace MeshCoP {

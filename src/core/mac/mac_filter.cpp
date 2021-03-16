@@ -33,9 +33,9 @@
 
 #include "mac_filter.hpp"
 
-#include "common/code_utils.hpp"
-
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+#include "common/code_utils.hpp"
 
 namespace ot {
 namespace Mac {

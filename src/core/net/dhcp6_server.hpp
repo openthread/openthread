@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac.hpp"
@@ -46,8 +48,6 @@
 
 namespace ot {
 namespace Dhcp6 {
-
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
 #error "OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT requires DHCPv6 server on Border Router side to be enabled."
@@ -229,9 +229,9 @@ private:
  *
  */
 
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
-
 } // namespace Dhcp6
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
 #endif // DHCP6_SERVER_HPP_

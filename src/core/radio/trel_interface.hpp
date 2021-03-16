@@ -36,12 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 #include "common/locator.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "radio/trel_packet.hpp"
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
 namespace Trel {

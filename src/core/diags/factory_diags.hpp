@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
 #include <string.h>
 
 #include <openthread/platform/radio.h>
@@ -46,8 +48,6 @@
 
 namespace ot {
 namespace FactoryDiags {
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 class Diags : public InstanceLocator, private NonCopyable
 {
@@ -169,9 +169,9 @@ private:
 #endif
 };
 
-#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
-
 } // namespace FactoryDiags
 } // namespace ot
+
+#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 #endif // FACTORY_DIAGS_HPP_

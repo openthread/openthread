@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include <openthread/srp_client.h>
 
 #include "common/clearable.hpp"
@@ -44,8 +46,6 @@
 #include "net/dns_types.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 /**
  * @file

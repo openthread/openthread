@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+
 #include <openthread/dataset_updater.h>
 
 #include "common/locator.hpp"
@@ -48,8 +50,6 @@
 
 namespace ot {
 namespace MeshCoP {
-
-#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
 /**
  * This class implements the Dataset Updater.
@@ -138,9 +138,9 @@ private:
     Message *  mDataset;
 };
 
-#endif // (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-
 } // namespace MeshCoP
 } // namespace ot
+
+#endif // (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 
 #endif // DATASET_UPDATER_HPP_

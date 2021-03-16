@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+
 #include <stdint.h>
 
 #include "common/locator.hpp"
@@ -216,5 +218,7 @@ private:
 
 } // namespace Utils
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 #endif // JAM_DETECTOR_HPP_

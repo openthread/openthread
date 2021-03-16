@@ -33,6 +33,8 @@
 
 #include "ecdsa.hpp"
 
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+
 #include <string.h>
 
 #include <mbedtls/ctr_drbg.h>
@@ -47,8 +49,6 @@
 namespace ot {
 namespace Crypto {
 namespace Ecdsa {
-
-#if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 Error P256::KeyPair::Generate(void)
 {
@@ -246,8 +246,8 @@ exit:
     return error;
 }
 
-#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
-
 } // namespace Ecdsa
 } // namespace Crypto
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE

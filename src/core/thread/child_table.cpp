@@ -33,13 +33,13 @@
 
 #include "child_table.hpp"
 
+#if OPENTHREAD_FTD
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 
 namespace ot {
-
-#if OPENTHREAD_FTD
 
 ChildTable::Iterator::Iterator(Instance &aInstance, Child::StateFilter aFilter)
     : InstanceLocator(aInstance)
@@ -330,6 +330,6 @@ bool ChildTable::HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) cons
     return hasChild;
 }
 
-#endif // OPENTHREAD_FTD
-
 } // namespace ot
+
+#endif // OPENTHREAD_FTD

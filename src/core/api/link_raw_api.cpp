@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
 #include <string.h>
 #include <openthread/diag.h>
 #include <openthread/thread.h>
@@ -44,8 +46,6 @@
 #include "common/locator-getters.hpp"
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
-
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 using namespace ot;
 

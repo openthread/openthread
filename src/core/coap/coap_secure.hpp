@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+
 #include "coap/coap.hpp"
 #include "meshcop/dtls.hpp"
 #include "meshcop/meshcop.hpp"
@@ -409,5 +411,7 @@ private:
 
 } // namespace Coap
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
 
 #endif // COAP_SECURE_HPP_

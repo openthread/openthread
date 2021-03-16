@@ -33,6 +33,8 @@
 
 #include "dhcp6_client.hpp"
 
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -41,8 +43,6 @@
 #include "mac/mac.hpp"
 #include "net/dhcp6.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 namespace ot {
 namespace Dhcp6 {

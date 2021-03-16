@@ -32,6 +32,9 @@
  */
 
 #include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+
 #include <openthread/channel_manager.h>
 
 #include "common/instance.hpp"
@@ -39,8 +42,6 @@
 #include "utils/channel_manager.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {

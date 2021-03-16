@@ -28,6 +28,8 @@
 
 #include "dns_client.hpp"
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -35,8 +37,6 @@
 #include "common/logging.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 /**
  * @file

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "net/ip6_address.hpp"
@@ -76,5 +78,7 @@ public:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 #endif // ANNOUNCE_BEGIN_CLIENT_HPP_

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "coap/coap.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -362,5 +364,7 @@ private:
  */
 
 } // namespace ot
+
+#endif //  OPENTHREAD_FTD
 
 #endif // ADDRESS_RESOLVER_HPP_

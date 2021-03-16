@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+
 #include <openthread/joiner.h>
 
 #include "common/instance.hpp"
@@ -40,7 +42,6 @@
 
 using namespace ot;
 
-#if OPENTHREAD_CONFIG_JOINER_ENABLE
 otError otJoinerStart(otInstance *     aInstance,
                       const char *     aPskd,
                       const char *     aProvisioningUrl,

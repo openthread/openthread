@@ -33,6 +33,8 @@
 
 #include "network_data_local.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -41,8 +43,6 @@
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 namespace ot {
 namespace NetworkData {
