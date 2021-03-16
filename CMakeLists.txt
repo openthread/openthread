@@ -58,9 +58,16 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "default build type: Debug" FORCE)
+    # Check if this is a top-level CMake.
+    # If it is not, do not set the CMAKE_BUILD_TYPE because OpenThread is a part of something bigger.
+    if ("${CMAKE_PROJECT_NAME}" STREQUAL "openthread")
+        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "default build type: Debug" FORCE)
+    endif ()
 endif()
-message(STATUS "CMake build type: ${CMAKE_BUILD_TYPE}")
+
+if (CMAKE_BUILD_TYPE)
+    message(STATUS "OpenThread CMake build type: ${CMAKE_BUILD_TYPE}")
+endif ()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror -pedantic-errors with gcc-compatible compilers")
