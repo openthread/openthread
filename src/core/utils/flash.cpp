@@ -114,9 +114,9 @@ exit:
     }
 }
 
-otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
+Error Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
 {
-    otError      error       = OT_ERROR_NOT_FOUND;
+    Error        error       = kErrorNotFound;
     uint16_t     valueLength = 0;
     int          index       = 0; // This must be initalized to 0. See [Note] in Delete().
     uint32_t     offset;
@@ -151,7 +151,7 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
             }
 
             valueLength = record.GetLength();
-            error       = OT_ERROR_NONE;
+            error       = kErrorNone;
         }
 
         index++;
@@ -165,22 +165,22 @@ otError Flash::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueL
     return error;
 }
 
-otError Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+Error Flash::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return Add(aKey, true, aValue, aValueLength);
 }
 
-otError Flash::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+Error Flash::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
-    bool first = (Get(aKey, 0, nullptr, nullptr) == OT_ERROR_NOT_FOUND);
+    bool first = (Get(aKey, 0, nullptr, nullptr) == kErrorNotFound);
 
     return Add(aKey, first, aValue, aValueLength);
 }
 
-otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength)
+Error Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength)
 {
-    otError error = OT_ERROR_NONE;
-    Record  record;
+    Error  error = kErrorNone;
+    Record record;
 
     record.Init(aKey, aFirst);
     record.SetData(aValue, aValueLength);
@@ -190,7 +190,7 @@ otError Flash::Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t a
     if ((mSwapSize - record.GetSize()) < mSwapUsed)
     {
         Swap();
-        VerifyOrExit((mSwapSize - record.GetSize()) >= mSwapUsed, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((mSwapSize - record.GetSize()) >= mSwapUsed, error = kErrorNoBufs);
     }
 
     otPlatFlashWrite(&GetInstance(), mSwapIndex, mSwapUsed, &record, record.GetSize());
@@ -255,9 +255,9 @@ exit:
     mSwapUsed  = dstOffset;
 }
 
-otError Flash::Delete(uint16_t aKey, int aIndex)
+Error Flash::Delete(uint16_t aKey, int aIndex)
 {
-    otError      error = OT_ERROR_NOT_FOUND;
+    Error        error = kErrorNotFound;
     int          index = 0; // This must be initalized to 0. See [Note] below.
     RecordHeader record;
 
@@ -279,7 +279,7 @@ otError Flash::Delete(uint16_t aKey, int aIndex)
         {
             record.SetDeleted();
             otPlatFlashWrite(&GetInstance(), mSwapIndex, offset, &record, sizeof(record));
-            error = OT_ERROR_NONE;
+            error = kErrorNone;
         }
 
         /* [Note] If the operation gets interrupted here and aIndex is 0, the next record (index == 1) will never get

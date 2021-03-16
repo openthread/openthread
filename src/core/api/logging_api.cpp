@@ -51,7 +51,7 @@ otLogLevel otLoggingGetLevel(void)
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 otError otLoggingSetLevel(otLogLevel aLogLevel)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE)
     {
@@ -59,7 +59,7 @@ otError otLoggingSetLevel(otLogLevel aLogLevel)
     }
     else
     {
-        error = OT_ERROR_INVALID_ARGS;
+        error = kErrorInvalidArgs;
     }
 
     return error;

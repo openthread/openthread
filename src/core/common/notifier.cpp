@@ -52,9 +52,9 @@ Notifier::Notifier(Instance &aInstance)
     }
 }
 
-otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
+Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    otError           error          = OT_ERROR_NONE;
+    Error             error          = kErrorNone;
     ExternalCallback *unusedCallback = nullptr;
 
     VerifyOrExit(aCallback != nullptr);
@@ -71,10 +71,10 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
             continue;
         }
 
-        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = OT_ERROR_ALREADY);
+        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = kErrorAlready);
     }
 
-    VerifyOrExit(unusedCallback != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
 
     unusedCallback->mHandler = aCallback;
     unusedCallback->mContext = aContext;

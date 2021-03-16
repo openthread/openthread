@@ -40,19 +40,19 @@ struct Ip6AddressStringTestVector
 {
     const char *  mString;
     const uint8_t mAddr[OT_IP6_ADDRESS_SIZE];
-    otError       mError;
+    ot::Error     mError;
 };
 
 static void checkAddressFromString(Ip6AddressStringTestVector *aTestVector)
 {
-    otError          error;
+    ot::Error        error;
     ot::Ip6::Address address;
 
     error = address.FromString(aTestVector->mString);
 
     VerifyOrQuit(error == aTestVector->mError, "Ip6::Address::FromString returned unexpected error code");
 
-    if (error == OT_ERROR_NONE)
+    if (error == ot::kErrorNone)
     {
         VerifyOrQuit(0 == memcmp(address.mFields.m8, aTestVector->mAddr, OT_IP6_ADDRESS_SIZE),
                      "Ip6::Address::FromString parsing failed");
@@ -65,73 +65,73 @@ void TestIp6AddressFromString(void)
         // Valid full IPv6 address.
         {"0102:0304:0506:0708:090a:0b0c:0d0e:0f00",
          {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Valid full IPv6 address with mixed capital and small letters.
         {"0102:0304:0506:0708:090a:0B0C:0d0E:0F00",
          {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Short prefix and full IID.
         {"fd11::abcd:e0e0:d10e:0001",
          {0xfd, 0x11, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xab, 0xcd, 0xe0, 0xe0, 0xd1, 0x0e, 0x00, 0x01},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Valid IPv6 address with unnecessary :: symbol.
         {"fd11:1234:5678:abcd::abcd:e0e0:d10e:1000",
          {0xfd, 0x11, 0x12, 0x34, 0x56, 0x78, 0xab, 0xcd, 0xab, 0xcd, 0xe0, 0xe0, 0xd1, 0x0e, 0x10, 0x00},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Short multicast address.
         {"ff03::0b",
          {0xff, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x0b},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Unspecified address.
-        {"::", {0}, OT_ERROR_NONE},
+        {"::", {0}, ot::kErrorNone},
 
         // Valid embedded IPv4 address.
         {"64:ff9b::100.200.15.4",
          {0x00, 0x64, 0xff, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0xc8, 0x0f, 0x04},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Valid embedded IPv4 address.
         {"2001:db8::abc:def1:127.0.0.1",
          {0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x0a, 0xbc, 0xde, 0xf1, 0x7f, 0x00, 0x00, 0x01},
-         OT_ERROR_NONE},
+         ot::kErrorNone},
 
         // Two :: should cause a parse error.
-        {"2001:db8::a::b", {0}, OT_ERROR_PARSE},
+        {"2001:db8::a::b", {0}, ot::kErrorParse},
 
         // The "g" and "h" are not the hex characters.
-        {"2001:db8::abcd:efgh", {0}, OT_ERROR_PARSE},
+        {"2001:db8::abcd:efgh", {0}, ot::kErrorParse},
 
         // Too many colons.
-        {"1:2:3:4:5:6:7:8:9", {0}, OT_ERROR_PARSE},
+        {"1:2:3:4:5:6:7:8:9", {0}, ot::kErrorParse},
 
         // Too many characters in a single part.
-        {"2001:db8::abc:def12:1:2", {0}, OT_ERROR_PARSE},
+        {"2001:db8::abc:def12:1:2", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {"64:ff9b::123.231.0.257", {0}, OT_ERROR_PARSE},
+        {"64:ff9b::123.231.0.257", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {"64:ff9b::1.22.33", {0}, OT_ERROR_PARSE},
+        {"64:ff9b::1.22.33", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {"64:ff9b::1.22.33.44.5", {0}, OT_ERROR_PARSE},
+        {"64:ff9b::1.22.33.44.5", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {".", {0}, OT_ERROR_PARSE},
+        {".", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {":.", {0}, OT_ERROR_PARSE},
+        {":.", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {"::.", {0}, OT_ERROR_PARSE},
+        {"::.", {0}, ot::kErrorParse},
 
         // Invalid embedded IPv4 address.
-        {":f:0:0:c:0:f:f:.", {0}, OT_ERROR_PARSE},
+        {":f:0:0:c:0:f:f:.", {0}, ot::kErrorParse},
     };
 
     for (Ip6AddressStringTestVector &testVector : testVectors)

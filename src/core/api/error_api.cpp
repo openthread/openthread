@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2017-2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,57 +28,16 @@
 
 /**
  * @file
- *   This file implements the radio callbacks.
+ *   This file implements the OpenThread error code functions.
  */
 
-#include "radio.hpp"
+#include "openthread-core-config.h"
 
-#include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/error.hpp"
 
-namespace ot {
+using namespace ot;
 
-void Radio::Callbacks::HandleReceiveDone(Mac::RxFrame *aFrame, Error aError)
+const char *otThreadErrorToString(otError aError)
 {
-    Get<Mac::SubMac>().HandleReceiveDone(aFrame, aError);
+    return ErrorToString(aError);
 }
-
-void Radio::Callbacks::HandleTransmitStarted(Mac::TxFrame &aFrame)
-{
-    Get<Mac::SubMac>().HandleTransmitStarted(aFrame);
-}
-
-void Radio::Callbacks::HandleTransmitDone(Mac::TxFrame &aFrame, Mac::RxFrame *aAckFrame, Error aError)
-{
-    Get<Mac::SubMac>().HandleTransmitDone(aFrame, aAckFrame, aError);
-}
-
-void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
-{
-    Get<Mac::SubMac>().HandleEnergyScanDone(aMaxRssi);
-}
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
-{
-#if OPENTHREAD_RADIO
-    // Pass it to notify OpenThread `Diags` module on host side.
-    HandleReceiveDone(aFrame, aError);
-#else
-    Get<FactoryDiags::Diags>().ReceiveDone(aFrame, aError);
-#endif
-}
-
-void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError)
-{
-#if OPENTHREAD_RADIO
-    // Pass it to notify OpenThread `Diags` module on host side.
-    HandleTransmitDone(aFrame, nullptr, aError);
-#else
-    OT_UNUSED_VARIABLE(aFrame);
-    Get<FactoryDiags::Diags>().TransmitDone(aError);
-#endif
-}
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
-
-} // namespace ot

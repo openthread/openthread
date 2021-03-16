@@ -151,9 +151,9 @@ void SubMac::SetPcapCallback(otLinkPcapCallback aPcapCallback, void *aCallbackCo
     mPcapCallbackContext = aCallbackContext;
 }
 
-otError SubMac::Enable(void)
+Error SubMac::Enable(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     VerifyOrExit(mState == kStateDisabled);
 
@@ -163,13 +163,13 @@ otError SubMac::Enable(void)
     SetState(kStateSleep);
 
 exit:
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
     return error;
 }
 
-otError SubMac::Disable(void)
+Error SubMac::Disable(void)
 {
-    otError error;
+    Error error;
 
     mTimer.Stop();
     SuccessOrExit(error = Get<Radio>().Sleep());
@@ -180,13 +180,13 @@ exit:
     return error;
 }
 
-otError SubMac::Sleep(void)
+Error SubMac::Sleep(void)
 {
-    otError error = Get<Radio>().Sleep();
+    Error error = Get<Radio>().Sleep();
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnMac("RadioSleep() failed, error: %s", otThreadErrorToString(error));
+        otLogWarnMac("RadioSleep() failed, error: %s", ErrorToString(error));
         ExitNow();
     }
 
@@ -196,13 +196,13 @@ exit:
     return error;
 }
 
-otError SubMac::Receive(uint8_t aChannel)
+Error SubMac::Receive(uint8_t aChannel)
 {
-    otError error = Get<Radio>().Receive(aChannel);
+    Error error = Get<Radio>().Receive(aChannel);
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnMac("RadioReceive() failed, error: %s", otThreadErrorToString(error));
+        otLogWarnMac("RadioReceive() failed, error: %s", ErrorToString(error));
         ExitNow();
     }
 
@@ -213,9 +213,9 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError SubMac::CslSample(uint8_t aPanChannel)
+Error SubMac::CslSample(uint8_t aPanChannel)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (!IsCslChannelSpecified())
     {
@@ -233,7 +233,7 @@ otError SubMac::CslSample(uint8_t aPanChannel)
 #endif
         break;
     case kCslIdle:
-        ExitNow(error = OT_ERROR_INVALID_STATE);
+        ExitNow(error = kErrorInvalidState);
     default:
         OT_ASSERT(false);
     }
@@ -241,17 +241,17 @@ otError SubMac::CslSample(uint8_t aPanChannel)
     SetState(kStateCslSample);
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnMac("CslSample() failed, error: %s", otThreadErrorToString(error));
+        otLogWarnMac("CslSample() failed, error: %s", ErrorToString(error));
     }
     return error;
 }
 #endif
 
-void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
+void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
 {
-    if (mPcapCallback && (aFrame != nullptr) && (aError == OT_ERROR_NONE))
+    if (mPcapCallback && (aFrame != nullptr) && (aError == kErrorNone))
     {
         mPcapCallback(aFrame, false, mPcapCallbackContext);
     }
@@ -262,7 +262,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
     }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE
-    if (aFrame != nullptr && aError == OT_ERROR_NONE)
+    if (aFrame != nullptr && aError == kErrorNone)
     {
         // Split the log into two lines for RTT to output
         otLogDebgMac("Received frame in state (SubMac %s, CSL %s), timestamp %u", StateToString(mState),
@@ -275,9 +275,9 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, otError aError)
     mCallbacks.ReceiveDone(aFrame, aError);
 }
 
-otError SubMac::Send(void)
+Error SubMac::Send(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     switch (mState)
     {
@@ -288,7 +288,7 @@ otError SubMac::Send(void)
 #endif
     case kStateTransmit:
     case kStateEnergyScan:
-        ExitNow(error = OT_ERROR_INVALID_STATE);
+        ExitNow(error = kErrorInvalidState);
         OT_UNREACHABLE_CODE(break);
 
     case kStateSleep:
@@ -409,7 +409,7 @@ exit:
 
 void SubMac::BeginTransmit(void)
 {
-    otError error;
+    Error error;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -422,7 +422,7 @@ void SubMac::BeginTransmit(void)
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
         error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
-        OT_ASSERT(error == OT_ERROR_NONE);
+        OT_ASSERT(error == kErrorNone);
     }
 
     SetState(kStateTransmit);
@@ -433,14 +433,14 @@ void SubMac::BeginTransmit(void)
     }
 
     error = Get<Radio>().Transmit(mTransmitFrame);
-    if (error == OT_ERROR_INVALID_STATE && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
+    if (error == kErrorInvalidState && mTransmitFrame.mInfo.mTxInfo.mTxDelay > 0)
     {
         // Platform `transmit_at` fails and we send the frame directly.
         mTransmitFrame.mInfo.mTxInfo.mTxDelay         = 0;
         mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
         error                                         = Get<Radio>().Transmit(mTransmitFrame);
     }
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 
 exit:
     return;
@@ -458,7 +458,7 @@ void SubMac::HandleTransmitStarted(TxFrame &aFrame)
     }
 }
 
-void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError)
+void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
 {
     bool ccaSuccess = true;
     bool shouldRetx;
@@ -471,18 +471,18 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
 
     switch (aError)
     {
-    case OT_ERROR_ABORT:
+    case kErrorAbort:
         // Do not record CCA status in case of `ABORT` error
         // since there may be no CCA check performed by radio.
         break;
 
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
+    case kErrorChannelAccessFailure:
         ccaSuccess = false;
 
         OT_FALL_THROUGH;
 
-    case OT_ERROR_NONE:
-    case OT_ERROR_NO_ACK:
+    case kErrorNone:
+    case kErrorNoAck:
         if (aFrame.IsCsmaCaEnabled())
         {
             mCallbacks.RecordCcaStatus(ccaSuccess, aFrame.GetChannel());
@@ -510,8 +510,7 @@ void SubMac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aEr
 
     // Determine whether to re-transmit the frame.
 
-    shouldRetx =
-        ((aError != OT_ERROR_NONE) && ShouldHandleRetries() && (mTransmitRetries < aFrame.GetMaxFrameRetries()));
+    shouldRetx = ((aError != kErrorNone) && ShouldHandleRetries() && (mTransmitRetries < aFrame.GetMaxFrameRetries()));
 
     mCallbacks.RecordFrameTransmitStatus(aFrame, aAckFrame, aError, mTransmitRetries, shouldRetx);
 
@@ -554,10 +553,10 @@ void SubMac::UpdateFrameCounterOnTxDone(const TxFrame &aFrame)
     allowError = Get<LinkRaw>().IsEnabled();
 #endif
 
-    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == OT_ERROR_NONE, OT_ASSERT(allowError));
+    VerifyOrExit(aFrame.GetKeyIdMode(keyIdMode) == kErrorNone, OT_ASSERT(allowError));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
-    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == OT_ERROR_NONE, OT_ASSERT(allowError));
+    VerifyOrExit(aFrame.GetFrameCounter(frameCounter) == kErrorNone, OT_ASSERT(allowError));
     UpdateFrameCounter(frameCounter);
 
 exit:
@@ -574,9 +573,9 @@ int8_t SubMac::GetNoiseFloor(void)
     return Get<Radio>().GetReceiveSensitivity();
 }
 
-otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
+Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     switch (mState)
     {
@@ -587,7 +586,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     case kStateCslTransmit:
 #endif
     case kStateEnergyScan:
-        ExitNow(error = OT_ERROR_INVALID_STATE);
+        ExitNow(error = kErrorInvalidState);
 
     case kStateReceive:
     case kStateSleep:
@@ -605,7 +604,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     else if (ShouldHandleEnergyScan())
     {
         error = Get<Radio>().Receive(aScanChannel);
-        OT_ASSERT(error == OT_ERROR_NONE);
+        OT_ASSERT(error == kErrorNone);
 
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;
@@ -614,7 +613,7 @@ otError SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     }
     else
     {
-        error = OT_ERROR_NOT_IMPLEMENTED;
+        error = kErrorNotImplemented;
     }
 
 exit:
@@ -676,7 +675,7 @@ void SubMac::HandleTimer(void)
     case kStateTransmit:
         otLogDebgMac("Ack timer timed out");
         IgnoreError(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
-        HandleTransmitDone(mTransmitFrame, nullptr, OT_ERROR_NO_ACK);
+        HandleTransmitDone(mTransmitFrame, nullptr, kErrorNoAck);
         break;
 
     case kStateEnergyScan:

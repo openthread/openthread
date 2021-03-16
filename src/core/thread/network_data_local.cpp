@@ -54,20 +54,20 @@ Local::Local(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-otError Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
+Error Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
-    otError  error;
+    Error    error;
     uint16_t flags = 0;
 
     // Add Prefix validation check:
     // Thread 1.1 Specification 5.13.2 says
     // "A valid prefix MUST NOT allow both DHCPv6 and SLAAC for address configuration"
-    VerifyOrExit(!aConfig.mDhcp || !aConfig.mSlaac, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aConfig.mDhcp || !aConfig.mSlaac, error = kErrorInvalidArgs);
 
     // RFC 4944 Section 6 says:
     // An IPv6 address prefix used for stateless autoconfiguration [RFC4862]
     // of an IEEE 802.15.4 interface MUST have a length of 64 bits.
-    VerifyOrExit(!aConfig.mSlaac || aConfig.mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aConfig.mSlaac || aConfig.mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = kErrorInvalidArgs);
 
     if (aConfig.mPreferred)
     {
@@ -118,33 +118,33 @@ exit:
     return error;
 }
 
-otError Local::RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
+Error Local::RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
 {
     return RemovePrefix(aPrefix, NetworkDataTlv::kTypeBorderRouter);
 }
 
-otError Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
+Error Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
 {
     return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, /* aFlags */ 0,
                      aConfig.mStable);
 }
 
-otError Local::RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)
+Error Local::RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)
 {
     return RemovePrefix(aPrefix, NetworkDataTlv::kTypeHasRoute);
 }
 
-otError Local::AddPrefix(const Ip6::Prefix &  aPrefix,
-                         NetworkDataTlv::Type aSubTlvType,
-                         int8_t               aPrf,
-                         uint16_t             aFlags,
-                         bool                 aStable)
+Error Local::AddPrefix(const Ip6::Prefix &  aPrefix,
+                       NetworkDataTlv::Type aSubTlvType,
+                       int8_t               aPrf,
+                       uint16_t             aFlags,
+                       bool                 aStable)
 {
-    otError    error = OT_ERROR_NONE;
+    Error      error = kErrorNone;
     uint8_t    subTlvLength;
     PrefixTlv *prefixTlv;
 
-    VerifyOrExit((aPrefix.GetLength() > 0) && aPrefix.IsValid(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aPrefix.GetLength() > 0) && aPrefix.IsValid(), error = kErrorInvalidArgs);
 
     switch (aPrf)
     {
@@ -153,10 +153,10 @@ otError Local::AddPrefix(const Ip6::Prefix &  aPrefix,
     case OT_ROUTE_PREFERENCE_HIGH:
         break;
     default:
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        ExitNow(error = kErrorInvalidArgs);
     }
 
-    VerifyOrExit(!aPrefix.ContainsPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix()), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aPrefix.ContainsPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix()), error = kErrorInvalidArgs);
 
     IgnoreError(RemovePrefix(aPrefix, aSubTlvType));
 
@@ -165,7 +165,7 @@ otError Local::AddPrefix(const Ip6::Prefix &  aPrefix,
                        : sizeof(HasRouteTlv) + sizeof(HasRouteEntry);
 
     prefixTlv = static_cast<PrefixTlv *>(AppendTlv(sizeof(PrefixTlv) + aPrefix.GetBytesSize() + subTlvLength));
-    VerifyOrExit(prefixTlv != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(prefixTlv != nullptr, error = kErrorNoBufs);
 
     prefixTlv->Init(0, aPrefix);
     prefixTlv->SetSubTlvsLength(subTlvLength);
@@ -200,13 +200,13 @@ exit:
     return error;
 }
 
-otError Local::RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType)
+Error Local::RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType)
 {
-    otError    error = OT_ERROR_NONE;
+    Error      error = kErrorNone;
     PrefixTlv *tlv;
 
-    VerifyOrExit((tlv = FindPrefix(aPrefix)) != nullptr, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit((tlv = FindPrefix(aPrefix)) != nullptr, error = kErrorNotFound);
+    VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != nullptr, error = kErrorNotFound);
     RemoveTlv(tlv);
 
 exit:
@@ -252,14 +252,14 @@ bool Local::IsExternalRouteConsistent(void) const
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-otError Local::AddService(uint32_t       aEnterpriseNumber,
-                          const uint8_t *aServiceData,
-                          uint8_t        aServiceDataLength,
-                          bool           aServerStable,
-                          const uint8_t *aServerData,
-                          uint8_t        aServerDataLength)
+Error Local::AddService(uint32_t       aEnterpriseNumber,
+                        const uint8_t *aServiceData,
+                        uint8_t        aServiceDataLength,
+                        bool           aServerStable,
+                        const uint8_t *aServerData,
+                        uint8_t        aServerDataLength)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     ServiceTlv *serviceTlv;
     ServerTlv * serverTlv;
     uint16_t    serviceTlvSize =
@@ -267,10 +267,10 @@ otError Local::AddService(uint32_t       aEnterpriseNumber,
 
     IgnoreError(RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength));
 
-    VerifyOrExit(serviceTlvSize <= kMaxSize, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(serviceTlvSize <= kMaxSize, error = kErrorNoBufs);
 
     serviceTlv = static_cast<ServiceTlv *>(AppendTlv(serviceTlvSize));
-    VerifyOrExit(serviceTlv != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(serviceTlv != nullptr, error = kErrorNoBufs);
 
     serviceTlv->Init(/* aServiceId */ 0, aEnterpriseNumber, aServiceData, aServiceDataLength);
     serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerDataLength);
@@ -294,13 +294,13 @@ exit:
     return error;
 }
 
-otError Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+Error Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     ServiceTlv *tlv;
 
     VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != nullptr,
-                 error = OT_ERROR_NOT_FOUND);
+                 error = kErrorNotFound);
     RemoveTlv(tlv);
 
 exit:
@@ -361,9 +361,9 @@ void Local::UpdateRloc(void)
     }
 }
 
-otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext)
+Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext)
 {
-    otError  error        = OT_ERROR_NONE;
+    Error    error        = kErrorNone;
     uint16_t rloc         = Get<Mle::MleRouter>().GetRloc16();
     bool     isConsistent = true;
 
@@ -372,7 +372,7 @@ otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void
     // Don't send this Server Data Notification if the device is going to upgrade to Router
     if (Get<Mle::MleRouter>().IsExpectedToBecomeRouter())
     {
-        ExitNow(error = OT_ERROR_INVALID_STATE);
+        ExitNow(error = kErrorInvalidState);
     }
 
 #endif
@@ -386,7 +386,7 @@ otError Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void
     isConsistent = isConsistent && IsServiceConsistent();
 #endif
 
-    VerifyOrExit(!isConsistent, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(!isConsistent, error = kErrorNotFound);
 
     if (mOldRloc == rloc)
     {

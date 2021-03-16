@@ -82,14 +82,12 @@ RoutingManager::RoutingManager(Instance &aInstance)
     memset(mDiscoveredPrefixes, 0, sizeof(mDiscoveredPrefixes));
 }
 
-otError RoutingManager::Init(uint32_t            aInfraIfIndex,
-                             bool                aInfraIfIsRunning,
-                             const Ip6::Address *aInfraIfLinkLocalAddress)
+Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress)
 {
-    otError error;
+    Error error;
 
-    VerifyOrExit(!IsInitialized(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(aInfraIfIndex > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(aInfraIfIndex > 0, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = LoadOrGenerateRandomOmrPrefix());
     SuccessOrExit(error = LoadOrGenerateRandomOnLinkPrefix());
@@ -100,18 +98,18 @@ otError RoutingManager::Init(uint32_t            aInfraIfIndex,
     SuccessOrExit(error = HandleInfraIfStateChanged(mInfraIfIndex, aInfraIfIsRunning, aInfraIfLinkLocalAddress));
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         mInfraIfIndex = 0;
     }
     return error;
 }
 
-otError RoutingManager::SetEnabled(bool aEnabled)
+Error RoutingManager::SetEnabled(bool aEnabled)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
 
     VerifyOrExit(aEnabled != mIsEnabled);
 
@@ -122,18 +120,18 @@ exit:
     return error;
 }
 
-otError RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
+Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    if (Get<Settings>().ReadOmrPrefix(mLocalOmrPrefix) != OT_ERROR_NONE || !IsValidOmrPrefix(mLocalOmrPrefix))
+    if (Get<Settings>().ReadOmrPrefix(mLocalOmrPrefix) != kErrorNone || !IsValidOmrPrefix(mLocalOmrPrefix))
     {
         Ip6::NetworkPrefix randomOmrPrefix;
 
         otLogNoteBr("no valid OMR prefix found in settings, generating new one");
 
         error = randomOmrPrefix.GenerateRandomUla();
-        if (error != OT_ERROR_NONE)
+        if (error != kErrorNone)
         {
             otLogCritBr("failed to generate random OMR prefix");
             ExitNow();
@@ -147,19 +145,18 @@ exit:
     return error;
 }
 
-otError RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
+Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    if (Get<Settings>().ReadOnLinkPrefix(mLocalOnLinkPrefix) != OT_ERROR_NONE ||
-        !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
+    if (Get<Settings>().ReadOnLinkPrefix(mLocalOnLinkPrefix) != kErrorNone || !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
     {
         Ip6::NetworkPrefix randomOnLinkPrefix;
 
         otLogNoteBr("no valid on-link prefix found in settings, generating new one");
 
         error = randomOnLinkPrefix.GenerateRandomUla();
-        if (error != OT_ERROR_NONE)
+        if (error != kErrorNone)
         {
             otLogCritBr("failed to generate random on-link prefix");
             ExitNow();
@@ -243,19 +240,19 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
                                       const uint8_t *     aBuffer,
                                       uint16_t            aBufferLength)
 {
-    otError                  error = OT_ERROR_NONE;
+    Error                    error = kErrorNone;
     const Ip6::Icmp::Header *icmp6Header;
     const Ip6::Address *     infraLinkLocalAddr;
 
-    VerifyOrExit(IsInitialized() && mIsRunning, error = OT_ERROR_DROP);
+    VerifyOrExit(IsInitialized() && mIsRunning, error = kErrorDrop);
 
-    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = kErrorDrop);
     infraLinkLocalAddr = static_cast<const Ip6::Address *>(&mInfraIfLinkLocalAddress);
 
     // Drop any ICMPv6 messages sent from myself.
-    VerifyOrExit(infraLinkLocalAddr != nullptr && aSrcAddress != *infraLinkLocalAddr, error = OT_ERROR_DROP);
+    VerifyOrExit(infraLinkLocalAddr != nullptr && aSrcAddress != *infraLinkLocalAddr, error = kErrorDrop);
 
-    VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header), error = OT_ERROR_PARSE);
+    VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header), error = kErrorParse);
 
     icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aBuffer);
 
@@ -272,21 +269,21 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
     }
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogDebgBr("drop ICMPv6 message: %s", otThreadErrorToString(error));
+        otLogDebgBr("drop ICMPv6 message: %s", ErrorToString(error));
     }
 }
 
-otError RoutingManager::HandleInfraIfStateChanged(uint32_t            aInfraIfIndex,
-                                                  bool                aIsRunning,
-                                                  const Ip6::Address *aLinkLocalAddress)
+Error RoutingManager::HandleInfraIfStateChanged(uint32_t            aInfraIfIndex,
+                                                bool                aIsRunning,
+                                                const Ip6::Address *aLinkLocalAddress)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsInitialized(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aLinkLocalAddress == nullptr || aLinkLocalAddress->IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = kErrorInvalidArgs);
+    VerifyOrExit(aLinkLocalAddress == nullptr || aLinkLocalAddress->IsLinkLocal(), error = kErrorInvalidArgs);
 
     otLogInfoBr("infra interface state changed: %s, link-local-addr=%s", aIsRunning ? "RUNNING" : "NOT RUNNING",
                 (aLinkLocalAddress != nullptr) ? aLinkLocalAddress->ToString().AsCString() : "(null)");
@@ -335,7 +332,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
 
     OT_ASSERT(mIsRunning);
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == kErrorNone)
     {
         uint8_t newPrefixIndex;
 
@@ -379,7 +376,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
     if (newOmrPrefixNum == 0)
     {
         otLogInfoBr("EvaluateOmrPrefix: no valid OMR prefixes found in Thread network");
-        if (PublishLocalOmrPrefix() == OT_ERROR_NONE)
+        if (PublishLocalOmrPrefix() == kErrorNone)
         {
             aNewOmrPrefixes[newOmrPrefixNum++] = mLocalOmrPrefix;
         }
@@ -399,9 +396,9 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
     return newOmrPrefixNum;
 }
 
-otError RoutingManager::PublishLocalOmrPrefix(void)
+Error RoutingManager::PublishLocalOmrPrefix(void)
 {
-    otError                         error = OT_ERROR_NONE;
+    Error                           error = kErrorNone;
     NetworkData::OnMeshPrefixConfig omrPrefixConfig;
 
     OT_ASSERT(mIsRunning);
@@ -416,10 +413,10 @@ otError RoutingManager::PublishLocalOmrPrefix(void)
     omrPrefixConfig.mPreference   = OT_ROUTE_PREFERENCE_MED;
 
     error = Get<NetworkData::Local>().AddOnMeshPrefix(omrPrefixConfig);
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         otLogWarnBr("failed to publish local OMR prefix %s in Thread network: %s",
-                    mLocalOmrPrefix.ToString().AsCString(), otThreadErrorToString(error));
+                    mLocalOmrPrefix.ToString().AsCString(), ErrorToString(error));
     }
     else
     {
@@ -432,7 +429,7 @@ otError RoutingManager::PublishLocalOmrPrefix(void)
 
 void RoutingManager::UnpublishLocalOmrPrefix(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     VerifyOrExit(mIsRunning);
 
@@ -442,16 +439,16 @@ void RoutingManager::UnpublishLocalOmrPrefix(void)
     otLogInfoBr("unpublished local OMR prefix %s from Thread network", mLocalOmrPrefix.ToString().AsCString());
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         otLogWarnBr("failed to unpublish local OMR prefix %s from Thread network: %s",
-                    mLocalOmrPrefix.ToString().AsCString(), otThreadErrorToString(error));
+                    mLocalOmrPrefix.ToString().AsCString(), ErrorToString(error));
     }
 }
 
-otError RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference)
+Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference)
 {
-    otError                          error;
+    Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
 
     OT_ASSERT(mIsRunning);
@@ -462,10 +459,9 @@ otError RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePref
     routeConfig.mPreference = aRoutePreference;
 
     error = Get<NetworkData::Local>().AddHasRoutePrefix(routeConfig);
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnBr("failed to add external route %s: %s", aPrefix.ToString().AsCString(),
-                    otThreadErrorToString(error));
+        otLogWarnBr("failed to add external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
     }
     else
     {
@@ -478,7 +474,7 @@ otError RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePref
 
 void RoutingManager::RemoveExternalRoute(const Ip6::Prefix &aPrefix)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     VerifyOrExit(mIsRunning);
 
@@ -488,10 +484,9 @@ void RoutingManager::RemoveExternalRoute(const Ip6::Prefix &aPrefix)
     otLogInfoBr("removed external route %s", aPrefix.ToString().AsCString());
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnBr("failed to remove external route %s: %s", aPrefix.ToString().AsCString(),
-                    otThreadErrorToString(error));
+        otLogWarnBr("failed to remove external route %s: %s", aPrefix.ToString().AsCString(), ErrorToString(error));
     }
 }
 
@@ -541,7 +536,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
         {
             newOnLinkPrefix = mAdvertisedOnLinkPrefix;
         }
-        else if (AddExternalRoute(mLocalOnLinkPrefix, OT_ROUTE_PREFERENCE_MED) == OT_ERROR_NONE)
+        else if (AddExternalRoute(mLocalOnLinkPrefix, OT_ROUTE_PREFERENCE_MED) == kErrorNone)
         {
             newOnLinkPrefix = &mLocalOnLinkPrefix;
         }
@@ -654,7 +649,7 @@ void RoutingManager::StartRouterSolicitationDelay(void)
     mRouterSolicitTimer.Start(randomDelay);
 }
 
-otError RoutingManager::SendRouterSolicitation(void)
+Error RoutingManager::SendRouterSolicitation(void)
 {
     Ip6::Address                    destAddress;
     RouterAdv::RouterSolicitMessage routerSolicit;
@@ -774,7 +769,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
     // Send the message only when there are options.
     if (bufferLength > sizeof(routerAdv))
     {
-        otError      error;
+        Error        error;
         Ip6::Address destAddress;
 
         ++mRouterAdvertisementCount;
@@ -782,14 +777,13 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
         destAddress.SetToLinkLocalAllNodesMulticast();
         error = otPlatInfraIfSendIcmp6Nd(mInfraIfIndex, &destAddress, buffer, bufferLength);
 
-        if (error == OT_ERROR_NONE)
+        if (error == kErrorNone)
         {
             otLogInfoBr("sent Router Advertisement on interface %u", mInfraIfIndex);
         }
         else
         {
-            otLogWarnBr("failed to send Router Advertisement on interface %u: %s", mInfraIfIndex,
-                        otThreadErrorToString(error));
+            otLogWarnBr("failed to send Router Advertisement on interface %u: %s", mInfraIfIndex, ErrorToString(error));
         }
     }
 }
@@ -850,19 +844,18 @@ void RoutingManager::HandleRouterSolicitTimer(void)
     if (mRouterSolicitCount < kMaxRtrSolicitations)
     {
         uint32_t nextSolicitationDelay;
-        otError  error;
+        Error    error;
 
         error = SendRouterSolicitation();
         ++mRouterSolicitCount;
 
-        if (error == OT_ERROR_NONE)
+        if (error == kErrorNone)
         {
             otLogDebgBr("successfully sent %uth Router Solicitation", mRouterSolicitCount);
         }
         else
         {
-            otLogCritBr("failed to send %uth Router Solicitation: %s", mRouterSolicitCount,
-                        otThreadErrorToString(error));
+            otLogCritBr("failed to send %uth Router Solicitation: %s", mRouterSolicitCount, ErrorToString(error));
         }
 
         nextSolicitationDelay =

@@ -50,7 +50,7 @@ namespace Ecdsa {
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
-otError P256::KeyPair::Generate(void)
+Error P256::KeyPair::Generate(void)
 {
     mbedtls_pk_context pk;
     int                ret;
@@ -74,26 +74,26 @@ otError P256::KeyPair::Generate(void)
 exit:
     mbedtls_pk_free(&pk);
 
-    return (ret >= 0) ? OT_ERROR_NONE : MbedTls::MapError(ret);
+    return (ret >= 0) ? kErrorNone : MbedTls::MapError(ret);
 }
 
-otError P256::KeyPair::Parse(void *aContext) const
+Error P256::KeyPair::Parse(void *aContext) const
 {
-    otError             error = OT_ERROR_NONE;
+    Error               error = kErrorNone;
     mbedtls_pk_context *pk    = reinterpret_cast<mbedtls_pk_context *>(aContext);
 
     mbedtls_pk_init(pk);
 
-    VerifyOrExit(mbedtls_pk_setup(pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)) == 0, error = OT_ERROR_FAILED);
-    VerifyOrExit(mbedtls_pk_parse_key(pk, mDerBytes, mDerLength, nullptr, 0) == 0, error = OT_ERROR_PARSE);
+    VerifyOrExit(mbedtls_pk_setup(pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)) == 0, error = kErrorFailed);
+    VerifyOrExit(mbedtls_pk_parse_key(pk, mDerBytes, mDerLength, nullptr, 0) == 0, error = kErrorParse);
 
 exit:
     return error;
 }
 
-otError P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
+Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
 {
-    otError              error;
+    Error                error;
     mbedtls_pk_context   pk;
     mbedtls_ecp_keypair *keyPair;
     int                  ret;
@@ -113,9 +113,9 @@ exit:
     return error;
 }
 
-otError P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
+Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) const
 {
-    otError               error;
+    Error                 error;
     mbedtls_pk_context    pk;
     mbedtls_ecp_keypair * keypair;
     mbedtls_ecdsa_context ecdsa;
@@ -155,9 +155,9 @@ exit:
     return error;
 }
 
-otError P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
+Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSignature) const
 {
-    otError               error = OT_ERROR_NONE;
+    Error                 error = kErrorNone;
     mbedtls_ecdsa_context ecdsa;
     mbedtls_mpi           r;
     mbedtls_mpi           s;
@@ -184,7 +184,7 @@ otError P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSig
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
     ret = mbedtls_ecdsa_verify(&ecdsa.grp, aHash.GetBytes(), Sha256::Hash::kSize, &ecdsa.Q, &r, &s);
-    VerifyOrExit(ret == 0, error = OT_ERROR_SECURITY);
+    VerifyOrExit(ret == 0, error = kErrorSecurity);
 
 exit:
     mbedtls_mpi_free(&s);
@@ -194,14 +194,14 @@ exit:
     return error;
 }
 
-otError Sign(uint8_t *      aOutput,
-             uint16_t &     aOutputLength,
-             const uint8_t *aInputHash,
-             uint16_t       aInputHashLength,
-             const uint8_t *aPrivateKey,
-             uint16_t       aPrivateKeyLength)
+Error Sign(uint8_t *      aOutput,
+           uint16_t &     aOutputLength,
+           const uint8_t *aInputHash,
+           uint16_t       aInputHashLength,
+           const uint8_t *aPrivateKey,
+           uint16_t       aPrivateKeyLength)
 {
-    otError               error = OT_ERROR_NONE;
+    Error                 error = kErrorNone;
     mbedtls_ecdsa_context ctx;
     mbedtls_pk_context    pkCtx;
     mbedtls_ecp_keypair * keypair;
@@ -215,26 +215,26 @@ otError Sign(uint8_t *      aOutput,
 
     // Parse a private key in PEM format.
     VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0) == 0,
-                 error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = OT_ERROR_INVALID_ARGS);
+                 error = kErrorInvalidArgs);
+    VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = kErrorInvalidArgs);
 
     keypair = mbedtls_pk_ec(pkCtx);
     OT_ASSERT(keypair != nullptr);
 
-    VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = OT_ERROR_FAILED);
+    VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = kErrorFailed);
 
     // Sign using ECDSA.
     VerifyOrExit(mbedtls_ecdsa_sign(&ctx.grp, &rMpi, &sMpi, &ctx.d, aInputHash, aInputHashLength,
                                     mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet()) == 0,
-                 error = OT_ERROR_FAILED);
-    VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= aOutputLength, error = OT_ERROR_NO_BUFS);
+                 error = kErrorFailed);
+    VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= aOutputLength, error = kErrorNoBufs);
 
     // Concatenate the two octet sequences in the order R and then S.
-    VerifyOrExit(mbedtls_mpi_write_binary(&rMpi, aOutput, mbedtls_mpi_size(&rMpi)) == 0, error = OT_ERROR_FAILED);
+    VerifyOrExit(mbedtls_mpi_write_binary(&rMpi, aOutput, mbedtls_mpi_size(&rMpi)) == 0, error = kErrorFailed);
     aOutputLength = static_cast<uint16_t>(mbedtls_mpi_size(&rMpi));
 
     VerifyOrExit(mbedtls_mpi_write_binary(&sMpi, aOutput + aOutputLength, mbedtls_mpi_size(&sMpi)) == 0,
-                 error = OT_ERROR_FAILED);
+                 error = kErrorFailed);
     aOutputLength += mbedtls_mpi_size(&sMpi);
 
 exit:

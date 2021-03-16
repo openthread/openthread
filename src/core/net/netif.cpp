@@ -208,7 +208,7 @@ exit:
 
 void Netif::SubscribeAllRoutersMulticast(void)
 {
-    otError                error                      = OT_ERROR_NONE;
+    Error                  error                      = kErrorNone;
     NetifMulticastAddress *prev                       = nullptr;
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
@@ -222,7 +222,7 @@ void Netif::SubscribeAllRoutersMulticast(void)
     // This method MUST be called after `SubscribeAllNodesMulticast()`
     // Ensure that the `LinkLocalAll` was found on the list.
 
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
     OT_UNUSED_VARIABLE(error);
 
     // The tail of multicast address linked list contains the
@@ -355,15 +355,15 @@ exit:
     return;
 }
 
-otError Netif::SubscribeExternalMulticast(const Address &aAddress)
+Error Netif::SubscribeExternalMulticast(const Address &aAddress)
 {
-    otError                error                      = OT_ERROR_NONE;
+    Error                  error                      = kErrorNone;
     NetifMulticastAddress &linkLocalAllRoutersAddress = static_cast<NetifMulticastAddress &>(
         const_cast<otNetifMulticastAddress &>(kLinkLocalAllRoutersMulticastAddress));
     ExternalNetifMulticastAddress *entry;
 
-    VerifyOrExit(aAddress.IsMulticast(), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(!IsMulticastSubscribed(aAddress), error = OT_ERROR_ALREADY);
+    VerifyOrExit(aAddress.IsMulticast(), error = kErrorInvalidArgs);
+    VerifyOrExit(!IsMulticastSubscribed(aAddress), error = kErrorAlready);
 
     // Check that the address is not one of the fixed addresses:
     // LinkLocalAllRouters -> RealmLocalAllRouters -> LinkLocalAllNodes
@@ -371,11 +371,11 @@ otError Netif::SubscribeExternalMulticast(const Address &aAddress)
 
     for (const NetifMulticastAddress *cur = &linkLocalAllRoutersAddress; cur; cur = cur->GetNext())
     {
-        VerifyOrExit(cur->GetAddress() != aAddress, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(cur->GetAddress() != aAddress, error = kErrorInvalidArgs);
     }
 
     entry = mExtMulticastAddressPool.Allocate();
-    VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
     entry->mAddress = aAddress;
 #if OPENTHREAD_CONFIG_MLR_ENABLE
@@ -388,16 +388,16 @@ exit:
     return error;
 }
 
-otError Netif::UnsubscribeExternalMulticast(const Address &aAddress)
+Error Netif::UnsubscribeExternalMulticast(const Address &aAddress)
 {
-    otError                error = OT_ERROR_NONE;
+    Error                  error = kErrorNone;
     NetifMulticastAddress *entry;
     NetifMulticastAddress *prev;
 
     entry = mMulticastAddresses.FindMatching(aAddress, prev);
-    VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
-    VerifyOrExit(IsMulticastAddressExternal(*entry), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsMulticastAddressExternal(*entry), error = kErrorInvalidArgs);
 
     mMulticastAddresses.PopAfter(prev);
 
@@ -466,18 +466,18 @@ exit:
     return;
 }
 
-otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
+Error Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
 {
-    otError              error = OT_ERROR_NONE;
+    Error                error = kErrorNone;
     NetifUnicastAddress *entry;
 
-    VerifyOrExit(!aAddress.GetAddress().IsMulticast(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aAddress.GetAddress().IsMulticast(), error = kErrorInvalidArgs);
 
     entry = mUnicastAddresses.FindMatching(aAddress.GetAddress());
 
     if (entry != nullptr)
     {
-        VerifyOrExit(IsUnicastAddressExternal(*entry), error = OT_ERROR_ALREADY);
+        VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorAlready);
 
         entry->mPrefixLength  = aAddress.mPrefixLength;
         entry->mAddressOrigin = aAddress.mAddressOrigin;
@@ -486,10 +486,10 @@ otError Netif::AddExternalUnicastAddress(const NetifUnicastAddress &aAddress)
         ExitNow();
     }
 
-    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aAddress.GetAddress().IsLinkLocal(), error = kErrorInvalidArgs);
 
     entry = mExtUnicastAddressPool.Allocate();
-    VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
     *entry = aAddress;
     mUnicastAddresses.Push(*entry);
@@ -499,16 +499,16 @@ exit:
     return error;
 }
 
-otError Netif::RemoveExternalUnicastAddress(const Address &aAddress)
+Error Netif::RemoveExternalUnicastAddress(const Address &aAddress)
 {
-    otError              error = OT_ERROR_NONE;
+    Error                error = kErrorNone;
     NetifUnicastAddress *entry;
     NetifUnicastAddress *prev;
 
     entry = mUnicastAddresses.FindMatching(aAddress, prev);
-    VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(entry != nullptr, error = kErrorNotFound);
 
-    VerifyOrExit(IsUnicastAddressExternal(*entry), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(IsUnicastAddressExternal(*entry), error = kErrorInvalidArgs);
 
     mUnicastAddresses.PopAfter(prev);
     mExtUnicastAddressPool.Free(*entry);

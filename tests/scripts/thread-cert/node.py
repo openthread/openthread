@@ -2741,9 +2741,10 @@ class LinuxHost():
         #
         for line in self.bash(f'cat /tmp/{host_name}'):
             elements = line.split()
-            if not elements or len(elements) < 6 or not elements[4].startswith(host_name):
+            fullname = f'{host_name}.local.'
+            if fullname not in elements:
                 continue
-            addresses.append(elements[5].split('%')[0])
+            addresses.append(elements[elements.index(fullname) + 1].split('%')[0])
 
         logging.debug(f'addresses of {host_name}: {addresses}')
 

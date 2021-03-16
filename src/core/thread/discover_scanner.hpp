@@ -114,18 +114,18 @@ public:
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE       Successfully started a Thread Discovery Scan.
-     * @retval OT_ERROR_NO_BUFS    Could not allocate message for Discovery Request.
-     * @retval OT_ERROR_BUSY       Thread Discovery Scan is already in progress.
+     * @retval kErrorNone       Successfully started a Thread Discovery Scan.
+     * @retval kErrorNoBufs     Could not allocate message for Discovery Request.
+     * @retval kErrorBusy       Thread Discovery Scan is already in progress.
      *
      */
-    otError Discover(const Mac::ChannelMask &aScanChannels,
-                     Mac::PanId              aPanId,
-                     bool                    aJoiner,
-                     bool                    aEnableFiltering,
-                     const FilterIndexes *   aFilterIndexes,
-                     Handler                 aCallback,
-                     void *                  aContext);
+    Error Discover(const Mac::ChannelMask &aScanChannels,
+                   Mac::PanId              aPanId,
+                   bool                    aJoiner,
+                   bool                    aEnableFiltering,
+                   const FilterIndexes *   aFilterIndexes,
+                   Handler                 aCallback,
+                   void *                  aContext);
 
     /**
      * This method indicates whether or not an MLE Thread Discovery Scan is currently in progress.
@@ -142,11 +142,11 @@ public:
      * @param[in]  aAdvData         A pointer to AdvData for Joiner Advertisement.
      * @param[in]  aAdvDataLength   The length of AdvData.
      *
-     * @retval OT_ERROR_NONE            Successfully set Joiner Advertisement.
-     * @retval OT_ERROR_INVALID_ARGS    Invalid AdvData.
+     * @retval kErrorNone           Successfully set Joiner Advertisement.
+     * @retval kErrorInvalidArgs    Invalid AdvData.
      *
      */
-    otError SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
+    Error SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
 
 private:
     enum State

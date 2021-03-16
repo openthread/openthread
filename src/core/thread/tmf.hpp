@@ -66,11 +66,11 @@ public:
     /**
      * This method starts the TMF agent.
      *
-     * @retval OT_ERROR_NONE    Successfully started the CoAP service.
-     * @retval OT_ERROR_FAILED  Failed to start the TMF agent.
+     * @retval kErrorNone    Successfully started the CoAP service.
+     * @retval kErrorFailed  Failed to start the TMF agent.
      *
      */
-    otError Start(void);
+    Error Start(void);
 
     /**
      * This method returns whether Thread Management Framework Addressing Rules are met.
@@ -82,7 +82,7 @@ public:
     bool IsTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
 private:
-    static otError Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
+    static Error Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext);
 };
 
 } // namespace Tmf

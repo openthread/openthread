@@ -64,11 +64,11 @@ public:
      * @param[in]  aPeriod        The time between two successive MLE Announce transmissions (in milliseconds).
      * @param[in]  aAddress       The destination address.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the Announce Begin message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a Announce Begin message.
+     * @retval kErrorNone    Successfully enqueued the Announce Begin message.
+     * @retval kErrorNoBufs  Insufficient buffers to generate a Announce Begin message.
      *
      */
-    otError SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod, const Ip6::Address &aAddress);
+    Error SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod, const Ip6::Address &aAddress);
 };
 
 /**

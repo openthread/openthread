@@ -159,9 +159,9 @@ void Links::Send(TxFrame &aFrame, RadioTypes aRadioTypes)
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (aRadioTypes.Contains(kRadioTypeIeee802154))
     {
-        otError error = mSubMac.Send();
+        Error error = mSubMac.Send();
 
-        OT_ASSERT(error == OT_ERROR_NONE);
+        OT_ASSERT(error == kErrorNone);
         OT_UNUSED_VARIABLE(error);
     }
 #endif

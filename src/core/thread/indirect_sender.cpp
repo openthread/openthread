@@ -119,12 +119,12 @@ exit:
     return;
 }
 
-otError IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
+Error IndirectSender::RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild)
 {
-    otError  error      = OT_ERROR_NONE;
+    Error    error      = kErrorNone;
     uint16_t childIndex = Get<ChildTable>().GetChildIndex(aChild);
 
-    VerifyOrExit(aMessage.GetChildMask(childIndex), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(aMessage.GetChildMask(childIndex), error = kErrorNotFound);
 
     aMessage.ClearChildMask(childIndex);
     mSourceMatchController.DecrementMessageCount(aChild);
@@ -324,16 +324,16 @@ void IndirectSender::UpdateIndirectMessage(Child &aChild)
         mDataPollHandler.HandleNewFrame(aChild);
 
         aChild.GetMacAddress(childAddress);
-        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, &childAddress, OT_ERROR_NONE);
+        Get<MeshForwarder>().LogMessage(MeshForwarder::kMessagePrepareIndirect, *message, &childAddress, kErrorNone);
     }
 }
 
-otError IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild)
+Error IndirectSender::PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild)
 {
-    otError  error   = OT_ERROR_NONE;
+    Error    error   = kErrorNone;
     Message *message = aChild.GetIndirectMessage();
 
-    VerifyOrExit(mEnabled, error = OT_ERROR_ABORT);
+    VerifyOrExit(mEnabled, error = kErrorAbort);
 
     if (message == nullptr)
     {
@@ -414,7 +414,7 @@ void IndirectSender::PrepareEmptyFrame(Mac::TxFrame &aFrame, Child &aChild, bool
 
 void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                             const FrameContext &aContext,
-                                            otError             aError,
+                                            Error               aError,
                                             Child &             aChild)
 {
     Message *message    = aChild.GetIndirectMessage();
@@ -424,13 +424,13 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
 
     switch (aError)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
         Get<Utils::ChildSupervisor>().UpdateOnSend(aChild);
         break;
 
-    case OT_ERROR_NO_ACK:
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-    case OT_ERROR_ABORT:
+    case kErrorNoAck:
+    case kErrorChannelAccessFailure:
+    case kErrorAbort:
 
         aChild.SetIndirectTxSuccess(false);
 
@@ -465,7 +465,7 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
     {
         // The indirect tx of this message to the child is done.
 
-        otError      txError    = aError;
+        Error        txError    = aError;
         uint16_t     childIndex = Get<ChildTable>().GetChildIndex(aChild);
         Mac::Address macDest;
 
@@ -493,9 +493,9 @@ void IndirectSender::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
         // represents the error status of the last fragment frame
         // transmission.
 
-        if (!aChild.GetIndirectTxSuccess() && (txError == OT_ERROR_NONE))
+        if (!aChild.GetIndirectTxSuccess() && (txError == kErrorNone))
         {
-            txError = OT_ERROR_FAILED;
+            txError = kErrorFailed;
         }
 #endif
 

@@ -46,11 +46,11 @@ using namespace ot;
 
 otError otIp6SetEnabled(otInstance *aInstance, bool aEnabled)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-    VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.Get<Mac::LinkRaw>().IsEnabled(), error = kErrorInvalidState);
 #endif
 
     if (aEnabled)
@@ -246,12 +246,12 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
 
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
 {
-    otError                         error    = OT_ERROR_NONE;
+    Error                           error    = kErrorNone;
     Instance &                      instance = *static_cast<Instance *>(aInstance);
     const Ip6::NetifUnicastAddress *netifAddr;
 
     netifAddr = instance.Get<Ip6::Ip6>().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
-    VerifyOrExit(netifAddr != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(netifAddr != nullptr, error = kErrorNotFound);
     aMessageInfo->mSockAddr = netifAddr->GetAddress();
 
 exit:

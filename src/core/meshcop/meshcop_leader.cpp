@@ -123,10 +123,10 @@ void Leader::SendPetitionResponse(const Coap::Message &   aRequest,
                                   const Ip6::MessageInfo &aMessageInfo,
                                   StateTlv::State         aState)
 {
-    otError        error = OT_ERROR_NONE;
+    Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -207,10 +207,10 @@ void Leader::SendKeepAliveResponse(const Coap::Message &   aRequest,
                                    const Ip6::MessageInfo &aMessageInfo,
                                    StateTlv::State         aState)
 {
-    otError        error = OT_ERROR_NONE;
+    Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -228,11 +228,11 @@ exit:
 
 void Leader::SendDatasetChanged(const Ip6::Address &aAddress)
 {
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDatasetChanged));
 
@@ -248,11 +248,11 @@ exit:
     LogError("send dataset changed", error);
 }
 
-otError Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
+Error Leader::SetDelayTimerMinimal(uint32_t aDelayTimerMinimal)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
     VerifyOrExit((aDelayTimerMinimal != 0 && aDelayTimerMinimal < DelayTimerTlv::kDelayTimerDefault),
-                 error = OT_ERROR_INVALID_ARGS);
+                 error = kErrorInvalidArgs);
     mDelayTimerMinimal = aDelayTimerMinimal;
 
 exit:

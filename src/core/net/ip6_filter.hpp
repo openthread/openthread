@@ -81,24 +81,24 @@ public:
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval OT_ERROR_NONE         The port was successfully added to the allowed unsecure port list.
-     * @retval OT_ERROR_INVALID_ARGS The port is invalid (value 0 is reserved for internal use).
-     * @retval OT_ERROR_NO_BUFS      The unsecure port list is full.
+     * @retval kErrorNone         The port was successfully added to the allowed unsecure port list.
+     * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
+     * @retval kErrorNoBufs       The unsecure port list is full.
      *
      */
-    otError AddUnsecurePort(uint16_t aPort);
+    Error AddUnsecurePort(uint16_t aPort);
 
     /**
      * This method removes a port from the allowed unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval OT_ERROR_NONE         The port was successfully removed from the allowed unsecure port list.
-     * @retval OT_ERROR_INVALID_ARGS The port is invalid (value 0 is reserved for internal use).
-     * @retval OT_ERROR_NOT_FOUND    The port was not found in the unsecure port list.
+     * @retval kErrorNone         The port was successfully removed from the allowed unsecure port list.
+     * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
+     * @retval kErrorNotFound     The port was not found in the unsecure port list.
      *
      */
-    otError RemoveUnsecurePort(uint16_t aPort);
+    Error RemoveUnsecurePort(uint16_t aPort);
 
     /**
      * This method checks whether a port is in the unsecure port list.

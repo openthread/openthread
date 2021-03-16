@@ -54,19 +54,19 @@ DatasetUpdater::DatasetUpdater(Instance &aInstance)
 {
 }
 
-otError DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext)
+Error DatasetUpdater::RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext)
 {
-    otError  error   = OT_ERROR_NONE;
+    Error    error   = kErrorNone;
     Message *message = nullptr;
 
-    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(mDataset == nullptr, error = OT_ERROR_BUSY);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(mDataset == nullptr, error = kErrorBusy);
 
     VerifyOrExit(!aDataset.IsActiveTimestampPresent() && !aDataset.IsPendingTimestampPresent(),
-                 error = OT_ERROR_INVALID_ARGS);
+                 error = kErrorInvalidArgs);
 
     message = Get<MessagePool>().New(Message::kTypeOther, 0);
-    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->Append(aDataset));
 
@@ -107,15 +107,15 @@ void DatasetUpdater::PreparePendingDataset(void)
 {
     Dataset                dataset(Dataset::kPending);
     MeshCoP::Dataset::Info requestedDataset;
-    otError                error;
+    Error                  error;
 
-    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!Get<Mle::Mle>().IsDisabled(), error = kErrorInvalidState);
 
     IgnoreError(mDataset->Read(0, requestedDataset));
 
     error = Get<ActiveDataset>().Read(dataset);
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         // If there is no valid Active Dataset but MLE is not disabled,
         // set the timer to try again after the retry interval. This
@@ -124,7 +124,7 @@ void DatasetUpdater::PreparePendingDataset(void)
         // dataset is created.
 
         mTimer.Start(kRetryInterval);
-        ExitNow(error = OT_ERROR_NONE);
+        ExitNow(error = kErrorNone);
     }
 
     IgnoreError(dataset.SetFrom(requestedDataset));
@@ -156,13 +156,13 @@ void DatasetUpdater::PreparePendingDataset(void)
     SuccessOrExit(error = Get<PendingDataset>().Save(dataset));
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         Finish(error);
     }
 }
 
-void DatasetUpdater::Finish(otError aError)
+void DatasetUpdater::Finish(Error aError)
 {
     OT_ASSERT(mDataset != nullptr);
 
@@ -186,23 +186,23 @@ void DatasetUpdater::HandleNotifierEvents(Events aEvents)
 
     IgnoreError(mDataset->Read(0, requestedDataset));
 
-    if (aEvents.Contains(kEventActiveDatasetChanged) && Get<MeshCoP::ActiveDataset>().Read(dataset) == OT_ERROR_NONE)
+    if (aEvents.Contains(kEventActiveDatasetChanged) && Get<MeshCoP::ActiveDataset>().Read(dataset) == kErrorNone)
     {
         if (requestedDataset.IsSubsetOf(dataset))
         {
-            Finish(OT_ERROR_NONE);
+            Finish(kErrorNone);
         }
         else if (requestedDataset.GetActiveTimestamp() <= dataset.GetActiveTimestamp())
         {
-            Finish(OT_ERROR_ALREADY);
+            Finish(kErrorAlready);
         }
     }
 
-    if (aEvents.Contains(kEventPendingDatasetChanged) && Get<MeshCoP::PendingDataset>().Read(dataset) == OT_ERROR_NONE)
+    if (aEvents.Contains(kEventPendingDatasetChanged) && Get<MeshCoP::PendingDataset>().Read(dataset) == kErrorNone)
     {
         if (!requestedDataset.IsSubsetOf(dataset))
         {
-            Finish(OT_ERROR_ALREADY);
+            Finish(kErrorAlready);
         }
     }
 

@@ -114,11 +114,11 @@ public:
      *
      * @param[in]  aConfig  The configuration to set.
      *
-     * @retval OT_ERROR_NONE          Successfully updated configuration.
-     * @retval OT_ERROR_INVALID_ARGS  The configuration in @p aConfig is invalid.
+     * @retval kErrorNone         Successfully updated configuration.
+     * @retval kErrorInvalidArgs  The configuration in @p aConfig is invalid.
      *
      */
-    otError SetConfig(const BackboneRouterConfig &aConfig);
+    Error SetConfig(const BackboneRouterConfig &aConfig);
 
     /**
      * This method registers Backbone Router Dataset to Leader.
@@ -127,12 +127,12 @@ public:
      *                    False to decide based on current BackboneRouterState.
      *
      *
-     * @retval OT_ERROR_NONE             Successfully added the Service entry.
-     * @retval OT_ERROR_INVALID_STATE    Not in the ready state to register.
-     * @retval OT_ERROR_NO_BUFS          Insufficient space to add the Service entry.
+     * @retval kErrorNone            Successfully added the Service entry.
+     * @retval kErrorInvalidState    Not in the ready state to register.
+     * @retval kErrorNoBufs          Insufficient space to add the Service entry.
      *
      */
-    otError AddService(bool aForce = false);
+    Error AddService(bool aForce = false);
 
     /**
      * This method indicates whether or not the Backbone Router is Primary.
@@ -182,23 +182,23 @@ public:
      *
      * @param[out]  aConfig  A reference to the Domain Prefix configuration.
      *
-     * @retval OT_ERROR_NONE       Successfully got the Domain Prefix configuration.
-     * @retval OT_ERROR_NOT_FOUND  No Domain Prefix was configured.
+     * @retval kErrorNone      Successfully got the Domain Prefix configuration.
+     * @retval kErrorNotFound  No Domain Prefix was configured.
      *
      */
-    otError GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig);
+    Error GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig);
 
     /**
      * This method removes the local Domain Prefix configuration.
      *
      * @param[in]  aPrefix A reference to the IPv6 Domain Prefix.
      *
-     * @retval OT_ERROR_NONE          Successfully removed the Domain Prefix.
-     * @retval OT_ERROR_INVALID_ARGS  @p aPrefix is invalid.
-     * @retval OT_ERROR_NOT_FOUND     No Domain Prefix was configured or @p aPrefix doesn't match.
+     * @retval kErrorNone         Successfully removed the Domain Prefix.
+     * @retval kErrorInvalidArgs  @p aPrefix is invalid.
+     * @retval kErrorNotFound     No Domain Prefix was configured or @p aPrefix doesn't match.
      *
      */
-    otError RemoveDomainPrefix(const Ip6::Prefix &aPrefix);
+    Error RemoveDomainPrefix(const Ip6::Prefix &aPrefix);
 
     /**
      * This method sets the local Domain Prefix configuration.
@@ -253,11 +253,11 @@ private:
     void AddDomainPrefixToNetworkData(void);
     void RemoveDomainPrefixFromNetworkData(void);
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
-    void LogBackboneRouterService(const char *aAction, otError aError);
-    void LogDomainPrefix(const char *aAction, otError aError);
+    void LogBackboneRouterService(const char *aAction, Error aError);
+    void LogDomainPrefix(const char *aAction, Error aError);
 #else
-    void LogBackboneRouterService(const char *, otError) {}
-    void LogDomainPrefix(const char *, otError) {}
+    void LogBackboneRouterService(const char *, Error) {}
+    void LogDomainPrefix(const char *, Error) {}
 #endif
 
     BackboneRouterState mState;

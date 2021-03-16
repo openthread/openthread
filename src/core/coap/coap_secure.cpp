@@ -54,9 +54,9 @@ CoapSecure::CoapSecure(Instance &aInstance, bool aLayerTwoSecurity)
 {
 }
 
-otError CoapSecure::Start(uint16_t aPort)
+Error CoapSecure::Start(uint16_t aPort)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     mConnectedCallback = nullptr;
     mConnectedContext  = nullptr;
@@ -68,9 +68,9 @@ exit:
     return error;
 }
 
-otError CoapSecure::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext)
+Error CoapSecure::Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     mConnectedCallback = nullptr;
     mConnectedContext  = nullptr;
@@ -95,7 +95,7 @@ void CoapSecure::Stop(void)
     ClearRequestsAndResponses();
 }
 
-otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
+Error CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext)
 {
     mConnectedCallback = aCallback;
     mConnectedContext  = aContext;
@@ -105,7 +105,7 @@ otError CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aC
 
 void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
-    otError error;
+    Error error;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -115,19 +115,19 @@ void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 
     error = mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength());
 
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError CoapSecure::SendMessage(Message &                   aMessage,
-                                ResponseHandler             aHandler,
-                                void *                      aContext,
-                                otCoapBlockwiseTransmitHook aTransmitHook,
-                                otCoapBlockwiseReceiveHook  aReceiveHook)
+Error CoapSecure::SendMessage(Message &                   aMessage,
+                              ResponseHandler             aHandler,
+                              void *                      aContext,
+                              otCoapBlockwiseTransmitHook aTransmitHook,
+                              otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsConnected(), error = kErrorInvalidState);
 
     error = CoapBase::SendMessage(aMessage, mDtls.GetMessageInfo(), TxParameters::GetDefault(), aHandler, aContext,
                                   aTransmitHook, aReceiveHook);
@@ -136,22 +136,22 @@ exit:
     return error;
 }
 
-otError CoapSecure::SendMessage(Message &                   aMessage,
-                                const Ip6::MessageInfo &    aMessageInfo,
-                                ResponseHandler             aHandler,
-                                void *                      aContext,
-                                otCoapBlockwiseTransmitHook aTransmitHook,
-                                otCoapBlockwiseReceiveHook  aReceiveHook)
+Error CoapSecure::SendMessage(Message &                   aMessage,
+                              const Ip6::MessageInfo &    aMessageInfo,
+                              ResponseHandler             aHandler,
+                              void *                      aContext,
+                              otCoapBlockwiseTransmitHook aTransmitHook,
+                              otCoapBlockwiseReceiveHook  aReceiveHook)
 {
     return CoapBase::SendMessage(aMessage, aMessageInfo, TxParameters::GetDefault(), aHandler, aContext, aTransmitHook,
                                  aReceiveHook);
 }
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-otError CoapSecure::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
+Error CoapSecure::SendMessage(Message &aMessage, ResponseHandler aHandler, void *aContext)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsConnected(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(IsConnected(), error = kErrorInvalidState);
 
     error = CoapBase::SendMessage(aMessage, mDtls.GetMessageInfo(), aHandler, aContext);
 
@@ -159,23 +159,23 @@ exit:
     return error;
 }
 
-otError CoapSecure::SendMessage(Message &               aMessage,
-                                const Ip6::MessageInfo &aMessageInfo,
-                                ResponseHandler         aHandler,
-                                void *                  aContext)
+Error CoapSecure::SendMessage(Message &               aMessage,
+                              const Ip6::MessageInfo &aMessageInfo,
+                              ResponseHandler         aHandler,
+                              void *                  aContext)
 {
     return CoapBase::SendMessage(aMessage, aMessageInfo, aHandler, aContext);
 }
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-otError CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error CoapSecure::Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     mTransmitQueue.Enqueue(aMessage);
     mTransmitTask.Post();
 
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
 void CoapSecure::HandleDtlsConnected(void *aContext, bool aConnected)
@@ -216,7 +216,7 @@ void CoapSecure::HandleTransmit(Tasklet &aTasklet)
 
 void CoapSecure::HandleTransmit(void)
 {
-    otError      error   = OT_ERROR_NONE;
+    Error        error   = kErrorNone;
     ot::Message *message = mTransmitQueue.GetHead();
 
     VerifyOrExit(message != nullptr);
@@ -230,14 +230,14 @@ void CoapSecure::HandleTransmit(void)
     SuccessOrExit(error = mDtls.Send(*message, message->GetLength()));
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogNoteMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
+        otLogNoteMeshCoP("CoapSecure Transmit: %s", ErrorToString(error));
         message->Free();
     }
     else
     {
-        otLogDebgMeshCoP("CoapSecure Transmit: %s", otThreadErrorToString(error));
+        otLogDebgMeshCoP("CoapSecure Transmit: %s", ErrorToString(error));
     }
 }
 

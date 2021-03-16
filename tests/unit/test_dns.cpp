@@ -218,7 +218,7 @@ void TestDnsName(void)
         }
 
         labelLength = sizeof(label);
-        VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == kErrorNotFound,
                      "Name::ReadLabel() failed at end of the name");
 
         // Read entire name
@@ -237,7 +237,7 @@ void TestDnsName(void)
             "Name::ReadName() failed with exact name buffer size");
         offset = 0;
         VerifyOrQuit(Dns::Name::ReadName(*message, offset, name,
-                                         static_cast<uint16_t>(strlen(test.mExpectedReadName))) == OT_ERROR_NO_BUFS,
+                                         static_cast<uint16_t>(strlen(test.mExpectedReadName))) == kErrorNoBufs,
                      "Name::ReadName() did not fail with too small name buffer size");
 
         // Compare labels one by one.
@@ -251,7 +251,7 @@ void TestDnsName(void)
                           "Name::CompareLabel() failed");
             VerifyOrQuit(offset != startOffset, "Name::CompareLabel() did not change offset");
 
-            VerifyOrQuit(Dns::Name::CompareLabel(*message, startOffset, kBadLabel) == OT_ERROR_NOT_FOUND,
+            VerifyOrQuit(Dns::Name::CompareLabel(*message, startOffset, kBadLabel) == kErrorNotFound,
                          "Name::CompareLabel() did not fail with incorrect label");
         }
 
@@ -261,7 +261,7 @@ void TestDnsName(void)
         VerifyOrQuit(offset == len, "Name::CompareName() returned incorrect offset");
 
         offset = 0;
-        VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == kErrorNotFound,
                      "Name::CompareName() did not fail with incorrect name");
         VerifyOrQuit(offset == len, "Name::CompareName() returned incorrect offset");
 
@@ -277,7 +277,7 @@ void TestDnsName(void)
         {
             name[strlen(name) - 1] = '\0';
             offset                 = 0;
-            VerifyOrQuit(Dns::Name::CompareName(*message, offset, name) == OT_ERROR_NOT_FOUND,
+            VerifyOrQuit(Dns::Name::CompareName(*message, offset, name) == kErrorNotFound,
                          "Name::CompareName() did not fail with invalid name");
             VerifyOrQuit(offset == len, "Name::CompareName() returned incorrect offset");
         }
@@ -307,7 +307,7 @@ void TestDnsName(void)
 
         printf("\"%s\"\n", maxLengthName);
 
-        VerifyOrQuit(Dns::Name::AppendName(maxLengthName, *message) == OT_ERROR_NONE,
+        VerifyOrQuit(Dns::Name::AppendName(maxLengthName, *message) == kErrorNone,
                      "Name::AppendName() failed with max length name");
     }
 
@@ -320,7 +320,7 @@ void TestDnsName(void)
 
         printf("\"%s\"\n", invalidName);
 
-        VerifyOrQuit(Dns::Name::AppendName(invalidName, *message) == OT_ERROR_INVALID_ARGS,
+        VerifyOrQuit(Dns::Name::AppendName(invalidName, *message) == kErrorInvalidArgs,
                      "Name::AppendName() did not fail with an invalid name");
     }
 
@@ -496,7 +496,7 @@ void TestDnsCompressedName(void)
     }
 
     labelLength = sizeof(label);
-    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == kErrorNotFound,
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name1Offset;
@@ -517,7 +517,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::CompareName() returned incorrect offset");
 
     offset = name1Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == kErrorNotFound,
                  "Name::CompareName() did not fail with incorrect name");
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::CompareName() returned incorrect offset");
 
@@ -526,7 +526,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::CompareName() returned incorrect offset");
 
     offset = name1Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name2Offset) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name2Offset) == kErrorNotFound,
                  "Name::CompareName() did not fail with mismatching name");
     VerifyOrQuit(offset == name1Offset + sizeof(kEncodedName), "Name::CompareName() returned incorrect offset");
 
@@ -553,7 +553,7 @@ void TestDnsCompressedName(void)
     }
 
     labelLength = sizeof(label);
-    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == kErrorNotFound,
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name2Offset;
@@ -574,7 +574,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::CompareName() returned incorrect offset");
 
     offset = name2Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == kErrorNotFound,
                  "Name::CompareName() did not fail with incorrect name");
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::CompareName() returned incorrect offset");
 
@@ -583,7 +583,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::CompareName() returned incorrect offset");
 
     offset = name2Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name3Offset) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name3Offset) == kErrorNotFound,
                  "Name::CompareName() did not fail with mismatching name");
     VerifyOrQuit(offset == name2Offset + kName2EncodedSize, "Name::CompareName() returned incorrect offset");
 
@@ -610,7 +610,7 @@ void TestDnsCompressedName(void)
     }
 
     labelLength = sizeof(label);
-    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::ReadLabel(*message, offset, label, labelLength) == kErrorNotFound,
                  "Name::ReadLabel() failed at end of the name");
 
     offset = name3Offset;
@@ -631,7 +631,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::CompareName() returned incorrect offset");
 
     offset = name3Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, kBadName) == kErrorNotFound,
                  "Name::CompareName() did not fail with incorrect name");
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::CompareName() returned incorrect offset");
 
@@ -640,7 +640,7 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::CompareName() returned incorrect offset");
 
     offset = name3Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name4Offset) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name4Offset) == kErrorNotFound,
                  "Name::CompareName() did not fail with mismatching name");
     VerifyOrQuit(offset == name3Offset + kName3EncodedSize, "Name::CompareName() returned incorrect offset");
 
@@ -668,7 +668,7 @@ void TestDnsCompressedName(void)
 
     // `ReadName()` for name-4 should fails due to first label containing dot char.
     offset = name4Offset;
-    VerifyOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)) == OT_ERROR_PARSE,
+    VerifyOrQuit(Dns::Name::ReadName(*message, offset, name, sizeof(name)) == kErrorParse,
                  "Name::ReadName() did not fail with invalid label");
 
     offset = name4Offset;
@@ -682,7 +682,7 @@ void TestDnsCompressedName(void)
     SuccessOrQuit(Dns::Name::CompareName(*message, offset, *message, offset), "Name::CompareName() with itself failed");
 
     offset = name4Offset;
-    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name1Offset) == OT_ERROR_NOT_FOUND,
+    VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name1Offset) == kErrorNotFound,
                  "Name::CompareName() did not fail with mismatching name");
 
     message->Free();
@@ -912,7 +912,7 @@ void TestHeaderAndResourceRecords(void)
 
     VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
     VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kServiceName)) ==
-                     OT_ERROR_NOT_FOUND,
+                     kErrorNotFound,
                  "FindRecord did not fail with no records");
 
     // Use `ReadRecord()` with a non-matching record type. Verify that it correct skips over the record.
@@ -924,7 +924,7 @@ void TestHeaderAndResourceRecords(void)
     {
         SuccessOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kServiceName)),
                       "FindRecord failed");
-        VerifyOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(Dns::ResourceRecord::ReadRecord(*message, offset, srvRecord) == kErrorNotFound,
                      "ReadRecord() did not fail with non-matching type");
     }
 
@@ -935,7 +935,7 @@ void TestHeaderAndResourceRecords(void)
     offset     = answerSectionOffset;
     numRecords = kAnswerCount;
     VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(kInstance1Name)) ==
-                     OT_ERROR_NOT_FOUND,
+                     kErrorNotFound,
                  "FindRecord did not fail with non-matching name");
     VerifyOrQuit(numRecords == 0, "Incorrect num records");
     VerifyOrQuit(offset == additionalSectionOffset, "offset is incorrect after answer section parse");
@@ -1005,7 +1005,7 @@ void TestHeaderAndResourceRecords(void)
         printf("    \"%s\" TXT %u %d\n", instanceName, txtRecord.GetTtl(), txtRecord.GetLength());
 
         VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, numRecords, Dns::Name(instanceName)) ==
-                         OT_ERROR_NOT_FOUND,
+                         kErrorNotFound,
                      "FindRecord() did not fail with no more records");
 
         VerifyOrQuit(offset == message->GetLength(), "offset is incorrect after additional section parse");
@@ -1037,19 +1037,19 @@ void TestHeaderAndResourceRecords(void)
 
     offset = answerSectionOffset;
     VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kServiceName),
-                                                 ptrRecord) == OT_ERROR_NOT_FOUND,
+                                                 ptrRecord) == kErrorNotFound,
                  "FindRecord() did not fail with bad index");
     VerifyOrQuit(offset == answerSectionOffset, "FindRecord() changed offset on failure");
 
     offset = answerSectionOffset;
     VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kInstance1Name),
-                                                 ptrRecord) == OT_ERROR_NOT_FOUND,
+                                                 ptrRecord) == kErrorNotFound,
                  "FindRecord() did not fail with bad index");
     VerifyOrQuit(offset == answerSectionOffset, "FindRecord() changed offset on failure");
 
     offset = answerSectionOffset;
     VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAnswerCount, index, Dns::Name(kServiceName),
-                                                 txtRecord) == OT_ERROR_NOT_FOUND,
+                                                 txtRecord) == kErrorNotFound,
                  "FindRecord() did not fail with bad index");
     VerifyOrQuit(offset == answerSectionOffset, "FindRecord() changed offset on failure");
 
@@ -1073,12 +1073,12 @@ void TestHeaderAndResourceRecords(void)
 
         offset = additionalSectionOffset;
         VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, /* aIndex */ 1,
-                                                     Dns::Name(instanceName), srvRecord) == OT_ERROR_NOT_FOUND,
+                                                     Dns::Name(instanceName), srvRecord) == kErrorNotFound,
                      "FindRecord() did not fail with bad index");
 
         offset = additionalSectionOffset;
         VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, /* aIndex */ 1,
-                                                     Dns::Name(instanceName), txtRecord) == OT_ERROR_NOT_FOUND,
+                                                     Dns::Name(instanceName), txtRecord) == kErrorNotFound,
                      "FindRecord() did not fail with bad index");
     }
 
@@ -1092,7 +1092,7 @@ void TestHeaderAndResourceRecords(void)
 
     offset = additionalSectionOffset;
     VerifyOrQuit(Dns::ResourceRecord::FindRecord(*message, offset, kAdditionalCount, index, Dns::Name(), record) ==
-                     OT_ERROR_NOT_FOUND,
+                     kErrorNotFound,
                  "FindRecord() did not fail with bad index");
 
     message->Free();
@@ -1244,14 +1244,14 @@ void TestDnsTxtEntry(void)
         }
     }
 
-    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_NOT_FOUND, "GetNextEntry() returned unexpected entry");
-    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_NOT_FOUND, "GetNextEntry() succeeded after done");
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == kErrorNotFound, "GetNextEntry() returned unexpected entry");
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == kErrorNotFound, "GetNextEntry() succeeded after done");
 
     // Verify `AppendEntries()` correctly rejecting invalid key
     txtEntry.mValue       = kValue1;
     txtEntry.mValueLength = sizeof(kValue1);
     txtEntry.mKey         = kShortKey;
-    VerifyOrQuit(Dns::TxtEntry::AppendEntries(&txtEntry, 1, *message) == OT_ERROR_INVALID_ARGS,
+    VerifyOrQuit(Dns::TxtEntry::AppendEntries(&txtEntry, 1, *message) == kErrorInvalidArgs,
                  "AppendEntries() did not fail with invalid key");
 
     // Verify appending empty txt data
@@ -1276,7 +1276,7 @@ void TestDnsTxtEntry(void)
     // Verify `Iterator` behavior with invalid txt data.
 
     iterator.Init(kInvalidEncodedTxt1, sizeof(kInvalidEncodedTxt1));
-    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_PARSE, "GetNextEntry() did not fail with invalid data");
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == kErrorParse, "GetNextEntry() did not fail with invalid data");
 
     // Verify `GetNextEntry()` correctly skipping over empty strings and
     // strings starting with '=' (missing key) in encoded txt.
@@ -1296,7 +1296,7 @@ void TestDnsTxtEntry(void)
     VerifyOrQuit((txtEntry.mKey[0] == 'D') && (txtEntry.mKey[1] == '\0'), "GetNextEntry() got incorrect key");
     VerifyOrQuit((txtEntry.mValueLength == 1) && (txtEntry.mValue[0] == 'E'), "GetNextEntry() got incorrect value");
 
-    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == OT_ERROR_NOT_FOUND, "GetNextEntry() returned extra entry");
+    VerifyOrQuit(iterator.GetNextEntry(txtEntry) == kErrorNotFound, "GetNextEntry() returned extra entry");
 
     message->Free();
     testFreeInstance(instance);

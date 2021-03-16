@@ -80,7 +80,7 @@ const otExtAddress *otJoinerGetId(otInstance *aInstance)
 
 otError otJoinerSetDiscerner(otInstance *aInstance, otJoinerDiscerner *aDiscerner)
 {
-    otError          error  = OT_ERROR_NONE;
+    Error            error  = kErrorNone;
     MeshCoP::Joiner &joiner = static_cast<Instance *>(aInstance)->Get<MeshCoP::Joiner>();
 
     if (aDiscerner != nullptr)
