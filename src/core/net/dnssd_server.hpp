@@ -89,6 +89,8 @@ private:
         kProtocolLabelLength = 4,
     };
 
+    static constexpr otNetifIdentifier kBindNetif = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_THREAD_NETIF;
+
     enum : uint8_t
     {
         kResolveNone           = 0,

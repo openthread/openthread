@@ -262,7 +262,25 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_DUA_ROUTING=ON"
+
+    # Bind DNS-SD server to unspecified interface to allow Infrastructure Hosts to dig.
+    local common_cflags="-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_THREAD_NETIF=OT_NETIF_UNSPECIFIED"
+
+    local otbr_options=(
+        "-DOT_DNSSD_SERVER=ON"
+        "-DOT_DNS_CLIENT=ON"
+        "-DOT_SRP_CLIENT=ON"
+        "-DOT_SLAAC=ON"
+        "-DOT_DUA=ON"
+        "-DOT_MLR=ON"
+        "-DOT_COVERAGE=ON"
+        "-DOTBR_REST=OFF"
+        "-DOTBR_WEB=OFF"
+        "-DOTBR_DUA_ROUTING=ON"
+        "-DCMAKE_C_FLAGS=${common_cflags}"
+        "-DCMAKE_CXX_FLAGS=${common_cflags}"
+    )
+
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
@@ -281,7 +299,7 @@ do_build_otbr_docker()
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
             --build-arg NAT64=0 \
-            --build-arg OTBR_OPTIONS="${otbr_options}"
+            --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
 
     rm -rf "${otbrdir}"

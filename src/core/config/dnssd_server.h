@@ -55,4 +55,15 @@
 #define OPENTHREAD_CONFIG_DNSSD_SERVER_PORT 53
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_THREAD_NETIF
+ *
+ * Define the network interface for DNS-SD server to bind.
+ * Change to OT_NETIF_UNSPECIFIED to allow DNS-SD server to bind to all network interfaces.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_THREAD_NETIF
+#define OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_THREAD_NETIF OT_NETIF_THREAD
+#endif
+
 #endif // CONFIG_DNSSD_SERVER_H_
