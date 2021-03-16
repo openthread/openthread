@@ -56,6 +56,7 @@
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
+#include "thread/network_data.hpp"
 
 namespace ot {
 
@@ -170,6 +171,7 @@ private:
         kMaxRaDelayTime              = 500, // The maximum delay of sending RA after receiving RS. In milliseconds.
         kRtrSolicitationInterval     = 4,   // The interval between Router Solicitations. In seconds.
         kMaxRtrSolicitationDelay     = 1,   // The maximum delay for initial solicitation. In seconds.
+        kMaxRoutingPolicyDelay       = 1,   // The maximum delay for routing policy evaluation. In seconds.
     };
 
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
@@ -203,12 +205,13 @@ private:
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
     void    EvaluateRoutingPolicy(void);
+    void    StartRoutingPolicyEvaluationDelay(void);
     uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum);
     Error   PublishLocalOmrPrefix(void);
     void    UnpublishLocalOmrPrefix(void);
     Error   AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
     void    RemoveExternalRoute(const Ip6::Prefix &aPrefix);
-    void    StartRouterSolicitation(void);
+    void    StartRouterSolicitationDelay(void);
     Error   SendRouterSolicitation(void);
     void    SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
                                     uint8_t            aNewOmrPrefixNum,
@@ -223,6 +226,8 @@ private:
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixInvalidTimer(void);
 
+    static void HandleRoutingPolicyTimer(Timer &aTimer);
+
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     bool UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio);
@@ -233,9 +238,11 @@ private:
                              bool               aIsOnLinkPrefix,
                              uint32_t           aLifetime,
                              otRoutePreference  aRoutePreference = OT_ROUTE_PREFERENCE_MED);
+    bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
 
     // Decides the first prefix is numerically smaller than the second one.
     static bool     IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const Ip6::Prefix &aSecondPrefix);
+    static bool     IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
     static bool     IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool     IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
     static bool     ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
@@ -296,6 +303,8 @@ private:
 
     TimerMilli mRouterSolicitTimer;
     uint8_t    mRouterSolicitCount;
+
+    TimerMilli mRoutingPolicyTimer;
 };
 
 } // namespace BorderRouter

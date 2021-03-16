@@ -48,7 +48,6 @@
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "net/ip6.hpp"
-#include "thread/network_data.hpp"
 #include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
@@ -71,6 +70,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterAdvertisementCount(0)
     , mRouterSolicitTimer(aInstance, HandleRouterSolicitTimer)
     , mRouterSolicitCount(0)
+    , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
 {
     mInfraIfLinkLocalAddress.Clear();
 
@@ -192,7 +192,7 @@ void RoutingManager::Start(void)
         otLogInfoBr("Border Routing manager started");
 
         mIsRunning = true;
-        StartRouterSolicitation();
+        StartRouterSolicitationDelay();
     }
 }
 
@@ -224,6 +224,8 @@ void RoutingManager::Stop(void)
 
     mRouterSolicitTimer.Stop();
     mRouterSolicitCount = 0;
+
+    mRoutingPolicyTimer.Stop();
 
     otLogInfoBr("Border Routing manager stopped");
 
@@ -313,7 +315,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadNetdataChanged))
     {
-        EvaluateRoutingPolicy();
+        StartRoutingPolicyEvaluationDelay();
     }
 
 exit:
@@ -334,7 +336,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
     {
         uint8_t newPrefixIndex;
 
-        if (!IsValidOmrPrefix(onMeshPrefixConfig.GetPrefix()) || !onMeshPrefixConfig.mSlaac || onMeshPrefixConfig.mDp)
+        if (!IsValidOmrPrefix(onMeshPrefixConfig))
         {
             continue;
         }
@@ -621,9 +623,20 @@ exit:
     return;
 }
 
+void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
+{
+    uint32_t randomDelay;
+
+    static_assert(kMaxRoutingPolicyDelay > 0, "invalid maximum routing policy evaluation delay");
+    randomDelay = Random::NonCrypto::GetUint32InRange(0, Time::SecToMsec(kMaxRoutingPolicyDelay));
+
+    otLogInfoBr("start evaluating routing policy, scheduled in %u milliseconds", randomDelay);
+    mRoutingPolicyTimer.Start(randomDelay);
+}
+
 // starts sending Router Solicitations in random delay
 // between 0 and kMaxRtrSolicitationDelay.
-void RoutingManager::StartRouterSolicitation(void)
+void RoutingManager::StartRouterSolicitationDelay(void)
 {
     uint32_t randomDelay;
 
@@ -788,6 +801,11 @@ bool RoutingManager::IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const 
            aFirstPrefix.GetBytes()[matchedLength / CHAR_BIT] < aSecondPrefix.GetBytes()[matchedLength / CHAR_BIT];
 }
 
+bool RoutingManager::IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)
+{
+    return IsValidOmrPrefix(aOnMeshPrefixConfig.GetPrefix()) && aOnMeshPrefixConfig.mSlaac && !aOnMeshPrefixConfig.mDp;
+}
+
 bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
 {
     // Accept ULA prefix with length of 64 bits and GUA prefix.
@@ -861,6 +879,11 @@ void RoutingManager::HandleDiscoveredPrefixInvalidTimer(Timer &aTimer)
 void RoutingManager::HandleDiscoveredPrefixInvalidTimer(void)
 {
     InvalidateDiscoveredPrefixes();
+}
+
+void RoutingManager::HandleRoutingPolicyTimer(Timer &aTimer)
+{
+    aTimer.Get<RoutingManager>().EvaluateRoutingPolicy();
 }
 
 void RoutingManager::HandleRouterSolicit(const Ip6::Address &aSrcAddress,
@@ -961,7 +984,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
     if (needReevaluate)
     {
-        EvaluateRoutingPolicy();
+        StartRoutingPolicyEvaluationDelay();
     }
 
 exit:
@@ -1006,8 +1029,8 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &
         ExitNow();
     }
 
-    // Ignore the OMR prefix that matches what we have advertised.
-    VerifyOrExit(!ContainsPrefix(prefix, mAdvertisedOmrPrefixes, mAdvertisedOmrPrefixNum));
+    // Ignore the OMR prefix in current Thread Network.
+    VerifyOrExit(!NetworkDataContainsOmrPrefix(prefix));
 
     otLogInfoBr("discovered OMR prefix (%s, %u seconds) from interface %u", prefix.ToString().AsCString(),
                 aRio.GetRouteLifetime(), mInfraIfIndex);
@@ -1064,7 +1087,7 @@ bool RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
 
         // There are no valid on-link prefixes on infra link now, start Router Solicitation
         // To find out more on-link prefixes or timeout to advertise my local on-link prefix.
-        StartRouterSolicitation();
+        StartRouterSolicitationDelay();
     }
     else
     {
@@ -1146,6 +1169,24 @@ bool RoutingManager::AddDiscoveredPrefix(const Ip6::Prefix &aPrefix,
 
 exit:
     return added;
+}
+
+bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const
+{
+    NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
+    NetworkData::OnMeshPrefixConfig onMeshPrefixConfig;
+    bool                            contain = false;
+
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, onMeshPrefixConfig) == OT_ERROR_NONE)
+    {
+        if (IsValidOmrPrefix(onMeshPrefixConfig) && onMeshPrefixConfig.GetPrefix() == aPrefix)
+        {
+            contain = true;
+            break;
+        }
+    }
+
+    return contain;
 }
 
 } // namespace BorderRouter
