@@ -119,12 +119,12 @@ public:
      * @param[in] aAddress     The Multicast Listener address.
      * @param[in] aExpireTime  The Multicast Listener expire time.
      *
-     * @retval OT_ERROR_NONE          If the Multicast Listener was successfully added.
-     * @retval OT_ERROR_INVALID_ARGS  If the Multicast Listener address was invalid.
-     * @retval OT_ERROR_NO_BUFS       No space available to save the Multicast Listener.
+     * @retval kErrorNone         If the Multicast Listener was successfully added.
+     * @retval kErrorInvalidArgs  If the Multicast Listener address was invalid.
+     * @retval kErrorNoBufs       No space available to save the Multicast Listener.
      *
      */
-    otError Add(const Ip6::Address &aAddress, TimeMilli aExpireTime);
+    Error Add(const Ip6::Address &aAddress, TimeMilli aExpireTime);
 
     /**
      * This method removes a given Multicast Listener.
@@ -181,12 +181,12 @@ public:
      * @param[in] aIterator       A pointer to the Multicast Listener Iterator.
      * @param[out] aListenerInfo  A pointer to where the Multicast Listener info is placed.
      *
-     * @retval OT_ERROR_NONE        Successfully found the next Multicast Listener info.
-     * @retval OT_ERROR_NOT_FOUND   No subsequent Multicast Listener was found.
+     * @retval kErrorNone         Successfully found the next Multicast Listener info.
+     * @retval kErrorNotFound     No subsequent Multicast Listener was found.
      *
      */
-    otError GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                    otBackboneRouterMulticastListenerInfo &    aListenerInfo);
+    Error GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
+                  otBackboneRouterMulticastListenerInfo &    aListenerInfo);
 
 private:
     enum
@@ -213,7 +213,7 @@ private:
     void LogMulticastListenersTable(const char *        aAction,
                                     const Ip6::Address &aAddress,
                                     TimeMilli           aExpireTime,
-                                    otError             aError);
+                                    Error               aError);
 
     void FixHeap(uint16_t aIndex);
     bool SiftHeapElemDown(uint16_t aIndex);

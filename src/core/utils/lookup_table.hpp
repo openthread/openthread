@@ -35,7 +35,8 @@
 #define LOOKUP_TABLE_HPP_
 
 #include <stdint.h>
-#include <openthread/error.h>
+
+#include "common/error.hpp"
 
 namespace ot {
 namespace Utils {

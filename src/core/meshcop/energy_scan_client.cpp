@@ -58,21 +58,21 @@ EnergyScanClient::EnergyScanClient(Instance &aInstance)
     Get<Tmf::TmfAgent>().AddResource(mEnergyScan);
 }
 
-otError EnergyScanClient::SendQuery(uint32_t                           aChannelMask,
-                                    uint8_t                            aCount,
-                                    uint16_t                           aPeriod,
-                                    uint16_t                           aScanDuration,
-                                    const Ip6::Address &               aAddress,
-                                    otCommissionerEnergyReportCallback aCallback,
-                                    void *                             aContext)
+Error EnergyScanClient::SendQuery(uint32_t                           aChannelMask,
+                                  uint8_t                            aCount,
+                                  uint16_t                           aPeriod,
+                                  uint16_t                           aScanDuration,
+                                  const Ip6::Address &               aAddress,
+                                  otCommissionerEnergyReportCallback aCallback,
+                                  void *                             aContext)
 {
-    otError                 error = OT_ERROR_NONE;
+    Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message = nullptr;
 
-    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kEnergyScan));
     SuccessOrExit(error = message->SetPayloadMarker());

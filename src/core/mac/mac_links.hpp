@@ -513,8 +513,8 @@ public:
     {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
         {
-            otError error = mSubMac.Send();
-            OT_ASSERT(error == OT_ERROR_NONE);
+            Error error = mSubMac.Send();
+            OT_ASSERT(error == kErrorNone);
             OT_UNUSED_VARIABLE(error);
         }
 #endif
@@ -576,12 +576,12 @@ public:
      * @param[in] aScanChannel   The channel to perform the energy scan on.
      * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
      *
-     * @retval OT_ERROR_NONE             Successfully started scanning the channel.
-     * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  Energy scan is not supported by radio link.
+     * @retval kErrorNone            Successfully started scanning the channel.
+     * @retval kErrorInvalidState    The radio was disabled or transmitting.
+     * @retval kErrorNotImplemented  Energy scan is not supported by radio link.
      *
      */
-    otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
+    Error EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     {
         OT_UNUSED_VARIABLE(aScanChannel);
         OT_UNUSED_VARIABLE(aScanDuration);
@@ -590,7 +590,7 @@ public:
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
             mSubMac.EnergyScan(aScanChannel, aScanDuration);
 #else
-            OT_ERROR_NOT_IMPLEMENTED;
+            kErrorNotImplemented;
 #endif
     }
 
@@ -654,8 +654,8 @@ public:
      *
      * @param[in] TxFrame  The `TxFrame` from which to get the counter value.
      *
-     * @retval OT_ERROR_NONE             If successful.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
     void SetMacFrameCounter(TxFrame &aFrame);

@@ -81,7 +81,7 @@ exit:
     return;
 }
 
-otError Interface::Send(const Packet &aPacket)
+Error Interface::Send(const Packet &aPacket)
 {
     Ip6::Address destIp6Address;
 
@@ -131,7 +131,7 @@ extern "C" OT_TOOL_WEAK otError otPlatTrelUdp6SetTestMode(otInstance *aInstance,
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aEnable);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return ot::kErrorNotImplemented;
 }
 
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

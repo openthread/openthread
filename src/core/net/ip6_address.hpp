@@ -74,11 +74,11 @@ public:
      * This method generates and sets the Network Prefix to a crypto-secure random Unique Local Address (ULA) based
      * on the pattern `fdxx:xxxx:xxxx:` (RFC 4193).
      *
-     * @retval OT_ERROR_NONE     Successfully generated a random ULA Network Prefix
-     * @retval OT_ERROR_FAILED   Failed to generate random ULA Network Prefix.
+     * @retval kErrorNone     Successfully generated a random ULA Network Prefix
+     * @retval kErrorFailed   Failed to generate random ULA Network Prefix.
      *
      */
-    otError GenerateRandomUla(void);
+    Error GenerateRandomUla(void);
 
 } OT_TOOL_PACKED_END;
 
@@ -880,11 +880,11 @@ public:
      *
      * @param[in]  aBuf  A pointer to the null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully parsed the IPv6 address string.
-     * @retval OT_ERROR_INVALID_ARGS  Failed to parse the IPv6 address string.
+     * @retval kErrorNone          Successfully parsed the IPv6 address string.
+     * @retval kErrorInvalidArgs   Failed to parse the IPv6 address string.
      *
      */
-    otError FromString(const char *aBuf);
+    Error FromString(const char *aBuf);
 
     /**
      * This method converts an IPv6 address object to a string

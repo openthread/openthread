@@ -38,14 +38,14 @@
 namespace ot {
 namespace Ip6 {
 
-otError Header::Init(const Message &aMessage)
+Error Header::Init(const Message &aMessage)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     SuccessOrExit(error = aMessage.Read(0, *this));
 
-    VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
-    VerifyOrExit((sizeof(*this) + GetPayloadLength()) == aMessage.GetLength(), error = OT_ERROR_PARSE);
+    VerifyOrExit(IsValid(), error = kErrorParse);
+    VerifyOrExit((sizeof(*this) + GetPayloadLength()) == aMessage.GetLength(), error = kErrorParse);
 
 exit:
     return error;

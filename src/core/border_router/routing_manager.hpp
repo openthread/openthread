@@ -47,11 +47,11 @@
 #error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
 #endif
 
-#include <openthread/error.h>
 #include <openthread/netdata.h>
 #include <openthread/platform/infra_if.h>
 
 #include "border_router/router_advertisement.hpp"
+#include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
@@ -92,11 +92,11 @@ public:
      * @param[in]  aInfraIfLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
      *                                       interface. NULL if the IPv6 link-local address is missing.
      *
-     * @retval  OT_ERROR_NONE          Successfully started the routing manager.
-     * @retval  OT_ERROR_INVALID_ARGS  The index of the infra interface is not valid.
+     * @retval  kErrorNone          Successfully started the routing manager.
+     * @retval  kErrorInvalidArgs   The index of the infra interface is not valid.
      *
      */
-    otError Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress);
+    Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress);
 
     /**
      * This method enables/disables the Border Routing Manager.
@@ -105,11 +105,11 @@ public:
      *
      * @param[in]  aEnabled   A boolean to enable/disable the Border Routing Manager.
      *
-     * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
-     * @retval  OT_ERROR_NONE           Successfully enabled/disabled the Border Routing Manager.
+     * @retval  kErrorInvalidState   The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone           Successfully enabled/disabled the Border Routing Manager.
      *
      */
-    otError SetEnabled(bool aEnabled);
+    Error SetEnabled(bool aEnabled);
 
     /**
      * This method receives an ICMPv6 message on the infrastructure interface.
@@ -136,14 +136,14 @@ public:
      * @param[in]  aLinkLocalAddress  A pointer to the IPv6 link local address of the infrastructure
      *                                interface. NULL if the IPv6 link local address is lost.
      *
-     * @retval  OT_ERROR_NONE           Successfully updated the infra interface status.
-     * @retval  OT_ERROR_INVALID_STATE  The Routing Manager is not initialized.
-     * @retval  OT_ERROR_INVALID_ARGS   The @p aInfraIfIndex doesn't match the infra interface the
-     *                                  Routing Manager are initialized with, or the @p aLinkLocalAddress
-     *                                  is not a valid IPv6 link-local address.
+     * @retval  kErrorNone          Successfully updated the infra interface status.
+     * @retval  kErrorInvalidState  The Routing Manager is not initialized.
+     * @retval  kErrorInvalidArgs   The @p aInfraIfIndex doesn't match the infra interface the Routing Manager are
+     *                              initialized with, or the @p aLinkLocalAddress is not a valid IPv6 link-local
+     *                              address.
      *
      */
-    otError HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning, const Ip6::Address *aLinkLocalAddress);
+    Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning, const Ip6::Address *aLinkLocalAddress);
 
 private:
     enum : uint16_t
@@ -191,25 +191,25 @@ private:
         bool        mIsOnLinkPrefix;
     };
 
-    void    EvaluateState(void);
-    void    Start(void);
-    void    Stop(void);
-    void    HandleNotifierEvents(Events aEvents);
-    bool    IsInitialized(void) const { return mInfraIfIndex != 0; }
-    bool    IsEnabled(void) const { return mIsEnabled; }
-    otError LoadOrGenerateRandomOmrPrefix(void);
-    otError LoadOrGenerateRandomOnLinkPrefix(void);
+    void  EvaluateState(void);
+    void  Start(void);
+    void  Stop(void);
+    void  HandleNotifierEvents(Events aEvents);
+    bool  IsInitialized(void) const { return mInfraIfIndex != 0; }
+    bool  IsEnabled(void) const { return mIsEnabled; }
+    Error LoadOrGenerateRandomOmrPrefix(void);
+    Error LoadOrGenerateRandomOnLinkPrefix(void);
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
     void    EvaluateRoutingPolicy(void);
     uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum);
-    otError PublishLocalOmrPrefix(void);
+    Error   PublishLocalOmrPrefix(void);
     void    UnpublishLocalOmrPrefix(void);
-    otError AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
+    Error   AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
     void    RemoveExternalRoute(const Ip6::Prefix &aPrefix);
     void    StartRouterSolicitation(void);
-    otError SendRouterSolicitation(void);
+    Error   SendRouterSolicitation(void);
     void    SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
                                     uint8_t            aNewOmrPrefixNum,
                                     const Ip6::Prefix *aNewOnLinkPrefix);

@@ -39,8 +39,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-#include <openthread/error.h>
-
+#include "common/error.hpp"
 #include "crypto/sha256.hpp"
 
 namespace ot {
@@ -146,24 +145,24 @@ public:
         /**
          * This method generates and populates the `KeyPair` with a new public/private keys.
          *
-         * @retval OT_ERROR_NONE         A new key pair was generated successfully.
-         * @retval OT_ERROR_NO_BUFS      Failed to allocate buffer for key generation.
-         * @retval OT_ERROR_NOT_CAPABLE  Feature not supported.
-         * @retval OT_ERROR_FAILED       Failed to generate key.
+         * @retval kErrorNone         A new key pair was generated successfully.
+         * @retval kErrorNoBufs       Failed to allocate buffer for key generation.
+         * @retval kErrorNotCapable   Feature not supported.
+         * @retval kErrorFailed       Failed to generate key.
          *
          */
-        otError Generate(void);
+        Error Generate(void);
 
         /**
          * This method gets the associated public key from the `KeyPair`.
          *
          * @param[out] aPublicKey     A reference to a `PublicKey` to output the value.
          *
-         * @retval OT_ERROR_NONE      Public key was retrieved successfully, and @p aPublicKey is updated.
-         * @retval OT_ERROR_PARSE     The key-pair DER format could not be parsed (invalid format).
+         * @retval kErrorNone      Public key was retrieved successfully, and @p aPublicKey is updated.
+         * @retval kErrorParse     The key-pair DER format could not be parsed (invalid format).
          *
          */
-        otError GetPublicKey(PublicKey &aPublicKey) const;
+        Error GetPublicKey(PublicKey &aPublicKey) const;
 
         /**
          * This method gets the pointer to start of the buffer containing the key-pair info in DER format.
@@ -211,16 +210,16 @@ public:
          * @param[in]  aHash               The SHA-256 hash value of the message to use for signature calculation.
          * @param[out] aSignature          A reference to a `Signature` to output the calculated signature value.
          *
-         * @retval OT_ERROR_NONE           The signature was calculated successfully and @p aSignature was updated.
-         * @retval OT_ERROR_PARSE          The key-pair DER format could not be parsed (invalid format).
-         * @retval OT_ERROR_INVALID_ARGS   The @p aHash is invalid.
-         * @retval OT_ERROR_NO_BUFS        Failed to allocate buffer for signature calculation.
+         * @retval kErrorNone           The signature was calculated successfully and @p aSignature was updated.
+         * @retval kErrorParse          The key-pair DER format could not be parsed (invalid format).
+         * @retval kErrorInvalidArgs    The @p aHash is invalid.
+         * @retval kErrorNoBufs         Failed to allocate buffer for signature calculation.
          *
          */
-        otError Sign(const Sha256::Hash &aHash, Signature &aSignature) const;
+        Error Sign(const Sha256::Hash &aHash, Signature &aSignature) const;
 
     private:
-        otError Parse(void *aContext) const;
+        Error Parse(void *aContext) const;
 
         uint8_t mDerBytes[kMaxDerSize];
         uint8_t mDerLength;
@@ -257,13 +256,13 @@ public:
          * @param[in] aHash                The SHA-256 hash value of a message to use for signature verification.
          * @param[in] aSignature           The signature value to verify.
          *
-         * @retval OT_ERROR_NONE           The signature was verified successfully.
-         * @retval OT_ERROR_SECURITY       The signature is invalid.
-         * @retval OT_ERROR_INVALID_ARGS   The key or has is invalid.
-         * @retval OT_ERROR_NO_BUFS        Failed to allocate buffer for signature verification
+         * @retval kErrorNone          The signature was verified successfully.
+         * @retval kErrorSecurity      The signature is invalid.
+         * @retval kErrorInvalidArgs   The key or has is invalid.
+         * @retval kErrorNoBufs        Failed to allocate buffer for signature verification
          *
          */
-        otError Verify(const Sha256::Hash &aHash, const Signature &aSignature) const;
+        Error Verify(const Sha256::Hash &aHash, const Signature &aSignature) const;
 
     private:
         uint8_t mData[kSize];
@@ -280,18 +279,18 @@ public:
  * @param[in]     aPrivateKey        A private key in PEM format.
  * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
  *
- * @retval  OT_ERROR_NONE         ECDSA sign has been created successfully.
- * @retval  OT_ERROR_NO_BUFS      Output buffer is too small.
- * @retval  OT_ERROR_INVALID_ARGS Private key is not valid EC Private Key.
- * @retval  OT_ERROR_FAILED       Error during signing.
+ * @retval  kErrorNone         ECDSA sign has been created successfully.
+ * @retval  kErrorNoBufs       Output buffer is too small.
+ * @retval  kErrorInvalidArgs  Private key is not valid EC Private Key.
+ * @retval  kErrorFailed       Error during signing.
  *
  */
-otError Sign(uint8_t *      aOutput,
-             uint16_t &     aOutputLength,
-             const uint8_t *aInputHash,
-             uint16_t       aInputHashLength,
-             const uint8_t *aPrivateKey,
-             uint16_t       aPrivateKeyLength);
+Error Sign(uint8_t *      aOutput,
+           uint16_t &     aOutputLength,
+           const uint8_t *aInputHash,
+           uint16_t       aInputHashLength,
+           const uint8_t *aPrivateKey,
+           uint16_t       aPrivateKeyLength);
 
 /**
  * @}

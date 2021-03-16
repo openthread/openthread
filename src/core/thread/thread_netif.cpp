@@ -211,16 +211,16 @@ exit:
     return;
 }
 
-otError ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
+Error ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
 {
-    otError  error;
+    Error    error;
     uint16_t rloc;
 
     SuccessOrExit(error = Get<NetworkData::Leader>().RouteLookup(aSource, aDestination, aPrefixMatch, &rloc));
 
     if (rloc == Get<Mle::MleRouter>().GetRloc16())
     {
-        error = OT_ERROR_NO_ROUTE;
+        error = kErrorNoRoute;
     }
 
 exit:

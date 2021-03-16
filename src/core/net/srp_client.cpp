@@ -91,12 +91,12 @@ void Client::HostInfo::SetAddresses(const Ip6::Address *aAddresses, uint8_t aNum
 //---------------------------------------------------------------------
 // Client::Service
 
-otError Client::Service::Init(void)
+Error Client::Service::Init(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit((GetName() != nullptr) && (GetInstanceName() != nullptr), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit((GetTxtEntries() != nullptr) || (GetNumTxtEntries() == 0), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((GetName() != nullptr) && (GetInstanceName() != nullptr), error = kErrorInvalidArgs);
+    VerifyOrExit((GetTxtEntries() != nullptr) || (GetNumTxtEntries() == 0), error = kErrorInvalidArgs);
 
     // State is directly set on `mState` instead of using `SetState()`
     // to avoid logging.
@@ -174,12 +174,12 @@ Client::Client(Instance &aInstance)
     static_assert(kRemoved == 7, "kRemoved value is not correct");
 }
 
-otError Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
+Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 {
-    otError error;
+    Error error;
 
     VerifyOrExit(GetState() == kStateStopped,
-                 error = (aServerSockAddr == GetServerAddress()) ? OT_ERROR_NONE : OT_ERROR_BUSY);
+                 error = (aServerSockAddr == GetServerAddress()) ? kErrorNone : kErrorBusy);
 
     SuccessOrExit(error = mSocket.Open(Client::HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Connect(aServerSockAddr));
@@ -323,12 +323,11 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
-otError Client::SetDomainName(const char *aName)
+Error Client::SetDomainName(const char *aName)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit((mHostInfo.GetState() == kToAdd) || (mHostInfo.GetState() == kRemoved),
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((mHostInfo.GetState() == kToAdd) || (mHostInfo.GetState() == kRemoved), error = kErrorInvalidState);
 
     mDomainName = (aName != nullptr) ? aName : kDefaultDomainName;
     otLogInfoSrp("[client] Domain name \"%s\"", mDomainName);
@@ -338,14 +337,13 @@ exit:
 }
 #endif
 
-otError Client::SetHostName(const char *aName)
+Error Client::SetHostName(const char *aName)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aName != nullptr, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aName != nullptr, error = kErrorInvalidArgs);
 
-    VerifyOrExit((mHostInfo.GetState() == kToAdd) || (mHostInfo.GetState() == kRemoved),
-                 error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit((mHostInfo.GetState() == kToAdd) || (mHostInfo.GetState() == kRemoved), error = kErrorInvalidState);
 
     otLogInfoSrp("[client] Host name \"%s\"", aName);
     mHostInfo.SetName(aName);
@@ -356,14 +354,14 @@ exit:
     return error;
 }
 
-otError Client::SetHostAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddresses)
+Error Client::SetHostAddresses(const Ip6::Address *aAddresses, uint8_t aNumAddresses)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit((aAddresses != nullptr) && (aNumAddresses > 0), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aAddresses != nullptr) && (aNumAddresses > 0), error = kErrorInvalidArgs);
 
     VerifyOrExit((mHostInfo.GetState() != kToRemove) && (mHostInfo.GetState() != kRemoving),
-                 error = OT_ERROR_INVALID_STATE);
+                 error = kErrorInvalidState);
 
     if (mHostInfo.GetState() == kRemoved)
     {
@@ -381,11 +379,11 @@ exit:
     return error;
 }
 
-otError Client::AddService(Service &aService)
+Error Client::AddService(Service &aService)
 {
-    otError error;
+    Error error;
 
-    VerifyOrExit(!mServices.Contains(aService), error = OT_ERROR_ALREADY);
+    VerifyOrExit(!mServices.Contains(aService), error = kErrorAlready);
 
     SuccessOrExit(error = aService.Init());
     mServices.Push(aService);
@@ -397,12 +395,12 @@ exit:
     return error;
 }
 
-otError Client::RemoveService(Service &aService)
+Error Client::RemoveService(Service &aService)
 {
-    otError             error = OT_ERROR_NONE;
+    Error               error = kErrorNone;
     LinkedList<Service> removedServices;
 
-    VerifyOrExit(mServices.Contains(aService), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(mServices.Contains(aService), error = kErrorNotFound);
 
     UpdateServiceStateToRemove(aService);
 
@@ -412,7 +410,7 @@ otError Client::RemoveService(Service &aService)
 
     if (!removedServices.IsEmpty())
     {
-        InvokeCallback(OT_ERROR_NONE, mHostInfo, removedServices.GetHead());
+        InvokeCallback(kErrorNone, mHostInfo, removedServices.GetHead());
     }
 
     UpdateState();
@@ -434,13 +432,13 @@ void Client::UpdateServiceStateToRemove(Service &aService)
     }
 }
 
-otError Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
+Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     otLogInfoSrp("[client] Remove host & services");
 
-    VerifyOrExit(mHostInfo.GetState() != kRemoved, error = OT_ERROR_ALREADY);
+    VerifyOrExit(mHostInfo.GetState() != kRemoved, error = kErrorAlready);
 
     if ((mHostInfo.GetState() == kToRemove) || (mHostInfo.GetState() == kRemoving))
     {
@@ -537,12 +535,12 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
     }
 }
 
-void Client::InvokeCallback(otError aError) const
+void Client::InvokeCallback(Error aError) const
 {
     InvokeCallback(aError, mHostInfo, nullptr);
 }
 
-void Client::InvokeCallback(otError aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const
+void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const
 {
     VerifyOrExit(GetState() != kStateStopped);
     VerifyOrExit(mCallback != nullptr);
@@ -565,10 +563,10 @@ void Client::SendUpdate(void)
         /* (7) kRemoved    -> */ kRemoved,
     };
 
-    otError  error   = OT_ERROR_NONE;
+    Error    error   = kErrorNone;
     Message *message = mSocket.NewMessage(0);
 
-    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(message != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = PrepareUpdateMessage(*message));
     SuccessOrExit(error = mSocket.SendTo(*message, Ip6::MessageInfo()));
 
@@ -596,7 +594,7 @@ void Client::SendUpdate(void)
     }
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         // If there is an error in preparation or transmission of the
         // update message (e.g., no buffer to allocate message), up to
@@ -605,7 +603,7 @@ exit:
         // continue to retry using the `mRetryWaitInterval` (which keeps
         // growing on each failure).
 
-        otLogInfoSrp("[client] Failed to send update: %s", otThreadErrorToString(error));
+        otLogInfoSrp("[client] Failed to send update: %s", ErrorToString(error));
 
         FreeMessage(message);
 
@@ -634,14 +632,14 @@ exit:
     }
 }
 
-otError Client::PrepareUpdateMessage(Message &aMessage)
+Error Client::PrepareUpdateMessage(Message &aMessage)
 {
     enum : uint16_t
     {
         kHeaderOffset = 0,
     };
 
-    otError           error = OT_ERROR_NONE;
+    Error             error = kErrorNone;
     Dns::UpdateHeader header;
     Info              info;
 
@@ -704,17 +702,17 @@ exit:
     return error;
 }
 
-otError Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
+Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 {
-    otError error;
+    Error error;
 
     error = Get<Settings>().ReadSrpKey(aKeyPair);
 
-    if (error == OT_ERROR_NONE)
+    if (error == kErrorNone)
     {
         Crypto::Ecdsa::P256::PublicKey publicKey;
 
-        if (aKeyPair.GetPublicKey(publicKey) == OT_ERROR_NONE)
+        if (aKeyPair.GetPublicKey(publicKey) == kErrorNone)
         {
             ExitNow();
         }
@@ -727,9 +725,9 @@ exit:
     return error;
 }
 
-otError Client::AppendServiceInstructions(Service &aService, Message &aMessage, Info &aInfo)
+Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, Info &aInfo)
 {
-    otError             error = OT_ERROR_NONE;
+    Error               error = kErrorNone;
     Dns::ResourceRecord rr;
     Dns::SrvRecord      srv;
     bool                removing;
@@ -816,9 +814,9 @@ exit:
     return error;
 }
 
-otError Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const
+Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const
 {
-    otError                        error = OT_ERROR_NONE;
+    Error                          error = kErrorNone;
     Dns::ResourceRecord            rr;
     Dns::KeyRecord                 key;
     Crypto::Ecdsa::P256::PublicKey publicKey;
@@ -865,7 +863,7 @@ exit:
     return error;
 }
 
-otError Client::AppendDeleteAllRrsets(Message &aMessage) const
+Error Client::AppendDeleteAllRrsets(Message &aMessage) const
 {
     // "Delete all RRsets from a name" (RFC 2136 - 2.5.3)
     // Name should be already appended in the message.
@@ -879,9 +877,9 @@ otError Client::AppendDeleteAllRrsets(Message &aMessage) const
     return aMessage.Append(rr);
 }
 
-otError Client::AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress) const
+Error Client::AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress) const
 {
-    otError error;
+    Error error;
 
     if (aDoNotCompress)
     {
@@ -909,9 +907,9 @@ exit:
     return error;
 }
 
-otError Client::AppendUpdateLeaseOptRecord(Message &aMessage) const
+Error Client::AppendUpdateLeaseOptRecord(Message &aMessage) const
 {
-    otError          error;
+    Error            error;
     Dns::OptRecord   optRecord;
     Dns::LeaseOption leaseOption;
 
@@ -946,9 +944,9 @@ exit:
     return error;
 }
 
-otError Client::AppendSignature(Message &aMessage, Info &aInfo)
+Error Client::AppendSignature(Message &aMessage, Info &aInfo)
 {
-    otError                        error;
+    Error                          error;
     Dns::SigRecord                 sig;
     Crypto::Sha256                 sha256;
     Crypto::Sha256::Hash           hash;
@@ -1043,7 +1041,7 @@ void Client::ProcessResponse(Message &aMessage)
         /* (7) kRemoved    -> */ kRemoved,
     };
 
-    otError             error = OT_ERROR_NONE;
+    Error               error = kErrorNone;
     Dns::UpdateHeader   header;
     uint16_t            offset = aMessage.GetOffset();
     uint16_t            recordCount;
@@ -1053,9 +1051,9 @@ void Client::ProcessResponse(Message &aMessage)
 
     SuccessOrExit(error = aMessage.Read(offset, header));
 
-    VerifyOrExit(header.GetType() == Dns::Header::kTypeResponse, error = OT_ERROR_PARSE);
-    VerifyOrExit(header.GetQueryType() == Dns::Header::kQueryTypeUpdate, error = OT_ERROR_PARSE);
-    VerifyOrExit(header.GetMessageId() == mUpdateMessageId, error = OT_ERROR_DROP);
+    VerifyOrExit(header.GetType() == Dns::Header::kTypeResponse, error = kErrorParse);
+    VerifyOrExit(header.GetQueryType() == Dns::Header::kQueryTypeUpdate, error = kErrorParse);
+    VerifyOrExit(header.GetMessageId() == mUpdateMessageId, error = kErrorDrop);
 
     if (!Get<Mle::Mle>().IsRxOnWhenIdle())
     {
@@ -1068,9 +1066,9 @@ void Client::ProcessResponse(Message &aMessage)
 
     error = Dns::Header::ResponseCodeToError(header.GetResponseCode());
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogInfoSrp("[client] Server rejected %s code:%d", otThreadErrorToString(error), header.GetResponseCode());
+        otLogInfoSrp("[client] Server rejected %s code:%d", ErrorToString(error), header.GetResponseCode());
 
         if (mHostInfo.GetState() == kAdding)
         {
@@ -1088,7 +1086,7 @@ void Client::ProcessResponse(Message &aMessage)
         GrowRetryWaitInterval();
         SetState(kStateToRetry);
         InvokeCallback(error);
-        ExitNow(error = OT_ERROR_NONE);
+        ExitNow(error = kErrorNone);
     }
 
     offset += sizeof(header);
@@ -1100,9 +1098,9 @@ void Client::ProcessResponse(Message &aMessage)
 
     if (header.GetZoneRecordCount() != 0)
     {
-        VerifyOrExit(header.GetZoneRecordCount() == 1, error = OT_ERROR_PARSE);
+        VerifyOrExit(header.GetZoneRecordCount() == 1, error = kErrorParse);
         SuccessOrExit(error = Dns::Name::ParseName(aMessage, offset));
-        VerifyOrExit(offset + sizeof(Dns::Zone) <= aMessage.GetLength(), error = OT_ERROR_PARSE);
+        VerifyOrExit(offset + sizeof(Dns::Zone) <= aMessage.GetLength(), error = kErrorParse);
         offset += sizeof(Dns::Zone);
     }
 
@@ -1163,9 +1161,9 @@ void Client::ProcessResponse(Message &aMessage)
     UpdateState();
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogInfoSrp("[clinet] Failed to process response %s", otThreadErrorToString(error));
+        otLogInfoSrp("[clinet] Failed to process response %s", ErrorToString(error));
     }
 }
 
@@ -1183,7 +1181,7 @@ void Client::HandleUpdateDone(void)
     SetState(kStateUpdated);
 
     GetRemovedServices(removedServices);
-    InvokeCallback(OT_ERROR_NONE, hostInfoCopy, removedServices.GetHead());
+    InvokeCallback(kErrorNone, hostInfoCopy, removedServices.GetHead());
 }
 
 void Client::GetRemovedServices(LinkedList<Service> &aRemovedServices)
@@ -1211,29 +1209,29 @@ void Client::GetRemovedServices(LinkedList<Service> &aRemovedServices)
     }
 }
 
-otError Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord)
+Error Client::ReadResourceRecord(const Message &aMessage, uint16_t &aOffset, Dns::ResourceRecord &aRecord)
 {
     // Reads and skips over a Resource Record (RR) from message at
     // given offset. On success, `aOffset` is updated to point to end
     // of RR.
 
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Dns::Name::ParseName(aMessage, aOffset));
     SuccessOrExit(error = aMessage.Read(aOffset, aRecord));
-    VerifyOrExit(aOffset + aRecord.GetSize() <= aMessage.GetLength(), error = OT_ERROR_PARSE);
+    VerifyOrExit(aOffset + aRecord.GetSize() <= aMessage.GetLength(), error = kErrorParse);
     aOffset += static_cast<uint16_t>(aRecord.GetSize());
 
 exit:
     return error;
 }
 
-otError Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const Dns::OptRecord &aOptRecord)
+Error Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, const Dns::OptRecord &aOptRecord)
 {
     // Read and process all options (in an OPT RR) from a message.
     // The `aOffset` points to beginning of record in `aMessage`.
 
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     uint16_t len;
 
     IgnoreError(Dns::Name::ParseName(aMessage, aOffset));
@@ -1249,7 +1247,7 @@ otError Client::ProcessOptRecord(const Message &aMessage, uint16_t aOffset, cons
 
         SuccessOrExit(error = aMessage.Read(aOffset, option));
 
-        VerifyOrExit(aOffset + option.GetSize() <= aMessage.GetLength(), error = OT_ERROR_PARSE);
+        VerifyOrExit(aOffset + option.GetSize() <= aMessage.GetLength(), error = kErrorParse);
 
         if ((option.GetOptionCode() == Dns::Option::kUpdateLease) &&
             (option.GetOptionLength() >= Dns::LeaseOption::kOptionLength))
@@ -1451,7 +1449,7 @@ void Client::HandleTimer(void)
         otLogInfoSrp("[client] Timed out, no response");
         GrowRetryWaitInterval();
         SetState(kStateToUpdate);
-        InvokeCallback(OT_ERROR_RESPONSE_TIMEOUT);
+        InvokeCallback(kErrorResponseTimeout);
         break;
 
     case kStateUpdated:
@@ -1492,7 +1490,7 @@ void Client::ProcessAutoStart(void)
 
     VerifyOrExit(!IsRunning() || mAutoStartDidSelectServer);
 
-    while (Get<NetworkData::Service::Manager>().GetNextSrpServerInfo(iterator, server) == OT_ERROR_NONE)
+    while (Get<NetworkData::Service::Manager>().GetNextSrpServerInfo(iterator, server) == kErrorNone)
     {
         numServers++;
 

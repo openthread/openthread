@@ -72,13 +72,13 @@ public:
      * This type represents the callback function pointer which is called when a Dataset update request finishes,
      * reporting success or failure status of the request.
      *
-     * The function pointer has the syntax `void (*Callback)(otError aError, void *aContext)`.
+     * The function pointer has the syntax `void (*Callback)(Error aError, void *aContext)`.
      *
      * @param[in] aError   The error status.
-     *                     OT_ERROR_NONE           indicates Dataset update successfully finished.
-     *                     OT_ERROR_INVALID_STATE  indicates failure due invalid state (MLE being disabled).
-     *                     OT_ERROR_ALREADY        indicates failure due to another device within network requesting
-     *                                             a conflicting Dataset update.
+     *                     kErrorNone           indicates Dataset update successfully finished.
+     *                     kErrorInvalidState   indicates failure due invalid state (MLE being disabled).
+     *                     kErrorAlready        indicates failure due to another device within network requesting a
+     *                                          conflicting Dataset update.
      * @param[in] aContext A pointer to the arbitrary context provided by the user.
      *
      */
@@ -94,14 +94,14 @@ public:
      * @param[in]  aCallback               A callback to indicate when Dataset update request finishes.
      * @param[in]  aContext                An arbitrary context passed to callback.
      *
-     * @retval OT_ERROR_NONE           Dataset update started successfully (@p aCallback will be invoked on completion).
-     * @retval OT_ERROR_INVALID_STATE  Device is disabled (MLE is disabled).
-     * @retval OT_ERROR_INVALID_ARGS   The @p aDataset is not valid (contains Active or Pending Timestamp).
-     * @retval OT_ERROR_BUSY           Cannot start update, a previous one is ongoing.
-     * @retval OT_ERROR_NO_BUFS        Could not allocated buffer to save Dataset.
+     * @retval kErrorNone           Dataset update started successfully (@p aCallback will be invoked on completion).
+     * @retval kErrorInvalidState   Device is disabled (MLE is disabled).
+     * @retval kErrorInvalidArgs    The @p aDataset is not valid (contains Active or Pending Timestamp).
+     * @retval kErrorBusy           Cannot start update, a previous one is ongoing.
+     * @retval kErrorNoBufs         Could not allocated buffer to save Dataset.
      *
      */
-    otError RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext);
+    Error RequestUpdate(const MeshCoP::Dataset::Info &aDataset, Callback aCallback, void *aContext);
 
     /**
      * This method cancels an ongoing (if any) Operational Dataset update request.
@@ -129,7 +129,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
     void        PreparePendingDataset(void);
-    void        Finish(otError aError);
+    void        Finish(Error aError);
     void        HandleNotifierEvents(Events aEvents);
 
     Callback   mCallback;

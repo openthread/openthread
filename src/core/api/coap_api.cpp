@@ -224,13 +224,13 @@ otError otCoapSendRequestBlockWiseWithParameters(otInstance *                aIn
                                                  otCoapBlockwiseTransmitHook aTransmitHook,
                                                  otCoapBlockwiseReceiveHook  aReceiveHook)
 {
-    otError                   error;
+    Error                     error;
     Instance &                instance     = *static_cast<Instance *>(aInstance);
     const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
 
     if (aTxParameters != nullptr)
     {
-        VerifyOrExit(txParameters.IsValid(), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
     }
 
     error = instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),
@@ -249,13 +249,13 @@ otError otCoapSendRequestWithParameters(otInstance *              aInstance,
                                         void *                    aContext,
                                         const otCoapTxParameters *aTxParameters)
 {
-    otError                   error;
+    Error                     error;
     Instance &                instance     = *static_cast<Instance *>(aInstance);
     const Coap::TxParameters &txParameters = Coap::TxParameters::From(aTxParameters);
 
     if (aTxParameters != nullptr)
     {
-        VerifyOrExit(txParameters.IsValid(), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(txParameters.IsValid(), error = kErrorInvalidArgs);
     }
 
     error = instance.GetApplicationCoap().SendMessage(*static_cast<Coap::Message *>(aMessage),

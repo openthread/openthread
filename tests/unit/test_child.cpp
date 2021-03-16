@@ -92,7 +92,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
     {
         Ip6::Address address;
 
-        VerifyOrQuit(aChild.GetMeshLocalIp6Address(address) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(aChild.GetMeshLocalIp6Address(address) == kErrorNotFound,
                      "Child::GetMeshLocalIp6Address() returned an address not in the expected list");
     }
 
@@ -263,7 +263,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        VerifyOrQuit(child.AddIp6Address(addresses[index]) == OT_ERROR_ALREADY,
+        VerifyOrQuit(child.AddIp6Address(addresses[index]) == kErrorAlready,
                      "AddIp6Address() did not fail when adding same address");
         VerifyChildIp6Addresses(child, numAddresses, addresses);
     }
@@ -278,7 +278,7 @@ void TestChildIp6Address(void)
         SuccessOrQuit(child.RemoveIp6Address(addresses[index]), "RemoveIp6Address() failed");
         VerifyChildIp6Addresses(child, numAddresses - 1 - index, &addresses[index + 1]);
 
-        VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == kErrorNotFound,
                      "RemoveIp6Address() did not fail when removing an address not on the list");
     }
 
@@ -298,7 +298,7 @@ void TestChildIp6Address(void)
         SuccessOrQuit(child.RemoveIp6Address(addresses[index]), "RemoveIp6Address() failed");
         VerifyChildIp6Addresses(child, index, &addresses[0]);
 
-        VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == kErrorNotFound,
                      "RemoveIp6Address() did not fail when removing an address not on the list");
     }
 
@@ -318,7 +318,7 @@ void TestChildIp6Address(void)
 
         SuccessOrQuit(child.RemoveIp6Address(addresses[indexToRemove]), "RemoveIp6Address() failed");
 
-        VerifyOrQuit(child.RemoveIp6Address(addresses[indexToRemove]) == OT_ERROR_NOT_FOUND,
+        VerifyOrQuit(child.RemoveIp6Address(addresses[indexToRemove]) == kErrorNotFound,
                      "RemoveIp6Address() did not fail when removing an address not on the list");
 
         {

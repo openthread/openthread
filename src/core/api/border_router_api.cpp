@@ -74,7 +74,7 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    otError                                error;
+    Error                                  error;
     Instance &                             instance = *static_cast<Instance *>(aInstance);
     const NetworkData::OnMeshPrefixConfig *config   = static_cast<const NetworkData::OnMeshPrefixConfig *>(aConfig);
 
@@ -99,7 +99,7 @@ exit:
 
 otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefix *aPrefix)
 {
-    otError            error    = OT_ERROR_NONE;
+    Error              error    = kErrorNone;
     Instance &         instance = *static_cast<Instance *>(aInstance);
     const Ip6::Prefix *prefix   = static_cast<const Ip6::Prefix *>(aPrefix);
 
@@ -108,7 +108,7 @@ otError otBorderRouterRemoveOnMeshPrefix(otInstance *aInstance, const otIp6Prefi
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     error = instance.Get<BackboneRouter::Local>().RemoveDomainPrefix(*prefix);
 
-    if (error == OT_ERROR_NOT_FOUND)
+    if (error == kErrorNotFound)
 #endif
     {
         error = instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(*prefix);
@@ -166,7 +166,7 @@ otError otBorderRouterRegister(otInstance *aInstance)
 
     instance.Get<NetworkData::Notifier>().HandleServerDataUpdated();
 
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE

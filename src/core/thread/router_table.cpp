@@ -261,15 +261,15 @@ exit:
     return rval;
 }
 
-otError RouterTable::Release(uint8_t aRouterId)
+Error RouterTable::Release(uint8_t aRouterId)
 {
-    otError  error  = OT_ERROR_NONE;
+    Error    error  = kErrorNone;
     uint16_t rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
 
     OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(IsAllocated(aRouterId), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = kErrorInvalidState);
+    VerifyOrExit(IsAllocated(aRouterId), error = kErrorNotFound);
 
     mAllocatedRouterIds.Remove(aRouterId);
     UpdateAllocation();
@@ -397,9 +397,9 @@ Router *RouterTable::GetRouter(const Mac::ExtAddress &aExtAddress)
     return FindRouter(Router::AddressMatcher(aExtAddress, Router::kInStateAny));
 }
 
-otError RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
+Error RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo)
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     Router *router;
     uint8_t routerId;
 
@@ -409,13 +409,13 @@ otError RouterTable::GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo
     }
     else
     {
-        VerifyOrExit(Mle::Mle::IsActiveRouter(aRouterId), error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(Mle::Mle::IsActiveRouter(aRouterId), error = kErrorInvalidArgs);
         routerId = Mle::Mle::RouterIdFromRloc16(aRouterId);
-        VerifyOrExit(routerId <= Mle::kMaxRouterId, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(routerId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
     }
 
     router = GetRouter(routerId);
-    VerifyOrExit(router != nullptr, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(router != nullptr, error = kErrorNotFound);
 
     aRouterInfo.SetFrom(*router);
 

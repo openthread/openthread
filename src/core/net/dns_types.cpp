@@ -44,53 +44,53 @@ namespace Dns {
 
 using ot::Encoding::BigEndian::HostSwap16;
 
-otError Header::SetRandomMessageId(void)
+Error Header::SetRandomMessageId(void)
 {
     return Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&mMessageId), sizeof(mMessageId));
 }
 
-otError Header::ResponseCodeToError(Response aResponse)
+Error Header::ResponseCodeToError(Response aResponse)
 {
-    otError error = OT_ERROR_FAILED;
+    Error error = kErrorFailed;
 
     switch (aResponse)
     {
     case kResponseSuccess:
-        error = OT_ERROR_NONE;
+        error = kErrorNone;
         break;
 
     case kResponseFormatError:   // Server unable to interpret request due to format error.
     case kResponseBadName:       // Bad name.
     case kResponseBadTruncation: // Bad truncation.
     case kResponseNotZone:       // A name is not in the zone.
-        error = OT_ERROR_PARSE;
+        error = kErrorParse;
         break;
 
     case kResponseServerFailure: // Server encountered an internal failure.
-        error = OT_ERROR_FAILED;
+        error = kErrorFailed;
         break;
 
     case kResponseNameError:       // Name that ought to exist, does not exists.
     case kResponseRecordNotExists: // Some RRset that ought to exist, does not exist.
-        error = OT_ERROR_NOT_FOUND;
+        error = kErrorNotFound;
         break;
 
     case kResponseNotImplemented: // Server does not support the query type (OpCode).
-        error = OT_ERROR_NOT_IMPLEMENTED;
+        error = kErrorNotImplemented;
         break;
 
     case kResponseBadAlg: // Bad algorithm.
-        error = OT_ERROR_NOT_CAPABLE;
+        error = kErrorNotCapable;
         break;
 
     case kResponseNameExists:   // Some name that ought not to exist, does exist.
     case kResponseRecordExists: // Some RRset that ought not to exist, does exist.
-        error = OT_ERROR_DUPLICATED;
+        error = kErrorDuplicated;
         break;
 
     case kResponseRefused: // Server refused to perform operation for policy or security reasons.
     case kResponseNotAuth: // Service is not authoritative for zone.
-        error = OT_ERROR_SECURITY;
+        error = kErrorSecurity;
         break;
 
     default:
@@ -100,16 +100,16 @@ otError Header::ResponseCodeToError(Response aResponse)
     return error;
 }
 
-otError Name::AppendLabel(const char *aLabel, Message &aMessage)
+Error Name::AppendLabel(const char *aLabel, Message &aMessage)
 {
     return AppendLabel(aLabel, static_cast<uint8_t>(StringLength(aLabel, kMaxLabelSize)), aMessage);
 }
 
-otError Name::AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage)
+Error Name::AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit((0 < aLength) && (aLength <= kMaxLabelLength), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((0 < aLength) && (aLength <= kMaxLabelLength), error = kErrorInvalidArgs);
 
     SuccessOrExit(error = aMessage.Append(aLength));
     error = aMessage.AppendBytes(aLabel, aLength);
@@ -118,14 +118,14 @@ exit:
     return error;
 }
 
-otError Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
+Error Name::AppendMultipleLabels(const char *aLabels, Message &aMessage)
 {
     return AppendMultipleLabels(aLabels, kMaxNameLength, aMessage);
 }
 
-otError Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage)
+Error Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage)
 {
-    otError  error           = OT_ERROR_NONE;
+    Error    error           = kErrorNone;
     uint16_t index           = 0;
     uint16_t labelStartIndex = 0;
     char     ch;
@@ -148,12 +148,12 @@ otError Name::AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message
                 // and `ch` is null char. (2) if `aLabels` is just "." (we
                 // see a dot at index 0, and index 1 is null char).
 
-                error = ((ch == kNullChar) || ((index == 0) && (aLabels[1] == kNullChar))) ? OT_ERROR_NONE
-                                                                                           : OT_ERROR_INVALID_ARGS;
+                error =
+                    ((ch == kNullChar) || ((index == 0) && (aLabels[1] == kNullChar))) ? kErrorNone : kErrorInvalidArgs;
                 ExitNow();
             }
 
-            VerifyOrExit(index + 1 < kMaxEncodedLength, error = OT_ERROR_INVALID_ARGS);
+            VerifyOrExit(index + 1 < kMaxEncodedLength, error = kErrorInvalidArgs);
             SuccessOrExit(error = AppendLabel(&aLabels[labelStartIndex], labelLength, aMessage));
 
             labelStartIndex = index + 1;
@@ -167,14 +167,14 @@ exit:
     return error;
 }
 
-otError Name::AppendTerminator(Message &aMessage)
+Error Name::AppendTerminator(Message &aMessage)
 {
     uint8_t terminator = 0;
 
     return aMessage.Append(terminator);
 }
 
-otError Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
+Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
 {
     // A pointer label takes the form of a two byte sequence as a
     // `uint16_t` value. The first two bits are ones. This allows a
@@ -192,9 +192,9 @@ otError Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
     return aMessage.Append(value);
 }
 
-otError Name::AppendName(const char *aName, Message &aMessage)
+Error Name::AppendName(const char *aName, Message &aMessage)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = AppendMultipleLabels(aName, aMessage));
     error = AppendTerminator(aMessage);
@@ -203,9 +203,9 @@ exit:
     return error;
 }
 
-otError Name::ParseName(const Message &aMessage, uint16_t &aOffset)
+Error Name::ParseName(const Message &aMessage, uint16_t &aOffset)
 {
-    otError       error;
+    Error         error;
     LabelIterator iterator(aMessage, aOffset);
 
     while (true)
@@ -214,13 +214,13 @@ otError Name::ParseName(const Message &aMessage, uint16_t &aOffset)
 
         switch (error)
         {
-        case OT_ERROR_NONE:
+        case kErrorNone:
             break;
 
-        case OT_ERROR_NOT_FOUND:
+        case kErrorNotFound:
             // We reached the end of name successfully.
             aOffset = iterator.mNameEndOffset;
-            error   = OT_ERROR_NONE;
+            error   = kErrorNone;
 
             OT_FALL_THROUGH;
 
@@ -233,9 +233,9 @@ exit:
     return error;
 }
 
-otError Name::ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength)
+Error Name::ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength)
 {
-    otError       error;
+    Error         error;
     LabelIterator iterator(aMessage, aOffset);
 
     SuccessOrExit(error = iterator.GetNextLabel());
@@ -246,9 +246,9 @@ exit:
     return error;
 }
 
-otError Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize)
+Error Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize)
 {
-    otError       error;
+    Error         error;
     LabelIterator iterator(aMessage, aOffset);
     bool          firstLabel = true;
     uint8_t       labelLength;
@@ -259,7 +259,7 @@ otError Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBu
 
         switch (error)
         {
-        case OT_ERROR_NONE:
+        case kErrorNone:
 
             if (!firstLabel)
             {
@@ -277,15 +277,15 @@ otError Name::ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBu
             firstLabel = false;
             break;
 
-        case OT_ERROR_NOT_FOUND:
+        case kErrorNotFound:
             // We reach the end of name successfully. Always add a terminating dot
             // at the end.
             *aNameBuffer++ = kLabelSeperatorChar;
             aNameBufferSize--;
-            VerifyOrExit(aNameBufferSize >= sizeof(uint8_t), error = OT_ERROR_NO_BUFS);
+            VerifyOrExit(aNameBufferSize >= sizeof(uint8_t), error = kErrorNoBufs);
             *aNameBuffer = kNullChar;
             aOffset      = iterator.mNameEndOffset;
-            error        = OT_ERROR_NONE;
+            error        = kErrorNone;
 
             OT_FALL_THROUGH;
 
@@ -298,29 +298,29 @@ exit:
     return error;
 }
 
-otError Name::CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel)
+Error Name::CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel)
 {
-    otError       error;
+    Error         error;
     LabelIterator iterator(aMessage, aOffset);
 
     SuccessOrExit(error = iterator.GetNextLabel());
-    VerifyOrExit(iterator.CompareLabel(aLabel, /* aIsSingleLabel */ true), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(iterator.CompareLabel(aLabel, /* aIsSingleLabel */ true), error = kErrorNotFound);
     aOffset = iterator.mNextLabelOffset;
 
 exit:
     return error;
 }
 
-otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName)
+Error Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName)
 {
-    otError       error;
+    Error         error;
     LabelIterator iterator(aMessage, aOffset);
     bool          matches = true;
 
     if (*aName == kLabelSeperatorChar)
     {
         aName++;
-        VerifyOrExit(*aName == kNullChar, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(*aName == kNullChar, error = kErrorInvalidArgs);
     }
 
     while (true)
@@ -329,7 +329,7 @@ otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char
 
         switch (error)
         {
-        case OT_ERROR_NONE:
+        case kErrorNone:
             if (matches && !iterator.CompareLabel(aName, /* aIsSingleLabel */ false))
             {
                 matches = false;
@@ -337,17 +337,17 @@ otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const char
 
             break;
 
-        case OT_ERROR_NOT_FOUND:
+        case kErrorNotFound:
             // We reached the end of the name in `aMessage`. We check if
             // all the previous labels matched so far, and we are also
             // at the end of `aName` string (see null char), then we
-            // return `OT_ERROR_NONE` indicating a successful comparison
-            // (full match). Otherwise we return `OT_ERROR_NOT_FOUND` to
+            // return `kErrorNone` indicating a successful comparison
+            // (full match). Otherwise we return `kErrorNotFound` to
             // indicate failed comparison.
 
             if (matches && (*aName == kNullChar))
             {
-                error = OT_ERROR_NONE;
+                error = kErrorNone;
             }
 
             aOffset = iterator.mNameEndOffset;
@@ -363,9 +363,9 @@ exit:
     return error;
 }
 
-otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2)
+Error Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2)
 {
-    otError       error;
+    Error         error;
     LabelIterator iterator(aMessage, aOffset);
     LabelIterator iterator2(aMessage2, aOffset2);
     bool          matches = true;
@@ -376,25 +376,25 @@ otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Mess
 
         switch (error)
         {
-        case OT_ERROR_NONE:
+        case kErrorNone:
             // If all the previous labels matched so far, then verify
             // that we can get the next label on `iterator2` and that it
             // matches the label from `iterator`.
-            if (matches && (iterator2.GetNextLabel() != OT_ERROR_NONE || !iterator.CompareLabel(iterator2)))
+            if (matches && (iterator2.GetNextLabel() != kErrorNone || !iterator.CompareLabel(iterator2)))
             {
                 matches = false;
             }
 
             break;
 
-        case OT_ERROR_NOT_FOUND:
+        case kErrorNotFound:
             // We reached the end of the name in `aMessage`. We check
             // that `iterator2` is also at its end, and if all previous
-            // labels matched we return `OT_ERROR_NONE`.
+            // labels matched we return `kErrorNone`.
 
-            if (matches && (iterator2.GetNextLabel() == OT_ERROR_NOT_FOUND))
+            if (matches && (iterator2.GetNextLabel() == kErrorNotFound))
             {
-                error = OT_ERROR_NONE;
+                error = kErrorNone;
             }
 
             aOffset = iterator.mNameEndOffset;
@@ -410,7 +410,7 @@ exit:
     return error;
 }
 
-otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName)
+Error Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName)
 {
     return aName.IsFromCString()
                ? CompareName(aMessage, aOffset, aName.mString)
@@ -418,9 +418,9 @@ otError Name::CompareName(const Message &aMessage, uint16_t &aOffset, const Name
                                         : ParseName(aMessage, aOffset));
 }
 
-otError Name::LabelIterator::GetNextLabel(void)
+Error Name::LabelIterator::GetNextLabel(void)
 {
-    otError error;
+    Error error;
 
     while (true)
     {
@@ -442,7 +442,7 @@ otError Name::LabelIterator::GetNextLabel(void)
                     mNameEndOffset = mNextLabelOffset + sizeof(uint8_t);
                 }
 
-                ExitNow(error = OT_ERROR_NOT_FOUND);
+                ExitNow(error = kErrorNotFound);
             }
 
             mLabelStartOffset = mNextLabelOffset + sizeof(uint8_t);
@@ -473,7 +473,7 @@ otError Name::LabelIterator::GetNextLabel(void)
         }
         else
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            ExitNow(error = kErrorParse);
         }
     }
 
@@ -481,11 +481,11 @@ exit:
     return error;
 }
 
-otError Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const
+Error Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const
 {
-    otError error;
+    Error error;
 
-    VerifyOrExit(mLabelLength < aLabelLength, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(mLabelLength < aLabelLength, error = kErrorNoBufs);
 
     SuccessOrExit(error = mMessage.Read(mLabelStartOffset, aLabelBuffer, mLabelLength));
     aLabelBuffer[mLabelLength] = kNullChar;
@@ -493,7 +493,7 @@ otError Name::LabelIterator::ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength
 
     if (!aAllowDotCharInLabel)
     {
-        VerifyOrExit(StringFind(aLabelBuffer, kLabelSeperatorChar) == nullptr, error = OT_ERROR_PARSE);
+        VerifyOrExit(StringFind(aLabelBuffer, kLabelSeperatorChar) == nullptr, error = kErrorParse);
     }
 
 exit:
@@ -576,9 +576,9 @@ exit:
     return match;
 }
 
-otError ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
+Error ResourceRecord::ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     while (aNumRecords > 0)
     {
@@ -594,9 +594,9 @@ exit:
     return error;
 }
 
-otError ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const Name &aName)
+Error ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const Name &aName)
 {
-    otError error;
+    Error error;
 
     while (aNumRecords > 0)
     {
@@ -607,9 +607,9 @@ otError ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, u
 
         switch (error)
         {
-        case OT_ERROR_NONE:
+        case kErrorNone:
             break;
-        case OT_ERROR_NOT_FOUND:
+        case kErrorNotFound:
             matches = false;
             break;
         default:
@@ -622,20 +622,20 @@ otError ResourceRecord::FindRecord(const Message &aMessage, uint16_t &aOffset, u
         aOffset += static_cast<uint16_t>(record.GetSize());
     }
 
-    error = OT_ERROR_NOT_FOUND;
+    error = kErrorNotFound;
 
 exit:
     return error;
 }
 
-otError ResourceRecord::FindRecord(const Message & aMessage,
-                                   uint16_t &      aOffset,
-                                   uint16_t        aNumRecords,
-                                   uint16_t        aIndex,
-                                   const Name &    aName,
-                                   uint16_t        aType,
-                                   ResourceRecord &aRecord,
-                                   uint16_t        aMinRecordSize)
+Error ResourceRecord::FindRecord(const Message & aMessage,
+                                 uint16_t &      aOffset,
+                                 uint16_t        aNumRecords,
+                                 uint16_t        aIndex,
+                                 const Name &    aName,
+                                 uint16_t        aType,
+                                 ResourceRecord &aRecord,
+                                 uint16_t        aMinRecordSize)
 {
     // This static method searches in `aMessage` starting from `aOffset`
     // up to maximum of `aNumRecords`, for the `(aIndex+1)`th
@@ -647,7 +647,7 @@ otError ResourceRecord::FindRecord(const Message & aMessage,
     // (so that the caller can read any remaining fields in the record
     // data).
 
-    otError  error;
+    Error    error;
     uint16_t offset = aOffset;
     uint16_t recordOffset;
 
@@ -660,7 +660,7 @@ otError ResourceRecord::FindRecord(const Message & aMessage,
 
         error = ReadRecord(aMessage, offset, aType, aRecord, aMinRecordSize);
 
-        if (error == OT_ERROR_NOT_FOUND)
+        if (error == kErrorNotFound)
         {
             // `ReadRecord()` already updates the `offset` to skip
             // over a non-matching record.
@@ -681,17 +681,17 @@ otError ResourceRecord::FindRecord(const Message & aMessage,
         offset = static_cast<uint16_t>(recordOffset + aRecord.GetSize());
     }
 
-    error = OT_ERROR_NOT_FOUND;
+    error = kErrorNotFound;
 
 exit:
     return error;
 }
 
-otError ResourceRecord::ReadRecord(const Message & aMessage,
-                                   uint16_t &      aOffset,
-                                   uint16_t        aType,
-                                   ResourceRecord &aRecord,
-                                   uint16_t        aMinRecordSize)
+Error ResourceRecord::ReadRecord(const Message & aMessage,
+                                 uint16_t &      aOffset,
+                                 uint16_t        aType,
+                                 ResourceRecord &aRecord,
+                                 uint16_t        aMinRecordSize)
 {
     // This static method tries to read a matching resource record of a
     // given type and a minimum record size from a message. The `aType`
@@ -699,7 +699,7 @@ otError ResourceRecord::ReadRecord(const Message & aMessage,
     // message does not match, it skips over the record. Please see
     // `ReadRecord<RecordType>()` for more details.
 
-    otError        error;
+    Error          error;
     ResourceRecord record;
 
     SuccessOrExit(error = record.ReadFrom(aMessage, aOffset));
@@ -713,19 +713,19 @@ otError ResourceRecord::ReadRecord(const Message & aMessage,
     {
         // Skip over the entire record.
         aOffset += static_cast<uint16_t>(record.GetSize());
-        error = OT_ERROR_NOT_FOUND;
+        error = kErrorNotFound;
     }
 
 exit:
     return error;
 }
 
-otError ResourceRecord::ReadName(const Message &aMessage,
-                                 uint16_t &     aOffset,
-                                 uint16_t       aStartOffset,
-                                 char *         aNameBuffer,
-                                 uint16_t       aNameBufferSize,
-                                 bool           aSkipRecord) const
+Error ResourceRecord::ReadName(const Message &aMessage,
+                               uint16_t &     aOffset,
+                               uint16_t       aStartOffset,
+                               char *         aNameBuffer,
+                               uint16_t       aNameBufferSize,
+                               bool           aSkipRecord) const
 {
     // This protected method parses and reads a name field in a record
     // from a message. It is intended only for sub-classes of
@@ -738,15 +738,15 @@ otError ResourceRecord::ReadName(const Message &aMessage,
     // successfully read, `aOffset` is updated to either point after the
     // end of record or after the the name field.
     //
-    // When read successfully, this method returns `OT_ERROR_NONE`. On a
-    // parse error (invalid format) returns `OT_ERROR_PARSE`. If the
+    // When read successfully, this method returns `kErrorNone`. On a
+    // parse error (invalid format) returns `kErrorParse`. If the
     // name does not fit in the given name buffer it returns
-    // `OT_ERROR_NO_BUFS`
+    // `kErrorNoBufs`
 
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     SuccessOrExit(error = Name::ReadName(aMessage, aOffset, aNameBuffer, aNameBufferSize));
-    VerifyOrExit(aOffset <= aStartOffset + GetSize(), error = OT_ERROR_PARSE);
+    VerifyOrExit(aOffset <= aStartOffset + GetSize(), error = kErrorParse);
 
     VerifyOrExit(aSkipRecord);
     aOffset = aStartOffset;
@@ -756,7 +756,7 @@ exit:
     return error;
 }
 
-otError ResourceRecord::SkipRecord(const Message &aMessage, uint16_t &aOffset) const
+Error ResourceRecord::SkipRecord(const Message &aMessage, uint16_t &aOffset) const
 {
     // This protected method parses and skips over a resource record
     // in a message.
@@ -765,7 +765,7 @@ otError ResourceRecord::SkipRecord(const Message &aMessage, uint16_t &aOffset) c
     // the `ResourceRecord`. On exit, when successfully parsed, `aOffset`
     // is updated to point to byte after the entire record.
 
-    otError error;
+    Error error;
 
     SuccessOrExit(error = CheckRecord(aMessage, aOffset));
     aOffset += static_cast<uint16_t>(GetSize());
@@ -774,22 +774,22 @@ exit:
     return error;
 }
 
-otError ResourceRecord::CheckRecord(const Message &aMessage, uint16_t aOffset) const
+Error ResourceRecord::CheckRecord(const Message &aMessage, uint16_t aOffset) const
 {
     // This method checks that the entire record (including record data)
     // is present in `aMessage` at `aOffset` (pointing to the start of
     // the `ResourceRecord` in `aMessage`).
 
-    return (aOffset + GetSize() <= aMessage.GetLength()) ? OT_ERROR_NONE : OT_ERROR_PARSE;
+    return (aOffset + GetSize() <= aMessage.GetLength()) ? kErrorNone : kErrorParse;
 }
 
-otError ResourceRecord::ReadFrom(const Message &aMessage, uint16_t aOffset)
+Error ResourceRecord::ReadFrom(const Message &aMessage, uint16_t aOffset)
 {
     // This method reads the `ResourceRecord` from `aMessage` at
     // `aOffset`. It verifies that the entire record (including record
     // data) is present in the message.
 
-    otError error;
+    Error error;
 
     SuccessOrExit(error = aMessage.Read(aOffset, *this));
     error = CheckRecord(aMessage, aOffset);
@@ -805,9 +805,9 @@ void TxtEntry::Iterator::Init(const uint8_t *aTxtData, uint16_t aTxtDataLength)
     SetTxtDataPosition(0);
 }
 
-otError TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
+Error TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     uint8_t     length;
     uint8_t     index;
     const char *cur;
@@ -815,7 +815,7 @@ otError TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
 
     static_assert(sizeof(mChar) == TxtEntry::kMaxKeyLength + 1, "KeyBuffer cannot fit the max key length");
 
-    VerifyOrExit(GetTxtData() != nullptr, error = OT_ERROR_PARSE);
+    VerifyOrExit(GetTxtData() != nullptr, error = kErrorParse);
 
     aEntry.mKey = keyBuffer;
 
@@ -824,7 +824,7 @@ otError TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
         length = static_cast<uint8_t>(*cur);
 
         cur++;
-        VerifyOrExit(cur + length <= GetTxtDataEnd(), error = OT_ERROR_PARSE);
+        VerifyOrExit(cur + length <= GetTxtDataEnd(), error = kErrorParse);
         IncreaseTxtDataPosition(sizeof(uint8_t) + length);
 
         // Silently skip over an empty string or if the string starts with
@@ -870,15 +870,15 @@ otError TxtEntry::Iterator::GetNextEntry(TxtEntry &aEntry)
         ExitNow();
     }
 
-    error = OT_ERROR_NOT_FOUND;
+    error = kErrorNotFound;
 
 exit:
     return error;
 }
 
-otError TxtEntry::AppendTo(Message &aMessage) const
+Error TxtEntry::AppendTo(Message &aMessage) const
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     uint16_t keyLength;
 
     if (mKey == nullptr)
@@ -890,7 +890,7 @@ otError TxtEntry::AppendTo(Message &aMessage) const
 
     keyLength = StringLength(mKey, static_cast<uint16_t>(kMaxKeyValueEncodedSize) + 1);
 
-    VerifyOrExit(kMinKeyLength <= keyLength, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(kMinKeyLength <= keyLength, error = kErrorInvalidArgs);
 
     if (mValue == nullptr)
     {
@@ -902,7 +902,7 @@ otError TxtEntry::AppendTo(Message &aMessage) const
 
     // Treat as key/value and encode as "key=value", value may be empty.
 
-    VerifyOrExit(mValueLength + keyLength + sizeof(char) <= kMaxKeyValueEncodedSize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(mValueLength + keyLength + sizeof(char) <= kMaxKeyValueEncodedSize, error = kErrorInvalidArgs);
 
     SuccessOrExit(error = aMessage.Append<uint8_t>(static_cast<uint8_t>(keyLength + mValueLength + sizeof(char))));
     SuccessOrExit(error = aMessage.AppendBytes(mKey, keyLength));
@@ -913,9 +913,9 @@ exit:
     return error;
 }
 
-otError TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
+Error TxtEntry::AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage)
 {
-    otError  error       = OT_ERROR_NONE;
+    Error    error       = kErrorNone;
     uint16_t startOffset = aMessage.GetLength();
 
     for (uint8_t index = 0; index < aNumEntries; index++)
@@ -966,19 +966,19 @@ bool LeaseOption::IsValid(void) const
     return GetLeaseInterval() <= GetKeyLeaseInterval();
 }
 
-otError PtrRecord::ReadPtrName(const Message &aMessage,
-                               uint16_t &     aOffset,
-                               char *         aLabelBuffer,
-                               uint8_t        aLabelBufferSize,
-                               char *         aNameBuffer,
-                               uint16_t       aNameBufferSize) const
+Error PtrRecord::ReadPtrName(const Message &aMessage,
+                             uint16_t &     aOffset,
+                             char *         aLabelBuffer,
+                             uint8_t        aLabelBufferSize,
+                             char *         aNameBuffer,
+                             uint16_t       aNameBufferSize) const
 {
-    otError  error       = OT_ERROR_NONE;
+    Error    error       = kErrorNone;
     uint16_t startOffset = aOffset - sizeof(PtrRecord); // start of `PtrRecord`.
 
     // Verify that the name is within the record data length.
     SuccessOrExit(error = Name::ParseName(aMessage, aOffset));
-    VerifyOrExit(aOffset <= startOffset + GetSize(), error = OT_ERROR_PARSE);
+    VerifyOrExit(aOffset <= startOffset + GetSize(), error = kErrorParse);
 
     aOffset = startOffset + sizeof(PtrRecord);
     SuccessOrExit(error = Name::ReadLabel(aMessage, aOffset, aLabelBuffer, aLabelBufferSize));
@@ -995,16 +995,16 @@ exit:
     return error;
 }
 
-otError TxtRecord::ReadTxtData(const Message &aMessage,
-                               uint16_t &     aOffset,
-                               uint8_t *      aTxtBuffer,
-                               uint16_t &     aTxtBufferSize) const
+Error TxtRecord::ReadTxtData(const Message &aMessage,
+                             uint16_t &     aOffset,
+                             uint8_t *      aTxtBuffer,
+                             uint16_t &     aTxtBufferSize) const
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(GetLength() <= aTxtBufferSize, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
     SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
-    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength()), error = OT_ERROR_PARSE);
+    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength()), error = kErrorParse);
     aTxtBufferSize = GetLength();
     aOffset += GetLength();
 

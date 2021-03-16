@@ -2558,7 +2558,7 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 /**
  * @def otLogResultPlat
  *
- * This function generates a log for the Plat region according to the error result. If @p aError is `OT_ERROR_NONE`, the
+ * This function generates a log for the Plat region according to the error result. If @p aError is `kErrorNone`, the
  * log level is info. Otherwise the log level is warn.
  *
  * @param[in]  aError    The error result.

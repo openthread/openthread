@@ -48,7 +48,7 @@ otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThresh
 
     instance.Get<Utils::JamDetector>().SetRssiThreshold(aRssiThreshold);
 
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
 int8_t otJamDetectionGetRssiThreshold(otInstance *aInstance)

@@ -158,50 +158,50 @@ void Otns::EmitDeviceMode(Mle::DeviceMode aMode)
 
 void Otns::EmitCoapSend(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    otError error;
+    char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    Error error;
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     EmitStatus("coap=send,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnCore("Otns::EmitCoapSend failed: %s", otThreadErrorToString(error));
+        otLogWarnCore("Otns::EmitCoapSend failed: %s", ErrorToString(error));
     }
 }
 
 void Otns::EmitCoapReceive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    otError error = OT_ERROR_NONE;
+    char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    Error error = kErrorNone;
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     EmitStatus("coap=recv,%d,%d,%d,%s,%s,%d", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(), uriPath,
                aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort());
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnCore("Otns::EmitCoapReceive failed: %s", otThreadErrorToString(error));
+        otLogWarnCore("Otns::EmitCoapReceive failed: %s", ErrorToString(error));
     }
 }
 
-void Otns::EmitCoapSendFailure(otError aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Otns::EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    char    uriPath[Coap::Message::kMaxReceivedUriPath + 1];
-    otError error = OT_ERROR_NONE;
+    char  uriPath[Coap::Message::kMaxReceivedUriPath + 1];
+    Error error = kErrorNone;
 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 
     EmitStatus("coap=send_error,%d,%d,%d,%s,%s,%d,%s", aMessage.GetMessageId(), aMessage.GetType(), aMessage.GetCode(),
                uriPath, aMessageInfo.GetPeerAddr().ToString().AsCString(), aMessageInfo.GetPeerPort(),
-               otThreadErrorToString(aError));
+               ErrorToString(aError));
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogWarnCore("Otns::EmitCoapSendFailure failed: %s", otThreadErrorToString(error));
+        otLogWarnCore("Otns::EmitCoapSendFailure failed: %s", ErrorToString(error));
     }
 }
 

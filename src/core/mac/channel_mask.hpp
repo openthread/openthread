@@ -201,11 +201,11 @@ public:
      *                               On entry it should contain the previous channel or `kChannelIteratorFirst`.
      *                               On exit it contains the next channel.
      *
-     * @retval  OT_ERROR_NONE        Got the next channel, @p aChannel updated successfully.
-     * @retval  OT_ERROR_NOT_FOUND   No next channel in the channel mask (note: @p aChannel may be changed).
+     * @retval  kErrorNone       Got the next channel, @p aChannel updated successfully.
+     * @retval  kErrorNotFound   No next channel in the channel mask (note: @p aChannel may be changed).
      *
      */
-    otError GetNextChannel(uint8_t &aChannel) const;
+    Error GetNextChannel(uint8_t &aChannel) const;
 
     /**
      * This method randomly chooses a channel from the channel mask.

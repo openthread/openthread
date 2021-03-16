@@ -135,14 +135,14 @@ public:
      * @param[inout]  aDadCounter          A pointer to the DAD_Counter that is employed to resolve Duplicate
      *                                     Address Detection connflicts.
      *
-     * @retval OT_ERROR_NONE   If successfully generated the IID.
-     * @retval OT_ERROR_FAILED If no valid IID was generated.
+     * @retval kErrorNone    If successfully generated the IID.
+     * @retval kErrorFailed  If no valid IID was generated.
      *
      */
-    otError GenerateIid(Ip6::NetifUnicastAddress &aAddress,
-                        uint8_t *                 aNetworkId       = nullptr,
-                        uint8_t                   aNetworkIdLength = 0,
-                        uint8_t *                 aDadCounter      = nullptr) const;
+    Error GenerateIid(Ip6::NetifUnicastAddress &aAddress,
+                      uint8_t *                 aNetworkId       = nullptr,
+                      uint8_t                   aNetworkIdLength = 0,
+                      uint8_t *                 aDadCounter      = nullptr) const;
 
 private:
     enum

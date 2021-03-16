@@ -185,28 +185,28 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      * @param[in]  aIpProto      The Internet Protocol value.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the message into an output interface.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffer to add the IPv6 headers.
+     * @retval kErrorNone     Successfully enqueued the message into an output interface.
+     * @retval kErrorNoBufs   Insufficient available buffer to add the IPv6 headers.
      *
      */
-    otError SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
+    Error SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
      * This method sends a raw IPv6 datagram with a fully formed IPv6 header.
      *
      * The caller transfers ownership of @p aMessage when making this call. OpenThread will free @p aMessage when
-     * processing is complete, including when a value other than `OT_ERROR_NONE` is returned.
+     * processing is complete, including when a value other than `kErrorNone` is returned.
      *
      * @param[in]  aMessage          A reference to the message.
      *
-     * @retval OT_ERROR_NONE      Successfully processed the message.
-     * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
-     * @retval OT_ERROR_NO_BUFS   Could not allocate necessary message buffers when processing the datagram.
-     * @retval OT_ERROR_NO_ROUTE  No route to host.
-     * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
+     * @retval kErrorNone     Successfully processed the message.
+     * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
+     * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
+     * @retval kErrorNoRoute  No route to host.
+     * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    otError SendRaw(Message &aMessage);
+    Error SendRaw(Message &aMessage);
 
     /**
      * This method processes a received IPv6 datagram.
@@ -216,14 +216,14 @@ public:
      * @param[in]  aLinkMessageInfo  A pointer to link-specific message information.
      * @param[in]  aFromNcpHost      TRUE if the message was submitted by the NCP host, FALSE otherwise.
      *
-     * @retval OT_ERROR_NONE      Successfully processed the message.
-     * @retval OT_ERROR_DROP      Message was well-formed but not fully processed due to packet processing rules.
-     * @retval OT_ERROR_NO_BUFS   Could not allocate necessary message buffers when processing the datagram.
-     * @retval OT_ERROR_NO_ROUTE  No route to host.
-     * @retval OT_ERROR_PARSE     Encountered a malformed header when processing the message.
+     * @retval kErrorNone     Successfully processed the message.
+     * @retval kErrorDrop     Message was well-formed but not fully processed due to packet processing rules.
+     * @retval kErrorNoBufs   Could not allocate necessary message buffers when processing the datagram.
+     * @retval kErrorNoRoute  No route to host.
+     * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    otError HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
+    Error HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
@@ -328,41 +328,41 @@ private:
     void        HandleSendQueue(void);
 
     static uint8_t PriorityToDscp(Message::Priority aPriority);
-    static otError GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
+    static Error   GetDatagramPriority(const uint8_t *aData, uint16_t aDataLen, Message::Priority &aPriority);
 
-    void    EnqueueDatagram(Message &aMessage);
-    otError ProcessReceiveCallback(Message &          aMessage,
-                                   const MessageInfo &aMessageInfo,
-                                   uint8_t            aIpProto,
-                                   bool               aFromNcpHost,
-                                   Message::Ownership aMessageOwnership);
-    otError HandleExtensionHeaders(Message &    aMessage,
-                                   Netif *      aNetif,
-                                   MessageInfo &aMessageInfo,
-                                   Header &     aHeader,
-                                   uint8_t &    aNextHeader,
-                                   bool         aIsOutbound,
-                                   bool         aFromNcpHost,
-                                   bool &       aReceive);
-    otError FragmentDatagram(Message &aMessage, uint8_t aIpProto);
-    otError HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
+    void  EnqueueDatagram(Message &aMessage);
+    Error ProcessReceiveCallback(Message &          aMessage,
+                                 const MessageInfo &aMessageInfo,
+                                 uint8_t            aIpProto,
+                                 bool               aFromNcpHost,
+                                 Message::Ownership aMessageOwnership);
+    Error HandleExtensionHeaders(Message &    aMessage,
+                                 Netif *      aNetif,
+                                 MessageInfo &aMessageInfo,
+                                 Header &     aHeader,
+                                 uint8_t &    aNextHeader,
+                                 bool         aIsOutbound,
+                                 bool         aFromNcpHost,
+                                 bool &       aReceive);
+    Error FragmentDatagram(Message &aMessage, uint8_t aIpProto);
+    Error HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessageInfo, bool aFromNcpHost);
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     void CleanupFragmentationBuffer(void);
     void HandleTimeTick(void);
     void UpdateReassemblyList(void);
     void SendIcmpError(Message &aMessage, Icmp::Header::Type aIcmpType, Icmp::Header::Code aIcmpCode);
 #endif
-    otError AddMplOption(Message &aMessage, Header &aHeader);
-    otError AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
-    otError InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
-    otError RemoveMplOption(Message &aMessage);
-    otError HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
-    otError HandlePayload(Message &          aMessage,
-                          MessageInfo &      aMessageInfo,
-                          uint8_t            aIpProto,
-                          Message::Ownership aMessageOwnership);
-    bool    ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
-    bool    IsOnLink(const Address &aAddress) const;
+    Error AddMplOption(Message &aMessage, Header &aHeader);
+    Error AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    Error InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
+    Error RemoveMplOption(Message &aMessage);
+    Error HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
+    Error HandlePayload(Message &          aMessage,
+                        MessageInfo &      aMessageInfo,
+                        uint8_t            aIpProto,
+                        Message::Ownership aMessageOwnership);
+    bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
+    bool  IsOnLink(const Address &aAddress) const;
 
     bool                 mForwardingEnabled;
     bool                 mIsReceiveIp6FilterEnabled;

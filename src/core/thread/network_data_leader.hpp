@@ -101,11 +101,11 @@ public:
      * @param[in]   aAddress  A reference to an IPv6 address.
      * @param[out]  aContext  A reference to 6LoWPAN Context information.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved 6LoWPAN Context information.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the 6LoWPAN Context information.
+     * @retval kErrorNone       Successfully retrieved 6LoWPAN Context information.
+     * @retval kErrorNotFound   Could not find the 6LoWPAN Context information.
      *
      */
-    otError GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const;
+    Error GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const;
 
     /**
      * This method retrieves the 6LoWPAN Context information based on a given Context ID.
@@ -113,11 +113,11 @@ public:
      * @param[in]   aContextId  The Context ID value.
      * @param[out]  aContext    A reference to the 6LoWPAN Context information.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved 6LoWPAN Context information.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the 6LoWPAN Context information.
+     * @retval kErrorNone       Successfully retrieved 6LoWPAN Context information.
+     * @retval kErrorNotFound   Could not find the 6LoWPAN Context information.
      *
      */
-    otError GetContext(uint8_t aContextId, Lowpan::Context &aContext) const;
+    Error GetContext(uint8_t aContextId, Lowpan::Context &aContext) const;
 
     /**
      * This method indicates whether or not the given IPv6 address is on-mesh.
@@ -138,14 +138,14 @@ public:
      * @param[out]  aPrefixMatchLength  A pointer to output the longest prefix match length in bits.
      * @param[out]  aRloc16             A pointer to the RLOC16 for the selected route.
      *
-     * @retval OT_ERROR_NONE      Successfully found a route.
-     * @retval OT_ERROR_NO_ROUTE  No valid route was found.
+     * @retval kErrorNone      Successfully found a route.
+     * @retval kErrorNoRoute   No valid route was found.
      *
      */
-    otError RouteLookup(const Ip6::Address &aSource,
-                        const Ip6::Address &aDestination,
-                        uint8_t *           aPrefixMatchLength,
-                        uint16_t *          aRloc16) const;
+    Error RouteLookup(const Ip6::Address &aSource,
+                      const Ip6::Address &aDestination,
+                      uint8_t *           aPrefixMatchLength,
+                      uint16_t *          aRloc16) const;
 
     /**
      * This method is used by non-Leader devices to set newly received Network Data from the Leader.
@@ -156,15 +156,15 @@ public:
      * @param[in]  aMessage        A reference to the MLE message.
      * @param[in]  aMessageOffset  The offset in @p aMessage for the Network Data TLV.
      *
-     * @retval OT_ERROR_NONE   Successfully set the network data.
-     * @retval OT_ERROR_PARSE  Network Data TLV in @p aMessage is not valid.
+     * @retval kErrorNone   Successfully set the network data.
+     * @retval kErrorParse  Network Data TLV in @p aMessage is not valid.
      *
      */
-    otError SetNetworkData(uint8_t        aVersion,
-                           uint8_t        aStableVersion,
-                           bool           aStableOnly,
-                           const Message &aMessage,
-                           uint16_t       aMessageOffset);
+    Error SetNetworkData(uint8_t        aVersion,
+                         uint8_t        aStableVersion,
+                         bool           aStableOnly,
+                         const Message &aMessage,
+                         uint16_t       aMessageOffset);
 
     /**
      * This method returns a pointer to the Commissioning Data.
@@ -224,35 +224,35 @@ public:
      * @param[in]  aValue        A pointer to the Commissioning Data value.
      * @param[in]  aValueLength  The length of @p aValue.
      *
-     * @retval OT_ERROR_NONE     Successfully added the Commissioning Data.
-     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Commissioning Data.
+     * @retval kErrorNone     Successfully added the Commissioning Data.
+     * @retval kErrorNoBufs   Insufficient space to add the Commissioning Data.
      *
      */
-    otError SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
+    Error SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength);
 
     /**
      * This method checks if the steering data includes a Joiner.
      *
      * @param[in]  aEui64             A reference to the Joiner's IEEE EUI-64.
      *
-     * @retval OT_ERROR_NONE          @p aEui64 is in the bloom filter.
-     * @retval OT_ERROR_INVALID_STATE No steering data present.
-     * @retval OT_ERROR_NOT_FOUND     @p aEui64 is not in the bloom filter.
+     * @retval kErrorNone          @p aEui64 is in the bloom filter.
+     * @retval kErrorInvalidState  No steering data present.
+     * @retval kErrorNotFound      @p aEui64 is not in the bloom filter.
      *
      */
-    otError SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const;
+    Error SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const;
 
     /**
      * This method checks if the steering data includes a Joiner with a given discerner value.
      *
      * @param[in]  aDiscerner         A reference to the Joiner Discerner.
      *
-     * @retval OT_ERROR_NONE          @p aDiscerner is in the bloom filter.
-     * @retval OT_ERROR_INVALID_STATE No steering data present.
-     * @retval OT_ERROR_NOT_FOUND     @p aDiscerner is not in the bloom filter.
+     * @retval kErrorNone          @p aDiscerner is in the bloom filter.
+     * @retval kErrorInvalidState  No steering data present.
+     * @retval kErrorNotFound      @p aDiscerner is not in the bloom filter.
      *
      */
-    otError SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
+    Error SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
 
     /**
      * This method gets the Rloc of Dhcp Agent of specified contextId.
@@ -260,11 +260,11 @@ public:
      * @param[in]  aContextId      A pointer to the Commissioning Data value.
      * @param[out] aRloc16         The reference of which for output the Rloc16.
      *
-     * @retval OT_ERROR_NONE       Successfully get the Rloc of Dhcp Agent.
-     * @retval OT_ERROR_NOT_FOUND  The specified @p aContextId could not be found.
+     * @retval kErrorNone       Successfully get the Rloc of Dhcp Agent.
+     * @retval kErrorNotFound   The specified @p aContextId could not be found.
      *
      */
-    otError GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const;
+    Error GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const;
 
     /**
      * This method gets the Service ID for the specified service.
@@ -275,15 +275,15 @@ public:
      * @param[in]  aServerStable      The Stable flag value for Server TLV
      * @param[out] aServiceId         A reference where to put the Service ID.
      *
-     * @retval OT_ERROR_NONE       Successfully got the Service ID.
-     * @retval OT_ERROR_NOT_FOUND  The specified service was not found.
+     * @retval kErrorNone       Successfully got the Service ID.
+     * @retval kErrorNotFound   The specified service was not found.
      *
      */
-    otError GetServiceId(uint32_t       aEnterpriseNumber,
-                         const uint8_t *aServiceData,
-                         uint8_t        aServiceDataLength,
-                         bool           aServerStable,
-                         uint8_t &      aServiceId) const;
+    Error GetServiceId(uint32_t       aEnterpriseNumber,
+                       const uint8_t *aServiceData,
+                       uint8_t        aServiceDataLength,
+                       bool           aServerStable,
+                       uint8_t &      aServiceId) const;
 
 protected:
     uint8_t mStableVersion;
@@ -296,12 +296,12 @@ private:
 
     void RemoveCommissioningData(void);
 
-    otError ExternalRouteLookup(uint8_t             aDomainId,
-                                const Ip6::Address &aDestination,
-                                uint8_t *           aPrefixMatchLength,
-                                uint16_t *          aRloc16) const;
-    otError DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
-    otError SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
+    Error ExternalRouteLookup(uint8_t             aDomainId,
+                              const Ip6::Address &aDestination,
+                              uint8_t *           aPrefixMatchLength,
+                              uint16_t *          aRloc16) const;
+    Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
+    Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
 };
 
 /**

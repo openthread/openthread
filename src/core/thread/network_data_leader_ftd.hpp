@@ -164,12 +164,12 @@ public:
      * @param[in]  aHandler  A function pointer that is called when the transaction ends.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE       A stale child entry was found and successfully enqueued a SVR_DATA.ntf message.
-     * @retval OT_ERROR_NO_BUFS    A stale child entry was found, but insufficient message buffers were available.
-     * @retval OT_ERROR_NOT_FOUND  No stale child entries were found.
+     * @retval kErrorNone      A stale child entry was found and successfully enqueued a SVR_DATA.ntf message.
+     * @retval kErrorNoBufs    A stale child entry was found, but insufficient message buffers were available.
+     * @retval kErrorNotFound  No stale child entries were found.
      *
      */
-    otError RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
+    Error RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aContext);
 
 private:
     class ChangedFlags
@@ -209,18 +209,18 @@ private:
 
     void RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
 
-    otError AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
-    otError AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
-    otError AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
-    otError AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
-    otError AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
+    Error AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
+    Error AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
+    Error AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
+    Error AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags);
+    Error AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, ChangedFlags &aChangedFlags);
 
-    otError AllocateServiceId(uint8_t &aServiceId) const;
+    Error AllocateServiceId(uint8_t &aServiceId) const;
 
-    otError AllocateContextId(uint8_t &aContextId);
-    void    FreeContextId(uint8_t aContextId);
-    void    StartContextReuseTimer(uint8_t aContextId);
-    void    StopContextReuseTimer(uint8_t aContextId);
+    Error AllocateContextId(uint8_t &aContextId);
+    void  FreeContextId(uint8_t aContextId);
+    void  StartContextReuseTimer(uint8_t aContextId);
+    void  StopContextReuseTimer(uint8_t aContextId);
 
     void RemoveContext(uint8_t aContextId);
     void RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId);
@@ -258,9 +258,9 @@ private:
 
     static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
 
-    static otError Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc16);
-    static otError ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16);
-    static otError ValidateService(const ServiceTlv &aService, uint16_t aRloc16);
+    static Error Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc16);
+    static Error ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16);
+    static Error ValidateService(const ServiceTlv &aService, uint16_t aRloc16);
 
     static bool ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const HasRouteEntry &aEntry);
     static bool ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry);
