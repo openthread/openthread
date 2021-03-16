@@ -91,7 +91,8 @@ enum
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
     kDefaultMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
-    kMaxFrameRetriesCsl = 0,                                      ///< macMaxFrameRetries for CSL transmissions
+    kMaxFrameRetriesCsl     = 0,                                  ///< macMaxFrameRetries for CSL transmissions
+    kMaxFrameRetriesCslSync = 0,                                  ///< macMaxFrameRetries for CSL Sync transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
@@ -764,6 +765,9 @@ private:
         kOperationTransmitPoll,
         kOperationWaitingForData,
         kOperationTransmitOutOfBandFrame,
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        kOperationTransmitCslSync,
+#endif
 #if OPENTHREAD_FTD
         kOperationTransmitDataIndirect,
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
@@ -836,6 +840,9 @@ private:
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     void ProcessCsl(const RxFrame &aFrame, const Address &aSrcAddr);
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    void HandleCslIeSent(TxFrame &aFrame, otError aError);
+#endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     void ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor);
 #endif
@@ -861,6 +868,9 @@ private:
     bool mPendingTransmitPoll : 1;
     bool mPendingTransmitOobFrame : 1;
     bool mPendingWaitingForData : 1;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    bool mPendingTransmitCslSync : 1;
+#endif
     bool mShouldTxPollBeforeData : 1;
     bool mRxOnWhenIdle : 1;
     bool mPromiscuous : 1;
@@ -923,6 +933,9 @@ private:
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint8_t mCslSyncTxCnt;
+#endif
 };
 
 /**
