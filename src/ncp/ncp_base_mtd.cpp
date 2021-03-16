@@ -275,7 +275,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
-        VerifyOrExit(addressesCount < kIPv6AddressesNumMax, error = OT_ERROR_PARSE);
+        VerifyOrExit(addressesCount < kIPv6AddressesNumMax, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
         ++addressesCount;
     }
@@ -330,13 +330,17 @@ void NcpBase::HandleMlrRegResult(otError             aError,
     SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(ThreadErrorToSpinelStatus(aError))));
     SuccessOrExit(mEncoder.WriteUint8(aMlrStatus));
 
+    SuccessOrExit(mEncoder.OpenStruct());
+
     if (aError == OT_ERROR_NONE)
     {
-        for (uint8_t i = 0U; i < aFailedAddressNum; ++i)
+        for (size_t i = 0U; i < aFailedAddressNum; ++i)
         {
             SuccessOrExit(mEncoder.WriteIp6Address(aFailedAddresses[i]));
         }
     }
+
+    SuccessOrExit(mEncoder.CloseStruct());
 
     SuccessOrExit(mEncoder.EndFrame());
 
