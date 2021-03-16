@@ -1214,14 +1214,6 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
     IgnoreError(otIp6SetEnabled(mInstance, false));
 #endif
 
-    error = WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
-
-    if (error != OT_ERROR_NONE)
-    {
-        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
-        mUpdateChangedPropsTask.Post();
-    }
-
     sNcpInstance = nullptr;
 
     return error;
