@@ -36,7 +36,6 @@ bin_PROGRAMS                                                                  = 
     $(NULL)
 
 CPPFLAGS_COMMON                                                              += \
-    -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -Wno-sign-compare                                                           \
     -I$(top_srcdir)/examples/platforms                                          \

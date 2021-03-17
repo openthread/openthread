@@ -33,6 +33,9 @@
  */
 
 #include "board_config.h"
+
+// IMPORTANT: Do not remove this include. Apps will build without error, but
+// they will not boot up properly
 #include "em_msc.h"
 
 #ifndef OPENTHREAD_CORE_EFR32_CONFIG_H_

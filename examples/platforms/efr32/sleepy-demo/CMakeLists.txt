@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,10 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(NOT OT_EXTERNAL_MBEDTLS)
-    add_subdirectory(mbedtls)
+if(OT_FTD)
+    add_subdirectory(sleepy-demo-ftd)
 endif()
 
-if(OT_PLATFORM STREQUAL "kw41z")
-    add_subdirectory(nxp)
-elseif(OT_PLATFORM MATCHES "cc*")
-    add_subdirectory(ti)
-elseif(OT_PLATFORM MATCHES "^qpg*")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "gp712")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "samr21")
-    add_subdirectory(microchip)
-elseif(OT_PLATFORM MATCHES "^nrf*")
-    add_subdirectory(jlink)
-    add_subdirectory(NordicSemiconductor)
-elseif(OT_PLATFORM MATCHES "^efr*")
-    add_subdirectory(jlink)
-    add_subdirectory(silabs)
+if(OT_MTD)
+    add_subdirectory(sleepy-demo-mtd)
 endif()
