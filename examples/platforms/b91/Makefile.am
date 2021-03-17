@@ -44,6 +44,7 @@ PLATFORM_SOURCES                       =    \
     radio.c                                 \
     system.c                                \
     logging.c                               \
+    diag.c                                  \
     uart_wrap.c                             \
     $(NULL)
 

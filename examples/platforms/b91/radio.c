@@ -630,9 +630,22 @@ void b91RadioProcess(otInstance *aInstance)
 
     if ((sState == OT_RADIO_STATE_RECEIVE) || (sState == OT_RADIO_STATE_TRANSMIT))
     {
-        if ((ptr != NULL) && (ptr->mLength > IEEE802154_ACK_LENGTH))
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
+        if (otPlatDiagModeGet())
         {
-            otPlatRadioReceiveDone(aInstance, ptr, sReceiveError);
+            if(ptr != NULL)
+            {
+                otPlatDiagRadioReceiveDone(aInstance, ptr, sReceiveError);
+            }
+        }
+        else
+#endif
+        {
+            if ((ptr != NULL) && (ptr->mLength > IEEE802154_ACK_LENGTH))
+            {
+                otPlatRadioReceiveDone(aInstance, ptr, sReceiveError);
+            }
         }
     }
 
@@ -642,7 +655,17 @@ void b91RadioProcess(otInstance *aInstance)
             (((sTransmitFrame.mPsdu[0] & IEEE802154_ACK_REQUEST) == 0) && (sTxBusy == false)))
         {
             sState = OT_RADIO_STATE_RECEIVE;
-            otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
+            if (otPlatDiagModeGet())
+            {
+                otPlatDiagRadioTransmitDone(aInstance, &sTransmitFrame, sTransmitError);
+            }
+            else
+#endif
+            {
+                otPlatRadioTxDone(aInstance, &sTransmitFrame, NULL, sTransmitError);
+            }
         }
         else if ((ptr != NULL) && ptr->mLength == IEEE802154_ACK_LENGTH &&
                  (ptr->mPsdu[0] & IEEE802154_FRAME_TYPE_MASK) == IEEE802154_FRAME_TYPE_ACK &&

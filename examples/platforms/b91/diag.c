@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,59 +26,64 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes b91 compile-time configuration constants for OpenThread.
- */
+#include <stdbool.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/time.h>
 
-#ifndef OPENTHREAD_CORE_B91_CONFIG_H_
-#define OPENTHREAD_CORE_B91_CONFIG_H_
+#include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/radio.h>
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "B91"
+#include "platform-b91.h"
 
-#define SETTINGS_CONFIG_IEEE_EUI64_ADDRESS 0x76000
-
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 /**
- * @def OPENTHREAD_CONFIG_SOFTWARE_ACK_TIMEOUT_ENABLE
- *
- * Define to 1 if you want to enable software ACK timeout logic.
+ * Diagnostics mode variables.
  *
  */
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE 1
+static bool sDiagMode = false;
 
-/**
- * @def OPENTHREAD_CONFIG_SOFTWARE_RETRANSMIT_ENABLE
- *
- * Define to 1 if you want to enable software retransmission logic.
- *
- */
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RETRANSMIT_ENABLE 1
+void otPlatDiagProcess(otInstance *aInstance, int argc, char *argv[], char *aOutput, size_t aOutputMaxLen)
+{
+    OT_UNUSED_VARIABLE(argc);
+    OT_UNUSED_VARIABLE(aInstance);
 
-/**
- * @def OPENTHREAD_CONFIG_SOFTWARE_CSMA_BACKOFF_ENABLE
- *
- * Define to 1 if you want to enable software CSMA-CA backoff logic.
- *
- */
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_CSMA_BACKOFF_ENABLE 1
+    // Add more platform specific diagnostics features here.
+    snprintf(aOutput, aOutputMaxLen, "diag feature '%s' is not supported\r\n", argv[0]);
+}
 
-/**
- * @def OPENTHREAD_CONFIG_SOFTWARE_ENERGY_SCAN_ENABLE
- *
- * Define to 1 if you want to enable software energy scanning logic.
- *
- */
-#define OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE 1
+void otPlatDiagModeSet(bool aMode)
+{
+    sDiagMode = aMode;
+}
 
+bool otPlatDiagModeGet()
+{
+    return sDiagMode;
+}
 
-#define OPENTHREAD_CONFIG_DIAG_ENABLE 1
+void otPlatDiagChannelSet(uint8_t aChannel)
+{
+    OT_UNUSED_VARIABLE(aChannel);
+}
 
-#endif
+void otPlatDiagTxPowerSet(int8_t aTxPower)
+{
+    OT_UNUSED_VARIABLE(aTxPower);
+}
+
+void otPlatDiagRadioReceived(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aFrame);
+    OT_UNUSED_VARIABLE(aError);
+}
+
+void otPlatDiagAlarmCallback(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
