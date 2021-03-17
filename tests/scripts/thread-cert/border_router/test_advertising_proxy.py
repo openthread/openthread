@@ -140,7 +140,7 @@ class SingleHostAndService(thread_cert.TestCase):
         #
 
         client.srp_client_set_host_address('2001::2')
-        self.simulator.go(2)
+        self.simulator.go(4)
 
         self.check_host_and_service(server, client, '2001::2')
         self.host_check_mdns_service(host, '2001::2')
