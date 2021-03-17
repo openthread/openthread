@@ -168,11 +168,11 @@ public:
      * @param[in] aMessage  The message to update.
      * @param[in] aChild    The (sleepy) child for indirect transmission.
      *
-     * @retval OT_ERROR_NONE           Successfully removed the message for indirect transmission.
-     * @retval OT_ERROR_NOT_FOUND      The message was not scheduled for indirect transmission to the child.
+     * @retval kErrorNone          Successfully removed the message for indirect transmission.
+     * @retval kErrorNotFound      The message was not scheduled for indirect transmission to the child.
      *
      */
-    otError RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
+    Error RemoveMessageFromSleepyChild(Message &aMessage, Child &aChild);
 
     /**
      * This method removes all added messages for a specific child and frees message (with no indirect/direct tx).
@@ -211,12 +211,9 @@ private:
     };
 
     // Callbacks from DataPollHandler
-    otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
-    void    HandleSentFrameToChild(const Mac::TxFrame &aFrame,
-                                   const FrameContext &aContext,
-                                   otError             aError,
-                                   Child &             aChild);
-    void    HandleFrameChangeDone(Child &aChild);
+    Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
+    void  HandleSentFrameToChild(const Mac::TxFrame &aFrame, const FrameContext &aContext, Error aError, Child &aChild);
+    void  HandleFrameChangeDone(Child &aChild);
 
     void     UpdateIndirectMessage(Child &aChild);
     Message *FindIndirectMessage(Child &aChild, bool aSupervisionTypeOnly = false);

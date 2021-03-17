@@ -58,7 +58,7 @@ Ip6::InterfaceIdentifier generateRandomIid(uint16_t aIndex)
 
 void TestNdProxyTable(void)
 {
-    otError error;
+    Error error;
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr, "Null OpenThread instance");
@@ -72,7 +72,7 @@ void TestNdProxyTable(void)
 
     // Reregister address IID when there are enough room should succeed.
     error = table.Register(existedAddressIid, existedMeshLocalIid, 0, nullptr);
-    VerifyOrQuit(error == OT_ERROR_NONE, "Register failed");
+    VerifyOrQuit(error == kErrorNone, "Register failed");
     VerifyOrQuit(table.IsRegistered(existedAddressIid), "should be registered");
     VerifyOrQuit(!table.IsRegistered(notExistAddressIid), "should not be registered");
 
@@ -83,17 +83,17 @@ void TestNdProxyTable(void)
 
         // Reregister address IID when there are enough room should succeed.
         error = table.Register(addressIid, meshLocalIid, i, nullptr);
-        VerifyOrQuit(error == OT_ERROR_NONE, "Register failed");
+        VerifyOrQuit(error == kErrorNone, "Register failed");
 
         VerifyOrQuit(table.IsRegistered(addressIid), "should be registered");
 
         // Reregister the same address IID should always succeed.
         error = table.Register(addressIid, meshLocalIid, i, nullptr);
-        VerifyOrQuit(error == OT_ERROR_NONE, "Register again failed");
+        VerifyOrQuit(error == kErrorNone, "Register again failed");
 
         // Register the same address IID with a different ML-IID should fail.
         error = table.Register(addressIid, notExistMeshLocalIid, i, nullptr);
-        VerifyOrQuit(error == OT_ERROR_DUPLICATED, "Register duplicate should fail");
+        VerifyOrQuit(error == kErrorDuplicated, "Register duplicate should fail");
 
         VerifyOrQuit(table.IsRegistered(addressIid), "should be registered");
     }
@@ -101,7 +101,7 @@ void TestNdProxyTable(void)
     // Now the table is full, registering another IID should fail.
     error =
         table.Register(notExistAddressIid, notExistMeshLocalIid, OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM, nullptr);
-    VerifyOrQuit(error == OT_ERROR_NO_BUFS, "should fail with no bufs");
+    VerifyOrQuit(error == kErrorNoBufs, "should fail with no bufs");
     VerifyOrQuit(!table.IsRegistered(notExistAddressIid), "should not be registered");
 }
 

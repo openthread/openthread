@@ -407,11 +407,11 @@ public:
     /**
      * This method validates the frame.
      *
-     * @retval OT_ERROR_NONE    Successfully parsed the MAC header.
-     * @retval OT_ERROR_PARSE   Failed to parse through the MAC header.
+     * @retval kErrorNone    Successfully parsed the MAC header.
+     * @retval kErrorParse   Failed to parse through the MAC header.
      *
      */
-    otError ValidatePsdu(void) const;
+    Error ValidatePsdu(void) const;
 
     /**
      * This method returns the IEEE 802.15.4 Frame Type.
@@ -536,11 +536,11 @@ public:
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully retrieved the Destination PAN Identifier.
-     * @retval OT_ERROR_PARSE  Failed to parse the PAN Identifier.
+     * @retval kErrorNone   Successfully retrieved the Destination PAN Identifier.
+     * @retval kErrorParse  Failed to parse the PAN Identifier.
      *
      */
-    otError GetDstPanId(PanId &aPanId) const;
+    Error GetDstPanId(PanId &aPanId) const;
 
     /**
      * This method sets the Destination PAN Identifier.
@@ -563,10 +563,10 @@ public:
      *
      * @param[out]  aAddress  The Destination Address.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Destination Address.
+     * @retval kErrorNone  Successfully retrieved the Destination Address.
      *
      */
-    otError GetDstAddr(Address &aAddress) const;
+    Error GetDstAddr(Address &aAddress) const;
 
     /**
      * This method sets the Destination Address.
@@ -605,20 +605,20 @@ public:
      *
      * @param[out]  aPanId  The Source PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully retrieved the Source PAN Identifier.
+     * @retval kErrorNone   Successfully retrieved the Source PAN Identifier.
      *
      */
-    otError GetSrcPanId(PanId &aPanId) const;
+    Error GetSrcPanId(PanId &aPanId) const;
 
     /**
      * This method sets the Source PAN Identifier.
      *
      * @param[in]  aPanId  The Source PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully set the Source PAN Identifier.
+     * @retval kErrorNone   Successfully set the Source PAN Identifier.
      *
      */
-    otError SetSrcPanId(PanId aPanId);
+    Error SetSrcPanId(PanId aPanId);
 
     /**
      * This method indicates whether or not the Source Address is present for this object.
@@ -633,10 +633,10 @@ public:
      *
      * @param[out]  aAddress  The Source Address.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Source Address.
+     * @retval kErrorNone  Successfully retrieved the Source Address.
      *
      */
-    otError GetSrcAddr(Address &aAddress) const;
+    Error GetSrcAddr(Address &aAddress) const;
 
     /**
      * This method sets the Source Address.
@@ -667,11 +667,11 @@ public:
      *
      * @param[out]  aSecurityControlField  The Security Control Field.
      *
-     * @retval OT_ERROR_NONE   Successfully retrieved the Security Level Identifier.
-     * @retval OT_ERROR_PARSE  Failed to find the security control field in the frame.
+     * @retval kErrorNone   Successfully retrieved the Security Level Identifier.
+     * @retval kErrorParse  Failed to find the security control field in the frame.
      *
      */
-    otError GetSecurityControlField(uint8_t &aSecurityControlField) const;
+    Error GetSecurityControlField(uint8_t &aSecurityControlField) const;
 
     /**
      * This method sets the Security Control Field.
@@ -686,30 +686,30 @@ public:
      *
      * @param[out]  aSecurityLevel  The Security Level Identifier.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Security Level Identifier.
+     * @retval kErrorNone  Successfully retrieved the Security Level Identifier.
      *
      */
-    otError GetSecurityLevel(uint8_t &aSecurityLevel) const;
+    Error GetSecurityLevel(uint8_t &aSecurityLevel) const;
 
     /**
      * This method gets the Key Identifier Mode.
      *
      * @param[out]  aSecurityLevel  The Key Identifier Mode.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier Mode.
+     * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
      *
      */
-    otError GetKeyIdMode(uint8_t &aKeyIdMode) const;
+    Error GetKeyIdMode(uint8_t &aKeyIdMode) const;
 
     /**
      * This method gets the Frame Counter.
      *
      * @param[out]  aFrameCounter  The Frame Counter.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Frame Counter.
+     * @retval kErrorNone  Successfully retrieved the Frame Counter.
      *
      */
-    otError GetFrameCounter(uint32_t &aFrameCounter) const;
+    Error GetFrameCounter(uint32_t &aFrameCounter) const;
 
     /**
      * This method sets the Frame Counter.
@@ -740,10 +740,10 @@ public:
      *
      * @param[out]  aKeyId  The Key Identifier.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier.
+     * @retval kErrorNone  Successfully retrieved the Key Identifier.
      *
      */
-    otError GetKeyId(uint8_t &aKeyId) const;
+    Error GetKeyId(uint8_t &aKeyId) const;
 
     /**
      * This method sets the Key Identifier.
@@ -758,20 +758,20 @@ public:
      *
      * @param[out]  aCommandId  The Command ID.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Command ID.
+     * @retval kErrorNone  Successfully retrieved the Command ID.
      *
      */
-    otError GetCommandId(uint8_t &aCommandId) const;
+    Error GetCommandId(uint8_t &aCommandId) const;
 
     /**
      * This method sets the Command ID.
      *
      * @param[in]  aCommandId  The Command ID.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Command ID.
+     * @retval kErrorNone  Successfully set the Command ID.
      *
      */
-    otError SetCommandId(uint8_t aCommandId);
+    Error SetCommandId(uint8_t aCommandId);
 
     /**
      * This method indicates whether the frame is a MAC Data Request command (data poll).
@@ -957,11 +957,11 @@ public:
      * @tparam  IeType  The Header IE type, it MUST contain an enum `kHeaderIeId` equal to the IE's Id
      *                  and an enum `kIeContentSize` indicating the IE body's size.
      *
-     * @retval OT_ERROR_NONE       Successfully appended the Header IE.
-     * @retval OT_ERROR_NOT_FOUND  The position for first IE is not found.
+     * @retval kErrorNone      Successfully appended the Header IE.
+     * @retval kErrorNotFound  The position for first IE is not found.
      *
      */
-    template <typename IeType> otError AppendHeaderIeAt(uint8_t &aIndex);
+    template <typename IeType> Error AppendHeaderIeAt(uint8_t &aIndex);
 
     /**
      * This method returns a pointer to the Header IE.
@@ -1121,7 +1121,7 @@ protected:
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
 
-    otError                         InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize);
+    Error                           InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize);
     template <typename IeType> void InitIeContentAt(uint8_t &aIndex);
 #endif
 
@@ -1203,11 +1203,11 @@ public:
      *                          for AES CCM computation.
      * @param[in]  aMacKey      A reference to the MAC key to decrypt the received frame.
      *
-     * @retval OT_ERROR_NONE      Process of received frame AES CCM succeeded.
-     * @retval OT_ERROR_SECURITY  Received frame MIC check failed.
+     * @retval kErrorNone      Process of received frame AES CCM succeeded.
+     * @retval kErrorSecurity  Received frame MIC check failed.
      *
      */
-    otError ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey);
+    Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -1426,11 +1426,11 @@ public:
      * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
      * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
      *
-     * @retval  OT_ERROR_NONE           Successfully generated Enh Ack.
-     * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
+     * @retval  kErrorNone           Successfully generated Enh Ack.
+     * @retval  kErrorParse          @p aFrame has incorrect format.
      *
      */
-    otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+    Error GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**

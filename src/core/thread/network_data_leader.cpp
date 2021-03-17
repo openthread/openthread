@@ -67,17 +67,17 @@ void LeaderBase::Reset(void)
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 }
 
-otError LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
-                                 const uint8_t *aServiceData,
-                                 uint8_t        aServiceDataLength,
-                                 bool           aServerStable,
-                                 uint8_t &      aServiceId) const
+Error LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
+                               const uint8_t *aServiceData,
+                               uint8_t        aServiceDataLength,
+                               bool           aServerStable,
+                               uint8_t &      aServiceId) const
 {
-    otError       error    = OT_ERROR_NOT_FOUND;
+    Error         error    = kErrorNotFound;
     Iterator      iterator = kIteratorInit;
     ServiceConfig serviceConfig;
 
-    while (GetNextService(iterator, serviceConfig) == OT_ERROR_NONE)
+    while (GetNextService(iterator, serviceConfig) == kErrorNone)
     {
         if (aEnterpriseNumber == serviceConfig.mEnterpriseNumber &&
             aServiceDataLength == serviceConfig.mServiceDataLength &&
@@ -85,7 +85,7 @@ otError LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
             aServerStable == serviceConfig.mServerConfig.mStable)
         {
             aServiceId = serviceConfig.mServiceId;
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
     }
 
@@ -110,7 +110,7 @@ exit:
     return prefixTlv;
 }
 
-otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
+Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aContext) const
 {
     const PrefixTlv * prefix = nullptr;
     const ContextTlv *contextTlv;
@@ -141,12 +141,12 @@ otError LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aC
         }
     }
 
-    return (aContext.mPrefix.GetLength() > 0) ? OT_ERROR_NONE : OT_ERROR_NOT_FOUND;
+    return (aContext.mPrefix.GetLength() > 0) ? kErrorNone : kErrorNotFound;
 }
 
-otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
+Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
 {
-    otError          error = OT_ERROR_NOT_FOUND;
+    Error            error = kErrorNotFound;
     const PrefixTlv *prefix;
 
     if (aContextId == Mle::kMeshLocalPrefixContextId)
@@ -154,7 +154,7 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) co
         aContext.mPrefix.Set(Get<Mle::MleRouter>().GetMeshLocalPrefix());
         aContext.mContextId    = Mle::kMeshLocalPrefixContextId;
         aContext.mCompressFlag = true;
-        ExitNow(error = OT_ERROR_NONE);
+        ExitNow(error = kErrorNone);
     }
 
     for (const NetworkDataTlv *start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr;
@@ -170,29 +170,29 @@ otError LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) co
         aContext.mPrefix.Set(prefix->GetPrefix(), prefix->GetPrefixLength());
         aContext.mContextId    = contextTlv->GetContextId();
         aContext.mCompressFlag = contextTlv->IsCompress();
-        ExitNow(error = OT_ERROR_NONE);
+        ExitNow(error = kErrorNone);
     }
 
 exit:
     return error;
 }
 
-otError LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const
+Error LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const
 {
-    otError         error = OT_ERROR_NOT_FOUND;
+    Error           error = kErrorNotFound;
     Lowpan::Context lowpanContext;
 
-    if ((GetContext(aContextId, lowpanContext)) == OT_ERROR_NONE)
+    if ((GetContext(aContextId, lowpanContext)) == kErrorNone)
     {
         Iterator           iterator = kIteratorInit;
         OnMeshPrefixConfig config;
 
-        while (GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+        while (GetNextOnMeshPrefix(iterator, config) == kErrorNone)
         {
             if (lowpanContext.mPrefix.ContainsPrefix(config.GetPrefix()))
             {
                 aRloc16 = config.mRloc16;
-                ExitNow(error = OT_ERROR_NONE);
+                ExitNow(error = kErrorNone);
             }
         }
     }
@@ -235,29 +235,29 @@ exit:
     return rval;
 }
 
-otError LeaderBase::RouteLookup(const Ip6::Address &aSource,
-                                const Ip6::Address &aDestination,
-                                uint8_t *           aPrefixMatchLength,
-                                uint16_t *          aRloc16) const
+Error LeaderBase::RouteLookup(const Ip6::Address &aSource,
+                              const Ip6::Address &aDestination,
+                              uint8_t *           aPrefixMatchLength,
+                              uint16_t *          aRloc16) const
 {
-    otError          error  = OT_ERROR_NO_ROUTE;
+    Error            error  = kErrorNoRoute;
     const PrefixTlv *prefix = nullptr;
 
     while ((prefix = FindNextMatchingPrefix(aSource, prefix)) != nullptr)
     {
-        if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatchLength, aRloc16) == OT_ERROR_NONE)
+        if (ExternalRouteLookup(prefix->GetDomainId(), aDestination, aPrefixMatchLength, aRloc16) == kErrorNone)
         {
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
 
-        if (DefaultRouteLookup(*prefix, aRloc16) == OT_ERROR_NONE)
+        if (DefaultRouteLookup(*prefix, aRloc16) == kErrorNone)
         {
             if (aPrefixMatchLength)
             {
                 *aPrefixMatchLength = 0;
             }
 
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
     }
 
@@ -265,12 +265,12 @@ exit:
     return error;
 }
 
-otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
-                                        const Ip6::Address &aDestination,
-                                        uint8_t *           aPrefixMatchLength,
-                                        uint16_t *          aRloc16) const
+Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
+                                      const Ip6::Address &aDestination,
+                                      uint8_t *           aPrefixMatchLength,
+                                      uint16_t *          aRloc16) const
 {
-    otError              error = OT_ERROR_NO_ROUTE;
+    Error                error = kErrorNoRoute;
     const PrefixTlv *    prefixTlv;
     const HasRouteEntry *bestRouteEntry  = nullptr;
     uint8_t              bestMatchLength = 0;
@@ -329,15 +329,15 @@ otError LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
             *aPrefixMatchLength = bestMatchLength;
         }
 
-        error = OT_ERROR_NONE;
+        error = kErrorNone;
     }
 
     return error;
 }
 
-otError LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const
+Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const
 {
-    otError                  error = OT_ERROR_NO_ROUTE;
+    Error                    error = kErrorNoRoute;
     const BorderRouterTlv *  borderRouter;
     const BorderRouterEntry *route = nullptr;
 
@@ -371,26 +371,26 @@ otError LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc
             *aRloc16 = route->GetRloc();
         }
 
-        error = OT_ERROR_NONE;
+        error = kErrorNone;
     }
 
     return error;
 }
 
-otError LeaderBase::SetNetworkData(uint8_t        aVersion,
-                                   uint8_t        aStableVersion,
-                                   bool           aStableOnly,
-                                   const Message &aMessage,
-                                   uint16_t       aMessageOffset)
+Error LeaderBase::SetNetworkData(uint8_t        aVersion,
+                                 uint8_t        aStableVersion,
+                                 bool           aStableOnly,
+                                 const Message &aMessage,
+                                 uint16_t       aMessageOffset)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     Mle::Tlv tlv;
     uint16_t length;
 
     SuccessOrExit(error = aMessage.Read(aMessageOffset, tlv));
 
     length = aMessage.ReadBytes(aMessageOffset + sizeof(tlv), mTlvs, tlv.GetLength());
-    VerifyOrExit(length == tlv.GetLength(), error = OT_ERROR_PARSE);
+    VerifyOrExit(length == tlv.GetLength(), error = kErrorParse);
 
     mLength        = tlv.GetLength();
     mVersion       = aVersion;
@@ -417,19 +417,19 @@ exit:
     return error;
 }
 
-otError LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
+Error LeaderBase::SetCommissioningData(const uint8_t *aValue, uint8_t aValueLength)
 {
-    otError               error = OT_ERROR_NONE;
+    Error                 error = kErrorNone;
     CommissioningDataTlv *commissioningDataTlv;
 
     RemoveCommissioningData();
 
     if (aValueLength > 0)
     {
-        VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(aValueLength <= kMaxSize - sizeof(CommissioningDataTlv), error = kErrorNoBufs);
         commissioningDataTlv =
             static_cast<CommissioningDataTlv *>(AppendTlv(sizeof(CommissioningDataTlv) + aValueLength));
-        VerifyOrExit(commissioningDataTlv != nullptr, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(commissioningDataTlv != nullptr, error = kErrorNoBufs);
 
         commissioningDataTlv->Init();
         commissioningDataTlv->SetLength(aValueLength);
@@ -495,24 +495,24 @@ exit:
     return;
 }
 
-otError LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
+Error LeaderBase::SteeringDataCheck(const FilterIndexes &aFilterIndexes) const
 {
-    otError               error = OT_ERROR_NONE;
+    Error                 error = kErrorNone;
     const MeshCoP::Tlv *  steeringDataTlv;
     MeshCoP::SteeringData steeringData;
 
     steeringDataTlv = GetCommissioningDataSubTlv(MeshCoP::Tlv::kSteeringData);
-    VerifyOrExit(steeringDataTlv != nullptr, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(steeringDataTlv != nullptr, error = kErrorInvalidState);
 
     static_cast<const MeshCoP::SteeringDataTlv *>(steeringDataTlv)->CopyTo(steeringData);
 
-    VerifyOrExit(steeringData.Contains(aFilterIndexes), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(steeringData.Contains(aFilterIndexes), error = kErrorNotFound);
 
 exit:
     return error;
 }
 
-otError LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
+Error LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
 {
     FilterIndexes   filterIndexes;
     Mac::ExtAddress joinerId;
@@ -523,7 +523,7 @@ otError LeaderBase::SteeringDataCheckJoiner(const Mac::ExtAddress &aEui64) const
     return SteeringDataCheck(filterIndexes);
 }
 
-otError LeaderBase::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const
+Error LeaderBase::SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const
 {
     FilterIndexes filterIndexes;
 

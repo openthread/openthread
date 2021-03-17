@@ -564,12 +564,12 @@ public:
      *
      * @param[in]  aNameData           A reference to name data.
      *
-     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
-     * @retval OT_ERROR_ALREADY        The name is already set to the same string.
-     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
+     * @retval kErrorAlready       The name is already set to the same string.
+     * @retval kErrorInvalidArgs   Given name is too long.
      *
      */
-    otError Set(const NameData &aNameData);
+    Error Set(const NameData &aNameData);
 
     /**
      * This method overloads operator `==` to evaluate whether or not two given `NetworkName` objects are equal.
@@ -623,12 +623,12 @@ public:
      *
      * @param[in]  aNameData           A reference to name data.
      *
-     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
-     * @retval OT_ERROR_ALREADY        The name is already set to the same string.
-     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     * @retval kErrorNone          Successfully set the Thread Domain Name.
+     * @retval kErrorAlready       The name is already set to the same string.
+     * @retval kErrorInvalidArgs   Given name is too long.
      *
      */
-    otError Set(const NameData &aNameData);
+    Error Set(const NameData &aNameData);
 
 private:
     char m8[kMaxSize + 1]; ///< Byte values.

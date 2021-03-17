@@ -47,16 +47,16 @@ DataPollHandler::Callbacks::Callbacks(Instance &aInstance)
 {
 }
 
-inline otError DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
-                                                                FrameContext &aContext,
-                                                                Child &       aChild)
+inline Error DataPollHandler::Callbacks::PrepareFrameForChild(Mac::TxFrame &aFrame,
+                                                              FrameContext &aContext,
+                                                              Child &       aChild)
 {
     return Get<IndirectSender>().PrepareFrameForChild(aFrame, aContext, aChild);
 }
 
 inline void DataPollHandler::Callbacks::HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                                                const FrameContext &aContext,
-                                                               otError             aError,
+                                                               Error               aError,
                                                                Child &             aChild)
 {
     Get<IndirectSender>().HandleSentFrameToChild(aFrame, aContext, aError, aChild);
@@ -183,7 +183,7 @@ Mac::TxFrame *DataPollHandler::HandleFrameRequest(Mac::TxFrames &aTxFrames)
     frame = &aTxFrames.GetTxFrame();
 #endif
 
-    VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mIndirectTxChild) == OT_ERROR_NONE,
+    VerifyOrExit(mCallbacks.PrepareFrameForChild(*frame, mFrameContext, *mIndirectTxChild) == kErrorNone,
                  frame = nullptr);
 
     if (mIndirectTxChild->GetIndirectTxAttempts() > 0)
@@ -210,7 +210,7 @@ exit:
     return frame;
 }
 
-void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError)
+void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 {
     Child *child = mIndirectTxChild;
 
@@ -223,7 +223,7 @@ exit:
     ProcessPendingPolls();
 }
 
-void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild)
+void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild)
 {
     if (aChild.IsFramePurgePending())
     {
@@ -236,12 +236,12 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 
     switch (aError)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
         aChild.ResetIndirectTxAttempts();
         aChild.SetFrameReplacePending(false);
         break;
 
-    case OT_ERROR_NO_ACK:
+    case kErrorNoAck:
         aChild.IncrementIndirectTxAttempts();
 
         otLogInfoMac("Indirect tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(),
@@ -249,8 +249,8 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, otError aError
 
         OT_FALL_THROUGH;
 
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-    case OT_ERROR_ABORT:
+    case kErrorChannelAccessFailure:
+    case kErrorAbort:
 
         if (aChild.IsFrameReplacePending())
         {

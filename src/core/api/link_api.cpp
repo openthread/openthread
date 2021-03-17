@@ -63,7 +63,7 @@ uint8_t otLinkGetChannel(otInstance *aInstance)
 
 otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
-    otError   error;
+    Error     error;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
@@ -74,7 +74,7 @@ otError otLinkSetChannel(otInstance *aInstance, uint8_t aChannel)
     }
 #endif
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     SuccessOrExit(error = instance.Get<Mac::Mac>().SetPanChannel(aChannel));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -93,10 +93,10 @@ uint32_t otLinkGetSupportedChannelMask(otInstance *aInstance)
 
 otError otLinkSetSupportedChannelMask(otInstance *aInstance, uint32_t aChannelMask)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetSupportedChannelMask(static_cast<Mac::ChannelMask>(aChannelMask));
 
@@ -113,11 +113,11 @@ const otExtAddress *otLinkGetExtendedAddress(otInstance *aInstance)
 
 otError otLinkSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddress)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     OT_ASSERT(aExtAddress != nullptr);
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetExtAddress(*static_cast<const Mac::ExtAddress *>(aExtAddress));
 
@@ -143,10 +143,10 @@ otPanId otLinkGetPanId(otInstance *aInstance)
 
 otError otLinkSetPanId(otInstance *aInstance, otPanId aPanId)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetPanId(aPanId);
     instance.Get<MeshCoP::ActiveDataset>().Clear();
@@ -378,11 +378,11 @@ bool otLinkIsPromiscuous(otInstance *aInstance)
 
 otError otLinkSetPromiscuous(otInstance *aInstance, bool aPromiscuous)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     // cannot enable IEEE 802.15.4 promiscuous mode if the Thread interface is enabled
-    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetPromiscuous(aPromiscuous);
 
@@ -392,11 +392,11 @@ exit:
 
 otError otLinkSetEnabled(otInstance *aInstance, bool aEnable)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     // cannot disable the link layer if the Thread interface is enabled
-    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!instance.Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
 
     instance.Get<Mac::Mac>().SetEnabled(aEnable);
 
@@ -490,10 +490,10 @@ uint8_t otLinkCslGetChannel(otInstance *aInstance)
 
 otError otLinkCslSetChannel(otInstance *aInstance, uint8_t aChannel)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Radio::IsCslChannelValid(aChannel), error = kErrorInvalidArgs);
 
     instance.Get<Mac::Mac>().SetCslChannel(aChannel);
 
@@ -508,10 +508,10 @@ uint16_t otLinkCslGetPeriod(otInstance *aInstance)
 
 otError otLinkCslSetPeriod(otInstance *aInstance, uint16_t aPeriod)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit((aPeriod == 0 || kMinCslPeriod <= aPeriod), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit((aPeriod == 0 || kMinCslPeriod <= aPeriod), error = kErrorInvalidArgs);
     instance.Get<Mac::Mac>().SetCslPeriod(aPeriod);
 
 exit:
@@ -525,10 +525,10 @@ uint32_t otLinkCslGetTimeout(otInstance *aInstance)
 
 otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(kMaxCslTimeout >= aTimeout, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
     instance.Get<Mac::Mac>().SetCslTimeout(aTimeout);
 
 exit:

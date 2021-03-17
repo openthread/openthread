@@ -123,11 +123,11 @@ public:
      *
      * @param[in]  aIid        A reference to the Interface Identifier to set.
      *
-     * @retval OT_ERROR_NONE           Successfully set the Interface Identifier.
-     * @retval OT_ERROR_INVALID_ARGS   The specified Interface Identifier is reserved.
+     * @retval kErrorNone          Successfully set the Interface Identifier.
+     * @retval kErrorInvalidArgs   The specified Interface Identifier is reserved.
      *
      */
-    otError SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
+    Error SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
 
     /**
      * This method clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
@@ -178,8 +178,8 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    otError GenerateDomainUnicastAddressIid(void);
-    otError Store(void);
+    Error GenerateDomainUnicastAddressIid(void);
+    Error Store(void);
 
     void AddDomainUnicastAddress(void);
     void RemoveDomainUnicastAddress(void);
@@ -198,16 +198,13 @@ private:
 
     void UpdateTimeTickerRegistration(void);
 
-    static void HandleDuaResponse(void *               aContext,
-                                  otMessage *          aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult)
+    static void HandleDuaResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
     {
         static_cast<DuaManager *>(aContext)->HandleDuaResponse(
             *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
     }
 
-    void HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, otError aResult);
+    void HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult);
 
     static void HandleDuaNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -215,8 +212,8 @@ private:
             *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
 
-    void    HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError ProcessDuaResponse(Coap::Message &aMessage);
+    void  HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error ProcessDuaResponse(Coap::Message &aMessage);
 
     void PerformNextRegistration(void);
     void UpdateReregistrationDelay(void);

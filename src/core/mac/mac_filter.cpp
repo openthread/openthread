@@ -83,14 +83,14 @@ exit:
     return rval;
 }
 
-otError Filter::AddAddress(const ExtAddress &aExtAddress)
+Error Filter::AddAddress(const ExtAddress &aExtAddress)
 {
-    otError      error = OT_ERROR_NONE;
+    Error        error = kErrorNone;
     FilterEntry *entry = FindEntry(aExtAddress);
 
     if (entry == nullptr)
     {
-        VerifyOrExit((entry = FindAvailableEntry()) != nullptr, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit((entry = FindAvailableEntry()) != nullptr, error = kErrorNoBufs);
         entry->mExtAddress = aExtAddress;
     }
 
@@ -118,9 +118,9 @@ void Filter::ClearAddresses(void)
     }
 }
 
-otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
+Error Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     for (; aIterator < OT_ARRAY_LENGTH(mFilterEntries); aIterator++)
     {
@@ -130,7 +130,7 @@ otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
         {
             aEntry.mExtAddress = entry.mExtAddress;
             aEntry.mRssIn      = entry.mRssIn;
-            error              = OT_ERROR_NONE;
+            error              = kErrorNone;
             aIterator++;
             break;
         }
@@ -139,15 +139,15 @@ otError Filter::GetNextAddress(Iterator &aIterator, Entry &aEntry) const
     return error;
 }
 
-otError Filter::AddRssIn(const ExtAddress &aExtAddress, int8_t aRss)
+Error Filter::AddRssIn(const ExtAddress &aExtAddress, int8_t aRss)
 {
-    otError      error = OT_ERROR_NONE;
+    Error        error = kErrorNone;
     FilterEntry *entry = FindEntry(aExtAddress);
 
     if (entry == nullptr)
     {
         entry = FindAvailableEntry();
-        VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(entry != nullptr, error = kErrorNoBufs);
 
         entry->mExtAddress = aExtAddress;
     }
@@ -180,9 +180,9 @@ void Filter::ClearAllRssIn(void)
     mDefaultRssIn = kFixedRssDisabled;
 }
 
-otError Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
+Error Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     for (; aIterator < OT_ARRAY_LENGTH(mFilterEntries); aIterator++)
     {
@@ -192,7 +192,7 @@ otError Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
         {
             aEntry.mExtAddress = entry.mExtAddress;
             aEntry.mRssIn      = entry.mRssIn;
-            error              = OT_ERROR_NONE;
+            error              = kErrorNone;
             aIterator++;
             ExitNow();
         }
@@ -203,7 +203,7 @@ otError Filter::GetNextRssIn(Iterator &aIterator, Entry &aEntry)
     {
         static_cast<ExtAddress &>(aEntry.mExtAddress).Fill(0xff);
         aEntry.mRssIn = mDefaultRssIn;
-        error         = OT_ERROR_NONE;
+        error         = kErrorNone;
         aIterator++;
     }
 
@@ -211,9 +211,9 @@ exit:
     return error;
 }
 
-otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
+Error Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
 {
-    otError      error = OT_ERROR_NONE;
+    Error        error = kErrorNone;
     FilterEntry *entry = FindEntry(aExtAddress);
     bool         isInFilterList;
 
@@ -231,11 +231,11 @@ otError Filter::Apply(const ExtAddress &aExtAddress, int8_t &aRss)
         break;
 
     case kModeAllowlist:
-        VerifyOrExit(isInFilterList, error = OT_ERROR_ADDRESS_FILTERED);
+        VerifyOrExit(isInFilterList, error = kErrorAddressFiltered);
         break;
 
     case kModeDenylist:
-        VerifyOrExit(!isInFilterList, error = OT_ERROR_ADDRESS_FILTERED);
+        VerifyOrExit(!isInFilterList, error = kErrorAddressFiltered);
         break;
     }
 

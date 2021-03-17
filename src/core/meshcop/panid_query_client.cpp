@@ -57,19 +57,19 @@ PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     Get<Tmf::TmfAgent>().AddResource(mPanIdQuery);
 }
 
-otError PanIdQueryClient::SendQuery(uint16_t                            aPanId,
-                                    uint32_t                            aChannelMask,
-                                    const Ip6::Address &                aAddress,
-                                    otCommissionerPanIdConflictCallback aCallback,
-                                    void *                              aContext)
+Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
+                                  uint32_t                            aChannelMask,
+                                  const Ip6::Address &                aAddress,
+                                  otCommissionerPanIdConflictCallback aCallback,
+                                  void *                              aContext)
 {
-    otError                 error = OT_ERROR_NONE;
+    Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message = nullptr;
 
-    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kPanIdQuery));
     SuccessOrExit(error = message->SetPayloadMarker());

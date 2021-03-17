@@ -151,11 +151,11 @@ public:
      *
      * @param[in]  aMessage  The IPv6 datagram.
      *
-     * @retval OT_ERROR_NONE   Successfully read the IPv6 header.
-     * @retval OT_ERROR_PARSE  Malformed IPv6 header.
+     * @retval kErrorNone   Successfully read the IPv6 header.
+     * @retval kErrorParse  Malformed IPv6 header.
      *
      */
-    otError Init(const Message &aMessage);
+    Error Init(const Message &aMessage);
 
     /**
      * This method indicates whether or not the header appears to be well-formed.

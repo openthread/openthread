@@ -58,7 +58,7 @@ RandomManager::CryptoCtrDrbg RandomManager::sCtrDrbg;
 RandomManager::RandomManager(void)
 {
     uint32_t seed;
-    otError  error;
+    Error    error;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -71,10 +71,10 @@ RandomManager::RandomManager(void)
     sCtrDrbg.Init();
 
     error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 #else
     error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 #endif
 
     sPrng.Init(seed);
@@ -211,7 +211,7 @@ void RandomManager::CryptoCtrDrbg::Deinit(void)
     mbedtls_ctr_drbg_free(&mCtrDrbg);
 }
 
-otError RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+Error RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSize)
 {
     return ot::Crypto::MbedTls::MapError(
         mbedtls_ctr_drbg_random(&mCtrDrbg, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize)));

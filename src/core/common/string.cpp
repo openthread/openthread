@@ -65,10 +65,10 @@ const char *StringFind(const char *aString, char aChar)
     return ret;
 }
 
-otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
+Error StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
 {
-    otError error = OT_ERROR_NONE;
-    int     len;
+    Error error = kErrorNone;
+    int   len;
 
     len = vsnprintf(aBuffer + aLength, aSize - aLength, aFormat, aArgs);
 
@@ -76,12 +76,12 @@ otError StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, cons
     {
         aLength    = 0;
         aBuffer[0] = 0;
-        error      = OT_ERROR_INVALID_ARGS;
+        error      = kErrorInvalidArgs;
     }
     else if (len >= aSize - aLength)
     {
         aLength = aSize - 1;
-        error   = OT_ERROR_NO_BUFS;
+        error   = kErrorNoBufs;
     }
     else
     {

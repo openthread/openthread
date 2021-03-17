@@ -81,11 +81,11 @@ exit:
 
 void AnnounceSenderBase::HandleTimer(void)
 {
-    otError error;
+    Error error;
 
     error = mChannelMask.GetNextChannel(mChannel);
 
-    if (error == OT_ERROR_NOT_FOUND)
+    if (error == kErrorNotFound)
     {
         if (mCount != 0)
         {
@@ -97,7 +97,7 @@ void AnnounceSenderBase::HandleTimer(void)
         error    = mChannelMask.GetNextChannel(mChannel);
     }
 
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 
     Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
@@ -150,7 +150,7 @@ void AnnounceSender::CheckState(void)
         ExitNow();
     }
 
-    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
+    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == kErrorNone, Stop());
 
     period = interval / channelMask.GetNumberOfChannels();
 

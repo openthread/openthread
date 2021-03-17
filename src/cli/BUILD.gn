@@ -58,11 +58,6 @@ openthread_cli_sources = [
 
 config("cli_config") {
   defines = []
-  if (openthread_posix) {
-    defines += ["OPENTHREAD_POSIX=1"]
-  } else {
-    defines += ["OPENTHREAD_POSIX=0"]
-  }
 }
 
 static_library("libopenthread-cli-ftd") {

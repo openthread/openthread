@@ -367,7 +367,7 @@ private:
     otError ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessEui64(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     otError ProcessExit(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessLog(uint8_t aArgsLength, char *aArgs[]);
@@ -678,7 +678,7 @@ private:
         {"eidcache", &Interpreter::ProcessEidCache},
 #endif
         {"eui64", &Interpreter::ProcessEui64},
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
         {"exit", &Interpreter::ProcessExit},
 #endif
         {"extaddr", &Interpreter::ProcessExtAddress},

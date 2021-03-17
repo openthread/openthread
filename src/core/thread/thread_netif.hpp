@@ -161,10 +161,10 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully submitted the message to the interface.
+     * @retval kErrorNone  Successfully submitted the message to the interface.
      *
      */
-    otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    Error SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -173,11 +173,11 @@ public:
      * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  A pointer where the number of prefix match bits for the chosen route is stored.
      *
-     * @retval OT_ERROR_NONE      Successfully found a route.
-     * @retval OT_ERROR_NO_ROUTE  Could not find a valid route.
+     * @retval kErrorNone      Successfully found a route.
+     * @retval kErrorNoRoute   Could not find a valid route.
      *
      */
-    otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
      * This method indicates whether @p aAddress matches an on-mesh prefix.

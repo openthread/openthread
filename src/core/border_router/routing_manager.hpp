@@ -47,15 +47,16 @@
 #error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE."
 #endif
 
-#include <openthread/error.h>
 #include <openthread/netdata.h>
 #include <openthread/platform/infra_if.h>
 
 #include "border_router/router_advertisement.hpp"
+#include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "net/ip6.hpp"
+#include "thread/network_data.hpp"
 
 namespace ot {
 
@@ -92,11 +93,11 @@ public:
      * @param[in]  aInfraIfLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
      *                                       interface. NULL if the IPv6 link-local address is missing.
      *
-     * @retval  OT_ERROR_NONE          Successfully started the routing manager.
-     * @retval  OT_ERROR_INVALID_ARGS  The index of the infra interface is not valid.
+     * @retval  kErrorNone          Successfully started the routing manager.
+     * @retval  kErrorInvalidArgs   The index of the infra interface is not valid.
      *
      */
-    otError Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress);
+    Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress);
 
     /**
      * This method enables/disables the Border Routing Manager.
@@ -105,11 +106,11 @@ public:
      *
      * @param[in]  aEnabled   A boolean to enable/disable the Border Routing Manager.
      *
-     * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
-     * @retval  OT_ERROR_NONE           Successfully enabled/disabled the Border Routing Manager.
+     * @retval  kErrorInvalidState   The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone           Successfully enabled/disabled the Border Routing Manager.
      *
      */
-    otError SetEnabled(bool aEnabled);
+    Error SetEnabled(bool aEnabled);
 
     /**
      * This method receives an ICMPv6 message on the infrastructure interface.
@@ -136,14 +137,14 @@ public:
      * @param[in]  aLinkLocalAddress  A pointer to the IPv6 link local address of the infrastructure
      *                                interface. NULL if the IPv6 link local address is lost.
      *
-     * @retval  OT_ERROR_NONE           Successfully updated the infra interface status.
-     * @retval  OT_ERROR_INVALID_STATE  The Routing Manager is not initialized.
-     * @retval  OT_ERROR_INVALID_ARGS   The @p aInfraIfIndex doesn't match the infra interface the
-     *                                  Routing Manager are initialized with, or the @p aLinkLocalAddress
-     *                                  is not a valid IPv6 link-local address.
+     * @retval  kErrorNone          Successfully updated the infra interface status.
+     * @retval  kErrorInvalidState  The Routing Manager is not initialized.
+     * @retval  kErrorInvalidArgs   The @p aInfraIfIndex doesn't match the infra interface the Routing Manager are
+     *                              initialized with, or the @p aLinkLocalAddress is not a valid IPv6 link-local
+     *                              address.
      *
      */
-    otError HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning, const Ip6::Address *aLinkLocalAddress);
+    Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning, const Ip6::Address *aLinkLocalAddress);
 
 private:
     enum : uint16_t
@@ -170,6 +171,7 @@ private:
         kMaxRaDelayTime              = 500, // The maximum delay of sending RA after receiving RS. In milliseconds.
         kRtrSolicitationInterval     = 4,   // The interval between Router Solicitations. In seconds.
         kMaxRtrSolicitationDelay     = 1,   // The maximum delay for initial solicitation. In seconds.
+        kMaxRoutingPolicyDelay       = 1,   // The maximum delay for routing policy evaluation. In seconds.
     };
 
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
@@ -191,25 +193,26 @@ private:
         bool        mIsOnLinkPrefix;
     };
 
-    void    EvaluateState(void);
-    void    Start(void);
-    void    Stop(void);
-    void    HandleNotifierEvents(Events aEvents);
-    bool    IsInitialized(void) const { return mInfraIfIndex != 0; }
-    bool    IsEnabled(void) const { return mIsEnabled; }
-    otError LoadOrGenerateRandomOmrPrefix(void);
-    otError LoadOrGenerateRandomOnLinkPrefix(void);
+    void  EvaluateState(void);
+    void  Start(void);
+    void  Stop(void);
+    void  HandleNotifierEvents(Events aEvents);
+    bool  IsInitialized(void) const { return mInfraIfIndex != 0; }
+    bool  IsEnabled(void) const { return mIsEnabled; }
+    Error LoadOrGenerateRandomOmrPrefix(void);
+    Error LoadOrGenerateRandomOnLinkPrefix(void);
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
     void    EvaluateRoutingPolicy(void);
+    void    StartRoutingPolicyEvaluationDelay(void);
     uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum);
-    otError PublishLocalOmrPrefix(void);
+    Error   PublishLocalOmrPrefix(void);
     void    UnpublishLocalOmrPrefix(void);
-    otError AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
+    Error   AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
     void    RemoveExternalRoute(const Ip6::Prefix &aPrefix);
-    void    StartRouterSolicitation(void);
-    otError SendRouterSolicitation(void);
+    void    StartRouterSolicitationDelay(void);
+    Error   SendRouterSolicitation(void);
     void    SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
                                     uint8_t            aNewOmrPrefixNum,
                                     const Ip6::Prefix *aNewOnLinkPrefix);
@@ -223,6 +226,8 @@ private:
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixInvalidTimer(void);
 
+    static void HandleRoutingPolicyTimer(Timer &aTimer);
+
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     bool UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio);
@@ -233,9 +238,11 @@ private:
                              bool               aIsOnLinkPrefix,
                              uint32_t           aLifetime,
                              otRoutePreference  aRoutePreference = OT_ROUTE_PREFERENCE_MED);
+    bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
 
     // Decides the first prefix is numerically smaller than the second one.
     static bool     IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const Ip6::Prefix &aSecondPrefix);
+    static bool     IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
     static bool     IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool     IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
     static bool     ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
@@ -296,6 +303,8 @@ private:
 
     TimerMilli mRouterSolicitTimer;
     uint8_t    mRouterSolicitCount;
+
+    TimerMilli mRoutingPolicyTimer;
 };
 
 } // namespace BorderRouter

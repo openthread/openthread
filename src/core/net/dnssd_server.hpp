@@ -70,11 +70,11 @@ public:
     /**
      * This method starts the DNS-SD server.
      *
-     * @retval OT_ERROR_NONE     Successfully started the DNS-SD server.
-     * @retval OT_ERROR_FAILED   If failed to open or bind the UDP socket.
+     * @retval kErrorNone     Successfully started the DNS-SD server.
+     * @retval kErrorFailed   If failed to open or bind the UDP socket.
      *
      */
-    otError Start(void);
+    Error Start(void);
 
     /**
      * This method stops the DNS-SD server.
@@ -242,16 +242,16 @@ private:
                                      Message &         aResponseMessage,
                                      uint8_t           aResolveKind,
                                      NameCompressInfo &aCompressInfo);
-    static otError   AppendQuestion(const char *      aName,
+    static Error     AppendQuestion(const char *      aName,
                                     const Question &  aQuestion,
                                     Message &         aMessage,
                                     NameCompressInfo &aCompressInfo);
-    static otError   AppendPtrRecord(Message &         aMessage,
+    static Error     AppendPtrRecord(Message &         aMessage,
                                      const char *      aServiceName,
                                      const char *      aInstanceName,
                                      uint32_t          aTtl,
                                      NameCompressInfo &aCompressInfo);
-    static otError   AppendSrvRecord(Message &         aMessage,
+    static Error     AppendSrvRecord(Message &         aMessage,
                                      const char *      aInstanceName,
                                      const char *      aHostName,
                                      uint32_t          aTtl,
@@ -259,17 +259,17 @@ private:
                                      uint16_t          aWeight,
                                      uint16_t          aPort,
                                      NameCompressInfo &aCompressInfo);
-    static otError   AppendAaaaRecord(Message &           aMessage,
+    static Error     AppendAaaaRecord(Message &           aMessage,
                                       const char *        aHostName,
                                       const Ip6::Address &aAddress,
                                       uint32_t            aTtl,
                                       NameCompressInfo &  aCompressInfo);
-    static otError   AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
-    static otError   AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
-    static otError   AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
+    static Error     AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
+    static Error     AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
+    static Error     AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
     static void      IncResourceRecordCount(Header &aHeader, bool aAdditional);
-    static otError   FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
-    static otError   FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
+    static Error     FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
+    static Error     FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Header::Response                   ResolveQuestionBySrp(const char *      aName,
@@ -281,7 +281,7 @@ private:
     const Srp::Server::Host *          GetNextSrpHost(const Srp::Server::Host *aHost);
     static const Srp::Server::Service *GetNextSrpService(const Srp::Server::Host &   aHost,
                                                          const Srp::Server::Service *aService);
-    static otError                     AppendTxtRecord(Message &                   aMessage,
+    static Error                       AppendTxtRecord(Message &                   aMessage,
                                                        const char *                aInstanceName,
                                                        const Srp::Server::Service &aService,
                                                        uint32_t                    aTtl,

@@ -91,11 +91,11 @@ public:
      *
      * @param[in] aPskdString   A pointer to the PSKd C string array.
      *
-     * @retval OT_ERROR_NONE           The PSKd was updated successfully.
-     * @retval OT_ERROR_INVALID_ARGS   The given PSKd C string is not valid.
+     * @retval kErrorNone          The PSKd was updated successfully.
+     * @retval kErrorInvalidArgs   The given PSKd C string is not valid.
      *
      */
-    otError SetFrom(const char *aPskdString);
+    Error SetFrom(const char *aPskdString);
 
     /**
      * This method gets the PSKd as a null terminated C string.
@@ -463,14 +463,14 @@ inline Coap::Message *NewMeshCoPMessage(Coap::CoapBase &aCoap)
  * @param[in]  aExtPanId     The extended PAN ID for PSKc computation.
  * @param[out] aPskc         A reference to a PSKc where the generated PSKc will be placed.
  *
- * @retval OT_ERROR_NONE          Successfully generate PSKc.
- * @retval OT_ERROR_INVALID_ARGS  If the length of passphrase is out of range.
+ * @retval kErrorNone          Successfully generate PSKc.
+ * @retval kErrorInvalidArgs   If the length of passphrase is out of range.
  *
  */
-otError GeneratePskc(const char *              aPassPhrase,
-                     const Mac::NetworkName &  aNetworkName,
-                     const Mac::ExtendedPanId &aExtPanId,
-                     Pskc &                    aPskc);
+Error GeneratePskc(const char *              aPassPhrase,
+                   const Mac::NetworkName &  aNetworkName,
+                   const Mac::ExtendedPanId &aExtPanId,
+                   Pskc &                    aPskc);
 
 /**
  * This function computes the Joiner ID from a factory-assigned IEEE EUI-64.
@@ -487,26 +487,26 @@ void ComputeJoinerId(const Mac::ExtAddress &aEui64, Mac::ExtAddress &aJoinerId);
  * @param[in]   aNetif  A reference to the thread interface.
  * @param[out]  aRloc   Border agent RLOC.
  *
- * @retval OT_ERROR_NONE        Successfully got the Border Agent Rloc.
- * @retval OT_ERROR_NOT_FOUND   Border agent is not available.
+ * @retval kErrorNone       Successfully got the Border Agent Rloc.
+ * @retval kErrorNotFound   Border agent is not available.
  *
  */
-otError GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
+Error GetBorderAgentRloc(ThreadNetif &aNetIf, uint16_t &aRloc);
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
 /**
  * This function emits a log message indicating an error during a MeshCoP action.
  *
- * Note that log message is emitted only if there is an error, i.e. @p aError is not `OT_ERROR_NONE`. The log
+ * Note that log message is emitted only if there is an error, i.e. @p aError is not `kErrorNone`. The log
  * message will have the format "Failed to {aActionText} : {ErrorString}".
  *
  * @param[in] aActionText   A string representing the failed action.
  * @param[in] aError        The error in sending the message.
  *
  */
-void LogError(const char *aActionText, otError aError);
+void LogError(const char *aActionText, Error aError);
 #else
-inline void LogError(const char *, otError)
+inline void LogError(const char *, Error)
 {
 }
 #endif

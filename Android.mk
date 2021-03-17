@@ -45,7 +45,6 @@ OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
     -DOPENTHREAD_FTD=1                                              \
-    -DOPENTHREAD_POSIX=1                                            \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
     $(NULL)
 
@@ -173,6 +172,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
     src/core/api/entropy_api.cpp                            \
+    src/core/api/error_api.cpp                              \
     src/core/api/heap_api.cpp                               \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
@@ -211,6 +211,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
     src/core/common/crc16.cpp                               \
+    src/core/common/error.cpp                               \
     src/core/common/instance.cpp                            \
     src/core/common/logging.cpp                             \
     src/core/common/message.cpp                             \

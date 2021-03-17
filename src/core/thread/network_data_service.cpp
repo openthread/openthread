@@ -45,12 +45,12 @@ namespace Service {
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-otError Manager::AddService(uint8_t     aServiceNumber,
-                            bool        aServerStable,
-                            const void *aServerData,
-                            uint8_t     aServerDataLength)
+Error Manager::AddService(uint8_t     aServiceNumber,
+                          bool        aServerStable,
+                          const void *aServerData,
+                          uint8_t     aServerDataLength)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Get<Local>().AddService(kThreadEnterpriseNumber, &aServiceNumber, sizeof(aServiceNumber),
                                                   aServerStable, reinterpret_cast<const uint8_t *>(aServerData),
@@ -62,9 +62,9 @@ exit:
     return error;
 }
 
-otError Manager::RemoveService(uint8_t aServiceNumber)
+Error Manager::RemoveService(uint8_t aServiceNumber)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Get<Local>().RemoveService(kThreadEnterpriseNumber, &aServiceNumber, sizeof(aServiceNumber)));
     Get<Notifier>().HandleServerDataUpdated();
@@ -75,7 +75,7 @@ exit:
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-otError Manager::GetServiceId(uint8_t aServiceNumber, bool aServerStable, uint8_t &aServiceId) const
+Error Manager::GetServiceId(uint8_t aServiceNumber, bool aServerStable, uint8_t &aServiceId) const
 {
     return Get<Leader>().GetServiceId(kThreadEnterpriseNumber, &aServiceNumber, sizeof(aServiceNumber), aServerStable,
                                       aServiceId);
@@ -96,7 +96,7 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig 
 
     VerifyOrExit(iterator.mServiceTlv != nullptr);
 
-    while (IterateToNextServer(iterator) == OT_ERROR_NONE)
+    while (IterateToNextServer(iterator) == kErrorNone)
     {
         const BackboneRouter::ServerData *serverData;
 
@@ -132,9 +132,9 @@ exit:
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
-otError Manager::GetNextSrpServerInfo(Iterator &aIterator, SrpServer::Info &aInfo) const
+Error Manager::GetNextSrpServerInfo(Iterator &aIterator, SrpServer::Info &aInfo) const
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     if (aIterator.mServiceTlv == nullptr)
     {
@@ -148,7 +148,7 @@ otError Manager::GetNextSrpServerInfo(Iterator &aIterator, SrpServer::Info &aInf
         VerifyOrExit(aIterator.mServerSubTlv != nullptr);
     }
 
-    while ((error = IterateToNextServer(aIterator)) == OT_ERROR_NONE)
+    while ((error = IterateToNextServer(aIterator)) == kErrorNone)
     {
         const SrpServer::ServerData *serverData;
 
@@ -170,7 +170,7 @@ exit:
     return error;
 }
 
-otError Manager::IterateToNextServer(Iterator &aIterator) const
+Error Manager::IterateToNextServer(Iterator &aIterator) const
 {
     const NetworkDataTlv *start;
 
@@ -178,7 +178,7 @@ otError Manager::IterateToNextServer(Iterator &aIterator) const
         (aIterator.mServerSubTlv != nullptr) ? aIterator.mServerSubTlv->GetNext() : aIterator.mServiceTlv->GetSubTlvs();
     aIterator.mServerSubTlv = NetworkData::FindTlv<ServerTlv>(start, aIterator.mServiceTlv->GetNext());
 
-    return (aIterator.mServerSubTlv != nullptr) ? OT_ERROR_NONE : OT_ERROR_NOT_FOUND;
+    return (aIterator.mServerSubTlv != nullptr) ? kErrorNone : kErrorNotFound;
 }
 
 } // namespace Service

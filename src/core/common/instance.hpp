@@ -39,13 +39,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/error.h>
 #include <openthread/heap.h>
 #include <openthread/platform/logging.h>
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/error.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
@@ -238,11 +238,11 @@ public:
      *
      * Erase is successful/allowed only if the device is in `disabled` state/role.
      *
-     * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
-     * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
+     * @retval kErrorNone          All persistent info/state was erased successfully.
+     * @retval kErrorInvalidState  Device is not in `disabled` state/role.
      *
      */
-    otError ErasePersistentInfo(void);
+    Error ErasePersistentInfo(void);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static void  HeapFree(void *aPointer) { otPlatFree(aPointer); }

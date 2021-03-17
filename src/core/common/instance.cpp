@@ -214,11 +214,11 @@ void Instance::FactoryReset(void)
     otPlatReset(this);
 }
 
-otError Instance::ErasePersistentInfo(void)
+Error Instance::ErasePersistentInfo(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
     Get<Settings>().Wipe();
 
 exit:

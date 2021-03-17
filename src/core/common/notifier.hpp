@@ -42,6 +42,7 @@
 #include <openthread/instance.h>
 #include <openthread/platform/toolchain.h>
 
+#include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/tasklet.hpp"
@@ -210,12 +211,12 @@ public:
      * @param[in]  aCallback     A pointer to the handler function that is called to notify of the changes.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE     Successfully registered the callback.
-     * @retval OT_ERROR_ALREADY  The callback was already registered.
-     * @retval OT_ERROR_NO_BUFS  Could not add the callback due to resource constraints.
+     * @retval kErrorNone     Successfully registered the callback.
+     * @retval kErrorAlready  The callback was already registered.
+     * @retval kErrorNoBufs   Could not add the callback due to resource constraints.
      *
      */
-    otError RegisterCallback(otStateChangedCallback aCallback, void *aContext);
+    Error RegisterCallback(otStateChangedCallback aCallback, void *aContext);
 
     /**
      * This method removes/unregisters a previously registered `otStateChangedCallback` handler.
@@ -264,7 +265,7 @@ public:
     /**
      * This template method updates a variable of a type `Type` with a new value and signals the given event.
      *
-     * If the variable is already set to the same value, this method returns `OT_ERROR_ALREADY` and the event is
+     * If the variable is already set to the same value, this method returns `kErrorAlready` and the event is
      * signaled using `SignalIfFirst()` (i.e., signal is scheduled only if event has not been signaled before).
      *
      * The template `Type` should support comparison operator `==` and assignment operator `=`.
@@ -273,18 +274,18 @@ public:
      * @param[in]    aNewValue    The new value.
      * @param[in]    aEvent       The event to signal.
      *
-     * @retval OT_ERROR_NONE      The variable was update successfully and @p aEvent was signaled.
-     * @retval OT_ERROR_ALREADY   The variable was already set to the same value.
+     * @retval kErrorNone      The variable was update successfully and @p aEvent was signaled.
+     * @retval kErrorAlready   The variable was already set to the same value.
      *
      */
-    template <typename Type> otError Update(Type &aVariable, const Type &aNewValue, Event aEvent)
+    template <typename Type> Error Update(Type &aVariable, const Type &aNewValue, Event aEvent)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
 
         if (aVariable == aNewValue)
         {
             SignalIfFirst(aEvent);
-            error = OT_ERROR_ALREADY;
+            error = kErrorAlready;
         }
         else
         {

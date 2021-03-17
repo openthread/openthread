@@ -80,12 +80,12 @@ public:
      *                        raw link-layer.
      *
      *
-     * @retval OT_ERROR_INVALID_STATE   Thread stack is enabled.
-     * @retval OT_ERROR_FAILED          The radio could not be enabled/disabled.
-     * @retval OT_ERROR_NONE            Successfully enabled/disabled raw link.
+     * @retval kErrorInvalidState    Thread stack is enabled.
+     * @retval kErrorFailed          The radio could not be enabled/disabled.
+     * @retval kErrorNone            Successfully enabled/disabled raw link.
      *
      */
-    otError SetReceiveDone(otLinkRawReceiveDone aCallback);
+    Error SetReceiveDone(otLinkRawReceiveDone aCallback);
 
     /**
      * This method returns the capabilities of the raw link-layer.
@@ -98,22 +98,22 @@ public:
     /**
      * This method starts a (recurring) Receive on the link-layer.
      *
-     * @retval OT_ERROR_NONE             Successfully transitioned to Receive.
-     * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
+     * @retval kErrorNone            Successfully transitioned to Receive.
+     * @retval kErrorInvalidState    The radio was disabled or transmitting.
      *
      */
-    otError Receive(void);
+    Error Receive(void);
 
     /**
      * This method invokes the mReceiveDoneCallback, if set.
      *
      * @param[in]  aFrame    A pointer to the received frame or nullptr if the receive operation failed.
-     * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
-     *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
-     *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
+     * @param[in]  aError    kErrorNone when successfully received a frame,
+     *                       kErrorAbort when reception was aborted and a frame was not received,
+     *                       kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
      *
      */
-    void InvokeReceiveDone(RxFrame *aFrame, otError aError);
+    void InvokeReceiveDone(RxFrame *aFrame, Error aError);
 
     /**
      * This method gets the radio transmit frame.
@@ -126,28 +126,28 @@ public:
     /**
      * This method starts a (single) Transmit on the link-layer.
      *
-     * @note The callback @p aCallback will not be called if this call does not return OT_ERROR_NONE.
+     * @note The callback @p aCallback will not be called if this call does not return kErrorNone.
      *
      * @param[in]  aCallback            A pointer to a function called on completion of the transmission.
      *
-     * @retval OT_ERROR_NONE            Successfully transitioned to Transmit.
-     * @retval OT_ERROR_INVALID_STATE   The radio was not in the Receive state.
+     * @retval kErrorNone           Successfully transitioned to Transmit.
+     * @retval kErrorInvalidState   The radio was not in the Receive state.
      *
      */
-    otError Transmit(otLinkRawTransmitDone aCallback);
+    Error Transmit(otLinkRawTransmitDone aCallback);
 
     /**
      * This method invokes the mTransmitDoneCallback, if set.
      *
      * @param[in]  aFrame     The transmitted frame.
      * @param[in]  aAckFrame  A pointer to the ACK frame, nullptr if no ACK was received.
-     * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
-     *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-     *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-     *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+     * @param[in]  aError     kErrorNone when the frame was transmitted,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+     *                        kErrorAbort when transmission was aborted for other reasons.
      *
      */
-    void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
+    void InvokeTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
     /**
      * This method starts a (single) Energy Scan on the link-layer.
@@ -156,12 +156,12 @@ public:
      * @param[in]  aScanDuration    The duration, in milliseconds, for the channel to be scanned.
      * @param[in]  aCallback        A pointer to a function called on completion of a scanned channel.
      *
-     * @retval OT_ERROR_NONE             Successfully started scanning the channel.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The radio doesn't support energy scanning.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            Successfully started scanning the channel.
+     * @retval kErrorNotImplemented  The radio doesn't support energy scanning.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
-    otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
+    Error EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration, otLinkRawEnergyScanDone aCallback);
 
     /**
      * This method invokes the mEnergyScanDoneCallback, if set.
@@ -184,11 +184,11 @@ public:
      *
      * @param[in]   aShortAddress   The short address.
      *
-     * @retval OT_ERROR_NONE             If successful.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
-    otError SetShortAddress(ShortAddress aShortAddress);
+    Error SetShortAddress(ShortAddress aShortAddress);
 
     /**
      * This function returns PANID.
@@ -203,11 +203,11 @@ public:
      *
      * @param[in]   aPanId          The PANID.
      *
-     * @retval OT_ERROR_NONE             If successful.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
-    otError SetPanId(PanId aPanId);
+    Error SetPanId(PanId aPanId);
 
     /**
      * This method gets the current receiving channel.
@@ -223,7 +223,7 @@ public:
      * @param[in]  aChannel     The channel to use for receiving.
      *
      */
-    otError SetChannel(uint8_t aChannel);
+    Error SetChannel(uint8_t aChannel);
 
     /**
      * This function returns the extended address.
@@ -238,11 +238,11 @@ public:
      *
      * @param[in]   aExtAddress     The extended address.
      *
-     * @retval OT_ERROR_NONE             If successful.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
-    otError SetExtAddress(const ExtAddress &aExtAddress);
+    Error SetExtAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method updates MAC keys and key index.
@@ -253,26 +253,22 @@ public:
      * @param[in]   aCurrKey          The current MAC key.
      * @param[in]   aNextKey          The next MAC key.
      *
-     * @retval OT_ERROR_NONE             If successful.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
-    otError SetMacKey(uint8_t    aKeyIdMode,
-                      uint8_t    aKeyId,
-                      const Key &aPrevKey,
-                      const Key &aCurrKey,
-                      const Key &aNextKey);
+    Error SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
 
     /**
      * This method sets the current MAC frame counter value.
      *
      * @param[in] aMacFrameCounter  The MAC frame counter value.
      *
-     * @retval OT_ERROR_NONE             If successful.
-     * @retval OT_ERROR_INVALID_STATE    If the raw link-layer isn't enabled.
+     * @retval kErrorNone            If successful.
+     * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */
-    otError SetMacFrameCounter(uint32_t aMacFrameCounter);
+    Error SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
      * This method records the status of a frame transmission attempt and is mainly used for logging failures.
@@ -282,10 +278,10 @@ public:
      *
      * @param[in] aFrame      The transmitted frame.
      * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
-     * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
-     *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-     *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-     *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+     * @param[in] aError      kErrorNone when the frame was transmitted successfully,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+     *                        kErrorAbort when transmission was aborted for other reasons.
      * @param[in] aRetryCount Indicates number of transmission retries for this frame.
      * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
@@ -294,11 +290,11 @@ public:
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
                                    const RxFrame *aAckFrame,
-                                   otError        aError,
+                                   Error          aError,
                                    uint8_t        aRetryCount,
                                    bool           aWillRetx);
 #else
-    void    RecordFrameTransmitStatus(const TxFrame &, const RxFrame *, otError, uint8_t, bool) {}
+    void    RecordFrameTransmitStatus(const TxFrame &, const RxFrame *, Error, uint8_t, bool) {}
 #endif
 
 private:

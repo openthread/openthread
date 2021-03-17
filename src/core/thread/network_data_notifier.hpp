@@ -85,8 +85,8 @@ private:
     static void HandleCoapResponse(void *               aContext,
                                    otMessage *          aMessage,
                                    const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void        HandleCoapResponse(otError aResult);
+                                   Error                aResult);
+    void        HandleCoapResponse(Error aResult);
 
     void SynchronizeServerData(void);
 

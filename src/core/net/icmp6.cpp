@@ -57,14 +57,14 @@ Message *Icmp::NewMessage(uint16_t aReserved)
     return Get<Ip6>().NewMessage(sizeof(Header) + aReserved);
 }
 
-otError Icmp::RegisterHandler(Handler &aHandler)
+Error Icmp::RegisterHandler(Handler &aHandler)
 {
     return mHandlers.Add(aHandler);
 }
 
-otError Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier)
+Error Icmp::SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     MessageInfo messageInfoLocal;
     Header      icmpHeader;
 
@@ -85,12 +85,9 @@ exit:
     return error;
 }
 
-otError Icmp::SendError(Header::Type       aType,
-                        Header::Code       aCode,
-                        const MessageInfo &aMessageInfo,
-                        const Message &    aMessage)
+Error Icmp::SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage)
 {
-    otError           error = OT_ERROR_NONE;
+    Error             error = kErrorNone;
     MessageInfo       messageInfoLocal;
     Message *         message = nullptr;
     Header            icmp6Header;
@@ -107,7 +104,7 @@ otError Icmp::SendError(Header::Type       aType,
 
     messageInfoLocal = aMessageInfo;
 
-    VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Ip6>().NewMessage(0, settings)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = message->SetLength(sizeof(icmp6Header) + sizeof(ip6Header)));
 
     message->Write(sizeof(icmp6Header), ip6Header);
@@ -126,10 +123,10 @@ exit:
     return error;
 }
 
-otError Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
+Error Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 {
-    otError error = OT_ERROR_NONE;
-    Header  icmp6Header;
+    Error  error = kErrorNone;
+    Header icmp6Header;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), icmp6Header));
 
@@ -174,9 +171,9 @@ bool Icmp::ShouldHandleEchoRequest(const MessageInfo &aMessageInfo)
     return rval;
 }
 
-otError Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
+Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     Header      icmp6Header;
     Message *   replyMessage = nullptr;
     MessageInfo replyMessageInfo;

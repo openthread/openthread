@@ -148,11 +148,11 @@ public:
      * @param[in]  aHandler       A pointer to a function that is called on receiving an IEEE 802.15.4 Beacon.
      * @param[in]  aContext       A pointer to an arbitrary context (used when invoking `aHandler` callback).
      *
-     * @retval OT_ERROR_NONE  Successfully scheduled the Active Scan request.
-     * @retval OT_ERROR_BUSY  Could not schedule the scan (a scan is ongoing or scheduled).
+     * @retval kErrorNone  Successfully scheduled the Active Scan request.
+     * @retval kErrorBusy  Could not schedule the scan (a scan is ongoing or scheduled).
      *
      */
-    otError ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
+    Error ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext);
 
     /**
      * This method starts an IEEE 802.15.4 Energy Scan.
@@ -163,11 +163,11 @@ public:
      * @param[in]  aHandler          A pointer to a function called to pass on scan result or indicate scan completion.
      * @param[in]  aContext          A pointer to an arbitrary context (used when invoking @p aHandler callback).
      *
-     * @retval OT_ERROR_NONE  Accepted the Energy Scan request.
-     * @retval OT_ERROR_BUSY  Could not start the energy scan.
+     * @retval kErrorNone  Accepted the Energy Scan request.
+     * @retval kErrorBusy  Could not start the energy scan.
      *
      */
-    otError EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
+    Error EnergyScan(uint32_t aScanChannels, uint16_t aScanDuration, EnergyScanHandler aHandler, void *aContext);
 
     /**
      * This method indicates the energy scan for the current channel is complete.
@@ -241,23 +241,23 @@ public:
      *
      * @param[in]  aOobFrame  A pointer to the frame.
      *
-     * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
-     * @retval OT_ERROR_ALREADY        MAC layer is busy sending a previously requested frame.
-     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
-     * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is nullptr.
+     * @retval kErrorNone          Successfully scheduled the frame transmission.
+     * @retval kErrorAlready       MAC layer is busy sending a previously requested frame.
+     * @retval kErrorInvalidState  The MAC layer is not enabled.
+     * @retval kErrorInvalidArgs   The argument @p aOobFrame is nullptr.
      *
      */
-    otError RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame);
+    Error RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame);
 
     /**
      * This method requests transmission of a data poll (MAC Data Request) frame.
      *
-     * @retval OT_ERROR_NONE           Data poll transmission request is scheduled successfully.
-     * @retval OT_ERROR_ALREADY        MAC is busy sending earlier poll transmission request.
-     * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
+     * @retval kErrorNone          Data poll transmission request is scheduled successfully.
+     * @retval kErrorAlready       MAC is busy sending earlier poll transmission request.
+     * @retval kErrorInvalidState  The MAC layer is not enabled.
      *
      */
-    otError RequestDataPollTransmission(void);
+    Error RequestDataPollTransmission(void);
 
     /**
      * This method returns a reference to the IEEE 802.15.4 Extended Address.
@@ -304,11 +304,11 @@ public:
      *
      * @param[in]  aChannel  The IEEE 802.15.4 PAN Channel.
      *
-     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 PAN Channel.
-     * @retval OT_ERROR_INVALID_ARGS   The @p aChannel is not in the supported channel mask.
+     * @retval kErrorNone          Successfully set the IEEE 802.15.4 PAN Channel.
+     * @retval kErrorInvalidArgs   The @p aChannel is not in the supported channel mask.
      *
      */
-    otError SetPanChannel(uint8_t aChannel);
+    Error SetPanChannel(uint8_t aChannel);
 
     /**
      * This method sets the temporary IEEE 802.15.4 radio channel.
@@ -320,11 +320,11 @@ public:
      *
      * @param[in]  aChannel            A IEEE 802.15.4 channel.
      *
-     * @retval OT_ERROR_NONE           Successfully set the temporary channel
-     * @retval OT_ERROR_INVALID_ARGS   The @p aChannel is not in the supported channel mask.
+     * @retval kErrorNone          Successfully set the temporary channel
+     * @retval kErrorInvalidArgs   The @p aChannel is not in the supported channel mask.
      *
      */
-    otError SetTemporaryChannel(uint8_t aChannel);
+    Error SetTemporaryChannel(uint8_t aChannel);
 
     /**
      * This method clears the use of a previously set temporary channel and adopts the PAN channel.
@@ -361,22 +361,22 @@ public:
      *
      * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
      *
-     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
-     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
+     * @retval kErrorInvalidArgs   Given name is too long.
      *
      */
-    otError SetNetworkName(const char *aNameString);
+    Error SetNetworkName(const char *aNameString);
 
     /**
      * This method sets the IEEE 802.15.4 Network Name.
      *
      * @param[in]  aNameData     A name data (pointer to char buffer and length).
      *
-     * @retval OT_ERROR_NONE           Successfully set the IEEE 802.15.4 Network Name.
-     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
+     * @retval kErrorInvalidArgs   Given name is too long.
      *
      */
-    otError SetNetworkName(const NameData &aNameData);
+    Error SetNetworkName(const NameData &aNameData);
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     /**
@@ -392,22 +392,22 @@ public:
      *
      * @param[in]  aNameString   A pointer to a string character array. Must be null terminated.
      *
-     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
-     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     * @retval kErrorNone          Successfully set the Thread Domain Name.
+     * @retval kErrorInvalidArgs   Given name is too long.
      *
      */
-    otError SetDomainName(const char *aNameString);
+    Error SetDomainName(const char *aNameString);
 
     /**
      * This method sets the Thread Domain Name.
      *
      * @param[in]  aNameData     A name data (pointer to char buffer and length).
      *
-     * @retval OT_ERROR_NONE           Successfully set the Thread Domain Name.
-     * @retval OT_ERROR_INVALID_ARGS   Given name is too long.
+     * @retval kErrorNone          Successfully set the Thread Domain Name.
+     * @retval kErrorInvalidArgs   Given name is too long.
      *
      */
-    otError SetDomainName(const NameData &aNameData);
+    Error SetDomainName(const NameData &aNameData);
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
     /**
@@ -483,11 +483,11 @@ public:
      * This method is called to handle a received frame.
      *
      * @param[in]  aFrame  A pointer to the received frame, or nullptr if the receive operation was aborted.
-     * @param[in]  aError  OT_ERROR_NONE when successfully received a frame,
-     *                     OT_ERROR_ABORT when reception was aborted and a frame was not received.
+     * @param[in]  aError  kErrorNone when successfully received a frame,
+     *                     kErrorAbort when reception was aborted and a frame was not received.
      *
      */
-    void HandleReceivedFrame(RxFrame *aFrame, otError aError);
+    void HandleReceivedFrame(RxFrame *aFrame, Error aError);
 
     /**
      * This method records CCA status (success/failure) for a frame transmission attempt.
@@ -506,10 +506,10 @@ public:
      *
      * @param[in] aFrame      The transmitted frame.
      * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
-     * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
-     *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-     *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-     *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+     * @param[in] aError      kErrorNone when the frame was transmitted successfully,
+     *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+     *                        kErrorAbort when transmission was aborted for other reasons.
      * @param[in] aRetryCount Indicates number of transmission retries for this frame.
      * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
      *                        when there was an error in transmission (i.e., `aError` is not NONE).
@@ -517,7 +517,7 @@ public:
      */
     void RecordFrameTransmitStatus(const TxFrame &aFrame,
                                    const RxFrame *aAckFrame,
-                                   otError        aError,
+                                   Error          aError,
                                    uint8_t        aRetryCount,
                                    bool           aWillRetx);
 
@@ -526,13 +526,13 @@ public:
      *
      * @param[in]  aFrame      The frame that was transmitted.
      * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
-     * @param[in]  aError      OT_ERROR_NONE when the frame was transmitted successfully,
-     *                         OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-     *                         OT_ERROR_CHANNEL_ACCESS_FAILURE when the tx failed due to activity on the channel,
-     *                         OT_ERROR_ABORT when transmission was aborted for other reasons.
+     * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
+     *                         kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
+     *                         kErrorAbort when transmission was aborted for other reasons.
      *
      */
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
+    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
     /**
      * This method returns if an active scan is in progress.
@@ -799,10 +799,10 @@ private:
     };
 #endif // OPENTHREAD_CONFIG_MAC_RETRY_SUCCESS_HISTOGRAM_ENABLE
 
-    otError ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
-    void    ProcessTransmitSecurity(TxFrame &aFrame);
+    Error ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor);
+    void  ProcessTransmitSecurity(TxFrame &aFrame);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    otError ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
+    Error ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame);
 #endif
 
     void     UpdateIdleMode(void);
@@ -821,16 +821,16 @@ private:
     void        HandleTimer(void);
     static void HandleOperationTask(Tasklet &aTasklet);
 
-    void    Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
-    otError UpdateScanChannel(void);
-    void    PerformActiveScan(void);
-    void    ReportActiveScanResult(const RxFrame *aBeaconFrame);
-    otError ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
-    void    PerformEnergyScan(void);
-    void    ReportEnergyScanResult(int8_t aRssi);
+    void  Scan(Operation aScanOperation, uint32_t aScanChannels, uint16_t aScanDuration);
+    Error UpdateScanChannel(void);
+    void  PerformActiveScan(void);
+    void  ReportActiveScanResult(const RxFrame *aBeaconFrame);
+    Error ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
+    void  PerformEnergyScan(void);
+    void  ReportEnergyScanResult(int8_t aRssi);
 
-    void LogFrameRxFailure(const RxFrame *aFrame, otError aError) const;
-    void LogFrameTxFailure(const TxFrame &aFrame, otError aError, uint8_t aRetryCount, bool aWillRetx) const;
+    void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
+    void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;
     void LogBeacon(const char *aActionText, const BeaconPayload &aBeaconPayload) const;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -927,7 +927,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioTypes mTxPendingRadioLinks;
-    otError    mTxError;
+    Error      mTxError;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE

@@ -78,7 +78,7 @@ public:
      * This method updates DHCP Agents and DHCP Alocs.
      *
      */
-    otError UpdateService(void);
+    Error UpdateService(void);
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -190,16 +190,16 @@ private:
 
     void AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext);
 
-    otError AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
-    otError AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
-    otError AppendServerIdentifier(Message &aMessage);
-    otError AppendIaNa(Message &aMessage, IaNa &aIaNa);
-    otError AppendStatusCode(Message &aMessage, Status aStatusCode);
-    otError AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId);
-    otError AppendRapidCommit(Message &aMessage);
-    otError AppendVendorSpecificInformation(Message &aMessage);
+    Error AppendHeader(Message &aMessage, const TransactionId &aTransactionId);
+    Error AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId);
+    Error AppendServerIdentifier(Message &aMessage);
+    Error AppendIaNa(Message &aMessage, IaNa &aIaNa);
+    Error AppendStatusCode(Message &aMessage, Status aStatusCode);
+    Error AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId);
+    Error AppendRapidCommit(Message &aMessage);
+    Error AppendVendorSpecificInformation(Message &aMessage);
 
-    otError AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId);
+    Error AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -207,15 +207,15 @@ private:
     void ProcessSolicit(Message &aMessage, const Ip6::Address &aDst, const TransactionId &aTransactionId);
 
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
-    otError  ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
-    otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
-    otError  ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
+    Error    ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId);
+    Error    ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa);
+    Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    Error    ProcessElapsedTime(Message &aMessage, uint16_t aOffset);
 
-    otError SendReply(const Ip6::Address & aDst,
-                      const TransactionId &aTransactionId,
-                      ClientIdentifier &   aClientId,
-                      IaNa &               aIaNa);
+    Error SendReply(const Ip6::Address & aDst,
+                    const TransactionId &aTransactionId,
+                    ClientIdentifier &   aClientId,
+                    IaNa &               aIaNa);
 
     Ip6::Udp::Socket mSocket;
 

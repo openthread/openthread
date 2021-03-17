@@ -86,25 +86,25 @@ public:
      * @param[in]  aJoinerCallback   A pointer to a function that is called when a joiner event occurs.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE           Successfully started the Commissioner service.
-     * @retval OT_ERROR_ALREADY        Commissioner is already started.
-     * @retval OT_ERROR_INVALID_STATE  Device is not currently attached to a network.
+     * @retval kErrorNone           Successfully started the Commissioner service.
+     * @retval kErrorAlready        Commissioner is already started.
+     * @retval kErrorInvalidState   Device is not currently attached to a network.
      *
      */
-    otError Start(otCommissionerStateCallback  aStateCallback,
-                  otCommissionerJoinerCallback aJoinerCallback,
-                  void *                       aCallbackContext);
+    Error Start(otCommissionerStateCallback  aStateCallback,
+                otCommissionerJoinerCallback aJoinerCallback,
+                void *                       aCallbackContext);
 
     /**
      * This method stops the Commissioner service.
      *
      * @param[in]  aResign      Whether send LEAD_KA.req to resign as Commissioner
      *
-     * @retval OT_ERROR_NONE     Successfully stopped the Commissioner service.
-     * @retval OT_ERROR_ALREADY  Commissioner is already stopped.
+     * @retval kErrorNone     Successfully stopped the Commissioner service.
+     * @retval kErrorAlready  Commissioner is already stopped.
      *
      */
-    otError Stop(bool aResign);
+    Error Stop(bool aResign);
 
     /**
      * This method clears all Joiner entries.
@@ -118,12 +118,12 @@ public:
      * @param[in]  aPskd         A pointer to the PSKd.
      * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
-     * @retval OT_ERROR_NONE           Successfully added the Joiner.
-     * @retval OT_ERROR_NO_BUFS        No buffers available to add the Joiner.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Successfully added the Joiner.
+     * @retval kErrorNoBufs        No buffers available to add the Joiner.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError AddJoinerAny(const char *aPskd, uint32_t aTimeout) { return AddJoiner(nullptr, nullptr, aPskd, aTimeout); }
+    Error AddJoinerAny(const char *aPskd, uint32_t aTimeout) { return AddJoiner(nullptr, nullptr, aPskd, aTimeout); }
 
     /**
      * This method adds a Joiner entry.
@@ -132,12 +132,12 @@ public:
      * @param[in]  aPskd         A pointer to the PSKd.
      * @param[in]  aTimeout      A time after which a Joiner is automatically removed, in seconds.
      *
-     * @retval OT_ERROR_NONE           Successfully added the Joiner.
-     * @retval OT_ERROR_NO_BUFS        No buffers available to add the Joiner.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Successfully added the Joiner.
+     * @retval kErrorNoBufs        No buffers available to add the Joiner.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError AddJoiner(const Mac::ExtAddress &aEui64, const char *aPskd, uint32_t aTimeout)
+    Error AddJoiner(const Mac::ExtAddress &aEui64, const char *aPskd, uint32_t aTimeout)
     {
         return AddJoiner(&aEui64, nullptr, aPskd, aTimeout);
     }
@@ -149,12 +149,12 @@ public:
      * @param[in]  aPskd       A pointer to the PSKd.
      * @param[in]  aTimeout    A time after which a Joiner is automatically removed, in seconds.
      *
-     * @retval OT_ERROR_NONE           Successfully added the Joiner.
-     * @retval OT_ERROR_NO_BUFS        No buffers available to add the Joiner.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Successfully added the Joiner.
+     * @retval kErrorNoBufs        No buffers available to add the Joiner.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError AddJoiner(const JoinerDiscerner &aDiscerner, const char *aPskd, uint32_t aTimeout)
+    Error AddJoiner(const JoinerDiscerner &aDiscerner, const char *aPskd, uint32_t aTimeout)
     {
         return AddJoiner(nullptr, &aDiscerner, aPskd, aTimeout);
     }
@@ -165,23 +165,23 @@ public:
      * @param[inout]    aIterator   A iterator to the index of the joiner.
      * @param[out]      aJoiner     A reference to Joiner info.
      *
-     * @retval OT_ERROR_NONE        Successfully get the Joiner info.
-     * @retval OT_ERROR_NOT_FOUND   Not found next Joiner.
+     * @retval kErrorNone       Successfully get the Joiner info.
+     * @retval kErrorNotFound   Not found next Joiner.
      *
      */
-    otError GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
+    Error GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoiner) const;
 
     /**
      * This method removes a Joiner entry accepting any Joiner.
      *
      * @param[in]  aDelay         The delay to remove Joiner (in seconds).
      *
-     * @retval OT_ERROR_NONE           Successfully added the Joiner.
-     * @retval OT_ERROR_NOT_FOUND      The Joiner entry accepting any Joiner was not found.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Successfully added the Joiner.
+     * @retval kErrorNotFound      The Joiner entry accepting any Joiner was not found.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError RemoveJoinerAny(uint32_t aDelay) { return RemoveJoiner(nullptr, nullptr, aDelay); }
+    Error RemoveJoinerAny(uint32_t aDelay) { return RemoveJoiner(nullptr, nullptr, aDelay); }
 
     /**
      * This method removes a Joiner entry.
@@ -189,12 +189,12 @@ public:
      * @param[in]  aEui64         The Joiner's IEEE EUI-64.
      * @param[in]  aDelay         The delay to remove Joiner (in seconds).
      *
-     * @retval OT_ERROR_NONE           Successfully added the Joiner.
-     * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Successfully added the Joiner.
+     * @retval kErrorNotFound      The Joiner specified by @p aEui64 was not found.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError RemoveJoiner(const Mac::ExtAddress &aEui64, uint32_t aDelay)
+    Error RemoveJoiner(const Mac::ExtAddress &aEui64, uint32_t aDelay)
     {
         return RemoveJoiner(&aEui64, nullptr, aDelay);
     }
@@ -205,12 +205,12 @@ public:
      * @param[in]  aDiscerner     A Joiner Discerner.
      * @param[in]  aDelay         The delay to remove Joiner (in seconds).
      *
-     * @retval OT_ERROR_NONE           Successfully added the Joiner.
-     * @retval OT_ERROR_NOT_FOUND      The Joiner specified by @p aEui64 was not found.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Successfully added the Joiner.
+     * @retval kErrorNotFound      The Joiner specified by @p aEui64 was not found.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError RemoveJoiner(const JoinerDiscerner &aDiscerner, uint32_t aDelay)
+    Error RemoveJoiner(const JoinerDiscerner &aDiscerner, uint32_t aDelay)
     {
         return RemoveJoiner(nullptr, &aDiscerner, aDelay);
     }
@@ -228,11 +228,11 @@ public:
      *
      * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr to set URL to empty string).
      *
-     * @retval OT_ERROR_NONE          Successfully set the Provisioning URL.
-     * @retval OT_ERROR_INVALID_ARGS  @p aProvisioningUrl is invalid (too long).
+     * @retval kErrorNone         Successfully set the Provisioning URL.
+     * @retval kErrorInvalidArgs  @p aProvisioningUrl is invalid (too long).
      *
      */
-    otError SetProvisioningUrl(const char *aProvisioningUrl);
+    Error SetProvisioningUrl(const char *aProvisioningUrl);
 
     /**
      * This method returns the Commissioner Session ID.
@@ -272,12 +272,12 @@ public:
      * @param[in]  aTlvs        A pointer to Commissioning Data TLVs.
      * @param[in]  aLength      The length of requested TLVs in bytes.
      *
-     * @retval OT_ERROR_NONE           Send MGMT_COMMISSIONER_GET successfully.
-     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space to send.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Send MGMT_COMMISSIONER_GET successfully.
+     * @retval kErrorNoBufs        Insufficient buffer space to send.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
+    Error SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * This method sends MGMT_COMMISSIONER_SET.
@@ -286,14 +286,12 @@ public:
      * @param[in]  aTlvs        A pointer to user specific Commissioning Data TLVs.
      * @param[in]  aLength      The length of user specific TLVs in bytes.
      *
-     * @retval OT_ERROR_NONE           Send MGMT_COMMISSIONER_SET successfully.
-     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space to send.
-     * @retval OT_ERROR_INVALID_STATE  Commissioner service is not started.
+     * @retval kErrorNone          Send MGMT_COMMISSIONER_SET successfully.
+     * @retval kErrorNoBufs        Insufficient buffer space to send.
+     * @retval kErrorInvalidState  Commissioner service is not started.
      *
      */
-    otError SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
-                                           const uint8_t *               aTlvs,
-                                           uint8_t                       aLength);
+    Error SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset, const uint8_t *aTlvs, uint8_t aLength);
 
     /**
      * This method returns a reference to the AnnounceBeginClient instance.
@@ -374,12 +372,12 @@ private:
     Joiner *FindBestMatchingJoinerEntry(const Mac::ExtAddress &aReceivedJoinerId);
     void    RemoveJoinerEntry(Joiner &aJoiner);
 
-    otError AddJoiner(const Mac::ExtAddress *aEui64,
-                      const JoinerDiscerner *aDiscerner,
-                      const char *           aPskd,
-                      uint32_t               aTimeout);
-    otError RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay);
-    void    RemoveJoiner(Joiner &aJoiner, uint32_t aDelay);
+    Error AddJoiner(const Mac::ExtAddress *aEui64,
+                    const JoinerDiscerner *aDiscerner,
+                    const char *           aPskd,
+                    uint32_t               aTimeout);
+    Error RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay);
+    void  RemoveJoiner(Joiner &aJoiner, uint32_t aDelay);
 
     void AddCoapResources(void);
     void RemoveCoapResources(void);
@@ -395,27 +393,27 @@ private:
     static void HandleMgmtCommissionerSetResponse(void *               aContext,
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  otError              aResult);
+                                                  Error                aResult);
     void        HandleMgmtCommissionerSetResponse(Coap::Message *         aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
-                                                  otError                 aResult);
+                                                  Error                   aResult);
     static void HandleMgmtCommissionerGetResponse(void *               aContext,
                                                   otMessage *          aMessage,
                                                   const otMessageInfo *aMessageInfo,
-                                                  otError              aResult);
+                                                  Error                aResult);
     void        HandleMgmtCommissionerGetResponse(Coap::Message *         aMessage,
                                                   const Ip6::MessageInfo *aMessageInfo,
-                                                  otError                 aResult);
+                                                  Error                   aResult);
     static void HandleLeaderPetitionResponse(void *               aContext,
                                              otMessage *          aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             otError              aResult);
-    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
+                                             Error                aResult);
+    void HandleLeaderPetitionResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
     static void HandleLeaderKeepAliveResponse(void *               aContext,
                                               otMessage *          aMessage,
                                               const otMessageInfo *aMessageInfo,
-                                              otError              aResult);
-    void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
+                                              Error                aResult);
+    void HandleLeaderKeepAliveResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     static void HandleCoapsConnected(bool aConnected, void *aContext);
     void        HandleCoapsConnected(bool aConnected);
@@ -431,14 +429,14 @@ private:
 
     void SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState);
 
-    static otError SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError        SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static Error SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error        SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    void    ComputeBloomFilter(SteeringData &aSteeringData) const;
-    void    SendCommissionerSet(void);
-    otError SendPetition(void);
-    void    SendKeepAlive(void);
-    void    SendKeepAlive(uint16_t aSessionId);
+    void  ComputeBloomFilter(SteeringData &aSteeringData) const;
+    void  SendCommissionerSet(void);
+    Error SendPetition(void);
+    void  SendKeepAlive(void);
+    void  SendKeepAlive(uint16_t aSessionId);
 
     void SetState(State aState);
     void SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const;

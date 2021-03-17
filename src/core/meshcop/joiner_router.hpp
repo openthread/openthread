@@ -89,8 +89,8 @@ private:
 
     struct JoinerEntrustMetadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void    ReadFrom(const Message &aMessage);
+        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+        void  ReadFrom(const Message &aMessage);
 
         Ip6::MessageInfo mMessageInfo; // Message info of the message to send.
         TimeMilli        mSendTime;    // Time when the message shall be sent.
@@ -108,8 +108,8 @@ private:
     static void HandleJoinerEntrustResponse(void *               aContext,
                                             otMessage *          aMessage,
                                             const otMessageInfo *aMessageInfo,
-                                            otError              aResult);
-    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
+                                            Error                aResult);
+    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
@@ -117,7 +117,7 @@ private:
     void           Start(void);
     void           DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
     void           SendDelayedJoinerEntrust(void);
-    otError        SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
+    Error          SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
     Coap::Message *PrepareJoinerEntrustMessage(void);
 
     Ip6::Udp::Socket mSocket;

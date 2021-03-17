@@ -160,7 +160,7 @@ public:
      * @param[in] aMessageInfo  The message info.
      *
      */
-    static void EmitCoapSendFailure(otError aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void EmitCoapSendFailure(Error aError, Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This function emits the received COAP message info to OTNS.
