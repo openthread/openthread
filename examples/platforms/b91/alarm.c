@@ -44,6 +44,7 @@
 static volatile uint32_t sTime      = 0;
 static uint32_t          sAlarmTime = 0;
 static uint32_t          sLastTick  = 0;
+static bool              sIsRunning = false;
 
 static inline uint32_t GetCurrentMs(uint32_t aMs, uint32_t aTick)
 {
@@ -60,9 +61,9 @@ void b91AlarmProcess(otInstance *aInstance)
 
     sLastTick = t;
 
-    if ((sAlarmTime != 0) && ((GetCurrentMs(sTime, t)) >= sAlarmTime))
+    if ((sIsRunning) && ((GetCurrentMs(sTime, t)) >= sAlarmTime))
     {
-        sAlarmTime = 0;
+        sIsRunning = false;
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
         if (otPlatDiagModeGet())
@@ -88,11 +89,12 @@ void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
     OT_UNUSED_VARIABLE(aInstance);
 
     sAlarmTime = aT0 + aDt;
+    sIsRunning = true;
 }
 
 void otPlatAlarmMilliStop(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    sAlarmTime = 0;
+    sIsRunning = false;
 }
