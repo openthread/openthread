@@ -93,19 +93,13 @@ endif()
 # ==============================================================================
 # General variables
 # ==============================================================================
-# set(EFR32_DEFINES
-#     PLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"
-# )
-
-
 
 # ==============================================================================
 # Filter out CFLAGS
 # ==============================================================================
 set(ignored_flags
-    "-pedantic-errors" # Needed for RAIL lib
-    "-Wshadow" # Needed for RAIL lib
-    # "-W" # Needed for RAIL lib
+    "-pedantic-errors"  # Needed for RAIL lib
+    "-Wshadow"          # Needed for RAIL lib
 )
 
 foreach(flag IN LISTS ignored_flags)
