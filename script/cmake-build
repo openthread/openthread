@@ -241,6 +241,7 @@ main()
         qpg7015m | gp712)
             OT_CMAKE_NINJA_TARGET=("ot-cli-ftd" "ot-rcp")
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-linux-gnueabihf.cmake" "-DCMAKE_BUILD_TYPE=Release")
+            ;;
         efr32*)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/efr32/${platform}/arm-none-eabi.cmake")
 
