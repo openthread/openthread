@@ -2627,27 +2627,18 @@ void Mac::HandleCslIeSent(TxFrame &aFrame, otError aError)
         {
             mCslSyncTxCnt = 0;
         }
-        else
+        else if (++mCslSyncTxCnt < kMaxFrameRetriesCslSync)
         {
-            mCslSyncTxCnt++;
-            if (mCslSyncTxCnt < kMaxFrameRetriesCslSync)
-            {
-                StartOperation(kOperationTransmitCslSync);
-            }
-        }
-    }
-    else if (mOperation == kOperationTransmitPoll || mOperation == kOperationTransmitDataDirect)
-    {
-        // If CSL IE is included in a retransmission frame, send out a datapoll to resync its parent
-        if (aFrame.mInfo.mTxInfo.mIsARetx)
-        {
-            VerifyOrExit(IsEnabled());
-            VerifyOrExit(!mPendingTransmitPoll && !mPendingTransmitCslSync &&
-                         (mOperation != kOperationTransmitCslSync));
-
-            mCslSyncTxCnt = 0;
             StartOperation(kOperationTransmitCslSync);
         }
+    }
+    else if (aFrame.mInfo.mTxInfo.mIsARetx)
+    {
+        // If CSL IE is included in a retransmission frame, send out a datapoll to resync its parent
+        VerifyOrExit(!mPendingTransmitPoll && !mPendingTransmitCslSync);
+
+        mCslSyncTxCnt = 0;
+        StartOperation(kOperationTransmitCslSync);
     }
 
 exit:

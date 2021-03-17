@@ -113,5 +113,6 @@ class SSED_CslTransmission(thread_cert.TestCase):
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         self.assertNotEqual(ssed_messages.next_data_poll(), None)
 
+
 if __name__ == '__main__':
     unittest.main()
