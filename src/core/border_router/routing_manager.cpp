@@ -361,7 +361,7 @@ uint8_t RoutingManager::EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t 
         }
 
         aNewOmrPrefixes[newOmrPrefixNum] = onMeshPrefixConfig.GetPrefix();
-        if (smallestOmrPrefix == nullptr || IsPrefixSmallerThan(onMeshPrefixConfig.GetPrefix(), *smallestOmrPrefix))
+        if (smallestOmrPrefix == nullptr || (onMeshPrefixConfig.GetPrefix() < *smallestOmrPrefix))
         {
             smallestOmrPrefix = &aNewOmrPrefixes[newOmrPrefixNum];
         }
@@ -523,7 +523,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
             continue;
         }
 
-        if (smallestOnLinkPrefix == nullptr || IsPrefixSmallerThan(prefix.mPrefix, *smallestOnLinkPrefix))
+        if (smallestOnLinkPrefix == nullptr || (prefix.mPrefix < *smallestOnLinkPrefix))
         {
             smallestOnLinkPrefix = &prefix.mPrefix;
         }
@@ -547,7 +547,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     // the same smallest on-link prefix and the application-specific prefix is not used.
     else if (mAdvertisedOnLinkPrefix != nullptr)
     {
-        if (IsPrefixSmallerThan(*mAdvertisedOnLinkPrefix, *smallestOnLinkPrefix))
+        if (*mAdvertisedOnLinkPrefix < *smallestOnLinkPrefix)
         {
             newOnLinkPrefix = mAdvertisedOnLinkPrefix;
         }
@@ -786,19 +786,6 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
             otLogWarnBr("failed to send Router Advertisement on interface %u: %s", mInfraIfIndex, ErrorToString(error));
         }
     }
-}
-
-bool RoutingManager::IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const Ip6::Prefix &aSecondPrefix)
-{
-    uint8_t matchedLength;
-
-    OT_ASSERT(aFirstPrefix.GetLength() == aSecondPrefix.GetLength());
-
-    matchedLength =
-        Ip6::Prefix::MatchLength(aFirstPrefix.GetBytes(), aSecondPrefix.GetBytes(), aFirstPrefix.GetBytesSize());
-
-    return matchedLength < aFirstPrefix.GetLength() &&
-           aFirstPrefix.GetBytes()[matchedLength / CHAR_BIT] < aSecondPrefix.GetBytes()[matchedLength / CHAR_BIT];
 }
 
 bool RoutingManager::IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig)

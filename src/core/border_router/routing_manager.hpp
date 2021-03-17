@@ -240,8 +240,6 @@ private:
                              otRoutePreference  aRoutePreference = OT_ROUTE_PREFERENCE_MED);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
 
-    // Decides the first prefix is numerically smaller than the second one.
-    static bool     IsPrefixSmallerThan(const Ip6::Prefix &aFirstPrefix, const Ip6::Prefix &aSecondPrefix);
     static bool     IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
     static bool     IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool     IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);

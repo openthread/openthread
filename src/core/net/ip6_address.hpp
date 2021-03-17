@@ -234,6 +234,20 @@ public:
     bool operator!=(const Prefix &aOther) const { return !(*this == aOther); }
 
     /**
+     * This method overloads operator `<` to compare two prefixes.
+     *
+     * A prefix with shorter length is considered smaller than the one with longer length. If the prefix lengths are
+     * equal, then the prefix bytes are compared directly.
+     *
+     * @param[in] aOther  The other prefix to compare against.
+     *
+     * @retval TRUE   If the prefix is smaller than @p aOther.
+     * @retval FALSE  If the prefix is not smaller than @p aOther.
+     *
+     */
+    bool operator<(const Prefix &aOther) const;
+
+    /**
      * This static method converts a prefix length (in bits) to size (number of bytes).
      *
      * @param[in] aLength   A prefix length (in bits).
