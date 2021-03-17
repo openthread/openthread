@@ -1270,7 +1270,8 @@ void Mac::BeginTransmit(void)
         frame->SetChannel(mRadioChannel);
         frame->SetSequence(mDataSequence++);
         frame->SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        frame->SetMaxFrameRetries(kMaxFrameRetriesCslSync);
+        // No retry for CSL sync
+        frame->SetMaxFrameRetries(0);
         break;
 #endif
 
@@ -2457,9 +2458,9 @@ const char *Mac::OperationToString(Operation aOperation)
     static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
     static_assert(kOperationTransmitOutOfBandFrame == 7, "kOperationTransmitOutOfBandFrame value is incorrect");
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kOperationTransmitCslSync == 8, "TransmitCslSync value is incorrect")
+    static_assert(kOperationTransmitCslSync == 8, "TransmitCslSync value is incorrect");
 #if OPENTHREAD_FTD
-        static_assert(kOperationTransmitDataIndirect == 9, "kOperationTransmitDataIndirect value is incorrect");
+    static_assert(kOperationTransmitDataIndirect == 9, "kOperationTransmitDataIndirect value is incorrect");
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     static_assert(kOperationTransmitDataCsl == 10, "TransmitDataCsl value is incorrect");
 #endif

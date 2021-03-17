@@ -92,7 +92,7 @@ enum
     kDefaultMaxFrameRetriesIndirect =
         OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
     kMaxFrameRetriesCsl     = 0,                                  ///< macMaxFrameRetries for CSL transmissions
-    kMaxFrameRetriesCslSync = 0,                                  ///< macMaxFrameRetries for CSL Sync transmissions
+    kMaxFrameRetriesCslSync = 4,                                  ///< macMaxFrameRetries for CSL Sync transmissions
 
     kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
 };
