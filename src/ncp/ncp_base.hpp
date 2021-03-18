@@ -337,6 +337,16 @@ protected:
     void        HandleJoinerCallback(otError aError);
 #endif
 
+    static void HandleMlrRegResult_Jump(void *              aContext,
+                                        otError             aError,
+                                        uint8_t             aMlrStatus,
+                                        const otIp6Address *aFailedAddresses,
+                                        uint8_t             aFailedAddressNum);
+    void        HandleMlrRegResult(otError             aError,
+                                   uint8_t             aMlrStatus,
+                                   const otIp6Address *aFailedAddresses,
+                                   uint8_t             aFailedAddressNum);
+
     otError EncodeOperationalDataset(const otOperationalDataset &aDataset);
 
     otError DecodeOperationalDataset(otOperationalDataset &aDataset,
