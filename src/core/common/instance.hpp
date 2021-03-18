@@ -39,13 +39,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/error.h>
 #include <openthread/heap.h>
 #include <openthread/platform/logging.h>
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/error.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
@@ -60,26 +60,24 @@
 #endif
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "common/code_utils.hpp"
-#include "crypto/mbedtls.hpp"
-#include "thread/tmf.hpp"
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-#include "utils/heap.hpp"
-#endif
 #include "common/notifier.hpp"
 #include "common/settings.hpp"
+#include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+#include "meshcop/dataset_updater.hpp"
+#endif
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
+#include "thread/tmf.hpp"
+#include "utils/heap.hpp"
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include "utils/channel_manager.hpp"
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
-#endif
-#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-#include "utils/dataset_updater.hpp"
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -94,6 +92,10 @@
 #endif
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+#include "border_router/routing_manager.hpp"
+#endif
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
@@ -236,35 +238,18 @@ public:
      *
      * Erase is successful/allowed only if the device is in `disabled` state/role.
      *
-     * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
-     * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
+     * @retval kErrorNone          All persistent info/state was erased successfully.
+     * @retval kErrorInvalidState  Device is not in `disabled` state/role.
      *
      */
-    otError ErasePersistentInfo(void);
+    Error ErasePersistentInfo(void);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    void HeapFree(void *aPointer)
-    {
-        OT_ASSERT(mFree != nullptr);
-
-        mFree(aPointer);
-    }
-
-    void *HeapCAlloc(size_t aCount, size_t aSize)
-    {
-        OT_ASSERT(mCAlloc != nullptr);
-
-        return mCAlloc(aCount, aSize);
-    }
-
-    static void HeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
-    {
-        mFree   = aFree;
-        mCAlloc = aCAlloc;
-    }
-#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    void  HeapFree(void *aPointer) { mHeap.Free(aPointer); }
-    void *HeapCAlloc(size_t aCount, size_t aSize) { return mHeap.CAlloc(aCount, aSize); }
+    static void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
+    static void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
+#else
+    static void  HeapFree(void *aPointer) { sHeap.Free(aPointer); }
+    static void *HeapCAlloc(size_t aCount, size_t aSize) { return sHeap.CAlloc(aCount, aSize); }
 
     /**
      * This method returns a reference to the Heap object.
@@ -272,10 +257,7 @@ public:
      * @returns A reference to the Heap object.
      *
      */
-    Utils::Heap &GetHeap(void) { return mHeap; }
-#else
-    void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
-    void *HeapCAlloc(size_t aCount, size_t aSize) { return otPlatCAlloc(aCount, aSize); }
+    Utils::Heap &GetHeap(void) { return sHeap; }
 #endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -334,11 +316,8 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // RandomManager is initialized before other objects. Note that it
     // requires MbedTls which itself may use Heap.
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    static otHeapFreeFn   mFree;
-    static otHeapCAllocFn mCAlloc;
-#elif !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    Utils::Heap  mHeap;
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+    static Utils::Heap sHeap;
 #endif
     Crypto::MbedTls mMbedTls;
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -380,7 +359,7 @@ private:
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-    Utils::DatasetUpdater mDatasetUpdater;
+    MeshCoP::DatasetUpdater mDatasetUpdater;
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -389,6 +368,10 @@ private:
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Utils::Otns mOtns;
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    BorderRouter::RoutingManager mRoutingManager;
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -446,6 +429,13 @@ template <> inline MeshForwarder &Instance::Get(void)
     return mThreadNetif.mMeshForwarder;
 }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+template <> inline RadioSelector &Instance::Get(void)
+{
+    return mThreadNetif.mRadioSelector;
+}
+#endif
+
 template <> inline Mle::Mle &Instance::Get(void)
 {
     return mThreadNetif.mMleRouter;
@@ -500,8 +490,20 @@ template <> inline Mac::Mac &Instance::Get(void)
 
 template <> inline Mac::SubMac &Instance::Get(void)
 {
-    return mThreadNetif.mMac.mSubMac;
+    return mThreadNetif.mMac.mLinks.mSubMac;
 }
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+template <> inline Trel::Link &Instance::Get(void)
+{
+    return mThreadNetif.mMac.mLinks.mTrel;
+}
+
+template <> inline Trel::Interface &Instance::Get(void)
+{
+    return mThreadNetif.mMac.mLinks.mTrel.mInterface;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 template <> inline Mac::Filter &Instance::Get(void)
@@ -604,6 +606,11 @@ template <> inline NetworkData::Notifier &Instance::Get(void)
 }
 #endif
 
+template <> inline NetworkData::Service::Manager &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataServiceManager;
+}
+
 template <> inline Ip6::Udp &Instance::Get(void)
 {
     return mIp6.mUdp;
@@ -666,6 +673,20 @@ template <> inline MeshCoP::Joiner &Instance::Get(void)
 template <> inline Dns::Client &Instance::Get(void)
 {
     return mThreadNetif.mDnsClient;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+template <> inline Srp::Client &Instance::Get(void)
+{
+    return mThreadNetif.mSrpClient;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void)
+{
+    return mThreadNetif.mDnssdServer;
 }
 #endif
 
@@ -736,7 +757,7 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-template <> inline Utils::DatasetUpdater &Instance::Get(void)
+template <> inline MeshCoP::DatasetUpdater &Instance::Get(void)
 {
     return mDatasetUpdater;
 }
@@ -777,15 +798,20 @@ template <> inline BackboneRouter::Manager &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager;
 }
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 template <> inline BackboneRouter::MulticastListenersTable &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager.GetMulticastListenersTable();
 }
+#endif
 
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 template <> inline BackboneRouter::NdProxyTable &Instance::Get(void)
 {
     return mThreadNetif.mBackboneRouterManager.GetNdProxyTable();
 }
+#endif
 
 template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 {
@@ -793,14 +819,14 @@ template <> inline BackboneRouter::BackboneTmfAgent &Instance::Get(void)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 template <> inline MlrManager &Instance::Get(void)
 {
     return mThreadNetif.mMlrManager;
 }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 template <> inline DuaManager &Instance::Get(void)
 {
     return mThreadNetif.mDuaManager;
@@ -820,6 +846,20 @@ template <> inline LinkMetrics &Instance::Get(void)
 template <> inline Utils::Otns &Instance::Get(void)
 {
     return mOtns;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+template <> inline BorderRouter::RoutingManager &Instance::Get(void)
+{
+    return mRoutingManager;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+template <> inline Srp::Server &Instance::Get(void)
+{
+    return mThreadNetif.mSrpServer;
 }
 #endif
 

@@ -44,11 +44,11 @@
 
 using namespace ot::Crypto;
 
-void otCryptoHmacSha256(const uint8_t *aKey,
-                        uint16_t       aKeyLength,
-                        const uint8_t *aBuf,
-                        uint16_t       aBufLength,
-                        uint8_t *      aHash)
+void otCryptoHmacSha256(const uint8_t *     aKey,
+                        uint16_t            aKeyLength,
+                        const uint8_t *     aBuf,
+                        uint16_t            aBufLength,
+                        otCryptoSha256Hash *aHash)
 {
     HmacSha256 hmac;
 
@@ -56,7 +56,7 @@ void otCryptoHmacSha256(const uint8_t *aKey,
 
     hmac.Start(aKey, aKeyLength);
     hmac.Update(aBuf, aBufLength);
-    hmac.Finish(aHash);
+    hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
 }
 
 void otCryptoAesCcm(const uint8_t *aKey,

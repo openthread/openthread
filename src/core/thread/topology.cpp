@@ -66,10 +66,11 @@ exit:
 void Neighbor::Info::SetFrom(const Neighbor &aNeighbor)
 {
     Clear();
+
     mExtAddress       = aNeighbor.GetExtAddress();
     mAge              = Time::MsecToSec(TimerMilli::GetNow() - aNeighbor.GetLastHeard());
     mRloc16           = aNeighbor.GetRloc16();
-    mLinkFrameCounter = aNeighbor.GetLinkFrameCounter();
+    mLinkFrameCounter = aNeighbor.GetLinkFrameCounters().GetMaximum();
     mMleFrameCounter  = aNeighbor.GetMleFrameCounter();
     mLinkQualityIn    = aNeighbor.GetLinkInfo().GetLinkQuality();
     mAverageRssi      = aNeighbor.GetLinkInfo().GetAverageRss();
@@ -197,6 +198,22 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
+const char *Neighbor::StateToString(State aState)
+{
+    static const char *kStateStrings[] = {
+        "Invalid",        // kStateInvalid
+        "Restored",       // kStateRestored
+        "ParentReq",      // kStateParentRequest
+        "ParentRes",      // kStateParentResponse
+        "ChildIdReq",     // kStateChildIdRequest
+        "LinkReq",        // kStateLinkRequest
+        "ChildUpdateReq", // kStateChildUpdateRequest
+        "Valid",          // kStateValid
+    };
+
+    return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "Unknown";
+}
+
 void Child::Info::SetFrom(const Child &aChild)
 {
     Clear();
@@ -217,7 +234,7 @@ void Child::Info::SetFrom(const Child &aChild)
     mFullThreadDevice   = aChild.IsFullThreadDevice();
     mFullNetworkData    = aChild.IsFullNetworkData();
     mIsStateRestoring   = aChild.IsStateRestoring();
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     mIsCslSynced = aChild.IsCslSynchronized();
 #else
     mIsCslSynced = false;
@@ -238,13 +255,13 @@ void Child::AddressIterator::Update(void)
 {
     const Ip6::Address *address;
 
+    if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != kErrorNone))
+    {
+        mIndex++;
+    }
+
     while (true)
     {
-        if ((mIndex == 0) && (mChild.GetMeshLocalIp6Address(mMeshLocalAddress) != OT_ERROR_NONE))
-        {
-            mIndex++;
-        }
-
         address = GetAddress();
 
         VerifyOrExit((address != nullptr) && !address->IsUnspecified(), mIndex = kMaxIndex);
@@ -269,17 +286,17 @@ void Child::ClearIp6Addresses(void)
 {
     mMeshLocalIid.Clear();
     memset(mIp6Address, 0, sizeof(mIp6Address));
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     mMlrToRegisterMask.Clear();
     mMlrRegisteredMask.Clear();
 #endif
 }
 
-otError Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
+Error Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!mMeshLocalIid.IsUnspecified(), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(!mMeshLocalIid.IsUnspecified(), error = kErrorNotFound);
 
     aAddress.SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
     aAddress.SetIid(mMeshLocalIid);
@@ -288,15 +305,15 @@ exit:
     return error;
 }
 
-otError Child::AddIp6Address(const Ip6::Address &aAddress)
+Error Child::AddIp6Address(const Ip6::Address &aAddress)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aAddress.IsUnspecified(), error = kErrorInvalidArgs);
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
-        VerifyOrExit(mMeshLocalIid.IsUnspecified(), error = OT_ERROR_ALREADY);
+        VerifyOrExit(mMeshLocalIid.IsUnspecified(), error = kErrorAlready);
         mMeshLocalIid = aAddress.GetIid();
         ExitNow();
     }
@@ -309,28 +326,28 @@ otError Child::AddIp6Address(const Ip6::Address &aAddress)
             ExitNow();
         }
 
-        VerifyOrExit(ip6Address != aAddress, error = OT_ERROR_ALREADY);
+        VerifyOrExit(ip6Address != aAddress, error = kErrorAlready);
     }
 
-    error = OT_ERROR_NO_BUFS;
+    error = kErrorNoBufs;
 
 exit:
     return error;
 }
 
-otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
+Error Child::RemoveIp6Address(const Ip6::Address &aAddress)
 {
-    otError  error = OT_ERROR_NOT_FOUND;
+    Error    error = kErrorNotFound;
     uint16_t index;
 
-    VerifyOrExit(!aAddress.IsUnspecified(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aAddress.IsUnspecified(), error = kErrorInvalidArgs);
 
     if (Get<Mle::MleRouter>().IsMeshLocalAddress(aAddress))
     {
         if (aAddress.GetIid() == mMeshLocalIid)
         {
             mMeshLocalIid.Clear();
-            error = OT_ERROR_NONE;
+            error = kErrorNone;
         }
 
         ExitNow();
@@ -342,7 +359,7 @@ otError Child::RemoveIp6Address(const Ip6::Address &aAddress)
 
         if (mIp6Address[index] == aAddress)
         {
-            error = OT_ERROR_NONE;
+            error = kErrorNone;
             break;
         }
     }
@@ -386,7 +403,7 @@ exit:
     return retval;
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
 const Ip6::Address *Child::GetDomainUnicastAddress(void) const
 {
     const Ip6::Address *addr = nullptr;
@@ -411,7 +428,7 @@ void Child::GenerateChallenge(void)
     IgnoreError(Random::Crypto::FillBuffer(mAttachChallenge, sizeof(mAttachChallenge)));
 }
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 bool Child::HasMlrRegisteredAddress(const Ip6::Address &aAddress) const
 {
     bool has = false;
@@ -454,7 +471,7 @@ void Child::SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState)
     mMlrToRegisterMask.Set(addressIndex, aState == kMlrStateToRegister);
     mMlrRegisteredMask.Set(addressIndex, aState == kMlrStateRegistered);
 }
-#endif // OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
 
 void Router::Info::SetFrom(const Router &aRouter)
 {

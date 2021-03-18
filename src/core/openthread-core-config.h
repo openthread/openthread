@@ -47,7 +47,7 @@
 #endif
 
 #ifndef OPENTHREAD_CONFIG_THREAD_VERSION
-#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_1
+#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_2
 #endif
 
 #include "config/openthread-core-default-config.h"
@@ -65,6 +65,8 @@
 #include "config/dhcp6_server.h"
 #include "config/diag.h"
 #include "config/dns_client.h"
+#include "config/dnssd_server.h"
+#include "config/dtls.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
 #include "config/link_quality.h"
@@ -74,16 +76,12 @@
 #include "config/mle.h"
 #include "config/parent_search.h"
 #include "config/platform.h"
+#include "config/radio_link.h"
 #include "config/sntp_client.h"
+#include "config/srp_client.h"
+#include "config/srp_server.h"
 #include "config/time_sync.h"
 #include "config/tmf.h"
-
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE || OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE || \
-    OPENTHREAD_CONFIG_COMMISSIONER_ENABLE || OPENTHREAD_CONFIG_JOINER_ENABLE
-#define OPENTHREAD_CONFIG_DTLS_ENABLE 1
-#else
-#define OPENTHREAD_CONFIG_DTLS_ENABLE 0
-#endif
 
 #undef OPENTHREAD_CORE_CONFIG_H_IN
 

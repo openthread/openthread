@@ -32,16 +32,16 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 send "dns resolve ipv6.google.com ::1 53\n"
 expect "DNS response for ipv6.google.com"
-expect "Done"
+expect_line "Done"
 
 dispose_all

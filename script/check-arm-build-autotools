@@ -58,6 +58,8 @@ build_cc2538()
         "DNS_CLIENT=1"
         "JOINER=1"
         "SLAAC=1"
+        # cc2538 does not have enough resources to support Thread 1.2
+        "THREAD_VERSION=1.1"
     )
 
     reset_source
@@ -133,7 +135,6 @@ build_kw41z()
 build_nrf52811()
 {
     local options=(
-        "BORDER_ROUTER=1"
         "COAP=1"
         "DNS_CLIENT=1"
         "LINK_RAW=1"
@@ -175,6 +176,7 @@ build_nrf52833()
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"
+        "SRP_CLIENT=1"
         "UDP_FORWARD=1"
     )
 
@@ -217,6 +219,7 @@ build_nrf52840()
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"
+        "SRP_CLIENT=1"
         "UDP_FORWARD=1"
     )
 

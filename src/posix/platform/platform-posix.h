@@ -39,6 +39,7 @@
 
 #include <errno.h>
 #include <net/if.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/select.h>
@@ -46,6 +47,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
@@ -390,6 +392,41 @@ enum SocketBlockOption
 };
 
 /**
+ * This function initializes platform TREL UDP6 driver.
+ *
+ * @param[in]   aInterfaceName   The name of network interface.
+ *
+ */
+void platformTrelInit(const char *aInterfaceName);
+
+/**
+ * This function shuts down the platform TREL UDP6 platform driver.
+ *
+ */
+void platformTrelDeinit(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by the TREL driver.
+ *
+ * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
+ * @param[inout]  aWriteFdSet  A pointer to the write file descriptors.
+ * @param[inout]  aMaxFd       A pointer to the max file descriptor.
+ * @param[inout]  aTimeout     A pointer to the timeout.
+ *
+ */
+void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout);
+
+/**
+ * This function performs TREL driver processing.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @param[in]   aReadFdSet      A pointer to the read file descriptors.
+ * @param[in]   aWriteFdSet     A pointer to the write file descriptors.
+ *
+ */
+void platformTrelProcess(otInstance *aInstance, const fd_set *aReadFdSet, const fd_set *aWriteFdSet);
+
+/**
  * This function creates a socket with SOCK_CLOEXEC flag set.
  *
  * @param[in]   aDomain       The communication domain.
@@ -462,6 +499,57 @@ extern char gBackboneNetifName[IFNAMSIZ];
  *
  */
 extern unsigned int gBackboneNetifIndex;
+
+/**
+ * This function initializes the infrastructure interface.
+ *
+ * @param[in]  aInstance  The OpenThread instance.
+ * @param[in]  aIfName    The name of the infrastructure interface.
+ *
+ * @returns  The index of the infrastructure interface.
+ *
+ */
+uint32_t platformInfraIfInit(otInstance *aInstance, const char *aIfName);
+
+/**
+ * This function deinitializes the infrastructure interface.
+ *
+ */
+void platformInfraIfDeinit(void);
+
+/**
+ * This function tells if the infrastructure interface is running.
+ *
+ * @returns TRUE if the infrastructure interface is running, FALSE if not.
+ *
+ */
+bool platformInfraIfIsRunning(void);
+
+/**
+ * this function returns the IPv6 link-local address of the infrastructure interface.
+ *
+ * @returns  A pointer to the link-local address; NULL if no link-local address is present.
+ *
+ */
+const otIp6Address *platformInfraIfGetLinkLocalAddress(void);
+
+/**
+ * This function updates the read fd set.
+ *
+ * @param[out]  aReadFdSet  The fd set to be updated.
+ * @param[out]  aMaxFd      The maximum fd to be updated.
+ *
+ */
+void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
+
+/**
+ * This function processes possible events on the infrastructure interface.
+ *
+ * @param[in]  aInstance   The OpenThread instance.
+ * @param[in]  aReadFdSet  The fd set which may contain read vents.
+ *
+ */
+void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
 
 #ifdef __cplusplus
 }

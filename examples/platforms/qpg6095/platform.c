@@ -45,7 +45,11 @@
 
 static otInstance *localInstance = NULL;
 
-bool qorvoPlatGotoSleepCheck(void)
+#ifdef QORVO_USE_ROM
+extern void flash_jump_gpJumpTables_GetRomVersion(void);
+#endif // QORVO_USE_ROM
+
+uint8_t qorvoPlatGotoSleepCheck(void)
 {
     if (localInstance)
     {
@@ -61,7 +65,11 @@ void otSysInit(int argc, char *argv[])
 {
     OT_UNUSED_VARIABLE(argc);
     OT_UNUSED_VARIABLE(argv);
+#ifdef QORVO_USE_ROM
+    flash_jump_gpJumpTables_GetRomVersion();
+#endif // QORVO_USE_ROM
     qorvoPlatInit((qorvoPlatGotoSleepCheckCallback_t)qorvoPlatGotoSleepCheck);
+    qorvoUartInit();
     qorvoAlarmInit();
     qorvoRandomInit();
     qorvoRadioInit();

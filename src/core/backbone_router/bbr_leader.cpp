@@ -57,11 +57,11 @@ void Leader::Reset(void)
     mDomainPrefix.SetLength(0);
 }
 
-otError Leader::GetConfig(BackboneRouterConfig &aConfig) const
+Error Leader::GetConfig(BackboneRouterConfig &aConfig) const
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(HasPrimary(), error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(HasPrimary(), error = kErrorNotFound);
 
     aConfig = mConfig;
 
@@ -69,15 +69,13 @@ exit:
     return error;
 }
 
-otError Leader::GetServiceId(uint8_t &aServiceId) const
+Error Leader::GetServiceId(uint8_t &aServiceId) const
 {
-    otError error       = OT_ERROR_NONE;
-    uint8_t serviceData = NetworkData::ServiceTlv::kServiceDataBackboneRouter;
+    Error error = kErrorNone;
 
-    VerifyOrExit(HasPrimary(), error = OT_ERROR_NOT_FOUND);
-
-    error = Get<NetworkData::Leader>().GetServiceId(NetworkData::ServiceTlv::kThreadEnterpriseNumber, &serviceData,
-                                                    sizeof(serviceData), true, aServiceId);
+    VerifyOrExit(HasPrimary(), error = kErrorNotFound);
+    error = Get<NetworkData::Service::Manager>().GetServiceId<NetworkData::Service::BackboneRouter>(
+        /* aServerStable */ true, aServiceId);
 
 exit:
     return error;
@@ -182,7 +180,7 @@ void Leader::UpdateBackboneRouterPrimary(void)
     State                state;
     uint32_t             origMlrTimeout;
 
-    IgnoreError(Get<NetworkData::Leader>().GetBackboneRouterPrimary(config));
+    Get<NetworkData::Service::Manager>().GetBackboneRouterPrimary(config);
 
     if (config.mServer16 != mConfig.mServer16)
     {
@@ -242,11 +240,11 @@ void Leader::UpdateBackboneRouterPrimary(void)
     Get<BackboneRouter::Local>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Get<MlrManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     Get<DuaManager>().HandleBackboneRouterPrimaryUpdate(state, mConfig);
 #endif
 }
@@ -258,7 +256,7 @@ void Leader::UpdateDomainPrefixConfig(void)
     DomainPrefixState               state;
     bool                            found = false;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
     {
         if (config.mDp)
         {
@@ -302,10 +300,12 @@ void Leader::UpdateDomainPrefixConfig(void)
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     Get<Local>().HandleDomainPrefixUpdate(state);
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
     Get<NdProxyTable>().HandleDomainPrefixUpdate(state);
 #endif
+#endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     Get<DuaManager>().HandleDomainPrefixUpdate(state);
 #endif
 }

@@ -33,7 +33,7 @@
 
 #include "ndproxy_table.hpp"
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
@@ -95,9 +95,9 @@ NdProxyTable::Iterator::Iterator(Instance &aInstance, Filter aFilter)
 {
     NdProxyTable &table = GetInstance().Get<BackboneRouter::NdProxyTable>();
 
-    mCurrent = &table.mProxies[0];
+    mItem = &table.mProxies[0];
 
-    if (!MatchesFilter(*mCurrent, mFilter))
+    if (!MatchesFilter(*mItem, mFilter))
     {
         Advance();
     }
@@ -107,7 +107,7 @@ NdProxyTable::Iterator::Iterator(Instance &aInstance, NdProxyTable::Iterator::It
     : InstanceLocator(aInstance)
 {
     NdProxyTable &table = GetInstance().Get<BackboneRouter::NdProxyTable>();
-    mCurrent            = OT_ARRAY_END(table.mProxies);
+    mItem               = OT_ARRAY_END(table.mProxies);
 }
 
 void NdProxyTable::Iterator::Advance(void)
@@ -116,8 +116,8 @@ void NdProxyTable::Iterator::Advance(void)
 
     do
     {
-        mCurrent++;
-    } while (mCurrent < OT_ARRAY_END(table.mProxies) && !MatchesFilter(*mCurrent, mFilter));
+        mItem++;
+    } while (mItem < OT_ARRAY_END(table.mProxies) && !MatchesFilter(*mItem, mFilter));
 }
 
 void NdProxyTable::Erase(NdProxy &aNdProxy)
@@ -149,18 +149,18 @@ void NdProxyTable::Clear(void)
     otLogNoteBbr("NdProxyTable::Clear!");
 }
 
-otError NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
-                               const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                               uint16_t                        aRloc16,
-                               const uint32_t *                aTimeSinceLastTransaction)
+Error NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
+                             const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                             uint16_t                        aRloc16,
+                             const uint32_t *                aTimeSinceLastTransaction)
 {
-    otError  error                    = OT_ERROR_NONE;
+    Error    error                    = kErrorNone;
     NdProxy *proxy                    = FindByAddressIid(aAddressIid);
     uint32_t timeSinceLastTransaction = aTimeSinceLastTransaction == nullptr ? 0 : *aTimeSinceLastTransaction;
 
     if (proxy != nullptr)
     {
-        VerifyOrExit(proxy->mMeshLocalIid == aMeshLocalIid, error = OT_ERROR_DUPLICATED);
+        VerifyOrExit(proxy->mMeshLocalIid == aMeshLocalIid, error = kErrorDuplicated);
 
         proxy->Update(aRloc16, timeSinceLastTransaction);
         NotifyDuaRegistrationOnBackboneLink(*proxy, /* aIsRenew */ true);
@@ -178,7 +178,7 @@ otError NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
         proxy = FindInvalid();
 
         // TODO: evict stale DUA entries to have room for this new DUA.
-        VerifyOrExit(proxy != nullptr, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(proxy != nullptr, error = kErrorNoBufs);
     }
 
     proxy->Init(aAddressIid, aMeshLocalIid, aRloc16, timeSinceLastTransaction);
@@ -186,7 +186,7 @@ otError NdProxyTable::Register(const Ip6::InterfaceIdentifier &aAddressIid,
 
 exit:
     otLogInfoBbr("NdProxyTable::Register %s MLIID %s RLOC16 %04x LTT %u => %s", aAddressIid.ToString().AsCString(),
-                 aMeshLocalIid.ToString().AsCString(), aRloc16, timeSinceLastTransaction, otThreadErrorToString(error));
+                 aMeshLocalIid.ToString().AsCString(), aRloc16, timeSinceLastTransaction, ErrorToString(error));
     return error;
 }
 
@@ -257,7 +257,7 @@ void NdProxyTable::HandleTimer(void)
         {
             mIsAnyDadInProcess = true;
 
-            if (Get<BackboneRouter::Manager>().SendBackboneQuery(GetDua(proxy)) == OT_ERROR_NONE)
+            if (Get<BackboneRouter::Manager>().SendBackboneQuery(GetDua(proxy)) == kErrorNone)
             {
                 proxy.IncreaseDadAttampts();
             }
@@ -335,11 +335,11 @@ void NdProxyTable::NotifyDuaRegistrationOnBackboneLink(NdProxyTable::NdProxy &aN
     }
 }
 
-otError NdProxyTable::GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo)
+Error NdProxyTable::GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
-    VerifyOrExit(Get<Leader>().IsDomainUnicast(aDua), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(aDua), error = kErrorInvalidArgs);
 
     for (NdProxy &proxy : Iterate(kFilterValid))
     {
@@ -349,7 +349,7 @@ otError NdProxyTable::GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyI
             aNdProxyInfo.mTimeSinceLastTransaction = proxy.GetTimeSinceLastTransaction();
             aNdProxyInfo.mRloc16                   = proxy.mRloc16;
 
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
     }
 
@@ -361,4 +361,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE

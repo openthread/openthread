@@ -33,7 +33,7 @@
 
 #include "multicast_listeners_table.hpp"
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -48,11 +48,11 @@ namespace ot {
 
 namespace BackboneRouter {
 
-otError MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTime)
+Error MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireTime)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aAddress.IsMulticastLargerThanRealmLocal(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aAddress.IsMulticastLargerThanRealmLocal(), error = kErrorInvalidArgs);
 
     for (uint16_t i = 0; i < mNumValidListeners; i++)
     {
@@ -66,7 +66,7 @@ otError MulticastListenersTable::Add(const Ip6::Address &aAddress, Time aExpireT
         }
     }
 
-    VerifyOrExit(mNumValidListeners < OT_ARRAY_LENGTH(mListeners), error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(mNumValidListeners < OT_ARRAY_LENGTH(mListeners), error = kErrorNoBufs);
 
     mListeners[mNumValidListeners].SetAddress(aAddress);
     mListeners[mNumValidListeners].SetExpireTime(aExpireTime);
@@ -87,7 +87,7 @@ exit:
 
 void MulticastListenersTable::Remove(const Ip6::Address &aAddress)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     for (uint16_t i = 0; i < mNumValidListeners; i++)
     {
@@ -108,7 +108,7 @@ void MulticastListenersTable::Remove(const Ip6::Address &aAddress)
                 mCallback(mCallbackContext, OT_BACKBONE_ROUTER_MULTICAST_LISTENER_REMOVED, &aAddress);
             }
 
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
     }
 
@@ -124,7 +124,7 @@ void MulticastListenersTable::Expire(void)
 
     while (mNumValidListeners > 0 && now >= mListeners[0].GetExpireTime())
     {
-        LogMulticastListenersTable("Expire", mListeners[0].GetAddress(), mListeners[0].GetExpireTime(), OT_ERROR_NONE);
+        LogMulticastListenersTable("Expire", mListeners[0].GetAddress(), mListeners[0].GetExpireTime(), kErrorNone);
         address = mListeners[0].GetAddress();
 
         mNumValidListeners--;
@@ -147,7 +147,7 @@ void MulticastListenersTable::Expire(void)
 void MulticastListenersTable::LogMulticastListenersTable(const char *        aAction,
                                                          const Ip6::Address &aAddress,
                                                          TimeMilli           aExpireTime,
-                                                         otError             aError)
+                                                         Error               aError)
 {
     OT_UNUSED_VARIABLE(aAction);
     OT_UNUSED_VARIABLE(aAddress);
@@ -155,7 +155,7 @@ void MulticastListenersTable::LogMulticastListenersTable(const char *        aAc
     OT_UNUSED_VARIABLE(aError);
 
     otLogDebgBbr("MulticastListenersTable: %s %s expire %u: %s", aAction, aAddress.ToString().AsCString(),
-                 aExpireTime.GetValue(), otThreadErrorToString(aError));
+                 aExpireTime.GetValue(), ErrorToString(aError));
 }
 
 void MulticastListenersTable::FixHeap(uint16_t aIndex)
@@ -287,13 +287,13 @@ void MulticastListenersTable::SetCallback(otBackboneRouterMulticastListenerCallb
     }
 }
 
-otError MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
-                                         otBackboneRouterMulticastListenerInfo &    aListenerInfo)
+Error MulticastListenersTable::GetNext(otBackboneRouterMulticastListenerIterator &aIterator,
+                                       otBackboneRouterMulticastListenerInfo &    aListenerInfo)
 {
-    otError   error = OT_ERROR_NONE;
+    Error     error = kErrorNone;
     TimeMilli now;
 
-    VerifyOrExit(aIterator < mNumValidListeners, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(aIterator < mNumValidListeners, error = kErrorNotFound);
 
     now = TimerMilli::GetNow();
 
@@ -311,4 +311,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE

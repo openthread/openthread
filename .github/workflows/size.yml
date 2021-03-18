@@ -38,7 +38,7 @@ jobs:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+      if: "github.ref != 'refs/heads/main'"
 
   size-report:
     runs-on: ubuntu-20.04
@@ -53,6 +53,7 @@ jobs:
       env:
         OT_BASE_BRANCH: "${{ github.base_ref }}"
         SIZE_REPORT_URL: "https://openthread-size-report.glitch.me/size-report/1354027"
+        GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export PATH=$PATH:$HOME/.local/bin
         ./script/check-size

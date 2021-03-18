@@ -34,49 +34,42 @@ setup_two_nodes
 
 switch_node 1
 send "coaps x509\n"
-expect "Done"
+expect_line "Done"
 send "coaps start\n"
-expect "Done"
+expect_line "Done"
 send "coaps resource test/resource\n"
-expect "Done"
+expect_line "Done"
 send "coaps set Testing123\n"
-expect "Done"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_1 $expect_out(1,string)
-expect "Done"
+expect_line "Done"
+
+set addr_1 [get_ipaddr mleid]
 
 switch_node 2
 send "coaps x509\n"
-expect "Done"
+expect_line "Done"
 send "coaps start\n"
-expect "Done"
+expect_line "Done"
 send "coaps connect $addr_1 5684\n"
-expect "Done"
+expect_line "Done"
 expect "coaps connected"
 send "coaps get $addr_1 test/resource\n"
-expect "Done"
+expect_line "Done"
 expect "coaps response from $addr_1 with payload: 54657374696e67313233" # ASCII of "Testing123"
 send "coaps post $addr_1 test/resource con Testing123\n"
-expect "Done"
+expect_line "Done"
 expect "coaps response from $addr_1"
 send "coaps put $addr_1 test/resource con Testing123\n"
-expect "Done"
+expect_line "Done"
 expect "coaps response from $addr_1"
 send "coaps delete $addr_1 test/resource con\n"
-expect "Done"
+expect_line "Done"
 expect "coaps response from $addr_1"
 send "coaps post $addr_1 test/resource none Testing123\n"
-expect "Done"
+expect_line "Done"
 send "coaps get $addr_1 default\n"
-expect "Done"
+expect_line "Done"
 expect "coaps response from $addr_1"
-send "ipaddr mleid\n"
-expect "ipaddr mleid"
-expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-set addr_2 $expect_out(1,string)
-expect "Done"
+set addr_2 [get_ipaddr mleid]
 
 switch_node 1
 expect "coaps request from $addr_2 GET"
@@ -90,12 +83,12 @@ expect "coaps response sent"
 expect "coaps request from $addr_2 POST with payload: 54657374696e67313233"
 send "coaps resource\n"
 expect "test/resource"
-expect "Done"
+expect_line "Done"
 send "coaps set\n"
 expect "Testing123"
-expect "Done"
+expect_line "Done"
 send "coaps help\n"
-expect "Done"
+expect_line "Done"
 send "coaps get\n"
 expect "Error 7: InvalidArgs"
 send "coaps\n"
@@ -107,10 +100,10 @@ expect "Error 7: InvalidArgs"
 
 switch_node 2
 send "coaps stop\n"
-expect "Done"
+expect_line "Done"
 
 switch_node 1
 send "coaps stop\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

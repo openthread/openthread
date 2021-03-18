@@ -137,21 +137,21 @@ Neighbor *NeighborTable::FindChildOrRouter(const Neighbor::AddressMatcher &aMatc
 Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor::StateFilter aFilter)
 {
     Neighbor *   neighbor = nullptr;
-    Mac::Address macAddresss;
+    Mac::Address macAddress;
 
     if (aIp6Address.IsLinkLocal())
     {
-        aIp6Address.GetIid().ConvertToMacAddress(macAddresss);
+        aIp6Address.GetIid().ConvertToMacAddress(macAddress);
     }
 
     if (Get<Mle::Mle>().IsRoutingLocator(aIp6Address))
     {
-        macAddresss.SetShort(aIp6Address.GetIid().GetLocator());
+        macAddress.SetShort(aIp6Address.GetIid().GetLocator());
     }
 
-    if (!macAddresss.IsNone())
+    if (!macAddress.IsNone())
     {
-        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddresss, aFilter));
+        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddress, aFilter));
         ExitNow();
     }
 
@@ -178,9 +178,9 @@ exit:
     return neighbor;
 }
 
-otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     int16_t index;
 
     // Non-negative iterator value gives the Child index into child table
@@ -226,7 +226,7 @@ otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Ne
     }
 
     aIterator = -index;
-    error     = OT_ERROR_NOT_FOUND;
+    error     = kErrorNotFound;
 
 exit:
     return error;
@@ -236,9 +236,9 @@ exit:
 
 #if OPENTHREAD_MTD
 
-otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
+Error NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     VerifyOrExit(aIterator == OT_NEIGHBOR_INFO_ITERATOR_INIT);
 
@@ -247,7 +247,7 @@ otError NeighborTable::GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Ne
 
     aNeighInfo.SetFrom(Get<Mle::Mle>().GetParent());
     aNeighInfo.mIsChild = false;
-    error               = OT_ERROR_NONE;
+    error               = kErrorNone;
 
 exit:
     return error;
@@ -291,7 +291,7 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 
     case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<const Child &>(aNeighbor),
                                                           Mle::ChildDuaState::kRemoved);
 #endif

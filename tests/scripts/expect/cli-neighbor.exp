@@ -33,26 +33,18 @@ source "tests/scripts/expect/_multinode.exp"
 setup_two_nodes
 
 switch_node 2
-send "rloc16\n"
-expect "rloc16"
-expect -re {([0-9a-f]{4})}
-set rloc $expect_out(1,string)
-expect "Done"
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
-expect "Done"
+set rloc [get_rloc16]
+set extaddr [get_extaddr]
 
 switch_node 1
 send "neighbor table\n"
 expect "| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |"
 expect "+------+--------+-----+----------+-----------+-+-+-+------------------+"
 expect -re "\\| +C +\\| 0x$rloc \\| +\\d+ \\| +-?\\d+ \\| +-?\\d+ \\|1\\|0\\|0\\| $extaddr \\|"
-expect "Done"
+expect_line "Done"
 send "neighbor list\n"
 expect "0x$rloc"
-expect "Done"
+expect_line "Done"
 send "neighbor something_invalid\n"
 expect "Error 7: InvalidArgs"
 

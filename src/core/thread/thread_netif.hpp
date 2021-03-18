@@ -56,12 +56,16 @@
 #include "backbone_router/bbr_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
 #include "thread/mlr_manager.hpp"
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 #include "thread/dua_manager.hpp"
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#include "net/srp_server.hpp"
 #endif
 
 #include "meshcop/dataset_manager.hpp"
@@ -76,9 +80,11 @@
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
 #include "net/dns_client.hpp"
+#include "net/dnssd_server.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
+#include "net/srp_client.hpp"
 #include "thread/address_resolver.hpp"
 #include "thread/announce_begin_server.hpp"
 #include "thread/discover_scanner.hpp"
@@ -90,8 +96,10 @@
 #include "thread/mle_router.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_notifier.hpp"
+#include "thread/network_data_service.hpp"
 #include "thread/network_diagnostic.hpp"
 #include "thread/panid_query_server.hpp"
+#include "thread/radio_selector.hpp"
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
 
@@ -153,10 +161,10 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE  Successfully submitted the message to the interface.
+     * @retval kErrorNone  Successfully submitted the message to the interface.
      *
      */
-    otError SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
+    Error SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -165,11 +173,11 @@ public:
      * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  A pointer where the number of prefix match bits for the chosen route is stored.
      *
-     * @retval OT_ERROR_NONE      Successfully found a route.
-     * @retval OT_ERROR_NO_ROUTE  Could not find a valid route.
+     * @retval kErrorNone      Successfully found a route.
+     * @retval kErrorNoRoute   Could not find a valid route.
      *
      */
-    otError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
      * This method indicates whether @p aAddress matches an on-mesh prefix.
@@ -195,10 +203,16 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     Dns::Client mDnsClient;
-#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Srp::Client mSrpClient;
+#endif
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    Dns::ServiceDiscovery::Server mDnssdServer;
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;
-#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+#endif
     MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
     Ip6::Filter             mIp6Filter;
@@ -208,6 +222,9 @@ private:
     MeshForwarder           mMeshForwarder;
     Mle::MleRouter          mMleRouter;
     Mle::DiscoverScanner    mDiscoverScanner;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    RadioSelector mRadioSelector;
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Local mNetworkDataLocal;
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -215,6 +232,7 @@ private:
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Notifier mNetworkDataNotifier;
 #endif
+    NetworkData::Service::Manager mNetworkDataServiceManager;
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
@@ -252,12 +270,16 @@ private:
     BackboneRouter::Local   mBackboneRouterLocal;
     BackboneRouter::Manager mBackboneRouterManager;
 #endif
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     MlrManager mMlrManager;
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     DuaManager mDuaManager;
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Srp::Server mSrpServer;
+#endif
+
     Utils::ChildSupervisor     mChildSupervisor;
     Utils::SupervisionListener mSupervisionListener;
     AnnounceBeginServer        mAnnounceBegin;

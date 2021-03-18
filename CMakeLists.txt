@@ -37,6 +37,7 @@ project(openthread VERSION ${OT_DEFAULT_VERSION})
 option(OT_BUILD_EXECUTABLES "Build executables" ON)
 option(OT_COVERAGE "enable coverage" OFF)
 set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
+option(OT_MBEDTLS_THREADING "enable mbedtls threading" OFF)
 
 add_library(ot-config INTERFACE)
 
@@ -57,9 +58,16 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "default build type: Debug" FORCE)
+    # Check if this is a top-level CMake.
+    # If it is not, do not set the CMAKE_BUILD_TYPE because OpenThread is a part of something bigger.
+    if ("${CMAKE_PROJECT_NAME}" STREQUAL "openthread")
+        set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "default build type: Debug" FORCE)
+    endif ()
 endif()
-message(STATUS "CMake build type: ${CMAKE_BUILD_TYPE}")
+
+if (CMAKE_BUILD_TYPE)
+    message(STATUS "OpenThread CMake build type: ${CMAKE_BUILD_TYPE}")
+endif ()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror -pedantic-errors with gcc-compatible compilers")
@@ -91,7 +99,7 @@ target_compile_definitions(ot-config INTERFACE
     "PACKAGE_VERSION=\"${OT_VERSION}\""
 )
 
-set(OT_THREAD_VERSION "1.1" CACHE STRING "Thread version chosen by the user at configure time")
+set(OT_THREAD_VERSION "1.2" CACHE STRING "Thread version chosen by the user at configure time")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2")
 if(${OT_THREAD_VERSION} EQUAL "1.1")
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_THREAD_VERSION=OT_THREAD_VERSION_1_1")
@@ -159,7 +167,10 @@ if(OT_PLATFORM STREQUAL "posix")
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM STREQUAL "external")
     # skip in this case
-elseif(OT_PLATFORM)
+elseif(OT_PLATFORM MATCHES "^nrf*")
+    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/${OT_PLATFORM})
+    add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx")
+else()
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
 endif()
@@ -186,7 +197,12 @@ add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
 if(OT_PLATFORM STREQUAL "simulation")
     enable_testing()
-    add_subdirectory(tests)
 endif()
 
-add_custom_target(print-ot-config ALL COMMAND echo -e "$<JOIN:$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>,\"\\n\">")
+add_subdirectory(tests)
+
+add_custom_target(print-ot-config ALL
+                  COMMAND ${CMAKE_COMMAND}
+                  -DLIST="$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>"
+                  -P ${PROJECT_SOURCE_DIR}/etc/cmake/print.cmake
+)

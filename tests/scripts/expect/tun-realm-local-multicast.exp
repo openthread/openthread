@@ -37,53 +37,45 @@
 source "tests/scripts/expect/_common.exp"
 
 spawn_node 1
-
-set timeout 1
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 set extaddr1 [get_extaddr]
 
 spawn_node 2 cli
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "router"
 sleep 3
 
 spawn_node 3 cli
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "macfilter addr add ${extaddr1}\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr denylist\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "router"
 sleep 4
@@ -91,24 +83,22 @@ sleep 4
 set extaddr3 [get_extaddr]
 
 spawn_node 4 cli
-
-send "panid 0xface\n"
-expect "Done"
+setup_default_network
 
 send "mode rn\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr add ${extaddr3}\n"
-expect "Done"
+expect_line "Done"
 
 send "macfilter addr allowlist\n"
-expect "Done"
+expect_line "Done"
 
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 
 wait_for "state" "child"
 
@@ -117,7 +107,7 @@ set mleid4 [get_ipaddr "mleid"]
 switch_node 1
 
 send "ping ${mleid4}\n"
-expect "Done"
+expect_line "Done"
 expect "16 bytes from $mleid4: icmp_seq=1"
 
 dispose_all

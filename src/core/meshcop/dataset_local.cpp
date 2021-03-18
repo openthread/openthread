@@ -66,10 +66,10 @@ void DatasetLocal::Clear(void)
     mSaved            = false;
 }
 
-otError DatasetLocal::Restore(Dataset &aDataset)
+Error DatasetLocal::Restore(Dataset &aDataset)
 {
     const Timestamp *timestamp;
-    otError          error;
+    Error            error;
 
     mTimestampPresent = false;
 
@@ -89,14 +89,14 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Read(Dataset &aDataset) const
+Error DatasetLocal::Read(Dataset &aDataset) const
 {
     DelayTimerTlv *delayTimer;
     uint32_t       elapsed;
-    otError        error;
+    Error          error;
 
     error = Get<Settings>().ReadOperationalDataset(IsActive(), aDataset);
-    VerifyOrExit(error == OT_ERROR_NONE, aDataset.mLength = 0);
+    VerifyOrExit(error == kErrorNone, aDataset.mLength = 0);
 
     if (mType == Dataset::kActive)
     {
@@ -126,10 +126,10 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Read(Dataset::Info &aDatasetInfo) const
+Error DatasetLocal::Read(Dataset::Info &aDatasetInfo) const
 {
     Dataset dataset(mType);
-    otError error;
+    Error   error;
 
     aDatasetInfo.Clear();
 
@@ -140,10 +140,10 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
+Error DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
 {
     Dataset dataset(mType);
-    otError error;
+    Error   error;
 
     memset(&aDataset, 0, sizeof(aDataset));
 
@@ -154,9 +154,9 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Save(const Dataset::Info &aDatasetInfo)
+Error DatasetLocal::Save(const Dataset::Info &aDatasetInfo)
 {
-    otError error;
+    Error   error;
     Dataset dataset(mType);
 
     SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
@@ -166,7 +166,7 @@ exit:
     return error;
 }
 
-otError DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
+Error DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
 {
     Dataset dataset(mType);
 
@@ -175,10 +175,10 @@ otError DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
     return Save(dataset);
 }
 
-otError DatasetLocal::Save(const Dataset &aDataset)
+Error DatasetLocal::Save(const Dataset &aDataset)
 {
     const Timestamp *timestamp;
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
 
     if (aDataset.GetSize() == 0)
     {

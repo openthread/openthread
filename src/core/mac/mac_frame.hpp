@@ -72,6 +72,15 @@ public:
     void Init(void) { mFields.m16 = 0; }
 
     /**
+     * This method initializes the Header IE with Id and Length.
+     *
+     * @param[in]  aId   The IE Element Id.
+     * @param[in]  aLen  The IE content length.
+     *
+     */
+    void Init(uint16_t aId, uint8_t aLen);
+
+    /**
      * This method returns the IE Element Id.
      *
      * @returns the IE Element Id.
@@ -135,7 +144,7 @@ private:
 
 } OT_TOOL_PACKED_END;
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 /**
  * This class implements vendor specific Header IE generation and parsing.
  *
@@ -144,6 +153,12 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = 0x00,
+        kIeContentSize = sizeof(uint8_t) * 4,
+    };
+
     /**
      * This method returns the Vendor OUI.
      *
@@ -186,6 +201,7 @@ private:
     uint8_t mSubType;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
  * This class implements Time Header IE generation and parsing.
  *
@@ -202,6 +218,12 @@ public:
     enum : uint8_t
     {
         kVendorIeTime = 0x01,
+    };
+
+    enum
+    {
+        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
+        kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t),
     };
 
     /**
@@ -252,6 +274,30 @@ private:
 } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+class ThreadIe
+{
+public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
+        kIeContentSize = VendorIeHeader::kIeContentSize,
+    };
+
+    enum : uint32_t
+    {
+        kVendorOuiThreadCompanyId = 0xeab89b,
+    };
+
+    enum SubType : uint8_t
+    {
+        kEnhAckProbingIe = 0x00,
+    };
+};
+#endif
+
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 /**
  * This class implements IEEE 802.15.4 MAC frame generation and parsing.
  *
@@ -261,13 +307,12 @@ class Frame : public otRadioFrame
 public:
     enum
     {
-        kMtu                 = OT_RADIO_FRAME_MAX_SIZE,
         kFcfSize             = sizeof(uint16_t),
         kDsnSize             = sizeof(uint8_t),
         kSecurityControlSize = sizeof(uint8_t),
         kFrameCounterSize    = sizeof(uint32_t),
         kCommandIdSize       = sizeof(uint8_t),
-        kFcsSize             = sizeof(uint16_t),
+        k154FcsSize          = sizeof(uint16_t),
 
         kFcfFrameBeacon      = 0 << 0,
         kFcfFrameData        = 1 << 0,
@@ -330,13 +375,9 @@ public:
         kMacCmdCoordinatorRealignment     = 8,
         kMacCmdGtsRequest                 = 9,
 
-        kHeaderIeVendor       = 0x00,
-        kHeaderIeCsl          = 0x1a,
-        kHeaderIeTermination2 = 0x7f,
+        kImmAckLength = kFcfSize + kDsnSize + k154FcsSize,
 
-        kInfoStringSize = 110, ///< Max chars needed for the info string representation (@sa ToInfoString()).
-
-        kImmAckLength = kFcfSize + kDsnSize + kFcsSize,
+        kInfoStringSize = 128, ///< Max chars needed for the info string representation (@sa ToInfoString()).
     };
 
     /**
@@ -366,11 +407,11 @@ public:
     /**
      * This method validates the frame.
      *
-     * @retval OT_ERROR_NONE    Successfully parsed the MAC header.
-     * @retval OT_ERROR_PARSE   Failed to parse through the MAC header.
+     * @retval kErrorNone    Successfully parsed the MAC header.
+     * @retval kErrorParse   Failed to parse through the MAC header.
      *
      */
-    otError ValidatePsdu(void) const;
+    Error ValidatePsdu(void) const;
 
     /**
      * This method returns the IEEE 802.15.4 Frame Type.
@@ -495,11 +536,11 @@ public:
      *
      * @param[out]  aPanId  The Destination PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully retrieved the Destination PAN Identifier.
-     * @retval OT_ERROR_PARSE  Failed to parse the PAN Identifier.
+     * @retval kErrorNone   Successfully retrieved the Destination PAN Identifier.
+     * @retval kErrorParse  Failed to parse the PAN Identifier.
      *
      */
-    otError GetDstPanId(PanId &aPanId) const;
+    Error GetDstPanId(PanId &aPanId) const;
 
     /**
      * This method sets the Destination PAN Identifier.
@@ -522,10 +563,10 @@ public:
      *
      * @param[out]  aAddress  The Destination Address.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Destination Address.
+     * @retval kErrorNone  Successfully retrieved the Destination Address.
      *
      */
-    otError GetDstAddr(Address &aAddress) const;
+    Error GetDstAddr(Address &aAddress) const;
 
     /**
      * This method sets the Destination Address.
@@ -564,20 +605,20 @@ public:
      *
      * @param[out]  aPanId  The Source PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully retrieved the Source PAN Identifier.
+     * @retval kErrorNone   Successfully retrieved the Source PAN Identifier.
      *
      */
-    otError GetSrcPanId(PanId &aPanId) const;
+    Error GetSrcPanId(PanId &aPanId) const;
 
     /**
      * This method sets the Source PAN Identifier.
      *
      * @param[in]  aPanId  The Source PAN Identifier.
      *
-     * @retval OT_ERROR_NONE   Successfully set the Source PAN Identifier.
+     * @retval kErrorNone   Successfully set the Source PAN Identifier.
      *
      */
-    otError SetSrcPanId(PanId aPanId);
+    Error SetSrcPanId(PanId aPanId);
 
     /**
      * This method indicates whether or not the Source Address is present for this object.
@@ -592,10 +633,10 @@ public:
      *
      * @param[out]  aAddress  The Source Address.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Source Address.
+     * @retval kErrorNone  Successfully retrieved the Source Address.
      *
      */
-    otError GetSrcAddr(Address &aAddress) const;
+    Error GetSrcAddr(Address &aAddress) const;
 
     /**
      * This method sets the Source Address.
@@ -626,11 +667,11 @@ public:
      *
      * @param[out]  aSecurityControlField  The Security Control Field.
      *
-     * @retval OT_ERROR_NONE   Successfully retrieved the Security Level Identifier.
-     * @retval OT_ERROR_PARSE  Failed to find the security control field in the frame.
+     * @retval kErrorNone   Successfully retrieved the Security Level Identifier.
+     * @retval kErrorParse  Failed to find the security control field in the frame.
      *
      */
-    otError GetSecurityControlField(uint8_t &aSecurityControlField) const;
+    Error GetSecurityControlField(uint8_t &aSecurityControlField) const;
 
     /**
      * This method sets the Security Control Field.
@@ -645,30 +686,30 @@ public:
      *
      * @param[out]  aSecurityLevel  The Security Level Identifier.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Security Level Identifier.
+     * @retval kErrorNone  Successfully retrieved the Security Level Identifier.
      *
      */
-    otError GetSecurityLevel(uint8_t &aSecurityLevel) const;
+    Error GetSecurityLevel(uint8_t &aSecurityLevel) const;
 
     /**
      * This method gets the Key Identifier Mode.
      *
      * @param[out]  aSecurityLevel  The Key Identifier Mode.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier Mode.
+     * @retval kErrorNone  Successfully retrieved the Key Identifier Mode.
      *
      */
-    otError GetKeyIdMode(uint8_t &aKeyIdMode) const;
+    Error GetKeyIdMode(uint8_t &aKeyIdMode) const;
 
     /**
      * This method gets the Frame Counter.
      *
      * @param[out]  aFrameCounter  The Frame Counter.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Frame Counter.
+     * @retval kErrorNone  Successfully retrieved the Frame Counter.
      *
      */
-    otError GetFrameCounter(uint32_t &aFrameCounter) const;
+    Error GetFrameCounter(uint32_t &aFrameCounter) const;
 
     /**
      * This method sets the Frame Counter.
@@ -699,10 +740,10 @@ public:
      *
      * @param[out]  aKeyId  The Key Identifier.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Key Identifier.
+     * @retval kErrorNone  Successfully retrieved the Key Identifier.
      *
      */
-    otError GetKeyId(uint8_t &aKeyId) const;
+    Error GetKeyId(uint8_t &aKeyId) const;
 
     /**
      * This method sets the Key Identifier.
@@ -717,20 +758,20 @@ public:
      *
      * @param[out]  aCommandId  The Command ID.
      *
-     * @retval OT_ERROR_NONE  Successfully retrieved the Command ID.
+     * @retval kErrorNone  Successfully retrieved the Command ID.
      *
      */
-    otError GetCommandId(uint8_t &aCommandId) const;
+    Error GetCommandId(uint8_t &aCommandId) const;
 
     /**
      * This method sets the Command ID.
      *
      * @param[in]  aCommandId  The Command ID.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Command ID.
+     * @retval kErrorNone  Successfully set the Command ID.
      *
      */
-    otError SetCommandId(uint8_t aCommandId);
+    Error SetCommandId(uint8_t aCommandId);
 
     /**
      * This method indicates whether the frame is a MAC Data Request command (data poll).
@@ -905,16 +946,22 @@ public:
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     /**
-     * This method appends Header IEs to MAC header.
+     * This template method appends an Header IE at specified index in this frame.
      *
-     * @param[in]   aIeList  The pointer to the Header IEs array.
-     * @param[in]   aIeCount The number of Header IEs in the array.
+     * @param[in,out]   aIndex  The index to append IE. If `aIndex` is `0` on input, this method finds the index
+     *                          for the first IE and appends the IE at that position. If the position is not found
+     *                          successfully, `aIndex` will be set to `kInvalidIndex`. Otherwise the IE will be
+     *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
+     *                          IE just appended.
      *
-     * @retval OT_ERROR_NONE    Successfully appended the Header IEs.
-     * @retval OT_ERROR_FAILED  If IE Present bit is not set.
+     * @tparam  IeType  The Header IE type, it MUST contain an enum `kHeaderIeId` equal to the IE's Id
+     *                  and an enum `kIeContentSize` indicating the IE body's size.
+     *
+     * @retval kErrorNone      Successfully appended the Header IE.
+     * @retval kErrorNotFound  The position for first IE is not found.
      *
      */
-    otError AppendHeaderIe(HeaderIe *aIeList, uint8_t aIeCount);
+    template <typename IeType> Error AppendHeaderIeAt(uint8_t &aIndex);
 
     /**
      * This method returns a pointer to the Header IE.
@@ -939,6 +986,33 @@ public:
      */
     const uint8_t *GetHeaderIe(uint8_t aIeId) const;
 
+    /**
+     * This method returns a pointer to a specific Thread IE.
+     *
+     * A Thread IE is a vendor specific IE with Vendor OUI as `kVendorOuiThreadCompanyId`.
+     *
+     * @param[in] aSubType  The sub type of the Thread IE.
+     *
+     * @returns A pointer to the Thread IE, nullptr if not found.
+     *
+     */
+    uint8_t *GetThreadIe(uint8_t aSubType)
+    {
+        return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetThreadIe(aSubType));
+    }
+
+    /**
+     * This method returns a pointer to a specific Thread IE.
+     *
+     * A Thread IE is a vendor specific IE with Vendor OUI as `kVendorOuiThreadCompanyId`.
+     *
+     * @param[in] aSubType  The sub type of the Thread IE.
+     *
+     * @returns A pointer to the Thread IE, nullptr if not found.
+     *
+     */
+    const uint8_t *GetThreadIe(uint8_t aSubType) const;
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method finds CSL IE in the frame and modify its content.
@@ -950,7 +1024,36 @@ public:
     void SetCslIe(uint16_t aCslPeriod, uint16_t aCslPhase);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    /**
+     * This method finds Enhanced ACK Probing (Vendor Specific) IE and set its value.
+     *
+     * @param[in] aValue  A pointer to the value to set.
+     * @param[in] aLen    The length of @p aValue.
+     *
+     */
+    void SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen);
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    /**
+     * This method gets the radio link type of the frame.
+     *
+     * @returns Frame's radio link type.
+     *
+     */
+    RadioType GetRadioType(void) const { return static_cast<RadioType>(mRadioType); }
+
+    /**
+     * This method sets the radio link type of the frame.
+     *
+     * @param[in] aRadioType  A radio link type.
+     *
+     */
+    void SetRadioType(RadioType aRadioType) { mRadioType = static_cast<uint8_t>(aRadioType); }
+#endif
 
     /**
      * This method returns the maximum transmission unit size (MTU).
@@ -958,7 +1061,14 @@ public:
      * @returns The maximum transmission unit (MTU).
      *
      */
-    uint16_t GetMtu(void) const { return kMtu; }
+    uint16_t GetMtu(void) const
+#if !OPENTHREAD_CONFIG_MULTI_RADIO && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    {
+        return OT_RADIO_FRAME_MAX_SIZE;
+    }
+#else
+        ;
+#endif
 
     /**
      * This method returns the FCS size.
@@ -966,7 +1076,14 @@ public:
      * @returns This method returns the FCS size.
      *
      */
-    uint16_t GetFcsSize(void) const { return kFcsSize; }
+    uint8_t GetFcsSize(void) const
+#if !OPENTHREAD_CONFIG_MULTI_RADIO && OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    {
+        return k154FcsSize;
+    }
+#else
+        ;
+#endif
 
     /**
      * This method returns information about the frame object as an `InfoString` object.
@@ -1003,6 +1120,9 @@ protected:
     uint8_t FindPayloadIndex(void) const;
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     uint8_t FindHeaderIeIndex(void) const;
+
+    Error                           InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize);
+    template <typename IeType> void InitIeContentAt(uint8_t &aIndex);
 #endif
 
     static uint8_t GetKeySourceLength(uint8_t aKeyIdMode);
@@ -1083,11 +1203,11 @@ public:
      *                          for AES CCM computation.
      * @param[in]  aMacKey      A reference to the MAC key to decrypt the received frame.
      *
-     * @retval OT_ERROR_NONE      Process of received frame AES CCM succeeded.
-     * @retval OT_ERROR_SECURITY  Received frame MIC check failed.
+     * @retval kErrorNone      Process of received frame AES CCM succeeded.
+     * @retval kErrorSecurity  Received frame MIC check failed.
      *
      */
-    otError ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey);
+    Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -1213,7 +1333,7 @@ public:
     void SetAesKey(const Mac::Key &aAesKey) { mInfo.mTxInfo.mAesKey = &aAesKey; }
 
     /**
-     * This method copies the PSDU and all attributes from another frame.
+     * This method copies the PSDU and all attributes (except for frame link type) from another frame.
      *
      * @note This method performs a deep copy meaning the content of PSDU buffer from the given frame is copied into
      * the PSDU buffer of the current frame.
@@ -1306,11 +1426,11 @@ public:
      * @param[in]    aIeData            A pointer to the IE data portion of the ACK to be sent.
      * @param[in]    aIeLength          The length of IE data portion of the ACK to be sent.
      *
-     * @retval  OT_ERROR_NONE           Successfully generated Enh Ack.
-     * @retval  OT_ERROR_PARSE          @p aFrame has incorrect format.
+     * @retval  kErrorNone           Successfully generated Enh Ack.
+     * @retval  kErrorParse          @p aFrame has incorrect format.
      *
      */
-    otError GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
+    Error GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength);
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     /**
@@ -1554,6 +1674,12 @@ OT_TOOL_PACKED_BEGIN
 class CslIe
 {
 public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = 0x1a,
+        kIeContentSize = sizeof(uint16_t) * 2,
+    };
+
     /**
      * This method returns the CSL Period.
      *
@@ -1590,6 +1716,22 @@ private:
     uint16_t mPhase;
     uint16_t mPeriod;
 } OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Termination2 IE.
+ *
+ * This class is empty for template specialization.
+ *
+ */
+class Termination2Ie
+{
+public:
+    enum : uint8_t
+    {
+        kHeaderIeId    = 0x7f,
+        kIeContentSize = 0,
+    };
+};
 
 /**
  * @}

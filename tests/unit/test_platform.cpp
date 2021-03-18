@@ -28,6 +28,7 @@
 
 #include "test_platform.h"
 
+#include <stdio.h>
 #include <sys/time.h>
 
 bool                 g_testPlatAlarmSet     = false;
@@ -93,7 +94,7 @@ bool sDiagMode = false;
 
 extern "C" {
 
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return calloc(aNum, aSize);
@@ -380,10 +381,29 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 
     VerifyOrExit(aOutput, error = OT_ERROR_INVALID_ARGS);
 
+#if __SANITIZE_ADDRESS__ == 0
+    {
+        FILE * file = nullptr;
+        size_t readLength;
+
+        file = fopen("/dev/urandom", "rb");
+        VerifyOrExit(file != nullptr, error = OT_ERROR_FAILED);
+
+        readLength = fread(aOutput, 1, aOutputLength, file);
+
+        if (readLength != aOutputLength)
+        {
+            error = OT_ERROR_FAILED;
+        }
+
+        fclose(file);
+    }
+#else
     for (uint16_t length = 0; length < aOutputLength; length++)
     {
         aOutput[length] = (uint8_t)rand();
     }
+#endif
 
 exit:
     return error;
@@ -609,5 +629,90 @@ void otPlatOtnsStatus(const char *aStatus)
     OT_UNUSED_VARIABLE(aStatus);
 }
 #endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
+void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddress, uint16_t aUdpPort)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aUnicastAddress);
+    OT_UNUSED_VARIABLE(aUdpPort);
+}
+
+void otPlatTrelUdp6UpdateAddress(otInstance *aInstance, const otIp6Address *aUnicastAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aUnicastAddress);
+}
+
+void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aMulticastAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aMulticastAddress);
+}
+
+otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
+                             const uint8_t *     aBuffer,
+                             uint16_t            aLength,
+                             const otIp6Address *aDestAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aLength);
+    OT_UNUSED_VARIABLE(aDestAddress);
+
+    return OT_ERROR_ABORT;
+}
+
+otError otPlatTrelUdp6SetTestMode(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+    return OT_ERROR_NOT_IMPLEMENTED;
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+                                          otLinkMetrics        aLinkMetrics,
+                                          const otShortAddress aShortAddress,
+                                          const otExtAddress * aExtAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aLinkMetrics);
+    OT_UNUSED_VARIABLE(aShortAddress);
+    OT_UNUSED_VARIABLE(aExtAddress);
+
+    return OT_ERROR_NONE;
+}
+
+otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const otShortAddress aShortAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddress);
+
+    otLinkMetrics metrics;
+
+    memset(&metrics, 0, sizeof(metrics));
+
+    return metrics;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                 const otIp6Address *aDestAddress,
+                                 const uint8_t *     aBuffer,
+                                 uint16_t            aBufferLength)
+{
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aDestAddress);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aBufferLength);
+
+    return OT_ERROR_FAILED;
+}
+#endif
 
 } // extern "C"

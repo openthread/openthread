@@ -62,6 +62,12 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     , mDnsClient(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    , mSrpClient(aInstance)
+#endif
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    , mDnssdServer(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpClient(aInstance)
 #endif
@@ -73,6 +79,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mMeshForwarder(aInstance)
     , mMleRouter(aInstance)
     , mDiscoverScanner(aInstance)
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    , mRadioSelector(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mNetworkDataLocal(aInstance)
 #endif
@@ -80,6 +89,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     , mNetworkDataNotifier(aInstance)
 #endif
+    , mNetworkDataServiceManager(aInstance)
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     , mNetworkDiagnostic(aInstance)
 #endif
@@ -111,13 +121,17 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mBackboneRouterLocal(aInstance)
     , mBackboneRouterManager(aInstance)
 #endif
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     , mMlrManager(aInstance)
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     , mDuaManager(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    , mSrpServer(aInstance)
+#endif
+
     , mChildSupervisor(aInstance)
     , mSupervisionListener(aInstance)
     , mAnnounceBegin(aInstance)
@@ -148,6 +162,9 @@ void ThreadNetif::Up(void)
     SubscribeAllNodesMulticast();
     IgnoreError(Get<Mle::MleRouter>().Enable());
     IgnoreError(Get<Tmf::TmfAgent>().Start());
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    IgnoreError(Get<Dns::ServiceDiscovery::Server>().Start());
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     IgnoreError(Get<Dns::Client>().Start());
 #endif
@@ -165,10 +182,13 @@ void ThreadNetif::Down(void)
     VerifyOrExit(mIsUp);
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    IgnoreError(Get<Dns::Client>().Stop());
+    Get<Dns::Client>().Stop();
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     IgnoreError(Get<Sntp::Client>().Stop());
+#endif
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    Get<Dns::ServiceDiscovery::Server>().Stop();
 #endif
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
     Get<Coap::CoapSecure>().Stop();
@@ -191,16 +211,16 @@ exit:
     return;
 }
 
-otError ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
+Error ThreadNetif::RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch)
 {
-    otError  error;
+    Error    error;
     uint16_t rloc;
 
     SuccessOrExit(error = Get<NetworkData::Leader>().RouteLookup(aSource, aDestination, aPrefixMatch, &rloc));
 
     if (rloc == Get<Mle::MleRouter>().GetRloc16())
     {
-        error = OT_ERROR_NO_ROUTE;
+        error = kErrorNoRoute;
     }
 
 exit:

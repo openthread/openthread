@@ -98,7 +98,7 @@ const char *Url::GetValue(const char *aName, const char *aLastValue) const
             }
             else if (start[len] == '\0')
             {
-                ExitNow(rval = "");
+                ExitNow(rval = &start[len]);
             }
         }
         last  = start;
@@ -153,6 +153,24 @@ void TestSimpleNoQueryString(void)
     printf("PASS %s\r\n", __func__);
 }
 
+void TestEmptyValue(void)
+{
+    char         url[] = "spinel:///dev/ttyUSB0?rtscts&baudrate=115200&verbose&verbose&verbose";
+    ot::Url::Url args;
+    const char * arg = nullptr;
+
+    assert(!args.Init(url));
+    assert(!strcmp(args.GetPath(), "/dev/ttyUSB0"));
+    assert((arg = args.GetValue("rtscts")) != nullptr);
+    assert(args.GetValue("rtscts", arg) == nullptr);
+    assert((arg = args.GetValue("verbose", arg)) != nullptr);
+    assert((arg = args.GetValue("verbose", arg)) != nullptr);
+    assert((arg = args.GetValue("verbose", arg)) != nullptr);
+    assert((arg = args.GetValue("verbose", arg)) == nullptr);
+
+    printf("PASS %s\r\n", __func__);
+}
+
 void TestMultipleProtocols(void)
 {
     char         url[] = "spinel+spi:///dev/ttyUSB0?baudrate=115200";
@@ -196,6 +214,7 @@ int main(void)
 {
     TestSimple();
     TestSimpleNoQueryString();
+    TestEmptyValue();
     TestMultipleProtocols();
     TestMultipleProtocolsAndDuplicateParameters();
 

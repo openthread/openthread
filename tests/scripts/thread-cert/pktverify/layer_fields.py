@@ -275,9 +275,11 @@ _LAYER_FIELDS = {
     'wpan.channel': _auto,
     'wpan.header_ie.id': _list(_auto),
     'wpan.header_ie.csl.period': _auto,
+    'wpan.payload_ie.vendor.oui': _auto,
 
     # MLE
     'mle.cmd': _auto,
+    'mle.sec_suite': _hex,
     'mle.tlv.type': _list(_dec),
     'mle.tlv.len': _list(_dec),
     'mle.tlv.mode.receiver_on_idle': _auto,
@@ -319,13 +321,16 @@ _LAYER_FIELDS = {
     'mle.tlv.addr16': _auto,
     'mle.tlv.channel': _auto,
     'mle.tlv.addr_reg_iid': _list(_auto),
+    'mle.tlv.link_enh_ack_flags': _auto,
     'mle.tlv.link_forward_series': _list(_auto),
+    'mle.tlv.link_requested_type_id_flags': _list(_hex),
     'mle.tlv.link_sub_tlv': _auto,
     'mle.tlv.link_status_sub_tlv': _auto,
     'mle.tlv.query_id': _auto,
     'mle.tlv.metric_type_id_flags.type': _list(_hex),
     'mle.tlv.metric_type_id_flags.metric': _list(_hex),
     'mle.tlv.metric_type_id_flags.l': _list(_hex),
+    'mle.tlv.link_requested_type_id_flags': _bytes,
 
     # IP
     'ip.version': _auto,
@@ -384,6 +389,7 @@ _LAYER_FIELDS = {
     'ipv6.opt.router_alert': _auto,
     'ipv6.opt.padn': _str,
     'ipv6.opt.length': _list(_auto),
+    'ipv6.opt.mpl.seed_id': _bytes,
     'ipv6.opt.mpl.sequence': _auto,
     'ipv6.opt.mpl.flag.v': _auto,
     'ipv6.opt.mpl.flag.s': _auto,
@@ -530,6 +536,12 @@ _LAYER_FIELDS = {
     'dtls.record.content_type': _list(_auto),
     'dtls.alert_message.desc': _auto,
 
+    # thread beacon
+    'thread_bcn.protocol': _auto,
+    'thread_bcn.version': _auto,
+    'thread_bcn.network_name': _str,
+    'thread_bcn.epid': _ext_addr,
+
     # thread_address
     'thread_address.tlv.len': _list(_auto),
     'thread_address.tlv.type': _list(_auto),
@@ -559,17 +571,20 @@ _LAYER_FIELDS = {
     'thread_meshcop.len_size_mismatch': _str,
     'thread_meshcop.tlv.type': _list(_auto),
     'thread_meshcop.tlv.len8': _list(_auto),
-    'thread_meshcop.tlv.net_name': _str,  # from thread_bl
+    'thread_meshcop.tlv.net_name': _list(_str),  # from thread_bl
     'thread_meshcop.tlv.commissioner_id': _str,
     'thread_meshcop.tlv.commissioner_sess_id': _auto,  # from mle
     "thread_meshcop.tlv.channel_page": _auto,  # from ble
-    "thread_meshcop.tlv.channel": _auto,  # from ble
+    "thread_meshcop.tlv.channel": _list(_auto),  # from ble
     "thread_meshcop.tlv.chan_mask": _str,  # from ble
     'thread_meshcop.tlv.chan_mask_page': _auto,
     'thread_meshcop.tlv.chan_mask_len': _auto,
     'thread_meshcop.tlv.chan_mask_mask': _bytes,
+    'thread_meshcop.tlv.discovery_req_ver': _auto,
+    'thread_meshcop.tlv.discovery_rsp_ver': _auto,
+    'thread_meshcop.tlv.discovery_rsp_n': _auto,
     'thread_meshcop.tlv.energy_list': _list(_auto),
-    'thread_meshcop.tlv.pan_id': _auto,
+    'thread_meshcop.tlv.pan_id': _list(_auto),
     'thread_meshcop.tlv.xpan_id': _bytes,
     'thread_meshcop.tlv.ml_prefix': _bytes,
     'thread_meshcop.tlv.master_key': _bytes,
@@ -581,10 +596,14 @@ _LAYER_FIELDS = {
     'thread_meshcop.tlv.sec_policy_c': _auto,
     'thread_meshcop.tlv.sec_policy_b': _auto,
     'thread_meshcop.tlv.state': _auto,
-    'thread_meshcop.tlv.steering_data': _list(_auto),
+    'thread_meshcop.tlv.steering_data': _bytes,
     'thread_meshcop.tlv.unknown': _bytes,
+    'thread_meshcop.tlv.udp_port': _list(_auto),
     'thread_meshcop.tlv.ba_locator': _auto,
+    'thread_meshcop.tlv.jr_locator': _auto,
     'thread_meshcop.tlv.active_tstamp': _auto,
+    'thread_meshcop.tlv.pending_tstamp': _auto,
+    'thread_meshcop.tlv.delay_timer': _auto,
     'thread_meshcop.tlv.ipv6_addr': _list(_ipv6_addr),
 
     # THREAD NWD
@@ -613,7 +632,7 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.border_router.flag.c': _list(_auto),
     'thread_nwd.tlv.6co.flag.reserved': _auto,
     'thread_nwd.tlv.6co.flag.cid': _auto,
-    'thread_nwd.tlv.6co.flag.c': _auto,
+    'thread_nwd.tlv.6co.flag.c': _list(_auto),
     'thread_nwd.tlv.6co.context_length': _auto,
 
     # Thread Diagnostic
@@ -722,6 +741,8 @@ def _get_candidate_layers(packet, layer_name):
         candidate_layer_names = ['wpan', 'mle']
     elif layer_name == 'ip':
         candidate_layer_names = ['ip', 'ipv6']
+    elif layer_name == 'thread_bcn':
+        candidate_layer_names = ['thread_bcn']
     else:
         candidate_layer_names = [layer_name]
 

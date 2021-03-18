@@ -30,12 +30,20 @@
 # qpg6095 platform-specific Makefile
 #
 
-LDADD_COMMON                                                          += \
-    $(top_builddir)/examples/platforms/qpg6095/libopenthread-qpg6095.a   \
-    $(top_srcdir)/third_party/Qorvo/qpg6095/libQorvoQPG6095.a            \
+LDADD_COMMON                                                            += \
+    $(top_builddir)/examples/platforms/qpg6095/libopenthread-qpg6095.a     \
     $(NULL)
-
-LDFLAGS_COMMON                                                        += \
-    -T $(top_srcdir)/examples/platforms/qpg6095/qpg6095.ld               \
+if OPENTHREAD_ENABLE_FTD
+LDADD_COMMON                                                            += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6095/lib/libQorvoQPG6095_ftd.a \
     $(NULL)
-
+else # OPENTHREAD_ENABLE_FTD
+if OPENTHREAD_ENABLE_MTD
+LDADD_COMMON                                                            += \
+    $(top_srcdir)/third_party/Qorvo/repo/qpg6095/lib/libQorvoQPG6095_mtd.a \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_MTD
+endif
+LDFLAGS_COMMON                                                          += \
+    -T $(top_srcdir)/third_party/Qorvo/repo/qpg6095/ld/qpg6095.ld          \
+    $(NULL)

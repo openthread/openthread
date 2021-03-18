@@ -62,16 +62,16 @@ ChannelMonitor::ChannelMonitor(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMaskIndex(0)
     , mSampleCount(0)
-    , mTimer(aInstance, ChannelMonitor::HandleTimer, this)
+    , mTimer(aInstance, ChannelMonitor::HandleTimer)
 {
     memset(mChannelOccupancy, 0, sizeof(mChannelOccupancy));
 }
 
-otError ChannelMonitor::Start(void)
+Error ChannelMonitor::Start(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!IsRunning(), error = OT_ERROR_ALREADY);
+    VerifyOrExit(!IsRunning(), error = kErrorAlready);
     Clear();
     mTimer.Start(kTimerInterval);
     otLogDebgUtil("ChannelMonitor: Starting");
@@ -80,11 +80,11 @@ exit:
     return error;
 }
 
-otError ChannelMonitor::Stop(void)
+Error ChannelMonitor::Stop(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(IsRunning(), error = OT_ERROR_ALREADY);
+    VerifyOrExit(IsRunning(), error = kErrorAlready);
     mTimer.Stop();
     otLogDebgUtil("ChannelMonitor: Stopping");
 
@@ -114,7 +114,7 @@ exit:
 
 void ChannelMonitor::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<ChannelMonitor>().HandleTimer();
+    aTimer.Get<ChannelMonitor>().HandleTimer();
 }
 
 void ChannelMonitor::HandleTimer(void)
@@ -212,7 +212,7 @@ Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask,
 
     channel = Mac::ChannelMask::kChannelIteratorFirst;
 
-    while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
+    while (aMask.GetNextChannel(channel) == kErrorNone)
     {
         uint16_t occupancy = GetChannelOccupancy(channel);
 

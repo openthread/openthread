@@ -38,7 +38,6 @@
 
 #include <openthread/dataset.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/settings.h>
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
@@ -52,6 +51,7 @@
 #include "lib/spinel/spinel_decoder.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
+#include "radio/radio.hpp"
 
 #ifndef MS_PER_S
 #define MS_PER_S 1000
@@ -79,7 +79,7 @@ using ot::Spinel::Decoder;
 namespace ot {
 namespace Spinel {
 
-static otError SpinelStatusToOtError(spinel_status_t aError)
+static inline otError SpinelStatusToOtError(spinel_status_t aError)
 {
     otError ret;
 
@@ -153,7 +153,7 @@ static otError SpinelStatusToOtError(spinel_status_t aError)
     return ret;
 }
 
-static void LogIfFail(const char *aText, otError aError)
+static inline void LogIfFail(const char *aText, otError aError)
 {
     OT_UNUSED_VARIABLE(aText);
     OT_UNUSED_VARIABLE(aError);
@@ -219,7 +219,9 @@ RadioSpinel<InterfaceType, ProcessContextType>::RadioSpinel(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool aRestoreDatasetFromNcp)
+void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
+                                                          bool aRestoreDatasetFromNcp,
+                                                          bool aSkipRcpCompatibilityCheck)
 {
     otError error = OT_ERROR_NONE;
     bool    supportsRcpApiVersion;
@@ -246,14 +248,19 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio, bool
 
         if (aRestoreDatasetFromNcp)
         {
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
             exitCode = (RestoreDatasetFromNcp() == OT_ERROR_NONE) ? OT_EXIT_SUCCESS : OT_EXIT_FAILURE;
+#endif
         }
 
         DieNow(exitCode);
     }
 
-    SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
-    SuccessOrDie(CheckRadioCapabilities());
+    if (!aSkipRcpCompatibilityCheck)
+    {
+        SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
+        SuccessOrDie(CheckRadioCapabilities());
+    }
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
@@ -359,6 +366,10 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
     {
         otRadioCaps missingCaps = (mRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
 
+        // missingCaps may be an unused variable when otLogCritPlat is blank
+        // avoid compiler warning in that case
+        OT_UNUSED_VARIABLE(missingCaps);
+
         otLogCritPlat("RCP is missing required capabilities: %s%s%s%s%s",
                       (missingCaps & OT_RADIO_CAPS_ACK_TIMEOUT) ? "ack-timeout " : "",
                       (missingCaps & OT_RADIO_CAPS_TRANSMIT_RETRIES) ? "tx-retries " : "",
@@ -403,12 +414,13 @@ exit:
     return error;
 }
 
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::RestoreDatasetFromNcp(void)
 {
     otError error = OT_ERROR_NONE;
 
-    otPlatSettingsInit(mInstance);
+    Instance::Get().template Get<SettingsDriver>().Init();
 
     otLogInfoPlat("Trying to get saved dataset from NCP");
     SuccessOrExit(
@@ -417,9 +429,10 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::RestoreDatasetFromNcp(vo
         error = Get(SPINEL_PROP_THREAD_PENDING_DATASET, SPINEL_DATATYPE_VOID_S, &RadioSpinel::ThreadDatasetHandler));
 
 exit:
-    otPlatSettingsDeinit(mInstance);
+    Instance::Get().template Get<SettingsDriver>().Deinit();
     return error;
 }
+#endif
 
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::Deinit(void)
@@ -576,6 +589,7 @@ exit:
     LogIfFail("Error processing response", error);
 }
 
+#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(const uint8_t *aBuffer, uint16_t aLength)
 {
@@ -722,13 +736,14 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     opDataset.mComponents.mIsActiveTimestampPresent = true;
 
     SuccessOrExit(error = dataset.SetFrom(static_cast<MeshCoP::Dataset::Info &>(opDataset)));
-    SuccessOrExit(error = otPlatSettingsSet(
-                      mInstance, isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset,
-                      dataset.GetBytes(), dataset.GetSize()));
+    SuccessOrExit(error = Instance::Get().template Get<SettingsDriver>().Set(
+                      isActive ? SettingsBase::kKeyActiveDataset : SettingsBase::kKeyPendingDataset, dataset.GetBytes(),
+                      dataset.GetSize()));
 
 exit:
     return error;
 }
+#endif // #if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
 
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleWaitingResponse(uint32_t          aCommand,
@@ -2047,6 +2062,8 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetRadioChannelMask(boo
         maskLength -= static_cast<spinel_size_t>(unpacked);
     }
 
+    channelMask &= mMaxPowerTable.GetSupportedChannelMask();
+
 exit:
     LogIfFail("Get radio channel mask failed", error);
     return channelMask;
@@ -2109,13 +2126,14 @@ void RadioSpinel<InterfaceType, ProcessContextType>::CalcRcpTimeOffset(void)
     localTxTimestamp = otPlatTimeGet();
 
     // Dummy timestamp payload to make request length same as response
-    error = GetWithParam(SPINEL_PROP_RCP_TIMESTAMP, buffer, packed, SPINEL_DATATYPE_UINT64_S, &remoteTimestamp);
+    error = GetWithParam(SPINEL_PROP_RCP_TIMESTAMP, buffer, static_cast<spinel_size_t>(packed),
+                         SPINEL_DATATYPE_UINT64_S, &remoteTimestamp);
 
     localRxTimestamp = otPlatTimeGet();
 
     VerifyOrExit(error == OT_ERROR_NONE, mRadioTimeRecalcStart = localRxTimestamp);
 
-    mRadioTimeOffset      = remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2));
+    mRadioTimeOffset      = static_cast<int64_t>(remoteTimestamp - ((localRxTimestamp / 2) + (localTxTimestamp / 2)));
     mIsTimeSynced         = true;
     mRadioTimeRecalcStart = localRxTimestamp + RCP_TIME_OFFSET_CHECK_INTERVAL;
 
@@ -2139,6 +2157,8 @@ uint32_t RadioSpinel<InterfaceType, ProcessContextType>::GetBusSpeed(void) const
 template <typename InterfaceType, typename ProcessContextType>
 void RadioSpinel<InterfaceType, ProcessContextType>::HandleRcpUnexpectedReset(spinel_status_t aStatus)
 {
+    OT_UNUSED_VARIABLE(aStatus);
+
     otLogCritPlat("Unexpected RCP reset: %s", spinel_status_to_cstr(aStatus));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
@@ -2190,6 +2210,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     mTxRadioTid   = 0;
     mWaitingTid   = 0;
     mWaitingKey   = SPINEL_PROP_LAST_STATUS;
+    mError        = OT_ERROR_NONE;
     mIsReady      = false;
     mIsTimeSynced = false;
 
@@ -2254,8 +2275,12 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
                          sizeof(otMacKey)));
     }
 
-    SuccessOrDie(Instance::Get().template Get<Settings>().ReadNetworkInfo(networkInfo));
-    SuccessOrDie(Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
+    if (mInstance != nullptr)
+    {
+        SuccessOrDie(static_cast<Instance *>(mInstance)->template Get<Settings>().ReadNetworkInfo(networkInfo));
+        SuccessOrDie(
+            Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
+    }
 
     for (int i = 0; i < mSrcMatchShortEntryCount; ++i)
     {
@@ -2289,9 +2314,55 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
         SuccessOrDie(Set(SPINEL_PROP_PHY_FEM_LNA_GAIN, SPINEL_DATATYPE_INT8_S, mFemLnaGain));
     }
 
+    for (uint8_t channel = Radio::kChannelMin; channel <= Radio::kChannelMax; channel++)
+    {
+        int8_t power = mMaxPowerTable.GetTransmitPower(channel);
+
+        if (power != OT_RADIO_POWER_INVALID)
+        {
+            // Some old RCPs doesn't support max transmit power
+            otError error = SetChannelMaxTransmitPower(channel, power);
+
+            if (error != OT_ERROR_NONE && error != OT_ERROR_NOT_FOUND)
+            {
+                DieNow(OT_EXIT_FAILURE);
+            }
+        }
+    }
+
     CalcRcpTimeOffset();
 }
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aMaxPower)
+{
+    otError error = OT_ERROR_NONE;
+    VerifyOrExit(aChannel >= Radio::kChannelMin && aChannel <= Radio::kChannelMax, error = OT_ERROR_INVALID_ARGS);
+    mMaxPowerTable.SetTransmitPower(aChannel, aMaxPower);
+    error = Set(SPINEL_PROP_PHY_CHAN_MAX_POWER, SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_INT8_S, aChannel, aMaxPower);
+
+exit:
+    return error;
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetRadioRegion(uint16_t aRegionCode)
+{
+    return Set(SPINEL_PROP_PHY_REGION_CODE, SPINEL_DATATYPE_UINT16_S, aRegionCode);
+}
+
+template <typename InterfaceType, typename ProcessContextType>
+otError RadioSpinel<InterfaceType, ProcessContextType>::GetRadioRegion(uint16_t *aRegionCode)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aRegionCode != nullptr, error = OT_ERROR_INVALID_ARGS);
+    error = Get(SPINEL_PROP_PHY_REGION_CODE, SPINEL_DATATYPE_UINT16_S, aRegionCode);
+
+exit:
+    return error;
+}
 
 } // namespace Spinel
 } // namespace ot

@@ -64,7 +64,7 @@ public:
      * @param[in]  aCount         The number of transmissions per channel.
      * @param[in]  aPeriod        The time between transmissions (milliseconds).
      *
-     * @retval OT_ERROR_NONE  Successfully started the transmission process.
+     * @retval kErrorNone  Successfully started the transmission process.
      *
      */
     void SendAnnounce(uint32_t aChannelMask, uint8_t aCount = kDefaultCount, uint16_t aPeriod = kDefaultPeriod);

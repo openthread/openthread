@@ -441,11 +441,11 @@ public:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     * @retval kErrorNone    Successfully appended the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+    Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
 
     /**
      * This method reads request data from the message.
@@ -455,9 +455,9 @@ public:
      */
     void ReadFrom(const Message &aMessage)
     {
-        otError error = aMessage.Read(aMessage.GetLength() - sizeof(*this), *this);
+        Error error = aMessage.Read(aMessage.GetLength() - sizeof(*this), *this);
 
-        OT_ASSERT(error == OT_ERROR_NONE);
+        OT_ASSERT(error == kErrorNone);
         OT_UNUSED_VARIABLE(error);
     }
 
@@ -498,18 +498,18 @@ public:
     /**
      * This method starts the SNTP client.
      *
-     * @retval OT_ERROR_NONE     Successfully started the SNTP client.
-     * @retval OT_ERROR_ALREADY  The socket is already open.
+     * @retval kErrorNone     Successfully started the SNTP client.
+     * @retval kErrorAlready  The socket is already open.
      */
-    otError Start(void);
+    Error Start(void);
 
     /**
      * This method stops the SNTP client.
      *
-     * @retval OT_ERROR_NONE  Successfully stopped the SNTP client.
+     * @retval kErrorNone  Successfully stopped the SNTP client.
      *
      */
-    otError Stop(void);
+    Error Stop(void);
 
     /**
      * This method returns the unix era number.
@@ -534,12 +534,12 @@ public:
      * @param[in]  aHandler  A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE          Successfully sent SNTP query.
-     * @retval OT_ERROR_NO_BUFS       Failed to allocate retransmission data.
-     * @retval OT_ERROR_INVALID_ARGS  Invalid arguments supplied.
+     * @retval kErrorNone         Successfully sent SNTP query.
+     * @retval kErrorNoBufs       Failed to allocate retransmission data.
+     * @retval kErrorInvalidArgs  Invalid arguments supplied.
      *
      */
-    otError Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, void *aContext);
+    Error Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, void *aContext);
 
 private:
     /**
@@ -568,11 +568,11 @@ private:
     Message *NewMessage(const Header &aHeader);
     Message *CopyAndEnqueueMessage(const Message &aMessage, const QueryMetadata &aQueryMetadata);
     void     DequeueMessage(Message &aMessage);
-    otError  SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error    SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void     SendCopy(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Message *FindRelatedQuery(const Header &aResponseHeader, QueryMetadata &aQueryMetadata);
-    void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, otError aResult);
+    void FinalizeSntpTransaction(Message &aQuery, const QueryMetadata &aQueryMetadata, uint64_t aTime, Error aResult);
 
     static void HandleRetransmissionTimer(Timer &aTimer);
     void        HandleRetransmissionTimer(void);

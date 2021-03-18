@@ -73,11 +73,11 @@ public:
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread Master Key.
      *
-     * @retval OT_ERROR_NONE     Successfully generated a random Thread Master Key.
-     * @retval OT_ERROR_FAILED   Failed to generate random sequence.
+     * @retval kErrorNone     Successfully generated a random Thread Master Key.
+     * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
 } OT_TOOL_PACKED_END;
 
@@ -93,10 +93,10 @@ public:
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
      *
-     * @retval OT_ERROR_NONE  Successfully generated a random Thread PSKc.
+     * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
 #endif
 
 } OT_TOOL_PACKED_END;
@@ -158,11 +158,11 @@ public:
      *
      * @param[in]  aKey        A Thread Master Key.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Thread Master Key.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aKeyLength value was invalid.
+     * @retval kErrorNone         Successfully set the Thread Master Key.
+     * @retval kErrorInvalidArgs  The @p aKeyLength value was invalid.
      *
      */
-    otError SetMasterKey(const MasterKey &aKey);
+    Error SetMasterKey(const MasterKey &aKey);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -209,39 +209,85 @@ public:
      */
     void SetCurrentKeySequence(uint32_t aKeySequence);
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * This method returns a pointer to the current MLE key.
+     * This method returns the current MAC key for TREL radio link.
      *
-     * @returns A pointer to the current MLE key.
+     * @returns The current TREL MAC key.
+     *
+     */
+    const Mac::Key &GetCurrentTrelMacKey(void) const { return mTrelKey; }
+
+    /**
+     * This method returns a temporary MAC key for TREL radio link computed from the given key sequence.
+     *
+     * @param[in]  aKeySequence  The key sequence value.
+     *
+     * @returns The temporary TREL MAC key.
+     *
+     */
+    const Mac::Key &GetTemporaryTrelMacKey(uint32_t aKeySequence);
+#endif
+
+    /**
+     * This method returns the current MLE key.
+     *
+     * @returns The current MLE key.
      *
      */
     const Mle::Key &GetCurrentMleKey(void) const { return mMleKey; }
 
     /**
-     * This method returns a pointer to a temporary MLE key computed from the given key sequence.
+     * This method returns a temporary MLE key computed from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
      *
-     * @returns A pointer to the temporary MLE key.
+     * @returns The temporary MLE key.
      *
      */
     const Mle::Key &GetTemporaryMleKey(uint32_t aKeySequence);
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
-     * This method returns the current MAC Frame Counter value.
+     * This method returns the current MAC Frame Counter value for 15.4 radio link.
      *
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const;
+    uint32_t Get154MacFrameCounter(void) const { return mMacFrameCounters.Get154(); }
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    /**
+     * This method returns the current MAC Frame Counter value for TREL radio link.
+     *
+     * @returns The current MAC Frame Counter value for TREL radio link.
+     *
+     */
+    uint32_t GetTrelMacFrameCounter(void) const { return mMacFrameCounters.GetTrel(); }
 
     /**
-     * This method sets the current MAC Frame Counter value.
+     * This method increments the current MAC Frame Counter value for TREL radio link.
+     *
+     */
+    void IncrementTrelMacFrameCounter(void);
+#endif
+
+    /**
+     * This method gets the maximum MAC Frame Counter among all supported radio links.
+     *
+     * @return The maximum MAC frame Counter among all supported radio links.
+     *
+     */
+    uint32_t GetMaximumMacFrameCounter(void) const { return mMacFrameCounters.GetMaximum(); }
+
+    /**
+     * This method sets the current MAC Frame Counter value for all radio links.
      *
      * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter);
+    void SetAllMacFrameCounters(uint32_t aMacFrameCounter);
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
@@ -336,11 +382,11 @@ public:
      *
      * @param[in]  aKeyRotation  The KeyRotation value in hours.
      *
-     * @retval  OT_ERROR_NONE          KeyRotation time updated.
-     * @retval  OT_ERROR_INVALID_ARGS  @p aKeyRotation is out of range.
+     * @retval  kErrorNone          KeyRotation time updated.
+     * @retval  kErrorInvalidArgs   @p aKeyRotation is out of range.
      *
      */
-    otError SetKeyRotation(uint32_t aKeyRotation);
+    Error SetKeyRotation(uint32_t aKeyRotation);
 
     /**
      * This method returns the KeySwitchGuardTime.
@@ -447,9 +493,9 @@ public:
     void UpdateKeyMaterial(void);
 
     /**
-     * This method handles MAC frame counter change.
+     * This method handles MAC frame counter change (callback from `SubMac` for 15.4 security frame change)
      *
-     * @param[in]  aMacFrameCounter  The MAC frame counter value.
+     * @param[in]  aMacFrameCounter  The 15.4 link MAC frame counter value.
      *
      */
     void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
@@ -471,18 +517,26 @@ private:
 
     union HashKeys
     {
-        uint8_t mHash[Crypto::HmacSha256::kHashSize];
-        Keys    mKeys;
+        Crypto::HmacSha256::Hash mHash;
+        Keys                     mKeys;
     };
 
     void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey);
+#endif
 
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
 
-    static const uint8_t     kThreadString[];
-    static const otMasterKey kDefaultMasterKey;
+    static const uint8_t kThreadString[];
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    static const uint8_t kHkdfExtractSaltString[];
+    static const uint8_t kTrelInfoString[];
+#endif
 
     MasterKey mMasterKey;
 
@@ -490,9 +544,15 @@ private:
     Mle::Key mMleKey;
     Mle::Key mTemporaryMleKey;
 
-    uint32_t mMleFrameCounter;
-    uint32_t mStoredMacFrameCounter;
-    uint32_t mStoredMleFrameCounter;
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Mac::Key mTrelKey;
+    Mac::Key mTemporaryTrelKey;
+#endif
+
+    Mac::LinkFrameCounters mMacFrameCounters;
+    uint32_t               mMleFrameCounter;
+    uint32_t               mStoredMacFrameCounter;
+    uint32_t               mStoredMleFrameCounter;
 
     uint32_t   mHoursSinceKeyRotation;
     uint32_t   mKeyRotationTime;

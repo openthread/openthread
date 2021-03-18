@@ -46,7 +46,7 @@ namespace NetworkData {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTimer(aInstance, Notifier::HandleTimer, this)
+    , mTimer(aInstance, Notifier::HandleTimer)
     , mNextDelay(0)
     , mWaitingForResponse(false)
 {
@@ -60,7 +60,7 @@ void Notifier::HandleServerDataUpdated(void)
 
 void Notifier::SynchronizeServerData(void)
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    Error error = kErrorNotFound;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached() && !mWaitingForResponse);
 
@@ -69,30 +69,30 @@ void Notifier::SynchronizeServerData(void)
 #if OPENTHREAD_FTD
     mNextDelay = kDelayRemoveStaleChildren;
     error      = Get<Leader>().RemoveStaleChildEntries(&Notifier::HandleCoapResponse, this);
-    VerifyOrExit(error == OT_ERROR_NOT_FOUND);
+    VerifyOrExit(error == kErrorNotFound);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     mNextDelay = kDelaySynchronizeServerData;
     error      = Get<Local>().UpdateInconsistentServerData(&Notifier::HandleCoapResponse, this);
-    VerifyOrExit(error == OT_ERROR_NOT_FOUND);
+    VerifyOrExit(error == kErrorNotFound);
 #endif
 
 exit:
     switch (error)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
         mWaitingForResponse = true;
         break;
-    case OT_ERROR_NO_BUFS:
+    case kErrorNoBufs:
         mTimer.Start(kDelayNoBufs);
         break;
 #if OPENTHREAD_FTD
-    case OT_ERROR_INVALID_STATE:
+    case kErrorInvalidState:
         mTimer.Start(Time::SecToMsec(Get<Mle::MleRouter>().GetRouterSelectionJitterTimeout() + 1));
         break;
 #endif
-    case OT_ERROR_NOT_FOUND:
+    case kErrorNotFound:
         break;
     default:
         OT_ASSERT(false);
@@ -115,7 +115,7 @@ void Notifier::HandleNotifierEvents(Events aEvents)
 
 void Notifier::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<Notifier>().HandleTimer();
+    aTimer.Get<Notifier>().HandleTimer();
 }
 
 void Notifier::HandleTimer(void)
@@ -123,10 +123,7 @@ void Notifier::HandleTimer(void)
     SynchronizeServerData();
 }
 
-void Notifier::HandleCoapResponse(void *               aContext,
-                                  otMessage *          aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult)
+void Notifier::HandleCoapResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
 {
     OT_UNUSED_VARIABLE(aMessage);
     OT_UNUSED_VARIABLE(aMessageInfo);
@@ -134,18 +131,18 @@ void Notifier::HandleCoapResponse(void *               aContext,
     static_cast<Notifier *>(aContext)->HandleCoapResponse(aResult);
 }
 
-void Notifier::HandleCoapResponse(otError aResult)
+void Notifier::HandleCoapResponse(Error aResult)
 {
     mWaitingForResponse = false;
 
     switch (aResult)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
         mTimer.Start(mNextDelay + 1);
         break;
 
-    case OT_ERROR_RESPONSE_TIMEOUT:
-    case OT_ERROR_ABORT:
+    case kErrorResponseTimeout:
+    case kErrorAbort:
         SynchronizeServerData();
         break;
 

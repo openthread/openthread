@@ -45,7 +45,7 @@ namespace ot {
 TimeTicker::TimeTicker(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mReceivers(0)
-    , mTimer(aInstance, HandleTimer, this)
+    , mTimer(aInstance, HandleTimer)
 {
 }
 
@@ -71,7 +71,7 @@ void TimeTicker::UnregisterReceiver(Receiver aReceiver)
 
 void TimeTicker::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<TimeTicker>().HandleTimer();
+    aTimer.Get<TimeTicker>().HandleTimer();
 }
 
 void TimeTicker::HandleTimer(void)
@@ -109,14 +109,14 @@ void TimeTicker::HandleTimer(void)
     }
 #endif
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     if (mReceivers & Mask(kDuaManager))
     {
         Get<DuaManager>().HandleTimeTick();
     }
 #endif
 
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     if (mReceivers & Mask(kMlrManager))
     {
         Get<MlrManager>().HandleTimeTick();

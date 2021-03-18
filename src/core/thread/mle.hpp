@@ -111,19 +111,19 @@ public:
     /**
      * This method enables MLE.
      *
-     * @retval OT_ERROR_NONE     Successfully enabled MLE.
-     * @retval OT_ERROR_ALREADY  MLE was already enabled.
+     * @retval kErrorNone     Successfully enabled MLE.
+     * @retval kErrorAlready  MLE was already enabled.
      *
      */
-    otError Enable(void);
+    Error Enable(void);
 
     /**
      * This method disables MLE.
      *
-     * @retval OT_ERROR_NONE     Successfully disabled MLE.
+     * @retval kErrorNone     Successfully disabled MLE.
      *
      */
-    otError Disable(void);
+    Error Disable(void);
 
     /**
      * This method starts the MLE protocol operation.
@@ -131,11 +131,11 @@ public:
      * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
      *                             or False if not.
      *
-     * @retval OT_ERROR_NONE     Successfully started the protocol operation.
-     * @retval OT_ERROR_ALREADY  The protocol operation was already started.
+     * @retval kErrorNone     Successfully started the protocol operation.
+     * @retval kErrorAlready  The protocol operation was already started.
      *
      */
-    otError Start(bool aAnnounceAttach);
+    Error Start(bool aAnnounceAttach);
 
     /**
      * This method stops the MLE protocol operation.
@@ -148,20 +148,20 @@ public:
     /**
      * This method restores network information from non-volatile memory.
      *
-     * @retval OT_ERROR_NONE       Successfully restore the network information.
-     * @retval OT_ERROR_NOT_FOUND  There is no valid network information stored in non-volatile memory.
+     * @retval kErrorNone      Successfully restore the network information.
+     * @retval kErrorNotFound  There is no valid network information stored in non-volatile memory.
      *
      */
-    otError Restore(void);
+    Error Restore(void);
 
     /**
      * This method stores network information into non-volatile memory.
      *
-     * @retval OT_ERROR_NONE       Successfully store the network information.
-     * @retval OT_ERROR_NO_BUFS    Could not store the network information due to insufficient memory space.
+     * @retval kErrorNone      Successfully store the network information.
+     * @retval kErrorNoBufs    Could not store the network information due to insufficient memory space.
      *
      */
-    otError Store(void);
+    Error Store(void);
 
     /**
      * This method generates an MLE Announce message.
@@ -175,23 +175,23 @@ public:
     /**
      * This method causes the Thread interface to detach from the Thread network.
      *
-     * @retval OT_ERROR_NONE           Successfully detached from the Thread network.
-     * @retval OT_ERROR_INVALID_STATE  MLE is Disabled.
+     * @retval kErrorNone          Successfully detached from the Thread network.
+     * @retval kErrorInvalidState  MLE is Disabled.
      *
      */
-    otError BecomeDetached(void);
+    Error BecomeDetached(void);
 
     /**
      * This method causes the Thread interface to attempt an MLE attach.
      *
      * @param[in]  aMode  Indicates what partitions to attach to.
      *
-     * @retval OT_ERROR_NONE           Successfully began the attach process.
-     * @retval OT_ERROR_INVALID_STATE  MLE is Disabled.
-     * @retval OT_ERROR_BUSY           An attach process is in progress.
+     * @retval kErrorNone          Successfully began the attach process.
+     * @retval kErrorInvalidState  MLE is Disabled.
+     * @retval kErrorBusy          An attach process is in progress.
      *
      */
-    otError BecomeChild(AttachMode aMode);
+    Error BecomeChild(AttachMode aMode);
 
     /**
      * This method indicates whether or not the Thread device is attached to a Thread network.
@@ -290,11 +290,11 @@ public:
      *
      * @param[in]  aDeviceMode  The device mode to set.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Mode TLV.
-     * @retval OT_ERROR_INVALID_ARGS  The mode combination specified in @p aMode is invalid.
+     * @retval kErrorNone         Successfully set the Mode TLV.
+     * @retval kErrorInvalidArgs  The mode combination specified in @p aMode is invalid.
      *
      */
-    otError SetDeviceMode(DeviceMode aDeviceMode);
+    Error SetDeviceMode(DeviceMode aDeviceMode);
 
     /**
      * This method indicates whether or not the device is rx-on-when-idle.
@@ -486,22 +486,22 @@ public:
      *
      * @param[out]  aAddress  A reference to the Leader's RLOC.
      *
-     * @retval OT_ERROR_NONE      Successfully retrieved the Leader's RLOC.
-     * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully retrieved the Leader's RLOC.
+     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    otError GetLeaderAddress(Ip6::Address &aAddress) const;
+    Error GetLeaderAddress(Ip6::Address &aAddress) const;
 
     /**
      * This method retrieves the Leader's ALOC.
      *
      * @param[out]  aAddress  A reference to the Leader's ALOC.
      *
-     * @retval OT_ERROR_NONE      Successfully retrieved the Leader's ALOC.
-     * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully retrieved the Leader's ALOC.
+     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    otError GetLeaderAloc(Ip6::Address &aAddress) const { return GetLocatorAddress(aAddress, kAloc16Leader); }
+    Error GetLeaderAloc(Ip6::Address &aAddress) const { return GetLocatorAddress(aAddress, kAloc16Leader); }
 
     /**
      * This method computes the Commissioner's ALOC.
@@ -509,11 +509,11 @@ public:
      * @param[out]  aAddress        A reference to the Commissioner's ALOC.
      * @param[in]   aSessionId      Commissioner session id.
      *
-     * @retval OT_ERROR_NONE      Successfully retrieved the Commissioner's ALOC.
-     * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully retrieved the Commissioner's ALOC.
+     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    otError GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
+    Error GetCommissionerAloc(Ip6::Address &aAddress, uint16_t aSessionId) const
     {
         return GetLocatorAddress(aAddress, CommissionerAloc16FromId(aSessionId));
     }
@@ -524,11 +524,11 @@ public:
      * @param[in]   aServiceId Service ID to get ALOC for.
      * @param[out]  aAddress   A reference to the Service ALOC.
      *
-     * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
-     * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+     * @retval kErrorNone      Successfully retrieved the Service ALOC.
+     * @retval kErrorDetached  The Thread interface is not currently attached to a Thread Partition.
      *
      */
-    otError GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
+    Error GetServiceAloc(uint8_t aServiceId, Ip6::Address &aAddress) const;
 
     /**
      * This method returns the most recently received Leader Data.
@@ -691,11 +691,11 @@ public:
      * @param[out]  aAddress  A reference to the RLOC or ALOC.
      * @param[in]   aLocator  RLOC16 or ALOC16.
      *
-     * @retval OT_ERROR_NONE      If got the RLOC or ALOC successfully.
-     * @retval OT_ERROR_DETACHED  If device is detached.
+     * @retval kErrorNone      If got the RLOC or ALOC successfully.
+     * @retval kErrorDetached  If device is detached.
      *
      */
-    otError GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
+    Error GetLocatorAddress(Ip6::Address &aAddress, uint16_t aLocator) const;
 
     /**
      * This method schedules a Child Update Request.
@@ -707,7 +707,7 @@ public:
      * This method indicates whether or not the device has restored the network information from
      * non-volatile settings after boot.
      *
-     * @retval true  Sucessfully restored the network information.
+     * @retval true  Successfully restored the network information.
      * @retval false No valid network information was found.
      *
      */
@@ -929,22 +929,22 @@ protected:
      * @param[in]  aMessage  A reference to the message.
      * @param[in]  aCommand  The MLE Command Type.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the header.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the header.
+     * @retval kErrorNone    Successfully appended the header.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the header.
      *
      */
-    otError AppendHeader(Message &aMessage, Command aCommand);
+    Error AppendHeader(Message &aMessage, Command aCommand);
 
     /**
      * This method appends a Source Address TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Source Address TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Source Address TLV.
+     * @retval kErrorNone    Successfully appended the Source Address TLV.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the Source Address TLV.
      *
      */
-    otError AppendSourceAddress(Message &aMessage) const;
+    Error AppendSourceAddress(Message &aMessage) const;
 
     /**
      * This method appends a Mode TLV to a message.
@@ -952,11 +952,11 @@ protected:
      * @param[in]  aMessage  A reference to the message.
      * @param[in]  aMode     The Device Mode.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Mode TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Mode TLV.
+     * @retval kErrorNone    Successfully appended the Mode TLV.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the Mode TLV.
      *
      */
-    otError AppendMode(Message &aMessage, DeviceMode aMode);
+    Error AppendMode(Message &aMessage, DeviceMode aMode);
 
     /**
      * This method appends a Timeout TLV to a message.
@@ -964,11 +964,11 @@ protected:
      * @param[in]  aMessage  A reference to the message.
      * @param[in]  aTimeout  The Timeout value.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Timeout TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Timeout TLV.
+     * @retval kErrorNone    Successfully appended the Timeout TLV.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the Timeout TLV.
      *
      */
-    otError AppendTimeout(Message &aMessage, uint32_t aTimeout);
+    Error AppendTimeout(Message &aMessage, uint32_t aTimeout);
 
     /**
      * This method appends a Challenge TLV to a message.
@@ -977,11 +977,11 @@ protected:
      * @param[in]  aChallenge        A pointer to the Challenge value.
      * @param[in]  aChallengeLength  The length of the Challenge value in bytes.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Challenge TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Challenge TLV.
+     * @retval kErrorNone    Successfully appended the Challenge TLV.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
      *
      */
-    otError AppendChallenge(Message &aMessage, const uint8_t *aChallenge, uint8_t aChallengeLength);
+    Error AppendChallenge(Message &aMessage, const uint8_t *aChallenge, uint8_t aChallengeLength);
 
     /**
      * This method appends a Challenge TLV to a message.
@@ -989,11 +989,11 @@ protected:
      * @param[in]  aMessage          A reference to the message.
      * @param[in]  aChallenge        A reference to the Challenge data.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Challenge TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Challenge TLV.
+     * @retval kErrorNone    Successfully appended the Challenge TLV.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the Challenge TLV.
      *
      */
-    otError AppendChallenge(Message &aMessage, const Challenge &aChallenge);
+    Error AppendChallenge(Message &aMessage, const Challenge &aChallenge);
 
     /**
      * This method reads Challenge TLV from a message.
@@ -1001,12 +1001,12 @@ protected:
      * @param[in]  aMessage          A reference to the message.
      * @param[out] aChallenge        A reference to the Challenge data where to output the read value.
      *
-     * @retval OT_ERROR_NONE       Successfully read the Challenge TLV.
-     * @retval OT_ERROR_NOT_FOUND  Challenge TLV was not found in the message.
-     * @retval OT_ERROR_PARSE      Challenge TLV was found but could not be parsed.
+     * @retval kErrorNone       Successfully read the Challenge TLV.
+     * @retval kErrorNotFound   Challenge TLV was not found in the message.
+     * @retval kErrorParse      Challenge TLV was found but could not be parsed.
      *
      */
-    otError ReadChallenge(const Message &aMessage, Challenge &aChallenge);
+    Error ReadChallenge(const Message &aMessage, Challenge &aChallenge);
 
     /**
      * This method appends a Response TLV to a message.
@@ -1014,11 +1014,11 @@ protected:
      * @param[in]  aMessage         A reference to the message.
      * @param[in]  aResponse        A reference to the Response data.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Response TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Response TLV.
+     * @retval kErrorNone    Successfully appended the Response TLV.
+     * @retval kErrorNoBufs  Insufficient buffers available to append the Response TLV.
      *
      */
-    otError AppendResponse(Message &aMessage, const Challenge &aResponse);
+    Error AppendResponse(Message &aMessage, const Challenge &aResponse);
 
     /**
      * This method reads Response TLV from a message.
@@ -1026,23 +1026,23 @@ protected:
      * @param[in]  aMessage         A reference to the message.
      * @param[out] aResponse        A reference to the Response data where to output the read value.
      *
-     * @retval OT_ERROR_NONE       Successfully read the Response TLV.
-     * @retval OT_ERROR_NOT_FOUND  Response TLV was not found in the message.
-     * @retval OT_ERROR_PARSE      Response TLV was found but could not be parsed.
+     * @retval kErrorNone       Successfully read the Response TLV.
+     * @retval kErrorNotFound   Response TLV was not found in the message.
+     * @retval kErrorParse      Response TLV was found but could not be parsed.
      *
      */
-    otError ReadResponse(const Message &aMessage, Challenge &aResponse);
+    Error ReadResponse(const Message &aMessage, Challenge &aResponse);
 
     /**
      * This method appends a Link Frame Counter TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Link Frame Counter TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Link Frame Counter TLV.
+     * @retval kErrorNone     Successfully appended the Link Frame Counter TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Link Frame Counter TLV.
      *
      */
-    otError AppendLinkFrameCounter(Message &aMessage);
+    Error AppendLinkFrameCounter(Message &aMessage);
 
     /**
      * This method reads Link and MLE Frame Counters from a message.
@@ -1055,23 +1055,23 @@ protected:
      * @param[out] aLinkFrameCounter   A reference to an `uint32_t` to output the Link Frame Counter.
      * @param[out] aMleFrameCounter    A reference to an `uint32_t` to output the MLE Frame Counter.
      *
-     * @retval OT_ERROR_NONE       Successfully read the counters.
-     * @retval OT_ERROR_NOT_FOUND  Link Frame Counter TLV was not found in the message.
-     * @retval OT_ERROR_PARSE      TLVs are not well-formed.
+     * @retval kErrorNone       Successfully read the counters.
+     * @retval kErrorNotFound   Link Frame Counter TLV was not found in the message.
+     * @retval kErrorParse      TLVs are not well-formed.
      *
      */
-    otError ReadFrameCounters(const Message &aMessage, uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
+    Error ReadFrameCounters(const Message &aMessage, uint32_t &aLinkFrameCounter, uint32_t &aMleFrameCounter) const;
 
     /**
      * This method appends an MLE Frame Counter TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Frame Counter TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the MLE Frame Counter TLV.
+     * @retval kErrorNone     Successfully appended the Frame Counter TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the MLE Frame Counter TLV.
      *
      */
-    otError AppendMleFrameCounter(Message &aMessage);
+    Error AppendMleFrameCounter(Message &aMessage);
 
     /**
      * This method appends an Address16 TLV to a message.
@@ -1079,11 +1079,11 @@ protected:
      * @param[in]  aMessage  A reference to the message.
      * @param[in]  aRloc16   The RLOC16 value.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Address16 TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address16 TLV.
+     * @retval kErrorNone     Successfully appended the Address16 TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Address16 TLV.
      *
      */
-    otError AppendAddress16(Message &aMessage, uint16_t aRloc16);
+    Error AppendAddress16(Message &aMessage, uint16_t aRloc16);
 
     /**
      * This method appends a Network Data TLV to the message.
@@ -1091,11 +1091,11 @@ protected:
      * @param[in]  aMessage     A reference to the message.
      * @param[in]  aStableOnly  TRUE to append stable data, FALSE otherwise.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Network Data TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Network Data TLV.
+     * @retval kErrorNone     Successfully appended the Network Data TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Network Data TLV.
      *
      */
-    otError AppendNetworkData(Message &aMessage, bool aStableOnly);
+    Error AppendNetworkData(Message &aMessage, bool aStableOnly);
 
     /**
      * This method appends a TLV Request TLV to a message.
@@ -1104,11 +1104,11 @@ protected:
      * @param[in]  aTlvs        A pointer to the list of TLV types.
      * @param[in]  aTlvsLength  The number of TLV types in @p aTlvs
      *
-     * @retval OT_ERROR_NONE     Successfully appended the TLV Request TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the TLV Request TLV.
+     * @retval kErrorNone     Successfully appended the TLV Request TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the TLV Request TLV.
      *
      */
-    otError AppendTlvRequest(Message &aMessage, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    Error AppendTlvRequest(Message &aMessage, const uint8_t *aTlvs, uint8_t aTlvsLength);
 
     /**
      * This method reads TLV Request TLV from a message.
@@ -1116,23 +1116,23 @@ protected:
      * @param[in]  aMessage         A reference to the message.
      * @param[out] aRequestedTlvs   A reference to output the read list of requested TLVs.
      *
-     * @retval OT_ERROR_NONE       Successfully read the TLV.
-     * @retval OT_ERROR_NOT_FOUND  TLV was not found in the message.
-     * @retval OT_ERROR_PARSE      TLV was found but could not be parsed.
+     * @retval kErrorNone       Successfully read the TLV.
+     * @retval kErrorNotFound   TLV was not found in the message.
+     * @retval kErrorParse      TLV was found but could not be parsed.
      *
      */
-    otError FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
+    Error FindTlvRequest(const Message &aMessage, RequestedTlvs &aRequestedTlvs);
 
     /**
      * This method appends a Leader Data TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Leader Data TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Leader Data TLV.
+     * @retval kErrorNone     Successfully appended the Leader Data TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Leader Data TLV.
      *
      */
-    otError AppendLeaderData(Message &aMessage);
+    Error AppendLeaderData(Message &aMessage);
 
     /**
      * This method reads Leader Data TLV from a message.
@@ -1140,12 +1140,12 @@ protected:
      * @param[in]  aMessage        A reference to the message.
      * @param[out] aLeaderData     A reference to output the Leader Data.
      *
-     * @retval OT_ERROR_NONE       Successfully read the TLV.
-     * @retval OT_ERROR_NOT_FOUND  TLV was not found in the message.
-     * @retval OT_ERROR_PARSE      TLV was found but could not be parsed.
+     * @retval kErrorNone       Successfully read the TLV.
+     * @retval kErrorNotFound   TLV was not found in the message.
+     * @retval kErrorParse      TLV was found but could not be parsed.
      *
      */
-    otError ReadLeaderData(const Message &aMessage, LeaderData &aLeaderData);
+    Error ReadLeaderData(const Message &aMessage, LeaderData &aLeaderData);
 
     /**
      * This method appends a Scan Mask TLV to a message.
@@ -1153,11 +1153,11 @@ protected:
      * @param[in]  aMessage   A reference to the message.
      * @param[in]  aScanMask  The Scan Mask value.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Scan Mask TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Scan Mask TLV.
+     * @retval kErrorNone     Successfully appended the Scan Mask TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Scan Mask TLV.
      *
      */
-    otError AppendScanMask(Message &aMessage, uint8_t aScanMask);
+    Error AppendScanMask(Message &aMessage, uint8_t aScanMask);
 
     /**
      * This method appends a Status TLV to a message.
@@ -1165,11 +1165,11 @@ protected:
      * @param[in]  aMessage  A reference to the message.
      * @param[in]  aStatus   The Status value.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Status TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Status TLV.
+     * @retval kErrorNone     Successfully appended the Status TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Status TLV.
      *
      */
-    otError AppendStatus(Message &aMessage, StatusTlv::Status aStatus);
+    Error AppendStatus(Message &aMessage, StatusTlv::Status aStatus);
 
     /**
      * This method appends a Link Margin TLV to a message.
@@ -1177,22 +1177,22 @@ protected:
      * @param[in]  aMessage     A reference to the message.
      * @param[in]  aLinkMargin  The Link Margin value.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Link Margin TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Link Margin TLV.
+     * @retval kErrorNone     Successfully appended the Link Margin TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Link Margin TLV.
      *
      */
-    otError AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin);
+    Error AppendLinkMargin(Message &aMessage, uint8_t aLinkMargin);
 
     /**
      * This method appends a Version TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Version TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Version TLV.
+     * @retval kErrorNone     Successfully appended the Version TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Version TLV.
      *
      */
-    otError AppendVersion(Message &aMessage);
+    Error AppendVersion(Message &aMessage);
 
     /**
      * This method appends an Address Registration TLV to a message.
@@ -1200,11 +1200,11 @@ protected:
      * @param[in]  aMessage  A reference to the message.
      * @param[in]  aMode     Determines which addresses to include in the TLV (see `AddressRegistrationMode`).
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Address Registration TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Address Registration TLV.
+     * @retval kErrorNone     Successfully appended the Address Registration TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Address Registration TLV.
      *
      */
-    otError AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
+    Error AppendAddressRegistration(Message &aMessage, AddressRegistrationMode aMode = kAppendAllAddresses);
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -1212,80 +1212,80 @@ protected:
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Time Request TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Time Request TLV.
+     * @retval kErrorNone     Successfully appended the Time Request TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Time Request TLV.
      *
      */
-    otError AppendTimeRequest(Message &aMessage);
+    Error AppendTimeRequest(Message &aMessage);
 
     /**
      * This method appends a Time Parameter TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Time Parameter TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Time Parameter TLV.
+     * @retval kErrorNone     Successfully appended the Time Parameter TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Time Parameter TLV.
      *
      */
-    otError AppendTimeParameter(Message &aMessage);
+    Error AppendTimeParameter(Message &aMessage);
 
     /**
      * This method appends a XTAL Accuracy TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the XTAL Accuracy TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the XTAl Accuracy TLV.
+     * @retval kErrorNone     Successfully appended the XTAL Accuracy TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the XTAl Accuracy TLV.
      *
      */
-    otError AppendXtalAccuracy(Message &aMessage);
+    Error AppendXtalAccuracy(Message &aMessage);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
      * This method appends a CSL Channel TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the CSL Channel TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the CSL Channel TLV.
+     * @retval kErrorNone     Successfully appended the CSL Channel TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Channel TLV.
      *
      */
-    otError AppendCslChannel(Message &aMessage);
+    Error AppendCslChannel(Message &aMessage);
 
     /**
      * This method appends a CSL Sync Timeout TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the CSL Timeout TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the CSL Timeout TLV.
+     * @retval kErrorNone     Successfully appended the CSL Timeout TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Timeout TLV.
      *
      */
-    otError AppendCslTimeout(Message &aMessage);
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    Error AppendCslTimeout(Message &aMessage);
+#endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
      * This method appends a Active Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Active Timestamp TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Active Timestamp TLV.
+     * @retval kErrorNone     Successfully appended the Active Timestamp TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Active Timestamp TLV.
      *
      */
-    otError AppendActiveTimestamp(Message &aMessage);
+    Error AppendActiveTimestamp(Message &aMessage);
 
     /**
      * This method appends a Pending Timestamp TLV to a message.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the Pending Timestamp TLV.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to append the Pending Timestamp TLV.
+     * @retval kErrorNone     Successfully appended the Pending Timestamp TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the Pending Timestamp TLV.
      *
      */
-    otError AppendPendingTimestamp(Message &aMessage);
+    Error AppendPendingTimestamp(Message &aMessage);
 
     /**
      * This method checks if the destination is reachable.
@@ -1293,11 +1293,11 @@ protected:
      * @param[in]  aMeshDest   The RLOC16 of the destination.
      * @param[in]  aIp6Header  The IPv6 header of the message.
      *
-     * @retval OT_ERROR_NONE      The destination is reachable.
-     * @retval OT_ERROR_NO_ROUTE  The destination is not reachable and the message should be dropped.
+     * @retval kErrorNone      The destination is reachable.
+     * @retval kErrorNoRoute   The destination is not reachable and the message should be dropped.
      *
      */
-    otError CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header);
+    Error CheckReachability(uint16_t aMeshDest, Ip6::Header &aIp6Header);
 
     /**
      * This method returns the next hop towards an RLOC16 destination.
@@ -1319,25 +1319,25 @@ protected:
      * @param[in]  aExtraTlvs        A pointer to extra TLVs.
      * @param[in]  aExtraTlvsLength  Length of extra TLVs.
      *
-     * @retval OT_ERROR_NONE     Successfully generated an MLE Data Request message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Data Request message.
+     * @retval kErrorNone     Successfully generated an MLE Data Request message.
+     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Data Request message.
      *
      */
-    otError SendDataRequest(const Ip6::Address &aDestination,
-                            const uint8_t *     aTlvs,
-                            uint8_t             aTlvsLength,
-                            uint16_t            aDelay,
-                            const uint8_t *     aExtraTlvs       = nullptr,
-                            uint8_t             aExtraTlvsLength = 0);
+    Error SendDataRequest(const Ip6::Address &aDestination,
+                          const uint8_t *     aTlvs,
+                          uint8_t             aTlvsLength,
+                          uint16_t            aDelay,
+                          const uint8_t *     aExtraTlvs       = nullptr,
+                          uint8_t             aExtraTlvsLength = 0);
 
     /**
      * This method generates an MLE Child Update Request message.
      *
-     * @retval OT_ERROR_NONE     Successfully generated an MLE Child Update Request message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Child Update Request message.
+     * @retval kErrorNone    Successfully generated an MLE Child Update Request message.
+     * @retval kErrorNoBufs  Insufficient buffers to generate the MLE Child Update Request message.
      *
      */
-    otError SendChildUpdateRequest(void);
+    Error SendChildUpdateRequest(void);
 
     /**
      * This method generates an MLE Child Update Response message.
@@ -1346,11 +1346,11 @@ protected:
      * @param[in]  aNumTlvs      The number of TLV types in @p aTlvs.
      * @param[in]  aChallenge    The Challenge for the response.
      *
-     * @retval OT_ERROR_NONE     Successfully generated an MLE Child Update Response message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Child Update Response message.
+     * @retval kErrorNone     Successfully generated an MLE Child Update Response message.
+     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Child Update Response message.
      *
      */
-    otError SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge);
+    Error SendChildUpdateResponse(const uint8_t *aTlvs, uint8_t aNumTlvs, const Challenge &aChallenge);
 
     /**
      * This method submits an MLE message to the UDP socket.
@@ -1358,11 +1358,11 @@ protected:
      * @param[in]  aMessage      A reference to the message.
      * @param[in]  aDestination  A reference to the IPv6 address of the destination.
      *
-     * @retval OT_ERROR_NONE     Successfully submitted the MLE message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to form the rest of the MLE message.
+     * @retval kErrorNone     Successfully submitted the MLE message.
+     * @retval kErrorNoBufs   Insufficient buffers to form the rest of the MLE message.
      *
      */
-    otError SendMessage(Message &aMessage, const Ip6::Address &aDestination);
+    Error SendMessage(Message &aMessage, const Ip6::Address &aDestination);
 
     /**
      * This method sets the RLOC16 assigned to the Thread interface.
@@ -1401,11 +1401,11 @@ protected:
      * @param[in]  aDestination  The IPv6 address of the recipient of the message.
      * @param[in]  aDelay        The delay in milliseconds before transmission of the message.
      *
-     * @retval OT_ERROR_NONE     Successfully queued the message to transmit after the delay.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to queue the message.
+     * @retval kErrorNone     Successfully queued the message to transmit after the delay.
+     * @retval kErrorNoBufs   Insufficient buffers to queue the message.
      *
      */
-    otError AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
+    Error AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
@@ -1437,29 +1437,29 @@ protected:
     /**
      * This static method emits a log message indicating an error in processing of a message.
      *
-     * Note that log message is emitted only if there is an error, i.e., @p aError is not `OT_ERROR_NONE`. The log
+     * Note that log message is emitted only if there is an error, i.e., @p aError is not `kErrorNone`. The log
      * message will have the format "Failed to process {aMessageString} : {ErrorString}".
      *
      * @param[in]  aType      The message type.
      * @param[in]  aError     The error in processing of the message.
      *
      */
-    static void LogProcessError(MessageType aType, otError aError);
+    static void LogProcessError(MessageType aType, Error aError);
 
     /**
      * This static method emits a log message indicating an error when sending a message.
      *
-     * Note that log message is emitted only if there is an error, i.e. @p aError is not `OT_ERROR_NONE`. The log
+     * Note that log message is emitted only if there is an error, i.e. @p aError is not `kErrorNone`. The log
      * message will have the format "Failed to send {Message Type} : {ErrorString}".
      *
      * @param[in]  aType    The message type.
      * @param[in]  aError   The error in sending the message.
      *
      */
-    static void LogSendError(MessageType aType, otError aError);
+    static void LogSendError(MessageType aType, Error aError);
 #else
-    static void LogProcessError(MessageType, otError) {}
-    static void LogSendError(MessageType, otError) {}
+    static void LogProcessError(MessageType, Error) {}
+    static void LogSendError(MessageType, Error) {}
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
 
     /**
@@ -1520,13 +1520,11 @@ protected:
      * @param[in]  aSubTlvs      A pointer to the buffer of the sub-TLVs in the message.
      * @param[in]  aLength       The overall length of @p aSubTlvs.
      *
-     * @retval OT_ERROR_NONE     Successfully sent a Link Metrics Management Request.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval kErrorNone     Successfully sent a Link Metrics Management Request.
+     * @retval kErrorNoBufs   Insufficient buffers to generate the MLE Link Metrics Management Request message.
      *
      */
-    otError SendLinkMetricsManagementRequest(const Ip6::Address &aDestination,
-                                             const uint8_t *     aSubTlvs,
-                                             uint8_t             aLength);
+    Error SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength);
 
     /**
      * This method sends an MLE Link Probe message.
@@ -1536,12 +1534,12 @@ protected:
      * @param[in]  aBuf          A pointer to the data payload.
      * @param[in]  aLength       The length of the data payload in Link Probe TLV, [0, 64].
      *
-     * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request.
-     * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
-     * @retval OT_ERROR_INVALID_ARGS  Series ID is not a valid value, not within range [1, 254].
+     * @retval kErrorNone         Successfully sent a Link Metrics Management Request.
+     * @retval kErrorNoBufs       Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval kErrorInvalidArgs  Series ID is not a valid value, not within range [1, 254].
      *
      */
-    otError SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength);
+    Error SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength);
 
 #endif
 
@@ -1575,11 +1573,15 @@ private:
         kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
         kParentSearchJitterInterval  = (15 * 1000u),
         kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
+    };
 
-        // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
-        kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL,
-        kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
-        kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL,
+    // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
+    enum : uint32_t
+    {
+        kAttachBackoffMinInterval         = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL,
+        kAttachBackoffMaxInterval         = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
+        kAttachBackoffJitter              = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL,
+        kAttachBackoffDelayToResetCounter = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL,
     };
 
     enum ParentRequestType
@@ -1603,9 +1605,9 @@ private:
 
     struct DelayedResponseMetadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void    ReadFrom(const Message &aMessage);
-        void    RemoveFrom(Message &aMessage) const;
+        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+        void  ReadFrom(const Message &aMessage);
+        void  RemoveFrom(Message &aMessage) const;
 
         Ip6::Address mDestination; // IPv6 address of the message destination.
         TimeMilli    mSendTime;    // Time when the message shall be sent.
@@ -1713,7 +1715,7 @@ private:
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        ScheduleMessageTransmissionTimer(void);
-    otError     ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
+    Error       ReadChallengeOrResponse(const Message &aMessage, uint8_t aTlvType, Challenge &aBuffer);
 
     void HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
     void HandleChildIdResponse(const Message &         aMessage,
@@ -1735,18 +1737,18 @@ private:
                                              Neighbor *              aNeighbor);
     void HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor);
 #endif
-    otError HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void    ProcessAnnounce(void);
-    bool    HasUnregisteredAddress(void);
+    Error HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  ProcessAnnounce(void);
+    bool  HasUnregisteredAddress(void);
 
     uint32_t GetAttachStartDelay(void) const;
-    otError  SendParentRequest(ParentRequestType aType);
-    otError  SendChildIdRequest(void);
-    otError  SendOrphanAnnounce(void);
+    Error    SendParentRequest(ParentRequestType aType);
+    Error    SendChildIdRequest(void);
+    Error    SendOrphanAnnounce(void);
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    otError SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, otLinkMetricsStatus aStatus);
+    Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus);
 #endif
     uint32_t Reattach(void);
 
@@ -1777,7 +1779,7 @@ private:
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
-    static void        LogError(MessageAction aAction, MessageType aType, otError aError);
+    static void        LogError(MessageAction aAction, MessageType aType, Error aError);
     static const char *MessageActionToString(MessageAction aAction);
     static const char *MessageTypeToString(MessageType aType);
     static const char *MessageTypeActionToSuffixString(MessageType aType, MessageAction aAction);

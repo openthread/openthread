@@ -66,11 +66,11 @@
  *
  * The default maximum number of retries allowed after a transmission failure for direct transmissions.
  *
- * Equivalent to macMaxFrameRetries, default value is 3.
+ * Equivalent to macMaxFrameRetries, default value is 15.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
-#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 3
+#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 15
 #endif
 
 /**
@@ -326,13 +326,14 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
  *
- * This setting configures the CSL transmitter feature in Thread 1.2.
- * This is compulsory for 1.2 FTD.
+ * Define to 1 to enable csl transmitter logic.
  *
  */
-#define OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE \
-    (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2) && (OPENTHREAD_FTD || OPENTHREAD_RADIO)
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#define OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#endif
 
 /**
  * @def OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -404,6 +405,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
 #define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 2
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_MAC_SCAN_DURATION
+ *
+ * This setting configures the default scan duration in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SCAN_DURATION
+#define OPENTHREAD_CONFIG_MAC_SCAN_DURATION 300
 #endif
 
 #endif // CONFIG_MAC_H_

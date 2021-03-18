@@ -76,45 +76,45 @@ public:
      *
      * @param[in]  aConfig  A reference to the on mesh perfix configuration.
      *
-     * @retval OT_ERROR_NONE         Successfully added the Border Router entry.
-     * @retval OT_ERROR_NO_BUFS      Insufficient space to add the Border Router entry.
-     * @retval OT_ERROR_INVALID_ARGS The prefix is mesh local prefix.
+     * @retval kErrorNone         Successfully added the Border Router entry.
+     * @retval kErrorNoBufs       Insufficient space to add the Border Router entry.
+     * @retval kErrorInvalidArgs  The prefix is mesh local prefix.
      *
      */
-    otError AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
+    Error AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        The Prefix to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     * @retval kErrorNone       Successfully removed the Border Router entry.
+     * @retval kErrorNotFound   Could not find the Border Router entry.
      *
      */
-    otError RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix);
+    Error RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix);
 
     /**
      * This method adds a Has Route entry to the Thread Network data.
      *
      * @param[in]  aConfig       A reference to the external route configuration.
      *
-     * @retval OT_ERROR_NONE     Successfully added the Has Route entry.
-     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Has Route entry.
+     * @retval kErrorNone     Successfully added the Has Route entry.
+     * @retval kErrorNoBufs   Insufficient space to add the Has Route entry.
      *
      */
-    otError AddHasRoutePrefix(const ExternalRouteConfig &aConfig);
+    Error AddHasRoutePrefix(const ExternalRouteConfig &aConfig);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        The Prefix to remove.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     * @retval kErrorNone       Successfully removed the Border Router entry.
+     * @retval kErrorNotFound   Could not find the Border Router entry.
      *
      */
-    otError RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix);
+    Error RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix);
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -128,16 +128,16 @@ public:
      * @param[in]  aServerData        A pointer to the Server Data
      * @param[in]  aServerDataLength  The length of @p aServerData in bytes.
      *
-     * @retval OT_ERROR_NONE     Successfully added the Service entry.
-     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Service entry.
+     * @retval kErrorNone     Successfully added the Service entry.
+     * @retval kErrorNoBufs   Insufficient space to add the Service entry.
      *
      */
-    otError AddService(uint32_t       aEnterpriseNumber,
-                       const uint8_t *aServiceData,
-                       uint8_t        aServiceDataLength,
-                       bool           aServerStable,
-                       const uint8_t *aServerData,
-                       uint8_t        aServerDataLength);
+    Error AddService(uint32_t       aEnterpriseNumber,
+                     const uint8_t *aServiceData,
+                     uint8_t        aServiceDataLength,
+                     bool           aServerStable,
+                     const uint8_t *aServerData,
+                     uint8_t        aServerDataLength);
 
     /**
      * This method removes a Service entry from the Thread Network local data.
@@ -146,12 +146,12 @@ public:
      * @param[in]  aServiceData        A pointer to the service data.
      * @param[in]  aServiceDataLength  The length of @p aServiceData in bytes.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the Border Router entry.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the Border Router entry.
+     * @retval kErrorNone       Successfully removed the Service entry.
+     * @retval kErrorNotFound   Could not find the Service entry.
      *
      */
-    otError RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
-#endif
+    Error RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength);
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     /**
      * This method sends a Server Data Notification message to the Leader.
@@ -159,26 +159,26 @@ public:
      * @param[in]  aHandler  A function pointer that is called when the transaction ends.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE           Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS        Insufficient message buffers to generate the notification message.
-     * @retval OT_ERROR_INVALID_STATE  Device is a REED and is in the process of becoming a Router.
-     * @retval OT_ERROR_NOT_FOUND      Server Data is already consistent with network data.
+     * @retval kErrorNone          Successfully enqueued the notification message.
+     * @retval kErrorNoBufs        Insufficient message buffers to generate the notification message.
+     * @retval kErrorInvalidState  Device is a REED and is in the process of becoming a Router.
+     * @retval kErrorNotFound      Server Data is already consistent with network data.
      *
      */
-    otError UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext);
+    Error UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *aContext);
 
 private:
     void UpdateRloc(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    otError AddPrefix(const Ip6::Prefix &  aPrefix,
-                      NetworkDataTlv::Type aSubTlvType,
-                      int8_t               aPrf,
-                      uint16_t             aFlags,
-                      bool                 aStable);
-    otError RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
-    void    UpdateRloc(PrefixTlv &aPrefixTlv);
-    bool    IsOnMeshPrefixConsistent(void) const;
-    bool    IsExternalRouteConsistent(void) const;
+    Error AddPrefix(const Ip6::Prefix &  aPrefix,
+                    NetworkDataTlv::Type aSubTlvType,
+                    int8_t               aPrf,
+                    uint16_t             aFlags,
+                    bool                 aStable);
+    Error RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
+    void  UpdateRloc(PrefixTlv &aPrefixTlv);
+    bool  IsOnMeshPrefixConsistent(void) const;
+    bool  IsExternalRouteConsistent(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

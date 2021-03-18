@@ -91,7 +91,6 @@ endif
 # Otherwise, the default serial transport is UART.
 #
 ifndef DISABLE_TRANSPORTS
-configure_OPTIONS              += --enable-ncp
 configure_OPTIONS              += --enable-radio-only
 ifeq ($(NCP_SPI),1)
 COMMONCFLAGS                   += -DSPIS_AS_SERIAL_TRANSPORT=1

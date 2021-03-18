@@ -72,9 +72,10 @@ enum
     OT_RADIO_BIT_RATE          = 250000, ///< 2.4 GHz IEEE 802.15.4 (bits per second)
     OT_RADIO_BITS_PER_OCTET    = 8,      ///< Number of bits per octet
 
-    OT_RADIO_SYMBOL_TIME  = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
-    OT_RADIO_LQI_NONE     = 0,   ///< LQI measurement not supported
-    OT_RADIO_RSSI_INVALID = 127, ///< Invalid or unknown RSSI value
+    OT_RADIO_SYMBOL_TIME   = ((OT_RADIO_BITS_PER_OCTET / OT_RADIO_SYMBOLS_PER_OCTET) * 1000000) / OT_RADIO_BIT_RATE,
+    OT_RADIO_LQI_NONE      = 0,   ///< LQI measurement not supported
+    OT_RADIO_RSSI_INVALID  = 127, ///< Invalid or unknown RSSI value
+    OT_RADIO_POWER_INVALID = 127, ///< Invalid or unknown power value
 };
 
 /**
@@ -150,9 +151,10 @@ typedef uint16_t otShortAddress;
  */
 enum
 {
-    OT_IE_HEADER_SIZE  = 2,  ///< Size of IE header in bytes.
-    OT_CSL_IE_SIZE     = 4,  ///< Size of CSL IE content in bytes.
-    OT_ACK_IE_MAX_SIZE = 16, ///< Max length for header IE in ACK.
+    OT_IE_HEADER_SIZE               = 2,  ///< Size of IE header in bytes.
+    OT_CSL_IE_SIZE                  = 4,  ///< Size of CSL IE content in bytes.
+    OT_ACK_IE_MAX_SIZE              = 16, ///< Max length for header IE in ACK.
+    OT_ENH_PROBING_IE_DATA_MAX_SIZE = 2,  ///< Max length of Link Metrics data in Vendor-Specific IE.
 };
 
 #define CSL_IE_HEADER_BYTES_LO 0x04 ///< Fixed CSL IE header first byte
@@ -215,6 +217,8 @@ typedef struct otRadioFrame
 
     uint16_t mLength;  ///< Length of the PSDU.
     uint8_t  mChannel; ///< Channel used to transmit/receive the frame.
+
+    uint8_t mRadioType; ///< Radio link type - should be ignored by radio driver.
 
     /**
      * The union of transmit and receive information for a radio frame.
@@ -321,6 +325,19 @@ typedef struct otRadioCoexMetrics
 } otRadioCoexMetrics;
 
 /**
+ * This structure represents what metrics are specified to query.
+ *
+ */
+typedef struct otLinkMetrics
+{
+    bool mPduCount : 1;   ///< Pdu count.
+    bool mLqi : 1;        ///< Link Quality Indicator.
+    bool mLinkMargin : 1; ///< Link Margin.
+    bool mRssi : 1;       ///< Received Signal Strength Indicator.
+    bool mReserved : 1;   ///< Reserved, this is for reference device.
+} otLinkMetrics;
+
+/**
  * @}
  *
  */
@@ -408,6 +425,9 @@ void otPlatRadioSetShortAddress(otInstance *aInstance, otShortAddress aShortAddr
 /**
  * Get the radio's transmit power in dBm.
  *
+ * @note The transmit power returned will be no larger than the power specified in the max power table for
+ * the current channel.
+ *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[out] aPower    The transmit power in dBm.
  *
@@ -420,6 +440,9 @@ otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower);
 
 /**
  * Set the radio's transmit power in dBm.
+ *
+ * @note The real transmit power will be no larger than the power specified in the max power table for
+ * the current channel.
  *
  * @param[in] aInstance  The OpenThread instance structure.
  * @param[in] aPower     The transmit power in dBm.
@@ -945,6 +968,77 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
  *
  */
 void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
+
+/**
+ * Set the max transmit power for a specific channel.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aChannel     The radio channel.
+ * @param[in]  aMaxPower    The max power in dBm, passing OT_RADIO_RSSI_INVALID will disable this channel.
+ *
+ * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
+ * @retval  OT_ERROR_INVALID_ARGS     The specified channel is not valid.
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully set max transmit poewr.
+ *
+ */
+otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
+
+/**
+ * Set the region code.
+ *
+ * The radio region format is the 2-bytes ascii representation of the
+ * ISO 3166 alpha-2 code.
+ *
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[in]  aRegionCode  The radio region.
+ *
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully set region code.
+ *
+ */
+otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode);
+
+/**
+ * Get the region code.
+ *
+ * The radio region format is the 2-bytes ascii representation of the
+ * ISO 3166 alpha-2 code.
+
+ * @param[in]  aInstance    The OpenThread instance structure.
+ * @param[out] aRegionCode  The radio region.
+ *
+ * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+ * @retval  OT_ERROR_FAILED           Other platform specific errors.
+ * @retval  OT_ERROR_NONE             Successfully got region code.
+ *
+ */
+otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode);
+
+/**
+ * Enable/disable or update Enhanced-ACK Based Probing in radio for a specific Initiator.
+ *
+ * After Enhanced-ACK Based Probing is configured by a specific Probing Initiator, the Enhanced-ACK sent to that
+ * node should include Vendor-Specific IE containing Link Metrics data. This method informs the radio to start/stop to
+ * collect Link Metrics data and include Vendor-Specific IE that containing the data in Enhanced-ACK sent to that
+ * Probing Initiator.
+ *
+ * @param[in]  aInstance     The OpenThread instance structure.
+ * @param[in]  aLinkMetrics  This parameter specifies what metrics to query. Per spec 4.11.3.4.4.6, at most 2 metrics
+ *                           can be specified. The probing would be disabled if @p `aLinkMetrics` is bitwise 0.
+ * @param[in]  aShortAddr    The short address of the Probing Initiator.
+ * @param[in]  aExtAddr      The extended source address of the Probing Initiator. @p aExtAddr MUST NOT be `NULL`.
+ *
+ * @retval  OT_ERROR_NONE            Successfully configured the Enhanced-ACK Based Probing.
+ * @retval  OT_ERROR_INVALID_ARGS    @p aExtAddress is `NULL`.
+ * @retval  OT_ERROR_NOT_FOUND       The Initiator indicated by @p aShortAddress is not found when trying to clear.
+ * @retval  OT_ERROR_NO_BUFS         No more Initiator can be supported.
+ *
+ */
+otError otPlatRadioConfigureEnhAckProbing(otInstance *        aInstance,
+                                          otLinkMetrics       aLinkMetrics,
+                                          otShortAddress      aShortAddress,
+                                          const otExtAddress *aExtAddress);
 
 /**
  * @}

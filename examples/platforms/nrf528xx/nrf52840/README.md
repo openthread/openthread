@@ -135,11 +135,13 @@ mbedtls_platform_setup(NULL);
 When building an external application with OpenThread libraries and CryptoCell 310 hardware acceleration, use the following configuration:
 
 - Crypto libraries:
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc310_backend.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
-  - `third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.2.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_shared.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_tls_vanilla.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_x509_vanilla.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_cc3xx.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libnrf_cc310_platform_0.9.4.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedcrypto_oberon.a`
+  - `/third_party/NordicSemiconductor/libraries/nrf_security/lib/libmbedtls_base_vanilla.a`
 - Include directories:
   - `third_party/NordicSemiconductor/libraries/nrf_security/mbedtls_platform_config`
   - `third_party/NordicSemiconductor/libraries/nrf_security/include`

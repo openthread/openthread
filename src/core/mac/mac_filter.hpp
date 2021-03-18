@@ -117,11 +117,11 @@ public:
      *
      * @param[in]  aExtAddress  A reference to the Extended Address.
      *
-     * @retval OT_ERROR_NONE           Successfully added @p aExtAddress to the filter.
-     * @retval OT_ERROR_NO_BUFS        No available entry exists.
+     * @retval kErrorNone          Successfully added @p aExtAddress to the filter.
+     * @retval kErrorNoBufs        No available entry exists.
      *
      */
-    otError AddAddress(const ExtAddress &aExtAddress);
+    Error AddAddress(const ExtAddress &aExtAddress);
 
     /**
      * This method removes an Extended Address from the filter.
@@ -146,11 +146,11 @@ public:
      *                           To get the first in-use address filter, set it to OT_MAC_FILTER_ITERATOR_INIT.
      * @param[out]     aEntry    A reference to where the information is placed.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the next address filter entry.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
+     * @retval kErrorNone      Successfully retrieved the next address filter entry.
+     * @retval kErrorNotFound  No subsequent entry exists.
      *
      */
-    otError GetNextAddress(Iterator &aIterator, Entry &aEntry) const;
+    Error GetNextAddress(Iterator &aIterator, Entry &aEntry) const;
 
     /**
      * This method adds a fixed received signal strength entry for the messages from a given Extended Address.
@@ -158,11 +158,11 @@ public:
      * @param[in]  aExtAddress  An Extended Address
      * @param[in]  aRss         The received signal strength to set.
      *
-     * @retval OT_ERROR_NONE     Successfully set @p aRss for @p aExtAddress.
-     * @retval OT_ERROR_NO_BUFS  No available entry exists.
+     * @retval kErrorNone    Successfully set @p aRss for @p aExtAddress.
+     * @retval kErrorNoBufs  No available entry exists.
      *
      */
-    otError AddRssIn(const ExtAddress &aExtAddress, int8_t aRss);
+    Error AddRssIn(const ExtAddress &aExtAddress, int8_t aRss);
 
     /**
      * This method removes a fixed received signal strength entry for a given Extended Address.
@@ -206,11 +206,11 @@ public:
      *                           Extended Address as all 0xff to indicate the default received signal strength
      *                           if it was set.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the next RssIn filter entry.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent entry exists.
+     * @retval kErrorNone      Successfully retrieved the next RssIn filter entry.
+     * @retval kErrorNotFound  No subsequent entry exists.
      *
      */
-    otError GetNextRssIn(Iterator &aIterator, Entry &aEntry);
+    Error GetNextRssIn(Iterator &aIterator, Entry &aEntry);
 
     /**
      * This method applies the filter rules on a given Extended Address.
@@ -218,12 +218,11 @@ public:
      * @param[in]  aExtAddress  A reference to the Extended Address.
      * @param[out] aRss         A reference to where the received signal strength to be placed.
      *
-     * @retval OT_ERROR_NONE                Successfully applied the filter rules on @p aExtAddress.
-     * @retval OT_ERROR_ADDRESS_FILTERED    Address filter (allowlist or denylist) is enabled and @p aExtAddress is
-     *                                      filtered.
+     * @retval kErrorNone             Successfully applied the filter rules on @p aExtAddress.
+     * @retval kErrorAddressFiltered  Address filter (allowlist or denylist) is enabled and @p aExtAddress is filtered.
      *
      */
-    otError Apply(const ExtAddress &aExtAddress, int8_t &aRss);
+    Error Apply(const ExtAddress &aExtAddress, int8_t &aRss);
 
 private:
     enum

@@ -111,8 +111,11 @@ check_PROGRAMS                                                     += \
     test-child                                                        \
     test-child-table                                                  \
     test-cmd-line-parser                                              \
+    test-dns                                                          \
+    test-ecdsa                                                        \
     test-flash                                                        \
     test-heap                                                         \
+    test-hkdf-sha256                                                  \
     test-hmac-sha256                                                  \
     test-ip6-address                                                  \
     test-link-quality                                                 \
@@ -188,6 +191,12 @@ test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
 test_cmd_line_parser_LDADD   = $(COMMON_LDADD)
 test_cmd_line_parser_SOURCES = $(COMMON_SOURCES) test_cmd_line_parser.cpp
 
+test_dns_LDADD               = $(COMMON_LDADD)
+test_dns_SOURCES             = $(COMMON_SOURCES) test_dns.cpp
+
+test_ecdsa_LDADD             = $(COMMON_LDADD)
+test_ecdsa_SOURCES           = $(COMMON_SOURCES) test_ecdsa.cpp
+
 test_flash_LDADD             = $(COMMON_LDADD)
 test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp
 
@@ -196,6 +205,9 @@ test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
 
 test_heap_LDADD              = $(COMMON_LDADD)
 test_heap_SOURCES            = $(COMMON_SOURCES) test_heap.cpp
+
+test_hkdf_sha256_LDADD       = $(COMMON_LDADD)
+test_hkdf_sha256_SOURCES     = $(COMMON_SOURCES) test_hkdf_sha256.cpp
 
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = $(COMMON_SOURCES) test_hmac_sha256.cpp

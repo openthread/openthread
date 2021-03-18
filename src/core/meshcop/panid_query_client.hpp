@@ -67,15 +67,15 @@ public:
      * @param[in]  aCallback      A pointer to a function called on receiving an Energy Report message.
      * @param[in]  aContext       A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the PAN ID Query message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers to generate a PAN ID Query message.
+     * @retval kErrorNone    Successfully enqueued the PAN ID Query message.
+     * @retval kErrorNoBufs  Insufficient buffers to generate a PAN ID Query message.
      *
      */
-    otError SendQuery(uint16_t                            aPanId,
-                      uint32_t                            aChannelMask,
-                      const Ip6::Address &                aAddress,
-                      otCommissionerPanIdConflictCallback aCallback,
-                      void *                              aContext);
+    Error SendQuery(uint16_t                            aPanId,
+                    uint32_t                            aChannelMask,
+                    const Ip6::Address &                aAddress,
+                    otCommissionerPanIdConflictCallback aCallback,
+                    void *                              aContext);
 
 private:
     static void HandleConflict(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

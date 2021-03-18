@@ -94,6 +94,9 @@ extern "C" {
 #define _OT_REGION_BBR_PREFIX "-BBR-----: "
 #define _OT_REGION_MLR_PREFIX "-MLR-----: "
 #define _OT_REGION_DUA_PREFIX "-DUA-----: "
+#define _OT_REGION_BR_PREFIX "-BR------: "
+#define _OT_REGION_SRP_PREFIX "-SRP-----: "
+#define _OT_REGION_DNS_PREFIX "-DNS-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -114,6 +117,9 @@ extern "C" {
 #define _OT_REGION_BBR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_DUA_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_BR_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_SRP_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_DNS_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -328,6 +334,64 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogNoteMbedTls(...) otLogNoteMeshCoP(__VA_ARGS__)
 #define otLogInfoMbedTls(...) otLogInfoMeshCoP(__VA_ARGS__)
 #define otLogDebgMbedTls(...) otLogDebgMeshCoP(__VA_ARGS__)
+
+/**
+ * @def otLogCritBr
+ *
+ * This function generates a log with level critical for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnBr
+ *
+ * This function generates a log with level warning for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteBr
+ *
+ * This function generates a log with level note for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoBr
+ *
+ * This function generates a log with level info for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgBr
+ *
+ * This function generates a log with level debug for the BR region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BR
+#define otLogCritBr(...) otLogCrit(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogWarnBr(...) otLogWarn(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogNoteBr(...) otLogNote(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogInfoBr(...) otLogInfo(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#define otLogDebgBr(...) otLogDebg(OT_LOG_REGION_BR, _OT_REGION_BR_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritBr(...)
+#define otLogWarnBr(...)
+#define otLogNoteBr(...)
+#define otLogInfoBr(...)
+#define otLogDebgBr(...)
+#endif
 
 /**
  * @def otLogCritMle
@@ -1243,6 +1307,122 @@ void otLogCertMeshCoP(const char *aFormat, ...);
 #endif
 
 /**
+ * @def otLogCritSrp
+ *
+ * This function generates a log with level critical for the Service Registration Protocol (SRP) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnSrp
+ *
+ * This function generates a log with level warning for the Service Registration Protocol (SRP) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteSrp
+ *
+ * This function generates a log with level note for the Service Registration Protocol (SRP) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoSrp
+ *
+ * This function generates a log with level info for the Service Registration Protocol (SRP) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgSrp
+ *
+ * This function generates a log with level debug for the Service Registration Protocol (SRP) region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_SRP
+#define otLogCritSrp(...) otLogCrit(OT_LOG_REGION_SRP, _OT_REGION_SRP_PREFIX, __VA_ARGS__)
+#define otLogWarnSrp(...) otLogWarn(OT_LOG_REGION_SRP, _OT_REGION_SRP_PREFIX, __VA_ARGS__)
+#define otLogNoteSrp(...) otLogNote(OT_LOG_REGION_SRP, _OT_REGION_SRP_PREFIX, __VA_ARGS__)
+#define otLogInfoSrp(...) otLogInfo(OT_LOG_REGION_SRP, _OT_REGION_SRP_PREFIX, __VA_ARGS__)
+#define otLogDebgSrp(...) otLogDebg(OT_LOG_REGION_SRP, _OT_REGION_SRP_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritSrp(...)
+#define otLogWarnSrp(...)
+#define otLogNoteSrp(...)
+#define otLogInfoSrp(...)
+#define otLogDebgSrp(...)
+#endif
+
+/**
+ * @def otLogCritDns
+ *
+ * This function generates a log with level critical for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnDns
+ *
+ * This function generates a log with level warning for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteDns
+ *
+ * This function generates a log with level note for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoDns
+ *
+ * This function generates a log with level info for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgDns
+ *
+ * This function generates a log with level debug for the DNS region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_DNS
+#define otLogCritDns(...) otLogCrit(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogWarnDns(...) otLogWarn(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogNoteDns(...) otLogNote(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogInfoDns(...) otLogInfo(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#define otLogDebgDns(...) otLogDebg(OT_LOG_REGION_DNS, _OT_REGION_DNS_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritDns(...)
+#define otLogWarnDns(...)
+#define otLogNoteDns(...)
+#define otLogInfoDns(...)
+#define otLogDebgDns(...)
+#endif
+
+/**
  * @def otLogCritPlat
  *
  * This function generates a log with level critical for the Platform region.
@@ -2078,6 +2258,142 @@ void otLogOtns(const char *aFormat, ...);
 #endif
 
 /**
+ * @def otDumpCritSrp
+ *
+ * This function generates a memory dump with log level critical and region Service Registration Protocol (SRP).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnSrp
+ *
+ * This function generates a memory dump with log level warning and region Service Registration Protocol (SRP).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteSrp
+ *
+ * This function generates a memory dump with log level note and region Service Registration Protocol (SRP).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoSrp
+ *
+ * This function generates a memory dump with log level info and region Service Registration Protocol (SRP).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgSrp
+ *
+ * This function generates a memory dump with log level debug and region Service Registration Protocol (SRP).
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_SRP
+#define otDumpCritSrp(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpWarnSrp(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpNoteSrp(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpInfoSrp(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpDebgSrp(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#else
+#define otDumpCritSrp(aId, aBuf, aLength)
+#define otDumpWarnSrp(aId, aBuf, aLength)
+#define otDumpNoteSrp(aId, aBuf, aLength)
+#define otDumpInfoSrp(aId, aBuf, aLength)
+#define otDumpDebgSrp(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritDns
+ *
+ * This function generates a memory dump with log level critical and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnDns
+ *
+ * This function generates a memory dump with log level warning and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteDns
+ *
+ * This function generates a memory dump with log level note and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoDns
+ *
+ * This function generates a memory dump with log level info and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgDns
+ *
+ * This function generates a memory dump with log level debug and region DNS.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_SRP
+#define otDumpCritDns(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpWarnDns(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpNoteDns(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpInfoDns(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#define otDumpDebgDns(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_SRP, aId, aBuf, aLength)
+#else
+#define otDumpCritDns(aId, aBuf, aLength)
+#define otDumpWarnDns(aId, aBuf, aLength)
+#define otDumpNoteDns(aId, aBuf, aLength)
+#define otDumpInfoDns(aId, aBuf, aLength)
+#define otDumpDebgDns(aId, aBuf, aLength)
+#endif
+
+/**
  * @def otDumpCritMem
  *
  * This function generates a memory dump with log level debug and region memory.
@@ -2193,6 +2509,10 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#error "Dynamic log level is not supported along with multiple OT instance feature"
+#endif
+
 /**
  * Local/private macro to dynamically filter log level.
  */
@@ -2238,14 +2558,26 @@ const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
 /**
  * @def otLogResultPlat
  *
- * This function generates a log for the Plat region according to the error result. If @p aError is `OT_ERROR_NONE`, the
+ * This function generates a log for the Plat region according to the error result. If @p aError is `kErrorNone`, the
  * log level is info. Otherwise the log level is warn.
  *
  * @param[in]  aError    The error result.
  * @param[in]  ...       Arguments for the format specification.
  *
  */
-#define otLogResultPlat(aError, ...) _otLogResult(Plat, aError, OT_FIRST_ARG(__VA_ARGS__) OT_REST_ARGS(__VA_ARGS__))
+#define otLogResultPlat(aError, ...) _otLogResult(Plat, aError, __VA_ARGS__)
+
+/**
+ * @def otLogResultBbr
+ *
+ * This function generates a log for the BBR region according to the error result. If @p aError is `OT_ERROR_NONE`, the
+ * log level is info. Otherwise the log level is warn.
+ *
+ * @param[in]  aError    The error result.
+ * @param[in]  ...       Arguments for the format specification.
+ *
+ */
+#define otLogResultBbr(aError, ...) _otLogResult(Bbr, aError, __VA_ARGS__)
 
 #ifdef __cplusplus
 }

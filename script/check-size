@@ -48,9 +48,15 @@ setup_arm_gcc_7()
     arm-none-eabi-gcc --version
 }
 
+setup_ninja_build()
+{
+    sudo apt-get --no-install-recommends install -y ninja-build
+}
+
 setup()
 {
     setup_arm_gcc_7
+    setup_ninja_build
 }
 
 markdown_init()
@@ -100,58 +106,63 @@ markdown()
 
 size_nrf52840_version()
 {
-    local flags=(
-        "BORDER_AGENT=1"
-        "BORDER_ROUTER=1"
-        "CHANNEL_MANAGER=1"
-        "CHANNEL_MONITOR=1"
-        "CHILD_SUPERVISION=1"
-        "COAP=1"
-        "COAPS=1"
-        "COMMISSIONER=1"
-        "DATASET_UPDATER=1"
-        "DHCP6_CLIENT=1"
-        "DHCP6_SERVER=1"
-        "DIAGNOSTIC=1"
-        "DISABLE_DOC=1"
-        "DNS_CLIENT=1"
-        "ECDSA=1"
-        "FULL_LOGS=1"
-        "JAM_DETECTION=1"
-        "JOINER=1"
-        "LINK_RAW=1"
-        "MAC_FILTER=1"
-        "MESSAGE_USE_HEAP=1"
-        "MTD_NETDIAG=1"
-        "SERVICE=1"
-        "SLAAC=1"
-        "SNTP_CLIENT=1"
-        "TIME_SYNC=1"
-        "UDP_FORWARD=1"
+    local options=(
+        "-DOT_BORDER_AGENT=ON"
+        "-DOT_BORDER_ROUTER=ON"
+        "-DOT_CHANNEL_MANAGER=ON"
+        "-DOT_CHANNEL_MONITOR=ON"
+        "-DOT_CHILD_SUPERVISION=ON"
+        "-DOT_COAP=ON"
+        "-DOT_COAPS=ON"
+        "-DOT_COMMISSIONER=ON"
+        "-DOT_DATASET_UPDATER=ON"
+        "-DOT_DHCP6_CLIENT=ON"
+        "-DOT_DHCP6_SERVER=ON"
+        "-DOT_DIAGNOSTIC=ON"
+        "-DOT_DNSSD_SERVER=ON"
+        "-DOT_DNS_CLIENT=ON"
+        "-DOT_ECDSA=ON"
+        "-DOT_FULL_LOGS=ON"
+        "-DOT_JAM_DETECTION=ON"
+        "-DOT_JOINER=ON"
+        "-DOT_LINK_RAW=ON"
+        "-DOT_MAC_FILTER=ON"
+        "-DOT_MESSAGE_USE_HEAP=ON"
+        "-DOT_MTD_NETDIAG=ON"
+        "-DOT_SERVICE=ON"
+        "-DOT_SLAAC=ON"
+        "-DOT_SNTP_CLIENT=ON"
+        "-DOT_SRP_CLIENT=ON"
+        "-DOT_SRP_SERVER=ON"
+        "-DOT_TIME_SYNC=ON"
+        "-DOT_UDP_FORWARD=ON"
     )
 
     local thread_version=$1
 
     if [[ ${thread_version} == "1.2" ]]; then
-        flags+=(
-            "THREAD_VERSION=1.2"
-            "BACKBONE_ROUTER=1"
-            "DUA=1"
-            "MLR=1"
-            "CSL_RECEIVER=1"
-            "LINK_METRICS=1"
+        options+=(
+            "-DOT_THREAD_VERSION=1.2"
+            "-DOT_BACKBONE_ROUTER=ON"
+            "-DOT_DUA=ON"
+            "-DOT_MLR=ON"
+            "-DOT_CSL_RECEIVER=ON"
+            "-DOT_LINK_METRICS=ON"
         )
     fi
 
     rm -rf "${OT_TMP_DIR}"
 
+    local build_dir="build"
+
     # new commit
     mkdir -p "${OT_TMP_DIR}/b"
-    git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/b"
+    script/git-tool clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/b"
+    rm -rf "${OT_TMP_DIR}/b/openthread/*" # replace openthread submodule with latest commit
+    git archive "${OT_SHA_NEW}" | tar x -C "${OT_TMP_DIR}/b/openthread"
 
     (cd "${OT_TMP_DIR}/b" \
-        && ./bootstrap \
-        && make -f examples/Makefile-nrf52840 "${flags[@]}")
+        && OT_CMAKE_BUILD_DIR=${build_dir} script/build nrf52840 UART_trans "${options[@]}")
 
     # old commit
     if [[ "${GITHUB_ACTIONS+x}" ]]; then
@@ -159,39 +170,53 @@ size_nrf52840_version()
     fi
 
     mkdir -p "${OT_TMP_DIR}/a"
-    git archive "${OT_SHA_OLD}" | tar x -C "${OT_TMP_DIR}/a"
+    git clone https://github.com/openthread/ot-nrf528xx.git "${OT_TMP_DIR}/a"
+    rm -rf "${OT_TMP_DIR}/a/openthread/*" # replace openthread submodule with last commit
+    git archive "${OT_SHA_OLD}" | tar x -C "${OT_TMP_DIR}/a/openthread"
+
     (cd "${OT_TMP_DIR}/a" \
-        && ./bootstrap \
-        && make -f examples/Makefile-nrf52840 "${flags[@]}")
+        && OT_CMAKE_BUILD_DIR=${build_dir} script/build nrf52840 UART_trans "${options[@]}")
 
     # rename the generated files to be ready for size-report
     # shellcheck disable=SC2011
     (
-        cd "${OT_TMP_DIR}"/a/output/nrf52840/bin
+        cd "${OT_TMP_DIR}"/a/"${build_dir}"/bin
         ls | xargs -I{} mv {} {}_"${thread_version}"
-        cd "${OT_TMP_DIR}"/b/output/nrf52840/bin
+        cd "${OT_TMP_DIR}"/b/"${build_dir}"/bin
         ls | xargs -I{} mv {} {}_"${thread_version}"
 
-        cd "${OT_TMP_DIR}"/a/output/nrf52840/lib/
+        cd "${OT_TMP_DIR}"/a/"${build_dir}"/lib
         ls ./*.a | xargs -I{} mv {} {}_"${thread_version}"
-        cd "${OT_TMP_DIR}"/b/output/nrf52840/lib/
+        cd "${OT_TMP_DIR}"/b/"${build_dir}"/lib
         ls ./*.a | xargs -I{} mv {} {}_"${thread_version}"
     )
 
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-ftd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-ftd_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-cli-mtd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-cli-mtd_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-ftd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-ftd_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-ncp-mtd_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-ncp-mtd_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/bin/ot-rcp_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/bin/ot-rcp_"${thread_version}"
+    local bins=(
+        "ot-cli-ftd"
+        "ot-cli-mtd"
+        "ot-ncp-ftd"
+        "ot-ncp-mtd"
+        "ot-rcp"
+    )
 
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-ftd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-ftd.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-cli-mtd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-cli-mtd.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ftd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ftd.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-mtd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-mtd.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-ftd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-ftd.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-ncp-mtd.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-ncp-mtd.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-rcp.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-rcp.a_"${thread_version}"
-    "${reporter}" size "${OT_TMP_DIR}"/a/output/nrf52840/lib/libopenthread-radio.a_"${thread_version}" "${OT_TMP_DIR}"/b/output/nrf52840/lib/libopenthread-radio.a_"${thread_version}"
+    local libs=(
+        "libopenthread-cli-ftd.a"
+        "libopenthread-cli-mtd.a"
+        "libopenthread-ftd.a"
+        "libopenthread-mtd.a"
+        "libopenthread-ncp-ftd.a"
+        "libopenthread-ncp-mtd.a"
+        "libopenthread-rcp.a"
+        "libopenthread-radio.a"
+    )
+
+    for file in "${bins[@]}"; do
+        "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
+    done
+
+    for file in "${libs[@]}"; do
+        "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
+    done
 }
 
 size_nrf52840()

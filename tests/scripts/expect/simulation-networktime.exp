@@ -32,12 +32,12 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "networktime 20 200\n"
-expect "Done"
+expect_line "Done"
 send "networktime\n"
 expect -re {Network Time:     \d+us \((unsynchronized|resync needed|synchronized)\)}
 expect "Time Sync Period: 20s"
 expect "XTAL Threshold:   200ppm"
-expect "Done"
+expect_line "Done"
 send "networktime something_invalid\n"
 expect "Error 7: InvalidArgs"
 

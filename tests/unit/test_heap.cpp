@@ -38,6 +38,8 @@
 #include "test_platform.h"
 #include "test_util.h"
 
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
 /**
  * Verifies single variable allocating and freeing.
  *
@@ -171,9 +173,13 @@ void RunTimerTests(void)
     TestAllocateMultiple();
 }
 
+#endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+
 int main(void)
 {
+#if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     RunTimerTests();
     printf("All tests passed\n");
+#endif // !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     return 0;
 }

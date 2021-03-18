@@ -75,20 +75,20 @@ public:
     /**
      * This method starts the Border Agent service.
      *
-     * @retval OT_ERROR_NONE    Successfully started the Border Agent service.
-     * @retval OT_ERROR_ALREADY Border Agent is already started.
+     * @retval kErrorNone    Successfully started the Border Agent service.
+     * @retval kErrorAlready Border Agent is already started.
      *
      */
-    otError Start(void);
+    Error Start(void);
 
     /**
      * This method stops the Border Agent service.
      *
-     * @retval OT_ERROR_NONE    Successfully stopped the Border Agent service.
-     * @retval OT_ERROR_ALREADY Border Agent is already stopped.
+     * @retval kErrorNone    Successfully stopped the Border Agent service.
+     * @retval kErrorAlready Border Agent is already stopped.
      *
      */
-    otError Stop(void);
+    Error Stop(void);
 
     /**
      * This method gets the state of the Border Agent service.
@@ -111,7 +111,7 @@ private:
         void     Init(Instance &aInstance, const Coap::Message &aMessage, bool aPetition, bool aSeparate);
         bool     IsPetition(void) const { return mPetition; }
         uint16_t GetMessageId(void) const { return mMessageId; }
-        otError  ToHeader(Coap::Message &aMessage, uint8_t aCode);
+        Error    ToHeader(Coap::Message &aMessage, uint8_t aCode);
 
     private:
         uint16_t mMessageId;                             // The CoAP Message ID of the original request.
@@ -124,9 +124,9 @@ private:
 
     void HandleNotifierEvents(Events aEvents);
 
-    Coap::Message::Code CoapCodeFromError(otError aError);
-    void                SendErrorMessage(ForwardContext &aForwardContext, otError aError);
-    void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, otError aError);
+    Coap::Message::Code CoapCodeFromError(Error aError);
+    void                SendErrorMessage(ForwardContext &aForwardContext, Error aError);
+    void                SendErrorMessage(const Coap::Message &aRequest, bool aSeparate, Error aError);
 
     static void HandleConnected(bool aConnected, void *aContext);
     void        HandleConnected(bool aConnected);
@@ -140,15 +140,15 @@ private:
     static void HandleCoapResponse(void *               aContext,
                                    otMessage *          aMessage,
                                    const otMessageInfo *aMessageInfo,
-                                   otError              aResult);
-    void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, otError aResult);
+                                   Error                aResult);
+    void        HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult);
 
-    otError     ForwardToLeader(const Coap::Message &   aMessage,
+    Error       ForwardToLeader(const Coap::Message &   aMessage,
                                 const Ip6::MessageInfo &aMessageInfo,
                                 const char *            aPath,
                                 bool                    aPetition,
                                 bool                    aSeparate);
-    otError     ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
+    Error       ForwardToCommissioner(Coap::Message &aForwardMessage, const Message &aMessage);
     void        HandleKeepAlive(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void        HandleRelayTransmit(const Coap::Message &aMessage);
     void        HandleRelayReceive(const Coap::Message &aMessage);

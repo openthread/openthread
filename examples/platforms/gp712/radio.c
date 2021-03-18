@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -77,6 +77,11 @@ typedef struct otCachedSettings_s
 
 static otCachedSettings_t otCachedSettings;
 
+/* Upper layer relies on txpower could be set before receive, but MAC have per-channel config for it.
+   Store txpower until channel set in Receive(). */
+#define PENDING_TX_POWER_NONE (-1)
+static int8_t pendingTxPower = PENDING_TX_POWER_NONE;
+
 static uint8_t sScanstate         = 0;
 static int8_t  sLastReceivedPower = 127;
 
@@ -152,13 +157,12 @@ otError otPlatRadioSleep(otInstance *aInstance)
 
     otError error = OT_ERROR_INVALID_STATE;
 
-    if (sState == OT_RADIO_STATE_RECEIVE)
+    if (sState == OT_RADIO_STATE_RECEIVE || sState == OT_RADIO_STATE_SLEEP)
     {
         qorvoRadioSetRxOnWhenIdle(false);
         error  = OT_ERROR_NONE;
         sState = OT_RADIO_STATE_SLEEP;
     }
-
     return error;
 }
 
@@ -171,6 +175,11 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     if ((sState != OT_RADIO_STATE_DISABLED) && (sScanstate == 0))
     {
         qorvoRadioSetCurrentChannel(aChannel);
+        if (pendingTxPower != PENDING_TX_POWER_NONE)
+        {
+            qorvoRadioSetTransmitPower(pendingTxPower);
+            pendingTxPower = PENDING_TX_POWER_NONE;
+        }
         error = OT_ERROR_NONE;
     }
 
@@ -186,8 +195,7 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aPacket)
 {
-    otError err = OT_ERROR_NONE;
-
+    otError err    = OT_ERROR_NONE;
     pQorvoInstance = aInstance;
 
     otEXPECT_ACTION(sState != OT_RADIO_STATE_DISABLED, err = OT_ERROR_INVALID_STATE);
@@ -225,10 +233,6 @@ void cbQorvoRadioReceiveDone(otRadioFrame *aPacket, otError aError)
     {
         sLastReceivedPower = aPacket->mInfo.mRxInfo.mRssi;
     }
-
-    // TODO Set this flag only when the packet is really acknowledged with frame pending set.
-    // See https://github.com/openthread/openthread/pull/3785
-    aPacket->mInfo.mRxInfo.mAckedWithFramePending = true;
 
     otPlatRadioReceiveDone(pQorvoInstance, aPacket, aError);
 }
@@ -334,20 +338,55 @@ void cbQorvoRadioEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 otError otPlatRadioGetTransmitPower(otInstance *aInstance, int8_t *aPower)
 {
-    // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPower);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError result;
+
+    if (aPower == NULL)
+    {
+        return OT_ERROR_INVALID_ARGS;
+    }
+
+    if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
+    {
+        *aPower = (pendingTxPower == PENDING_TX_POWER_NONE) ? 0 : pendingTxPower;
+        return OT_ERROR_NONE;
+    }
+
+    result = qorvoRadioGetTransmitPower(aPower);
+
+    if (result == OT_ERROR_INVALID_STATE)
+    {
+        // Channel was not set, so txpower is ambigious
+        *aPower = (pendingTxPower == PENDING_TX_POWER_NONE) ? 0 : pendingTxPower;
+        return OT_ERROR_NONE;
+    }
+
+    return result;
 }
 
 otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
 {
-    // TODO: Create a proper implementation for this driver.
     OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPower);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError result;
+
+    if ((sState == OT_RADIO_STATE_DISABLED) || (sScanstate != 0))
+    {
+        pendingTxPower = aPower;
+        return OT_ERROR_NONE;
+    }
+
+    result = qorvoRadioSetTransmitPower(aPower);
+
+    if (result == OT_ERROR_INVALID_STATE)
+    {
+        // Channel was not set, so txpower is ambigious
+        pendingTxPower = aPower;
+        result         = OT_ERROR_NONE;
+    }
+
+    return result;
 }
 
 otError otPlatRadioGetCcaEnergyDetectThreshold(otInstance *aInstance, int8_t *aThreshold)
@@ -371,4 +410,10 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
     OT_UNUSED_VARIABLE(aInstance);
 
     return GP712_RECEIVE_SENSITIVITY;
+}
+
+const char *otPlatRadioGetVersionString(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    return "OPENTHREAD/Qorvo/0.0";
 }

@@ -178,7 +178,8 @@ void setNetworkConfiguration(otInstance *aInstance)
     aDataset.mComponents.mIsExtendedPanIdPresent = true;
 
     /* Set master key to 1234C0DE1AB51234C0DE1AB51234C0DE */
-    uint8_t key[OT_MASTER_KEY_SIZE] = {0x12, 0x34, 0xC0, 0xDE, 0x1A, 0xB5, 0x12, 0x34, 0xC0, 0xDE, 0x1A, 0xB5};
+    uint8_t key[OT_MASTER_KEY_SIZE] = {0x12, 0x34, 0xC0, 0xDE, 0x1A, 0xB5, 0x12, 0x34,
+                                       0xC0, 0xDE, 0x1A, 0xB5, 0x12, 0x34, 0xC0, 0xDE};
     memcpy(aDataset.mMasterKey.m8, key, sizeof(aDataset.mMasterKey));
     aDataset.mComponents.mIsMasterKeyPresent = true;
 
@@ -210,7 +211,7 @@ void handleNetifStateChanged(uint32_t aFlags, void *aContext)
             config.mDeviceType   = 0;
             config.mNetworkData  = 0;
             otThreadSetLinkMode(instance, config);
-            sAllowDeepSleep = true;
+            sAllowDeepSleep = false;
             break;
 
         case OT_DEVICE_ROLE_DETACHED:

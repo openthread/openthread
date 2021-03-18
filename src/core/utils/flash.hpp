@@ -34,10 +34,10 @@
 #include <stdint.h>
 #include <string.h>
 
-#include <openthread/error.h>
 #include <openthread/platform/toolchain.h>
 
 #include "common/debug.hpp"
+#include "common/error.hpp"
 #include "common/locator.hpp"
 
 namespace ot {
@@ -77,11 +77,11 @@ public:
      *                              At return, the actual length of the setting is written.
      *                              May be nullptr if performing a presence check.
      *
-     * @retval OT_ERROR_NONE        The value was fetched successfully.
-     * @retval OT_ERROR_NOT_FOUND   The key was not found.
+     * @retval kErrorNone       The value was fetched successfully.
+     * @retval kErrorNotFound   The key was not found.
      *
      */
-    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
+    Error Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
 
     /**
      * This method sets or replaces the value identified by @p aKey.
@@ -94,11 +94,11 @@ public:
      *                           MUST NOT be nullptr if @p aValueLength is non-zero.
      * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
      *
-     * @retval OT_ERROR_NONE     The value was changed.
-     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     * @retval kErrorNone     The value was changed.
+     * @retval kErrorNoBufs   Not enough space to store the value.
      *
      */
-    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    Error Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
      * This method adds a value to @p aKey.
@@ -108,11 +108,11 @@ public:
      *                           MUST NOT be nullptr if @p aValueLength is non-zero.
      * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
      *
-     * @retval OT_ERROR_NONE     The value was added.
-     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     * @retval kErrorNone    The value was added.
+     * @retval kErrorNoBufs  Not enough space to store the value.
      *
      */
-    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    Error Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
      * This method removes a value from @p aKey.
@@ -122,11 +122,11 @@ public:
      * @param[in] aIndex  The index of the value to be removed.
      *                    If set to -1, all values for @p aKey will be removed.
      *
-     * @retval OT_ERROR_NONE       The given key and index was found and removed successfully.
-     * @retval OT_ERROR_NOT_FOUND  The given key or index was not found.
+     * @retval kErrorNone      The given key and index was found and removed successfully.
+     * @retval kErrorNotFound  The given key or index was not found.
      *
      */
-    otError Delete(uint16_t aKey, int aIndex);
+    Error Delete(uint16_t aKey, int aIndex);
 
     /**
      * This method removes all values.
@@ -220,10 +220,10 @@ private:
         uint8_t mData[kMaxDataSize];
     } OT_TOOL_PACKED_END;
 
-    otError Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength);
-    bool    DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const;
-    void    SanitizeFreeSpace(void);
-    void    Swap(void);
+    Error Add(uint16_t aKey, bool aFirst, const uint8_t *aValue, uint16_t aValueLength);
+    bool  DoesValidRecordExist(uint32_t aOffset, uint16_t aKey) const;
+    void  SanitizeFreeSpace(void);
+    void  Swap(void);
 
     uint32_t mSwapSize;
     uint32_t mSwapUsed;

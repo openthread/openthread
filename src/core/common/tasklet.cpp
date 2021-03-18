@@ -41,9 +41,8 @@
 
 namespace ot {
 
-Tasklet::Tasklet(Instance &aInstance, Handler aHandler, void *aOwner)
+Tasklet::Tasklet(Instance &aInstance, Handler aHandler)
     : InstanceLocator(aInstance)
-    , OwnerLocator(aOwner)
     , mHandler(aHandler)
     , mNext(nullptr)
 {

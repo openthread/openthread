@@ -41,6 +41,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/logging.hpp"
 #include "common/random.hpp"
 #include "crypto/mbedtls.hpp"
 
@@ -57,7 +58,7 @@ RandomManager::CryptoCtrDrbg RandomManager::sCtrDrbg;
 RandomManager::RandomManager(void)
 {
     uint32_t seed;
-    otError  error;
+    Error    error;
 
     OT_UNUSED_VARIABLE(error);
 
@@ -70,10 +71,10 @@ RandomManager::RandomManager(void)
     sCtrDrbg.Init();
 
     error = Random::Crypto::FillBuffer(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 #else
     error = otPlatEntropyGet(reinterpret_cast<uint8_t *>(&seed), sizeof(seed));
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 #endif
 
     sPrng.Init(seed);
@@ -190,8 +191,19 @@ exit:
 
 void RandomManager::CryptoCtrDrbg::Init(void)
 {
+    int rval;
+
     mbedtls_ctr_drbg_init(&mCtrDrbg);
-    mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), nullptr, 0);
+
+    rval =
+        mbedtls_ctr_drbg_seed(&mCtrDrbg, mbedtls_entropy_func, RandomManager::GetMbedTlsEntropyContext(), nullptr, 0);
+
+    if (rval != 0)
+    {
+        otLogCritMbedTls("Failed to seed the CTR DRBG");
+    }
+
+    OT_ASSERT(rval == 0);
 }
 
 void RandomManager::CryptoCtrDrbg::Deinit(void)
@@ -199,7 +211,7 @@ void RandomManager::CryptoCtrDrbg::Deinit(void)
     mbedtls_ctr_drbg_free(&mCtrDrbg);
 }
 
-otError RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSize)
+Error RandomManager::CryptoCtrDrbg::FillBuffer(uint8_t *aBuffer, uint16_t aSize)
 {
     return ot::Crypto::MbedTls::MapError(
         mbedtls_ctr_drbg_random(&mCtrDrbg, static_cast<unsigned char *>(aBuffer), static_cast<size_t>(aSize)));

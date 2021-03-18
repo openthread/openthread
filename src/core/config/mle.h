@@ -164,6 +164,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL
+ *
+ * Specifies the delay wait interval (in milliseconds) used by attach backoff feature after a successful attach before
+ * it resets the current backoff interval back to the minimum value.
+ *
+ * If it is set to zero then the device resets its backoff attach interval immediately after a successful attach. With
+ * a non-zero value, if after a successful attach, the device happens to detach within the delay interval, the reattach
+ *  process resumes with the previous backoff interval (as if the attach did not happen).
+ *
+ * This behavior is helpful in the situation where a battery-powered device has poor link quality to its parent and
+ * therefore attaches and detaches frequently from the parent.  Using a non-zero wait interval ensures that the attach
+ * backoff interval does not reset on each attach and that the device does not drain its battery quickly trying to
+ * re-attach too frequently.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL
+#define OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL 20000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
  *
  * Define to 1 to send an MLE Link Request when MAX_NEIGHBOR_AGE is reached for a neighboring router.

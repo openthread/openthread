@@ -40,9 +40,8 @@
 #include <stdint.h>
 #include <stdio.h>
 
-#include <openthread/error.h>
-
 #include "common/code_utils.hpp"
+#include "common/error.hpp"
 
 namespace ot {
 
@@ -69,6 +68,17 @@ namespace ot {
 uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 
 /**
+ * This function finds the first occurrence of a given character in a null-terminated string.
+ *
+ * @param[in] aString     A pointer to the string.
+ * @param[in] aChar       A char to search for in the string.
+ *
+ * @returns The pointer to first occurrence of the @p aChar in @p aString, or nullptr if cannot be found.
+ *
+ */
+const char *StringFind(const char *aString, char aChar);
+
+/**
  * This class defines the base class for `String`.
  *
  */
@@ -84,11 +94,11 @@ protected:
      * @param[in]    aFormat  A pointer to the format string.
      * @param[in]    aArgs    Arguments for the format specification.
      *
-     * @retval OT_ERROR_NONE           Updated the string successfully.
-     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
-     * @retval OT_ERROR_INVALID_ARGS   Arguments do not match the format string.
+     * @retval kErrorNone          Updated the string successfully.
+     * @retval kErrorNoBufs        String could not fit in the storage.
+     * @retval kErrorInvalidArgs   Arguments do not match the format string.
      */
-    static otError Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs);
+    static Error Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs);
 };
 
 /**
@@ -171,15 +181,15 @@ public:
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] ...        Arguments for the format specification.
      *
-     * @retval OT_ERROR_NONE           Updated the string successfully.
-     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
-     * @retval OT_ERROR_INVALID_ARGS   Arguments do not match the format string.
+     * @retval kErrorNone          Updated the string successfully.
+     * @retval kErrorNoBufs        String could not fit in the storage.
+     * @retval kErrorInvalidArgs   Arguments do not match the format string.
      *
      */
-    otError Set(const char *aFormat, ...)
+    Error Set(const char *aFormat, ...)
     {
         va_list args;
-        otError error;
+        Error   error;
 
         va_start(args, aFormat);
         mLength = 0;
@@ -195,15 +205,15 @@ public:
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] ...        Arguments for the format specification.
      *
-     * @retval OT_ERROR_NONE           Updated the string successfully.
-     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
-     * @retval OT_ERROR_INVALID_ARGS   Arguments do not match the format string.
+     * @retval kErrorNone          Updated the string successfully.
+     * @retval kErrorNoBufs        String could not fit in the storage.
+     * @retval kErrorInvalidArgs   Arguments do not match the format string.
      *
      */
-    otError Append(const char *aFormat, ...)
+    Error Append(const char *aFormat, ...)
     {
         va_list args;
-        otError error;
+        Error   error;
 
         va_start(args, aFormat);
         error = Write(mBuffer, kSize, mLength, aFormat, args);
@@ -218,12 +228,12 @@ public:
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] aArgs      Arguments for the format specification (as `va_list`).
      *
-     * @retval OT_ERROR_NONE           Updated the string successfully.
-     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
-     * @retval OT_ERROR_INVALID_ARGS   Arguments do not match the format string.
+     * @retval kErrorNone          Updated the string successfully.
+     * @retval kErrorNoBufs        String could not fit in the storage.
+     * @retval kErrorInvalidArgs   Arguments do not match the format string.
      *
      */
-    otError AppendVarArgs(const char *aFormat, va_list aArgs) { return Write(mBuffer, kSize, mLength, aFormat, aArgs); }
+    Error AppendVarArgs(const char *aFormat, va_list aArgs) { return Write(mBuffer, kSize, mLength, aFormat, aArgs); }
 
     /**
      * This method appends an array of bytes in hex representation (using "%02x" style) to the `String` object.
@@ -231,13 +241,13 @@ public:
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
      *
-     * @retval OT_ERROR_NONE           Updated the string successfully.
-     * @retval OT_ERROR_NO_BUFS        String could not fit in the storage.
+     * @retval kErrorNone          Updated the string successfully.
+     * @retval kErrorNoBufs        String could not fit in the storage.
      *
      */
-    otError AppendHexBytes(const uint8_t *aBytes, uint16_t aLength)
+    Error AppendHexBytes(const uint8_t *aBytes, uint16_t aLength)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
 
         while (aLength--)
         {

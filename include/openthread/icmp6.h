@@ -64,6 +64,8 @@ typedef enum otIcmp6Type
     OT_ICMP6_TYPE_PARAMETER_PROBLEM = 4,   ///< Parameter Problem
     OT_ICMP6_TYPE_ECHO_REQUEST      = 128, ///< Echo Request
     OT_ICMP6_TYPE_ECHO_REPLY        = 129, ///< Echo Reply
+    OT_ICMP6_TYPE_ROUTER_SOLICIT    = 133, ///< Router Solicitation
+    OT_ICMP6_TYPE_ROUTER_ADVERT     = 134, ///< Router Advertisement
 } otIcmp6Type;
 
 /**

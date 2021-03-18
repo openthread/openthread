@@ -26,15 +26,16 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "platform_qorvo.h"
-
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/time.h>
 
-#include <openthread/config.h>
+#include <openthread-core-config.h>
+#include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 /**
  * Diagnostics mode variables.
@@ -73,3 +74,5 @@ void otPlatDiagAlarmCallback(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 }
+
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

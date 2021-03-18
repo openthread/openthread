@@ -38,6 +38,7 @@
 
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
+#include "common/iterator_utils.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -273,7 +274,9 @@ public:
      *
      */
     class ExternalMulticastAddressIterator
+        : public ItemPtrIterator<ExternalNetifMulticastAddress, ExternalMulticastAddressIterator>
     {
+        friend class ItemPtrIterator<ExternalNetifMulticastAddress, ExternalMulticastAddressIterator>;
         friend class ExternalMulticastAddressIteratorBuilder;
 
     public:
@@ -286,87 +289,12 @@ public:
          *
          */
         explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny)
-            : mNetif(aNetif)
+            : ItemPtrIterator(nullptr)
+            , mNetif(aNetif)
             , mFilter(aFilter)
         {
             AdvanceFrom(mNetif.GetMulticastAddresses());
         }
-
-        /**
-         * This method indicates whether the iterator has reached end of the list.
-         *
-         * @retval TRUE   There are no more entries in the list (reached end of the list).
-         * @retval FALSE  The current address entry is valid.
-         *
-         */
-        bool IsDone(void) const { return mCurrent != nullptr; }
-
-        /**
-         * This method overloads `++` operator (pre-increment) to advance the iterator.
-         *
-         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator becomes
-         * empty.
-         *
-         */
-        void operator++(void) { AdvanceFrom(mCurrent->GetNext()); }
-
-        /**
-         * This method overloads `++` operator (post-increment) to advance the iterator.
-         *
-         * The iterator is moved to point to the next entry.  If there are no more entries matching the iterator becomes
-         * empty.
-         *
-         */
-        void operator++(int) { AdvanceFrom(mCurrent->GetNext()); }
-
-        /**
-         * This method overloads the `*` dereference operator and gets a reference to `ExternalNetifMulticastAddress`
-         * entry to which the iterator is currently pointing.
-         *
-         * This method MUST be used when the iterator is not empty.
-         *
-         * @returns A reference to the `ExternalNetifMulticastAddress` entry currently pointed by the iterator.
-         *
-         */
-        ExternalNetifMulticastAddress &operator*(void) { return *mCurrent; }
-
-        /**
-         * This method overloads the `->` dereference operator and gets a pointer to `ExternalNetifMulticastAddress`
-         * entry to which the iterator is current pointing.
-         *
-         * @returns A pointer to the `ExternalNetifMulticastAddress` entry associated with the iterator, or `nullptr` if
-         * iterator is empty.
-         *
-         */
-        ExternalNetifMulticastAddress *operator->(void) { return mCurrent; }
-
-        /**
-         * This method overloads operator `==` to evaluate whether or not two `ExternalMulticastAddressIterator`
-         * instances point to the same `ExternalNetifMulticastAddress` entry.
-         *
-         * @param[in] aOther  The other `Iterator` to compare with.
-         *
-         * @retval TRUE   If the two `ExternalMulticastAddressIterator` objects point to the same
-         * `ExternalNetifMulticastAddress` entry or both are done.
-         * @retval FALSE  If the two `ExternalMulticastAddressIterator` objects do not point to the same
-         * `ExternalNetifMulticastAddress` entry.
-         *
-         */
-        bool operator==(const ExternalMulticastAddressIterator &aOther) { return mCurrent == aOther.mCurrent; }
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `ExternalMulticastAddressIterator`
-         * instances point to the same `ExternalNetifMulticastAddress` entry.
-         *
-         * @param[in]  aOther  The other `ExternalMulticastAddressIterator` to compare with.
-         *
-         * @retval TRUE   If the two `ExternalMulticastAddressIterator` objects do not point to the same
-         * `ExternalNetifMulticastAddress` entry.
-         * @retval FALSE  If the two `ExternalMulticastAddressIterator` objects point to the same
-         * `ExternalNetifMulticastAddress` entry or both are done.
-         *
-         */
-        bool operator!=(const ExternalMulticastAddressIterator &aOther) { return mCurrent != aOther.mCurrent; }
 
     private:
         enum IteratorType
@@ -376,7 +304,6 @@ public:
 
         ExternalMulticastAddressIterator(const Netif &aNetif, IteratorType)
             : mNetif(aNetif)
-            , mCurrent(nullptr)
         {
         }
 
@@ -388,13 +315,14 @@ public:
                 aAddr = aAddr->GetNext();
             }
 
-            mCurrent =
+            mItem =
                 const_cast<ExternalNetifMulticastAddress *>(static_cast<const ExternalNetifMulticastAddress *>(aAddr));
         }
 
-        const Netif &                  mNetif;
-        ExternalNetifMulticastAddress *mCurrent;
-        Address::TypeFilter            mFilter;
+        void Advance(void) { AdvanceFrom(mItem->GetNext()); }
+
+        const Netif &       mNetif;
+        Address::TypeFilter mFilter;
     };
 
     /**
@@ -486,24 +414,24 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully added (or updated) the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
-     * @retval OT_ERROR_NO_BUFS       The maximum number of allowed external addresses are already added.
+     * @retval kErrorNone         Successfully added (or updated) the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNoBufs       The maximum number of allowed external addresses are already added.
      *
      */
-    otError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
+    Error AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
      * This method removes a external (to OpenThread) unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully removed the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
-     * @retval OT_ERROR_NOT_FOUND     The unicast address was not found.
+     * @retval kErrorNone         Successfully removed the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNotFound     The unicast address was not found.
      *
      */
-    otError RemoveExternalUnicastAddress(const Address &aAddress);
+    Error RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
      * This method removes all the previously added external (to OpenThread) unicast addresses from the
@@ -587,25 +515,25 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE           Successfully subscribed to @p aAddress.
-     * @retval OT_ERROR_ALREADY        The multicast address is already subscribed.
-     * @retval OT_ERROR_INVALID_ARGS   The address indicated by @p aAddress is an internal multicast address.
-     * @retval OT_ERROR_NO_BUFS        The maximum number of allowed external multicast addresses are already added.
+     * @retval kErrorNone          Successfully subscribed to @p aAddress.
+     * @retval kErrorAlready       The multicast address is already subscribed.
+     * @retval kErrorInvalidArgs   The address indicated by @p aAddress is an internal multicast address.
+     * @retval kErrorNoBufs        The maximum number of allowed external multicast addresses are already added.
      *
      */
-    otError SubscribeExternalMulticast(const Address &aAddress);
+    Error SubscribeExternalMulticast(const Address &aAddress);
 
     /**
      * This method unsubscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully unsubscribed to the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
-     * @retval OT_ERROR_NOT_FOUND     The multicast address was not found.
+     * @retval kErrorNone         Successfully unsubscribed to the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNotFound     The multicast address was not found.
      *
      */
-    otError UnsubscribeExternalMulticast(const Address &aAddress);
+    Error UnsubscribeExternalMulticast(const Address &aAddress);
 
     /**
      * This method unsubscribes the network interface from all previously added external (to OpenThread) multicast

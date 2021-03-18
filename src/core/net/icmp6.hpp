@@ -87,6 +87,8 @@ public:
             kTypeParameterProblem = OT_ICMP6_TYPE_PARAMETER_PROBLEM, ///< Parameter Problem
             kTypeEchoRequest      = OT_ICMP6_TYPE_ECHO_REQUEST,      ///< Echo Request
             kTypeEchoReply        = OT_ICMP6_TYPE_ECHO_REPLY,        ///< Echo Reply
+            kTypeRouterSolicit    = OT_ICMP6_TYPE_ROUTER_SOLICIT,    ///< Router Solicitation
+            kTypeRouterAdvert     = OT_ICMP6_TYPE_ROUTER_ADVERT,     ///< Router Advertisement
         };
 
         /**
@@ -195,7 +197,6 @@ public:
          *
          */
         void SetSequence(uint16_t aSequence) { mData.m16[1] = HostSwap16(aSequence); }
-
     } OT_TOOL_PACKED_END;
 
     /**
@@ -251,11 +252,11 @@ public:
      *
      * @param[in]  aHandler  A reference to the ICMPv6 handler.
      *
-     * @retval OT_ERROR_NONE     Successfully registered the ICMPv6 handler.
-     * @retval OT_ERROR_ALREADY  The ICMPv6 handler is already registered.
+     * @retval kErrorNone     Successfully registered the ICMPv6 handler.
+     * @retval kErrorAlready  The ICMPv6 handler is already registered.
      *
      */
-    otError RegisterHandler(Handler &aHandler);
+    Error RegisterHandler(Handler &aHandler);
 
     /**
      * This method sends an ICMPv6 Echo Request message.
@@ -265,11 +266,11 @@ public:
      * @param[in]  aIdentifier   An identifier to aid in matching Echo Replies to this Echo Request.
      *                           May be zero.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 Echo Request message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to generate an ICMPv6 Echo Request message.
+     * @retval kErrorNone     Successfully enqueued the ICMPv6 Echo Request message.
+     * @retval kErrorNoBufs   Insufficient buffers available to generate an ICMPv6 Echo Request message.
      *
      */
-    otError SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier);
+    Error SendEchoRequest(Message &aMessage, const MessageInfo &aMessageInfo, uint16_t aIdentifier);
 
     /**
      * This method sends an ICMPv6 error message.
@@ -279,11 +280,11 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info.
      * @param[in]  aMessage      The error-causing IPv6 message.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the ICMPv6 error message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available.
+     * @retval kErrorNone     Successfully enqueued the ICMPv6 error message.
+     * @retval kErrorNoBufs   Insufficient buffers available.
      *
      */
-    otError SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage);
+    Error SendError(Header::Type aType, Header::Code aCode, const MessageInfo &aMessageInfo, const Message &aMessage);
 
     /**
      * This method handles an ICMPv6 message.
@@ -291,12 +292,12 @@ public:
      * @param[in]  aMessage      A reference to the ICMPv6 message.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
-     * @retval OT_ERROR_NONE     Successfully processed the ICMPv6 message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient buffers available to generate the reply.
-     * @retval OT_ERROR_DROP     The ICMPv6 message was invalid and dropped.
+     * @retval kErrorNone     Successfully processed the ICMPv6 message.
+     * @retval kErrorNoBufs   Insufficient buffers available to generate the reply.
+     * @retval kErrorDrop     The ICMPv6 message was invalid and dropped.
      *
      */
-    otError HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(Message &aMessage, MessageInfo &aMessageInfo);
 
     /**
      * This method indicates whether or not ICMPv6 Echo processing is enabled.
@@ -325,7 +326,7 @@ public:
     bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
 
 private:
-    otError HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
+    Error HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 
     LinkedList<Handler> mHandlers;
 

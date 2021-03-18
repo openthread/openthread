@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -30,6 +30,7 @@
 
 #include "platform_qorvo.h"
 
+#undef NDEBUG
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -38,7 +39,7 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-#include <openthread/config.h>
+#include <openthread-core-config.h>
 #include <openthread/platform/flash.h>
 
 static int sFlashFd = -1;

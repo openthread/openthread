@@ -29,12 +29,27 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 lib_LIBRARIES                           = libopenthread-platform-utils.a
+noinst_LTLIBRARIES                      = libutils-link-metrics.la
 
-libopenthread_platform_utils_a_CPPFLAGS                 = \
+COMMON_FLAGS                                            = \
     -I$(top_srcdir)/include                               \
     -I$(top_srcdir)/examples/platforms                    \
     -I$(top_srcdir)/src/core                              \
     -I$(top_srcdir)/third_party/jlink/SEGGER_RTT_V640/RTT \
+    $(NULL)
+
+libutils_link_metrics_la_CPPFLAGS                       = \
+    $(COMMON_FLAGS)                                       \
+    -fno-threadsafe-statics                               \
+    $(NULL)
+
+libutils_link_metrics_la_SOURCES                        = \
+    link_metrics.cpp                                      \
+    link_metrics.h                                        \
+    $(NULL)
+
+libopenthread_platform_utils_a_CPPFLAGS                 = \
+    $(COMMON_FLAGS)                                       \
     $(NULL)
 
 libopenthread_platform_utils_a_SOURCES  = \
@@ -49,6 +64,10 @@ libopenthread_platform_utils_a_SOURCES  = \
     settings_ram.c                        \
     soft_source_match_table.c             \
     soft_source_match_table.h             \
+    $(NULL)
+
+libopenthread_platform_utils_a_LIBADD  = \
+    libutils-link-metrics.la             \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

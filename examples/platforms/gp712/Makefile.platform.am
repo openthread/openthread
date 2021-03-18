@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2017, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -32,5 +32,15 @@
 
 LDADD_COMMON                                                          += \
     $(top_builddir)/examples/platforms/gp712/libopenthread-gp712.a       \
-    $(top_srcdir)/third_party/Qorvo/gp712/libQorvoRPi.a                  \
     $(NULL)
+if OPENTHREAD_ENABLE_FTD
+LDADD_COMMON                                                          += \
+    $(top_srcdir)/third_party/Qorvo/repo/gp712/lib/libQorvoGP712_ftd.a   \
+    $(NULL)
+else # OPENTHREAD_ENABLE_FTD
+if OPENTHREAD_ENABLE_MTD
+LDADD_COMMON                                                          += \
+    $(top_srcdir)/third_party/Qorvo/repo/gp712/lib/libQorvoGP712_mtd.a   \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_MTD
+endif

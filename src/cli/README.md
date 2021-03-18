@@ -22,6 +22,7 @@ Done
 ## OpenThread Command List
 
 - [bbr](#bbr)
+- [br](#br)
 - [bufferinfo](#bufferinfo)
 - [ccathreshold](#ccathreshold)
 - [channel](#channel)
@@ -40,7 +41,7 @@ Done
 - [delaytimermin](#delaytimermin)
 - [diag](#diag)
 - [discover](#discover-channel)
-- [dns](#dns-resolve-hostname-dns-server-ip-dns-server-port)
+- [dns](#dns-config)
 - [domainname](#domainname)
 - [dua](#dua-iid)
 - [eidcache](#eidcache)
@@ -58,7 +59,7 @@ Done
 - [keysequence](#keysequence-counter)
 - [leaderdata](#leaderdata)
 - [leaderweight](#leaderweight)
-- [linkmetrics](#linkmetrics-mgmt-ipaddr-forward-seriesid-ldraxpqmr)
+- [linkmetrics](#linkmetrics-mgmt-ipaddr-enhanced-ack-clear)
 - [linkquality](#linkquality-extaddr)
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
@@ -66,6 +67,7 @@ Done
 - [masterkey](#masterkey)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
+- [multiradio](#multiradio)
 - [neighbor](#neighbor-list)
 - [netdata](README_NETDATA.md)
 - [netstat](#netstat)
@@ -84,6 +86,7 @@ Done
 - [promiscuous](#promiscuous)
 - [pskc](#pskc--p-keypassphrase)
 - [rcp](#rcp)
+- [region](#region)
 - [releaserouterid](#releaserouterid-routerid)
 - [reset](#reset)
 - [rloc16](#rloc16)
@@ -98,6 +101,7 @@ Done
 - [singleton](#singleton)
 - [sntp](#sntp-query-sntp-server-ip-sntp-server-port)
 - [state](#state)
+- [srp](README_SRP.md)
 - [thread](#thread-start)
 - [txpower](#txpower)
 - [unsecureport](#unsecureport-add-port)
@@ -308,6 +312,20 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 
 ```bash
 > bbr jitter 10
+Done
+```
+
+### br
+
+Enbale/disable the Border Routing functionality.
+
+```bash
+> br enable
+Done
+```
+
+```bash
+> br disable
 Done
 ```
 
@@ -729,17 +747,90 @@ Perform an MLE Discovery operation.
 Done
 ```
 
-### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\]
+### dns config
 
-Send DNS Query to obtain IPv6 address for given hostname. The latter two parameters have following default values:
+Get the default query config used by DNS client.
 
-- DNS server IP: 2001:4860:4860::8888 (Google DNS Server)
-- DNS server port: 53
+The config includes the server IPv6 address and port, response timeout in msec (wait time to rx response), maximum tx attempts before reporting failure, boolean flag to indicate whether the server can resolve the query recursively or not.
+
+```bash
+> dns config
+Server: [fd00:0:0:0:0:0:0:1]:1234
+ResponseTimeout: 5000 ms
+MaxTxAttempts: 2
+RecursionDesired: no
+Done
+>
+```
+
+### dns config \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Set the default query config.
+
+```bash
+> dns config fd00::1 1234 5000 2 0
+Done
+
+> dns config
+Server: [fd00:0:0:0:0:0:0:1]:1234
+ResponseTimeout: 5000 ms
+MaxTxAttempts: 2
+RecursionDesired: no
+Done
+```
+
+We can leave some of the fields as unspecified (or use value zero). The unspecified fields are replaced by the corresponding OT config option definitions `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
+
+```bash
+> dns config fd00::2
+Done
+
+> dns config
+Server: [fd00:0:0:0:0:0:0:2]:53
+ResponseTimeout: 3000 ms
+MaxTxAttempts: 3
+RecursionDesired: yes
+Done
+```
+
+### dns resolve \<hostname\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send DNS Query to obtain IPv6 address for given hostname.
+
+The parameters after `hostname` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ```bash
 > dns resolve ipv6.google.com
 > DNS response for ipv6.google.com - 2a00:1450:401b:801:0:0:0:200e TTL: 300
 ```
+
+### dns browse \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send a browse (service instance enumeration) DNS query to get the list of services for given service-name.
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
+
+```bash
+> dns browse _service._udp.example.com
+DNS browse response for _service._udp.example.com.
+inst1
+    Port:1234, Priority:1, Weight:2, TTL:7200
+    Host:host.example.com.
+    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+    TXT:[a=6531, b=6c12] TTL:7300
+instance2
+    Port:1234, Priority:1, Weight:2, TTL:7200
+    Host:host.example.com.
+    HostAddress:fd00:0:0:0:0:0:0:abcd TTL:7200
+    TXT:[a=1234] TTL:7300
+Done
+```
+
+### dns service \<service-instance-label\> \<service-name\> \[DNS server IP\] \[DNS server port\] \[response timeout (ms)\] \[max tx attempts\] \[recursion desired (boolean)\]
+
+Send a service instance resolution DNS query for a given service instance. Service instance label is provided first, followed by the service name (note that service instance label can contain dot '.' character).
+
+The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
 ### domainname
 
@@ -1126,6 +1217,42 @@ Set the Thread Leader Weight.
 Done
 ```
 
+### linkmetrics mgmt \<ipaddr\> enhanced-ack clear
+
+Send a Link Metrics Management Request to clear an Enhanced-ACK Based Probing.
+
+- ipaddr: Peer address (SHOULD be link local address of the neighboring device).
+
+```bash
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack clear
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: Success
+```
+
+### linkmetrics mgmt \<ipaddr\> enhanced-ack register [qmr][r]
+
+Send a Link Metrics Management Request to register an Enhanced-ACK Based Probing.
+
+- ipaddr: Peer address.
+- qmr: This specifies what metrics to query. At most two options are allowed to select (per spec 4.11.3.4.4.6).
+  - q: Layer 2 LQI.
+  - m: Link Margin.
+  - r: RSSI.
+- r: This is optional and only used for reference devices. When this option is specified, Type/Average Enum of each Type Id Flags would be set to `reserved`. This is used to verify the Probing Subject correctly handles invalid Type Id Flags. This is only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+
+```bash
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: Success
+
+> linkmetrics mgmt fe80:0:0:0:3092:f334:1455:1ad2 enhanced-ack register qm r
+Done
+> Received Link Metrics Management Response from: fe80:0:0:0:3092:f334:1455:1ad2
+Status: Cannot support new series
+```
+
 ### linkmetrics mgmt \<ipaddr\> forward \<seriesid\> [ldraX][pqmr]
 
 Send a Link Metrics Management Request to configure a Forward Tracking Series.
@@ -1324,6 +1451,43 @@ Done
 
 ```bash
 > mode -
+Done
+```
+
+### multiradio
+
+Get the list of supported radio links by the device.
+
+This command is always available, even when only a single radio is supported by the device.
+
+```bash
+> multiradio
+[15.4, TREL]
+Done
+```
+
+### multiradio neighbor list
+
+Get the list of neighbors and their supported radios and their preference.
+
+This command is only available when device supports more than one radio link.
+
+```bash
+> multiradio neighbor list
+ExtAddr:3a65bc38dbe4a5be, RLOC16:0xcc00, Radios:[15.4(255), TREL(255)]
+ExtAddr:17df23452ee4a4be, RLOC16:0x1300, Radios:[15.4(255)]
+Done
+```
+
+### multiradio neighbor \<ext address\>
+
+Get the radio info for specific neighbor with a given extended address.
+
+This command is only available when device supports more than one radio link.
+
+```bash
+> multiradio neighbor 3a65bc38dbe4a5be
+[15.4(255), TREL(255)]
 Done
 ```
 
@@ -1673,6 +1837,18 @@ Done
 
 RCP-related commands.
 
+### region
+
+Set the radio region, this can affect the transmit power limit.
+
+```bash
+> region US
+Done
+> region
+US
+Done
+```
+
 ### rcp version
 
 Print RCP version string.
@@ -1757,10 +1933,10 @@ Print table of routers.
 
 ```bash
 > router table
-| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     |
-+----+--------+----------+-----------+-------+--------+-----+------------------+
-| 21 | 0x5400 |       21 |         0 |     3 |      3 |   5 | d28d7f875888fccb |
-| 56 | 0xe000 |       56 |         0 |     0 |      0 | 182 | f2d92a82c8d8fe43 |
+| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     | Link |
++----+--------+----------+-----------+-------+--------+-----+------------------+------+
+| 22 | 0x5800 |       63 |         0 |     0 |      0 |   0 | 0aeb8196c9f61658 |    0 |
+| 49 | 0xc400 |       63 |         0 |     3 |      3 |   0 | faa1c03908e2dbf2 |    1 |
 Done
 ```
 

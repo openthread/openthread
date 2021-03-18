@@ -85,9 +85,8 @@ class BaseSimulator(object):
                     type,
                     payload,
             ) in node.read_cert_messages_in_commissioning_log():
-                if direction == b'send':
-                    msg = self._payload_parse_factory.parse(type.decode("utf-8"), io.BytesIO(payload))
-                    self.commissioning_messages[nodeid].append(msg)
+                msg = self._payload_parse_factory.parse(type.decode("utf-8"), io.BytesIO(payload))
+                self.commissioning_messages[nodeid].append(msg)
 
 
 class RealTime(BaseSimulator):
@@ -145,12 +144,15 @@ class VirtualTime(BaseSimulator):
 
     BLOCK_TIMEOUT = 10
 
-    RADIO_ONLY = os.getenv('RADIO_DEVICE') is not None
     NCP_SIM = os.getenv('NODE_TYPE', 'sim') == 'ncp-sim'
+
+    _message_factory = None
 
     def __init__(self, use_message_factory=True):
         super(VirtualTime, self).__init__()
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_RCVBUF, 2 * 1024 * 1024)
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_SNDBUF, 2 * 1024 * 1024)
 
         ip = '127.0.0.1'
         self.port = self.BASE_PORT + (self.PORT_OFFSET * (self.MAX_NODES + 1))
@@ -243,7 +245,7 @@ class VirtualTime(BaseSimulator):
         return (addr[0], addr[1] - self.BASE_PORT)
 
     def _core_addr_from(self, nodeid):
-        if self.RADIO_ONLY:
+        if self._nodes[nodeid].is_posix:
             return ('127.0.0.1', self.BASE_PORT + self.port + nodeid)
         else:
             return ('127.0.0.1', self.port + nodeid)
@@ -498,7 +500,7 @@ class VirtualTime(BaseSimulator):
 
     def go(self, duration, nodeid=None):
         assert self.current_time == self._pause_time
-        duration = int(duration) * 1000000
+        duration = int(duration * 1000000)
         dbg_print('running for %d us' % duration)
         self._pause_time += duration
         if nodeid:

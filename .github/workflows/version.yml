@@ -37,12 +37,14 @@ jobs:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+      if: "github.ref != 'refs/heads/main'"
 
   api-version:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Check
       run: |
         script/check-api-version

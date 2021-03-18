@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,7 +28,6 @@
 
 #include "platform_qorvo.h"
 #include <openthread-core-config.h>
-#include <openthread/config.h>
 
 #include <ctype.h>
 #include <inttypes.h>
@@ -41,15 +40,10 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
 
+#include "uart_qorvo.h"
 #include "utils/code_utils.h"
 
 // Macro to append content to end of the log string.
-
-#define LOG_PRINTF(...)                                                                   \
-    charsWritten = snprintf(&logString[offset], sizeof(logString) - offset, __VA_ARGS__); \
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);                            \
-    offset += (unsigned int)charsWritten;                                                 \
-    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0)
 
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
 
@@ -88,23 +82,10 @@ int PlatOtLogLevelToSysLogLevel(otLogLevel aLogLevel)
 
 OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
 {
-    OT_UNUSED_VARIABLE(aLogRegion);
-
-    char         logString[512];
-    unsigned int offset;
-    int          charsWritten;
-    va_list      args;
-
-    offset = 0;
-
+    va_list args;
     va_start(args, aFormat);
-    charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
+    qorvoUartLog(aLogLevel, aLogRegion, aFormat, args);
     va_end(args);
-
-    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
-
-exit:
-    syslog(PlatOtLogLevelToSysLogLevel(aLogLevel), "%s", logString);
 }
 
 #endif

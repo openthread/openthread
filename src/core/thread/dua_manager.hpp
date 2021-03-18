@@ -36,7 +36,11 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_DUA_ENABLE"
+#endif
 
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap.hpp"
@@ -119,11 +123,11 @@ public:
      *
      * @param[in]  aIid        A reference to the Interface Identifier to set.
      *
-     * @retval OT_ERROR_NONE           Successfully set the Interface Identifier.
-     * @retval OT_ERROR_INVALID_ARGS   The specified Interface Identifier is reserved.
+     * @retval kErrorNone          Successfully set the Interface Identifier.
+     * @retval kErrorInvalidArgs   The specified Interface Identifier is reserved.
      *
      */
-    otError SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
+    Error SetFixedDuaInterfaceIdentifier(const Ip6::InterfaceIdentifier &aIid);
 
     /**
      * This method clears the Interface Identifier manually specified for the Thread Domain Unicast Address.
@@ -162,7 +166,7 @@ public:
     void NotifyDuplicateDomainUnicastAddress(void);
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void UpdateChildDomainUnicastAddress(const Child &aChild, Mle::ChildDuaState aState);
 #endif
 
@@ -170,18 +174,19 @@ private:
     enum
     {
         kNewRouterRegistrationDelay = 3, ///< Delay (in seconds) for waiting link establishment for a new Router.
+        kNewDuaRegistrationDelay    = 1, ///< Delay (in seconds) for newly added DUA.
     };
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    otError GenerateDomainUnicastAddressIid(void);
-    otError Store(void);
+    Error GenerateDomainUnicastAddressIid(void);
+    Error Store(void);
 
     void AddDomainUnicastAddress(void);
     void RemoveDomainUnicastAddress(void);
     void UpdateRegistrationDelay(uint8_t aDelay);
 #endif
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     void SendAddressNotification(Ip6::Address &aAddress, ThreadStatusTlv::DuaStatus aStatus, const Child &aChild);
 #endif
 
@@ -189,20 +194,17 @@ private:
 
     void HandleTimeTick(void);
 
-    static void HandleRegistrationTask(Tasklet &aTasklet) { aTasklet.GetOwner<DuaManager>().PerformNextRegistration(); }
+    static void HandleRegistrationTask(Tasklet &aTasklet);
 
     void UpdateTimeTickerRegistration(void);
 
-    static void HandleDuaResponse(void *               aContext,
-                                  otMessage *          aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult)
+    static void HandleDuaResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
     {
         static_cast<DuaManager *>(aContext)->HandleDuaResponse(
             *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
     }
 
-    void HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, otError aResult);
+    void HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult);
 
     static void HandleDuaNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -210,8 +212,8 @@ private:
             *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
     }
 
-    void    HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError ProcessDuaResponse(Coap::Message &aMessage);
+    void  HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error ProcessDuaResponse(Coap::Message &aMessage);
 
     void PerformNextRegistration(void);
     void UpdateReregistrationDelay(void);
@@ -251,7 +253,7 @@ private:
         uint32_t mValue; ///< Non-zero indicates timer should start.
     } mDelay;
 
-#if OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     // TODO: (DUA) may re-evaluate the alternative option of distributing the flags into the child table:
     //       - Child class itself have some padding - may save some RAM
     //       - Avoid cross reference between a bit-vector and the child entry
@@ -264,5 +266,5 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 #endif // DUA_MANAGER_HPP_

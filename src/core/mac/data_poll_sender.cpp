@@ -52,7 +52,7 @@ DataPollSender::DataPollSender(Instance &aInstance)
     , mPollPeriod(0)
     , mExternalPollPeriod(0)
     , mFastPollsUsers(0)
-    , mTimer(aInstance, DataPollSender::HandlePollTimer, this)
+    , mTimer(aInstance, DataPollSender::HandlePollTimer)
     , mEnabled(false)
     , mAttachMode(false)
     , mRetxMode(false)
@@ -94,14 +94,14 @@ void DataPollSender::StopPolling(void)
     mEnabled              = false;
 }
 
-otError DataPollSender::SendDataPoll(void)
+Error DataPollSender::SendDataPoll(void)
 {
-    otError error;
+    Error error;
 
-    VerifyOrExit(mEnabled, error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(mEnabled, error = kErrorInvalidState);
+    VerifyOrExit(!Get<Mac::Mac>().GetRxOnWhenIdle(), error = kErrorInvalidState);
 
-    VerifyOrExit(GetParent().IsStateValidOrRestoring(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(GetParent().IsStateValidOrRestoring(), error = kErrorInvalidState);
 
     mTimer.Stop();
 
@@ -111,23 +111,23 @@ exit:
 
     switch (error)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
         otLogDebgMac("Sending data poll");
         ScheduleNextPoll(kUsePreviousPollPeriod);
         break;
 
-    case OT_ERROR_INVALID_STATE:
+    case kErrorInvalidState:
         otLogWarnMac("Data poll tx requested while data polling was not enabled!");
         StopPolling();
         break;
 
-    case OT_ERROR_ALREADY:
+    case kErrorAlready:
         otLogDebgMac("Data poll tx requested when a previous data request still in send queue.");
         ScheduleNextPoll(kUsePreviousPollPeriod);
         break;
 
     default:
-        otLogWarnMac("Unexpected error %s requesting data poll", otThreadErrorToString(error));
+        otLogWarnMac("Unexpected error %s requesting data poll", ErrorToString(error));
         ScheduleNextPoll(kRecalculatePollPeriod);
         break;
     }
@@ -135,12 +135,16 @@ exit:
     return error;
 }
 
-otError DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const
+#else
+Error DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
+#endif
 {
-    otError         error  = OT_ERROR_NONE;
+    Error           error  = kErrorNone;
     const Neighbor &parent = GetParent();
 
-    VerifyOrExit(parent.IsStateValidOrRestoring(), error = OT_ERROR_ABORT);
+    VerifyOrExit(parent.IsStateValidOrRestoring(), error = kErrorAbort);
 
     // Use extended address attaching to a new parent (i.e. parent is the parent candidate).
     if ((Get<Mac::Mac>().GetShortAddress() == Mac::kShortAddrInvalid) ||
@@ -153,17 +157,21 @@ otError DataPollSender::GetPollDestinationAddress(Mac::Address &aDest) const
         aDest.SetShort(parent.GetRloc16());
     }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    aRadioType = Get<RadioSelector>().SelectPollFrameRadio(parent);
+#endif
+
 exit:
     return error;
 }
 
-otError DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
+Error DataPollSender::SetExternalPollPeriod(uint32_t aPeriod)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (aPeriod != 0)
     {
-        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD, error = OT_ERROR_INVALID_ARGS);
+        VerifyOrExit(aPeriod >= OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD, error = kErrorInvalidArgs);
 
         // Clipped by the maximal value.
         if (aPeriod > kMaxExternalPeriod)
@@ -198,7 +206,7 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
     return period;
 }
 
-void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
+void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
 {
     Mac::Address macDest;
     bool         shouldRecalculatePollPeriod = false;
@@ -220,7 +228,7 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
 
     switch (aError)
     {
-    case OT_ERROR_NONE:
+    case kErrorNone:
 
         if (mRemainingFastPolls != 0)
         {
@@ -242,8 +250,8 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
 
         break;
 
-    case OT_ERROR_CHANNEL_ACCESS_FAILURE:
-    case OT_ERROR_ABORT:
+    case kErrorChannelAccessFailure:
+    case kErrorAbort:
         mRetxMode                   = true;
         shouldRecalculatePollPeriod = true;
         break;
@@ -251,8 +259,8 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, otError aError)
     default:
         mPollTxFailureCounter++;
 
-        otLogInfoMac("Failed to send data poll, error:%s, retx:%d/%d", otThreadErrorToString(aError),
-                     mPollTxFailureCounter, kMaxPollRetxAttempts);
+        otLogInfoMac("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
+                     kMaxPollRetxAttempts);
 
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
         {
@@ -491,7 +499,7 @@ uint32_t DataPollSender::CalculatePollPeriod(void) const
 
 void DataPollSender::HandlePollTimer(Timer &aTimer)
 {
-    IgnoreError(aTimer.GetOwner<DataPollSender>().SendDataPoll());
+    IgnoreError(aTimer.Get<DataPollSender>().SendDataPoll());
 }
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const

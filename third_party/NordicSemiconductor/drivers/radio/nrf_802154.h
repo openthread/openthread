@@ -536,8 +536,10 @@ bool nrf_802154_continuous_carrier(void);
  * @note This function must be very short to prevent dropping frames by the driver.
  *
  * @param[in]  p_data  Pointer to a buffer with PHR and PSDU of the ACK frame.
+ * @param[in]  power   RSSI of the received frame.
+ * @param[in]  lqi     LQI of the received frame.
  */
-extern void nrf_802154_tx_ack_started(uint8_t * p_data);
+extern void nrf_802154_tx_ack_started(uint8_t * p_data, int8_t power, uint8_t lqi);
 
 #if NRF_802154_USE_RAW_API
 

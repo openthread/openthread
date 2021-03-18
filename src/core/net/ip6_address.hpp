@@ -74,11 +74,11 @@ public:
      * This method generates and sets the Network Prefix to a crypto-secure random Unique Local Address (ULA) based
      * on the pattern `fdxx:xxxx:xxxx:` (RFC 4193).
      *
-     * @retval OT_ERROR_NONE     Successfully generated a random ULA Network Prefix
-     * @retval OT_ERROR_FAILED   Failed to generate random ULA Network Prefix.
+     * @retval kErrorNone     Successfully generated a random ULA Network Prefix
+     * @retval kErrorFailed   Failed to generate random ULA Network Prefix.
      *
      */
-    otError GenerateRandomUla(void);
+    Error GenerateRandomUla(void);
 
 } OT_TOOL_PACKED_END;
 
@@ -87,7 +87,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Prefix : public otIp6Prefix
+class Prefix : public otIp6Prefix, public Clearable<Prefix>
 {
 public:
     enum : uint8_t
@@ -232,6 +232,20 @@ public:
      *
      */
     bool operator!=(const Prefix &aOther) const { return !(*this == aOther); }
+
+    /**
+     * This method overloads operator `<` to compare two prefixes.
+     *
+     * A prefix with shorter length is considered smaller than the one with longer length. If the prefix lengths are
+     * equal, then the prefix bytes are compared directly.
+     *
+     * @param[in] aOther  The other prefix to compare against.
+     *
+     * @retval TRUE   If the prefix is smaller than @p aOther.
+     * @retval FALSE  If the prefix is not smaller than @p aOther.
+     *
+     */
+    bool operator<(const Prefix &aOther) const;
 
     /**
      * This static method converts a prefix length (in bits) to size (number of bytes).
@@ -880,11 +894,11 @@ public:
      *
      * @param[in]  aBuf  A pointer to the null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully parsed the IPv6 address string.
-     * @retval OT_ERROR_INVALID_ARGS  Failed to parse the IPv6 address string.
+     * @retval kErrorNone          Successfully parsed the IPv6 address string.
+     * @retval kErrorInvalidArgs   Failed to parse the IPv6 address string.
      *
      */
-    otError FromString(const char *aBuf);
+    Error FromString(const char *aBuf);
 
     /**
      * This method converts an IPv6 address object to a string

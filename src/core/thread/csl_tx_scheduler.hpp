@@ -50,7 +50,7 @@ namespace ot {
  * @{
  */
 
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 class Child;
 
@@ -142,27 +142,27 @@ public:
          * @param[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
          * @param[in]  aChild    The child for which to prepare the frame.
          *
-         * @retval OT_ERROR_NONE   Frame was prepared successfully.
-         * @retval OT_ERROR_ABORT  CSL transmission should be aborted (no frame for the child).
+         * @retval kErrorNone   Frame was prepared successfully.
+         * @retval kErrorAbort  CSL transmission should be aborted (no frame for the child).
          *
          */
-        otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
+        Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
 
         /**
          * This callback method notifies the end of CSL frame transmission to a child.
          *
          * @param[in]  aFrame     The transmitted frame.
          * @param[in]  aContext   The context associated with the frame when it was prepared.
-         * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted successfully,
-         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-         *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+         * @param[in]  aError     kErrorNone when the frame was transmitted successfully,
+         *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+         *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+         *                        kErrorAbort when transmission was aborted for other reasons.
          * @param[in]  aChild     The child to which the frame was transmitted.
          *
          */
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
-                                    otError             aError,
+                                    Error               aError,
                                     Child &             aChild);
     };
     /**
@@ -193,13 +193,13 @@ private:
     void InitFrameRequestAhead(void);
     void RescheduleCslTx(void);
 
-    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint64_t aRadioNow, uint32_t &aDelayFromLastRx) const;
+    uint32_t GetNextCslTransmissionDelay(const Child &aChild, uint32_t &aDelayFromLastRx) const;
 
     // Callbacks from `Mac`
-    otError HandleFrameRequest(Mac::TxFrame &aFrame);
-    void    HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
+    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
+    void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
 
     uint32_t                mCslFrameRequestAheadUs;
     Child *                 mCslTxChild;
@@ -208,7 +208,7 @@ private:
     Callbacks               mCallbacks;
 };
 
-#endif // OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 /**
  * @}

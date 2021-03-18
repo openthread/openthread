@@ -53,18 +53,18 @@ AnnounceBeginClient::AnnounceBeginClient(Instance &aInstance)
 {
 }
 
-otError AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
-                                         uint8_t             aCount,
-                                         uint16_t            aPeriod,
-                                         const Ip6::Address &aAddress)
+Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
+                                       uint8_t             aCount,
+                                       uint16_t            aPeriod,
+                                       const Ip6::Address &aAddress)
 {
-    otError                 error = OT_ERROR_NONE;
+    Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message = nullptr;
 
-    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = OT_ERROR_INVALID_STATE);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kAnnounceBegin));
     SuccessOrExit(error = message->SetPayloadMarker());

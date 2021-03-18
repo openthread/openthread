@@ -55,9 +55,9 @@ Server::Server(Instance &aInstance)
     memset(mPrefixAgents, 0, sizeof(mPrefixAgents));
 }
 
-otError Server::UpdateService(void)
+Error Server::UpdateService(void)
 {
-    otError                         error  = OT_ERROR_NONE;
+    Error                           error  = kErrorNone;
     uint16_t                        rloc16 = Get<Mle::MleRouter>().GetRloc16();
     NetworkData::Iterator           iterator;
     NetworkData::OnMeshPrefixConfig config;
@@ -75,7 +75,7 @@ otError Server::UpdateService(void)
 
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
         {
             if (!config.mDhcp)
             {
@@ -84,7 +84,7 @@ otError Server::UpdateService(void)
 
             error = Get<NetworkData::Leader>().GetContext(prefixAgent.GetPrefixAsAddress(), lowpanContext);
 
-            if ((error == OT_ERROR_NONE) && (prefixAgent.GetContextId() == lowpanContext.mContextId))
+            if ((error == kErrorNone) && (prefixAgent.GetContextId() == lowpanContext.mContextId))
             {
                 // still in network data
                 found = true;
@@ -102,7 +102,7 @@ otError Server::UpdateService(void)
     // add dhcp agent aloc and prefix delegation
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
     {
         if (!config.mDhcp)
         {
@@ -112,7 +112,7 @@ otError Server::UpdateService(void)
         error = Get<NetworkData::Leader>().GetContext(static_cast<const Ip6::Address &>(config.mPrefix.mPrefix),
                                                       lowpanContext);
 
-        if (error == OT_ERROR_NONE)
+        if (error == kErrorNone)
         {
             AddPrefixAgent(config.GetPrefix(), lowpanContext);
         }
@@ -143,7 +143,7 @@ void Server::Stop(void)
 
 void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context &aContext)
 {
-    otError      error    = OT_ERROR_NONE;
+    Error        error    = kErrorNone;
     PrefixAgent *newEntry = nullptr;
 
     for (PrefixAgent &prefixAgent : mPrefixAgents)
@@ -159,7 +159,7 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context
         }
     }
 
-    VerifyOrExit(newEntry != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(newEntry != nullptr, error = kErrorNoBufs);
 
     newEntry->Set(aIp6Prefix, Get<Mle::MleRouter>().GetMeshLocalPrefix(), aContext.mContextId);
     Get<ThreadNetif>().AddUnicastAddress(newEntry->GetAloc());
@@ -167,9 +167,9 @@ void Server::AddPrefixAgent(const Ip6::Prefix &aIp6Prefix, const Lowpan::Context
 
 exit:
 
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
-        otLogNoteIp6("Failed to add DHCPv6 prefix agent: %s", otThreadErrorToString(error));
+        otLogNoteIp6("Failed to add DHCPv6 prefix agent: %s", ErrorToString(error));
     }
 }
 
@@ -251,33 +251,33 @@ uint16_t Server::FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLengt
 exit:
     return rval;
 }
-otError Server::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId)
+Error Server::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset, ClientIdentifier &aClientId)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     SuccessOrExit(error = aMessage.Read(aOffset, aClientId));
     VerifyOrExit((aClientId.GetLength() == sizeof(aClientId) - sizeof(Option)) &&
                      (aClientId.GetDuidType() == kDuidLinkLayerAddress) &&
                      (aClientId.GetDuidHardwareType() == kHardwareTypeEui64),
-                 error = OT_ERROR_PARSE);
+                 error = kErrorParse);
 exit:
     return error;
 }
 
-otError Server::ProcessElapsedTime(Message &aMessage, uint16_t aOffset)
+Error Server::ProcessElapsedTime(Message &aMessage, uint16_t aOffset)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     ElapsedTime option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
-    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = OT_ERROR_PARSE);
+    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
 exit:
     return error;
 }
 
-otError Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa)
+Error Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     uint16_t optionOffset;
     uint16_t length;
 
@@ -286,7 +286,7 @@ otError Server::ProcessIaNa(Message &aMessage, uint16_t aOffset, IaNa &aIaNa)
     aOffset += sizeof(aIaNa);
     length = aIaNa.GetLength() + sizeof(Option) - sizeof(IaNa);
 
-    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = OT_ERROR_PARSE);
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kErrorParse);
 
     mPrefixAgentsMask = 0;
 
@@ -303,13 +303,13 @@ exit:
     return error;
 }
 
-otError Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
+Error Server::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 {
-    otError   error = OT_ERROR_NONE;
+    Error     error = kErrorNone;
     IaAddress option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
-    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = OT_ERROR_PARSE);
+    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
 
     // mask matching prefix
     for (uint16_t i = 0; i < OT_ARRAY_LENGTH(mPrefixAgents); i++)
@@ -325,16 +325,16 @@ exit:
     return error;
 }
 
-otError Server::SendReply(const Ip6::Address & aDst,
-                          const TransactionId &aTransactionId,
-                          ClientIdentifier &   aClientId,
-                          IaNa &               aIaNa)
+Error Server::SendReply(const Ip6::Address & aDst,
+                        const TransactionId &aTransactionId,
+                        ClientIdentifier &   aClientId,
+                        IaNa &               aIaNa)
 {
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
     Ip6::MessageInfo messageInfo;
     Message *        message;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);
     SuccessOrExit(error = AppendHeader(*message, aTransactionId));
     SuccessOrExit(error = AppendServerIdentifier(*message));
     SuccessOrExit(error = AppendClientIdentifier(*message, aClientId));
@@ -352,7 +352,7 @@ exit:
     return error;
 }
 
-otError Server::AppendHeader(Message &aMessage, const TransactionId &aTransactionId)
+Error Server::AppendHeader(Message &aMessage, const TransactionId &aTransactionId)
 {
     Header header;
 
@@ -362,14 +362,14 @@ otError Server::AppendHeader(Message &aMessage, const TransactionId &aTransactio
     return aMessage.Append(header);
 }
 
-otError Server::AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId)
+Error Server::AppendClientIdentifier(Message &aMessage, ClientIdentifier &aClientId)
 {
     return aMessage.Append(aClientId);
 }
 
-otError Server::AppendServerIdentifier(Message &aMessage)
+Error Server::AppendServerIdentifier(Message &aMessage)
 {
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
     ServerIdentifier option;
     Mac::ExtAddress  eui64;
 
@@ -385,9 +385,9 @@ exit:
     return error;
 }
 
-otError Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
+Error Server::AppendIaNa(Message &aMessage, IaNa &aIaNa)
 {
-    otError  error  = OT_ERROR_NONE;
+    Error    error  = kErrorNone;
     uint16_t length = 0;
 
     if (mPrefixAgentsMask)
@@ -416,7 +416,7 @@ exit:
     return error;
 }
 
-otError Server::AppendStatusCode(Message &aMessage, Status aStatusCode)
+Error Server::AppendStatusCode(Message &aMessage, Status aStatusCode)
 {
     StatusCode option;
 
@@ -425,9 +425,9 @@ otError Server::AppendStatusCode(Message &aMessage, Status aStatusCode)
     return aMessage.Append(option);
 }
 
-otError Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
+Error Server::AppendIaAddress(Message &aMessage, ClientIdentifier &aClientId)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (mPrefixAgentsMask)
     {
@@ -456,9 +456,9 @@ exit:
     return error;
 }
 
-otError Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId)
+Error Server::AddIaAddress(Message &aMessage, const Ip6::Address &aPrefix, ClientIdentifier &aClientId)
 {
-    otError   error = OT_ERROR_NONE;
+    Error     error = kErrorNone;
     IaAddress option;
 
     option.Init();
@@ -472,7 +472,7 @@ exit:
     return error;
 }
 
-otError Server::AppendRapidCommit(Message &aMessage)
+Error Server::AppendRapidCommit(Message &aMessage)
 {
     RapidCommit option;
 

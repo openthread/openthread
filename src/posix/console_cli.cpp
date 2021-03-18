@@ -57,6 +57,8 @@
 
 #include <openthread/cli.h>
 
+#include "common/code_utils.hpp"
+
 #include "openthread-core-config.h"
 #include "platform-posix.h"
 
@@ -68,12 +70,10 @@ static void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
     {
-        size_t len;
-
-        if ((len = strlen(aLine)) > 0)
+        if (aLine[0] != '\0')
         {
             add_history(aLine);
-            otCliConsoleInputLine(aLine, (uint16_t)len);
+            otCliConsoleInputLine(aLine);
         }
         free(aLine);
     }
@@ -95,7 +95,10 @@ void otxConsoleInit(otInstance *aInstance)
     rl_instream           = stdin;
     rl_outstream          = stdout;
     rl_inhibit_completion = true;
-    sReadFd               = fileno(rl_instream);
+
+    rl_set_screen_size(0, OT_MAX(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH, OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE));
+
+    sReadFd = fileno(rl_instream);
     rl_callback_handler_install(sPrompt, InputCallback);
     otCliConsoleInit(aInstance, OutputCallback, nullptr);
 }

@@ -154,6 +154,27 @@ void TestUtf8(void)
     printf(" -- PASS\n");
 }
 
+void TestStringFind(void)
+{
+    char emptyString[1] = {'\0'};
+    char testString[]   = "foo.bar\\.";
+
+    printf("\nTest 6: StringFind() function\n");
+
+    VerifyOrQuit(StringFind(testString, 'f') == testString, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, 'o') == &testString[1], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, '.') == &testString[3], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, 'r') == &testString[6], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, '\\') == &testString[7], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, 'x') == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, ',') == nullptr, "StringFind() failed");
+
+    VerifyOrQuit(StringFind(emptyString, 'f') == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(emptyString, '.') == nullptr, "StringFind() failed");
+
+    printf(" -- PASS\n");
+}
+
 } // namespace ot
 
 int main(void)
@@ -161,6 +182,7 @@ int main(void)
     ot::TestString();
     ot::TestStringLength();
     ot::TestUtf8();
+    ot::TestStringFind();
     printf("\nAll tests passed.\n");
     return 0;
 }

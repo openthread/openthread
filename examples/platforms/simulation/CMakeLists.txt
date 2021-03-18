@@ -52,7 +52,6 @@ list(APPEND OT_PLATFORM_DEFINES
     "_BSD_SOURCE=1"
     "_DEFAULT_SOURCE=1"
     "OPENTHREAD_EXAMPLES_SIMULATION=1"
-    "OPENTHREAD_POSIX=1"
     "OPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
@@ -69,6 +68,7 @@ add_library(openthread-simulation
     radio.c
     spi-stubs.c
     system.c
+    trel.c
     uart.c
     virtual_time/alarm-sim.c
     virtual_time/platform-sim.c

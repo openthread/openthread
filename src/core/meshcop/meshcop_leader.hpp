@@ -86,11 +86,11 @@ public:
      *
      * @param[in]  aDelayTimerMinimal The value of minimal delay timer (in ms).
      *
-     * @retval  OT_ERROR_NONE         Successfully set the minimal delay timer.
-     * @retval  OT_ERROR_INVALID_ARGS If @p aDelayTimerMinimal is not valid.
+     * @retval  kErrorNone         Successfully set the minimal delay timer.
+     * @retval  kErrorInvalidArgs  If @p aDelayTimerMinimal is not valid.
      *
      */
-    otError SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
+    Error SetDelayTimerMinimal(uint32_t aDelayTimerMinimal);
 
     /**
      * This method gets minimal delay timer.

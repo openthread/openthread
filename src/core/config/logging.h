@@ -220,7 +220,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_PLATFORM
-#define OPENTHREAD_CONFIG_LOG_PLATFORM 0
+#define OPENTHREAD_CONFIG_LOG_PLATFORM 1
 #endif
 
 /**
@@ -297,6 +297,36 @@
  */
 #ifndef OPENTHREAD_CONFIG_LOG_DUA
 #define OPENTHREAD_CONFIG_LOG_DUA 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_BR
+ *
+ * Define to Border Router (BR) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_BR
+#define OPENTHREAD_CONFIG_LOG_BR 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_SRP
+ *
+ * Define to enable Service Registration Protocol (SRP) region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_SRP
+#define OPENTHREAD_CONFIG_LOG_SRP 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_DNS
+ *
+ * Define to enable DNS region logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_DNS
+#define OPENTHREAD_CONFIG_LOG_DNS 1
 #endif
 
 /**

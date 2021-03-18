@@ -39,6 +39,7 @@
 #include "openthread-spinel-config.h"
 #include "spinel.h"
 #include "spinel_interface.hpp"
+#include "core/radio/max_power_table.hpp"
 #include "ncp/ncp_config.h"
 
 namespace ot {
@@ -112,13 +113,14 @@ public:
     /**
      * Initialize this radio transceiver.
      *
-     * @param[in]  aResetRadio            TRUE to reset on init, FALSE to not reset on init.
-     * @param[in]  aRestoreDatasetFromNcp TRUE to restore dataset to host from non-volatile memory
-     *                                    (only used when attempts to upgrade from NCP to RCP mode),
-     *                                    FALSE otherwise.
+     * @param[in]  aResetRadio                 TRUE to reset on init, FALSE to not reset on init.
+     * @param[in]  aRestoreDatasetFromNcp      TRUE to restore dataset to host from non-volatile memory
+     *                                         (only used when attempts to upgrade from NCP to RCP mode),
+     *                                         FALSE otherwise.
+     * @param[in]  aSkipRcpCompatibilityCheck  TRUE to skip RCP compatibility check, FALSE to perform the check.
      *
      */
-    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp);
+    void Init(bool aResetRadio, bool aRestoreDataSetFromNcp, bool aSkipRcpCompatibilityCheck);
 
     /**
      * Deinitialize this radio transceiver.
@@ -650,6 +652,29 @@ public:
     otError SetMacFrameCounter(uint32_t aMacFrameCounter);
 
     /**
+     * This method sets the radio region code.
+     *
+     * @param[in]   aRegionCode  The radio region code.
+     *
+     * @retval  OT_ERROR_NONE             Successfully set region code.
+     * @retval  OT_ERROR_FAILED           Other platform specific errors.
+     *
+     */
+    otError SetRadioRegion(uint16_t aRegionCode);
+
+    /**
+     * This method gets the radio region code.
+     *
+     * @param[out]   aRegionCode  The radio region code.
+     *
+     * @retval  OT_ERROR_INVALID_ARGS     @p aRegionCode is nullptr.
+     * @retval  OT_ERROR_NONE             Successfully got region code.
+     * @retval  OT_ERROR_FAILED           Other platform specific errors.
+     *
+     */
+    otError GetRadioRegion(uint16_t *aRegionCode);
+
+    /**
      * This method checks whether the spinel interface is radio-only.
      *
      * @param[out] aSupportsRcpApiVersion   A reference to a boolean variable to update whether the list of spinel
@@ -703,6 +728,18 @@ public:
      *
      */
     uint32_t GetBusSpeed(void) const;
+
+    /**
+     * This method sets the max transmit power.
+     *
+     * @param[in] aChannel    The radio channel.
+     * @param[in] aPower      The max transmit power in dBm.
+     *
+     * @retval  OT_ERROR_NONE           Succesfully set the max transmit power.
+     * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
+     *
+     */
+    otError SetChannelMaxTransmitPower(uint8_t aChannel, int8_t aPower);
 
 private:
     enum
@@ -968,6 +1005,8 @@ private:
     uint64_t mTxRadioEndUs;
     uint64_t mRadioTimeRecalcStart; ///< When to recalculate RCP time offset.
     int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
+
+    MaxPowerTable mMaxPowerTable;
 };
 
 } // namespace Spinel

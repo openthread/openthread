@@ -76,6 +76,7 @@ typedef struct otPlatformConfig
     const char *mRadioUrl;              ///< Radio url.
     int         mRealTimeSignal;        ///< The real-time signal for microsecond timer.
     uint32_t    mSpeedUpFactor;         ///< Speed up factor.
+    const char *mTrelInterface;         ///< Interface name used by TREL radio link (can be NULL to use default).
 } otPlatformConfig;
 
 /**

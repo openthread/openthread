@@ -697,9 +697,11 @@ void nrf_802154_ack_timeout_set(uint32_t time)
 
 #endif // NRF_802154_ACK_TIMEOUT_ENABLED
 
-__WEAK void nrf_802154_tx_ack_started(uint8_t * p_data)
+__WEAK void nrf_802154_tx_ack_started(uint8_t * p_data, int8_t power, uint8_t lqi)
 {
     (void)p_data;
+    (void)power;
+    (void)lqi;
 }
 
 #if NRF_802154_USE_RAW_API

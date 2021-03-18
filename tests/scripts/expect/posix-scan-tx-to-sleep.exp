@@ -31,44 +31,40 @@ source "tests/scripts/expect/_common.exp"
 
 spawn_node 1 "rcp" "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=1"
 send "dataset init new\n"
-expect "Done"
+expect_line "Done"
 send "dataset panid 0xface\n"
-expect "Done"
+expect_line "Done"
 send "dataset commit active\n"
-expect "Done"
+expect_line "Done"
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
-expect "Done"
+set extaddr [get_extaddr]
 send "panid\n"
 expect "panid"
 expect -re {([0-9a-f]{4})}
 set pan $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 send "extpanid\n"
 expect "extpanid"
 expect -re {([0-9a-f]{16})}
 set extpan $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 expect "> "
 send "networkname\n"
 expect "networkname"
 expect -re {[\r\n]([^\r\n]+)[\r\n]}
 set network $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 send "channel\n"
 expect "channel"
 expect -re {(\d+)}
 set channel $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 
 spawn_node 2 "rcp" "spinel+hdlc+uart://$env(OT_SIMULATION_APPS)/ncp/ot-rcp?forkpty-arg=--sleep-to-tx&forkpty-arg=2"
 send "scan\n"

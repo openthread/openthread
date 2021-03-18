@@ -58,6 +58,18 @@ namespace ot {
 
 namespace Mac {
 
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE."
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE && (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE."
+#endif
+
+#if OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE && !OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#error "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is required for OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE."
+#endif
+
 /**
  * This class implements the IEEE 802.15.4 MAC (sub-MAC).
  *
@@ -104,12 +116,12 @@ public:
          * This method notifies user of `SubMac` of a received frame.
          *
          * @param[in]  aFrame    A pointer to the received frame or nullptr if the receive operation failed.
-         * @param[in]  aError    OT_ERROR_NONE when successfully received a frame,
-         *                       OT_ERROR_ABORT when reception was aborted and a frame was not received,
-         *                       OT_ERROR_NO_BUFS when a frame could not be received due to lack of rx buffer space.
+         * @param[in]  aError    kErrorNone when successfully received a frame,
+         *                       kErrorAbort when reception was aborted and a frame was not received,
+         *                       kErrorNoBufs when a frame could not be received due to lack of rx buffer space.
          *
          */
-        void ReceiveDone(RxFrame *aFrame, otError aError);
+        void ReceiveDone(RxFrame *aFrame, Error aError);
 
         /**
          * This method notifies user of `SubMac` of CCA status (success/failure) for a frame transmission attempt.
@@ -132,10 +144,10 @@ public:
          *
          * @param[in] aFrame      The transmitted frame.
          * @param[in] aAckFrame   A pointer to the ACK frame, or nullptr if no ACK was received.
-         * @param[in] aError      OT_ERROR_NONE when the frame was transmitted successfully,
-         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-         *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+         * @param[in] aError      kErrorNone when the frame was transmitted successfully,
+         *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+         *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+         *                        kErrorAbort when transmission was aborted for other reasons.
          * @param[in] aRetryCount Current retry count. This is valid only when sub-mac handles frame re-transmissions.
          * @param[in] aWillRetx   Indicates whether frame will be retransmitted or not. This is applicable only
          *                        when there was an error in current transmission attempt.
@@ -143,7 +155,7 @@ public:
          */
         void RecordFrameTransmitStatus(const TxFrame &aFrame,
                                        const RxFrame *aAckFrame,
-                                       otError        aError,
+                                       Error          aError,
                                        uint8_t        aRetryCount,
                                        bool           aWillRetx);
 
@@ -153,13 +165,13 @@ public:
          *
          * @param[in]  aFrame     The transmitted frame.
          * @param[in]  aAckFrame  A pointer to the ACK frame, nullptr if no ACK was received.
-         * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted,
-         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-         *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+         * @param[in]  aError     kErrorNone when the frame was transmitted,
+         *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+         *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+         *                        kErrorAbort when transmission was aborted for other reasons.
          *
          */
-        void TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
+        void TransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
 
         /**
          * This method notifies user of `SubMac` that energy scan is complete.
@@ -263,40 +275,49 @@ public:
     /**
      * This method enables the radio.
      *
-     * @retval OT_ERROR_NONE     Successfully enabled.
-     * @retval OT_ERROR_FAILED   The radio could not be enabled.
+     * @retval kErrorNone     Successfully enabled.
+     * @retval kErrorFailed   The radio could not be enabled.
      *
      */
-    otError Enable(void);
+    Error Enable(void);
 
     /**
      * This method disables the radio.
      *
-     * @retval OT_ERROR_NONE     Successfully disabled the radio.
+     * @retval kErrorNone     Successfully disabled the radio.
      *
      */
-    otError Disable(void);
+    Error Disable(void);
 
     /**
      * This method transitions the radio to Sleep.
      *
-     * @retval OT_ERROR_NONE          Successfully transitioned to Sleep.
-     * @retval OT_ERROR_BUSY          The radio was transmitting.
-     * @retval OT_ERROR_INVALID_STATE The radio was disabled.
+     * @retval kErrorNone          Successfully transitioned to Sleep.
+     * @retval kErrorBusy          The radio was transmitting.
+     * @retval kErrorInvalidState  The radio was disabled.
      *
      */
-    otError Sleep(void);
+    Error Sleep(void);
+
+    /**
+     * This method indicates whether the sub-mac is busy transmitting or scanning.
+     *
+     * @retval TRUE if the sub-mac is busy transmitting or scanning.
+     * @retval FALSE if the sub-mac is not busy transmitting or scanning.
+     *
+     */
+    bool IsTransmittingOrScanning(void) const { return (mState == kStateTransmit) || (mState == kStateEnergyScan); }
 
     /**
      * This method transitions the radio to Receive.
      *
      * @param[in]  aChannel   The channel to use for receiving.
      *
-     * @retval OT_ERROR_NONE          Successfully transitioned to Receive.
-     * @retval OT_ERROR_INVALID_STATE The radio was disabled or transmitting.
+     * @retval kErrorNone          Successfully transitioned to Receive.
+     * @retval kErrorInvalidState  The radio was disabled or transmitting.
      *
      */
-    otError Receive(uint8_t aChannel);
+    Error Receive(uint8_t aChannel);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     /**
@@ -309,12 +330,12 @@ public:
      * @param[in]  aPanChannel  The current phy channel used by the device. This param will only take effect when CSL
      *                          channel hasn't been explicitly specified.
      *
-     * @retval OT_ERROR_NONE          Successfully entered CSL operation (sleep or receive according to CSL timer).
-     * @retval OT_ERROR_BUSY          The radio was transmitting.
-     * @retval OT_ERROR_INVALID_STATE The radio was disabled.
+     * @retval kErrorNone          Successfully entered CSL operation (sleep or receive according to CSL timer).
+     * @retval kErrorBusy          The radio was transmitting.
+     * @retval kErrorInvalidState  The radio was disabled.
      *
      */
-    otError CslSample(uint8_t aPanChannel);
+    Error CslSample(uint8_t aPanChannel);
 #endif
 
     /**
@@ -332,14 +353,14 @@ public:
      *
      * The `SubMac` layer handles Ack timeout, CSMA backoff, and frame retransmission.
      *
-     * @retval OT_ERROR_NONE          Successfully started the frame transmission
-     * @retval OT_ERROR_INVALID_STATE The radio was disabled or transmitting.
+     * @retval kErrorNone          Successfully started the frame transmission
+     * @retval kErrorInvalidState  The radio was disabled or transmitting.
      *
      */
-    otError Send(void);
+    Error Send(void);
 
     /**
-     * This method gets the number of transmit retries of last transmit packet.
+     * This method gets the number of transmit retries of last transmitted frame.
      *
      * @returns Number of transmit retries.
      *
@@ -360,12 +381,12 @@ public:
      * @param[in] aScanChannel   The channel to perform the energy scan on.
      * @param[in] aScanDuration  The duration, in milliseconds, for the channel to be scanned.
      *
-     * @retval OT_ERROR_NONE             Successfully started scanning the channel.
-     * @retval OT_ERROR_INVALID_STATE    The radio was disabled or transmitting.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  Energy scan is not supported (applicable in link-raw/radio mode only).
+     * @retval kErrorNone            Successfully started scanning the channel.
+     * @retval kErrorInvalidState    The radio was disabled or transmitting.
+     * @retval kErrorNotImplemented  Energy scan is not supported (applicable in link-raw/radio mode only).
      *
      */
-    otError EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
+    Error EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration);
 
     /**
      * This method returns the noise floor value (currently use the radio receive sensitivity value).
@@ -514,7 +535,7 @@ private:
 #endif
     };
 
-    enum State
+    enum State : uint8_t
     {
         kStateDisabled,    ///< Radio is disabled.
         kStateSleep,       ///< Radio is in sleep.
@@ -522,7 +543,7 @@ private:
         kStateCsmaBackoff, ///< CSMA backoff before transmission.
         kStateTransmit,    ///< Radio is transmitting.
         kStateEnergyScan,  ///< Energy scan.
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         kStateCslTransmit, ///< CSL transmission.
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -532,8 +553,8 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     enum : uint32_t{
-        kCslSampleWindow =
-            OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * kUsPerTenSymbols, ///< The SSED sample window in units of 10 symbols.
+        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW *
+                           kUsPerTenSymbols, ///< The SSED sample window in units of microseconds.
         kCslReceiveTimeAhead =
             OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD, ///< CSL receivers would wake up `kCslReceiveTimeAhead` earlier
                                                       ///< than expected sample window. The time is in unit of 10
@@ -575,9 +596,9 @@ private:
     void BeginTransmit(void);
     void SampleRssi(void);
 
-    void HandleReceiveDone(RxFrame *aFrame, otError aError);
+    void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
-    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, otError aError);
+    void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
     void UpdateFrameCounterOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
 

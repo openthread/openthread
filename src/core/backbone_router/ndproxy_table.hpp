@@ -35,11 +35,12 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
 #include <openthread/backbone_router_ftd.h>
 
 #include "backbone_router/bbr_leader.hpp"
+#include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/time.hpp"
@@ -146,15 +147,15 @@ public:
      * @param[in] aRloc16                    The RLOC16.
      * @param[in] aTimeSinceLastTransaction  Time since last transaction (in seconds).
      *
-     * @retval OT_ERROR_NONE        If registered successfully.
-     * @retval OT_ERROR_DUPLICATED  If the Ip6 address IID is a duplicate.
-     * @retval OT_ERROR_NO_BUFS     Insufficient buffer space available to register.
+     * @retval kErrorNone        If registered successfully.
+     * @retval kErrorDuplicated  If the Ip6 address IID is a duplicate.
+     * @retval kErrorNoBufs      Insufficient buffer space available to register.
      *
      */
-    otError Register(const Ip6::InterfaceIdentifier &aAddressIid,
-                     const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                     uint16_t                        aRloc16,
-                     const uint32_t *                aTimeSinceLastTransaction);
+    Error Register(const Ip6::InterfaceIdentifier &aAddressIid,
+                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                   uint16_t                        aRloc16,
+                   const uint32_t *                aTimeSinceLastTransaction);
 
     /**
      * This method checks if a given Ip6 address IID was registered.
@@ -223,11 +224,11 @@ public:
      * @param[in] aDua          The Domain Unicast Address to get info.
      * @param[in] aNdProxyInfo  A pointer to the ND Proxy info.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieve the ND Proxy info.
-     * @retval OT_ERROR_NOT_FOUND  Failed to find the Domain Unicast Address in the ND Proxy table.
+     * @retval kErrorNone       Successfully retrieve the ND Proxy info.
+     * @retval kErrorNotFound   Failed to find the Domain Unicast Address in the ND Proxy table.
      *
      */
-    otError GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo);
+    Error GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo);
 
 private:
     enum
@@ -246,8 +247,9 @@ private:
      * This class represents an iterator for iterating through the NdProxy Table.
      *
      */
-    class Iterator : public InstanceLocator
+    class Iterator : public InstanceLocator, public ItemPtrIterator<NdProxy, Iterator>
     {
+        friend class ItemPtrIterator<NdProxy, Iterator>;
         friend class NdProxyTable;
         friend class IteratorBuilder;
 
@@ -260,18 +262,9 @@ private:
         Iterator(Instance &aInstance, Filter aFilter);
         Iterator(Instance &aInstance, IteratorType);
 
-        bool           IsDone(void) const { return (mCurrent == nullptr); }
-        void           Advance(void);
-        void           operator++(void) { Advance(); }
-        void           operator++(int) { Advance(); }
-        const NdProxy &operator*(void)const { return *mCurrent; }
-        bool           operator==(const Iterator &aOther) const { return mCurrent == aOther.mCurrent; }
-        bool           operator!=(const Iterator &aOther) const { return !(*this == aOther); }
-        NdProxy *      operator->(void) { return mCurrent; }
-        NdProxy &      operator*(void) { return *mCurrent; }
+        void Advance(void);
 
-        NdProxy *mCurrent;
-        Filter   mFilter;
+        Filter mFilter;
     };
 
     class IteratorBuilder : public InstanceLocator
@@ -311,6 +304,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
 
 #endif // NDPROXY_TABLE_HPP_

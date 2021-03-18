@@ -39,6 +39,7 @@
 
 #include <openthread/ip6.h>
 #include <openthread/message.h>
+#include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -53,18 +54,6 @@ extern "C" {
  * @{
  *
  */
-
-/**
- * This structure represents what metrics are specified to query.
- *
- */
-typedef struct otLinkMetrics
-{
-    bool mPduCount : 1;
-    bool mLqi : 1;
-    bool mLinkMargin : 1;
-    bool mRssi : 1;
-} otLinkMetrics;
 
 /**
  * This structure represents the result (value) for a Link Metrics query.
@@ -93,10 +82,22 @@ typedef struct otLinkMetricsSeriesFlags
 } otLinkMetricsSeriesFlags;
 
 /**
+ * Enhanced-ACK Flags.
+ *
+ * These are used in Enhanced-ACK Based Probing to indicate whether to register or clear the probing.
+ *
+ */
+typedef enum otLinkMetricsEnhAckFlags
+{
+    OT_LINK_METRICS_ENH_ACK_CLEAR    = 0, ///< Clear.
+    OT_LINK_METRICS_ENH_ACK_REGISTER = 1, ///< Register.
+} otLinkMetricsEnhAckFlags;
+
+/**
  * Link Metrics Status values.
  *
  */
-typedef enum otLinkMetricsStatus : uint8_t
+typedef enum otLinkMetricsStatus
 {
     OT_LINK_METRICS_STATUS_SUCCESS                     = 0,
     OT_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES   = 1,
@@ -130,6 +131,20 @@ typedef void (*otLinkMetricsReportCallback)(const otIp6Address *       aSource,
 typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource, uint8_t aStatus, void *aContext);
 
 /**
+ * This function pointer is called when Enh-ACK Probing IE is received.
+ *
+ * @param[in] aShortAddress     The Mac short address of the Probing Subject.
+ * @param[in] aExtAddress       A pointer to the Mac extended address of the Probing Subject.
+ * @param[in] aMetricsValues    A pointer to the Link Metrics values obtained from the IE.
+ * @param[in] aContext          A pointer to application-specific context.
+ *
+ */
+typedef void (*otLinkMetricsEnhAckProbingIeReportCallback)(otShortAddress             aShortAddress,
+                                                           const otExtAddress *       aExtAddress,
+                                                           const otLinkMetricsValues *aMetricsValues,
+                                                           void *                     aContext);
+
+/**
  * This function sends an MLE Data Request to query Link Metrics.
  *
  * It could be either Single Probe or Forward Tracking Series.
@@ -141,8 +156,10 @@ typedef void (*otLinkMetricsMgmtResponseCallback)(const otIp6Address *aSource, u
  * @param[in]  aCallback            A pointer to a function that is called when Link Metrics report is received.
  * @param[in]  aCallbackContext     A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE          Successfully sent a Link Metrics query message.
- * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Data Request message.
+ * @retval OT_ERROR_NONE              Successfully sent a Link Metrics query message.
+ * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Data Request message.
+ * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+ * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
  *
  */
 otError otLinkMetricsQuery(otInstance *                aInstance,
@@ -165,9 +182,11 @@ otError otLinkMetricsQuery(otInstance *                aInstance,
  *                               received.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE          Successfully sent a Link Metrics Management Request message.
- * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Metrics Management Request message.
- * @retval OT_ERROR_INVALID_ARGS  @p aSeriesId is not within the valid range.
+ * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
+ * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request message.
+ * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId is not within the valid range.
+ * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+ * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
  *
  */
 otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                      aInstance,
@@ -179,6 +198,35 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
                                                  void *                            aCallbackContext);
 
 /**
+ * This function sends an MLE Link Metrics Management Request to configure/clear an Enhanced-ACK Based Probing.
+ *
+ * @param[in] aInstance          A pointer to an OpenThread instance.
+ * @param[in] aDestination       A pointer to the destination address.
+ * @param[in] aEnhAckFlags       Enh-ACK Flags to indicate whether to register or clear the probing. `0` to clear and
+ *                               `1` to register. Other values are reserved.
+ * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
+ *                               `aEnhAckFlags` is `0`.
+ * @param[in] aCallback          A pointer to a function that is called when an Enhanced Ack with Link Metrics is
+ *                               received.
+ * @param[in] aCallbackContext   A pointer to application-specific context.
+ *
+ * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
+ * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request message.
+ * @retval OT_ERROR_INVALID_ARGS      @p aEnhAckFlags is not a valid value or @p aLinkMetricsFlags isn't correct.
+ * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+ * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
+ *
+ */
+otError otLinkMetricsConfigEnhAckProbing(otInstance *                               aInstance,
+                                         const otIp6Address *                       aDestination,
+                                         otLinkMetricsEnhAckFlags                   aEnhAckFlags,
+                                         const otLinkMetrics *                      aLinkMetricsFlags,
+                                         otLinkMetricsMgmtResponseCallback          aCallback,
+                                         void *                                     aCallbackContext,
+                                         otLinkMetricsEnhAckProbingIeReportCallback aEnhAckCallback,
+                                         void *                                     aEnhAckCallbackContext);
+
+/**
  * This function sends an MLE Link Probe message.
  *
  * @param[in] aInstance       A pointer to an OpenThread instance.
@@ -186,9 +234,11 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
  * @param[in] aSeriesId       The Series ID [1, 254] which the Probe message aims at.
  * @param[in] aLength         The length of the data payload in Link Probe TLV, [0, 64] (per Thread 1.2 spec, 4.4.37).
  *
- * @retval OT_ERROR_NONE          Successfully sent a Link Probe message.
- * @retval OT_ERROR_NO_BUFS       Insufficient buffers to generate the MLE Link Probe message.
- * @retval OT_ERROR_INVALID_ARGS  @p aSeriesId or @p aLength is not within the valid range.
+ * @retval OT_ERROR_NONE              Successfully sent a Link Probe message.
+ * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Probe message.
+ * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId or @p aLength is not within the valid range.
+ * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+ * @retval OT_ERROR_NOT_CAPABLE       The neighbor is not a Thread 1.2 device and does not support Link Metrics.
  *
  */
 otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,

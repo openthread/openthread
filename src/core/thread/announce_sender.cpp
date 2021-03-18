@@ -52,7 +52,7 @@ AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHand
     , mJitter(0)
     , mCount(0)
     , mChannel(0)
-    , mTimer(aInstance, aHandler, this)
+    , mTimer(aInstance, aHandler)
 {
 }
 
@@ -81,11 +81,11 @@ exit:
 
 void AnnounceSenderBase::HandleTimer(void)
 {
-    otError error;
+    Error error;
 
     error = mChannelMask.GetNextChannel(mChannel);
 
-    if (error == OT_ERROR_NOT_FOUND)
+    if (error == kErrorNotFound)
     {
         if (mCount != 0)
         {
@@ -97,7 +97,7 @@ void AnnounceSenderBase::HandleTimer(void)
         error    = mChannelMask.GetNextChannel(mChannel);
     }
 
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 
     Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
@@ -116,7 +116,7 @@ AnnounceSender::AnnounceSender(Instance &aInstance)
 
 void AnnounceSender::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AnnounceSender>().AnnounceSenderBase::HandleTimer();
+    aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer();
 }
 
 void AnnounceSender::CheckState(void)
@@ -142,7 +142,7 @@ void AnnounceSender::CheckState(void)
         }
 #endif
 
-        // fall through
+        OT_FALL_THROUGH;
 
     case Mle::kRoleDisabled:
     case Mle::kRoleDetached:
@@ -150,7 +150,7 @@ void AnnounceSender::CheckState(void)
         ExitNow();
     }
 
-    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == OT_ERROR_NONE, Stop());
+    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == kErrorNone, Stop());
 
     period = interval / channelMask.GetNumberOfChannels();
 

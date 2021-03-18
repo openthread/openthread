@@ -50,7 +50,7 @@ PanIdQueryServer::PanIdQueryServer(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mChannelMask(0)
     , mPanId(Mac::kPanIdBroadcast)
-    , mTimer(aInstance, PanIdQueryServer::HandleTimer, this)
+    , mTimer(aInstance, PanIdQueryServer::HandleTimer)
     , mPanIdQuery(UriPath::kPanIdQuery, &PanIdQueryServer::HandleQuery, this)
 {
     Get<Tmf::TmfAgent>().AddResource(mPanIdQuery);
@@ -110,12 +110,12 @@ void PanIdQueryServer::HandleScanResult(Mac::ActiveScanResult *aScanResult)
 
 void PanIdQueryServer::SendConflict(void)
 {
-    otError                 error = OT_ERROR_NONE;
+    Error                   error = kErrorNone;
     MeshCoP::ChannelMaskTlv channelMask;
     Ip6::MessageInfo        messageInfo;
     Coap::Message *         message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kPanIdConflict));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -140,7 +140,7 @@ exit:
 
 void PanIdQueryServer::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<PanIdQueryServer>().HandleTimer();
+    aTimer.Get<PanIdQueryServer>().HandleTimer();
 }
 
 void PanIdQueryServer::HandleTimer(void)

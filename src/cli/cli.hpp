@@ -41,7 +41,7 @@
 #include <stdarg.h>
 
 #include <openthread/cli.h>
-#include <openthread/dns.h>
+#include <openthread/dns_client.h>
 #include <openthread/ip6.h>
 #include <openthread/sntp.h>
 #include <openthread/udp.h>
@@ -50,6 +50,8 @@
 #include "cli/cli_dataset.hpp"
 #include "cli/cli_joiner.hpp"
 #include "cli/cli_network_data.hpp"
+#include "cli/cli_srp_client.hpp"
+#include "cli/cli_srp_server.hpp"
 #include "cli/cli_udp.hpp"
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 #include "cli/cli_coap.hpp"
@@ -86,6 +88,8 @@ class Interpreter
     friend class Dataset;
     friend class Joiner;
     friend class NetworkData;
+    friend class SrpClient;
+    friend class SrpServer;
     friend class UdpExample;
 
 public:
@@ -121,10 +125,9 @@ public:
      * This method interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
-     * @param[in]  aBufLength  The length of the string in bytes.
      *
      */
-    void ProcessLine(char *aBuf, uint16_t aBufLength);
+    void ProcessLine(char *aBuf);
 
     /**
      * This method delivers raw characters to the client.
@@ -146,7 +149,7 @@ public:
      * @param[in]  aLength  @p aBytes length.
      *
      */
-    void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
+    void OutputBytes(const uint8_t *aBytes, uint16_t aLength);
 
     /**
      * This method writes a number of bytes to the CLI console as a hex string.
@@ -255,6 +258,14 @@ public:
     void OutputResult(otError aError);
 
     /**
+     * This method delivers "Enabled" or "Disabled" status to the CLI client (it also appends newline `\r\n`).
+     *
+     * @param[in] aEnabled  A boolean indicating the status. TRUE outputs "Enabled", FALSE outputs "Disabled".
+     *
+     */
+    void OutputEnabledDisabledStatus(bool aEnabled);
+
+    /**
      * This method sets the user command table.
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.
@@ -294,12 +305,15 @@ private:
     otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    otError ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[]);
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     otError ProcessBackboneRouter(uint8_t aArgsLength, char *aArgs[]);
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     otError ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     otError ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, char *aArgs[]);
     void    PrintMulticastListenersTable(void);
 #endif
@@ -353,7 +367,7 @@ private:
     otError ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessEui64(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     otError ProcessExit(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessLog(uint8_t aArgsLength, char *aArgs[]);
@@ -393,7 +407,7 @@ private:
 
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, char *aFlags);
 #endif
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(uint8_t aArgsLength, char *aArgs[]);
 
     otError ProcessMlrReg(uint8_t aArgsLength, char *aArgs[]);
@@ -409,6 +423,10 @@ private:
                                    uint8_t             aFailedAddressNum);
 #endif
     otError ProcessMode(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessMultiRadio(uint8_t aArgsLength, char *aArgsp[]);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    void OutputMultiRadioInfo(const otMultiRadioNeighborInfo &aMultiRadioInfo);
+#endif
 #if OPENTHREAD_FTD
     otError ProcessNeighbor(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -467,6 +485,7 @@ private:
     otError ProcessPskc(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessRcp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRegion(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
     otError ProcessReleaseRouterId(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -489,6 +508,9 @@ private:
     otError ProcessSingleton(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     otError ProcessSntp(uint8_t aArgsLength, char *aArgs[]);
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    otError ProcessSrp(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessState(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessThread(uint8_t aArgsLength, char *aArgs[]);
@@ -534,12 +556,19 @@ private:
     void OutputChildTableEntry(uint8_t aIndentSize, const otNetworkDiagChildEntry &aChildEntry);
 #endif
 
+    void OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    static void HandleDnsResponse(void *              aContext,
-                                  const char *        aHostname,
-                                  const otIp6Address *aAddress,
-                                  uint32_t            aTtl,
-                                  otError             aResult);
+    otError     GetDnsConfig(uint8_t aArgsLength, char *aArgs[], otDnsQueryConfig *&aConfig, uint8_t aStartArgsIndex);
+    static void HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse, void *aContext);
+    void        HandleDnsAddressResponse(otError aError, const otDnsAddressResponse *aResponse);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    void        OutputDnsServiceInfo(uint8_t aIndentSize, const otDnsServiceInfo &aServiceInfo);
+    static void HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse, void *aContext);
+    void        HandleDnsBrowseResponse(otError aError, const otDnsBrowseResponse *aResponse);
+    static void HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse, void *aContext);
+    void        HandleDnsServiceResponse(otError aError, const otDnsServiceResponse *aResponse);
+#endif
 #endif
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
@@ -551,13 +580,12 @@ private:
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    void HandleDnsResponse(const char *aHostname, const Ip6::Address *aAddress, uint32_t aTtl, otError aResult);
-#endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+    void PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues);
+
     static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
                                         const otLinkMetricsValues *aMetricsValues,
                                         uint8_t                    aStatus,
@@ -571,10 +599,19 @@ private:
 
     void HandleLinkMetricsMgmtResponse(const otIp6Address *aAddress, uint8_t aStatus);
 
-    const char *LinkMetricsStatusToStr(uint8_t aStatus);
-#endif
+    static void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
+                                                 const otExtAddress *       aExtAddress,
+                                                 const otLinkMetricsValues *aMetricsValues,
+                                                 void *                     aContext);
 
-    static Interpreter &GetOwner(OwnerLocator &aOwnerLocator);
+    void HandleLinkMetricsEnhAckProbingIe(otShortAddress             aShortAddress,
+                                          const otExtAddress *       aExtAddress,
+                                          const otLinkMetricsValues *aMetricsValues);
+
+    const char *LinkMetricsStatusToStr(uint8_t aStatus);
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
+    static Interpreter &GetOwner(InstanceLocator &aInstanceLocator);
 
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
@@ -585,6 +622,9 @@ private:
     static constexpr Command sCommands[] = {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"bbr", &Interpreter::ProcessBackboneRouter},
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+        {"br", &Interpreter::ProcessBorderRouting},
 #endif
         {"bufferinfo", &Interpreter::ProcessBufferInfo},
         {"ccathreshold", &Interpreter::ProcessCcaThreshold},
@@ -638,7 +678,7 @@ private:
         {"eidcache", &Interpreter::ProcessEidCache},
 #endif
         {"eui64", &Interpreter::ProcessEui64},
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
         {"exit", &Interpreter::ProcessExit},
 #endif
         {"extaddr", &Interpreter::ProcessExtAddress},
@@ -672,10 +712,11 @@ private:
         {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
         {"masterkey", &Interpreter::ProcessMasterKey},
-#if OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+#if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
         {"mlr", &Interpreter::ProcessMlr},
 #endif
         {"mode", &Interpreter::ProcessMode},
+        {"multiradio", &Interpreter::ProcessMultiRadio},
 #if OPENTHREAD_FTD
         {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
@@ -713,6 +754,7 @@ private:
         {"pskc", &Interpreter::ProcessPskc},
 #endif
         {"rcp", &Interpreter::ProcessRcp},
+        {"region", &Interpreter::ProcessRegion},
 #if OPENTHREAD_FTD
         {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
 #endif
@@ -736,6 +778,9 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
         {"sntp", &Interpreter::ProcessSntp},
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE || OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+        {"srp", &Interpreter::ProcessSrp},
+#endif
         {"state", &Interpreter::ProcessState},
         {"thread", &Interpreter::ProcessThread},
         {"txpower", &Interpreter::ProcessTxPower},
@@ -746,6 +791,7 @@ private:
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 
+    Instance *          mInstance;
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
@@ -758,11 +804,6 @@ private:
     otIp6Address        mPingDestAddress;
     TimerMilli          mPingTimer;
     otIcmp6Handler      mIcmpHandler;
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-    bool mResolvingInProgress;
-    char mResolvingHostname[OT_DNS_MAX_HOSTNAME_LENGTH];
-#endif
-
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif
@@ -787,7 +828,13 @@ private:
     Joiner mJoiner;
 #endif
 
-    Instance *mInstance;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    SrpClient mSrpClient;
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    SrpServer mSrpServer;
+#endif
 };
 
 } // namespace Cli

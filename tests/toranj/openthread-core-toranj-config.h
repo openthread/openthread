@@ -112,6 +112,14 @@
 #define OPENTHREAD_CONFIG_LEGACY_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_ECDSA_ENABLE
+ *
+ * Define to 1 to enable ECDSA support.
+ *
+ */
+#define OPENTHREAD_CONFIG_ECDSA_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
  *
  * Define to 1 to enable the Jam Detection service.
@@ -453,6 +461,38 @@
  *
  */
 #define OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+ *
+ * Define to 1 to enable DNS Client support.
+ *
+ */
+#define OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+ *
+ * Define to 1 to enable SRP Client support.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+ *
+ * Define to 1 to enable SRP Server support.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_SERVER_ENABLE 1
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_CHANGE_ENABLE
+ *
+ * Define to 1 for the SRP client implementation to provides APIs to allow domain name to be set/changed.
+ *
+ */
+#define OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE 1
 
 #if OPENTHREAD_RADIO
 /**

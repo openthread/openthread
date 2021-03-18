@@ -154,6 +154,18 @@ bool otMacFrameDoesAddrMatch(const otRadioFrame *aFrame,
 otError otMacFrameGetSrcAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress);
 
 /**
+ * Get destination MAC address.
+ *
+ * @param[in]   aFrame          A pointer to the frame.
+ * @param[out]  aMacAddress     A pointer to MAC address.
+ *
+ * @retval  OT_ERROR_NONE   Successfully got the destination MAC address.
+ * @retval  OT_ERROR_PARSE  Failed to parse the destination MAC address.
+ *
+ */
+otError otMacFrameGetDstAddr(const otRadioFrame *aFrame, otMacAddress *aMacAddress);
+
+/**
  * Get the sequence of @p aFrame.
  *
  * @param[in]   aFrame          A pointer to the frame.
@@ -282,6 +294,43 @@ uint32_t otMacFrameGetFrameCounter(otRadioFrame *aFrame);
  *
  */
 void otMacFrameSetFrameCounter(otRadioFrame *aFrame, uint32_t aFrameCounter);
+
+/**
+ * Write CSL IE to a buffer (without setting IE value).
+ *
+ * @param[out]  aDest    A pointer to the output buffer.
+ *
+ * @returns  The total count of bytes (total length of CSL IE) written to the buffer.
+ *
+ */
+uint8_t otMacFrameGenerateCslIeTemplate(uint8_t *aDest);
+
+/**
+ * Write Enh-ACK Probing IE (Vendor IE with THREAD OUI) to a buffer.
+ *
+ * @p aIeData could be `NULL`. If @p aIeData is `NULL`, this method generates the IE with the data unset. This allows
+ * users to generate the pattern first and update value later. (For example, using `otMacFrameSetEnhAckProbingIe`)
+ *
+ * @param[out]  aDest          A pointer to the output buffer.
+ * @param[in]   aIeData        A pointer to the Link Metrics data.
+ * @param[in]   aIeDataLength  The length of Link Metrics data value. Should be `1` or `2`. (Per spec 4.11.3.4.4.6)
+ *
+ * @returns  The total count of bytes (total length of the Vendor IE) written to the buffer.
+ *
+ */
+uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData, uint8_t aIeDataLength);
+
+/**
+ * Sets the data value of Enh-ACK Probing IE (Vendor IE with THREAD OUI) in a frame.
+ *
+ * If no Enh-ACK Probing IE is found in @p aFrame, nothing would be done.
+ *
+ * @param[in]  aFrame    The target frame that contains the IE. MUST NOT be `NULL`.
+ * @param[in]  aData     A pointer to the data value. MUST NOT be `NULL`.
+ * @param[in]  aDataLen  The length of @p aData.
+ *
+ */
+void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, uint8_t aDataLen);
 
 #ifdef __cplusplus
 } // extern "C"

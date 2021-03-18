@@ -32,9 +32,9 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "extaddr 99aabbccddeeff00\n"
-expect "Done"
+expect_line "Done"
 send "extaddr 99AABBCCDDEEFF00\n"
-expect "Done"
+expect_line "Done"
 send "extaddr\n"
 expect "99aabbccddeeff00"
 send "extaddr 1\n"

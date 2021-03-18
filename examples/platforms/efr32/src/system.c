@@ -55,15 +55,11 @@
 #include "em_system.h"
 #include "hal-config.h"
 #include "hal_common.h"
+#include "platform-efr32.h"
 #include "rail.h"
+#include "sl_device_init_nvic.h"
 #include "sl_mpu.h"
 #include "sl_sleeptimer.h"
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-#include "sl_malloc.h"
-#include "openthread/heap.h"
-#endif
-
-#include "platform-efr32.h"
 
 #if (HAL_FEM_ENABLE)
 #include "fem-control.h"
@@ -170,18 +166,8 @@ void otSysInit(int argc, char *argv[])
 
     __disable_irq();
 
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-    otHeapSetCAllocFree(sl_calloc, sl_free);
-#endif
-#undef FIXED_EXCEPTION
-#define FIXED_EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler)
-#define EXCEPTION(vectorNumber, functionName, deviceIrqn, deviceIrqHandler, priorityLevel, subpriority) \
-    NVIC_SetPriority(deviceIrqn, NVIC_EncodePriority(PRIGROUP_POSITION - 1, priorityLevel, subpriority));
-#include NVIC_CONFIG
-#undef EXCEPTION
-
-    NVIC_SetPriorityGrouping(PRIGROUP_POSITION - 1);
     CHIP_Init();
+    sl_device_init_nvic();
     halInitChipSpecific();
     BSP_Init(BSP_INIT_BCC);
 

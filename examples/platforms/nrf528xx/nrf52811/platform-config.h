@@ -55,7 +55,7 @@
  *
  */
 #ifndef RTC_INSTANCE
-#define RTC_INSTANCE NRF_RTC0
+#define RTC_INSTANCE NRF_RTC1
 #endif
 
 /**
@@ -65,7 +65,7 @@
  *
  */
 #ifndef RTC_IRQ_HANDLER
-#define RTC_IRQ_HANDLER RTC0_IRQHandler
+#define RTC_IRQ_HANDLER RTC1_IRQHandler
 #endif
 
 /**
@@ -75,7 +75,7 @@
  *
  */
 #ifndef RTC_IRQN
-#define RTC_IRQN RTC0_IRQn
+#define RTC_IRQN RTC1_IRQn
 #endif
 
 /**

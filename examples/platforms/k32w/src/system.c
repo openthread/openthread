@@ -32,6 +32,7 @@
  *
  */
 #include "board.h"
+#include "clock_config.h"
 #include "pin_mux.h"
 #include "platform-k32w.h"
 #include "openthread/platform/uart.h"

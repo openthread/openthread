@@ -40,12 +40,6 @@
 #include <openthread/platform/logging.h>
 
 /**
- * This function performs UART driver processing.
- *
- */
-void qorvoUartProcess(void);
-
-/**
  * This function enables the UART driver.
  *
  */

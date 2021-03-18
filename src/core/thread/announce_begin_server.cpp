@@ -92,7 +92,7 @@ exit:
 
 void AnnounceBeginServer::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<AnnounceBeginServer>().AnnounceSenderBase::HandleTimer();
+    aTimer.Get<AnnounceBeginServer>().AnnounceSenderBase::HandleTimer();
 }
 
 } // namespace ot

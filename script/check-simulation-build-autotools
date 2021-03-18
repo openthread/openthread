@@ -80,6 +80,7 @@ build_all_features()
         "-DOPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE=1"
         "-DOPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1"
         "-DOPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1"
         "-DOPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE=1"
         "-DOPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE=1"
         "-DOPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1"
@@ -192,12 +193,68 @@ build_nest_common()
     cd ..
 }
 
+build_multi_radio_links()
+{
+    # TREL radio link only.
+    local options=(
+        "-DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG"
+        "-DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=0"
+        "-DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+    )
+    export CPPFLAGS="${options[*]}"
+
+    reset_source
+    mkdir build && cd build
+    ../configure \
+        --enable-cli \
+        --enable-ftd \
+        --enable-mtd \
+        --enable-ncp \
+        --enable-radio-only \
+        --with-examples=simulation \
+        --disable-docs \
+        --disable-tests
+    make -j"${OT_BUILD_JOBS}"
+    cd ..
+
+    # Multi radio link - 15.4 and TREL.
+    options=(
+        "-DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_DIAG_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_LINK_RAW_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG"
+        "-DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        "-DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+    )
+    export CPPFLAGS="${options[*]}"
+
+    reset_source
+    mkdir build && cd build
+    ../configure \
+        --enable-cli \
+        --enable-ftd \
+        --enable-mtd \
+        --enable-ncp \
+        --enable-radio-only \
+        --with-examples=simulation \
+        --disable-docs \
+        --disable-tests
+    make -j"${OT_BUILD_JOBS}"
+    cd ..
+}
+
 main()
 {
     ./bootstrap
 
     build_all_features
     build_nest_common
+    build_multi_radio_links
 }
 
 main "$@"

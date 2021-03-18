@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016-2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,6 +25,7 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+#define _XOPEN_SOURCE 500
 
 #include "alarm_qorvo.h"
 #include "platform_qorvo.h"
@@ -87,6 +88,11 @@ void platformUartRestore(void)
     restore_stdin_termios();
     restore_stdout_termios();
     dup2(s_out_fd, STDOUT_FILENO);
+
+    qorvoPlatUnRegisterPollFunction(s_in_fd);
+    qorvoPlatUnRegisterPollFunction(s_out_fd);
+
+    otPlatUartDisable();
 }
 
 void platformUartInit(void)
@@ -95,8 +101,19 @@ void platformUartInit(void)
     s_out_fd = dup(STDOUT_FILENO);
     dup2(STDERR_FILENO, STDOUT_FILENO);
 
+    int res = fcntl(s_in_fd, F_SETFD, fcntl(s_in_fd, F_GETFD) | FD_CLOEXEC);
+    otEXPECT_ACTION(res != -1, perror("fcntl() FD_CLOEXEC failed"));
+
+    res = fcntl(s_out_fd, F_SETFD, fcntl(s_out_fd, F_GETFD) | FD_CLOEXEC);
+    otEXPECT_ACTION(res != -1, perror("fcntl() FD_CLOEXEC failed"));
+
     qorvoPlatRegisterPollFunction(s_in_fd, cbKeyPressed);
     qorvoPlatRegisterPollFunction(s_out_fd, cbKeyPressed);
+
+    return;
+
+exit:
+    exit(1);
 }
 
 otError otPlatUartEnable(void)
@@ -173,14 +190,11 @@ otError otPlatUartEnable(void)
         otEXPECT_ACTION(tcsetattr(s_out_fd, TCSANOW, &termios) == 0, perror("tcsetattr"); error = OT_ERROR_GENERIC);
     }
 
+    return error;
+
 exit:
-
-    if (error != OT_ERROR_NONE)
-    {
-        close(s_in_fd);
-        close(s_out_fd);
-    }
-
+    close(s_in_fd);
+    close(s_out_fd);
     return error;
 }
 
@@ -203,13 +217,70 @@ otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
     s_write_buffer = aBuf;
     s_write_length = aBufLength;
 
+    qorvoAlarmScheduleEventArg(0, platformDummy, (void *)&s_in_fd);
+
 exit:
     return error;
 }
 
+void platformUartUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
+{
+    if (aReadFdSet != NULL)
+    {
+        FD_SET(s_in_fd, aReadFdSet);
+
+        if (aErrorFdSet != NULL)
+        {
+            FD_SET(s_in_fd, aErrorFdSet);
+        }
+
+        if (aMaxFd != NULL && *aMaxFd < s_in_fd)
+        {
+            *aMaxFd = s_in_fd;
+        }
+    }
+
+    if ((aWriteFdSet != NULL) && (s_write_length > 0))
+    {
+        FD_SET(s_out_fd, aWriteFdSet);
+
+        if (aErrorFdSet != NULL)
+        {
+            FD_SET(s_out_fd, aErrorFdSet);
+        }
+
+        if (aMaxFd != NULL && *aMaxFd < s_out_fd)
+        {
+            *aMaxFd = s_out_fd;
+        }
+    }
+}
+
 otError otPlatUartFlush(void)
 {
-    return OT_ERROR_NOT_IMPLEMENTED;
+    otError error = OT_ERROR_NONE;
+    ssize_t count;
+
+    otEXPECT_ACTION(s_write_buffer != NULL && s_write_length > 0, error = OT_ERROR_INVALID_STATE);
+
+    while ((count = write(s_out_fd, s_write_buffer, s_write_length)) > 0 && (s_write_length -= count) > 0)
+    {
+        s_write_buffer += count;
+    }
+
+    if (count != -1)
+    {
+        assert(s_write_length == 0);
+        s_write_buffer = NULL;
+    }
+    else
+    {
+        perror("write(UART)");
+        exit(EXIT_FAILURE);
+    }
+
+exit:
+    return error;
 }
 
 void platformUartProcess(void)
@@ -254,7 +325,6 @@ void platformUartProcess(void)
                 perror("read");
                 exit(EXIT_FAILURE);
             }
-
             otPlatUartReceived(s_receive_buffer, (uint16_t)rval);
         }
 
@@ -262,19 +332,34 @@ void platformUartProcess(void)
         {
             rval = write(s_out_fd, s_write_buffer, s_write_length);
 
-            if (rval <= 0)
+            if (rval >= 0)
+            {
+                s_write_buffer += (uint16_t)rval;
+                s_write_length -= (uint16_t)rval;
+
+                if (s_write_length == 0)
+                {
+                    otPlatUartSendDone();
+                }
+            }
+            else if (errno != EINTR)
             {
                 perror("write");
                 exit(EXIT_FAILURE);
             }
-
-            s_write_buffer += (uint16_t)rval;
-            s_write_length -= (uint16_t)rval;
-
-            if (s_write_length == 0)
-            {
-                otPlatUartSendDone();
-            }
         }
     }
+}
+
+/**
+ *  The weak stubs functions definition.
+ */
+OT_TOOL_WEAK void otPlatUartSendDone(void)
+{
+}
+
+OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    (void)aBuf;
+    (void)aBufLength;
 }

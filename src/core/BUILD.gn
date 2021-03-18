@@ -74,6 +74,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1" ]
     }
 
+    if (openthread_config_border_routing_enable) {
+      defines += [ "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1" ]
+    }
+
     if (openthread_external_mbedtls != "") {
       defines += [ "OPENTHREAD_CONFIG_ENABLE_BUILTIN_MBEDTLS=0" ]
     } else if (!openthread_config_enable_builtin_mbedtls_management) {
@@ -126,6 +130,10 @@ if (openthread_enable_core_config_args) {
 
     if (openthread_config_dns_client_enable) {
       defines += [ "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1" ]
+    }
+
+    if (openthread_config_dnssd_server_enable) {
+      defines += [ "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1" ]
     }
 
     if (openthread_config_ecdsa_enable) {
@@ -220,6 +228,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE=1" ]
     }
 
+    if (openthread_config_srp_server_enable) {
+      defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
+    }
+
     if (openthread_config_time_sync_enable) {
       defines += [ "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1" ]
     }
@@ -229,28 +241,9 @@ if (openthread_enable_core_config_args) {
     }
 
     if (openthread_config_full_logs) {
-      defines += [
-        "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG",
-        "OPENTHREAD_CONFIG_LOG_API=1",
-        "OPENTHREAD_CONFIG_LOG_ARP=1",
-        "OPENTHREAD_CONFIG_LOG_BBR=1",
-        "OPENTHREAD_CONFIG_LOG_CLI=1",
-        "OPENTHREAD_CONFIG_LOG_COAP=1",
-        "OPENTHREAD_CONFIG_LOG_DUA=1",
-        "OPENTHREAD_CONFIG_LOG_ICMP=1",
-        "OPENTHREAD_CONFIG_LOG_IP6=1",
-        "OPENTHREAD_CONFIG_LOG_MAC=1",
-        "OPENTHREAD_CONFIG_LOG_MEM=1",
-        "OPENTHREAD_CONFIG_LOG_MESHCOP=1",
-        "OPENTHREAD_CONFIG_LOG_MLE=1",
-        "OPENTHREAD_CONFIG_LOG_MLR=1",
-        "OPENTHREAD_CONFIG_LOG_NETDATA=1",
-        "OPENTHREAD_CONFIG_LOG_NETDIAG=1",
-        "OPENTHREAD_CONFIG_LOG_PKT_DUMP=1",
-        "OPENTHREAD_CONFIG_LOG_PLATFORM=1",
-        "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1",
-        "OPENTHREAD_CONFIG_LOG_PREPEND_REGION=1",
-      ]
+      defines += [ "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_DEBG" ]
+      defines += [ "OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL=1" ]
+      defines += [ "OPENTHREAD_CONFIG_LOG_PREPEND_REGION=1" ]
     }
 
     if (openthread_config_otns_enable) {
@@ -307,6 +300,7 @@ openthread_core_files = [
   "api/diags_api.cpp",
   "api/dns_api.cpp",
   "api/entropy_api.cpp",
+  "api/error_api.cpp",
   "api/heap_api.cpp",
   "api/icmp6_api.cpp",
   "api/instance_api.cpp",
@@ -318,6 +312,7 @@ openthread_core_files = [
   "api/link_raw_api.cpp",
   "api/logging_api.cpp",
   "api/message_api.cpp",
+  "api/multi_radio_api.cpp",
   "api/netdata_api.cpp",
   "api/netdiag_api.cpp",
   "api/network_time_api.cpp",
@@ -325,6 +320,8 @@ openthread_core_files = [
   "api/random_noncrypto_api.cpp",
   "api/server_api.cpp",
   "api/sntp_api.cpp",
+  "api/srp_client_api.cpp",
+  "api/srp_server_api.cpp",
   "api/tasklet_api.cpp",
   "api/thread_api.cpp",
   "api/thread_ftd_api.cpp",
@@ -341,6 +338,11 @@ openthread_core_files = [
   "backbone_router/multicast_listeners_table.hpp",
   "backbone_router/ndproxy_table.cpp",
   "backbone_router/ndproxy_table.hpp",
+  "border_router/infra_if_platform.cpp",
+  "border_router/router_advertisement.cpp",
+  "border_router/router_advertisement.hpp",
+  "border_router/routing_manager.cpp",
+  "border_router/routing_manager.hpp",
   "coap/coap.cpp",
   "coap/coap.hpp",
   "coap/coap_message.cpp",
@@ -356,9 +358,12 @@ openthread_core_files = [
   "common/debug.hpp",
   "common/encoding.hpp",
   "common/equatable.hpp",
+  "common/error.cpp",
+  "common/error.hpp",
   "common/extension.hpp",
   "common/instance.cpp",
   "common/instance.hpp",
+  "common/iterator_utils.hpp",
   "common/linked_list.hpp",
   "common/locator-getters.hpp",
   "common/locator.hpp",
@@ -397,12 +402,14 @@ openthread_core_files = [
   "crypto/aes_ecb.hpp",
   "crypto/ecdsa.cpp",
   "crypto/ecdsa.hpp",
+  "crypto/hkdf_sha256.cpp",
+  "crypto/hkdf_sha256.hpp",
   "crypto/hmac_sha256.cpp",
   "crypto/hmac_sha256.hpp",
   "crypto/mbedtls.cpp",
   "crypto/mbedtls.hpp",
   "crypto/pbkdf2_cmac.cpp",
-  "crypto/pbkdf2_cmac.h",
+  "crypto/pbkdf2_cmac.hpp",
   "crypto/sha256.cpp",
   "crypto/sha256.hpp",
   "diags/factory_diags.cpp",
@@ -421,6 +428,8 @@ openthread_core_files = [
   "mac/mac_filter.hpp",
   "mac/mac_frame.cpp",
   "mac/mac_frame.hpp",
+  "mac/mac_links.cpp",
+  "mac/mac_links.hpp",
   "mac/mac_types.cpp",
   "mac/mac_types.hpp",
   "mac/sub_mac.cpp",
@@ -439,6 +448,8 @@ openthread_core_files = [
   "meshcop/dataset_manager.cpp",
   "meshcop/dataset_manager.hpp",
   "meshcop/dataset_manager_ftd.cpp",
+  "meshcop/dataset_updater.cpp",
+  "meshcop/dataset_updater.hpp",
   "meshcop/dtls.cpp",
   "meshcop/dtls.hpp",
   "meshcop/energy_scan_client.cpp",
@@ -466,7 +477,10 @@ openthread_core_files = [
   "net/dhcp6_server.hpp",
   "net/dns_client.cpp",
   "net/dns_client.hpp",
-  "net/dns_headers.hpp",
+  "net/dns_types.cpp",
+  "net/dns_types.hpp",
+  "net/dnssd_server.cpp",
+  "net/dnssd_server.hpp",
   "net/icmp6.cpp",
   "net/icmp6.hpp",
   "net/ip6.cpp",
@@ -483,14 +497,26 @@ openthread_core_files = [
   "net/netif.hpp",
   "net/sntp_client.cpp",
   "net/sntp_client.hpp",
+  "net/socket.cpp",
   "net/socket.hpp",
+  "net/srp_client.cpp",
+  "net/srp_client.hpp",
+  "net/srp_server.cpp",
+  "net/srp_server.hpp",
   "net/tcp.hpp",
   "net/udp6.cpp",
   "net/udp6.hpp",
+  "radio/max_power_table.hpp",
   "radio/radio.cpp",
   "radio/radio.hpp",
   "radio/radio_callbacks.cpp",
   "radio/radio_platform.cpp",
+  "radio/trel_interface.cpp",
+  "radio/trel_interface.hpp",
+  "radio/trel_link.cpp",
+  "radio/trel_link.hpp",
+  "radio/trel_packet.cpp",
+  "radio/trel_packet.hpp",
   "thread/address_resolver.cpp",
   "thread/address_resolver.hpp",
   "thread/announce_begin_server.cpp",
@@ -546,12 +572,16 @@ openthread_core_files = [
   "thread/network_data_local.hpp",
   "thread/network_data_notifier.cpp",
   "thread/network_data_notifier.hpp",
+  "thread/network_data_service.cpp",
+  "thread/network_data_service.hpp",
   "thread/network_data_tlvs.hpp",
   "thread/network_diagnostic.cpp",
   "thread/network_diagnostic.hpp",
   "thread/network_diagnostic_tlvs.hpp",
   "thread/panid_query_server.cpp",
   "thread/panid_query_server.hpp",
+  "thread/radio_selector.cpp",
+  "thread/radio_selector.hpp",
   "thread/router_table.cpp",
   "thread/router_table.hpp",
   "thread/src_match_controller.cpp",
@@ -573,8 +603,6 @@ openthread_core_files = [
   "utils/channel_monitor.hpp",
   "utils/child_supervision.cpp",
   "utils/child_supervision.hpp",
-  "utils/dataset_updater.cpp",
-  "utils/dataset_updater.hpp",
   "utils/flash.cpp",
   "utils/flash.hpp",
   "utils/heap.cpp",
@@ -593,11 +621,13 @@ openthread_core_files = [
 
 openthread_radio_sources = [
   "api/diags_api.cpp",
+  "api/error_api.cpp",
   "api/instance_api.cpp",
   "api/link_raw_api.cpp",
   "api/logging_api.cpp",
   "api/random_noncrypto_api.cpp",
   "api/tasklet_api.cpp",
+  "common/error.hpp",
   "common/instance.cpp",
   "common/logging.cpp",
   "common/random_manager.cpp",
@@ -643,6 +673,8 @@ source_set("libopenthread_core_config") {
     "config/dhcp6_server.h",
     "config/diag.h",
     "config/dns_client.h",
+    "config/dnssd_server.h",
+    "config/dtls.h",
     "config/ip6.h",
     "config/joiner.h",
     "config/link_quality.h",
@@ -654,7 +686,10 @@ source_set("libopenthread_core_config") {
     "config/openthread-core-default-config.h",
     "config/parent_search.h",
     "config/platform.h",
+    "config/radio_link.h",
     "config/sntp_client.h",
+    "config/srp_client.h",
+    "config/srp_server.h",
     "config/time_sync.h",
     "config/tmf.h",
     "openthread-core-config.h",

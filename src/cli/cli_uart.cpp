@@ -152,7 +152,7 @@ void Uart::ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
             break;
 
 #if !OPENTHREAD_CONFIG_UART_CLI_RAW
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
 
         case 0x03: // ASCII for Ctrl-C
             kill(0, SIGINT);
@@ -227,7 +227,7 @@ otError Uart::ProcessCommand(void)
 #endif
     if (mRxLength > 0)
     {
-        ProcessLine(mRxBuffer, mRxLength);
+        ProcessLine(mRxBuffer);
     }
 
     mRxLength = 0;

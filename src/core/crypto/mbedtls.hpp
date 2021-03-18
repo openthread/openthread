@@ -38,6 +38,7 @@
 
 #include <openthread/instance.h>
 
+#include "common/error.hpp"
 #include "common/non_copyable.hpp"
 
 namespace ot {
@@ -68,10 +69,10 @@ public:
      *
      * @param[in] aMbedTlsError  The mbed TLS error.
      *
-     * @returns The mapped otError.
+     * @returns The mapped Error.
      *
      */
-    static otError MapError(int aMbedTlsError);
+    static Error MapError(int aMbedTlsError);
 };
 
 /**

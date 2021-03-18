@@ -38,8 +38,103 @@ jobs:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+      if: "github.ref != 'refs/heads/main'"
 
+  expects-macos:
+    runs-on: macos-10.15
+    env:
+      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15 -DOPENTHREAD_CONFIG_MAC_SCAN_DURATION=500
+      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15 -DOPENTHREAD_CONFIG_MAC_SCAN_DURATION=500
+      CC: clang
+      CXX: clang++
+      THREAD_VERSION: 1.1
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        brew install ninja
+    - name: Run RCP Mode
+      run: |
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_APP_NCP=OFF' OT_NODE_TYPE=rcp-cli ./script/test build expect
+    - name: Run Native IP Mode
+      run: |
+        brew install dnsmasq
+        echo 'listen-address=::1' | sudo tee $(brew --prefix)/etc/dnsmasq.conf
+        sudo brew services start dnsmasq
+        host ipv6.google.com ::1
+        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 OT_NODE_TYPE=rcp-cli ./script/test clean build expect
+
+  expects-linux:
+    runs-on: ubuntu-18.04
+    env:
+      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
+      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15
+    steps:
+    - uses: actions/checkout@v2
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
+    - name: Run RCP Mode
+      run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test build expect
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED_RCP=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED_RCP == '1' }}
+      with:
+        name: core-expect-rcp
+        path: |
+          ./ot-core-dump/*
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-expects-linux-1
+        path: tmp/coverage.info
+    - name: Run TUN Mode
+      run: |
+        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+        sudo apt-get install --no-install-recommends -y dnsmasq bind9-host ntp
+        sudo systemctl start dnsmasq ntp
+        host ipv6.google.com 127.0.0.1
+        echo 'listen-address=::1' | sudo tee /etc/dnsmasq.conf
+        echo 0 | sudo tee /proc/sys/net/ipv6/conf/all/disable_ipv6
+        sudo systemctl restart dnsmasq
+        host ipv6.google.com ::1
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        OT_OPTIONS='-DOT_READLINE=OFF -DOT_FULL_LOGS=ON -DOT_LOG_OUTPUT=PLATFORM_DEFINED' OT_NATIVE_IP=1 VIRTUAL_TIME=0 OT_NODE_TYPE=rcp ./script/test clean build expect
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED_TUN=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED_TUN == '1' }}
+      with:
+        name: core-expect-posix
+        path: |
+          ./ot-core-dump/*
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() }}
+      with:
+        name: syslog-expect-posix
+        path: /var/log/syslog
+    - name: Generate Coverage
+      run: |
+        ./script/test generate_coverage gcc
+    - uses: actions/upload-artifact@v2
+      with:
+        name: cov-expects-linux-2
+        path: tmp/coverage.info
 
   posix-cli:
     runs-on: ubuntu-20.04
@@ -48,10 +143,13 @@ jobs:
       PYTHONUNBUFFERED: 1
       READLINE: readline
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -70,27 +168,12 @@ jobs:
       with:
         name: posix-cli-thread-cert
         path: build/posix/tests/scripts/thread-cert
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-cli-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-cli-2
+        name: cov-posix-cli
         path: tmp/coverage.info
 
   posix-ncp:
@@ -101,10 +184,13 @@ jobs:
       PYTHONUNBUFFERED: 1
       READLINE: readline
       REFERENCE_DEVICE: 1
+      THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
       VIRTUAL_TIME_UART: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -124,27 +210,12 @@ jobs:
       with:
         name: posix-ncp-thread-cert
         path: build/posix/tests/scripts/thread-cert
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-ncp-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-ncp-2
+        name: cov-posix-ncp
         path: tmp/coverage.info
 
   posix-ncp-rcp-migrate:
@@ -153,6 +224,8 @@ jobs:
       COVERAGE: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -164,27 +237,12 @@ jobs:
     - name: Run
       run: |
         script/check-ncp-rcp-migrate check
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-ncp-rcp-migrate-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-ncp-rcp-migrate-2
+        name: cov-posix-ncp-rcp-migrate
         path: tmp/coverage.info
 
   posix-pty:
@@ -193,6 +251,8 @@ jobs:
       COVERAGE: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -212,27 +272,12 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-pty-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-pty-2
+        name: cov-posix-pty
         path: tmp/coverage.info
 
   posix-pty-daemon:
@@ -242,6 +287,8 @@ jobs:
       DAEMON: 1
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -261,31 +308,17 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
-    - name: Keep Simulation Only
-      run: |
-        tar -cf build/posix.tar -C build/ posix/
-        rm -rf build/posix/
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-pty-daemon-1
-        path: tmp/coverage.info
-    - name: Keep POSIX Only
-      run: |
-        rm -rf build/simulation/
-        tar -xf build/posix.tar -C build/
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-pty-daemon-2
+        name: cov-posix-pty-daemon
         path: tmp/coverage.info
 
   upload-coverage:
     needs:
+    - expects-linux
     - posix-cli
     - posix-ncp
     - posix-ncp-rcp-migrate
@@ -294,6 +327,8 @@ jobs:
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y lcov
@@ -303,3 +338,13 @@ jobs:
     - name: Upload Coverage
       run: |
         script/test upload_codecov
+
+  delete-coverage-artifacts:
+    needs: upload-coverage
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: geekyeggo/delete-artifact@1-glob-support
+      with:
+        name: cov-*
+        useGlob: true

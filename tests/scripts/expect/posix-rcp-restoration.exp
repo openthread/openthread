@@ -31,6 +31,9 @@ source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
 
+# The expect on macOS doesn't support `try` or `file tempfile`.
+skip_on_macos
+
 file tempfile socat_out
 set socat_pid [exec socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$socat_out &]
 while {true} {
@@ -70,34 +73,28 @@ try {
     setup_two_nodes "-" false
 
     switch_node 2
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_2 $expect_out(1,string)
+    set addr_2 [get_ipaddr mleid]
     send "udp open\n"
-    expect "Done"
+    expect_line "Done"
     send "udp bind :: 11003\n"
-    expect "Done"
+    expect_line "Done"
     send "pollperiod 100000\n"
-    expect "Done"
+    expect_line "Done"
 
     sleep 1
 
     switch_node 1
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_1 $expect_out(1,string)
+    set addr_1 [get_ipaddr mleid]
     send "udp open\n"
-    expect "Done"
+    expect_line "Done"
     send "udp bind :: 11004\n"
-    expect "Done"
+    expect_line "Done"
     send "udp connect $addr_2 11003\n"
-    expect "Done"
+    expect_line "Done"
     send "udp send hello\n"
-    expect "Done"
+    expect_line "Done"
     send "udp send there\n"
-    expect "Done"
+    expect_line "Done"
 
     sleep 1
 
@@ -107,9 +104,11 @@ try {
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
 
+    sleep 1
+
     switch_node 2
     send "pollperiod 1000\n"
-    expect "Done"
+    expect_line "Done"
     expect "5 bytes from $addr_1 11004 hello"
     expect "5 bytes from $addr_1 11004 there"
 
@@ -130,32 +129,26 @@ try {
     setup_two_nodes "-" false
 
     switch_node 2
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_2 $expect_out(1,string)
+    set addr_2 [get_ipaddr mleid]
     send "udp open\n"
-    expect "Done"
+    expect_line "Done"
     send "udp bind :: 11003\n"
-    expect "Done"
+    expect_line "Done"
     send "pollperiod 100000\n"
-    expect "Done"
+    expect_line "Done"
 
     sleep 1
 
     switch_node 1
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr_1 $expect_out(1,string)
+    set addr_1 [get_ipaddr mleid]
     send "udp open\n"
-    expect "Done"
+    expect_line "Done"
     send "udp bind :: 11004\n"
-    expect "Done"
+    expect_line "Done"
     send "udp connect $addr_2 11003\n"
-    expect "Done"
+    expect_line "Done"
     send "udp send hello\n"
-    expect "Done"
+    expect_line "Done"
 
     sleep 1
 
@@ -169,7 +162,7 @@ try {
 
     switch_node 2
     send "pollperiod 1000\n"
-    expect "Done"
+    expect_line "Done"
     expect "5 bytes from $addr_1 11004 hello"
 
     dispose_all
@@ -184,46 +177,25 @@ try {
     puts "Many children, queued child-to-child packets"
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
-    send "panid 0xface\n"
-    expect "Done"
-    send "ifconfig up\n"
-    expect "Done"
-    send "thread start\n"
-    expect "Done"
-    wait_for "state" "leader"
-    expect "Done"
-    send "ipaddr mleid\n"
-    expect "ipaddr mleid"
-    expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-    set addr(1) $expect_out(1,string)
+    setup_leader
+    set addr(1) [get_ipaddr mleid]
     send "udp open\n"
-    expect "Done"
+    expect_line "Done"
     send "udp bind :: 11004\n"
-    expect "Done"
+    expect_line "Done"
 
-    set max_children 15
+    set max_children 10
     for {set i 2} {$i <= $max_children + 1} {incr i} {
         spawn_node $i
-        send "mode -\n"
-        expect "Done"
-        send "panid 0xface\n"
-        expect "Done"
-        send "ifconfig up\n"
-        expect "Done"
-        send "thread start\n"
-        expect "Done"
-        wait_for "state" "child"
-        send "ipaddr mleid\n"
-        expect "ipaddr mleid"
-        expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
-        set addr($i) $expect_out(1,string)
-        expect "Done"
+        setup_node $i "-"
+        switch_node $i
+        set addr($i) [get_ipaddr mleid]
         send "udp open\n"
-        expect "Done"
+        expect_line "Done"
         send "udp bind :: 11003\n"
-        expect "Done"
+        expect_line "Done"
         send "pollperiod 100000\n"
-        expect "Done"
+        expect_line "Done"
     }
 
     sleep 1
@@ -231,7 +203,7 @@ try {
     switch_node 1
     for {set i 2} {$i <= $max_children + 1} {incr i} {
         send "udp send $addr($i) 11003 hello\n"
-        expect "Done"
+        expect_line "Done"
     }
 
     sleep 1
@@ -242,16 +214,18 @@ try {
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
 
+    sleep 1
+
     for {set i 7} {$i <= 9} {incr i} {
         switch_node $i
         send "pollperiod 1000\n"
-        expect "Done"
+        expect_line "Done"
         expect "5 bytes from $addr(1) 11004 hello"
     }
 
     switch_node 4
     send "udp send $addr(5) 11003 hello_from_node_4\n"
-    expect "Done"
+    expect_line "Done"
     if {$::env(THREAD_VERSION) != "1.1"} {
         expect "5 bytes from $addr(1) 11004 hello"
     }
@@ -264,9 +238,11 @@ try {
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
 
+    sleep 1
+
     switch_node 5
     send "pollperiod 1000\n"
-    expect "Done"
+    expect_line "Done"
     expect "17 bytes from $addr(4) 11003 hello_from_node_4"
 
     dispose_all
@@ -276,11 +252,11 @@ try {
 
     spawn_node 1 "rcp" "spinel+hdlc_uart://$host_pty"
     send "ifconfig up\n"
-    expect "Done"
+    expect_line "Done"
     send "thread start\n"
-    expect "Done"
+    expect_line "Done"
     wait_for "state" "leader"
-    expect "Done"
+    expect_line "Done"
 
     send "scan energy 100\n"
     expect "| Ch | RSSI |"
@@ -294,10 +270,12 @@ try {
     set rcp_pid [exec $::env(OT_SIMULATION_APPS)/ncp/ot-rcp 1 < $radio_pty > $radio_pty &]
     puts "RCP PID: $rcp_pid"
 
+    sleep 1
+
     for {set i 11} {$i <= 26} {incr i} {
         expect -re "\\| +$i \\| +-?\\d+ \\|"
     }
-    expect "Done"
+    expect_line "Done"
 
     dispose_all
 } finally {

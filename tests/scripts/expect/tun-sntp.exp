@@ -27,27 +27,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set OSTYPE [lindex $tcl_platform(os) 0]
-
-if { $OSTYPE == "Darwin" } {
-    exit 77
-}
-
 source "tests/scripts/expect/_common.exp"
+
+skip_on_macos
 
 spawn_node 1
 
 send "panid 0xface\n"
-expect "Done"
+expect_line "Done"
 send "ifconfig up\n"
-expect "Done"
+expect_line "Done"
 send "thread start\n"
-expect "Done"
+expect_line "Done"
 wait_for "state" "leader"
-expect "Done"
+expect_line "Done"
 
 send "sntp query ::1 123\n"
 expect -re {SNTP response - Unix time: \d+ \(era: \d+\)}
-expect "Done"
+expect_line "Done"
 
 dispose_all

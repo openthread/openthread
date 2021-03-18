@@ -58,12 +58,12 @@ void SuccessRateTracker::AddSample(bool aSuccess, uint16_t aWeight)
     mFailureRate = static_cast<uint16_t>(((oldAverage * (n - 1)) + newValue + (n / 2)) / n);
 }
 
-otError RssAverager::Add(int8_t aRss)
+Error RssAverager::Add(int8_t aRss)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     uint16_t newValue;
 
-    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aRss != OT_RADIO_RSSI_INVALID, error = kErrorInvalidArgs);
 
     // Restrict the RSS value to the closed range [0, -128] so the RSS times precision multiple can fit in 11 bits.
     if (aRss > 0)
@@ -234,17 +234,17 @@ uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLast
     case 0:
         threshold1 += kHysteresisThreshold;
 
-        // fall-through
+        OT_FALL_THROUGH;
 
     case 1:
         threshold2 += kHysteresisThreshold;
 
-        // fall-through
+        OT_FALL_THROUGH;
 
     case 2:
         threshold3 += kHysteresisThreshold;
 
-        // fall-through
+        OT_FALL_THROUGH;
 
     default:
         break;

@@ -104,8 +104,10 @@
 #define MBEDTLS_BASE64_C
 #define MBEDTLS_ECDH_C
 #define MBEDTLS_ECDSA_C
+#define MBEDTLS_ECDSA_DETERMINISTIC
 #define MBEDTLS_OID_C
 #define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PK_WRITE_C
 #endif
 
 #define MBEDTLS_MPI_WINDOW_SIZE            1 /**< Maximum windows size used. */
@@ -115,7 +117,7 @@
 #define MBEDTLS_ECP_FIXED_POINT_OPTIM      0 /**< Enable fixed-point speed-up */
 #define MBEDTLS_ENTROPY_MAX_SOURCES        1 /**< Maximum number of sources supported */
 
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #define MBEDTLS_PLATFORM_STD_CALLOC      otPlatCAlloc /**< Default allocator to use, can be undefined */
 #define MBEDTLS_PLATFORM_STD_FREE        otPlatFree /**< Default free to use, can be undefined */
 #else

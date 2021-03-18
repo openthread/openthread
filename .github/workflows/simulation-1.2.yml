@@ -38,7 +38,7 @@ jobs:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+      if: "github.ref != 'refs/heads/main'"
 
   thread-1-2:
     name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
@@ -59,6 +59,8 @@ jobs:
         arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -66,7 +68,6 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        ./bootstrap
         ./script/test build
     - name: Run
       run: |
@@ -74,55 +75,29 @@ jobs:
         ./script/test prepare_coredump_upload
         ./script/test unit
         ./script/test cert_suite tests/scripts/thread-cert/v1_2_*
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
         name: thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-pcaps
         path: "*.pcap"
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && env.CRASHED == '1' }}
       with:
-        name: core-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
+        name: core-packet-verification-thread-1-2
         path: |
-          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
-          ./so-lib/*
-    - name: Keep-1-2-only
-      run: |
-        ./script/test tar simulation 1.1
-        ./script/test tar simulation 1.2-bbr
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-1
-        path: tmp/coverage.info
-    - name: Keep-1-2-bbr-only
-      run: |
-        ./script/test tar simulation 1.2
-        ./script/test untar simulation 1.2-bbr
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-2
-        path: tmp/coverage.info
-    - name: Keep-1-1-only
-      run: |
-        ./script/test tar simulation 1.2-bbr
-        ./script/test untar simulation 1.1
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage "${{ matrix.compiler.gcov }}"
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}-3
+        name: cov-thread-1-2-${{ matrix.compiler.c }}-${{ matrix.arch }}
         path: tmp/coverage.info
 
   packet-verification-low-power:
@@ -135,8 +110,11 @@ jobs:
       THREAD_VERSION: 1.2
       MAC_FILTER: 1
       INTER_OP: 1
+      INTER_OP_BBR: 0
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -156,10 +134,12 @@ jobs:
         do
           ./script/test cert_suite ./tests/scripts/thread-cert/v1_2_LowPower*.py
         done
-    - name: Copy Shared Libraries
+    - name: Check Crash
       if: ${{ failure() }}
       run: |
-          ./script/test copy_so_lib
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -168,34 +148,17 @@ jobs:
           *.pcap
           *.json
     - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
+      if: ${{ failure() && env.CRASHED == '1' }}
       with:
         name: core-packet-verification-low-power
         path: |
-          ./build/cmake/openthread-simulation-1.2/examples/apps/cli/ot-cli-*
-          ./build/cmake/openthread-simulation-1.1/examples/apps/cli/ot-cli-*
           ./ot-core-dump/*
-          ./so-lib/*
-    - name: Keep-1-2-only
-      run: |
-        ./script/test tar simulation 1.2-bbr
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-packet-verification-low-power-1
-        path: tmp/coverage.info
-    - name: Keep-1-2-bbr-only
-      run: |
-        ./script/test tar simulation 1.2
-        ./script/test untar simulation 1.2-bbr
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-packet-verification-low-power-2
+        name: cov-packet-verification-low-power
         path: tmp/coverage.info
 
   packet-verification-1-1-on-1-2:
@@ -207,6 +170,8 @@ jobs:
       THREAD_VERSION: 1.2
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
@@ -247,19 +212,28 @@ jobs:
       VIRTUAL_TIME: 0
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y expect ninja-build lcov socat
     - name: Run RCP Mode
       run: |
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
         OT_OPTIONS=-DOT_READLINE=OFF OT_NODE_TYPE=rcp ./script/test build expect
-    - name: Keep-1-2-only
+    - name: Check Crash
+      if: ${{ failure() }}
       run: |
-        ./script/test tar posix 1.2-bbr
-        ./script/test tar simulation 1.2-bbr
-    - name: Keep POSIX Only
-      run: |
-        ./script/test tar simulation 1.2
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-expect-1-2
+        path: |
+          ./ot-core-dump/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
@@ -268,57 +242,62 @@ jobs:
         name: cov-expects
         path: tmp/coverage.info
 
-  thread-1-2-backbone:
-    runs-on: ubuntu-18.04
+  thread-1-2-posix:
+    runs-on: ubuntu-20.04
     env:
-      REFERENCE_DEVICE: 1
-      VIRTUAL_TIME: 0
-      PACKET_VERIFICATION: 1
-      THREAD_VERSION: 1.2
-      INTER_OP: 1
       COVERAGE: 1
-      MULTIPLY: 1
       PYTHONUNBUFFERED: 1
-      VERBOSE: 1
+      READLINE: readline
+      THREAD_VERSION: 1.2
+      OT_NODE_TYPE: rcp
+      USE_MTD: 1
+      VIRTUAL_TIME: 1
+      INTER_OP: 1
     steps:
     - uses: actions/checkout@v2
-    - name: Build OTBR Docker
-      run: |
-        ./script/test build_otbr_docker
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel ninja-build socat lcov
+        sudo apt-get --no-install-recommends install -y libreadline6-dev g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
         ./script/test build
-    - name: Get Thread-Wireshark
-      run: |
-        ./script/test get_thread_wireshark
     - name: Run
       run: |
-        export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
-        echo "CI_ENV=${CI_ENV}"
-        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/backbone/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-thread-1-2-backbone-docker
-        path: /tmp/coverage/
+        ulimit -c unlimited
+        ./script/test prepare_coredump_upload
+        ./script/test cert tests/scripts/thread-cert/v1_2_LowPower_5_3_01_SSEDAttachment.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_LowPower_6_1_07_PreferringARouterOverAReed.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_csl_transmission.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_enhanced_frame_pending.py
+        ./script/test cert tests/scripts/thread-cert/v1_2_test_parent_selection.py
+    - name: Check Crash
+      if: ${{ failure() }}
+      run: |
+          CRASHED=$(./script/test check_crash | tail -1)
+          [[ $CRASHED -eq "1" ]] && echo "Crashed!" || echo "Not crashed."
+          echo "CRASHED=$CRASHED" >> $GITHUB_ENV
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
-        name: thread-1-2-backbone-results
+        name: thread-1-2-posix-pcaps
+        path: "*.pcap"
+    - uses: actions/upload-artifact@v2
+      if: ${{ failure() && env.CRASHED == '1' }}
+      with:
+        name: core-thread-1-2-posix
         path: |
-          *.pcap
-          *.json
-          *.log
+            ./ot-core-dump/*
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-thread-1-2-backbone
+        name: cov-thread-1-2-posix
         path: tmp/coverage.info
 
   upload-coverage:
@@ -327,10 +306,12 @@ jobs:
     - packet-verification-low-power
     - packet-verification-1-1-on-1-2
     - expects
-    - thread-1-2-backbone
+    - thread-1-2-posix
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
+      with:
+        submodules: true
     - name: Bootstrap
       run: |
         sudo apt-get --no-install-recommends install -y lcov
@@ -340,3 +321,13 @@ jobs:
     - name: Upload Coverage
       run: |
         script/test upload_codecov
+
+  delete-coverage-artifacts:
+    needs: upload-coverage
+    if: always()
+    runs-on: ubuntu-20.04
+    steps:
+    - uses: geekyeggo/delete-artifact@1-glob-support
+      with:
+        name: cov-*
+        useGlob: true

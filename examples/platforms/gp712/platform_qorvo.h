@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2017, The OpenThread Authors.
+ *  Copyright (c) 2019, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,6 @@
 #define PLATFORM_QORVO_H_
 
 #include <openthread-core-config.h>
-#include <openthread/config.h>
 
 #include <stdbool.h>
 #include <stdint.h>

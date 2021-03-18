@@ -53,6 +53,45 @@ extern "C" {
  */
 
 /**
+ * This method initializes the Border Routing Manager on given infrastructure interface.
+ *
+ * @note  This method MUST be called before any other otBorderRouting* APIs.
+ *
+ * @param[in]  aInstance                 A pointer to an OpenThread instance.
+ * @param[in]  aInfraIfIndex             The infrastructure interface index.
+ * @param[in]  aInfraIfIsRunning         A boolean that indicates whether the infrastructure
+ *                                       interface is running.
+ * @param[in]  aInfraIfLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
+ *                                       interface. NULL if the IPv6 link-local address is missing.
+ *
+ * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager has already been initialized.
+ * @retval  OT_ERROR_INVALID_ARGS   The index or the IPv6 link-local address of the infra interface is not valid.
+ * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
+ *
+ * @sa otPlatInfraIfStateChanged.
+ *
+ */
+otError otBorderRoutingInit(otInstance *        aInstance,
+                            uint32_t            aInfraIfIndex,
+                            bool                aInfraIfIsRunning,
+                            const otIp6Address *aInfraIfLinkLocalAddress);
+
+/**
+ * This method enables/disables the Border Routing Manager.
+ *
+ * @note  The Border Routing Manager is disabled by default.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   A boolean to enable/disable the routing manager.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully enabled/disabled the Border Routing Manager.
+ *
+ */
+otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.

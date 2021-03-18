@@ -45,10 +45,12 @@ CHANNEL_MANAGER                      ?= 1
 CHANNEL_MONITOR                      ?= 1
 CHILD_SUPERVISION                    ?= 1
 DAEMON                               ?= 0
+DATASET_UPDATER                      ?= 1
 DHCP6_CLIENT                         ?= 1
 DHCP6_SERVER                         ?= 1
 DIAGNOSTIC                           ?= 1
 DNS_CLIENT                           ?= 1
+DNSSD_SERVER                         ?= 1
 DYNAMIC_LOG_LEVEL                    ?= 1
 ECDSA                                ?= 1
 IP6_FRAGM                            ?= 1
@@ -64,6 +66,8 @@ READLINE                             ?= readline
 REFERENCE_DEVICE                     ?= 1
 SERVICE                              ?= 1
 SNTP_CLIENT                          ?= 1
+SRP_CLIENT                           ?= 1
+SRP_SERVER                           ?= 1
 ifneq ($(DAEMON),1)
 UDP_FORWARD                          ?= 1
 endif

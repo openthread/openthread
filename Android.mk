@@ -28,6 +28,8 @@
 
 LOCAL_PATH := $(call my-dir)
 
+ifeq ($(OPENTHREAD_ENABLE_ANDROID_MK),1)
+
 OPENTHREAD_DEFAULT_VERSION := $(shell cat $(LOCAL_PATH)/.default-version)
 OPENTHREAD_SOURCE_VERSION := $(shell git -C $(LOCAL_PATH) describe --always --match "[0-9].*" 2> /dev/null)
 
@@ -43,7 +45,6 @@ OPENTHREAD_PUBLIC_CFLAGS                                         := \
     -DOPENTHREAD_CONFIG_MAC_FILTER_ENABLE=1                         \
     -DOPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE=1                      \
     -DOPENTHREAD_FTD=1                                              \
-    -DOPENTHREAD_POSIX=1                                            \
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1          \
     $(NULL)
 
@@ -145,14 +146,24 @@ LOCAL_CPPFLAGS                                                              := \
     -pedantic-errors                                                           \
     $(NULL)
 
+ifeq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+
+LOCAL_CFLAGS                                             += \
+    -DOPENTHREAD_ENABLE_ANDROID_NDK=1                       \
+    $(NULL)
+endif
+
 LOCAL_SRC_FILES                                          := \
     src/core/api/backbone_router_api.cpp                    \
     src/core/api/backbone_router_ftd_api.cpp                \
+    src/core/api/border_agent_api.cpp                       \
     src/core/api/border_router_api.cpp                      \
     src/core/api/channel_manager_api.cpp                    \
     src/core/api/channel_monitor_api.cpp                    \
     src/core/api/child_supervision_api.cpp                  \
     src/core/api/coap_api.cpp                               \
+    src/core/api/coap_secure_api.cpp                        \
     src/core/api/commissioner_api.cpp                       \
     src/core/api/crypto_api.cpp                             \
     src/core/api/dataset_api.cpp                            \
@@ -160,6 +171,9 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/dataset_updater_api.cpp                    \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
+    src/core/api/entropy_api.cpp                            \
+    src/core/api/error_api.cpp                              \
+    src/core/api/heap_api.cpp                               \
     src/core/api/icmp6_api.cpp                              \
     src/core/api/instance_api.cpp                           \
     src/core/api/ip6_api.cpp                                \
@@ -170,11 +184,16 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/link_raw_api.cpp                           \
     src/core/api/logging_api.cpp                            \
     src/core/api/message_api.cpp                            \
+    src/core/api/multi_radio_api.cpp                        \
     src/core/api/netdata_api.cpp                            \
     src/core/api/netdiag_api.cpp                            \
+    src/core/api/network_time_api.cpp                       \
     src/core/api/random_crypto_api.cpp                      \
     src/core/api/random_noncrypto_api.cpp                   \
     src/core/api/server_api.cpp                             \
+    src/core/api/sntp_api.cpp                               \
+    src/core/api/srp_client_api.cpp                         \
+    src/core/api/srp_server_api.cpp                         \
     src/core/api/tasklet_api.cpp                            \
     src/core/api/thread_api.cpp                             \
     src/core/api/thread_ftd_api.cpp                         \
@@ -185,10 +204,14 @@ LOCAL_SRC_FILES                                          := \
     src/core/backbone_router/bbr_manager.cpp                \
     src/core/backbone_router/multicast_listeners_table.cpp  \
     src/core/backbone_router/ndproxy_table.cpp              \
+    src/core/border_router/infra_if_platform.cpp            \
+    src/core/border_router/router_advertisement.cpp         \
+    src/core/border_router/routing_manager.cpp              \
     src/core/coap/coap.cpp                                  \
     src/core/coap/coap_message.cpp                          \
     src/core/coap/coap_secure.cpp                           \
     src/core/common/crc16.cpp                               \
+    src/core/common/error.cpp                               \
     src/core/common/instance.cpp                            \
     src/core/common/logging.cpp                             \
     src/core/common/message.cpp                             \
@@ -203,6 +226,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/common/trickle_timer.cpp                       \
     src/core/crypto/aes_ccm.cpp                             \
     src/core/crypto/aes_ecb.cpp                             \
+    src/core/crypto/ecdsa.cpp                               \
+    src/core/crypto/hkdf_sha256.cpp                         \
     src/core/crypto/hmac_sha256.cpp                         \
     src/core/crypto/mbedtls.cpp                             \
     src/core/crypto/pbkdf2_cmac.cpp                         \
@@ -211,9 +236,11 @@ LOCAL_SRC_FILES                                          := \
     src/core/mac/channel_mask.cpp                           \
     src/core/mac/data_poll_handler.cpp                      \
     src/core/mac/data_poll_sender.cpp                       \
+    src/core/mac/link_raw.cpp                               \
     src/core/mac/mac.cpp                                    \
     src/core/mac/mac_filter.cpp                             \
     src/core/mac/mac_frame.cpp                              \
+    src/core/mac/mac_links.cpp                              \
     src/core/mac/mac_types.cpp                              \
     src/core/mac/sub_mac.cpp                                \
     src/core/mac/sub_mac_callbacks.cpp                      \
@@ -224,6 +251,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/meshcop/dataset_local.cpp                      \
     src/core/meshcop/dataset_manager.cpp                    \
     src/core/meshcop/dataset_manager_ftd.cpp                \
+    src/core/meshcop/dataset_updater.cpp                    \
     src/core/meshcop/dtls.cpp                               \
     src/core/meshcop/energy_scan_client.cpp                 \
     src/core/meshcop/joiner.cpp                             \
@@ -237,6 +265,8 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/dhcp6_client.cpp                           \
     src/core/net/dhcp6_server.cpp                           \
     src/core/net/dns_client.cpp                             \
+    src/core/net/dns_types.cpp                              \
+    src/core/net/dnssd_server.cpp                           \
     src/core/net/icmp6.cpp                                  \
     src/core/net/ip6.cpp                                    \
     src/core/net/ip6_address.cpp                            \
@@ -244,10 +274,17 @@ LOCAL_SRC_FILES                                          := \
     src/core/net/ip6_headers.cpp                            \
     src/core/net/ip6_mpl.cpp                                \
     src/core/net/netif.cpp                                  \
+    src/core/net/sntp_client.cpp                            \
+    src/core/net/socket.cpp                                 \
+    src/core/net/srp_client.cpp                             \
+    src/core/net/srp_server.cpp                             \
     src/core/net/udp6.cpp                                   \
     src/core/radio/radio.cpp                                \
     src/core/radio/radio_callbacks.cpp                      \
     src/core/radio/radio_platform.cpp                       \
+    src/core/radio/trel_interface.cpp                       \
+    src/core/radio/trel_link.cpp                            \
+    src/core/radio/trel_packet.cpp                          \
     src/core/thread/address_resolver.cpp                    \
     src/core/thread/announce_begin_server.cpp               \
     src/core/thread/announce_sender.cpp                     \
@@ -274,21 +311,25 @@ LOCAL_SRC_FILES                                          := \
     src/core/thread/network_data_leader_ftd.cpp             \
     src/core/thread/network_data_local.cpp                  \
     src/core/thread/network_data_notifier.cpp               \
+    src/core/thread/network_data_service.cpp                \
     src/core/thread/network_diagnostic.cpp                  \
     src/core/thread/panid_query_server.cpp                  \
+    src/core/thread/radio_selector.cpp                      \
     src/core/thread/router_table.cpp                        \
     src/core/thread/src_match_controller.cpp                \
     src/core/thread/thread_netif.cpp                        \
+    src/core/thread/time_sync_service.cpp                   \
     src/core/thread/tmf.cpp                                 \
     src/core/thread/topology.cpp                            \
     src/core/thread/uri_paths.cpp                           \
     src/core/utils/channel_manager.cpp                      \
     src/core/utils/channel_monitor.cpp                      \
     src/core/utils/child_supervision.cpp                    \
-    src/core/utils/dataset_updater.cpp                      \
+    src/core/utils/flash.cpp                                \
     src/core/utils/heap.cpp                                 \
     src/core/utils/jam_detector.cpp                         \
     src/core/utils/lookup_table.cpp                         \
+    src/core/utils/otns.cpp                                 \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \
@@ -301,7 +342,9 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/backbone.cpp                         \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
+    src/posix/platform/infra_if.cpp                         \
     src/posix/platform/logging.cpp                          \
+    src/posix/platform/memory.cpp                           \
     src/posix/platform/misc.cpp                             \
     src/posix/platform/multicast_routing.cpp                \
     src/posix/platform/netif.cpp                            \
@@ -312,12 +355,10 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/system.cpp                           \
     src/posix/platform/uart.cpp                             \
     src/posix/platform/udp.cpp                              \
-    third_party/mbedtls/repo/library/md.c                   \
-    third_party/mbedtls/repo/library/md_wrap.c              \
-    third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
-    third_party/mbedtls/repo/library/platform.c             \
-    third_party/mbedtls/repo/library/platform_util.c        \
-    third_party/mbedtls/repo/library/sha256.c               \
+    third_party/mbedtls/repo/library/aes.c                  \
+    third_party/mbedtls/repo/library/asn1parse.c            \
+    third_party/mbedtls/repo/library/asn1write.c            \
+    third_party/mbedtls/repo/library/base64.c               \
     third_party/mbedtls/repo/library/bignum.c               \
     third_party/mbedtls/repo/library/ccm.c                  \
     third_party/mbedtls/repo/library/cipher.c               \
@@ -325,18 +366,35 @@ LOCAL_SRC_FILES                                          := \
     third_party/mbedtls/repo/library/cmac.c                 \
     third_party/mbedtls/repo/library/ctr_drbg.c             \
     third_party/mbedtls/repo/library/debug.c                \
+    third_party/mbedtls/repo/library/ecdh.c                 \
+    third_party/mbedtls/repo/library/ecdsa.c                \
     third_party/mbedtls/repo/library/ecjpake.c              \
+    third_party/mbedtls/repo/library/ecp.c                  \
     third_party/mbedtls/repo/library/ecp_curves.c           \
     third_party/mbedtls/repo/library/entropy.c              \
     third_party/mbedtls/repo/library/entropy_poll.c         \
-    third_party/mbedtls/repo/library/ssl_cookie.c           \
+    third_party/mbedtls/repo/library/hmac_drbg.c            \
+    third_party/mbedtls/repo/library/md.c                   \
+    third_party/mbedtls/repo/library/md_wrap.c              \
+    third_party/mbedtls/repo/library/memory_buffer_alloc.c  \
+    third_party/mbedtls/repo/library/oid.c                  \
+    third_party/mbedtls/repo/library/pem.c                  \
+    third_party/mbedtls/repo/library/pk.c                   \
+    third_party/mbedtls/repo/library/pk_wrap.c              \
+    third_party/mbedtls/repo/library/pkparse.c              \
+    third_party/mbedtls/repo/library/pkwrite.c              \
+    third_party/mbedtls/repo/library/platform.c             \
+    third_party/mbedtls/repo/library/platform_util.c        \
+    third_party/mbedtls/repo/library/sha256.c               \
     third_party/mbedtls/repo/library/ssl_ciphersuites.c     \
     third_party/mbedtls/repo/library/ssl_cli.c              \
+    third_party/mbedtls/repo/library/ssl_cookie.c           \
     third_party/mbedtls/repo/library/ssl_srv.c              \
     third_party/mbedtls/repo/library/ssl_ticket.c           \
     third_party/mbedtls/repo/library/ssl_tls.c              \
-    third_party/mbedtls/repo/library/aes.c                  \
-    third_party/mbedtls/repo/library/ecp.c                  \
+    third_party/mbedtls/repo/library/threading.c            \
+    third_party/mbedtls/repo/library/x509.c                 \
+    third_party/mbedtls/repo/library/x509_crt.c             \
     $(OPENTHREAD_PROJECT_SRC_FILES)                         \
     $(NULL)
 
@@ -380,6 +438,8 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_joiner.cpp                    \
     src/cli/cli_network_data.cpp              \
+    src/cli/cli_srp_client.cpp                \
+    src/cli/cli_srp_server.cpp                \
     src/cli/cli_uart.cpp                      \
     src/cli/cli_udp.cpp                       \
     $(NULL)
@@ -390,6 +450,10 @@ include $(CLEAR_VARS)
 
 LOCAL_MODULE := ot-cli
 LOCAL_MODULE_TAGS := eng
+
+ifneq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+endif
 
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
@@ -471,6 +535,10 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := ot-ncp
 LOCAL_MODULE_TAGS := eng
 
+ifneq ($(ANDROID_NDK),1)
+LOCAL_SHARED_LIBRARIES := libcutils
+endif
+
 LOCAL_C_INCLUDES                                         := \
     $(OPENTHREAD_PROJECT_INCLUDES)                          \
     $(LOCAL_PATH)/include                                   \
@@ -541,3 +609,5 @@ endif # ($(USE_OTBR_DAEMON), 1)
 ifneq ($(OPENTHREAD_PROJECT_ANDROID_MK),)
 include $(OPENTHREAD_PROJECT_ANDROID_MK)
 endif
+
+endif # ($(OPENTHREAD_ENABLE_ANDROID_MK),1)

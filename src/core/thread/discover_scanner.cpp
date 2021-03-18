@@ -48,7 +48,7 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mHandler(nullptr)
     , mHandlerContext(nullptr)
-    , mTimer(aInstance, DiscoverScanner::HandleTimer, this)
+    , mTimer(aInstance, DiscoverScanner::HandleTimer)
     , mFilterIndexes()
     , mState(kStateIdle)
     , mScanChannel(0)
@@ -58,22 +58,22 @@ DiscoverScanner::DiscoverScanner(Instance &aInstance)
 {
 }
 
-otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
-                                  uint16_t                aPanId,
-                                  bool                    aJoiner,
-                                  bool                    aEnableFiltering,
-                                  const FilterIndexes *   aFilterIndexes,
-                                  Handler                 aCallback,
-                                  void *                  aContext)
+Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
+                                uint16_t                aPanId,
+                                bool                    aJoiner,
+                                bool                    aEnableFiltering,
+                                const FilterIndexes *   aFilterIndexes,
+                                Handler                 aCallback,
+                                void *                  aContext)
 {
-    otError                         error   = OT_ERROR_NONE;
+    Error                           error   = kErrorNone;
     Message *                       message = nullptr;
     Tlv                             tlv;
     Ip6::Address                    destination;
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
     MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
 
-    VerifyOrExit(mState == kStateIdle, error = OT_ERROR_BUSY);
+    VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
 
     mEnableFiltering = aEnableFiltering;
 
@@ -103,7 +103,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
         mScanChannels.Intersect(aScanChannels);
     }
 
-    VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = Get<Mle>().NewMleMessage()) != nullptr, error = kErrorNoBufs);
     message->SetSubType(Message::kSubTypeMleDiscoverRequest);
     message->SetPanId(aPanId);
     SuccessOrExit(error = Get<Mle>().AppendHeader(*message, Mle::kCommandDiscoveryRequest));
@@ -151,7 +151,7 @@ otError DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     }
 
     mScanChannel = Mac::ChannelMask::kChannelIteratorFirst;
-    mState       = (mScanChannels.GetNextChannel(mScanChannel) == OT_ERROR_NONE) ? kStateScanning : kStateScanDone;
+    mState       = (mScanChannels.GetNextChannel(mScanChannel) == kErrorNone) ? kStateScanning : kStateScanDone;
 
     Mle::Log(Mle::kMessageSend, Mle::kTypeDiscoveryRequest, destination);
 
@@ -160,13 +160,13 @@ exit:
     return error;
 }
 
-otError DiscoverScanner::SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength)
+Error DiscoverScanner::SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     VerifyOrExit((aAdvData != nullptr) && (aAdvDataLength != 0) &&
                      (aAdvDataLength <= MeshCoP::JoinerAdvertisementTlv::kAdvDataMaxLength) && (aOui <= kMaxOui),
-                 error = OT_ERROR_INVALID_ARGS);
+                 error = kErrorInvalidArgs);
 
     mOui           = aOui;
     mAdvDataLength = aAdvDataLength;
@@ -177,9 +177,9 @@ exit:
     return error;
 }
 
-otError DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
+Mac::TxFrame *DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
 {
-    otError error = OT_ERROR_NONE;
+    Mac::TxFrame *frame = &aFrame;
 
     switch (mState)
     {
@@ -188,16 +188,16 @@ otError DiscoverScanner::PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame)
         // If scan is finished (no more channels to scan), abort the
         // Discovery Request frame tx. The handler callback is invoked &
         // state is cleared from `HandleDiscoveryRequestFrameTxDone()`.
-        error = OT_ERROR_ABORT;
+        frame = nullptr;
         break;
 
     case kStateScanning:
-        aFrame.SetChannel(mScanChannel);
+        frame->SetChannel(mScanChannel);
         IgnoreError(Get<Mac::Mac>().SetTemporaryChannel(mScanChannel));
         break;
     }
 
-    return error;
+    return frame;
 }
 
 void DiscoverScanner::HandleDiscoveryRequestFrameTxDone(Message &aMessage)
@@ -234,7 +234,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
         mTimer.Stop();
         Get<MeshForwarder>().ResumeMessageTransmissions();
 
-        // Fall through
+        OT_FALL_THROUGH;
 
     case kStateScanDone:
         Get<Mac::Mac>().ClearTemporaryChannel();
@@ -258,7 +258,7 @@ void DiscoverScanner::HandleDiscoverComplete(void)
 
 void DiscoverScanner::HandleTimer(Timer &aTimer)
 {
-    aTimer.GetOwner<DiscoverScanner>().HandleTimer();
+    aTimer.Get<DiscoverScanner>().HandleTimer();
 }
 
 void DiscoverScanner::HandleTimer(void)
@@ -272,7 +272,7 @@ void DiscoverScanner::HandleTimer(void)
     // frame tx is aborted  from `PrepareDiscoveryRequestFrame()` and
     // then wraps up the scan (invoking handler callback).
 
-    if (mScanChannels.GetNextChannel(mScanChannel) != OT_ERROR_NONE)
+    if (mScanChannels.GetNextChannel(mScanChannel) != kErrorNone)
     {
         mState = kStateScanDone;
     }
@@ -285,7 +285,7 @@ exit:
 
 void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
 {
-    otError                       error    = OT_ERROR_NONE;
+    Error                         error    = kErrorNone;
     const ThreadLinkInfo *        linkInfo = aMessageInfo.GetThreadLinkInfo();
     Tlv                           tlv;
     MeshCoP::Tlv                  meshcopTlv;
@@ -298,10 +298,10 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
 
     Mle::Log(Mle::kMessageReceive, Mle::kTypeDiscoveryResponse, aMessageInfo.GetPeerAddr());
 
-    VerifyOrExit(mState == kStateScanning, error = OT_ERROR_DROP);
+    VerifyOrExit(mState == kStateScanning, error = kErrorDrop);
 
     // Find MLE Discovery TLV
-    VerifyOrExit(Tlv::FindTlvOffset(aMessage, Tlv::kDiscovery, offset) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
+    VerifyOrExit(Tlv::FindTlvOffset(aMessage, Tlv::kDiscovery, offset) == kErrorNone, error = kErrorParse);
     IgnoreError(aMessage.Read(offset, tlv));
 
     offset += sizeof(tlv);
@@ -324,7 +324,7 @@ void DiscoverScanner::HandleDiscoveryResponse(const Message &aMessage, const Ip6
         {
         case MeshCoP::Tlv::kDiscoveryResponse:
             IgnoreError(aMessage.Read(offset, discoveryResponse));
-            VerifyOrExit(discoveryResponse.IsValid(), error = OT_ERROR_PARSE);
+            VerifyOrExit(discoveryResponse.IsValid(), error = kErrorParse);
             result.mVersion  = discoveryResponse.GetVersion();
             result.mIsNative = discoveryResponse.IsNativeCommissioner();
             break;

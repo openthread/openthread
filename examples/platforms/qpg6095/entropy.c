@@ -39,26 +39,11 @@
 #include <common/code_utils.hpp>
 #include <openthread/platform/radio.h>
 
-#define GP_COMPONENT_ID GP_COMPONENT_ID_APP
-
-// uint8_t pseudoRandom = 0x34;
-
-void qorvoRandomInit(void)
-{
-    // pseudoRandom += (uint8_t) (seed&0xFF);
-}
-
 otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
     assert(aOutputLength < 256);
-    // uint8_t i;
 
     qorvoRandomGet((uint8_t *)aOutput, (uint8_t)aOutputLength);
-    // for(i=0; i<aOutputLength; i++)
-    // {
-    //     aOutput[i] = pseudoRandom;
-    //     pseudoRandom = (pseudoRandom * 97 + 1)%256;
-    // }
     return error;
 }

@@ -33,16 +33,8 @@ source "tests/scripts/expect/_multinode.exp"
 setup_two_nodes
 
 switch_node 2
-send "extaddr\n"
-expect "extaddr"
-expect -re {([0-9a-f]{16})}
-set extaddr $expect_out(1,string)
-expect "Done"
-send "rloc16\n"
-expect "rloc16"
-expect -re {([0-9a-f]{4})}
-set rloc $expect_out(1,string)
-expect "Done"
+set extaddr [get_extaddr]
+set rloc [get_rloc16]
 
 switch_node 1
 send "child table\n"
@@ -50,13 +42,13 @@ expect "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|Q
 expect "+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+"
 expect -re "\\| +(\\d+) \\| 0x$rloc \\| +\\d+ \\| +\\d+ \\| +\\d+ \\| +\\d+ \\|\\d\\|\\d\\|\\d\\| *\\d+\\| \\d \\| +\\d+ \\| $extaddr \\|"
 set child_id $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 send "child list\n"
 expect "child list"
 expect $child_id
-expect "Done"
+expect_line "Done"
 send "child $child_id\n"
 expect "Ext Addr: $extaddr"
-expect "Done"
+expect_line "Done"
 
 dispose_all

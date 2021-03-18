@@ -45,6 +45,10 @@ openthread_cli_sources = [
   "cli_joiner.hpp",
   "cli_network_data.cpp",
   "cli_network_data.hpp",
+  "cli_srp_client.cpp",
+  "cli_srp_client.hpp",
+  "cli_srp_server.cpp",
+  "cli_srp_server.hpp",
   "cli_uart.cpp",
   "cli_uart.hpp",
   "cli_udp.cpp",
@@ -54,11 +58,6 @@ openthread_cli_sources = [
 
 config("cli_config") {
   defines = []
-  if (openthread_posix) {
-    defines += ["OPENTHREAD_POSIX=1"]
-  } else {
-    defines += ["OPENTHREAD_POSIX=0"]
-  }
 }
 
 static_library("libopenthread-cli-ftd") {

@@ -61,6 +61,7 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
         SSED_1: {
             'version': '1.2',
             'name': 'SSED_1',
+            'is_mtd': True,
             'mode': '-',
             'panid': 0xface,
             'allowlist': [LEADER],
@@ -96,6 +97,8 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
         self.assertTrue(self.nodes[ROUTER].ping(self.nodes[SSED_1].get_ip6_address(ADDRESS_TYPE.RLOC),
                                                 size=128,
                                                 timeout=timeout * 2))
+
+        self.simulator.go(5)
 
     def verify(self, pv):
         pkts = pv.pkts

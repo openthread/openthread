@@ -33,6 +33,7 @@
 
 #include "notifier.hpp"
 
+#include "border_router/routing_manager.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/locator-getters.hpp"
@@ -42,7 +43,7 @@ namespace ot {
 
 Notifier::Notifier(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mTask(aInstance, Notifier::EmitEvents, this)
+    , mTask(aInstance, Notifier::EmitEvents)
 {
     for (ExternalCallback &callback : mExternalCallbacks)
     {
@@ -51,9 +52,9 @@ Notifier::Notifier(Instance &aInstance)
     }
 }
 
-otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
+Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    otError           error          = OT_ERROR_NONE;
+    Error             error          = kErrorNone;
     ExternalCallback *unusedCallback = nullptr;
 
     VerifyOrExit(aCallback != nullptr);
@@ -70,10 +71,10 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
             continue;
         }
 
-        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = OT_ERROR_ALREADY);
+        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = kErrorAlready);
     }
 
-    VerifyOrExit(unusedCallback != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
 
     unusedCallback->mHandler = aCallback;
     unusedCallback->mContext = aContext;
@@ -116,7 +117,7 @@ void Notifier::SignalIfFirst(Event aEvent)
 
 void Notifier::EmitEvents(Tasklet &aTasklet)
 {
-    aTasklet.GetOwner<Notifier>().EmitEvents();
+    aTasklet.Get<Notifier>().EmitEvents();
 }
 
 void Notifier::EmitEvents(void)
@@ -146,7 +147,7 @@ void Notifier::EmitEvents(void)
     Get<Utils::ChildSupervisor>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
-    Get<Utils::DatasetUpdater>().HandleNotifierEvents(events);
+    Get<MeshCoP::DatasetUpdater>().HandleNotifierEvents(events);
 #endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -158,10 +159,10 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     Get<MeshCoP::BorderAgent>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_MLR_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
     Get<MlrManager>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_DUA_ENABLE || OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
     Get<DuaManager>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -178,6 +179,15 @@ void Notifier::EmitEvents(void)
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Get<Extension::ExtensionBase>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Get<Srp::Server>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Get<Srp::Client>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)

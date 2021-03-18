@@ -28,7 +28,7 @@
 
 #include "posix/platform/multicast_routing.hpp"
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 #include <assert.h>
 #include <net/if.h>
@@ -171,7 +171,7 @@ void MulticastRoutingManager::InitMulticastRouterSock(void)
     struct mif6ctl      mif6ctl;
 
     // Create a Multicast Routing socket
-    mMulticastRouterSock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    mMulticastRouterSock = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketBlock);
     VerifyOrDie(mMulticastRouterSock != -1, OT_EXIT_ERROR_ERRNO);
 
     // Enable Multicast Forwarding in Kernel
@@ -566,4 +566,4 @@ void MulticastRoutingManager::RemoveMulticastForwardingCache(
 } // namespace Posix
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE

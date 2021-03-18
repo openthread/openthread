@@ -69,6 +69,9 @@ typedef struct otThreadLinkInfo
     // Applicable/Required only when time sync feature (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
     uint8_t mTimeSyncSeq;       ///< The time sync sequence.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+
+    // Applicable only when OPENTHREAD_CONFIG_MULTI_RADIO feature is enabled.
+    uint8_t mRadioType; ///< Radio link type.
 } otThreadLinkInfo;
 
 /**

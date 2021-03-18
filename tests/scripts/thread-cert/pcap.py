@@ -28,19 +28,25 @@
 #
 """ Module to provide codec utilities for .pcap formatters. """
 
+import os
 import struct
 import time
 
-DLT_IEEE802_15_4 = 195
+# https://www.tcpdump.org/linktypes.html
+DLT_IEEE802_15_4_WITHFCS = 195
+DLT_IEEE802_15_4_TAP = 283
 PCAP_MAGIC_NUMBER = 0xA1B2C3D4
 PCAP_VERSION_MAJOR = 2
 PCAP_VERSION_MINOR = 4
+
+PACKET_VERIFICATION = int(os.getenv('PACKET_VERIFICATION', 0))
 
 
 class PcapCodec(object):
     """ Utility class for .pcap formatters. """
 
     def __init__(self, filename):
+        self._dlt = DLT_IEEE802_15_4_WITHFCS if PACKET_VERIFICATION else DLT_IEEE802_15_4_TAP
         self._pcap_file = open('%s.pcap' % filename, 'wb')
         self._pcap_file.write(self.encode_header())
 
@@ -54,14 +60,28 @@ class PcapCodec(object):
             0,
             0,
             256,
-            DLT_IEEE802_15_4,
+            self._dlt,
         )
 
     def encode_frame(self, frame, sec, usec):
         """ Returns a pcap encapsulation of the given frame. """
+        length = 0
+
+        if self._dlt == DLT_IEEE802_15_4_TAP:
+            # Append TLVs according to 802.15.4 TAP specification:
+            # https://github.com/jkcko/ieee802.15.4-tap
+            pcap_tap_fcs_tlv = struct.pack("<HHL", 0, 1, 1)
+            pcap_tap_channel_tlv = struct.pack("<HHHH", 3, 3, frame[0], 0)
+            length = 4 + len(pcap_tap_fcs_tlv) + len(pcap_tap_channel_tlv)
+            pcap_tap_header = struct.pack("<HH", 0, length)
+
         frame = frame[1:]
-        length = len(frame)
+        length += len(frame)
         pcap_frame = struct.pack("<LLLL", sec, usec, length, length)
+
+        if self._dlt == DLT_IEEE802_15_4_TAP:
+            pcap_frame += pcap_tap_header + pcap_tap_fcs_tlv + pcap_tap_channel_tlv
+
         pcap_frame += frame
         return pcap_frame
 

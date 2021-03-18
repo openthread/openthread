@@ -36,13 +36,14 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #include "common/locator-getters.hpp"
+#include "common/logging.hpp"
 
 namespace ot {
 namespace BackboneRouter {
 
-otError BackboneTmfAgent::Start(void)
+Error BackboneTmfAgent::Start(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     SuccessOrExit(error = Coap::Start(kBackboneUdpPort, OT_NETIF_BACKBONE));
     SubscribeMulticast(Get<Local>().GetAllNetworkBackboneRoutersAddress());
@@ -51,14 +52,11 @@ exit:
     return error;
 }
 
-otError BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage,
-                                 const Ip6::MessageInfo & aMessageInfo,
-                                 void *                   aContext)
+Error BackboneTmfAgent::Filter(const ot::Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, void *aContext)
 {
     OT_UNUSED_VARIABLE(aMessage);
 
-    return static_cast<BackboneTmfAgent *>(aContext)->IsBackboneTmfMessage(aMessageInfo) ? OT_ERROR_NONE
-                                                                                         : OT_ERROR_NOT_TMF;
+    return static_cast<BackboneTmfAgent *>(aContext)->IsBackboneTmfMessage(aMessageInfo) ? kErrorNone : kErrorNotTmf;
 }
 
 bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const
@@ -79,34 +77,20 @@ bool BackboneTmfAgent::IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo
 
 void BackboneTmfAgent::SubscribeMulticast(const Ip6::Address &aAddress)
 {
-    otError error;
+    Error error;
 
     error = mSocket.JoinNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
 
-    if (error != OT_ERROR_NONE)
-    {
-        otLogDebgBbr("Backbone TMF subscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogCritBbr("Backbone TMF subscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
-    }
+    otLogResultBbr(error, "Backbone TMF subscribes %s", aAddress.ToString().AsCString());
 }
 
 void BackboneTmfAgent::UnsubscribeMulticast(const Ip6::Address &aAddress)
 {
-    otError error;
+    Error error;
 
     error = mSocket.LeaveNetifMulticastGroup(OT_NETIF_BACKBONE, aAddress);
 
-    if (error == OT_ERROR_NONE)
-    {
-        otLogDebgBbr("Backbone TMF unsubscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogCritBbr("Backbone TMF unsubscribes %s: %s", aAddress.ToString().AsCString(), otThreadErrorToString(error));
-    }
+    otLogResultBbr(error, "Backbone TMF unsubscribes %s", aAddress.ToString().AsCString());
 }
 
 } // namespace BackboneRouter

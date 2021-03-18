@@ -87,7 +87,7 @@ NcpUart::NcpUart(Instance *aInstance)
     , mState(kStartingFrame)
     , mByte(0)
     , mUartSendImmediate(false)
-    , mUartSendTask(*aInstance, EncodeAndSendToUart, this)
+    , mUartSendTask(*aInstance, EncodeAndSendToUart)
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     , mTxFrameBufferEncrypterReader(mTxFrameBuffer)
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
@@ -158,6 +158,8 @@ void NcpUart::EncodeAndSendToUart(void)
             {
                 mByte = txFrameBuffer.OutFrameReadByte();
 
+                OT_FALL_THROUGH;
+
             case kEncodingFrame:
 
                 SuccessOrExit(mFrameEncoder.Encode(mByte));
@@ -181,7 +183,7 @@ void NcpUart::EncodeAndSendToUart(void)
 
             mState = kFinalizingFrame;
 
-            // fall through
+            OT_FALL_THROUGH;
 
         case kFinalizingFrame:
 

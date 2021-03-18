@@ -53,9 +53,9 @@ extern "C" void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallba
     Console::Initialize(aInstance, aCallback, aContext);
 }
 
-extern "C" void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength)
+extern "C" void otCliConsoleInputLine(char *aBuf)
 {
-    Interpreter::GetInterpreter().ProcessLine(aBuf, aBufLength);
+    Interpreter::GetInterpreter().ProcessLine(aBuf);
 }
 
 // Add stubs for simulation

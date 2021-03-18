@@ -32,16 +32,16 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "mac retries direct 5\n"
-expect "Done"
+expect_line "Done"
 send "mac retries direct\n"
 expect "5"
-expect "Done"
+expect_line "Done"
 
 send "mac retries indirect 2\n"
-expect "Done"
+expect_line "Done"
 send "mac retries indirect\n"
 expect "2"
-expect "Done"
+expect_line "Done"
 
 send "mac\n"
 expect "Error 7: InvalidArgs"

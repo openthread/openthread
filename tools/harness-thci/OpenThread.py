@@ -148,14 +148,12 @@ class OpenThreadTHCI(object):
         """
         Connect to the device.
         """
-        pass
 
     @abstractmethod
     def _disconnect(self):
         """
         Disconnect from the device
         """
-        pass
 
     @abstractmethod
     def _cliReadLine(self):
@@ -164,7 +162,6 @@ class OpenThreadTHCI(object):
         Returns:
             None if no data
         """
-        pass
 
     @abstractmethod
     def _cliWriteLine(self, line):
@@ -173,17 +170,14 @@ class OpenThreadTHCI(object):
         Args:
             line str: data send to device
         """
-        pass
 
     @abstractmethod
     def _onCommissionStart(self):
         """Called when commissioning starts."""
-        pass
 
     @abstractmethod
     def _onCommissionStop(self):
         """Called when commissioning stops."""
-        pass
 
     def __sendCommand(self, cmd, expectEcho=True):
         self.log("command: %s", cmd)
@@ -436,9 +430,7 @@ class OpenThreadTHCI(object):
         print('call setAddressFilterMode() ' + mode)
         try:
             cmd = 'macfilter addr ' + mode
-            if self.__executeCommand(cmd)[-1] == 'Done':
-                return True
-            return False
+            return self.__executeCommand(cmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('__setAddressFilterMode() Error: ' + str(e))
 
@@ -575,6 +567,7 @@ class OpenThreadTHCI(object):
         strIp6Prefix = prefix[:19]
         return strIp6Prefix + '::'
 
+    # pylint: disable=no-self-use
     def __convertLongToHex(self, iValue, fillZeros=None):
         """convert a long hex integer to string
            remove '0x' and 'L' return string
@@ -640,6 +633,7 @@ class OpenThreadTHCI(object):
         self.logThreadStatus = self.logStatus['stop']
         return logs
 
+    # pylint: disable=no-self-use
     def __convertChannelMask(self, channelsArray):
         """convert channelsArray to bitmask format
 
@@ -705,6 +699,7 @@ class OpenThreadTHCI(object):
         print('%s call getCommissionerSessionId' % self)
         return self.__executeCommand('commissioner sessionid')[0]
 
+    # pylint: disable=no-self-use
     def __escapeEscapable(self, string):
         """Escape CLI escapable characters in the given string.
 
@@ -737,7 +732,7 @@ class OpenThreadTHCI(object):
             cmd = 'networkname %s' % networkName
             datasetCmd = 'dataset networkname %s' % networkName
             self.hasActiveDatasetToCommit = True
-            return (self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done')
+            return self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setNetworkName() Error: ' + str(e))
 
@@ -761,7 +756,7 @@ class OpenThreadTHCI(object):
             cmd = 'channel %s' % channel
             datasetCmd = 'dataset channel %s' % channel
             self.hasActiveDatasetToCommit = True
-            return (self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done')
+            return self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setChannel() Error: ' + str(e))
 
@@ -907,7 +902,7 @@ class OpenThreadTHCI(object):
 
             self.networkKey = masterKey
             self.hasActiveDatasetToCommit = True
-            return (self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done')
+            return self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setNetworkkey() Error: ' + str(e))
 
@@ -1266,7 +1261,7 @@ class OpenThreadTHCI(object):
             cmd = 'panid %s' % panid
             datasetCmd = 'dataset panid %s' % panid
             self.hasActiveDatasetToCommit = True
-            return (self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done')
+            return self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setPANID() Error: ' + str(e))
 
@@ -1880,7 +1875,7 @@ class OpenThreadTHCI(object):
 
             self.xpanId = xpanid
             self.hasActiveDatasetToCommit = True
-            return (self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done')
+            return self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done'
         except Exception as e:
             ModuleHelper.WriteIntoDebugLogger('setXpanId() Error: ' + str(e))
 
@@ -2045,7 +2040,7 @@ class OpenThreadTHCI(object):
         if not listTLV_ids:
             return
 
-        if not len(listTLV_ids):
+        if len(listTLV_ids) == 0:
             return
 
         cmd = 'networkdiagnostic get %s %s' % (
@@ -2061,7 +2056,7 @@ class OpenThreadTHCI(object):
         if not listTLV_ids:
             return
 
-        if not len(listTLV_ids):
+        if len(listTLV_ids) == 0:
             return
 
         cmd = 'networkdiagnostic reset %s %s' % (
@@ -2085,10 +2080,7 @@ class OpenThreadTHCI(object):
         self.__executeCommand('ifconfig up')
         cmd = 'joiner start %s' % (strPSKc)
         print(cmd)
-        if self.__executeCommand(cmd)[-1] == 'Done':
-            return True
-        else:
-            return False
+        return self.__executeCommand(cmd)[-1] == 'Done'
 
     @API
     def startCollapsedCommissioner(self):
@@ -2835,10 +2827,7 @@ class OpenThreadTHCI(object):
     @API
     def ValidateDeviceFirmware(self):
         print('%s call ValidateDeviceFirmware' % self)
-        if 'OPENTHREAD' in self.UIStatusMsg:
-            return True
-        else:
-            return False
+        return 'OPENTHREAD' in self.UIStatusMsg
 
     # Low power THCI
     @API
@@ -2870,7 +2859,8 @@ class OpenThreadTHCI(object):
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
-    def getForwardSeriesFlagsFromHexStr(self, flags):
+    @staticmethod
+    def getForwardSeriesFlagsFromHexStr(flags):
         hexFlags = int(flags, 16)
         strFlags = ''
         if hexFlags == 0:
@@ -2887,7 +2877,8 @@ class OpenThreadTHCI(object):
 
         return strFlags
 
-    def mapMetricsHexToChar(self, metrics):
+    @staticmethod
+    def mapMetricsHexToChar(metrics):
         metricsFlagMap = {
             0x40: 'p',
             0x09: 'q',
@@ -2896,21 +2887,22 @@ class OpenThreadTHCI(object):
         }
         return metricsFlagMap.get(metrics, '?')
 
-    def getMetricsFlagsFromHexStr(self, metrics):
+    @staticmethod
+    def getMetricsFlagsFromHexStr(metrics):
         if metrics.startswith('0x'):
             metrics = metrics[2:]
         hexMetricsArray = bytearray.fromhex(metrics)
 
         strMetrics = ''
         for metric in hexMetricsArray:
-            strMetrics += mapMetricsHexToChar(metric)
+            strMetrics += OpenThreadTHCI.mapMetricsHexToChar(metric)
 
         return strMetrics
 
     @API
     def LinkMetricsSingleReq(self, dst_addr, metrics):
         self.log('call LinkMetricsSingleReq')
-        cmd = 'linkmetrics query %s single %s' % (dst_addr, getMetricsFlagsFromHexStr(metrics))
+        cmd = 'linkmetrics query %s single %s' % (dst_addr, self.getMetricsFlagsFromHexStr(metrics))
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
 
@@ -2919,14 +2911,14 @@ class OpenThreadTHCI(object):
         self.log('call LinkMetricsMgmtReq')
         cmd = 'linkmetrics mgmt %s ' % dst_addr
         if type_ == 'FWD':
-            cmd += 'forward %d %s' % (series_id, getForwardSeriesFlagsFromHexStr(flags))
+            cmd += 'forward %d %s' % (series_id, self.getForwardSeriesFlagsFromHexStr(flags))
             if flags != 0:
-                cmd += ' %s' % (getMetricsFlagsFromHexStr(metrics))
+                cmd += ' %s' % (self.getMetricsFlagsFromHexStr(metrics))
         elif type_ == 'ENH':
             cmd += 'enhanced-ack'
             if flags != 0:
                 cmd += ' register'
-                metricsFlags = getMetricsFlagsFromHexStr(metrics)
+                metricsFlags = self.getMetricsFlagsFromHexStr(metrics)
                 if '?' in metricsFlags:
                     cmd += ' %s r' % metricsFlags.replace('?', '')
                 else:
@@ -2974,7 +2966,7 @@ class OpenThreadTHCI(object):
         print(cmd1)
         cmd2 = 'udp send %s %d %s' % (destination, port, payload)
         print(cmd2)
-        return (self.__executeCommand(cmd1)[-1] == 'Done' and self.__executeCommand(cmd2)[-1] == 'Done')
+        return self.__executeCommand(cmd1)[-1] == 'Done' and self.__executeCommand(cmd2)[-1] == 'Done'
 
     @API
     def send_udp(self, interface, destination, port, payload='12ABcd'):
@@ -2986,7 +2978,7 @@ class OpenThreadTHCI(object):
         print(cmd1)
         cmd2 = 'udp send %s %s -x %s' % (destination, port, payload)
         print(cmd2)
-        return (self.__executeCommand(cmd1)[-1] == 'Done' and self.__executeCommand(cmd2)[-1] == 'Done')
+        return self.__executeCommand(cmd1)[-1] == 'Done' and self.__executeCommand(cmd2)[-1] == 'Done'
 
     @API
     def sendMACcmd(self, enh=False):
@@ -3071,7 +3063,7 @@ class OpenThread(OpenThreadTHCI, IThci):
             return self.__lines.pop(0)
 
         tail = ''
-        if len(self.__lines):
+        if len(self.__lines) != 0:
             tail = self.__lines.pop()
 
         try:

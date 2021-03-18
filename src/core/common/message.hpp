@@ -52,7 +52,22 @@
 #include "thread/child_mask.hpp"
 #include "thread/link_quality.hpp"
 
+/**
+ * This struct represents an opaque (and empty) type for an OpenThread message buffer.
+ *
+ */
+struct otMessage
+{
+};
+
 namespace ot {
+
+namespace Crypto {
+
+class Sha256;
+class HmacSha256;
+
+} // namespace Crypto
 
 /**
  * @addtogroup core-message
@@ -85,38 +100,38 @@ namespace ot {
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `otError` indicates an error.
+ * This macro frees a given message buffer if a given `Error` indicates an error.
  *
  * The parameter @p aMessage can be nullptr in which case this macro does nothing.
  *
  * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
- * @param[in] aError      The `otError` to check.
+ * @param[in] aError      The `Error` to check.
  *
  */
-#define FreeMessageOnError(aMessage, aError)                        \
-    do                                                              \
-    {                                                               \
-        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
-        {                                                           \
-            (aMessage)->Free();                                     \
-        }                                                           \
+#define FreeMessageOnError(aMessage, aError)                     \
+    do                                                           \
+    {                                                            \
+        if (((aError) != kErrorNone) && ((aMessage) != nullptr)) \
+        {                                                        \
+            (aMessage)->Free();                                  \
+        }                                                        \
     } while (false)
 
 /**
- * This macro frees a given message buffer if a given `otError` indicates an error and sets the `aMessage` to `nullptr`.
+ * This macro frees a given message buffer if a given `Error` indicates an error and sets the `aMessage` to `nullptr`.
  *
  * @param[in] aMessage    A pointer to a `Message` to free (can be nullptr).
- * @param[in] aError      The `otError` to check.
+ * @param[in] aError      The `Error` to check.
  *
  */
-#define FreeAndNullMessageOnError(aMessage, aError)                 \
-    do                                                              \
-    {                                                               \
-        if (((aError) != OT_ERROR_NONE) && ((aMessage) != nullptr)) \
-        {                                                           \
-            (aMessage)->Free();                                     \
-            (aMessage) = nullptr;                                   \
-        }                                                           \
+#define FreeAndNullMessageOnError(aMessage, aError)              \
+    do                                                           \
+    {                                                            \
+        if (((aError) != kErrorNone) && ((aMessage) != nullptr)) \
+        {                                                        \
+            (aMessage)->Free();                                  \
+            (aMessage) = nullptr;                                \
+        }                                                        \
     } while (false)
 
 enum
@@ -176,8 +191,14 @@ struct MessageMetadata
     bool    mMulticastLoop : 1; ///< Indicates whether or not this multicast message may be looped back.
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     bool    mTimeSync : 1;      ///< Indicates whether the message is also used for time sync purpose.
-    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
     int64_t mNetworkTimeOffset; ///< The time offset to the Thread network time, in microseconds.
+    uint8_t mTimeSyncSeq;       ///< The time sync sequence.
+#endif
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    uint8_t mRadioType : 2;      ///< The radio link type the message was received on, or should be sent on.
+    bool    mIsRadioTypeSet : 1; ///< Indicates whether the radio type is set.
+
+    static_assert(Mac::kNumRadioTypes <= (1 << 2), "mRadioType bitfield cannot store all radio type values");
 #endif
 };
 
@@ -185,9 +206,10 @@ struct MessageMetadata
  * This class represents a Message buffer.
  *
  */
-class Buffer : public otMessage, public LinkedListEntry<Buffer>
+class Buffer : public otMessageBuffer, public LinkedListEntry<Buffer>
 {
     friend class Message;
+    friend class LinkedListEntry<Buffer>;
 
 public:
     /**
@@ -265,7 +287,7 @@ private:
 
     enum
     {
-        kBufferDataSize     = kBufferSize - sizeof(otMessage),
+        kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer),
         kHeadBufferDataSize = kBufferDataSize - sizeof(MessageMetadata),
     };
 
@@ -285,9 +307,11 @@ protected:
  * This class represents a message.
  *
  */
-class Message : public Buffer
+class Message : public otMessage, public Buffer
 {
     friend class Checksum;
+    friend class Crypto::HmacSha256;
+    friend class Crypto::Sha256;
     friend class MessagePool;
     friend class MessageQueue;
     friend class PriorityQueue;
@@ -453,11 +477,11 @@ public:
      *
      * @param[in]  aLength  Requested number of bytes in the message.
      *
-     * @retval OT_ERROR_NONE     Successfully set the length of the message.
-     * @retval OT_ERROR_NO_BUFS  Failed to grow the size of the message because insufficient buffers were available.
+     * @retval kErrorNone    Successfully set the length of the message.
+     * @retval kErrorNoBufs  Failed to grow the size of the message because insufficient buffers were available.
      *
      */
-    otError SetLength(uint16_t aLength);
+    Error SetLength(uint16_t aLength);
 
     /**
      * This method returns the number of buffers in the message.
@@ -562,11 +586,21 @@ public:
      *
      * @param[in]  aPriority  The message priority level.
      *
-     * @retval OT_ERROR_NONE           Successfully set the priority for the message.
-     * @retval OT_ERROR_INVALID_ARGS   Priority level is not invalid.
+     * @retval kErrorNone          Successfully set the priority for the message.
+     * @retval kErrorInvalidArgs   Priority level is not invalid.
      *
      */
-    otError SetPriority(Priority aPriority);
+    Error SetPriority(Priority aPriority);
+
+    /**
+     * This static method convert a `Priority` to a string.
+     *
+     * @param[in] aPriority  The priority level.
+     *
+     * @returns A string representation of @p aPriority.
+     *
+     */
+    static const char *PriorityToString(Priority aPriority);
 
     /**
      * This method prepends bytes to the front of the message.
@@ -576,11 +610,11 @@ public:
      * @param[in]  aBuf     A pointer to a data buffer (can be `nullptr` to grow message without writing bytes).
      * @param[in]  aLength  The number of bytes to prepend.
      *
-     * @retval OT_ERROR_NONE     Successfully prepended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
+     * @retval kErrorNone    Successfully prepended the bytes.
+     * @retval kErrorNoBufs  Not enough reserved bytes in the message.
      *
      */
-    otError PrependBytes(const void *aBuf, uint16_t aLength);
+    Error PrependBytes(const void *aBuf, uint16_t aLength);
 
     /**
      * This method prepends an object to the front of the message.
@@ -591,11 +625,11 @@ public:
      *
      * @param[in] aObject      A reference to the object to prepend to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully prepended the object.
-     * @retval OT_ERROR_NO_BUFS  Not enough reserved bytes in the message.
+     * @retval kErrorNone    Successfully prepended the object.
+     * @retval kErrorNoBufs  Not enough reserved bytes in the message.
      *
      */
-    template <typename ObjectType> otError Prepend(const ObjectType &aObject)
+    template <typename ObjectType> Error Prepend(const ObjectType &aObject)
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -618,11 +652,11 @@ public:
      * @param[in]  aBuf     A pointer to a data buffer (MUST not be `nullptr`).
      * @param[in]  aLength  The number of bytes to append.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the bytes.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     * @retval kErrorNone    Successfully appended the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
      *
      */
-    otError AppendBytes(const void *aBuf, uint16_t aLength);
+    Error AppendBytes(const void *aBuf, uint16_t aLength);
 
     /**
      * This method appends an object to the end of the message.
@@ -633,11 +667,11 @@ public:
      *
      * @param[in] aObject      A reference to the object to append to the message.
      *
-     * @retval OT_ERROR_NONE     Successfully appended the object.
-     * @retval OT_ERROR_NO_BUFS  Insufficient available buffers to grow the message.
+     * @retval kErrorNone    Successfully appended the object.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
      *
      */
-    template <typename ObjectType> otError Append(const ObjectType &aObject)
+    template <typename ObjectType> Error Append(const ObjectType &aObject)
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
@@ -660,23 +694,23 @@ public:
      * This method reads a given number of bytes from the message.
      *
      * If there are fewer bytes available in the message than the requested read length, the available bytes will be
-     * read and copied into @p aBuf. In this case `OT_ERROR_PARSE` will be returned.
+     * read and copied into @p aBuf. In this case `kErrorParse` will be returned.
      *
      * @param[in]  aOffset  Byte offset within the message to begin reading.
      * @param[out] aBuf     A pointer to a data buffer to copy the read bytes into.
      * @param[in]  aLength  Number of bytes to read.
      *
-     * @retval OT_ERROR_NONE     @p aLength bytes were successfully read from message.
-     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     * @retval kErrorNone     @p aLength bytes were successfully read from message.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object.
      *
      */
-    otError Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
+    Error Read(uint16_t aOffset, void *aBuf, uint16_t aLength) const;
 
     /**
      * This method reads an object from the message.
      *
      * If there are fewer bytes available in the message than the requested object size, the available bytes will be
-     * read and copied into @p aObject (@p aObject will be read partially). In this case `OT_ERROR_PARSE` will
+     * read and copied into @p aObject (@p aObject will be read partially). In this case `kErrorParse` will
      * be returned.
      *
      * @tparam     ObjectType   The object type to read from the message.
@@ -684,15 +718,69 @@ public:
      * @param[in]  aOffset      Byte offset within the message to begin reading.
      * @param[out] aObject      A reference to the object to read into.
      *
-     * @retval OT_ERROR_NONE     Object @p aObject was successfully read from message.
-     * @retval OT_ERROR_PARSE    Not enough bytes remaining in message to read the entire object.
+     * @retval kErrorNone     Object @p aObject was successfully read from message.
+     * @retval kErrorParse    Not enough bytes remaining in message to read the entire object.
      *
      */
-    template <typename ObjectType> otError Read(uint16_t aOffset, ObjectType &aObject) const
+    template <typename ObjectType> Error Read(uint16_t aOffset, ObjectType &aObject) const
     {
         static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
 
         return Read(aOffset, &aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method compares the bytes in the message at a given offset with a given byte array.
+     *
+     * If there are fewer bytes available in the message than the requested @p aLength, the comparison is treated as
+     * failure (returns FALSE).
+     *
+     * @param[in]  aOffset    Byte offset within the message to read from for the comparison.
+     * @param[in]  aBuf       A pointer to a data buffer to compare with the bytes from message.
+     * @param[in]  aLength    Number of bytes in @p aBuf.
+     *
+     * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes from @p aBuf,
+     *          FALSE otherwise.
+     *
+     */
+    bool CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength) const;
+
+    /**
+     * This method compares the bytes in the message at a given offset with bytes read from another message.
+     *
+     * If either message has fewer bytes available than the requested @p aLength, the comparison is treated as failure
+     * (returns FALSE).
+     *
+     * @param[in]  aOffset        Byte offset within the message to read from for the comparison.
+     * @param[in]  aOtherMessage  The other message to compare with.
+     * @param[in]  aOtherOffset   Byte offset within @p aOtherMessage to read from for the comparison.
+     * @param[in]  aLength        Number of bytes to compare.
+     *
+     * @returns TRUE if there are enough bytes available in both messages and they all match. FALSE otherwise.
+     *
+     */
+    bool CompareBytes(uint16_t aOffset, const Message &aOtherMessage, uint16_t aOtherOffset, uint16_t aLength) const;
+
+    /**
+     * This method compares the bytes in the message at a given offset with an object.
+     *
+     * The bytes in the message are compared with the bytes in @p aObject. If there are fewer bytes available in the
+     * message than the requested object size, it is treated as failed comparison (returns FALSE).
+     *
+     * @tparam     ObjectType   The object type to compare with the bytes in message.
+     *
+     * @param[in] aOffset      Byte offset within the message to read from for the comparison.
+     * @param[in] aObject      A reference to the object to compare with the message bytes.
+     *
+     * @returns TRUE if there are enough bytes available in @p aMessage and they match the bytes in @p aObject,
+     *          FALSE otherwise.
+     *
+     */
+    template <typename ObjectType> bool Compare(uint16_t aOffset, const ObjectType &aObject) const
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+
+        return CompareBytes(aOffset, &aObject, sizeof(ObjectType));
     }
 
     /**
@@ -1116,6 +1204,48 @@ public:
     uint8_t GetTimeSyncSeq(void) const { return GetMetadata().mTimeSyncSeq; }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    /**
+     * This method indicates whether the radio type is set.
+     *
+     * @retval TRUE   If the radio type is set.
+     * @retval FALSE  If the radio type is not set.
+     *
+     */
+    bool IsRadioTypeSet(void) const { return GetMetadata().mIsRadioTypeSet; }
+
+    /**
+     * This method gets the radio link type the message was received on, or should be sent on.
+     *
+     * This method should be used only when `IsRadioTypeSet()` returns `true`.
+     *
+     * @returns The radio link type of the message.
+     *
+     */
+    Mac::RadioType GetRadioType(void) const { return static_cast<Mac::RadioType>(GetMetadata().mRadioType); }
+
+    /**
+     * This method sets the radio link type the message was received on, or should be sent on.
+     *
+     * @param[in] aRadioType   A radio link type of the message.
+     *
+     */
+    void SetRadioType(Mac::RadioType aRadioType)
+    {
+        GetMetadata().mIsRadioTypeSet = true;
+        GetMetadata().mRadioType      = aRadioType;
+    }
+
+    /**
+     * This method clears any previously set radio type on the message.
+     *
+     * After calling this method, `IsRadioTypeSet()` returns false until radio type is set (`SetRadioType()`).
+     *
+     */
+    void ClearRadioType(void) { GetMetadata().mIsRadioTypeSet = false; }
+
+#endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
+
 private:
     /**
      * This method returns a pointer to the message pool to which this message belongs
@@ -1203,11 +1333,11 @@ private:
      *
      * @param[in]  aLength  The number of bytes that the message buffer needs to handle.
      *
-     * @retval OT_ERROR_NONE     Successfully resized the message.
-     * @retval OT_ERROR_NO_BUFS  Could not grow the message due to insufficient available message buffers.
+     * @retval kErrorNone    Successfully resized the message.
+     * @retval kErrorNoBufs  Could not grow the message due to insufficient available message buffers.
      *
      */
-    otError ResizeMessage(uint16_t aLength);
+    Error ResizeMessage(uint16_t aLength);
 
 private:
     struct Chunk
@@ -1497,7 +1627,7 @@ public:
 private:
     Buffer *NewBuffer(Message::Priority aPriority);
     void    FreeBuffers(Buffer *aBuffer);
-    otError ReclaimBuffers(Message::Priority aPriority);
+    Error   ReclaimBuffers(Message::Priority aPriority);
 
 #if !OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT && !OPENTHREAD_CONFIG_MESSAGE_USE_HEAP_ENABLE
     uint16_t                  mNumFreeBuffers;

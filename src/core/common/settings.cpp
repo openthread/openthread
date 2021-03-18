@@ -43,6 +43,9 @@
 #include "thread/mle.hpp"
 
 namespace ot {
+// This array contains critical keys that should be stored in the secure area.
+static const uint16_t kCriticalKeys[] = {SettingsBase::kKeyActiveDataset, SettingsBase::kKeyPendingDataset,
+                                         SettingsBase::kKeySrpEcdsaKey};
 
 // LCOV_EXCL_START
 
@@ -81,16 +84,22 @@ void SettingsBase::LogDadInfo(const char *aAction, const DadInfo &aDadInfo) cons
     otLogInfoCore("Non-volatile: %s DadInfo {DadCounter:%2d}", aAction, aDadInfo.GetDadCounter());
 }
 #endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+void SettingsBase::LogPrefix(const char *aAction, const char *aPrefixName, const Ip6::Prefix &aOmrPrefix) const
+{
+    otLogInfoCore("Non-volatile: %s %s %s", aAction, aPrefixName, aOmrPrefix.ToString().AsCString());
+}
+#endif
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
 
-void SettingsBase::LogFailure(otError error, const char *aText, bool aIsDelete) const
+void SettingsBase::LogFailure(Error error, const char *aText, bool aIsDelete) const
 {
-    if ((error != OT_ERROR_NONE) && (!aIsDelete || (error != OT_ERROR_NOT_FOUND)))
+    if ((error != kErrorNone) && (!aIsDelete || (error != kErrorNotFound)))
     {
-        otLogWarnCore("Non-volatile: Error %s %s", otThreadErrorToString(error), aText);
+        otLogWarnCore("Non-volatile: Error %s %s", ErrorToString(error), aText);
     }
 }
 
@@ -116,22 +125,27 @@ void SettingsDriver::Deinit(void)
     otPlatSettingsDeinit(&GetInstance());
 }
 
-otError SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    otPlatSettingsSetCriticalKeys(&GetInstance(), aKeys, aKeysLength);
+}
+
+Error SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return otPlatSettingsAdd(&GetInstance(), aKey, aValue, aValueLength);
 }
 
-otError SettingsDriver::Delete(uint16_t aKey, int aIndex)
+Error SettingsDriver::Delete(uint16_t aKey, int aIndex)
 {
     return otPlatSettingsDelete(&GetInstance(), aKey, aIndex);
 }
 
-otError SettingsDriver::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
+Error SettingsDriver::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
 {
     return otPlatSettingsGet(&GetInstance(), aKey, aIndex, aValue, aValueLength);
 }
 
-otError SettingsDriver::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+Error SettingsDriver::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return otPlatSettingsSet(&GetInstance(), aKey, aValue, aValueLength);
 }
@@ -158,22 +172,28 @@ void SettingsDriver::Deinit(void)
 {
 }
 
-otError SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+void SettingsDriver::SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    OT_UNUSED_VARIABLE(aKeys);
+    OT_UNUSED_VARIABLE(aKeysLength);
+}
+
+Error SettingsDriver::Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return mFlash.Add(aKey, aValue, aValueLength);
 }
 
-otError SettingsDriver::Delete(uint16_t aKey, int aIndex)
+Error SettingsDriver::Delete(uint16_t aKey, int aIndex)
 {
     return mFlash.Delete(aKey, aIndex);
 }
 
-otError SettingsDriver::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
+Error SettingsDriver::Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const
 {
     return mFlash.Get(aKey, aIndex, aValue, aValueLength);
 }
 
-otError SettingsDriver::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+Error SettingsDriver::Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
 {
     return mFlash.Set(aKey, aValue, aValueLength);
 }
@@ -188,6 +208,7 @@ void SettingsDriver::Wipe(void)
 void Settings::Init(void)
 {
     Get<SettingsDriver>().Init();
+    Get<SettingsDriver>().SetCriticalKeys(kCriticalKeys, OT_ARRAY_LENGTH(kCriticalKeys));
 }
 
 void Settings::Deinit(void)
@@ -201,21 +222,21 @@ void Settings::Wipe(void)
     otLogInfoCore("Non-volatile: Wiped all info");
 }
 
-otError Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset)
+Error Settings::SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset)
 {
-    otError error = Save(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), aDataset.GetSize());
+    Error error = Save(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), aDataset.GetSize());
 
     LogFailure(error, "saving OperationalDataset", false);
     return error;
 }
 
-otError Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const
+Error Settings::ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const
 {
-    otError  error  = OT_ERROR_NONE;
+    Error    error  = kErrorNone;
     uint16_t length = MeshCoP::Dataset::kMaxSize;
 
     SuccessOrExit(error = Read(aIsActive ? kKeyActiveDataset : kKeyPendingDataset, aDataset.GetBytes(), length));
-    VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(length <= MeshCoP::Dataset::kMaxSize, error = kErrorNotFound);
 
     aDataset.SetSize(length);
 
@@ -223,18 +244,18 @@ exit:
     return error;
 }
 
-otError Settings::DeleteOperationalDataset(bool aIsActive)
+Error Settings::DeleteOperationalDataset(bool aIsActive)
 {
-    otError error = Delete(aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
+    Error error = Delete(aIsActive ? kKeyActiveDataset : kKeyPendingDataset);
 
     LogFailure(error, "deleting OperationalDataset", true);
 
     return error;
 }
 
-otError Settings::ReadNetworkInfo(NetworkInfo &aNetworkInfo) const
+Error Settings::ReadNetworkInfo(NetworkInfo &aNetworkInfo) const
 {
-    otError  error;
+    Error    error;
     uint16_t length = sizeof(NetworkInfo);
 
     aNetworkInfo.Init();
@@ -245,13 +266,13 @@ exit:
     return error;
 }
 
-otError Settings::SaveNetworkInfo(const NetworkInfo &aNetworkInfo)
+Error Settings::SaveNetworkInfo(const NetworkInfo &aNetworkInfo)
 {
-    otError     error = OT_ERROR_NONE;
+    Error       error = kErrorNone;
     NetworkInfo prevNetworkInfo;
     uint16_t    length = sizeof(prevNetworkInfo);
 
-    if ((Read(kKeyNetworkInfo, &prevNetworkInfo, length) == OT_ERROR_NONE) && (length == sizeof(NetworkInfo)) &&
+    if ((Read(kKeyNetworkInfo, &prevNetworkInfo, length) == kErrorNone) && (length == sizeof(NetworkInfo)) &&
         (prevNetworkInfo == aNetworkInfo))
     {
         LogNetworkInfo("Re-saved", aNetworkInfo);
@@ -266,9 +287,9 @@ exit:
     return error;
 }
 
-otError Settings::DeleteNetworkInfo(void)
+Error Settings::DeleteNetworkInfo(void)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Delete(kKeyNetworkInfo));
     otLogInfoCore("Non-volatile: Deleted NetworkInfo");
@@ -278,9 +299,9 @@ exit:
     return error;
 }
 
-otError Settings::ReadParentInfo(ParentInfo &aParentInfo) const
+Error Settings::ReadParentInfo(ParentInfo &aParentInfo) const
 {
-    otError  error;
+    Error    error;
     uint16_t length = sizeof(ParentInfo);
 
     aParentInfo.Init();
@@ -291,13 +312,13 @@ exit:
     return error;
 }
 
-otError Settings::SaveParentInfo(const ParentInfo &aParentInfo)
+Error Settings::SaveParentInfo(const ParentInfo &aParentInfo)
 {
-    otError    error = OT_ERROR_NONE;
+    Error      error = kErrorNone;
     ParentInfo prevParentInfo;
     uint16_t   length = sizeof(ParentInfo);
 
-    if ((Read(kKeyParentInfo, &prevParentInfo, length) == OT_ERROR_NONE) && (length == sizeof(ParentInfo)) &&
+    if ((Read(kKeyParentInfo, &prevParentInfo, length) == kErrorNone) && (length == sizeof(ParentInfo)) &&
         (prevParentInfo == aParentInfo))
     {
         LogParentInfo("Re-saved", aParentInfo);
@@ -312,9 +333,9 @@ exit:
     return error;
 }
 
-otError Settings::DeleteParentInfo(void)
+Error Settings::DeleteParentInfo(void)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Delete(kKeyParentInfo));
     otLogInfoCore("Non-volatile: Deleted ParentInfo");
@@ -324,9 +345,9 @@ exit:
     return error;
 }
 
-otError Settings::AddChildInfo(const ChildInfo &aChildInfo)
+Error Settings::AddChildInfo(const ChildInfo &aChildInfo)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Add(kKeyChildInfo, &aChildInfo, sizeof(aChildInfo)));
     LogChildInfo("Added", aChildInfo);
@@ -336,9 +357,9 @@ exit:
     return error;
 }
 
-otError Settings::DeleteAllChildInfo(void)
+Error Settings::DeleteAllChildInfo(void)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Delete(kKeyChildInfo));
     otLogInfoCore("Non-volatile: Deleted all ChildInfo");
@@ -365,11 +386,11 @@ void Settings::ChildInfoIterator::Advance(void)
     }
 }
 
-otError Settings::ChildInfoIterator::Delete(void)
+Error Settings::ChildInfoIterator::Delete(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(!mIsDone, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(!mIsDone, error = kErrorInvalidState);
     SuccessOrExit(error = Get<SettingsDriver>().Delete(kKeyChildInfo, mIndex));
     LogChildInfo("Removed", mChildInfo);
 
@@ -381,7 +402,7 @@ exit:
 void Settings::ChildInfoIterator::Read(void)
 {
     uint16_t length = sizeof(ChildInfo);
-    otError  error;
+    Error    error;
 
     mChildInfo.Init();
     SuccessOrExit(
@@ -389,13 +410,13 @@ void Settings::ChildInfoIterator::Read(void)
     LogChildInfo("Read", mChildInfo);
 
 exit:
-    mIsDone = (error != OT_ERROR_NONE);
+    mIsDone = (error != kErrorNone);
 }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-otError Settings::ReadDadInfo(DadInfo &aDadInfo) const
+Error Settings::ReadDadInfo(DadInfo &aDadInfo) const
 {
-    otError  error;
+    Error    error;
     uint16_t length = sizeof(DadInfo);
 
     aDadInfo.Init();
@@ -406,13 +427,13 @@ exit:
     return error;
 }
 
-otError Settings::SaveDadInfo(const DadInfo &aDadInfo)
+Error Settings::SaveDadInfo(const DadInfo &aDadInfo)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     DadInfo  prevDadInfo;
     uint16_t length = sizeof(DadInfo);
 
-    if ((Read(kKeyDadInfo, &prevDadInfo, length) == OT_ERROR_NONE) && (length == sizeof(DadInfo)) &&
+    if ((Read(kKeyDadInfo, &prevDadInfo, length) == kErrorNone) && (length == sizeof(DadInfo)) &&
         (prevDadInfo == aDadInfo))
     {
         LogDadInfo("Re-saved", aDadInfo);
@@ -427,9 +448,9 @@ exit:
     return error;
 }
 
-otError Settings::DeleteDadInfo(void)
+Error Settings::DeleteDadInfo(void)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Delete(kKeyDadInfo));
     otLogInfoCore("Non-volatile: Deleted DadInfo");
@@ -440,24 +461,146 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
-otError Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+Error Settings::SaveOmrPrefix(const Ip6::Prefix &aOmrPrefix)
+{
+    Error       error = kErrorNone;
+    Ip6::Prefix prevOmrPrefix;
+    uint16_t    length = sizeof(prevOmrPrefix);
+
+    if ((Read(kKeyOmrPrefix, &prevOmrPrefix, length) == kErrorNone) && (length == sizeof(prevOmrPrefix)) &&
+        (prevOmrPrefix == aOmrPrefix))
+    {
+        LogPrefix("Re-saved", "OMR prefix", aOmrPrefix);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = Save(kKeyOmrPrefix, &aOmrPrefix, sizeof(aOmrPrefix)));
+    LogPrefix("Saved", "OMR prefix", aOmrPrefix);
+
+exit:
+    LogFailure(error, "saving OMR prefix", false);
+    return error;
+}
+
+Error Settings::ReadOmrPrefix(Ip6::Prefix &aOmrPrefix) const
+{
+    Error    error;
+    uint16_t length = sizeof(aOmrPrefix);
+
+    aOmrPrefix.Clear();
+    SuccessOrExit(error = Read(kKeyOmrPrefix, &aOmrPrefix, length));
+    LogPrefix("Read", "OMR prefix", aOmrPrefix);
+
+exit:
+    return error;
+}
+
+Error Settings::SaveOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
+{
+    Error       error = kErrorNone;
+    Ip6::Prefix prevOnLinkPrefix;
+    uint16_t    length = sizeof(prevOnLinkPrefix);
+
+    if ((Read(kKeyOnLinkPrefix, &prevOnLinkPrefix, length) == kErrorNone) && (length == sizeof(prevOnLinkPrefix)) &&
+        (prevOnLinkPrefix == aOnLinkPrefix))
+    {
+        LogPrefix("Re-saved", "on-link prefix", aOnLinkPrefix);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = Save(kKeyOnLinkPrefix, &aOnLinkPrefix, sizeof(aOnLinkPrefix)));
+    LogPrefix("Saved", "on-link prefix", aOnLinkPrefix);
+
+exit:
+    LogFailure(error, "saving on-link prefix", false);
+    return error;
+}
+
+Error Settings::ReadOnLinkPrefix(Ip6::Prefix &aOnLinkPrefix) const
+{
+    Error    error;
+    uint16_t length = sizeof(aOnLinkPrefix);
+
+    aOnLinkPrefix.Clear();
+    SuccessOrExit(error = Read(kKeyOnLinkPrefix, &aOnLinkPrefix, length));
+    LogPrefix("Read", "on-link prefix", aOnLinkPrefix);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
+Error Settings::SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(error = Save(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), aKeyPair.GetDerLength()));
+    otLogInfoCore("Non-volatile: Saved SRP key");
+
+exit:
+    LogFailure(error, "saving SRP key", false);
+    return error;
+}
+
+Error Settings::ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const
+{
+    Error    error;
+    uint16_t length = Crypto::Ecdsa::P256::KeyPair::kMaxDerSize;
+
+    SuccessOrExit(error = Read(kKeySrpEcdsaKey, aKeyPair.GetDerBytes(), length));
+    VerifyOrExit(length <= Crypto::Ecdsa::P256::KeyPair::kMaxDerSize, error = kErrorNotFound);
+    aKeyPair.SetDerLength(static_cast<uint8_t>(length));
+    otLogInfoCore("Non-volatile: Read SRP key");
+
+exit:
+    return error;
+}
+
+Error Settings::DeleteSrpKey(void)
+{
+    Error error;
+
+    SuccessOrExit(error = Delete(kKeySrpEcdsaKey));
+    otLogInfoCore("Non-volatile: Deleted SRP key");
+
+exit:
+    LogFailure(error, "deleting SRP key", true);
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
+Error Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
 {
     return Get<SettingsDriver>().Get(aKey, 0, reinterpret_cast<uint8_t *>(aBuffer), &aSize);
 }
 
-otError Settings::Save(Key aKey, const void *aValue, uint16_t aSize)
+Error Settings::Save(Key aKey, const void *aValue, uint16_t aSize)
 {
     return Get<SettingsDriver>().Set(aKey, reinterpret_cast<const uint8_t *>(aValue), aSize);
 }
 
-otError Settings::Add(Key aKey, const void *aValue, uint16_t aSize)
+Error Settings::Add(Key aKey, const void *aValue, uint16_t aSize)
 {
     return Get<SettingsDriver>().Add(aKey, reinterpret_cast<const uint8_t *>(aValue), aSize);
 }
 
-otError Settings::Delete(Key aKey)
+Error Settings::Delete(Key aKey)
 {
     return Get<SettingsDriver>().Delete(aKey, -1);
 }
 
 } // namespace ot
+
+//---------------------------------------------------------------------------------------------------------------------
+// Default/weak implementation of settings platform APIs
+
+OT_TOOL_WEAK void otPlatSettingsSetCriticalKeys(otInstance *aInstance, const uint16_t *aKeys, uint16_t aKeysLength)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aKeys);
+    OT_UNUSED_VARIABLE(aKeysLength);
+}

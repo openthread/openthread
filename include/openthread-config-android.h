@@ -26,6 +26,10 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef OPENTHREAD_CONFIG_ANDROID_VERSION_HEADER_ENABLE
+#include <openthread-config-android-version.h>
+#endif
+
 /* Define to 1 to enable the border agent feature. */
 #define OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE 1
 

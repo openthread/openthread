@@ -28,34 +28,19 @@
 #
 
 source "tests/scripts/expect/_common.exp"
+source "tests/scripts/expect/_multinode.exp"
 
 set max_node 15
 spawn_node 1
-send "panid 0xface\n"
-expect "Done"
-send "ifconfig up\n"
-expect "Done"
-send "thread start\n"
-expect "Done"
-wait_for "state" "leader"
-expect "Done"
+setup_leader
 
 for {set i 2} {$i <= $max_node} {incr i} {
     spawn_node $i
-    send "mode r\n"
-    expect "Done"
-    send "panid 0xface\n"
-    expect "Done"
-    send "ifconfig up\n"
-    expect "Done"
-    send "thread start\n"
-    expect "Done"
-    wait_for "state" "child"
-    expect "Done"
+    setup_node $i
 }
 
 set spawn_id $spawn_ids(1)
 send "child table\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

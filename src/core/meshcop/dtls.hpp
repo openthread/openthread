@@ -108,7 +108,7 @@ public:
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    typedef otError (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
      * This method opens the DTLS socket.
@@ -117,23 +117,23 @@ public:
      * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
      * @param[in]  aContext             A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE     Successfully opened the socket.
-     * @retval OT_ERROR_ALREADY  The DTLS is already open.
+     * @retval kErrorNone     Successfully opened the socket.
+     * @retval kErrorAlready  The DTLS is already open.
      *
      */
-    otError Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
+    Error Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
 
     /**
      * This method binds this DTLS to a UDP port.
      *
      * @param[in]  aPort              The port to bind.
      *
-     * @retval OT_ERROR_NONE           Successfully bound the DTLS socket.
-     * @retval OT_ERROR_INVALID_STATE  The DTLS socket is not open.
-     * @retval OT_ERROR_ALREADY        Already bound.
+     * @retval kErrorNone           Successfully bound the DTLS socket.
+     * @retval kErrorInvalidState   The DTLS socket is not open.
+     * @retval kErrorAlready        Already bound.
      *
      */
-    otError Bind(uint16_t aPort);
+    Error Bind(uint16_t aPort);
 
     /**
      * This method binds this DTLS with a transport callback.
@@ -141,12 +141,12 @@ public:
      * @param[in]  aCallback  A pointer to a function for sending messages.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE           Successfully bound the DTLS socket.
-     * @retval OT_ERROR_INVALID_STATE  The DTLS socket is not open.
-     * @retval OT_ERROR_ALREADY        Already bound.
+     * @retval kErrorNone           Successfully bound the DTLS socket.
+     * @retval kErrorInvalidState   The DTLS socket is not open.
+     * @retval kErrorAlready        Already bound.
      *
      */
-    otError Bind(TransportCallback aCallback, void *aContext);
+    Error Bind(TransportCallback aCallback, void *aContext);
 
     /**
      * This method establishes a DTLS session.
@@ -157,11 +157,11 @@ public:
      *
      * @param[in]  aSockAddr               A reference to the remote sockaddr.
      *
-     * @retval OT_ERROR_NONE           Successfully started DTLS handshake.
-     * @retval OT_ERROR_INVALID_STATE  The DTLS socket is not open.
+     * @retval kErrorNone          Successfully started DTLS handshake.
+     * @retval kErrorInvalidState  The DTLS socket is not open.
      *
      */
-    otError Connect(const Ip6::SockAddr &aSockAddr);
+    Error Connect(const Ip6::SockAddr &aSockAddr);
 
     /**
      * This method indicates whether or not the DTLS session is active.
@@ -198,11 +198,11 @@ public:
      *
      * @param[in]  aPsk  A pointer to the PSK.
      *
-     * @retval OT_ERROR_NONE          Successfully set the PSK.
-     * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
+     * @retval kErrorNone          Successfully set the PSK.
+     * @retval kErrorInvalidArgs   The PSK is invalid.
      *
      */
-    otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+    Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
@@ -217,7 +217,7 @@ public:
      * @param[in]  aPskIdentity  The Identity Name for the PSK.
      * @param[in]  aPskIdLength  The PSK Identity Length.
      *
-     * @retval OT_ERROR_NONE  Successfully set the PSK.
+     * @retval kErrorNone  Successfully set the PSK.
      *
      */
     void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
@@ -264,12 +264,12 @@ public:
      * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
      * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
      *
-     * @retval OT_ERROR_INVALID_STATE   Not connected yet.
-     * @retval OT_ERROR_NONE            Successfully get the peer certificate.
-     * @retval OT_ERROR_NO_BUFS         Can't allocate memory for certificate.
+     * @retval kErrorInvalidState   Not connected yet.
+     * @retval kErrorNone           Successfully get the peer certificate.
+     * @retval kErrorNoBufs         Can't allocate memory for certificate.
      *
      */
-    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+    Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
 #endif
 
     /**
@@ -291,10 +291,10 @@ public:
      * @param[in]  aClientId  A pointer to the Client ID.
      * @param[in]  aLength    Number of bytes in the Client ID.
      *
-     * @retval OT_ERROR_NONE  Successfully set the Client ID.
+     * @retval kErrorNone  Successfully set the Client ID.
      *
      */
-    otError SetClientId(const uint8_t *aClientId, uint8_t aLength);
+    Error SetClientId(const uint8_t *aClientId, uint8_t aLength);
 #endif
 
     /**
@@ -303,11 +303,11 @@ public:
      * @param[in]  aMessage  A message to send via DTLS.
      * @param[in]  aLength   Number of bytes in the data buffer.
      *
-     * @retval OT_ERROR_NONE     Successfully sent the data via the DTLS session.
-     * @retval OT_ERROR_NO_BUFS  A message is too long.
+     * @retval kErrorNone     Successfully sent the data via the DTLS session.
+     * @retval kErrorNoBufs   A message is too long.
      *
      */
-    otError Send(Message &aMessage, uint16_t aLength);
+    Error Send(Message &aMessage, uint16_t aLength);
 
     /**
      * This method provides a received DTLS message to the DTLS object.
@@ -357,8 +357,8 @@ private:
 #endif
     };
 
-    void    FreeMbedtls(void);
-    otError Setup(bool aClient);
+    void  FreeMbedtls(void);
+    Error Setup(bool aClient);
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     /**
@@ -402,8 +402,8 @@ private:
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
-    void    HandleDtlsReceive(const uint8_t *aBuf, uint16_t aLength);
-    otError HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
+    void  HandleDtlsReceive(const uint8_t *aBuf, uint16_t aLength);
+    Error HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
 
     void Process(void);
 
@@ -414,7 +414,7 @@ private:
     uint8_t mPskLength;
 
     static const mbedtls_ecp_group_id sCurves[];
-#ifdef MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
     static const int sHashes[];
 #endif
 

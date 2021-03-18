@@ -34,11 +34,17 @@ display_usage()
     echo ""
     echo "Usage: $(basename "$0") [options] <config>"
     echo "    <config> can be:"
-    echo "        ncp        : Build OpenThread NCP FTD mode with simulation platform"
-    echo "        rcp        : Build OpenThread RCP (NCP in radio mode) with simulation platform"
-    echo "        posix      : Build OpenThread POSIX App NCP"
-    echo "        cmake      : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
-    echo "        cmake-posix: Configure and build OpenThread POSIX host using cmake/ninja"
+    echo "        ncp             : Build OpenThread NCP FTD mode with simulation platform"
+    echo "        ncp-15.4        : Build OpenThread NCP FTD mode with simulation platform - 15.4 radio"
+    echo "        ncp-trel        : Build OpenThread NCP FTD mode with simulation platform - TREL radio "
+    echo "        ncp-15.4+trel   : Build OpenThread NCP FTD mode with simulation platform - multi radio (15.4+TREL)"
+    echo "        rcp             : Build OpenThread RCP (NCP in radio mode) with simulation platform"
+    echo "        posix           : Build OpenThread POSIX NCP"
+    echo "        posix-15.4      : Build OpenThread POSIX NCP - 15.4 radio"
+    echo "        posix-trel      : Build OpenThread POSIX NCP - TREL radio "
+    echo "        posix-15.4+trel : Build OpenThread POSIX NCP - multi radio (15.4+TREL)"
+    echo "        cmake           : Configure and build OpenThread using cmake/ninja (RCP and NCP) only"
+    echo "        cmake-posix:    : Configure and build OpenThread POSIX using cmake/ninja"
     echo ""
     echo "Options:"
     echo "        -c/--enable-coverage  Enable code coverage"
@@ -100,9 +106,9 @@ else
 fi
 
 case ${build_config} in
-    ncp)
+    ncp | ncp-)
         echo "==================================================================================================="
-        echo "Building OpenThread NCP FTD mode with POSIX platform"
+        echo "Building OpenThread NCP FTD mode with simulation platform (radios determined by config)"
         echo "==================================================================================================="
         ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
@@ -114,9 +120,60 @@ case ${build_config} in
         make -j 8 || die
         ;;
 
+    ncp-15.4)
+        echo "==================================================================================================="
+        echo "Building OpenThread NCP FTD mode with simulation platform - 15.4 radio"
+        echo "==================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=0"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${configure_options[@]}" || die
+        make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4
+        ;;
+
+    ncp-trel)
+        echo "==================================================================================================="
+        echo "Building OpenThread NCP FTD mode with simulation platform - TREL radio"
+        echo "==================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=0"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${configure_options[@]}" || die
+        make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-trel
+        ;;
+
+    ncp-15.4+trel | ncp-trel+15.4)
+        echo "==================================================================================================="
+        echo "Building OpenThread NCP FTD mode with simulation platform - multi radio (15.4 + TREL)"
+        echo "==================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-simulation.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-examples=simulation \
+            "${configure_options[@]}" || die
+        make -j 8 || die
+        cp -p ${top_builddir}/examples/apps/ncp/ot-ncp-ftd ${top_builddir}/examples/apps/ncp/ot-ncp-ftd-15.4-trel
+        ;;
+
     rcp)
         echo "===================================================================================================="
-        echo "Building OpenThread RCP (NCP in radio mode) with POSIX platform"
+        echo "Building OpenThread RCP (NCP in radio mode) with simulation platform"
         echo "===================================================================================================="
         ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
@@ -132,13 +189,61 @@ case ${build_config} in
         make -j 8 || die
         ;;
 
-    posix | posix-app | posixapp)
+    posix | posix-)
         echo "===================================================================================================="
-        echo "Building OpenThread POSIX App NCP"
+        echo "Building OpenThread POSIX (radios determined by config)"
         echo "===================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
         ./bootstrap || die "bootstrap failed"
         cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-platform=posix \
+            "${configure_options[@]}" || die
+        make -j 8 || die
+        ;;
+
+    posix-15.4)
+        echo "===================================================================================================="
+        echo "Building OpenThread POSIX - 15.4 radio"
+        echo "===================================================================================================="
         cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=0"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-platform=posix \
+            "${configure_options[@]}" || die
+        make -j 8 || die
+        ;;
+
+    posix-trel)
+        echo "===================================================================================================="
+        echo "Building OpenThread POSIX - TREL radio"
+        echo "===================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=0"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
+        ${top_srcdir}/configure \
+            CPPFLAGS="$cppflags_config" \
+            --with-platform=posix \
+            "${configure_options[@]}" || die
+        make -j 8 || die
+        ;;
+
+    posix-trel+15.4 | posix-15.4+trel)
+        echo "===================================================================================================="
+        echo "Building OpenThread POSIX - multi radio link (15.4 + TREL)"
+        echo "===================================================================================================="
+        cppflags_config='-DOPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"../tests/toranj/openthread-core-toranj-config-posix.h\"'
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE=1"
+        cppflags_config="${cppflags_config} -DOPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1"
+        ./bootstrap || die "bootstrap failed"
+        cd "${top_builddir}" || die "cd failed"
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
@@ -159,7 +264,7 @@ case ${build_config} in
 
     cmake-posix-host | cmake-posix | cmake-p)
         echo "===================================================================================================="
-        echo "Building OpenThread POSIX host platform using cmake"
+        echo "Building OpenThread POSIX using cmake"
         echo "===================================================================================================="
         cd "${top_builddir}" || die "cd failed"
         cmake -GNinja -DOT_PLATFORM=posix -DOT_COMPILE_WARNING_AS_ERROR=on -DOT_APP_CLI=off \

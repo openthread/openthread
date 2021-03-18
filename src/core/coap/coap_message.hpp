@@ -149,6 +149,7 @@ enum : uint16_t
     kOptionLocationQuery = OT_COAP_OPTION_LOCATION_QUERY, ///< Location-Query
     kOptionBlock2        = OT_COAP_OPTION_BLOCK2,         ///< Block2 (RFC7959)
     kOptionBlock1        = OT_COAP_OPTION_BLOCK1,         ///< Block1 (RFC7959)
+    kOptionSize2         = OT_COAP_OPTION_SIZE2,          ///< Size2 (RFC7959)
     kOptionProxyUri      = OT_COAP_OPTION_PROXY_URI,      ///< Proxy-Uri
     kOptionProxyScheme   = OT_COAP_OPTION_PROXY_SCHEME,   ///< Proxy-Scheme
     kOptionSize1         = OT_COAP_OPTION_SIZE1,          ///< Size1
@@ -222,33 +223,33 @@ public:
      * @param[in]  aCode              The Code value.
      * @param[in]  aUriPath           A pointer to a null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError Init(Type aType, Code aCode, const char *aUriPath);
+    Error Init(Type aType, Code aCode, const char *aUriPath);
 
     /**
      * This method initializes the CoAP header as `kTypeConfirmable` and `kCodePost` with a given URI Path.
      *
      * @param[in]  aUriPath           A pointer to a null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError InitAsConfirmablePost(const char *aUriPath);
+    Error InitAsConfirmablePost(const char *aUriPath);
 
     /**
      * This method initializes the CoAP header as `kTypeNonConfirmable` and `kCodePost` with a given URI Path.
      *
      * @param[in]  aUriPath           A pointer to a null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError InitAsNonConfirmablePost(const char *aUriPath);
+    Error InitAsNonConfirmablePost(const char *aUriPath);
 
     /**
      * This method initializes the CoAP header as `kCodePost` with a given URI Path with its type determined from a
@@ -258,11 +259,11 @@ public:
      *                                `kTypeNonConfirmable` if multicast address, `kTypeConfirmable` otherwise.
      * @param[in]  aUriPath           A pointer to a null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError InitAsPost(const Ip6::Address &aDestination, const char *aUriPath);
+    Error InitAsPost(const Ip6::Address &aDestination, const char *aUriPath);
 
     /**
      * This method writes header to the message. This must be called before sending the message.
@@ -380,33 +381,33 @@ public:
      * @param[in]  aToken        A pointer to the Token value.
      * @param[in]  aTokenLength  The Length of @p aToken.
      *
-     * @retval OT_ERROR_NONE     Successfully set the token value.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully set the token value.
+     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
      *
      */
-    otError SetToken(const uint8_t *aToken, uint8_t aTokenLength);
+    Error SetToken(const uint8_t *aToken, uint8_t aTokenLength);
 
     /**
      * This method sets the Token value and length by copying it from another given message.
      *
      * @param[in] aMessage       The message to copy the Token from.
      *
-     * @retval OT_ERROR_NONE     Successfully set the token value.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully set the token value.
+     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
      *
      */
-    otError SetTokenFromMessage(const Message &aMessage);
+    Error SetTokenFromMessage(const Message &aMessage);
 
     /**
      * This method sets the Token length and randomizes its value.
      *
      * @param[in]  aTokenLength  The Length of a Token to set.
      *
-     * @retval OT_ERROR_NONE     Successfully set the token value.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the token value.
+     * @retval kErrorNone    Successfully set the token value.
+     * @retval kErrorNoBufs  Insufficient message buffers available to set the token value.
      *
      */
-    otError GenerateRandomToken(uint8_t aTokenLength);
+    Error GenerateRandomToken(uint8_t aTokenLength);
 
     /**
      * This method checks if Tokens in two CoAP headers are equal.
@@ -426,12 +427,12 @@ public:
      * @param[in] aLength   The CoAP Option length.
      * @param[in] aValue    A pointer to the CoAP Option value (@p aLength bytes are used as Option value).
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue);
+    Error AppendOption(uint16_t aNumber, uint16_t aLength, const void *aValue);
 
     /**
      * This method appends an unsigned integer CoAP option as specified in RFC-7252 section-3.2
@@ -439,12 +440,12 @@ public:
      * @param[in]  aNumber  The CoAP Option number.
      * @param[in]  aValue   The CoAP Option unsigned integer value.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendUintOption(uint16_t aNumber, uint32_t aValue);
+    Error AppendUintOption(uint16_t aNumber, uint32_t aValue);
 
     /**
      * This method appends a string CoAP option.
@@ -452,35 +453,35 @@ public:
      * @param[in]  aNumber  The CoAP Option number.
      * @param[in]  aValue   The CoAP Option string value.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendStringOption(uint16_t aNumber, const char *aValue);
+    Error AppendStringOption(uint16_t aNumber, const char *aValue);
 
     /**
      * This method appends an Observe option.
      *
      * @param[in]  aObserve  Observe field value.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    otError AppendObserveOption(uint32_t aObserve) { return AppendUintOption(kOptionObserve, aObserve & kObserveMask); }
+    Error AppendObserveOption(uint32_t aObserve) { return AppendUintOption(kOptionObserve, aObserve & kObserveMask); }
 
     /**
      * This method appends a Uri-Path option.
      *
      * @param[in]  aUriPath           A pointer to a null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendUriPathOptions(const char *aUriPath);
+    Error AppendUriPathOptions(const char *aUriPath);
 
     /**
      * This method reads the Uri-Path options and constructs the URI path in the buffer referenced by @p `aUriPath`.
@@ -488,11 +489,11 @@ public:
      * @param[in] aUriPath  A reference to the buffer for storing URI path.
      *                      NOTE: The buffer size must be `kMaxReceivedUriPath + 1`.
      *
-     * @retval  OT_ERROR_NONE   Successfully read the Uri-Path options.
-     * @retval  OT_ERROR_PARSE  CoAP Option header not well-formed.
+     * @retval  kErrorNone   Successfully read the Uri-Path options.
+     * @retval  kErrorParse  CoAP Option header not well-formed.
      *
      */
-    otError ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
+    Error ReadUriPathOptions(char (&aUriPath)[kMaxReceivedUriPath + 1]) const;
 
     /**
      * This method appends a Block option
@@ -502,36 +503,36 @@ public:
      * @param[in]  aMore              Boolean to indicate more blocks are to be sent.
      * @param[in]  aSize              Maximum block size.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSize aSize);
+    Error AppendBlockOption(BlockType aType, uint32_t aNum, bool aMore, otCoapBlockSzx aSize);
 
     /**
      * This method appends a Proxy-Uri option.
      *
      * @param[in]  aProxyUri          A pointer to a null-terminated string.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendProxyUriOption(const char *aProxyUri) { return AppendStringOption(kOptionProxyUri, aProxyUri); }
+    Error AppendProxyUriOption(const char *aProxyUri) { return AppendStringOption(kOptionProxyUri, aProxyUri); }
 
     /**
      * This method appends a Content-Format option.
      *
      * @param[in]  aContentFormat  The Content Format value.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      *
      */
-    otError AppendContentFormatOption(otCoapOptionContentFormat aContentFormat)
+    Error AppendContentFormatOption(otCoapOptionContentFormat aContentFormat)
     {
         return AppendUintOption(kOptionContentFormat, static_cast<uint32_t>(aContentFormat));
     }
@@ -541,33 +542,89 @@ public:
      *
      * @param[in]  aMaxAge  The Max-Age value.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    otError AppendMaxAgeOption(uint32_t aMaxAge) { return AppendUintOption(kOptionMaxAge, aMaxAge); }
+    Error AppendMaxAgeOption(uint32_t aMaxAge) { return AppendUintOption(kOptionMaxAge, aMaxAge); }
 
     /**
      * This method appends a single Uri-Query option.
      *
      * @param[in]  aUriQuery  A pointer to null-terminated string, which should contain a single key=value pair.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the option.
-     * @retval OT_ERROR_INVALID_ARGS  The option type is not equal or greater than the last option type.
-     * @retval OT_ERROR_NO_BUFS       The option length exceeds the buffer size.
+     * @retval kErrorNone         Successfully appended the option.
+     * @retval kErrorInvalidArgs  The option type is not equal or greater than the last option type.
+     * @retval kErrorNoBufs       The option length exceeds the buffer size.
      */
-    otError AppendUriQueryOption(const char *aUriQuery) { return AppendStringOption(kOptionUriQuery, aUriQuery); }
+    Error AppendUriQueryOption(const char *aUriQuery) { return AppendStringOption(kOptionUriQuery, aUriQuery); }
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    /**
+     * This function reads the information contained in a Block1 or Block2 option and set it in
+     * the HelpData of the message.
+     *
+     * @param[in]   aBlockType  Block1 or Block2 option value.
+     *
+     * @retval  kErrorNone          The option has been found and is valid.
+     * @retval  kErrorNotFound      The option has not been found.
+     * @retval  kErrorInvalidArgs   The option is invalid.
+     */
+    Error ReadBlockOptionValues(uint16_t aBlockType);
+
+    /**
+     * This method returns the current header length of a message.
+     *
+     * @returns The length of the message header.
+     *
+     */
+    uint16_t GetHeaderLength(void) const { return GetHelpData().mHeaderLength; }
+
+    /**
+     * This method returns the block number of a CoAP block-wise transfer message.
+     *
+     * @returns The block number.
+     *
+     */
+    uint32_t GetBlockWiseBlockNumber(void) const { return GetHelpData().mBlockWiseData.mBlockNumber; }
+
+    /**
+     * This method checks if the More Blocks flag is set.
+     *
+     * @retval TRUE   More Blocks flag is set.
+     * @retval FALSE  More Blocks flag is not set.
+     *
+     */
+    bool IsMoreBlocksFlagSet(void) const { return GetHelpData().mBlockWiseData.mMoreBlocks; }
+
+    /**
+     * This method returns the block size of a CoAP block-wise transfer message.
+     *
+     * @returns The block size.
+     *
+     */
+    otCoapBlockSzx GetBlockWiseBlockSize(void) const { return GetHelpData().mBlockWiseData.mBlockSize; }
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+    /**
+     * This function reads and reassembles the URI path string and fills it into @p aUriPath.
+     *
+     * @retval  kErrorNone      URI path string has been reassembled.
+     * @retval  kErrorNoBufs    URI path string is too long.
+     *
+     */
+    Error GetUriPath(char *aUriPath) const;
 
     /**
      * This method adds Payload Marker indicating beginning of the payload to the CoAP header.
      *
      * It also set offset to the start of payload.
      *
-     * @retval OT_ERROR_NONE     Payload Marker successfully added.
-     * @retval OT_ERROR_NO_BUFS  Message Payload Marker exceeds the buffer size.
+     * @retval kErrorNone    Payload Marker successfully added.
+     * @retval kErrorNoBufs  Message Payload Marker exceeds the buffer size.
      *
      */
-    otError SetPayloadMarker(void);
+    Error SetPayloadMarker(void);
 
     /**
      * This method returns the offset of the first CoAP option.
@@ -580,22 +637,49 @@ public:
     /**
      * This method parses CoAP header and moves offset end of CoAP header.
      *
-     * @retval  OT_ERROR_NONE   Successfully parsed CoAP header from the message.
-     * @retval  OT_ERROR_PARSE  Failed to parse the CoAP header.
+     * @retval  kErrorNone   Successfully parsed CoAP header from the message.
+     * @retval  kErrorParse  Failed to parse the CoAP header.
      *
      */
-    otError ParseHeader(void);
+    Error ParseHeader(void);
 
     /**
      * This method sets a default response header based on request header.
      *
      * @param[in]  aRequest  The request message.
      *
-     * @retval OT_ERROR_NONE     Successfully set the default response header.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers available to set the default response header.
+     * @retval kErrorNone    Successfully set the default response header.
+     * @retval kErrorNoBufs  Insufficient message buffers available to set the default response header.
      *
      */
-    otError SetDefaultResponseHeader(const Message &aRequest);
+    Error SetDefaultResponseHeader(const Message &aRequest);
+
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+
+    /**
+     * This method sets the block number value in the message HelpData.
+     *
+     * @param[in]   aBlockNumber    Block number value to set.
+     *
+     */
+    void SetBlockWiseBlockNumber(uint32_t aBlockNumber) { GetHelpData().mBlockWiseData.mBlockNumber = aBlockNumber; }
+
+    /**
+     * This method sets the More Blocks falg in the message HelpData.
+     *
+     * @param[in]   aMoreBlocks    TRUE or FALSE.
+     *
+     */
+    void SetMoreBlocksFlag(bool aMoreBlocks) { GetHelpData().mBlockWiseData.mMoreBlocks = aMoreBlocks; }
+
+    /**
+     * This method sets the block size value in the message HelpData.
+     *
+     * @param[in]   aBlockSize    Block size value to set.
+     *
+     */
+    void SetBlockWiseBlockSize(otCoapBlockSzx aBlockSize) { GetHelpData().mBlockWiseData.mBlockSize = aBlockSize; }
+#endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
      * This method checks if a header is an empty message header.
@@ -845,6 +929,15 @@ private:
         kBlockNumMax = 0xffff,
     };
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    struct BlockWiseData
+    {
+        uint32_t       mBlockNumber;
+        bool           mMoreBlocks;
+        otCoapBlockSzx mBlockSize;
+    };
+#endif
+
     /**
      * This structure represents a CoAP header excluding CoAP options.
      *
@@ -868,6 +961,9 @@ private:
         uint16_t mOptionLast;
         uint16_t mHeaderOffset; ///< The byte offset for the CoAP Header
         uint16_t mHeaderLength;
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+        BlockWiseData mBlockWiseData;
+#endif
     };
 
     const HelpData &GetHelpData(void) const
@@ -962,11 +1058,11 @@ public:
          *
          * @param[in] aMessage  The CoAP message.
          *
-         * @retval OT_ERROR_NONE   Successfully initialized. Iterator is either at the first option or done.
-         * @retval OT_ERROR_PARSE  CoAP Option header in @p aMessage is not well-formed.
+         * @retval kErrorNone   Successfully initialized. Iterator is either at the first option or done.
+         * @retval kErrorParse  CoAP Option header in @p aMessage is not well-formed.
          *
          */
-        otError Init(const Message &aMessage);
+        Error Init(const Message &aMessage);
 
         /**
          * This method initializes the iterator to iterate over CoAP Options in a CoAP message matching a given Option
@@ -981,11 +1077,11 @@ public:
          * @param[in] aMessage  The CoAP message.
          * @param[in] aNumber   The CoAP Option Number.
          *
-         * @retval  OT_ERROR_NONE   Successfully initialized. Iterator is either at the first matching option or done.
-         * @retval  OT_ERROR_PARSE  CoAP Option header in @p aMessage is not well-formed.
+         * @retval  kErrorNone   Successfully initialized. Iterator is either at the first matching option or done.
+         * @retval  kErrorParse  CoAP Option header in @p aMessage is not well-formed.
          *
          */
-        otError Init(const Message &aMessage, uint16_t aNumber) { return InitOrAdvance(&aMessage, aNumber); }
+        Error Init(const Message &aMessage, uint16_t aNumber) { return InitOrAdvance(&aMessage, aNumber); }
 
         /**
          * This method indicates whether or not the iterator is done (i.e., has reached the end of CoAP Option Header).
@@ -1012,11 +1108,11 @@ public:
          *
          * The iterator is updated to point to the next option or marked as done when there are no more options.
          *
-         * @retval  OT_ERROR_NONE   Successfully advanced the iterator.
-         * @retval  OT_ERROR_PARSE  CoAP Option header is not well-formed.
+         * @retval  kErrorNone   Successfully advanced the iterator.
+         * @retval  kErrorParse  CoAP Option header is not well-formed.
          *
          */
-        otError Advance(void);
+        Error Advance(void);
 
         /**
          * This method advances the iterator to the next CoAP Option in the header matching a given Option Number value.
@@ -1026,11 +1122,11 @@ public:
          *
          * @param[in] aNumber   The CoAP Option Number.
          *
-         * @retval  OT_ERROR_NONE   Successfully advanced the iterator.
-         * @retval  OT_ERROR_PARSE  CoAP Option header is not well-formed.
+         * @retval  kErrorNone   Successfully advanced the iterator.
+         * @retval  kErrorParse  CoAP Option header is not well-formed.
          *
          */
-        otError Advance(uint16_t aNumber) { return InitOrAdvance(nullptr, aNumber); }
+        Error Advance(uint16_t aNumber) { return InitOrAdvance(nullptr, aNumber); }
 
         /**
          * This method gets the CoAP message associated with the iterator.
@@ -1055,23 +1151,23 @@ public:
          * @param[out]  aValue   The pointer to a buffer to copy the Option Value. The buffer is assumed to be
          *                       sufficiently large (i.e. at least `GetOption()->GetLength()` bytes).
          *
-         * @retval OT_ERROR_NONE        Successfully read and copied the Option Value into given buffer.
-         * @retval OT_ERROR_NOT_FOUND   Iterator is done (not pointing to any option).
+         * @retval kErrorNone       Successfully read and copied the Option Value into given buffer.
+         * @retval kErrorNotFound   Iterator is done (not pointing to any option).
          *
          */
-        otError ReadOptionValue(void *aValue) const;
+        Error ReadOptionValue(void *aValue) const;
 
         /**
          * This method read the current Option Value which is assumed to be an unsigned integer.
          *
          * @param[out]  aUintValue      A reference to `uint64_t` to output the read Option Value.
          *
-         * @retval OT_ERROR_NONE        Successfully read the Option value.
-         * @retval OT_ERROR_NO_BUFS     Value is too long to fit in an `uint64_t`.
-         * @retval OT_ERROR_NOT_FOUND   Iterator is done (not pointing to any option).
+         * @retval kErrorNone       Successfully read the Option value.
+         * @retval kErrorNoBufs     Value is too long to fit in an `uint64_t`.
+         * @retval kErrorNotFound   Iterator is done (not pointing to any option).
          *
          */
-        otError ReadOptionValue(uint64_t &aUintValue) const;
+        Error ReadOptionValue(uint64_t &aUintValue) const;
 
         /**
          * This method gets the offset of beginning of the CoAP message payload (after the CoAP header).
@@ -1093,9 +1189,9 @@ public:
         void MarkAsDone(void) { mOption.mLength = kIteratorDoneLength; }
         void MarkAsParseErrored(void) { MarkAsDone(), mNextOptionOffset = kNextOptionOffsetParseError; }
 
-        otError Read(uint16_t aLength, void *aBuffer);
-        otError ReadExtendedOptionField(uint16_t &aValue);
-        otError InitOrAdvance(const Message *aMessage, uint16_t aNumber);
+        Error Read(uint16_t aLength, void *aBuffer);
+        Error ReadExtendedOptionField(uint16_t &aValue);
+        Error InitOrAdvance(const Message *aMessage, uint16_t aNumber);
     };
 
     /**

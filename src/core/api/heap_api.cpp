@@ -37,8 +37,6 @@
 
 #include "common/instance.hpp"
 
-#if !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE || OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-
 #if OPENTHREAD_RADIO
 
 void *otHeapCAlloc(size_t aCount, size_t aSize)
@@ -61,25 +59,14 @@ void otHeapFree(void *aPointer)
     OT_ASSERT(false);
 }
 
-#else // OPENTHREAD_RADIO
-
+#else  // OPENTHREAD_RADIO
 void *otHeapCAlloc(size_t aCount, size_t aSize)
 {
-    return ot::Instance::Get().HeapCAlloc(aCount, aSize);
+    return ot::Instance::HeapCAlloc(aCount, aSize);
 }
 
 void otHeapFree(void *aPointer)
 {
-    ot::Instance::Get().HeapFree(aPointer);
+    ot::Instance::HeapFree(aPointer);
 }
-
 #endif // OPENTHREAD_RADIO
-
-#endif // !OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE || OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-
-#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE && !OPENTHREAD_RADIO
-void otHeapSetCAllocFree(otHeapCAllocFn aCAlloc, otHeapFreeFn aFree)
-{
-    ot::Instance::HeapSetCAllocFree(aCAlloc, aFree);
-}
-#endif // OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE

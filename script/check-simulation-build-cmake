@@ -46,6 +46,14 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON
 
+    # Build Thread 1.2 Backbone Router without DUA ND Proxying
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
+
+    # Build Thread 1.2 Backbone Router without Multicast Routing
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
+
     # Build with Vendor Extension
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp

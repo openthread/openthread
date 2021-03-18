@@ -35,14 +35,14 @@ spawn_node 1
 
 send "promiscuous\n"
 expect "Disabled"
-expect "Done"
+expect_line "Done"
 send "promiscuous enable\n"
-expect "Done"
+expect_line "Done"
 send "promiscuous\n"
 expect "Enabled"
-expect "Done"
+expect_line "Done"
 send "promiscuous disable\n"
-expect "Done"
+expect_line "Done"
 send "promiscuous a\n"
 expect "Error 7: InvalidArgs"
 
@@ -56,19 +56,19 @@ send "channel\n"
 expect "channel"
 expect -re {(\d+)}
 set channel $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 
 spawn_node 3
 send "channel $channel\n"
-expect "Done"
+expect_line "Done"
 send "promiscuous enable\n"
-expect "Done"
+expect_line "Done"
 
 switch_node 2
 send "ipaddr\n"
 expect -re {(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4})}
 set addr $expect_out(1,string)
-expect "Done"
+expect_line "Done"
 
 switch_node 1
 send "ping $addr\n"
@@ -79,6 +79,6 @@ expect -re {============================================\[len = +\d+]===========
 expect -re {\|( ([0-9A-Z]{2}|\.\.)){16}\|( .){16}\|}
 expect -- "-----------------------------------------------------------------------------------"
 send "promiscuous disable\n"
-expect "Done"
+expect_line "Done"
 
 dispose_all

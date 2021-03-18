@@ -90,7 +90,7 @@ public:
     class ChildInfo
     {
         friend class DataPollHandler;
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         friend class CslTxScheduler;
 #endif
 
@@ -117,6 +117,11 @@ public:
         bool IsFrameReplacePending(void) const { return mFrameReplacePending; }
         void SetFrameReplacePending(bool aReplacePending) { mFrameReplacePending = aReplacePending; }
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        Mac::RadioType GetLastPollRadioType(void) const { return mLastPollRadioType; }
+        void           SetLastPollRadioType(Mac::RadioType aRadioType) { mLastPollRadioType = aRadioType; }
+#endif
+
         uint32_t mIndirectFrameCounter;    // Frame counter for current indirect frame (used for retx).
         uint8_t  mIndirectKeyId;           // Key Id for current indirect frame (used for retx).
         uint8_t  mIndirectDsn;             // MAC level Data Sequence Number (DSN) for retx attempts.
@@ -124,6 +129,9 @@ public:
         bool     mDataPollPending : 1;     // Indicates whether or not a Data Poll was received.
         bool     mFramePurgePending : 1;   // Indicates a pending purge request for the current indirect frame.
         bool     mFrameReplacePending : 1; // Indicates a pending replace request for the current indirect frame.
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+        Mac::RadioType mLastPollRadioType; // The radio link last data poll frame was received on.
+#endif
 
         static_assert(kMaxPollTriggeredTxAttempts < (1 << 5), "mIndirectTxAttempts cannot fit max!");
     };
@@ -163,27 +171,27 @@ public:
          * @param[out] aContext  A reference to a `FrameContext` where the context for the new frame would be placed.
          * @param[in]  aChild    The child for which to prepare the frame.
          *
-         * @retval OT_ERROR_NONE   Frame was prepared successfully
-         * @retval OT_ERROR_ABORT  Indirect transmission to child should be aborted (no frame for the child).
+         * @retval kErrorNone   Frame was prepared successfully.
+         * @retval kErrorAbort  Indirect transmission to child should be aborted (no frame for the child).
          *
          */
-        otError PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
+        Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);
 
         /**
          * This callback method notifies the end of indirect frame transmission to a child.
          *
          * @param[in]  aFrame     The transmitted frame.
          * @param[in]  aContext   The context associated with the frame when it was prepared.
-         * @param[in]  aError     OT_ERROR_NONE when the frame was transmitted successfully,
-         *                        OT_ERROR_NO_ACK when the frame was transmitted but no ACK was received,
-         *                        OT_ERROR_CHANNEL_ACCESS_FAILURE tx failed due to activity on the channel,
-         *                        OT_ERROR_ABORT when transmission was aborted for other reasons.
+         * @param[in]  aError     kErrorNone when the frame was transmitted successfully,
+         *                        kErrorNoAck when the frame was transmitted but no ACK was received,
+         *                        kErrorChannelAccessFailure tx failed due to activity on the channel,
+         *                        kErrorAbort when transmission was aborted for other reasons.
          * @param[in]  aChild     The child to which the frame was transmitted.
          *
          */
         void HandleSentFrameToChild(const Mac::TxFrame &aFrame,
                                     const FrameContext &aContext,
-                                    otError             aError,
+                                    Error               aError,
                                     Child &             aChild);
 
         /**
@@ -262,11 +270,11 @@ public:
 
 private:
     // Callbacks from MAC
-    void    HandleDataPoll(Mac::RxFrame &aFrame);
-    otError HandleFrameRequest(Mac::TxFrame &aFrame);
-    void    HandleSentFrame(const Mac::TxFrame &aFrame, otError aError);
+    void          HandleDataPoll(Mac::RxFrame &aFrame);
+    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
+    void          HandleSentFrame(const Mac::TxFrame &aFrame, Error aError);
 
-    void HandleSentFrame(const Mac::TxFrame &aFrame, otError aError, Child &aChild);
+    void HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, Child &aChild);
     void ProcessPendingPolls(void);
 
     // In the current implementation of `DataPollHandler`, we can have a

@@ -26,4 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_subdirectory(unit)
+if(OT_PLATFORM STREQUAL "simulation")
+    if(OT_FTD)
+        add_subdirectory(unit)
+    endif()
+endif()
+
+option(OT_FUZZ_TARGETS "enable fuzz targets" OFF)
+
+if(OT_FUZZ_TARGETS)
+    add_subdirectory(fuzz)
+endif()
