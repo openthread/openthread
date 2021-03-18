@@ -2,9 +2,9 @@
 
 This directory contains example platform drivers for the Telink B91.
 
-The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities. 
+The example platform drivers are intended to present the minimal code necessary to support OpenThread. As a result, the example platform drivers do not necessarily highlight the platform's full capabilities.
 
-This platform is intended for exprimentation and exploration of OpenThread, not a production ready environment. 
+This platform is intended for exprimentation and exploration of OpenThread, not a production ready environment.
 
 ## Build Environment
 
@@ -14,7 +14,7 @@ After the Telink risc-v toolchain is installed, the Cygwin environment is instal
 
 [gnu-autoconf]: https://www.gnu.org/software/autoconf
 [gnu-automake]: https://www.gnu.org/software/automake
-[gnu-libtool]:https://www.gnu.org/software/libtool
+[gnu-libtool]: https://www.gnu.org/software/libtool
 [python]: https://www.python.org
 [telink-toolchain]: http://wiki.telink-semi.cn/tools_and_sdk/Tools/IDE/telink_v323_rds_official_windows.zip
 
