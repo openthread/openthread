@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import config
 import unittest
 import thread_cert
 
@@ -70,39 +71,27 @@ class TestReset(thread_cert.TestCase):
         self.simulator.go(7)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
-        leader_addrs = self.nodes[LEADER].get_addrs()
-        router_addrs = self.nodes[ROUTER].get_addrs()
-
         for i in range(0, 1010):
-            self.assertTrue(self.nodes[ED].ping(leader_addrs[0]))
+            self.assertTrue(self.nodes[ED].ping(self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)))
         self.simulator.go(1)
 
-        # 1 - Leader
         self.nodes[LEADER].reset()
         self.nodes[LEADER].start()
         self.simulator.go(7)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        for addr in router_addrs:
-            self.assertTrue(self.nodes[LEADER].ping(addr))
-
-        # 2 - Router
         self.nodes[ROUTER].reset()
         self.nodes[ROUTER].start()
         self.simulator.go(7)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        for addr in leader_addrs:
-            self.assertTrue(self.nodes[ROUTER].ping(addr))
-
-        # 3 - Child
         self.nodes[ED].reset()
+        self.nodes[LEADER].add_allowlist(self.nodes[ROUTER].get_addr64())
+        self.nodes[LEADER].enable_allowlist()
         self.nodes[ED].start()
         self.simulator.go(7)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
-
-        for addr in router_addrs:
-            self.assertTrue(self.nodes[ED].ping(addr))
+        self.assertTrue(self.nodes[ED].ping(self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)))
 
 
 if __name__ == '__main__':
