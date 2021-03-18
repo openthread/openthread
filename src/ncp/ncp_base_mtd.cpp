@@ -284,9 +284,10 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
+        uint8_t paramId;
+
         SuccessOrExit(error = mDecoder.OpenStruct());
 
-        uint8_t paramId;
         SuccessOrExit(error = mDecoder.ReadUint8(paramId));
 
         switch (paramId)
