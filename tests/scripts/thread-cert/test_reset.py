@@ -27,6 +27,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
+import config
 import unittest
 import thread_cert
 
@@ -71,7 +72,7 @@ class TestReset(thread_cert.TestCase):
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         for i in range(0, 1010):
-            self.assertTrue(self.nodes[ED].ping(self.nodes[LEADER].get_rloc()))
+            self.assertTrue(self.nodes[ED].ping(self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)))
         self.simulator.go(1)
 
         self.nodes[LEADER].reset()
@@ -90,7 +91,7 @@ class TestReset(thread_cert.TestCase):
         self.nodes[ED].start()
         self.simulator.go(7)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
-        self.assertTrue(self.nodes[ED].ping(self.nodes[LEADER].get_rloc()))
+        self.assertTrue(self.nodes[ED].ping(self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.RLOC)))
 
 
 if __name__ == '__main__':
