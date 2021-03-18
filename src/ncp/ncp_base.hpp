@@ -389,7 +389,7 @@ protected:
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-    otError DecodeLinkMetrics(otLinkMetrics *linkMetrics, bool allowPduCount);
+    otError DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount);
 
     otError EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValues);
 #endif

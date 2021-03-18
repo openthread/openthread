@@ -210,7 +210,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-otError NcpBase::DecodeLinkMetrics(otLinkMetrics *linkMetrics, bool allowPduCount)
+otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
 {
     otError        error = OT_ERROR_NONE;
     const uint8_t *metrics;
@@ -222,17 +222,17 @@ otError NcpBase::DecodeLinkMetrics(otLinkMetrics *linkMetrics, bool allowPduCoun
     {
         switch (metrics[i])
         {
-        case THREAD_LINK_METRIC_PDU_COUNT:
+        case SPINEL_THREAD_LINK_METRIC_PDU_COUNT:
             VerifyOrExit(allowPduCount, error = OT_ERROR_INVALID_ARGS);
             linkMetrics->mPduCount = true;
             break;
-        case THREAD_LINK_METRIC_LQI:
+        case SPINEL_THREAD_LINK_METRIC_LQI:
             linkMetrics->mLqi = true;
             break;
-        case THREAD_LINK_METRIC_LINK_MARGIN:
+        case SPINEL_THREAD_LINK_METRIC_LINK_MARGIN:
             linkMetrics->mLinkMargin = true;
             break;
-        case THREAD_LINK_METRIC_RSSI:
+        case SPINEL_THREAD_LINK_METRIC_RSSI:
             linkMetrics->mRssi = true;
             break;
         default:
@@ -250,7 +250,7 @@ otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValu
     if (aMetricsValues->mMetrics.mPduCount)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
-        SuccessOrExit(error = mEncoder.WriteUint8(THREAD_LINK_METRIC_PDU_COUNT));
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_PDU_COUNT));
         SuccessOrExit(error = mEncoder.WriteUint32(aMetricsValues->mPduCountValue));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -258,7 +258,7 @@ otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValu
     if (aMetricsValues->mMetrics.mLqi)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
-        SuccessOrExit(error = mEncoder.WriteUint8(THREAD_LINK_METRIC_LQI));
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_LQI));
         SuccessOrExit(error = mEncoder.WriteUint8(aMetricsValues->mLqiValue));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -266,7 +266,7 @@ otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValu
     if (aMetricsValues->mMetrics.mLinkMargin)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
-        SuccessOrExit(error = mEncoder.WriteUint8(THREAD_LINK_METRIC_LINK_MARGIN));
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_LINK_MARGIN));
         SuccessOrExit(error = mEncoder.WriteUint8(aMetricsValues->mLinkMarginValue));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -274,7 +274,7 @@ otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValu
     if (aMetricsValues->mMetrics.mRssi)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
-        SuccessOrExit(error = mEncoder.WriteUint8(THREAD_LINK_METRIC_RSSI));
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_RSSI));
         SuccessOrExit(error = mEncoder.WriteInt8(aMetricsValues->mRssiValue));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
@@ -3189,16 +3189,16 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     {
         switch (types[i])
         {
-        case THREAD_FRAME_TYPE_MLE_LINK_PROBE:
+        case SPINEL_THREAD_FRAME_TYPE_MLE_LINK_PROBE:
             seriesFlags.mLinkProbe = true;
             break;
-        case THREAD_FRAME_TYPE_MAC_DATA:
+        case SPINEL_THREAD_FRAME_TYPE_MAC_DATA:
             seriesFlags.mMacData = true;
             break;
-        case THREAD_FRAME_TYPE_MAC_DATA_REQUEST:
+        case SPINEL_THREAD_FRAME_TYPE_MAC_DATA_REQUEST:
             seriesFlags.mMacDataRequest = true;
             break;
-        case THREAD_FRAME_TYPE_MAC_ACK:
+        case SPINEL_THREAD_FRAME_TYPE_MAC_ACK:
             seriesFlags.mMacAck = true;
             break;
         default:
