@@ -137,7 +137,6 @@ void processReceive(void)
     }
 }
 
-
 otError otPlatUartFlush(void)
 {
     otEXPECT(sTransmitBuffer != NULL);

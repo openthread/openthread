@@ -48,7 +48,7 @@ otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
     uint16_t temp;
     uint32_t rn;
 
-    if((aOutput == NULL)||(aOutputLength == 0))
+    if ((aOutput == NULL) || (aOutputLength == 0))
     {
         return OT_ERROR_INVALID_ARGS;
     }
