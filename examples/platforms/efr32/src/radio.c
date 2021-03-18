@@ -249,12 +249,12 @@ static otRadioIeInfo sTransmitIeInfo;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 // Enhanced ACKs, CSL
-static bool          sAckedWithSecEnhAck;
-static uint32_t      sAckFrameCounter;
-static uint8_t       sAckKeyId;
+static bool     sAckedWithSecEnhAck;
+static uint32_t sAckFrameCounter;
+static uint8_t  sAckKeyId;
 
-static uint8_t       sAckIeData[OT_ACK_IE_MAX_SIZE];
-static uint8_t       sAckIeDataLength = 0;
+static uint8_t sAckIeData[OT_ACK_IE_MAX_SIZE];
+static uint8_t sAckIeDataLength = 0;
 
 static uint32_t      sCslPeriod;
 static uint32_t      sCslSampleTime;
@@ -332,7 +332,7 @@ static void updateIeData(void)
     // (in txCurrentPacket), before updating the 802.15.4 header with CSL IEs.
     // The tx frame is modified at the right offset (see mInfo.mTxInfo.mIeInfo->mTimeIeOffset)
 
-    int8_t  offset = 0;
+    int8_t offset = 0;
     if (sCslPeriod > 0)
     {
         uint8_t *finger = sAckIeData;
@@ -340,11 +340,11 @@ static void updateIeData(void)
         finger += OT_IE_HEADER_SIZE;
 
         uint16_t cslPhase = getCslPhase();
-        *finger++ = HIGH_BYTE(cslPhase);
-        *finger++ = LOW_BYTE(cslPhase);
+        *finger++         = HIGH_BYTE(cslPhase);
+        *finger++         = LOW_BYTE(cslPhase);
 
-        *finger++ = HIGH_BYTE((uint16_t) sCslPeriod);
-        *finger++ = LOW_BYTE((uint16_t) sCslPeriod);
+        *finger++ = HIGH_BYTE((uint16_t)sCslPeriod);
+        *finger++ = LOW_BYTE((uint16_t)sCslPeriod);
 
         offset = finger - sAckIeData;
     }
@@ -526,8 +526,7 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     // assert(status == RAIL_STATUS_NO_ERROR);
 
     // Enhanced ACKs (only on platforms that support it, so error checking is disabled)
-    RAIL_IEEE802154_ConfigEOptions(handle,
-                                   (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK),
+    RAIL_IEEE802154_ConfigEOptions(handle, (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK),
                                    (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK));
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -976,13 +975,12 @@ void txCurrentPacket(void)
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    if (otMacFrameIsSecurityEnabled(sTxFrame)
-        && otMacFrameIsKeyIdMode1(sTxFrame)
-        && !sTxFrame->mInfo.mTxInfo.mIsSecurityProcessed)
+    if (otMacFrameIsSecurityEnabled(sTxFrame) && otMacFrameIsKeyIdMode1(sTxFrame) &&
+        !sTxFrame->mInfo.mTxInfo.mIsSecurityProcessed)
     {
         sTxFrame->mInfo.mTxInfo.mAesKey = &sCurrKey;
 
-        if (! sTxFrame->mInfo.mTxInfo.mIsARetx)
+        if (!sTxFrame->mInfo.mTxInfo.mIsARetx)
         {
             otMacFrameSetKeyId(sTxFrame, sKeyId);
             otMacFrameSetFrameCounter(sTxFrame, sMacFrameCounter++);
