@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,69 +26,45 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CONSOLE_CLI_H_
-#define OPENTHREAD_CONSOLE_CLI_H_
+#include "openthread-core-config.h"
 
-#include "platform/openthread-posix-config.h"
+#include <openthread/ncp.h>
 
-#include <stdint.h>
+#include "common/code_utils.hpp"
 
-#include <openthread/openthread-system.h>
+#include "ncp/ncp_config.h"
 
-#include "cli/cli_config.h"
+#if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+#include "utils/uart.h"
 
-#ifndef HAVE_LIBEDIT
-#define HAVE_LIBEDIT 0
-#endif
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    otNcpHdlcReceive(aBuf, aBufLength);
+}
 
-#ifndef HAVE_LIBREADLINE
-#define HAVE_LIBREADLINE 0
-#endif
-
-#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE
-#define OPENTHREAD_USE_CONSOLE 1
-#if !(HAVE_LIBEDIT || HAVE_LIBREADLINE) || OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-#error \
-    "When OPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_CONSOLE, HAVE_LIBEDIT or HAVE_LIBREADLINE MUST be defined and OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE MUST be 0"
-#endif
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * This function initializes CLI console.
- *
- * @param[in]  aInstance    A pointer to the OpenThread instance.
- *
- */
-void otxConsoleInit(otInstance *aInstance);
-
-/**
- * This function deinitializes CLI console
- *
- */
-void otxConsoleDeinit(void);
-
-/**
- * This function updates the file descriptor sets with file descriptors used by console.
- *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
- *
- */
-void otxConsoleUpdate(otSysMainloopContext *aMainloop);
-
-/**
- * This function performs console driver processing.
- *
- * @param[in]    aMainloop      A pointer to the mainloop context.
- *
- */
-void otxConsoleProcess(const otSysMainloopContext *aMainloop);
-
-#ifdef __cplusplus
+void otPlatUartSendDone(void)
+{
+    otNcpHdlcSendDone();
 }
 #endif
 
-#endif // OPENTHREAD_CONSOLE_CLI_H_
+#if !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+#if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+static int NcpSend(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    IgnoreError(otPlatUartSend(aBuf, aBufLength));
+    return aBufLength;
+}
+#endif
+
+void otAppNcpInit(otInstance *aInstance)
+{
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+    otNcpSpiInit(aInstance);
+#else
+    IgnoreError(otPlatUartEnable());
+
+    otNcpHdlcInit(aInstance, NcpSend);
+#endif
+}
+#endif // !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK

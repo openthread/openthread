@@ -38,10 +38,10 @@ openthread_ncp_sources = [
   "ncp_base_mtd.cpp",
   "ncp_base_radio.cpp",
   "ncp_config.h",
+  "ncp_hdlc.cpp",
+  "ncp_hdlc.hpp",
   "ncp_spi.cpp",
   "ncp_spi.hpp",
-  "ncp_uart.cpp",
-  "ncp_uart.hpp",
 ]
 
 config("ncp_config") {

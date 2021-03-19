@@ -27,11 +27,11 @@
 
 /**
  * @file
- *   This file contains definitions for a UART based NCP interface to the OpenThread stack.
+ *   This file contains definitions for a HDLC based NCP interface to the OpenThread stack.
  */
 
-#ifndef NCP_UART_HPP_
-#define NCP_UART_HPP_
+#ifndef NCP_HDLC_HPP_
+#define NCP_HDLC_HPP_
 
 #include "openthread-core-config.h"
 
@@ -45,7 +45,7 @@
 namespace ot {
 namespace Ncp {
 
-class NcpUart : public NcpBase
+class NcpHdlc : public NcpBase
 {
     typedef NcpBase super_t;
 
@@ -56,29 +56,29 @@ public:
      * @param[in]  aInstance  The OpenThread instance structure.
      *
      */
-    explicit NcpUart(Instance *aInstance);
+    explicit NcpHdlc(Instance *aInstance, otNcpHdlcSendCallback aSendCallback);
 
     /**
      * This method is called when uart tx is finished. It prepares and sends the next data chunk (if any) to uart.
      *
      */
-    void HandleUartSendDone(void);
+    void HandleHdlcSendDone(void);
 
     /**
      * This method is called when uart received a data buffer.
      *
      */
-    void HandleUartReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);
+    void HandleHdlcReceiveDone(const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
     enum
     {
-        kUartTxBufferSize = OPENTHREAD_CONFIG_NCP_UART_TX_CHUNK_SIZE,   // Uart tx buffer size.
-        kRxBufferSize     = OPENTHREAD_CONFIG_NCP_UART_RX_BUFFER_SIZE + // Rx buffer size (should be large enough to fit
+        kHdlcTxBufferSize = OPENTHREAD_CONFIG_NCP_HDLC_TX_CHUNK_SIZE,   // HDLC tx buffer size.
+        kRxBufferSize     = OPENTHREAD_CONFIG_NCP_HDLC_RX_BUFFER_SIZE + // Rx buffer size (should be large enough to fit
                         OPENTHREAD_CONFIG_NCP_SPINEL_ENCRYPTER_EXTRA_DATA_SIZE, // one whole (decoded) received frame).
     };
 
-    enum UartTxState
+    enum HdlcTxState
     {
         kStartingFrame,   // Starting a new frame.
         kEncodingFrame,   // In middle of encoding a frame.
@@ -114,27 +114,28 @@ private:
     };
 #endif // OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
 
-    void EncodeAndSendToUart(void);
+    void EncodeAndSend(void);
     void HandleFrame(otError aError);
     void HandleError(otError aError, uint8_t *aBuf, uint16_t aBufLength);
     void TxFrameBufferHasData(void);
     void HandleFrameAddedToNcpBuffer(void);
 
-    static void EncodeAndSendToUart(Tasklet &aTasklet);
-    static void HandleFrame(void *aContext, otError aError);
-    static void HandleFrameAddedToNcpBuffer(void *                   aContext,
-                                            Spinel::Buffer::FrameTag aTag,
-                                            Spinel::Buffer::Priority aPriority,
-                                            Spinel::Buffer *         aBuffer);
+    static void           EncodeAndSend(Tasklet &aTasklet);
+    static void           HandleFrame(void *aContext, otError aError);
+    static void           HandleFrameAddedToNcpBuffer(void *                   aContext,
+                                                      Spinel::Buffer::FrameTag aTag,
+                                                      Spinel::Buffer::Priority aPriority,
+                                                      Spinel::Buffer *         aBuffer);
+    otNcpHdlcSendCallback mSendCallback;
 
     Hdlc::Encoder                        mFrameEncoder;
     Hdlc::Decoder                        mFrameDecoder;
-    Hdlc::FrameBuffer<kUartTxBufferSize> mUartBuffer;
-    UartTxState                          mState;
+    Hdlc::FrameBuffer<kHdlcTxBufferSize> mHdlcBuffer;
+    HdlcTxState                          mState;
     uint8_t                              mByte;
     Hdlc::FrameBuffer<kRxBufferSize>     mRxBuffer;
-    bool                                 mUartSendImmediate;
-    Tasklet                              mUartSendTask;
+    bool                                 mHdlcSendImmediate;
+    Tasklet                              mHdlcSendTask;
 
 #if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
     BufferEncrypterReader mTxFrameBufferEncrypterReader;
@@ -144,4 +145,4 @@ private:
 } // namespace Ncp
 } // namespace ot
 
-#endif // NCP_UART_HPP_
+#endif // NCP_HDLC_HPP_

@@ -219,8 +219,8 @@ if (openthread_enable_core_config_args) {
     # Enable NCP SPI support
     openthread_config_ncp_spi_enable = false
 
-    # Enable NCP UART support
-    openthread_config_ncp_uart_enable = false
+    # Enable NCP HDLC support
+    openthread_config_ncp_hdlc_enable = false
 
     # Enable builtin mbedtls management
     openthread_config_enable_builtin_mbedtls_management =

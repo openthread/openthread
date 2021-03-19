@@ -93,7 +93,7 @@ endif
 ifeq ($(NCP_SPI),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_SPI_ENABLE=1
 else
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_UART_ENABLE=1
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
 endif # NCP_SPI == 1
 
 ifeq ($(OTNS),1)

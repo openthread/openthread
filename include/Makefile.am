@@ -106,7 +106,6 @@ ot_platform_headers                     = \
     openthread/platform/time.h            \
     openthread/platform/toolchain.h       \
     openthread/platform/trel-udp6.h       \
-    openthread/platform/uart.h            \
     openthread/platform/udp.h             \
     $(NULL)
 

@@ -46,10 +46,10 @@
 #include <common/logging.hpp>
 #include <openthread-system.h>
 #include <utils/code_utils.h>
+#include <utils/uart.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/diag.h>
 #include <openthread/platform/misc.h>
-#include <openthread/platform/uart.h>
 
 #include "platform-nrf5-transport.h"
 

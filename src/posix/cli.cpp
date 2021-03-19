@@ -26,13 +26,15 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "console_cli.h"
+#include "platform/openthread-posix-config.h"
 
-#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 
 #include <openthread/config.h>
+#include <openthread/openthread-system.h>
 
 #include <assert.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
@@ -46,17 +48,20 @@
 #endif
 
 #if HAVE_LIBEDIT || HAVE_LIBREADLINE
+#define OPENTHREAD_USE_READLINE 1
 #if HAVE_LIBEDIT
 #include <editline/readline.h>
 #elif HAVE_LIBREADLINE
 #include <readline/history.h>
 #include <readline/readline.h>
+#endif
 #else
-#error "Missing readline library"
+#define OPENTHREAD_USE_READLINE 0
 #endif
 
 #include <openthread/cli.h>
 
+#include "cli/cli_config.h"
 #include "common/code_utils.hpp"
 
 #include "openthread-core-config.h"
@@ -64,8 +69,7 @@
 
 static const char sPrompt[] = "> ";
 
-static int sReadFd;
-
+#if OPENTHREAD_USE_READLINE
 static void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
@@ -73,7 +77,7 @@ static void InputCallback(char *aLine)
         if (aLine[0] != '\0')
         {
             add_history(aLine);
-            otCliConsoleInputLine(aLine);
+            otCliInputLine(aLine);
         }
         free(aLine);
     }
@@ -82,57 +86,72 @@ static void InputCallback(char *aLine)
         exit(OT_EXIT_SUCCESS);
     }
 }
+#endif
 
-static int OutputCallback(const char *aBuffer, uint16_t aLength, void *aContext)
+static int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
 {
-    (void)aContext;
+    OT_UNUSED_VARIABLE(aContext);
 
-    return (int)write(STDOUT_FILENO, aBuffer, aLength);
+    return vdprintf(STDOUT_FILENO, aFormat, aArguments);
 }
 
-void otxConsoleInit(otInstance *aInstance)
+extern "C" void otAppCliInit(otInstance *aInstance)
 {
+#if OPENTHREAD_USE_READLINE
     rl_instream           = stdin;
     rl_outstream          = stdout;
     rl_inhibit_completion = true;
 
-    rl_set_screen_size(0, OT_MAX(OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH, OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE));
+    rl_set_screen_size(0, OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH);
 
-    sReadFd = fileno(rl_instream);
     rl_callback_handler_install(sPrompt, InputCallback);
-    otCliConsoleInit(aInstance, OutputCallback, nullptr);
+#endif
+    otCliInit(aInstance, OutputCallback, nullptr);
 }
 
-void otxConsoleDeinit(void)
+extern "C" void otAppCliDeinit(void)
 {
+#if OPENTHREAD_USE_READLINE
     rl_callback_handler_remove();
+#endif
 }
 
-void otxConsoleUpdate(otSysMainloopContext *aMainloop)
+extern "C" void otAppCliUpdate(otSysMainloopContext *aMainloop)
 {
-    FD_SET(sReadFd, &aMainloop->mReadFdSet);
-    FD_SET(sReadFd, &aMainloop->mErrorFdSet);
+    FD_SET(STDIN_FILENO, &aMainloop->mReadFdSet);
+    FD_SET(STDIN_FILENO, &aMainloop->mErrorFdSet);
 
-    if (aMainloop->mMaxFd < sReadFd)
+    if (aMainloop->mMaxFd < STDIN_FILENO)
     {
-        aMainloop->mMaxFd = sReadFd;
+        aMainloop->mMaxFd = STDIN_FILENO;
     }
 }
 
-void otxConsoleProcess(const otSysMainloopContext *aMainloop)
+extern "C" void otAppCliProcess(const otSysMainloopContext *aMainloop)
 {
-    if (FD_ISSET(sReadFd, &aMainloop->mErrorFdSet))
+    if (FD_ISSET(STDIN_FILENO, &aMainloop->mErrorFdSet))
     {
-        perror("console error");
         exit(OT_EXIT_FAILURE);
     }
 
-    if (FD_ISSET(sReadFd, &aMainloop->mReadFdSet))
+    if (FD_ISSET(STDIN_FILENO, &aMainloop->mReadFdSet))
     {
+#if OPENTHREAD_USE_READLINE
         rl_callback_read_char();
+#else
+        char buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
+
+        if (fgets(buffer, sizeof(buffer), stdin) != nullptr)
+        {
+            otCliInputLine(buffer);
+            dprintf(STDOUT_FILENO, "%s", sPrompt);
+        }
+        else
+        {
+            exit(OT_EXIT_SUCCESS);
+        }
+#endif
     }
 }
 
-#endif // HAVE_LIBEDIT || HAVE_LIBREADLINE
-
-#endif // OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_CONSOLE
+#endif // !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE

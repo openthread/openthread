@@ -40,7 +40,6 @@
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/settings.h>
-#include <openthread/platform/uart.h>
 
 #include "mac/mac_frame.hpp"
 
@@ -491,28 +490,6 @@ otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
 void otPlatSettingsWipe(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
-}
-
-otError otPlatUartEnable(void)
-{
-    return OT_ERROR_NONE;
-}
-
-otError otPlatUartDisable(void)
-{
-    return OT_ERROR_NONE;
-}
-
-otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
-{
-    OT_UNUSED_VARIABLE(aBuf);
-    OT_UNUSED_VARIABLE(aBufLength);
-    return OT_ERROR_NONE;
-}
-
-otError otPlatUartFlush(void)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 otError otPlatDiagProcess(otInstance *aInstance,

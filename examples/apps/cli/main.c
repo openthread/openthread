@@ -38,6 +38,14 @@
 #include "openthread-system.h"
 #include "cli/cli_config.h"
 
+/**
+ * This function initializes the CLI app.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+extern void otAppCliInit(otInstance *aInstance);
+
 #if OPENTHREAD_EXAMPLES_SIMULATION
 #include <setjmp.h>
 #include <unistd.h>
@@ -107,9 +115,7 @@ pseudo_reset:
 #endif
     assert(instance);
 
-#if OPENTHREAD_CONFIG_CLI_TRANSPORT == OT_CLI_TRANSPORT_UART
-    otCliUartInit(instance);
-#endif
+    otAppCliInit(instance);
 
     while (!otSysPseudoResetWasRequested())
     {

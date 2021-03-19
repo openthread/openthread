@@ -67,7 +67,6 @@
 #elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #include <openthread/cli.h>
 
-#include "console_cli.h"
 #include "cli/cli_config.h"
 #else
 #error "Unknown posix app type!"
@@ -81,6 +80,58 @@
 #ifndef OPENTHREAD_ENABLE_COVERAGE
 #define OPENTHREAD_ENABLE_COVERAGE 0
 #endif
+
+/**
+ * This function initializes NCP app.
+ *
+ * @param[in]  aInstance    A pointer to the OpenThread instance.
+ *
+ */
+void otAppNcpInit(otInstance *aInstance);
+
+/**
+ * This function deinitializes NCP app.
+ *
+ */
+void otAppNcpUpdate(otSysMainloopContext *aContext);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by console.
+ *
+ * @param[inout]    aMainloop   A pointer to the mainloop context.
+ *
+ */
+void otAppNcpProcess(const otSysMainloopContext *aContext);
+
+/**
+ * This function initializes CLI app.
+ *
+ * @param[in]  aInstance    A pointer to the OpenThread instance.
+ *
+ */
+void otAppCliInit(otInstance *aInstance);
+
+/**
+ * This function deinitializes CLI app.
+ *
+ */
+void otAppCliDeinit(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by console.
+ *
+ * @param[inout]    aMainloop   A pointer to the mainloop context.
+ *
+ */
+void otAppCliUpdate(otSysMainloopContext *aMainloop);
+
+/**
+ * This function performs console driver processing.
+ *
+ * @param[in]    aMainloop      A pointer to the mainloop context.
+ *
+ */
+void otAppCliProcess(const otSysMainloopContext *aMainloop);
 
 typedef struct PosixConfig
 {
@@ -330,12 +381,10 @@ int main(int argc, char *argv[])
     instance = InitInstance(&config);
 
 #if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
-    otNcpInit(instance);
+    otAppNcpInit(instance);
 #elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
-#ifdef OPENTHREAD_USE_CONSOLE
-    otxConsoleInit(instance);
-#else
-    otCliUartInit(instance);
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    otAppCliInit(instance);
 #endif
     otCliSetUserCommands(&radioUrlCommand, 1, &config.mPlatformConfig);
 #endif
@@ -354,8 +403,12 @@ int main(int argc, char *argv[])
         mainloop.mTimeout.tv_sec  = 10;
         mainloop.mTimeout.tv_usec = 0;
 
-#ifdef OPENTHREAD_USE_CONSOLE
-        otxConsoleUpdate(&mainloop);
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
+        otAppNcpUpdate(&mainloop);
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+        otAppCliUpdate(&mainloop);
+#endif
 #endif
 
         otSysMainloopUpdate(instance, &mainloop);
@@ -363,8 +416,12 @@ int main(int argc, char *argv[])
         if (otSysMainloopPoll(&mainloop) >= 0)
         {
             otSysMainloopProcess(instance, &mainloop);
-#ifdef OPENTHREAD_USE_CONSOLE
-            otxConsoleProcess(&mainloop);
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
+            otAppNcpProcess(&mainloop);
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+            otAppCliProcess(&mainloop);
+#endif
 #endif
         }
         else if (errno != EINTR)
@@ -374,8 +431,12 @@ int main(int argc, char *argv[])
         }
     }
 
-#ifdef OPENTHREAD_USE_CONSOLE
-    otxConsoleDeinit();
+#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
+    // disable ncp
+#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    otAppCliDeinit();
+#endif
 #endif
 
 exit:

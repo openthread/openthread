@@ -340,6 +340,7 @@ LOCAL_SRC_FILES                                          := \
     src/lib/url/url.cpp                                     \
     src/posix/platform/alarm.cpp                            \
     src/posix/platform/backbone.cpp                         \
+    src/posix/platform/daemon.cpp                           \
     src/posix/platform/entropy.cpp                          \
     src/posix/platform/hdlc_interface.cpp                   \
     src/posix/platform/infra_if.cpp                         \
@@ -353,7 +354,6 @@ LOCAL_SRC_FILES                                          := \
     src/posix/platform/settings.cpp                         \
     src/posix/platform/spi_interface.cpp                    \
     src/posix/platform/system.cpp                           \
-    src/posix/platform/uart.cpp                             \
     src/posix/platform/udp.cpp                              \
     third_party/mbedtls/repo/library/aes.c                  \
     third_party/mbedtls/repo/library/asn1parse.c            \
@@ -420,7 +420,6 @@ LOCAL_C_INCLUDES                                         := \
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
     $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
-    -DOPENTHREAD_CONFIG_UART_CLI_RAW=1                                         \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 
@@ -434,13 +433,11 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_coap.cpp                      \
     src/cli/cli_coap_secure.cpp               \
     src/cli/cli_commissioner.cpp              \
-    src/cli/cli_console.cpp                   \
     src/cli/cli_dataset.cpp                   \
     src/cli/cli_joiner.cpp                    \
     src/cli/cli_network_data.cpp              \
     src/cli/cli_srp_client.cpp                \
     src/cli/cli_srp_server.cpp                \
-    src/cli/cli_uart.cpp                      \
     src/cli/cli_udp.cpp                       \
     $(NULL)
 
@@ -484,95 +481,11 @@ LOCAL_LDLIBS                               := \
     -lutil
 
 LOCAL_SRC_FILES                            := \
+    src/posix/cli.cpp                         \
     src/posix/main.c                          \
     $(NULL)
 
 LOCAL_STATIC_LIBRARIES = libopenthread-cli ot-core
-include $(BUILD_EXECUTABLE)
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := libopenthread-ncp
-LOCAL_MODULE_TAGS := eng
-
-LOCAL_C_INCLUDES                                         := \
-    $(OPENTHREAD_PROJECT_INCLUDES)                          \
-    $(LOCAL_PATH)/include                                   \
-    $(LOCAL_PATH)/src                                       \
-    $(LOCAL_PATH)/src/core                                  \
-    $(LOCAL_PATH)/src/ncp                                   \
-    $(LOCAL_PATH)/src/posix/platform                        \
-    $(LOCAL_PATH)/src/posix/platform/include                \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
-    $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
-    $(NULL)
-
-LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
-    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
-    $(OPENTHREAD_PROJECT_CFLAGS)                                               \
-    $(NULL)
-
-LOCAL_CPPFLAGS                                                              := \
-    -std=c++11                                                                 \
-    -pedantic-errors                                                           \
-    $(NULL)
-
-LOCAL_SRC_FILES                            := \
-    src/lib/spinel/spinel_buffer.cpp          \
-    src/ncp/changed_props_set.cpp             \
-    src/ncp/ncp_base.cpp                      \
-    src/ncp/ncp_base_mtd.cpp                  \
-    src/ncp/ncp_base_ftd.cpp                  \
-    src/ncp/ncp_base_dispatcher.cpp           \
-    src/ncp/ncp_uart.cpp                      \
-    $(NULL)
-
-include $(BUILD_STATIC_LIBRARY)
-
-include $(CLEAR_VARS)
-
-LOCAL_MODULE := ot-ncp
-LOCAL_MODULE_TAGS := eng
-
-ifneq ($(ANDROID_NDK),1)
-LOCAL_SHARED_LIBRARIES := libcutils
-endif
-
-LOCAL_C_INCLUDES                                         := \
-    $(OPENTHREAD_PROJECT_INCLUDES)                          \
-    $(LOCAL_PATH)/include                                   \
-    $(LOCAL_PATH)/src                                       \
-    $(LOCAL_PATH)/src/core                                  \
-    $(LOCAL_PATH)/src/ncp                                   \
-    $(LOCAL_PATH)/src/posix/platform                        \
-    $(LOCAL_PATH)/src/posix/platform/include                \
-    $(LOCAL_PATH)/third_party/mbedtls                       \
-    $(LOCAL_PATH)/third_party/mbedtls/repo/include          \
-    $(NULL)
-
-LOCAL_CFLAGS                                                                := \
-    $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
-    $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
-    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP                          \
-    $(OPENTHREAD_PROJECT_CFLAGS)                                               \
-    $(NULL)
-
-LOCAL_CPPFLAGS                                                              := \
-    -std=c++11                                                                 \
-    -pedantic-errors                                                           \
-    $(NULL)
-
-LOCAL_SRC_FILES                            := \
-    src/posix/main.c                          \
-    $(NULL)
-
-LOCAL_LDLIBS                               := \
-    -lrt                                      \
-    -lutil
-
-LOCAL_STATIC_LIBRARIES = libopenthread-ncp ot-core
-
 include $(BUILD_EXECUTABLE)
 
 ifeq ($(USE_OTBR_DAEMON), 1)

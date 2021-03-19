@@ -96,9 +96,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aInstance    The OpenThread instance structure.
+     * @param[in]  aCallback    A callback method called to process CLI output.
+     * @param[in]  aContext     A user context pointer.
      */
-    explicit Interpreter(Instance *aInstance);
+    explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
      * This method returns a reference to the interpreter object.
@@ -112,6 +114,16 @@ public:
 
         return *sInterpreter;
     }
+
+    /**
+     * This method initializes the Console interpreter.
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aCallback  A pointer to a callback method.
+     * @param[in]  aContext   A pointer to a user context.
+     *
+     */
+    static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
      * This method returns whether the interpreter is initialized.
@@ -792,6 +804,9 @@ private:
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 
     Instance *          mInstance;
+    otCliOutputCallback mOutputCallback;
+    void *              mOutputContext;
+
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;

@@ -49,6 +49,7 @@ LIBTOOLFLAGS_COMMON                                                   += \
     $(NULL)
 
 SOURCES_COMMON                                                        += \
+    cli_uart.cpp                                                         \
     main.c                                                               \
     $(NULL)
 
