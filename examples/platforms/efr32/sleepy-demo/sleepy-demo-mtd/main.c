@@ -76,6 +76,14 @@ void initUdp(void);
 void applicationTick(void);
 void mtdReceiveCallback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+/**
+ * This function initializes the CLI app.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+extern void otAppCliInit(otInstance *aInstance);
+
 // Variables
 static otInstance *        instance;
 static otUdpSocket         sMtdSocket;
@@ -97,7 +105,7 @@ int main(int argc, char *argv[])
     instance = otInstanceInitSingle();
     assert(instance);
 
-    otCliUartInit(instance);
+    otAppCliInit(instance);
 
     otLinkSetPollPeriod(instance, SLEEPY_POLL_PERIOD_MS);
     setNetworkConfiguration(instance);
