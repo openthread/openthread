@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(NOT OT_EXTERNAL_MBEDTLS)
-    add_subdirectory(mbedtls)
-endif()
+# Alias OT_PLATFORM as EFR32_PLATFORM
+set(EFR32_PLATFORM ${OT_PLATFORM})
 
-if(OT_PLATFORM STREQUAL "kw41z")
-    add_subdirectory(nxp)
-elseif(OT_PLATFORM MATCHES "cc*")
-    add_subdirectory(ti)
-elseif(OT_PLATFORM MATCHES "^qpg*")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "gp712")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "samr21")
-    add_subdirectory(microchip)
-elseif(OT_PLATFORM MATCHES "^nrf*")
-    add_subdirectory(jlink)
-    add_subdirectory(NordicSemiconductor)
-elseif(OT_PLATFORM MATCHES "^efr*")
-    add_subdirectory(jlink)
-    add_subdirectory(silabs)
+string(TOLOWER "${EFR32_PLATFORM}" PLATFORM_LOWERCASE)
+string(TOUPPER "${EFR32_PLATFORM}" PLATFORM_UPPERCASE)
+
+string(TOLOWER "${BOARD}" BOARD_LOWERCASE)
+string(TOUPPER "${BOARD}" BOARD_UPPERCASE)
+
+set(SILABS_GSDK_VERSION 3.1)
+set(SILABS_GSDK_DIR ${PROJECT_SOURCE_DIR}/third_party/silabs/gecko_sdk_suite/v${SILABS_GSDK_VERSION})
+
+# Check if GSDK exists
+if(NOT EXISTS "${SILABS_GSDK_DIR}")
+    message(FATAL_ERROR "Cannot find: ${SILABS_GSDK_DIR}\nCheck that Silicon Labs GSDK ${SILABS_GSDK_VERSION} was installed properly")
 endif()

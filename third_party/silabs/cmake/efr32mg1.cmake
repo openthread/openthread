@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,32 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(NOT OT_EXTERNAL_MBEDTLS)
-    add_subdirectory(mbedtls)
-endif()
+include(${PROJECT_SOURCE_DIR}/third_party/silabs/cmake/efr32mg1x.cmake)
 
-if(OT_PLATFORM STREQUAL "kw41z")
-    add_subdirectory(nxp)
-elseif(OT_PLATFORM MATCHES "cc*")
-    add_subdirectory(ti)
-elseif(OT_PLATFORM MATCHES "^qpg*")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "gp712")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "samr21")
-    add_subdirectory(microchip)
-elseif(OT_PLATFORM MATCHES "^nrf*")
-    add_subdirectory(jlink)
-    add_subdirectory(NordicSemiconductor)
-elseif(OT_PLATFORM MATCHES "^efr*")
-    add_subdirectory(jlink)
-    add_subdirectory(silabs)
-endif()
+add_library(silabs-efr32mg1-sdk)
+
+target_compile_definitions(silabs-efr32mg1-sdk
+    PRIVATE
+        ${COMMON_FLAG}
+)
+
+target_include_directories(silabs-efr32mg1-sdk
+    PUBLIC
+        ${SILABS_COMMON_INCLUDES}
+        ${SILABS_GSDK_DIR}/platform/Device/SiliconLabs/EFR32MG1P/Include
+        ${SILABS_EFR32MG1X_INCLUDES}
+)
+
+target_sources(silabs-efr32mg1-sdk
+    PRIVATE
+        ${SILABS_GSDK_COMMON_SOURCES}
+        ${SILABS_EFR32MG1_SOURCES}
+)
+
+target_link_libraries(silabs-efr32mg1-sdk
+    PUBLIC
+        silabs-mbedtls
+    PRIVATE
+        ${silabs-librail}
+        ot-config
+)

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,24 +26,27 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(NOT OT_EXTERNAL_MBEDTLS)
-    add_subdirectory(mbedtls)
-endif()
+add_executable(sleepy-demo-ftd
+    main.c
+)
 
-if(OT_PLATFORM STREQUAL "kw41z")
-    add_subdirectory(nxp)
-elseif(OT_PLATFORM MATCHES "cc*")
-    add_subdirectory(ti)
-elseif(OT_PLATFORM MATCHES "^qpg*")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "gp712")
-    add_subdirectory(Qorvo)
-elseif(OT_PLATFORM STREQUAL "samr21")
-    add_subdirectory(microchip)
-elseif(OT_PLATFORM MATCHES "^nrf*")
-    add_subdirectory(jlink)
-    add_subdirectory(NordicSemiconductor)
-elseif(OT_PLATFORM MATCHES "^efr*")
-    add_subdirectory(jlink)
-    add_subdirectory(silabs)
-endif()
+target_include_directories(sleepy-demo-ftd PRIVATE ${COMMON_INCLUDES})
+
+target_link_libraries(sleepy-demo-ftd PRIVATE
+    openthread-cli-ftd
+    ${OT_PLATFORM_LIB}
+    openthread-ftd
+    ${OT_PLATFORM_LIB}
+    ${OT_MBEDTLS}
+    ot-config
+)
+
+
+target_compile_options(sleepy-demo-ftd
+    PRIVATE
+        ${EFR32_CFLAGS}
+)
+
+install(TARGETS sleepy-demo-ftd
+    DESTINATION bin)
+
