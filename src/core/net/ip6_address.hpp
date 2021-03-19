@@ -38,6 +38,8 @@
 
 #include <stdint.h>
 
+#include <openthread/ip6.h>
+
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -906,10 +908,7 @@ public:
      * @retval false  The IPv6 address is larger than or equal to @p aOther.
      *
      */
-    bool operator<(const Ip6::Address &aOther) const
-    {
-        return memcmp(mFields.m8, aOther.mFields.m8, sizeof(Ip6::Address)) < 0;
-    }
+    bool operator<(const Address &aOther) const { return memcmp(mFields.m8, aOther.mFields.m8, sizeof(Address)) < 0; }
 
 private:
     void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
@@ -923,7 +922,6 @@ private:
 
     enum
     {
-        kIp4AddressSize                     = 4, ///< Size of the IPv4 address.
         kMulticastNetworkPrefixLengthOffset = 3, ///< Prefix-Based Multicast Address (RFC3306).
         kMulticastNetworkPrefixOffset       = 4, ///< Prefix-Based Multicast Address (RFC3306).
     };

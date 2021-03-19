@@ -29,6 +29,7 @@
 #include <limits.h>
 
 #include "common/encoding.hpp"
+#include "net/ip4_address.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -36,32 +37,39 @@
 
 using ot::Encoding::BigEndian::ReadUint16;
 
-struct Ip6AddressStringTestVector
+template <typename AddressType> struct TestVector
 {
     const char *  mString;
-    const uint8_t mAddr[OT_IP6_ADDRESS_SIZE];
+    const uint8_t mAddr[sizeof(AddressType)];
     ot::Error     mError;
 };
 
-static void checkAddressFromString(Ip6AddressStringTestVector *aTestVector)
+template <typename AddressType> static void checkAddressFromString(TestVector<AddressType> *aTestVector)
 {
-    ot::Error        error;
-    ot::Ip6::Address address;
+    ot::Error   error;
+    AddressType address;
+
+    address.Clear();
 
     error = address.FromString(aTestVector->mString);
 
-    VerifyOrQuit(error == aTestVector->mError, "Ip6::Address::FromString returned unexpected error code");
+    printf("%-42s -> %-42s\n", aTestVector->mString,
+           (error == ot::kErrorNone) ? address.ToString().AsCString() : "(parse error)");
+
+    VerifyOrQuit(error == aTestVector->mError, "Address::FromString returned unexpected error code");
 
     if (error == ot::kErrorNone)
     {
-        VerifyOrQuit(0 == memcmp(address.mFields.m8, aTestVector->mAddr, OT_IP6_ADDRESS_SIZE),
-                     "Ip6::Address::FromString parsing failed");
+        VerifyOrQuit(0 == memcmp(address.GetBytes(), aTestVector->mAddr, sizeof(AddressType)),
+                     "Address::FromString parsing failed");
     }
 }
 
 void TestIp6AddressFromString(void)
 {
-    Ip6AddressStringTestVector testVectors[] = {
+    typedef TestVector<ot::Ip6::Address> Ip6AddressTestVector;
+
+    Ip6AddressTestVector testVectors[] = {
         // Valid full IPv6 address.
         {"0102:0304:0506:0708:090a:0b0c:0d0e:0f00",
          {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00},
@@ -134,7 +142,33 @@ void TestIp6AddressFromString(void)
         {":f:0:0:c:0:f:f:.", {0}, ot::kErrorParse},
     };
 
-    for (Ip6AddressStringTestVector &testVector : testVectors)
+    for (Ip6AddressTestVector &testVector : testVectors)
+    {
+        checkAddressFromString(&testVector);
+    }
+}
+
+void TestIp4AddressFromString(void)
+{
+    typedef TestVector<ot::Ip4::Address> Ip4AddressTestVector;
+
+    Ip4AddressTestVector testVectors[] = {
+        {"0.0.0.0", {0, 0, 0, 0}, ot::kErrorNone},
+        {"255.255.255.255", {255, 255, 255, 255}, ot::kErrorNone},
+        {"127.0.0.1", {127, 0, 0, 1}, ot::kErrorNone},
+        {"1.2.3.4", {1, 2, 3, 4}, ot::kErrorNone},
+        {"001.002.003.004", {1, 2, 3, 4}, ot::kErrorNone},
+        {"00000127.000.000.000001", {127, 0, 0, 1}, ot::kErrorNone},
+        {"123.231.0.256", {0}, ot::kErrorParse},    // Invalid byte value.
+        {"100123.231.0.256", {0}, ot::kErrorParse}, // Invalid byte value.
+        {"1.22.33", {0}, ot::kErrorParse},          // Too few bytes.
+        {"1.22.33.44.5", {0}, ot::kErrorParse},     // Too many bytes.
+        {"a.b.c.d", {0}, ot::kErrorParse},          // Wrong digit char.
+        {"123.23.45 .12", {0}, ot::kErrorParse},    // Extra space.
+        {".", {0}, ot::kErrorParse},                // Invalid.
+    };
+
+    for (Ip4AddressTestVector &testVector : testVectors)
     {
         checkAddressFromString(&testVector);
     }
@@ -360,6 +394,7 @@ void TestIp6Header(void)
 int main(void)
 {
     TestIp6AddressSetPrefix();
+    TestIp4AddressFromString();
     TestIp6AddressFromString();
     TestIp6Prefix();
     TestIp6Header();

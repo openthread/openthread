@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/random.hpp"
+#include "net/ip4_address.hpp"
 #include "net/netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
@@ -509,7 +510,7 @@ Error Address::FromString(const char *aBuf)
             hasIp4 = true;
 
             // Do not count bytes of the embedded IPv4 address.
-            endp -= kIp4AddressSize;
+            endp -= Ip4::Address::kSize;
 
             VerifyOrExit(dst <= endp, error = kErrorParse);
 
@@ -539,40 +540,10 @@ Error Address::FromString(const char *aBuf)
 
     if (hasIp4)
     {
-        val = 0;
+        Ip4::Address ip4Addr;
 
-        // Reset the start and end pointers.
-        dst  = reinterpret_cast<uint8_t *>(mFields.m8 + 12);
-        endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-
-        for (;;)
-        {
-            ch = *colonc++;
-
-            if (ch == '.' || ch == '\0' || ch == ' ')
-            {
-                VerifyOrExit(dst <= endp, error = kErrorParse);
-
-                *dst++ = static_cast<uint8_t>(val);
-                val    = 0;
-
-                if (ch == '\0' || ch == ' ')
-                {
-                    // Check if embedded IPv4 address had exactly four parts.
-                    VerifyOrExit(dst == endp + 1, error = kErrorParse);
-                    break;
-                }
-            }
-            else
-            {
-                VerifyOrExit('0' <= ch && ch <= '9', error = kErrorParse);
-
-                val = (10 * val) + (ch & 0xf);
-
-                // Single part of IPv4 address has to fit in one byte.
-                VerifyOrExit(val <= 0xff, error = kErrorParse);
-            }
-        }
+        SuccessOrExit(error = ip4Addr.FromString(colonc));
+        memcpy(mFields.m8 + 12, ip4Addr.GetBytes(), Ip4::Address::kSize);
     }
 
 exit:
