@@ -73,6 +73,9 @@
 #include "thread/thread_netif.hpp"
 #include "thread/tmf.hpp"
 #include "utils/heap.hpp"
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+#include "utils/ping_sender.hpp"
+#endif
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include "utils/channel_manager.hpp"
 #endif
@@ -348,6 +351,10 @@ private:
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     Coap::CoapSecure mApplicationCoapSecure;
+#endif
+
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    Utils::PingSender mPingSender;
 #endif
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
@@ -741,6 +748,13 @@ template <> inline Utils::SupervisionListener &Instance::Get(void)
 {
     return mThreadNetif.mSupervisionListener;
 }
+
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+template <> inline Utils::PingSender &Instance::Get(void)
+{
+    return mPingSender;
+}
+#endif
 
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 template <> inline Utils::ChannelMonitor &Instance::Get(void)

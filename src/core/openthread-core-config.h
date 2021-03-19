@@ -75,6 +75,7 @@
 #include "config/mac.h"
 #include "config/mle.h"
 #include "config/parent_search.h"
+#include "config/ping_sender.h"
 #include "config/platform.h"
 #include "config/radio_link.h"
 #include "config/sntp_client.h"

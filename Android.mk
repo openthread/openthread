@@ -188,6 +188,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/netdata_api.cpp                            \
     src/core/api/netdiag_api.cpp                            \
     src/core/api/network_time_api.cpp                       \
+    src/core/api/ping_sender_api.cpp                        \
     src/core/api/random_crypto_api.cpp                      \
     src/core/api/random_noncrypto_api.cpp                   \
     src/core/api/server_api.cpp                             \
@@ -331,6 +332,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/lookup_table.cpp                         \
     src/core/utils/otns.cpp                                 \
     src/core/utils/parse_cmdline.cpp                        \
+    src/core/utils/ping_sender.cpp                          \
     src/core/utils/slaac_address.cpp                        \
     src/lib/hdlc/hdlc.cpp                                   \
     src/lib/platform/exit_code.c                            \
