@@ -51,8 +51,8 @@ using ot::Encoding::BigEndian::HostSwap32;
 enum
 {
     // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
-    kIPv6AddressesNumMin = 1,
-    kIPv6AddressesNumMax = 15,
+    kIp6AddressesNumMin = 1,
+    kIp6AddressesNumMax = 15,
 };
 
 /**
@@ -76,12 +76,12 @@ public:
         kStatus                = 4,  ///< Status TLV
         kLastTransactionTime   = 6,  ///< Time Since Last Transaction TLV
         kRouterMask            = 7,  ///< Router Mask TLV
-        kNDOption              = 8,  ///< ND Option TLV
-        kNDData                = 9,  ///< ND Data TLV
+        kNdOption              = 8,  ///< ND Option TLV
+        kNdData                = 9,  ///< ND Data TLV
         kThreadNetworkData     = 10, ///< Thread Network Data TLV
         kTimeout               = 11, ///< Timeout TLV
         kNetworkName           = 12, ///< Network Name TLV
-        kIPv6Addresses         = 14, ///< IPv6 Addresses TLV
+        kIp6Addresses          = 14, ///< IPv6 Addresses TLV
         kCommissionerSessionId = 15, ///< Commissioner Session ID TLV
     };
 
@@ -316,14 +316,14 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class IPv6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIPv6Addresses>
+class Ip6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIp6Addresses>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kIPv6Addresses); }
+    void Init(void) { SetType(kIp6Addresses); }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -334,8 +334,8 @@ public:
      */
     bool IsValid(void) const
     {
-        return GetLength() >= sizeof(Ip6::Address) * kIPv6AddressesNumMin &&
-               GetLength() <= sizeof(Ip6::Address) * kIPv6AddressesNumMax && (GetLength() % sizeof(Ip6::Address)) == 0;
+        return GetLength() >= sizeof(Ip6::Address) * kIp6AddressesNumMin &&
+               GetLength() <= sizeof(Ip6::Address) * kIp6AddressesNumMax && (GetLength() % sizeof(Ip6::Address)) == 0;
     }
 
     /**
