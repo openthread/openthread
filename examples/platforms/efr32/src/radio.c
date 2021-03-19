@@ -944,6 +944,7 @@ void txCurrentPacket(void)
 
     frameLength = (uint8_t)sTxFrame->mLength;
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // Update IE data in the 802.15.4 header with the newest CSL period / phase
     if (sCslPeriod > 0)
@@ -952,7 +953,9 @@ void txCurrentPacket(void)
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     bool processSecurity = false;
+#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Seek the time sync offset and update the rendezvous time
@@ -970,11 +973,13 @@ void txCurrentPacket(void)
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
 
+#if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
         processSecurity = true;
+#endif
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+#if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     if (otMacFrameIsSecurityEnabled(sTxFrame) && otMacFrameIsKeyIdMode1(sTxFrame) &&
         !sTxFrame->mInfo.mTxInfo.mIsSecurityProcessed)
     {
@@ -988,12 +993,13 @@ void txCurrentPacket(void)
 
         processSecurity = true;
     }
-#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     if (processSecurity)
     {
         otMacFrameProcessTransmitAesCcm(sTxFrame, &sExtAddress);
     }
+#endif // OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
     RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
     RAIL_WriteTxFifo(gRailHandle, sTxFrame->mPsdu, frameLength - 2, false);
