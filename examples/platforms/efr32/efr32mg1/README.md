@@ -99,8 +99,8 @@ build/efr32mg1/examples/apps/ncp/ot-rcp
 ```bash
 $ make -f examples/Makefile-efr32mg1 BOARD=BRD4151A
 ```
-After a successful build, the `elf` files are found in `<path-to-openthread>/output/efr32mg1/bin`.
 
+After a successful build, the `elf` files are found in `<path-to-openthread>/output/efr32mg1/bin`.
 
 ## Flash Binaries
 
