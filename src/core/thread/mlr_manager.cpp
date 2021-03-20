@@ -227,7 +227,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 {
     Error           error;
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
-    Ip6::Address    addresses[kIPv6AddressesNumMax];
+    Ip6::Address    addresses[kIp6AddressesNumMax];
     uint8_t         addressesNum = 0;
 
     VerifyOrExit(!mMlrPending, error = kErrorBusy);
@@ -240,7 +240,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
     for (Ip6::ExternalNetifMulticastAddress &addr :
          Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
     {
-        if (addressesNum >= kIPv6AddressesNumMax)
+        if (addressesNum >= kIp6AddressesNumMax)
         {
             break;
         }
@@ -257,7 +257,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
     // Append Child multicast addresses
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
-        if (addressesNum >= kIPv6AddressesNumMax)
+        if (addressesNum >= kIp6AddressesNumMax)
         {
             break;
         }
@@ -269,7 +269,7 @@ void MlrManager::SendMulticastListenerRegistration(void)
 
         for (const Ip6::Address &address : child.IterateIp6Addresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
         {
-            if (addressesNum >= kIPv6AddressesNumMax)
+            if (addressesNum >= kIp6AddressesNumMax)
             {
                 break;
             }
@@ -323,7 +323,7 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address *               
     Error error;
 
     VerifyOrExit(aAddresses != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(aAddressNum > 0 && aAddressNum <= kIPv6AddressesNumMax, error = kErrorInvalidArgs);
+    VerifyOrExit(aAddressNum > 0 && aAddressNum <= kIp6AddressesNumMax, error = kErrorInvalidArgs);
     VerifyOrExit(aContext == nullptr || aCallback != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
 
@@ -358,7 +358,7 @@ void MlrManager::HandleRegisterMulticastListenersResponse(otMessage *          a
 
     uint8_t                                 status;
     Error                                   error;
-    Ip6::Address                            failedAddresses[kIPv6AddressesNumMax];
+    Ip6::Address                            failedAddresses[kIp6AddressesNumMax];
     uint8_t                                 failedAddressNum = 0;
     otIp6RegisterMulticastListenersCallback callback         = mRegisterMulticastListenersCallback;
     void *                                  context          = mRegisterMulticastListenersContext;
@@ -390,7 +390,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
     Mle::MleRouter & mle     = Get<Mle::MleRouter>();
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
-    IPv6AddressesTlv addressesTlv;
+    Ip6AddressesTlv  addressesTlv;
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
@@ -462,7 +462,7 @@ void MlrManager::HandleMulticastListenerRegistrationResponse(Coap::Message *    
 
     uint8_t      status;
     Error        error;
-    Ip6::Address failedAddresses[kIPv6AddressesNumMax];
+    Ip6::Address failedAddresses[kIp6AddressesNumMax];
     uint8_t      failedAddressNum = 0;
 
     error = ParseMulticastListenerRegistrationResponse(aResult, aMessage, status, failedAddresses, failedAddressNum);
@@ -509,11 +509,11 @@ Error MlrManager::ParseMulticastListenerRegistrationResponse(Error          aRes
 
     SuccessOrExit(error = Tlv::Find<ThreadStatusTlv>(*aMessage, aStatus));
 
-    if (ThreadTlv::FindTlvValueOffset(*aMessage, IPv6AddressesTlv::kIPv6Addresses, addressesOffset, addressesLength) ==
+    if (ThreadTlv::FindTlvValueOffset(*aMessage, Ip6AddressesTlv::kIp6Addresses, addressesOffset, addressesLength) ==
         kErrorNone)
     {
         VerifyOrExit(addressesLength % sizeof(Ip6::Address) == 0, error = kErrorParse);
-        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= kIPv6AddressesNumMax, error = kErrorParse);
+        VerifyOrExit(addressesLength / sizeof(Ip6::Address) <= kIp6AddressesNumMax, error = kErrorParse);
 
         for (uint16_t offset = 0; offset < addressesLength; offset += sizeof(Ip6::Address))
         {
@@ -694,7 +694,7 @@ void MlrManager::LogMulticastAddresses(void)
 #endif // OPENTHREAD_CONFIG_LOG_MLR && OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG
 }
 
-void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIPv6AddressesNumMax],
+void MlrManager::AppendToUniqueAddressList(Ip6::Address (&aAddresses)[kIp6AddressesNumMax],
                                            uint8_t &           aAddressNum,
                                            const Ip6::Address &aAddress)
 {

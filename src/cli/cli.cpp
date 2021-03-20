@@ -2564,14 +2564,14 @@ exit:
 otError Interpreter::ProcessMlrReg(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error = OT_ERROR_NONE;
-    otIp6Address addresses[kIPv6AddressesNumMax];
+    otIp6Address addresses[kIp6AddressesNumMax];
     uint32_t     timeout;
     uint8_t      i;
 
     VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aArgsLength <= kIPv6AddressesNumMax + 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength <= kIp6AddressesNumMax + 1, error = OT_ERROR_INVALID_ARGS);
 
-    for (i = 0; i < aArgsLength && i < kIPv6AddressesNumMax; i++)
+    for (i = 0; i < aArgsLength && i < kIp6AddressesNumMax; i++)
     {
         if (ParseAsIp6Address(aArgs[i], addresses[i]) != OT_ERROR_NONE)
         {
