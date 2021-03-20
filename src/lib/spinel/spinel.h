@@ -2783,7 +2783,7 @@ enum
     SPINEL_PROP_DATASET_DELAY_TIMER = SPINEL_PROP_THREAD_EXT__BEGIN + 30,
 
     /// Operational Dataset Security Policy
-    /** Format: `SC` - No direct read or write
+    /** Format: `SD` - No direct read or write
      *
      * It can only be included in one of the Dataset related properties below:
      *
@@ -2797,6 +2797,8 @@ enum
      * Content is
      *   `S` : Key Rotation Time (in units of hour)
      *   `C` : Security Policy Flags (as specified in Thread 1.1 Section 8.10.1.15)
+     *   `C` : Optional Security Policy Flags extension (as specified in Thread 1.2 Section 8.10.1.15).
+     *         0xf8 is used if this field is missing.
      *
      */
     SPINEL_PROP_DATASET_SECURITY_POLICY = SPINEL_PROP_THREAD_EXT__BEGIN + 31,

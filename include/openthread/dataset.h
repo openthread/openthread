@@ -131,22 +131,20 @@ typedef struct otPskc otPskc;
  */
 typedef struct otSecurityPolicy
 {
-    uint16_t mRotationTime; ///< The value for thrKeyRotation in units of hours
-    uint8_t  mFlags;        ///< Flags as defined in Thread 1.1 Section 8.10.1.15
-} otSecurityPolicy;
+    uint16_t mRotationTime; ///< The value for thrKeyRotation in units of hours.
 
-/**
- * This enumeration defines the Security Policy TLV flags.
- *
- */
-enum
-{
-    OT_SECURITY_POLICY_OBTAIN_MASTER_KEY     = 1 << 7, ///< Obtaining the Master Key
-    OT_SECURITY_POLICY_NATIVE_COMMISSIONING  = 1 << 6, ///< Native Commissioning
-    OT_SECURITY_POLICY_ROUTERS               = 1 << 5, ///< Routers enabled
-    OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER = 1 << 4, ///< External Commissioner allowed
-    OT_SECURITY_POLICY_BEACONS               = 1 << 3, ///< Beacons enabled
-};
+    bool    mObtainMasterKeyEnabled : 1;         ///< Obtaining the Master Key for out-of-band commissioning is enabled
+    bool    mNativeCommissioningEnabled : 1;     ///< Native Commissioning using PSKc is allowed
+    bool    mRoutersEnabled : 1;                 ///< Thread 1.0/1.1.x Routers are enabled
+    bool    mExternalCommissioningEnabled : 1;   ///< External Commissioner authentication is allowed
+    bool    mBeaconsEnabled : 1;                 ///< Thread 1.0/1.1.x Beacons are enabled
+    bool    mCommercialCommissioningEnabled : 1; ///< Commercial Commissioning is enabled
+    bool    mAutonomousEnrollmentEnabled : 1;    ///< Autonomous Enrollment is enabled
+    bool    mMasterKeyProvisioningEnabled : 1;   ///< Network Master-key Provisioning is enabled
+    bool    mTobleLinkEnabled : 1;               ///< ToBLE link is enabled
+    bool    mNonCcmRoutersEnabled : 1;           ///< Non-CCM Routers enabled
+    uint8_t mVersionThresholdForRouting : 3;     ///< Version-threshold for Routing
+} otSecurityPolicy;
 
 /**
  * This type represents Channel Mask.

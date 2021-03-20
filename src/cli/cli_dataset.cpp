@@ -126,33 +126,8 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
-        mInterpreter.OutputFormat("Security Policy: %d, ", aDataset.mSecurityPolicy.mRotationTime);
-
-        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY)
-        {
-            mInterpreter.OutputFormat("o");
-        }
-
-        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
-        {
-            mInterpreter.OutputFormat("n");
-        }
-
-        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_ROUTERS)
-        {
-            mInterpreter.OutputFormat("r");
-        }
-
-        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER)
-        {
-            mInterpreter.OutputFormat("c");
-        }
-
-        if (aDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_BEACONS)
-        {
-            mInterpreter.OutputFormat("b");
-        }
-
+        mInterpreter.OutputFormat("Security Policy: ", aDataset.mSecurityPolicy.mRotationTime);
+        OutputSecurityPolicy(aDataset.mSecurityPolicy);
         mInterpreter.OutputLine("");
     }
 
@@ -620,6 +595,14 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[])
             dataset.mComponents.mIsChannelMaskPresent = true;
             SuccessOrExit(error = ParseAsUint32(aArgs[index], dataset.mChannelMask));
         }
+        else if (strcmp(aArgs[index], "securitypolicy") == 0)
+        {
+            VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseSecurityPolicy(dataset.mSecurityPolicy, aArgs[index],
+                                                      index + 1 < aArgsLength ? aArgs[index + 1] : nullptr));
+            dataset.mComponents.mIsSecurityPolicyPresent = true;
+            ++index;
+        }
         else if (strcmp(aArgs[index], "-x") == 0)
         {
             uint16_t length;
@@ -703,6 +686,10 @@ otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[])
         {
             datasetComponents.mIsChannelPresent = true;
         }
+        else if (strcmp(aArgs[index], "securitypolicy") == 0)
+        {
+            datasetComponents.mIsSecurityPolicyPresent = true;
+        }
         else if (strcmp(aArgs[index], "-x") == 0)
         {
             uint16_t length;
@@ -784,6 +771,119 @@ exit:
     return error;
 }
 
+void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
+{
+    mInterpreter.OutputFormat("%d ", aSecurityPolicy.mRotationTime);
+
+    if (aSecurityPolicy.mObtainMasterKeyEnabled)
+    {
+        mInterpreter.OutputFormat("o");
+    }
+
+    if (aSecurityPolicy.mNativeCommissioningEnabled)
+    {
+        mInterpreter.OutputFormat("n");
+    }
+
+    if (aSecurityPolicy.mRoutersEnabled)
+    {
+        mInterpreter.OutputFormat("r");
+    }
+
+    if (aSecurityPolicy.mExternalCommissioningEnabled)
+    {
+        mInterpreter.OutputFormat("c");
+    }
+
+    if (aSecurityPolicy.mBeaconsEnabled)
+    {
+        mInterpreter.OutputFormat("b");
+    }
+
+    if (aSecurityPolicy.mCommercialCommissioningEnabled)
+    {
+        mInterpreter.OutputFormat("C");
+    }
+
+    if (aSecurityPolicy.mAutonomousEnrollmentEnabled)
+    {
+        mInterpreter.OutputFormat("e");
+    }
+
+    if (aSecurityPolicy.mMasterKeyProvisioningEnabled)
+    {
+        mInterpreter.OutputFormat("p");
+    }
+
+    if (aSecurityPolicy.mNonCcmRoutersEnabled)
+    {
+        mInterpreter.OutputFormat("R");
+    }
+}
+
+Error Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, const char *aRotation, const char *aFlags)
+{
+    Error            error;
+    otSecurityPolicy policy;
+
+    memset(&policy, 0, sizeof(policy));
+    SuccessOrExit(error = ParseAsUint16(aRotation, policy.mRotationTime));
+
+    VerifyOrExit(aFlags != nullptr);
+
+    for (const char *flag = aFlags; *flag != '\0'; flag++)
+    {
+        switch (*flag)
+        {
+        case 'o':
+            policy.mObtainMasterKeyEnabled = true;
+            break;
+
+        case 'n':
+            policy.mNativeCommissioningEnabled = true;
+            break;
+
+        case 'r':
+            policy.mRoutersEnabled = true;
+            break;
+
+        case 'c':
+            policy.mExternalCommissioningEnabled = true;
+            break;
+
+        case 'b':
+            policy.mBeaconsEnabled = true;
+            break;
+
+        case 'C':
+            policy.mCommercialCommissioningEnabled = true;
+            break;
+
+        case 'e':
+            policy.mAutonomousEnrollmentEnabled = true;
+            break;
+
+        case 'p':
+            policy.mMasterKeyProvisioningEnabled = true;
+            break;
+
+        case 'R':
+            policy.mNonCcmRoutersEnabled = true;
+            break;
+
+        default:
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+
+exit:
+    if (error == kErrorNone)
+    {
+        aSecurityPolicy = policy;
+    }
+    return error;
+}
+
 otError Dataset::ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -792,73 +892,14 @@ otError Dataset::ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsSecurityPolicyPresent)
         {
-            mInterpreter.OutputFormat("%d ", sDataset.mSecurityPolicy.mRotationTime);
-
-            if (sDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY)
-            {
-                mInterpreter.OutputFormat("o");
-            }
-
-            if (sDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING)
-            {
-                mInterpreter.OutputFormat("n");
-            }
-
-            if (sDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_ROUTERS)
-            {
-                mInterpreter.OutputFormat("r");
-            }
-
-            if (sDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER)
-            {
-                mInterpreter.OutputFormat("c");
-            }
-
-            if (sDataset.mSecurityPolicy.mFlags & OT_SECURITY_POLICY_BEACONS)
-            {
-                mInterpreter.OutputFormat("b");
-            }
-
+            OutputSecurityPolicy(sDataset.mSecurityPolicy);
             mInterpreter.OutputLine("");
         }
     }
     else
     {
-        SuccessOrExit(error = ParseAsUint16(aArgs[0], sDataset.mSecurityPolicy.mRotationTime));
-        sDataset.mSecurityPolicy.mFlags = 0;
-
-        if (aArgsLength > 1)
-        {
-            for (char *arg = aArgs[1]; *arg != '\0'; arg++)
-            {
-                switch (*arg)
-                {
-                case 'o':
-                    sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_OBTAIN_MASTER_KEY;
-                    break;
-
-                case 'n':
-                    sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_NATIVE_COMMISSIONING;
-                    break;
-
-                case 'r':
-                    sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_ROUTERS;
-                    break;
-
-                case 'c':
-                    sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER;
-                    break;
-
-                case 'b':
-                    sDataset.mSecurityPolicy.mFlags |= OT_SECURITY_POLICY_BEACONS;
-                    break;
-
-                default:
-                    ExitNow(error = OT_ERROR_INVALID_ARGS);
-                }
-            }
-        }
-
+        SuccessOrExit(
+            error = ParseSecurityPolicy(sDataset.mSecurityPolicy, aArgs[0], aArgsLength > 1 ? aArgs[1] : nullptr));
         sDataset.mComponents.mIsSecurityPolicyPresent = true;
     }
 

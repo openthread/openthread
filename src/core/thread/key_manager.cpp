@@ -56,6 +56,116 @@ const uint8_t KeyManager::kTrelInfoString[] = {'T', 'h', 'r', 'e', 'a', 'd', 'O'
                                                'r', 'I', 'n', 'f', 'r', 'a', 'K', 'e', 'y'};
 #endif
 
+void SecurityPolicy::SetToDefault(void)
+{
+    mRotationTime = kDefaultKeyRotationTime;
+    SetToDefaultFlags();
+}
+
+void SecurityPolicy::SetToDefaultFlags(void)
+{
+    mObtainMasterKeyEnabled         = true;
+    mNativeCommissioningEnabled     = true;
+    mRoutersEnabled                 = true;
+    mExternalCommissioningEnabled   = true;
+    mBeaconsEnabled                 = true;
+    mCommercialCommissioningEnabled = false;
+    mAutonomousEnrollmentEnabled    = false;
+    mMasterKeyProvisioningEnabled   = false;
+    mTobleLinkEnabled               = true;
+    mNonCcmRoutersEnabled           = false;
+    mVersionThresholdForRouting     = 0;
+}
+
+void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
+{
+    OT_ASSERT(aFlagsLength > 0);
+
+    SetToDefaultFlags();
+
+    mObtainMasterKeyEnabled         = aFlags[0] & kObtainMasterKeyMask;
+    mNativeCommissioningEnabled     = aFlags[0] & kNativeCommissioningMask;
+    mRoutersEnabled                 = aFlags[0] & kRoutersMask;
+    mExternalCommissioningEnabled   = aFlags[0] & kExternalCommissioningMask;
+    mBeaconsEnabled                 = aFlags[0] & kBeaconsMask;
+    mCommercialCommissioningEnabled = (aFlags[0] & kCommercialCommissioningMask) == 0;
+    mAutonomousEnrollmentEnabled    = (aFlags[0] & kAutonomousEnrollmentMask) == 0;
+    mMasterKeyProvisioningEnabled   = (aFlags[0] & kMasterKeyProvisioningMask) == 0;
+
+    VerifyOrExit(aFlagsLength > sizeof(aFlags[0]));
+    mTobleLinkEnabled           = aFlags[1] & kTobleLinkMask;
+    mNonCcmRoutersEnabled       = (aFlags[1] & kNonCcmRoutersMask) == 0;
+    mVersionThresholdForRouting = aFlags[1] & kVersionThresholdForRoutingMask;
+
+exit:
+    return;
+}
+
+void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
+{
+    OT_ASSERT(aFlagsLength > 0);
+
+    memset(aFlags, 0, aFlagsLength);
+
+    if (mObtainMasterKeyEnabled)
+    {
+        aFlags[0] |= kObtainMasterKeyMask;
+    }
+
+    if (mNativeCommissioningEnabled)
+    {
+        aFlags[0] |= kNativeCommissioningMask;
+    }
+
+    if (mRoutersEnabled)
+    {
+        aFlags[0] |= kRoutersMask;
+    }
+
+    if (mExternalCommissioningEnabled)
+    {
+        aFlags[0] |= kExternalCommissioningMask;
+    }
+
+    if (mBeaconsEnabled)
+    {
+        aFlags[0] |= kBeaconsMask;
+    }
+
+    if (!mCommercialCommissioningEnabled)
+    {
+        aFlags[0] |= kCommercialCommissioningMask;
+    }
+
+    if (!mAutonomousEnrollmentEnabled)
+    {
+        aFlags[0] |= kAutonomousEnrollmentMask;
+    }
+
+    if (!mMasterKeyProvisioningEnabled)
+    {
+        aFlags[0] |= kMasterKeyProvisioningMask;
+    }
+
+    VerifyOrExit(aFlagsLength > sizeof(aFlags[0]));
+
+    if (mTobleLinkEnabled)
+    {
+        aFlags[1] |= kTobleLinkMask;
+    }
+
+    if (!mNonCcmRoutersEnabled)
+    {
+        aFlags[1] |= kNonCcmRoutersMask;
+    }
+
+    aFlags[1] |= kReservedMask;
+    aFlags[1] |= mVersionThresholdForRouting;
+
+exit:
+    return;
+}
+
 KeyManager::KeyManager(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mKeySequence(0)
@@ -63,12 +173,10 @@ KeyManager::KeyManager(Instance &aInstance)
     , mStoredMacFrameCounter(0)
     , mStoredMleFrameCounter(0)
     , mHoursSinceKeyRotation(0)
-    , mKeyRotationTime(kDefaultKeyRotationTime)
     , mKeySwitchGuardTime(kDefaultKeySwitchGuardTime)
     , mKeySwitchGuardEnabled(false)
     , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer)
     , mKekFrameCounter(0)
-    , mSecurityPolicyFlags(kDefaultSecurityPolicyFlags)
     , mIsPskcSet(false)
 {
     Error error = mMasterKey.GenerateRandom();
@@ -298,21 +406,11 @@ void KeyManager::SetKek(const uint8_t *aKek)
     mKekFrameCounter = 0;
 }
 
-Error KeyManager::SetKeyRotation(uint32_t aKeyRotation)
+void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
-    Error result = kErrorNone;
+    OT_ASSERT(aSecurityPolicy.mRotationTime >= SecurityPolicy::kMinKeyRotationTime);
 
-    VerifyOrExit(aKeyRotation >= static_cast<uint32_t>(kMinKeyRotationTime), result = kErrorInvalidArgs);
-
-    mKeyRotationTime = aKeyRotation;
-
-exit:
-    return result;
-}
-
-void KeyManager::SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags)
-{
-    IgnoreError(Get<Notifier>().Update(mSecurityPolicyFlags, aSecurityPolicyFlags, kEventSecurityPolicyChanged));
+    IgnoreError(Get<Notifier>().Update(mSecurityPolicy, aSecurityPolicy, kEventSecurityPolicyChanged));
 }
 
 void KeyManager::StartKeyRotationTimer(void)
@@ -339,7 +437,7 @@ void KeyManager::HandleKeyRotationTimer(void)
 
     mKeyRotationTimer.StartAt(mKeyRotationTimer.GetFireTime(), kOneHourIntervalInMsec);
 
-    if (mHoursSinceKeyRotation >= mKeyRotationTime)
+    if (mHoursSinceKeyRotation >= mSecurityPolicy.mRotationTime)
     {
         SetCurrentKeySequence(mKeySequence + 1);
     }

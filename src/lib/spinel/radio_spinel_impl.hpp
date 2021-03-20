@@ -52,6 +52,7 @@
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "radio/radio.hpp"
+#include "thread/key_manager.hpp"
 
 #ifndef MS_PER_S
 #define MS_PER_S 1000
@@ -699,8 +700,17 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
 
         case SPINEL_PROP_DATASET_SECURITY_POLICY:
         {
+            uint8_t flags[2];
+            uint8_t flagsLength = 1;
+
             SuccessOrExit(error = decoder.ReadUint16(opDataset.mSecurityPolicy.mRotationTime));
-            SuccessOrExit(error = decoder.ReadUint8(opDataset.mSecurityPolicy.mFlags));
+            SuccessOrExit(error = decoder.ReadUint8(flags[0]));
+            if (otThreadGetVersion() >= OT_THREAD_VERSION_1_2 && decoder.GetRemainingLengthInStruct() > 0)
+            {
+                SuccessOrExit(error = decoder.ReadUint8(flags[1]));
+                ++flagsLength;
+            }
+            static_cast<SecurityPolicy &>(opDataset.mSecurityPolicy).SetFlags(flags, flagsLength);
             opDataset.mComponents.mIsSecurityPolicyPresent = true;
             break;
         }

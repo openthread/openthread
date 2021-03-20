@@ -366,7 +366,7 @@ Usage: `dataset mgmtgetcommand <active|pending> [address <destination>] [TLV lis
 Send MGMT_ACTIVE_GET or MGMT_PENDING_GET.
 
 ```bash
-> dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp -x 0c030001ff
+> dataset mgmtgetcommand active address fdde:ad00:beef:0:558:f56b:d688:799 activetimestamp securitypolicy
 Done
 ```
 
@@ -377,7 +377,7 @@ Usage: `dataset mgmtsetcommand <active|pending> [TLV Type list] [-x]`
 Send MGMT_ACTIVE_SET or MGMT_PENDING_SET.
 
 ```bash
-> dataset mgmtsetcommand active activetimestamp 123 -x 0c030001ff
+> dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrcb
 Done
 ```
 
@@ -496,7 +496,7 @@ Done
 
 ### securitypolicy
 
-Usage: `dataset securitypolicy [<rotationtime> [onrcb]]`
+Usage: `dataset securitypolicy [<rotationtime> [onrcbCepR]]`
 
 Get security policy.
 
@@ -513,6 +513,10 @@ Set security policy.
 - r: Thread 1.x Routers are enabled.
 - c: External Commissioner authentication is allowed using PSKc.
 - b: Thread 1.x Beacons are enabled.
+- C: Thread 1.2 Commercial Commissioning is enabled.
+- e: Thread 1.2 Autonomous Enrollment is enabled.
+- p: Thread 1.2 Network Master Key Provisioning is enabled.
+- R: Non-CCM routers are allowed in Thread 1.2 CCM networks.
 
 ```bash
 > dataset securitypolicy 672 onrcb
