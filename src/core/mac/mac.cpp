@@ -89,9 +89,6 @@ Mac::Mac(Instance &aInstance)
     , mPendingTransmitPoll(false)
     , mPendingTransmitOobFrame(false)
     , mPendingWaitingForData(false)
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mPendingTransmitCslSync(false)
-#endif
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
     , mPromiscuous(false)
@@ -128,9 +125,6 @@ Mac::Mac(Instance &aInstance)
     , mCcaSampleCount(0)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     , mTxError(kErrorNone)
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslSyncTxCnt(0)
 #endif
 {
     ExtAddress randomExtAddress;
@@ -223,9 +217,6 @@ bool Mac::IsInTransmitState(void) const
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
     case kOperationTransmitOutOfBandFrame:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kOperationTransmitCslSync:
-#endif
         retval = true;
         break;
 
@@ -756,12 +747,6 @@ void Mac::StartOperation(Operation aOperation)
     case kOperationTransmitOutOfBandFrame:
         mPendingTransmitOobFrame = true;
         break;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kOperationTransmitCslSync:
-        mPendingTransmitCslSync = true;
-        break;
-#endif
     }
 
     if (mOperation == kOperationIdle)
@@ -794,9 +779,6 @@ void Mac::PerformNextOperation(void)
 #endif
 #endif
         mPendingTransmitPoll = false;
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        mPendingTransmitCslSync = false;
-#endif
         mTimer.Stop();
 #if OPENTHREAD_CONFIG_MAC_STAY_AWAKE_BETWEEN_FRAGMENTS
         mDelayingSleep    = false;
@@ -818,13 +800,6 @@ void Mac::PerformNextOperation(void)
     {
         mPendingTransmitDataCsl = false;
         mOperation              = kOperationTransmitDataCsl;
-    }
-#endif
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    else if (mPendingTransmitCslSync)
-    {
-        mPendingTransmitCslSync = false;
-        mOperation              = kOperationTransmitCslSync;
     }
 #endif
     else if (mPendingTransmitOobFrame)
@@ -903,9 +878,6 @@ void Mac::PerformNextOperation(void)
 #endif
     case kOperationTransmitPoll:
     case kOperationTransmitOutOfBandFrame:
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kOperationTransmitCslSync:
-#endif
         BeginTransmit();
         break;
 
@@ -923,65 +895,6 @@ void Mac::FinishOperation(void)
 {
     otLogDebgMac("Finishing operation \"%s\"", OperationToString(mOperation));
     mOperation = kOperationIdle;
-}
-
-TxFrame *Mac::PrepareDataRequest(void)
-{
-    TxFrame *frame = nullptr;
-    Address  src, dst;
-    uint16_t fcf;
-    bool     iePresent = Get<MeshForwarder>().CalcIePresent(nullptr);
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radio;
-
-    SuccessOrExit(Get<DataPollSender>().GetPollDestinationAddress(dst, radio));
-    frame = &mLinks.GetTxFrames().GetTxFrame(radio);
-#else
-    SuccessOrExit(Get<DataPollSender>().GetPollDestinationAddress(dst));
-    frame = &mLinks.GetTxFrames().GetTxFrame();
-#endif
-
-    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
-
-    if (iePresent)
-    {
-        fcf |= Frame::kFcfIePresent;
-    }
-
-    fcf |= Get<MeshForwarder>().CalcFrameVersion(Get<NeighborTable>().FindNeighbor(dst), iePresent);
-
-    if (dst.IsExtended())
-    {
-        fcf |= Frame::kFcfDstAddrExt | Frame::kFcfSrcAddrExt;
-        src.SetExtended(GetExtAddress());
-    }
-    else
-    {
-        fcf |= Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrShort;
-        src.SetShort(GetShortAddress());
-    }
-
-    frame->InitMacHeader(fcf, Frame::kKeyIdMode1 | Frame::kSecEncMic32);
-
-    if (frame->IsDstPanIdPresent())
-    {
-        frame->SetDstPanId(GetPanId());
-    }
-
-    frame->SetSrcAddr(src);
-    frame->SetDstAddr(dst);
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    if (iePresent)
-    {
-        Get<MeshForwarder>().AppendHeaderIe(nullptr, *frame);
-    }
-#endif
-
-    IgnoreError(frame->SetCommandId(Frame::kMacCmdDataRequest));
-
-exit:
-    return frame;
 }
 
 TxFrame *Mac::PrepareBeaconRequest(void)
@@ -1203,12 +1116,12 @@ void Mac::BeginTransmit(void)
         break;
 
     case kOperationTransmitPoll:
-        frame = PrepareDataRequest();
+        txFrames.SetChannel(mRadioChannel);
+        txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
+        txFrames.SetMaxFrameRetries(mMaxFrameRetriesDirect);
+        frame = Get<DataPollSender>().PrepareDataRequest(txFrames);
         VerifyOrExit(frame != nullptr);
-        frame->SetChannel(mRadioChannel);
         frame->SetSequence(mDataSequence++);
-        frame->SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        frame->SetMaxFrameRetries(mMaxFrameRetriesDirect);
         break;
 
     case kOperationTransmitDataDirect:
@@ -1261,18 +1174,6 @@ void Mac::BeginTransmit(void)
         frame->CopyFrom(*mOobFrame);
         frame->SetIsSecurityProcessed(true);
         break;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kOperationTransmitCslSync:
-        frame = PrepareDataRequest();
-        VerifyOrExit(frame != nullptr);
-        frame->SetChannel(mRadioChannel);
-        frame->SetSequence(mDataSequence++);
-        frame->SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        // No retry for CSL sync
-        frame->SetMaxFrameRetries(0);
-        break;
-#endif
 
     default:
         OT_ASSERT(false);
@@ -1567,9 +1468,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
             aError = kErrorNoAck;
         }
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        HandleCslIeSent(aFrame, aError);
-#endif
 #endif
     }
 #endif // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -1676,11 +1574,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        if (aError == kErrorNone && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
-            aFrame.GetSecurityEnabled() && aAckFrame != nullptr)
-        {
-            Get<DataPollSender>().ProcessFrame(*aAckFrame);
-        }
+        Get<DataPollSender>().ProcessTxDone(aFrame, aAckFrame, aError);
 #endif
         PerformNextOperation();
         break;
@@ -1724,14 +1618,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         FinishOperation();
         PerformNextOperation();
         break;
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    case kOperationTransmitCslSync:
-        mCounters.mTxDataPoll++;
-        FinishOperation();
-        PerformNextOperation();
-        break;
-#endif
 
     default:
         OT_ASSERT(false);
@@ -2164,7 +2050,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     }
 #endif
 
-    Get<DataPollSender>().ProcessFrame(*aFrame);
+    Get<DataPollSender>().ProcessRxFrame(*aFrame);
 
     if (neighbor != nullptr)
     {
@@ -2437,13 +2323,10 @@ const char *Mac::OperationToString(Operation aOperation)
         "TransmitPoll",       // (5) kOperationTransmitPoll
         "WaitingForData",     // (6) kOperationWaitingForData
         "TransmitOobFrame",   // (7) kOperationTransmitOutOfBandFrame
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        "TransmitCslSync", // (8) kOperationTransmitCslSync
-#endif
 #if OPENTHREAD_FTD
-        "TransmitDataIndirect", // (9) kOperationTransmitDataIndirect
+        "TransmitDataIndirect", // (8) kOperationTransmitDataIndirect
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "TransmitDataCsl", // (10) kOperationTransmitDataCsl
+        "TransmitDataCsl", // (9) kOperationTransmitDataCsl
 #endif
 #endif
     };
@@ -2456,20 +2339,10 @@ const char *Mac::OperationToString(Operation aOperation)
     static_assert(kOperationTransmitPoll == 5, "kOperationTransmitPoll value is incorrect");
     static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
     static_assert(kOperationTransmitOutOfBandFrame == 7, "kOperationTransmitOutOfBandFrame value is incorrect");
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    static_assert(kOperationTransmitCslSync == 8, "TransmitCslSync value is incorrect");
-#if OPENTHREAD_FTD
-    static_assert(kOperationTransmitDataIndirect == 9, "kOperationTransmitDataIndirect value is incorrect");
-#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kOperationTransmitDataCsl == 10, "TransmitDataCsl value is incorrect");
-#endif
-#endif
-#else
 #if OPENTHREAD_FTD
     static_assert(kOperationTransmitDataIndirect == 8, "kOperationTransmitDataIndirect value is incorrect");
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     static_assert(kOperationTransmitDataCsl == 9, "TransmitDataCsl value is incorrect");
-#endif
 #endif
 #endif
 
@@ -2585,6 +2458,7 @@ exit:
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
     mLinks.GetSubMac().SetCslPeriod(aPeriod);
+    Get<DataPollSender>().RecalculatePollPeriod();
 
     if (IsCslEnabled())
     {
@@ -2600,6 +2474,7 @@ void Mac::SetCslTimeout(uint32_t aTimeout)
     VerifyOrExit(GetCslTimeout() != aTimeout);
 
     mLinks.GetSubMac().SetCslTimeout(aTimeout);
+    Get<DataPollSender>().RecalculatePollPeriod();
 
     if (IsCslEnabled())
     {
@@ -2616,34 +2491,6 @@ bool Mac::IsCslEnabled(void) const
            Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 
-void Mac::HandleCslIeSent(TxFrame &aFrame, otError aError)
-{
-    VerifyOrExit(IsCslEnabled());
-    VerifyOrExit(aFrame.GetHeaderIe(CslIe::kHeaderIeId) != nullptr);
-
-    if (mOperation == kOperationTransmitCslSync)
-    {
-        if (aError == OT_ERROR_NONE)
-        {
-            mCslSyncTxCnt = 0;
-        }
-        else if (++mCslSyncTxCnt < kMaxFrameRetriesCslSync)
-        {
-            StartOperation(kOperationTransmitCslSync);
-        }
-    }
-    else if (aFrame.mInfo.mTxInfo.mIsARetx)
-    {
-        // If CSL IE is included in a retransmission frame, send out a datapoll to resync its parent
-        VerifyOrExit(!mPendingTransmitPoll && !mPendingTransmitCslSync);
-
-        mCslSyncTxCnt = 0;
-        StartOperation(kOperationTransmitCslSync);
-    }
-
-exit:
-    return;
-}
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE

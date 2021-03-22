@@ -103,6 +103,11 @@ class SSED_CslTransmission(thread_cert.TestCase):
 
         self.nodes[SSED_1].set_csl_period(consts.CSL_DEFAULT_PERIOD)
         self.simulator.go(2)
+        self.flush_all()
+        self.simulator.go(consts.CSL_DEFAULT_TIMEOUT)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        self.assertNotEqual(ssed_messages.next_data_poll(), None)
+
         leader_rloc = self.nodes[LEADER].get_rloc()
         self.nodes[LEADER].stop()
         self.flush_all()

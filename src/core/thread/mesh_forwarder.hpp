@@ -480,7 +480,7 @@ private:
     bool     CalcIePresent(const Message *aMessage);
     uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    void AppendHeaderIe(const Message *aMessage, Mac::Frame &aFrame);
+    void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
 #endif
 
     void PauseMessageTransmissions(void) { mTxPaused = true; }

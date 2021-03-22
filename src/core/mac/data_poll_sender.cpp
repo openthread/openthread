@@ -262,7 +262,12 @@ void DataPollSender::HandlePollSent(Mac::TxFrame &aFrame, Error aError)
         otLogInfoMac("Failed to send data poll, error:%s, retx:%d/%d", ErrorToString(aError), mPollTxFailureCounter,
                      kMaxPollRetxAttempts);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        if (mPollTxFailureCounter <
+            ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) ? kMaxCslPollRetxAttempts : kMaxPollRetxAttempts))
+#else
         if (mPollTxFailureCounter < kMaxPollRetxAttempts)
+#endif
         {
             if (!mRetxMode)
             {
@@ -314,7 +319,7 @@ exit:
     return;
 }
 
-void DataPollSender::ProcessFrame(const Mac::RxFrame &aFrame)
+void DataPollSender::ProcessRxFrame(const Mac::RxFrame &aFrame)
 {
     VerifyOrExit(mEnabled);
 
@@ -324,16 +329,51 @@ void DataPollSender::ProcessFrame(const Mac::RxFrame &aFrame)
     {
         IgnoreError(SendDataPoll());
     }
-#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    else if (aFrame.IsAck())
-    {
-        ResetKeepAliveTimer();
-    }
-#endif
 
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFrame *aAckFrame, Error aError)
+{
+    bool sendDataPoll = false;
+
+    VerifyOrExit(mEnabled);
+    VerifyOrExit(Get<Mle::MleRouter>().GetParent().IsEnhancedKeepAliveSupported());
+    VerifyOrExit(aFrame.GetSecurityEnabled());
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (aFrame.mInfo.mTxInfo.mIsARetx && (aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr))
+    {
+        // For retransmission frame, use a data poll to resync its parent with correct CSL phase
+        sendDataPoll = true;
+    }
+#endif
+
+    if (aError == kErrorNone && aAckFrame != nullptr)
+    {
+        mPollTimeoutCounter = 0;
+
+        if (aAckFrame->GetFramePending())
+        {
+            sendDataPoll = true;
+        }
+        else
+        {
+            ResetKeepAliveTimer();
+        }
+    }
+
+    if (sendDataPoll)
+    {
+        IgnoreError(SendDataPoll());
+    }
+
+exit:
+    return;
+}
+#endif
 
 void DataPollSender::RecalculatePollPeriod(void)
 {
@@ -504,8 +544,88 @@ void DataPollSender::HandlePollTimer(Timer &aTimer)
 
 uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 {
-    return Time::SecToMsec(Get<Mle::MleRouter>().GetTimeout()) -
-           static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts;
+    uint32_t period = Time::SecToMsec(Get<Mle::MleRouter>().GetTimeout());
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (Get<Mac::Mac>().IsCslEnabled())
+    {
+        UpdateIfLarger(period, Time::SecToMsec(Get<Mac::Mac>().GetCslTimeout()));
+    }
+#endif
+
+    period -= (static_cast<uint32_t>(kRetxPollPeriod) * kMaxPollRetxAttempts);
+
+    return period;
+}
+
+Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
+{
+    Mac::TxFrame *frame = nullptr;
+    Mac::Address  src, dst;
+    uint16_t      fcf;
+    bool          iePresent;
+
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    RadioType radio;
+
+    SuccessOrExit(GetPollDestinationAddress(dst, radio));
+    frame = &aTxFrames.GetTxFrame(radio);
+#else
+    SuccessOrExit(GetPollDestinationAddress(dst));
+    frame = &aTxFrames.GetTxFrame();
+#endif
+
+    fcf = Mac::Frame::kFcfFrameMacCmd | Mac::Frame::kFcfPanidCompression | Mac::Frame::kFcfAckRequest |
+          Mac::Frame::kFcfSecurityEnabled;
+
+    iePresent = Get<MeshForwarder>().CalcIePresent(nullptr);
+
+    if (iePresent)
+    {
+        fcf |= Mac::Frame::kFcfIePresent;
+    }
+
+    fcf |= Get<MeshForwarder>().CalcFrameVersion(Get<NeighborTable>().FindNeighbor(dst), iePresent);
+
+    if (dst.IsExtended())
+    {
+        fcf |= Mac::Frame::kFcfDstAddrExt | Mac::Frame::kFcfSrcAddrExt;
+        src.SetExtended(Get<Mac::Mac>().GetExtAddress());
+    }
+    else
+    {
+        fcf |= Mac::Frame::kFcfDstAddrShort | Mac::Frame::kFcfSrcAddrShort;
+        src.SetShort(Get<Mac::Mac>().GetShortAddress());
+    }
+
+    frame->InitMacHeader(fcf, Mac::Frame::kKeyIdMode1 | Mac::Frame::kSecEncMic32);
+
+    if (frame->IsDstPanIdPresent())
+    {
+        frame->SetDstPanId(Get<Mac::Mac>().GetPanId());
+    }
+
+    frame->SetSrcAddr(src);
+    frame->SetDstAddr(dst);
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    if (iePresent)
+    {
+        Get<MeshForwarder>().AppendHeaderIe(nullptr, *frame);
+    }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (frame->GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr)
+    {
+        // Disable frame retransmission when the data poll has CSL IE included
+        aTxFrames.SetMaxFrameRetries(0);
+    }
+#endif
+#endif
+
+    IgnoreError(frame->SetCommandId(Mac::Frame::kMacCmdDataRequest));
+
+exit:
+    return frame;
 }
 
 } // namespace ot

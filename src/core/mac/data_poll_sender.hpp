@@ -130,31 +130,6 @@ public:
      */
     uint32_t GetExternalPollPeriod(void) const { return mExternalPollPeriod; }
 
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    /**
-     * This method gets the destination MAC address for a data poll frame.
-     *
-     * @param[out] aDest       Reference to a `MAC::Address` to output the poll destination address (on success).
-     * @param[out] aRadioType  Reference to a `Mac::RadioType` to output the link type (on success).
-     *
-     * @retval kErrorNone   @p aDest and @p aRadioType were updated successfully.
-     * @retval kErrorAbort  Abort the data poll transmission (not currently attached to any parent).
-     *
-     */
-    Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
-#else
-    /**
-     * This method gets the destination MAC address for a data poll frame.
-     *
-     * @param[out] aDest       Reference to a `MAC::Address` to output the poll destination address (on success).
-     *
-     * @retval kErrorNone   @p aDest was updated successfully.
-     * @retval kErrorAbort  Abort the data poll transmission (not currently attached to any parent).
-     *
-     */
-    Error GetPollDestinationAddress(Mac::Address &aDest) const;
-#endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
-
     /**
      * This method informs the data poll sender of success/error status of a previously requested poll frame
      * transmission.
@@ -178,16 +153,28 @@ public:
     void HandlePollTimeout(void);
 
     /**
-     * This method informs the data poll sender to process a MAC frame.
+     * This method informs the data poll sender to process a received MAC frame.
      *
-     *   1. Data Frame: send an immediate data poll if "frame pending" is set.
-     *   2. Ack Frame for a secured data frame in version 1.2 or newer: send an immediate data poll if
-     *      "frame pending" is set, otherwise reset the keep-alive timer for sending next poll.
-     *
-     * @param[in] aFrame     The frame to process.
+     * @param[in] aFrame     The received frame to process.
+     * @param[in] aError     Error status of the transmission.
      *
      */
-    void ProcessFrame(const Mac::RxFrame &aFrame);
+    void ProcessRxFrame(const Mac::RxFrame &aFrame);
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    /**
+     * This method informs the data poll sender to process a transmitted MAC frame.
+     *
+     * @param[in]  aFrame      The frame that was transmitted.
+     * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
+     * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
+     *                         kErrorNoAck when the frame was transmitted but no ACK was received,
+     *                         kErrorChannelAccessFailure when the tx failed due to activity on the channel,
+     *                         kErrorAbort when transmission was aborted for other reasons.
+     *
+     */
+    void ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFrame *aAckFrame, Error aError);
+#endif
 
     /**
      * This method asks the data poll sender to recalculate the poll period.
@@ -261,6 +248,16 @@ public:
      */
     uint32_t GetDefaultPollPeriod(void) const;
 
+    /**
+     * This method prepares and returns a data request command frame.
+     *
+     * @param[in] aTxFrames  The set of TxFrames for all radio links.
+     *
+     * @returns The data poll frame.
+     *
+     */
+    Mac::TxFrame *PrepareDataRequest(Mac::TxFrames &aTxFrames);
+
 private:
     enum // Poll period under different conditions (in milliseconds).
     {
@@ -277,6 +274,9 @@ private:
         kQuickPollsAfterTimeout = 5, ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
         kMaxPollRetxAttempts = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< Maximum number of retransmit attempts
                                                                              ///< of data poll (mac data request).
+        kMaxCslPollRetxAttempts =
+            OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< Maximum number of retransmit attempts of data
+                                                                    ///< poll with CSL IE (mac data request).
     };
 
     enum PollPeriodSelector
@@ -290,6 +290,11 @@ private:
     const Neighbor &GetParent(void) const;
     static void     HandlePollTimer(Timer &aTimer);
     static void     UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod);
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
+#else
+    Error GetPollDestinationAddress(Mac::Address &aDest) const;
+#endif
 
     TimeMilli mTimerStartTime;
     uint32_t  mPollPeriod;
