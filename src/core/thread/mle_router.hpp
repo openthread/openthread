@@ -599,7 +599,7 @@ private:
 #endif
 
     Error ProcessRouteTlv(const RouteTlv &aRoute);
-    void  StopAdvertiseTimer(void);
+    void  StopAdvertiseTrickleTimer(void);
     Error SendAddressSolicit(ThreadStatusTlv::Status aStatus);
     void  SendAddressRelease(void);
     void  SendAddressSolicitResponse(const Coap::Message &   aRequest,
@@ -653,11 +653,11 @@ private:
     bool HasOneNeighborWithComparableConnectivity(const RouteTlv &aRoute, uint8_t aRouterId);
     bool HasSmallNumberOfChildren(void);
 
-    static bool HandleAdvertiseTimer(TrickleTimer &aTimer);
-    bool        HandleAdvertiseTimer(void);
+    static void HandleAdvertiseTrickleTimer(TrickleTimer &aTimer);
+    void        HandleAdvertiseTrickleTimer(void);
     void        HandleTimeTick(void);
 
-    TrickleTimer mAdvertiseTimer;
+    TrickleTimer mAdvertiseTrickleTimer;
 
     Coap::Resource mAddressSolicit;
     Coap::Resource mAddressRelease;

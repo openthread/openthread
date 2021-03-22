@@ -56,7 +56,7 @@ namespace Mle {
 
 MleRouter::MleRouter(Instance &aInstance)
     : Mle(aInstance)
-    , mAdvertiseTimer(aInstance, MleRouter::HandleAdvertiseTimer, nullptr)
+    , mAdvertiseTrickleTimer(aInstance, MleRouter::HandleAdvertiseTrickleTimer)
     , mAddressSolicit(UriPath::kAddressSolicit, &MleRouter::HandleAddressSolicit, this)
     , mAddressRelease(UriPath::kAddressRelease, &MleRouter::HandleAddressRelease, this)
     , mChildTable(aInstance)
@@ -225,7 +225,7 @@ void MleRouter::StopLeader(void)
     Get<Tmf::TmfAgent>().RemoveResource(mAddressRelease);
     Get<MeshCoP::ActiveDataset>().StopLeader();
     Get<MeshCoP::PendingDataset>().StopLeader();
-    StopAdvertiseTimer();
+    StopAdvertiseTrickleTimer();
     Get<NetworkData::Leader>().Stop();
     Get<ThreadNetif>().UnsubscribeAllRoutersMulticast();
 }
@@ -324,7 +324,7 @@ void MleRouter::SetStateRouter(uint16_t aRloc16)
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    StopAdvertiseTimer();
+    StopAdvertiseTrickleTimer();
     ResetAdvertiseInterval();
 
     Get<ThreadNetif>().SubscribeAllRoutersMulticast();
@@ -355,7 +355,7 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     mAttachCounter = 0;
     mAttachTimer.Stop();
     mMessageTransmissionTimer.Stop();
-    StopAdvertiseTimer();
+    StopAdvertiseTrickleTimer();
     ResetAdvertiseInterval();
     IgnoreError(GetLeaderAloc(mLeaderAloc.GetAddress()));
     Get<ThreadNetif>().AddUnicastAddress(mLeaderAloc);
@@ -386,39 +386,37 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     otLogNoteMle("Leader partition id 0x%x", mLeaderData.GetPartitionId());
 }
 
-bool MleRouter::HandleAdvertiseTimer(TrickleTimer &aTimer)
+void MleRouter::HandleAdvertiseTrickleTimer(TrickleTimer &aTimer)
 {
-    return aTimer.Get<MleRouter>().HandleAdvertiseTimer();
+    aTimer.Get<MleRouter>().HandleAdvertiseTrickleTimer();
 }
 
-bool MleRouter::HandleAdvertiseTimer(void)
+void MleRouter::HandleAdvertiseTrickleTimer(void)
 {
-    bool continueTrickle = true;
-
-    VerifyOrExit(IsRouterEligible(), continueTrickle = false);
+    VerifyOrExit(IsRouterEligible(), mAdvertiseTrickleTimer.Stop());
 
     SendAdvertisement();
 
 exit:
-    return continueTrickle;
+    return;
 }
 
-void MleRouter::StopAdvertiseTimer(void)
+void MleRouter::StopAdvertiseTrickleTimer(void)
 {
-    mAdvertiseTimer.Stop();
+    mAdvertiseTrickleTimer.Stop();
 }
 
 void MleRouter::ResetAdvertiseInterval(void)
 {
     VerifyOrExit(IsRouterOrLeader());
 
-    if (!mAdvertiseTimer.IsRunning())
+    if (!mAdvertiseTrickleTimer.IsRunning())
     {
-        mAdvertiseTimer.Start(Time::SecToMsec(kAdvertiseIntervalMin), Time::SecToMsec(kAdvertiseIntervalMax),
-                              TrickleTimer::kModeNormal);
+        mAdvertiseTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kAdvertiseIntervalMin),
+                                     Time::SecToMsec(kAdvertiseIntervalMax));
     }
 
-    mAdvertiseTimer.IndicateInconsistent();
+    mAdvertiseTrickleTimer.IndicateInconsistent();
 
 exit:
     return;
@@ -1727,13 +1725,12 @@ void MleRouter::HandleTimeTick(void)
                 InformPreviousChannel();
             }
 
-            if (!mAdvertiseTimer.IsRunning())
+            if (!mAdvertiseTrickleTimer.IsRunning())
             {
                 SendAdvertisement();
 
-                mAdvertiseTimer.Start(Time::SecToMsec(kReedAdvertiseInterval),
-                                      Time::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter),
-                                      TrickleTimer::kModePlainTimer);
+                mAdvertiseTrickleTimer.Start(TrickleTimer::kModePlainTimer, Time::SecToMsec(kReedAdvertiseInterval),
+                                             Time::SecToMsec(kReedAdvertiseInterval + kReedAdvertiseJitter));
             }
 
             ExitNow();

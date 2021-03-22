@@ -140,8 +140,8 @@ private:
     Error    ProcessStatusCode(Message &aMessage, uint16_t aOffset);
     Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
 
-    static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
-    bool        HandleTrickleTimer(void);
+    static void HandleTrickleTimer(TrickleTimer &aTrickleTimer);
+    void        HandleTrickleTimer(void);
 
     Ip6::Udp::Socket mSocket;
 
