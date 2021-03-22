@@ -109,7 +109,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         self.simulator.go(2)
 
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertEqual(client.srp_client_get_server_port(), client.get_srp_server_port())
+        self.assertTrue(server1.has_ipaddr(client.srp_client_get_server_address()))
 
         #
         # 2. Disable server1 and check client is stopped/disabled.
@@ -126,7 +126,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         server2.srp_server_set_enabled(True)
         self.simulator.go(5)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        prev_port = client.srp_client_get_server_port()
+        server2_address = client.srp_client_get_server_address()
 
         #
         # 4. Enable both servers and check client stays with server2.
@@ -135,7 +135,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         server1.srp_server_set_enabled(True)
         self.simulator.go(2)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertEqual(client.srp_client_get_server_port(), prev_port)
+        self.assertEqual(client.srp_client_get_server_address(), server2_address)
 
         #
         # 5. Disable server2 and check client switches to server1.
@@ -144,7 +144,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         server2.srp_server_set_enabled(False)
         self.simulator.go(5)
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertNotEqual(client.srp_client_get_server_port(), prev_port)
+        self.assertNotEqual(client.srp_client_get_server_address(), server2_address)
 
 
 if __name__ == '__main__':
