@@ -236,7 +236,7 @@ void Notifier::LogEvents(Events aEvents) const
     }
 
 exit:
-    otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s] ", aEvents.GetAsFlags(), didLog ? "... " : "[",
+    otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s]", aEvents.GetAsFlags(), didLog ? "... " : "[",
                   string.AsCString());
 }
 
