@@ -1128,7 +1128,8 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    otRadioCaps capabilities = (OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_SLEEP_TO_TX);
+    otRadioCaps capabilities = (OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_ENERGY_SCAN |
+                                OT_RADIO_CAPS_SLEEP_TO_TX);
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     capabilities |= OT_RADIO_CAPS_TRANSMIT_SEC;
