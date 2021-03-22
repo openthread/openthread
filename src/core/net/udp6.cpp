@@ -87,17 +87,7 @@ Error Udp::Socket::Open(otUdpReceive aHandler, void *aContext)
     return Get<Udp>().Open(*this, aHandler, aContext);
 }
 
-Error Udp::Socket::Bind(const SockAddr &aSockAddr)
-{
-    return Get<Udp>().Bind(*this, aSockAddr);
-}
-
-Error Udp::Socket::Bind(uint16_t aPort)
-{
-    return Bind(SockAddr(aPort));
-}
-
-Error Udp::Socket::BindToNetif(otNetifIdentifier aNetifIdentifier)
+Error Udp::Socket::Bind(const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier)
 {
     OT_UNUSED_VARIABLE(aNetifIdentifier);
 
@@ -108,13 +98,21 @@ Error Udp::Socket::BindToNetif(otNetifIdentifier aNetifIdentifier)
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    Get<Udp>().BindToNetif(*this, aNetifIdentifier);
+    if (aNetifIdentifier == OT_NETIF_BACKBONE)
+    {
+        Get<Udp>().SetBackboneSocket(*this);
+    }
 #endif
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    SuccessOrExit(error = Get<Udp>().Bind(*this, aSockAddr));
+
 exit:
-#endif
     return error;
+}
+
+Error Udp::Socket::Bind(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
+{
+    return Bind(SockAddr(aPort), aNetifIdentifier);
 }
 
 Error Udp::Socket::Connect(const SockAddr &aSockAddr)
@@ -253,14 +251,6 @@ exit:
 }
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-void Udp::BindToNetif(SocketHandle &aSocket, otNetifIdentifier aNetifIdentifier)
-{
-    if (aNetifIdentifier == OT_NETIF_BACKBONE)
-    {
-        SetBackboneSocket(aSocket);
-    }
-}
-
 void Udp::SetBackboneSocket(SocketHandle &aSocket)
 {
     RemoveSocket(aSocket);

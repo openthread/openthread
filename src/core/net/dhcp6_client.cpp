@@ -50,7 +50,7 @@ namespace Dhcp6 {
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mTrickleTimer(aInstance, Client::HandleTrickleTimer, nullptr)
+    , mTrickleTimer(aInstance, Client::HandleTrickleTimer)
     , mStartTime(0)
     , mIdentityAssociationCurrent(nullptr)
 {
@@ -203,8 +203,8 @@ bool Client::ProcessNextIdentityAssociation(void)
 
         mIdentityAssociationCurrent = &idAssociation;
 
-        mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
-                            TrickleTimer::kModeNormal);
+        mTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kTrickleTimerImin),
+                            Time::SecToMsec(kTrickleTimerImax));
 
         mTrickleTimer.IndicateInconsistent();
 
@@ -215,18 +215,16 @@ exit:
     return rval;
 }
 
-bool Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
+void Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
 {
-    return aTrickleTimer.Get<Client>().HandleTrickleTimer();
+    aTrickleTimer.Get<Client>().HandleTrickleTimer();
 }
 
-bool Client::HandleTrickleTimer(void)
+void Client::HandleTrickleTimer(void)
 {
-    bool rval = true;
-
     OT_ASSERT(mSocket.IsBound());
 
-    VerifyOrExit(mIdentityAssociationCurrent != nullptr, rval = false);
+    VerifyOrExit(mIdentityAssociationCurrent != nullptr, mTrickleTimer.Stop());
 
     switch (mIdentityAssociationCurrent->mStatus)
     {
@@ -246,7 +244,7 @@ bool Client::HandleTrickleTimer(void)
         if (!ProcessNextIdentityAssociation())
         {
             Stop();
-            rval = false;
+            mTrickleTimer.Stop();
         }
 
         break;
@@ -256,7 +254,7 @@ bool Client::HandleTrickleTimer(void)
     }
 
 exit:
-    return rval;
+    return;
 }
 
 void Client::Solicit(uint16_t aRloc16)

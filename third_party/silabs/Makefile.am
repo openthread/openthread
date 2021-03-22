@@ -91,7 +91,6 @@ SILABS_MBEDTLS_CPPFLAGS                                                         
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_alt/include                    \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/config         \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/inc            \
-    -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_mbedtls_support/inc/configs    \
     -I$(SDK_SRC_DIR)/util/third_party/crypto/sl_component/sl_psa_driver/inc                 \
     -I$(SDK_SRC_DIR)/util/silicon_labs/silabs_core/memory_manager                           \
     -I$(SDK_SRC_DIR)/platform/CMSIS/Include                                                 \

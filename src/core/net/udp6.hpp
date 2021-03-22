@@ -174,36 +174,27 @@ public:
         /**
          * This method binds the UDP socket.
          *
-         * @param[in]  aSockAddr    A reference to the socket address.
+         * @param[in]  aSockAddr            A reference to the socket address.
+         * @param[in]  aNetifIdentifier     The network interface identifier.
          *
          * @retval kErrorNone            Successfully bound the socket.
          * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          *
          */
-        Error Bind(const SockAddr &aSockAddr);
-
-        /**
-         * This method binds the UDP socket to a specified network interface.
-         *
-         * @param[in]  aNetifIdentifier     The network interface identifier.
-         *
-         * @retval kErrorNone    Successfully bound to the network interface.
-         * @retval kErrorFailed  Failed to bind to the network interface.
-         *
-         */
-        Error BindToNetif(otNetifIdentifier aNetifIdentifier);
+        Error Bind(const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier = OT_NETIF_THREAD);
 
         /**
          * This method binds the UDP socket.
          *
-         * @param[in]  aPort        A port number.
+         * @param[in]  aPort                A port number.
+         * @param[in]  aNetifIdentifier     The network interface identifier.
          *
          * @retval kErrorNone            Successfully bound the socket.
          * @retval kErrorFailed          Failed to bind UDP Socket.
          *
          */
-        Error Bind(uint16_t aPort);
+        Error Bind(uint16_t aPort, otNetifIdentifier aNetifIdentifier = OT_NETIF_THREAD);
 
         /**
          * This method binds the UDP socket.
@@ -467,15 +458,6 @@ public:
      *
      */
     Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
-
-    /**
-     * This method binds a UDP socket to the Network interface.
-     *
-     * @param[in]  aSocket           A reference to the socket.
-     * @param[in]  aNetifIdentifier  The network interface identifier.
-     *
-     */
-    void BindToNetif(SocketHandle &aSocket, otNetifIdentifier aNetifIdentifier);
 
     /**
      * This method connects a UDP socket.

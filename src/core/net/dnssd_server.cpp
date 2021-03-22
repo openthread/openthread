@@ -66,7 +66,7 @@ Error Server::Start(void)
     VerifyOrExit(!IsRunning());
 
     SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(kPort));
+    SuccessOrExit(error = mSocket.Bind(kPort, OT_NETIF_UNSPECIFIED));
 
 exit:
     otLogInfoDns("[server] started: %s", ErrorToString(error));

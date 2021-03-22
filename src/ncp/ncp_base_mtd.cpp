@@ -266,7 +266,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_CSL_CHANNEL>(v
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(void)
 {
     otError      error = OT_ERROR_NONE;
-    otIp6Address addresses[kIPv6AddressesNumMax];
+    otIp6Address addresses[kIp6AddressesNumMax];
     uint8_t      addressesCount = 0U;
     bool         timeoutPresent = false;
     uint32_t     timeout;
@@ -275,7 +275,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MLR_REQUEST>(v
 
     while (mDecoder.GetRemainingLengthInStruct())
     {
-        VerifyOrExit(addressesCount < kIPv6AddressesNumMax, error = OT_ERROR_NO_BUFS);
+        VerifyOrExit(addressesCount < kIp6AddressesNumMax, error = OT_ERROR_NO_BUFS);
         SuccessOrExit(error = mDecoder.ReadIp6Address(addresses[addressesCount]));
         ++addressesCount;
     }

@@ -64,6 +64,7 @@ set(COMMON_SOURCES
     api/netdata_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
+    api/ping_sender_api.cpp
     api/random_crypto_api.cpp
     api/random_noncrypto_api.cpp
     api/server_api.cpp
@@ -207,6 +208,7 @@ set(COMMON_SOURCES
     utils/lookup_table.cpp
     utils/otns.cpp
     utils/parse_cmdline.cpp
+    utils/ping_sender.cpp
     utils/slaac_address.cpp
 )
 

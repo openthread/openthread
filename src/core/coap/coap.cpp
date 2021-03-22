@@ -1666,8 +1666,7 @@ Error Coap::Start(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
     SuccessOrExit(error = mSocket.Open(&Coap::HandleUdpReceive, this));
     socketOpened = true;
 
-    SuccessOrExit(error = mSocket.BindToNetif(aNetifIdentifier));
-    SuccessOrExit(error = mSocket.Bind(aPort));
+    SuccessOrExit(error = mSocket.Bind(aPort, aNetifIdentifier));
 
 exit:
     if (error != kErrorNone && socketOpened)

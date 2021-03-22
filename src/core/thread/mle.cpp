@@ -528,7 +528,7 @@ Error Mle::BecomeChild(AttachMode aMode)
 #if OPENTHREAD_FTD
         if (IsFullThreadDevice())
         {
-            Get<MleRouter>().StopAdvertiseTimer();
+            Get<MleRouter>().StopAdvertiseTrickleTimer();
         }
 #endif
     }

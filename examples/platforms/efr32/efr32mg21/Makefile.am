@@ -33,7 +33,6 @@ lib_LIBRARIES = libopenthread-efr32mg21.a
 
 libopenthread_efr32mg21_a_CPPFLAGS                                            = \
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
-    -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -Wno-sign-compare                                                           \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(BOARD_LOWERCASE) \

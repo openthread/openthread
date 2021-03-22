@@ -236,6 +236,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1" ]
     }
 
+    if (openthread_config_ping_sender) {
+      defines += [ "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1" ]
+    }
+
     if (openthread_config_time_sync_enable) {
       defines += [ "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1" ]
     }
@@ -320,6 +324,7 @@ openthread_core_files = [
   "api/netdata_api.cpp",
   "api/netdiag_api.cpp",
   "api/network_time_api.cpp",
+  "api/ping_sender_api.cpp",
   "api/random_crypto_api.cpp",
   "api/random_noncrypto_api.cpp",
   "api/server_api.cpp",
@@ -619,6 +624,8 @@ openthread_core_files = [
   "utils/otns.hpp",
   "utils/parse_cmdline.cpp",
   "utils/parse_cmdline.hpp",
+  "utils/ping_sender.cpp",
+  "utils/ping_sender.hpp",
   "utils/slaac_address.cpp",
   "utils/slaac_address.hpp",
 ]
@@ -689,6 +696,7 @@ source_set("libopenthread_core_config") {
     "config/openthread-core-config-check.h",
     "config/openthread-core-default-config.h",
     "config/parent_search.h",
+    "config/ping_sender.h",
     "config/platform.h",
     "config/radio_link.h",
     "config/sntp_client.h",
