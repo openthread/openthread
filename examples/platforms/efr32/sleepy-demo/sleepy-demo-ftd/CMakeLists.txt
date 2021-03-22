@@ -27,6 +27,7 @@
 #
 
 add_executable(sleepy-demo-ftd
+    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
     main.c
 )
 
