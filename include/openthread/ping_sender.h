@@ -115,6 +115,11 @@ otError otPingSenderPing(otInstance *aInstance, const otPingSenderConfig *aConfi
  */
 void otPingSenderStop(otInstance *aInstance);
 
+/**
+ * @}
+ *
+ */  
+  
 #ifdef __cplusplus
 } // extern "C"
 #endif
