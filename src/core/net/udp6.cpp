@@ -89,25 +89,7 @@ Error Udp::Socket::Open(otUdpReceive aHandler, void *aContext)
 
 Error Udp::Socket::Bind(const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier)
 {
-    OT_UNUSED_VARIABLE(aNetifIdentifier);
-
-    Error error = kErrorNone;
-
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    SuccessOrExit(error = otPlatUdpBindToNetif(this, aNetifIdentifier));
-#endif
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (aNetifIdentifier == OT_NETIF_BACKBONE)
-    {
-        Get<Udp>().SetBackboneSocket(*this);
-    }
-#endif
-
-    SuccessOrExit(error = Get<Udp>().Bind(*this, aSockAddr));
-
-exit:
-    return error;
+    return Get<Udp>().Bind(*this, aSockAddr, aNetifIdentifier);
 }
 
 Error Udp::Socket::Bind(uint16_t aPort, otNetifIdentifier aNetifIdentifier)
@@ -220,9 +202,22 @@ exit:
     return error;
 }
 
-Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr)
+Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier)
 {
+    OT_UNUSED_VARIABLE(aNetifIdentifier);
+
     Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    SuccessOrExit(error = otPlatUdpBindToNetif(&aSocket, aNetifIdentifier));
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (aNetifIdentifier == OT_NETIF_BACKBONE)
+    {
+        SetBackboneSocket(aSocket);
+    }
+#endif
 
     VerifyOrExit(aSockAddr.GetAddress().IsUnspecified() || Get<ThreadNetif>().HasUnicastAddress(aSockAddr.GetAddress()),
                  error = kErrorInvalidArgs);
@@ -295,7 +290,7 @@ Error Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
 
     if (!aSocket.IsBound())
     {
-        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName()));
+        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName(), OT_NETIF_THREAD));
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
@@ -356,7 +351,7 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
 
     if (!aSocket.IsBound())
     {
-        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName()));
+        SuccessOrExit(error = Bind(aSocket, aSocket.GetSockName(), OT_NETIF_THREAD));
     }
 
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);
