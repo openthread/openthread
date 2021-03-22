@@ -414,24 +414,24 @@ public:
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully added (or updated) the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
-     * @retval OT_ERROR_NO_BUFS       The maximum number of allowed external addresses are already added.
+     * @retval kErrorNone         Successfully added (or updated) the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNoBufs       The maximum number of allowed external addresses are already added.
      *
      */
-    otError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
+    Error AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
 
     /**
      * This method removes a external (to OpenThread) unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully removed the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
-     * @retval OT_ERROR_NOT_FOUND     The unicast address was not found.
+     * @retval kErrorNone         Successfully removed the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNotFound     The unicast address was not found.
      *
      */
-    otError RemoveExternalUnicastAddress(const Address &aAddress);
+    Error RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
      * This method removes all the previously added external (to OpenThread) unicast addresses from the
@@ -515,25 +515,25 @@ public:
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE           Successfully subscribed to @p aAddress.
-     * @retval OT_ERROR_ALREADY        The multicast address is already subscribed.
-     * @retval OT_ERROR_INVALID_ARGS   The address indicated by @p aAddress is an internal multicast address.
-     * @retval OT_ERROR_NO_BUFS        The maximum number of allowed external multicast addresses are already added.
+     * @retval kErrorNone          Successfully subscribed to @p aAddress.
+     * @retval kErrorAlready       The multicast address is already subscribed.
+     * @retval kErrorInvalidArgs   The address indicated by @p aAddress is an internal multicast address.
+     * @retval kErrorNoBufs        The maximum number of allowed external multicast addresses are already added.
      *
      */
-    otError SubscribeExternalMulticast(const Address &aAddress);
+    Error SubscribeExternalMulticast(const Address &aAddress);
 
     /**
      * This method unsubscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval OT_ERROR_NONE          Successfully unsubscribed to the unicast address.
-     * @retval OT_ERROR_INVALID_ARGS  The address indicated by @p aAddress is an internal address.
-     * @retval OT_ERROR_NOT_FOUND     The multicast address was not found.
+     * @retval kErrorNone         Successfully unsubscribed to the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNotFound     The multicast address was not found.
      *
      */
-    otError UnsubscribeExternalMulticast(const Address &aAddress);
+    Error UnsubscribeExternalMulticast(const Address &aAddress);
 
     /**
      * This method unsubscribes the network interface from all previously added external (to OpenThread) multicast

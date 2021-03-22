@@ -156,7 +156,7 @@ uint32_t otPlatAlarmMicroGetNow(void)
 void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
 {
     // TODO microsecond support
-    return otPlatAlarmMilliStartAt(aInstance, aT0, aDt);
+    otPlatAlarmMilliStartAt(aInstance, aT0, aDt);
 }
 
 void otPlatAlarmMicroStop(otInstance *aInstance)

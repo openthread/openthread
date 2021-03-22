@@ -51,6 +51,8 @@ namespace ot {
 
 namespace Dhcp6 {
 
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
 /**
  * @addtogroup core-dhcp6
  *
@@ -120,26 +122,26 @@ private:
 
     bool ProcessNextIdentityAssociation(void);
 
-    otError AppendHeader(Message &aMessage);
-    otError AppendClientIdentifier(Message &aMessage);
-    otError AppendIaNa(Message &aMessage, uint16_t aRloc16);
-    otError AppendIaAddress(Message &aMessage, uint16_t aRloc16);
-    otError AppendElapsedTime(Message &aMessage);
-    otError AppendRapidCommit(Message &aMessage);
+    Error AppendHeader(Message &aMessage);
+    Error AppendClientIdentifier(Message &aMessage);
+    Error AppendIaNa(Message &aMessage, uint16_t aRloc16);
+    Error AppendIaAddress(Message &aMessage, uint16_t aRloc16);
+    Error AppendElapsedTime(Message &aMessage);
+    Error AppendRapidCommit(Message &aMessage);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     void     ProcessReply(Message &aMessage);
     uint16_t FindOption(Message &aMessage, uint16_t aOffset, uint16_t aLength, Code aCode);
-    otError  ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
-    otError  ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
-    otError  ProcessIaNa(Message &aMessage, uint16_t aOffset);
-    otError  ProcessStatusCode(Message &aMessage, uint16_t aOffset);
-    otError  ProcessIaAddress(Message &aMessage, uint16_t aOffset);
+    Error    ProcessServerIdentifier(Message &aMessage, uint16_t aOffset);
+    Error    ProcessClientIdentifier(Message &aMessage, uint16_t aOffset);
+    Error    ProcessIaNa(Message &aMessage, uint16_t aOffset);
+    Error    ProcessStatusCode(Message &aMessage, uint16_t aOffset);
+    Error    ProcessIaAddress(Message &aMessage, uint16_t aOffset);
 
-    static bool HandleTrickleTimer(TrickleTimer &aTrickleTimer);
-    bool        HandleTrickleTimer(void);
+    static void HandleTrickleTimer(TrickleTimer &aTrickleTimer);
+    void        HandleTrickleTimer(void);
 
     Ip6::Udp::Socket mSocket;
 
@@ -151,6 +153,19 @@ private:
     IdentityAssociation  mIdentityAssociations[OPENTHREAD_CONFIG_DHCP6_CLIENT_NUM_PREFIXES];
     IdentityAssociation *mIdentityAssociationCurrent;
 };
+
+/**
+ * @}
+ *
+ */
+
+#else // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
+#if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
+#error "OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT requires OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE to be also set."
+#endif
+
+#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 } // namespace Dhcp6
 } // namespace ot

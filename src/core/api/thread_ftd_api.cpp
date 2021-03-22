@@ -139,7 +139,7 @@ otError otThreadSetJoinerUdpPort(otInstance *aInstance, uint16_t aJoinerUdpPort)
 
     instance.Get<MeshCoP::JoinerRouter>().SetJoinerUdpPort(aJoinerUdpPort);
 
-    return OT_ERROR_NONE;
+    return kErrorNone;
 }
 
 uint32_t otThreadGetContextIdReuseDelay(otInstance *aInstance)
@@ -186,10 +186,10 @@ void otThreadSetRouterUpgradeThreshold(otInstance *aInstance, uint8_t aThreshold
 
 otError otThreadReleaseRouterId(otInstance *aInstance, uint8_t aRouterId)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aRouterId <= Mle::kMaxRouterId, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aRouterId <= Mle::kMaxRouterId, error = kErrorInvalidArgs);
 
     error = instance.Get<RouterTable>().Release(aRouterId);
 
@@ -199,7 +199,7 @@ exit:
 
 otError otThreadBecomeRouter(otInstance *aInstance)
 {
-    otError   error    = OT_ERROR_INVALID_STATE;
+    Error     error    = kErrorInvalidState;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     switch (instance.Get<Mle::MleRouter>().GetRole())
@@ -214,7 +214,7 @@ otError otThreadBecomeRouter(otInstance *aInstance)
 
     case Mle::kRoleRouter:
     case Mle::kRoleLeader:
-        error = OT_ERROR_NONE;
+        error = kErrorNone;
         break;
     }
 
@@ -279,20 +279,20 @@ otError otThreadGetChildNextIp6Address(otInstance *               aInstance,
                                        otChildIp6AddressIterator *aIterator,
                                        otIp6Address *             aAddress)
 {
-    otError      error    = OT_ERROR_NONE;
+    Error        error    = kErrorNone;
     Instance &   instance = *static_cast<Instance *>(aInstance);
     const Child *child;
 
     OT_ASSERT(aIterator != nullptr && aAddress != nullptr);
 
     child = instance.Get<ChildTable>().GetChildAtIndex(aChildIndex);
-    VerifyOrExit(child != nullptr, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(child->IsStateValidOrRestoring(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(child != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(child->IsStateValidOrRestoring(), error = kErrorInvalidArgs);
 
     {
         Child::AddressIterator iter(*child, *aIterator);
 
-        VerifyOrExit(!iter.IsDone(), error = OT_ERROR_NOT_FOUND);
+        VerifyOrExit(!iter.IsDone(), error = kErrorNotFound);
         *aAddress = *iter.GetAddress();
 
         iter++;
@@ -352,10 +352,10 @@ const otPskc *otThreadGetPskc(otInstance *aInstance)
 
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<KeyManager>().SetPskc(*static_cast<const Pskc *>(aPskc));
     instance.Get<MeshCoP::ActiveDataset>().Clear();

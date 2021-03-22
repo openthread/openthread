@@ -58,6 +58,8 @@ build_cc2538()
         "DNS_CLIENT=1"
         "JOINER=1"
         "SLAAC=1"
+        # cc2538 does not have enough resources to support Thread 1.2
+        "THREAD_VERSION=1.1"
     )
 
     reset_source
@@ -171,6 +173,7 @@ build_nrf52833()
         "LINK_RAW=1"
         "MAC_FILTER=1"
         "MTD_NETDIAG=1"
+        "PING_SENDER=1"
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"
@@ -214,6 +217,7 @@ build_nrf52840()
         "LINK_RAW=1"
         "MAC_FILTER=1"
         "MTD_NETDIAG=1"
+        "PING_SENDER=1"
         "SERVICE=1"
         "SLAAC=1"
         "SNTP_CLIENT=1"

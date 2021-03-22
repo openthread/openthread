@@ -38,6 +38,10 @@
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
+#if (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
+#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE."
+#endif
+
 #include <openthread/ip6.h>
 #include <openthread/link.h>
 
@@ -194,15 +198,13 @@ public:
      * @param[in]  aSeriesId          The Series ID to query, 0 for single probe.
      * @param[in]  aLinkMetricsFlags  A pointer to flags specifying what metrics to query.
      *
-     * @retval OT_ERROR_NONE              Successfully sent a Link Metrics query message.
-     * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Data Request message.
-     * @retval OT_ERROR_INVALID_ARGS      TypeIdFlags are not valid or exceed the count limit.
-     * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+     * @retval kErrorNone             Successfully sent a Link Metrics query message.
+     * @retval kErrorNoBufs           Insufficient buffers to generate the MLE Data Request message.
+     * @retval kErrorInvalidArgs      TypeIdFlags are not valid or exceed the count limit.
+     * @retval kErrorUnknownNeighbor  @p aDestination is not link-local or the neighbor is not found.
      *
      */
-    otError LinkMetricsQuery(const Ip6::Address & aDestination,
-                             uint8_t              aSeriesId,
-                             const otLinkMetrics *aLinkMetricsFlags);
+    Error LinkMetricsQuery(const Ip6::Address &aDestination, uint8_t aSeriesId, const otLinkMetrics *aLinkMetricsFlags);
 
     /**
      * This method sends an MLE Link Metrics Management Request to configure/clear a Forward Tracking Series.
@@ -213,17 +215,16 @@ public:
      *                               accounted.
      * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query.
      *
-     * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
-     * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request
-     *                                    message.
-     * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId is not within the valid range.
-     * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+     * @retval kErrorNone             Successfully sent a Link Metrics Management Request message.
+     * @retval kErrorNoBufs           Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval kErrorInvalidArgs      @p aSeriesId is not within the valid range.
+     * @retval kErrorUnknownNeighbor  @p aDestination is not link-local or the neighbor is not found.
      *
      */
-    otError SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
-                                                 uint8_t                         aSeriesId,
-                                                 const otLinkMetricsSeriesFlags &aSeriesFlags,
-                                                 const otLinkMetrics *           aLinkMetricsFlags);
+    Error SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
+                                               uint8_t                         aSeriesId,
+                                               const otLinkMetricsSeriesFlags &aSeriesFlags,
+                                               const otLinkMetrics *           aLinkMetricsFlags);
 
     /**
      * This method sends an MLE Link Metrics Management Request to configure/clear a Enhanced-ACK Based Probing.
@@ -234,16 +235,15 @@ public:
      * @param[in] aLinkMetricsFlags  A pointer to flags specifying what metrics to query. Should be `NULL` when
      *                               `aEnhAckFlags` is `0`.
      *
-     * @retval OT_ERROR_NONE              Successfully sent a Link Metrics Management Request message.
-     * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Metrics Management Request
-     *                                    message.
-     * @retval OT_ERROR_INVALID_ARGS      @p aEnhAckFlags is not a valid value or @p aLinkMetricsFlags isn't correct.
-     * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+     * @retval kErrorNone             Successfully sent a Link Metrics Management Request message.
+     * @retval kErrorNoBufs           Insufficient buffers to generate the MLE Link Metrics Management Request message.
+     * @retval kErrorInvalidArgs      @p aEnhAckFlags is not a valid value or @p aLinkMetricsFlags isn't correct.
+     * @retval kErrorUnknownNeighbor  @p aDestination is not link-local or the neighbor is not found.
      *
      */
-    otError SendMgmtRequestEnhAckProbing(const Ip6::Address &     aDestination,
-                                         otLinkMetricsEnhAckFlags aEnhAckFlags,
-                                         const otLinkMetrics *    aLinkMetricsFlags);
+    Error SendMgmtRequestEnhAckProbing(const Ip6::Address &     aDestination,
+                                       otLinkMetricsEnhAckFlags aEnhAckFlags,
+                                       const otLinkMetrics *    aLinkMetricsFlags);
 
     /**
      * This method sends an MLE Link Probe message.
@@ -252,13 +252,13 @@ public:
      * @param[in] aSeriesId       The Series ID which the Probe message targets at.
      * @param[in] aLength         The length of the data payload in Link Probe TLV, [0, 64].
      *
-     * @retval OT_ERROR_NONE              Successfully sent a Link Probe message.
-     * @retval OT_ERROR_NO_BUFS           Insufficient buffers to generate the MLE Link Probe message.
-     * @retval OT_ERROR_INVALID_ARGS      @p aSeriesId or @p aLength is not within the valid range.
-     * @retval OT_ERROR_UNKNOWN_NEIGHBOR  @p aDestination is not link-local or the neighbor is not found.
+     * @retval kErrorNone             Successfully sent a Link Probe message.
+     * @retval kErrorNoBufs           Insufficient buffers to generate the MLE Link Probe message.
+     * @retval kErrorInvalidArgs      @p aSeriesId or @p aLength is not within the valid range.
+     * @retval kErrorUnknownNeighbor  @p aDestination is not link-local or the neighbor is not found.
      *
      */
-    otError SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength);
+    Error SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength);
 
     /**
      * This method appends a Link Metrics Report to a message according to the Link Metrics query.
@@ -267,12 +267,12 @@ public:
      * @param[in]   aRequestMessage    A reference to the message of the Data Request.
      * @param[in]   aNeighbor          A reference to the neighbor who queries the report.
      *
-     * @retval OT_ERROR_NONE          Successfully appended the Thread Discovery TLV.
-     * @retval OT_ERROR_PARSE         Cannot parse query sub TLV successfully.
-     * @retval OT_ERROR_INVALID_ARGS  QueryId is invalid or any Type ID is invalid.
+     * @retval kErrorNone         Successfully appended the Thread Discovery TLV.
+     * @retval kErrorParse        Cannot parse query sub TLV successfully.
+     * @retval kErrorInvalidArgs  QueryId is invalid or any Type ID is invalid.
      *
      */
-    otError AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor);
+    Error AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor);
 
     /**
      * This method handles the received Link Metrics Management Request contained in @p aMessage and return a status.
@@ -281,13 +281,11 @@ public:
      * @param[in]   aNeighbor    A reference to the neighbor who sends the request.
      * @param[out]  aStatus      A reference to the status which indicates the handling result.
      *
-     * @retval OT_ERROR_NONE     Successfully handled the Link Metrics Management Request.
-     * @retval OT_ERROR_PARSE    Cannot parse sub-TLVs from @p aMessage successfully.
+     * @retval kErrorNone     Successfully handled the Link Metrics Management Request.
+     * @retval kErrorParse    Cannot parse sub-TLVs from @p aMessage successfully.
      *
      */
-    otError HandleLinkMetricsManagementRequest(const Message &    aMessage,
-                                               Neighbor &         aNeighbor,
-                                               LinkMetricsStatus &aStatus);
+    Error HandleLinkMetricsManagementRequest(const Message &aMessage, Neighbor &aNeighbor, LinkMetricsStatus &aStatus);
 
     /**
      * This method handles the received Link Metrics Management Response contained in @p aMessage.
@@ -295,11 +293,11 @@ public:
      * @param[in]  aMessage    A reference to the message that contains the Link Metrics Management Response.
      * @param[in]  aAddress    A reference to the source address of the message.
      *
-     * @retval OT_ERROR_NONE     Successfully handled the Link Metrics Management Response.
-     * @retval OT_ERROR_PARSE    Cannot parse sub-TLVs from @p aMessage successfully.
+     * @retval kErrorNone     Successfully handled the Link Metrics Management Response.
+     * @retval kErrorParse    Cannot parse sub-TLVs from @p aMessage successfully.
      *
      */
-    otError HandleLinkMetricsManagementResponse(const Message &aMessage, const Ip6::Address &aAddress);
+    Error HandleLinkMetricsManagementResponse(const Message &aMessage, const Ip6::Address &aAddress);
 
     /**
      * This method handles the received Link Metrics report contained in @p aMessage.
@@ -321,11 +319,11 @@ public:
      * @param[in]   aMessage     A reference to the message that contains the Link Probe Message.
      * @param[out]  aSeriesId    A reference to Series ID that parsed from the message.
      *
-     * @retval OT_ERROR_NONE     Successfully handled the Link Metrics Management Response.
-     * @retval OT_ERROR_PARSE    Cannot parse sub-TLVs from @p aMessage successfully.
+     * @retval kErrorNone     Successfully handled the Link Metrics Management Response.
+     * @retval kErrorParse    Cannot parse sub-TLVs from @p aMessage successfully.
      *
      */
-    otError HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId);
+    Error HandleLinkProbe(const Message &aMessage, uint8_t &aSeriesId);
 
     /**
      * This method registers a callback to handle Link Metrics report received.
@@ -383,10 +381,10 @@ private:
 
     Pool<LinkMetricsSeriesInfo, kMaxSeriesSupported> mLinkMetricsSeriesInfoPool;
 
-    otError SendLinkMetricsQuery(const Ip6::Address &          aDestination,
-                                 uint8_t                       aSeriesId,
-                                 const LinkMetricsTypeIdFlags *aTypeIdFlags,
-                                 uint8_t                       aTypeIdFlagsCount);
+    Error SendLinkMetricsQuery(const Ip6::Address &          aDestination,
+                               uint8_t                       aSeriesId,
+                               const LinkMetricsTypeIdFlags *aTypeIdFlags,
+                               uint8_t                       aTypeIdFlagsCount);
 
     LinkMetricsStatus ConfigureForwardTrackingSeries(uint8_t              aSeriesId,
                                                      const SeriesFlags &  aSeriesFlags,
@@ -399,14 +397,14 @@ private:
 
     Neighbor *GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination);
 
-    static otError ReadTypeIdFlagsFromMessage(const Message &aMessage,
-                                              uint8_t        aStartPos,
-                                              uint8_t        aEndPos,
-                                              otLinkMetrics &aLinkMetrics);
+    static Error ReadTypeIdFlagsFromMessage(const Message &aMessage,
+                                            uint8_t        aStartPos,
+                                            uint8_t        aEndPos,
+                                            otLinkMetrics &aLinkMetrics);
 
-    static otError AppendReportSubTlvToMessage(Message &aMessage, uint8_t &aLength, const otLinkMetricsValues &aValues);
+    static Error AppendReportSubTlvToMessage(Message &aMessage, uint8_t &aLength, const otLinkMetricsValues &aValues);
 
-    static otError AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, LinkMetricsStatus aStatus);
+    static Error AppendStatusSubTlvToMessage(Message &aMessage, uint8_t &aLength, LinkMetricsStatus aStatus);
 };
 
 /**

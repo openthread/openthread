@@ -52,4 +52,16 @@ extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
     instance.Get<BorderRouter::RoutingManager>().RecvIcmp6Message(
         aInfraIfIndex, static_cast<const Ip6::Address &>(*aSrcAddress), aBuffer, aBufferLength);
 }
+
+extern "C" otError otPlatInfraIfStateChanged(otInstance *        aInstance,
+                                             uint32_t            aInfraIfIndex,
+                                             bool                aIsRunning,
+                                             const otIp6Address *aLinkLocalAddress)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BorderRouter::RoutingManager>().HandleInfraIfStateChanged(
+        aInfraIfIndex, aIsRunning, static_cast<const Ip6::Address *>(aLinkLocalAddress));
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

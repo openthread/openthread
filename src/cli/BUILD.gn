@@ -37,8 +37,6 @@ openthread_cli_sources = [
   "cli_commissioner.cpp",
   "cli_commissioner.hpp",
   "cli_config.h",
-  "cli_console.cpp",
-  "cli_console.hpp",
   "cli_dataset.cpp",
   "cli_dataset.hpp",
   "cli_joiner.cpp",
@@ -49,8 +47,6 @@ openthread_cli_sources = [
   "cli_srp_client.hpp",
   "cli_srp_server.cpp",
   "cli_srp_server.hpp",
-  "cli_uart.cpp",
-  "cli_uart.hpp",
   "cli_udp.cpp",
   "cli_udp.hpp",
   "x509_cert_key.hpp",
@@ -58,11 +54,6 @@ openthread_cli_sources = [
 
 config("cli_config") {
   defines = []
-  if (openthread_posix) {
-    defines += ["OPENTHREAD_POSIX=1"]
-  } else {
-    defines += ["OPENTHREAD_POSIX=0"]
-  }
 }
 
 static_library("libopenthread-cli-ftd") {

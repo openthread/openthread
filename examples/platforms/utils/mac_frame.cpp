@@ -230,7 +230,7 @@ uint8_t otMacFrameGenerateCslIeTemplate(uint8_t *aDest)
 {
     assert(aDest != nullptr);
 
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::Frame::kHeaderIeCsl);
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::CslIe::kHeaderIeId);
     reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(sizeof(Mac::CslIe));
 
     return sizeof(Mac::HeaderIe) + sizeof(Mac::CslIe);
@@ -244,7 +244,7 @@ uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData
 
     assert(aDest != nullptr);
 
-    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::Frame::kHeaderIeVendor);
+    reinterpret_cast<Mac::HeaderIe *>(aDest)->SetId(Mac::ThreadIe::kHeaderIeId);
     reinterpret_cast<Mac::HeaderIe *>(aDest)->SetLength(len);
 
     aDest += sizeof(Mac::HeaderIe);

@@ -134,7 +134,7 @@ void SourceMatchController::AddEntry(Child &aChild)
     }
     else
     {
-        VerifyOrExit(AddAddress(aChild) == OT_ERROR_NONE, Enable(false));
+        VerifyOrExit(AddAddress(aChild) == kErrorNone, Enable(false));
         aChild.SetIndirectSourceMatchPending(false);
     }
 
@@ -142,16 +142,16 @@ exit:
     return;
 }
 
-otError SourceMatchController::AddAddress(const Child &aChild)
+Error SourceMatchController::AddAddress(const Child &aChild)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (aChild.IsIndirectSourceMatchShort())
     {
         error = Get<Radio>().AddSrcMatchShortEntry(aChild.GetRloc16());
 
-        otLogDebgMac("SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
-                     otThreadErrorToString(error), error);
+        otLogDebgMac("SrcAddrMatch - Adding short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(), ErrorToString(error),
+                     error);
     }
     else
     {
@@ -161,7 +161,7 @@ otError SourceMatchController::AddAddress(const Child &aChild)
         error = Get<Radio>().AddSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Adding addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
-                     otThreadErrorToString(error), error);
+                     ErrorToString(error), error);
     }
 
     return error;
@@ -169,7 +169,7 @@ otError SourceMatchController::AddAddress(const Child &aChild)
 
 void SourceMatchController::ClearEntry(Child &aChild)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (aChild.IsIndirectSourceMatchPending())
     {
@@ -182,8 +182,8 @@ void SourceMatchController::ClearEntry(Child &aChild)
     {
         error = Get<Radio>().ClearSrcMatchShortEntry(aChild.GetRloc16());
 
-        otLogDebgMac("SrcAddrMatch - Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(),
-                     otThreadErrorToString(error), error);
+        otLogDebgMac("SrcAddrMatch - Clearing short addr: 0x%04x -- %s (%d)", aChild.GetRloc16(), ErrorToString(error),
+                     error);
     }
     else
     {
@@ -193,7 +193,7 @@ void SourceMatchController::ClearEntry(Child &aChild)
         error = Get<Radio>().ClearSrcMatchExtEntry(address);
 
         otLogDebgMac("SrcAddrMatch - Clearing addr: %s -- %s (%d)", aChild.GetExtAddress().ToString().AsCString(),
-                     otThreadErrorToString(error), error);
+                     ErrorToString(error), error);
     }
 
     SuccessOrExit(error);
@@ -208,9 +208,9 @@ exit:
     return;
 }
 
-otError SourceMatchController::AddPendingEntries(void)
+Error SourceMatchController::AddPendingEntries(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValidOrRestoring))
     {

@@ -42,6 +42,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include "common/encoding.hpp"
+#include "common/random.hpp"
 
 namespace ot {
 namespace MeshCoP {
@@ -137,11 +138,18 @@ public:
                             ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask));
     }
 
+    /**
+     * This method increments the timestamp by a random number of ticks [0, 32767].
+     *
+     */
+    void AdvanceRandomTicks(void);
+
 private:
     enum
     {
         kTicksOffset         = 1,
         kTicksMask           = 0x7fff << kTicksOffset,
+        kMaxRandomTicks      = 0x7fff,
         kAuthoritativeOffset = 0,
         kAuthoritativeMask   = 1 << kAuthoritativeOffset,
     };

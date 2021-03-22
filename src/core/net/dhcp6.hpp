@@ -112,11 +112,11 @@ public:
     /**
      * This method generates a cryptographically secure random sequence to populate the transaction identifier.
      *
-     * @retval OT_ERROR_NONE     Successfully generated a random transaction identifier.
-     * @retval OT_ERROR_FAILED   Failed to generate random sequence.
+     * @retval kErrorNone     Successfully generated a random transaction identifier.
+     * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, kSize); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, kSize); }
 
 private:
     uint8_t m8[kSize];

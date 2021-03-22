@@ -128,15 +128,15 @@ NameData NetworkName::GetAsData(void) const
     return NameData(m8, len);
 }
 
-otError NetworkName::Set(const NameData &aNameData)
+Error NetworkName::Set(const NameData &aNameData)
 {
-    otError error  = OT_ERROR_NONE;
+    Error   error  = kErrorNone;
     uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
 
-    VerifyOrExit(newLen <= kMaxSize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(newLen <= kMaxSize, error = kErrorInvalidArgs);
 
     // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = OT_ERROR_ALREADY);
+    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
 
     memcpy(m8, aNameData.GetBuffer(), newLen);
     m8[newLen] = '\0';
@@ -162,15 +162,15 @@ NameData DomainName::GetAsData(void) const
     return NameData(m8, len);
 }
 
-otError DomainName::Set(const NameData &aNameData)
+Error DomainName::Set(const NameData &aNameData)
 {
-    otError error  = OT_ERROR_NONE;
+    Error   error  = kErrorNone;
     uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
 
-    VerifyOrExit(newLen <= kMaxSize, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(newLen <= kMaxSize, error = kErrorInvalidArgs);
 
     // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = OT_ERROR_ALREADY);
+    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
 
     memcpy(m8, aNameData.GetBuffer(), newLen);
     m8[newLen] = '\0';

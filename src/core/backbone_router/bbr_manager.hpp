@@ -145,12 +145,12 @@ public:
      * @param[in]  aRloc16  The short address of the address resolution initiator or `Mac::kShortAddrInvalid` for
      *                      DUA DAD.
      *
-     * @retval OT_ERROR_NONE           Successfully sent BB.qry on backbone link.
-     * @retval OT_ERROR_INVALID_STATE  If the Backbone Router is not primary, or not enabled.
-     * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
+     * @retval kErrorNone          Successfully sent BB.qry on backbone link.
+     * @retval kErrorInvalidState  If the Backbone Router is not primary, or not enabled.
+     * @retval kErrorNoBufs        If insufficient message buffers available.
      *
      */
-    otError SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mac::kShortAddrInvalid);
+    Error SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16 = Mac::kShortAddrInvalid);
 
     /**
      * This method send a Proactive Backbone Notification (PRO_BB.ntf) on the Backbone link.
@@ -159,13 +159,13 @@ public:
      * @param[in] aMeshLocalIid                 The Mesh-Local IID to notify.
      * @param[in] aTimeSinceLastTransaction     Time since last transaction (in seconds).
      *
-     * @retval OT_ERROR_NONE           Successfully sent PRO_BB.ntf on backbone link.
-     * @retval OT_ERROR_NO_BUFS        If insufficient message buffers available.
+     * @retval kErrorNone          Successfully sent PRO_BB.ntf on backbone link.
+     * @retval kErrorNoBufs        If insufficient message buffers available.
      *
      */
-    otError SendProactiveBackboneNotification(const Ip6::Address &            aDua,
-                                              const Ip6::InterfaceIdentifier &aMeshLocalIid,
-                                              uint32_t                        aTimeSinceLastTransaction);
+    Error SendProactiveBackboneNotification(const Ip6::Address &            aDua,
+                                            const Ip6::InterfaceIdentifier &aMeshLocalIid,
+                                            uint32_t                        aTimeSinceLastTransaction);
 
 private:
     enum
@@ -204,11 +204,11 @@ private:
     void        HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     static void HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    otError     SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
+    Error       SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
                                    const Ip6::Address &         aDua,
                                    uint16_t                     aSrcRloc16,
                                    const NdProxyTable::NdProxy &aNdProxy);
-    otError     SendBackboneAnswer(const Ip6::Address &            aDstAddr,
+    Error       SendBackboneAnswer(const Ip6::Address &            aDstAddr,
                                    uint16_t                        aDstPort,
                                    const Ip6::Address &            aDua,
                                    const Ip6::InterfaceIdentifier &aMeshLocalIid,

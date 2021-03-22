@@ -41,7 +41,8 @@
 #define HAVE__BOOL 1
 
 #include <common/code_utils.hpp>
-#include <openthread/platform/uart.h>
+
+#include "utils/uart.h"
 
 otError otPlatUartEnable(void)
 {

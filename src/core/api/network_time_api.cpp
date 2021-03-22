@@ -51,10 +51,10 @@ otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTi
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<TimeSync>().SetTimeSyncPeriod(aTimeSyncPeriod);
 
@@ -71,10 +71,10 @@ uint16_t otNetworkTimeGetSyncPeriod(otInstance *aInstance)
 
 otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXtalThreshold)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<TimeSync>().SetXtalThreshold(aXtalThreshold);
 

@@ -38,8 +38,6 @@ set_target_properties(
 target_compile_definitions(openthread-cli-ftd
     PRIVATE
         OPENTHREAD_FTD=1
-    PUBLIC
-        "OPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_${OT_CLI_TRANSPORT}"
 )
 
 target_compile_options(openthread-cli-ftd PRIVATE

@@ -89,7 +89,6 @@ SILABS_GSDK_CPPFLAGS                                                          = 
     -I$(SDK_SRC_DIR)/platform/emlib/inc                                         \
     -I$(SDK_SRC_DIR)/platform/halconfig/inc/hal-config                          \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32                         \
-    -I$(SDK_SRC_DIR)/platform/radio/rail_lib/chip/efr32/rf/common/cortex        \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/common                             \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal                                \
     -I$(SDK_SRC_DIR)/platform/radio/rail_lib/hal/efr32                          \

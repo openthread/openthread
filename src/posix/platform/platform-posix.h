@@ -47,6 +47,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 #include <openthread/openthread-system.h>
 #include <openthread/platform/time.h>
 
@@ -505,14 +506,32 @@ extern unsigned int gBackboneNetifIndex;
  * @param[in]  aInstance  The OpenThread instance.
  * @param[in]  aIfName    The name of the infrastructure interface.
  *
+ * @returns  The index of the infrastructure interface.
+ *
  */
-void platformInfraIfInit(otInstance *aInstance, const char *aIfName);
+uint32_t platformInfraIfInit(otInstance *aInstance, const char *aIfName);
 
 /**
  * This function deinitializes the infrastructure interface.
  *
  */
 void platformInfraIfDeinit(void);
+
+/**
+ * This function tells if the infrastructure interface is running.
+ *
+ * @returns TRUE if the infrastructure interface is running, FALSE if not.
+ *
+ */
+bool platformInfraIfIsRunning(void);
+
+/**
+ * this function returns the IPv6 link-local address of the infrastructure interface.
+ *
+ * @returns  A pointer to the link-local address; NULL if no link-local address is present.
+ *
+ */
+const otIp6Address *platformInfraIfGetLinkLocalAddress(void);
 
 /**
  * This function updates the read fd set.
@@ -533,12 +552,34 @@ void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
 void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
 
 /**
- * This function returns the index of the infrastructure interface.
+ * This function enables daemon.
  *
- * @returns  The index of the infrastructure interface. 0 indicates invalid index.
+ * @param[in]       aInstance   The OpenThread instance structure.
  *
  */
-uint32_t platformInfraIfGetIndex(void);
+void platformDaemonEnable(otInstance *aInstance);
+
+/**
+ * This function disables daemon.
+ *
+ */
+void platformDaemonDisable(void);
+
+/**
+ * This function updates the file descriptor sets with file descriptors used by daemon.
+ *
+ * @param[inout]    aMainloop   A pointer to the mainloop context.
+ *
+ */
+void platformDaemonUpdate(otSysMainloopContext *aContext);
+
+/**
+ * This function performs daemon processing.
+ *
+ * @param[in]   aMainloop   A pointer to the mainloop context.
+ *
+ */
+void platformDaemonProcess(const otSysMainloopContext *aContext);
 
 #ifdef __cplusplus
 }

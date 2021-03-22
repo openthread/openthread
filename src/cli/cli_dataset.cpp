@@ -38,6 +38,7 @@
 
 #include <openthread/dataset.h>
 #include <openthread/dataset_ftd.h>
+#include <openthread/dataset_updater.h>
 
 #include "cli/cli.hpp"
 #include "common/string.hpp"
@@ -909,6 +910,47 @@ otError Dataset::ProcessSet(uint8_t aArgsLength, char *aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+
+otError Dataset::ProcessUpdater(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        mInterpreter.OutputEnabledDisabledStatus(otDatasetUpdaterIsUpdateOngoing(mInterpreter.mInstance));
+        ExitNow();
+    }
+
+    if (strcmp(aArgs[0], "start") == 0)
+    {
+        error = otDatasetUpdaterRequestUpdate(mInterpreter.mInstance, &sDataset, &Dataset::HandleDatasetUpdater, this);
+    }
+    else if (strcmp(aArgs[0], "cancel") == 0)
+    {
+        otDatasetUpdaterCancelUpdate(mInterpreter.mInstance);
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+exit:
+    return error;
+}
+
+void Dataset::HandleDatasetUpdater(otError aError, void *aContext)
+{
+    static_cast<Dataset *>(aContext)->HandleDatasetUpdater(aError);
+}
+
+void Dataset::HandleDatasetUpdater(otError aError)
+{
+    mInterpreter.OutputLine("Dataset update complete: %s", otThreadErrorToString(aError));
+}
+
+#endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
 
 } // namespace Cli
 } // namespace ot

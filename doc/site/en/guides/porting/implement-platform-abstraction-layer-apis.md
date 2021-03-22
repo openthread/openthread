@@ -36,30 +36,30 @@ HAL BSP | `/openthread/third_party/{platform-name}`
 
 API declaration:
 
-[`/openthread/include/openthread/platform/alarm-milli.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/alarm-milli.h)
+[`/openthread/include/openthread/platform/alarm-milli.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/alarm-milli.h)
 
 The Alarm API provides fundamental timing and alarm services for the upper layer
 timer implementation.
 
 There are two alarm service types,
-[millisecond](https://github.com/openthread/openthread/blob/master/include/openthread/platform/alarm-milli.h)
-and [microsecond](https://github.com/openthread/openthread/blob/master/include/openthread/platform/alarm-micro.h).
+[millisecond](https://github.com/openthread/openthread/blob/main/include/openthread/platform/alarm-milli.h)
+and [microsecond](https://github.com/openthread/openthread/blob/main/include/openthread/platform/alarm-micro.h).
 Millisecond is required for a new hardware platform. Microsecond is optional.
 
-## Step 2: UART  
+## Step 2: UART
 
 > Note: This API is optional.
 
 API declaration:
 
-[`/openthread/include/openthread/platform/uart.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/uart.h)
+[`/openthread/examples/platforms/utils/uart.h`](https://github.com/openthread/openthread/blob/main/examples/platforms/utils/uart.h)
 
 The UART API implements fundamental serial port communication via the UART
 interface.
 
 While the OpenThread
-[CLI](https://github.com/openthread/openthread/tree/master/examples/apps/cli)
-and [NCP](https://github.com/openthread/openthread/tree/master/examples/apps/ncp)
+[CLI](https://github.com/openthread/openthread/tree/main/examples/apps/cli)
+and [NCP](https://github.com/openthread/openthread/tree/main/examples/apps/ncp)
 add-ons depend on the UART interface to interact with the host side, UART API
 support is optional. However, even if you do not plan to use these add-ons on
 your new hardware platform example, we highly recommend you add support for a
@@ -79,7 +79,7 @@ sure to:
 
 API declaration:
 
-[`/openthread/include/openthread/platform/radio.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/radio.h)
+[`/openthread/include/openthread/platform/radio.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/radio.h)
 
 The Radio API defines all necessary functions called by the upper IEEE 802.15.4
 MAC layer. The Radio chip must be fully compliant with the 2.4GHz IEEE
@@ -101,7 +101,7 @@ The EUI-64 is used to match to steering data during the Joiner Discovery phase.
 
 API declaration:
 
-[`/openthread/include/openthread/platform/misc.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/misc.h)
+[`/openthread/include/openthread/platform/misc.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/misc.h)
 
 The Misc/Reset API provides a method to reset the software on the chip, and
 query the reason for last reset.
@@ -112,7 +112,7 @@ query the reason for last reset.
 
 API declaration:
 
-[`/openthread/include/openthread/platform/entropy.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/entropy.h)
+[`/openthread/include/openthread/platform/entropy.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/entropy.h)
 
 The Entropy API provides a true random number generator (TRNG) for the upper
 layer, which is used to maintain security assets for the entire OpenThread
@@ -142,11 +142,11 @@ of OpenThread.**
 
 API declarations:
 
-[`/openthread/include/openthread/platform/flash.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/flash.h)
+[`/openthread/include/openthread/platform/flash.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/flash.h)
 
 **or**
 
-[`/openthread/include/openthread/platform/settings.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/settings.h)
+[`/openthread/include/openthread/platform/settings.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/settings.h)
 
 The Non-volatile storage requirement can be satisfied by implementing one of the
 two APIs listed above. The Flash API implements a flash storage driver, while
@@ -175,7 +175,7 @@ file.
 
 API declaration:
 
-[`/openthread/include/openthread/platform/logging.h`](https://github.com/openthread/openthread/blob/master/include/openthread/platform/logging.h)
+[`/openthread/include/openthread/platform/logging.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/logging.h)
 
 The Logging API implements OpenThread's logging and debug functionality, with
 multiple levels of debug output available.  This API is optional if you do not
@@ -189,7 +189,7 @@ the terminal. Choose a debug level that best meets your needs.
 
 API declaration:
 
-[`/openthread/examples/platforms/openthread-system.h`](https://github.com/openthread/openthread/blob/master/examples/platforms/openthread-system.h)
+[`/openthread/examples/platforms/openthread-system.h`](https://github.com/openthread/openthread/blob/main/examples/platforms/openthread-system.h)
 
 The System-specific API primarily provides initialization and deinitialization
 operations for the selected hardware platform. This API is not called by the
@@ -199,6 +199,6 @@ Misc/Reset) in this source file.
 
 Implementation of this API depends on your use case. If you wish to use the
 generated [CLI and NCP applications](https://openthread.io/guides/build#binaries) for an [example
-platform](https://github.com/openthread/openthread/tree/master/examples/platforms),
+platform](https://github.com/openthread/openthread/tree/main/examples/platforms),
 you must implement this API. Otherwise, any API can be implemented to integrate
 the example platform drivers into your system/RTOS.

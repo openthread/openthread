@@ -26,10 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-target_compile_definitions(ot-config INTERFACE
-    OPENTHREAD_CONFIG_UART_CLI_RAW=1
-)
-
 set(COMMON_INCLUDES
     ${OT_PUBLIC_INCLUDES}
     ${PROJECT_SOURCE_DIR}/src
@@ -38,15 +34,32 @@ set(COMMON_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 
-set(OT_READLINE "readline" CACHE STRING "set readline library name")
-set_property(CACHE OT_READLINE PROPERTY STRINGS "readline" "edit")
+set(OT_READLINE_VALUES
+    "readline"
+    "edit"
+)
 
-if(OT_READLINE)
+set(OT_READLINE "" CACHE STRING "set readline library name")
+set_property(CACHE OT_READLINE PROPERTY STRINGS ${OT_READLINE_VALUES})
+
+if(OT_READLINE STREQUAL "")
+    foreach(X IN LISTS OT_READLINE_VALUES)
+        find_library(READLINE ${X})
+        if (READLINE)
+            set(OT_READLINE ${X})
+            break()
+        endif()
+    endforeach()
+elseif(OT_READLINE)
     find_library(READLINE ${OT_READLINE})
 
     if (NOT READLINE)
         message(FATAL_ERROR "Failed to find ${OT_READLINE}")
     endif()
+endif()
+
+if (READLINE)
+    message(STATUS "Readline: ${OT_READLINE}")
 
     find_library(NCURSES ncurses)
     if (NOT NCURSES)

@@ -23,5 +23,5 @@ At a minimum, the README should include:
 -   Versions of libraries and toolchains used for validation of the port
 
 See the
-[EFR32MG12 README](https://github.com/openthread/openthread/blob/master/examples/platforms/efr32/efr32mg12/README.md)
+[EFR32MG12 README](https://github.com/openthread/openthread/blob/main/examples/platforms/efr32/efr32mg12/README.md)
 for an example.

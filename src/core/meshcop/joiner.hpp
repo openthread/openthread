@@ -92,19 +92,19 @@ public:
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
-     * @retval OT_ERROR_NONE          Successfully started the Joiner service.
-     * @retval OT_ERROR_BUSY          The previous attempt is still on-going.
-     * @retval OT_ERROR_INVALID_STATE The IPv6 stack is not enabled or Thread stack is fully enabled.
+     * @retval kErrorNone          Successfully started the Joiner service.
+     * @retval kErrorBusy          The previous attempt is still on-going.
+     * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is fully enabled.
      *
      */
-    otError Start(const char *     aPskd,
-                  const char *     aProvisioningUrl,
-                  const char *     aVendorName,
-                  const char *     aVendorModel,
-                  const char *     aVendorSwVersion,
-                  const char *     aVendorData,
-                  otJoinerCallback aCallback,
-                  void *           aContext);
+    Error Start(const char *     aPskd,
+                const char *     aProvisioningUrl,
+                const char *     aVendorName,
+                const char *     aVendorModel,
+                const char *     aVendorSwVersion,
+                const char *     aVendorData,
+                otJoinerCallback aCallback,
+                void *           aContext);
 
     /**
      * This method stops the Joiner service.
@@ -147,23 +147,23 @@ public:
      *
      * @param[in]   aDiscerner  A Joiner Discerner
      *
-     * @retval OT_ERROR_NONE           The Joiner Discerner updated successfully.
-     * @retval OT_ERROR_INVALID_ARGS   @p aDiscerner is not valid (specified length is not within valid range).
-     * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
+     * @retval kErrorNone          The Joiner Discerner updated successfully.
+     * @retval kErrorInvalidArgs   @p aDiscerner is not valid (specified length is not within valid range).
+     * @retval kErrorInvalidState  There is an ongoing Joining process so Joiner Discerner could not be changed.
      *
      */
-    otError SetDiscerner(const JoinerDiscerner &aDiscerner);
+    Error SetDiscerner(const JoinerDiscerner &aDiscerner);
 
     /**
      * This method clears any previously set Joiner Discerner.
      *
      * When cleared, Joiner ID is derived as first 64 bits of SHA-256 of factory-assigned IEEE EUI-64.
      *
-     * @retval OT_ERROR_NONE           The Joiner Discerner cleared and Joiner ID updated.
-     * @retval OT_ERROR_INVALID_STATE  There is an ongoing Joining process so Joiner Discerner could not be changed.
+     * @retval kErrorNone          The Joiner Discerner cleared and Joiner ID updated.
+     * @retval kErrorInvalidState  There is an ongoing Joining process so Joiner Discerner could not be changed.
      *
      */
-    otError ClearDiscerner(void);
+    Error ClearDiscerner(void);
 
 private:
     enum
@@ -191,8 +191,8 @@ private:
     static void HandleJoinerFinalizeResponse(void *               aContext,
                                              otMessage *          aMessage,
                                              const otMessageInfo *aMessageInfo,
-                                             otError              aResult);
-    void HandleJoinerFinalizeResponse(Coap::Message &aMessage, const Ip6::MessageInfo *aMessageInfo, otError aResult);
+                                             Error                aResult);
+    void HandleJoinerFinalizeResponse(Coap::Message &aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     static void HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
@@ -205,19 +205,19 @@ private:
     void    SetState(State aState);
     void    SetIdFromIeeeEui64(void);
     void    SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult);
-    void    TryNextJoinerRouter(otError aPrevError);
-    otError Connect(JoinerRouter &aRouter);
-    void    Finish(otError aError);
+    void    TryNextJoinerRouter(Error aPrevError);
+    Error   Connect(JoinerRouter &aRouter);
+    void    Finish(Error aError);
     uint8_t CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
 
-    otError PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
-                                         const char *aVendorName,
-                                         const char *aVendorModel,
-                                         const char *aVendorSwVersion,
-                                         const char *aVendorData);
-    void    FreeJoinerFinalizeMessage(void);
-    void    SendJoinerFinalize(void);
-    void    SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
+    Error PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
+                                       const char *aVendorName,
+                                       const char *aVendorModel,
+                                       const char *aVendorSwVersion,
+                                       const char *aVendorData);
+    void  FreeJoinerFinalizeMessage(void);
+    void  SendJoinerFinalize(void);
+    void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;

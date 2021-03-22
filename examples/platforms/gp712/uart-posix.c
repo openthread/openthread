@@ -40,9 +40,8 @@
 #include <termios.h>
 #include <unistd.h>
 
-#include <openthread/platform/uart.h>
-
 #include "utils/code_utils.h"
+#include "utils/uart.h"
 
 #ifdef __linux__
 #include <sys/prctl.h>

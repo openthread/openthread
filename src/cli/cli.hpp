@@ -41,9 +41,14 @@
 #include <stdarg.h>
 
 #include <openthread/cli.h>
+#include <openthread/dataset.h>
 #include <openthread/dns_client.h>
+#include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/link.h>
 #include <openthread/sntp.h>
+#include <openthread/thread.h>
+#include <openthread/thread_ftd.h>
 #include <openthread/udp.h>
 
 #include "cli/cli_commissioner.hpp"
@@ -59,10 +64,10 @@
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 #include "cli/cli_coap_secure.hpp"
 #endif
+
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/timer.hpp"
-#include "net/icmp6.hpp"
 #include "utils/lookup_table.hpp"
 
 namespace ot {
@@ -96,9 +101,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aInstance    The OpenThread instance structure.
+     * @param[in]  aCallback    A callback method called to process CLI output.
+     * @param[in]  aContext     A user context pointer.
      */
-    explicit Interpreter(Instance *aInstance);
+    explicit Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
     /**
      * This method returns a reference to the interpreter object.
@@ -114,6 +121,16 @@ public:
     }
 
     /**
+     * This method initializes the Console interpreter.
+     *
+     * @param[in]  aInstance  The OpenThread instance structure.
+     * @param[in]  aCallback  A pointer to a callback method.
+     * @param[in]  aContext   A pointer to a user context.
+     *
+     */
+    static void Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
+
+    /**
      * This method returns whether the interpreter is initialized.
      *
      * @returns  Whether the interpreter is initialized.
@@ -125,10 +142,9 @@ public:
      * This method interprets a CLI command.
      *
      * @param[in]  aBuf        A pointer to a string.
-     * @param[in]  aBufLength  The length of the string in bytes.
      *
      */
-    void ProcessLine(char *aBuf, uint16_t aBufLength);
+    void ProcessLine(char *aBuf);
 
     /**
      * This method delivers raw characters to the client.
@@ -285,12 +301,7 @@ private:
         kIndentSize       = 4,
         kMaxArgs          = 32,
         kMaxAutoAddresses = 8,
-
-        kDefaultPingInterval = 1000, // (in mses)
-        kDefaultPingLength   = 8,    // (in bytes)
-        kDefaultPingCount    = 1,
-
-        kMaxLineLength = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
+        kMaxLineLength    = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
     struct Command
@@ -299,7 +310,9 @@ private:
         otError (Interpreter::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
     };
 
-    otError        ParsePingInterval(const char *aString, uint32_t &aInterval);
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    otError ParsePingInterval(const char *aString, uint32_t &aInterval);
+#endif
     static otError ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aDiscerner);
 
     otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
@@ -368,7 +381,7 @@ private:
     otError ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessEui64(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
     otError ProcessExit(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessLog(uint8_t aArgsLength, char *aArgs[]);
@@ -463,17 +476,10 @@ private:
 #if OPENTHREAD_FTD
     otError ProcessParentPriority(uint8_t aArgsLength, char *aArgs[]);
 #endif
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     otError ProcessPing(uint8_t aArgsLength, char *aArgs[]);
+#endif
     otError ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[]);
-    void    SignalPingRequest(const Ip6::Address &aPeerAddress,
-                              uint16_t            aPingLength,
-                              uint32_t            aTimestamp,
-                              uint8_t             aHopLimit);
-    void    SignalPingReply(const Ip6::Address &aPeerAddress,
-                            uint16_t            aPingLength,
-                            uint32_t            aTimestamp,
-                            uint8_t             aHopLimit);
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     otError ProcessPrefix(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessPrefixAdd(uint8_t aArgsLength, char *aArgs[]);
@@ -532,11 +538,9 @@ private:
     otError ProcessMacSend(uint8_t aArgsLength, char *aArgs[]);
 #endif
 
-    static void HandleIcmpReceive(void *               aContext,
-                                  otMessage *          aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  const otIcmp6Header *aIcmpHeader);
-    static void HandlePingTimer(Timer &aTimer);
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
+#endif
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
@@ -576,8 +580,9 @@ private:
     static void HandleSntpResponse(void *aContext, uint64_t aTime, otError aResult);
 #endif
 
-    void HandleIcmpReceive(otMessage *aMessage, const otMessageInfo *aMessageInfo, const otIcmp6Header *aIcmpHeader);
-    void SendPing(void);
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    void HandlePingReply(const otPingSenderReply *aReply);
+#endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
     void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx);
@@ -611,8 +616,6 @@ private:
 
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-
-    static Interpreter &GetOwner(InstanceLocator &aInstanceLocator);
 
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
@@ -679,7 +682,7 @@ private:
         {"eidcache", &Interpreter::ProcessEidCache},
 #endif
         {"eui64", &Interpreter::ProcessEui64},
-#if OPENTHREAD_POSIX
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
         {"exit", &Interpreter::ProcessExit},
 #endif
         {"extaddr", &Interpreter::ProcessExtAddress},
@@ -742,7 +745,9 @@ private:
         {"parentpriority", &Interpreter::ProcessParentPriority},
         {"partitionid", &Interpreter::ProcessPartitionId},
 #endif
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
         {"ping", &Interpreter::ProcessPing},
+#endif
         {"pollperiod", &Interpreter::ProcessPollPeriod},
 #if OPENTHREAD_FTD
         {"preferrouterid", &Interpreter::ProcessPreferRouterId},
@@ -793,18 +798,11 @@ private:
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
 
     Instance *          mInstance;
+    otCliOutputCallback mOutputCallback;
+    void *              mOutputContext;
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
-    uint16_t            mPingLength;
-    uint16_t            mPingCount;
-    uint32_t            mPingInterval;
-    uint8_t             mPingHopLimit;
-    bool                mPingAllowZeroHopLimit;
-    uint16_t            mPingIdentifier;
-    otIp6Address        mPingDestAddress;
-    TimerMilli          mPingTimer;
-    otIcmp6Handler      mIcmpHandler;
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif

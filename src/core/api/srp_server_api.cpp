@@ -87,7 +87,7 @@ void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, const otSrpServ
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Srp::Server>().HandleAdvertisingResult(static_cast<const Srp::Server::Host *>(aHost), aError);
+    instance.Get<Srp::Server>().HandleServiceUpdateResult(static_cast<const Srp::Server::Host *>(aHost), aError);
 }
 
 const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrpServerHost *aHost)

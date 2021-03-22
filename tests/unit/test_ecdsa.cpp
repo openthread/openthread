@@ -169,8 +169,7 @@ void TestEdsaKeyGenerationSignAndVerify(void)
     sha256.Start();
     sha256.Update(kMessage, sizeof(kMessage)); // include null char
     sha256.Finish(hash);
-    VerifyOrQuit(publicKey.Verify(hash, signature) != OT_ERROR_NONE,
-                 "PublicKey::Verify() passed for invalid signature");
+    VerifyOrQuit(publicKey.Verify(hash, signature) != kErrorNone, "PublicKey::Verify() passed for invalid signature");
     printf("\nSignature verification correctly failed with incorrect hash/signature.\n\n");
 
     testFreeInstance(instance);

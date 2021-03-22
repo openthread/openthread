@@ -182,12 +182,12 @@ void TestMacNetworkName(void)
     SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kName1);
 
-    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))) == OT_ERROR_ALREADY,
-                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))) == kErrorAlready,
+                 "NetworkName::Set() accepted same name without returning kErrorAlready");
     CompareNetworkName(networkName, kName1);
 
-    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1) - 1)) == OT_ERROR_ALREADY,
-                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+    VerifyOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1) - 1)) == kErrorAlready,
+                 "NetworkName::Set() accepted same name without returning kErrorAlready");
 
     SuccessOrQuit(networkName.Set(Mac::NameData(kName2, sizeof(kName2))), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kName2);
@@ -198,15 +198,15 @@ void TestMacNetworkName(void)
     SuccessOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName))), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kLongName);
 
-    VerifyOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName) - 1)) == OT_ERROR_ALREADY,
-                 "NetworkName::Set() accepted same name without returning OT_ERROR_ALREADY");
+    VerifyOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName) - 1)) == kErrorAlready,
+                 "NetworkName::Set() accepted same name without returning kErrorAlready");
 
     SuccessOrQuit(networkName.Set(Mac::NameData(nullptr, 0)), "NetworkName::Set() failed");
     CompareNetworkName(networkName, kEmptyName);
 
     SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))), "NetworkName::Set() failed");
 
-    VerifyOrQuit(networkName.Set(Mac::NameData(kTooLongName, sizeof(kTooLongName))) == OT_ERROR_INVALID_ARGS,
+    VerifyOrQuit(networkName.Set(Mac::NameData(kTooLongName, sizeof(kTooLongName))) == kErrorInvalidArgs,
                  "NetworkName::Set() accepted an invalid (too long) name");
 
     CompareNetworkName(networkName, kName1);
@@ -310,7 +310,7 @@ void VerifyChannelMaskContent(const Mac::ChannelMask &aMask, uint8_t *aChannels,
     index   = 0;
     channel = Mac::ChannelMask::kChannelIteratorFirst;
 
-    while (aMask.GetNextChannel(channel) == OT_ERROR_NONE)
+    while (aMask.GetNextChannel(channel) == kErrorNone)
     {
         VerifyOrQuit(channel == aChannels[index++], "ChannelMask.GetNextChannel() failed");
     }
@@ -424,7 +424,7 @@ void TestMacFrameApi(void)
     uint8_t mac_cmd_psdu2[] = {0x6b, 0xaa, 0x8d, 0xce, 0xfa, 0x00, 0x68, 0x01, 0x68, 0x0d,
                                0x08, 0x00, 0x00, 0x00, 0x01, 0x04, 0x0d, 0xed, 0x0b, 0x35,
                                0x0c, 0x80, 0x3f, 0x04, 0x4b, 0x88, 0x89, 0xd6, 0x59, 0xe1};
-    otError error;
+    Error   error;
     uint8_t scf; // SecurityControlField
 #endif
 
@@ -469,11 +469,11 @@ void TestMacFrameApi(void)
     VerifyOrQuit(frame.IsDstPanIdPresent() == true, "Mac::Frame::IsDstPanIdPresent failed\n");
     VerifyOrQuit(frame.IsDstAddrPresent() == true, "Mac::Frame::IsDstAddrPresent failed\n");
     VerifyOrQuit(frame.IsSrcAddrPresent() == true, "Mac::Frame::IsSrcAddrPresent failed\n");
-    VerifyOrQuit((error = frame.GetSecurityControlField(scf)) == OT_ERROR_NONE,
+    VerifyOrQuit((error = frame.GetSecurityControlField(scf)) == kErrorNone,
                  "Mac::Frame::GetSecurityControlField failed\n");
     VerifyOrQuit(scf == 0x0d, "Mac::Frame::GetSecurityControlField value failed\n");
     frame.SetSecurityControlField(0xff);
-    VerifyOrQuit((error = frame.GetSecurityControlField(scf)) == OT_ERROR_NONE,
+    VerifyOrQuit((error = frame.GetSecurityControlField(scf)) == kErrorNone,
                  "Mac::Frame::GetSecurityControlField failed\n");
     VerifyOrQuit(scf == 0xff, "Mac::Frame::SetSecurityControlField value failed\n");
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -487,11 +487,11 @@ void TestMacFrameApi(void)
     VerifyOrQuit(frame.GetSequence() == 133, "Mac::Frame::GetSequence failed\n");
     VerifyOrQuit(frame.GetVersion() == Mac::Frame::kFcfFrameVersion2006, "Mac::Frame::GetVersion failed\n");
     VerifyOrQuit(frame.GetType() == Mac::Frame::kFcfFrameMacCmd, "Mac::Frame::GetType failed\n");
-    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == kErrorNone, "Mac::Frame::GetCommandId failed\n");
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest, "Mac::Frame::GetCommandId value not correct\n");
-    VerifyOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdBeaconRequest) == OT_ERROR_NONE,
+    VerifyOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdBeaconRequest) == kErrorNone,
                  "Mac::Frame::SetCommandId failed\n");
-    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == kErrorNone, "Mac::Frame::GetCommandId failed\n");
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdBeaconRequest, "Mac::Frame::SetCommandId value not correct\n");
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -506,12 +506,12 @@ void TestMacFrameApi(void)
     VerifyOrQuit(frame.GetSequence() == 141, "Mac::Frame::GetSequence failed\n");
     VerifyOrQuit(frame.IsVersion2015() == true, "Mac::Frame::IsVersion2015 failed\n");
     VerifyOrQuit(frame.GetType() == Mac::Frame::kFcfFrameMacCmd, "Mac::Frame::GetVersion failed\n");
-    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == kErrorNone, "Mac::Frame::GetCommandId failed\n");
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdDataRequest, "Mac::Frame::GetCommandId value not correct\n");
     printf("commandId:%d\n", commandId);
-    VerifyOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdOrphanNotification) == OT_ERROR_NONE,
+    VerifyOrQuit(frame.SetCommandId(Mac::Frame::kMacCmdOrphanNotification) == kErrorNone,
                  "Mac::Frame::SetCommandId failed\n");
-    VerifyOrQuit(frame.GetCommandId(commandId) == OT_ERROR_NONE, "Mac::Frame::GetCommandId failed\n");
+    VerifyOrQuit(frame.GetCommandId(commandId) == kErrorNone, "Mac::Frame::GetCommandId failed\n");
     VerifyOrQuit(commandId == Mac::Frame::kMacCmdOrphanNotification, "Mac::Frame::SetCommandId value not correct\n");
 
 #endif
@@ -620,7 +620,7 @@ void TestMacFrameAckGeneration(void)
     Mac::CslIe *csl;
 
     IgnoreError(ackFrame.GenerateEnhAck(receivedFrame, false, ie_data, sizeof(ie_data)));
-    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
+    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) + sizeof(Mac::HeaderIe));
     VerifyOrQuit(ackFrame.mLength == 23,
                  "Mac::Frame::GenerateEnhAck() failed, length incorrect\n"); // 23 is the length of the correct ack
     VerifyOrQuit(ackFrame.GetType() == Mac::Frame::kFcfFrameAck,
@@ -642,7 +642,7 @@ void TestMacFrameAckGeneration(void)
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     ackFrame.SetCslIe(123, 456);
-    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::Frame::kHeaderIeCsl) + sizeof(Mac::HeaderIe));
+    csl = reinterpret_cast<Mac::CslIe *>(ackFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) + sizeof(Mac::HeaderIe));
     VerifyOrQuit(csl->GetPeriod() == 123 && csl->GetPhase() == 456, "Mac::Frame::SetCslIe failed, CslIe incorrect\n");
 #endif
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)

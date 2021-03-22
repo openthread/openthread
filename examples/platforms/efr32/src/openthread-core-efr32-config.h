@@ -33,6 +33,9 @@
  */
 
 #include "board_config.h"
+
+// IMPORTANT: Do not remove this include. Apps will build without error, but
+// they will not boot up properly
 #include "em_msc.h"
 
 #ifndef OPENTHREAD_CORE_EFR32_CONFIG_H_
@@ -141,12 +144,12 @@
 #define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 0
 
 /**
- * @def OPENTHREAD_CONFIG_NCP_UART_ENABLE
+ * @def OPENTHREAD_CONFIG_NCP_HDLC_ENABLE
  *
- * Define to 1 to enable NCP UART support.
+ * Define to 1 to enable NCP HDLC support.
  *
  */
-#define OPENTHREAD_CONFIG_NCP_UART_ENABLE 1
+#define OPENTHREAD_CONFIG_NCP_HDLC_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_MIN_SLEEP_DURATION_MS

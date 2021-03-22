@@ -72,11 +72,11 @@ public:
      *
      * @param[in]  aPort      The local UDP port to bind to.
      *
-     * @retval OT_ERROR_NONE        Successfully started the CoAP agent.
-     * @retval OT_ERROR_ALREADY     Already started.
+     * @retval kErrorNone        Successfully started the CoAP agent.
+     * @retval kErrorAlready     Already started.
      *
      */
-    otError Start(uint16_t aPort);
+    Error Start(uint16_t aPort);
 
     /**
      * This method starts the secure CoAP agent, but do not use socket to transmit/receive messages.
@@ -84,11 +84,11 @@ public:
      * @param[in]  aCallback  A pointer to a function for sending messages.
      * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE        Successfully started the CoAP agent.
-     * @retval OT_ERROR_ALREADY     Already started.
+     * @retval kErrorNone        Successfully started the CoAP agent.
+     * @retval kErrorAlready     Already started.
      *
      */
-    otError Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext);
+    Error Start(MeshCoP::Dtls::TransportCallback aCallback, void *aContext);
 
     /**
      * This method sets connected callback of this secure CoAP agent.
@@ -116,10 +116,10 @@ public:
      * @param[in]  aCallback               A pointer to a function that will be called once DTLS connection is
      * established.
      *
-     * @retval OT_ERROR_NONE  Successfully started DTLS connection.
+     * @retval kErrorNone  Successfully started DTLS connection.
      *
      */
-    otError Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext);
+    Error Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCallback, void *aContext);
 
     /**
      * This method indicates whether or not the DTLS session is active.
@@ -159,11 +159,11 @@ public:
      * @param[in]  aPsk        A pointer to the PSK.
      * @param[in]  aPskLength  The PSK length.
      *
-     * @retval OT_ERROR_NONE          Successfully set the PSK.
-     * @retval OT_ERROR_INVALID_ARGS  The PSK is invalid.
+     * @retval kErrorNone         Successfully set the PSK.
+     * @retval kErrorInvalidArgs  The PSK is invalid.
      *
      */
-    otError SetPsk(const uint8_t *aPsk, uint8_t aPskLength) { return mDtls.SetPsk(aPsk, aPskLength); }
+    Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength) { return mDtls.SetPsk(aPsk, aPskLength); }
 
     /**
      * This method sets the PSK.
@@ -238,11 +238,11 @@ public:
      * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
      * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
      *
-     * @retval OT_ERROR_NONE     Successfully get the peer certificate.
-     * @retval OT_ERROR_NO_BUFS  Can't allocate memory for certificate.
+     * @retval kErrorNone    Successfully get the peer certificate.
+     * @retval kErrorNoBufs  Can't allocate memory for certificate.
      *
      */
-    otError GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
+    Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
     {
         return mDtls.GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
     }
@@ -286,16 +286,16 @@ public:
      * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
      * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
      *
-     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
-     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     * @retval kErrorNone          Successfully sent CoAP message.
+     * @retval kErrorNoBufs        Failed to allocate retransmission data.
+     * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &                   aMessage,
-                        ResponseHandler             aHandler      = nullptr,
-                        void *                      aContext      = nullptr,
-                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
-                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
+    Error SendMessage(Message &                   aMessage,
+                      ResponseHandler             aHandler      = nullptr,
+                      void *                      aContext      = nullptr,
+                      otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                      otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -311,17 +311,17 @@ public:
      * @param[in]  aTransmitHook A pointer to a hook function for outgoing block-wise transfer.
      * @param[in]  aReceiveHook  A pointer to a hook function for incoming block-wise transfer.
      *
-     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
-     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     * @retval kErrorNone          Successfully sent CoAP message.
+     * @retval kErrorNoBufs        Failed to allocate retransmission data.
+     * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &                   aMessage,
-                        const Ip6::MessageInfo &    aMessageInfo,
-                        ResponseHandler             aHandler      = nullptr,
-                        void *                      aContext      = nullptr,
-                        otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
-                        otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
+    Error SendMessage(Message &                   aMessage,
+                      const Ip6::MessageInfo &    aMessageInfo,
+                      ResponseHandler             aHandler      = nullptr,
+                      void *                      aContext      = nullptr,
+                      otCoapBlockwiseTransmitHook aTransmitHook = nullptr,
+                      otCoapBlockwiseReceiveHook  aReceiveHook  = nullptr);
 #else  // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -334,12 +334,12 @@ public:
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
-     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     * @retval kErrorNone          Successfully sent CoAP message.
+     * @retval kErrorNoBufs        Failed to allocate retransmission data.
+     * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &aMessage, ResponseHandler aHandler = nullptr, void *aContext = nullptr);
+    Error SendMessage(Message &aMessage, ResponseHandler aHandler = nullptr, void *aContext = nullptr);
 
     /**
      * This method sends a CoAP message over secure DTLS connection.
@@ -353,15 +353,15 @@ public:
      * @param[in]  aHandler      A function pointer that shall be called on response reception or time-out.
      * @param[in]  aContext      A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE           Successfully sent CoAP message.
-     * @retval OT_ERROR_NO_BUFS        Failed to allocate retransmission data.
-     * @retval OT_ERROR_INVALID_STATE  DTLS connection was not initialized.
+     * @retval kErrorNone          Successfully sent CoAP message.
+     * @retval kErrorNoBufs        Failed to allocate retransmission data.
+     * @retval kErrorInvalidState  DTLS connection was not initialized.
      *
      */
-    otError SendMessage(Message &               aMessage,
-                        const Ip6::MessageInfo &aMessageInfo,
-                        ResponseHandler         aHandler = nullptr,
-                        void *                  aContext = nullptr);
+    Error SendMessage(Message &               aMessage,
+                      const Ip6::MessageInfo &aMessageInfo,
+                      ResponseHandler         aHandler = nullptr,
+                      void *                  aContext = nullptr);
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
     /**
@@ -385,11 +385,11 @@ public:
     const Ip6::MessageInfo &GetMessageInfo(void) const { return mDtls.GetMessageInfo(); }
 
 private:
-    static otError Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+    static Error Send(CoapBase &aCoapBase, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
     {
         return static_cast<CoapSecure &>(aCoapBase).Send(aMessage, aMessageInfo);
     }
-    otError Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    Error Send(ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleDtlsConnected(void *aContext, bool aConnected);
     void        HandleDtlsConnected(bool aConnected);

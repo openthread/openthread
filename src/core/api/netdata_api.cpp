@@ -53,11 +53,11 @@ otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,
                                      otNetworkDataIterator *aIterator,
                                      otBorderRouterConfig * aConfig)
 {
-    otError                          error    = OT_ERROR_NONE;
+    Error                            error    = kErrorNone;
     Instance &                       instance = *static_cast<Instance *>(aInstance);
     NetworkData::OnMeshPrefixConfig *config   = static_cast<NetworkData::OnMeshPrefixConfig *>(aConfig);
 
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
     error = instance.Get<NetworkData::Leader>().GetNextOnMeshPrefix(*aIterator, *config);
 
@@ -67,10 +67,10 @@ exit:
 
 otError otNetDataGetNextRoute(otInstance *aInstance, otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
     error = instance.Get<NetworkData::Leader>().GetNextExternalRoute(
         *aIterator, *static_cast<NetworkData::ExternalRouteConfig *>(aConfig));
@@ -81,10 +81,10 @@ exit:
 
 otError otNetDataGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
 {
-    otError   error    = OT_ERROR_NONE;
+    Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aIterator && aConfig, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aIterator && aConfig, error = kErrorInvalidArgs);
 
     error = instance.Get<NetworkData::Leader>().GetNextService(*aIterator,
                                                                *static_cast<NetworkData::ServiceConfig *>(aConfig));

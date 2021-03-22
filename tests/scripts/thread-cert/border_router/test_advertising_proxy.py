@@ -47,6 +47,8 @@ import thread_cert
 BR = 1
 ROUTER = 2
 HOST = 3
+LEASE = 10  # Seconds
+KEY_LEASE = 20  # Seconds
 
 
 class SingleHostAndService(thread_cert.TestCase):
@@ -81,6 +83,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.simulator.go(5)
 
         server.srp_server_set_enabled(True)
+        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
         server.start()
         self.simulator.go(5)
         self.assertEqual('leader', server.get_state())
@@ -96,17 +99,17 @@ class SingleHostAndService(thread_cert.TestCase):
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
-        client.srp_client_start(server.get_addrs()[0], client.get_srp_server_port())
+        client.srp_client_enable_auto_start_mode()
         self.simulator.go(2)
 
-        self.check_host_and_service(server, client)
+        self.check_host_and_service(server, client, '2001::1')
 
         #
         # 2. Discover the service by the HOST on the ethernet. This makes sure
         #    the Advertising Proxy multicasts the same service on ethernet.
         #
 
-        self.host_check_mdns_service(host)
+        self.host_check_mdns_service(host, '2001::1')
 
         #
         # 3. Check if the Advertising Proxy removes the service from ethernet
@@ -128,9 +131,47 @@ class SingleHostAndService(thread_cert.TestCase):
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
-        self.host_check_mdns_service(host)
+        self.check_host_and_service(server, client, '2001::1')
+        self.host_check_mdns_service(host, '2001::1')
 
-    def host_check_mdns_service(self, host):
+        #
+        # 5. Update the SRP host address and make sure the Advertising Proxy
+        #    will follow it.
+        #
+
+        client.srp_client_set_host_address('2001::2')
+        self.simulator.go(8)
+
+        self.check_host_and_service(server, client, '2001::2')
+        self.host_check_mdns_service(host, '2001::2')
+
+        #
+        # 6. Check if the service is removed by the Advertising Proxy when the SRP server is stopped.
+        #
+
+        server.srp_server_set_enabled(False)
+        self.simulator.go(2)
+
+        self.assertEqual(len(server.srp_server_get_hosts()), 0)
+        self.assertEqual(len(server.srp_server_get_services()), 0)
+        self.assertIsNone(host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host'))
+
+        server.srp_server_set_enabled(True)
+        self.simulator.go(LEASE)
+
+        self.check_host_and_service(server, client, '2001::2')
+        self.host_check_mdns_service(host, '2001::2')
+
+        #
+        # 7. Check if the expired service is removed by the Advertising Proxy.
+        #
+
+        client.srp_client_stop()
+        self.simulator.go(LEASE + 2)
+
+        self.assertIsNone(host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host'))
+
+    def host_check_mdns_service(self, host, host_addr):
         service = host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host')
         self.assertIsNotNone(service)
         self.assertEqual(service['instance'], 'my-service')
@@ -139,8 +180,10 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(service['priority'], 0)
         self.assertEqual(service['weight'], 0)
         self.assertEqual(service['host'], 'my-host')
+        self.assertEqual(ipaddress.ip_address(service['addresses'][0]), ipaddress.ip_address(host_addr))
+        self.assertEqual(len(service['addresses']), 1)
 
-    def check_host_and_service(self, server, client):
+    def check_host_and_service(self, server, client, host_addr):
         """Check that we have properly registered host and service instance.
         """
 
@@ -182,7 +225,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(server_host['deleted'], 'false')
         self.assertEqual(server_host['fullname'], server_service['host_fullname'])
         self.assertEqual(len(server_host['addresses']), 1)
-        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
+        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address(host_addr))
 
 
 if __name__ == '__main__':

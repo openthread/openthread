@@ -74,6 +74,9 @@ Instance::Instance(void)
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
     , mApplicationCoapSecure(*this, /* aLayerTwoSecurity */ true)
 #endif
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    , mPingSender(*this)
+#endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     , mChannelMonitor(*this)
 #endif
@@ -214,11 +217,11 @@ void Instance::FactoryReset(void)
     otPlatReset(this);
 }
 
-otError Instance::ErasePersistentInfo(void)
+Error Instance::ErasePersistentInfo(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
     Get<Settings>().Wipe();
 
 exit:

@@ -156,11 +156,11 @@ public:
      * @param[in]   aMaxLength  Maximum number of bytes to read.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval OT_ERROR_NONE       Successfully copied the TLV.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
+     * @retval kErrorNone      Successfully copied the TLV.
+     * @retval kErrorNotFound  Could not find the TLV with Type @p aType.
      *
      */
-    static otError FindTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
+    static Error FindTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv)
     {
         return ot::Tlv::FindTlv(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
     }
@@ -175,12 +175,12 @@ public:
      * @param[in]   aMessage    A reference to the message.
      * @param[out]  aTlv        A reference to the TLV that will be copied to.
      *
-     * @retval OT_ERROR_NONE       Successfully copied the TLV.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the TLV with Type @p aType.
+     * @retval kErrorNone      Successfully copied the TLV.
+     * @retval kErrorNotFound  Could not find the TLV with Type @p aType.
      *
      */
 
-    template <typename TlvType> static otError FindTlv(const Message &aMessage, TlvType &aTlv)
+    template <typename TlvType> static Error FindTlv(const Message &aMessage, TlvType &aTlv)
     {
         return ot::Tlv::FindTlv(aMessage, aTlv);
     }

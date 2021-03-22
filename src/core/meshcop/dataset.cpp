@@ -48,9 +48,9 @@
 namespace ot {
 namespace MeshCoP {
 
-otError Dataset::Info::GenerateRandom(Instance &aInstance)
+Error Dataset::Info::GenerateRandom(Instance &aInstance)
 {
-    otError          error;
+    Error            error;
     Mac::ChannelMask supportedChannels = aInstance.Get<Mac::Mac>().GetSupportedChannelMask();
     Mac::ChannelMask preferredChannels(aInstance.Get<Radio>().GetPreferredChannelMask());
 
@@ -285,9 +285,9 @@ void Dataset::SetFrom(const otOperationalDatasetTlvs &aDataset)
     memcpy(mTlvs, aDataset.mTlvs, mLength);
 }
 
-otError Dataset::SetFrom(const Info &aDatasetInfo)
+Error Dataset::SetFrom(const Info &aDatasetInfo)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (aDatasetInfo.IsActiveTimestampPresent())
     {
@@ -400,9 +400,9 @@ void Dataset::SetTimestamp(const Timestamp &aTimestamp)
     IgnoreError(SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, aTimestamp));
 }
 
-otError Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
+Error Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
 {
-    otError  error          = OT_ERROR_NONE;
+    Error    error          = kErrorNone;
     uint16_t bytesAvailable = sizeof(mTlvs) - mLength;
     Tlv *    old            = GetTlv(aType);
     Tlv      tlv;
@@ -412,7 +412,7 @@ otError Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
         bytesAvailable += sizeof(Tlv) + old->GetLength();
     }
 
-    VerifyOrExit(sizeof(Tlv) + aLength <= bytesAvailable, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(sizeof(Tlv) + aLength <= bytesAvailable, error = kErrorNoBufs);
 
     if (old != nullptr)
     {
@@ -433,20 +433,20 @@ exit:
     return error;
 }
 
-otError Dataset::SetTlv(const Tlv &aTlv)
+Error Dataset::SetTlv(const Tlv &aTlv)
 {
     return SetTlv(aTlv.GetType(), aTlv.GetValue(), aTlv.GetLength());
 }
 
-otError Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
+Error Dataset::Set(const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
-    otError error = OT_ERROR_INVALID_ARGS;
+    Error error = kErrorInvalidArgs;
 
     SuccessOrExit(aMessage.Read(aOffset, mTlvs, aLength));
     mLength = aLength;
 
     mUpdateTime = TimerMilli::GetNow();
-    error       = OT_ERROR_NONE;
+    error       = kErrorNone;
 
 exit:
     return error;
@@ -463,9 +463,9 @@ exit:
     return;
 }
 
-otError Dataset::AppendMleDatasetTlv(Message &aMessage) const
+Error Dataset::AppendMleDatasetTlv(Message &aMessage) const
 {
-    otError        error = OT_ERROR_NONE;
+    Error          error = kErrorNone;
     Mle::Tlv       tlv;
     Mle::Tlv::Type type;
 
@@ -519,13 +519,13 @@ void Dataset::RemoveTlv(Tlv *aTlv)
     mLength -= length;
 }
 
-otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated) const
+Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated) const
 {
     Mac::Mac &  mac        = aInstance.Get<Mac::Mac>();
     KeyManager &keyManager = aInstance.Get<KeyManager>();
-    otError     error      = OT_ERROR_NONE;
+    Error       error      = kErrorNone;
 
-    VerifyOrExit(IsValid(), error = OT_ERROR_PARSE);
+    VerifyOrExit(IsValid(), error = kErrorParse);
 
     if (aIsMasterKeyUpdated)
     {
@@ -542,10 +542,10 @@ otError Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdat
 
             error = mac.SetPanChannel(channel);
 
-            if (error != OT_ERROR_NONE)
+            if (error != kErrorNone)
             {
                 otLogWarnMeshCoP("DatasetManager::ApplyConfiguration() Failed to set channel to %d (%s)", channel,
-                                 otThreadErrorToString(error));
+                                 ErrorToString(error));
                 ExitNow();
             }
 

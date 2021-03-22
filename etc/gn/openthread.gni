@@ -55,9 +55,6 @@ declare_args() {
   # Use external mbedtls. If blank, internal mbedtls will be used.
   openthread_external_mbedtls = ""
 
-  # Enable building for POSIX platforms.
-  openthread_posix = current_os == "linux"
-
   # Package name for OpenThread.
   openthread_package_name = "OPENTHREAD"
 
@@ -201,8 +198,14 @@ if (openthread_enable_core_config_args) {
     # Enable SNTP Client support
     openthread_config_sntp_client_enable = false
 
+    # Enable SRP Client support
+    openthread_config_srp_client_enable = false
+
     # Enable SRP Server support
     openthread_config_srp_server_enable = false
+
+    # Enable ping sender support
+    openthread_config_ping_sender = false
 
     # Enable the time synchronization service feature
     openthread_config_time_sync_enable = false
@@ -219,8 +222,8 @@ if (openthread_enable_core_config_args) {
     # Enable NCP SPI support
     openthread_config_ncp_spi_enable = false
 
-    # Enable NCP UART support
-    openthread_config_ncp_uart_enable = false
+    # Enable NCP HDLC support
+    openthread_config_ncp_hdlc_enable = false
 
     # Enable builtin mbedtls management
     openthread_config_enable_builtin_mbedtls_management =

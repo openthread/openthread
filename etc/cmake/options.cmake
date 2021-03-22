@@ -257,6 +257,11 @@ if(OT_MULTIPLE_INSTANCE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1")
 endif()
 
+option(OT_PING_SENDER "enable ping sender support" ${OT_APP_CLI})
+if(OT_PING_SENDER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1")
+endif()
+
 option(OT_PLATFORM_NETIF "enable platform netif support")
 if(OT_PLATFORM_NETIF)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1")
@@ -300,6 +305,11 @@ endif()
 option(OT_TIME_SYNC "enable the time synchronization service feature")
 if(OT_TIME_SYNC)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1")
+endif()
+
+option(OT_TREL "enable TREL radio link for Thread over Infrastructure feature")
+if (OT_TREL)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
 endif()
 
 option(OT_UDP_FORWARD "enable UDP forward support")

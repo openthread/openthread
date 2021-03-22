@@ -114,6 +114,15 @@
 #define QUARTER_DBM_IN_DBM 4
 #define US_IN_MS 1000
 
+enum
+{
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT && RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
+    EFR32_NUM_BAND_CONFIGS = 2,
+#else
+    EFR32_NUM_BAND_CONFIGS = 1,
+#endif
+};
+
 // Energy Scan
 typedef enum
 {
@@ -156,7 +165,7 @@ static bool         sPromiscuous = false;
 static otRadioState sState       = OT_RADIO_STATE_DISABLED;
 
 static efr32CommonConfig sCommonConfig;
-static efr32BandConfig   sBandConfig;
+static efr32BandConfig   sBandConfig[EFR32_NUM_BAND_CONFIGS];
 static efr32BandConfig * sCurrentBandConfig = NULL;
 
 static int8_t sCcaThresholdDbm = CCA_THRESHOLD_DEFAULT;
@@ -224,32 +233,32 @@ static uint32_t sCoexCounters[SL_RAIL_UTIL_COEX_EVENT_COUNT] = {0};
 
 #endif // SL_CATALOG_RAIL_UTIL_COEX_PRESENT
 
-// Enhanced Acks and CSL
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+// Transmit Security
+static uint32_t        sMacFrameCounter;
+static uint8_t         sKeyId;
+static struct otMacKey sPrevKey;
+static struct otMacKey sCurrKey;
+static struct otMacKey sNextKey;
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+// IE support
 static otExtAddress  sExtAddress;
 static otRadioIeInfo sTransmitIeInfo;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+// Enhanced ACKs, CSL
+static bool     sAckedWithSecEnhAck;
+static uint32_t sAckFrameCounter;
+static uint8_t  sAckKeyId;
+
 static uint8_t sAckIeData[OT_ACK_IE_MAX_SIZE];
 static uint8_t sAckIeDataLength = 0;
 
 static uint32_t      sCslPeriod;
 static uint32_t      sCslSampleTime;
 static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
-
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-static uint32_t        sMacFrameCounter;
-static uint8_t         sKeyId;
-static struct otMacKey sPrevKey;
-static struct otMacKey sCurrKey;
-static struct otMacKey sNextKey;
-static bool            sAckedWithSecEnhAck;
-static uint32_t        sAckFrameCounter;
-static uint8_t         sAckKeyId;
 
 static void processSecurityForEnhancedAck(uint8_t *aAckFrame)
 {
@@ -300,6 +309,49 @@ static void processSecurityForEnhancedAck(uint8_t *aAckFrame)
 exit:
     return;
 }
+
+static uint16_t getCslPhase()
+{
+    uint32_t curTime       = otPlatAlarmMicroGetNow();
+    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
+    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
+
+    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
+}
+
+static void updateIeData(void)
+{
+    // The CSL IE Content field:
+    //  ___________________________________________________
+    // |   Octets: 2  |   Octets: 2  |     Octets: 0/2     |
+    // |______________|______________|_____________________|
+    // |   CSL Phase  |   CSL Period |   Rendezvous time   |
+    // |______________|______________|_____________________|
+    //
+    // Note: The rendezvous time is included right when sending the packet,
+    // (in txCurrentPacket), before updating the 802.15.4 header with CSL IEs.
+    // The tx frame is modified at the right offset (see mInfo.mTxInfo.mIeInfo->mTimeIeOffset)
+
+    int8_t offset = 0;
+    if (sCslPeriod > 0)
+    {
+        uint8_t *finger = sAckIeData;
+        memcpy(finger, sCslIeHeader, OT_IE_HEADER_SIZE);
+        finger += OT_IE_HEADER_SIZE;
+
+        uint16_t cslPhase = getCslPhase();
+        *finger++         = HIGH_BYTE(cslPhase);
+        *finger++         = LOW_BYTE(cslPhase);
+
+        *finger++ = HIGH_BYTE((uint16_t)sCslPeriod);
+        *finger++ = LOW_BYTE((uint16_t)sCslPeriod);
+
+        offset = finger - sAckIeData;
+    }
+
+    sAckIeDataLength = offset;
+}
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 //------------------------------------------------------------------------------
@@ -315,7 +367,7 @@ static void efr32CoexInit(void);
 static void tryTxCurrentPacket(void);
 #else
 // Transmit the current outgoing frame.
-void        txCurrentPacket(void);
+void txCurrentPacket(void);
 #define tryTxCurrentPacket txCurrentPacket
 #endif // SL_CATALOG_RAIL_UTIL_COEX_PRESENT
 
@@ -474,9 +526,8 @@ static RAIL_Handle_t efr32RailInit(efr32CommonConfig *aCommonConfig)
     // assert(status == RAIL_STATUS_NO_ERROR);
 
     // Enhanced ACKs (only on platforms that support it, so error checking is disabled)
-    // RAIL_IEEE802154_ConfigEOptions(handle,
-    //                                (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK),
-    //                                (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK));
+    RAIL_IEEE802154_ConfigEOptions(handle, (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK),
+                                   (RAIL_IEEE802154_E_OPTION_GB868 | RAIL_IEEE802154_E_OPTION_ENH_ACK));
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
     uint16_t actualLenth = RAIL_SetTxFifo(handle, aCommonConfig->mRailTxFifo, 0, sizeof(aCommonConfig->mRailTxFifo));
@@ -490,14 +541,16 @@ static void efr32RailConfigLoad(efr32BandConfig *aBandConfig)
     RAIL_Status_t        status;
     RAIL_TxPowerConfig_t txPowerConfig = {SL_RAIL_UTIL_PA_SELECTION_2P4GHZ, SL_RAIL_UTIL_PA_VOLTAGE_MV, 10};
 
+#if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     if (aBandConfig->mChannelConfig != NULL)
     {
         uint16_t firstChannel = RAIL_ConfigChannels(gRailHandle, aBandConfig->mChannelConfig, NULL);
         assert(firstChannel == aBandConfig->mChannelMin);
 
-        // txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG; TO DO:Check this macro
+        txPowerConfig.mode = RAIL_TX_POWER_MODE_SUBGIG;
     }
     else
+#endif // RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
     {
 #ifdef SL_CATALOG_RAIL_UTIL_IEEE802154_PHY_SELECT_PRESENT
         status = sl_rail_util_plugin_config_2p4ghz_radio(gRailHandle);
@@ -524,9 +577,13 @@ static efr32BandConfig *efr32RadioGetBandConfig(uint8_t aChannel)
 {
     efr32BandConfig *config = NULL;
 
-    if ((sBandConfig.mChannelMin <= aChannel) && (aChannel <= sBandConfig.mChannelMax))
+    for (uint8_t i = 0; i < EFR32_NUM_BAND_CONFIGS; i++)
     {
-        config = &sBandConfig;
+        if ((sBandConfig[i].mChannelMin <= aChannel) && (aChannel <= sBandConfig[i].mChannelMax))
+        {
+            config = &sBandConfig[i];
+            break;
+        }
     }
 
     return config;
@@ -542,17 +599,20 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
     sCommonConfig.mRailConfig.scheduler = NULL; // only needed for DMP
 #endif
 
-#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
-    sBandConfig.mChannelConfig = NULL;
-    sBandConfig.mChannelMin    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
-    sBandConfig.mChannelMax    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
+    uint8_t index = 0;
 
+#if RADIO_CONFIG_2P4GHZ_OQPSK_SUPPORT
+    sBandConfig[index].mChannelConfig = NULL;
+    sBandConfig[index].mChannelMin    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
+    sBandConfig[index].mChannelMax    = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
+
+    index++;
 #endif
 
 #if RADIO_CONFIG_915MHZ_OQPSK_SUPPORT
-    sBandConfig.mChannelConfig = channelConfigs[0]; // TO DO: channel config??
-    sBandConfig.mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
-    sBandConfig.mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
+    sBandConfig[index].mChannelConfig = channelConfigs[0]; // TO DO: channel config??
+    sBandConfig[index].mChannelMin    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    sBandConfig[index].mChannelMax    = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
 #endif
 
 #if RADIO_CONFIG_DEBUG_COUNTERS_SUPPORT
@@ -570,7 +630,7 @@ static void efr32ConfigInit(void (*aEventCallback)(RAIL_Handle_t railHandle, RAI
 #endif
                   | RAIL_EVENT_CAL_NEEDED));
 
-    efr32RailConfigLoad(&(sBandConfig));
+    efr32RailConfigLoad(&(sBandConfig[0]));
 }
 
 void efr32RadioInit(void)
@@ -678,56 +738,6 @@ exit:
     }
     return error;
 }
-
-//------------------------------------------------------------------------------
-// Enhanced Acks and CSL support
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-
-static uint16_t getCslPhase()
-{
-    uint32_t curTime       = otPlatAlarmMicroGetNow();
-    uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = ((sCslSampleTime % cslPeriodInUs) - (curTime % cslPeriodInUs) + cslPeriodInUs) % cslPeriodInUs;
-
-    return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS);
-}
-
-static void updateIeData(void)
-{
-    // The CSL IE Content field:
-    //  ___________________________________________________
-    // |   Octets: 2  |   Octets: 2  |     Octets: 0/2     |
-    // |______________|______________|_____________________|
-    // |   CSL Phase  |   CSL Period |   Rendezvous time   |
-    // |______________|______________|_____________________|
-    //
-    // Note: The rendezvous time is included right when sending the packet,
-    // (in txCurrentPacket), before updating the 802.15.4 header with CSL IEs.
-    // The tx frame is modified at the right offset (see mInfo.mTxInfo.mIeInfo->mTimeIeOffset)
-
-    int8_t offset = 0;
-    if (sCslPeriod > 0)
-    {
-        uint8_t *finger = sAckIeData;
-        memcpy(finger, sCslIeHeader, OT_IE_HEADER_SIZE);
-        finger += OT_IE_HEADER_SIZE;
-
-        uint16_t cslPhase = getCslPhase();
-        *finger++         = HIGH_BYTE(cslPhase);
-        *finger++         = LOW_BYTE(cslPhase);
-
-        *finger++ = HIGH_BYTE((uint16_t)sCslPeriod);
-        *finger++ = LOW_BYTE((uint16_t)sCslPeriod);
-
-        offset = finger - sAckIeData;
-    }
-
-    sAckIeDataLength = offset;
-}
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 //------------------------------------------------------------------------------
 // Stack support
@@ -933,16 +943,7 @@ void txCurrentPacket(void)
     }
 
     frameLength = (uint8_t)sTxFrame->mLength;
-    RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
-    RAIL_WriteTxFifo(gRailHandle, sTxFrame->mPsdu, frameLength - 2, false);
 
-    RAIL_SchedulerInfo_t txSchedulerInfo = {
-        .priority        = RADIO_SCHEDULER_TX_PRIORITY,
-        .slipTime        = RADIO_SCHEDULER_CHANNEL_SLIP_TIME,
-        .transactionTime = 0, // will be calculated later if DMP is used
-    };
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     // Update IE data in the 802.15.4 header with the newest CSL period / phase
     if (sCslPeriod > 0)
@@ -951,14 +952,16 @@ void txCurrentPacket(void)
     }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+    bool processSecurity = false;
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     // Seek the time sync offset and update the rendezvous time
-    if (aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
+    if (sTxFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset != 0)
     {
-        uint8_t *timeIe = aFrame->mPsdu + aFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
-        uint64_t time   = otPlatTimeGet() + aFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
+        uint8_t *timeIe = sTxFrame->mPsdu + sTxFrame->mInfo.mTxInfo.mIeInfo->mTimeIeOffset;
+        uint64_t time   = otPlatTimeGet() + sTxFrame->mInfo.mTxInfo.mIeInfo->mNetworkTimeOffset;
 
-        *timeIe = aFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
+        *timeIe = sTxFrame->mInfo.mTxInfo.mIeInfo->mTimeSyncSeq;
 
         *(++timeIe) = (uint8_t)(time & 0xff);
         for (uint8_t i = 1; i < sizeof(uint64_t); i++)
@@ -966,9 +969,40 @@ void txCurrentPacket(void)
             time        = time >> 8;
             *(++timeIe) = (uint8_t)(time & 0xff);
         }
+
+        processSecurity = true;
     }
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    if (otMacFrameIsSecurityEnabled(sTxFrame) && otMacFrameIsKeyIdMode1(sTxFrame) &&
+        !sTxFrame->mInfo.mTxInfo.mIsSecurityProcessed)
+    {
+        sTxFrame->mInfo.mTxInfo.mAesKey = &sCurrKey;
+
+        if (!sTxFrame->mInfo.mTxInfo.mIsARetx)
+        {
+            otMacFrameSetKeyId(sTxFrame, sKeyId);
+            otMacFrameSetFrameCounter(sTxFrame, sMacFrameCounter++);
+        }
+
+        processSecurity = true;
+    }
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+    if (processSecurity)
+    {
+        otMacFrameProcessTransmitAesCcm(sTxFrame, &sExtAddress);
+    }
+
+    RAIL_WriteTxFifo(gRailHandle, &frameLength, sizeof frameLength, true);
+    RAIL_WriteTxFifo(gRailHandle, sTxFrame->mPsdu, frameLength - 2, false);
+
+    RAIL_SchedulerInfo_t txSchedulerInfo = {
+        .priority        = RADIO_SCHEDULER_TX_PRIORITY,
+        .slipTime        = RADIO_SCHEDULER_CHANNEL_SLIP_TIME,
+        .transactionTime = 0, // will be calculated later if DMP is used
+    };
 
     ackRequested = (sTxFrame->mPsdu[0] & IEEE802154_FRAME_FLAG_ACK_REQUIRED);
     if (ackRequested)
@@ -1193,10 +1227,10 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
     return efr32StartEnergyScan(ENERGY_SCAN_MODE_ASYNC, aScanChannel, (RAIL_Time_t)aScanDuration * US_IN_MS);
 }
 
-//------------------------------------------------------------------------------
-// Enhanced Acks and CSL support
-
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+//------------------------------------------------------------------------------
+// Radio Config: Thread 1.2 transmit security support
+
 void otPlatRadioSetMacKey(otInstance *    aInstance,
                           uint8_t         aKeyIdMode,
                           uint8_t         aKeyId,
@@ -1232,6 +1266,9 @@ void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCoun
     CORE_EXIT_ATOMIC();
 }
 
+//------------------------------------------------------------------------------
+// Radio Config: Enhanced Acks, CSL
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
@@ -1251,6 +1288,29 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
     sCslSampleTime = aCslSampleTime;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+//------------------------------------------------------------------------------
+// Radio Config: Link Metrics
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
+                                          otLinkMetrics        aLinkMetrics,
+                                          const otShortAddress aShortAddress,
+                                          const otExtAddress * aExtAddress)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = otLinkMetricsConfigureEnhAckProbing(aShortAddress, aExtAddress, aLinkMetrics);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if (error == OT_ERROR_NONE)
+    {
+        updateIeData();
+    }
+#endif
+
+    return error;
+}
+#endif
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
@@ -1290,10 +1350,10 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_RADIO_COEX_ENABLE
 
-//------------------------------------------------------------------------------
-
-// Return false if enhanced ACK is not required
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+//------------------------------------------------------------------------------
+// Radio implementation: Enhanced ACKs, CSL
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 static uint8_t getKeySourceLength(uint8_t keyIdMode)
 {

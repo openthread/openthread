@@ -54,11 +54,22 @@ extern "C" {
 #endif
 
 /**
+ * This struct represents an OpenThread message buffer.
+ *
+ */
+typedef struct otMessageBuffer
+{
+    struct otMessageBuffer *mNext; ///< Pointer to the next buffer.
+} otMessageBuffer;
+
+/**
  * Initialize the platform implemented message pool.
+ *
+ * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * @param[in] aInstance            A pointer to the OpenThread instance.
  * @param[in] aMinNumFreeBuffers   An uint16 containing the minimum number of free buffers desired by OpenThread.
- * @param[in] aBufferSize          The size in bytes of a Buffer object.
+ * @param[in] aBufferSize          The size in bytes of a buffer object.
  *
  */
 void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, size_t aBufferSize);
@@ -66,24 +77,32 @@ void otPlatMessagePoolInit(otInstance *aInstance, uint16_t aMinNumFreeBuffers, s
 /**
  * Allocate a buffer from the platform managed buffer pool.
  *
+ * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
+ *
+ * The returned buffer instance MUST have at least `aBufferSize` bytes (as specified in `otPlatMessagePoolInit()`).
+ *
  * @param[in] aInstance            A pointer to the OpenThread instance.
  *
- * @returns A pointer to the Buffer or NULL if no Buffers are available.
+ * @returns A pointer to the buffer or NULL if no buffers are available.
  *
  */
-otMessage *otPlatMessagePoolNew(otInstance *aInstance);
+otMessageBuffer *otPlatMessagePoolNew(otInstance *aInstance);
 
 /**
- * This function is used to free a Buffer back to the platform managed buffer pool.
+ * This function is used to free a buffer back to the platform managed buffer pool.
+ *
+ * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
- * @param[in]  aBuffer    The Buffer to free.
+ * @param[in]  aBuffer    The buffer to free.
  *
  */
-void otPlatMessagePoolFree(otInstance *aInstance, otMessage *aBuffer);
+void otPlatMessagePoolFree(otInstance *aInstance, otMessageBuffer *aBuffer);
 
 /**
  * Get the number of free buffers.
+ *
+ * This function is used when `OPENTHREAD_CONFIG_PLATFORM_MESSAGE_MANAGEMENT` is enabled.
  *
  * @param[in]  aInstance  A pointer to the OpenThread instance.
  *

@@ -29,6 +29,7 @@
 import unittest
 
 import thread_cert
+import config
 
 # Test description:
 #   This test verifies UDP servers can be accessible using RLOC/ALOC/MLEID/LINK-LOCAL/OMR when PLAT_UDP is enabled.
@@ -41,8 +42,6 @@ import thread_cert
 #           |
 #        ROUTER1
 #
-
-import config
 
 BR1 = 1
 ROUTER1 = 2
@@ -86,6 +85,39 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         self._test_srp_server(self.nodes[BR1].get_rloc(), server_port)
         for server_aloc in self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.ALOC):
             self._test_srp_server(server_aloc, server_port)
+
+        self._testDhcp6ClientAfterReset(BR1, BR1, BR1)
+
+    def _testDhcp6ClientAfterReset(self, server, client, reset_device):
+        DHCP6_PREFIX = '2001::/64'
+
+        # Configure DHCP6 server
+        self.nodes[server].add_prefix(DHCP6_PREFIX, 'pdros')
+        self.simulator.go(3)
+        self.nodes[server].register_netdata()
+        self.simulator.go(10)
+
+        # Verify DHCP6 client works
+        self.assertTrue(self.nodes[client].get_addr(DHCP6_PREFIX))
+        self.simulator.go(3)
+
+        self.nodes[reset_device].reset()
+        self.nodes[reset_device].start()
+        self.simulator.go(5)
+        self.assertIn(self.nodes[reset_device].get_state(), ['leader', 'router'])
+        self.simulator.go(5)
+
+        if reset_device == server:
+            # Reconfigure DHCP6 server if necessary
+            self.nodes[server].add_prefix(DHCP6_PREFIX, 'pdros')
+            self.simulator.go(3)
+            self.nodes[server].register_netdata()
+
+        self.simulator.go(10)
+
+        # Verify DHCP6 client works after reset
+        self.assertTrue(self.nodes[client].get_addr(DHCP6_PREFIX))
+        self.simulator.go(3)
 
     def _test_srp_server(self, server_addr, server_port):
         print(f'Testing SRP server: {server_addr}:{server_port}')

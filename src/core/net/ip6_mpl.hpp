@@ -219,11 +219,11 @@ public:
      * @param[out] aReceive    Set to FALSE if the MPL message is a duplicate and must not
      *                         go through the receiving process again, untouched otherwise.
      *
-     * @retval OT_ERROR_NONE  Successfully processed the MPL option.
-     * @retval OT_ERROR_DROP  The MPL message is a duplicate and should be dropped.
+     * @retval kErrorNone  Successfully processed the MPL option.
+     * @retval kErrorDrop  The MPL message is a duplicate and should be dropped.
      *
      */
-    otError ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive);
+    Error ProcessOption(Message &aMessage, const Address &aAddress, bool aIsOutbound, bool &aReceive);
 
     /**
      * This method returns the MPL Seed Id value.
@@ -296,7 +296,7 @@ private:
     static void HandleSeedSetTimer(Timer &aTimer);
     void        HandleSeedSetTimer(void);
 
-    otError UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
+    Error UpdateSeedSet(uint16_t aSeedId, uint8_t aSequence);
 
     SeedEntry      mSeedSet[kNumSeedEntries];
     const Address *mMatchingAddress;
@@ -307,11 +307,11 @@ private:
 #if OPENTHREAD_FTD
     struct Metadata
     {
-        otError AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
-        void    ReadFrom(const Message &aMessage);
-        void    RemoveFrom(Message &aMessage) const;
-        void    UpdateIn(Message &aMessage) const;
-        void    GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
+        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+        void  ReadFrom(const Message &aMessage);
+        void  RemoveFrom(Message &aMessage) const;
+        void  UpdateIn(Message &aMessage) const;
+        void  GenerateNextTransmissionTime(TimeMilli aCurrentTime, uint8_t aInterval);
 
         TimeMilli mTransmissionTime;
         uint16_t  mSeedId;

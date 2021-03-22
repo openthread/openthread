@@ -97,7 +97,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
         self.simulator.go(2)
 
-        self.check_host_and_service(server, client)
+        self.check_host_and_service(server, client, '2001::1')
 
         #
         # 2. Unregister a service but retain the name. The service name should be
@@ -138,10 +138,19 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
         self.simulator.go(2)
 
-        self.check_host_and_service(server, client)
+        self.check_host_and_service(server, client, '2001::1')
 
         #
-        # 4. Fully remove the host and all its service instances.
+        # 4. Update the SRP host address and make sure it will succeed.
+        #
+
+        client.srp_client_set_host_address('2001::2')
+        self.simulator.go(2)
+
+        self.check_host_and_service(server, client, '2001::2')
+
+        #
+        # 5. Fully remove the host and all its service instances.
         #
 
         client.srp_client_remove_host(remove_key=True)
@@ -161,7 +170,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         print(server_hosts)
         self.assertEqual(len(server_hosts), 0)
 
-    def check_host_and_service(self, server, client):
+    def check_host_and_service(self, server, client, host_addr):
         """Check that we have properly registered host and service instance.
         """
 
@@ -205,7 +214,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(server_host['deleted'], 'false')
         self.assertEqual(server_host['fullname'], server_service['host_fullname'])
         self.assertEqual(len(server_host['addresses']), 1)
-        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
+        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address(host_addr))
 
 
 if __name__ == '__main__':

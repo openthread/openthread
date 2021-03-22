@@ -92,13 +92,13 @@ public:
     /**
      * This method enqueues a data poll (an IEEE 802.15.4 Data Request) message.
      *
-     * @retval OT_ERROR_NONE           Successfully enqueued a data poll message
-     * @retval OT_ERROR_ALREADY        A data poll message is already enqueued.
-     * @retval OT_ERROR_INVALID_STATE  Device is not in rx-off-when-idle mode.
-     * @retval OT_ERROR_NO_BUFS        Insufficient message buffers available.
+     * @retval kErrorNone          Successfully enqueued a data poll message
+     * @retval kErrorAlready       A data poll message is already enqueued.
+     * @retval kErrorInvalidState  Device is not in rx-off-when-idle mode.
+     * @retval kErrorNoBufs        Insufficient message buffers available.
      *
      */
-    otError SendDataPoll(void);
+    Error SendDataPoll(void);
 
     /**
      * This method sets/clears a user-specified/external data poll period.
@@ -111,16 +111,16 @@ public:
      * value is larger than the child timeout.
      *
      * A non-zero `aPeriod` should be larger than or equal to `OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD` (10ms) or
-     * this method returns `OT_ERROR_INVALID_ARGS`. If a non-zero `aPeriod` is larger than maximum value of
+     * this method returns `kErrorInvalidArgs`. If a non-zero `aPeriod` is larger than maximum value of
      * `0x3FFFFFF ((1 << 26) - 1)`, it would be clipped to this value.
      *
      * @param[in]  aPeriod  The data poll period in milliseconds.
      *
-     * @retval OT_ERROR_NONE           Successfully set/cleared user-specified poll period.
-     * @retval OT_ERROR_INVALID_ARGS   If aPeriod is invalid.
+     * @retval kErrorNone           Successfully set/cleared user-specified poll period.
+     * @retval kErrorInvalidArgs    If aPeriod is invalid.
      *
      */
-    otError SetExternalPollPeriod(uint32_t aPeriod);
+    Error SetExternalPollPeriod(uint32_t aPeriod);
 
     /**
      * This method gets the current user-specified/external data poll period.
@@ -137,22 +137,22 @@ public:
      * @param[out] aDest       Reference to a `MAC::Address` to output the poll destination address (on success).
      * @param[out] aRadioType  Reference to a `Mac::RadioType` to output the link type (on success).
      *
-     * @retval OT_ERROR_NONE   @p aDest and @p aRadioType were updated successfully.
-     * @retval OT_ERROR_ABORT  Abort the data poll transmission (not currently attached to any parent).
+     * @retval kErrorNone   @p aDest and @p aRadioType were updated successfully.
+     * @retval kErrorAbort  Abort the data poll transmission (not currently attached to any parent).
      *
      */
-    otError GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
+    Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
 #else
     /**
      * This method gets the destination MAC address for a data poll frame.
      *
      * @param[out] aDest       Reference to a `MAC::Address` to output the poll destination address (on success).
      *
-     * @retval OT_ERROR_NONE   @p aDest was updated successfully.
-     * @retval OT_ERROR_ABORT  Abort the data poll transmission (not currently attached to any parent).
+     * @retval kErrorNone   @p aDest was updated successfully.
+     * @retval kErrorAbort  Abort the data poll transmission (not currently attached to any parent).
      *
      */
-    otError GetPollDestinationAddress(Mac::Address &aDest) const;
+    Error GetPollDestinationAddress(Mac::Address &aDest) const;
 #endif // #if OPENTHREAD_CONFIG_MULTI_RADIO
 
     /**
@@ -166,7 +166,7 @@ public:
      * @param[in] aError     Error status of a data poll message transmission.
      *
      */
-    void HandlePollSent(Mac::TxFrame &aFrame, otError aError);
+    void HandlePollSent(Mac::TxFrame &aFrame, Error aError);
 
     /**
      * This method informs the data poll sender that a data poll timeout happened, i.e., when the ack in response to
