@@ -27,7 +27,7 @@
 #
 
 add_executable(sleepy-demo-mtd
-    ${PROJECT_SOURCE_DIR}/openthread/examples/apps/cli/cli_uart.cpp
+    ${PROJECT_SOURCE_DIR}/examples/apps/cli/cli_uart.cpp
     main.c
 )
 
