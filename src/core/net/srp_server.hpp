@@ -73,6 +73,11 @@ class Server : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
 
 public:
+    enum : uint16_t
+    {
+        kUdpPort = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT, ///< The SRP Server UDP listening port.
+    };
+
     class Host;
     class Service;
 
