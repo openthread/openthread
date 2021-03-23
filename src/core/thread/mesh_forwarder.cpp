@@ -1541,8 +1541,7 @@ bool MeshForwarder::CalcIePresent(const Message *aMessage)
     iePresent |= (aMessage != nullptr && aMessage->IsTimeSync());
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    // Only append CSL IE for the packet which disables retransmission
-    iePresent |= (Get<Mac::Mac>().IsCslEnabled());
+    iePresent |= Get<Mac::Mac>().IsCslEnabled();
 #endif
 #endif
 
@@ -1565,7 +1564,6 @@ void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame
     }
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    // Only append CSL IE for the packet which disables retransmission
     if (Get<Mac::Mac>().IsCslEnabled())
     {
         IgnoreError(aFrame.AppendHeaderIeAt<Mac::CslIe>(index));

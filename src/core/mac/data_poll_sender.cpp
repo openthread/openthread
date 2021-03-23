@@ -566,7 +566,7 @@ Mac::TxFrame *DataPollSender::PrepareDataRequest(Mac::TxFrames &aTxFrames)
     bool          iePresent;
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radio;
+    Mac::RadioType radio;
 
     SuccessOrExit(GetPollDestinationAddress(dst, radio));
     frame = &aTxFrames.GetTxFrame(radio);
