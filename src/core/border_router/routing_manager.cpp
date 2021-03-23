@@ -313,7 +313,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
         EvaluateState();
     }
 
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
         StartRoutingPolicyEvaluationDelay();
     }
@@ -576,11 +576,11 @@ exit:
 // OMR prefix in the Thread network.
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
+    OT_ASSERT(mIsRunning);
+
     const Ip6::Prefix *newOnLinkPrefix = nullptr;
     Ip6::Prefix        newOmrPrefixes[kMaxOmrPrefixNum];
     uint8_t            newOmrPrefixNum = 0;
-
-    VerifyOrExit(mIsRunning);
 
     otLogInfoBr("evaluating routing policy");
 
@@ -618,13 +618,12 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     static_assert(sizeof(mAdvertisedOmrPrefixes) == sizeof(newOmrPrefixes), "invalid new OMR prefix array size");
     memcpy(mAdvertisedOmrPrefixes, newOmrPrefixes, sizeof(newOmrPrefixes[0]) * newOmrPrefixNum);
     mAdvertisedOmrPrefixNum = newOmrPrefixNum;
-
-exit:
-    return;
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
 {
+    OT_ASSERT(mIsRunning);
+
     uint32_t randomDelay;
 
     static_assert(kMaxRoutingPolicyDelay > 0, "invalid maximum routing policy evaluation delay");
@@ -917,6 +916,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
                                                const uint8_t *     aBuffer,
                                                uint16_t            aBufferLength)
 {
+    OT_ASSERT(mIsRunning);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
     using RouterAdv::Option;
