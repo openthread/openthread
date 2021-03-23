@@ -180,7 +180,7 @@ private:
  * This type represents a Service configuration.
  *
  */
-class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>
+class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>, public Unequatable<ServiceConfig>
 {
     friend class NetworkData;
 
@@ -189,7 +189,7 @@ public:
      * This class represents a Server configuration.
      *
      */
-    class ServerConfig : public otServerConfig
+    class ServerConfig : public otServerConfig, public Unequatable<ServerConfig>
     {
         friend class ServiceConfig;
 
@@ -204,17 +204,6 @@ public:
          *
          */
         bool operator==(const ServerConfig &aOther) const;
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `ServerConfig` instances are unequal.
-         *
-         * @param[in]  aOther  The other `ServerConfig` instance to compare with.
-         *
-         * @retval TRUE   If the two `ServerConfig` instances are unequal.
-         * @retval FALSE  If the two `ServerConfig` instances are not unequal.
-         *
-         */
-        bool operator!=(const ServerConfig &aOther) const { return !(*this == aOther); }
 
     private:
         void SetFrom(const ServerTlv &aServerTlv);
@@ -246,17 +235,6 @@ public:
      *
      */
     bool operator==(const ServiceConfig &aOther) const;
-
-    /**
-     * This method overloads operator `!=` to evaluate whether or not two `ServiceConfig` instances are unequal.
-     *
-     * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
-     *
-     * @retval TRUE   If the two `ServiceConfig` instances are unequal.
-     * @retval FALSE  If the two `ServiceConfig` instances are not unequal.
-     *
-     */
-    bool operator!=(const ServiceConfig &aOther) const { return !(*this == aOther); }
 
 private:
     void SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv);

@@ -39,6 +39,7 @@
 #include <limits.h>
 #include <openthread/platform/radio.h>
 
+#include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "radio/radio.hpp"
 
@@ -61,7 +62,7 @@ namespace Mac {
  * It is a wrapper class around a `uint32_t` bit vector representing a set of channels.
  *
  */
-class ChannelMask
+class ChannelMask : public Unequatable<ChannelMask>
 {
 public:
     enum
@@ -224,16 +225,6 @@ public:
      *
      */
     bool operator==(const ChannelMask &aAnother) const { return (mMask == aAnother.mMask); }
-
-    /**
-     * This method overloads `!=` operator to indicate whether two masks are different.
-     *
-     * @param[in] aAnother     A reference to another mask to compare with the current one.
-     *
-     * @returns TRUE if the two masks are different, FALSE otherwise.
-     *
-     */
-    bool operator!=(const ChannelMask &aAnother) const { return !(*this == aAnother); }
 
     /**
      * This method converts the channel mask into a human-readable string.

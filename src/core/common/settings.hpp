@@ -870,7 +870,7 @@ public:
      * This class defines an iterator to access all Child Info entries in the settings.
      *
      */
-    class ChildInfoIterator : public SettingsBase
+    class ChildInfoIterator : public SettingsBase, public Unequatable<ChildInfoIterator>
     {
         friend class ChildInfoIteratorBuilder;
 
@@ -954,17 +954,6 @@ public:
         {
             return (mIsDone && aOther.mIsDone) || (!mIsDone && !aOther.mIsDone && (mIndex == aOther.mIndex));
         }
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two iterator instances are unequal.
-         *
-         * @param[in]  aOther  The other iterator to compare with.
-         *
-         * @retval TRUE   If the two iterator objects are unequal.
-         * @retval FALSE  If the two iterator objects are not unequal.
-         *
-         */
-        bool operator!=(const ChildInfoIterator &aOther) const { return !(*this == aOther); }
 
     private:
         enum IteratorType
