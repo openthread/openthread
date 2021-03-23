@@ -38,6 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "net/ip4_address.hpp"
 #include "net/netif.hpp"
@@ -452,99 +453,122 @@ bool Address::MatchesFilter(TypeFilter aFilter) const
     return matches;
 }
 
-Error Address::FromString(const char *aBuf)
+Error Address::FromString(const char *aString)
 {
-    Error       error  = kErrorNone;
-    uint8_t *   dst    = reinterpret_cast<uint8_t *>(mFields.m8);
-    uint8_t *   endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-    uint8_t *   colonp = nullptr;
-    const char *colonc = nullptr;
-    uint16_t    val    = 0;
-    uint8_t     count  = 0;
-    bool        first  = true;
-    bool        hasIp4 = false;
-    char        ch;
-    uint8_t     d;
-
-    Clear();
-
-    dst--;
-
-    for (;;)
+    enum : uint8_t
     {
-        ch = *aBuf++;
-        d  = ch & 0xf;
+        kInvalidIndex = 0xff,
+    };
 
-        if (('a' <= ch && ch <= 'f') || ('A' <= ch && ch <= 'F'))
-        {
-            d += 9;
-        }
-        else if (ch == ':' || ch == '\0' || ch == ' ')
-        {
-            if (count)
-            {
-                VerifyOrExit(dst + 2 <= endp, error = kErrorParse);
-                *(dst + 1) = static_cast<uint8_t>(val >> 8);
-                *(dst + 2) = static_cast<uint8_t>(val);
-                dst += 2;
-                count = 0;
-                val   = 0;
-            }
-            else if (ch == ':')
-            {
-                VerifyOrExit(colonp == nullptr || first, error = kErrorParse);
-                colonp = dst;
-            }
+    enum : char
+    {
+        kColonChar = ':',
+        kDotChar   = '.',
+        kNullChar  = '\0',
+    };
 
-            if (ch == '\0' || ch == ' ')
+    Error   error      = kErrorParse;
+    uint8_t index      = 0;
+    uint8_t endIndex   = kSize / sizeof(uint16_t);
+    uint8_t colonIndex = kInvalidIndex;
+    bool    hasIp4     = false;
+
+    // Check if the string starts with "::".
+
+    if (*aString == kColonChar)
+    {
+        aString++;
+        VerifyOrExit(*aString == kColonChar);
+        aString++;
+        colonIndex = index;
+    }
+
+    while (*aString != kNullChar)
+    {
+        const char *start = aString;
+        uint32_t    value = 0;
+
+        // Parse hex number
+
+        while (true)
+        {
+            char    c = *aString;
+            uint8_t digit;
+
+            if (('A' <= c) && (c <= 'F'))
+            {
+                digit = static_cast<uint8_t>(c - 'A' + 10);
+            }
+            else if (('a' <= c) && (c <= 'f'))
+            {
+                digit = static_cast<uint8_t>(c - 'a' + 10);
+            }
+            else if (('0' <= c) && (c <= '9'))
+            {
+                digit = static_cast<uint8_t>(c - '0');
+            }
+            else
             {
                 break;
             }
 
-            colonc = aBuf;
+            aString++;
+            value = (value << 4) + digit;
 
-            continue;
+            VerifyOrExit(value <= NumericLimits<uint16_t>::Max());
         }
-        else if (ch == '.')
+
+        VerifyOrExit(aString != start);
+
+        if (*aString == kDotChar)
         {
-            hasIp4 = true;
-
-            // Do not count bytes of the embedded IPv4 address.
-            endp -= Ip4::Address::kSize;
-
-            VerifyOrExit(dst <= endp, error = kErrorParse);
-
+            // IPv6 address contains an embedded IPv4 address.
+            aString = start;
+            hasIp4  = true;
+            endIndex -= Ip4::Address::kSize / sizeof(uint16_t);
+            VerifyOrExit(index <= endIndex);
             break;
         }
-        else
+
+        VerifyOrExit((*aString == kColonChar) || (*aString == kNullChar));
+
+        VerifyOrExit(index < endIndex);
+        mFields.m16[index++] = HostSwap16(static_cast<uint16_t>(value));
+
+        if (*aString == kColonChar)
         {
-            VerifyOrExit('0' <= ch && ch <= '9', error = kErrorParse);
+            aString++;
+
+            if (*aString == kColonChar)
+            {
+                VerifyOrExit(colonIndex == kInvalidIndex);
+                colonIndex = index;
+                aString++;
+            }
         }
-
-        first = false;
-        val   = static_cast<uint16_t>((val << 4) | d);
-        VerifyOrExit(++count <= 4, error = kErrorParse);
     }
 
-    VerifyOrExit(colonp || dst == endp, error = kErrorParse);
-
-    while (colonp && dst > colonp)
+    if (index < endIndex)
     {
-        *endp-- = *dst--;
-    }
+        uint8_t wordsToCopy;
 
-    while (endp > dst)
-    {
-        *endp-- = 0;
+        VerifyOrExit(colonIndex != kInvalidIndex);
+
+        wordsToCopy = index - colonIndex;
+
+        memmove(&mFields.m16[endIndex - wordsToCopy], &mFields.m16[colonIndex], wordsToCopy * sizeof(uint16_t));
+        memset(&mFields.m16[colonIndex], 0, (endIndex - index) * sizeof(uint16_t));
     }
 
     if (hasIp4)
     {
         Ip4::Address ip4Addr;
 
-        SuccessOrExit(error = ip4Addr.FromString(colonc));
-        memcpy(mFields.m8 + 12, ip4Addr.GetBytes(), Ip4::Address::kSize);
+        SuccessOrExit(error = ip4Addr.FromString(aString));
+        memcpy(OT_ARRAY_END(mFields.m8) - Ip4::Address::kSize, ip4Addr.GetBytes(), Ip4::Address::kSize);
     }
+
+    error = kErrorNone;
 
 exit:
     return error;
