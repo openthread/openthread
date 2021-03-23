@@ -177,8 +177,9 @@ int main(int argc, char *argv[])
         for (int i = 1; i < argc; i++)
         {
             int rval = snprintf(&buffer[count], (sizeof(buffer) - count), "%s ", argv[i]);
+
             VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < (sizeof(buffer) - count), ret = OT_EXIT_FAILURE);
-            count += rval;
+            count += static_cast<size_t>(rval);
         }
 
         // replace the trailing space with newline
