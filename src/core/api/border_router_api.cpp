@@ -80,18 +80,18 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
 
     OT_ASSERT(aConfig != nullptr);
 
-    SuccessOrExit(error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config));
+    SuccessOrExit(error = instance.Get<NetworkData::Local>().ValidateOnMeshPrefix(*config));
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // Only try to configure Domain Prefix after the parameter is validated via above `AddOnMeshPrefix()`.
     if (aConfig->mDp)
     {
-        // Restore local server data
-        IgnoreError(instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(config->GetPrefix()));
-
         instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
     }
+    else
 #endif
+    {
+        SuccessOrExit(error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config));
+    }
 
 exit:
     return error;

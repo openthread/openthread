@@ -84,6 +84,17 @@ public:
     Error AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
+     * This method validates on mesh prefix.
+     *
+     * @param[in]  aConfig        A reference to the on-mesh perfix configuration.
+     *
+     * @retval kErrorNone         Successfully verified the on-mesh prefix.
+     * @retval kErrorInvalidArgs  The prefix is not a valid on-mesh prefix.
+     *
+     */
+    Error ValidateOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
+
+    /**
      * This method removes a Border Router entry from the Thread Network Data.
      *
      * @param[in]  aPrefix        The Prefix to remove.
@@ -104,6 +115,17 @@ public:
      *
      */
     Error AddHasRoutePrefix(const ExternalRouteConfig &aConfig);
+
+    /**
+     * This method validates Has Route prefix for Thread Network data.
+     *
+     * @param[in]  aConfig        A reference to the external route configuration.
+     *
+     * @retval kErrorNone         Successfully verified the Has Route prefix.
+     * @retval kErrorInvalidArgs  The prefix is not a valid Has Route prefix.
+     *
+     */
+    otError ValidateHasRoutePrefix(const ExternalRouteConfig &aConfig);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -170,15 +192,17 @@ public:
 private:
     void UpdateRloc(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    Error AddPrefix(const Ip6::Prefix &  aPrefix,
-                    NetworkDataTlv::Type aSubTlvType,
-                    int8_t               aPrf,
-                    uint16_t             aFlags,
-                    bool                 aStable);
-    Error RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
-    void  UpdateRloc(PrefixTlv &aPrefixTlv);
-    bool  IsOnMeshPrefixConsistent(void) const;
-    bool  IsExternalRouteConsistent(void) const;
+    Error        AddPrefix(const Ip6::Prefix &  aPrefix,
+                           NetworkDataTlv::Type aSubTlvType,
+                           int8_t               aPrf,
+                           uint16_t             aFlags,
+                           bool                 aStable);
+    Error        RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
+    static Error ValidatePrefix(const Ip6::Prefix &aPrefix);
+    static Error ValidatePreference(int8_t aPrf);
+    void         UpdateRloc(PrefixTlv &aPrefixTlv);
+    bool         IsOnMeshPrefixConsistent(void) const;
+    bool         IsExternalRouteConsistent(void) const;
 #endif
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
