@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -233,7 +234,7 @@ public:
  * This class implements a socket address.
  *
  */
-class SockAddr : public otSockAddr, public Clearable<SockAddr>
+class SockAddr : public otSockAddr, public Clearable<SockAddr>, public Unequatable<SockAddr>
 {
 public:
     enum : uint16_t
@@ -324,17 +325,6 @@ public:
     {
         return (GetPort() == aOther.GetPort()) && (GetAddress() == aOther.GetAddress());
     }
-
-    /**
-     * This method overloads operator `!=` to evaluate whether or not two `SockAddr` instances are unequal.
-     *
-     * @param[in]  aOther  The other `SockAddr` instance to compare with.
-     *
-     * @retval TRUE   If the two `SockAddr` instances are not equal.
-     * @retval FALSE  If the two `SockAddr` instances are equal.
-     *
-     */
-    bool operator!=(const SockAddr &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts the socket address to a string.

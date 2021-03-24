@@ -87,7 +87,7 @@ public:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Prefix : public otIp6Prefix, public Clearable<Prefix>
+class Prefix : public otIp6Prefix, public Clearable<Prefix>, public Unequatable<Prefix>
 {
 public:
     enum : uint8_t
@@ -221,17 +221,6 @@ public:
         return (mLength == aOther.mLength) &&
                (MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize()) >= GetLength());
     }
-
-    /**
-     * This method overloads operator `==` to evaluate whether or not two prefixes are unequal.
-     *
-     * @param[in]  aOther  The other prefix to compare with.
-     *
-     * @retval TRUE   If the two prefixes are unequal.
-     * @retval FALSE  If the two prefixes are not unequal.
-     *
-     */
-    bool operator!=(const Prefix &aOther) const { return !(*this == aOther); }
 
     /**
      * This method overloads operator `<` to compare two prefixes.
