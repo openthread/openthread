@@ -35,7 +35,7 @@ file(GLOB rail_libs ${librail_release_dir}/*.a)
 foreach(lib_file ${rail_libs})
 
     # Parse lib name, stripping .a extension
-    get_filename_component(lib_name ${lib_file} NAME_WLE)
+    get_filename_component(lib_name ${lib_file} NAME_WE)
     set(imported_lib_name "silabs-${lib_name}")
 
     # Add as an IMPORTED lib
@@ -58,7 +58,7 @@ file(GLOB nvm3_libs ${libnvm3_release_dir}/*.a)
 foreach(lib_file ${nvm3_libs})
 
     # Parse lib name, stripping .a extension
-    get_filename_component(lib_name ${lib_file} NAME_WLE)
+    get_filename_component(lib_name ${lib_file} NAME_WE)
     set(imported_lib_name "silabs-${lib_name}")
 
     # Add as an IMPORTED lib
