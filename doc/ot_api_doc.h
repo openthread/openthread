@@ -57,6 +57,7 @@
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
  * @defgroup api-srp                  SRP
+ * @defgroup api-ping-sender          Ping Sender
  * @defgroup api-udp-group            UDP
  *
  * @{
