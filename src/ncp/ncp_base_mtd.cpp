@@ -212,33 +212,29 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
 {
-    otError        error = OT_ERROR_NONE;
-    const uint8_t *metrics;
-    uint16_t       metricsLen;
+    otError error = OT_ERROR_NONE;
+    uint8_t metrics = 0;
 
-    SuccessOrExit(error = mDecoder.ReadDataWithLen(metrics, metricsLen));
+    SuccessOrExit(error = mDecoder.ReadUint8(metrics));
 
-    for (uint8_t i = 0; i < metricsLen; ++i)
+    if (metrics & SPINEL_THREAD_LINK_METRIC_PDU_COUNT)
     {
-        switch (metrics[i])
-        {
-        case SPINEL_THREAD_LINK_METRIC_PDU_COUNT:
-            VerifyOrExit(allowPduCount, error = OT_ERROR_INVALID_ARGS);
-            linkMetrics->mPduCount = true;
-            break;
-        case SPINEL_THREAD_LINK_METRIC_LQI:
-            linkMetrics->mLqi = true;
-            break;
-        case SPINEL_THREAD_LINK_METRIC_LINK_MARGIN:
-            linkMetrics->mLinkMargin = true;
-            break;
-        case SPINEL_THREAD_LINK_METRIC_RSSI:
-            linkMetrics->mRssi = true;
-            break;
-        default:
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
+        VerifyOrExit(aAllowPduCount, error = OT_ERROR_INVALID_ARGS);
+        aMetrics->mPduCount = true;
     }
+    if (metrics & SPINEL_THREAD_LINK_METRIC_LQI)
+    {
+        aMetrics->mLqi = true;
+    }
+    if (metrics & SPINEL_THREAD_LINK_METRIC_LINK_MARGIN)
+    {
+        aMetrics->mLinkMargin = true;
+    }
+    if (metrics & SPINEL_THREAD_LINK_METRIC_RSSI)
+    {
+        aMetrics->mRssi = true;
+    }
+
 exit:
     return error;
 }
@@ -3175,35 +3171,31 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     otError                  error = OT_ERROR_NONE;
     struct otIp6Address      address;
     uint8_t                  seriesId;
-    const uint8_t *          types;
-    uint16_t                 typesLen;
+    uint8_t                  types;
     otLinkMetrics            linkMetrics = {};
     otLinkMetricsSeriesFlags seriesFlags = {};
 
     SuccessOrExit(error = mDecoder.ReadIp6Address(address));
     SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
-    SuccessOrExit(error = mDecoder.ReadDataWithLen(types, typesLen));
+    SuccessOrExit(error = mDecoder.ReadUint8(types));
+
     SuccessOrExit(error = DecodeLinkMetrics(&linkMetrics, true));
 
-    for (uint8_t i = 0; i < typesLen; ++i)
+    if (types & SPINEL_THREAD_FRAME_TYPE_MLE_LINK_PROBE)
     {
-        switch (types[i])
-        {
-        case SPINEL_THREAD_FRAME_TYPE_MLE_LINK_PROBE:
-            seriesFlags.mLinkProbe = true;
-            break;
-        case SPINEL_THREAD_FRAME_TYPE_MAC_DATA:
-            seriesFlags.mMacData = true;
-            break;
-        case SPINEL_THREAD_FRAME_TYPE_MAC_DATA_REQUEST:
-            seriesFlags.mMacDataRequest = true;
-            break;
-        case SPINEL_THREAD_FRAME_TYPE_MAC_ACK:
-            seriesFlags.mMacAck = true;
-            break;
-        default:
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
+        seriesFlags.mLinkProbe = true;
+    }
+    if (types & SPINEL_THREAD_FRAME_TYPE_MAC_DATA)
+    {
+        seriesFlags.mMacData = true;
+    }
+    if (types & SPINEL_THREAD_FRAME_TYPE_MAC_DATA_REQUEST)
+    {
+        seriesFlags.mMacDataRequest = true;
+    }
+    if (types & SPINEL_THREAD_FRAME_TYPE_MAC_ACK)
+    {
+        seriesFlags.mMacAck = true;
     }
 
     error = otLinkMetricsConfigForwardTrackingSeries(mInstance, &address, seriesId, seriesFlags, &linkMetrics,
