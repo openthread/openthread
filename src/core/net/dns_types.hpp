@@ -41,6 +41,7 @@
 
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/ip6_address.hpp"
@@ -2025,7 +2026,7 @@ private:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 OT_TOOL_PACKED_BEGIN
-class Ecdsa256KeyRecord : public KeyRecord, public Clearable<Ecdsa256KeyRecord>
+class Ecdsa256KeyRecord : public KeyRecord, public Clearable<Ecdsa256KeyRecord>, public Equatable<Ecdsa256KeyRecord>
 {
 public:
     /**
@@ -2051,26 +2052,6 @@ public:
      *
      */
     const Crypto::Ecdsa::P256::PublicKey &GetKey(void) const { return mKey; }
-
-    /**
-     * This comparator tells whether two Ecdsa256KeyRecord objects are equal.
-     *
-     * @param[in]  aOther  The other Ecdsa256KeyRecord object.
-     *
-     * @returns  TRUE if they are equal, FALSE if not.
-     *
-     */
-    bool operator==(const Ecdsa256KeyRecord &aOther) const { return memcmp(this, &aOther, sizeof(*this)) == 0; }
-
-    /**
-     * This comparator tells whether two Ecdsa256KeyRecord objects are not equal.
-     *
-     * @param[in]  aOther  The other Ecdsa256KeyRecord object.
-     *
-     * @returns  TRUE if they are not equal, FALSE if equal.
-     *
-     */
-    bool operator!=(const Ecdsa256KeyRecord &aOther) const { return !(*this == aOther); }
 
 private:
     Crypto::Ecdsa::P256::PublicKey mKey;
