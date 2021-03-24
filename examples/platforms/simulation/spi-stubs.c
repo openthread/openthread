@@ -33,7 +33,6 @@
 
 #include <openthread/config.h>
 #include <openthread/platform/spi-slave.h>
-#include <openthread/platform/uart.h>
 
 #if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
 

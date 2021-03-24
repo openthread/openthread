@@ -38,7 +38,6 @@
 #include "stdlib.h"
 
 #include <openthread/tasklet.h>
-#include <openthread/platform/uart.h>
 
 #include "alarm_qorvo.h"
 #include "platform_qorvo.h"

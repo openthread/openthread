@@ -466,6 +466,7 @@ enum
     SPINEL_STATUS_ALREADY                  = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND           = 20, ///< The given item could not be found.
     SPINEL_STATUS_INVALID_COMMAND_FOR_PROP = 21, ///< The given command cannot be performed on this property.
+    SPINEL_STATUS_RESPONSE_TIMEOUT         = 24, ///< No response received from remote node
 
     SPINEL_STATUS_JOIN__BEGIN = 104,
 
@@ -722,6 +723,13 @@ enum
 {
     SPINEL_RADIO_LINK_IEEE_802_15_4 = 0,
     SPINEL_RADIO_LINK_TREL_UDP6     = 1,
+};
+
+// Parameter ids used for:
+// @ref SPINEL_PROP_THREAD_MLR_REQUEST
+enum
+{
+    SPINEL_THREAD_MLR_PARAMID_TIMEOUT = 0
 };
 
 // Backbone Router states used for:
@@ -2954,6 +2962,46 @@ enum
      *
      */
     SPINEL_PROP_THREAD_DOMAIN_NAME = SPINEL_PROP_THREAD_EXT__BEGIN + 44,
+
+    /// Multicast Listeners Register Request
+    /** Format `t(A(6))A(t(CD))` - Write-only
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * `t(A(6))`: Array of IPv6 multicast addresses
+     * `A(t(CD))`: Array of structs holding optional parameters as follows
+     *   `C`: Parameter id
+     *   `D`: Parameter value
+     *
+     *   +----------------------------------------------------------------+
+     *   | Id:   SPINEL_THREAD_MLR_PARAMID_TIMEOUT                        |
+     *   | Type: `L`                                                      |
+     *   | Description: Timeout in seconds. If this optional parameter is |
+     *   |   omitted, the default value of the BBR will be used.          |
+     *   | Special values:                                                |
+     *   |   0 causes given addresses to be removed                       |
+     *   |   0xFFFFFFFF is permanent and persistent registration          |
+     *   +----------------------------------------------------------------+
+     *
+     * Write to this property initiates update of Multicast Listeners Table on the primary BBR.
+     * If the write succeeded, the result of network operation will be notified later by the
+     * SPINEL_PROP_THREAD_MLR_RESPONSE property. If the write fails, no MLR.req is issued and
+     * notifiaction through the SPINEL_PROP_THREAD_MLR_RESPONSE property will not occur.
+     *
+     */
+    SPINEL_PROP_THREAD_MLR_REQUEST = SPINEL_PROP_THREAD_EXT__BEGIN + 52,
+
+    /// Multicast Listeners Register Response
+    /** Format `CCt(A(6))` - Unsolicited notifications only
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * `C`: Status
+     * `C`: MlrStatus (The Multicast Listener Registration Status)
+     * `A(6)`: Array of IPv6 addresses that failed to be updated on the primary BBR
+     *
+     * This property is notified asynchronously when the NCP receives MLR.rsp following
+     * previous write to the SPINEL_PROP_THREAD_MLR_REQUEST property.
+     */
+    SPINEL_PROP_THREAD_MLR_RESPONSE = SPINEL_PROP_THREAD_EXT__BEGIN + 53,
 
     /// Interface Identifier specified for Thread Domain Unicast Address.
     /** Format: `A(C)` - Read-write

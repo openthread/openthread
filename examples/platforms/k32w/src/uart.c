@@ -40,7 +40,7 @@
 
 /* Openthread general includes */
 #include <utils/code_utils.h>
-#include "openthread/platform/uart.h"
+#include <utils/uart.h>
 
 #if USE_RTOS
 #include "UART_Serial_Adapter.h"

@@ -44,7 +44,6 @@
 #include <openthread/logging.h>
 #include <openthread/ncp.h>
 #include <openthread/thread.h>
-#include <openthread/platform/uart.h>
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #include <openthread/network_time.h>
 #endif
@@ -87,12 +86,9 @@
 #include "common/new.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
-#include "net/ip6.hpp"
-#include "utils/otns.hpp"
 #include "utils/parse_cmdline.hpp"
 
 using ot::Encoding::BigEndian::HostSwap16;
-using ot::Encoding::BigEndian::HostSwap32;
 
 using ot::Utils::CmdLineParser::ParseAsBool;
 using ot::Utils::CmdLineParser::ParseAsHexString;
@@ -110,18 +106,14 @@ namespace Cli {
 constexpr Interpreter::Command Interpreter::sCommands[];
 
 Interpreter *Interpreter::sInterpreter = nullptr;
+static OT_DEFINE_ALIGNED_VAR(sInterpreterRaw, sizeof(Interpreter), uint64_t);
 
-Interpreter::Interpreter(Instance *aInstance)
+Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, void *aContext)
     : mInstance(aInstance)
+    , mOutputCallback(aCallback)
+    , mOutputContext(aContext)
     , mUserCommands(nullptr)
     , mUserCommandsLength(0)
-    , mPingLength(kDefaultPingLength)
-    , mPingCount(kDefaultPingCount)
-    , mPingInterval(kDefaultPingInterval)
-    , mPingHopLimit(0)
-    , mPingAllowZeroHopLimit(false)
-    , mPingIdentifier(0)
-    , mPingTimer(*aInstance, Interpreter::HandlePingTimer)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
@@ -150,10 +142,6 @@ Interpreter::Interpreter(Instance *aInstance)
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
-
-    mIcmpHandler.mReceiveCallback = Interpreter::HandleIcmpReceive;
-    mIcmpHandler.mContext         = this;
-    IgnoreError(otIcmp6RegisterHandler(mInstance, &mIcmpHandler));
 }
 
 void Interpreter::OutputResult(otError aError)
@@ -209,6 +197,8 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+
 otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
 {
     otError        error    = OT_ERROR_NONE;
@@ -254,6 +244,8 @@ otError Interpreter::ParsePingInterval(const char *aString, uint32_t &aInterval)
 exit:
     return error;
 }
+
+#endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
 otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 {
@@ -2572,14 +2564,14 @@ exit:
 otError Interpreter::ProcessMlrReg(uint8_t aArgsLength, char *aArgs[])
 {
     otError      error = OT_ERROR_NONE;
-    otIp6Address addresses[kIPv6AddressesNumMax];
+    otIp6Address addresses[kIp6AddressesNumMax];
     uint32_t     timeout;
     uint8_t      i;
 
     VerifyOrExit(aArgsLength >= 1, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aArgsLength <= kIPv6AddressesNumMax + 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength <= kIp6AddressesNumMax + 1, error = OT_ERROR_INVALID_ARGS);
 
-    for (i = 0; i < aArgsLength && i < kIPv6AddressesNumMax; i++)
+    for (i = 0; i < aArgsLength && i < kIp6AddressesNumMax; i++)
     {
         if (ParseAsIp6Address(aArgs[i], addresses[i]) != OT_ERROR_NONE)
         {
@@ -3149,153 +3141,70 @@ exit:
 }
 #endif
 
-void Interpreter::HandleIcmpReceive(void *               aContext,
-                                    otMessage *          aMessage,
-                                    const otMessageInfo *aMessageInfo,
-                                    const otIcmp6Header *aIcmpHeader)
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+
+void Interpreter::HandlePingReply(const otPingSenderReply *aReply, void *aContext)
 {
-    static_cast<Interpreter *>(aContext)->HandleIcmpReceive(aMessage, aMessageInfo, aIcmpHeader);
+    static_cast<Interpreter *>(aContext)->HandlePingReply(aReply);
 }
 
-void Interpreter::HandleIcmpReceive(otMessage *          aMessage,
-                                    const otMessageInfo *aMessageInfo,
-                                    const otIcmp6Header *aIcmpHeader)
+void Interpreter::HandlePingReply(const otPingSenderReply *aReply)
 {
-    uint32_t timestamp = 0;
-    uint16_t dataSize;
-
-    VerifyOrExit(aIcmpHeader->mType == OT_ICMP6_TYPE_ECHO_REPLY);
-    VerifyOrExit((mPingIdentifier != 0) && (mPingIdentifier == HostSwap16(aIcmpHeader->mData.m16[0])));
-
-    dataSize = otMessageGetLength(aMessage) - otMessageGetOffset(aMessage);
-    OutputFormat("%u bytes from ", dataSize + static_cast<uint16_t>(sizeof(otIcmp6Header)));
-
-    OutputIp6Address(aMessageInfo->mPeerAddr);
-
-    OutputFormat(": icmp_seq=%d hlim=%d", HostSwap16(aIcmpHeader->mData.m16[1]), aMessageInfo->mHopLimit);
-
-    if (otMessageRead(aMessage, otMessageGetOffset(aMessage), &timestamp, sizeof(uint32_t)) == sizeof(uint32_t))
-    {
-        OutputFormat(" time=%dms", TimerMilli::GetNow().GetValue() - HostSwap32(timestamp));
-    }
-
-    OutputLine("");
-
-    SignalPingReply(static_cast<const Ip6::MessageInfo *>(aMessageInfo)->GetPeerAddr(), dataSize, HostSwap32(timestamp),
-                    aMessageInfo->mHopLimit);
-
-exit:
-    return;
+    OutputFormat("%u bytes from ", static_cast<uint16_t>(aReply->mSize + sizeof(otIcmp6Header)));
+    OutputIp6Address(aReply->mSenderAddress);
+    OutputLine(": icmp_seq=%d hlim=%d time=%dms", aReply->mSequenceNumber, aReply->mHopLimit, aReply->mRoundTripTime);
 }
 
 otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint8_t  index = 1;
-    uint32_t interval;
+    otError            error = OT_ERROR_NONE;
+    otPingSenderConfig config;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (strcmp(aArgs[0], "stop") == 0)
     {
-        mPingIdentifier = 0;
-        VerifyOrExit(mPingTimer.IsRunning(), error = OT_ERROR_INVALID_STATE);
-        mPingTimer.Stop();
+        otPingSenderStop(mInstance);
         ExitNow();
     }
 
-    VerifyOrExit(!mPingTimer.IsRunning(), error = OT_ERROR_BUSY);
+    memset(&config, 0, sizeof(config));
 
-    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], mPingDestAddress));
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], config.mDestination));
 
-    mPingLength            = kDefaultPingLength;
-    mPingCount             = kDefaultPingCount;
-    mPingInterval          = kDefaultPingInterval;
-    mPingHopLimit          = 0;
-    mPingAllowZeroHopLimit = false;
-
-    while (index < aArgsLength)
+    if (aArgsLength > 1)
     {
-        switch (index)
-        {
-        case 1:
-            SuccessOrExit(error = ParseAsUint16(aArgs[index], mPingLength));
-            break;
-
-        case 2:
-            SuccessOrExit(error = ParseAsUint16(aArgs[index], mPingCount));
-            break;
-
-        case 3:
-            SuccessOrExit(error = ParsePingInterval(aArgs[index], interval));
-            VerifyOrExit(0 < interval && interval <= Timer::kMaxDelay, error = OT_ERROR_INVALID_ARGS);
-            mPingInterval = interval;
-            break;
-
-        case 4:
-            SuccessOrExit(error = ParseAsUint8(aArgs[index], mPingHopLimit));
-            mPingAllowZeroHopLimit = (mPingHopLimit == 0);
-            break;
-
-        default:
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
-
-        index++;
+        SuccessOrExit(error = ParseAsUint16(aArgs[1], config.mSize));
     }
 
-    mPingIdentifier++;
-
-    if (mPingIdentifier == 0)
+    if (aArgsLength > 2)
     {
-        mPingIdentifier++;
+        SuccessOrExit(error = ParseAsUint16(aArgs[2], config.mCount));
     }
 
-    SendPing();
+    if (aArgsLength > 3)
+    {
+        SuccessOrExit(error = ParsePingInterval(aArgs[3], config.mInterval));
+    }
+
+    if (aArgsLength > 4)
+    {
+        SuccessOrExit(error = ParseAsUint8(aArgs[4], config.mHopLimit));
+        config.mAllowZeroHopLimit = (config.mHopLimit == 0);
+    }
+
+    VerifyOrExit(aArgsLength <= 5, error = OT_ERROR_INVALID_ARGS);
+
+    config.mCallback        = Interpreter::HandlePingReply;
+    config.mCallbackContext = this;
+
+    error = otPingSenderPing(mInstance, &config);
 
 exit:
     return error;
 }
 
-void Interpreter::HandlePingTimer(Timer &aTimer)
-{
-    GetOwner(aTimer).SendPing();
-}
-
-void Interpreter::SendPing(void)
-{
-    uint32_t      timestamp = HostSwap32(TimerMilli::GetNow().GetValue());
-    otMessage *   message   = nullptr;
-    otMessageInfo messageInfo;
-
-    memset(&messageInfo, 0, sizeof(messageInfo));
-    messageInfo.mPeerAddr          = mPingDestAddress;
-    messageInfo.mHopLimit          = mPingHopLimit;
-    messageInfo.mAllowZeroHopLimit = mPingAllowZeroHopLimit;
-
-    message = otIp6NewMessage(mInstance, nullptr);
-    VerifyOrExit(message != nullptr);
-
-    SuccessOrExit(otMessageAppend(message, &timestamp, sizeof(timestamp)));
-    SuccessOrExit(otMessageSetLength(message, mPingLength));
-    SuccessOrExit(otIcmp6SendEchoRequest(mInstance, message, &messageInfo, mPingIdentifier));
-
-    SignalPingRequest(static_cast<Ip6::MessageInfo *>(&messageInfo)->GetPeerAddr(), mPingLength, HostSwap32(timestamp),
-                      messageInfo.mHopLimit);
-
-    message = nullptr;
-
-exit:
-    if (message != nullptr)
-    {
-        otMessageFree(message);
-    }
-
-    if (--mPingCount)
-    {
-        mPingTimer.Start(mPingInterval);
-    }
-}
+#endif // OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
 otError Interpreter::ProcessPollPeriod(uint8_t aArgsLength, char *aArgs[])
 {
@@ -4777,7 +4686,7 @@ otError Interpreter::ProcessDiag(uint8_t aArgsLength, char *aArgs[])
     output[sizeof(output) - 1] = '\0';
 
     error = otDiagProcessCmd(mInstance, aArgsLength, aArgs, output, sizeof(output) - 1);
-    Output(output, static_cast<uint16_t>(strlen(output)));
+    OutputFormat("%s", output);
 
     return error;
 }
@@ -5069,42 +4978,6 @@ void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength
     mUserCommandsContext = aContext;
 }
 
-Interpreter &Interpreter::GetOwner(InstanceLocator &aInstanceLocator)
-{
-    OT_UNUSED_VARIABLE(aInstanceLocator);
-    return Interpreter::GetInterpreter();
-}
-
-void Interpreter::SignalPingRequest(const Ip6::Address &aPeerAddress,
-                                    uint16_t            aPingLength,
-                                    uint32_t            aTimestamp,
-                                    uint8_t             aHopLimit)
-{
-    OT_UNUSED_VARIABLE(aPeerAddress);
-    OT_UNUSED_VARIABLE(aPingLength);
-    OT_UNUSED_VARIABLE(aTimestamp);
-    OT_UNUSED_VARIABLE(aHopLimit);
-
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    mInstance->Get<Utils::Otns>().EmitPingRequest(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
-#endif
-}
-
-void Interpreter::SignalPingReply(const Ip6::Address &aPeerAddress,
-                                  uint16_t            aPingLength,
-                                  uint32_t            aTimestamp,
-                                  uint8_t             aHopLimit)
-{
-    OT_UNUSED_VARIABLE(aPeerAddress);
-    OT_UNUSED_VARIABLE(aPingLength);
-    OT_UNUSED_VARIABLE(aTimestamp);
-    OT_UNUSED_VARIABLE(aHopLimit);
-
-#if OPENTHREAD_CONFIG_OTNS_ENABLE
-    mInstance->Get<Utils::Otns>().EmitPingReply(aPeerAddress, aPingLength, aTimestamp, aHopLimit);
-#endif
-}
-
 void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo)
 {
     OutputFormat("~ Discovery Request from ");
@@ -5161,24 +5034,33 @@ void Interpreter::OutputLine(uint8_t aIndentSize, const char *aFormat, ...)
 
 void Interpreter::OutputSpaces(uint8_t aCount)
 {
-    static const char kSpaces[] = {' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' '};
+    char format[sizeof("%256s")];
 
-    while (aCount > 0)
-    {
-        uint8_t len = OT_MIN(aCount, sizeof(kSpaces));
+    snprintf(format, sizeof(format), "%%%us", aCount);
 
-        Output(kSpaces, len);
-        aCount -= len;
-    }
+    OutputFormat(format, "");
 }
 
 int Interpreter::OutputFormatV(const char *aFormat, va_list aArguments)
 {
-    char buf[kMaxLineLength];
+    return mOutputCallback(mOutputContext, aFormat, aArguments);
+}
 
-    vsnprintf(buf, sizeof(buf), aFormat, aArguments);
+void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
+{
+    Instance *instance = static_cast<Instance *>(aInstance);
 
-    return Output(buf, static_cast<uint16_t>(strlen(buf)));
+    Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
+}
+
+extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
+{
+    Interpreter::Initialize(aInstance, aCallback, aContext);
+}
+
+extern "C" void otCliInputLine(char *aBuf)
+{
+    Interpreter::GetInterpreter().ProcessLine(aBuf);
 }
 
 extern "C" void otCliSetUserCommands(const otCliCommand *aUserCommands, uint8_t aLength, void *aContext)
@@ -5197,11 +5079,6 @@ extern "C" void otCliOutputFormat(const char *aFmt, ...)
     va_start(aAp, aFmt);
     Interpreter::GetInterpreter().OutputFormatV(aFmt, aAp);
     va_end(aAp);
-}
-
-extern "C" void otCliOutput(const char *aString, uint16_t aLength)
-{
-    Interpreter::GetInterpreter().Output(aString, aLength);
 }
 
 extern "C" void otCliAppendResult(otError aError)

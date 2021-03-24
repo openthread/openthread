@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,70 +26,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#define MAX_ITERATIONS 100
+/**
+ * @file
+ *   This file includes compile-time configurations for ping sender module.
+ *
+ */
 
-#include <stdlib.h>
-#include <string.h>
+#ifndef CONFIG_PING_SENDER_H_
+#define CONFIG_PING_SENDER_H_
 
-#include <openthread/cli.h>
-#include <openthread/instance.h>
-#include <openthread/ip6.h>
-#include <openthread/link.h>
-#include <openthread/tasklet.h>
-#include <openthread/thread.h>
-#include <openthread/thread_ftd.h>
-#include <openthread/platform/uart.h>
+/**
+ * @def OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+ *
+ * Define to 1 to enable ping sender module.
+ *
+ * Ping sender module implements sending ICMPv6 Echo Request messages and processing ICMPv6 Echo Reply messages.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+#define OPENTHREAD_CONFIG_PING_SENDER_ENABLE 0
+#endif
 
-#include "fuzzer_platform.h"
-#include "common/code_utils.hpp"
+/**
+ * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL
+ *
+ * Specifies the default ping interval (time between sending echo requests) in milliseconds.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL
+#define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL 1000
+#endif
 
-extern "C" int LLVMFuzzerTestOneInput(const uint8_t *data, size_t size)
-{
-    const otPanId panId = 0xdead;
+/**
+ * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE
+ *
+ * Specifies the default ping data size in bytes. The data size specifies the Echo Request data payload which excludes
+ * the IPv6 and ICMPv6 headers.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE
+#define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE 8
+#endif
 
-    otInstance *instance = nullptr;
-    uint8_t *   buf      = nullptr;
+/**
+ * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT
+ *
+ * Specifies the default ping count (number of ping messages to send).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT
+#define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_COUNT 1
+#endif
 
-    VerifyOrExit(size <= 65536);
-
-    FuzzerPlatformInit();
-
-    instance = otInstanceInitSingle();
-    otCliUartInit(instance);
-    IgnoreError(otLinkSetPanId(instance, panId));
-    IgnoreError(otIp6SetEnabled(instance, true));
-    IgnoreError(otThreadSetEnabled(instance, true));
-    IgnoreError(otThreadBecomeLeader(instance));
-
-    buf = static_cast<uint8_t *>(malloc(size));
-
-    memcpy(buf, data, size);
-
-    otPlatUartReceived(buf, (uint16_t)size);
-
-    VerifyOrExit(!FuzzerPlatformResetWasRequested());
-
-    for (int i = 0; i < MAX_ITERATIONS; i++)
-    {
-        while (otTaskletsArePending(instance))
-        {
-            otTaskletsProcess(instance);
-        }
-
-        FuzzerPlatformProcess(instance);
-    }
-
-exit:
-
-    if (buf != nullptr)
-    {
-        free(buf);
-    }
-
-    if (instance != nullptr)
-    {
-        otInstanceFinalize(instance);
-    }
-
-    return 0;
-}
+#endif // CONFIG_PING_SENDER_H_

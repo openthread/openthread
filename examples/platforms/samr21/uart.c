@@ -34,7 +34,7 @@
 
 #include "asf.h"
 
-#include <openthread/platform/uart.h>
+#include "utils/uart.h"
 
 enum
 {

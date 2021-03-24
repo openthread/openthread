@@ -47,8 +47,8 @@ check_targets()
 
 main()
 {
-    OPENTHREAD_ENABLE_ANDROID_MK=1 ANDROID_NDK=1 USE_OTBR_DAEMON=1 check_targets ot-cli ot-ctl ot-ncp
-    OPENTHREAD_ENABLE_ANDROID_MK=1 ANDROID_NDK=1 check_targets ot-cli ot-ncp spi-hdlc-adapter
+    OPENTHREAD_ENABLE_ANDROID_MK=1 ANDROID_NDK=1 USE_OTBR_DAEMON=1 check_targets ot-cli ot-ctl
+    OPENTHREAD_ENABLE_ANDROID_MK=1 ANDROID_NDK=1 check_targets ot-cli spi-hdlc-adapter
 }
 
 main "$@"

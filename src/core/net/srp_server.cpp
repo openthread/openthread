@@ -424,7 +424,7 @@ void Server::Start(void)
     VerifyOrExit(!IsRunning());
 
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(0));
+    SuccessOrExit(error = mSocket.Bind(kUdpPort, OT_NETIF_THREAD));
 
     SuccessOrExit(error = PublishServerData());
 

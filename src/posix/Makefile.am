@@ -82,6 +82,7 @@ ot_ncp_CPPFLAGS                                                        = \
 
 ot_ncp_SOURCES                                                         = \
     main.c                                                               \
+    ncp.cpp                                                              \
     $(NULL)
 
 ot_ncp_LDADD                                                           = \
@@ -162,7 +163,7 @@ ot_cli_CPPFLAGS                                                        = \
 
 ot_cli_SOURCES                                                         = \
     main.c                                                               \
-    console_cli.cpp                                                      \
+    cli.cpp                                                              \
     $(NULL)
 
 ot_cli_LDADD                                                           = \
@@ -197,9 +198,5 @@ CPPFLAGS_COMMON                                                       += \
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 endif # OPENTHREAD_ENABLE_EXECUTABLE
-
-noinst_HEADERS                                                         = \
-    console_cli.h                                                        \
-    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

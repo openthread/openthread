@@ -55,12 +55,47 @@ extern "C" {
  */
 
 /**
- * Initialize the NCP.
+ * This function pointer is called to send HDLC encoded NCP data.
+ *
+ * @param[in]  aBuf        A pointer to a buffer with an output.
+ * @param[in]  aBufLength  A length of the output data stored in the buffer.
+ *
+ * @returns                Number of bytes processed by the callback.
+ *
+ */
+typedef int (*otNcpHdlcSendCallback)(const uint8_t *aBuf, uint16_t aBufLength);
+
+/**
+ * This function is called after NCP send finished.
+ *
+ */
+void otNcpHdlcSendDone(void);
+
+/**
+ * This function is called after HDLC encoded NCP data received.
+ *
+ * @param[in]  aBuf        A pointer to a buffer.
+ * @param[in]  aBufLength  The length of the data stored in the buffer.
+ *
+ */
+void otNcpHdlcReceive(const uint8_t *aBuf, uint16_t aBufLength);
+
+/**
+ * Initialize the NCP based on HDLC framing.
+ *
+ * @param[in]  aInstance        The OpenThread instance structure.
+ * @param[in]  aSendCallback    The function pointer used to send NCP data.
+ *
+ */
+void otNcpHdlcInit(otInstance *aInstance, otNcpHdlcSendCallback aSendCallback);
+
+/**
+ * Initialize the NCP based on SPI framing.
  *
  * @param[in]  aInstance  The OpenThread instance structure.
  *
  */
-void otNcpInit(otInstance *aInstance);
+void otNcpSpiInit(otInstance *aInstance);
 
 /**
  * @brief Send data to the host via a specific stream.

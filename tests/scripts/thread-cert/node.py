@@ -909,7 +909,7 @@ class NodeImpl:
                 return service
 
     def get_srp_server_port(self):
-        """Returns the dynamic SRP server UDP port by parsing
+        """Returns the SRP server UDP port by parsing
            the SRP Server Data in Network Data.
         """
 

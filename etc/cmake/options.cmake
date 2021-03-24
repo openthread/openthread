@@ -257,6 +257,11 @@ if(OT_MULTIPLE_INSTANCE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1")
 endif()
 
+option(OT_PING_SENDER "enable ping sender support" ${OT_APP_CLI})
+if(OT_PING_SENDER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1")
+endif()
+
 option(OT_PLATFORM_NETIF "enable platform netif support")
 if(OT_PLATFORM_NETIF)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE=1")

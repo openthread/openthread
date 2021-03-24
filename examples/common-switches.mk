@@ -42,7 +42,6 @@ COVERAGE                  ?= 0
 CHANNEL_MANAGER           ?= 0
 CHANNEL_MONITOR           ?= 0
 CHILD_SUPERVISION         ?= 0
-CLI_TRANSPORT             ?= UART
 DATASET_UPDATER           ?= 0
 DEBUG                     ?= 0
 DHCP6_CLIENT              ?= 0
@@ -71,6 +70,7 @@ MLR                       ?= 0
 MTD_NETDIAG               ?= 0
 MULTIPLE_INSTANCE         ?= 0
 OTNS                      ?= 0
+PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
 REFERENCE_DEVICE          ?= 0
 SERVICE                   ?= 0
@@ -141,10 +141,6 @@ endif
 
 ifeq ($(CHILD_SUPERVISION),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE=1
-endif
-
-ifneq ($(CLI_TRANSPORT),)
-COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_CLI_TRANSPORT=OT_CLI_TRANSPORT_$(CLI_TRANSPORT)
 endif
 
 ifeq ($(CSL_RECEIVER),1)
@@ -258,6 +254,10 @@ endif
 
 ifeq ($(MULTIPLE_INSTANCE),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE=1
+endif
+
+ifeq ($(PING_SENDER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1
 endif
 
 ifeq ($(PLATFORM_UDP),1)

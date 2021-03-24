@@ -41,10 +41,10 @@
 
 #include <openthread/platform/debug_uart.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/uart.h>
 
 #include "platform-cc2538.h"
 #include "utils/code_utils.h"
+#include "utils/uart.h"
 
 enum
 {

@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,63 +26,45 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file contains definitions for a CLI interpreter on the CONSOLE service.
- */
+#include "openthread-core-config.h"
 
-#ifndef CLI_CONSOLE_HPP_
-#define CLI_CONSOLE_HPP_
+#include <openthread/ncp.h>
 
-#include "cli_config.h"
+#include "common/code_utils.hpp"
 
-#include <openthread/cli.h>
+#include "ncp/ncp_config.h"
 
-#include "cli/cli.hpp"
+#if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+#include "utils/uart.h"
 
-namespace ot {
-namespace Cli {
-
-/**
- * This class implements the CLI interpreter on top of the CONSOLE platform abstraction.
- *
- */
-class Console : public Interpreter
+void otPlatUartReceived(const uint8_t *aBuf, uint16_t aBufLength)
 {
-public:
-    /**
-     * This method initializes the Console interpreter.
-     *
-     * @param[in]  aInstance  The OpenThread instance structure.
-     * @param[in]  aCallback  A pointer to a callback method.
-     * @param[in]  aContext   A pointer to a user context.
-     *
-     */
-    static void Initialize(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
+    otNcpHdlcReceive(aBuf, aBufLength);
+}
 
-    /**
-     * This method delivers raw characters to the client.
-     *
-     * @param[in]  aBuf        A pointer to a buffer.
-     * @param[in]  aBufLength  Number of bytes in the buffer.
-     *
-     * @returns The number of bytes placed in the output queue.
-     *
-     */
-    int Output(const char *aBuf, uint16_t aBufLength);
+void otPlatUartSendDone(void)
+{
+    otNcpHdlcSendDone();
+}
+#endif
 
-private:
-    explicit Console(Instance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
+#if !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+#if !OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+static int NcpSend(const uint8_t *aBuf, uint16_t aBufLength)
+{
+    IgnoreError(otPlatUartSend(aBuf, aBufLength));
+    return aBufLength;
+}
+#endif
 
-    otCliConsoleOutputCallback mCallback;
-    void *                     mContext;
+void otAppNcpInit(otInstance *aInstance)
+{
+#if OPENTHREAD_CONFIG_NCP_SPI_ENABLE
+    otNcpSpiInit(aInstance);
+#else
+    IgnoreError(otPlatUartEnable());
 
-    static Console *sConsole;
-
-    friend class Interpreter;
-};
-
-} // namespace Cli
-} // namespace ot
-
-#endif // CLI_CONSOLE_HPP_
+    otNcpHdlcInit(aInstance, NcpSend);
+#endif
+}
+#endif // !OPENTHREAD_ENABLE_NCP_VENDOR_HOOK

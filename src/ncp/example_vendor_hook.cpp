@@ -118,20 +118,27 @@ otError NcpBase::VendorSetPropertyHandler(spinel_prop_key_t aPropKey)
 
 //-------------------------------------------------------------------------------------------------------------------
 // When OPENTHREAD_ENABLE_NCP_VENDOR_HOOK is enabled, vendor code is
-// expected to provide the `otNcpInit()` function. The reason behind
+// expected to provide the `otAppNcpInit()` function. The reason behind
 // this is to enable vendor code to define its own sub-class of
-// `NcpBase` or `NcpUart`/`NcpSpi`.
+// `NcpBase` or `NcpHdlc`/`NcpSpi`.
 //
-// Example below show how to add a vendor sub-class over `NcpUart`.
+// Example below show how to add a vendor sub-class over `NcpHdlc`.
 
-#include "ncp_uart.hpp"
+#include "ncp_hdlc.hpp"
 #include "common/new.hpp"
 
-class NcpVendorUart : public ot::Ncp::NcpUart
+class NcpVendorUart : public ot::Ncp::NcpHdlc
 {
+    static int SendHdlc(const uint8_t *aBuf, uint16_t aBufLength)
+    {
+        OT_UNUSED_VARIABLE(aBuf);
+        OT_UNUSED_VARIABLE(aBufLength);
+        return 0;
+    }
+
 public:
     NcpVendorUart(ot::Instance *aInstance)
-        : ot::Ncp::NcpUart(aInstance)
+        : ot::Ncp::NcpHdlc(aInstance, &NcpVendorUart::SendHdlc)
     {
     }
 
@@ -140,7 +147,7 @@ public:
 
 static OT_DEFINE_ALIGNED_VAR(sNcpVendorRaw, sizeof(NcpVendorUart), uint64_t);
 
-extern "C" void otNcpInit(otInstance *aInstance)
+extern "C" void otAppNcpInit(otInstance *aInstance)
 {
     NcpVendorUart *ncpVendor = nullptr;
     ot::Instance * instance  = static_cast<ot::Instance *>(aInstance);

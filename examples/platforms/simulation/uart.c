@@ -39,9 +39,9 @@
 #include <unistd.h>
 
 #include <openthread/platform/debug_uart.h>
-#include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
+#include "utils/uart.h"
 
 #if OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART == 0
 

@@ -89,7 +89,6 @@ EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suit
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_alt/include
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/config
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/inc
-EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_mbedtls_support/inc/configs
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/util/third_party/crypto/sl_component/sl_psa_driver/inc
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/platform/CMSIS/Include
 EFR32_MBEDTLS_CPPFLAGS += -I$(AbsTopSourceDir)/third_party/silabs/gecko_sdk_suite/v3.1/platform/Device/SiliconLabs/EFR32MG21/Include

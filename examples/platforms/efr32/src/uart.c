@@ -36,9 +36,9 @@
 
 #include "openthread-system.h"
 #include <openthread-core-config.h>
-#include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
+#include "utils/uart.h"
 
 #include "ecode.h"
 #include "em_core.h"

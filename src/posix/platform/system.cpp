@@ -45,7 +45,6 @@
 #include <openthread/platform/infra_if.h>
 #include <openthread/platform/otns.h>
 #include <openthread/platform/radio.h>
-#include <openthread/platform/uart.h>
 
 #include "common/code_utils.hpp"
 
@@ -128,11 +127,17 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
 #endif
 
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    platformDaemonEnable(instance);
+#endif
     return instance;
 }
 
 void otSysDeinit(void)
 {
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    platformDaemonDisable();
+#endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
 #endif
@@ -143,7 +148,6 @@ void otSysDeinit(void)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelDeinit();
 #endif
-    IgnoreError(otPlatUartDisable());
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     platformInfraIfDeinit();
@@ -186,8 +190,6 @@ static int trySelect(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSe
 void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 {
     platformAlarmUpdateTimeout(&aMainloop->mTimeout);
-    platformUartUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
-                            &aMainloop->mMaxFd);
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpUpdateFdSet(aInstance, &aMainloop->mReadFdSet, &aMainloop->mMaxFd);
 #endif
@@ -209,6 +211,10 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    platformDaemonUpdate(aMainloop);
 #endif
 
     if (otTaskletsArePending(aInstance))
@@ -271,7 +277,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
 #endif
-    platformUartProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
@@ -284,6 +289,9 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     platformInfraIfProcess(aInstance, aMainloop->mReadFdSet);
+#endif
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    platformDaemonProcess(aMainloop);
 #endif
 }
 

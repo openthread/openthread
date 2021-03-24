@@ -38,7 +38,6 @@
 #include "random_qorvo.h"
 #include "uart_qorvo.h"
 #include <openthread/tasklet.h>
-#include <openthread/platform/uart.h>
 
 #include "stdio.h"
 #include "stdlib.h"

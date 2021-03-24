@@ -46,13 +46,13 @@ There are two alarm service types,
 and [microsecond](https://github.com/openthread/openthread/blob/main/include/openthread/platform/alarm-micro.h).
 Millisecond is required for a new hardware platform. Microsecond is optional.
 
-## Step 2: UART  
+## Step 2: UART
 
 > Note: This API is optional.
 
 API declaration:
 
-[`/openthread/include/openthread/platform/uart.h`](https://github.com/openthread/openthread/blob/main/include/openthread/platform/uart.h)
+[`/openthread/examples/platforms/utils/uart.h`](https://github.com/openthread/openthread/blob/main/examples/platforms/utils/uart.h)
 
 The UART API implements fundamental serial port communication via the UART
 interface.
