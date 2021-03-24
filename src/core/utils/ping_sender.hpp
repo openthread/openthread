@@ -44,6 +44,7 @@
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/time.hpp"
 #include "common/timer.hpp"
 #include "net/icmp6.hpp"
@@ -64,6 +65,25 @@ public:
      *
      */
     typedef otPingSenderReply Reply;
+
+    /**
+     * This class represents the statistics of several ping requests.
+     *
+     */
+    struct Statistics : public otPingSenderStatistics
+    {
+        Statistics(void) { Clear(); }
+
+        void Clear(void)
+        {
+            mSentCount          = 0;
+            mReceivedCount      = 0;
+            mTotalRoundTripTime = 0;
+            mMinRoundTripTime   = NumericLimits<uint16_t>::Max();
+            mMaxRoundTripTime   = NumericLimits<uint16_t>::Min();
+            mIsMulticast        = false;
+        }
+    };
 
     /**
      * This class represents a ping request configuration.
@@ -100,10 +120,12 @@ public:
         enum : uint32_t
         {
             kDefaultInterval = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_INTEVRAL,
+            kDefaultTimeout  = OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT,
         };
 
         void SetUnspecifiedToDefault(void);
-        void InvokeCallback(const Reply &aReply) const;
+        void InvokeReplyCallback(const Reply &aReply) const;
+        void InvokeStatisticsCallback(const Statistics &aStatistics) const;
     };
 
     /**
@@ -145,7 +167,9 @@ private:
                                   const Ip6::Icmp::Header &aIcmpHeader);
 
     Config             mConfig;
+    Statistics         mStatistics;
     uint16_t           mIdentifier;
+    uint16_t           mTargetEchoSequence;
     TimerMilli         mTimer;
     Ip6::Icmp::Handler mIcmpHandler;
 };

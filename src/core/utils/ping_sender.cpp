@@ -60,12 +60,26 @@ void PingSender::Config::SetUnspecifiedToDefault(void)
     {
         mInterval = kDefaultInterval;
     }
+
+    if (mTimeout == 0)
+    {
+        mTimeout = kDefaultTimeout;
+    }
 }
 
-void PingSender::Config::InvokeCallback(const Reply &aReply) const
+void PingSender::Config::InvokeReplyCallback(const Reply &aReply) const
 {
-    VerifyOrExit(mCallback != nullptr);
-    mCallback(&aReply, mCallbackContext);
+    VerifyOrExit(mReplyCallback != nullptr);
+    mReplyCallback(&aReply, mCallbackContext);
+
+exit:
+    return;
+}
+
+void PingSender::Config::InvokeStatisticsCallback(const Statistics &aStatistics) const
+{
+    VerifyOrExit(mStatisticsCallback != nullptr);
+    mStatisticsCallback(&aStatistics, mCallbackContext);
 
 exit:
     return;
@@ -74,6 +88,7 @@ exit:
 PingSender::PingSender(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mIdentifier(0)
+    , mTargetEchoSequence(0)
     , mTimer(aInstance, PingSender::HandleTimer)
     , mIcmpHandler(PingSender::HandleIcmpReceive, this)
 {
@@ -88,7 +103,11 @@ Error PingSender::Ping(const Config &aConfig)
 
     mConfig = aConfig;
     mConfig.SetUnspecifiedToDefault();
+
     VerifyOrExit(mConfig.mInterval <= Timer::kMaxDelay, error = kErrorInvalidArgs);
+
+    mStatistics.Clear();
+    mStatistics.mIsMulticast = static_cast<Ip6::Address *>(&mConfig.mDestination)->IsMulticast();
 
     mIdentifier++;
     SendPing();
@@ -123,7 +142,9 @@ void PingSender::SendPing(void)
         SuccessOrExit(message->SetLength(mConfig.mSize));
     }
 
+    mTargetEchoSequence = Get<Ip6::Icmp>().GetEchoSequence();
     SuccessOrExit(Get<Ip6::Icmp>().SendEchoRequest(*message, messageInfo, mIdentifier));
+    mStatistics.mSentCount++;
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitPingRequest(mConfig.GetDestination(), mConfig.mSize, now.GetValue(), mConfig.mHopLimit);
@@ -135,9 +156,13 @@ exit:
     FreeMessage(message);
     mConfig.mCount--;
 
-    if (mConfig.mCount != 0)
+    if (mConfig.mCount > 0)
     {
         mTimer.Start(mConfig.mInterval);
+    }
+    else if (!mStatistics.mIsMulticast)
+    {
+        mTimer.Start(mConfig.mTimeout);
     }
 }
 
@@ -148,7 +173,14 @@ void PingSender::HandleTimer(Timer &aTimer)
 
 void PingSender::HandleTimer(void)
 {
-    SendPing();
+    if (mConfig.mCount > 0)
+    {
+        SendPing();
+    }
+    else // The last reply times out, triggering the callback to print statistics in CLI.
+    {
+        mConfig.InvokeStatisticsCallback(mStatistics);
+    }
 }
 
 void PingSender::HandleIcmpReceive(void *               aContext,
@@ -174,17 +206,32 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
     SuccessOrExit(aMessage.Read(aMessage.GetOffset(), timestamp));
     timestamp = HostSwap32(timestamp);
 
-    reply.mSenderAddress  = aMessageInfo.GetPeerAddr();
-    reply.mRoundTripTime  = TimerMilli::GetNow() - TimeMilli(timestamp);
+    reply.mSenderAddress = aMessageInfo.GetPeerAddr();
+    reply.mRoundTripTime =
+        static_cast<uint16_t>(OT_MIN(TimerMilli::GetNow() - TimeMilli(timestamp), NumericLimits<uint16_t>::Max()));
     reply.mSize           = aMessage.GetLength() - aMessage.GetOffset();
     reply.mSequenceNumber = aIcmpHeader.GetSequence();
     reply.mHopLimit       = aMessageInfo.GetHopLimit();
 
+    mStatistics.mReceivedCount++;
+    mStatistics.mTotalRoundTripTime += reply.mRoundTripTime;
+    mStatistics.mMaxRoundTripTime = OT_MAX(mStatistics.mMaxRoundTripTime, reply.mRoundTripTime);
+    mStatistics.mMinRoundTripTime = OT_MIN(mStatistics.mMinRoundTripTime, reply.mRoundTripTime);
+
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitPingReply(aMessageInfo.GetPeerAddr(), reply.mSize, timestamp, reply.mHopLimit);
 #endif
-
-    mConfig.InvokeCallback(reply);
+    // Received all ping replies, no need to wait longer.
+    if (!mStatistics.mIsMulticast && mConfig.mCount == 0 && aIcmpHeader.GetSequence() == mTargetEchoSequence)
+    {
+        mTimer.Stop();
+    }
+    mConfig.InvokeReplyCallback(reply);
+    // Received all ping replies, no need to wait longer.
+    if (!mStatistics.mIsMulticast && mConfig.mCount == 0 && aIcmpHeader.GetSequence() == mTargetEchoSequence)
+    {
+        mConfig.InvokeStatisticsCallback(mStatistics);
+    }
 
 exit:
     return;
