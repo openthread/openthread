@@ -53,8 +53,8 @@ extern "C" {
  *
  * @{
  *
- */  
-  
+ */
+
 /**
  * This structure represents a ping reply.
  *
@@ -118,8 +118,8 @@ void otPingSenderStop(otInstance *aInstance);
 /**
  * @}
  *
- */  
-  
+ */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
