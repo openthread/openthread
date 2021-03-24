@@ -2305,6 +2305,7 @@ Error Mle::SendChildUpdateRequest(void)
     if (!IsRxOnWhenIdle())
     {
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        Get<DataPollSender>().RecalculatePollPeriod();
         Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslEnabled());
 #else
         Get<DataPollSender>().SetAttachMode(true);

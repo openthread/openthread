@@ -2457,7 +2457,6 @@ exit:
 void Mac::SetCslPeriod(uint16_t aPeriod)
 {
     mLinks.GetSubMac().SetCslPeriod(aPeriod);
-    Get<DataPollSender>().RecalculatePollPeriod();
 
     if (IsCslEnabled())
     {
@@ -2473,7 +2472,6 @@ void Mac::SetCslTimeout(uint32_t aTimeout)
     VerifyOrExit(GetCslTimeout() != aTimeout);
 
     mLinks.GetSubMac().SetCslTimeout(aTimeout);
-    Get<DataPollSender>().RecalculatePollPeriod();
 
     if (IsCslEnabled())
     {
