@@ -39,16 +39,14 @@ import thread_cert
 # Topology:
 #    ----------------(eth)--------------------
 #           |                 |
-#          BR1 (Leader)      HOST
+#          BR (Leader)      HOST
 #           |
-#        ROUTER1
+#        ROUTER
 #
 
-BR1 = 1
-ROUTER1 = 2
-HOST = 4
-
-CHANNEL1 = 18
+BR = 1
+ROUTER = 2
+HOST = 3
 
 # The two prefixes are set small enough that a random-generated OMR prefix is
 # very likely greater than them. So that the duckhorn BR will remove the random-generated one.
@@ -60,20 +58,17 @@ class SingleBorderRouter(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
-        BR1: {
-            'name': 'BR_1',
-            'allowlist': [ROUTER1],
+        BR: {
+            'name': 'BR',
+            'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
-            'channel': CHANNEL1,
-            'router_selection_jitter': 2,
         },
-        ROUTER1: {
-            'name': 'Router_1',
-            'allowlist': [BR1],
+        ROUTER: {
+            'name': 'Router',
+            'allowlist': [BR],
             'version': '1.2',
-            'channel': CHANNEL1,
-            'router_selection_jitter': 2,
+            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'Host',
@@ -82,16 +77,20 @@ class SingleBorderRouter(thread_cert.TestCase):
     }
 
     def test(self):
-        self.nodes[HOST].start(start_radvd=False)
+        br = self.nodes[BR]
+        router = self.nodes[ROUTER]
+        host = self.nodes[HOST]
+
+        host.start(start_radvd=False)
         self.simulator.go(5)
 
-        self.nodes[BR1].start()
+        br.start()
         self.simulator.go(5)
-        self.assertEqual('leader', self.nodes[BR1].get_state())
+        self.assertEqual('leader', br.get_state())
 
-        self.nodes[ROUTER1].start()
+        router.start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[ROUTER1].get_state())
+        self.assertEqual('router', router.get_state())
 
         #
         # Case 1. There is no OMR prefix or on-link prefix.
@@ -100,30 +99,29 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 1)
+        self.assertEqual(len(br.get_prefixes()), 1)
+        self.assertEqual(len(router.get_prefixes()), 1)
+        self.assertEqual(len(br.get_routes()), 1)
+        self.assertEqual(len(router.get_routes()), 1)
 
-        omr_prefix = self.nodes[BR1].get_prefixes()[0]
-        external_route = self.nodes[BR1].get_routes()[0]
+        omr_prefix = br.get_prefixes()[0]
+        external_route = br.get_routes()[0]
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
-        br1_omr_address = self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
-        router1_omr_address = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
-        host_ula_address = self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
+        br1_omr_address = br.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+        router1_omr_address = router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+        host_ula_address = host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
         #
         # Case 2. User adds smaller on-mesh prefix.
@@ -132,195 +130,205 @@ class SingleBorderRouter(thread_cert.TestCase):
         #            is removed.
         #
 
-        self.nodes[BR1].add_prefix(ON_MESH_PREFIX1)
-        self.nodes[BR1].add_prefix(ON_MESH_PREFIX2)
-        self.nodes[BR1].register_netdata()
+        br.add_prefix(ON_MESH_PREFIX1)
+        br.add_prefix(ON_MESH_PREFIX2)
+        br.register_netdata()
 
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertGreaterEqual(len(self.nodes[HOST].get_addrs()), 2)
+        self.assertGreaterEqual(len(host.get_addrs()), 2)
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 2)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 2)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 1)
+        self.assertEqual(len(br.get_prefixes()), 2)
+        self.assertEqual(len(router.get_prefixes()), 2)
+        self.assertEqual(len(br.get_routes()), 1)
+        self.assertEqual(len(router.get_routes()), 1)
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 2)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 2)
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 2)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 2)
+        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[1],
-                                              backbone=True))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[1], backbone=True))
 
         # Remove user prefixes, should re-register local OMR prefix.
-        self.nodes[BR1].remove_prefix(ON_MESH_PREFIX1)
-        self.nodes[BR1].remove_prefix(ON_MESH_PREFIX2)
-        self.nodes[BR1].register_netdata()
+        br.remove_prefix(ON_MESH_PREFIX1)
+        br.remove_prefix(ON_MESH_PREFIX2)
+        br.register_netdata()
 
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 1)
+        self.assertEqual(len(br.get_prefixes()), 1)
+        self.assertEqual(len(router.get_prefixes()), 1)
+        self.assertEqual(len(br.get_routes()), 1)
+        self.assertEqual(len(router.get_routes()), 1)
 
         # The same local OMR and on-link prefix should be re-register.
-        self.assertEqual(omr_prefix, self.nodes[BR1].get_prefixes()[0])
-        self.assertEqual(omr_prefix, self.nodes[ROUTER1].get_prefixes()[0])
-        self.assertEqual(external_route, self.nodes[BR1].get_routes()[0])
-        self.assertEqual(external_route, self.nodes[ROUTER1].get_routes()[0])
+        self.assertEqual(br.get_prefixes(), [omr_prefix])
+        self.assertEqual(router.get_prefixes(), [omr_prefix])
+        self.assertEqual(br.get_routes(), [external_route])
+        self.assertEqual(router.get_routes(), [external_route])
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
-        self.assertEqual(br1_omr_address, self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        self.assertEqual(router1_omr_address, self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        self.assertEqual(host_ula_address, self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
+        self.assertEqual(br.get_ip6_address(config.ADDRESS_TYPE.OMR), [br1_omr_address])
+        self.assertEqual(router.get_ip6_address(config.ADDRESS_TYPE.OMR), [router1_omr_address])
+        self.assertEqual(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA), [host_ula_address])
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
         #
         # Case 3. OMR and on-link prefixes should be removed when Border Routing is
         #         explicitly disabled and added when Border Routing is enabled again.
         #
 
-        self.nodes[BR1].disable_br()
+        br.disable_br()
 
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 0)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 0)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 0)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 0)
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 0)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 0)
+        self.assertEqual(len(br.get_prefixes()), 0)
+        self.assertEqual(len(router.get_prefixes()), 0)
+        self.assertEqual(len(br.get_routes()), 0)
+        self.assertEqual(len(router.get_routes()), 0)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 0)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 0)
 
         # Per RFC 4862, the host will not immediately remove the ULA address, but deprecate it.
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
-        self.nodes[BR1].enable_br()
+        br.enable_br()
 
         # It takes around 10 seconds to start sending RA messages.
         self.simulator.go(15)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 1)
+        self.assertEqual(len(br.get_prefixes()), 1)
+        self.assertEqual(len(router.get_prefixes()), 1)
+        self.assertEqual(len(br.get_routes()), 1)
+        self.assertEqual(len(router.get_routes()), 1)
 
         # The same local OMR and on-link prefix should be re-registered.
-        self.assertEqual(omr_prefix, self.nodes[BR1].get_prefixes()[0])
-        self.assertEqual(omr_prefix, self.nodes[ROUTER1].get_prefixes()[0])
-        self.assertEqual(external_route, self.nodes[BR1].get_routes()[0])
-        self.assertEqual(external_route, self.nodes[ROUTER1].get_routes()[0])
+        self.assertEqual(br.get_prefixes(), [omr_prefix])
+        self.assertEqual(router.get_prefixes(), [omr_prefix])
+        self.assertEqual(br.get_routes(), [external_route])
+        self.assertEqual(router.get_routes(), [external_route])
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
-        self.assertEqual(br1_omr_address, self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        self.assertEqual(router1_omr_address, self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        self.assertEqual(host_ula_address, self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
+        self.assertEqual(br.get_ip6_address(config.ADDRESS_TYPE.OMR), [br1_omr_address])
+        self.assertEqual(router.get_ip6_address(config.ADDRESS_TYPE.OMR), [router1_omr_address])
+        self.assertEqual(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA), [host_ula_address])
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
         #
         # Case 4. The Routing Manager should be stopped if the infra interface went down.
         #
 
-        self.nodes[BR1].disable_ether()
+        br.disable_ether()
 
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 0)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 0)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 0)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 0)
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 0)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 0)
+        self.assertEqual(len(br.get_prefixes()), 0)
+        self.assertEqual(len(router.get_prefixes()), 0)
+        self.assertEqual(len(br.get_routes()), 0)
+        self.assertEqual(len(router.get_routes()), 0)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 0)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 0)
 
-        self.nodes[BR1].enable_ether()
+        br.enable_ether()
 
         # It takes around 10 seconds to start sending RA messages.
         self.simulator.go(15)
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("HOST    addrs: %r", self.nodes[HOST].get_addrs())
+        logging.info("BR     addrs: %r", br.get_addrs())
+        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 1)
+        self.assertEqual(len(br.get_prefixes()), 1)
+        self.assertEqual(len(router.get_prefixes()), 1)
+        self.assertEqual(len(br.get_routes()), 1)
+        self.assertEqual(len(router.get_routes()), 1)
 
         # The same local OMR and on-link prefix should be re-registered.
-        self.assertEqual(omr_prefix, self.nodes[BR1].get_prefixes()[0])
-        self.assertEqual(omr_prefix, self.nodes[ROUTER1].get_prefixes()[0])
-        self.assertEqual(external_route, self.nodes[BR1].get_routes()[0])
-        self.assertEqual(external_route, self.nodes[ROUTER1].get_routes()[0])
+        self.assertEqual(br.get_prefixes(), [omr_prefix])
+        self.assertEqual(router.get_prefixes(), [omr_prefix])
+        self.assertEqual(br.get_routes(), [external_route])
+        self.assertEqual(router.get_routes(), [external_route])
 
-        self.assertTrue(len(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)) == 1)
+        self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
-        self.assertEqual(br1_omr_address, self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        self.assertEqual(router1_omr_address, self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0])
-        self.assertEqual(host_ula_address, self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0])
+        self.assertEqual(br.get_ip6_address(config.ADDRESS_TYPE.OMR), [br1_omr_address])
+        self.assertEqual(router.get_ip6_address(config.ADDRESS_TYPE.OMR), [router1_omr_address])
+        self.assertEqual(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA), [host_ula_address])
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
         #
         # Case 5. Test if the linux host is still reachable if rejoin the network.
         #
 
-        self.nodes[HOST].disable_ether()
+        host.disable_ether()
         self.simulator.go(10)
-        self.nodes[HOST].enable_ether()
+        host.enable_ether()
         self.simulator.go(10)
 
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
+
+        #
+        # Case 6. Test if the Border Router will remove the on-link prefix when
+        #         another RA daemon is started on the same infra interface.
+        #
+
+        br.start_radvd_service(prefix=config.ONLINK_GUA_PREFIX, slaac=True)
+        self.simulator.go(5)
+
+        self.assertEqual(len(br.get_routes()), 1)
+        self.assertTrue(br.get_routes()[0].startswith(config.ONLINK_GUA_PREFIX.split('::/')[0]))
+        self.assertEqual(len(router.get_routes()), 1)
+        self.assertTrue(router.get_routes()[0].startswith(config.ONLINK_GUA_PREFIX.split('::/')[0]))
+
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_GUA)[0]))
+        self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
 
 if __name__ == '__main__':

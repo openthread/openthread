@@ -2677,7 +2677,7 @@ class LinuxHost():
         return resp_count
 
     def _getBackboneGua(self) -> Optional[str]:
-        for addr in self.get_addrs():
+        for addr in self.get_ether_addrs():
             if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, addr, re.I):
                 return addr
 
@@ -2687,11 +2687,18 @@ class LinuxHost():
         """ Returns the ULA addresses autoconfigured on the infra link.
         """
         addrs = []
-        for addr in self.get_addrs():
+        for addr in self.get_ether_addrs():
             if re.match(config.ONLINK_PREFIX_REGEX_PATTERN, addr, re.I):
                 addrs.append(addr)
 
         return addrs
+
+    def _getInfraGua(self) -> Optional[str]:
+        """ Returns the GUA addresses autoconfigured on the infra link.
+        """
+
+        gua_prefix = config.ONLINK_GUA_PREFIX.split('::/')[0]
+        return [addr for addr in self.get_ether_addrs() if addr.startswith(gua_prefix)]
 
     def ping(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)
@@ -2775,6 +2782,31 @@ class LinuxHost():
                 service['addresses'] = addresses
                 return service if service['addresses'] else None
 
+    def start_radvd_service(self, prefix, slaac):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface eth0
+{
+	AdvSendAdvert on;
+
+	MinRtrAdvInterval 3;
+	MaxRtrAdvInterval 30;
+	AdvDefaultPreference low;
+
+	prefix %s
+	{
+		AdvOnLink on;
+		AdvAutonomous %s;
+		AdvRouterAddr off;
+	};
+};
+EOF
+""" % (prefix, 'on' if slaac else 'off'))
+        self.bash('service radvd start')
+        self.bash('service radvd status')  # Make sure radvd service is running
+
+    def stop_radvd_service(self):
+        self.bash('service radvd stop')
+
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     is_otbr = True
@@ -2803,12 +2835,12 @@ class HostNode(LinuxHost, OtbrDocker):
     def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()
         if start_radvd:
-            self._service_radvd_start(prefix, slaac)
+            self.start_radvd_service(prefix, slaac)
         else:
-            self._service_radvd_stop()
+            self.stop_radvd_service()
 
     def stop(self):
-        self._service_radvd_stop()
+        self.stop_radvd_service()
 
     def get_addrs(self) -> List[str]:
         return self.get_ether_addrs()
@@ -2836,39 +2868,15 @@ class HostNode(LinuxHost, OtbrDocker):
         Returns:
             IPv6 address string.
         """
-        assert address_type in [config.ADDRESS_TYPE.BACKBONE_GUA, config.ADDRESS_TYPE.ONLINK_ULA]
 
         if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
-        if address_type == config.ADDRESS_TYPE.ONLINK_ULA:
+        elif address_type == config.ADDRESS_TYPE.ONLINK_ULA:
             return self._getInfraUla()
+        elif address_type == config.ADDRESS_TYPE.ONLINK_GUA:
+            return self._getInfraGua()
         else:
-            return None
-
-    def _service_radvd_start(self, prefix, slaac):
-        self.bash("""cat >/etc/radvd.conf <<EOF
-interface eth0
-{
-	AdvSendAdvert on;
-
-	MinRtrAdvInterval 3;
-	MaxRtrAdvInterval 30;
-	AdvDefaultPreference low;
-
-	prefix %s
-	{
-		AdvOnLink on;
-		AdvAutonomous %s;
-		AdvRouterAddr off;
-	};
-};
-EOF
-""" % (prefix, 'on' if slaac else 'off'))
-        self.bash('service radvd start')
-        self.bash('service radvd status')  # Make sure radvd service is running
-
-    def _service_radvd_stop(self):
-        self.bash('service radvd stop')
+            raise ValueError(f'unsupported address type: {address_type}')
 
 
 if __name__ == '__main__':
