@@ -37,8 +37,6 @@ feedback link: https://github.com/openthread/openthread/issues
 
 ---
 
-{# <!--* freshness: { owner: 'jbumgardner' reviewed: '2020-12-01' } *--> #}
-
 # Build a Thread network with nRF52840 boards and OpenThread
 
 [Codelab Feedback](https://github.com/openthread/openthread/issues)
