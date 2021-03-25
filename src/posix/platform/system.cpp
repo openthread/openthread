@@ -133,6 +133,19 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     return instance;
 }
 
+otInstance *otSysInitMinimal(otPlatformConfig *aPlatformConfig)
+{
+    otInstance *        instance = nullptr;
+    ot::Posix::RadioUrl radioUrl(aPlatformConfig->mRadioUrl);
+
+    VerifyOrDie(radioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
+    platformRadioInit(&radioUrl);
+
+    instance = otInstanceInitSingle();
+
+    return instance;
+}
+
 void otSysDeinit(void)
 {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE

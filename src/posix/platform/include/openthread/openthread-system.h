@@ -93,6 +93,20 @@ typedef struct otPlatformConfig
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 
 /**
+ * This function performs minimal initialization of OpenThread's drivers for dry-running of the daemon process.
+ *
+ * In some cases, the daemon process is used in a `dry-run` way. For example, it's used to print the Radio firmware
+ * version and will exit after that. In these cases, the system doesn't need a full initialization. In addition, any
+ * other failure when initializing the system will break the dry-run.
+ *
+ * @param[in]  aPlatformConfig  Platform configuration structure.
+ *
+ * @returns A pointer to the OpenThread instance.
+ *
+ */
+otInstance *otSysInitMinimal(otPlatformConfig *aPlatformConfig);
+
+/**
  * This function performs all platform-specific deinitialization for OpenThread's drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function

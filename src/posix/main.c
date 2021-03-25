@@ -314,9 +314,16 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
-    instance = otSysInit(&aConfig->mPlatformConfig);
-
     atexit(otSysDeinit);
+
+    if (aConfig->mIsDryRun)
+    {
+        instance = otSysInitMinimal(&aConfig->mPlatformConfig);
+    }
+    else
+    {
+        instance = otSysInit(&aConfig->mPlatformConfig);
+    }
 
     if (aConfig->mPrintRadioVersion)
     {
