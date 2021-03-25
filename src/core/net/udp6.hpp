@@ -451,13 +451,14 @@ public:
      *
      * @param[in]  aSocket          A reference to the socket.
      * @param[in]  aSockAddr        A reference to the socket address.
+     * @param[in]  aNetifIdentifier The network interface identifier.
      *
      * @retval kErrorNone            Successfully bound the socket.
      * @retval kErrorInvalidArgs     Unable to bind to Thread network interface with the given address.
      * @retval kErrorFailed          Failed to bind UDP Socket.
      *
      */
-    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr);
+    Error Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier);
 
     /**
      * This method connects a UDP socket.

@@ -50,7 +50,7 @@ static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME) < sizeof(sockaddr_un::
               "OpenThread daemon socket name too long!");
 
 static int sListenSocket  = -1;
-static int sUartLock      = -1;
+static int sDaemonLock    = -1;
 static int sSessionSocket = -1;
 
 static int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments)
@@ -148,14 +148,14 @@ void platformDaemonEnable(otInstance *aInstance)
         DieNow(OT_EXIT_FAILURE);
     }
 
-    sUartLock = open(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    sDaemonLock = open(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
 
-    if (sUartLock == -1)
+    if (sDaemonLock == -1)
     {
         DieNowWithMessage("open", OT_EXIT_ERROR_ERRNO);
     }
 
-    if (flock(sUartLock, LOCK_EX | LOCK_NB) == -1)
+    if (flock(sDaemonLock, LOCK_EX | LOCK_NB) == -1)
     {
         DieNowWithMessage("flock", OT_EXIT_ERROR_ERRNO);
     }
@@ -209,11 +209,11 @@ void platformDaemonDisable(void)
         (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
     }
 
-    if (sUartLock != -1)
+    if (sDaemonLock != -1)
     {
-        (void)flock(sUartLock, LOCK_UN);
-        close(sUartLock);
-        sUartLock = -1;
+        (void)flock(sDaemonLock, LOCK_UN);
+        close(sDaemonLock);
+        sDaemonLock = -1;
     }
 }
 
@@ -275,6 +275,7 @@ void platformDaemonProcess(const otSysMainloopContext *aContext)
         if (rval > 0)
         {
             buffer[rval] = '\0';
+            otLogInfoPlat("> %s", reinterpret_cast<const char *>(buffer));
             otCliInputLine(reinterpret_cast<char *>(buffer));
             otCliOutputFormat("> ");
         }

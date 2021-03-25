@@ -1,4 +1,3 @@
-#
 #  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
@@ -26,49 +25,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-# ==============================================================================
-# RAIL libs
-# ==============================================================================
-set(librail_release_dir "${SILABS_GSDK_DIR}/platform/radio/rail_lib/autogen/librail_release")
-file(GLOB rail_libs ${librail_release_dir}/*.a)
+visibility = [ "../../../*" ]
 
-foreach(lib_file ${rail_libs})
+platform_sources = [
+  "exit_code.c",
+  "exit_code.h",
+]
 
-    # Parse lib name, stripping .a extension
-    get_filename_component(lib_name ${lib_file} NAME_WE)
-    set(imported_lib_name "silabs-${lib_name}")
+config("platform_config") {
+  include_dirs = [ ".." ]
+}
 
-    # Add as an IMPORTED lib
-    add_library(${imported_lib_name} STATIC IMPORTED)
-    set_target_properties(${imported_lib_name}
-        PROPERTIES
-            IMPORTED_LOCATION "${lib_file}"
-            IMPORTED_LINK_INTERFACE_LIBRARIES silabs-${PLATFORM_LOWERCASE}-sdk
-    )
-
-endforeach()
-
-
-# ==============================================================================
-# NVM3 libs
-# ==============================================================================
-set(libnvm3_release_dir "${SILABS_GSDK_DIR}/platform/emdrv/nvm3/lib")
-file(GLOB nvm3_libs ${libnvm3_release_dir}/*.a)
-
-foreach(lib_file ${nvm3_libs})
-
-    # Parse lib name, stripping .a extension
-    get_filename_component(lib_name ${lib_file} NAME_WE)
-    set(imported_lib_name "silabs-${lib_name}")
-
-    # Add as an IMPORTED lib
-    add_library(${imported_lib_name} STATIC IMPORTED)
-    set_target_properties(${imported_lib_name}
-        PROPERTIES
-            IMPORTED_LOCATION "${lib_file}"
-            IMPORTED_LINK_INTERFACE_LIBRARIES silabs-${PLATFORM_LOWERCASE}-sdk
-    )
-
-endforeach()
-
-
+static_library("libopenthread-platform") {
+  sources = platform_sources
+  public_configs = [ ":platform_config" ]
+}

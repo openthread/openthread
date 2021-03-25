@@ -39,6 +39,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -854,7 +855,7 @@ public:
      * This class defines an iterator used to go through IPv6 address entries of a child.
      *
      */
-    class AddressIterator
+    class AddressIterator : public Unequatable<AddressIterator>
     {
         friend class AddressIteratorBuilder;
 
@@ -968,19 +969,6 @@ public:
          *
          */
         bool operator==(const AddressIterator &aOther) const { return (mIndex == aOther.mIndex); }
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances are unequal.
-         *
-         * This method MUST be used when the two iterators are associated with the same `Child` entry.
-         *
-         * @param[in]  aOther  The other `Iterator` to compare with.
-         *
-         * @retval TRUE   If the two `Iterator` objects are unequal.
-         * @retval FALSE  If the two `Iterator` objects are not unequal.
-         *
-         */
-        bool operator!=(const AddressIterator &aOther) const { return !(*this == aOther); }
 
     private:
         enum IteratorType : uint8_t

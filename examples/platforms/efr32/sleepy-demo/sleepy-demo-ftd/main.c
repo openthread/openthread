@@ -71,6 +71,14 @@ void initUdp(void);
 void applicationTick(void);
 void sFtdReceiveCallback(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 
+/**
+ * This function initializes the CLI app.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+extern void otAppCliInit(otInstance *aInstance);
+
 // Variables
 static otInstance *        instance;
 static otUdpSocket         sFtdSocket;
@@ -93,7 +101,7 @@ int main(int argc, char *argv[])
     instance = otInstanceInitSingle();
     assert(instance);
 
-    otCliUartInit(instance);
+    otAppCliInit(instance);
     otCliOutputFormat("sleepy-demo-ftd started\r\n");
 
     setNetworkConfiguration(instance);

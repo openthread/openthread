@@ -46,6 +46,16 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup api-ping-sender
+ *
+ * @brief
+ *   This file includes the OpenThread API for the ping sender module.
+ *
+ * @{
+ *
+ */
+
+/**
  * This structure represents a ping reply.
  *
  */
@@ -104,6 +114,11 @@ otError otPingSenderPing(otInstance *aInstance, const otPingSenderConfig *aConfi
  *
  */
 void otPingSenderStop(otInstance *aInstance);
+
+/**
+ * @}
+ *
+ */
 
 #ifdef __cplusplus
 } // extern "C"

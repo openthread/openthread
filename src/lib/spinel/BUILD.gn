@@ -69,6 +69,7 @@ static_library("libopenthread-spinel-ncp") {
   public_deps = [
     ":spinel-api",
     "../../core:libopenthread_core_headers",
+    "../platform:libopenthread-platform",
   ]
   public_configs = [ ":spinel_config_openthread_message_enable" ]
 }
@@ -78,6 +79,7 @@ static_library("libopenthread-spinel-rcp") {
   public_deps = [
     ":spinel-api",
     "../../core:libopenthread_core_headers",
+    "../platform:libopenthread-platform",
   ]
   public_configs = [ ":spinel_config_openthread_message_disable" ]
 }

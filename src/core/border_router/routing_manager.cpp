@@ -313,7 +313,7 @@ void RoutingManager::HandleNotifierEvents(Events aEvents)
         EvaluateState();
     }
 
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (mIsRunning && aEvents.Contains(kEventThreadNetdataChanged))
     {
         StartRoutingPolicyEvaluationDelay();
     }
@@ -576,11 +576,11 @@ exit:
 // OMR prefix in the Thread network.
 void RoutingManager::EvaluateRoutingPolicy(void)
 {
+    OT_ASSERT(mIsRunning);
+
     const Ip6::Prefix *newOnLinkPrefix = nullptr;
     Ip6::Prefix        newOmrPrefixes[kMaxOmrPrefixNum];
     uint8_t            newOmrPrefixNum = 0;
-
-    VerifyOrExit(mIsRunning);
 
     otLogInfoBr("evaluating routing policy");
 
@@ -618,13 +618,12 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     static_assert(sizeof(mAdvertisedOmrPrefixes) == sizeof(newOmrPrefixes), "invalid new OMR prefix array size");
     memcpy(mAdvertisedOmrPrefixes, newOmrPrefixes, sizeof(newOmrPrefixes[0]) * newOmrPrefixNum);
     mAdvertisedOmrPrefixNum = newOmrPrefixNum;
-
-exit:
-    return;
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
 {
+    OT_ASSERT(mIsRunning);
+
     uint32_t randomDelay;
 
     static_assert(kMaxRoutingPolicyDelay > 0, "invalid maximum routing policy evaluation delay");
@@ -800,6 +799,12 @@ bool RoutingManager::IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix)
            (aOmrPrefix.mLength >= 3 && (aOmrPrefix.GetBytes()[0] & 0xE0) == 0x20);
 }
 
+bool RoutingManager::IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig)
+{
+    return IsValidOnLinkPrefix(aPio.GetPrefix()) && aPio.GetOnLink() &&
+           (aPio.GetAutoAddrConfig() || aManagedAddrConfig);
+}
+
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
 {
     // Accept ULA prefix with length of 64 bits and GUA prefix.
@@ -917,6 +922,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
                                                const uint8_t *     aBuffer,
                                                uint16_t            aBufferLength)
 {
+    OT_ASSERT(mIsRunning);
     OT_UNUSED_VARIABLE(aSrcAddress);
 
     using RouterAdv::Option;
@@ -924,18 +930,20 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
     using RouterAdv::RouteInfoOption;
     using RouterAdv::RouterAdvMessage;
 
-    bool           needReevaluate = false;
-    const uint8_t *optionsBegin;
-    uint16_t       optionsLength;
-    const Option * option;
+    bool                    needReevaluate = false;
+    const uint8_t *         optionsBegin;
+    uint16_t                optionsLength;
+    const Option *          option;
+    const RouterAdvMessage *routerAdvMessage;
 
     VerifyOrExit(aBufferLength >= sizeof(RouterAdvMessage));
 
     otLogInfoBr("received Router Advertisement from %s on interface %u", aSrcAddress.ToString().AsCString(),
                 mInfraIfIndex);
 
-    optionsBegin  = aBuffer + sizeof(RouterAdvMessage);
-    optionsLength = aBufferLength - sizeof(RouterAdvMessage);
+    routerAdvMessage = reinterpret_cast<const RouterAdvMessage *>(aBuffer);
+    optionsBegin     = aBuffer + sizeof(RouterAdvMessage);
+    optionsLength    = aBufferLength - sizeof(RouterAdvMessage);
 
     option = nullptr;
     while ((option = Option::GetNextOption(option, optionsBegin, optionsLength)) != nullptr)
@@ -948,7 +956,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
             if (pio->IsValid())
             {
-                needReevaluate |= UpdateDiscoveredPrefixes(*pio);
+                needReevaluate |= UpdateDiscoveredPrefixes(*pio, routerAdvMessage->GetManagedAddrConfig());
             }
         }
         break;
@@ -978,12 +986,12 @@ exit:
     return;
 }
 
-bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio)
+bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig)
 {
     Ip6::Prefix prefix         = aPio.GetPrefix();
     bool        needReevaluate = false;
 
-    if (!IsValidOnLinkPrefix(prefix))
+    if (!IsValidOnLinkPrefix(aPio, aManagedAddrConfig))
     {
         otLogInfoBr("ignore invalid prefix in PIO: %s", prefix.ToString().AsCString());
         ExitNow();

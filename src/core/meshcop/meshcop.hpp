@@ -45,6 +45,7 @@
 
 #include "coap/coap.hpp"
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "common/string.hpp"
 #include "mac/mac_types.hpp"
@@ -65,7 +66,7 @@ enum
  * This type represents a Joiner PSKd.
  *
  */
-class JoinerPskd : public otJoinerPskd, public Clearable<JoinerPskd>
+class JoinerPskd : public otJoinerPskd, public Clearable<JoinerPskd>, public Unequatable<JoinerPskd>
 {
 public:
     enum
@@ -129,17 +130,6 @@ public:
     bool operator==(const JoinerPskd &aOther) const;
 
     /**
-     * This method overloads operator `!=` to evaluate whether or not two PSKds are unequal.
-     *
-     * @param[in]  aOther  The other PSKd to compare with.
-     *
-     * @retval TRUE   If the two are not equal.
-     * @retval FALSE  If the two are equal.
-     *
-     */
-    bool operator!=(const JoinerPskd &aOther) const { return !(*this == aOther); }
-
-    /**
      * This static method indicates whether a given PSKd string if well-formed and valid.
      *
      * @param[in] aPskdString  A pointer to a PSKd string array.
@@ -156,7 +146,7 @@ public:
  * This type represents a Joiner Discerner.
  *
  */
-class JoinerDiscerner : public otJoinerDiscerner
+class JoinerDiscerner : public otJoinerDiscerner, public Unequatable<JoinerDiscerner>
 {
     friend class SteeringData;
 
@@ -240,17 +230,6 @@ public:
      *
      */
     bool operator==(const JoinerDiscerner &aOther) const;
-
-    /**
-     * This method overloads operator `!=` to evaluate whether or not two Joiner Discerner instances are equal.
-     *
-     * @param[in]  aOther  The other Joiner Discerner to compare with.
-     *
-     * @retval TRUE   If the two are not equal.
-     * @retval FALSE  If the two are equal.
-     *
-     */
-    bool operator!=(const JoinerDiscerner &aOther) const { return !(*this == aOther); }
 
     /**
      * This method converts the Joiner Discerner to a string.
