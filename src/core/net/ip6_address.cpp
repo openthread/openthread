@@ -453,6 +453,55 @@ bool Address::MatchesFilter(TypeFilter aFilter) const
     return matches;
 }
 
+void Address::SetFromTranslatedIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
+{
+    // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
+    // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
+    // which must be set to zero. The suffix is set to zero (per RFC 6502).
+    //
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |PL| 0-------------32--40--48--56--64--72--80--88--96--104---------|
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |32|     prefix    |v4(32)         | u | suffix                    |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |40|     prefix        |v4(24)     | u |(8)| suffix                |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |48|     prefix            |v4(16) | u | (16)  | suffix            |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |56|     prefix                |(8)| u |  v4(24)   | suffix        |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |64|     prefix                    | u |   v4(32)      | suffix    |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+    //    |96|     prefix                                    |    v4(32)     |
+    //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
+
+    enum : uint8_t
+    {
+        kSkipIndex = 8,
+    };
+
+    uint8_t prefixLen = aPrefix.GetLength();
+    uint8_t ip6Index;
+
+    OT_ASSERT((prefixLen == 32) || (prefixLen == 40) || (prefixLen == 48) || (prefixLen == 56) || (prefixLen == 64) ||
+              (prefixLen == 96));
+
+    Clear();
+    SetPrefix(aPrefix);
+
+    ip6Index = prefixLen / CHAR_BIT;
+
+    for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
+    {
+        if (ip6Index == kSkipIndex)
+        {
+            ip6Index++;
+        }
+
+        mFields.m8[ip6Index++] = aIp4Address.GetBytes()[i];
+    }
+}
+
 Error Address::FromString(const char *aString)
 {
     enum : uint8_t
