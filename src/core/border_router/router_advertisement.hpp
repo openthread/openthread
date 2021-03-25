@@ -183,12 +183,28 @@ public:
     PrefixInfoOption(void);
 
     /**
+     * This method returns the on-link flag.
+     *
+     * @returns  A boolean which indicates whether the on-link flag is set.
+     *
+     */
+    bool GetOnLink(void) const { return (mReserved1 & kOnLinkFlagMask) != 0; }
+
+    /**
      * This method sets the on-link (L) flag.
      *
      * @param[in]  aOnLink  A boolean indicates whether the prefix is on-link or off-link.
      *
      */
     void SetOnLink(bool aOnLink);
+
+    /**
+     * This method returns the autonomous address-configuration (A) flag.
+     *
+     * @returns  A boolean which indicates whether the A flag is set.
+     *
+     */
+    bool GetAutoAddrConfig(void) const { return (mReserved1 & kAutoConfigFlagMask) != 0; }
 
     /**
      * This method sets the autonomous address-configuration (A) flag.
@@ -393,10 +409,20 @@ public:
         mHeader.mData.m16[kRouteLifetimeIdx] = HostSwap16(aRouterLifetime);
     }
 
+    /**
+     * This method returns the Managed Address Configuration ('m') flag.
+     *
+     * @returns  A boolean which indicates whether the 'm' flag is set.
+     *
+     */
+    bool GetManagedAddrConfig(void) const { return (mHeader.mData.m8[kReservedIdx] & kManagedAddressConfigMask) != 0; }
+
 private:
     enum : uint8_t
     {
-        kRouteLifetimeIdx = 1u, // The index of Route Lifetime in ICMPv6 Header Data. in unit of 2 octets.
+        kRouteLifetimeIdx         = 1u,    // The index of Route Lifetime in ICMPv6 Header Data. In unit of 2 octets.
+        kReservedIdx              = 1u,    // The idex of Reserved byte in ICMPv6 Header Data. In unit of 1 octet.
+        kManagedAddressConfigMask = 0x80u, // The bitmask of the Managed Address Configuration ('m') flag.
     };
 
     Ip6::Icmp::Header mHeader;        // The common ICMPv6 header.
