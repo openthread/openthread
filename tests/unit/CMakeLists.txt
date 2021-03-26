@@ -306,26 +306,26 @@ target_link_libraries(test-hmac-sha256
 
 add_test(NAME test-hmac-sha256 COMMAND test-hmac-sha256)
 
-add_executable(test-ip6-address
-    test_ip6_address.cpp
+add_executable(test-ip-address
+    test_ip_address.cpp
 )
 
-target_include_directories(test-ip6-address
+target_include_directories(test-ip-address
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-ip6-address
+target_compile_options(test-ip-address
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-ip6-address
+target_link_libraries(test-ip-address
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-ip6-address COMMAND test-ip6-address)
+add_test(NAME test-ip-address COMMAND test-ip-address)
 
 add_executable(test-link-quality
     test_link_quality.cpp
@@ -720,7 +720,7 @@ set_target_properties(
     test-heap
     test-hkdf-sha256
     test-hmac-sha256
-    test-ip6-address
+    test-ip-address
     test-link-quality
     test-linked-list
     test-lookup-table
