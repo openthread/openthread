@@ -41,8 +41,6 @@
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
 
-#include "mac/mac_frame.hpp"
-
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 namespace ot {
