@@ -655,7 +655,6 @@ private:
     Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
     void        FreeQuery(Query &aQuery);
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
-    void        SendQuery(Query &aQuery);
     void        SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
     void        FinalizeQuery(Response &Response, QueryType aType, Error aError);
