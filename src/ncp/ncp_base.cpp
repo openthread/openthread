@@ -281,7 +281,7 @@ NcpBase::NcpBase(Instance *aInstance)
     otMessageQueueInit(&mMessageQueue);
     IgnoreError(otSetStateChangedCallback(mInstance, &NcpBase::HandleStateChanged, this));
     otIp6SetReceiveCallback(mInstance, &NcpBase::HandleDatagramFromStack, this);
-    otIp6SetReceiveFilterEnabled(mInstance, true);
+    otIp6SetReceiveFilterMode(mInstance, OT_IP6_RX_FILTER_MODE_FILTER_THREAD_CONTROL_TRAFFIC);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otNetworkTimeSyncSetCallback(mInstance, &NcpBase::HandleTimeSyncUpdate, this);
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

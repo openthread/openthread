@@ -228,42 +228,42 @@ public:
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.
      *
-     * By default, this callback does not pass Thread control traffic.  See SetReceiveIp6FilterEnabled() to change
+     * By default, this callback does not pass Thread control traffic. See SetReceiveFilterMode() to change
      * the Thread control traffic filter setting.
      *
      * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received
      *                               or nullptr to disable the callback.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
-     * @sa IsReceiveIp6FilterEnabled
-     * @sa SetReceiveIp6FilterEnabled
+     * @sa GetReceiveFilterMode
+     * @sa SetReceiveFilterMode
      *
      */
     void SetReceiveDatagramCallback(otIp6ReceiveCallback aCallback, void *aCallbackContext);
 
     /**
-     * This method indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+     * This method indicates howtrafic is filtered out when delivering IPv6 datagrams
      * via the callback specified in SetReceiveIp6DatagramCallback().
      *
-     * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+     * @returns  Received frames filtering mode.
      *
      * @sa SetReceiveDatagramCallback
-     * @sa SetReceiveIp6FilterEnabled
+     * @sa SetReceiveFilterMode
      *
      */
-    bool IsReceiveIp6FilterEnabled(void) const { return mIsReceiveIp6FilterEnabled; }
+    otIp6ReceiveFilterMode GetReceiveFilterMode(void) const { return mIp6ReceiveFilterType; }
 
     /**
-     * This method sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+     * This method sets how inbound traffic is filtered out when delivering IPv6 datagrams
      * via the callback specified in SetReceiveIp6DatagramCallback().
      *
-     * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+     * @param[in]  aFilterMode  TRUE if Thread control traffic is filtered out, FALSE otherwise.
      *
      * @sa SetReceiveDatagramCallback
-     * @sa IsReceiveIp6FilterEnabled
+     * @sa GetReceiveFilterMode
      *
      */
-    void SetReceiveIp6FilterEnabled(bool aEnabled) { mIsReceiveIp6FilterEnabled = aEnabled; }
+    void SetReceiveFilterMode(otIp6ReceiveFilterMode aFilterMode) { mIp6ReceiveFilterType = aFilterMode; }
 
     /**
      * This method indicates whether or not IPv6 forwarding is enabled.
@@ -361,13 +361,14 @@ private:
                         MessageInfo &      aMessageInfo,
                         uint8_t            aIpProto,
                         Message::Ownership aMessageOwnership);
-    bool  ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
-    bool  IsOnLink(const Address &aAddress) const;
 
-    bool                 mForwardingEnabled;
-    bool                 mIsReceiveIp6FilterEnabled;
-    otIp6ReceiveCallback mReceiveIp6DatagramCallback;
-    void *               mReceiveIp6DatagramCallbackContext;
+    bool ShouldForwardToThread(const MessageInfo &aMessageInfo, bool aFromNcpHost) const;
+    bool IsOnLink(const Address &aAddress) const;
+
+    bool                   mForwardingEnabled;
+    otIp6ReceiveFilterMode mIp6ReceiveFilterType;
+    otIp6ReceiveCallback   mReceiveIp6DatagramCallback;
+    void *                 mReceiveIp6DatagramCallbackContext;
 
     PriorityQueue mSendQueue;
     Tasklet       mSendQueueTask;

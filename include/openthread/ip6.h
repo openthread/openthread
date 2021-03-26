@@ -171,6 +171,17 @@ enum
 };
 
 /**
+ * This enumeration defines possible rx packets filtering modes
+ *
+ */
+typedef enum otIp6ReceiveFilterMode
+{
+    OT_IP6_RX_FILTER_MODE_NO_FILTER                     = 0, ///< Filter is disabled.
+    OT_IP6_RX_FILTER_MODE_FILTER_THREAD_CONTROL_TRAFFIC = 1, ///< Filter all Thread control traffic
+    OT_IP6_RX_FILTER_MODE_FILTER_ALL_THREAD_USED_PORTS  = 2, ///< Filter all ports being used by OpenThread.
+} otIp6ReceiveFilterMode;
+
+/**
  * This structure represents an IPv6 network interface unicast address.
  *
  */
@@ -402,16 +413,16 @@ typedef void (*otIp6ReceiveCallback)(otMessage *aMessage, void *aContext);
 /**
  * This function registers a callback to provide received IPv6 datagrams.
  *
- * By default, this callback does not pass Thread control traffic.  See otIp6SetReceiveFilterEnabled() to
- * change the Thread control traffic filter setting.
+ * By default, this callback does not pass Thread control traffic.  See otIp6SetReceiveFilterMode() to
+ * change the Thread filter setting.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.
  * @param[in]  aCallback         A pointer to a function that is called when an IPv6 datagram is received or
  *                               NULL to disable the callback.
  * @param[in]  aCallbackContext  A pointer to application-specific context.
  *
- * @sa otIp6IsReceiveFilterEnabled
- * @sa otIp6SetReceiveFilterEnabled
+ * @sa otIp6GetReceiveFilterMode
+ * @sa otIp6SetReceiveFilterMode
  *
  */
 void otIp6SetReceiveCallback(otInstance *aInstance, otIp6ReceiveCallback aCallback, void *aCallbackContext);
@@ -452,7 +463,7 @@ typedef void (*otIp6AddressCallback)(const otIp6AddressInfo *aAddressInfo, bool 
 void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallback, void *aCallbackContext);
 
 /**
- * This function indicates whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+ * This function indicates how inbound traffic is filtered out when delivering IPv6 datagrams
  * via the callback specified in otIp6SetReceiveCallback().
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -460,23 +471,23 @@ void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallba
  * @returns  TRUE if Thread control traffic is filtered out, FALSE otherwise.
  *
  * @sa otIp6SetReceiveCallback
- * @sa otIp6SetReceiveFilterEnabled
+ * @sa otIp6SetReceiveFilterMode
  *
  */
-bool otIp6IsReceiveFilterEnabled(otInstance *aInstance);
+otIp6ReceiveFilterMode otIp6GetReceiveFilterMode(otInstance *aInstance);
 
 /**
- * This function sets whether or not Thread control traffic is filtered out when delivering IPv6 datagrams
+ * This function sets sets how inbound traffic should be filtered out when delivering IPv6 datagrams
  * via the callback specified in otIp6SetReceiveCallback().
  *
- * @param[in]  aInstance A pointer to an OpenThread instance.
- * @param[in]  aEnabled  TRUE if Thread control traffic is filtered out, FALSE otherwise.
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aFilterType TRUE if Thread control traffic is filtered out, FALSE otherwise.
  *
  * @sa otIp6SetReceiveCallback
- * @sa otIsReceiveIp6FilterEnabled
+ * @sa otIp6GetReceiveFilterMode
  *
  */
-void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
+void otIp6SetReceiveFilterMode(otInstance *aInstance, otIp6ReceiveFilterMode aFilterMode);
 
 /**
  * This function sends an IPv6 datagram via the Thread interface.

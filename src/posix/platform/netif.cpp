@@ -1480,8 +1480,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
 #endif
-
-    otIp6SetReceiveFilterEnabled(aInstance, true);
+    otIp6SetReceiveFilterMode(aInstance, OT_IP6_RX_FILTER_MODE_FILTER_THREAD_CONTROL_TRAFFIC);
     otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
     otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
     otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);

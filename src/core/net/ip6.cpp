@@ -49,6 +49,7 @@
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
+#include "openthread/ip6.h"
 #include "thread/mle.hpp"
 
 using IcmpType = ot::Ip6::Icmp::Header::Type;
@@ -64,7 +65,7 @@ namespace Ip6 {
 Ip6::Ip6(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mForwardingEnabled(false)
-    , mIsReceiveIp6FilterEnabled(false)
+    , mIp6ReceiveFilterType(OT_IP6_RX_FILTER_MODE_NO_FILTER)
     , mReceiveIp6DatagramCallback(nullptr)
     , mReceiveIp6DatagramCallbackContext(nullptr)
     , mSendQueueTask(aInstance, Ip6::HandleSendQueue)
@@ -1005,7 +1006,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
     // Do not forward reassembled IPv6 packets.
     VerifyOrExit(aMessage.GetLength() <= kMinimalMtu, error = kErrorDrop);
 
-    if (mIsReceiveIp6FilterEnabled)
+    if (mIp6ReceiveFilterType != OT_IP6_RX_FILTER_MODE_NO_FILTER)
     {
 #if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
@@ -1035,8 +1036,21 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
             Udp::Header udp;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
-            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = kErrorNoRoute);
-
+            switch (mIp6ReceiveFilterType)
+            {
+            case OT_IP6_RX_FILTER_MODE_FILTER_THREAD_CONTROL_TRAFFIC:
+            {
+                VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = kErrorNoRoute);
+                break;
+            }
+            case OT_IP6_RX_FILTER_MODE_FILTER_ALL_THREAD_USED_PORTS:
+            {
+                VerifyOrExit(Get<Udp>().IsPortInUse(udp.GetDestinationPort()) == false, error = kErrorNoRoute);
+                break;
+            }
+            default:
+                OT_ASSERT(false);
+            }
             break;
         }
 

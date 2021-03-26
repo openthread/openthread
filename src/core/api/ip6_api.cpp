@@ -146,18 +146,18 @@ void otIp6SetAddressCallback(otInstance *aInstance, otIp6AddressCallback aCallba
     instance.Get<ThreadNetif>().SetAddressCallback(aCallback, aCallbackContext);
 }
 
-bool otIp6IsReceiveFilterEnabled(otInstance *aInstance)
+void otIp6SetReceiveFilterMode(otInstance *aInstance, otIp6ReceiveFilterMode aFilterMode)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Ip6::Ip6>().IsReceiveIp6FilterEnabled();
+    return instance.Get<Ip6::Ip6>().SetReceiveFilterMode(aFilterMode);
 }
 
-void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled)
+otIp6ReceiveFilterMode otIp6GetReceiveFilterMode(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Ip6::Ip6>().SetReceiveIp6FilterEnabled(aEnabled);
+    return instance.Get<Ip6::Ip6>().GetReceiveFilterMode();
 }
 
 otError otIp6Send(otInstance *aInstance, otMessage *aMessage)

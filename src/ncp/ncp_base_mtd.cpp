@@ -2121,7 +2121,7 @@ exit:
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU>(void)
 {
     // Note reverse logic: passthru enabled = filter disabled
-    return mEncoder.WriteBool(!otIp6IsReceiveFilterEnabled(mInstance));
+    return mEncoder.WriteBool(otIp6GetReceiveFilterMode(mInstance) == OT_IP6_RX_FILTER_MODE_NO_FILTER);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_RLOC16_DEBUG_PASSTHRU>(void)
@@ -2132,7 +2132,8 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_RLOC16_DEBUG_P
     SuccessOrExit(error = mDecoder.ReadBool(enabled));
 
     // Note reverse logic: passthru enabled = filter disabled
-    otIp6SetReceiveFilterEnabled(mInstance, !enabled);
+    otIp6SetReceiveFilterMode(mInstance, enabled ? OT_IP6_RX_FILTER_MODE_NO_FILTER
+                                                 : OT_IP6_RX_FILTER_MODE_FILTER_THREAD_CONTROL_TRAFFIC);
 
 exit:
     return error;
