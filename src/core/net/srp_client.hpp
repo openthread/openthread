@@ -572,6 +572,31 @@ public:
      */
     static const char *ItemStateToString(ItemState aState);
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method enables/disables "service key record inclusion" mode.
+     *
+     * When enabled, SRP client will include KEY record in Service Description Instructions in the SRP update messages
+     * that it sends.
+     *
+     * @note KEY record is optional in Service Description Instruction (it is required and always included in the Host
+     * Description Instruction). The default behavior of SRP client is to not include it. This method is added under
+     * `REFERENCE_DEVICE` config and is intended to override the default behavior for testing only.
+     *
+     * @param[in] aEnabled   TRUE to enable, FALSE to disable the "service key record inclusion" mode.
+     *
+     */
+    void SetServiceKeyRecordEnabled(bool aEnabled) { mServiceKeyRecordEnabled = aEnabled; }
+
+    /**
+     * This method indicates whether the "service key record inclusion" mode is enabled or disabled.
+     *
+     * @returns TRUE if "service key record inclusion" mode is enabled, FALSE otherwise.
+     *
+     */
+    bool IsServiceKeyRecordEnabled(void) const { return mServiceKeyRecordEnabled; }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
 private:
     enum : uint8_t
     {
@@ -726,6 +751,7 @@ private:
     Error        ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
     Error        AppendServiceInstructions(Service &aService, Message &aMessage, Info &aInfo);
     Error        AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const;
+    Error        AppendKeyRecord(Message &aMessage, Info &aInfo) const;
     Error        AppendDeleteAllRrsets(Message &aMessage) const;
     Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
     Error        AppendUpdateLeaseOptRecord(Message &aMessage) const;
@@ -766,6 +792,9 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     bool mAutoStartModeEnabled : 1;
     bool mAutoStartDidSelectServer : 1;
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mServiceKeyRecordEnabled : 1;
 #endif
 
     uint16_t mUpdateMessageId;

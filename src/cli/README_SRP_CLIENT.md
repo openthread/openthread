@@ -328,6 +328,33 @@ Remove a service with a give instance name and service name.
 Done
 ```
 
+### service key
+
+Usage `srp client service key [enable|disable]`
+
+Enable/Disable "service key record inclusion" mode in SRP client. This command requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` feature to be enabled.
+
+KEY record is optional in Service Description Instruction (it is required and always included in the Host Description Instruction). The default behavior of SRP client is to not include it. This command is intended to override the default behavior for testing only (in a `REFERENCE_DEVICE` build).
+
+Get the current "service key record inclusion" mode.
+
+```bash
+> srp client service key
+Disabled
+Done
+```
+
+Set the "service key record inclusion" mode.
+
+```bash
+> srp client service key enable
+Done
+
+> srp client service key
+Enabled
+Done
+```
+
 ### start
 
 Usage: `srp client start <serveraddr> <serverport>`

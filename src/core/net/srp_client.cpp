@@ -141,6 +141,9 @@ Client::Client(Instance &aInstance)
     , mAutoStartModeEnabled(kAutoStartDefaultMode)
     , mAutoStartDidSelectServer(false)
 #endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mServiceKeyRecordEnabled(false)
+#endif
     , mUpdateMessageId(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
     , mAcceptedLeaseInterval(0)
@@ -810,16 +813,26 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
     UpdateRecordLengthInMessage(rr, offset, aMessage);
     aInfo.mRecordCount++;
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mServiceKeyRecordEnabled)
+    {
+        // KEY RR is optional in "Service Description Instruction". It
+        // is added here under `REFERENCE_DEVICE` config and is intended
+        // for testing only.
+
+        SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, aMessage));
+        SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+    }
+#endif
+
 exit:
     return error;
 }
 
 Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const
 {
-    Error                          error = kErrorNone;
-    Dns::ResourceRecord            rr;
-    Dns::KeyRecord                 key;
-    Crypto::Ecdsa::P256::PublicKey publicKey;
+    Error               error = kErrorNone;
+    Dns::ResourceRecord rr;
 
     //----------------------------------
     // Host Description Instruction
@@ -847,6 +860,18 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) c
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aMessage, aInfo));
+    SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+
+exit:
+    return error;
+}
+
+Error Client::AppendKeyRecord(Message &aMessage, Info &aInfo) const
+{
+    Error                          error;
+    Dns::KeyRecord                 key;
+    Crypto::Ecdsa::P256::PublicKey publicKey;
+
     key.Init();
     key.SetTtl(mLeaseInterval);
     key.SetFlags(Dns::KeyRecord::kAuthConfidPermitted, Dns::KeyRecord::kOwnerNonZone,
