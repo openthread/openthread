@@ -1035,7 +1035,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
             Udp::Header udp;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
-            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = kErrorNoRoute);
+            VerifyOrExit(Get<Udp>().IsPortInUse(udp.GetDestinationPort()) == false, error = OT_ERROR_NO_ROUTE);
 
             break;
         }

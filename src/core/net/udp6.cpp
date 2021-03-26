@@ -524,6 +524,18 @@ exit:
     return;
 }
 
+bool Udp::IsPortInUse(uint16_t aPort) const
+{
+    for (const SocketHandle * socket = mSockets.GetHead(); socket != nullptr; socket=socket->GetNext())
+    {
+        if(socket->GetSockName().GetPort() == aPort)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
     return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort

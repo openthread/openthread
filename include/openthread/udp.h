@@ -290,6 +290,18 @@ void otUdpForwardReceive(otInstance *        aInstance,
                          uint16_t            aSockPort);
 
 /**
+ * Determines if the given UDP port is used by OpenThread, or belongs entirely to the platform
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  port                 UDP port number to verify.
+ *
+ * @retval true    The port is being used by OpenThread
+ * @retval false   The port is not used by OpenThread i.e.it belongs to the platform or is incorrect.
+ *
+ */
+bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port);
+
+/**
  * @}
  *
  */

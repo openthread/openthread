@@ -147,3 +147,10 @@ otError otUdpSendDatagram(otInstance *aInstance, otMessage *aMessage, otMessageI
     return instance.Get<Ip6::Udp>().SendDatagram(*static_cast<ot::Message *>(aMessage),
                                                  *static_cast<Ip6::MessageInfo *>(aMessageInfo), Ip6::kProtoUdp);
 }
+
+bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Udp>().IsPortInUse(port);
+}
