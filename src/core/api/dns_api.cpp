@@ -52,6 +52,18 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
     return static_cast<Dns::TxtEntry::Iterator *>(aIterator)->GetNextEntry(*static_cast<Dns::TxtEntry *>(aEntry));
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otDnsSetNameCompressionEnabled(bool aEnabled)
+{
+    Instance::SetDnsNameCompressionEnabled(aEnabled);
+}
+
+bool otDnsIsNameCompressionEnabled(void)
+{
+    return Instance::IsDnsNameCompressionEnabled();
+}
+#endif
+
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance)
