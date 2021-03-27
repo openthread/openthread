@@ -388,6 +388,28 @@ exit:
     return error;
 }
 
+Error Message::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Error    error       = kErrorNone;
+    uint16_t writeOffset = GetLength();
+    Chunk    chunk;
+
+    VerifyOrExit(aMessage.GetLength() >= aOffset + aLength, error = kErrorParse);
+    SuccessOrExit(error = SetLength(GetLength() + aLength));
+
+    aMessage.GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        WriteBytes(writeOffset, chunk.GetData(), chunk.GetLength());
+        writeOffset += chunk.GetLength();
+        aMessage.GetNextChunk(aLength, chunk);
+    }
+
+exit:
+    return error;
+}
+
 Error Message::PrependBytes(const void *aBuf, uint16_t aLength)
 {
     Error   error     = kErrorNone;
