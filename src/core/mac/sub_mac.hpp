@@ -306,7 +306,7 @@ public:
      * @retval FALSE if the sub-mac is not busy transmitting or scanning.
      *
      */
-    bool IsTransmittingOrScanning(void) const { return (mState == kStateTransmit) || (mState == kStateEnergyScan); }
+    bool IsTransmittingOrScanning(void) const { return (mState == kStateTransmit) || (mState == kStateEnergyScan) || (mState == kStateCsmaBackoff); }
 
     /**
      * This method transitions the radio to Receive.

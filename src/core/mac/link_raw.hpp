@@ -115,6 +115,8 @@ public:
      */
     void InvokeReceiveDone(RxFrame *aFrame, otError aError);
 
+    bool IsTransmittingOrScanning(void) { return mSubMac.IsTransmittingOrScanning(); }
+
     /**
      * This method gets the radio transmit frame.
      *

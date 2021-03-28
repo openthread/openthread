@@ -96,7 +96,7 @@ public:
      * @returns IID.
      *
      */
-    spinel_iid_t GetIid(void);
+     spinel_iid_t GetCurCommandIid(void);
 
     /**
      * This method sends data to host via specific stream.
@@ -568,11 +568,7 @@ protected:
 
     uint8_t mTxBuffer[kTxBufferSize];
 
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
     spinel_tid_t mNextExpectedTid[4];
-#else
-    spinel_tid_t mNextExpectedTid;
-#endif
 
     uint8_t       mResponseQueueHead;
     uint8_t       mResponseQueueTail;
@@ -598,10 +594,43 @@ protected:
     uint8_t mCurCommandIID;
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    uint8_t mCurTransmitIID;
     uint8_t mCurTransmitTID;
     int8_t  mCurScanChannel;
     bool    mSrcMatchEnabled;
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
+#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE  
+    #define kPendingCommandQueueSize SPINEL_HEADER_IID_MAX
+
+  enum PendingCommandType
+    {
+        kPendingCommandTypeTransmit,
+        kPendingCommandTypeEnergyScan,
+    };
+
+    struct PendingCommandEntry
+    {
+        uint8_t      mType : 2;
+        uint8_t      mIid : 2;   
+        uint8_t      mTid : 4;
+        uint8_t      mScanChannel;
+        otRadioFrame mTransmitFrame;
+        uint8_t      mTransmitPsdu[127];
+    };  
+
+    static uint8_t GetWrappedPendingCommandQueueIndex(uint8_t aPosition);
+    uint8_t mPendingCommandQueueHead;
+    uint8_t mPendingCommandQueueTail;
+    PendingCommandEntry mPendingCommandQueue[kPendingCommandQueueSize];
+
+    otError EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader, uint8_t aScanChannel);
+    otError HandlePendingTransmit(PendingCommandEntry *entry);
+    otError HandlePendingEnergyScan(PendingCommandEntry *entry);
+    void HandlePendingCommands(void);
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE  
+#endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     otMessageQueue mMessageQueue;
