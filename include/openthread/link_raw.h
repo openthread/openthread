@@ -147,6 +147,15 @@ otError otLinkRawSleep(otInstance *aInstance);
  */
 otError otLinkRawReceive(otInstance *aInstance);
 
+/**
+ * This function indicates whether or not the raw link-layer is busy transmitting or scanning.
+ *
+ * @param[in] aInstance     A pointer to an OpenThread instance.
+ *
+ * @retval true     The raw link-layer is busy transmitting or scanning.
+ * @retval false    The raw link-layer is not busy transmitting or scanning.
+ *
+ */
 bool otLinkRawIsTransmittingOrScanning(otInstance *aInstance);
 
 /**

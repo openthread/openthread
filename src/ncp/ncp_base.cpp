@@ -936,8 +936,8 @@ otError NcpBase::HandlePendingEnergyScan(PendingCommandEntry *entry)
 exit:
     if (error != OT_ERROR_NONE)
     {
-        if (mEncoder.BeginFrame(SPINEL_HEADER_FLAG | (entry->mIid << SPINEL_HEADER_IID_SHIFT), SPINEL_CMD_PROP_VALUE_IS,
-                                SPINEL_PROP_MAC_SCAN_STATE) == OT_ERROR_NONE)
+        if (mEncoder.BeginFrame(SPINEL_HEADER_FLAG | static_cast<uint8_t>(entry->mIid << SPINEL_HEADER_IID_SHIFT),
+                                SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MAC_SCAN_STATE) == OT_ERROR_NONE)
         {
             if (mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE) == OT_ERROR_NONE)
             {
