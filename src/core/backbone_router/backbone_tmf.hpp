@@ -82,17 +82,17 @@ public:
     bool IsBackboneTmfMessage(const Ip6::MessageInfo &aMessageInfo) const;
 
     /**
-     * This method subscribes the Backbone TMF socket to a given Ip6 multicast group on the Backbone network.
+     * This method subscribes the Backbone TMF socket to a given IPv6 multicast group on the Backbone network.
      *
-     * @param[in] aAddress  The Ip6 multicast group address.
+     * @param[in] aAddress  The IPv6 multicast group address.
      *
      */
     void SubscribeMulticast(const Ip6::Address &aAddress);
 
     /**
-     * This method unsubscribes the Backbone TMF socket from a given Ip6 multicast group on the Backbone network.
+     * This method unsubscribes the Backbone TMF socket from a given IPv6 multicast group on the Backbone network.
      *
-     * @param[in] aAddress  The Ip6 multicast group address.
+     * @param[in] aAddress  The IPv6 multicast group address.
      *
      */
     void UnsubscribeMulticast(const Ip6::Address &aAddress);

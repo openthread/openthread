@@ -262,7 +262,7 @@
  *   the second struct is defined by the PHY layer.  Because of the use of
  *   structures, we know exactly what part comes from that layer.
  *   Additionally, we can add fields to each structure without introducing
- *   backward compatability problems: Data encoded as "Lt(ESU)t(6C)"
+ *   backward compatibility problems: Data encoded as "Lt(ESU)t(6C)"
  *   (Notice the extra "U") will decode just fine as "Lt(ES)t(6C)".
  *   Additionally, if we don't care about the MAC layer and only care
  *   about the network layer, we could parse as "Lt()t(6C)".

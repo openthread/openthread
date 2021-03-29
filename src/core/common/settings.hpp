@@ -152,7 +152,7 @@ public:
     Error Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
-     * This method remves all values.
+     * This method removes all values.
      *
      */
     void Wipe(void);

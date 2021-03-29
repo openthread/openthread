@@ -63,12 +63,10 @@ namespace ot {
 namespace BorderRouter {
 
 /**
- * This class implements bi-directional routing between Thread and
- * Infrastructure networks.
+ * This class implements bi-directional routing between Thread and Infrastructure networks.
  *
- * The Border Routing manager works on both Thread interface and
- * infrastructure interface. All ICMPv6 messages are sent/recv
- * on the infrastructure interface.
+ * The Border Routing manager works on both Thread interface and infrastructure interface. All ICMPv6 messages are
+ * sent/received on the infrastructure interface.
  *
  */
 class RoutingManager : public InstanceLocator
@@ -250,48 +248,48 @@ private:
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;
 
-    // Indicates whether the Routing manager is enabled.
-    // The Routing Manager will be stopped if we are
-    // disabled.
+    // Indicates whether the Routing manager is enabled. The Routing
+    // Manager will be stopped if we are disabled.
     bool mIsEnabled;
 
-    // Indicates whether the infra interface is running.
-    // The Routing Manager will be stopped when the
-    // Infra interface is not running.
+    // Indicates whether the infra interface is running. The Routing
+    // Manager will be stopped when the Infra interface is not running.
     bool mInfraIfIsRunning;
 
-    // The index of the infra interface on which Router
-    // Advertisement messages will be sent.
+    // The index of the infra interface on which Router Advertisement
+    // messages will be sent.
     uint32_t mInfraIfIndex;
 
-    // The IPv6 link-local address of the infra interface.
-    // It's UNSPECIFIED if no valid IPv6 link-local address
-    // is associated with the infra interface and the Routing
-    // Manager will be stopped.
+    // The IPv6 link-local address of the infra interface. It's
+    // UNSPECIFIED if no valid IPv6 link-local address is associated
+    // with the infra interface and the Routing Manager will be
+    // stopped.
     Ip6::Address mInfraIfLinkLocalAddress;
 
-    // The OMR prefix loaded from local persistent storage or randomly generated
-    // if non is found in persistent storage.
+    // The OMR prefix loaded from local persistent storage or randomly
+    // generated if non is found in persistent storage.
     Ip6::Prefix mLocalOmrPrefix;
 
     // The advertised OMR prefixes. For a stable Thread network without
-    // manually configured OMR prefixes, there should be a single OMR prefix
-    // that is being advertised because each BRs will converge to the smallest
-    // OMR prefix sorted by method IsPrefixSmallerThan. If manually configured
-    // OMR prefixes exist, they will also be advertised on infra link.
+    // manually configured OMR prefixes, there should be a single OMR
+    // prefix that is being advertised because each BRs will converge to
+    // the smallest OMR prefix sorted by method IsPrefixSmallerThan. If
+    // manually configured OMR prefixes exist, they will also be
+    // advertised on infra link.
     Ip6::Prefix mAdvertisedOmrPrefixes[kMaxOmrPrefixNum];
     uint8_t     mAdvertisedOmrPrefixNum;
 
-    // The on-link prefix loaded from local persistent storage or randomly generated
-    // if non is found in persistent storage.
+    // The on-link prefix loaded from local persistent storage or
+    // randomly generated if non is found in persistent storage.
     Ip6::Prefix mLocalOnLinkPrefix;
 
     // Could only be nullptr or a pointer to mLocalOnLinkPrefix.
     const Ip6::Prefix *mAdvertisedOnLinkPrefix;
 
-    // The array of prefixes discovered on the infra link. Those prefixes consist of
-    // on-link prefix(es) and OMR prefixes advertised by BRs in another Thread Network
-    // which is connected to the same infra link.
+    // The array of prefixes discovered on the infra link. Those
+    // prefixes consist of on-link prefix(es) and OMR prefixes
+    // advertised by BRs in another Thread Network which is connected to
+    // the same infra link.
     ExternalPrefix mDiscoveredPrefixes[kMaxDiscoveredPrefixNum];
     uint8_t        mDiscoveredPrefixNum;
 

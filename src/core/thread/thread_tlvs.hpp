@@ -198,7 +198,7 @@ public:
         kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
         kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
         kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
-        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not futher specified.
+        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not further specified.
     };
 };
 

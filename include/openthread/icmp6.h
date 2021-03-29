@@ -29,7 +29,7 @@
 /**
  * @file
  * @brief
- *  This file defines the top-level icmp6 functions for the OpenThread library.
+ *  This file defines the top-level ICMPv6 functions for the OpenThread library.
  */
 
 #ifndef OPENTHREAD_ICMP6_H_

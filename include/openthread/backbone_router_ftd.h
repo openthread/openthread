@@ -220,7 +220,7 @@ typedef enum
  *
  * @param[in] aContext  The user context pointer.
  * @param[in] aEvent    The Multicast Listener event.
- * @param[in] aAddress  The Ip6 multicast address of the Multicast Listener.
+ * @param[in] aAddress  The IPv6 multicast address of the Multicast Listener.
  *
  */
 typedef void (*otBackboneRouterMulticastListenerCallback)(void *                                 aContext,
