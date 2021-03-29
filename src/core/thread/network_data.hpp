@@ -180,7 +180,7 @@ private:
  * This type represents a Service configuration.
  *
  */
-class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>
+class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>, public Unequatable<ServiceConfig>
 {
     friend class NetworkData;
 
@@ -189,7 +189,7 @@ public:
      * This class represents a Server configuration.
      *
      */
-    class ServerConfig : public otServerConfig
+    class ServerConfig : public otServerConfig, public Unequatable<ServerConfig>
     {
         friend class ServiceConfig;
 
@@ -204,17 +204,6 @@ public:
          *
          */
         bool operator==(const ServerConfig &aOther) const;
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `ServerConfig` instances are unequal.
-         *
-         * @param[in]  aOther  The other `ServerConfig` instance to compare with.
-         *
-         * @retval TRUE   If the two `ServerConfig` instances are unequal.
-         * @retval FALSE  If the two `ServerConfig` instances are not unequal.
-         *
-         */
-        bool operator!=(const ServerConfig &aOther) const { return !(*this == aOther); }
 
     private:
         void SetFrom(const ServerTlv &aServerTlv);
@@ -246,17 +235,6 @@ public:
      *
      */
     bool operator==(const ServiceConfig &aOther) const;
-
-    /**
-     * This method overloads operator `!=` to evaluate whether or not two `ServiceConfig` instances are unequal.
-     *
-     * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
-     *
-     * @retval TRUE   If the two `ServiceConfig` instances are unequal.
-     * @retval FALSE  If the two `ServiceConfig` instances are not unequal.
-     *
-     */
-    bool operator!=(const ServiceConfig &aOther) const { return !(*this == aOther); }
 
 private:
     void SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv);
@@ -309,11 +287,11 @@ public:
      * @param[inout]  aDataLength  On entry, size of the data buffer pointed to by @p aData.
      *                             On exit, number of copied bytes.
      *
-     * @retval OT_ERROR_NONE       Successfully copied full Thread Network Data.
-     * @retval OT_ERROR_NO_BUFS    Not enough space to fully copy Thread Network Data.
+     * @retval kErrorNone       Successfully copied full Thread Network Data.
+     * @retval kErrorNoBufs     Not enough space to fully copy Thread Network Data.
      *
      */
-    otError GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const;
+    Error GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const;
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data.
@@ -321,11 +299,11 @@ public:
      * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[out]    aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next On Mesh prefix.
+     * @retval kErrorNotFound   No subsequent On Mesh prefix exists in the Thread Network Data.
      *
      */
-    otError GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig) const;
+    Error GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig) const;
 
     /**
      * This method provides the next On Mesh prefix in the Thread Network Data for a given RLOC16.
@@ -334,11 +312,11 @@ public:
      * @param[in]     aRloc16    The RLOC16 value.
      * @param[out]    aConfig    A reference to a config variable where the On Mesh Prefix information will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next On Mesh prefix.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent On Mesh prefix exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next On Mesh prefix.
+     * @retval kErrorNotFound   No subsequent On Mesh prefix exists in the Thread Network Data.
      *
      */
-    otError GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const;
+    Error GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const;
 
     /**
      * This method provides the next external route in the Thread Network Data.
@@ -346,11 +324,11 @@ public:
      * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[out]    aConfig    A reference to a config variable where the external route information will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next external route.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent external route exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next external route.
+     * @retval kErrorNotFound   No subsequent external route exists in the Thread Network Data.
      *
      */
-    otError GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const;
+    Error GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const;
 
     /**
      * This method provides the next external route in the Thread Network Data for a given RLOC16.
@@ -359,11 +337,11 @@ public:
      * @param[in]     aRloc16    The RLOC16 value.
      * @param[out]    aConfig    A reference to a config variable where the external route information will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next external route.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent external route exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next external route.
+     * @retval kErrorNotFound   No subsequent external route exists in the Thread Network Data.
      *
      */
-    otError GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const;
+    Error GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const;
 
     /**
      * This method provides the next service in the Thread Network Data.
@@ -371,11 +349,11 @@ public:
      * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[out]    aConfig    A reference to a config variable where the service information will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next service.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next service.
+     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const;
+    Error GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const;
 
     /**
      * This method provides the next service in the Thread Network Data for a given RLOC16.
@@ -384,11 +362,11 @@ public:
      * @param[in]     aRloc16    The RLOC16 value.
      * @param[out]    aConfig    A reference to a config variable where the service information will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next service.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next service.
+     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
+    Error GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const;
 
     /**
      * This method provides the next Service ID in the Thread Network Data for a given RLOC16.
@@ -397,11 +375,11 @@ public:
      * @param[in]     aRloc16    The RLOC16 value.
      * @param[out]    aServiceId A reference to variable where the Service ID will be placed.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next service.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent service exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next service.
+     * @retval kErrorNotFound   No subsequent service exists in the Thread Network Data.
      *
      */
-    otError GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId) const;
+    Error GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId) const;
 
     /**
      * This method indicates whether or not the Thread Network Data contains all of the on mesh prefix information
@@ -461,11 +439,11 @@ public:
      * @param[inout]  aIterator  A reference to the Network Data iterator.
      * @param[out]    aRloc16    The RLOC16 value.
      *
-     * @retval OT_ERROR_NONE       Successfully found the next server.
-     * @retval OT_ERROR_NOT_FOUND  No subsequent server exists in the Thread Network Data.
+     * @retval kErrorNone       Successfully found the next server.
+     * @retval kErrorNotFound   No subsequent server exists in the Thread Network Data.
      *
      */
-    otError GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
+    Error GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const;
 
 protected:
     /**
@@ -839,11 +817,11 @@ protected:
      * @param[in]  aHandler  A function pointer that is called when the transaction ends.
      * @param[in]  aContext  A pointer to arbitrary context information.
      *
-     * @retval OT_ERROR_NONE     Successfully enqueued the notification message.
-     * @retval OT_ERROR_NO_BUFS  Insufficient message buffers to generate the notification message.
+     * @retval kErrorNone     Successfully enqueued the notification message.
+     * @retval kErrorNoBufs   Insufficient message buffers to generate the notification message.
      *
      */
-    otError SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext);
+    Error SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext);
 
     /**
      * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type.
@@ -1055,7 +1033,7 @@ private:
         ServiceConfig *      mService;
     };
 
-    otError Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
+    Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
     static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
     static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService);

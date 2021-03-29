@@ -114,13 +114,13 @@ void Checksum::Calculate(const Ip6::Address &aSource,
     }
 }
 
-otError Checksum::VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto)
+Error Checksum::VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
     Checksum checksum;
 
     checksum.Calculate(aMessageInfo.GetPeerAddr(), aMessageInfo.GetSockAddr(), aIpProto, aMessage);
 
-    return (checksum.GetValue() == kValidRxChecksum) ? OT_ERROR_NONE : OT_ERROR_DROP;
+    return (checksum.GetValue() == kValidRxChecksum) ? kErrorNone : kErrorDrop;
 }
 
 void Checksum::UpdateMessageChecksum(Message &           aMessage,

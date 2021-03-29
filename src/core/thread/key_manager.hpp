@@ -73,11 +73,11 @@ public:
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread Master Key.
      *
-     * @retval OT_ERROR_NONE     Successfully generated a random Thread Master Key.
-     * @retval OT_ERROR_FAILED   Failed to generate random sequence.
+     * @retval kErrorNone     Successfully generated a random Thread Master Key.
+     * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
 } OT_TOOL_PACKED_END;
 
@@ -93,10 +93,10 @@ public:
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
      *
-     * @retval OT_ERROR_NONE  Successfully generated a random Thread PSKc.
+     * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    otError GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
 #endif
 
 } OT_TOOL_PACKED_END;
@@ -158,11 +158,11 @@ public:
      *
      * @param[in]  aKey        A Thread Master Key.
      *
-     * @retval OT_ERROR_NONE          Successfully set the Thread Master Key.
-     * @retval OT_ERROR_INVALID_ARGS  The @p aKeyLength value was invalid.
+     * @retval kErrorNone         Successfully set the Thread Master Key.
+     * @retval kErrorInvalidArgs  The @p aKeyLength value was invalid.
      *
      */
-    otError SetMasterKey(const MasterKey &aKey);
+    Error SetMasterKey(const MasterKey &aKey);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -382,11 +382,11 @@ public:
      *
      * @param[in]  aKeyRotation  The KeyRotation value in hours.
      *
-     * @retval  OT_ERROR_NONE          KeyRotation time updated.
-     * @retval  OT_ERROR_INVALID_ARGS  @p aKeyRotation is out of range.
+     * @retval  kErrorNone          KeyRotation time updated.
+     * @retval  kErrorInvalidArgs   @p aKeyRotation is out of range.
      *
      */
-    otError SetKeyRotation(uint32_t aKeyRotation);
+    Error SetKeyRotation(uint32_t aKeyRotation);
 
     /**
      * This method returns the KeySwitchGuardTime.

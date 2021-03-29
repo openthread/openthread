@@ -47,7 +47,7 @@
 #endif
 
 #ifndef OPENTHREAD_CONFIG_THREAD_VERSION
-#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_1
+#define OPENTHREAD_CONFIG_THREAD_VERSION OT_THREAD_VERSION_1_2
 #endif
 
 #include "config/openthread-core-default-config.h"
@@ -75,6 +75,7 @@
 #include "config/mac.h"
 #include "config/mle.h"
 #include "config/parent_search.h"
+#include "config/ping_sender.h"
 #include "config/platform.h"
 #include "config/radio_link.h"
 #include "config/sntp_client.h"

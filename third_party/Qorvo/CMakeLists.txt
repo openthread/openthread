@@ -73,11 +73,11 @@ add_library(qpg7015m-driver INTERFACE)
 if (OT_MTD)
     target_link_libraries(qpg7015m-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/lib/libQorvoQPG7015m_mtd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/lib/libQorvoQPG7015M_mtd.a
     )
 else()
     target_link_libraries(qpg7015m-driver
         INTERFACE
-            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/lib/libQorvoQPG7015m_ftd.a
+            ${CMAKE_CURRENT_SOURCE_DIR}/repo/qpg7015m/lib/libQorvoQPG7015M_ftd.a
     )
 endif()

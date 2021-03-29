@@ -95,7 +95,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         self.nodes[server].add_prefix(DHCP6_PREFIX, 'pdros')
         self.simulator.go(3)
         self.nodes[server].register_netdata()
-        self.simulator.go(5)
+        self.simulator.go(10)
 
         # Verify DHCP6 client works
         self.assertTrue(self.nodes[client].get_addr(DHCP6_PREFIX))
@@ -105,14 +105,15 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         self.nodes[reset_device].start()
         self.simulator.go(5)
         self.assertIn(self.nodes[reset_device].get_state(), ['leader', 'router'])
-        self.simulator.go(3)
+        self.simulator.go(5)
 
         if reset_device == server:
             # Reconfigure DHCP6 server if necessary
             self.nodes[server].add_prefix(DHCP6_PREFIX, 'pdros')
             self.simulator.go(3)
             self.nodes[server].register_netdata()
-            self.simulator.go(5)
+
+        self.simulator.go(10)
 
         # Verify DHCP6 client works after reset
         self.assertTrue(self.nodes[client].get_addr(DHCP6_PREFIX))

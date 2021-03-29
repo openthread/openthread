@@ -50,7 +50,7 @@ namespace Dhcp6 {
 Client::Client(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mSocket(aInstance)
-    , mTrickleTimer(aInstance, Client::HandleTrickleTimer, nullptr)
+    , mTrickleTimer(aInstance, Client::HandleTrickleTimer)
     , mStartTime(0)
     , mIdentityAssociationCurrent(nullptr)
 {
@@ -80,7 +80,7 @@ void Client::UpdateAddresses(void)
         found    = false;
         iterator = NetworkData::kIteratorInit;
 
-        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
         {
             if (!config.mDhcp)
             {
@@ -104,7 +104,7 @@ void Client::UpdateAddresses(void)
     // add IdentityAssociation for new configured prefix
     iterator = NetworkData::kIteratorInit;
 
-    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == OT_ERROR_NONE)
+    while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
     {
         IdentityAssociation *idAssociation = nullptr;
 
@@ -178,6 +178,7 @@ exit:
 
 void Client::Stop(void)
 {
+    mTrickleTimer.Stop();
     IgnoreError(mSocket.Close());
 }
 
@@ -202,8 +203,8 @@ bool Client::ProcessNextIdentityAssociation(void)
 
         mIdentityAssociationCurrent = &idAssociation;
 
-        mTrickleTimer.Start(Time::SecToMsec(kTrickleTimerImin), Time::SecToMsec(kTrickleTimerImax),
-                            TrickleTimer::kModeNormal);
+        mTrickleTimer.Start(TrickleTimer::kModeTrickle, Time::SecToMsec(kTrickleTimerImin),
+                            Time::SecToMsec(kTrickleTimerImax));
 
         mTrickleTimer.IndicateInconsistent();
 
@@ -214,16 +215,16 @@ exit:
     return rval;
 }
 
-bool Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
+void Client::HandleTrickleTimer(TrickleTimer &aTrickleTimer)
 {
-    return aTrickleTimer.Get<Client>().HandleTrickleTimer();
+    aTrickleTimer.Get<Client>().HandleTrickleTimer();
 }
 
-bool Client::HandleTrickleTimer(void)
+void Client::HandleTrickleTimer(void)
 {
-    bool rval = true;
+    OT_ASSERT(mSocket.IsBound());
 
-    VerifyOrExit(mIdentityAssociationCurrent != nullptr, rval = false);
+    VerifyOrExit(mIdentityAssociationCurrent != nullptr, mTrickleTimer.Stop());
 
     switch (mIdentityAssociationCurrent->mStatus)
     {
@@ -242,9 +243,8 @@ bool Client::HandleTrickleTimer(void)
 
         if (!ProcessNextIdentityAssociation())
         {
-            mTrickleTimer.Stop();
             Stop();
-            rval = false;
+            mTrickleTimer.Stop();
         }
 
         break;
@@ -254,16 +254,16 @@ bool Client::HandleTrickleTimer(void)
     }
 
 exit:
-    return rval;
+    return;
 }
 
 void Client::Solicit(uint16_t aRloc16)
 {
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
     Message *        message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit((message = mSocket.NewMessage(0)) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = AppendHeader(*message));
     SuccessOrExit(error = AppendElapsedTime(*message));
@@ -285,14 +285,14 @@ void Client::Solicit(uint16_t aRloc16)
     otLogInfoIp6("solicit");
 
 exit:
-    if (error != OT_ERROR_NONE)
+    if (error != kErrorNone)
     {
         FreeMessage(message);
-        otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", otThreadErrorToString(error));
+        otLogWarnIp6("Failed to send DHCPv6 Solicit: %s", ErrorToString(error));
     }
 }
 
-otError Client::AppendHeader(Message &aMessage)
+Error Client::AppendHeader(Message &aMessage)
 {
     Header header;
 
@@ -302,7 +302,7 @@ otError Client::AppendHeader(Message &aMessage)
     return aMessage.Append(header);
 }
 
-otError Client::AppendElapsedTime(Message &aMessage)
+Error Client::AppendElapsedTime(Message &aMessage)
 {
     ElapsedTime option;
 
@@ -311,7 +311,7 @@ otError Client::AppendElapsedTime(Message &aMessage)
     return aMessage.Append(option);
 }
 
-otError Client::AppendClientIdentifier(Message &aMessage)
+Error Client::AppendClientIdentifier(Message &aMessage)
 {
     ClientIdentifier option;
     Mac::ExtAddress  eui64;
@@ -326,14 +326,14 @@ otError Client::AppendClientIdentifier(Message &aMessage)
     return aMessage.Append(option);
 }
 
-otError Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
+Error Client::AppendIaNa(Message &aMessage, uint16_t aRloc16)
 {
-    otError  error  = OT_ERROR_NONE;
+    Error    error  = kErrorNone;
     uint8_t  count  = 0;
     uint16_t length = 0;
     IaNa     option;
 
-    VerifyOrExit(mIdentityAssociationCurrent != nullptr, error = OT_ERROR_DROP);
+    VerifyOrExit(mIdentityAssociationCurrent != nullptr, error = kErrorDrop);
 
     for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
@@ -362,12 +362,12 @@ exit:
     return error;
 }
 
-otError Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
+Error Client::AppendIaAddress(Message &aMessage, uint16_t aRloc16)
 {
-    otError   error = OT_ERROR_NONE;
+    Error     error = kErrorNone;
     IaAddress option;
 
-    VerifyOrExit(mIdentityAssociationCurrent, error = OT_ERROR_DROP);
+    VerifyOrExit(mIdentityAssociationCurrent, error = kErrorDrop);
 
     option.Init();
 
@@ -387,7 +387,7 @@ exit:
     return error;
 }
 
-otError Client::AppendRapidCommit(Message &aMessage)
+Error Client::AppendRapidCommit(Message &aMessage)
 {
     RapidCommit option;
 
@@ -475,9 +475,9 @@ exit:
     return rval;
 }
 
-otError Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset)
+Error Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset)
 {
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
     ServerIdentifier option;
 
     SuccessOrExit(aMessage.Read(aOffset, option));
@@ -486,14 +486,14 @@ otError Client::ProcessServerIdentifier(Message &aMessage, uint16_t aOffset)
                      ((option.GetLength() == (sizeof(option) - sizeof(Option))) &&
                       (option.GetDuidType() == kDuidLinkLayerAddress) &&
                       (option.GetDuidHardwareType() == kHardwareTypeEui64)),
-                 error = OT_ERROR_PARSE);
+                 error = kErrorParse);
 exit:
     return error;
 }
 
-otError Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset)
+Error Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset)
 {
-    otError          error = OT_ERROR_NONE;
+    Error            error = kErrorNone;
     ClientIdentifier option;
     Mac::ExtAddress  eui64;
 
@@ -503,14 +503,14 @@ otError Client::ProcessClientIdentifier(Message &aMessage, uint16_t aOffset)
     VerifyOrExit(
         (option.GetLength() == (sizeof(option) - sizeof(Option))) && (option.GetDuidType() == kDuidLinkLayerAddress) &&
             (option.GetDuidHardwareType() == kHardwareTypeEui64) && (option.GetDuidLinkLayerAddress() == eui64),
-        error = OT_ERROR_PARSE);
+        error = kErrorParse);
 exit:
     return error;
 }
 
-otError Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
+Error Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     IaNa     option;
     uint16_t optionOffset;
     uint16_t length;
@@ -520,7 +520,7 @@ otError Client::ProcessIaNa(Message &aMessage, uint16_t aOffset)
     aOffset += sizeof(option);
     length = option.GetLength() - (sizeof(option) - sizeof(Option));
 
-    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = OT_ERROR_PARSE);
+    VerifyOrExit(length <= aMessage.GetLength() - aOffset, error = kErrorParse);
 
     if ((optionOffset = FindOption(aMessage, aOffset, length, kOptionStatusCode)) > 0)
     {
@@ -544,26 +544,26 @@ exit:
     return error;
 }
 
-otError Client::ProcessStatusCode(Message &aMessage, uint16_t aOffset)
+Error Client::ProcessStatusCode(Message &aMessage, uint16_t aOffset)
 {
-    otError    error = OT_ERROR_NONE;
+    Error      error = kErrorNone;
     StatusCode option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
     VerifyOrExit((option.GetLength() >= sizeof(option) - sizeof(Option)) && (option.GetStatusCode() == kStatusSuccess),
-                 error = OT_ERROR_PARSE);
+                 error = kErrorParse);
 
 exit:
     return error;
 }
 
-otError Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
+Error Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
 {
-    otError   error;
+    Error     error;
     IaAddress option;
 
     SuccessOrExit(error = aMessage.Read(aOffset, option));
-    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = OT_ERROR_PARSE);
+    VerifyOrExit(option.GetLength() == sizeof(option) - sizeof(Option), error = kErrorParse);
 
     for (IdentityAssociation &idAssociation : mIdentityAssociations)
     {
@@ -583,11 +583,11 @@ otError Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             idAssociation.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
             idAssociation.mStatus                      = kIaStatusSolicitReplied;
             Get<ThreadNetif>().AddUnicastAddress(idAssociation.mNetifAddress);
-            ExitNow(error = OT_ERROR_NONE);
+            ExitNow(error = kErrorNone);
         }
     }
 
-    error = OT_ERROR_NOT_FOUND;
+    error = kErrorNotFound;
 
 exit:
     return error;

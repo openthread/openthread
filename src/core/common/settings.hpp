@@ -96,11 +96,11 @@ public:
      *                           MUST NOT be nullptr if @p aValueLength is non-zero.
      * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
      *
-     * @retval OT_ERROR_NONE     The value was added.
-     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     * @retval kErrorNone     The value was added.
+     * @retval kErrorNoBufs   Not enough space to store the value.
      *
      */
-    otError Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    Error Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
      * This method removes a value from @p aKey.
@@ -109,11 +109,11 @@ public:
      * @param[in] aIndex  The index of the value to be removed.
      *                    If set to -1, all values for @p aKey will be removed.
      *
-     * @retval OT_ERROR_NONE       The given key and index was found and removed successfully.
-     * @retval OT_ERROR_NOT_FOUND  The given key or index was not found.
+     * @retval kErrorNone       The given key and index was found and removed successfully.
+     * @retval kErrorNotFound   The given key or index was not found.
      *
      */
-    otError Delete(uint16_t aKey, int aIndex);
+    Error Delete(uint16_t aKey, int aIndex);
 
     /**
      * This method fetches the value identified by @p aKey.
@@ -128,11 +128,11 @@ public:
      *                              At return, the actual length of the setting is written.
      *                              May be nullptr if performing a presence check.
      *
-     * @retval OT_ERROR_NONE        The value was fetched successfully.
-     * @retval OT_ERROR_NOT_FOUND   The key was not found.
+     * @retval kErrorNone        The value was fetched successfully.
+     * @retval kErrorNotFound    The key was not found.
      *
      */
-    otError Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
+    Error Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
 
     /**
      * This method sets or replaces the value identified by @p aKey.
@@ -145,11 +145,11 @@ public:
      *                           MUST NOT be nullptr if @p aValueLength is non-zero.
      * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
      *
-     * @retval OT_ERROR_NONE     The value was changed.
-     * @retval OT_ERROR_NO_BUFS  Not enough space to store the value.
+     * @retval kErrorNone     The value was changed.
+     * @retval kErrorNoBufs   Not enough space to store the value.
      *
      */
-    otError Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
+    Error Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
 
     /**
      * This method remves all values.
@@ -637,9 +637,9 @@ protected:
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogFailure(otError aError, const char *aAction, bool aIsDelete) const;
+    void LogFailure(Error aError, const char *aAction, bool aIsDelete) const;
 #else
-    void LogFailure(otError, const char *, bool) const {}
+    void LogFailure(Error, const char *, bool) const {}
 #endif
 };
 
@@ -691,11 +691,11 @@ public:
      * @param[in]   aIsActive   Indicates whether Dataset is active or pending.
      * @param[in]   aDataset    A reference to a `Dataset` object to be saved.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the Dataset.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the Dataset.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset);
+    Error SaveOperationalDataset(bool aIsActive, const MeshCoP::Dataset &aDataset);
 
     /**
      * This method reads the Operational Dataset (active or pending).
@@ -703,87 +703,87 @@ public:
      * @param[in]   aIsActive             Indicates whether Dataset is active or pending.
      * @param[out]  aDataset              A reference to a `Dataset` object to output the read content.
      *
-     * @retval OT_ERROR_NONE              Successfully read the Dataset.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully read the Dataset.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const;
+    Error ReadOperationalDataset(bool aIsActive, MeshCoP::Dataset &aDataset) const;
 
     /**
      * This method deletes the Operational Dataset (active/pending) from settings.
      *
      * @param[in]   aIsActive            Indicates whether Dataset is active or pending.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the Dataset.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the Dataset.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteOperationalDataset(bool aIsActive);
+    Error DeleteOperationalDataset(bool aIsActive);
 
     /**
      * This method saves Network Info.
      *
      * @param[in]   aNetworkInfo          A reference to a `NetworkInfo` structure to be saved.
      *
-     * @retval OT_ERROR_NONE              Successfully saved Network Info in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved Network Info in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveNetworkInfo(const NetworkInfo &aNetworkInfo);
+    Error SaveNetworkInfo(const NetworkInfo &aNetworkInfo);
 
     /**
      * This method reads Network Info.
      *
      * @param[out]   aNetworkInfo         A reference to a `NetworkInfo` structure to output the read content.
      *
-     * @retval OT_ERROR_NONE              Successfully read the Network Info.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully read the Network Info.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError ReadNetworkInfo(NetworkInfo &aNetworkInfo) const;
+    Error ReadNetworkInfo(NetworkInfo &aNetworkInfo) const;
 
     /**
      * This method deletes Network Info from settings.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteNetworkInfo(void);
+    Error DeleteNetworkInfo(void);
 
     /**
      * This method saves Parent Info.
      *
      * @param[in]   aParentInfo           A reference to a `ParentInfo` structure to be saved.
      *
-     * @retval OT_ERROR_NONE              Successfully saved Parent Info in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved Parent Info in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveParentInfo(const ParentInfo &aParentInfo);
+    Error SaveParentInfo(const ParentInfo &aParentInfo);
 
     /**
      * This method reads Parent Info.
      *
      * @param[out]   aParentInfo         A reference to a `ParentInfo` structure to output the read content.
      *
-     * @retval OT_ERROR_NONE              Successfully read the Parent Info.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully read the Parent Info.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError ReadParentInfo(ParentInfo &aParentInfo) const;
+    Error ReadParentInfo(ParentInfo &aParentInfo) const;
 
     /**
      * This method deletes Parent Info from settings.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteParentInfo(void);
+    Error DeleteParentInfo(void);
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
@@ -792,11 +792,11 @@ public:
      *
      * @param[in]   aKey                  The SLAAC IID secret key.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the value.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
+    Error SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
     {
         return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
     }
@@ -806,12 +806,12 @@ public:
      *
      * @param[out]   aKey          A reference to a SLAAC IID secret key to output the read value.
      *
-     * @retval OT_ERROR_NONE              Successfully read the value.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully read the value.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
+    Error ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
     {
         uint16_t length = sizeof(aKey);
 
@@ -821,11 +821,11 @@ public:
     /**
      * This method deletes the SLAAC IID secret key value from settings.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
+    Error DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
@@ -836,22 +836,22 @@ public:
      *
      * @param[in]   aChildInfo            A reference to a `ChildInfo` structure to be saved/added.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the Child Info in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the Child Info in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError AddChildInfo(const ChildInfo &aChildInfo);
+    Error AddChildInfo(const ChildInfo &aChildInfo);
 
     /**
      * This method deletes all Child Info entries from the settings.
      *
      * @note Child Info is a list-based settings property and can contain multiple entries.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteAllChildInfo(void);
+    Error DeleteAllChildInfo(void);
 
     /**
      * This method enables range-based `for` loop iteration over all child info entries in the `Settings`.
@@ -870,7 +870,7 @@ public:
      * This class defines an iterator to access all Child Info entries in the settings.
      *
      */
-    class ChildInfoIterator : public SettingsBase
+    class ChildInfoIterator : public SettingsBase, public Unequatable<ChildInfoIterator>
     {
         friend class ChildInfoIteratorBuilder;
 
@@ -921,12 +921,12 @@ public:
         /**
          * This method deletes the current Child Info entry.
          *
-         * @retval OT_ERROR_NONE             The entry was deleted successfully.
-         * @retval OT_ERROR_INVALID_STATE    The entry is not valid (iterator has reached end of list).
-         * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+         * @retval kErrorNone            The entry was deleted successfully.
+         * @retval kErrorInvalidState    The entry is not valid (iterator has reached end of list).
+         * @retval kErrorNotImplemented  The platform does not implement settings functionality.
          *
          */
-        otError Delete(void);
+        Error Delete(void);
 
         /**
          * This method overloads the `*` dereference operator and gets a reference to `ChildInfo` entry to which the
@@ -954,17 +954,6 @@ public:
         {
             return (mIsDone && aOther.mIsDone) || (!mIsDone && !aOther.mIsDone && (mIndex == aOther.mIndex));
         }
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two iterator instances are unequal.
-         *
-         * @param[in]  aOther  The other iterator to compare with.
-         *
-         * @retval TRUE   If the two iterator objects are unequal.
-         * @retval FALSE  If the two iterator objects are not unequal.
-         *
-         */
-        bool operator!=(const ChildInfoIterator &aOther) const { return !(*this == aOther); }
 
     private:
         enum IteratorType
@@ -994,32 +983,32 @@ public:
      *
      * @param[in]   aDadInfo           A reference to a `DadInfo` structure to be saved.
      *
-     * @retval OT_ERROR_NONE              Successfully saved duplicate address detection information in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved duplicate address detection information in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveDadInfo(const DadInfo &aDadInfo);
+    Error SaveDadInfo(const DadInfo &aDadInfo);
 
     /**
      * This method reads duplicate address detection information.
      *
      * @param[out]   aDadInfo         A reference to a `DadInfo` structure to output the read content.
      *
-     * @retval OT_ERROR_NONE              Successfully read the duplicate address detection information.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully read the duplicate address detection information.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError ReadDadInfo(DadInfo &aDadInfo) const;
+    Error ReadDadInfo(DadInfo &aDadInfo) const;
 
     /**
      * This method deletes duplicate address detection information from settings.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteDadInfo(void);
+    Error DeleteDadInfo(void);
 
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
@@ -1029,46 +1018,46 @@ public:
      *
      * @param[in]  aOmrPrefix  An OMR prefix to be saved.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the OMR prefix in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the OMR prefix in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveOmrPrefix(const Ip6::Prefix &aOmrPrefix);
+    Error SaveOmrPrefix(const Ip6::Prefix &aOmrPrefix);
 
     /**
      * This method reads OMR prefix.
      *
      * @param[out]  aOmrPrefix  A reference to a `Ip6::Prefix` structure to output the OMR prefix.
      *
-     * @retval OT_ERROR_NONE             Successfully read the OMR prefix.
-     * @retval OT_ERROR_NOT_FOUND        No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully read the OMR prefix.
+     * @retval kErrorNotFound        No corresponding value in the setting store.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError ReadOmrPrefix(Ip6::Prefix &aOmrPrefix) const;
+    Error ReadOmrPrefix(Ip6::Prefix &aOmrPrefix) const;
 
     /**
      * This method saves on-link prefix.
      *
      * @param[in]  aOnLinkPrefix  An on-link prefix to be saved.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the on-link prefix in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the on-link prefix in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
+    Error SaveOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
 
     /**
      * This method reads on-link prefix.
      *
      * @param[out]  aOnLinkPrefix  A reference to a `Ip6::Prefix` structure to output the on-link prefix.
      *
-     * @retval OT_ERROR_NONE             Successfully read the on-link prefix.
-     * @retval OT_ERROR_NOT_FOUND        No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully read the on-link prefix.
+     * @retval kErrorNotFound        No corresponding value in the setting store.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError ReadOnLinkPrefix(Ip6::Prefix &aOnLinkPrefix) const;
+    Error ReadOnLinkPrefix(Ip6::Prefix &aOnLinkPrefix) const;
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
@@ -1077,32 +1066,32 @@ public:
      *
      * @param[in]   aKeyPair              A reference to an SRP ECDSA key-pair to save.
      *
-     * @retval OT_ERROR_NONE              Successfully saved key-pair information in settings.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved key-pair information in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair);
+    Error SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair);
 
     /**
      * This method reads SRP client ECDSA key pair.
      *
      * @param[out]   aKeyPair             A reference to a ECDA `KeyPair` to output the read content.
      *
-     * @retval OT_ERROR_NONE              Successfully read key-pair information.
-     * @retval OT_ERROR_NOT_FOUND         No corresponding value in the setting store.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully read key-pair information.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const;
+    Error ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const;
 
     /**
      * This method deletes SRP client ECDSA key pair from settings.
      *
-     * @retval OT_ERROR_NONE             Successfully deleted the value.
-     * @retval OT_ERROR_NOT_IMPLEMENTED  The platform does not implement settings functionality.
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    otError DeleteSrpKey(void);
+    Error DeleteSrpKey(void);
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 private:
@@ -1118,10 +1107,10 @@ private:
         ChildInfoIterator end(void) { return ChildInfoIterator(GetInstance(), ChildInfoIterator::kEndIterator); }
     };
 
-    otError Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
-    otError Save(Key aKey, const void *aValue, uint16_t aSize);
-    otError Add(Key aKey, const void *aValue, uint16_t aSize);
-    otError Delete(Key aKey);
+    Error Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
+    Error Save(Key aKey, const void *aValue, uint16_t aSize);
+    Error Add(Key aKey, const void *aValue, uint16_t aSize);
+    Error Delete(Key aKey);
 };
 
 } // namespace ot

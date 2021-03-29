@@ -66,7 +66,35 @@ $ cd <path-to-openthread>
 $ ./bootstrap
 ```
 
-For EFR32MG1™ Mighty Gecko Wireless Starter Kit:
+For EFR32MG1™ Mighty Gecko Wireless Starter Kit, this can be done using both the CMake and autotools build systems
+
+**CMake (preferred)**
+
+```bash
+$ ./script/cmake-build efr32mg1 -DBOARD=brd4151a
+...
+-- Configuring done
+-- Generating done
+-- Build files have been written to: <path-to-openthread>/build/efr32mg1
++ [[ -n ot-rcp ]]
++ ninja ot-rcp
+[160/160] Linking CXX executable examples/apps/ncp/ot-rcp
++ cd <path-to-openthread>
+```
+
+After a successful build, the `elf` files are found in `<path-to-openthread>/build/efr32mg1/examples`.
+
+```bash
+# For linux
+$ find build/efr32mg1/examples -type f -executable
+build/efr32mg1/examples/apps/ncp/ot-rcp
+
+# For BSD/Darwin/mac systems
+$ find build/efr32mg1/examples -type f -perm +111
+build/efr32mg1/examples/apps/ncp/ot-rcp
+```
+
+**autotools (soon to be depracated)**
 
 ```bash
 $ make -f examples/Makefile-efr32mg1 BOARD=BRD4151A
@@ -234,7 +262,7 @@ $ make -f examples/Makefile-efr32mg1 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHCP
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[cli]: https://github.com/openthread/openthread/blob/main/src/cli/README.md
 
 ## Verification
 

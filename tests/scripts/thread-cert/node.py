@@ -39,7 +39,6 @@ import time
 import traceback
 import unittest
 from typing import Union, Dict, Optional, List
-from zeroconf import Zeroconf, ServiceInfo
 
 import pexpect
 import pexpect.popen_spawn
@@ -302,9 +301,6 @@ class OtbrDocker:
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
-
-        # Zeroconf complains that there is not enough BUFS to subscribe multicast groups.
-        self.bash('sysctl net.ipv4.igmp_max_memberships=1024')
 
 
 class OtCli:
@@ -913,7 +909,7 @@ class NodeImpl:
                 return service
 
     def get_srp_server_port(self):
-        """Returns the dynamic SRP server UDP port by parsing
+        """Returns the SRP server UDP port by parsing
            the SRP Server Data in Network Data.
         """
 
@@ -1882,6 +1878,23 @@ class NodeImpl:
         self.send_command('dataset commit pending')
         self._expect_done()
 
+    def start_dataset_updater(self, panid=None, channel=None):
+        self.send_command('dataset clear')
+        self._expect_done()
+
+        if panid is not None:
+            cmd = 'dataset panid %d' % panid
+            self.send_command(cmd)
+            self._expect_done()
+
+        if channel is not None:
+            cmd = 'dataset channel %d' % channel
+            self.send_command(cmd)
+            self._expect_done()
+
+        self.send_command('dataset updater start')
+        self._expect_done()
+
     def announce_begin(self, mask, count, period, ipaddr):
         cmd = 'commissioner announce %d %d %d %s' % (
             mask,
@@ -2710,27 +2723,52 @@ class LinuxHost():
         The return value is a dict with the same key/values of srp_server_get_service
         except that we don't have a `deleted` field here.
         """
-        zeroconf = Zeroconf()
-        timeout *= 1000  # Zeroconf use timeout in milliseconds.
-        try:
-            info = ServiceInfo(type_=f'{name}.local.', name=f'{instance}.{name}.local.', server=f'{host_name}.local.')
-            while timeout > 0 and not info.parsed_addresses():
-                info.request(zeroconf, 500)
-                timeout -= 500
-            if info.parsed_addresses():
-                return {
-                    'fullname': info.name,
-                    'instance': info.get_name(),
-                    'name': name,
-                    'port': info.port,
-                    'weight': info.weight,
-                    'priority': info.priority,
-                    'host_fullname': info.server,
-                    'host': host_name,
-                    'addresses': info.parsed_addresses()
-                }
-        finally:
-            zeroconf.close()
+
+        self.bash(f'dns-sd -Z {name} local. > /tmp/{name} 2>&1 &')
+        self.bash(f'dns-sd -G v6 {host_name}.local. > /tmp/{host_name} 2>&1 &')
+        time.sleep(timeout)
+
+        self.bash('pkill dns-sd')
+        addresses = []
+        service = {}
+
+        logging.debug(self.bash(f'cat /tmp/{host_name}'))
+        logging.debug(self.bash(f'cat /tmp/{name}'))
+
+        # example output in the host file:
+        # Timestamp     A/R Flags if Hostname                               Address                                     TTL
+        # 9:38:09.274  Add     23 48 my-host.local.                         2001:0000:0000:0000:0000:0000:0000:0002%<0>  120
+        #
+        for line in self.bash(f'cat /tmp/{host_name}'):
+            elements = line.split()
+            fullname = f'{host_name}.local.'
+            if fullname not in elements:
+                continue
+            addresses.append(elements[elements.index(fullname) + 1].split('%')[0])
+
+        logging.debug(f'addresses of {host_name}: {addresses}')
+
+        # example output of in the service file:
+        # _ipps._tcp                                      PTR     my-service._ipps._tcp
+        # my-service._ipps._tcp                           SRV     0 0 12345 my-host.local. ; Replace with unicast FQDN of target host
+        # my-service._ipps._tcp                           TXT     ""
+        #
+        for line in self.bash(f'cat /tmp/{name}'):
+            elements = line.split()
+            if not elements or elements[0] != f'{instance}.{name}':
+                continue
+            if elements[1] == 'SRV':
+                service['fullname'] = elements[0]
+                service['instance'] = instance
+                service['name'] = name
+                service['priority'] = int(elements[2])
+                service['weight'] = int(elements[3])
+                service['port'] = int(elements[4])
+                service['host_fullname'] = elements[5]
+                assert (service['host_fullname'] == f'{host_name}.local.')
+                service['host'] = host_name
+                service['addresses'] = addresses
+                return service if service['addresses'] else None
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):

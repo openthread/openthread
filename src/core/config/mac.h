@@ -66,11 +66,11 @@
  *
  * The default maximum number of retries allowed after a transmission failure for direct transmissions.
  *
- * Equivalent to macMaxFrameRetries, default value is 3.
+ * Equivalent to macMaxFrameRetries, default value is 15.
  *
  */
 #ifndef OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT
-#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 3
+#define OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT 15
 #endif
 
 /**

@@ -70,7 +70,47 @@ $ cd <path-to-openthread>
 $ ./bootstrap
 ```
 
-For EFR32MG13™ Mighty Gecko Wireless Starter Kit:
+For EFR32MG13™ Mighty Gecko Wireless Starter Kit, this can be done using both the CMake and autotools build systems
+
+**CMake (preferred)**
+
+```bash
+$ ./script/cmake-build efr32mg13 -DBOARD=brd4168a
+...
+-- Configuring done
+-- Generating done
+-- Build files have been written to: <path-to-openthread>/build/efr32mg13
++ [[ -n ot-rcp ot-cli-ftd ot-cli-mtd ot-ncp-ftd ot-ncp-mtd sleepy-demo-ftd sleepy-demo-mtd ]]
++ ninja ot-rcp ot-cli-ftd ot-cli-mtd ot-ncp-ftd ot-ncp-mtd sleepy-demo-ftd sleepy-demo-mtd
+[573/573] Linking CXX executable examples/apps/ncp/ot-ncp-ftd
++ cd <path-to-openthread>
+```
+
+After a successful build, the `elf` files are found in `<path-to-openthread>/build/efr32mg13/examples`.
+
+```bash
+# For linux
+$ find build/efr32mg13/examples -type f -executable
+build/efr32mg13/examples/apps/cli/ot-cli-mtd
+build/efr32mg13/examples/apps/cli/ot-cli-ftd
+build/efr32mg13/examples/apps/ncp/ot-ncp-ftd
+build/efr32mg13/examples/apps/ncp/ot-ncp-mtd
+build/efr32mg13/examples/apps/ncp/ot-rcp
+build/efr32mg13/examples/platforms/efr32/sleepy-demo/sleepy-demo-ftd/sleepy-demo-ftd
+build/efr32mg13/examples/platforms/efr32/sleepy-demo/sleepy-demo-mtd/sleepy-demo-mtd
+
+# For BSD/Darwin/mac systems
+$ find build/efr32mg13/examples -type f -perm +111
+build/efr32mg13/examples/apps/cli/ot-cli-mtd
+build/efr32mg13/examples/apps/cli/ot-cli-ftd
+build/efr32mg13/examples/apps/ncp/ot-ncp-ftd
+build/efr32mg13/examples/apps/ncp/ot-ncp-mtd
+build/efr32mg13/examples/apps/ncp/ot-rcp
+build/efr32mg13/examples/platforms/efr32/sleepy-demo/sleepy-demo-ftd/sleepy-demo-ftd
+build/efr32mg13/examples/platforms/efr32/sleepy-demo/sleepy-demo-mtd/sleepy-demo-mtd
+```
+
+**autotools (soon to be depracated)**
 
 ```bash
 $ make -f examples/Makefile-efr32mg13 BOARD=BRD4168A
@@ -240,7 +280,7 @@ $ make -f examples/Makefile-efr32mg13 COMMISSIONER=1 JOINER=1 DHCP6_CLIENT=1 DHC
 
 For a list of all available commands, visit [OpenThread CLI Reference README.md][cli].
 
-[cli]: https://github.com/openthread/openthread/blob/master/src/cli/README.md
+[cli]: https://github.com/openthread/openthread/blob/main/src/cli/README.md
 
 ## Verification
 

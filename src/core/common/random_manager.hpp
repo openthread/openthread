@@ -37,13 +37,13 @@
 #include "openthread-core-config.h"
 
 #include <stdint.h>
-#include <openthread/error.h>
 
 #if !OPENTHREAD_RADIO
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #endif
 
+#include "common/error.hpp"
 #include "common/non_copyable.hpp"
 
 #if (!defined(MBEDTLS_NO_DEFAULT_ENTROPY_SOURCES) && \
@@ -94,10 +94,10 @@ public:
      * @param[out] aBuffer  A pointer to a buffer to fill with the random bytes.
      * @param[in]  aSize    Size of buffer (number of bytes to fill).
      *
-     * @retval OT_ERROR_NONE    Successfully filled buffer with random values.
+     * @retval kErrorNone    Successfully filled buffer with random values.
      *
      */
-    static otError CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return sCtrDrbg.FillBuffer(aBuffer, aSize); }
+    static Error CryptoFillBuffer(uint8_t *aBuffer, uint16_t aSize) { return sCtrDrbg.FillBuffer(aBuffer, aSize); }
 
     /**
      * This static method returns the initialized mbedtls_ctr_drbg_context.
@@ -139,9 +139,9 @@ private:
     class CryptoCtrDrbg
     {
     public:
-        void    Init(void);
-        void    Deinit(void);
-        otError FillBuffer(uint8_t *aBuffer, uint16_t aSize);
+        void  Init(void);
+        void  Deinit(void);
+        Error FillBuffer(uint8_t *aBuffer, uint16_t aSize);
 
         mbedtls_ctr_drbg_context *GetContext(void) { return &mCtrDrbg; }
 

@@ -74,37 +74,28 @@ typedef struct otCliCommand
  * @param[in]  aBufLength  A length of the output data stored in the buffer.
  * @param[out] aContext    A user context pointer.
  *
- * @returns                Number of bytes processed by the callback.
+ * @returns                Number of bytes written by the callback.
  *
  */
-typedef int (*otCliConsoleOutputCallback)(const char *aBuf, uint16_t aBufLength, void *aContext);
+typedef int (*otCliOutputCallback)(void *aContext, const char *aFormat, va_list aArguments);
 
 /**
- * Initialize the CLI CONSOLE module.
+ * Initialize the CLI module.
  *
  * @param[in]  aInstance   The OpenThread instance structure.
- * @param[in]  aCallback   A callback method called to process console output.
+ * @param[in]  aCallback   A callback method called to process CLI output.
  * @param[in]  aContext    A user context pointer.
  *
  */
-void otCliConsoleInit(otInstance *aInstance, otCliConsoleOutputCallback aCallback, void *aContext);
+void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext);
 
 /**
  * This method is called to feed in a console input line.
  *
- * @param[in]  aBuf        A pointer to a buffer with an input.
- * @param[in]  aBufLength  A length of the input data stored in the buffer.
+ * @param[in]  aBuf        A pointer to a null-terminated string.
  *
  */
-void otCliConsoleInputLine(char *aBuf, uint16_t aBufLength);
-
-/**
- * Initialize the CLI UART module.
- *
- * @param[in]  aInstance  The OpenThread instance structure.
- *
- */
-void otCliUartInit(otInstance *aInstance);
+void otCliInputLine(char *aBuf);
 
 /**
  * Set a user command table.
@@ -133,15 +124,6 @@ void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
  *
  */
 void otCliOutputFormat(const char *aFmt, ...);
-
-/**
- * Write string to the CLI console
- *
- * @param[in]  aString  A pointer to the string, which may not be null-terminated.
- * @param[in]  aLength  Number of bytes.
- *
- */
-void otCliOutput(const char *aString, uint16_t aLength);
 
 /**
  * Write error code to the CLI console

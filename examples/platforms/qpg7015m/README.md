@@ -28,6 +28,22 @@ After a successful build, the `elf` files are found in `<path-to-openthread>/out
 
 Building a variant which interfaces via a tcp socket is also possible. Replace the uart-posix.c with uart-socket.c in the Makefile.am from examples/platforms/qpg7015m/Makefile.am and rebuild. Now it should be possible to open a telnet to socket 9190 of the raspberry pi from a remote PC. This also easier testing with the official Thread Test Harness.
 
+## Cmake build
+
+Make sure arm-linux-gnueabihf-gcc compiler installed in `$PATH`
+
+```bash
+cd <path-to-openthread>
+./script/cmake-build qpg7015m
+```
+
+After a successful build, binary files will be generated:
+
+```
+./build/qpg7015m/examples/apps/ncp/ot-rcp
+./build/qpg7015m/examples/apps/cli/ot-cli-ftd
+```
+
 ##
 
 ## Interact

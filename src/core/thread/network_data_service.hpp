@@ -268,12 +268,12 @@ public:
      * @param[in] aServerData    The server data.
      * @param[in] aServerStable  The Stable flag value for Server TLV.
      *
-     * @retval OT_ERROR_NONE     Successfully added the Service entry.
-     * @retval OT_ERROR_NO_BUFS  Insufficient space to add the Service entry.
+     * @retval kErrorNone     Successfully added the Service entry.
+     * @retval kErrorNoBufs   Insufficient space to add the Service entry.
      *
      */
     template <typename ServiceType>
-    otError Add(const typename ServiceType::ServerData &aServerData, bool aServerStable = true)
+    Error Add(const typename ServiceType::ServerData &aServerData, bool aServerStable = true)
     {
         return AddService(ServiceType::kServiceNumber, aServerStable, &aServerData, aServerData.GetLength());
     }
@@ -289,11 +289,11 @@ public:
      *
      * @tparam   ServiceType       The service type to be removed.
      *
-     * @retval OT_ERROR_NONE       Successfully removed the Service entry.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the Service entry.
+     * @retval kErrorNone       Successfully removed the Service entry.
+     * @retval kErrorNotFound   Could not find the Service entry.
      *
      */
-    template <typename ServiceType> otError Remove(void) { return RemoveService(ServiceType::kServiceNumber); }
+    template <typename ServiceType> Error Remove(void) { return RemoveService(ServiceType::kServiceNumber); }
 
 #endif
 
@@ -308,11 +308,11 @@ public:
      * @param[in]  aServerStable   The Stable flag value for Server TLV
      * @param[out] aServiceId      A reference where to put the Service ID.
      *
-     * @retval OT_ERROR_NONE       Successfully got the Service ID.
-     * @retval OT_ERROR_NOT_FOUND  The specified service was not found.
+     * @retval kErrorNone       Successfully got the Service ID.
+     * @retval kErrorNotFound   The specified service was not found.
      *
      */
-    template <typename ServiceType> otError GetServiceId(bool aServerStable, uint8_t &aServiceId) const
+    template <typename ServiceType> Error GetServiceId(bool aServerStable, uint8_t &aServiceId) const
     {
         return GetServiceId(ServiceType::kServiceNumber, aServerStable, aServiceId);
     }
@@ -336,20 +336,20 @@ public:
      * @param[inout] aIterator     A reference to an iterator.
      * @param[out]   aInfo         A reference to `SrpServer::Info` to return the next SRP server info.
      *
-     * @retval OT_ERROR_NONE       Successfully got the next SRP server info. @p aInfo and @p aIterator are updated.
-     * @retval OT_ERROR_NOT_FOUND  No more SRP server entries in Network Data.
+     * @retval kErrorNone       Successfully got the next SRP server info. @p aInfo and @p aIterator are updated.
+     * @retval kErrorNotFound   No more SRP server entries in Network Data.
      *
      */
-    otError GetNextSrpServerInfo(Iterator &aIterator, SrpServer::Info &aInfo) const;
+    Error GetNextSrpServerInfo(Iterator &aIterator, SrpServer::Info &aInfo) const;
 
 private:
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    otError AddService(uint8_t aServiceNumber, bool aServerStable, const void *aServerData, uint8_t aServerDataLength);
-    otError RemoveService(uint8_t aServiceNumber);
+    Error AddService(uint8_t aServiceNumber, bool aServerStable, const void *aServerData, uint8_t aServerDataLength);
+    Error RemoveService(uint8_t aServiceNumber);
 #endif
 
-    otError GetServiceId(uint8_t aServiceNumber, bool aServerStable, uint8_t &aServiceId) const;
-    otError IterateToNextServer(Iterator &aIterator) const;
+    Error GetServiceId(uint8_t aServiceNumber, bool aServerStable, uint8_t &aServiceId) const;
+    Error IterateToNextServer(Iterator &aIterator) const;
 };
 
 } // namespace Service

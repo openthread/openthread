@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/random.hpp"
+#include "net/ip4_address.hpp"
 #include "net/netif.hpp"
 
 using ot::Encoding::BigEndian::HostSwap32;
@@ -49,7 +50,7 @@ namespace Ip6 {
 //---------------------------------------------------------------------------------------------------------------------
 // NetworkPrefix methods
 
-otError NetworkPrefix::GenerateRandomUla(void)
+Error NetworkPrefix::GenerateRandomUla(void)
 {
     m8[0] = 0xfd;
 
@@ -68,6 +69,23 @@ void Prefix::Set(const uint8_t *aPrefix, uint8_t aLength)
 bool Prefix::IsEqual(const uint8_t *aPrefixBytes, uint8_t aPrefixLength) const
 {
     return (mLength == aPrefixLength) && (MatchLength(GetBytes(), aPrefixBytes, GetBytesSize()) >= mLength);
+}
+
+bool Prefix::operator<(const Prefix &aOther) const
+{
+    bool    isSmaller;
+    uint8_t matchedLength;
+
+    VerifyOrExit(GetLength() == aOther.GetLength(), isSmaller = GetLength() < aOther.GetLength());
+
+    matchedLength = MatchLength(GetBytes(), aOther.GetBytes(), GetBytesSize());
+
+    VerifyOrExit(matchedLength < GetLength(), isSmaller = false);
+
+    isSmaller = GetBytes()[matchedLength / CHAR_BIT] < aOther.GetBytes()[matchedLength / CHAR_BIT];
+
+exit:
+    return isSmaller;
 }
 
 uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, uint8_t aMaxSize)
@@ -152,13 +170,13 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
 
 void InterfaceIdentifier::GenerateRandom(void)
 {
-    otError error;
+    Error error;
 
     OT_UNUSED_VARIABLE(error);
 
     error = Random::Crypto::FillBuffer(mFields.m8, kSize);
 
-    OT_ASSERT(error == OT_ERROR_NONE);
+    OT_ASSERT(error == kErrorNone);
 }
 
 void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer)
@@ -434,9 +452,9 @@ bool Address::MatchesFilter(TypeFilter aFilter) const
     return matches;
 }
 
-otError Address::FromString(const char *aBuf)
+Error Address::FromString(const char *aBuf)
 {
-    otError     error  = OT_ERROR_NONE;
+    Error       error  = kErrorNone;
     uint8_t *   dst    = reinterpret_cast<uint8_t *>(mFields.m8);
     uint8_t *   endp   = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
     uint8_t *   colonp = nullptr;
@@ -465,7 +483,7 @@ otError Address::FromString(const char *aBuf)
         {
             if (count)
             {
-                VerifyOrExit(dst + 2 <= endp, error = OT_ERROR_PARSE);
+                VerifyOrExit(dst + 2 <= endp, error = kErrorParse);
                 *(dst + 1) = static_cast<uint8_t>(val >> 8);
                 *(dst + 2) = static_cast<uint8_t>(val);
                 dst += 2;
@@ -474,7 +492,7 @@ otError Address::FromString(const char *aBuf)
             }
             else if (ch == ':')
             {
-                VerifyOrExit(colonp == nullptr || first, error = OT_ERROR_PARSE);
+                VerifyOrExit(colonp == nullptr || first, error = kErrorParse);
                 colonp = dst;
             }
 
@@ -492,23 +510,23 @@ otError Address::FromString(const char *aBuf)
             hasIp4 = true;
 
             // Do not count bytes of the embedded IPv4 address.
-            endp -= kIp4AddressSize;
+            endp -= Ip4::Address::kSize;
 
-            VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
+            VerifyOrExit(dst <= endp, error = kErrorParse);
 
             break;
         }
         else
         {
-            VerifyOrExit('0' <= ch && ch <= '9', error = OT_ERROR_PARSE);
+            VerifyOrExit('0' <= ch && ch <= '9', error = kErrorParse);
         }
 
         first = false;
         val   = static_cast<uint16_t>((val << 4) | d);
-        VerifyOrExit(++count <= 4, error = OT_ERROR_PARSE);
+        VerifyOrExit(++count <= 4, error = kErrorParse);
     }
 
-    VerifyOrExit(colonp || dst == endp, error = OT_ERROR_PARSE);
+    VerifyOrExit(colonp || dst == endp, error = kErrorParse);
 
     while (colonp && dst > colonp)
     {
@@ -522,40 +540,10 @@ otError Address::FromString(const char *aBuf)
 
     if (hasIp4)
     {
-        val = 0;
+        Ip4::Address ip4Addr;
 
-        // Reset the start and end pointers.
-        dst  = reinterpret_cast<uint8_t *>(mFields.m8 + 12);
-        endp = reinterpret_cast<uint8_t *>(mFields.m8 + 15);
-
-        for (;;)
-        {
-            ch = *colonc++;
-
-            if (ch == '.' || ch == '\0' || ch == ' ')
-            {
-                VerifyOrExit(dst <= endp, error = OT_ERROR_PARSE);
-
-                *dst++ = static_cast<uint8_t>(val);
-                val    = 0;
-
-                if (ch == '\0' || ch == ' ')
-                {
-                    // Check if embedded IPv4 address had exactly four parts.
-                    VerifyOrExit(dst == endp + 1, error = OT_ERROR_PARSE);
-                    break;
-                }
-            }
-            else
-            {
-                VerifyOrExit('0' <= ch && ch <= '9', error = OT_ERROR_PARSE);
-
-                val = (10 * val) + (ch & 0xf);
-
-                // Single part of IPv4 address has to fit in one byte.
-                VerifyOrExit(val <= 0xff, error = OT_ERROR_PARSE);
-            }
-        }
+        SuccessOrExit(error = ip4Addr.FromString(colonc));
+        memcpy(mFields.m8 + 12, ip4Addr.GetBytes(), Ip4::Address::kSize);
     }
 
 exit:

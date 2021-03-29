@@ -39,13 +39,13 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include <openthread/error.h>
 #include <openthread/heap.h>
 #include <openthread/platform/logging.h>
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 #include <openthread/platform/memory.h>
 #endif
 
+#include "common/error.hpp"
 #include "common/non_copyable.hpp"
 #include "common/random_manager.hpp"
 #include "common/tasklet.hpp"
@@ -64,20 +64,23 @@
 #include "common/settings.hpp"
 #include "crypto/mbedtls.hpp"
 #include "meshcop/border_agent.hpp"
+#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
+#include "meshcop/dataset_updater.hpp"
+#endif
 #include "net/ip6.hpp"
 #include "thread/announce_sender.hpp"
 #include "thread/link_quality.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/tmf.hpp"
 #include "utils/heap.hpp"
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+#include "utils/ping_sender.hpp"
+#endif
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 #include "utils/channel_manager.hpp"
 #endif
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
-#endif
-#if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-#include "utils/dataset_updater.hpp"
 #endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -238,11 +241,11 @@ public:
      *
      * Erase is successful/allowed only if the device is in `disabled` state/role.
      *
-     * @retval OT_ERROR_NONE           All persistent info/state was erased successfully.
-     * @retval OT_ERROR_INVALID_STATE  Device is not in `disabled` state/role.
+     * @retval kErrorNone          All persistent info/state was erased successfully.
+     * @retval kErrorInvalidState  Device is not in `disabled` state/role.
      *
      */
-    otError ErasePersistentInfo(void);
+    Error ErasePersistentInfo(void);
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
     static void  HeapFree(void *aPointer) { otPlatFree(aPointer); }
@@ -350,6 +353,10 @@ private:
     Coap::CoapSecure mApplicationCoapSecure;
 #endif
 
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    Utils::PingSender mPingSender;
+#endif
+
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
     Utils::ChannelMonitor mChannelMonitor;
 #endif
@@ -359,7 +366,7 @@ private:
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-    Utils::DatasetUpdater mDatasetUpdater;
+    MeshCoP::DatasetUpdater mDatasetUpdater;
 #endif
 
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -742,6 +749,13 @@ template <> inline Utils::SupervisionListener &Instance::Get(void)
     return mThreadNetif.mSupervisionListener;
 }
 
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+template <> inline Utils::PingSender &Instance::Get(void)
+{
+    return mPingSender;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 template <> inline Utils::ChannelMonitor &Instance::Get(void)
 {
@@ -757,7 +771,7 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
-template <> inline Utils::DatasetUpdater &Instance::Get(void)
+template <> inline MeshCoP::DatasetUpdater &Instance::Get(void)
 {
     return mDatasetUpdater;
 }

@@ -14,7 +14,6 @@ This page lists the available common switches with description. Unless stated ot
 | CHANNEL_MANAGER | OT_CHANNEL_MANAGER | Enables support for channel manager. Enable this switch on devices that are supposed to request a Thread network channel change. This switch should be used only with an FTD build. |
 | CHANNEL_MONITOR | OT_CHANNEL_MONITOR | Enables support for channel monitor. Enable this switch on devices that are supposed to determine the cleaner channels. |
 | CHILD_SUPERVISION | OT_CHILD_SUPERVISION | Enables support for [child supervision](https://openthread.io/guides/build/features/child-supervision). Enable this switch on a parent or child node with custom OpenThread application that manages the supervision, checks timeout intervals, and verifies connectivity between parent and child. |
-| CLI_TRANSPORT | not implemented | Selects the transport of CLI. You can set this switch to UART (default) or CONSOLE. |
 | COAP | OT_COAP | Enables support for the CoAP API. Enable this switch if you want to control Constrained Application Protocol communication. |
 | COAP_OBSERVE | OT_COAP_OBSERVE | Enables support for CoAP Observe (RFC7641) API. |
 | COAPS | OT_COAPS | Enables support for the secure CoAP API. Enable this switch if you want to control Constrained Application Protocol Secure (CoAP over DTLS) communication. |
@@ -49,6 +48,7 @@ This page lists the available common switches with description. Unless stated ot
 | MLR | OT_MLR | Enables Multicast Listener Registration feature for Thread 1.2. |
 | MTD_NETDIAG | OT_MTD_NETDIAG | Enables the TMF network diagnostics on MTDs. |
 | MULTIPLE_INSTANCE | OT_MULTIPLE_INSTANCE | Enables multiple OpenThread instances. |
+| PING_SENDER | OT_PING_SENDER | Enables support for ping sender. |
 | OTNS | OT_OTNS | Enables support for [OpenThread Network Simulator](https://github.com/openthread/ot-ns). Enable this switch if you are building OpenThread for OpenThread Network Simulator. |
 | PLATFORM_UDP | OT_PLATFORM_UDP | Enables platform UDP support. |
 | REFERENCE_DEVICE | OT_REFERENCE_DEVICE | Enables support for Thread Test Harness reference device. Enable this switch on the reference device during certification. |
@@ -61,4 +61,5 @@ This page lists the available common switches with description. Unless stated ot
 | SRP_SERVER | OT_SRP_SERVER | Enable support for SRP server. |
 | THREAD_VERSION | OT_THREAD_VERSION | Enables the chosen Thread version (1.1 (default) / 1.2). For example, set to `1.2` for Thread 1.2. |
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
+| TREL | OT_TREL | Enables TREL radio link for Thread over Infrastructure feature. |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |

@@ -38,8 +38,7 @@
 
 #include <stdint.h>
 
-#include <openthread/error.h>
-
+#include "common/error.hpp"
 #include "crypto/aes_ecb.hpp"
 #include "mac/mac_types.hpp"
 

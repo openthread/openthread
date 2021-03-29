@@ -38,7 +38,6 @@
 #include <openthread/config.h>
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
-#include <openthread/platform/uart.h>
 
 #include "stdio.h"
 #include "string.h"

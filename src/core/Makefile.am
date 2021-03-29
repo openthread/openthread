@@ -125,6 +125,7 @@ SOURCES_COMMON                                  = \
     api/diags_api.cpp                             \
     api/dns_api.cpp                               \
     api/entropy_api.cpp                           \
+    api/error_api.cpp                             \
     api/heap_api.cpp                              \
     api/icmp6_api.cpp                             \
     api/instance_api.cpp                          \
@@ -140,6 +141,7 @@ SOURCES_COMMON                                  = \
     api/netdata_api.cpp                           \
     api/netdiag_api.cpp                           \
     api/network_time_api.cpp                      \
+    api/ping_sender_api.cpp                       \
     api/random_crypto_api.cpp                     \
     api/random_noncrypto_api.cpp                  \
     api/server_api.cpp                            \
@@ -163,6 +165,7 @@ SOURCES_COMMON                                  = \
     coap/coap_message.cpp                         \
     coap/coap_secure.cpp                          \
     common/crc16.cpp                              \
+    common/error.cpp                              \
     common/instance.cpp                           \
     common/logging.cpp                            \
     common/message.cpp                            \
@@ -202,6 +205,7 @@ SOURCES_COMMON                                  = \
     meshcop/dataset_local.cpp                     \
     meshcop/dataset_manager.cpp                   \
     meshcop/dataset_manager_ftd.cpp               \
+    meshcop/dataset_updater.cpp                   \
     meshcop/dtls.cpp                              \
     meshcop/energy_scan_client.cpp                \
     meshcop/joiner.cpp                            \
@@ -218,6 +222,7 @@ SOURCES_COMMON                                  = \
     net/dns_types.cpp                             \
     net/dnssd_server.cpp                          \
     net/icmp6.cpp                                 \
+    net/ip4_address.cpp                           \
     net/ip6.cpp                                   \
     net/ip6_address.cpp                           \
     net/ip6_filter.cpp                            \
@@ -275,13 +280,13 @@ SOURCES_COMMON                                  = \
     utils/channel_manager.cpp                     \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
-    utils/dataset_updater.cpp                     \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
     utils/jam_detector.cpp                        \
     utils/lookup_table.cpp                        \
     utils/otns.cpp                                \
     utils/parse_cmdline.cpp                       \
+    utils/ping_sender.cpp                         \
     utils/slaac_address.cpp                       \
     $(NULL)
 
@@ -291,12 +296,14 @@ EXTRA_DIST                                 = \
 
 libopenthread_radio_a_SOURCES              = \
     api/diags_api.cpp                        \
+    api/error_api.cpp                        \
     api/heap_api.cpp                         \
     api/instance_api.cpp                     \
     api/link_raw_api.cpp                     \
     api/logging_api.cpp                      \
     api/random_noncrypto_api.cpp             \
     api/tasklet_api.cpp                      \
+    common/error.cpp                         \
     common/instance.cpp                      \
     common/logging.cpp                       \
     common/random_manager.cpp                \
@@ -369,6 +376,7 @@ HEADERS_COMMON                                  = \
     common/debug.hpp                              \
     common/encoding.hpp                           \
     common/equatable.hpp                          \
+    common/error.hpp                              \
     common/extension.hpp                          \
     common/instance.hpp                           \
     common/iterator_utils.hpp                     \
@@ -418,6 +426,7 @@ HEADERS_COMMON                                  = \
     config/openthread-core-config-check.h         \
     config/openthread-core-default-config.h       \
     config/parent_search.h                        \
+    config/ping_sender.h                          \
     config/platform.h                             \
     config/radio_link.h                           \
     config/sntp_client.h                          \
@@ -450,6 +459,7 @@ HEADERS_COMMON                                  = \
     meshcop/dataset.hpp                           \
     meshcop/dataset_local.hpp                     \
     meshcop/dataset_manager.hpp                   \
+    meshcop/dataset_updater.hpp                   \
     meshcop/dtls.hpp                              \
     meshcop/energy_scan_client.hpp                \
     meshcop/joiner.hpp                            \
@@ -467,6 +477,7 @@ HEADERS_COMMON                                  = \
     net/dns_types.hpp                             \
     net/dnssd_server.hpp                          \
     net/icmp6.hpp                                 \
+    net/ip4_address.hpp                           \
     net/ip6.hpp                                   \
     net/ip6_address.hpp                           \
     net/ip6_filter.hpp                            \
@@ -531,13 +542,13 @@ HEADERS_COMMON                                  = \
     utils/channel_manager.hpp                     \
     utils/channel_monitor.hpp                     \
     utils/child_supervision.hpp                   \
-    utils/dataset_updater.hpp                     \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
     utils/jam_detector.hpp                        \
     utils/lookup_table.hpp                        \
     utils/otns.hpp                                \
     utils/parse_cmdline.hpp                       \
+    utils/ping_sender.hpp                         \
     utils/slaac_address.hpp                       \
     $(NULL)
 

@@ -42,7 +42,7 @@ readonly COLOR_NONE='\033[0m'
 
 readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
 readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
-readonly THREAD_VERSION="${THREAD_VERSION:-1.1}"
+readonly THREAD_VERSION="${THREAD_VERSION:-1.2}"
 readonly INTER_OP="${INTER_OP:-0}"
 readonly VERBOSE="${VERBOSE:-0}"
 readonly BORDER_ROUTING="${BORDER_ROUTING:-1}"
@@ -63,6 +63,7 @@ build_simulation()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_SERVICE=ON"
         "-DOT_ECDSA=ON"
+        "-DOT_PING_SENDER=ON"
         "-DOT_DNSSD_SERVER=ON"
         "-DOT_DNS_CLIENT=ON"
     )
@@ -262,16 +263,8 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_MDNS=mDNSResponder -DOTBR_SRP_ADVERTISING_PROXY=ON -DOTBR_DUA_ROUTING=ON"
+    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_DUA_ROUTING=ON"
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
-
-    # Always enable SRP server for OTBR.
-    # TODO: enable SRP server inside OTBR after this PR merged.
-    otbr_options="${otbr_options} -DOT_SRP_SERVER=ON -DOT_SERVICE=ON -DOT_ECDSA=ON"
-
-    if [[ ${BORDER_ROUTING} == "1" ]]; then
-        otbr_options="${otbr_options} -DOT_BORDER_ROUTING=ON"
-    fi
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
     otdir=$(pwd)
@@ -283,6 +276,8 @@ do_build_otbr_docker()
         cp -r "${otdir}" third_party/openthread/repo
         rm -rf .git
         docker build -t "${otbr_docker_image}" -f etc/docker/Dockerfile . \
+            --build-arg BORDER_ROUTING="${BORDER_ROUTING}" \
+            --build-arg INFRA_IF_NAME=eth0 \
             --build-arg BACKBONE_ROUTER=1 \
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
@@ -377,7 +372,7 @@ ENVIRONMENTS:
     VERBOSE         1 to build or test verbosely. The default is 0.
     VIRTUAL_TIME    1 for virtual time, otherwise real time. The default value is 0 when running expect tests,
                     otherwise default value is 1.
-    THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.1.
+    THREAD_VERSION  1.1 for Thread 1.1 stack, 1.2 for Thread 1.2 stack. The default is 1.2.
     INTER_OP        1 to build 1.1 together. Only works when THREAD_VERSION is 1.2. The default is 0.
     INTER_OP_BBR    1 to build bbr version together. Only works when THREAD_VERSION is 1.2. The default is 1.
 
@@ -407,10 +402,14 @@ EXAMPLES:
     VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
     VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
 
+    # Test Thread 1.1 CLI with real time
+    THREAD_VERSION=1.1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/Cert_5_1_01_RouterAttach.py
+    THREAD_VERSION=1.1 VIRTUAL_TIME=0 $0 cert tests/scripts/thread-cert/Cert_5_1_02_ChildAddressTimeout.py
+
     # Test Thread 1.2 with real time, use 'INTER_OP=1' when the case needs both versions.
-    THREAD_VERSION=1.2 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
-    THREAD_VERSION=1.2 INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
-    THREAD_VERSION=1.2 INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
+    VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_test_enhanced_keep_alive.py
+    INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert tests/scripts/thread-cert/v1_2_router_5_1_1.py
+    INTER_OP=1 VIRTUAL_TIME=0 $0 clean build cert_suite tests/scripts/thread-cert/v1_2_*
 
     # Run a single expect test
     $0 clean build expect tests/scripts/expect/cli-log-level.exp
@@ -425,7 +424,7 @@ EXAMPLES:
 do_package()
 {
     local builddir
-    local options=("-DCMAKE_BUILD_TYPE=Release" "-DOT_LOG_LEVEL=INFO")
+    local options=("-DCMAKE_BUILD_TYPE=Release" "-DOT_LOG_LEVEL=INFO" "-DOT_THREAD_VERSION=${THREAD_VERSION}")
 
     if [[ ${ot_extra_options[*]+x} ]]; then
         options+=("${ot_extra_options[@]}")

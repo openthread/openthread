@@ -39,6 +39,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "common/equatable.hpp"
+
 namespace ot {
 
 /**
@@ -55,7 +57,7 @@ namespace ot {
  * This class represents a time instance.
  *
  */
-class Time
+class Time : public Unequatable<Time>
 {
 public:
     /**
@@ -155,17 +157,6 @@ public:
      *
      */
     bool operator==(const Time &aOther) const { return mValue == aOther.mValue; }
-
-    /**
-     * This method indicates whether two `Time` instance are not equal.
-     *
-     * @param[in]   aOther   A `Time` instance to compare with.
-     *
-     * @retval TRUE    The two `Time` instances are not equal.
-     * @retval FALSE   The two `Time` instances are equal.
-     *
-     */
-    bool operator!=(const Time &aOther) const { return !(*this == aOther); }
 
     /**
      * This method indicates whether this `Time` instance is strictly before another one.

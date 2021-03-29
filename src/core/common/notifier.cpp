@@ -52,9 +52,9 @@ Notifier::Notifier(Instance &aInstance)
     }
 }
 
-otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
+Error Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aContext)
 {
-    otError           error          = OT_ERROR_NONE;
+    Error             error          = kErrorNone;
     ExternalCallback *unusedCallback = nullptr;
 
     VerifyOrExit(aCallback != nullptr);
@@ -71,10 +71,10 @@ otError Notifier::RegisterCallback(otStateChangedCallback aCallback, void *aCont
             continue;
         }
 
-        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = OT_ERROR_ALREADY);
+        VerifyOrExit((callback.mHandler != aCallback) || (callback.mContext != aContext), error = kErrorAlready);
     }
 
-    VerifyOrExit(unusedCallback != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(unusedCallback != nullptr, error = kErrorNoBufs);
 
     unusedCallback->mHandler = aCallback;
     unusedCallback->mContext = aContext;
@@ -147,7 +147,7 @@ void Notifier::EmitEvents(void)
     Get<Utils::ChildSupervisor>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
-    Get<Utils::DatasetUpdater>().HandleNotifierEvents(events);
+    Get<MeshCoP::DatasetUpdater>().HandleNotifierEvents(events);
 #endif
 #endif // OPENTHREAD_FTD
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -236,7 +236,7 @@ void Notifier::LogEvents(Events aEvents) const
     }
 
 exit:
-    otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s] ", aEvents.GetAsFlags(), didLog ? "... " : "[",
+    otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s]", aEvents.GetAsFlags(), didLog ? "... " : "[",
                   string.AsCString());
 }
 

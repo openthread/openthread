@@ -104,6 +104,13 @@ markdown()
     esac
 }
 
+nm_size()
+{
+    arm-none-eabi-nm --print-size --defined-only -C "$1" | cut -d' ' -f2- >nmsize_old
+    arm-none-eabi-nm --print-size --defined-only -C "$2" | cut -d' ' -f2- >nmsize_new
+    diff -Nuar nmsize_old nmsize_new || true
+}
+
 size_nrf52840_version()
 {
     local options=(
@@ -129,6 +136,7 @@ size_nrf52840_version()
         "-DOT_MAC_FILTER=ON"
         "-DOT_MESSAGE_USE_HEAP=ON"
         "-DOT_MTD_NETDIAG=ON"
+        "-DOT_PING_SENDER=ON"
         "-DOT_SERVICE=ON"
         "-DOT_SLAAC=ON"
         "-DOT_SNTP_CLIENT=ON"
@@ -212,10 +220,14 @@ size_nrf52840_version()
 
     for file in "${bins[@]}"; do
         "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
+        echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
+        nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/bin/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/bin/"${file}"_"${thread_version}"
     done
 
     for file in "${libs[@]}"; do
         "${reporter}" size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
+        echo nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
+        nm_size "${OT_TMP_DIR}"/a/"${build_dir}"/lib/"${file}"_"${thread_version}" "${OT_TMP_DIR}"/b/"${build_dir}"/lib/"${file}"_"${thread_version}"
     done
 }
 

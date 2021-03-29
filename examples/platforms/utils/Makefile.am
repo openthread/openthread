@@ -64,6 +64,7 @@ libopenthread_platform_utils_a_SOURCES  = \
     settings_ram.c                        \
     soft_source_match_table.c             \
     soft_source_match_table.h             \
+    uart.h                                \
     $(NULL)
 
 libopenthread_platform_utils_a_LIBADD  = \

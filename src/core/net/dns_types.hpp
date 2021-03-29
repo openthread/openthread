@@ -41,6 +41,7 @@
 
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "crypto/ecdsa.hpp"
 #include "net/ip6_address.hpp"
@@ -101,11 +102,11 @@ public:
     /**
      * This method sets the Message ID to a crypto-secure randomly generated number.
      *
-     * @retval  OT_ERROR_NONE     Successfully generated random Message ID.
-     * @retval  OT_ERROR_FAILED   Could not generate random Message ID.
+     * @retval  kErrorNone     Successfully generated random Message ID.
+     * @retval  kErrorFailed   Could not generate random Message ID.
      *
      */
-    otError SetRandomMessageId(void);
+    Error SetRandomMessageId(void);
 
     /**
      * Defines types of DNS message.
@@ -295,28 +296,28 @@ public:
     }
 
     /**
-     * This method converts a Response Code into a related `otError`.
+     * This method converts a Response Code into a related `Error`.
      *
-     * - kResponseSuccess (0)         : Success (no error condition)                    -> OT_ERROR_NONE
-     * - kResponseFormatError (1)     : Server unable to interpret due to format error  -> OT_ERROR_PARSE
-     * - kResponseServerFailure (2)   : Server encountered an internal failure          -> OT_ERROR_FAILED
-     * - kResponseNameError (3)       : Name that ought to exist, does not exists       -> OT_ERROR_NOT_FOUND
-     * - kResponseNotImplemented (4)  : Server does not support the query type (OpCode) -> OT_ERROR_NOT_IMPLEMENTED
-     * - kResponseRefused (5)         : Server refused for policy/security reasons      -> OT_ERROR_SECURITY
-     * - kResponseNameExists (6)      : Some name that ought not to exist, does exist   -> OT_ERROR_DUPLICATED
-     * - kResponseRecordExists (7)    : Some RRset that ought not to exist, does exist  -> OT_ERROR_DUPLICATED
-     * - kResponseRecordNotExists (8) : Some RRset that ought to exist, does not exist  -> OT_ERROR_NOT_FOUND
-     * - kResponseNotAuth (9)         : Service is not authoritative for zone           -> OT_ERROR_SECURITY
-     * - kResponseNotZone (10)        : A name is not in the zone                       -> OT_ERROR_PARSE
-     * - kResponseBadName (20)        : Bad name                                        -> OT_ERROR_PARSE
-     * - kResponseBadAlg (21)         : Bad algorithm                                   -> OT_ERROR_SECURITY
-     * - kResponseBadTruncation (22)  : Bad truncation                                  -> OT_ERROR_PARSE
-     * - Other error                                                                    -> OT_ERROR_FAILED
+     * - kResponseSuccess (0)         : Success (no error condition)                    -> kErrorNone
+     * - kResponseFormatError (1)     : Server unable to interpret due to format error  -> kErrorParse
+     * - kResponseServerFailure (2)   : Server encountered an internal failure          -> kErrorFailed
+     * - kResponseNameError (3)       : Name that ought to exist, does not exists       -> kErrorNotFound
+     * - kResponseNotImplemented (4)  : Server does not support the query type (OpCode) -> kErrorNotImplemented
+     * - kResponseRefused (5)         : Server refused for policy/security reasons      -> kErrorSecurity
+     * - kResponseNameExists (6)      : Some name that ought not to exist, does exist   -> kErrorDuplicated
+     * - kResponseRecordExists (7)    : Some RRset that ought not to exist, does exist  -> kErrorDuplicated
+     * - kResponseRecordNotExists (8) : Some RRset that ought to exist, does not exist  -> kErrorNotFound
+     * - kResponseNotAuth (9)         : Service is not authoritative for zone           -> kErrorSecurity
+     * - kResponseNotZone (10)        : A name is not in the zone                       -> kErrorParse
+     * - kResponseBadName (20)        : Bad name                                        -> kErrorParse
+     * - kResponseBadAlg (21)         : Bad algorithm                                   -> kErrorSecurity
+     * - kResponseBadTruncation (22)  : Bad truncation                                  -> kErrorParse
+     * - Other error                                                                    -> kErrorFailed
      *
      * @param[in] aResponse  The response code to convert.
      *
      */
-    static otError ResponseCodeToError(Response aResponse);
+    static Error ResponseCodeToError(Response aResponse);
 
     /**
      * This method returns the number of entries in question section.
@@ -666,12 +667,12 @@ public:
      * @param[in] aLabel              The label string to append. MUST NOT be nullptr.
      * @param[in] aMessage            The message to append to.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the name label to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS  @p aLabel is not valid (e.g., label length is not within valid range).
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the name label to @p aMessage.
+     * @retval kErrorInvalidArgs  @p aLabel is not valid (e.g., label length is not within valid range).
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendLabel(const char *aLabel, Message &aMessage);
+    static Error AppendLabel(const char *aLabel, Message &aMessage);
 
     /**
      * This static method encodes and appends a single name label of specified length to a message.
@@ -686,12 +687,12 @@ public:
      * @param[in] aLength        The length of the label to append.
      * @param[in] aMessage       The message to append to.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the name label to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS  @p aLabel is not valid (e.g., label length is not within valid range).
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the name label to @p aMessage.
+     * @retval kErrorInvalidArgs  @p aLabel is not valid (e.g., label length is not within valid range).
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
+    static Error AppendLabel(const char *aLabel, uint8_t aLength, Message &aMessage);
 
     /**
      * This static method encodes and appends a sequence of name labels to a given message.
@@ -708,12 +709,12 @@ public:
      * @param[in]  aLabels            A name label string. Can be nullptr (then treated as "").
      * @param[in]  aMessage           The message to which to append the encoded name.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the name label(s) to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS  Name label @p aLabels is not valid.
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the name label(s) to @p aMessage.
+     * @retval kErrorInvalidArgs  Name label @p aLabels is not valid.
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendMultipleLabels(const char *aLabels, Message &aMessage);
+    static Error AppendMultipleLabels(const char *aLabels, Message &aMessage);
 
     /**
      * This static method encodes and appends a sequence of name labels within the specified length to a given message.
@@ -735,12 +736,12 @@ public:
      * @param[in]  aLength            The max length of the name labels to encode.
      * @param[in]  aMessage           The message to which to append the encoded name.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the name label(s) to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS  Name label @p aLabels is not valid.
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the name label(s) to @p aMessage.
+     * @retval kErrorInvalidArgs  Name label @p aLabels is not valid.
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage);
+    static Error AppendMultipleLabels(const char *aLabels, uint8_t aLength, Message &aMessage);
 
     /**
      * This static method appends a name label terminator to a message.
@@ -749,11 +750,11 @@ public:
      *
      * @param[in] aMessage            The message to append to.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the terminator label to @p aMessage.
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the terminator label to @p aMessage.
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendTerminator(Message &aMessage);
+    static Error AppendTerminator(Message &aMessage);
 
     /**
      * This static method appends a pointer type name label to a message.
@@ -764,11 +765,11 @@ public:
      * @param[in] aOffset             The offset from the start of DNS header to use for pointer value.
      * @param[in] aMessage            The message to append to.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the pointer label to @p aMessage.
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the pointer label to @p aMessage.
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendPointerLabel(uint16_t aOffset, Message &aMessage);
+    static Error AppendPointerLabel(uint16_t aOffset, Message &aMessage);
 
     /**
      * This static method encodes and appends a full name to a message.
@@ -782,12 +783,12 @@ public:
      * @param[in]  aName              A name string. Can be nullptr (then treated as "." or root).
      * @param[in]  aMessage           The message to append to.
      *
-     * @retval OT_ERROR_NONE          Successfully encoded and appended the name to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS  Name @p aName is not valid.
-     * @retval OT_ERROR_NO_BUFS       Insufficient available buffers to grow the message.
+     * @retval kErrorNone         Successfully encoded and appended the name to @p aMessage.
+     * @retval kErrorInvalidArgs  Name @p aName is not valid.
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendName(const char *aName, Message &aMessage);
+    static Error AppendName(const char *aName, Message &aMessage);
 
     /**
      * This static method parses and skips over a full name in a message.
@@ -798,17 +799,17 @@ public:
      *                                On exit (when parsed successfully), @p aOffset is updated to point to the byte
      *                                after the end of name field.
      *
-     * @retval OT_ERROR_NONE          Successfully parsed and skipped over name, @p Offset is updated.
-     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
+     * @retval kErrorNone          Successfully parsed and skipped over name, @p Offset is updated.
+     * @retval kErrorParse         Name could not be parsed (invalid format).
      *
      */
-    static otError ParseName(const Message &aMessage, uint16_t &aOffset);
+    static Error ParseName(const Message &aMessage, uint16_t &aOffset);
 
     /**
      * This static method reads a name label from a message.
      *
      * This method can be used to read labels one by one in a name. After a successful label read, @p aOffset is
-     * updated to point to the start of the next label. When we reach the end of the name, OT_ERROR_NOT_FOUND is
+     * updated to point to the start of the next label. When we reach the end of the name, kErrorNotFound is
      * returned. This method handles compressed names which use pointer labels. So as the labels in a name are read,
      * the @p aOffset may jump back in the message and at the end the @p aOffset does not necessarily point to the end
      * of the original name field.
@@ -826,14 +827,13 @@ public:
      *                                On output, when label is successfully read, @p aLabelLength is updated to return
      *                                the label's length (number of chars in the label string, excluding the null char).
      *
-     * @retval OT_ERROR_NONE          Successfully read the label and updated @p aLabelBuffer, @p aLabelLength, and
-     *                                @p aOffset.
-     * @retval OT_ERROR_NOT_FOUND     Reached the end of name and no more label to read.
-     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS       Label could not fit in @p aLabelLength chars.
+     * @retval kErrorNone      Successfully read the label and updated @p aLabelBuffer, @p aLabelLength, and @p aOffset.
+     * @retval kErrorNotFound  Reached the end of name and no more label to read.
+     * @retval kErrorParse     Name could not be parsed (invalid format).
+     * @retval kErrorNoBufs    Label could not fit in @p aLabelLength chars.
      *
      */
-    static otError ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength);
+    static Error ReadLabel(const Message &aMessage, uint16_t &aOffset, char *aLabelBuffer, uint8_t &aLabelLength);
 
     /**
      * This static method reads a full name from a message.
@@ -842,7 +842,7 @@ public:
      * dot '.' character. The read name will ALWAYS end with a dot.
      *
      * This method verifies that the read labels in message do not contain any dot character, otherwise it returns
-     * `OT_ERROR_PARSE`).
+     * `kErrorParse`).
      *
      * @param[in]    aMessage         The message to read the name from. `aMessage.GetOffset()` MUST point to
      *                                the start of DNS header (this is used to handle compressed names).
@@ -852,12 +852,12 @@ public:
      * @param[out]   aNameBuffer      A pointer to a char array to output the read name as a null-terminated C string.
      * @param[inout] aNameBufferSize  The maximum number of chars in @p aNameBuffer array.
      *
-     * @retval OT_ERROR_NONE          Successfully read the name, @p aNameBuffer and @p Offset are updated.
-     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS       Name could not fit in @p aNameBufferSize chars.
+     * @retval kErrorNone         Successfully read the name, @p aNameBuffer and @p Offset are updated.
+     * @retval kErrorParse        Name could not be parsed (invalid format).
+     * @retval kErrorNoBufs       Name could not fit in @p aNameBufferSize chars.
      *
      */
-    static otError ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize);
+    static Error ReadName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize);
 
     /**
      * This static method compares a single name label from a message with a given label string.
@@ -875,20 +875,20 @@ public:
      *                                @p aOffset is updated to point to the start of the next label.
      * @param[in]    aLabel           A pointer to a null terminated string containing the label to compare with.
 
-     * @retval OT_ERROR_NONE          The label from @p aMessage matches @p aLabel. @p aOffset is updated.
-     * @retval OT_ERROR_NOT_FOUND     The label from @p aMessage does not match @p aLabel (note that @p aOffset is not
-     *                                updated in this case).
-     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
+     * @retval kErrorNone          The label from @p aMessage matches @p aLabel. @p aOffset is updated.
+     * @retval kErrorNotFound      The label from @p aMessage does not match @p aLabel (note that @p aOffset is not
+     *                             updated in this case).
+     * @retval kErrorParse         Name could not be parsed (invalid format).
      *
      */
-    static otError CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel);
+    static Error CompareLabel(const Message &aMessage, uint16_t &aOffset, const char *aLabel);
 
     /**
      * This static method parses and compares a full name from a message with a given name.
      *
      * This method checks whether the encoded name in a message matches a given name string. It checks the name in
      * the message in place and handles compressed names. If the name read from the message does not match @p aName, it
-     * returns `OT_ERROR_NOT_FOUND`. `OT_ERROR_NONE` indicates that the name matches @p aName.
+     * returns `kErrorNotFound`. `kErrorNone` indicates that the name matches @p aName.
      *
      * The @p aName must follow  "<label1>.<label2>.<label3>", i.e., a sequence of labels separated by dot '.' char.
      * E.g., "example.com", "example.com." (same as previous one), "local.", "default.service.arpa", "." or "" (root).
@@ -902,13 +902,13 @@ public:
      *                                the name field.
      * @param[in]    aName            A pointer to a null terminated string containing the name to compare with.
      *
-     * @retval OT_ERROR_NONE          The name from @p aMessage matches @p aName. @p aOffset is updated.
-     * @retval OT_ERROR_NOT_FOUND     The name from @p aMessage does not match @p aName. @p aOffset is updated.
-     * @retval OT_ERROR_PARSE         Name could not be parsed (invalid format).
-     * @retval OT_ERROR_INVALID_ARGS  The @p aName is not a valid name (e.g. back to back "." chars)
+     * @retval kErrorNone          The name from @p aMessage matches @p aName. @p aOffset is updated.
+     * @retval kErrorNotFound      The name from @p aMessage does not match @p aName. @p aOffset is updated.
+     * @retval kErrorParse         Name could not be parsed (invalid format).
+     * @retval kErrorInvalidArgs   The @p aName is not a valid name (e.g. back to back "." chars)
      *
      */
-    static otError CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName);
+    static Error CompareName(const Message &aMessage, uint16_t &aOffset, const char *aName);
 
     /**
      * This static method parses and compares a full name from a message with a name from another message.
@@ -934,14 +934,13 @@ public:
      *                                `aMessage2.GetOffset()` MUST point to the start of DNS header.
      * @param[in]    aOffset2         The offset in @p aMessage2 pointing to the start of the name field.
      *
-     * @retval OT_ERROR_NONE          The name from @p aMessage matches the name from @p aMessage2. @p aOffset is
-     *                                updated.
-     * @retval OT_ERROR_NOT_FOUND     The name from @p aMessage does not match the name from @p aMessage2. @p aOffset
-     *                                is updated.
-     * @retval OT_ERROR_PARSE         Name in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNone       The name from @p aMessage matches the name from @p aMessage2. @p aOffset is updated.
+     * @retval kErrorNotFound   The name from @p aMessage does not match the name from @p aMessage2. @p aOffset is
+     *                          updated.
+     * @retval kErrorParse      Name in @p aMessage could not be parsed (invalid format).
      *
      */
-    static otError CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2);
+    static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Message &aMessage2, uint16_t aOffset2);
 
     /**
      * This static method parses and compares a full name from a message with a given name.
@@ -956,12 +955,12 @@ public:
      *                                field.
      * @param[in]    aName            A reference to a name to compare with.
      *
-     * @retval OT_ERROR_NONE          The name from @p aMessage matches @p aName. @p aOffset is updated.
-     * @retval OT_ERROR_NOT_FOUND     The name from @p aMessage does not match @p aName. @p aOffset is updated.
-     * @retval OT_ERROR_PARSE         Name in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNone          The name from @p aMessage matches @p aName. @p aOffset is updated.
+     * @retval kErrorNotFound      The name from @p aMessage does not match @p aName. @p aOffset is updated.
+     * @retval kErrorParse         Name in @p aMessage could not be parsed (invalid format).
      *
      */
-    static otError CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
+    static Error CompareName(const Message &aMessage, uint16_t &aOffset, const Name &aName);
 
     /**
      * This static method tests if a DNS name is a sub-domain of a given domain.
@@ -1017,11 +1016,11 @@ private:
         {
         }
 
-        bool    IsEndOffsetSet(void) const { return (mNameEndOffset != kUnsetNameEndOffset); }
-        otError GetNextLabel(void);
-        otError ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const;
-        bool    CompareLabel(const char *&aName, bool aIsSingleLabel) const;
-        bool    CompareLabel(const LabelIterator &aOtherIterator) const;
+        bool  IsEndOffsetSet(void) const { return (mNameEndOffset != kUnsetNameEndOffset); }
+        Error GetNextLabel(void);
+        Error ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const;
+        bool  CompareLabel(const char *&aName, bool aIsSingleLabel) const;
+        bool  CompareLabel(const LabelIterator &aOtherIterator) const;
 
         const Message &mMessage;          // Message to read labels from.
         uint16_t       mLabelStartOffset; // Offset in `mMessage` to the first char of current label text.
@@ -1090,12 +1089,12 @@ public:
          *
          * @param[out] aEntry          A reference to a `TxtEntry` to output the parsed/read entry.
          *
-         * @retval OT_ERROR_NONE       The next entry was parsed successfully. @p aEntry is updated.
-         * @retval OT_ERROR_NOT_FOUND  No more entries in TXT data.
-         * @retval OT_ERROR_PARSE      The TXT data from `Iterator` is not well-formed.
+         * @retval kErrorNone       The next entry was parsed successfully. @p aEntry is updated.
+         * @retval kErrorNotFound   No more entries in TXT data.
+         * @retval kErrorParse      The TXT data from `Iterator` is not well-formed.
          *
          */
-        otError GetNextEntry(TxtEntry &aEntry);
+        Error GetNextEntry(TxtEntry &aEntry);
 
     private:
         enum : uint8_t
@@ -1141,12 +1140,12 @@ public:
      *
      * @param[in] aMessage  The message to append to.
      *
-     * @retval OT_ERROR_NONE           Entry was appended successfully to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS   The `TxTEntry` info is not valid.
-     * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to grow the message.
+     * @retval kErrorNone          Entry was appended successfully to @p aMessage.
+     * @retval kErrorInvalidArgs   The `TxTEntry` info is not valid.
+     * @retval kErrorNoBufs        Insufficient available buffers to grow the message.
      *
      */
-    otError AppendTo(Message &aMessage) const;
+    Error AppendTo(Message &aMessage) const;
 
     /**
      * This static method appends an array of `TxtEntry` items to a message.
@@ -1155,12 +1154,12 @@ public:
      * @param[in] aNumEntries  The number of entries in @p aEntries array.
      * @param[in] aMessage     The message to append to.
      *
-     * @retval OT_ERROR_NONE           Entries appended successfully to @p aMessage.
-     * @retval OT_ERROR_INVALID_ARGS   The `TxTEntry` info is not valid.
-     * @retval OT_ERROR_NO_BUFS        Insufficient available buffers to grow the message.
+     * @retval kErrorNone          Entries appended successfully to @p aMessage.
+     * @retval kErrorInvalidArgs   The `TxTEntry` info is not valid.
+     * @retval kErrorNoBufs        Insufficient available buffers to grow the message.
      *
      */
-    static otError AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
+    static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
 
 private:
     enum : uint8_t
@@ -1328,11 +1327,11 @@ public:
      *                            the last parsed record.
      * @param[in]    aNumRecords  Number of resource records to parse.
      *
-     * @retval OT_ERROR_NONE      Parsed records successfully. @p aOffset is updated.
-     * @retval OT_ERROR_PARSE     Could not parse the records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     * @retval kErrorNone      Parsed records successfully. @p aOffset is updated.
+     * @retval kErrorParse     Could not parse the records from @p aMessage (e.g., ran out of bytes in @p aMessage).
      *
      */
-    static otError ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords);
+    static Error ParseRecords(const Message &aMessage, uint16_t &aOffset, uint16_t aNumRecords);
 
     /**
      * This static method searches in a given message to find the first resource record matching a given record name.
@@ -1349,12 +1348,12 @@ public:
      *                               number of remaining records after @p aOffset (excluding the matching record).
      * @param[in]    aName           The record name to match against.
      *
-     * @retval OT_ERROR_NONE         A matching record was found. @p aOffset, @p aNumRecords are updated.
-     * @retval OT_ERROR_NOT_FOUND    A matching record could not be found. @p aOffset and @p aNumRecords are updated.
-     * @retval OT_ERROR_PARSE        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     * @retval kErrorNone         A matching record was found. @p aOffset, @p aNumRecords are updated.
+     * @retval kErrorNotFound     A matching record could not be found. @p aOffset and @p aNumRecords are updated.
+     * @retval kErrorParse        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
      *
      */
-    static otError FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const Name &aName);
+    static Error FindRecord(const Message &aMessage, uint16_t &aOffset, uint16_t &aNumRecords, const Name &aName);
 
     /**
      * This template static method searches in a message to find the i-th occurrence of resource records of specific
@@ -1383,18 +1382,18 @@ public:
      *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
      *                               read and copied into @p aRecord.
      *
-     * @retval OT_ERROR_NONE         A matching record was found. @p aOffset is updated.
-     * @retval OT_ERROR_NOT_FOUND    A matching record could not be found.
-     * @retval OT_ERROR_PARSE        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     * @retval kErrorNone         A matching record was found. @p aOffset is updated.
+     * @retval kErrorNotFound     A matching record could not be found.
+     * @retval kErrorParse        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
      *
      */
     template <class RecordType>
-    static otError FindRecord(const Message &aMessage,
-                              uint16_t &     aOffset,
-                              uint16_t       aNumRecords,
-                              uint16_t       aIndex,
-                              const Name &   aName,
-                              RecordType &   aRecord)
+    static Error FindRecord(const Message &aMessage,
+                            uint16_t &     aOffset,
+                            uint16_t       aNumRecords,
+                            uint16_t       aIndex,
+                            const Name &   aName,
+                            RecordType &   aRecord)
     {
         return FindRecord(aMessage, aOffset, aNumRecords, aIndex, aName, RecordType::kType, aRecord,
                           sizeof(RecordType));
@@ -1429,25 +1428,24 @@ public:
      *                               If a matching record is found, `sizeof(RecordType)` bytes from @p aMessage are
      *                               read and copied into @p aRecord.
      *
-     * @retval OT_ERROR_NONE         A matching record was read successfully. @p aOffset, and @p aRecord are updated.
-     * @retval OT_ERROR_NOT_FOUND    A matching record could not be found. @p aOffset is updated.
-     * @retval OT_ERROR_PARSE        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
+     * @retval kErrorNone         A matching record was read successfully. @p aOffset, and @p aRecord are updated.
+     * @retval kErrorNotFound     A matching record could not be found. @p aOffset is updated.
+     * @retval kErrorParse        Could not parse records from @p aMessage (e.g., ran out of bytes in @p aMessage).
      *
      */
-    template <class RecordType>
-    static otError ReadRecord(const Message &aMessage, uint16_t &aOffset, RecordType &aRecord)
+    template <class RecordType> static Error ReadRecord(const Message &aMessage, uint16_t &aOffset, RecordType &aRecord)
     {
         return ReadRecord(aMessage, aOffset, RecordType::kType, aRecord, sizeof(RecordType));
     }
 
 protected:
-    otError ReadName(const Message &aMessage,
-                     uint16_t &     aOffset,
-                     uint16_t       aStartOffset,
-                     char *         aNameBuffer,
-                     uint16_t       aNameBufferSize,
-                     bool           aSkipRecord) const;
-    otError SkipRecord(const Message &aMessage, uint16_t &aOffset) const;
+    Error ReadName(const Message &aMessage,
+                   uint16_t &     aOffset,
+                   uint16_t       aStartOffset,
+                   char *         aNameBuffer,
+                   uint16_t       aNameBufferSize,
+                   bool           aSkipRecord) const;
+    Error SkipRecord(const Message &aMessage, uint16_t &aOffset) const;
 
 private:
     enum : uint8_t
@@ -1455,23 +1453,23 @@ private:
         kType = kTypeAny, // This is intended for used by `ReadRecord()` only.
     };
 
-    static otError FindRecord(const Message & aMessage,
-                              uint16_t &      aOffset,
-                              uint16_t        aNumRecords,
-                              uint16_t        aIndex,
-                              const Name &    aName,
-                              uint16_t        aType,
-                              ResourceRecord &aRecord,
-                              uint16_t        aMinRecordSize);
+    static Error FindRecord(const Message & aMessage,
+                            uint16_t &      aOffset,
+                            uint16_t        aNumRecords,
+                            uint16_t        aIndex,
+                            const Name &    aName,
+                            uint16_t        aType,
+                            ResourceRecord &aRecord,
+                            uint16_t        aMinRecordSize);
 
-    static otError ReadRecord(const Message & aMessage,
-                              uint16_t &      aOffset,
-                              uint16_t        aType,
-                              ResourceRecord &aRecord,
-                              uint16_t        aMinRecordSize);
+    static Error ReadRecord(const Message & aMessage,
+                            uint16_t &      aOffset,
+                            uint16_t        aType,
+                            ResourceRecord &aRecord,
+                            uint16_t        aMinRecordSize);
 
-    otError CheckRecord(const Message &aMessage, uint16_t aOffset) const;
-    otError ReadFrom(const Message &aMessage, uint16_t aOffset);
+    Error CheckRecord(const Message &aMessage, uint16_t aOffset) const;
+    Error ReadFrom(const Message &aMessage, uint16_t aOffset);
 
     uint16_t mType;   // The type of the data in RDATA section.
     uint16_t mClass;  // The class of the data in RDATA section.
@@ -1518,15 +1516,15 @@ public:
      *                                  (MUST NOT be nullptr).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
-     * @retval OT_ERROR_NONE            The CNAME name was read successfully. @p aOffset and @p aNameBuffer are updated.
-     * @retval OT_ERROR_PARSE           The CNAME record in @p aMessage could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     * @retval kErrorNone           The CNAME name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval kErrorParse          The CNAME record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs         Name could not fit in @p aNameBufferSize chars.
      *
      */
-    otError ReadCanonicalName(const Message &aMessage,
-                              uint16_t &     aOffset,
-                              char *         aNameBuffer,
-                              uint16_t       aNameBufferSize) const
+    Error ReadCanonicalName(const Message &aMessage,
+                            uint16_t &     aOffset,
+                            char *         aNameBuffer,
+                            uint16_t       aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(CnameRecord),
                                         aNameBuffer, aNameBufferSize, /* aSkipRecord */ true);
@@ -1572,12 +1570,12 @@ public:
      *                                  (MUST NOT be nullptr).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
-     * @retval OT_ERROR_NONE            The PTR name was read successfully. @p aOffset and @p aNameBuffer are updated.
-     * @retval OT_ERROR_PARSE           The PTR record in @p aMessage could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     * @retval kErrorNone           The PTR name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval kErrorParse          The PTR record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs         Name could not fit in @p aNameBufferSize chars.
      *
      */
-    otError ReadPtrName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize) const
+    Error ReadPtrName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(PtrRecord), aNameBuffer,
                                         aNameBufferSize,
@@ -1608,18 +1606,17 @@ public:
      *                                  be `nullptr` if caller is only interested in the first label.
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
-     * @retval OT_ERROR_NONE            The PTR name was read successfully. @p aOffset, @aLabelBuffer and @aNameBuffer
-     *                                  are updated.
-     * @retval OT_ERROR_PARSE           The PTR record in @p aMessage could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS         Either label or name could not fit in the related char buffers.
+     * @retval kErrorNone    The PTR name was read successfully. @p aOffset, @aLabelBuffer and @aNameBuffer are updated.
+     * @retval kErrorParse   The PTR record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs  Either label or name could not fit in the related char buffers.
      *
      */
-    otError ReadPtrName(const Message &aMessage,
-                        uint16_t &     aOffset,
-                        char *         aLabelBuffer,
-                        uint8_t        aLabelBufferSize,
-                        char *         aNameBuffer,
-                        uint16_t       aNameBufferSize) const;
+    Error ReadPtrName(const Message &aMessage,
+                      uint16_t &     aOffset,
+                      char *         aLabelBuffer,
+                      uint8_t        aLabelBufferSize,
+                      char *         aNameBuffer,
+                      uint16_t       aNameBufferSize) const;
 
 } OT_TOOL_PACKED_END;
 
@@ -1659,16 +1656,13 @@ public:
      * @param[inout]  aTxtBufferSize    On input, the size of @p aTxtBuffer (max bytes that can be read).
      *                                  On exit, @p aTxtBufferSize gives number of bytes written to @p aTxtBuffer.
      *
-     * @retval OT_ERROR_NONE            The TXT data was read successfully. @p aOffset, @p aTxtBuffer and
-     *                                  @p aTxtBufferSize are updated.
-     * @retval OT_ERROR_PARSE           The TXT record in @p aMessage could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS         TXT data could not fit in @p aTxtBufferSize bytes.
+     * @retval kErrorNone           The TXT data was read successfully. @p aOffset, @p aTxtBuffer and @p aTxtBufferSize
+     *                              are updated.
+     * @retval kErrorParse          The TXT record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs         TXT data could not fit in @p aTxtBufferSize bytes.
      *
      */
-    otError ReadTxtData(const Message &aMessage,
-                        uint16_t &     aOffset,
-                        uint8_t *      aTxtBuffer,
-                        uint16_t &     aTxtBufferSize) const;
+    Error ReadTxtData(const Message &aMessage, uint16_t &aOffset, uint8_t *aTxtBuffer, uint16_t &aTxtBufferSize) const;
 
     /**
      * This static method tests if a buffer contains valid encoded TXT data.
@@ -1822,15 +1816,15 @@ public:
      *                                  (MUST NOT be nullptr).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
-     * @retval OT_ERROR_NONE            The host name was read successfully. @p aOffset and @p aNameBuffer are updated.
-     * @retval OT_ERROR_PARSE           The SRV record in @p aMessage could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     * @retval kErrorNone            The host name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval kErrorParse           The SRV record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs          Name could not fit in @p aNameBufferSize chars.
      *
      */
-    otError ReadTargetHostName(const Message &aMessage,
-                               uint16_t &     aOffset,
-                               char *         aNameBuffer,
-                               uint16_t       aNameBufferSize) const
+    Error ReadTargetHostName(const Message &aMessage,
+                             uint16_t &     aOffset,
+                             char *         aNameBuffer,
+                             uint16_t       aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SrvRecord), aNameBuffer,
                                         aNameBufferSize,
@@ -2032,7 +2026,7 @@ private:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 OT_TOOL_PACKED_BEGIN
-class Ecdsa256KeyRecord : public KeyRecord, public Clearable<Ecdsa256KeyRecord>
+class Ecdsa256KeyRecord : public KeyRecord, public Clearable<Ecdsa256KeyRecord>, public Equatable<Ecdsa256KeyRecord>
 {
 public:
     /**
@@ -2058,26 +2052,6 @@ public:
      *
      */
     const Crypto::Ecdsa::P256::PublicKey &GetKey(void) const { return mKey; }
-
-    /**
-     * This comparator tells whether two Ecdsa256KeyRecord objects are equal.
-     *
-     * @param[in]  aOther  The other Ecdsa256KeyRecord object.
-     *
-     * @returns  TRUE if they are equal, FALSE if not.
-     *
-     */
-    bool operator==(const Ecdsa256KeyRecord &aOther) const { return memcmp(this, &aOther, sizeof(*this)) == 0; }
-
-    /**
-     * This comparator tells whether two Ecdsa256KeyRecord objects are not equal.
-     *
-     * @param[in]  aOther  The other Ecdsa256KeyRecord object.
-     *
-     * @returns  TRUE if they are not equal, FALSE if equal.
-     *
-     */
-    bool operator!=(const Ecdsa256KeyRecord &aOther) const { return !(*this == aOther); }
 
 private:
     Crypto::Ecdsa::P256::PublicKey mKey;
@@ -2252,15 +2226,12 @@ public:
      *                                  (MUST NOT be nullptr).
      * @param[in]     aNameBufferSize   The size of @p aNameBuffer.
      *
-     * @retval OT_ERROR_NONE            The name was read successfully. @p aOffset and @p aNameBuffer are updated.
-     * @retval OT_ERROR_PARSE           The SIG record in @p aMessage could not be parsed (invalid format).
-     * @retval OT_ERROR_NO_BUFS         Name could not fit in @p aNameBufferSize chars.
+     * @retval kErrorNone           The name was read successfully. @p aOffset and @p aNameBuffer are updated.
+     * @retval kErrorParse          The SIG record in @p aMessage could not be parsed (invalid format).
+     * @retval kErrorNoBufs         Name could not fit in @p aNameBufferSize chars.
      *
      */
-    otError ReadSignerName(const Message &aMessage,
-                           uint16_t &     aOffset,
-                           char *         aNameBuffer,
-                           uint16_t       aNameBufferSize) const
+    Error ReadSignerName(const Message &aMessage, uint16_t &aOffset, char *aNameBuffer, uint16_t aNameBufferSize) const
     {
         return ResourceRecord::ReadName(aMessage, aOffset, /* aStartOffset */ aOffset - sizeof(SigRecord), aNameBuffer,
                                         aNameBufferSize,

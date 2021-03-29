@@ -38,7 +38,7 @@ jobs:
     - uses: rokroskar/workflow-run-cleanup-action@master
       env:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
-      if: "github.ref != 'refs/heads/master'"
+      if: "github.ref != 'refs/heads/main'"
 
   buildx:
     name: buildx-${{ matrix.docker_name }}
@@ -52,8 +52,7 @@ jobs:
     - uses: actions/checkout@v2
       with:
         submodules: true
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
+
     - name: Prepare
       id: prepare
       run: |
@@ -72,29 +71,26 @@ jobs:
           --build-arg VCS_REF=${GITHUB_SHA::8} \
           ${TAGS} --file ${DOCKER_FILE} .
 
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
     - name: Docker Buildx (build)
       run: |
         docker buildx build --output "type=image,push=false" ${{ steps.prepare.outputs.buildx_args }}
 
-    - name: Docker Login
+    - name: Login to DockerHub
       if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-      run: |
-        echo "${DOCKER_PASSWORD}" | docker login --username "${DOCKER_USERNAME}" --password-stdin
+      uses: docker/login-action@v1
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
     - name: Docker Buildx (push)
       if: success() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
       run: |
         docker buildx build --output "type=image,push=true" ${{ steps.prepare.outputs.buildx_args }}
 
-    - name: Docker Check Manifest
+    - name: Inspect Image
       if: always() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
       run: |
-        docker run --rm mplatform/mquery ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}
-
-    - name: Clear
-      if: always() && github.repository == 'openthread/openthread' && github.event_name != 'pull_request'
-      run: |
-        rm -f ${HOME}/.docker/config.json
+        docker buildx imagetools inspect ${{ steps.prepare.outputs.docker_image }}:${{ steps.prepare.outputs.version }}

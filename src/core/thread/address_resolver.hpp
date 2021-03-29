@@ -99,11 +99,11 @@ public:
      *                           To get the first entry, initialize the iterator by setting all its fields to zero.
      *                           e.g., `memset` the the iterator structure to zero.
      *
-     * @retval OT_ERROR_NONE       Successfully populated @p aInfo with the info for the next EID cache entry.
-     * @retval OT_ERROR_NOT_FOUND  No more entries in the address cache table.
+     * @retval kErrorNone      Successfully populated @p aInfo with the info for the next EID cache entry.
+     * @retval kErrorNotFound  No more entries in the address cache table.
      *
      */
-    otError GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const;
+    Error GetNextCacheEntry(EntryInfo &aInfo, Iterator &aIterator) const;
 
     /**
      * This method removes the EID-to-RLOC cache entries corresponding to an RLOC16.
@@ -135,11 +135,11 @@ public:
      * @param[in]  aEid               A reference to the EID.
      * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
      *
-     * @retval OT_ERROR_NONE           Successfully updates an existing cache entry.
-     * @retval OT_ERROR_NOT_FOUND      No cache entry with @p aEid.
+     * @retval kErrorNone          Successfully updates an existing cache entry.
+     * @retval kErrorNotFound      No cache entry with @p aEid.
      *
      */
-    otError UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    Error UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     /**
      * This method adds a snooped cache entry for a given EID.
@@ -161,14 +161,14 @@ public:
      * @param[out]  aRloc16             The RLOC16 corresponding to @p aEid.
      * @param[in]   aAllowAddressQuery  Allow to initiate Address Query if the mapping is not known.
      *
-     * @retval OT_ERROR_NONE           Successfully provided the RLOC16.
-     * @retval OT_ERROR_ADDRESS_QUERY  Initiated an Address Query if allowed.
-     * @retval OT_ERROR_DROP           Earlier Address Query for the EID timed out. In retry timeout interval.
-     * @retval OT_ERROR_NO_BUFS        Insufficient buffer space available to send Address Query.
-     * @retval OT_ERROR_NOT_FOUND      The mapping was not found and Address Query was not allowed.
+     * @retval kErrorNone           Successfully provided the RLOC16.
+     * @retval kErrorAddressQuery   Initiated an Address Query if allowed.
+     * @retval kErrorDrop           Earlier Address Query for the EID timed out. In retry timeout interval.
+     * @retval kErrorNoBufs         Insufficient buffer space available to send Address Query.
+     * @retval kErrorNotFound       The mapping was not found and Address Query was not allowed.
      *
      */
-    otError Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery = true);
+    Error Resolve(const Ip6::Address &aEid, Mac::ShortAddress &aRloc16, bool aAllowAddressQuery = true);
 
     /**
      * This method restarts any ongoing address queries.
@@ -312,7 +312,7 @@ private:
     CacheEntry *NewCacheEntry(bool aSnoopedEntry);
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
 
-    otError SendAddressQuery(const Ip6::Address &aEid);
+    Error SendAddressQuery(const Ip6::Address &aEid);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
 

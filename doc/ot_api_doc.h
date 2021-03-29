@@ -57,6 +57,7 @@
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
  * @defgroup api-srp                  SRP
+ * @defgroup api-ping-sender          Ping Sender
  * @defgroup api-udp-group            UDP
  *
  * @{
@@ -163,7 +164,6 @@
  * @defgroup plat-time                Time Service
  * @defgroup plat-toolchain           Toolchain
  * @defgroup plat-trel                TREL
- * @defgroup plat-uart                UART
  *
  * @}
  *

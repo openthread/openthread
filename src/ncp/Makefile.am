@@ -112,8 +112,8 @@ COMMON_SOURCES                                    = \
     ncp_config.h                                    \
     ncp_spi.cpp                                     \
     ncp_spi.hpp                                     \
-    ncp_uart.cpp                                    \
-    ncp_uart.hpp                                    \
+    ncp_hdlc.cpp                                    \
+    ncp_hdlc.hpp                                    \
     $(NULL)
 
 if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK

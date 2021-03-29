@@ -80,7 +80,6 @@ typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
  * @param[in]  aDataset                A pointer to the Dataset containing the fields to change.
  * @param[in]  aCallback               A callback to indicate when Dataset update request finishes.
  * @param[in]  aContext                An arbitrary context passed to callback.
- * @param[in]  aRetryWaitInterval      The wait time after sending Pending dataset before retrying (interval in ms).
  *
  * @retval OT_ERROR_NONE           Dataset update started successfully (@p aCallback will be invoked on completion).
  * @retval OT_ERROR_INVALID_STATE  Device is disabled (MLE is disabled).
@@ -92,8 +91,7 @@ typedef void (*otDatasetUpdaterCallback)(otError aError, void *aContext);
 otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
                                       const otOperationalDataset *aDataset,
                                       otDatasetUpdaterCallback    aCallback,
-                                      void *                      aContext,
-                                      uint32_t                    aReryWaitInterval);
+                                      void *                      aContext);
 
 /**
  * This function cancels an ongoing (if any) Operational Dataset update request.

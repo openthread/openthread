@@ -20,7 +20,7 @@ platform-relative macro definitions. These macros can be exposed for
 conditional compilation in other Makefiles during the pre-compiling phase.
 
 The OpenThread Autoconf script is located at:
-[`/openthread/configure.ac`](https://github.com/openthread/openthread/blob/master/configure.ac)
+[`/openthread/configure.ac`](https://github.com/openthread/openthread/blob/main/configure.ac)
 
 ### Platform example name
 
@@ -106,14 +106,14 @@ The following platform-specific Automake files need to be created:
 -   `/openthread/examples/platforms/{platform-name}/Makefile.am`
 -   `/openthread/examples/platforms/{platform-name}/Makefile.platform.am`
 
-See [`/examples`](https://github.com/openthread/openthread/tree/master/examples/) for sample implementations of
+See [`/examples`](https://github.com/openthread/openthread/tree/main/examples/) for sample implementations of
 these files.
 
 The following Automake files also need to be updated with your platform
 information:
 
--   [`/openthread/examples/platforms/Makefile.am`](https://github.com/openthread/openthread/blob/master/examples/platforms/Makefile.am)
--   [`/openthread/examples/platforms/Makefile.platform.am`](https://github.com/openthread/openthread/blob/master/examples/platforms/Makefile.platform.am)
+-   [`/openthread/examples/platforms/Makefile.am`](https://github.com/openthread/openthread/blob/main/examples/platforms/Makefile.am)
+-   [`/openthread/examples/platforms/Makefile.platform.am`](https://github.com/openthread/openthread/blob/main/examples/platforms/Makefile.platform.am)
 
 ### Linker script configuration
 
@@ -145,7 +145,7 @@ endif # OPENTHREAD_EXAMPLES_EFR32
 ```
 
 Add the platform's linker script configuration to the
-[`/openthread/examples/platforms/Makefile.platform.am`](https://github.com/openthread/openthread/blob/master/examples/platforms/Makefile.platform.am)
+[`/openthread/examples/platforms/Makefile.platform.am`](https://github.com/openthread/openthread/blob/main/examples/platforms/Makefile.platform.am)
 utility Makefile:
 
 ```
@@ -156,7 +156,7 @@ endif
 
 ### Subdirectory configuration
 
-Modify [`/openthread/examples/platforms/Makefile.am`](https://github.com/openthread/openthread/blob/master/examples/platforms/Makefile.platform.am)
+Modify [`/openthread/examples/platforms/Makefile.am`](https://github.com/openthread/openthread/blob/main/examples/platforms/Makefile.platform.am)
 to configure the package subdirectories for the new platform example.
 
 Add the platform subdirectory name in the list for `make dist`, in alphabetical
@@ -214,4 +214,4 @@ libopenthread_efr32_a_SOURCES   =  \
 
 > Note: Any non-original derivative code (for example, linker script or
 toolchain startup code) must be contained in
-[`/openthread/third_party`](https://github.com/openthread/openthread/tree/master/third_party).
+[`/openthread/third_party`](https://github.com/openthread/openthread/tree/main/third_party).

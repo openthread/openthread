@@ -191,11 +191,11 @@ public:
                                  it should be set to OT_NEIGHBOR_INFO_ITERATOR_INIT.
      * @param[out]    aNeighInfo The neighbor information.
      *
-     * @retval OT_ERROR_NONE          Successfully found the next neighbor entry in table.
-     * @retval OT_ERROR_NOT_FOUND     No subsequent neighbor entry exists in the table.
+     * @retval kErrorNone         Successfully found the next neighbor entry in table.
+     * @retval kErrorNotFound     No subsequent neighbor entry exists in the table.
      *
      */
-    otError GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
+    Error GetNextNeighborInfo(otNeighborInfoIterator &aIterator, Neighbor::Info &aNeighInfo);
 
     /**
      * This method registers the "neighbor table changed" callback function.

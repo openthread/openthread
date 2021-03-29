@@ -197,7 +197,7 @@ void TestUdpMessageChecksum(void)
 
         CorruptMessage(*message);
 
-        VerifyOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoUdp) != OT_ERROR_NONE,
+        VerifyOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoUdp) != kErrorNone,
                      "Checksum passed on corrupted message");
 
         message->Free();
@@ -271,7 +271,7 @@ void TestIcmp6MessageChecksum(void)
 
         CorruptMessage(*message);
 
-        VerifyOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoIcmp6) != OT_ERROR_NONE,
+        VerifyOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoIcmp6) != kErrorNone,
                      "Checksum passed on corrupted message");
 
         message->Free();

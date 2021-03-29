@@ -143,7 +143,7 @@ void Link::BeginTransmit(void)
     // continue to rx on same channel
     mRxChannel = mTxFrame.GetChannel();
 
-    VerifyOrExit(!mTxFrame.IsEmpty(), InvokeSendDone(OT_ERROR_ABORT));
+    VerifyOrExit(!mTxFrame.IsEmpty(), InvokeSendDone(kErrorAbort));
 
     IgnoreError(mTxFrame.GetDstAddr(destAddr));
 
@@ -171,7 +171,7 @@ void Link::BeginTransmit(void)
         }
     }
 
-    if (mTxFrame.GetDstPanId(destPanId) != OT_ERROR_NONE)
+    if (mTxFrame.GetDstPanId(destPanId) != kErrorNone)
     {
         destPanId = Mac::kPanIdBroadcast;
     }
@@ -203,7 +203,7 @@ void Link::BeginTransmit(void)
     otLogDebgMac("Trel: BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(),
                  txPacket.GetPayloadLength());
 
-    VerifyOrExit(mInterface.Send(txPacket) == OT_ERROR_NONE, InvokeSendDone(OT_ERROR_ABORT));
+    VerifyOrExit(mInterface.Send(txPacket) == kErrorNone, InvokeSendDone(kErrorAbort));
 
     if (mTxFrame.GetAckRequest())
     {
@@ -232,13 +232,13 @@ void Link::BeginTransmit(void)
         ackFrame = &mRxFrame;
     }
 
-    InvokeSendDone(OT_ERROR_NONE, ackFrame);
+    InvokeSendDone(kErrorNone, ackFrame);
 
 exit:
     return;
 }
 
-void Link::InvokeSendDone(otError aError, Mac::RxFrame *aAckFrame)
+void Link::InvokeSendDone(Error aError, Mac::RxFrame *aAckFrame)
 {
     SetState(kStateReceive);
 
@@ -303,7 +303,7 @@ void Link::HandleTimer(Neighbor &aNeighbor)
     {
         aNeighbor.mTrelPreviousPendingAcks--;
 
-        ReportDeferredAckStatus(aNeighbor, OT_ERROR_NO_ACK);
+        ReportDeferredAckStatus(aNeighbor, kErrorNoAck);
         VerifyOrExit(!aNeighbor.IsStateInvalid());
     }
 
@@ -372,7 +372,7 @@ void Link::ProcessReceivedPacket(Packet &aPacket)
     mRxFrame.mInfo.mRxInfo.mLqi                   = OT_RADIO_LQI_NONE;
     mRxFrame.mInfo.mRxInfo.mAckedWithFramePending = true;
 
-    Get<Mac::Mac>().HandleReceivedFrame(&mRxFrame, OT_ERROR_NONE);
+    Get<Mac::Mac>().HandleReceivedFrame(&mRxFrame, kErrorNone);
 
 exit:
     return;
@@ -380,7 +380,7 @@ exit:
 
 void Link::HandleAck(Packet &aAckPacket)
 {
-    otError      ackError;
+    Error        ackError;
     Mac::Address srcAddress;
     Neighbor *   neighbor;
     uint32_t     ackNumber;
@@ -404,14 +404,14 @@ void Link::HandleAck(Packet &aAckPacket)
         // expected one. If it does not, it indicates that some of
         // packets missed their acks.
 
-        ackError = (ackNumber == neighbor->GetExpectedTrelAckNumber()) ? OT_ERROR_NONE : OT_ERROR_NO_ACK;
+        ackError = (ackNumber == neighbor->GetExpectedTrelAckNumber()) ? kErrorNone : kErrorNoAck;
 
         neighbor->DecrementPendingTrelAckCount();
 
         ReportDeferredAckStatus(*neighbor, ackError);
         VerifyOrExit(!neighbor->IsStateInvalid());
 
-    } while (ackError == OT_ERROR_NO_ACK);
+    } while (ackError == kErrorNoAck);
 
 exit:
     return;
@@ -436,10 +436,10 @@ void Link::SendAck(Packet &aRxPacket)
     IgnoreError(mInterface.Send(ackPacket));
 }
 
-void Link::ReportDeferredAckStatus(Neighbor &aNeighbor, otError aError)
+void Link::ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError)
 {
     otLogDebgMac("Trel: ReportDeferredAckStatus(): %s for %s", aNeighbor.GetExtAddress().ToString().AsCString(),
-                 otThreadErrorToString(aError));
+                 ErrorToString(aError));
 
     Get<MeshForwarder>().HandleDeferredAck(aNeighbor, aError);
 }

@@ -59,17 +59,17 @@ Server::Server(Instance &aInstance)
 {
 }
 
-otError Server::Start(void)
+Error Server::Start(void)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     VerifyOrExit(!IsRunning());
 
     SuccessOrExit(error = mSocket.Open(&Server::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(kPort));
+    SuccessOrExit(error = mSocket.Bind(kPort, OT_NETIF_UNSPECIFIED));
 
 exit:
-    otLogInfoDns("[server] started: %s", otThreadErrorToString(error));
+    otLogInfoDns("[server] started: %s", ErrorToString(error));
     return error;
 }
 
@@ -87,15 +87,15 @@ void Server::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
 
 void Server::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     Header   requestHeader;
     Message *responseMessage = nullptr;
 
     SuccessOrExit(error = aMessage.Read(aMessage.GetOffset(), requestHeader));
-    VerifyOrExit(requestHeader.GetType() == Header::kTypeQuery, error = OT_ERROR_DROP);
+    VerifyOrExit(requestHeader.GetType() == Header::kTypeQuery, error = kErrorDrop);
 
     responseMessage = mSocket.NewMessage(0);
-    VerifyOrExit(responseMessage != nullptr, error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
 
     // Allocate space for DNS header
     SuccessOrExit(error = responseMessage->SetLength(sizeof(Header)));
@@ -118,7 +118,7 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
     char             name[Dns::Name::kMaxNameSize];
     NameCompressInfo compressInfo(kDefaultDomainName);
     Header::Response response          = Header::Response::kResponseSuccess;
-    otError          error             = OT_ERROR_NONE;
+    Error            error             = kErrorNone;
     uint8_t          resolveAdditional = kResolveAdditionalAll;
 
     // Setup initial DNS response header
@@ -139,9 +139,9 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
     {
         NameComponentsOffsetInfo nameComponentsOffsetInfo;
 
-        VerifyOrExit(OT_ERROR_NONE == Dns::Name::ReadName(aMessage, readOffset, name, sizeof(name)),
+        VerifyOrExit(kErrorNone == Dns::Name::ReadName(aMessage, readOffset, name, sizeof(name)),
                      response = Header::kResponseFormatError);
-        VerifyOrExit(OT_ERROR_NONE == aMessage.Read(readOffset, question), response = Header::kResponseFormatError);
+        VerifyOrExit(kErrorNone == aMessage.Read(readOffset, question), response = Header::kResponseFormatError);
         readOffset += sizeof(question);
 
         uint16_t qtype = question.GetType();
@@ -150,7 +150,7 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
                      response = Header::kResponseNotImplemented);
 
-        VerifyOrExit(OT_ERROR_NONE == FindNameComponents(name, compressInfo.GetDomainName(), nameComponentsOffsetInfo),
+        VerifyOrExit(kErrorNone == FindNameComponents(name, compressInfo.GetDomainName(), nameComponentsOffsetInfo),
                      response = Header::kResponseNameError);
 
         switch (question.GetType())
@@ -214,7 +214,7 @@ void Server::ProcessQuery(Message &aMessage, Message &aResponse, const Header &a
     }
 
 exit:
-    response = (error == OT_ERROR_NONE) ? response : Header::Response::kResponseServerFailure;
+    response = (error == kErrorNone) ? response : Header::Response::kResponseServerFailure;
 
     if (response == Header::Response::kResponseServerFailure)
     {
@@ -251,12 +251,12 @@ Header::Response Server::ResolveQuestion(const char *      aName,
     return response;
 }
 
-otError Server::AppendQuestion(const char *      aName,
-                               const Question &  aQuestion,
-                               Message &         aMessage,
-                               NameCompressInfo &aCompressInfo)
+Error Server::AppendQuestion(const char *      aName,
+                             const Question &  aQuestion,
+                             Message &         aMessage,
+                             NameCompressInfo &aCompressInfo)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     switch (aQuestion.GetType())
     {
@@ -280,13 +280,13 @@ exit:
     return error;
 }
 
-otError Server::AppendPtrRecord(Message &         aMessage,
-                                const char *      aServiceName,
-                                const char *      aInstanceName,
-                                uint32_t          aTtl,
-                                NameCompressInfo &aCompressInfo)
+Error Server::AppendPtrRecord(Message &         aMessage,
+                              const char *      aServiceName,
+                              const char *      aInstanceName,
+                              uint32_t          aTtl,
+                              NameCompressInfo &aCompressInfo)
 {
-    otError   error;
+    Error     error;
     PtrRecord ptrRecord;
     uint16_t  recordOffset;
 
@@ -307,17 +307,17 @@ exit:
     return error;
 }
 
-otError Server::AppendSrvRecord(Message &         aMessage,
-                                const char *      aInstanceName,
-                                const char *      aHostName,
-                                uint32_t          aTtl,
-                                uint16_t          aPriority,
-                                uint16_t          aWeight,
-                                uint16_t          aPort,
-                                NameCompressInfo &aCompressInfo)
+Error Server::AppendSrvRecord(Message &         aMessage,
+                              const char *      aInstanceName,
+                              const char *      aHostName,
+                              uint32_t          aTtl,
+                              uint16_t          aPriority,
+                              uint16_t          aWeight,
+                              uint16_t          aPort,
+                              NameCompressInfo &aCompressInfo)
 {
     SrvRecord srvRecord;
-    otError   error = OT_ERROR_NONE;
+    Error     error = kErrorNone;
     uint16_t  recordOffset;
 
     srvRecord.Init();
@@ -340,14 +340,14 @@ exit:
     return error;
 }
 
-otError Server::AppendAaaaRecord(Message &           aMessage,
-                                 const char *        aHostName,
-                                 const Ip6::Address &aAddress,
-                                 uint32_t            aTtl,
-                                 NameCompressInfo &  aCompressInfo)
+Error Server::AppendAaaaRecord(Message &           aMessage,
+                               const char *        aHostName,
+                               const Ip6::Address &aAddress,
+                               uint32_t            aTtl,
+                               NameCompressInfo &  aCompressInfo)
 {
     AaaaRecord aaaaRecord;
-    otError    error;
+    Error      error;
 
     aaaaRecord.Init();
     aaaaRecord.SetTtl(aTtl);
@@ -360,9 +360,9 @@ exit:
     return error;
 }
 
-otError Server::AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
+Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    otError  error;
+    Error    error;
     uint16_t serviceCompressOffset = aCompressInfo.GetServiceNameOffset(aName);
 
     if (serviceCompressOffset != NameCompressInfo::kUnknownOffset)
@@ -394,9 +394,9 @@ exit:
     return error;
 }
 
-otError Server::AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
+Error Server::AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    otError error;
+    Error error;
 
     uint16_t instanceCompressOffset = aCompressInfo.GetInstanceNameOffset(aName);
 
@@ -436,9 +436,9 @@ exit:
     return error;
 }
 
-otError Server::AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
+Error Server::AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    otError  error;
+    Error    error;
     uint16_t hostCompressOffset = aCompressInfo.GetHostNameOffset(aName);
 
     if (hostCompressOffset != NameCompressInfo::kUnknownOffset)
@@ -482,14 +482,14 @@ void Server::IncResourceRecordCount(Header &aHeader, bool aAdditional)
     }
 }
 
-otError Server::FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo)
+Error Server::FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo)
 {
     uint8_t nameLen   = static_cast<uint8_t>(StringLength(aName, Name::kMaxNameLength));
     uint8_t domainLen = static_cast<uint8_t>(StringLength(aDomain, Name::kMaxNameLength));
-    otError error     = OT_ERROR_NONE;
+    Error   error     = kErrorNone;
     uint8_t labelBegin, labelEnd;
 
-    VerifyOrExit(Dns::Name::IsSubDomainOf(aName, aDomain), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(Dns::Name::IsSubDomainOf(aName, aDomain), error = kErrorInvalidArgs);
 
     labelBegin          = nameLen - domainLen;
     aInfo.mDomainOffset = labelBegin;
@@ -498,7 +498,7 @@ otError Server::FindNameComponents(const char *aName, const char *aDomain, NameC
     {
         error = FindPreviousLabel(aName, labelBegin, labelEnd);
 
-        VerifyOrExit(error == OT_ERROR_NONE, error = (error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error));
+        VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
         if (labelEnd == labelBegin + kProtocolLabelLength &&
             (memcmp(&aName[labelBegin], kDnssdProtocolUdp, kProtocolLabelLength) == 0 ||
@@ -512,13 +512,13 @@ otError Server::FindNameComponents(const char *aName, const char *aDomain, NameC
 
     // Get service label <Service>
     error = FindPreviousLabel(aName, labelBegin, labelEnd);
-    VerifyOrExit(error == OT_ERROR_NONE, error = (error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error));
+    VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
     aInfo.mServiceOffset = labelBegin;
 
     // Treat everything before <Service> as <Instance> label
     error = FindPreviousLabel(aName, labelBegin, labelEnd);
-    VerifyOrExit(error == OT_ERROR_NONE, error = (error == OT_ERROR_NOT_FOUND ? OT_ERROR_NONE : error));
+    VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
     aInfo.mInstanceOffset = 0;
 
@@ -526,18 +526,18 @@ exit:
     return error;
 }
 
-otError Server::FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop)
+Error Server::FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop)
 {
     // This method finds the previous label before the current label (whose start index is @p aStart), and updates @p
     // aStart to the start index of the label and @p aStop to the index of the dot just after the label.
     // @note The input value of @p aStop does not matter because it is only used to output.
 
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t start = aStart;
     uint8_t end;
 
-    VerifyOrExit(start > 0, error = OT_ERROR_NOT_FOUND);
-    VerifyOrExit(aName[--start] == Name::kLabelSeperatorChar, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(start > 0, error = kErrorNotFound);
+    VerifyOrExit(aName[--start] == Name::kLabelSeperatorChar, error = kErrorInvalidArgs);
 
     end = start;
     while (start > 0 && aName[start - 1] != Name::kLabelSeperatorChar)
@@ -545,7 +545,7 @@ otError Server::FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &a
         start--;
     }
 
-    VerifyOrExit(start < end, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(start < end, error = kErrorInvalidArgs);
 
     aStart = start;
     aStop  = end;
@@ -562,7 +562,7 @@ Header::Response Server::ResolveQuestionBySrp(const char *      aName,
                                               uint8_t           aResolveKind,
                                               NameCompressInfo &aCompressInfo)
 {
-    otError                  error    = OT_ERROR_NONE;
+    Error                    error    = kErrorNone;
     const Srp::Server::Host *host     = nullptr;
     TimeMilli                now      = TimerMilli::GetNow();
     uint16_t                 qtype    = aQuestion.GetType();
@@ -641,7 +641,7 @@ Header::Response Server::ResolveQuestionBySrp(const char *      aName,
     }
 
 exit:
-    return error == OT_ERROR_NONE ? response : Header::Response::kResponseServerFailure;
+    return error == kErrorNone ? response : Header::Response::kResponseServerFailure;
 }
 
 const Srp::Server::Host *Server::GetNextSrpHost(const Srp::Server::Host *aHost)
@@ -669,13 +669,13 @@ const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host & 
     return service;
 }
 
-otError Server::AppendTxtRecord(Message &                   aMessage,
-                                const char *                aInstanceName,
-                                const Srp::Server::Service &aService,
-                                uint32_t                    aTtl,
-                                NameCompressInfo &          aCompressInfo)
+Error Server::AppendTxtRecord(Message &                   aMessage,
+                              const char *                aInstanceName,
+                              const Srp::Server::Service &aService,
+                              uint32_t                    aTtl,
+                              NameCompressInfo &          aCompressInfo)
 {
-    otError   error;
+    Error     error;
     uint16_t  recordOffset;
     TxtRecord txtRecord;
 

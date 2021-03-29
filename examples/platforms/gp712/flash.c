@@ -30,6 +30,7 @@
 
 #include "platform_qorvo.h"
 
+#undef NDEBUG
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>

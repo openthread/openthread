@@ -295,7 +295,7 @@ void TestChildTable(void)
     uint16_t testNumAllowedChildren = 2;
 
     ChildTable *table;
-    otError     error;
+    Error       error;
 
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr, "Null instance");
@@ -364,17 +364,17 @@ void TestChildTable(void)
     printf("Test Get/SetMaxChildrenAllowed");
 
     error = table->SetMaxChildrenAllowed(kMaxChildren - 1);
-    VerifyOrQuit(error == OT_ERROR_INVALID_STATE, "SetMaxChildrenAllowed() should fail when table is not empty");
+    VerifyOrQuit(error == kErrorInvalidState, "SetMaxChildrenAllowed() should fail when table is not empty");
 
     table->Clear();
     error = table->SetMaxChildrenAllowed(kMaxChildren + 1);
-    VerifyOrQuit(error == OT_ERROR_INVALID_ARGS, "SetMaxChildrenAllowed() did not fail with an invalid arg");
+    VerifyOrQuit(error == kErrorInvalidArgs, "SetMaxChildrenAllowed() did not fail with an invalid arg");
 
     error = table->SetMaxChildrenAllowed(0);
-    VerifyOrQuit(error == OT_ERROR_INVALID_ARGS, "SetMaxChildrenAllowed() did not fail with an invalid arg");
+    VerifyOrQuit(error == kErrorInvalidArgs, "SetMaxChildrenAllowed() did not fail with an invalid arg");
 
     error = table->SetMaxChildrenAllowed(testNumAllowedChildren);
-    VerifyOrQuit(error == OT_ERROR_NONE, "SetMaxChildrenAllowed() failed");
+    VerifyOrQuit(error == kErrorNone, "SetMaxChildrenAllowed() failed");
     VerifyOrQuit(table->GetMaxChildrenAllowed() == testNumAllowedChildren, "GetMaxChildrenAllowed() failed");
 
     for (uint16_t num = 0; num < testNumAllowedChildren; num++)

@@ -28,6 +28,7 @@
 
 add_executable(ot-ncp-mtd
     main.c
+    ncp.c
 )
 
 target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
@@ -37,6 +38,7 @@ target_link_libraries(ot-ncp-mtd PRIVATE
     ${OT_PLATFORM_LIB}
     openthread-mtd
     ${OT_PLATFORM_LIB}
+    openthread-ncp-mtd
     ${OT_MBEDTLS}
     ot-config
 )

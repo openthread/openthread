@@ -36,14 +36,15 @@ bin_PROGRAMS                                                                  = 
     $(NULL)
 
 CPPFLAGS_COMMON                                                              += \
-    -DNVIC_CONFIG=\"platform/base/hal/micro/cortexm3/efm32/nvic-config.h\"      \
     -DPLATFORM_HEADER=\"platform/base/hal/micro/cortexm3/compiler/gcc.h\"       \
     -Wno-sign-compare                                                           \
+    -I$(top_srcdir)/examples/apps/cli                                           \
     -I$(top_srcdir)/examples/platforms                                          \
     -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)/$(BOARD_LOWERCASE) \
     -I$(top_srcdir)/examples/platforms/efr32/$(PLATFORM_LOWERCASE)              \
     -I$(top_srcdir)/examples/platforms/efr32/src                                \
     -I$(top_srcdir)/include                                                     \
+    -I$(top_srcdir)/src                                                         \
     -I$(top_srcdir)/src/core                                                    \
     -I$(top_srcdir)/third_party/silabs/rail_config                              \
     $(SILABS_GSDK_CPPFLAGS)                                                     \
@@ -61,6 +62,7 @@ LIBTOOLFLAGS_COMMON                                                          += 
     $(NULL)
 
 SOURCES_COMMON                                                               += \
+    ../../../../apps/cli/cli_uart.cpp                                           \
     main.c                                                                      \
     $(NULL)
 

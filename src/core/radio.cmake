@@ -47,11 +47,13 @@ target_include_directories(openthread-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE
 
 target_sources(openthread-radio PRIVATE
     api/diags_api.cpp
+    api/error_api.cpp
     api/instance_api.cpp
     api/link_raw_api.cpp
     api/logging_api.cpp
     api/random_noncrypto_api.cpp
     api/tasklet_api.cpp
+    common/error.cpp
     common/instance.cpp
     common/logging.cpp
     common/random_manager.cpp

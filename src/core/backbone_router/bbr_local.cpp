@@ -125,19 +125,19 @@ void Local::GetConfig(BackboneRouterConfig &aConfig) const
     aConfig.mMlrTimeout          = mMlrTimeout;
 }
 
-otError Local::SetConfig(const BackboneRouterConfig &aConfig)
+Error Local::SetConfig(const BackboneRouterConfig &aConfig)
 {
-    otError error  = OT_ERROR_NONE;
-    bool    update = false;
+    Error error  = kErrorNone;
+    bool  update = false;
 
     VerifyOrExit(aConfig.mMlrTimeout >= Mle::kMlrTimeoutMin && aConfig.mMlrTimeout <= Mle::kMlrTimeoutMax,
-                 error = OT_ERROR_INVALID_ARGS);
+                 error = kErrorInvalidArgs);
     // Validate configuration according to Thread 1.2.1 Specification 5.21.3.3:
     // "The Reregistration Delay in seconds MUST be lower than (0.5 * MLR Timeout). It MUST be at least 1."
-    VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aConfig.mReregistrationDelay >= 1, error = kErrorInvalidArgs);
     static_assert(sizeof(aConfig.mReregistrationDelay) < sizeof(aConfig.mMlrTimeout),
                   "the calculation below might overflow");
-    VerifyOrExit(aConfig.mReregistrationDelay * 2 < aConfig.mMlrTimeout, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aConfig.mReregistrationDelay * 2 < aConfig.mMlrTimeout, error = kErrorInvalidArgs);
 
     if (aConfig.mReregistrationDelay != mReregistrationDelay)
     {
@@ -169,9 +169,9 @@ exit:
     return error;
 }
 
-otError Local::AddService(bool aForce)
+Error Local::AddService(bool aForce)
 {
-    otError                                          error = OT_ERROR_INVALID_STATE;
+    Error                                            error = kErrorInvalidState;
     NetworkData::Service::BackboneRouter::ServerData serverData;
 
     VerifyOrExit(mState != OT_BACKBONE_ROUTER_STATE_DISABLED && Get<Mle::Mle>().IsAttached());
@@ -196,7 +196,7 @@ exit:
 
 void Local::RemoveService(void)
 {
-    otError error;
+    Error error;
 
     SuccessOrExit(error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::BackboneRouter>());
     mIsServiceAdded = false;
@@ -266,7 +266,7 @@ void Local::HandleBackboneRouterPrimaryUpdate(Leader::State aState, const Backbo
         mReregistrationDelay = aConfig.mReregistrationDelay;
         mMlrTimeout          = aConfig.mMlrTimeout;
         Get<Notifier>().Signal(kEventThreadBackboneRouterLocalChanged);
-        if (AddService(true /* Force registration to refresh and restore Primary state */) == OT_ERROR_NONE)
+        if (AddService(true /* Force registration to refresh and restore Primary state */) == kErrorNone)
         {
             Get<NetworkData::Notifier>().HandleServerDataUpdated();
         }
@@ -280,11 +280,11 @@ exit:
     return;
 }
 
-otError Local::GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig)
+Error Local::GetDomainPrefix(NetworkData::OnMeshPrefixConfig &aConfig)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(mDomainPrefixConfig.GetPrefix().GetLength() > 0, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(mDomainPrefixConfig.GetPrefix().GetLength() > 0, error = kErrorNotFound);
 
     aConfig = mDomainPrefixConfig;
 
@@ -292,12 +292,12 @@ exit:
     return error;
 }
 
-otError Local::RemoveDomainPrefix(const Ip6::Prefix &aPrefix)
+Error Local::RemoveDomainPrefix(const Ip6::Prefix &aPrefix)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aPrefix.GetLength() > 0, error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(mDomainPrefixConfig.GetPrefix() == aPrefix, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(aPrefix.GetLength() > 0, error = kErrorInvalidArgs);
+    VerifyOrExit(mDomainPrefixConfig.GetPrefix() == aPrefix, error = kErrorNotFound);
 
     if (IsEnabled())
     {
@@ -318,7 +318,7 @@ void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
     }
 
     mDomainPrefixConfig = aConfig;
-    LogDomainPrefix("Set", OT_ERROR_NONE);
+    LogDomainPrefix("Set", kErrorNone);
 
     if (IsEnabled())
     {
@@ -390,7 +390,7 @@ exit:
 
 void Local::RemoveDomainPrefixFromNetworkData(void)
 {
-    otError error = OT_ERROR_NOT_FOUND; // only used for logging.
+    Error error = kErrorNotFound; // only used for logging.
 
     if (mDomainPrefixConfig.mPrefix.mLength > 0)
     {
@@ -402,7 +402,7 @@ void Local::RemoveDomainPrefixFromNetworkData(void)
 
 void Local::AddDomainPrefixToNetworkData(void)
 {
-    otError error = OT_ERROR_NOT_FOUND; // only used for logging.
+    Error error = kErrorNotFound; // only used for logging.
 
     if (mDomainPrefixConfig.GetPrefix().GetLength() > 0)
     {
@@ -413,16 +413,16 @@ void Local::AddDomainPrefixToNetworkData(void)
 }
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_BBR == 1)
-void Local::LogDomainPrefix(const char *aAction, otError aError)
+void Local::LogDomainPrefix(const char *aAction, Error aError)
 {
     otLogInfoBbr("%s Domain Prefix: %s, %s", aAction, mDomainPrefixConfig.GetPrefix().ToString().AsCString(),
-                 otThreadErrorToString(aError));
+                 ErrorToString(aError));
 }
 
-void Local::LogBackboneRouterService(const char *aAction, otError aError)
+void Local::LogBackboneRouterService(const char *aAction, Error aError)
 {
     otLogInfoBbr("%s BBR Service: seqno (%d), delay (%ds), timeout (%ds), %s", aAction, mSequenceNumber,
-                 mReregistrationDelay, mMlrTimeout, otThreadErrorToString(aError));
+                 mReregistrationDelay, mMlrTimeout, ErrorToString(aError));
 }
 #endif
 

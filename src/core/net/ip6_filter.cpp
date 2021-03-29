@@ -120,11 +120,11 @@ exit:
     return rval;
 }
 
-otError Filter::AddUnsecurePort(uint16_t aPort)
+Error Filter::AddUnsecurePort(uint16_t aPort)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aPort != 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPort != 0, error = kErrorInvalidArgs);
 
     for (uint16_t unsecurePort : mUnsecurePorts)
     {
@@ -144,17 +144,17 @@ otError Filter::AddUnsecurePort(uint16_t aPort)
         }
     }
 
-    ExitNow(error = OT_ERROR_NO_BUFS);
+    ExitNow(error = kErrorNoBufs);
 
 exit:
     return error;
 }
 
-otError Filter::RemoveUnsecurePort(uint16_t aPort)
+Error Filter::RemoveUnsecurePort(uint16_t aPort)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
-    VerifyOrExit(aPort != 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aPort != 0, error = kErrorInvalidArgs);
 
     for (int i = 0; i < kMaxUnsecurePorts; i++)
     {
@@ -174,7 +174,7 @@ otError Filter::RemoveUnsecurePort(uint16_t aPort)
         }
     }
 
-    ExitNow(error = OT_ERROR_NOT_FOUND);
+    ExitNow(error = kErrorNotFound);
 
 exit:
     return error;

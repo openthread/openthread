@@ -95,44 +95,44 @@ public:
      *
      * @param[out]  aDataset  Where to place the dataset.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     * @retval kErrorNone      Successfully retrieved the dataset.
+     * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Restore(Dataset &aDataset);
+    Error Restore(Dataset &aDataset);
 
     /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     * @retval kErrorNone      Successfully retrieved the dataset.
+     * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Read(Dataset &aDataset) const;
+    Error Read(Dataset &aDataset) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDatasetInfo  Where to place the dataset as `Dataset::Info`.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     * @retval kErrorNone      Successfully retrieved the dataset.
+     * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Read(Dataset::Info &aDatasetInfo) const;
+    Error Read(Dataset::Info &aDatasetInfo) const;
 
     /**
      * This method retrieves the dataset from non-volatile memory.
      *
      * @param[out]  aDataset  Where to place the dataset.
      *
-     * @retval OT_ERROR_NONE       Successfully retrieved the dataset.
-     * @retval OT_ERROR_NOT_FOUND  There is no corresponding dataset stored in non-volatile memory.
+     * @retval kErrorNone      Successfully retrieved the dataset.
+     * @retval kErrorNotFound  There is no corresponding dataset stored in non-volatile memory.
      *
      */
-    otError Read(otOperationalDatasetTlvs &aDataset) const;
+    Error Read(otOperationalDatasetTlvs &aDataset) const;
 
     /**
      * This method returns the local time this dataset was last updated or restored.
@@ -147,33 +147,33 @@ public:
      *
      * @param[in] aDatasetInfo     The Dataset to save as `Dataset::Info`.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the dataset.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the dataset.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError Save(const Dataset::Info &aDatasetInfo);
+    Error Save(const Dataset::Info &aDatasetInfo);
 
     /**
      * This method stores the dataset into non-volatile memory.
      *
      * @param[in]  aDataset  The Dataset to save as `otOperationalDatasetTlvs`.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the dataset.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the dataset.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError Save(const otOperationalDatasetTlvs &aDataset);
+    Error Save(const otOperationalDatasetTlvs &aDataset);
 
     /**
      * This method stores the dataset into non-volatile memory.
      *
      * @param[in]  aDataset  The Dataset to save.
      *
-     * @retval OT_ERROR_NONE              Successfully saved the dataset.
-     * @retval OT_ERROR_NOT_IMPLEMENTED   The platform does not implement settings functionality.
+     * @retval kErrorNone             Successfully saved the dataset.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    otError Save(const Dataset &aDataset);
+    Error Save(const Dataset &aDataset);
 
     /**
      * This method compares this dataset to another based on the timestamp.

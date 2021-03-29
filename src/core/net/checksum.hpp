@@ -62,13 +62,11 @@ public:
      * @param[in] aMessageInfo   The message info associated with @p aMessage.
      * @param[in] aIpProto       The Internet Protocol value.
      *
-     * @retval OT_ERROR_NONE    The checksum is valid if UDP/ICMP6 protocol, or not a UDP/ICMP6 protocol.
-     * @retval OT_ERROR_DROP    The check is not valid and message should be dropped.
+     * @retval kErrorNone    The checksum is valid if UDP/ICMP6 protocol, or not a UDP/ICMP6 protocol.
+     * @retval kErrorDrop    The check is not valid and message should be dropped.
      *
      */
-    static otError VerifyMessageChecksum(const Message &         aMessage,
-                                         const Ip6::MessageInfo &aMessageInfo,
-                                         uint8_t                 aIpProto);
+    static Error VerifyMessageChecksum(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint8_t aIpProto);
 
     /**
      * This static method calculates and then updates the checksum in a given message (if UDP/ICMP6).

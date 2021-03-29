@@ -28,6 +28,7 @@
 
 add_executable(ot-ncp
     main.c
+    ncp.cpp
 )
 
 set_target_properties(

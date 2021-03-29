@@ -1098,6 +1098,7 @@ public:
      * @param[in]  aIndex  The index into the Child Table list.
      *
      * @returns  A reference to the Child Table entry.
+     *
      */
     ChildTableEntry &GetEntry(uint16_t aIndex)
     {
@@ -1112,16 +1113,17 @@ public:
      * @param[in]   aOffset     The offset of the ChildTableTLV in aMessage.
      * @param[in]   aIndex      The index into the Child Table list.
      *
-     * @retval  OT_ERROR_NOT_FOUND  No such entry is found.
-     * @retval  OT_ERROR_NONE       Successfully read the entry.
+     * @retval  kErrorNotFound   No such entry is found.
+     * @retval  kErrorNone       Successfully read the entry.
+     *
      */
-    otError ReadEntry(ChildTableEntry &aEntry, const Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
+    Error ReadEntry(ChildTableEntry &aEntry, const Message &aMessage, uint16_t aOffset, uint8_t aIndex) const
     {
         return ((aIndex < GetNumEntries()) &&
                 (aMessage.Read(aOffset + sizeof(ChildTableTlv) + (aIndex * sizeof(ChildTableEntry)), aEntry) ==
-                 OT_ERROR_NONE))
-                   ? OT_ERROR_NONE
-                   : OT_ERROR_INVALID_ARGS;
+                 kErrorNone))
+                   ? kErrorNone
+                   : kErrorInvalidArgs;
     }
 
 } OT_TOOL_PACKED_END;

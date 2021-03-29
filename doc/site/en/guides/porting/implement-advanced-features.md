@@ -26,7 +26,7 @@ device, which acknowledges receipt of the data.
 
 If the radio supports dynamically setting the Frame Pending bit in outgoing
 acknowledgments to SEDs, the drivers must implement the
-[source address match](https://github.com/openthread/openthread/blob/master/include/openthread/platform/radio.h#L288)
+[source address match](https://github.com/openthread/openthread/blob/main/include/openthread/platform/radio.h#L288)
 API to enable this capability. OpenThread uses this API to tell the radio which
 SEDs to set the Frame Pending bit for.
 
@@ -55,7 +55,7 @@ energy scanning logic by setting the macro
 > Note:  This feature is optional.
 
 mbedTLS defines several macros in the main configuration header file,
-[`mbedtls-config.h`](https://github.com/openthread/openthread/blob/master/third_party/mbedtls/mbedtls-config.h),
+[`mbedtls-config.h`](https://github.com/openthread/openthread/blob/main/third_party/mbedtls/mbedtls-config.h),
 to allow users to enable alternative implementations of AES, SHA1, SHA2, and
 other modules, as well as individual functions for the Elliptic curve
 cryptography (ECC) over GF(p) module. See
@@ -89,7 +89,7 @@ Commented macros in `mbedtls-config.h` are not mandatory, and can be enabled in
 the user-specific configuration header file for hardware acceleration.
 
 For a complete example user-specific configuration, see the
-[`mbedtls_config_autogen.h`](https://github.com/openthread/openthread/blob/master/examples/platforms/efr32/efr32mg12/crypto/mbedtls_config_autogen.h)
+[`mbedtls_config_autogen.h`](https://github.com/openthread/openthread/blob/main/examples/platforms/efr32/efr32mg12/crypto/mbedtls_config_autogen.h)
 file.
 
 ### AES module

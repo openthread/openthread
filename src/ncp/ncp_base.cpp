@@ -135,6 +135,10 @@ spinel_status_t NcpBase::ThreadErrorToSpinelStatus(otError aError)
         ret = SPINEL_STATUS_ITEM_NOT_FOUND;
         break;
 
+    case OT_ERROR_RESPONSE_TIMEOUT:
+        ret = SPINEL_STATUS_RESPONSE_TIMEOUT;
+        break;
+
     default:
         // Unknown error code. Wrap it as a Spinel status and return that.
         ret = static_cast<spinel_status_t>(SPINEL_STATUS_STACK_NATIVE__BEGIN + static_cast<uint32_t>(aError));
@@ -1370,14 +1374,6 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
     IgnoreError(otIp6SetEnabled(mInstance, false));
 #endif
 
-    error = WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_SOFTWARE);
-
-    if (error != OT_ERROR_NONE)
-    {
-        mChangedPropsSet.AddLastStatus(SPINEL_STATUS_RESET_UNKNOWN);
-        mUpdateChangedPropsTask.Post();
-    }
-
     sNcpInstance = nullptr;
 
     return error;
@@ -2100,6 +2096,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_DUA));
+#endif
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_BACKBONE_ROUTER));
 #endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

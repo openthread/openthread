@@ -27,6 +27,7 @@
 #
 
 add_executable(ot-cli-ftd
+    cli_uart.cpp
     main.c
 )
 
@@ -37,6 +38,7 @@ target_link_libraries(ot-cli-ftd PRIVATE
     ${OT_PLATFORM_LIB}
     openthread-ftd
     ${OT_PLATFORM_LIB}
+    openthread-cli-ftd
     ${OT_MBEDTLS}
     ot-config
 )

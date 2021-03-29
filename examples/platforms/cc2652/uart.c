@@ -41,11 +41,9 @@
 
 #include <openthread/platform/debug_uart.h>
 #include <openthread/platform/logging.h>
-#include <openthread/platform/uart.h>
 
 #include "utils/code_utils.h"
-
-#include <utils/code_utils.h>
+#include "utils/uart.h"
 
 #include <driverlib/ioc.h>
 #include <driverlib/prcm.h>
@@ -116,7 +114,7 @@ static void uart_power_control(uint32_t who_base, int turnon)
 }
 
 /**
- * Function documented in platform/uart.h
+ * Function documented in utils/uart.h
  */
 otError otPlatUartEnable(void)
 {
@@ -138,7 +136,7 @@ otError otPlatUartEnable(void)
 }
 
 /**
- * Function documented in platform/uart.h
+ * Function documented in utils/uart.h
  */
 otError otPlatUartDisable(void)
 {
@@ -154,7 +152,7 @@ otError otPlatUartDisable(void)
 }
 
 /**
- * Function documented in platform/uart.h
+ * Function documented in utils/uart.h
  */
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {

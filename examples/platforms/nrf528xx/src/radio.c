@@ -51,7 +51,6 @@
 #include <platform-config.h>
 #include <openthread/platform/alarm-micro.h>
 #include <openthread/platform/diag.h>
-#include <openthread/platform/logging.h>
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
@@ -119,9 +118,10 @@ static uint8_t  sEnergyDetectionChannel;
 static int8_t   sEnergyDetected;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint32_t      sCslPeriod;
-static uint32_t      sCslSampleTime;
-static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
+static uint32_t       sCslPeriod;
+static uint32_t       sCslSampleTime;
+static const uint32_t sCslSampleDur                   = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * OT_US_PER_TEN_SYMBOLS;
+static const uint8_t  sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 typedef enum
@@ -1068,8 +1068,9 @@ static uint16_t getCslPhase()
 {
     uint32_t curTime       = otPlatAlarmMicroGetNow();
     uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff = (cslPeriodInUs - (curTime % cslPeriodInUs) + (sCslSampleTime % cslPeriodInUs)) % cslPeriodInUs;
-
+    uint32_t diff =
+        (cslPeriodInUs - (curTime % cslPeriodInUs) + (sCslSampleTime % cslPeriodInUs) + (sCslSampleDur / 2)) %
+        cslPeriodInUs;
     return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS + 1);
 }
 #endif
@@ -1187,7 +1188,9 @@ int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
 void nrf_802154_tx_started(const uint8_t *aFrame)
 {
     bool processSecurity = false;
+
     assert(aFrame == sTransmitPsdu);
+    OT_UNUSED_VARIABLE(aFrame);
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (sCslPeriod > 0)

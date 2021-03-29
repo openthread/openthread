@@ -171,7 +171,7 @@ void MulticastRoutingManager::InitMulticastRouterSock(void)
     struct mif6ctl      mif6ctl;
 
     // Create a Multicast Routing socket
-    mMulticastRouterSock = socket(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6);
+    mMulticastRouterSock = SocketWithCloseExec(AF_INET6, SOCK_RAW, IPPROTO_ICMPV6, kSocketBlock);
     VerifyOrDie(mMulticastRouterSock != -1, OT_EXIT_ERROR_ERRNO);
 
     // Enable Multicast Forwarding in Kernel

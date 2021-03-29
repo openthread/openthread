@@ -86,13 +86,13 @@ uint16_t Frame::GetFrameControlField(void) const
     return ReadUint16(mPsdu);
 }
 
-otError Frame::ValidatePsdu(void) const
+Error Frame::ValidatePsdu(void) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindPayloadIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
-    VerifyOrExit((index + GetFooterLength()) <= mLength, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
+    VerifyOrExit((index + GetFooterLength()) <= mLength, error = kErrorParse);
 
 exit:
     return error;
@@ -166,12 +166,12 @@ bool Frame::IsDstPanIdPresent(uint16_t aFcf)
     return present;
 }
 
-otError Frame::GetDstPanId(PanId &aPanId) const
+Error Frame::GetDstPanId(PanId &aPanId) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindDstPanIdIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
     aPanId = ReadUint16(&mPsdu[index]);
 
 exit:
@@ -191,12 +191,12 @@ uint8_t Frame::FindDstAddrIndex(void) const
     return kFcfSize + kDsnSize + (IsDstPanIdPresent() ? sizeof(PanId) : 0);
 }
 
-otError Frame::GetDstAddr(Address &aAddress) const
+Error Frame::GetDstAddr(Address &aAddress) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindDstAddrIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     switch (GetFrameControlField() & kFcfDstAddrMask)
     {
@@ -304,24 +304,24 @@ bool Frame::IsSrcPanIdPresent(uint16_t aFcf)
     return srcPanIdPresent;
 }
 
-otError Frame::GetSrcPanId(PanId &aPanId) const
+Error Frame::GetSrcPanId(PanId &aPanId) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindSrcPanIdIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
     aPanId = ReadUint16(&mPsdu[index]);
 
 exit:
     return error;
 }
 
-otError Frame::SetSrcPanId(PanId aPanId)
+Error Frame::SetSrcPanId(PanId aPanId)
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindSrcPanIdIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
     WriteUint16(aPanId, &mPsdu[index]);
 
 exit:
@@ -359,13 +359,13 @@ uint8_t Frame::FindSrcAddrIndex(void) const
     return index;
 }
 
-otError Frame::GetSrcAddr(Address &aAddress) const
+Error Frame::GetSrcAddr(Address &aAddress) const
 {
-    otError  error = OT_ERROR_NONE;
+    Error    error = kErrorNone;
     uint8_t  index = FindSrcAddrIndex();
     uint16_t fcf   = GetFrameControlField();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     switch (fcf & kFcfSrcAddrMask)
     {
@@ -423,12 +423,12 @@ void Frame::SetSrcAddr(const Address &aAddress)
     }
 }
 
-otError Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
+Error Frame::GetSecurityControlField(uint8_t &aSecurityControlField) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     aSecurityControlField = mPsdu[index];
 
@@ -457,12 +457,12 @@ exit:
     return index;
 }
 
-otError Frame::GetSecurityLevel(uint8_t &aSecurityLevel) const
+Error Frame::GetSecurityLevel(uint8_t &aSecurityLevel) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     aSecurityLevel = mPsdu[index] & kSecLevelMask;
 
@@ -470,12 +470,12 @@ exit:
     return error;
 }
 
-otError Frame::GetKeyIdMode(uint8_t &aKeyIdMode) const
+Error Frame::GetKeyIdMode(uint8_t &aKeyIdMode) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     aKeyIdMode = mPsdu[index] & kKeyIdModeMask;
 
@@ -483,12 +483,12 @@ exit:
     return error;
 }
 
-otError Frame::GetFrameCounter(uint32_t &aFrameCounter) const
+Error Frame::GetFrameCounter(uint32_t &aFrameCounter) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     // Security Control
     index += kSecurityControlSize;
@@ -558,13 +558,13 @@ void Frame::SetKeySource(const uint8_t *aKeySource)
     memcpy(&mPsdu[index + kSecurityControlSize + kFrameCounterSize], aKeySource, keySourceLength);
 }
 
-otError Frame::GetKeyId(uint8_t &aKeyId) const
+Error Frame::GetKeyId(uint8_t &aKeyId) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t keySourceLength;
     uint8_t index = FindSecurityHeaderIndex();
 
-    VerifyOrExit(index != kInvalidIndex);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     keySourceLength = GetKeySourceLength(mPsdu[index] & kKeyIdModeMask);
 
@@ -586,11 +586,12 @@ void Frame::SetKeyId(uint8_t aKeyId)
     mPsdu[index + kSecurityControlSize + kFrameCounterSize + keySourceLength] = aKeyId;
 }
 
-otError Frame::GetCommandId(uint8_t &aCommandId) const
+Error Frame::GetCommandId(uint8_t &aCommandId) const
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindPayloadIndex();
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     aCommandId = mPsdu[IsVersion2015() ? index : (index - 1)];
 
@@ -598,12 +599,12 @@ exit:
     return error;
 }
 
-otError Frame::SetCommandId(uint8_t aCommandId)
+Error Frame::SetCommandId(uint8_t aCommandId)
 {
-    otError error = OT_ERROR_NONE;
+    Error   error = kErrorNone;
     uint8_t index = FindPayloadIndex();
 
-    VerifyOrExit(index != kInvalidIndex, error = OT_ERROR_PARSE);
+    VerifyOrExit(index != kInvalidIndex, error = kErrorParse);
 
     mPsdu[IsVersion2015() ? index : (index - 1)] = aCommandId;
 
@@ -894,9 +895,9 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-template <typename IeType> otError Frame::AppendHeaderIeAt(uint8_t &aIndex)
+template <typename IeType> Error Frame::AppendHeaderIeAt(uint8_t &aIndex)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     SuccessOrExit(error = InitIeHeaderAt(aIndex, IeType::kHeaderIeId, IeType::kIeContentSize));
 
@@ -906,16 +907,16 @@ exit:
     return error;
 }
 
-otError Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize)
+Error Frame::InitIeHeaderAt(uint8_t &aIndex, uint8_t ieId, uint8_t ieContentSize)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     if (aIndex == 0)
     {
         aIndex = FindHeaderIeIndex();
     }
 
-    VerifyOrExit(aIndex != kInvalidIndex, error = OT_ERROR_NOT_FOUND);
+    VerifyOrExit(aIndex != kInvalidIndex, error = kErrorNotFound);
 
     reinterpret_cast<HeaderIe *>(mPsdu + aIndex)->Init(ieId, ieContentSize);
     aIndex += sizeof(HeaderIe);
@@ -1123,12 +1124,12 @@ uint8_t Frame::GetFcsSize(void) const
 // Explicit instantiation
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-template otError Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);
+template Error Frame::AppendHeaderIeAt<TimeIe>(uint8_t &aIndex);
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-template otError Frame::AppendHeaderIeAt<CslIe>(uint8_t &aIndex);
+template Error Frame::AppendHeaderIeAt<CslIe>(uint8_t &aIndex);
 #endif
-template otError Frame::AppendHeaderIeAt<Termination2Ie>(uint8_t &aIndex);
+template Error Frame::AppendHeaderIeAt<Termination2Ie>(uint8_t &aIndex);
 #endif
 
 void TxFrame::CopyFrom(const TxFrame &aFromFrame)
@@ -1222,9 +1223,9 @@ void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
 }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
+Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const uint8_t *aIeData, uint8_t aIeLength)
 {
-    otError error = OT_ERROR_NONE;
+    Error error = kErrorNone;
 
     uint16_t fcf = kFcfFrameAck | kFcfFrameVersion2015 | kFcfSrcAddrNone;
     Address  address;
@@ -1289,7 +1290,7 @@ otError TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, con
         }
         else
         {
-            ExitNow(error = OT_ERROR_PARSE);
+            ExitNow(error = kErrorParse);
         }
 
         SetDstPanId(panId);
@@ -1332,15 +1333,15 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey)
+Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey)
 {
 #if OPENTHREAD_RADIO
     OT_UNUSED_VARIABLE(aExtAddress);
     OT_UNUSED_VARIABLE(aMacKey);
 
-    return OT_ERROR_NONE;
+    return kErrorNone;
 #else
-    otError        error        = OT_ERROR_SECURITY;
+    Error          error        = kErrorSecurity;
     uint32_t       frameCounter = 0;
     uint8_t        securityLevel;
     uint8_t        nonce[Crypto::AesCcm::kNonceSize];
@@ -1348,7 +1349,7 @@ otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &
     uint8_t        tagLength;
     Crypto::AesCcm aesCcm;
 
-    VerifyOrExit(GetSecurityEnabled(), error = OT_ERROR_NONE);
+    VerifyOrExit(GetSecurityEnabled(), error = kErrorNone);
 
     SuccessOrExit(GetSecurityLevel(securityLevel));
     SuccessOrExit(GetFrameCounter(frameCounter));
@@ -1373,7 +1374,7 @@ otError RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &
     VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0);
 #endif
 
-    error = OT_ERROR_NONE;
+    error = kErrorNone;
 
 exit:
     return error;
@@ -1409,7 +1410,7 @@ Frame::InfoString Frame::ToInfoString(void) const
         break;
 
     case kFcfFrameMacCmd:
-        if (GetCommandId(commandId) != OT_ERROR_NONE)
+        if (GetCommandId(commandId) != kErrorNone)
         {
             commandId = 0xff;
         }

@@ -226,12 +226,12 @@ public:
      *
      * @param[in]  aMaxChildren  Maximum number of children allowed.
      *
-     * @retval OT_ERROR_NONE          The number of allowed children changed successfully.
-     * @retval OT_ERROR_INVALID_ARGS  If @p aMaxChildren is not in the range [1, Max supported children].
-     * @retval OT_ERROR_INVALID_STATE The child table is not empty.
+     * @retval kErrorNone         The number of allowed children changed successfully.
+     * @retval kErrorInvalidArgs  If @p aMaxChildren is not in the range [1, Max supported children].
+     * @retval kErrorInvalidState The child table is not empty.
      *
      */
-    otError SetMaxChildrenAllowed(uint16_t aMaxChildren);
+    Error SetMaxChildrenAllowed(uint16_t aMaxChildren);
 
     /**
      * This method enables range-based `for` loop iteration over all child entries in the child table matching a given
@@ -255,7 +255,7 @@ public:
      * @param[out]  aChildInfo  A reference to a `Child::Info` to populate with the child information.
      *
      */
-    otError GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo);
+    Error GetChildInfoById(uint16_t aChildId, Child::Info &aChildInfo);
 
     /**
      * This method retains diagnostic information for an attached child by the internal table index.
@@ -264,7 +264,7 @@ public:
      * @param[out]  aChildInfo   A reference to a `Child::Info` to populate with the child information.
      *
      */
-    otError GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo);
+    Error GetChildInfoByIndex(uint16_t aChildIndex, Child::Info &aChildInfo);
 
     /**
      * This method restores child table from non-volatile memory.
@@ -285,11 +285,11 @@ public:
      *
      * @param[in]  aChild          A reference to the child to store.
      *
-     * @retval  OT_ERROR_NONE      Successfully store child.
-     * @retval  OT_ERROR_NO_BUFS   Insufficient available buffers to store child.
+     * @retval  kErrorNone     Successfully store child.
+     * @retval  kErrorNoBufs   Insufficient available buffers to store child.
      *
      */
-    otError StoreChild(const Child &aChild);
+    Error StoreChild(const Child &aChild);
 
     /**
      * This method indicates whether the child table contains any sleepy child (in states valid or restoring) with a

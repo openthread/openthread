@@ -134,16 +134,16 @@ public:
     /**
      * This method adds a received signal strength (RSS) value to the average.
      *
-     * If @p aRss is OT_RADIO_RSSI_INVALID, it is ignored and error status OT_ERROR_INVALID_ARGS is returned.
+     * If @p aRss is OT_RADIO_RSSI_INVALID, it is ignored and error status kErrorInvalidArgs is returned.
      * The value of RSS is capped at 0dBm (i.e., for any given RSS value higher than 0dBm, 0dBm is used instead).
      *
      * @param[in] aRss                Received signal strength value (in dBm) to be added to the average.
      *
-     * @retval OT_ERROR_NONE          New RSS value added to average successfully.
-     * @retval OT_ERROR_INVALID_ARGS  Value of @p aRss is OT_RADIO_RSSI_INVALID.
+     * @retval kErrorNone         New RSS value added to average successfully.
+     * @retval kErrorInvalidArgs  Value of @p aRss is OT_RADIO_RSSI_INVALID.
      *
      */
-    otError Add(int8_t aRss);
+    Error Add(int8_t aRss);
 
     /**
      * This method returns the current average signal strength value maintained by the averager.

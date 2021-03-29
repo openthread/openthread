@@ -1185,7 +1185,7 @@ class OnMeshPrefix(object):
 
         m = re.match(
             r'\t"([0-9a-fA-F:]+)\s*prefix_len:(\d+)\s+origin:(\w*)\s+stable:(\w*).* \[' +
-            r'on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+prio:(\w*)\]' +
+            r'on-mesh:(\d)\s+def-route:(\d)\s+config:(\d)\s+dhcp:(\d)\s+slaac:(\d)\s+pref:(\d)\s+.*prio:(\w*)\]' +
             r'\s+rloc:(0x[0-9a-fA-F]+)', text)
         verify(m is not None)
         data = m.groups()

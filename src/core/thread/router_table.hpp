@@ -123,12 +123,12 @@ public:
      *
      * @param[in]  aRouterId  The router id.
      *
-     * @retval OT_ERROR_NONE           Successfully released the router id.
-     * @retval OT_ERROR_INVALID_STATE  The device is not currently operating as a leader.
-     * @retval OT_ERROR_NOT_FOUND      The router id is not currently allocated.
+     * @retval kErrorNone          Successfully released the router id.
+     * @retval kErrorInvalidState  The device is not currently operating as a leader.
+     * @retval kErrorNotFound      The router id is not currently allocated.
      *
      */
-    otError Release(uint8_t aRouterId);
+    Error Release(uint8_t aRouterId);
 
     /**
      * This method removes a router link.
@@ -265,12 +265,12 @@ public:
      * @param[in]   aRouterId    The router ID or RLOC16 for a given router.
      * @param[out]  aRouterInfo  The router information.
      *
-     * @retval OT_ERROR_NONE          Successfully retrieved the router info for given id.
-     * @retval OT_ERROR_INVALID_ARGS  @p aRouterId is not a valid value for a router.
-     * @retval OT_ERROR_NOT_FOUND     No router entry with the given id.
+     * @retval kErrorNone          Successfully retrieved the router info for given id.
+     * @retval kErrorInvalidArgs   @p aRouterId is not a valid value for a router.
+     * @retval kErrorNotFound      No router entry with the given id.
      *
      */
-    otError GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo);
+    Error GetRouterInfo(uint16_t aRouterId, Router::Info &aRouterInfo);
 
     /**
      * This method returns the Router ID Sequence.

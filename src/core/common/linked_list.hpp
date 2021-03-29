@@ -37,7 +37,8 @@
 #include "openthread-core-config.h"
 
 #include <stdio.h>
-#include <openthread/error.h>
+
+#include "common/error.hpp"
 
 namespace ot {
 
@@ -239,7 +240,7 @@ public:
     {
         const Type *prev;
 
-        return Find(aEntry, prev) == OT_ERROR_NONE;
+        return Find(aEntry, prev) == kErrorNone;
     }
 
     /**
@@ -267,17 +268,17 @@ public:
      *
      * @param[in] aEntry   A reference to an entry to add.
      *
-     * @retval OT_ERROR_NONE     The entry was successfully added at the head of the list.
-     * @retval OT_ERROR_ALREADY  The entry is already in the list.
+     * @retval kErrorNone     The entry was successfully added at the head of the list.
+     * @retval kErrorAlready  The entry is already in the list.
      *
      */
-    otError Add(Type &aEntry)
+    Error Add(Type &aEntry)
     {
-        otError error = OT_ERROR_NONE;
+        Error error = kErrorNone;
 
         if (Contains(aEntry))
         {
-            error = OT_ERROR_ALREADY;
+            error = kErrorAlready;
         }
         else
         {
@@ -295,16 +296,16 @@ public:
      *
      * @param[in] aEntry   A reference to an entry to remove.
      *
-     * @retval OT_ERROR_NONE       The entry was successfully removed from the list.
-     * @retval OT_ERROR_NOT_FOUND  Could not find the entry in the list.
+     * @retval kErrorNone      The entry was successfully removed from the list.
+     * @retval kErrorNotFound  Could not find the entry in the list.
      *
      */
-    otError Remove(const Type &aEntry)
+    Error Remove(const Type &aEntry)
     {
-        Type *  prev;
-        otError error = Find(aEntry, prev);
+        Type *prev;
+        Error error = Find(aEntry, prev);
 
-        if (error == OT_ERROR_NONE)
+        if (error == kErrorNone)
         {
             PopAfter(prev);
         }
@@ -351,13 +352,13 @@ public:
      *                         @p aPrevEntry is set to nullptr if @p aEntry is the head of the list. Otherwise it is
      *                         updated to point to the previous entry before @p aEntry in the list.
      *
-     * @retval OT_ERROR_NONE       The entry was found in the list and @p aPrevEntry was updated successfully.
-     * @retval OT_ERROR_NOT_FOUND  The entry was not found in the list.
+     * @retval kErrorNone      The entry was found in the list and @p aPrevEntry was updated successfully.
+     * @retval kErrorNotFound  The entry was not found in the list.
      *
      */
-    otError Find(const Type &aEntry, const Type *&aPrevEntry) const
+    Error Find(const Type &aEntry, const Type *&aPrevEntry) const
     {
-        otError error = OT_ERROR_NOT_FOUND;
+        Error error = kErrorNotFound;
 
         aPrevEntry = nullptr;
 
@@ -365,7 +366,7 @@ public:
         {
             if (entry == &aEntry)
             {
-                error = OT_ERROR_NONE;
+                error = kErrorNone;
                 break;
             }
         }
@@ -381,11 +382,11 @@ public:
      *                         @p aPrevEntry is set to nullptr if @p aEntry is the head of the list. Otherwise it is
      *                         updated to point to the previous entry before @p aEntry in the list.
      *
-     * @retval OT_ERROR_NONE       The entry was found in the list and @p aPrevEntry was updated successfully.
-     * @retval OT_ERROR_NOT_FOUND  The entry was not found in the list.
+     * @retval kErrorNone      The entry was found in the list and @p aPrevEntry was updated successfully.
+     * @retval kErrorNotFound  The entry was not found in the list.
      *
      */
-    otError Find(const Type &aEntry, Type *&aPrevEntry)
+    Error Find(const Type &aEntry, Type *&aPrevEntry)
     {
         return const_cast<const LinkedList *>(this)->Find(aEntry, const_cast<const Type *&>(aPrevEntry));
     }

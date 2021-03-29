@@ -39,6 +39,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -56,10 +57,6 @@
 #include "thread/radio_selector.hpp"
 
 namespace ot {
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-class LinkMetricsSeriesInfo; ///< Forward declaration for including each other with `link_metrics.hpp`
-#endif
 
 /**
  * This class represents a Thread neighbor.
@@ -854,7 +851,7 @@ public:
      * This class defines an iterator used to go through IPv6 address entries of a child.
      *
      */
-    class AddressIterator
+    class AddressIterator : public Unequatable<AddressIterator>
     {
         friend class AddressIteratorBuilder;
 
@@ -969,19 +966,6 @@ public:
          */
         bool operator==(const AddressIterator &aOther) const { return (mIndex == aOther.mIndex); }
 
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances are unequal.
-         *
-         * This method MUST be used when the two iterators are associated with the same `Child` entry.
-         *
-         * @param[in]  aOther  The other `Iterator` to compare with.
-         *
-         * @retval TRUE   If the two `Iterator` objects are unequal.
-         * @retval FALSE  If the two `Iterator` objects are not unequal.
-         *
-         */
-        bool operator!=(const AddressIterator &aOther) const { return !(*this == aOther); }
-
     private:
         enum IteratorType : uint8_t
         {
@@ -1032,11 +1016,11 @@ public:
      *
      * @param[out]   aAddress            A reference to an IPv6 address to provide address (if any).
      *
-     * @retval       OT_ERROR_NONE       Successfully found the mesh-local address and updated @p aAddress.
-     * @retval       OT_ERROR_NOT_FOUND  No mesh-local IPv6 address in the IPv6 address list.
+     * @retval kErrorNone      Successfully found the mesh-local address and updated @p aAddress.
+     * @retval kErrorNotFound  No mesh-local IPv6 address in the IPv6 address list.
      *
      */
-    otError GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
+    Error GetMeshLocalIp6Address(Ip6::Address &aAddress) const;
 
     /**
      * This method returns the Mesh Local Interface Identifier.
@@ -1073,25 +1057,25 @@ public:
      *
      * @param[in]  aAddress           A reference to IPv6 address to be added.
      *
-     * @retval OT_ERROR_NONE          Successfully added the new address.
-     * @retval OT_ERROR_ALREADY       Address is already in the list.
-     * @retval OT_ERROR_NO_BUFS       Already at maximum number of addresses. No entry available to add the new address.
-     * @retval OT_ERROR_INVALID_ARGS  Address is invalid (it is the Unspecified Address).
+     * @retval kErrorNone          Successfully added the new address.
+     * @retval kErrorAlready       Address is already in the list.
+     * @retval kErrorNoBufs        Already at maximum number of addresses. No entry available to add the new address.
+     * @retval kErrorInvalidArgs   Address is invalid (it is the Unspecified Address).
      *
      */
-    otError AddIp6Address(const Ip6::Address &aAddress);
+    Error AddIp6Address(const Ip6::Address &aAddress);
 
     /**
      * This method removes an IPv6 address from the list.
      *
      * @param[in]  aAddress               A reference to IPv6 address to be removed.
      *
-     * @retval OT_ERROR_NONE              Successfully removed the address.
-     * @retval OT_ERROR_NOT_FOUND         Address was not found in the list.
-     * @retval OT_ERROR_INVALID_ARGS      Address is invalid (it is the Unspecified Address).
+     * @retval kErrorNone             Successfully removed the address.
+     * @retval kErrorNotFound         Address was not found in the list.
+     * @retval kErrorInvalidArgs      Address is invalid (it is the Unspecified Address).
      *
      */
-    otError RemoveIp6Address(const Ip6::Address &aAddress);
+    Error RemoveIp6Address(const Ip6::Address &aAddress);
 
     /**
      * This method indicates whether an IPv6 address is in the list of IPv6 addresses of the child.

@@ -466,6 +466,7 @@ enum
     SPINEL_STATUS_ALREADY                  = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND           = 20, ///< The given item could not be found.
     SPINEL_STATUS_INVALID_COMMAND_FOR_PROP = 21, ///< The given command cannot be performed on this property.
+    SPINEL_STATUS_RESPONSE_TIMEOUT         = 24, ///< No response received from remote node
 
     SPINEL_STATUS_JOIN__BEGIN = 104,
 
@@ -722,6 +723,22 @@ enum
 {
     SPINEL_RADIO_LINK_IEEE_802_15_4 = 0,
     SPINEL_RADIO_LINK_TREL_UDP6     = 1,
+};
+
+// Parameter ids used for:
+// @ref SPINEL_PROP_THREAD_MLR_REQUEST
+enum
+{
+    SPINEL_THREAD_MLR_PARAMID_TIMEOUT = 0
+};
+
+// Backbone Router states used for:
+// @ref SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE
+enum
+{
+    SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED  = 0,
+    SPINEL_THREAD_BACKBONE_ROUTER_STATE_SECONDARY = 1,
+    SPINEL_THREAD_BACKBONE_ROUTER_STATE_PRIMARY   = 2,
 };
 
 typedef enum
@@ -1191,15 +1208,16 @@ enum
     SPINEL_CAP_DUA                     = (SPINEL_CAP_OPENTHREAD__BEGIN + 15),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
-    SPINEL_CAP_THREAD__BEGIN        = 1024,
-    SPINEL_CAP_THREAD_COMMISSIONER  = (SPINEL_CAP_THREAD__BEGIN + 0),
-    SPINEL_CAP_THREAD_TMF_PROXY     = (SPINEL_CAP_THREAD__BEGIN + 1),
-    SPINEL_CAP_THREAD_UDP_FORWARD   = (SPINEL_CAP_THREAD__BEGIN + 2),
-    SPINEL_CAP_THREAD_JOINER        = (SPINEL_CAP_THREAD__BEGIN + 3),
-    SPINEL_CAP_THREAD_BORDER_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 4),
-    SPINEL_CAP_THREAD_SERVICE       = (SPINEL_CAP_THREAD__BEGIN + 5),
-    SPINEL_CAP_THREAD_CSL_RECEIVER  = (SPINEL_CAP_THREAD__BEGIN + 6),
-    SPINEL_CAP_THREAD__END          = 1152,
+    SPINEL_CAP_THREAD__BEGIN          = 1024,
+    SPINEL_CAP_THREAD_COMMISSIONER    = (SPINEL_CAP_THREAD__BEGIN + 0),
+    SPINEL_CAP_THREAD_TMF_PROXY       = (SPINEL_CAP_THREAD__BEGIN + 1),
+    SPINEL_CAP_THREAD_UDP_FORWARD     = (SPINEL_CAP_THREAD__BEGIN + 2),
+    SPINEL_CAP_THREAD_JOINER          = (SPINEL_CAP_THREAD__BEGIN + 3),
+    SPINEL_CAP_THREAD_BORDER_ROUTER   = (SPINEL_CAP_THREAD__BEGIN + 4),
+    SPINEL_CAP_THREAD_SERVICE         = (SPINEL_CAP_THREAD__BEGIN + 5),
+    SPINEL_CAP_THREAD_CSL_RECEIVER    = (SPINEL_CAP_THREAD__BEGIN + 6),
+    SPINEL_CAP_THREAD_BACKBONE_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 8),
+    SPINEL_CAP_THREAD__END            = 1152,
 
     SPINEL_CAP_NEST__BEGIN           = 15296,
     SPINEL_CAP_NEST_LEGACY_INTERFACE = (SPINEL_CAP_NEST__BEGIN + 0),
@@ -2946,6 +2964,46 @@ enum
      */
     SPINEL_PROP_THREAD_DOMAIN_NAME = SPINEL_PROP_THREAD_EXT__BEGIN + 44,
 
+    /// Multicast Listeners Register Request
+    /** Format `t(A(6))A(t(CD))` - Write-only
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * `t(A(6))`: Array of IPv6 multicast addresses
+     * `A(t(CD))`: Array of structs holding optional parameters as follows
+     *   `C`: Parameter id
+     *   `D`: Parameter value
+     *
+     *   +----------------------------------------------------------------+
+     *   | Id:   SPINEL_THREAD_MLR_PARAMID_TIMEOUT                        |
+     *   | Type: `L`                                                      |
+     *   | Description: Timeout in seconds. If this optional parameter is |
+     *   |   omitted, the default value of the BBR will be used.          |
+     *   | Special values:                                                |
+     *   |   0 causes given addresses to be removed                       |
+     *   |   0xFFFFFFFF is permanent and persistent registration          |
+     *   +----------------------------------------------------------------+
+     *
+     * Write to this property initiates update of Multicast Listeners Table on the primary BBR.
+     * If the write succeeded, the result of network operation will be notified later by the
+     * SPINEL_PROP_THREAD_MLR_RESPONSE property. If the write fails, no MLR.req is issued and
+     * notifiaction through the SPINEL_PROP_THREAD_MLR_RESPONSE property will not occur.
+     *
+     */
+    SPINEL_PROP_THREAD_MLR_REQUEST = SPINEL_PROP_THREAD_EXT__BEGIN + 52,
+
+    /// Multicast Listeners Register Response
+    /** Format `CCt(A(6))` - Unsolicited notifications only
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * `C`: Status
+     * `C`: MlrStatus (The Multicast Listener Registration Status)
+     * `A(6)`: Array of IPv6 addresses that failed to be updated on the primary BBR
+     *
+     * This property is notified asynchronously when the NCP receives MLR.rsp following
+     * previous write to the SPINEL_PROP_THREAD_MLR_REQUEST property.
+     */
+    SPINEL_PROP_THREAD_MLR_RESPONSE = SPINEL_PROP_THREAD_EXT__BEGIN + 53,
+
     /// Interface Identifier specified for Thread Domain Unicast Address.
     /** Format: `A(C)` - Read-write
      *
@@ -2960,6 +3018,63 @@ enum
      *
      */
     SPINEL_PROP_THREAD_DUA_ID = SPINEL_PROP_THREAD_EXT__BEGIN + 54,
+
+    /// Thread 1.2 Primary Backbone Router information in the Thread Network.
+    /** Format: `SSLC` - Read-Only
+     *
+     * Required capability: `SPINEL_CAP_NET_THREAD_1_2`
+     *
+     * `S`: Server.
+     * `S`: Reregistration Delay (in seconds).
+     * `L`: Multicast Listener Registration Timeout (in seconds).
+     * `C`: Sequence Number.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY = SPINEL_PROP_THREAD_EXT__BEGIN + 55,
+
+    /// Thread 1.2 Backbone Router local state.
+    /** Format: `C` - Read-Write
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * The valid values are specified by SPINEL_THREAD_BACKBONE_ROUTER_STATE_<state> enumeration.
+     * Backbone functionality will be disabled if SPINEL_THREAD_BACKBONE_ROUTER_STATE_DISABLED
+     * is writted to this property, enabled otherwise.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_STATE = SPINEL_PROP_THREAD_EXT__BEGIN + 56,
+
+    /// Local Thread 1.2 Backbone Router configuration.
+    /** Format: SLC - Read-Write
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * `S`: Reregistration Delay (in seconds).
+     * `L`: Multicast Listener Registration Timeout (in seconds).
+     * `C`: Sequence Number.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_CONFIG = SPINEL_PROP_THREAD_EXT__BEGIN + 57,
+
+    /// Register local Thread 1.2 Backbone Router configuration.
+    /** Format: Empty (Write only).
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * Writing to this property (with any value) will register local Backbone Router configuration.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTER = SPINEL_PROP_THREAD_EXT__BEGIN + 58,
+
+    /// Thread 1.2 Backbone Router registration jitter.
+    /** Format: `C` - Read-Write
+     *
+     * Required capability: `SPINEL_CAP_THREAD_BACKBONE_ROUTER`
+     *
+     * `C`: Backbone Router registration jitter.
+     *
+     */
+    SPINEL_PROP_THREAD_BACKBONE_ROUTER_LOCAL_REGISTRATION_JITTER = SPINEL_PROP_THREAD_EXT__BEGIN + 59,
 
     SPINEL_PROP_THREAD_EXT__END = 0x1600,
 

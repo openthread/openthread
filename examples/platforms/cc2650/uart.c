@@ -34,7 +34,8 @@
 #include <driverlib/uart.h>
 
 #include <utils/code_utils.h>
-#include <openthread/platform/uart.h>
+
+#include "utils/uart.h"
 
 /**
  * \note this will configure the uart for 115200 baud 8-N-1, no HW flow control
@@ -58,7 +59,7 @@ static uint16_t sReceiveTailIdx = 0;
 void UART0_intHandler(void);
 
 /**
- * Function documented in platform/uart.h
+ * Function documented in utils/uart.h
  */
 otError otPlatUartEnable(void)
 {
@@ -86,7 +87,7 @@ otError otPlatUartEnable(void)
 }
 
 /**
- * Function documented in platform/uart.h
+ * Function documented in utils/uart.h
  */
 otError otPlatUartDisable(void)
 {
@@ -109,7 +110,7 @@ otError otPlatUartDisable(void)
 }
 
 /**
- * Function documented in platform/uart.h
+ * Function documented in utils/uart.h
  */
 otError otPlatUartSend(const uint8_t *aBuf, uint16_t aBufLength)
 {
