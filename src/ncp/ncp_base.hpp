@@ -96,7 +96,7 @@ public:
      * @returns IID.
      *
      */
-     spinel_iid_t GetCurCommandIid(void);
+    spinel_iid_t GetCurCommandIid(void);
 
     /**
      * This method sends data to host via specific stream.
@@ -466,8 +466,8 @@ protected:
     void StartLegacy(void);
     void StopLegacy(void);
 #else
-    void         StartLegacy(void) {}
-    void         StopLegacy(void) {}
+    void StartLegacy(void) {}
+    void StopLegacy(void) {}
 #endif
 
     static uint8_t      ConvertLogLevel(otLogLevel aLogLevel);
@@ -611,10 +611,10 @@ protected:
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE  
-    #define kPendingCommandQueueSize SPINEL_HEADER_IID_MAX
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#define kPendingCommandQueueSize SPINEL_HEADER_IID_MAX
 
-  enum PendingCommandType
+    enum PendingCommandType
     {
         kPendingCommandTypeTransmit,
         kPendingCommandTypeEnergyScan,
@@ -623,23 +623,23 @@ protected:
     struct PendingCommandEntry
     {
         uint8_t      mType : 2;
-        uint8_t      mIid : 2;   
+        uint8_t      mIid : 2;
         uint8_t      mTid : 4;
         uint8_t      mScanChannel;
         otRadioFrame mTransmitFrame;
         uint8_t      mTransmitPsdu[127];
-    };  
+    };
 
-    static uint8_t GetWrappedPendingCommandQueueIndex(uint8_t aPosition);
-    uint8_t mPendingCommandQueueHead;
-    uint8_t mPendingCommandQueueTail;
+    static uint8_t      GetWrappedPendingCommandQueueIndex(uint8_t aPosition);
+    uint8_t             mPendingCommandQueueHead;
+    uint8_t             mPendingCommandQueueTail;
     PendingCommandEntry mPendingCommandQueue[kPendingCommandQueueSize];
 
     otError EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader, uint8_t aScanChannel);
     otError HandlePendingTransmit(PendingCommandEntry *entry);
     otError HandlePendingEnergyScan(PendingCommandEntry *entry);
-    void HandlePendingCommands(void);
-#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE  
+    void    HandlePendingCommands(void);
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 #endif // OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD

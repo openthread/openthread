@@ -148,7 +148,7 @@ otError otLinkRawSleep(otInstance *aInstance);
 otError otLinkRawReceive(otInstance *aInstance);
 
 bool otLinkRawIsTransmittingOrScanning(otInstance *aInstance);
-  
+
 /**
  * The radio transitions from Transmit to Receive.
  * This method returns a pointer to the transmit buffer.

@@ -863,7 +863,7 @@ uint8_t NcpBase::GetWrappedPendingCommandQueueIndex(uint8_t aPosition)
 
 otError NcpBase::EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader, uint8_t aScanChannel)
 {
-    otError      error = OT_ERROR_NONE;
+    otError              error = OT_ERROR_NONE;
     PendingCommandEntry *entry;
 
     if ((mPendingCommandQueueTail - mPendingCommandQueueHead) >= kPendingCommandQueueSize)
@@ -879,11 +879,11 @@ otError NcpBase::EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader
     entry = &mPendingCommandQueue[GetWrappedPendingCommandQueueIndex(mPendingCommandQueueTail)];
 
     entry->mType = aType;
-    switch(aType)
+    switch (aType)
     {
     case kPendingCommandTypeTransmit:
-        entry->mIid = SPINEL_HEADER_GET_IID(aHeader);
-        entry->mTid = SPINEL_HEADER_GET_TID(aHeader);
+        entry->mIid                 = SPINEL_HEADER_GET_IID(aHeader);
+        entry->mTid                 = SPINEL_HEADER_GET_TID(aHeader);
         entry->mTransmitFrame.mPsdu = entry->mTransmitPsdu;
         SuccessOrExit(error = DecodeStreamRawTxRequest(entry->mTransmitFrame));
         break;
@@ -904,7 +904,7 @@ exit:
 
 otError NcpBase::HandlePendingTransmit(PendingCommandEntry *entry)
 {
-    otError error = OT_ERROR_NONE;
+    otError       error = OT_ERROR_NONE;
     otRadioFrame *frame;
 
     mCurTransmitTID = entry->mTid;
@@ -936,14 +936,14 @@ otError NcpBase::HandlePendingEnergyScan(PendingCommandEntry *entry)
 exit:
     if (error != OT_ERROR_NONE)
     {
-      if (mEncoder.BeginFrame(SPINEL_HEADER_FLAG | (entry->mIid << SPINEL_HEADER_IID_SHIFT), SPINEL_CMD_PROP_VALUE_IS,
-                              SPINEL_PROP_MAC_SCAN_STATE) == OT_ERROR_NONE)
-      {
-          if (mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE) == OT_ERROR_NONE)
-          {
-              mEncoder.EndFrame();
-          }
-      }
+        if (mEncoder.BeginFrame(SPINEL_HEADER_FLAG | (entry->mIid << SPINEL_HEADER_IID_SHIFT), SPINEL_CMD_PROP_VALUE_IS,
+                                SPINEL_PROP_MAC_SCAN_STATE) == OT_ERROR_NONE)
+        {
+            if (mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE) == OT_ERROR_NONE)
+            {
+                mEncoder.EndFrame();
+            }
+        }
     }
     return error;
 }
@@ -965,8 +965,8 @@ void NcpBase::HandlePendingCommands(void)
             mPendingCommandQueueHead = 0;
             mPendingCommandQueueTail = GetWrappedPendingCommandQueueIndex(mPendingCommandQueueTail);
         }
-        
-        switch(entry->mType)
+
+        switch (entry->mType)
         {
         case kPendingCommandTypeTransmit:
             submitted = (HandlePendingTransmit(entry) == OT_ERROR_NONE);

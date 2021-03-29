@@ -148,7 +148,7 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
 
     if (mCurTransmitTID)
     {
-        uint8_t header       = SPINEL_HEADER_FLAG | mCurTransmitTID;
+        uint8_t header = SPINEL_HEADER_FLAG | mCurTransmitTID;
         header |= static_cast<uint8_t>(mCurTransmitIID << SPINEL_HEADER_IID_SHIFT);
 
         bool framePending = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
@@ -214,8 +214,8 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // We are finished with the scan, so send out
     // a property update indicating such.
-    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | (mCurTransmitIID << SPINEL_HEADER_IID_SHIFT), SPINEL_CMD_PROP_VALUE_IS,
-                                      SPINEL_PROP_MAC_SCAN_STATE));
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | (mCurTransmitIID << SPINEL_HEADER_IID_SHIFT),
+                                      SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MAC_SCAN_STATE));
 
     SuccessOrExit(mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE));
     SuccessOrExit(mEncoder.EndFrame());
@@ -465,7 +465,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_STREAM_RAW(uint8_t aHeader)
 
         // Cache the interface and transaction ID for async response
         mCurTransmitIID = SPINEL_HEADER_GET_IID(aHeader);
-        mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);        
+        mCurTransmitTID = SPINEL_HEADER_GET_TID(aHeader);
     }
 
 exit:
