@@ -359,6 +359,56 @@ void TestIp6Prefix(void)
     }
 }
 
+void TestIp4Ip6Translation(void)
+{
+    struct TestCase
+    {
+        const char *mPrefix;     // NAT64 prefix
+        uint8_t     mLength;     // Prefix length in bits
+        const char *mIp6Address; // Expected IPv6 address (with embedded IPv4 "192.0.2.33").
+    };
+
+    // The test cases are from RFC 6502 - section 2.4
+
+    const TestCase kTestCases[] = {
+        {"2001:db8::", 32, "2001:db8:c000:221::"},
+        {"2001:db8:100::", 40, "2001:db8:1c0:2:21::"},
+        {"2001:db8:122::", 48, "2001:db8:122:c000:2:2100::"},
+        {"2001:db8:122:300::", 56, "2001:db8:122:3c0:0:221::"},
+        {"2001:db8:122:344::", 64, "2001:db8:122:344:c0:2:2100::"},
+        {"2001:db8:122:344::", 96, "2001:db8:122:344::192.0.2.33"},
+        {"64:ff9b::", 96, "64:ff9b::192.0.2.33"},
+    };
+
+    const uint8_t kIp4Address[] = {192, 0, 2, 33};
+
+    ot::Ip4::Address ip4Address;
+
+    printf("\nTestIp4Ip6Translation()\n");
+
+    ip4Address.SetBytes(kIp4Address);
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        ot::Ip6::Prefix  prefix;
+        ot::Ip6::Address address;
+        ot::Ip6::Address expectedAddress;
+
+        SuccessOrQuit(address.FromString(testCase.mPrefix), "Ip6::FromString() failed");
+        prefix.Set(address.GetBytes(), testCase.mLength);
+
+        SuccessOrQuit(expectedAddress.FromString(testCase.mIp6Address), "Ip6::FromString() failed");
+
+        address.SetFromTranslatedIp4Address(prefix, ip4Address);
+
+        printf("Prefix: %-26s IPv4Addr: %-12s Ipv6Address: %-36s Expected: %s (%s)\n", prefix.ToString().AsCString(),
+               ip4Address.ToString().AsCString(), address.ToString().AsCString(), testCase.mIp6Address,
+               expectedAddress.ToString().AsCString());
+
+        VerifyOrQuit(address == expectedAddress, "Ip6::SetFromTranslatedIp4Address() failed");
+    }
+}
+
 void TestIp6Header(void)
 {
     ot::Ip6::Header  header;
@@ -420,6 +470,7 @@ int main(void)
     TestIp4AddressFromString();
     TestIp6AddressFromString();
     TestIp6Prefix();
+    TestIp4Ip6Translation();
     TestIp6Header();
     printf("All tests passed\n");
     return 0;
