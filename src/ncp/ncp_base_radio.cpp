@@ -214,8 +214,9 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
     // We are finished with the scan, so send out
     // a property update indicating such.
-    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | (mCurTransmitIID << SPINEL_HEADER_IID_SHIFT),
-                                      SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MAC_SCAN_STATE));
+    SuccessOrExit(
+        mEncoder.BeginFrame(SPINEL_HEADER_FLAG | static_cast<uint8_t>(mCurTransmitIID << SPINEL_HEADER_IID_SHIFT),
+                            SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MAC_SCAN_STATE));
 
     SuccessOrExit(mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE));
     SuccessOrExit(mEncoder.EndFrame());
