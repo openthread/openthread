@@ -709,12 +709,7 @@ bool SubMac::ShouldHandleCsmaBackOff(void) const
 {
     bool swCsma = true;
 
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    // Use software csma to perform retries in case of a busy RCP
-    goto exit;
-#else
     VerifyOrExit(!RadioSupportsCsmaBackoff(), swCsma = false);
-#endif
 
 #if OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     VerifyOrExit(Get<LinkRaw>().IsEnabled());

@@ -883,13 +883,13 @@ public:
     /**
      * This method converts an IPv6 address string to binary.
      *
-     * @param[in]  aString  A pointer to the null-terminated string.
+     * @param[in]  aBuf  A pointer to the null-terminated string.
      *
      * @retval kErrorNone          Successfully parsed the IPv6 address string.
-     * @retval kErrorParse         Failed to parse the IPv6 address string.
+     * @retval kErrorInvalidArgs   Failed to parse the IPv6 address string.
      *
      */
-    Error FromString(const char *aString);
+    Error FromString(const char *aBuf);
 
     /**
      * This method converts an IPv6 address object to a string

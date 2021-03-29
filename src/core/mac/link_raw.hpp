@@ -115,8 +115,6 @@ public:
      */
     void InvokeReceiveDone(RxFrame *aFrame, Error aError);
 
-    bool IsTransmittingOrScanning(void) { return mSubMac.IsTransmittingOrScanning(); }
-
     /**
      * This method returns true if the raw link-layer is busy transmitting or scanning.
      *
