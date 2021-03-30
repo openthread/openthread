@@ -307,10 +307,6 @@ NcpBase::NcpBase(Instance *aInstance)
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     aInstance->Get<Extension::ExtensionBase>().SignalNcpInit(*this);
 #endif
-
-#if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    memset(mNextExpectedTid, 0, sizeof(mNextExpectedTid));
-#endif
 }
 
 NcpBase *NcpBase::GetNcpInstance(void)
@@ -374,7 +370,7 @@ void NcpBase::HandleReceive(const uint8_t *aBuf, uint16_t aBufLength)
     mCurCommandIID = SPINEL_HEADER_GET_IID(header);
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
-    if (mCurCommandIID == 0 || mCurCommandIID > SPINEL_HEADER_IID_MAX)
+    if (mCurCommandIID > SPINEL_HEADER_IID_MAX)
 #else
     if (mCurCommandIID != 0)
 #endif
