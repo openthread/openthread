@@ -403,6 +403,7 @@ class TestOTCI(unittest.TestCase):
 
         for dst_ip in leader.get_ipaddrs():
             commissioner.ping(dst_ip, size=10, count=1, interval=2, hoplimit=3)
+            commissioner.wait(1)
 
         self.assertEqual('disabled', commissioner.get_commissioiner_state())
         commissioner.commissioner_start()

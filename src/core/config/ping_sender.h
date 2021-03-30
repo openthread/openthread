@@ -58,6 +58,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_DEADLINE
+ *
+ * Specifies the default ping timeout in milliseconds. The timeout is the max acceptable time gap between each ping
+ * request and its reply.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT
+#define OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_TIMEOUT 3000
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_PING_SENDER_DEFAULT_SIZE
  *
  * Specifies the default ping data size in bytes. The data size specifies the Echo Request data payload which excludes
