@@ -1882,7 +1882,7 @@ Set the preferred Thread Leader Partition ID.
 Done
 ```
 
-### ping \<ipaddr\> [size][count] [interval][hoplimit]
+### ping \<ipaddr\> [size][count] [interval][hoplimit] [timeout]
 
 Send an ICMPv6 Echo Request.
 
@@ -1890,6 +1890,7 @@ Send an ICMPv6 Echo Request.
 - count: The number of ICMPv6 Echo Requests to be sent.
 - interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
 - hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
+- timeout: Time in seconds to wait for the final ICMPv6 Echo Reply after sending out the request. The value may have fractional form, for example `3.5`.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799

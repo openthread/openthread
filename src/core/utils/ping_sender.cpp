@@ -97,7 +97,7 @@ PingSender::PingSender(Instance &aInstance)
 
 Error PingSender::Ping(const Config &aConfig)
 {
-    Error error = kErrorNone;
+    Error error = kErrorPending;
 
     VerifyOrExit(!mTimer.IsRunning(), error = kErrorBusy);
 
@@ -108,6 +108,10 @@ Error PingSender::Ping(const Config &aConfig)
 
     mStatistics.Clear();
     mStatistics.mIsMulticast = static_cast<Ip6::Address *>(&mConfig.mDestination)->IsMulticast();
+    if (mStatistics.mIsMulticast)
+    {
+        error = kErrorNone;
+    }
 
     mIdentifier++;
     SendPing();

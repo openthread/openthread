@@ -120,23 +120,23 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
-        self.assertFalse(self.nodes[SED].ping('2001:2:0:2::1'))
+        self.assertFalse(self.nodes[SED].ping('2001:2:0:2::1', timeout=10))
 
-        self.assertFalse(self.nodes[SED].ping('2007::1'))
+        self.assertFalse(self.nodes[SED].ping('2007::1', timeout=10))
 
         self.nodes[ROUTER2].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'high')
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
-        self.assertFalse(self.nodes[SED].ping('2007::1'))
+        self.assertFalse(self.nodes[SED].ping('2007::1', timeout=10))
 
         self.nodes[ROUTER2].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'med')
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
-        self.assertFalse(self.nodes[SED].ping('2007::1'))
+        self.assertFalse(self.nodes[SED].ping('2007::1', timeout=10))
 
     def verify(self, pv):
         pkts = pv.pkts

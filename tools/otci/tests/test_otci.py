@@ -402,7 +402,14 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('router', commissioner.get_state())
 
         for dst_ip in leader.get_ipaddrs():
-            commissioner.ping(dst_ip, size=10, count=1, interval=2, hoplimit=3)
+            statistics = commissioner.ping(dst_ip, size=10, count=10, interval=2, hoplimit=3)
+            self.assertTrue('transmitted_packets' in statistics)
+            self.assertTrue('received_packets' in statistics)
+            self.assertTrue('packet_loss' in statistics)
+            self.assertTrue('round_trip_time' in statistics)
+            self.assertTrue('min' in statistics['round_trip_time'])
+            self.assertTrue('avg' in statistics['round_trip_time'])
+            self.assertTrue('max' in statistics['round_trip_time'])
             commissioner.wait(1)
 
         self.assertEqual('disabled', commissioner.get_commissioiner_state())
