@@ -279,24 +279,25 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
- *
- * CSL sample window in units of 10 symbols.
- *
- */
-#ifndef OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW
-#define OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW 5
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
  *
- * For some reasons, CSL receivers wake up a little later than expected. This variable specifies how much time that
- * CSL receiver would wake up earlier than the expected sample window. The time is in unit of 10 symbols.
+ * Reception scheduling and ramp up time needed for the CSL receiver to be ready, in units of microseconds.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD
-#define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 3
+#define OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD 800
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON
+ *
+ * The total duration, in units of microseconds, required for the CSL receiver to fully receive and acknowledge a frame
+ * of maximum possible length.
+ * - Frame preamble: 6*2 symbols + margin
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON
+#define OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON 12 * 16
 #endif
 
 /*
