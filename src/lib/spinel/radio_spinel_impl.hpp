@@ -2238,11 +2238,6 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     if (mResetRadioOnStartup)
     {
         SuccessOrDie(SendReset());
-        SuccessOrDie(WaitResponse());
-    }
-    else
-    {
-        mIsReady = true;
     }
 
     SuccessOrDie(WaitResponse());
