@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,32 +28,45 @@
 
 /**
  * @file
- *   This file includes compile-time configurations for the CLI service.
- *
+ *   This file implements the SRP client buffers and service pool.
  */
 
-#ifndef CONFIG_CLI_H_
-#define CONFIG_CLI_H_
+#include "srp_client_buffers.hpp"
 
-#include "openthread-core-config.h"
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
 
-#ifndef OPENTHREAD_POSIX
-#if defined(__ANDROID__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || \
-    defined(__unix__)
-#define OPENTHREAD_POSIX 1
-#else
-#define OPENTHREAD_POSIX 0
-#endif
-#endif
+#include <string.h>
 
-/**
- * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
- *
- * The maximum size of the CLI line in bytes.
- *
- */
-#ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
-#define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH 384
-#endif
+#include "common/code_utils.hpp"
+#include "common/instance.hpp"
+#include "common/locator-getters.hpp"
 
-#endif // CONFIG_CLI_H_
+namespace ot {
+namespace Utils {
+
+SrpClientBuffers::SrpClientBuffers(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
+SrpClientBuffers::ServiceEntry *SrpClientBuffers::AllocateService(void)
+{
+    ServiceEntry *entry = mServicePool.Allocate();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->Clear();
+    entry->mService.mName          = entry->mServiceName;
+    entry->mService.mInstanceName  = entry->mInstanceName;
+    entry->mService.mTxtEntries    = &entry->mTxtEntry;
+    entry->mService.mNumTxtEntries = 1;
+    entry->mTxtEntry.mValue        = entry->mTxtBuffer;
+
+exit:
+    return entry;
+}
+
+} // namespace Utils
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE

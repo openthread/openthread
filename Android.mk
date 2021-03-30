@@ -194,6 +194,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/server_api.cpp                             \
     src/core/api/sntp_api.cpp                               \
     src/core/api/srp_client_api.cpp                         \
+    src/core/api/srp_client_buffers_api.cpp                 \
     src/core/api/srp_server_api.cpp                         \
     src/core/api/tasklet_api.cpp                            \
     src/core/api/thread_api.cpp                             \
@@ -335,6 +336,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/utils/parse_cmdline.cpp                        \
     src/core/utils/ping_sender.cpp                          \
     src/core/utils/slaac_address.cpp                        \
+    src/core/utils/srp_client_buffers.cpp                   \
     src/lib/hdlc/hdlc.cpp                                   \
     src/lib/platform/exit_code.c                            \
     src/lib/spinel/spinel.c                                 \
