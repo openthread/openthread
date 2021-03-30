@@ -248,7 +248,6 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDroppedOutboundIpFrameCounter(0)
     , mDroppedInboundIpFrameCounter(0)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-    , mSrpClientNumHostAddresses(0)
     , mSrpClientCallbackEnabled(false)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD

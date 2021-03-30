@@ -62,11 +62,25 @@ extern "C" {
 typedef struct otPingSenderReply
 {
     otIp6Address mSenderAddress;  ///< Sender IPv6 address (address from which ping reply was received).
-    uint32_t     mRoundTripTime;  ///< Round trip time in msec.
+    uint16_t     mRoundTripTime;  ///< Round trip time in msec.
     uint16_t     mSize;           ///< Data size (number of bytes) in reply (excluding IPv6 and ICMP6 headers).
     uint16_t     mSequenceNumber; ///< Sequence number.
     uint8_t      mHopLimit;       ///< Hop limit.
 } otPingSenderReply;
+
+/**
+ * This structure represents statistics of a ping request.
+ *
+ */
+typedef struct otPingSenderStatistics
+{
+    uint16_t mSentCount;          ///< The number of ping requests already sent.
+    uint16_t mReceivedCount;      ///< The number of ping replies received.
+    uint32_t mTotalRoundTripTime; ///< The total round trip time of ping requests.
+    uint16_t mMinRoundTripTime;   ///< The min round trip time among ping requests.
+    uint16_t mMaxRoundTripTime;   ///< The max round trip time among ping requests.
+    bool     mIsMulticast;        ///< Whether this is a multicast ping request.
+} otPingSenderStatistics;
 
 /**
  * This function pointer type specifies the callback to notify receipt of a ping reply.
@@ -75,7 +89,17 @@ typedef struct otPingSenderReply
  * @param[in] aContext    A pointer to application-specific context.
  *
  */
-typedef void (*otPingSenderCallback)(const otPingSenderReply *aReply, void *aContext);
+typedef void (*otPingSenderReplyCallback)(const otPingSenderReply *aReply, void *aContext);
+
+/**
+ * This function pointer type specifies the callback to report the ping statistics.
+ *
+ * @param[in] aStatistics      A pointer to a `otPingSenderStatistics` containing info about the received ping
+ *                             statistics.
+ * @param[in] aContext         A pointer to application-specific context.
+ *
+ */
+typedef void (*otPingSenderStatisticsCallback)(const otPingSenderStatistics *aStatistics, void *aContext);
 
 /**
  * This structure represents a ping request configuration.
@@ -83,14 +107,18 @@ typedef void (*otPingSenderCallback)(const otPingSenderReply *aReply, void *aCon
  */
 typedef struct otPingSenderConfig
 {
-    otIp6Address         mDestination;       ///< Destination address to ping.
-    otPingSenderCallback mCallback;          ///< Callback function to report replies (can be NULL if not needed).
-    void *               mCallbackContext;   ///< A pointer to the callback application-specific context.
-    uint16_t             mSize;              ///< Data size (# of bytes) excludes IPv6/ICMPv6 header. Zero for default.
-    uint16_t             mCount;             ///< Number of ping messages to send. Zero to use default.
-    uint32_t             mInterval;          ///< Ping tx interval in milliseconds. Zero to use default.
-    uint8_t              mHopLimit;          ///< Hop limit (used if `mAllowZeroHopLimit` is false). Zero for default.
-    bool                 mAllowZeroHopLimit; ///< Indicates whether hop limit is zero.
+    otIp6Address              mDestination;   ///< Destination address to ping.
+    otPingSenderReplyCallback mReplyCallback; ///< Callback function to report replies (can be NULL if not needed).
+    otPingSenderStatisticsCallback
+             mStatisticsCallback; ///< Callback function to report statistics (can be NULL if not needed).
+    void *   mCallbackContext;    ///< A pointer to the callback application-specific context.
+    uint16_t mSize;               ///< Data size (# of bytes) excludes IPv6/ICMPv6 header. Zero for default.
+    uint16_t mCount;              ///< Number of ping messages to send. Zero to use default.
+    uint32_t mInterval;           ///< Ping tx interval in milliseconds. Zero to use default.
+    uint16_t mTimeout;            ///< Time in milliseconds to wait for a reply after sending out the request.
+                                  ///< Zero to use default.
+    uint8_t mHopLimit;            ///< Hop limit (used if `mAllowZeroHopLimit` is false). Zero for default.
+    bool    mAllowZeroHopLimit;   ///< Indicates whether hop limit is zero.
 } otPingSenderConfig;
 
 /**

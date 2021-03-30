@@ -655,19 +655,7 @@ protected:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     enum : uint8_t
     {
-        kSrpClientMaxServices      = OPENTHREAD_CONFIG_NCP_SRP_CLIENT_MAX_SERVICES,
-        kSrpClientMaxHostAddresses = OPENTHREAD_CONFIG_NCP_SRP_CLIENT_MAX_HOST_ADDRESSES,
-        kSrpClientNameSize         = 64,
-    };
-
-    struct SrpClientService
-    {
-        void MarkAsNotInUse(void) { mService.mNext = &mService; }
-        bool IsInUse(void) const { return (mService.mNext != &mService); }
-
-        otSrpClientService mService;
-        char               mInstanceName[kSrpClientNameSize];
-        char               mServiceName[kSrpClientNameSize];
+        kSrpClientMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRSSES,
     };
 
     otError EncodeSrpClientHostInfo(const otSrpClientHostInfo &aHostInfo);
@@ -683,11 +671,7 @@ protected:
                                         const otSrpClientService * aServices,
                                         const otSrpClientService * aRemovedServices);
 
-    char             mSrpClientHostName[kSrpClientNameSize];
-    SrpClientService mSrpClientServicePool[kSrpClientMaxServices];
-    otIp6Address     mSrpClientHostAddresses[kSrpClientMaxHostAddresses];
-    uint8_t          mSrpClientNumHostAddresses;
-    bool             mSrpClientCallbackEnabled;
+    bool mSrpClientCallbackEnabled;
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE

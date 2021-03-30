@@ -51,7 +51,7 @@ namespace Cli {
 
 constexpr SrpClient::Command SrpClient::sCommands[];
 
-template <uint16_t kDestSize> static otError CopyString(char (&aDestination)[kDestSize], const char *aSource)
+static otError CopyString(char *aDest, uint16_t aDestSize, const char *aSource)
 {
     // Copies a string from `aSource` to `aDestination` (char array),
     // verifying that the string fits in the destination array.
@@ -59,8 +59,8 @@ template <uint16_t kDestSize> static otError CopyString(char (&aDestination)[kDe
     otError error = OT_ERROR_NONE;
     size_t  len   = strlen(aSource);
 
-    VerifyOrExit(len + 1 <= kDestSize, error = OT_ERROR_INVALID_ARGS);
-    memcpy(aDestination, aSource, len + 1);
+    VerifyOrExit(len + 1 <= aDestSize, error = OT_ERROR_INVALID_ARGS);
+    memcpy(aDest, aSource, len + 1);
 
 exit:
     return error;
@@ -70,13 +70,6 @@ SrpClient::SrpClient(Interpreter &aInterpreter)
     : mInterpreter(aInterpreter)
     , mCallbackEnabled(false)
 {
-    for (Service &service : mServicePool)
-    {
-        service.MarkAsNotInUse();
-    }
-
-    memset(mHostAddresses, 0, sizeof(mHostAddresses));
-
     otSrpClientSetCallback(mInterpreter.mInstance, SrpClient::HandleCallback, this);
 }
 
@@ -190,9 +183,26 @@ otError SrpClient::ProcessHost(uint8_t aArgsLength, char *aArgs[])
         }
         else
         {
+            size_t   len;
+            uint16_t size;
+            char *   hostName;
+
             VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = CopyString(mHostName, aArgs[1]));
-            error = otSrpClientSetHostName(mInterpreter.mInstance, mHostName);
+            hostName = otSrpClientBuffersGetHostNameString(mInterpreter.mInstance, &size);
+
+            len = strlen(aArgs[1]);
+            VerifyOrExit(len + 1 <= size, error = OT_ERROR_INVALID_ARGS);
+
+            // We first make sure we can set the name, and if so
+            // we copy it to the persisted string buffer and set
+            // the host name again now with the persisted buffer.
+            // This ensures that we do not overwrite a previous
+            // buffer with a host name that cannot be set.
+
+            SuccessOrExit(error = otSrpClientSetHostName(mInterpreter.mInstance, aArgs[1]));
+            memcpy(hostName, aArgs[1], len + 1);
+
+            IgnoreError(otSrpClientSetHostName(mInterpreter.mInstance, hostName));
         }
     }
     else if (strcmp(aArgs[0], "state") == 0)
@@ -215,24 +225,30 @@ otError SrpClient::ProcessHost(uint8_t aArgsLength, char *aArgs[])
         }
         else
         {
-            uint8_t      numAddresses;
-            otIp6Address addresses[kMaxHostAddresses];
+            uint8_t       numAddresses = aArgsLength - 1;
+            otIp6Address  addresses[kMaxHostAddresses];
+            uint8_t       arrayLength;
+            otIp6Address *hostAddressArray;
 
-            numAddresses = 0;
-            memset(addresses, 0, sizeof(addresses));
+            hostAddressArray = otSrpClientBuffersGetHostAddressesArray(mInterpreter.mInstance, &arrayLength);
 
-            while (aArgsLength > 1)
+            // We first make sure we can set the addresses, and if so
+            // we copy the address list into the persisted address array
+            // and set it again. This ensures that we do not overwrite
+            // a previous list before we know it is safe to set/change
+            // the address list.
+
+            VerifyOrExit(numAddresses <= arrayLength, error = OT_ERROR_NO_BUFS);
+
+            for (uint8_t index = 1; index < aArgsLength; index++)
             {
-                VerifyOrExit(numAddresses < kMaxHostAddresses, error = OT_ERROR_NO_BUFS);
-                aArgsLength--;
-                aArgs++;
-                SuccessOrExit(error = ParseAsIp6Address(aArgs[0], addresses[numAddresses++]));
+                SuccessOrExit(error = ParseAsIp6Address(aArgs[index], addresses[index - 1]));
             }
 
-            VerifyOrExit(numAddresses > 0, error = OT_ERROR_INVALID_ARGS);
-            memcpy(mHostAddresses, addresses, sizeof(addresses));
+            SuccessOrExit(error = otSrpClientSetHostAddresses(mInterpreter.mInstance, addresses, numAddresses));
 
-            error = otSrpClientSetHostAddresses(mInterpreter.mInstance, mHostAddresses, numAddresses);
+            memcpy(hostAddressArray, addresses, numAddresses * sizeof(hostAddressArray[0]));
+            IgnoreError(otSrpClientSetHostAddresses(mInterpreter.mInstance, hostAddressArray, numAddresses));
         }
     }
     else if (strcmp(aArgs[0], "remove") == 0)
@@ -251,11 +267,7 @@ otError SrpClient::ProcessHost(uint8_t aArgsLength, char *aArgs[])
     {
         VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
         otSrpClientClearHostAndServices(mInterpreter.mInstance);
-
-        for (Service &poolEntry : mServicePool)
-        {
-            poolEntry.MarkAsNotInUse();
-        }
+        otSrpClientBuffersFreeAllServices(mInterpreter.mInstance);
     }
     else
     {
@@ -349,82 +361,27 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, char *aArgs[])
 
     if (strcmp(aArgs[0], "add") == 0)
     {
-        // `add` <instance-name> <service-name> <port> [priority] [weight] [txt]
-
-        Service *entry = nullptr;
-
-        VerifyOrExit(4 <= aArgsLength && aArgsLength <= 7, error = OT_ERROR_INVALID_ARGS);
-
-        for (Service &poolEntry : mServicePool)
-        {
-            if (!poolEntry.IsInUse())
-            {
-                entry = &poolEntry;
-                break;
-            }
-        }
-
-        VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
-
-        memset(&entry->mService, 0, sizeof(entry->mService));
-
-        SuccessOrExit(error = CopyString(entry->mInstanceName, aArgs[1]));
-        entry->mService.mInstanceName = entry->mInstanceName;
-
-        SuccessOrExit(error = CopyString(entry->mServiceName, aArgs[2]));
-        entry->mService.mName = entry->mServiceName;
-
-        SuccessOrExit(error = ParseAsUint16(aArgs[3], entry->mService.mPort));
-
-        if (aArgsLength >= 5)
-        {
-            SuccessOrExit(error = ParseAsUint16(aArgs[4], entry->mService.mPriority));
-        }
-
-        if (aArgsLength >= 6)
-        {
-            SuccessOrExit(error = ParseAsUint16(aArgs[5], entry->mService.mWeight));
-        }
-
-        if (aArgsLength >= 7)
-        {
-            entry->mService.mNumTxtEntries = 1;
-            entry->mService.mTxtEntries    = &entry->mTxtEntry;
-            entry->mTxtEntry.mKey          = nullptr; // Treat `mValue` as an already encoded TXT-DATA
-            entry->mTxtEntry.mValue        = entry->mTxtBuffer;
-            entry->mTxtEntry.mValueLength  = sizeof(entry->mTxtBuffer);
-
-            SuccessOrExit(error = ParseAsHexString(aArgs[6], entry->mTxtEntry.mValueLength, entry->mTxtBuffer));
-        }
-
-        error = otSrpClientAddService(mInterpreter.mInstance, &entry->mService);
-
-        if (error != OT_ERROR_NONE)
-        {
-            entry->MarkAsNotInUse();
-        }
+        error = ProcessServiceAdd(aArgsLength, aArgs);
     }
     else if (strcmp(aArgs[0], "remove") == 0)
     {
         // `remove` <instance-name> <service-name>
 
-        Service *entry = nullptr;
+        const otSrpClientService *service;
 
         VerifyOrExit(aArgsLength == 3, error = OT_ERROR_INVALID_ARGS);
 
-        for (Service &poolEntry : mServicePool)
+        for (service = otSrpClientGetServices(mInterpreter.mInstance); service != nullptr; service = service->mNext)
         {
-            if (poolEntry.IsInUse() && (strcmp(aArgs[1], poolEntry.mInstanceName) == 0) &&
-                (strcmp(aArgs[2], poolEntry.mServiceName) == 0))
+            if ((strcmp(aArgs[1], service->mInstanceName) == 0) && (strcmp(aArgs[2], service->mName) == 0))
             {
-                entry = &poolEntry;
                 break;
             }
         }
 
-        VerifyOrExit(entry != nullptr, error = OT_ERROR_NOT_FOUND);
+        VerifyOrExit(service != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        error = otSrpClientRemoveService(mInterpreter.mInstance, &entry->mService);
+        error = otSrpClientRemoveService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service));
     }
     else
     {
@@ -432,6 +389,66 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, char *aArgs[])
     }
 
 exit:
+    return error;
+}
+
+otError SrpClient::ProcessServiceAdd(uint8_t aArgsLength, char *aArgs[])
+{
+    // `add` <instance-name> <service-name> <port> [priority] [weight] [txt]
+
+    otSrpClientBuffersServiceEntry *entry = nullptr;
+    uint16_t                        size;
+    char *                          string;
+    otError                         error;
+
+    VerifyOrExit(4 <= aArgsLength && aArgsLength <= 7, error = OT_ERROR_INVALID_ARGS);
+
+    entry = otSrpClientBuffersAllocateService(mInterpreter.mInstance);
+
+    VerifyOrExit(entry != nullptr, error = OT_ERROR_NO_BUFS);
+
+    string = otSrpClientBuffersGetServiceEntryInstanceNameString(entry, &size);
+    SuccessOrExit(error = CopyString(string, size, aArgs[1]));
+
+    string = otSrpClientBuffersGetServiceEntryServiceNameString(entry, &size);
+    SuccessOrExit(error = CopyString(string, size, aArgs[2]));
+
+    SuccessOrExit(error = ParseAsUint16(aArgs[3], entry->mService.mPort));
+
+    if (aArgsLength >= 5)
+    {
+        SuccessOrExit(error = ParseAsUint16(aArgs[4], entry->mService.mPriority));
+    }
+
+    if (aArgsLength >= 6)
+    {
+        SuccessOrExit(error = ParseAsUint16(aArgs[5], entry->mService.mWeight));
+    }
+
+    if (aArgsLength >= 7)
+    {
+        uint8_t *txtBuffer;
+
+        txtBuffer                     = otSrpClientBuffersGetServiceEntryTxtBuffer(entry, &size);
+        entry->mTxtEntry.mValueLength = size;
+
+        SuccessOrExit(error = ParseAsHexString(aArgs[6], entry->mTxtEntry.mValueLength, txtBuffer));
+    }
+    else
+    {
+        entry->mService.mNumTxtEntries = 0;
+    }
+
+    SuccessOrExit(error = otSrpClientAddService(mInterpreter.mInstance, &entry->mService));
+
+    entry = nullptr;
+
+exit:
+    if (entry != nullptr)
+    {
+        otSrpClientBuffersFreeService(mInterpreter.mInstance, entry);
+    }
+
     return error;
 }
 
@@ -554,21 +571,16 @@ void SrpClient::HandleCallback(otError                    aError,
         }
     }
 
-    // Go through removed services and mark the corresponding entry in
-    // `mServicePool` as "not in use".
+    // Go through removed services and free all removed services
 
     for (const otSrpClientService *service = aRemovedServices; service != nullptr; service = next)
     {
         next = service->mNext;
+        otSrpClientBuffersServiceEntry *entry;
 
-        for (Service &poolEntry : mServicePool)
-        {
-            if (service == &poolEntry.mService)
-            {
-                poolEntry.MarkAsNotInUse();
-                break;
-            }
-        }
+        entry = reinterpret_cast<otSrpClientBuffersServiceEntry *>(const_cast<otSrpClientService *>(service));
+
+        otSrpClientBuffersFreeService(mInterpreter.mInstance, entry);
     }
 }
 

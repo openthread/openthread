@@ -78,6 +78,7 @@ openthread_headers                      = \
     openthread/server.h                   \
     openthread/sntp.h                     \
     openthread/srp_client.h               \
+    openthread/srp_client_buffers.h       \
     openthread/srp_server.h               \
     openthread/tasklet.h                  \
     openthread/thread.h                   \

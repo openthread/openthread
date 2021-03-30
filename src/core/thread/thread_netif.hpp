@@ -102,6 +102,7 @@
 #include "thread/radio_selector.hpp"
 #include "thread/time_sync_service.hpp"
 #include "utils/child_supervision.hpp"
+#include "utils/srp_client_buffers.hpp"
 
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 #include "utils/slaac_address.hpp"
@@ -206,6 +207,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Srp::Client mSrpClient;
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+    Utils::SrpClientBuffers mSrpClientBuffers;
 #endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     Dns::ServiceDiscovery::Server mDnssdServer;
