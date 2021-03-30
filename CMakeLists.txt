@@ -94,10 +94,13 @@ execute_process(
 )
 message(STATUS "Version: ${OT_VERSION}")
 
-target_compile_definitions(ot-config INTERFACE
-    "PACKAGE_NAME=\"OPENTHREAD\""
-    "PACKAGE_VERSION=\"${OT_VERSION}\""
-)
+if(NOT OT_PACKAGE_NAME)
+    target_compile_definitions(ot-config INTERFACE "PACKAGE_NAME=\"OPENTHREAD\"")
+endif()
+
+if(NOT OT_PACKAGE_VERSION)
+    target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_VERSION}\"")
+endif()
 
 set(OT_THREAD_VERSION "1.2" CACHE STRING "Thread version chosen by the user at configure time")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2")
