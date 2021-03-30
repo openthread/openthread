@@ -540,6 +540,7 @@ private:
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
+    static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
 #endif
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
@@ -582,6 +583,7 @@ private:
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     void HandlePingReply(const otPingSenderReply *aReply);
+    void HandlePingStatistics(const otPingSenderStatistics *aStatistics);
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
