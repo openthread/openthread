@@ -61,10 +61,6 @@ if OPENTHREAD_EXAMPLES_EFR32
 include $(top_srcdir)/examples/platforms/efr32/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_GP712
-include $(top_srcdir)/examples/platforms/gp712/Makefile.platform.am
-endif
-
 if OPENTHREAD_EXAMPLES_JN5189
 include $(top_srcdir)/examples/platforms/k32w/jn5189/Makefile.platform.am
 endif
@@ -87,18 +83,6 @@ endif
 
 if OPENTHREAD_EXAMPLES_NRF52840
 include $(top_srcdir)/examples/platforms/nrf528xx/nrf52840/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_QPG6095
-include $(top_srcdir)/examples/platforms/qpg6095/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_QPG6100
-include $(top_srcdir)/examples/platforms/qpg6100/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_QPG7015M
-include $(top_srcdir)/examples/platforms/qpg7015m/Makefile.platform.am
 endif
 
 if OPENTHREAD_EXAMPLES_SIMULATION

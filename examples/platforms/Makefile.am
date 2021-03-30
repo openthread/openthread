@@ -29,6 +29,10 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                              = \
+    gp712                                 \
+    qpg6095                               \
+    qpg6100                               \
+    qpg7015m                              \
     samr21                                \
     $(NULL)
 
@@ -40,14 +44,10 @@ DIST_SUBDIRS                            = \
     cc2650                                \
     cc2652                                \
     efr32                                 \
-    gp712                                 \
     k32w                                  \
     kw41z                                 \
     nrf528xx                              \
     simulation                            \
-    qpg6095                               \
-    qpg6100                               \
-    qpg7015m                              \
     utils                                 \
     $(NULL)
 
@@ -77,10 +77,6 @@ if OPENTHREAD_PLATFORM_EFR32
 SUBDIRS                                += efr32
 endif
 
-if OPENTHREAD_PLATFORM_GP712
-SUBDIRS                                += gp712
-endif
-
 if OPENTHREAD_PLATFORM_K32W
 SUBDIRS                                += k32w
 endif
@@ -95,18 +91,6 @@ endif
 
 if OPENTHREAD_PLATFORM_SIMULATION
 SUBDIRS                                += simulation
-endif
-
-if OPENTHREAD_PLATFORM_QPG6095
-SUBDIRS                                += qpg6095
-endif
-
-if OPENTHREAD_PLATFORM_QPG6100
-SUBDIRS                                += qpg6100
-endif
-
-if OPENTHREAD_PLATFORM_QPG7015M
-SUBDIRS                                += qpg7015m
 endif
 
 noinst_HEADERS                          = \
