@@ -243,6 +243,8 @@ otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValu
 {
     otError error = OT_ERROR_NONE;
 
+    SuccessOrExit(error = mEncoder.OpenStruct());
+
     if (aMetricsValues->mMetrics.mPduCount)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
@@ -274,6 +276,8 @@ otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValu
         SuccessOrExit(error = mEncoder.WriteInt8(aMetricsValues->mRssiValue));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
+
+    SuccessOrExit(error = mEncoder.CloseStruct());
 
 exit:
     return error;
