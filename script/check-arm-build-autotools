@@ -265,26 +265,6 @@ build_qpg6095()
     make -f examples/Makefile-qpg6095 "${options[@]}"
 }
 
-build_samr21()
-{
-    local options=(
-        "COMMISSIONER=1"
-        "DHCP6_CLIENT=1"
-        "DHCP6_SERVER=1"
-        "DNS_CLIENT=1"
-        "JOINER=1"
-        "SLAAC=1"
-    )
-
-    reset_source
-
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/asf-standalone-archive-3.45.0.85.zip
-    unzip -qq asf-standalone-archive-3.45.0.85.zip
-    mv xdk-asf-3.45.0 third_party/microchip/asf
-
-    make -f examples/Makefile-samr21 "${options[@]}"
-}
-
 main()
 {
     ./bootstrap
@@ -303,7 +283,6 @@ main()
         build_nrf52833
         build_nrf52840
         build_qpg6095
-        build_samr21
         return 0
     fi
 

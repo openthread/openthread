@@ -118,10 +118,9 @@ static uint8_t  sEnergyDetectionChannel;
 static int8_t   sEnergyDetected;
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-static uint32_t       sCslPeriod;
-static uint32_t       sCslSampleTime;
-static const uint32_t sCslSampleDur                   = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW * OT_US_PER_TEN_SYMBOLS;
-static const uint8_t  sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
+static uint32_t      sCslPeriod;
+static uint32_t      sCslSampleTime;
+static const uint8_t sCslIeHeader[OT_IE_HEADER_SIZE] = {CSL_IE_HEADER_BYTES_LO, CSL_IE_HEADER_BYTES_HI};
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 typedef enum
@@ -1068,9 +1067,7 @@ static uint16_t getCslPhase()
 {
     uint32_t curTime       = otPlatAlarmMicroGetNow();
     uint32_t cslPeriodInUs = sCslPeriod * OT_US_PER_TEN_SYMBOLS;
-    uint32_t diff =
-        (cslPeriodInUs - (curTime % cslPeriodInUs) + (sCslSampleTime % cslPeriodInUs) + (sCslSampleDur / 2)) %
-        cslPeriodInUs;
+    uint32_t diff = (cslPeriodInUs - (curTime % cslPeriodInUs) + (sCslSampleTime % cslPeriodInUs)) % cslPeriodInUs;
     return (uint16_t)(diff / OT_US_PER_TEN_SYMBOLS + 1);
 }
 #endif
@@ -1368,6 +1365,13 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
     OT_UNUSED_VARIABLE(aInstance);
 
     sCslSampleTime = aCslSampleTime;
+}
+
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return otPlatTimeGetXtalAccuracy() / 2;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 

@@ -125,18 +125,6 @@ build_qpg7015m()
     "$(dirname "$0")"/cmake-build qpg7015m "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
-build_samr21()
-{
-    reset_source
-
-    asfzip=asf-standalone-archive-3.45.0.85.zip
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/${asfzip}
-    unzip -qq ${asfzip}
-    mv xdk-asf-3.45.0 third_party/microchip/asf
-
-    "$(dirname "$0")"/cmake-build samr21 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
 main()
 {
     export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
@@ -151,7 +139,6 @@ main()
         build_qpg6100
         build_gp712
         build_qpg7015m
-        build_samr21
         # UART transport
         build_nrf52840 UART_trans
         # USB transport with bootloader e.g. to support PCA10059 dongle
