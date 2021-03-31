@@ -419,8 +419,7 @@ Done
 
 Request a channel selection with the channel manager.
 
-`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and
-`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
 
 ```bash
 > channel manager select 1
@@ -432,8 +431,7 @@ Done
 
 Enable/disable the auto-channel-selection functionality.
 
-`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and
-`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
 
 ```bash
 > channel manager auto 1
@@ -445,8 +443,7 @@ Done
 
 Set the channel change delay (in seconds).
 
-`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and
-`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
 
 ```bash
 > channel manager delay 120
@@ -458,8 +455,7 @@ Done
 
 Set the auto-channel-selection interval (in seconds).
 
-`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and
-`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
 
 ```bash
 > channel manager interval 10800
@@ -471,8 +467,7 @@ Done
 
 Set the supported channel mask for the auto-channel-selection.
 
-`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and
-`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
 
 ```bash
 > channel manager supported 0x7fffc00
@@ -484,8 +479,7 @@ Done
 
 Set the favored channel mask for the auto-channel-selection.
 
-`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and
-`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
 
 ```bash
 > channel manager favored 0x7fffc00
@@ -494,6 +488,7 @@ Done
 ```
 
 ### channel monitor
+
 Get current channel monitor state and channel occupancy.
 
 `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
@@ -528,6 +523,7 @@ Done
 ```
 
 ### channel monitor start
+
 Start the channel monitor.
 
 `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
@@ -539,6 +535,7 @@ Done
 ```
 
 ### channel monitor stop
+
 Stop the channel monitor.
 
 `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
