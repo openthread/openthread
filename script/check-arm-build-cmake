@@ -101,30 +101,6 @@ build_nrf52840()
     "$(dirname "$0")"/cmake-build nrf52840 "$1" "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
-build_qpg6095()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build qpg6095 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_qpg6100()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build qpg6100 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_gp712()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build gp712 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_qpg7015m()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build qpg7015m "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
 main()
 {
     export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
@@ -135,10 +111,6 @@ main()
         build_cc2650
         build_cc2652
         build_kw41z
-        build_qpg6095
-        build_qpg6100
-        build_gp712
-        build_qpg7015m
         # UART transport
         build_nrf52840 UART_trans
         # USB transport with bootloader e.g. to support PCA10059 dongle
