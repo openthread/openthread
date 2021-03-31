@@ -212,7 +212,7 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
 {
-    otError error = OT_ERROR_NONE;
+    otError error   = OT_ERROR_NONE;
     uint8_t metrics = 0;
 
     SuccessOrExit(error = mDecoder.ReadUint8(metrics));
