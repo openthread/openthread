@@ -3005,13 +3005,13 @@ enum
     SPINEL_PROP_THREAD_DOMAIN_NAME = SPINEL_PROP_THREAD_EXT__BEGIN + 44,
 
     /// Link metrics query
-    /** Format: `6Ctd` - Write-Only
+    /** Format: `6CC` - Write-Only
      *
      * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
      *
      * `6` : IPv6 destination address
      * `C` : Series id (0 for Single Probe)
-     * `d` : List of requested metric ids encoded as single bytes (`C`)
+     * `C` : List of requested metric ids encoded as bit fields in single byte
      *
      *   +---------------+----+
      *   |    Metric     | Id |
@@ -3029,13 +3029,13 @@ enum
     SPINEL_PROP_THREAD_LINK_METRICS_QUERY = SPINEL_PROP_THREAD_EXT__BEGIN + 45,
 
     /// Link metrics query result
-    /** Format: `6CA(t(CD))` - Unsolicited notifications only
+    /** Format: `6Ct(A(t(CD)))` - Unsolicited notifications only
      *
      * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
      *
      * `6` : IPv6 destination address
      * `C` : Status
-     * `A(t(CD))` : Array of structs encoded as following:
+     * `t(A(t(CD)))` : Array of structs encoded as following:
      *   `C` : Metric id
      *   `D` : Metric value
      *
@@ -3071,7 +3071,7 @@ enum
      *
      * `6` : IPv6 destination address
      * `C` : Indicate whether to register or clear the probing. `0` - clear, `1` - register
-     * `d` : List of requested metric ids encoded as single bytes (`C`)
+     * `C` : List of requested metric ids encoded as bit fields in single byte
      *
      *   +---------------+----+
      *   |    Metric     | Id |
@@ -3097,7 +3097,7 @@ enum
      *
      * `S` : Short address of the Probing Subject
      * `E` : Extended address of the Probing Subject
-     * `A(t(CD))` : Array of structs encoded as following:
+     * `t(A(t(CD)))` : Struct that contains array of structs encoded as following:
      *   `C` : Metric id
      *   `D` : Metric value
      *
@@ -3113,15 +3113,15 @@ enum
     SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE = SPINEL_PROP_THREAD_EXT__BEGIN + 49,
 
     /// Link metrics Forward Tracking Series management
-    /** Format: 6Cdd - Write only
+    /** Format: 6CCC - Write only
      *
      * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
      *
      * `6` : IPv6 destination address
      * `C` : Series id
-     * `d` : List of tracked frame types encoded as single bytes (`C`), if the list is empty
+     * `C` : Tracked frame types encoded as bit fields in single byte, if equal to zero,
      *       accounting is stopped and a series is removed
-     * `d` : List of requested metric ids encoded as single bytes (`C`)
+     * `C` : Requested metric ids encoded as bit fields in single byte
      *
      *   +------------------+----+
      *   |    Frame type    | Id |
