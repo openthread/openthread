@@ -29,6 +29,7 @@
 #include <limits.h>
 
 #include "common/encoding.hpp"
+#include "net/ip4_address.hpp"
 #include "net/ip6_address.hpp"
 #include "net/ip6_headers.hpp"
 
@@ -36,34 +37,46 @@
 
 using ot::Encoding::BigEndian::ReadUint16;
 
-struct Ip6AddressStringTestVector
+template <typename AddressType> struct TestVector
 {
     const char *  mString;
-    const uint8_t mAddr[OT_IP6_ADDRESS_SIZE];
+    const uint8_t mAddr[sizeof(AddressType)];
     ot::Error     mError;
 };
 
-static void checkAddressFromString(Ip6AddressStringTestVector *aTestVector)
+template <typename AddressType> static void checkAddressFromString(TestVector<AddressType> *aTestVector)
 {
-    ot::Error        error;
-    ot::Ip6::Address address;
+    ot::Error   error;
+    AddressType address;
+
+    address.Clear();
 
     error = address.FromString(aTestVector->mString);
 
-    VerifyOrQuit(error == aTestVector->mError, "Ip6::Address::FromString returned unexpected error code");
+    printf("%-42s -> %-42s\n", aTestVector->mString,
+           (error == ot::kErrorNone) ? address.ToString().AsCString() : "(parse error)");
+
+    VerifyOrQuit(error == aTestVector->mError, "Address::FromString returned unexpected error code");
 
     if (error == ot::kErrorNone)
     {
-        VerifyOrQuit(0 == memcmp(address.mFields.m8, aTestVector->mAddr, OT_IP6_ADDRESS_SIZE),
-                     "Ip6::Address::FromString parsing failed");
+        VerifyOrQuit(0 == memcmp(address.GetBytes(), aTestVector->mAddr, sizeof(AddressType)),
+                     "Address::FromString parsing failed");
     }
 }
 
 void TestIp6AddressFromString(void)
 {
-    Ip6AddressStringTestVector testVectors[] = {
+    typedef TestVector<ot::Ip6::Address> Ip6AddressTestVector;
+
+    Ip6AddressTestVector testVectors[] = {
         // Valid full IPv6 address.
         {"0102:0304:0506:0708:090a:0b0c:0d0e:0f00",
+         {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00},
+         ot::kErrorNone},
+
+        // Valid full address using capital letters.
+        {"0102:0304:0506:0708:090A:0B0C:0D0E:0F00",
          {0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0a, 0x0b, 0x0c, 0x0d, 0x0e, 0x0f, 0x00},
          ot::kErrorNone},
 
@@ -90,6 +103,16 @@ void TestIp6AddressFromString(void)
         // Unspecified address.
         {"::", {0}, ot::kErrorNone},
 
+        // Starts with ::
+        {"::1:2:3:4",
+         {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04},
+         ot::kErrorNone},
+
+        // Ends with ::
+        {"1001:2002:3003:4004::",
+         {0x10, 0x01, 0x20, 0x02, 0x30, 0x03, 0x40, 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+         ot::kErrorNone},
+
         // Valid embedded IPv4 address.
         {"64:ff9b::100.200.15.4",
          {0x00, 0x64, 0xff, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x64, 0xc8, 0x0f, 0x04},
@@ -98,6 +121,11 @@ void TestIp6AddressFromString(void)
         // Valid embedded IPv4 address.
         {"2001:db8::abc:def1:127.0.0.1",
          {0x20, 0x01, 0x0d, 0xb8, 0x00, 0x00, 0x00, 0x00, 0x0a, 0xbc, 0xde, 0xf1, 0x7f, 0x00, 0x00, 0x01},
+         ot::kErrorNone},
+
+        // Valid embedded IPv4 address.
+        {"1:2:3:4:5:6:127.1.2.3",
+         {0x00, 0x01, 0x00, 0x02, 0x00, 0x03, 0x00, 0x04, 0x00, 0x05, 0x00, 0x06, 0x7f, 0x01, 0x02, 0x03},
          ot::kErrorNone},
 
         // Two :: should cause a parse error.
@@ -121,6 +149,9 @@ void TestIp6AddressFromString(void)
         // Invalid embedded IPv4 address.
         {"64:ff9b::1.22.33.44.5", {0}, ot::kErrorParse},
 
+        // Too long with embedded IPv4 address.
+        {"1:2:3:4:5:6:7:127.1.2.3", {0}, ot::kErrorParse},
+
         // Invalid embedded IPv4 address.
         {".", {0}, ot::kErrorParse},
 
@@ -134,7 +165,33 @@ void TestIp6AddressFromString(void)
         {":f:0:0:c:0:f:f:.", {0}, ot::kErrorParse},
     };
 
-    for (Ip6AddressStringTestVector &testVector : testVectors)
+    for (Ip6AddressTestVector &testVector : testVectors)
+    {
+        checkAddressFromString(&testVector);
+    }
+}
+
+void TestIp4AddressFromString(void)
+{
+    typedef TestVector<ot::Ip4::Address> Ip4AddressTestVector;
+
+    Ip4AddressTestVector testVectors[] = {
+        {"0.0.0.0", {0, 0, 0, 0}, ot::kErrorNone},
+        {"255.255.255.255", {255, 255, 255, 255}, ot::kErrorNone},
+        {"127.0.0.1", {127, 0, 0, 1}, ot::kErrorNone},
+        {"1.2.3.4", {1, 2, 3, 4}, ot::kErrorNone},
+        {"001.002.003.004", {1, 2, 3, 4}, ot::kErrorNone},
+        {"00000127.000.000.000001", {127, 0, 0, 1}, ot::kErrorNone},
+        {"123.231.0.256", {0}, ot::kErrorParse},    // Invalid byte value.
+        {"100123.231.0.256", {0}, ot::kErrorParse}, // Invalid byte value.
+        {"1.22.33", {0}, ot::kErrorParse},          // Too few bytes.
+        {"1.22.33.44.5", {0}, ot::kErrorParse},     // Too many bytes.
+        {"a.b.c.d", {0}, ot::kErrorParse},          // Wrong digit char.
+        {"123.23.45 .12", {0}, ot::kErrorParse},    // Extra space.
+        {".", {0}, ot::kErrorParse},                // Invalid.
+    };
+
+    for (Ip4AddressTestVector &testVector : testVectors)
     {
         checkAddressFromString(&testVector);
     }
@@ -302,6 +359,56 @@ void TestIp6Prefix(void)
     }
 }
 
+void TestIp4Ip6Translation(void)
+{
+    struct TestCase
+    {
+        const char *mPrefix;     // NAT64 prefix
+        uint8_t     mLength;     // Prefix length in bits
+        const char *mIp6Address; // Expected IPv6 address (with embedded IPv4 "192.0.2.33").
+    };
+
+    // The test cases are from RFC 6502 - section 2.4
+
+    const TestCase kTestCases[] = {
+        {"2001:db8::", 32, "2001:db8:c000:221::"},
+        {"2001:db8:100::", 40, "2001:db8:1c0:2:21::"},
+        {"2001:db8:122::", 48, "2001:db8:122:c000:2:2100::"},
+        {"2001:db8:122:300::", 56, "2001:db8:122:3c0:0:221::"},
+        {"2001:db8:122:344::", 64, "2001:db8:122:344:c0:2:2100::"},
+        {"2001:db8:122:344::", 96, "2001:db8:122:344::192.0.2.33"},
+        {"64:ff9b::", 96, "64:ff9b::192.0.2.33"},
+    };
+
+    const uint8_t kIp4Address[] = {192, 0, 2, 33};
+
+    ot::Ip4::Address ip4Address;
+
+    printf("\nTestIp4Ip6Translation()\n");
+
+    ip4Address.SetBytes(kIp4Address);
+
+    for (const TestCase &testCase : kTestCases)
+    {
+        ot::Ip6::Prefix  prefix;
+        ot::Ip6::Address address;
+        ot::Ip6::Address expectedAddress;
+
+        SuccessOrQuit(address.FromString(testCase.mPrefix), "Ip6::FromString() failed");
+        prefix.Set(address.GetBytes(), testCase.mLength);
+
+        SuccessOrQuit(expectedAddress.FromString(testCase.mIp6Address), "Ip6::FromString() failed");
+
+        address.SetFromTranslatedIp4Address(prefix, ip4Address);
+
+        printf("Prefix: %-26s IPv4Addr: %-12s Ipv6Address: %-36s Expected: %s (%s)\n", prefix.ToString().AsCString(),
+               ip4Address.ToString().AsCString(), address.ToString().AsCString(), testCase.mIp6Address,
+               expectedAddress.ToString().AsCString());
+
+        VerifyOrQuit(address == expectedAddress, "Ip6::SetFromTranslatedIp4Address() failed");
+    }
+}
+
 void TestIp6Header(void)
 {
     ot::Ip6::Header  header;
@@ -360,8 +467,10 @@ void TestIp6Header(void)
 int main(void)
 {
     TestIp6AddressSetPrefix();
+    TestIp4AddressFromString();
     TestIp6AddressFromString();
     TestIp6Prefix();
+    TestIp4Ip6Translation();
     TestIp6Header();
     printf("All tests passed\n");
     return 0;

@@ -65,6 +65,9 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     , mSrpClient(aInstance)
 #endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+    , mSrpClientBuffers(aInstance)
+#endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     , mDnssdServer(aInstance)
 #endif

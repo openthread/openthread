@@ -325,6 +325,14 @@ public:
      */
     bool ShouldHandleEchoRequest(const MessageInfo &aMessageInfo);
 
+    /**
+     * This method returns the ICMPv6 Echo sequence number.
+     *
+     * @returns The sequence number of the next ICMPv6 Echo request.
+     *
+     */
+    uint16_t GetEchoSequence(void) const { return mEchoSequence; }
+
 private:
     Error HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMessageInfo);
 

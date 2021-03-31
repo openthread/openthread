@@ -690,6 +690,13 @@ template <> inline Srp::Client &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+template <> inline Utils::SrpClientBuffers &Instance::Get(void)
+{
+    return mThreadNetif.mSrpClientBuffers;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 template <> inline Dns::ServiceDiscovery::Server &Instance::Get(void)
 {

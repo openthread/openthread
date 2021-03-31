@@ -28,6 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+EXTRA_DIST                              = \
+    samr21                                \
+    $(NULL)
+
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
@@ -44,7 +48,6 @@ DIST_SUBDIRS                            = \
     qpg6095                               \
     qpg6100                               \
     qpg7015m                              \
-    samr21                                \
     utils                                 \
     $(NULL)
 
@@ -104,10 +107,6 @@ endif
 
 if OPENTHREAD_PLATFORM_QPG7015M
 SUBDIRS                                += qpg7015m
-endif
-
-if OPENTHREAD_EXAMPLES_SAMR21
-SUBDIRS                                += samr21
 endif
 
 noinst_HEADERS                          = \

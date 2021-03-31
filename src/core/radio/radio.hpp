@@ -425,6 +425,16 @@ public:
      *
      */
     Error EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+
+    /**
+     * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
+     *
+     * @note Platforms may optimize this value based on operational conditions (i.e.: temperature).
+     *
+     * @returns The current CSL rx/tx scheduling drift, in units of ± ppm.
+     *
+     */
+    uint8_t GetCslAccuracy(void);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
@@ -735,6 +745,11 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr)
 {
     return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aExtAddr);
 }
+
+inline uint8_t Radio::GetCslAccuracy()
+{
+    return otPlatRadioGetCslAccuracy(GetInstancePtr());
+}
 #endif
 
 inline Mac::TxFrame &Radio::GetTransmitBuffer(void)
@@ -882,6 +897,11 @@ inline void Radio::UpdateCslSampleTime(uint32_t)
 inline Error Radio::EnableCsl(uint32_t, const otExtAddress *)
 {
     return kErrorNotImplemented;
+}
+
+inline uint8_t Radio::GetCslAccuracy(void)
+{
+    return UINT8_MAX;
 }
 #endif
 

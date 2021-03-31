@@ -58,10 +58,6 @@
 
 namespace ot {
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-class LinkMetricsSeriesInfo; ///< Forward declaration for including each other with `link_metrics.hpp`
-#endif
-
 /**
  * This class represents a Thread neighbor.
  *

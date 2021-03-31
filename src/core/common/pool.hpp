@@ -116,6 +116,20 @@ public:
     void Free(Type &aEntry) { mFreeList.Push(aEntry); }
 
     /**
+     * This method frees all previously allocated objects.
+     *
+     */
+    void FreeAll(void)
+    {
+        mFreeList.Clear();
+
+        for (Type &entry : mPool)
+        {
+            mFreeList.Push(entry);
+        }
+    }
+
+    /**
      * This method returns the pool size.
      *
      * @returns The pool size (maximum number of objects in the pool).

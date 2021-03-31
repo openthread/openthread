@@ -1765,10 +1765,14 @@ class NodeImpl:
         result = True
         # ncp-sim doesn't print Done
         done = (self.node_type == 'ncp-sim')
-        while len(responders) < num_responses or not done:
+
+        # ncp-sim doesn't print statistics
+        received_statistics = (self.node_type == 'ncp-sim')
+        is_multicast = ipaddress.IPv6Address(ipaddr).is_multicast
+        while len(responders) < num_responses or not done or (not is_multicast and not received_statistics):
             self.simulator.go(1)
             try:
-                i = self._expect([r'from (\S+):', r'Done'], timeout=0.1)
+                i = self._expect([r'from (\S+):', r'Done', r'packets transmitted'], timeout=0.1)
             except (pexpect.TIMEOUT, socket.timeout):
                 if self.simulator.now() < end:
                     continue
@@ -1781,7 +1785,8 @@ class NodeImpl:
                     responders[self.pexpect.match.groups()[0]] = 1
                 elif i == 1:
                     done = True
-
+                elif i == 2:
+                    received_statistics = True
         return result
 
     def reset(self):

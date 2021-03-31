@@ -264,11 +264,6 @@ private:
 };
 
 /**
- * @}
- *
- */
-
-/**
  * This function validates whether a given byte sequence (string) follows UTF-8 encoding.
  *
  * @param[in]  aString  A null-terminated byte sequence.
@@ -290,6 +285,11 @@ bool IsValidUtf8String(const char *aString);
  *
  */
 bool IsValidUtf8String(const char *aString, size_t aLength);
+
+/**
+ * @}
+ *
+ */
 
 } // namespace ot
 

@@ -656,6 +656,24 @@ public:
     }
 
     /**
+     * This method encodes and appends the name to a message.
+     *
+     * If the name is empty (not specified), then root "." is appended to @p aMessage. If the name is from a C string
+     * then the string is checked and appended (similar to static `AppendName(const char *aName, Message &)` method).
+     * If the the name is from a message, then it is read from the message and appended to @p aMessage. Note that in
+     * this case independent of whether the name is compressed or not in its original message, the name is appended
+     * as full (uncompressed) in @p aMessage.
+     *
+     * @param[in] aMessage        The message to append to.
+     *
+     * @retval kErrorNone         Successfully encoded and appended the name to @p aMessage.
+     * @retval kErrorInvalidArgs  Name is not valid.
+     * @retval kErrorNoBufs       Insufficient available buffers to grow the message.
+     *
+     */
+    Error AppendTo(Message &aMessage) const;
+
+    /**
      * This static method encodes and appends a single name label to a message.
      *
      * The @p aLabel is assumed to contain a single name label as a C string (null-terminated). Unlike
@@ -1021,6 +1039,7 @@ private:
         Error ReadLabel(char *aLabelBuffer, uint8_t &aLabelLength, bool aAllowDotCharInLabel) const;
         bool  CompareLabel(const char *&aName, bool aIsSingleLabel) const;
         bool  CompareLabel(const LabelIterator &aOtherIterator) const;
+        Error AppendLabel(Message &aMessage) const;
 
         const Message &mMessage;          // Message to read labels from.
         uint16_t       mLabelStartOffset; // Offset in `mMessage` to the first char of current label text.

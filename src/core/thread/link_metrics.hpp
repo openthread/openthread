@@ -42,19 +42,19 @@
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE."
 #endif
 
-#include <openthread/ip6.h>
 #include <openthread/link.h>
 
-#include "common/code_utils.hpp"
 #include "common/locator.hpp"
+#include "common/message.hpp"
 #include "common/non_copyable.hpp"
 #include "common/pool.hpp"
-
-#include "link_metrics_tlvs.hpp"
-#include "link_quality.hpp"
-#include "topology.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/link_metrics_tlvs.hpp"
+#include "thread/link_quality.hpp"
 
 namespace ot {
+
+class Neighbor;
 
 /**
  * @addtogroup core-link-metrics
@@ -107,7 +107,7 @@ public:
      * @returns  The Series ID.
      *
      */
-    uint8_t GetSeriesId() const { return mSeriesId; }
+    uint8_t GetSeriesId(void) const { return mSeriesId; }
 
     /**
      * This method gets the PDU count.
@@ -115,7 +115,7 @@ public:
      * @returns  The PDU count.
      *
      */
-    uint32_t GetPduCount() const { return mPduCount; }
+    uint32_t GetPduCount(void) const { return mPduCount; }
 
     /**
      * This method gets the average LQI.
@@ -123,7 +123,7 @@ public:
      * @returns  The average LQI.
      *
      */
-    uint8_t GetAverageLqi() const { return mLqiAverager.GetAverage(); }
+    uint8_t GetAverageLqi(void) const { return mLqiAverager.GetAverage(); }
 
     /**
      * This method gets the average RSS.
@@ -131,7 +131,7 @@ public:
      * @returns  The average RSS.
      *
      */
-    int8_t GetAverageRss() const { return mRssAverager.GetAverage(); }
+    int8_t GetAverageRss(void) const { return mRssAverager.GetAverage(); }
 
     /**
      * This method aggregates the Link Metrics data of a frame into this series.

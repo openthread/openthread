@@ -117,7 +117,7 @@ check_PROGRAMS                                                     += \
     test-heap                                                         \
     test-hkdf-sha256                                                  \
     test-hmac-sha256                                                  \
-    test-ip6-address                                                  \
+    test-ip-address                                                   \
     test-link-quality                                                 \
     test-linked-list                                                  \
     test-lookup-table                                                 \
@@ -212,8 +212,8 @@ test_hkdf_sha256_SOURCES     = $(COMMON_SOURCES) test_hkdf_sha256.cpp
 test_hmac_sha256_LDADD       = $(COMMON_LDADD)
 test_hmac_sha256_SOURCES     = $(COMMON_SOURCES) test_hmac_sha256.cpp
 
-test_ip6_address_LDADD       = $(COMMON_LDADD)
-test_ip6_address_SOURCES     = $(COMMON_SOURCES) test_ip6_address.cpp
+test_ip_address_LDADD        = $(COMMON_LDADD)
+test_ip_address_SOURCES      = $(COMMON_SOURCES) test_ip_address.cpp
 
 test_link_quality_LDADD      = $(COMMON_LDADD)
 test_link_quality_SOURCES    = $(COMMON_SOURCES) test_link_quality.cpp

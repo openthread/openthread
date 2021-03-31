@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,22 +26,47 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef SAMR21_MBEDTLS_CONFIG_H
-#define SAMR21_MBEDTLS_CONFIG_H
-
 /**
- * \def MBEDTLS_AES_ALT
- *
- * Enable hardware acceleration for the AES block cipher
- *
- * Module:  sl_crypto/src/sl_aes.c
- *          or
- *          sl_crypto/src/slcl_aes.c if MBEDTLS_SLCL_PLUGINS is defined.
- *
- * See MBEDTLS_AES_C for more information.
+ * @file
+ *   This file implements the SRP client buffers and service pool.
  */
-#define MBEDTLS_AES_ALT
 
-#define MBEDTLS_CTR_DRBG_USE_128_BIT_KEY
+#include "srp_client_buffers.hpp"
 
-#endif // SAMR21_MBEDTLS_CONFIG_H
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+
+#include <string.h>
+
+#include "common/code_utils.hpp"
+#include "common/instance.hpp"
+#include "common/locator-getters.hpp"
+
+namespace ot {
+namespace Utils {
+
+SrpClientBuffers::SrpClientBuffers(Instance &aInstance)
+    : InstanceLocator(aInstance)
+{
+}
+
+SrpClientBuffers::ServiceEntry *SrpClientBuffers::AllocateService(void)
+{
+    ServiceEntry *entry = mServicePool.Allocate();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->Clear();
+    entry->mService.mName          = entry->mServiceName;
+    entry->mService.mInstanceName  = entry->mInstanceName;
+    entry->mService.mTxtEntries    = &entry->mTxtEntry;
+    entry->mService.mNumTxtEntries = 1;
+    entry->mTxtEntry.mValue        = entry->mTxtBuffer;
+
+exit:
+    return entry;
+}
+
+} // namespace Utils
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE

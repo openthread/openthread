@@ -407,6 +407,7 @@ void TestDnsCompressedName(void)
     Instance *   instance;
     MessagePool *messagePool;
     Message *    message;
+    Message *    message2;
     uint16_t     offset;
     uint16_t     name1Offset;
     uint16_t     name2Offset;
@@ -416,6 +417,10 @@ void TestDnsCompressedName(void)
     char         label[kLabelSize];
     uint8_t      labelLength;
     char         name[kNameSize];
+    Dns::Name    dnsName1;
+    Dns::Name    dnsName2;
+    Dns::Name    dnsName3;
+    Dns::Name    dnsName4;
 
     printf("================================================================\n");
     printf("TestDnsCompressedName()\n");
@@ -685,7 +690,44 @@ void TestDnsCompressedName(void)
     VerifyOrQuit(Dns::Name::CompareName(*message, offset, *message, name1Offset) == kErrorNotFound,
                  "Name::CompareName() did not fail with mismatching name");
 
+    printf("----------------------------------------------------------------\n");
+    printf("Append names from one message to another\n");
+
+    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+
+    dnsName1.SetFromMessage(*message, name1Offset);
+    dnsName2.SetFromMessage(*message, name2Offset);
+    dnsName3.SetFromMessage(*message, name3Offset);
+    dnsName4.SetFromMessage(*message, name4Offset);
+
+    offset = 0;
+    SuccessOrQuit(dnsName1.AppendTo(*message2), "Name::AppendTo() failed");
+    SuccessOrQuit(dnsName2.AppendTo(*message2), "Name::AppendTo() failed");
+    SuccessOrQuit(dnsName3.AppendTo(*message2), "Name::AppendTo() failed");
+    SuccessOrQuit(dnsName4.AppendTo(*message2), "Name::AppendTo() failed");
+
+    SuccessOrQuit(message2->Read(0, buffer, message2->GetLength()), "Message::Read() failed");
+    DumpBuffer("message2", buffer, message2->GetLength());
+
+    // Now compare the names one by one in `message2`. Note that
+    // `CompareName()` will update `offset` on success.
+
+    VerifyOrQuit(Dns::Name::CompareName(*message2, offset, dnsName1) == kErrorNone, "Incorrect name after AppendTo()");
+    VerifyOrQuit(Dns::Name::CompareName(*message2, offset, dnsName2) == kErrorNone, "Incorrect name after AppendTo()");
+    VerifyOrQuit(Dns::Name::CompareName(*message2, offset, dnsName3) == kErrorNone, "Incorrect name after AppendTo()");
+    VerifyOrQuit(Dns::Name::CompareName(*message2, offset, dnsName4) == kErrorNone, "Incorrect name after AppendTo()");
+
+    offset = 0;
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)), "ReadName() failed");
+    printf("- Name1 after `AppendTo()`: \"%s\"\n", name);
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)), "ReadName() failed");
+    printf("- Name2 after `AppendTo()`: \"%s\"\n", name);
+    SuccessOrQuit(Dns::Name::ReadName(*message2, offset, name, sizeof(name)), "ReadName() failed");
+    printf("- Name3 after `AppendTo()`: \"%s\"\n", name);
+    // `ReadName()` for name-4 will fail due to first label containing dot char.
+
     message->Free();
+    message2->Free();
     testFreeInstance(instance);
 }
 

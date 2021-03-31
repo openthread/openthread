@@ -517,6 +517,7 @@ private:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     static void HandleCslTimer(Timer &aTimer);
     void        HandleCslTimer(void);
+    void        GetCslWindowEdges(uint32_t &ahead, uint32_t &after);
 #endif
 
     enum
@@ -553,12 +554,18 @@ private:
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     enum : uint32_t{
-        kCslSampleWindow = OPENTHREAD_CONFIG_CSL_SAMPLE_WINDOW *
-                           kUsPerTenSymbols, ///< The SSED sample window in units of microseconds.
+        kMinCslWindow = OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON, ///< CSL receive window for the longest possible
+                                                              ///< frame and ack duration.
         kCslReceiveTimeAhead =
             OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD, ///< CSL receivers would wake up `kCslReceiveTimeAhead` earlier
-                                                      ///< than expected sample window. The time is in unit of 10
-                                                      ///< symbols.
+                                                      ///< than expected sample window. The time is in unit of
+                                                      ///< microseconds.
+    };
+
+    enum : uint8_t{
+        kCslWorstCrystalPpm  = 255, ///< Worst possible crystal accuracy, in units of ± ppm.
+        kCslWorstUncertainty = 255, ///< Worst possible scheduling uncertainty, in units of 100 us.
+        kUsPerUncertUnit     = 100, ///< Number of microseconds by uncertainty unit.
     };
 
     /**
@@ -636,13 +643,17 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint32_t  mCslTimeout;     ///< The CSL synchronized timeout in seconds.
-    TimeMicro mCslSampleTime;  ///< The CSL sample time of the current period.
-    uint16_t  mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t   mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
-                               ///< equal to the Pan channel of `Mac`.
+    uint32_t mCslTimeout;     ///< The CSL synchronized timeout in seconds.
+    uint16_t mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t  mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
+                              ///< equal to the Pan channel of `Mac`.
     uint8_t mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by
                                         ///< the user.
+
+    TimeMicro mCslSampleTime;   ///< The CSL sample time of the current period.
+    TimeMicro mCslLastSync;     ///< The timestamp of the last successful CSL syncronization.
+    uint8_t   mCslParentDrift;  ///< Drift of timer used for scheduling CSL transmission by the parent, in ± ppm.
+    uint8_t   mCslParentUncert; ///< Uncertainty of the scheduling CSL of transmission by the parent, in ±100 us units.
 
     CslState mCslState;
 

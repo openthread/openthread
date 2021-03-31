@@ -330,6 +330,7 @@ openthread_core_files = [
   "api/server_api.cpp",
   "api/sntp_api.cpp",
   "api/srp_client_api.cpp",
+  "api/srp_client_buffers_api.cpp",
   "api/srp_server_api.cpp",
   "api/tasklet_api.cpp",
   "api/thread_api.cpp",
@@ -492,6 +493,8 @@ openthread_core_files = [
   "net/dnssd_server.hpp",
   "net/icmp6.cpp",
   "net/icmp6.hpp",
+  "net/ip4_address.cpp",
+  "net/ip4_address.hpp",
   "net/ip6.cpp",
   "net/ip6.hpp",
   "net/ip6_address.cpp",
@@ -628,6 +631,8 @@ openthread_core_files = [
   "utils/ping_sender.hpp",
   "utils/slaac_address.cpp",
   "utils/slaac_address.hpp",
+  "utils/srp_client_buffers.cpp",
+  "utils/srp_client_buffers.hpp",
 ]
 
 openthread_radio_sources = [
