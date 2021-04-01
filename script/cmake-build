@@ -79,7 +79,7 @@ set -euxo pipefail
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
-readonly OT_PLATFORMS=(cc1352 cc2538 cc2650 cc2652 efr32mg1 efr32mg12 efr32mg13 efr32mg21 kw41z nrf52811 nrf52833 nrf52840 simulation posix)
+readonly OT_PLATFORMS=(cc1352 cc2538 cc2650 cc2652 efr32mg1 efr32mg12 efr32mg13 efr32mg21 nrf52811 nrf52833 nrf52840 simulation posix)
 readonly OT_NRF528XX_BUILD_TYPES=(UART_trans USB_trans_bl SPI_trans_NCP soft_crypto soft_crypto_threading)
 readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_BORDER_AGENT=ON"
@@ -232,7 +232,7 @@ main()
             OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd")
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=MinSizeRel")
             ;;
-        cc1352 | cc2538 | cc2652 | kw41z)
+        cc1352 | cc2538 | cc2652)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=MinSizeRel")
             ;;
         efr32*)

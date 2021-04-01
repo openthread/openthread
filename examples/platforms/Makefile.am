@@ -30,6 +30,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                              = \
     gp712                                 \
+    kw41z                                 \
     qpg6095                               \
     qpg6100                               \
     qpg7015m                              \
@@ -45,7 +46,6 @@ DIST_SUBDIRS                            = \
     cc2652                                \
     efr32                                 \
     k32w                                  \
-    kw41z                                 \
     nrf528xx                              \
     simulation                            \
     utils                                 \
@@ -79,10 +79,6 @@ endif
 
 if OPENTHREAD_PLATFORM_K32W
 SUBDIRS                                += k32w
-endif
-
-if OPENTHREAD_PLATFORM_KW41Z
-SUBDIRS                                += kw41z
 endif
 
 if OPENTHREAD_PLATFORM_NRF528XX

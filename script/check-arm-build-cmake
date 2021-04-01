@@ -77,12 +77,6 @@ build_cc2652()
     "$(dirname "$0")"/cmake-build cc2652 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
-build_kw41z()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build kw41z "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
 build_nrf52811()
 {
     reset_source
@@ -110,7 +104,6 @@ main()
         build_cc2538
         build_cc2650
         build_cc2652
-        build_kw41z
         # UART transport
         build_nrf52840 UART_trans
         # USB transport with bootloader e.g. to support PCA10059 dongle
