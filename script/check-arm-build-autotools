@@ -117,21 +117,6 @@ build_k32w061()
     make -f examples/Makefile-k32w061 "${options[@]}"
 }
 
-build_kw41z()
-{
-    local options=(
-        "COMMISSIONER=1"
-        "DHCP6_CLIENT=1"
-        "DHCP6_SERVER=1"
-        "DNS_CLIENT=1"
-        "JOINER=1"
-        "SLAAC=1"
-    )
-
-    reset_source
-    make -f examples/Makefile-kw41z "${options[@]}"
-}
-
 build_nrf52811()
 {
     local options=(
@@ -263,7 +248,6 @@ main()
         build_cc2652
         build_jn5189
         build_k32w061
-        build_kw41z
         build_nrf52811
         build_nrf52833
         build_nrf52840
