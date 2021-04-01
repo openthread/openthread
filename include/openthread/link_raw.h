@@ -70,7 +70,7 @@ typedef void (*otLinkRawReceiveDone)(otInstance *aInstance, otRadioFrame *aFrame
  * raw-link layer.
  *
  * @retval OT_ERROR_FAILED          The radio could not be enabled/disabled.
- * @retval OT_ERROR_INVALID_STATE   If the OpenThread Ip6 interface is already enabled.
+ * @retval OT_ERROR_INVALID_STATE   If the OpenThread IPv6 interface is already enabled.
  * @retval OT_ERROR_NONE            If the enable state was successfully set.
  *
  */

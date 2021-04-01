@@ -529,7 +529,7 @@ public:
      *
      * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
      * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
-     * etc. (see `config/dns_clinet.h` for all related config options).
+     * etc. (see `config/dns_client.h` for all related config options).
      *
      */
     void ResetDefaultConfig(void);

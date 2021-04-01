@@ -1163,7 +1163,7 @@ void Client::ProcessResponse(Message &aMessage)
 exit:
     if (error != kErrorNone)
     {
-        otLogInfoSrp("[clinet] Failed to process response %s", ErrorToString(error));
+        otLogInfoSrp("[client] Failed to process response %s", ErrorToString(error));
     }
 }
 

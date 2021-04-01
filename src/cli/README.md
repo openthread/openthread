@@ -168,7 +168,7 @@ Done
 
 ### bbr mgmt mlr listener add \<ipaddr\> \[\<timeout\>\]
 
-Add a Multicast Listener with a given Ip6 multicast address and timeout (in seconds).
+Add a Multicast Listener with a given IPv6 multicast address and timeout (in seconds).
 
 Only for testing/reference Backbone Router device.
 

@@ -128,7 +128,7 @@ ChannelMask::InfoString ChannelMask::ToString(void) const
         }
     }
 
-    IgnoreError(string.Append("}"));
+    IgnoreError(string.Append(" }"));
 
     return string;
 }

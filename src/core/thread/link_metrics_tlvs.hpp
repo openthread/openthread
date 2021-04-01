@@ -114,7 +114,7 @@ public:
     }
 
     /**
-     * This method init the Type Id value
+     * This method initializes the Type ID value
      *
      */
     void Init(void) { mTypeIdFlags = 0; }
