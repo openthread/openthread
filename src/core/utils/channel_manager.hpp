@@ -227,6 +227,22 @@ public:
      */
     void SetFavoredChannels(uint32_t aChannelMask);
 
+    /**
+     * This method gets the CCA failure rate threshold
+     *
+     * @returns  The CCA failure rate threshold
+     *
+     */
+    uint16_t GetCcaFailureRateThreshold(void) const { return mCcaFailureRateThreshold; }
+
+    /**
+     * This method sets the CCA failure rate threshold
+     *
+     * @param[in]  aThreshold  A CCA failure rate threshold.
+     *
+     */
+    void SetCcaFailureRateThreshold(uint16_t aThreshold);
+
 private:
     enum
     {
@@ -281,6 +297,7 @@ private:
     TimerMilli       mTimer;
     uint32_t         mAutoSelectInterval;
     bool             mAutoSelectEnabled;
+    uint16_t         mCcaFailureRateThreshold;
 };
 
 /**

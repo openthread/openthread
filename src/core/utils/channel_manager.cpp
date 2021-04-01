@@ -57,6 +57,7 @@ ChannelManager::ChannelManager(Instance &aInstance)
     , mTimer(aInstance, ChannelManager::HandleTimer)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
     , mAutoSelectEnabled(false)
+    , mCcaFailureRateThreshold(kCcaFailureRateThreshold)
 {
 }
 
@@ -231,10 +232,10 @@ exit:
 bool ChannelManager::ShouldAttemptChannelChange(void)
 {
     uint16_t ccaFailureRate = Get<Mac::Mac>().GetCcaFailureRate();
-    bool     shouldAttempt  = (ccaFailureRate >= kCcaFailureRateThreshold);
+    bool     shouldAttempt  = (ccaFailureRate >= mCcaFailureRateThreshold);
 
     otLogInfoUtil("ChannelManager: CCA-err-rate: 0x%04x %s 0x%04x, selecting channel: %s", ccaFailureRate,
-                  shouldAttempt ? ">=" : "<", kCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
+                  shouldAttempt ? ">=" : "<", mCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
 
     return shouldAttempt;
 }
@@ -346,6 +347,13 @@ void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
     mFavoredChannelMask.SetMask(aChannelMask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
     otLogInfoUtil("ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
+}
+
+void ChannelManager::SetCcaFailureRateThreshold(uint16_t aThreshold)
+{
+    mCcaFailureRateThreshold = aThreshold;
+
+    otLogInfoUtil("ChannelManager: CCA threshold: 0x%04x", mCcaFailureRateThreshold);
 }
 
 } // namespace Utils
