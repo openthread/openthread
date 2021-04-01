@@ -174,6 +174,7 @@ class OTCI(object):
     #
     # Network Operations
     #
+    _PING_STATISTICS_PATTERN = re.compile(r'^(?P<transmitted>\d+) packets transmitted, (?P<received>\d+) packets received.(?: Packet loss = (?P<loss>\d+\.\d+)%.)?(?: Round-trip min/avg/max = (?P<min>\d+)/(?P<avg>\d+\.\d+)/(?P<max>\d+) ms.)?$')
 
     def ping(self, ip: str, size: int = 8, count: int = 1, interval: float = 1, hoplimit: int = 64, timeout: float = 3) -> Dict:
         """Send an ICMPv6 Echo Request. 
@@ -190,26 +191,22 @@ class OTCI(object):
 
         timeout_allowance = 3
         lines = self.execute_command(cmd, timeout=(count - 1) * interval + timeout + timeout_allowance)
-        packet_count_pattern = re.compile(r'(\d+) packets transmitted, (\d+) packets received.')
-        packet_loss_pattern = re.compile(r'Packet loss = (\d+\.\d+)%')
-        round_trip_time = re.compile(r'Round-trip min/avg/max = (\d+)/(\d+\.\d+)/(\d+) ms')
 
         statistics = {}
         for line in lines:
-            m = packet_count_pattern.search(line)
+            m = OTCI._PING_STATISTICS_PATTERN.match(line)
             if m is not None:
-                statistics['transmitted_packets'] = int(m.group(1))
-                statistics['received_packets'] = int(m.group(2))
-            m = packet_loss_pattern.search(line)
-            if m is not None:
-                statistics['packet_loss'] = float(m.group(1)) / 100
-            m = round_trip_time.search(line)
-            if m is not None:
-                statistics['round_trip_time'] = {
-                    'min': int(m.group(1)),
-                    'avg': float(m.group(2)),
-                    'max': int(m.group(3))
-                }
+                if m.group('transmitted') is not None:
+                    statistics['transmitted_packets'] = int(m.group('transmitted'))
+                    statistics['received_packets'] = int(m.group('received'))
+                if m.group('loss') is not None:
+                    statistics['packet_loss'] = float(m.group('loss')) / 100
+                if m.group('min') is not None:
+                    statistics['round_trip_time'] = {
+                        'min': int(m.group('min')),
+                        'avg': float(m.group('avg')),
+                        'max': int(m.group('max'))
+                    }
         return statistics
 
     def ping_stop(self):
