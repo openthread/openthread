@@ -87,18 +87,18 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     )
 endif()
 
-execute_process(
-    COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE OT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message(STATUS "Version: ${OT_VERSION}")
-
 if(NOT OT_PACKAGE_NAME)
     target_compile_definitions(ot-config INTERFACE "PACKAGE_NAME=\"OPENTHREAD\"")
 endif()
 
 if(NOT OT_PACKAGE_VERSION)
+    execute_process(
+        COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE OT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message(STATUS "Version: ${OT_VERSION}")
+
     target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_VERSION}\"")
 endif()
 
