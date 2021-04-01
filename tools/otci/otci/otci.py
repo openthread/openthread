@@ -175,8 +175,9 @@ class OTCI(object):
     # Network Operations
     #
 
-    def ping(self, ip: str, size: int = 8, count: int = 1, interval: float = 1, hoplimit: int = 64, timeout: float = 3):
-        """Send an ICMPv6 Echo Request. The default arguments are consistent with those in src/core/config/ping_sender.h.
+    def ping(self, ip: str, size: int = 8, count: int = 1, interval: float = 1, hoplimit: int = 64, timeout: float = 3) -> Dict:
+        """Send an ICMPv6 Echo Request. 
+        The default arguments are consistent with https://github.com/openthread/openthread/blob/main/src/core/utils/ping_sender.hpp.
 
         :param ip: The target IPv6 address to ping.
         :param size: The number of data bytes in the payload. Default is 8.

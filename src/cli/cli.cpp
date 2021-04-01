@@ -3262,11 +3262,7 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
     {
         uint32_t timeout;
         SuccessOrExit(error = ParsePingInterval(aArgs[5], timeout));
-        if (timeout > NumericLimits<uint16_t>::Max())
-        {
-            error = OT_ERROR_INVALID_ARGS;
-            ExitNow();
-        }
+        VerifyOrExit(timeout <= NumericLimits<uint16_t>::Max(), error = OT_ERROR_INVALID_ARGS);
         config.mTimeout = static_cast<uint16_t>(timeout);
     }
 
