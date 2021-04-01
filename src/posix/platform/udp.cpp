@@ -312,7 +312,7 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
         VerifyOrExit(setsockopt(fd, SOL_SOCKET, SO_BINDTODEVICE, nullptr, 0) == 0, error = OT_ERROR_FAILED);
 #else  // __NetBSD__ || __FreeBSD__ || __APPLE__
         unsigned int netifIndex = 0;
-        VerifyOrExit(setsockopt(fd, IPPROTO_IP, IP_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
+        VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_BOUND_IF, &netifIndex, sizeof(netifIndex)) == 0,
                      error = OT_ERROR_FAILED);
 #endif // __linux__
         break;

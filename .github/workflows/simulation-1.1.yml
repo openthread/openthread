@@ -202,6 +202,7 @@ jobs:
         path: tmp/coverage.info
 
   cli-mtd:
+    name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
     runs-on: ubuntu-20.04
     strategy:
       matrix:

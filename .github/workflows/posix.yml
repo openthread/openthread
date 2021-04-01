@@ -245,18 +245,22 @@ jobs:
         name: cov-posix-ncp-rcp-migrate
         path: tmp/coverage.info
 
-  posix-pty:
+  pty-linux:
+    name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        OT_DAEMON: ['off', 'on']
     env:
       COVERAGE: 1
+      OT_DAEMON: ${{ matrix.OT_DAEMON }}
+      OT_READLINE: 'readline'
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools
+        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools ninja-build
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -267,7 +271,6 @@ jobs:
         sudo make install
     - name: Build
       run: |
-        ./bootstrap
         script/check-posix-pty build
     - name: Run
       run: |
@@ -277,44 +280,29 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-pty
+        name: cov-pty-linux-${{ matrix.DAEMON }}
         path: tmp/coverage.info
 
-  posix-pty-daemon:
-    runs-on: ubuntu-20.04
+  pty-macos:
+    name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        OT_DAEMON: ['off', 'on']
     env:
-      COVERAGE: 1
-      DAEMON: 1
+      OT_DAEMON: ${{ matrix.OT_DAEMON }}
+      OT_READLINE: 'off'
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools
-        cd /tmp
-        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-        tar xvf bsd-licensed.tar.gz
-        cd libcoap-bsd-licensed
-        ./autogen.sh
-        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-        make -j2
-        sudo make install
+        brew install ninja socat
     - name: Build
       run: |
-        ./bootstrap
         script/check-posix-pty build
     - name: Run
       run: |
         script/check-posix-pty check
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-pty-daemon
-        path: tmp/coverage.info
 
   upload-coverage:
     needs:
@@ -322,8 +310,7 @@ jobs:
     - posix-cli
     - posix-ncp
     - posix-ncp-rcp-migrate
-    - posix-pty
-    - posix-pty-daemon
+    - pty-linux
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
