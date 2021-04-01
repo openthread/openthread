@@ -87,7 +87,7 @@ const char *otSrpServerGetDomain(otInstance *aInstance);
  * This method should only be called before the SRP server is enabled.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aDomain    The domain to be set. MUST NOT be nullptr.
+ * @param[in]  aDomain    The domain to be set. MUST NOT be NULL.
  *
  * @retval  OT_ERROR_NONE           Successfully set the domain to @p aDomain.
  * @retval  OT_ERROR_INVALID_STATE  The SRP server is already enabled and the Domain cannot be changed.
@@ -134,7 +134,7 @@ otError otSrpServerSetLeaseRange(otInstance *aInstance,
  * This method handles SRP service updates.
  *
  * This function is called by the SRP server to notify that a SRP host and possibly SRP services
- * are being updated. It is important that the SRP updates are not commited until the handler
+ * are being updated. It is important that the SRP updates are not committed until the handler
  * returns the result by calling otSrpServerHandleServiceUpdateResult or times out after @p aTimeout.
  *
  * A SRP service observer should always call otSrpServerHandleServiceUpdateResult with error code

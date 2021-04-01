@@ -1404,7 +1404,7 @@ class OTCI(object):
         return tuple(map(Ip6Addr, self.execute_command('ipaddr')))
 
     def has_ipaddr(self, ip: Union[str, ipaddress.IPv6Address]):
-        """Check if a Ip6 address was added to the Thread interface."""
+        """Check if a IPv6 address was added to the Thread interface."""
         return ip in self.get_ipaddrs()
 
     def get_ipaddr_mleid(self) -> Ip6Addr:
@@ -1436,7 +1436,7 @@ class OTCI(object):
         return tuple(map(Ip6Addr, self.execute_command('ipmaddr')))
 
     def has_ipmaddr(self, ip: Union[str, ipaddress.IPv6Address]):
-        """Check if a Ip6 multicast address was subscribed by the Thread interface."""
+        """Check if a IPv6 multicast address was subscribed by the Thread interface."""
         return ip in self.get_ipmaddrs()
 
     def get_ipmaddr_promiscuous(self) -> bool:

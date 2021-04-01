@@ -47,7 +47,7 @@ namespace Spinel {
 
 /**
  * The class for providing a OpenThread radio interface by talking with a radio-only
- * co-procesor(RCP). The InterfaceType template parameter should provide the following
+ * co-processor(RCP). The InterfaceType template parameter should provide the following
  * methods:
  *
  * class InterfaceType {
@@ -80,7 +80,7 @@ namespace Spinel {
  *
  *    // This method waits for receiving part or all of spinel frame within specified interval.
  *
- *    // @param[in]  aTimeout  The timeout value in micrsoseconds.
+ *    // @param[in]  aTimeout  The timeout value in microseconds.
  *
  *    // @retval OT_ERROR_NONE             Part or all of spinel frame is received.
  *    // @retval OT_ERROR_RESPONSE_TIMEOUT No spinel frame is received within @p aTimeout.
@@ -541,8 +541,8 @@ public:
     /**
      * This method indicates whether a transmit has just finished.
      *
-     * @retval TRUE  The trasmission is done.
-     * @retval FALSE The trasmission is not done.
+     * @retval TRUE  The transmission is done.
+     * @retval FALSE The transmission is not done.
      *
      */
     bool IsTransmitDone(void) const { return mState == kStateTransmitDone; }
@@ -735,7 +735,7 @@ public:
      * @param[in] aChannel    The radio channel.
      * @param[in] aPower      The max transmit power in dBm.
      *
-     * @retval  OT_ERROR_NONE           Succesfully set the max transmit power.
+     * @retval  OT_ERROR_NONE           Successfully set the max transmit power.
      * @retval  OT_ERROR_INVALID_ARGS   Channel is not in valid range.
      *
      */
@@ -990,7 +990,7 @@ private:
     bool mCcaEnergyDetectThresholdSet : 1; ///< Whether CCA energy detect threshold has been set.
     bool mTransmitPowerSet : 1;            ///< Whether transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
-    bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has benn set.
+    bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
     bool mRcpFailed : 1;                   ///< RCP failure happened, should recover and retry operation.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
 

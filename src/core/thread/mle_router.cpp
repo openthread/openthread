@@ -2388,7 +2388,7 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         tlvs[tlvslength++] = Tlv::kLinkFrameCounter;
     }
 
-    // Ip6 Address TLV
+    // IPv6 Address TLV
     if (Tlv::FindTlvOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == kErrorNone)
     {
         SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));
@@ -2624,7 +2624,7 @@ void MleRouter::HandleChildUpdateResponse(const Message &         aMessage,
         ExitNow(error = kErrorParse);
     }
 
-    // Ip6 Address
+    // IPv6 Address
     if (Tlv::FindTlvOffset(aMessage, Tlv::kAddressRegistration, addressRegistrationOffset) == kErrorNone)
     {
         SuccessOrExit(error = UpdateChildAddresses(aMessage, addressRegistrationOffset, *child));

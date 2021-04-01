@@ -223,7 +223,7 @@ typedef struct otMessageInfo
                                  ///< Otherwise, specifies the IPv6 Hop Limit.
     bool mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
     bool mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
-    bool mMulticastLoop : 1;     ///< TRUE to allow looping back mutlicast, FALSE otherwise.
+    bool mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
 } otMessageInfo;
 
 /**
@@ -492,7 +492,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * rules.
  * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
  * @retval OT_ERROR_NO_ROUTE                No route to host.
- * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source addresss is invalid, e.g. an anycast address or a multicast address.
+ * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  *
  */
@@ -674,8 +674,8 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
  *                       OT_ERROR_RESPONSE_TIMEOUT when failed to receive MLR.rsp,
  *                       OT_ERROR_PARSE when failed to parse MLR.rsp.
  * @param[in]  aMlrStatus         The Multicast Listener Registration status when @p aError is OT_ERROR_NONE.
- * @param[in]  aFailedAddresses   A pointer to the failed Ip6 addresses when @p aError is OT_ERROR_NONE.
- * @param[in]  aFailedAddressNum  The number of failed Ip6 addresses when @p aError is OT_ERROR_NONE.
+ * @param[in]  aFailedAddresses   A pointer to the failed IPv6 addresses when @p aError is OT_ERROR_NONE.
+ * @param[in]  aFailedAddressNum  The number of failed IPv6 addresses when @p aError is OT_ERROR_NONE.
  *
  * @sa otIp6RegisterMulticastListeners
  *

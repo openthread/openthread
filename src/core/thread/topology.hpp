@@ -668,7 +668,7 @@ public:
     /**
      * This method aggregates the Link Metrics data into all the series that is running for this neighbor.
      *
-     * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregrate @p aLqi and
+     * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregate @p aLqi and
      * @p aRss into its averagers.
      *
      * @param[in] aSeriesId     Series ID for Link Probe. Should be `0` if this method is not called by Link Probe.
@@ -1203,53 +1203,53 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * This method returns MLR state of an Ip6 multicast address.
+     * This method returns MLR state of an IPv6 multicast address.
      *
      * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
-     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aAddress  The IPv6 multicast address.
      *
-     * @returns MLR state of the Ip6 multicast address.
+     * @returns MLR state of the IPv6 multicast address.
      *
      */
     MlrState GetAddressMlrState(const Ip6::Address &aAddress) const;
 
     /**
-     * This method sets MLR state of an Ip6 multicast address.
+     * This method sets MLR state of an IPv6 multicast address.
      *
      * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
-     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aAddress  The IPv6 multicast address.
      * @param[in] aState    The target MLR state.
      *
      */
     void SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState);
 
     /**
-     * This method returns if the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * This method returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
      *
-     * @param[in] aAddress  The Ip6 address.
+     * @param[in] aAddress  The IPv6 address.
      *
-     * @retval true   If the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval true   If the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
      *
      */
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
+     * This method returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
      *
-     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateRegistered`.
+     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
      *
      */
     bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
 
     /**
-     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
+     * This method returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      *
-     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
-     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateToRegister`.
+     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
+     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
      *
      */
     bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }

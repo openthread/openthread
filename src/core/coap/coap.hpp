@@ -720,10 +720,8 @@ private:
         bool mObserve : 1; // Information that this request involves Observations.
 #endif
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-        otCoapBlockwiseReceiveHook mBlockwiseReceiveHook;   // A function pointer that is called on Block2
-                                                            // response reception.
-        otCoapBlockwiseTransmitHook mBlockwiseTransmitHook; // A function pointer that is called on Block1
-                                                            // response reception.
+        otCoapBlockwiseReceiveHook  mBlockwiseReceiveHook;  // Function pointer called on Block2 response reception.
+        otCoapBlockwiseTransmitHook mBlockwiseTransmitHook; // Function pointer called on Block1 response reception.
 #endif
     };
 

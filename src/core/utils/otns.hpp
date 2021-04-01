@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file wraps the calls to platform OTNS abstrations.
+ *   This file wraps the calls to platform OTNS abstractions.
  */
 
 #ifndef UTILS_OTNS_HPP_
