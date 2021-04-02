@@ -403,13 +403,9 @@ class TestOTCI(unittest.TestCase):
 
         for dst_ip in leader.get_ipaddrs():
             statistics = commissioner.ping(dst_ip, size=10, count=10, interval=2, hoplimit=3)
-            self.assertTrue('transmitted_packets' in statistics)
             self.assertEqual(statistics['transmitted_packets'], 10)
-            self.assertTrue('received_packets' in statistics)
             self.assertEqual(statistics['received_packets'], 10)
-            self.assertTrue('packet_loss' in statistics)
             self.assertAlmostEqual(statistics['packet_loss'], 0.0, delta=1e-9)
-            self.assertTrue('round_trip_time' in statistics)
             rtt = statistics['round_trip_time']
             self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
             commissioner.wait(1)
