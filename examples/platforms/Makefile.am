@@ -43,7 +43,6 @@ EXTRA_DIST                              = \
 
 DIST_SUBDIRS                            = \
     cc2538                                \
-    cc2650                                \
     efr32                                 \
     k32w                                  \
     nrf528xx                              \
@@ -59,10 +58,6 @@ SUBDIRS                                 = \
 
 if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
-endif
-
-if OPENTHREAD_PLATFORM_CC2650
-SUBDIRS                                += cc2650
 endif
 
 if OPENTHREAD_PLATFORM_EFR32
