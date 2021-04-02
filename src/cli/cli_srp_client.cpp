@@ -383,6 +383,37 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, char *aArgs[])
 
         error = otSrpClientRemoveService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service));
     }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    else if (strcmp(aArgs[0], "key") == 0)
+    {
+        // `key [enable/disable]`
+
+        bool enable;
+
+        if (aArgsLength == 1)
+        {
+            mInterpreter.OutputEnabledDisabledStatus(otSrpClientIsServiceKeyRecordEnabled(mInterpreter.mInstance));
+            ExitNow();
+        }
+
+        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+        if (strcmp(aArgs[1], "enable") == 0)
+        {
+            enable = true;
+        }
+        else if (strcmp(aArgs[1], "disable") == 0)
+        {
+            enable = false;
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_COMMAND);
+        }
+
+        otSrpClientSetServiceKeyRecordEnabled(mInterpreter.mInstance, enable);
+    }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
