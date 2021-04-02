@@ -527,6 +527,9 @@ exit:
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
     return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+            && aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort()
+#endif
 #if OPENTHREAD_FTD
             && aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()
 #endif

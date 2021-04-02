@@ -421,7 +421,7 @@ public:
     bool IsAnycastLocator(void) const;
 
     /**
-     * This method indicates whether or not the Interface Identifier (IID) matches a Service Anycast  Locator (ALOC).
+     * This method indicates whether or not the Interface Identifier (IID) matches a Service Anycast Locator (ALOC).
      *
      * In addition to checking that the IID matches the locator pattern (`0000:00ff:fe00:xxxx`), this method also
      * checks that the locator value is a valid Service ALOC16 (0xfc10 – 0xfc2f).
