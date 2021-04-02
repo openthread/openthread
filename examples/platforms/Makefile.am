@@ -29,6 +29,8 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                              = \
+    cc1352                                \
+    cc2652                                \
     gp712                                 \
     kw41z                                 \
     qpg6095                               \
@@ -40,10 +42,8 @@ EXTRA_DIST                              = \
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
-    cc1352                                \
     cc2538                                \
     cc2650                                \
-    cc2652                                \
     efr32                                 \
     k32w                                  \
     nrf528xx                              \
@@ -57,20 +57,12 @@ SUBDIRS                                 = \
     utils                                 \
     $(NULL)
 
-if OPENTHREAD_PLATFORM_CC1352
-SUBDIRS                                += cc1352
-endif
-
 if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
 endif
 
 if OPENTHREAD_PLATFORM_CC2650
 SUBDIRS                                += cc2650
-endif
-
-if OPENTHREAD_PLATFORM_CC2652
-SUBDIRS                                += cc2652
 endif
 
 if OPENTHREAD_PLATFORM_EFR32

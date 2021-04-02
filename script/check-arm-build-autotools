@@ -34,21 +34,6 @@ reset_source()
     rm -rf build output tmp
 }
 
-build_cc1352()
-{
-    local options=(
-        "COMMISSIONER=1"
-        "DHCP6_CLIENT=1"
-        "DHCP6_SERVER=1"
-        "DNS_CLIENT=1"
-        "JOINER=1"
-        "SLAAC=1"
-    )
-
-    reset_source
-    make -f examples/Makefile-cc1352 "${options[@]}"
-}
-
 build_cc2538()
 {
     local options=(
@@ -70,21 +55,6 @@ build_cc2650()
 {
     reset_source
     make -f examples/Makefile-cc2650
-}
-
-build_cc2652()
-{
-    local options=(
-        "COMMISSIONER=1"
-        "DHCP6_CLIENT=1"
-        "DHCP6_SERVER=1"
-        "DNS_CLIENT=1"
-        "JOINER=1"
-        "SLAAC=1"
-    )
-
-    reset_source
-    make -f examples/Makefile-cc2652 "${options[@]}"
 }
 
 build_jn5189()
@@ -242,10 +212,8 @@ main()
     export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
 
     if [[ $# == 0 ]]; then
-        build_cc1352
         build_cc2538
         build_cc2650
-        build_cc2652
         build_jn5189
         build_k32w061
         build_nrf52811
