@@ -200,7 +200,7 @@ uint32_t DataPollSender::GetKeepAlivePollPeriod(void) const
 
     if (mExternalPollPeriod != 0)
     {
-        UpdateIfLarger(period, mExternalPollPeriod);
+        period = OT_MIN(period, mExternalPollPeriod);
     }
 
     return period;
@@ -457,36 +457,28 @@ void DataPollSender::ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector)
     }
 }
 
-void DataPollSender::UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod)
-{
-    if (aPeriod > aNewPeriod)
-    {
-        aPeriod = aNewPeriod;
-    }
-}
-
 uint32_t DataPollSender::CalculatePollPeriod(void) const
 {
     uint32_t period = GetDefaultPollPeriod();
 
     if (mAttachMode)
     {
-        UpdateIfLarger(period, kAttachDataPollPeriod);
+        period = OT_MIN(period, kAttachDataPollPeriod);
     }
 
     if (mRetxMode)
     {
-        UpdateIfLarger(period, kRetxPollPeriod);
+        period = OT_MIN(period, kRetxPollPeriod);
     }
 
     if (mRemainingFastPolls != 0)
     {
-        UpdateIfLarger(period, kFastPollPeriod);
+        period = OT_MIN(period, kFastPollPeriod);
     }
 
     if (mExternalPollPeriod != 0)
     {
-        UpdateIfLarger(period, mExternalPollPeriod);
+        period = OT_MIN(period, mExternalPollPeriod);
     }
 
     if (period == 0)
