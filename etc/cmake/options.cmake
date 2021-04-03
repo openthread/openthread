@@ -317,16 +317,6 @@ if(OT_UDP_FORWARD)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1")
 endif()
 
-option(OT_PACKAGE_NAME "enable vendor package name")
-if(OT_PACKAGE_NAME)
-    target_compile_definitions(ot-config INTERFACE "PACKAGE_NAME=\"${OT_PACKAGE_NAME}\"")
-endif()
-
-option(OT_PACKAGE_VERSION "enable vendor package version")
-if(OT_PACKAGE_VERSION)
-    target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\"")
-endif()
-
 option(OT_FULL_LOGS "enable full logs")
 if(OT_FULL_LOGS)
     if(NOT OT_LOG_LEVEL)
