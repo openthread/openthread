@@ -51,12 +51,6 @@ build_cc2538()
     make -f examples/Makefile-cc2538 "${options[@]}"
 }
 
-build_cc2650()
-{
-    reset_source
-    make -f examples/Makefile-cc2650
-}
-
 build_jn5189()
 {
     local options=(
@@ -213,7 +207,6 @@ main()
 
     if [[ $# == 0 ]]; then
         build_cc2538
-        build_cc2650
         build_jn5189
         build_k32w061
         build_nrf52811

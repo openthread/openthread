@@ -32,12 +32,12 @@ Example:
 ```
 AC_ARG_WITH(examples,
     [AS_HELP_STRING([--with-examples=TARGET],
-        [Specify the examples from one of: none, simulation, cc2538, cc2650, efr32, nrf52840 @&lt;:@default=none@:&gt;@.])],
+        [Specify the examples from one of: none, simulation, cc2538, efr32, nrf52840 @&lt;:@default=none@:&gt;@.])],
     [
         case "${with_examples}" in 
         none)
             ;;
-        simulation|cc2538|cc2650|efr32|nrf52840)
+        simulation|cc2538|efr32|nrf52840)
             if test ${enable_posix_app} = "yes"; then
                 AC_MSG_ERROR([--with-examples must be none when POSIX apps are enabled by --enable-posix-app])
             fi
@@ -167,7 +167,6 @@ order:
  
 DIST_SUBDIRS                           = \
     cc2538                               \
-    cc2650                               \
     efr32                                \
     nrf52840                             \
     simulation                           \
