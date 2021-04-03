@@ -32,7 +32,6 @@ EXTRA_DIST                              = \
     nlbuild-autotools                     \
     openthread-test-driver                \
     NordicSemiconductor                   \
-    silabs                                \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.
@@ -43,34 +42,6 @@ DIST_SUBDIRS                            = \
     $(NULL)
 
 SUBDIRS =
-
-if OPENTHREAD_PLATFORM_EFR32MG1
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG12
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG13
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG21
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
 
 if OPENTHREAD_PLATFORM_NRF52811
 SUBDIRS                                += \
