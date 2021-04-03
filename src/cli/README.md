@@ -387,6 +387,165 @@ Set the IEEE 802.15.4 Channel value.
 Done
 ```
 
+### channel manager
+
+Get channel manager state.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+
+```bash
+channel: 11
+auto: 1
+delay: 120
+interval: 10800
+supported: { 11-26}
+favored: { 11-26}
+Done
+```
+
+### channel manager change \<channel\>
+
+Initiate a channel change with the channel manager.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+
+```bash
+> channel manager change 11
+channel manager change 11
+Done
+```
+
+### channel manager select \<skip quality check (boolean)\>
+
+Request a channel selection with the channel manager.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager select 1
+channel manager select 1
+Done
+```
+
+### channel manager auto \<enable (boolean)\>
+
+Enable/disable the auto-channel-selection functionality.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager auto 1
+channel manager auto 1
+Done
+```
+
+### channel manager delay \<delay\>
+
+Set the channel change delay (in seconds).
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager delay 120
+channel manager delay 120
+Done
+```
+
+### channel manager interval \<interval\>
+
+Set the auto-channel-selection interval (in seconds).
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager interval 10800
+channel manager interval 10800
+Done
+```
+
+### channel manager supported \<mask\>
+
+Set the supported channel mask for the auto-channel-selection.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager supported 0x7fffc00
+channel manager supported 0x7fffc00
+Done
+```
+
+### channel manager favored \<mask\>
+
+Set the favored channel mask for the auto-channel-selection.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager favored 0x7fffc00
+channel manager favored 0x7fffc00
+Done
+```
+
+### channel monitor
+
+Get current channel monitor state and channel occupancy.
+
+`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+
+```bash
+> channel monitor
+channel monitor
+enabled: 1
+interval: 41000
+threshold: -75
+window: 960
+count: 10552
+occupancies:
+ch 11 (0x0cb7)  4.96% busy
+ch 12 (0x2e2b) 18.03% busy
+ch 13 (0x2f54) 18.48% busy
+ch 14 (0x0fef)  6.22% busy
+ch 15 (0x1536)  8.28% busy
+ch 16 (0x1746)  9.09% busy
+ch 17 (0x0b8b)  4.50% busy
+ch 18 (0x60a7) 37.75% busy
+ch 19 (0x0810)  3.14% busy
+ch 20 (0x0c2a)  4.75% busy
+ch 21 (0x08dc)  3.46% busy
+ch 22 (0x101d)  6.29% busy
+ch 23 (0x0092)  0.22% busy
+ch 24 (0x0028)  0.06% busy
+ch 25 (0x0063)  0.15% busy
+ch 26 (0x058c)  2.16% busy
+
+Done
+```
+
+### channel monitor start
+
+Start the channel monitor.
+
+`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+
+```bash
+> channel monitor start
+channel monitor start
+Done
+```
+
+### channel monitor stop
+
+Stop the channel monitor.
+
+`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+
+```bash
+> channel monitor stop
+channel monitor stop
+Done
+```
+
 ### channel preferred
 
 Get preferred channel mask.
