@@ -518,6 +518,12 @@ class TestOTCI(unittest.TestCase):
 
         self.assertFalse(leader.is_singleton())
 
+        statistics = commissioner.ping("ff02::1", size=1, count=10, interval=1, hoplimit=255)
+        self.assertEqual(statistics['transmitted_packets'], 10)
+        self.assertEqual(statistics['received_packets'], 20)
+        rtt = statistics['round_trip_time']
+        self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
+
         # Shutdown
         leader.thread_stop()
         logging.info("node state: %s", leader.get_state())

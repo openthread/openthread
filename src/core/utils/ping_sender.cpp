@@ -108,10 +108,6 @@ Error PingSender::Ping(const Config &aConfig)
 
     mStatistics.Clear();
     mStatistics.mIsMulticast = static_cast<Ip6::Address *>(&mConfig.mDestination)->IsMulticast();
-    if (mStatistics.mIsMulticast)
-    {
-        error = kErrorNone;
-    }
 
     mIdentifier++;
     SendPing();
@@ -164,7 +160,7 @@ exit:
     {
         mTimer.Start(mConfig.mInterval);
     }
-    else if (!mStatistics.mIsMulticast)
+    else
     {
         mTimer.Start(mConfig.mTimeout);
     }
