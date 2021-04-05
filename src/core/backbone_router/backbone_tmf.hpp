@@ -34,6 +34,10 @@
 #ifndef OT_CORE_THREAD_BACKBONE_TMF_HPP_
 #define OT_CORE_THREAD_BACKBONE_TMF_HPP_
 
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+
 #include "coap/coap.hpp"
 
 namespace ot {
@@ -103,5 +107,7 @@ private:
 
 } // namespace BackboneRouter
 } // namespace ot
+
+#endif //  OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
 #endif //  OT_CORE_THREAD_BACKBONE_TMF_HPP_

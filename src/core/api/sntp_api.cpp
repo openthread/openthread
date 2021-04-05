@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+
 #include <openthread/sntp.h>
 
 #include "common/instance.hpp"
@@ -40,7 +42,6 @@
 
 using namespace ot;
 
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 otError otSntpClientQuery(otInstance *          aInstance,
                           const otSntpQuery *   aQuery,
                           otSntpResponseHandler aHandler,
@@ -57,4 +58,5 @@ void otSntpClientSetUnixEra(otInstance *aInstance, uint32_t aUnixEra)
 
     return instance.Get<Sntp::Client>().SetUnixEra(aUnixEra);
 }
-#endif
+
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE

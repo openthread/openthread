@@ -31,9 +31,9 @@
  *   This file implements a MeshCoP Leader.
  */
 
-#if OPENTHREAD_FTD
-
 #include "meshcop_leader.hpp"
+
+#if OPENTHREAD_FTD
 
 #include <stdio.h>
 

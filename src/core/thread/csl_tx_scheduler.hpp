@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -49,8 +51,6 @@ namespace ot {
  *
  * @{
  */
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 class Child;
 
@@ -208,13 +208,13 @@ private:
     Callbacks               mCallbacks;
 };
 
-#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-
 /**
  * @}
  *
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
 #endif // CSL_TX_SCHEDULER_HPP_

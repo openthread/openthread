@@ -811,6 +811,8 @@ private:
 #endif
 };
 
+#if OPENTHREAD_FTD
+
 /**
  * This class represents a Thread Child.
  *
@@ -818,7 +820,7 @@ private:
 class Child : public Neighbor,
               public IndirectSender::ChildInfo,
               public DataPollHandler::ChildInfo
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ,
               public CslTxScheduler::ChildInfo
 #endif
@@ -1307,6 +1309,8 @@ private:
 
     static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
+
+#endif // OPENTHREAD_FTD
 
 /**
  * This class represents a Thread Router

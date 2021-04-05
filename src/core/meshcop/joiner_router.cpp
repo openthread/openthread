@@ -31,9 +31,9 @@
  *   This file implements the Joiner Router role.
  */
 
-#if OPENTHREAD_FTD
-
 #include "joiner_router.hpp"
+
+#if OPENTHREAD_FTD
 
 #include <stdio.h>
 

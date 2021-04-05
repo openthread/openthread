@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"
 #include "common/locator.hpp"
@@ -133,5 +135,7 @@ private:
 
 } // namespace MeshCoP
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // JOINER_ROUTER_HPP_

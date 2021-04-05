@@ -37,10 +37,10 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 #include "common/non_copyable.hpp"
 #include "thread/network_data.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 namespace ot {
 

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
@@ -180,5 +182,7 @@ private:
 
 } // namespace Utils
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 #endif // SLAAC_ADDRESS_HPP_

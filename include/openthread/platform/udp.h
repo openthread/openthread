@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_PLATFORM_UDP_H_
 #define OPENTHREAD_PLATFORM_UDP_H_
 
+#include <openthread/udp.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+
 #include <openthread/joiner.h>
 
 #include "coap/coap.hpp"
@@ -242,5 +244,7 @@ private:
 
 } // namespace MeshCoP
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
 #endif // JOINER_HPP_

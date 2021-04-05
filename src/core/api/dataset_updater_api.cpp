@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+
 #include <openthread/dataset_updater.h>
 
 #include "common/instance.hpp"
@@ -40,8 +42,6 @@
 #include "meshcop/dataset_updater.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
 
 otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
                                       const otOperationalDataset *aDataset,

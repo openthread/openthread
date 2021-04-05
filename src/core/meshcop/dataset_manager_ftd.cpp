@@ -31,6 +31,9 @@
  *   This file implements MeshCoP Datasets manager to process commands.
  *
  */
+
+#include "meshcop/dataset_manager.hpp"
+
 #if OPENTHREAD_FTD
 
 #include <stdio.h>
@@ -46,7 +49,6 @@
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
-#include "meshcop/dataset_manager.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_leader.hpp"
 #include "meshcop/meshcop_tlvs.hpp"

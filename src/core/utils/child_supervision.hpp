@@ -51,6 +51,7 @@
 namespace ot {
 
 class ThreadNetif;
+class Child;
 
 namespace Utils {
 

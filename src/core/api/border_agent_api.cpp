@@ -33,12 +33,12 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
 #include <openthread/border_agent.h>
 
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 using namespace ot;
 

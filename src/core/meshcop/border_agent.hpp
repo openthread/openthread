@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
 #include <openthread/border_agent.h>
 
 #include "coap/coap.hpp"
@@ -189,5 +191,7 @@ private:
 
 } // namespace MeshCoP
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #endif // BORDER_AGENT_HPP_

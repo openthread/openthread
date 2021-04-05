@@ -31,9 +31,9 @@
  *   This file implements FTD-specific mesh forwarding of IPv6/6LoWPAN messages.
  */
 
-#if OPENTHREAD_FTD
-
 #include "mesh_forwarder.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"

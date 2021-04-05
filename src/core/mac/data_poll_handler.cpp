@@ -31,9 +31,9 @@
  *   This file includes the implementation for handling of data polls and indirect frame transmission.
  */
 
-#if OPENTHREAD_FTD
-
 #include "data_poll_handler.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
