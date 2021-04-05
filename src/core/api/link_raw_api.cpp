@@ -99,6 +99,11 @@ otError otLinkRawReceive(otInstance *aInstance)
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().Receive();
 }
 
+bool otLinkRawIsTransmittingOrScanning(otInstance *aInstance)
+{
+    return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().IsTransmittingOrScanning();
+}
+
 otRadioFrame *otLinkRawGetTransmitBuffer(otInstance *aInstance)
 {
     return &static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().GetTransmitFrame();
