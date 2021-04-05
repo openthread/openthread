@@ -991,6 +991,33 @@ Send a service instance resolution DNS query for a given service instance. Servi
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
+### dns compression \[enable|disable\]
+
+Enable/Disable the "DNS name compression" mode.
+
+By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This is applicable to OpenThread's DNS and SRP client/server modules.
+
+This is intended for testing only and available under `REFERENCE_DEVICE` config.
+
+Get the current "DNS name compression" mode.
+
+```
+> dns compression
+Enabled
+```
+
+Set the "DNS name compression" mode.
+
+```
+> dns compression disable
+Done
+>
+>
+> dns compression
+Disabled
+Done
+```
+
 ### domainname
 
 Get the Thread Domain Name for Thread 1.2 device.
