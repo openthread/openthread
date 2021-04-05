@@ -74,7 +74,7 @@ public:
     /**
      * This method adds a Border Router entry to the Thread Network Data.
      *
-     * @param[in]  aConfig  A reference to the on mesh perfix configuration.
+     * @param[in]  aConfig  A reference to the on mesh prefix configuration.
      *
      * @retval kErrorNone         Successfully added the Border Router entry.
      * @retval kErrorNoBufs       Insufficient space to add the Border Router entry.

@@ -3163,18 +3163,21 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
 void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
 {
     OutputFormat("%u packets transmitted, %u packets received.", aStatistics->mSentCount, aStatistics->mReceivedCount);
-    if (!aStatistics->mIsMulticast)
+
+    if ((aStatistics->mSentCount != 0) && !aStatistics->mIsMulticast)
     {
         uint32_t packetLossRate =
             1000 * (aStatistics->mSentCount - aStatistics->mReceivedCount) / aStatistics->mSentCount;
         OutputFormat(" Packet loss = %u.%u%%.", packetLossRate / 10, packetLossRate % 10);
     }
+
     if (aStatistics->mReceivedCount != 0)
     {
         uint32_t avgRoundTripTime = 1000 * aStatistics->mTotalRoundTripTime / aStatistics->mReceivedCount;
         OutputFormat(" Round-trip min/avg/max = %u/%u.%u/%u ms.", aStatistics->mMinRoundTripTime,
                      avgRoundTripTime / 1000, avgRoundTripTime % 1000, aStatistics->mMaxRoundTripTime);
     }
+
     OutputLine("");
 }
 

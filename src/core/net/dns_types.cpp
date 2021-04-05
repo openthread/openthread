@@ -100,6 +100,51 @@ Error Header::ResponseCodeToError(Response aResponse)
     return error;
 }
 
+Error Name::AppendTo(Message &aMessage) const
+{
+    Error error;
+
+    if (IsEmpty())
+    {
+        error = AppendTerminator(aMessage);
+    }
+    else if (IsFromCString())
+    {
+        error = AppendName(GetAsCString(), aMessage);
+    }
+    else
+    {
+        // Name is from a message. Read labels one by one from
+        // `mMessage` and and append each to the `aMessage`.
+
+        LabelIterator iterator(*mMessage, mOffset);
+
+        while (true)
+        {
+            error = iterator.GetNextLabel();
+
+            switch (error)
+            {
+            case kErrorNone:
+                SuccessOrExit(error = iterator.AppendLabel(aMessage));
+                break;
+
+            case kErrorNotFound:
+                // We reached the end of name successfully.
+                error = AppendTerminator(aMessage);
+
+                OT_FALL_THROUGH;
+
+            default:
+                ExitNow();
+            }
+        }
+    }
+
+exit:
+    return error;
+}
+
 Error Name::AppendLabel(const char *aLabel, Message &aMessage)
 {
     return AppendLabel(aLabel, static_cast<uint8_t>(StringLength(aLabel, kMaxLabelSize)), aMessage);
@@ -543,6 +588,21 @@ bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) cons
     return (mLabelLength == aOtherIterator.mLabelLength) &&
            mMessage.CompareBytes(mLabelStartOffset, aOtherIterator.mMessage, aOtherIterator.mLabelStartOffset,
                                  mLabelLength);
+}
+
+Error Name::LabelIterator::AppendLabel(Message &aMessage) const
+{
+    // This method reads and appends the current label in the iterator
+    // to `aMessage`.
+
+    Error error;
+
+    VerifyOrExit((0 < mLabelLength) && (mLabelLength <= kMaxLabelLength), error = kErrorInvalidArgs);
+    SuccessOrExit(error = aMessage.Append(mLabelLength));
+    error = aMessage.AppendBytesFromMessage(mMessage, mLabelStartOffset, mLabelLength);
+
+exit:
+    return error;
 }
 
 bool Name::IsSubDomainOf(const char *aName, const char *aDomain)

@@ -163,9 +163,12 @@ exit:
 
 int main(int argc, char *argv[])
 {
-    int  ret;
-    bool isInteractive = true;
-    bool isFinished    = false;
+    bool   isInteractive = true;
+    bool   isFinished    = false;
+    bool   isBeginOfLine = true;
+    char   lineBuffer[kLineBufferSize];
+    size_t lineBufferWritePos = 0;
+    int    ret;
 
     VerifyOrExit(ConnectSession() != -1, perror("connect session failed"); ret = OT_EXIT_FAILURE);
 
@@ -201,12 +204,9 @@ int main(int argc, char *argv[])
 
     while (!isFinished)
     {
-        fd_set readFdSet;
-        char   lineBuffer[kLineBufferSize];
         char   buffer[kLineBufferSize];
-        size_t lineBufferWritePos = 0;
-        bool   isBeginOfLine      = true;
-        int    maxFd              = sSessionFd;
+        fd_set readFdSet;
+        int    maxFd = sSessionFd;
 
         FD_ZERO(&readFdSet);
 

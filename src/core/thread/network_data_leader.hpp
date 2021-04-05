@@ -255,12 +255,12 @@ public:
     Error SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
 
     /**
-     * This method gets the Rloc of Dhcp Agent of specified contextId.
+     * This method gets the RLOC of DHCP Agent of specified contextId.
      *
      * @param[in]  aContextId      A pointer to the Commissioning Data value.
-     * @param[out] aRloc16         The reference of which for output the Rloc16.
+     * @param[out] aRloc16         The reference of which for output the RLOC16.
      *
-     * @retval kErrorNone       Successfully get the Rloc of Dhcp Agent.
+     * @retval kErrorNone       Successfully get the RLOC of DHCP Agent.
      * @retval kErrorNotFound   The specified @p aContextId could not be found.
      *
      */

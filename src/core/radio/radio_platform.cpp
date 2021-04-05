@@ -242,6 +242,13 @@ OT_TOOL_WEAK uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
     return 0;
 }
 
+OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return UINT8_MAX;
+}
+
 OT_TOOL_WEAK Error otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);

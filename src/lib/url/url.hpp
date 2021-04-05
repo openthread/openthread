@@ -69,7 +69,7 @@ public:
     /**
      * This method gets the path in URL.
      *
-     * @returns The path in url.
+     * @returns The path in URL.
      *
      */
     const char *GetPath(void) const { return mPath; }

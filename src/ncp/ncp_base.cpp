@@ -2093,6 +2093,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_DUA));
 #endif
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_REFERENCE_DEVICE));
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_BACKBONE_ROUTER));
 #endif

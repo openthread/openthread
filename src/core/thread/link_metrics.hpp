@@ -138,7 +138,7 @@ public:
      *
      * @param[in]  aFrameType    The type of the frame.
      * @param[in]  aLqi          The LQI value.
-     * @param[in]  aRss          Ths RSS value.
+     * @param[in]  aRss          The RSS value.
      *
      */
     void AggregateLinkMetrics(uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
@@ -350,7 +350,7 @@ public:
     void ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLen, const Neighbor &aNeighbor);
 
 private:
-    /**
+    /*
      * TypeIdFlagPdu: 0x0_1_000_000 -> 0x40 ==> L bit set, type = 0 (count/summation), metric-enum = 0 (PDU rxed).
      * TypeIdFlagLqi: 0x0_0_001_001 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 1 (LQI).
      * TypeIdFlagLinkMargin: 0x0_0_001_010 -> 0x00 ==> L bit not set, type = 1 (exp ave), metric-enum = 2 (Link Margin).

@@ -109,6 +109,8 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.nodes[COMMISSIONER].start()
         self.wait_node_state(COMMISSIONER, 'router', 5)
 
+        self.wait_route_established(COMMISSIONER, PBBR)
+
         self.nodes[COMMISSIONER].commissioner_start()
         self.simulator.go(10)
         self.assertEqual('active', self.nodes[COMMISSIONER].commissioner_state())

@@ -3833,6 +3833,25 @@ exit:
     }
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_SRP_CLIENT_SERVICE_KEY_ENABLED>(void)
+{
+    return mEncoder.WriteBool(otSrpClientIsServiceKeyRecordEnabled(mInstance));
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_SERVICE_KEY_ENABLED>(void)
+{
+    otError error = OT_ERROR_NONE;
+    bool    enabled;
+
+    SuccessOrExit(error = mDecoder.ReadBool(enabled));
+    otSrpClientSetServiceKeyRecordEnabled(mInstance, enabled);
+
+exit:
+    return error;
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 #if OPENTHREAD_CONFIG_LEGACY_ENABLE

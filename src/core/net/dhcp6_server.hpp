@@ -75,7 +75,7 @@ public:
     explicit Server(Instance &aInstance);
 
     /**
-     * This method updates DHCP Agents and DHCP Alocs.
+     * This method updates DHCP Agents and DHCP ALOCs.
      *
      */
     Error UpdateService(void);

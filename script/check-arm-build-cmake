@@ -48,12 +48,6 @@ reset_source()
     rm -rf "$OT_BUILDDIR"
 }
 
-build_cc1352()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build cc1352 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
 build_cc2538()
 {
     local options=(
@@ -63,24 +57,6 @@ build_cc2538()
 
     reset_source
     "$(dirname "$0")"/cmake-build cc2538 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}" "${options[@]}"
-}
-
-build_cc2650()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build cc2650 "${OT_COMMON_OPTIONS[@]}"
-}
-
-build_cc2652()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build cc2652 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_kw41z()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build kw41z "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
 build_nrf52811()
@@ -101,57 +77,12 @@ build_nrf52840()
     "$(dirname "$0")"/cmake-build nrf52840 "$1" "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
 }
 
-build_qpg6095()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build qpg6095 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_qpg6100()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build qpg6100 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_gp712()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build gp712 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_qpg7015m()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build qpg7015m "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_samr21()
-{
-    reset_source
-
-    asfzip=asf-standalone-archive-3.45.0.85.zip
-    wget http://ww1.microchip.com/downloads/en/DeviceDoc/${asfzip}
-    unzip -qq ${asfzip}
-    mv xdk-asf-3.45.0 third_party/microchip/asf
-
-    "$(dirname "$0")"/cmake-build samr21 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
 main()
 {
     export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
 
     if [[ $# == 0 ]]; then
-        build_cc1352
         build_cc2538
-        build_cc2650
-        build_cc2652
-        build_kw41z
-        build_qpg6095
-        build_qpg6100
-        build_gp712
-        build_qpg7015m
-        build_samr21
         # UART transport
         build_nrf52840 UART_trans
         # USB transport with bootloader e.g. to support PCA10059 dongle

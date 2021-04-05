@@ -1183,6 +1183,13 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
 
     sCslSampleTime = aCslSampleTime;
 }
+
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 void otPlatRadioSetMacKey(otInstance *    aInstance,
