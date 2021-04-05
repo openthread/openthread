@@ -266,7 +266,7 @@ protected:
         return EnqueueResponse(aHeader, kResponseTypeLastStatus, aStatus);
     }
 
-    static uint8_t GetWrappedResponseQueueIndex(uint8_t aPosition);
+    static uint8_t GetWrappedQueueIndex(uint8_t aPosition, uint8_t aQueueSize);
 
     static void UpdateChangedProps(Tasklet &aTasklet);
     void        UpdateChangedProps(void);
@@ -630,7 +630,6 @@ protected:
         uint8_t      mTransmitPsdu[127];
     };
 
-    static uint8_t      GetWrappedPendingCommandQueueIndex(uint8_t aPosition);
     uint8_t             mPendingCommandQueueHead;
     uint8_t             mPendingCommandQueueTail;
     PendingCommandEntry mPendingCommandQueue[kPendingCommandQueueSize];

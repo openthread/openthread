@@ -49,6 +49,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "mac/sub_mac.hpp"
 #include "radio/radio.hpp"
 
 namespace ot {
@@ -708,14 +709,14 @@ void NcpBase::RegisterPeekPokeDelagates(otNcpDelegateAllowPeekPoke aAllowPeekDel
 // MARK: Spinel Response Handling
 // ----------------------------------------------------------------------------
 
-uint8_t NcpBase::GetWrappedResponseQueueIndex(uint8_t aPosition)
+uint8_t NcpBase::GetWrappedQueueIndex(uint8_t aPosition, uint8_t aQueueSize)
 {
-    while (aPosition >= kResponseQueueSize)
+    while (aPosition >= aQueueSize)
     {
-        aPosition -= kResponseQueueSize;
+        aPosition -= aQueueSize;
     }
 
-    return aPosition;
+    return aPosition % aQueueSize;
 }
 
 otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned int aPropKeyOrStatus)
@@ -758,7 +759,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
     {
         for (uint8_t cur = mResponseQueueHead; cur < mResponseQueueTail; cur++)
         {
-            entry = &mResponseQueue[GetWrappedResponseQueueIndex(cur)];
+            entry = &mResponseQueue[GetWrappedQueueIndex(cur, kResponseQueueSize)];
 
             if (entry->mIsInUse && (entry->mIid == iid) && (entry->mTid == tid))
             {
@@ -773,7 +774,7 @@ otError NcpBase::EnqueueResponse(uint8_t aHeader, ResponseType aType, unsigned i
 
     // Add the new entry in the queue at tail.
 
-    entry = &mResponseQueue[GetWrappedResponseQueueIndex(mResponseQueueTail)];
+    entry = &mResponseQueue[GetWrappedQueueIndex(mResponseQueueTail, kResponseQueueSize)];
 
     entry->mIid             = iid;
     entry->mTid             = tid;
@@ -831,7 +832,7 @@ otError NcpBase::SendQueuedResponses(void)
             // the queue.
 
             mResponseQueueHead = 0;
-            mResponseQueueTail = GetWrappedResponseQueueIndex(mResponseQueueTail);
+            mResponseQueueTail = GetWrappedQueueIndex(mResponseQueueTail, kResponseQueueSize);
         }
     }
 
@@ -845,16 +846,6 @@ exit:
 
 #if OPENTHREAD_CONFIG_MULTIPAN_RCP_ENABLE
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-
-uint8_t NcpBase::GetWrappedPendingCommandQueueIndex(uint8_t aPosition)
-{
-    while (aPosition >= kPendingCommandQueueSize)
-    {
-        aPosition -= kPendingCommandQueueSize;
-    }
-
-    return aPosition;
-}
 
 otError NcpBase::EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader, uint8_t aScanChannel)
 {
@@ -871,7 +862,7 @@ otError NcpBase::EnqueuePendingCommand(PendingCommandType aType, uint8_t aHeader
     }
 
     // Add the new entry in the queue at tail.
-    entry = &mPendingCommandQueue[GetWrappedPendingCommandQueueIndex(mPendingCommandQueueTail)];
+    entry = &mPendingCommandQueue[GetWrappedQueueIndex(mPendingCommandQueueTail, kPendingCommandQueueSize)];
 
     entry->mType = aType;
     switch (aType)
@@ -907,7 +898,7 @@ otError NcpBase::HandlePendingTransmit(PendingCommandEntry *entry)
     VerifyOrExit(otLinkRawIsEnabled(mInstance), error = OT_ERROR_INVALID_STATE);
     frame = otLinkRawGetTransmitBuffer(mInstance);
     VerifyOrExit(frame != nullptr, error = OT_ERROR_NO_BUFS);
-    memcpy(frame, (void *)&entry->mTransmitFrame, sizeof(frame));
+    memcpy(frame, &entry->mTransmitFrame, sizeof(*frame));
     SuccessOrExit(error = otLinkRawTransmit(mInstance, &NcpBase::LinkRawTransmitDone));
 
 exit:
@@ -923,22 +914,16 @@ otError NcpBase::HandlePendingEnergyScan(PendingCommandEntry *entry)
     otError error = OT_ERROR_NONE;
 
     VerifyOrExit(mCurScanChannel == kInvalidScanChannel, error = OT_ERROR_INVALID_STATE);
-    SuccessOrExit(error = otLinkRawEnergyScan(mInstance, entry->mScanChannel, mScanPeriod, LinkRawEnergyScanDone));
 
     mCurScanChannel = static_cast<int8_t>(entry->mScanChannel);
     mCurTransmitIID = entry->mIid;
 
+    SuccessOrExit(error = otLinkRawEnergyScan(mInstance, entry->mScanChannel, mScanPeriod, LinkRawEnergyScanDone));
+
 exit:
     if (error != OT_ERROR_NONE)
     {
-        if (mEncoder.BeginFrame(SPINEL_HEADER_FLAG | static_cast<uint8_t>(entry->mIid << SPINEL_HEADER_IID_SHIFT),
-                                SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MAC_SCAN_STATE) == OT_ERROR_NONE)
-        {
-            if (mEncoder.WriteUint8(SPINEL_SCAN_STATE_IDLE) == OT_ERROR_NONE)
-            {
-                mEncoder.EndFrame();
-            }
-        }
+        LinkRawEnergyScanDone(ot::Mac::SubMac::kInvalidRssiValue);
     }
     return error;
 }
@@ -958,7 +943,7 @@ void NcpBase::HandlePendingCommands(void)
         if (mPendingCommandQueueHead == kPendingCommandQueueSize)
         {
             mPendingCommandQueueHead = 0;
-            mPendingCommandQueueTail = GetWrappedPendingCommandQueueIndex(mPendingCommandQueueTail);
+            mPendingCommandQueueTail = GetWrappedQueueIndex(mPendingCommandQueueTail, kPendingCommandQueueSize);
         }
 
         switch (entry->mType)

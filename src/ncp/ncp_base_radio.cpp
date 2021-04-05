@@ -205,8 +205,9 @@ void NcpBase::LinkRawEnergyScanDone(int8_t aEnergyScanMaxRssi)
     // since the energy scan could have been on a different channel.
     IgnoreError(otLinkRawReceive(mInstance));
 
-    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
-                                      SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
+    SuccessOrExit(
+        mEncoder.BeginFrame(SPINEL_HEADER_FLAG | static_cast<uint8_t>(mCurTransmitIID << SPINEL_HEADER_IID_SHIFT),
+                            SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MAC_ENERGY_SCAN_RESULT));
 
     SuccessOrExit(mEncoder.WriteUint8(static_cast<uint8_t>(scanChannel)));
     SuccessOrExit(mEncoder.WriteInt8(aEnergyScanMaxRssi));

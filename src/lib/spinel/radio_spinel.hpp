@@ -968,8 +968,16 @@ private:
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
 
+    enum
+    {
+        kRcpFailureNone,
+        kRcpFailureTimeout,
+        kRcpFailureUnexpectedReset,
+    };
+
     bool    mResetRadioOnStartup : 1; ///< Whether should send reset command when init.
     int16_t mRcpFailureCount;         ///< Count of consecutive RCP failures.
+    uint8_t mRcpFailure : 2;          ///< RCP failure reason, should recover and retry operation.
 
     // Properties set by core.
     uint8_t      mKeyIdMode;
@@ -993,7 +1001,6 @@ private:
     bool mTransmitPowerSet : 1;            ///< Whether transmit power has been set.
     bool mCoexEnabledSet : 1;              ///< Whether coex enabled has been set.
     bool mFemLnaGainSet : 1;               ///< Whether FEM LNA gain has been set.
-    bool mRcpFailed : 1;                   ///< RCP failure happened, should recover and retry operation.
     bool mEnergyScanning : 1;              ///< If fails while scanning, restarts scanning.
 
 #endif // OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
