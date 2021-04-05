@@ -453,7 +453,7 @@ bool Address::MatchesFilter(TypeFilter aFilter) const
     return matches;
 }
 
-void Address::SetFromTranslatedIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
+void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
     // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
