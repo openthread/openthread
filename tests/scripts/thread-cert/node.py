@@ -1182,6 +1182,7 @@ class NodeImpl:
     def register_multicast_listener(self, *ipaddrs: Union[ipaddress.IPv6Address, str], timeout=None):
         assert len(ipaddrs) > 0, ipaddrs
 
+        ipaddrs = map(str, ipaddrs)
         cmd = f'mlr reg {" ".join(ipaddrs)}'
         if timeout is not None:
             cmd += f' {int(timeout)}'

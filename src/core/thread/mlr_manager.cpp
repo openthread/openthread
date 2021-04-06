@@ -325,7 +325,11 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address *               
     VerifyOrExit(aAddresses != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aAddressNum > 0 && aAddressNum <= kIp6AddressesNumMax, error = kErrorInvalidArgs);
     VerifyOrExit(aContext == nullptr || aCallback != nullptr, error = kErrorInvalidArgs);
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
+#else
+    otLogWarnMlr("MLR.req sent without active commissioner session.");
+#endif
 
     // Only allow one outstanding registration if callback is specified.
     VerifyOrExit(!mRegisterMulticastListenersPending, error = kErrorBusy);
