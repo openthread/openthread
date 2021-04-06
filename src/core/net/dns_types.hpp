@@ -44,6 +44,7 @@
 #include "common/equatable.hpp"
 #include "common/message.hpp"
 #include "crypto/ecdsa.hpp"
+#include "net/ip4_address.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -1495,6 +1496,51 @@ private:
     uint32_t mTtl;    // Specifies the maximum time that the resource record may be cached.
     uint16_t mLength; // The length of RDATA section in bytes.
 
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Resource Record body format of A type.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ARecord : public ResourceRecord
+{
+public:
+    enum : uint16_t
+    {
+        kType = kTypeA, ///< The A record type.
+    };
+
+    /**
+     * This method initializes the A Resource Record by setting its type, class, and length.
+     *
+     * Other record fields (TTL, address) remain unchanged/uninitialized.
+     *
+     */
+    void Init(void)
+    {
+        ResourceRecord::Init(kTypeA);
+        SetLength(sizeof(Ip4::Address));
+    }
+
+    /**
+     * This method sets the IPv4 address of the resource record.
+     *
+     * @param[in]  aAddress The IPv4 address of the resource record.
+     *
+     */
+    void SetAddress(const Ip4::Address &aAddress) { mAddress = aAddress; }
+
+    /**
+     * This method returns the reference to IPv4 address of the resource record.
+     *
+     * @returns The reference to IPv4 address of the resource record.
+     *
+     */
+    const Ip4::Address &GetAddress(void) const { return mAddress; }
+
+private:
+    Ip4::Address mAddress; // IPv4 Address of A Resource Record.
 } OT_TOOL_PACKED_END;
 
 /**
