@@ -373,7 +373,7 @@ void DataPollSender::ProcessTxDone(const Mac::TxFrame &aFrame, const Mac::RxFram
 exit:
     return;
 }
-#endif
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 void DataPollSender::RecalculatePollPeriod(void)
 {

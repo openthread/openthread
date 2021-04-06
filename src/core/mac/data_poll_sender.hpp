@@ -155,8 +155,7 @@ public:
     /**
      * This method informs the data poll sender to process a received MAC frame.
      *
-     * @param[in] aFrame     The received frame to process.
-     * @param[in] aError     Error status of the transmission.
+     * @param[in] aFrame     A reference to the received frame to process.
      *
      */
     void ProcessRxFrame(const Mac::RxFrame &aFrame);
@@ -165,7 +164,7 @@ public:
     /**
      * This method informs the data poll sender to process a transmitted MAC frame.
      *
-     * @param[in]  aFrame      The frame that was transmitted.
+     * @param[in]  aFrame      A reference to the frame that was transmitted.
      * @param[in]  aAckFrame   A pointer to the ACK frame, nullptr if no ACK was received.
      * @param[in]  aError      kErrorNone when the frame was transmitted successfully,
      *                         kErrorNoAck when the frame was transmitted but no ACK was received,
