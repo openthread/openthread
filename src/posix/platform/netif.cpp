@@ -1296,7 +1296,17 @@ static void platformConfigureTunDevice(otInstance *aInstance,
         strncpy(ifr.ifr_name, "wpan%d", IFNAMSIZ);
     }
 
-    VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
+    if (ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) < 0)
+    {
+        ifr.ifr_flags = IFF_TUN | IFF_NO_PI;
+        VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
+        VerifyOrDie(ioctl(sTunFd, TUNSETPERSIST, 0) == 0, OT_EXIT_ERROR_ERRNO);
+        close(sTunFd);
+        sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
+        VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
+        ifr.ifr_flags = IFF_TUN | IFF_NO_PI | static_cast<short>(IFF_TUN_EXCL);
+        VerifyOrDie(ioctl(sTunFd, TUNSETIFF, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
+    }
     VerifyOrDie(ioctl(sTunFd, TUNSETLINK, ARPHRD_VOID) == 0, OT_EXIT_ERROR_ERRNO);
 
     strncpy(deviceName, ifr.ifr_name, deviceNameLen);
