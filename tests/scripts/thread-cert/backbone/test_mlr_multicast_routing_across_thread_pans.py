@@ -152,8 +152,7 @@ class TestMlr(thread_cert.TestCase):
         self.simulator.go(WAIT_REDUNDANCE)
 
         # ping MA2 from R1 could get replied from Host and R2
-        # TODO (DUA): ping reply can not reach ROUTER1 since DUA feature is not complete.
-        self.assertFalse(self.nodes[ROUTER1].ping(MA2))
+        self.assertTrue(self.nodes[ROUTER1].ping(MA2))
         self.simulator.go(WAIT_REDUNDANCE)
 
     def verify(self, pv: PacketVerifier):
