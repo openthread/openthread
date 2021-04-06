@@ -222,14 +222,17 @@ otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
         VerifyOrExit(aAllowPduCount, error = OT_ERROR_INVALID_ARGS);
         aMetrics->mPduCount = true;
     }
+
     if (metrics & SPINEL_THREAD_LINK_METRIC_LQI)
     {
         aMetrics->mLqi = true;
     }
+
     if (metrics & SPINEL_THREAD_LINK_METRIC_LINK_MARGIN)
     {
         aMetrics->mLinkMargin = true;
     }
+
     if (metrics & SPINEL_THREAD_LINK_METRIC_RSSI)
     {
         aMetrics->mRssi = true;
@@ -3189,14 +3192,17 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
     {
         seriesFlags.mLinkProbe = true;
     }
+
     if (types & SPINEL_THREAD_FRAME_TYPE_MAC_DATA)
     {
         seriesFlags.mMacData = true;
     }
+
     if (types & SPINEL_THREAD_FRAME_TYPE_MAC_DATA_REQUEST)
     {
         seriesFlags.mMacDataRequest = true;
     }
+
     if (types & SPINEL_THREAD_FRAME_TYPE_MAC_ACK)
     {
         seriesFlags.mMacAck = true;
