@@ -448,7 +448,8 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
 
-    otLogInfoMeshCoP("sent dataset get response");
+    otLogInfoMeshCoP("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
+                     aMessageInfo.GetPeerAddr().ToString().AsCString());
 
 exit:
     FreeMessageOnError(message, error);

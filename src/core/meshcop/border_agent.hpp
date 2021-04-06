@@ -106,6 +106,15 @@ public:
      */
     void ApplyMeshLocalPrefix(void);
 
+    /**
+     * This method returns the UDP Proxy port to which the commissioner is currently
+     * bound.
+     *
+     * @returns  The current UDP Proxy port or 0 if no Proxy Transmit has been received yet.
+     *
+     */
+    uint16_t GetUdpProxyPort(void) const { return mUdpProxyPort; }
+
 private:
     class ForwardContext : public InstanceLocatorInit
     {
@@ -187,6 +196,7 @@ private:
 
     TimerMilli mTimer;
     State      mState;
+    uint16_t   mUdpProxyPort;
 };
 
 } // namespace MeshCoP
