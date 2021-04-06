@@ -199,6 +199,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
 {
     Reply    reply;
     uint32_t timestamp;
+    bool timerWasRunning;
 
     VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeEchoReply);
     VerifyOrExit(aIcmpHeader.GetId() == mIdentifier);
@@ -221,6 +222,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitPingReply(aMessageInfo.GetPeerAddr(), reply.mSize, timestamp, reply.mHopLimit);
 #endif
+    timerWasRunning = mTimer.IsRunning();
     // Received all ping replies, no need to wait longer.
     if (!mStatistics.mIsMulticast && mConfig.mCount == 0 && aIcmpHeader.GetSequence() == mTargetEchoSequence)
     {
@@ -228,7 +230,8 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
     }
     mConfig.InvokeReplyCallback(reply);
     // Received all ping replies, no need to wait longer.
-    if (!mStatistics.mIsMulticast && mConfig.mCount == 0 && aIcmpHeader.GetSequence() == mTargetEchoSequence)
+    if (!mStatistics.mIsMulticast && mConfig.mCount == 0 && aIcmpHeader.GetSequence() == mTargetEchoSequence &&
+        timerWasRunning)
     {
         mConfig.InvokeStatisticsCallback(mStatistics);
     }

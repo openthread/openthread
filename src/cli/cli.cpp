@@ -3202,7 +3202,8 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
 {
     OutputFormat("%u packets transmitted, %u packets received.", aStatistics->mSentCount, aStatistics->mReceivedCount);
 
-    if ((aStatistics->mSentCount != 0) && !aStatistics->mIsMulticast)
+    if ((aStatistics->mSentCount != 0) && !aStatistics->mIsMulticast &&
+        aStatistics->mReceivedCount <= aStatistics->mSentCount)
     {
         uint32_t packetLossRate =
             1000 * (aStatistics->mSentCount - aStatistics->mReceivedCount) / aStatistics->mSentCount;
