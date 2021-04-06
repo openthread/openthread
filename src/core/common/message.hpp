@@ -659,6 +659,22 @@ public:
     Error AppendBytes(const void *aBuf, uint16_t aLength);
 
     /**
+     * This method appends bytes read from another or potentially the same message to the end of the current message.
+     *
+     * On success, this method grows the message by @p aLength bytes.
+     *
+     * @param[in] aMessage   The message to read the bytes from (it can be the same as the current message).
+     * @param[in] aOffset    The offset in @p aMessage to start reading the bytes from.
+     * @param[in] aLength    The number of bytes to read from @p aMessage and append.
+     *
+     * @retval kErrorNone    Successfully appended the bytes.
+     * @retval kErrorNoBufs  Insufficient available buffers to grow the message.
+     * @retval kErrorParse   Not enough bytes in @p aMessage to read @p aLength bytes from @p aOffset.
+     *
+     */
+    Error AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
+
+    /**
      * This method appends an object to the end of the message.
      *
      * On success, this method grows the message by the size of the appended object

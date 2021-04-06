@@ -28,6 +28,8 @@
 
 #include "dns_client.hpp"
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -35,8 +37,6 @@
 #include "common/logging.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 /**
  * @file
@@ -564,7 +564,7 @@ Error Client::StartQuery(QueryInfo &        aInfo,
     SuccessOrExit(error = AllocateQuery(aInfo, aLabel, aName, query));
     mQueries.Enqueue(*query);
 
-    SendQuery(*query);
+    SendQuery(*query, aInfo, /* aUpdateTimer */ true);
 
 exit:
     return error;
@@ -595,15 +595,6 @@ void Client::FreeQuery(Query &aQuery)
 {
     mQueries.Dequeue(aQuery);
     aQuery.Free();
-}
-
-void Client::SendQuery(Query &aQuery)
-{
-    QueryInfo info;
-
-    info.ReadFrom(aQuery);
-
-    SendQuery(aQuery, info, /* aUpdateTimer */ true);
 }
 
 void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)
@@ -787,6 +778,11 @@ void Client::ProcessResponse(const Message &aMessage)
     Error     responseError;
 
     response.mMessage = &aMessage;
+
+    // We intentionally parse the response in a separate method
+    // `ParseResponse()` to free all the stack allocated variables
+    // (e.g., `QueryInfo`) used during parsing of the message before
+    // finalizing the query and invoking the user's callback.
 
     SuccessOrExit(ParseResponse(response, type, responseError));
     FinalizeQuery(response, type, responseError);

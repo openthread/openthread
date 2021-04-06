@@ -39,6 +39,7 @@
 #include <openthread/thread_ftd.h>
 
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
@@ -56,10 +57,6 @@
 #include "thread/radio_selector.hpp"
 
 namespace ot {
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
-class LinkMetricsSeriesInfo; ///< Forward declaration for including each other with `link_metrics.hpp`
-#endif
 
 /**
  * This class represents a Thread neighbor.
@@ -671,7 +668,7 @@ public:
     /**
      * This method aggregates the Link Metrics data into all the series that is running for this neighbor.
      *
-     * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregrate @p aLqi and
+     * If a series wants to account frames of @p aFrameType, it would add count by 1 and aggregate @p aLqi and
      * @p aRss into its averagers.
      *
      * @param[in] aSeriesId     Series ID for Link Probe. Should be `0` if this method is not called by Link Probe.
@@ -814,6 +811,8 @@ private:
 #endif
 };
 
+#if OPENTHREAD_FTD
+
 /**
  * This class represents a Thread Child.
  *
@@ -821,7 +820,7 @@ private:
 class Child : public Neighbor,
               public IndirectSender::ChildInfo,
               public DataPollHandler::ChildInfo
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     ,
               public CslTxScheduler::ChildInfo
 #endif
@@ -854,7 +853,7 @@ public:
      * This class defines an iterator used to go through IPv6 address entries of a child.
      *
      */
-    class AddressIterator
+    class AddressIterator : public Unequatable<AddressIterator>
     {
         friend class AddressIteratorBuilder;
 
@@ -968,19 +967,6 @@ public:
          *
          */
         bool operator==(const AddressIterator &aOther) const { return (mIndex == aOther.mIndex); }
-
-        /**
-         * This method overloads operator `!=` to evaluate whether or not two `Iterator` instances are unequal.
-         *
-         * This method MUST be used when the two iterators are associated with the same `Child` entry.
-         *
-         * @param[in]  aOther  The other `Iterator` to compare with.
-         *
-         * @retval TRUE   If the two `Iterator` objects are unequal.
-         * @retval FALSE  If the two `Iterator` objects are not unequal.
-         *
-         */
-        bool operator!=(const AddressIterator &aOther) const { return !(*this == aOther); }
 
     private:
         enum IteratorType : uint8_t
@@ -1219,53 +1205,53 @@ public:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE
     /**
-     * This method returns MLR state of an Ip6 multicast address.
+     * This method returns MLR state of an IPv6 multicast address.
      *
      * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
-     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aAddress  The IPv6 multicast address.
      *
-     * @returns MLR state of the Ip6 multicast address.
+     * @returns MLR state of the IPv6 multicast address.
      *
      */
     MlrState GetAddressMlrState(const Ip6::Address &aAddress) const;
 
     /**
-     * This method sets MLR state of an Ip6 multicast address.
+     * This method sets MLR state of an IPv6 multicast address.
      *
      * @note The @p aAdddress reference MUST be from `IterateIp6Addresses()` or `AddressIterator`.
      *
-     * @param[in] aAddress  The Ip6 multicast address.
+     * @param[in] aAddress  The IPv6 multicast address.
      * @param[in] aState    The target MLR state.
      *
      */
     void SetAddressMlrState(const Ip6::Address &aAddress, MlrState aState);
 
     /**
-     * This method returns if the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * This method returns if the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
      *
-     * @param[in] aAddress  The Ip6 address.
+     * @param[in] aAddress  The IPv6 address.
      *
-     * @retval true   If the Child has Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have Ip6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval true   If the Child has IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have IPv6 address @p aAddress of MLR state `kMlrStateRegistered`.
      *
      */
     bool HasMlrRegisteredAddress(const Ip6::Address &aAddress) const;
 
     /**
-     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
+     * This method returns if the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
      *
-     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateRegistered`.
-     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateRegistered`.
+     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateRegistered`.
+     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateRegistered`.
      *
      */
     bool HasAnyMlrRegisteredAddress(void) const { return mMlrRegisteredMask.HasAny(); }
 
     /**
-     * This method returns if the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
+     * This method returns if the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
      *
-     * @retval true   If the Child has any Ip6 address of MLR state `kMlrStateToRegister`.
-     * @retval false  If the Child does not have any Ip6 address of MLR state `kMlrStateToRegister`.
+     * @retval true   If the Child has any IPv6 address of MLR state `kMlrStateToRegister`.
+     * @retval false  If the Child does not have any IPv6 address of MLR state `kMlrStateToRegister`.
      *
      */
     bool HasAnyMlrToRegisterAddress(void) const { return mMlrToRegisterMask.HasAny(); }
@@ -1323,6 +1309,8 @@ private:
 
     static_assert(OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS < 8192, "mQueuedMessageCount cannot fit max required!");
 };
+
+#endif // OPENTHREAD_FTD
 
 /**
  * This class represents a Thread Router

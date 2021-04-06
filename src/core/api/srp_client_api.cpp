@@ -33,6 +33,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include <openthread/srp_client.h>
 
 #include "common/instance.hpp"
@@ -40,8 +42,6 @@
 #include "net/srp_client.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAddr)
 {
@@ -208,5 +208,21 @@ const char *otSrpClientItemStateToString(otSrpClientItemState aItemState)
 
     return Srp::Client::ItemStateToString(static_cast<Srp::Client::ItemState>(aItemState));
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Srp::Client>().SetServiceKeyRecordEnabled(aEnabled);
+}
+
+bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Client>().IsServiceKeyRecordEnabled();
+}
+#endif
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE

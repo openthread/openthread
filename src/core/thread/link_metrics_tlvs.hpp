@@ -35,15 +35,15 @@
 #ifndef LINK_METRICS_TLVS_HPP_
 #define LINK_METRICS_TLVS_HPP_
 
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 #include <openthread/link_metrics.h>
 
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/tlvs.hpp"
-
-#include "mac/mac_frame.hpp"
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 namespace ot {
 
@@ -116,7 +116,7 @@ public:
     }
 
     /**
-     * This method init the Type Id value
+     * This method initializes the Type ID value
      *
      */
     void Init(void) { mTypeIdFlags = 0; }

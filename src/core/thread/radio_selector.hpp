@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
 #include <openthread/multi_radio.h>
 
 #include "common/locator.hpp"
@@ -43,8 +45,6 @@
 #include "mac/mac_frame.hpp"
 #include "mac/mac_links.hpp"
 #include "mac/mac_types.hpp"
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
 
 namespace ot {
 

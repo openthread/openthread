@@ -193,6 +193,50 @@ void TestMessage(void)
                      "CopyTo() write error");
     }
 
+    // Verify `AppendBytesFromMessage()` with two different messages as source and destination.
+
+    message->WriteBytes(0, writeBuffer, kMaxSize);
+
+    for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset += kOffsetStep)
+    {
+        for (uint16_t dstOffset = 0; dstOffset < kMaxSize; dstOffset += kOffsetStep)
+        {
+            for (uint16_t length = 0; length <= kMaxSize - srcOffset; length += kLengthStep)
+            {
+                IgnoreError(message2->SetLength(0));
+                SuccessOrQuit(message2->AppendBytes(zeroBuffer, dstOffset), "AppendBytes() failed");
+
+                SuccessOrQuit(message2->AppendBytesFromMessage(*message, srcOffset, length),
+                              "AppendBytesFromMessage() failed");
+
+                VerifyOrQuit(message2->CompareBytes(dstOffset, *message, srcOffset, length),
+                             "CompareBytes failed after AppendBytesFromMessage()");
+            }
+
+            VerifyOrQuit(message2->AppendBytesFromMessage(*message, srcOffset, kMaxSize - srcOffset + 1) == kErrorParse,
+                         "AppendBytesFromMessage() did not fail with invalid length");
+        }
+    }
+
+    // Verify `AppendBytesFromMessage()` with the same message as source and destination.
+
+    for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset += kOffsetStep)
+    {
+        uint16_t size = kMaxSize;
+
+        for (uint16_t length = 0; length <= kMaxSize - srcOffset; length++)
+        {
+            // Reset the `message` to its original size.
+            IgnoreError(message->SetLength(size));
+
+            SuccessOrQuit(message->AppendBytesFromMessage(*message, srcOffset, length),
+                          "AppendBytesFromMessage() failed");
+
+            VerifyOrQuit(message->CompareBytes(size, *message, srcOffset, length),
+                         "CompareBytes failed after AppendBytesFromMessage()");
+        }
+    }
+
     message->Free();
     message2->Free();
 

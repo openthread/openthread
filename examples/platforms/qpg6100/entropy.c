@@ -1,1 +1,0 @@
-../qpg6095/entropy.c

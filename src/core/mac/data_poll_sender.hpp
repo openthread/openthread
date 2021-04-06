@@ -258,16 +258,6 @@ public:
     Mac::TxFrame *PrepareDataRequest(Mac::TxFrames &aTxFrames);
 
 private:
-    enum // Poll period under different conditions (in milliseconds).
-    {
-        kAttachDataPollPeriod = OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD, ///< Poll period during attach.
-        kRetxPollPeriod       = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD,        ///< Poll retx period due to tx failure.
-        kFastPollPeriod       = 188,                                           ///< Period used for fast polls.
-        kMinPollPeriod        = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD,     ///< Minimum allowed poll period.
-        kMaxExternalPeriod    = ((1 << 26) - 1), ///< Maximum allowed user-specified period.
-                                                 ///< i.e. (0x3FFFFF)ms, about 18.64 hours.
-    };
-
     enum
     {
         kQuickPollsAfterTimeout = 5, ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
@@ -284,11 +274,17 @@ private:
         kRecalculatePollPeriod,
     };
 
+    // Poll period under different conditions (in milliseconds).
+    static constexpr uint32_t kAttachDataPollPeriod = OPENTHREAD_CONFIG_MAC_ATTACH_DATA_POLL_PERIOD;
+    static constexpr uint32_t kRetxPollPeriod       = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
+    static constexpr uint32_t kFastPollPeriod       = 188;
+    static constexpr uint32_t kMinPollPeriod        = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
+    static constexpr uint32_t kMaxExternalPeriod    = ((1 << 26) - 1); //< ~18.6 hours.
+
     void            ScheduleNextPoll(PollPeriodSelector aPollPeriodSelector);
     uint32_t        CalculatePollPeriod(void) const;
     const Neighbor &GetParent(void) const;
     static void     HandlePollTimer(Timer &aTimer);
-    static void     UpdateIfLarger(uint32_t &aPeriod, uint32_t aNewPeriod);
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     Error GetPollDestinationAddress(Mac::Address &aDest, Mac::RadioType &aRadioType) const;
 #else

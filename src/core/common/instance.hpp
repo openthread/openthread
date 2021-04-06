@@ -283,6 +283,29 @@ public:
     Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method enables/disables the "DNS name compressions" mode.
+     *
+     * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed.
+     * This is applicable to OpenThread's DNS and SRP client/server modules.
+     *
+     * This is intended for testing only and available under a `REFERENCE_DEVICE` config.
+     *
+     * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
+     *
+     */
+    static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
+
+    /**
+     * This method indicates whether the "DNS name compression" mode is enabled or not.
+     *
+     * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
+     *
+     */
+    static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
@@ -396,6 +419,10 @@ private:
     FactoryDiags::Diags mDiags;
 #endif
     bool mIsInitialized;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    static bool sDnsNameCompressionEnabled;
+#endif
 };
 
 // Specializations of the `Get<Type>()` method.
@@ -687,6 +714,13 @@ template <> inline Dns::Client &Instance::Get(void)
 template <> inline Srp::Client &Instance::Get(void)
 {
     return mThreadNetif.mSrpClient;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+template <> inline Utils::SrpClientBuffers &Instance::Get(void)
+{
+    return mThreadNetif.mSrpClientBuffers;
 }
 #endif
 

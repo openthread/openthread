@@ -502,3 +502,17 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
     def wait_node_state(self, nodeid: int, state: str, timeout: int):
         self.wait_until(lambda: self.nodes[nodeid].get_state() == state, timeout)
+
+    def wait_route_established(self, node1: int, node2: int, timeout=10):
+        node2_addr = self.nodes[node2].get_ip6_address(config.ADDRESS_TYPE.RLOC)
+
+        while timeout > 0:
+
+            if self.nodes[node1].ping(node2_addr):
+                break
+
+            self.simulator.go(1)
+            timeout -= 1
+
+        else:
+            raise Exception("Route between node %d and %d is not established" % (node1, node2))

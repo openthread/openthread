@@ -970,6 +970,18 @@ otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const o
 void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime);
 
 /**
+ * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
+ *
+ * @note Platforms may optimize this value based on operational conditions (i.e.: temperature).
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The current CSL rx/tx scheduling drift, in units of ± ppm.
+ *
+ */
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance);
+
+/**
  * Set the max transmit power for a specific channel.
  *
  * @param[in]  aInstance    The OpenThread instance structure.

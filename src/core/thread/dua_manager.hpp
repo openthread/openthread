@@ -227,7 +227,7 @@ private:
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState
     {
-        kNotExist,    ///< DUA is not avaiable.
+        kNotExist,    ///< DUA is not available.
         kToRegister,  ///< DUA is to be registered.
         kRegistering, ///< DUA is being registered.
         kRegistered,  ///< DUA is registered.

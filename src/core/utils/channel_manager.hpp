@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -54,8 +56,6 @@ namespace Utils {
  *
  * @{
  */
-
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 /**
  * This class implements the Channel Manager.
@@ -283,8 +283,6 @@ private:
     bool             mAutoSelectEnabled;
 };
 
-#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
-
 /**
  * @}
  *
@@ -292,5 +290,7 @@ private:
 
 } // namespace Utils
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 #endif // CHANNEL_MANAGER_HPP_

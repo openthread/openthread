@@ -35,6 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/instance.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
@@ -97,6 +98,51 @@ Error Header::ResponseCodeToError(Response aResponse)
         break;
     }
 
+    return error;
+}
+
+Error Name::AppendTo(Message &aMessage) const
+{
+    Error error;
+
+    if (IsEmpty())
+    {
+        error = AppendTerminator(aMessage);
+    }
+    else if (IsFromCString())
+    {
+        error = AppendName(GetAsCString(), aMessage);
+    }
+    else
+    {
+        // Name is from a message. Read labels one by one from
+        // `mMessage` and and append each to the `aMessage`.
+
+        LabelIterator iterator(*mMessage, mOffset);
+
+        while (true)
+        {
+            error = iterator.GetNextLabel();
+
+            switch (error)
+            {
+            case kErrorNone:
+                SuccessOrExit(error = iterator.AppendLabel(aMessage));
+                break;
+
+            case kErrorNotFound:
+                // We reached the end of name successfully.
+                error = AppendTerminator(aMessage);
+
+                OT_FALL_THROUGH;
+
+            default:
+                ExitNow();
+            }
+        }
+    }
+
+exit:
     return error;
 }
 
@@ -176,6 +222,23 @@ Error Name::AppendTerminator(Message &aMessage)
 
 Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
 {
+    Error    error;
+    uint16_t value;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (!Instance::IsDnsNameCompressionEnabled())
+    {
+        // If "DNS name compression" mode is disabled, instead of
+        // appending the pointer label, read the name from the message
+        // and append it uncompressed. Note that the `aOffset` parameter
+        // in this method is given relative to the start of DNS header
+        // in `aMessage` (which `aMessage.GetOffset()` specifies).
+
+        error = Name(aMessage, aOffset + aMessage.GetOffset()).AppendTo(aMessage);
+        ExitNow();
+    }
+#endif
+
     // A pointer label takes the form of a two byte sequence as a
     // `uint16_t` value. The first two bits are ones. This allows a
     // pointer to be distinguished from a text label, since the text
@@ -183,13 +246,14 @@ Error Name::AppendPointerLabel(uint16_t aOffset, Message &aMessage)
     // restricted to 63 octets or less). The next 14-bits specify
     // an offset value relative to start of DNS header.
 
-    uint16_t value;
-
     OT_ASSERT(aOffset < kPointerLabelTypeUint16);
 
     value = HostSwap16(aOffset | kPointerLabelTypeUint16);
 
-    return aMessage.Append(value);
+    ExitNow(error = aMessage.Append(value));
+
+exit:
+    return error;
 }
 
 Error Name::AppendName(const char *aName, Message &aMessage)
@@ -543,6 +607,21 @@ bool Name::LabelIterator::CompareLabel(const LabelIterator &aOtherIterator) cons
     return (mLabelLength == aOtherIterator.mLabelLength) &&
            mMessage.CompareBytes(mLabelStartOffset, aOtherIterator.mMessage, aOtherIterator.mLabelStartOffset,
                                  mLabelLength);
+}
+
+Error Name::LabelIterator::AppendLabel(Message &aMessage) const
+{
+    // This method reads and appends the current label in the iterator
+    // to `aMessage`.
+
+    Error error;
+
+    VerifyOrExit((0 < mLabelLength) && (mLabelLength <= kMaxLabelLength), error = kErrorInvalidArgs);
+    SuccessOrExit(error = aMessage.Append(mLabelLength));
+    error = aMessage.AppendBytesFromMessage(mMessage, mLabelStartOffset, mLabelLength);
+
+exit:
+    return error;
 }
 
 bool Name::IsSubDomainOf(const char *aName, const char *aDomain)

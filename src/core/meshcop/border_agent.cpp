@@ -33,6 +33,8 @@
 
 #include "border_agent.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+
 #include "coap/coap_message.hpp"
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
@@ -42,8 +44,6 @@
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/uri_paths.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 namespace ot {
 namespace MeshCoP {

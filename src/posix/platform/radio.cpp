@@ -555,6 +555,13 @@ uint32_t otPlatRadioGetBusSpeed(otInstance *aInstance)
     return sRadioSpinel.GetBusSpeed();
 }
 
+uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    return 0;
+}
+
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
 {
     OT_UNUSED_VARIABLE(aInstance);

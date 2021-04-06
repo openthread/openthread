@@ -199,7 +199,7 @@ public:
          *
          * @param[in]  aFullName  The full name.
          *
-         * @returns  TRUE if the servce matches the full name, FALSE if doesn't match.
+         * @returns  TRUE if the service matches the full name, FALSE if doesn't match.
          *
          */
         bool Matches(const char *aFullName) const;
@@ -282,7 +282,7 @@ public:
         const char *GetFullName(void) const { return mFullName; }
 
         /**
-         * This method returns adrersses of the host.
+         * This method returns addresses of the host.
          *
          * @param[out]  aAddressesNum  The number of the addresses.
          *

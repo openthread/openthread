@@ -248,7 +248,6 @@ NcpBase::NcpBase(Instance *aInstance)
     , mDroppedOutboundIpFrameCounter(0)
     , mDroppedInboundIpFrameCounter(0)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-    , mSrpClientNumHostAddresses(0)
     , mSrpClientCallbackEnabled(false)
 #endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -1929,6 +1928,10 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_DUA));
+#endif
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_REFERENCE_DEVICE));
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

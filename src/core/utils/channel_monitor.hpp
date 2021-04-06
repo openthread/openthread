@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -55,8 +57,6 @@ namespace Utils {
  *
  * @{
  */
-
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 /**
  * This class implements the channel monitoring logic.
@@ -213,8 +213,6 @@ private:
     TimerMilli mTimer;
 };
 
-#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
-
 /**
  * @}
  *
@@ -222,5 +220,7 @@ private:
 
 } // namespace Utils
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 #endif // CHANNEL_MONITOR_HPP_

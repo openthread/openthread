@@ -28,6 +28,8 @@
 
 #include "srp_client.hpp"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -37,8 +39,6 @@
 #include "common/settings.hpp"
 #include "common/string.hpp"
 #include "thread/network_data_service.hpp"
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 /**
  * @file
@@ -140,6 +140,9 @@ Client::Client(Instance &aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     , mAutoStartModeEnabled(kAutoStartDefaultMode)
     , mAutoStartDidSelectServer(false)
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mServiceKeyRecordEnabled(false)
 #endif
     , mUpdateMessageId(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
@@ -810,16 +813,26 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
     UpdateRecordLengthInMessage(rr, offset, aMessage);
     aInfo.mRecordCount++;
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mServiceKeyRecordEnabled)
+    {
+        // KEY RR is optional in "Service Description Instruction". It
+        // is added here under `REFERENCE_DEVICE` config and is intended
+        // for testing only.
+
+        SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, aMessage));
+        SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+    }
+#endif
+
 exit:
     return error;
 }
 
 Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const
 {
-    Error                          error = kErrorNone;
-    Dns::ResourceRecord            rr;
-    Dns::KeyRecord                 key;
-    Crypto::Ecdsa::P256::PublicKey publicKey;
+    Error               error = kErrorNone;
+    Dns::ResourceRecord rr;
 
     //----------------------------------
     // Host Description Instruction
@@ -847,6 +860,18 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) c
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aMessage, aInfo));
+    SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+
+exit:
+    return error;
+}
+
+Error Client::AppendKeyRecord(Message &aMessage, Info &aInfo) const
+{
+    Error                          error;
+    Dns::KeyRecord                 key;
+    Crypto::Ecdsa::P256::PublicKey publicKey;
+
     key.Init();
     key.SetTtl(mLeaseInterval);
     key.SetFlags(Dns::KeyRecord::kAuthConfidPermitted, Dns::KeyRecord::kOwnerNonZone,
@@ -1163,7 +1188,7 @@ void Client::ProcessResponse(Message &aMessage)
 exit:
     if (error != kErrorNone)
     {
-        otLogInfoSrp("[clinet] Failed to process response %s", ErrorToString(error));
+        otLogInfoSrp("[client] Failed to process response %s", ErrorToString(error));
     }
 }
 

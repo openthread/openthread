@@ -28,14 +28,14 @@
 
 #include "coap_secure.hpp"
 
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "meshcop/dtls.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_DTLS_ENABLE
 
 /**
  * @file

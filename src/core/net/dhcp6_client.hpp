@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -50,8 +52,6 @@
 namespace ot {
 
 namespace Dhcp6 {
-
-#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 /**
  * @addtogroup core-dhcp6
@@ -159,6 +159,9 @@ private:
  *
  */
 
+} // namespace Dhcp6
+} // namespace ot
+
 #else // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
 
 #if OPENTHREAD_ENABLE_DHCP6_MULTICAST_SOLICIT
@@ -166,8 +169,5 @@ private:
 #endif
 
 #endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
-
-} // namespace Dhcp6
-} // namespace ot
 
 #endif // DHCP6_CLIENT_HPP_

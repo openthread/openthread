@@ -77,7 +77,7 @@ public:
     explicit Local(Instance &aInstance);
 
     /**
-     * This methhod enables/disables Backbone function.
+     * This method enables/disables Backbone function.
      *
      * @param[in]  aEnable  TRUE to enable the backbone function, FALSE otherwise.
      *
@@ -85,7 +85,7 @@ public:
     void SetEnabled(bool aEnable);
 
     /**
-     * This methhod retrieves the Backbone Router state.
+     * This method retrieves the Backbone Router state.
      *
      *
      * @retval OT_BACKBONE_ROUTER_STATE_DISABLED   Backbone function is disabled.

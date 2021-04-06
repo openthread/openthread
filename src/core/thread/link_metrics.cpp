@@ -39,9 +39,8 @@
 #include "common/instance.hpp"
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
+#include "thread/link_metrics_tlvs.hpp"
 #include "thread/neighbor_table.hpp"
-
-#include "link_metrics_tlvs.hpp"
 
 namespace ot {
 

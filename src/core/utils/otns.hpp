@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file wraps the calls to platform OTNS abstrations.
+ *   This file wraps the calls to platform OTNS abstractions.
  */
 
 #ifndef UTILS_OTNS_HPP_
@@ -46,6 +46,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
+#include "mac/mac_frame.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/neighbor_table.hpp"

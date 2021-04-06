@@ -1369,52 +1369,52 @@ void Interpreter::OutputDnsTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLen
     OutputFormat("]");
 }
 
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
-
-otError Interpreter::GetDnsConfig(uint8_t            aArgsLength,
-                                  char *             aArgs[],
-                                  otDnsQueryConfig *&aConfig,
-                                  uint8_t            aStartArgsIndex)
-{
-    // This method gets the optional config from given `aArgs` after the
-    // `aStartArgsIndex`. The format: `[server IPv6 address] [server
-    // port] [timeout] [max tx attempt] [recursion desired]`.
-
-    otError error = OT_ERROR_NONE;
-    bool    recursionDesired;
-
-    memset(aConfig, 0, sizeof(otDnsQueryConfig));
-
-    VerifyOrExit(aArgsLength > aStartArgsIndex, aConfig = nullptr);
-
-    SuccessOrExit(error = ParseAsIp6Address(aArgs[aStartArgsIndex], aConfig->mServerSockAddr.mAddress));
-
-    VerifyOrExit(aArgsLength > aStartArgsIndex + 1);
-    SuccessOrExit(error = ParseAsUint16(aArgs[aStartArgsIndex + 1], aConfig->mServerSockAddr.mPort));
-
-    VerifyOrExit(aArgsLength > aStartArgsIndex + 2);
-    SuccessOrExit(error = ParseAsUint32(aArgs[aStartArgsIndex + 2], aConfig->mResponseTimeout));
-
-    VerifyOrExit(aArgsLength > aStartArgsIndex + 3);
-    SuccessOrExit(error = ParseAsUint8(aArgs[aStartArgsIndex + 3], aConfig->mMaxTxAttempts));
-
-    VerifyOrExit(aArgsLength > aStartArgsIndex + 4);
-    SuccessOrExit(error = ParseAsBool(aArgs[aStartArgsIndex + 4], recursionDesired));
-    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
-
-exit:
-    return error;
-}
-
 otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
 {
-    otError           error = OT_ERROR_NONE;
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError error = OT_ERROR_NONE;
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     otDnsQueryConfig  queryConfig;
     otDnsQueryConfig *config = &queryConfig;
+#endif
 
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+    if (aArgsLength == 0)
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    else if (strcmp(aArgs[0], "compression") == 0)
+    {
+        if (aArgsLength == 1)
+        {
+            OutputEnabledDisabledStatus(otDnsIsNameCompressionEnabled());
+        }
+        else
+        {
+            bool enable;
 
-    if (strcmp(aArgs[0], "config") == 0)
+            VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
+
+            if (strcmp(aArgs[1], "enable") == 0)
+            {
+                enable = true;
+            }
+            else if (strcmp(aArgs[1], "disable") == 0)
+            {
+                enable = false;
+            }
+            else
+            {
+                ExitNow(error = OT_ERROR_INVALID_COMMAND);
+            }
+
+            otDnsSetNameCompressionEnabled(enable);
+        }
+    }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+    else if (strcmp(aArgs[0], "config") == 0)
     {
         if (aArgsLength == 1)
         {
@@ -1457,10 +1457,48 @@ otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
         error = OT_ERROR_PENDING;
     }
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
     }
+
+exit:
+    return error;
+}
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
+otError Interpreter::GetDnsConfig(uint8_t            aArgsLength,
+                                  char *             aArgs[],
+                                  otDnsQueryConfig *&aConfig,
+                                  uint8_t            aStartArgsIndex)
+{
+    // This method gets the optional config from given `aArgs` after the
+    // `aStartArgsIndex`. The format: `[server IPv6 address] [server
+    // port] [timeout] [max tx attempt] [recursion desired]`.
+
+    otError error = OT_ERROR_NONE;
+    bool    recursionDesired;
+
+    memset(aConfig, 0, sizeof(otDnsQueryConfig));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex, aConfig = nullptr);
+
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[aStartArgsIndex], aConfig->mServerSockAddr.mAddress));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 1);
+    SuccessOrExit(error = ParseAsUint16(aArgs[aStartArgsIndex + 1], aConfig->mServerSockAddr.mPort));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 2);
+    SuccessOrExit(error = ParseAsUint32(aArgs[aStartArgsIndex + 2], aConfig->mResponseTimeout));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 3);
+    SuccessOrExit(error = ParseAsUint8(aArgs[aStartArgsIndex + 3], aConfig->mMaxTxAttempts));
+
+    VerifyOrExit(aArgsLength > aStartArgsIndex + 4);
+    SuccessOrExit(error = ParseAsBool(aArgs[aStartArgsIndex + 4], recursionDesired));
+    aConfig->mRecursionFlag = recursionDesired ? OT_DNS_FLAG_RECURSION_DESIRED : OT_DNS_FLAG_NO_RECURSION;
 
 exit:
     return error;
@@ -3155,6 +3193,32 @@ void Interpreter::HandlePingReply(const otPingSenderReply *aReply)
     OutputLine(": icmp_seq=%d hlim=%d time=%dms", aReply->mSequenceNumber, aReply->mHopLimit, aReply->mRoundTripTime);
 }
 
+void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext)
+{
+    static_cast<Interpreter *>(aContext)->HandlePingStatistics(aStatistics);
+}
+
+void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics)
+{
+    OutputFormat("%u packets transmitted, %u packets received.", aStatistics->mSentCount, aStatistics->mReceivedCount);
+
+    if ((aStatistics->mSentCount != 0) && !aStatistics->mIsMulticast)
+    {
+        uint32_t packetLossRate =
+            1000 * (aStatistics->mSentCount - aStatistics->mReceivedCount) / aStatistics->mSentCount;
+        OutputFormat(" Packet loss = %u.%u%%.", packetLossRate / 10, packetLossRate % 10);
+    }
+
+    if (aStatistics->mReceivedCount != 0)
+    {
+        uint32_t avgRoundTripTime = 1000 * aStatistics->mTotalRoundTripTime / aStatistics->mReceivedCount;
+        OutputFormat(" Round-trip min/avg/max = %u/%u.%u/%u ms.", aStatistics->mMinRoundTripTime,
+                     avgRoundTripTime / 1000, avgRoundTripTime % 1000, aStatistics->mMaxRoundTripTime);
+    }
+
+    OutputLine("");
+}
+
 otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 {
     otError            error = OT_ERROR_NONE;
@@ -3195,8 +3259,9 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength <= 5, error = OT_ERROR_INVALID_ARGS);
 
-    config.mCallback        = Interpreter::HandlePingReply;
-    config.mCallbackContext = this;
+    config.mReplyCallback      = Interpreter::HandlePingReply;
+    config.mStatisticsCallback = Interpreter::HandlePingStatistics;
+    config.mCallbackContext    = this;
 
     error = otPingSenderPing(mInstance, &config);
 

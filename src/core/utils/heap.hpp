@@ -181,7 +181,7 @@ class Heap : private NonCopyable
 {
 public:
     /**
-     * This constructure initialize a memory heap.
+     * This constructor initializes a memory heap.
      *
      */
     Heap(void);

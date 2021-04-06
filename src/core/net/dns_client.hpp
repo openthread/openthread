@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
 #include <openthread/dns_client.h>
 
 #include "common/clearable.hpp"
@@ -529,7 +531,7 @@ public:
      *
      * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
      * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
-     * etc. (see `config/dns_clinet.h` for all related config options).
+     * etc. (see `config/dns_client.h` for all related config options).
      *
      */
     void ResetDefaultConfig(void);
@@ -655,7 +657,6 @@ private:
     Error       AllocateQuery(const QueryInfo &aInfo, const char *aLabel, const char *aName, Query *&aQuery);
     void        FreeQuery(Query &aQuery);
     void        UpdateQuery(Query &aQuery, const QueryInfo &aInfo) { aQuery.Write(0, aInfo); }
-    void        SendQuery(Query &aQuery);
     void        SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer);
     void        FinalizeQuery(Query &aQuery, Error aError);
     void        FinalizeQuery(Response &Response, QueryType aType, Error aError);
@@ -685,5 +686,7 @@ private:
 
 } // namespace Dns
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #endif // DNS_CLIENT_HPP_

@@ -50,32 +50,63 @@ at_exit()
     exit $EXIT_CODE
 }
 
-build()
+wait_for_socat()
 {
-    make -f examples/Makefile-simulation
-    make -f src/posix/Makefile-posix PLATFORM_NETIF=1 PLATFORM_UDP=1 UDP_FORWARD=0 MAX_POWER_TABLE=1
+    if [[ "$(head -n2 "$SOCAT_OUTPUT" | wc -l | tr -d ' ')" == 2 ]]; then
+        RADIO_PTY=$(head -n1 "$SOCAT_OUTPUT" | grep -o '/dev/.\+')
+        CORE_PTY=$(head -n2 "$SOCAT_OUTPUT" | tail -n1 | grep -o '/dev/.\+')
+        return 0
+    else
+        echo 'Still waiting for socat'
+    fi
+    return 1
 }
 
-check()
+wait_for_leader()
+{
+    if grep -q leader "$OT_OUTPUT"; then
+        return 0
+    else
+        echo 'Still waiting for leader'
+    fi
+    return 1
+}
+
+timeout_run()
+{
+    local count="$1"
+    local exit_code
+    shift 1
+
+    while [[ $count != 0 && $exit_code != 0 ]]; do
+        count=$((count - 1))
+        "$@" && return 0 || exit_code=$?
+        sleep 1
+    done
+
+    return $exit_code
+}
+
+do_build()
+{
+    ./script/cmake-build simulation
+    ./script/cmake-build posix -DOT_PLATFORM_NETIF=1 -DOT_PLATFORM_UDP=1 -DOT_UDP_FORWARD=0 -DOT_POSIX_MAX_POWER_TABLE=1 -DOT_DAEMON="${OT_DAEMON}" -DOT_READLINE="${OT_READLINE}"
+}
+
+do_check()
 {
     trap at_exit INT TERM EXIT
+
+    sudo rm -rf tmp
 
     SOCAT_OUTPUT=/tmp/ot-socat
     OT_OUTPUT=/tmp/ot-output
     socat -d -d pty,raw,echo=0 pty,raw,echo=0 >/dev/null 2>$SOCAT_OUTPUT &
-    while true; do
-        if test "$(head -n2 $SOCAT_OUTPUT | wc -l)" = 2; then
-            RADIO_PTY=$(head -n1 $SOCAT_OUTPUT | grep -o '/dev/.\+')
-            CORE_PTY=$(head -n2 $SOCAT_OUTPUT | tail -n1 | grep -o '/dev/.\+')
-            break
-        fi
-        echo 'Waiting for socat ready...'
-        sleep 1
-    done
+    timeout_run 10 wait_for_socat
     echo 'RADIO_PTY' "$RADIO_PTY"
     echo 'CORE_PTY' "$CORE_PTY"
 
-    RADIO_NCP_PATH="$PWD/output/simulation/bin/ot-rcp"
+    RADIO_NCP_PATH="$PWD/build/simulation/examples/apps/ncp/ot-rcp"
 
     # shellcheck disable=SC2094
     $RADIO_NCP_PATH 1 >"$RADIO_PTY" <"$RADIO_PTY" &
@@ -85,10 +116,10 @@ check()
 
     RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
-    if [[ ${DAEMON} == 1 ]]; then
-        sudo "$PWD/output/posix/bin/ot-daemon" -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
+    if [[ ${OT_DAEMON} == 'on' ]]; then
+        sudo "$PWD/build/posix/src/posix/ot-daemon" -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
         sleep 1
-        OT_CLI_CMD="$PWD/output/posix/bin/ot-ctl"
+        OT_CLI_CMD="$PWD/build/posix/src/posix/ot-ctl"
         sudo "${OT_CLI_CMD}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify this reset and factoryreset end immediately
@@ -97,7 +128,7 @@ check()
         sleep 2
         sudo "${OT_CLI_CMD}" factoryreset
     else
-        OT_CLI="$PWD/output/posix/bin/ot-cli"
+        OT_CLI="$PWD/build/posix/src/posix/ot-cli"
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"
 
         # Cover setting a too long(max is 15 characters) network interface name.
@@ -105,11 +136,14 @@ check()
         readonly INVALID_NETIF_NAME="wan0123456789123"
         sudo "${OT_CLI}" -I "${INVALID_NETIF_NAME}" -n "${RADIO_URL}" || test $? = 2
 
-        OT_CLI_CMD="$PWD/output/posix/bin/ot-cli ${RADIO_URL}"
+        OT_CLI_CMD="$PWD/build/posix/src/posix/ot-cli ${RADIO_URL}"
     fi
 
     sudo expect <<EOF | tee "${OT_OUTPUT}" &
 spawn ${OT_CLI_CMD}
+expect_after {
+    timeout { error }
+}
 send "radiourl\r\n"
 expect "${RADIO_URL}"
 expect "Done"
@@ -117,6 +151,8 @@ send "region\r\n"
 expect "US"
 expect "Done"
 send "panid 0xface\r\n"
+expect "Done"
+send "routerselectionjitter 1\r\n"
 expect "Done"
 send "ifconfig up\r\n"
 expect "Done"
@@ -140,25 +176,30 @@ send "coap resource TestResource\r\n"
 expect "Done"
 send "coap set TestContent\r\n"
 expect "Done"
-wait
+set timeout -1
+expect eof
 EOF
 
+    sleep 5
+
     # wait until the node becomes leader
-    while true; do
-        sleep 5
-        if grep -q leader $OT_OUTPUT; then
-            break
-        else
-            echo 'Still waiting for leader'
-        fi
-    done
+    timeout_run 5 wait_for_leader
+
+    # wait coap service start
+    sleep 5
 
     netstat -an | grep -q 5683 || die 'Application CoAP port is not available!'
 
-    extaddr=$(grep -azoP 'extaddr[\r\n]+\K[0-9a-z]{16}' $OT_OUTPUT | tr -d '\0')
+    extaddr=$(grep -ao -A +1 'extaddr' $OT_OUTPUT | tail -n1 | tr -d '\r\n\0')
     echo "Extended address is: ${extaddr}"
 
-    if [[ ${DAEMON} == 1 ]]; then
+    prefix=$(grep -ao 'Mesh Local Prefix: [0-9a-f:]\+' $OT_OUTPUT | cut -d: -f2- | tr -d ' \r\n')
+    LEADER_ALOC="${prefix}ff:fe00:fc00"
+
+    # skip testing CoAP for https://github.com/openthread/openthread/issues/6363
+    [[ $OSTYPE == "linux-gnu"* ]] || return 0
+
+    if [[ ${OT_DAEMON} == 'on' ]]; then
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
         NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
@@ -167,8 +208,6 @@ EOF
             || die 'multicast group join failed'
     fi
 
-    prefix=$(grep -aoP 'Mesh Local Prefix: \K[0-9a-f:]+(?=::\/64)' $OT_OUTPUT | tr -d '\r\n')
-    LEADER_ALOC="$prefix::ff:fe00:fc00"
     # Retrievie test resource through application CoAP
     coap_response=$(coap-client -B 5 -m GET "coap://[${LEADER_ALOC}]:5683/TestResource")
     echo "CoAP response is: ${coap_response}"
@@ -191,18 +230,27 @@ EOF
 
 main()
 {
-    case $1 in
-        build)
-            build
-            ;;
-        check)
-            check
-            ;;
-        *)
-            build
-            check
-            ;;
-    esac
+    if [[ $# == 0 ]]; then
+        do_build
+        do_check
+        return 0
+    fi
+
+    while [[ $# != 0 ]]; do
+        case $1 in
+            build)
+                do_build
+                ;;
+            check)
+                do_check
+                ;;
+            *)
+                echo "Unknown action: $1"
+                return 1
+                ;;
+        esac
+        shift
+    done
 }
 
 main "$@"

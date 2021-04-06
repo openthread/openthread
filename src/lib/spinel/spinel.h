@@ -262,7 +262,7 @@
  *   the second struct is defined by the PHY layer.  Because of the use of
  *   structures, we know exactly what part comes from that layer.
  *   Additionally, we can add fields to each structure without introducing
- *   backward compatability problems: Data encoded as "Lt(ESU)t(6C)"
+ *   backward compatibility problems: Data encoded as "Lt(ESU)t(6C)"
  *   (Notice the extra "U") will decode just fine as "Lt(ES)t(6C)".
  *   Additionally, if we don't care about the MAC layer and only care
  *   about the network layer, we could parse as "Lt()t(6C)".
@@ -1205,6 +1205,7 @@ enum
     SPINEL_CAP_MULTI_RADIO             = (SPINEL_CAP_OPENTHREAD__BEGIN + 13),
     SPINEL_CAP_SRP_CLIENT              = (SPINEL_CAP_OPENTHREAD__BEGIN + 14),
     SPINEL_CAP_DUA                     = (SPINEL_CAP_OPENTHREAD__BEGIN + 15),
+    SPINEL_CAP_REFERENCE_DEVICE        = (SPINEL_CAP_OPENTHREAD__BEGIN + 16),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN          = 1024,
@@ -3978,6 +3979,22 @@ enum
      *
      */
     SPINEL_PROP_SRP_CLIENT_EVENT = SPINEL_PROP_OPENTHREAD__BEGIN + 26,
+
+    /// SRP Client Service Key Inclusion Enabled
+    /** Format `b` : Read-Write
+     * Required capability: `SPINEL_CAP_SRP_CLIENT` & `SPINEL_CAP_REFERENCE_DEVICE`.
+     *
+     * This boolean property indicates whether the "service key record inclusion" mode is enabled or not.
+     *
+     * When enabled, SRP client will include KEY record in Service Description Instructions in the SRP update messages
+     * that it sends.
+     *
+     * KEY record is optional in Service Description Instruction (it is required and always included in the Host
+     * Description Instruction). The default behavior of SRP client is to not include it. This function is intended to
+     * override the default behavior for testing only.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_SERVICE_KEY_ENABLED = SPINEL_PROP_OPENTHREAD__BEGIN + 27,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 

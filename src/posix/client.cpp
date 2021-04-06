@@ -28,6 +28,8 @@
 
 #include "platform/openthread-posix-config.h"
 
+#include "cli/cli_config.h"
+
 #include <openthread/platform/toolchain.h>
 
 #ifndef HAVE_LIBEDIT
@@ -62,7 +64,7 @@
 
 enum
 {
-    kLineBufferSize = 256,
+    kLineBufferSize = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
 };
 
 static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
@@ -161,23 +163,31 @@ exit:
 
 int main(int argc, char *argv[])
 {
-    int    ret;
     bool   isInteractive = true;
     bool   isFinished    = false;
+    bool   isBeginOfLine = true;
     char   lineBuffer[kLineBufferSize];
     size_t lineBufferWritePos = 0;
-    bool   isBeginOfLine      = true;
+    int    ret;
 
     VerifyOrExit(ConnectSession() != -1, perror("connect session failed"); ret = OT_EXIT_FAILURE);
 
     if (argc > 1)
     {
+        char   buffer[kLineBufferSize];
+        size_t count = 0;
+
         for (int i = 1; i < argc; i++)
         {
-            VerifyOrExit(DoWrite(sSessionFd, argv[i], strlen(argv[i])), ret = OT_EXIT_FAILURE);
-            VerifyOrExit(DoWrite(sSessionFd, " ", 1), ret = OT_EXIT_FAILURE);
+            int rval = snprintf(&buffer[count], (sizeof(buffer) - count), "%s ", argv[i]);
+
+            VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < (sizeof(buffer) - count), ret = OT_EXIT_FAILURE);
+            count += static_cast<size_t>(rval);
         }
-        VerifyOrExit(DoWrite(sSessionFd, "\n", 1), ret = OT_EXIT_FAILURE);
+
+        // replace the trailing space with newline
+        buffer[count - 1] = '\n';
+        VerifyOrExit(DoWrite(sSessionFd, buffer, count), ret = OT_EXIT_FAILURE);
 
         isInteractive = false;
     }
@@ -194,8 +204,8 @@ int main(int argc, char *argv[])
 
     while (!isFinished)
     {
+        char   buffer[kLineBufferSize];
         fd_set readFdSet;
-        char   buffer[OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE];
         int    maxFd = sSessionFd;
 
         FD_ZERO(&readFdSet);

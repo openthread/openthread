@@ -374,9 +374,7 @@ private:
     otError ProcessDiag(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessDiscover(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     otError ProcessDns(uint8_t aArgsLength, char *aArgs[]);
-#endif
 #if OPENTHREAD_FTD
     otError ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -540,6 +538,7 @@ private:
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
+    static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
 #endif
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
@@ -582,6 +581,7 @@ private:
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     void HandlePingReply(const otPingSenderReply *aReply);
+    void HandlePingStatistics(const otPingSenderStatistics *aStatistics);
 #endif
     void HandleActiveScanResult(otActiveScanResult *aResult);
     void HandleEnergyScanResult(otEnergyScanResult *aResult);
@@ -669,9 +669,7 @@ private:
         {"diag", &Interpreter::ProcessDiag},
 #endif
         {"discover", &Interpreter::ProcessDiscover},
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
         {"dns", &Interpreter::ProcessDns},
-#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"domainname", &Interpreter::ProcessDomainName},
 #endif

@@ -32,6 +32,7 @@
  */
 
 #include "openthread-core-config.h"
+
 #include <openthread/crypto.h>
 #include <openthread/error.h>
 
