@@ -39,6 +39,7 @@
 #include "common/locator-getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "common/random.hpp"
 #include "net/dns_types.hpp"
 #include "thread/network_data_service.hpp"
 #include "thread/thread_netif.hpp"
@@ -86,6 +87,7 @@ Server::Server(Instance &aInstance)
     , mMaxKeyLease(kDefaultMaxKeyLease)
     , mLeaseTimer(aInstance, HandleLeaseTimer)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
+    , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mEnabled(false)
 {
     IgnoreError(SetDomain(kDefaultDomain));
@@ -234,7 +236,7 @@ void Server::RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandle
 
     if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
     {
-        mServiceUpdateHandler(aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        mServiceUpdateHandler(AllocateId(), aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the host (and its services) regardless of
         // host/service update result. Because removing a host should fail
@@ -292,9 +294,9 @@ exit:
     return hasConflicts;
 }
 
-void Server::HandleServiceUpdateResult(const Host *aHost, Error aError)
+void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
 {
-    UpdateMetadata *update = mOutstandingUpdates.FindMatching(aHost);
+    UpdateMetadata *update = mOutstandingUpdates.FindMatching(aId);
 
     if (update != nullptr)
     {
@@ -1022,7 +1024,7 @@ exit:
         IgnoreError(mOutstandingUpdates.Add(*update));
         mOutstandingUpdatesTimer.StartAt(mOutstandingUpdates.GetTail()->GetExpireTime(), 0);
 
-        mServiceUpdateHandler(aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        mServiceUpdateHandler(update->GetId(), aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
     }
     else
     {
@@ -1543,7 +1545,7 @@ exit:
 
 void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler)
 {
-    const Server &server = Get<Server>();
+    Server &server = Get<Server>();
 
     VerifyOrExit(aService != nullptr);
 
@@ -1568,7 +1570,8 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
         mServices.Clear();
         IgnoreError(mServices.Add(*aService));
 
-        server.mServiceUpdateHandler(this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
+        server.mServiceUpdateHandler(server.AllocateId(), this, kDefaultEventsHandlerTimeout,
+                                     server.mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the service regardless of service update result.
         // Because removing a service should fail only when there is system
@@ -1691,6 +1694,7 @@ Server::UpdateMetadata::UpdateMetadata(Instance &               aInstance,
     : InstanceLocator(aInstance)
     , mExpireTime(TimerMilli::GetNow() + kDefaultEventsHandlerTimeout)
     , mDnsHeader(aHeader)
+    , mId(Get<Server>().AllocateId())
     , mHost(aHost)
     , mMessageInfo(aMessageInfo)
     , mNext(nullptr)
