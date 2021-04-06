@@ -199,7 +199,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
 {
     Reply    reply;
     uint32_t timestamp;
-    bool timerWasRunning;
+    bool     timerWasRunning;
 
     VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeEchoReply);
     VerifyOrExit(aIcmpHeader.GetId() == mIdentifier);

@@ -115,10 +115,10 @@ typedef struct otPingSenderConfig
     uint16_t mSize;               ///< Data size (# of bytes) excludes IPv6/ICMPv6 header. Zero for default.
     uint16_t mCount;              ///< Number of ping messages to send. Zero to use default.
     uint32_t mInterval;           ///< Ping tx interval in milliseconds. Zero to use default.
-    uint16_t mTimeout; ///< Time in milliseconds to wait for final reply after sending final request.
-                       ///< Zero to use default.
-    uint8_t mHopLimit; ///< Hop limit (used if `mAllowZeroHopLimit` is false). Zero for default.
-    bool    mAllowZeroHopLimit; ///< Indicates whether hop limit is zero.
+    uint16_t mTimeout;            ///< Time in milliseconds to wait for final reply after sending final request.
+                                  ///< Zero to use default.
+    uint8_t mHopLimit;            ///< Hop limit (used if `mAllowZeroHopLimit` is false). Zero for default.
+    bool    mAllowZeroHopLimit;   ///< Indicates whether hop limit is zero.
 } otPingSenderConfig;
 
 /**
