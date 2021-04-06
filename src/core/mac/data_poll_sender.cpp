@@ -541,7 +541,7 @@ uint32_t DataPollSender::GetDefaultPollPeriod(void) const
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     if (Get<Mac::Mac>().IsCslEnabled())
     {
-        UpdateIfLarger(period, Time::SecToMsec(Get<Mac::Mac>().GetCslTimeout()));
+        period = OT_MIN(period, Time::SecToMsec(Get<Mac::Mac>().GetCslTimeout()));
     }
 #endif
 

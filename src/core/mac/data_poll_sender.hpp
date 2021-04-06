@@ -40,6 +40,7 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
+#include "mac/mac.hpp"
 #include "mac/mac_frame.hpp"
 #include "thread/topology.hpp"
 
