@@ -544,14 +544,11 @@ envsetup()
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
-        export OT_NCP_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
 
         if [[ ${THREAD_VERSION} == "1.2" ]]; then
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
             export OT_CLI_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-cli"
-            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-ncp"
             export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-cli"
-            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-ncp"
         fi
     fi
 

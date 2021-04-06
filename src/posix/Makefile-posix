@@ -84,7 +84,6 @@ COMMONCFLAGS                         := \
 configure_OPTIONS                   = \
     --enable-cli                      \
     --enable-ftd                      \
-    --enable-ncp                      \
     --with-platform=posix             \
     $(NULL)
 

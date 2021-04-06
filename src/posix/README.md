@@ -82,26 +82,7 @@ python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
 ./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
 ```
 
-## Wpantund Support
-
-**NOTE** Assuming the build system is 64bit Linux and _wpantund_ is already installed and **stopped**.
-
-### With Simulation
-
-```sh
-sudo wpantund -s 'system:./output/posix/bin/ot-ncp spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
-```
-
-### With Real Device
-
-```sh
-# nRF52840
-sudo wpantund -s 'system:./output/posix/bin/ot-ncp spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
-# CC2538
-sudo wpantund -s 'system:./output/posix/bin/ot-ncp spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
-```
-
-## Daemon Mode Support
+## Daemon Mode
 
 OpenThread Posix Daemon mode uses a unix socket as input and output, so that OpenThread core can run as a service. And a client can communicate with it by connecting to the socket. The protocol is OpenThread CLI.
 

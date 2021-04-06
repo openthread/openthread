@@ -475,7 +475,6 @@ LOCAL_C_INCLUDES                                         := \
 LOCAL_CFLAGS                                                                := \
     $(OPENTHREAD_PUBLIC_CFLAGS)                                                \
     $(OPENTHREAD_PRIVATE_CFLAGS)                                               \
-    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                          \
     $(OPENTHREAD_PROJECT_CFLAGS)                                               \
     $(NULL)
 

@@ -174,8 +174,6 @@ all_gettable_props = [
     wpan.WPAN_THREAD_STABLE_LEADER_NETWORK_DATA,
 ]
 
-all_posix_gettable_props = [wpan.WPAN_RCP_VERSION]
-
 # note: Partition Id only takes effect after forming one Thread network.
 node.set(wpan.WPAN_PARTITION_ID, '12345678')
 
@@ -186,10 +184,6 @@ verify(int(node.get(wpan.WPAN_PARTITION_ID), 0) == 12345678)
 
 for prop in all_gettable_props:
     node.get(prop)
-
-if node.using_posix_with_rcp:
-    for prop in all_posix_gettable_props:
-        node.get(prop)
 
 # -----------------------------------------------------------------------------------------------------------------------
 # Test finished
