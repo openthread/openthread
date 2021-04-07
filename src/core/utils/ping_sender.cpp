@@ -97,7 +97,7 @@ PingSender::PingSender(Instance &aInstance)
 
 Error PingSender::Ping(const Config &aConfig)
 {
-    Error error = kErrorNone;
+    Error error = kErrorPending;
 
     VerifyOrExit(!mTimer.IsRunning(), error = kErrorBusy);
 
@@ -160,7 +160,7 @@ exit:
     {
         mTimer.Start(mConfig.mInterval);
     }
-    else if (!mStatistics.mIsMulticast)
+    else
     {
         mTimer.Start(mConfig.mTimeout);
     }
@@ -200,6 +200,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
     Reply    reply;
     uint32_t timestamp;
 
+    VerifyOrExit(mTimer.IsRunning());
     VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeEchoReply);
     VerifyOrExit(aIcmpHeader.GetId() == mIdentifier);
 

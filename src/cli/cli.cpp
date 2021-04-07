@@ -3202,7 +3202,8 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
 {
     OutputFormat("%u packets transmitted, %u packets received.", aStatistics->mSentCount, aStatistics->mReceivedCount);
 
-    if ((aStatistics->mSentCount != 0) && !aStatistics->mIsMulticast)
+    if ((aStatistics->mSentCount != 0) && !aStatistics->mIsMulticast &&
+        aStatistics->mReceivedCount <= aStatistics->mSentCount)
     {
         uint32_t packetLossRate =
             1000 * (aStatistics->mSentCount - aStatistics->mReceivedCount) / aStatistics->mSentCount;
@@ -3217,6 +3218,7 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
     }
 
     OutputLine("");
+    OutputResult(OT_ERROR_NONE);
 }
 
 otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
@@ -3257,7 +3259,15 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
         config.mAllowZeroHopLimit = (config.mHopLimit == 0);
     }
 
-    VerifyOrExit(aArgsLength <= 5, error = OT_ERROR_INVALID_ARGS);
+    if (aArgsLength > 5)
+    {
+        uint32_t timeout;
+        SuccessOrExit(error = ParsePingInterval(aArgs[5], timeout));
+        VerifyOrExit(timeout <= NumericLimits<uint16_t>::Max(), error = OT_ERROR_INVALID_ARGS);
+        config.mTimeout = static_cast<uint16_t>(timeout);
+    }
+
+    VerifyOrExit(aArgsLength <= 6, error = OT_ERROR_INVALID_ARGS);
 
     config.mReplyCallback      = Interpreter::HandlePingReply;
     config.mStatisticsCallback = Interpreter::HandlePingStatistics;

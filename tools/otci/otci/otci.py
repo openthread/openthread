@@ -174,31 +174,48 @@ class OTCI(object):
     #
     # Network Operations
     #
+    _PING_STATISTICS_PATTERN = re.compile(
+        r'^(?P<transmitted>\d+) packets transmitted, (?P<received>\d+) packets received.(?: Packet loss = (?P<loss>\d+\.\d+)%.)?(?: Round-trip min/avg/max = (?P<min>\d+)/(?P<avg>\d+\.\d+)/(?P<max>\d+) ms.)?$'
+    )
 
-    def ping(self, ip: str, size: int = None, count: int = None, interval: int = None, hoplimit: int = None):
-        """Send an ICMPv6 Echo Request.
+    def ping(self,
+             ip: str,
+             size: int = 8,
+             count: int = 1,
+             interval: float = 1,
+             hoplimit: int = 64,
+             timeout: float = 3) -> Dict:
+        """Send an ICMPv6 Echo Request. 
+        The default arguments are consistent with https://github.com/openthread/openthread/blob/main/src/core/utils/ping_sender.hpp.
 
         :param ip: The target IPv6 address to ping.
-        :param size: The number of data bytes in the payload.
-        :param count: The number of ICMPv6 Echo Requests to be sent.
-        :param interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example 0.5.
-        :param hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
+        :param size: The number of data bytes in the payload. Default is 8.
+        :param count: The number of ICMPv6 Echo Requests to be sent. Default is 1.
+        :param interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example 0.5. Default is 1.
+        :param hoplimit: The hoplimit of ICMPv6 Echo Request to be sent. Default is 64. See OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT in src/core/config/ip6.h.
+        :param timeout: The maximum duration in seconds for the ping command to wait after the final echo request is sent. Default is 3.
         """
-        cmd = f'ping {ip}'
+        cmd = f'ping {ip} {size} {count} {interval} {hoplimit} {timeout}'
 
-        if size is not None:
-            cmd += f' {size}'
+        timeout_allowance = 3
+        lines = self.execute_command(cmd, timeout=(count - 1) * interval + timeout + timeout_allowance)
 
-        if count is not None:
-            cmd += f' {count}'
-
-        if interval is not None:
-            cmd += f' {interval}'
-
-        if hoplimit is not None:
-            cmd += f' {hoplimit}'
-
-        self.execute_command(cmd)
+        statistics = {}
+        for line in lines:
+            m = OTCI._PING_STATISTICS_PATTERN.match(line)
+            if m is not None:
+                if m.group('transmitted') is not None:
+                    statistics['transmitted_packets'] = int(m.group('transmitted'))
+                    statistics['received_packets'] = int(m.group('received'))
+                if m.group('loss') is not None:
+                    statistics['packet_loss'] = float(m.group('loss')) / 100
+                if m.group('min') is not None:
+                    statistics['round_trip_time'] = {
+                        'min': int(m.group('min')),
+                        'avg': float(m.group('avg')),
+                        'max': int(m.group('max'))
+                    }
+        return statistics
 
     def ping_stop(self):
         """Stop sending ICMPv6 Echo Requests."""

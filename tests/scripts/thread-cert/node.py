@@ -1751,28 +1751,23 @@ class NodeImpl:
             return self._expect_results(
                 r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
-    def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
-        cmd = 'ping %s' % ipaddr
-        if size is not None:
-            cmd += ' %d' % size
+    def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64):
+        cmd = f'ping {ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
 
         self.send_command(cmd)
 
-        end = self.simulator.now() + timeout
+        wait_allowance = 3
+        end = self.simulator.now() + timeout + wait_allowance
 
         responders = {}
 
         result = True
         # ncp-sim doesn't print Done
         done = (self.node_type == 'ncp-sim')
-
-        # ncp-sim doesn't print statistics
-        received_statistics = (self.node_type == 'ncp-sim')
-        is_multicast = ipaddress.IPv6Address(ipaddr).is_multicast
-        while len(responders) < num_responses or not done or (not is_multicast and not received_statistics):
+        while len(responders) < num_responses or not done:
             self.simulator.go(1)
             try:
-                i = self._expect([r'from (\S+):', r'Done', r'packets transmitted'], timeout=0.1)
+                i = self._expect([r'from (\S+):', r'Done'], timeout=0.1)
             except (pexpect.TIMEOUT, socket.timeout):
                 if self.simulator.now() < end:
                     continue
@@ -1785,8 +1780,6 @@ class NodeImpl:
                     responders[self.pexpect.match.groups()[0]] = 1
                 elif i == 1:
                     done = True
-                elif i == 2:
-                    received_statistics = True
         return result
 
     def reset(self):

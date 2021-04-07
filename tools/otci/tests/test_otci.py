@@ -402,7 +402,12 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('router', commissioner.get_state())
 
         for dst_ip in leader.get_ipaddrs():
-            commissioner.ping(dst_ip, size=10, count=1, interval=2, hoplimit=3)
+            statistics = commissioner.ping(dst_ip, size=10, count=10, interval=2, hoplimit=3)
+            self.assertEqual(statistics['transmitted_packets'], 10)
+            self.assertEqual(statistics['received_packets'], 10)
+            self.assertAlmostEqual(statistics['packet_loss'], 0.0, delta=1e-9)
+            rtt = statistics['round_trip_time']
+            self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
             commissioner.wait(1)
 
         self.assertEqual('disabled', commissioner.get_commissioiner_state())
@@ -512,6 +517,12 @@ class TestOTCI(unittest.TestCase):
                          set(router.is_link_established for router in leader.get_router_table().values()))
 
         self.assertFalse(leader.is_singleton())
+
+        statistics = commissioner.ping("ff02::1", size=1, count=10, interval=1, hoplimit=255)
+        self.assertEqual(statistics['transmitted_packets'], 10)
+        self.assertEqual(statistics['received_packets'], 20)
+        rtt = statistics['round_trip_time']
+        self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
 
         # Shutdown
         leader.thread_stop()
