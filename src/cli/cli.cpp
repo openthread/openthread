@@ -1630,6 +1630,46 @@ void Interpreter::HandleDnsServiceResponse(otError aError, const otDnsServiceRes
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #if OPENTHREAD_FTD
+const char *EidCacheStateToString(otCacheEntryState aState)
+{
+    static const char *const kStateStrings[4] = {
+        "cache",
+        "snoop",
+        "query",
+        "retry",
+    };
+
+    return static_cast<uint8_t>(aState) < OT_ARRAY_LENGTH(kStateStrings) ? kStateStrings[aState] : "unknown";
+}
+
+void Interpreter::OutputEidCacheEntry(const otCacheEntryInfo &aEntry)
+{
+    OutputIp6Address(aEntry.mTarget);
+    OutputFormat(" %04x", aEntry.mRloc16);
+    OutputFormat(" %s", EidCacheStateToString(aEntry.mState));
+    OutputFormat(" canEvict=%d", aEntry.mCanEvict);
+
+    if (aEntry.mState == OT_CACHE_ENTRY_STATE_CACHED)
+    {
+        if (aEntry.mValidLastTrans)
+        {
+            OutputFormat(" transTime=%u eid=", aEntry.mLastTransTime);
+            OutputIp6Address(aEntry.mMeshLocalEid);
+        }
+    }
+    else
+    {
+        OutputFormat(" timeout=%u", aEntry.mTimeout);
+    }
+
+    if (aEntry.mState == OT_CACHE_ENTRY_STATE_RETRY_QUERY)
+    {
+        OutputFormat(" retryDelay=%u", aEntry.mRetryDelay);
+    }
+
+    OutputLine("");
+}
+
 otError Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
@@ -1643,9 +1683,7 @@ otError Interpreter::ProcessEidCache(uint8_t aArgsLength, char *aArgs[])
     for (uint8_t i = 0;; i++)
     {
         SuccessOrExit(otThreadGetNextCacheEntry(mInstance, &entry, &iterator));
-
-        OutputIp6Address(entry.mTarget);
-        OutputLine(" %04x", entry.mRloc16);
+        OutputEidCacheEntry(entry);
     }
 
 exit:

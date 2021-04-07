@@ -376,6 +376,7 @@ private:
     otError ProcessDiscover(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessDns(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_FTD
+    void    OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
     otError ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessEui64(uint8_t aArgsLength, char *aArgs[]);

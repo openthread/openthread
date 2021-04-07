@@ -1681,7 +1681,7 @@ class OTCI(object):
         cache = {}
 
         for line in output:
-            ip, rloc16 = line.split()
+            ip, rloc16, _ = line.split(" ", 2)
 
             cache[Ip6Addr(ip)] = Rloc16(rloc16, 16)
 

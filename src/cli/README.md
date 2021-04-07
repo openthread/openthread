@@ -1071,8 +1071,8 @@ Print the EID-to-RLOC cache entries.
 
 ```bash
 > eidcache
-fdde:ad00:beef:0:bb1:ebd6:ad10:f33 ac00
-fdde:ad00:beef:0:110a:e041:8399:17cd 6000
+fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d 2000 cache canEvict=1 transTime=0 eid=fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d
+fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7f fffe retry canEvict=1 timeout=10 retryDelay=30
 Done
 ```
 
