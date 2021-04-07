@@ -249,9 +249,6 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = kErrorDrop);
     infraLinkLocalAddr = static_cast<const Ip6::Address *>(&mInfraIfLinkLocalAddress);
 
-    // Drop any ICMPv6 messages sent from myself.
-    VerifyOrExit(infraLinkLocalAddr != nullptr && aSrcAddress != *infraLinkLocalAddr, error = kErrorDrop);
-
     VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header), error = kErrorParse);
 
     icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aBuffer);
@@ -262,6 +259,8 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
         HandleRouterAdvertisement(aSrcAddress, aBuffer, aBufferLength);
         break;
     case Ip6::Icmp::Header::kTypeRouterSolicit:
+        // Drop Router Solicitations initiated from infra interface.
+        VerifyOrExit(aSrcAddress != *infraLinkLocalAddr, error = kErrorDrop);
         HandleRouterSolicit(aSrcAddress, aBuffer, aBufferLength);
         break;
     default:
@@ -637,6 +636,8 @@ void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
 // between 0 and kMaxRtrSolicitationDelay.
 void RoutingManager::StartRouterSolicitationDelay(void)
 {
+    OT_ASSERT(mAdvertisedOnLinkPrefix == nullptr);
+
     uint32_t randomDelay;
 
     mRouterSolicitCount = 0;
@@ -993,9 +994,11 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption 
 
     if (!IsValidOnLinkPrefix(aPio, aManagedAddrConfig))
     {
-        otLogInfoBr("ignore invalid prefix in PIO: %s", prefix.ToString().AsCString());
+        otLogInfoBr("ignore invalid on-link prefix in PIO: %s", prefix.ToString().AsCString());
         ExitNow();
     }
+
+    VerifyOrExit(mAdvertisedOnLinkPrefix == nullptr || prefix != *mAdvertisedOnLinkPrefix);
 
     otLogInfoBr("discovered on-link prefix (%s, %u seconds) from interface %u", prefix.ToString().AsCString(),
                 aPio.GetValidLifetime(), mInfraIfIndex);
@@ -1020,11 +1023,20 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &
 
     if (!IsValidOmrPrefix(prefix))
     {
-        otLogInfoBr("ignore invalid prefix in RIO: %s", prefix.ToString().AsCString());
+        otLogInfoBr("ignore invalid OMR prefix in RIO: %s", prefix.ToString().AsCString());
         ExitNow();
     }
 
-    // Ignore the OMR prefix in current Thread Network.
+    // Ignore OMR prefixes advertised by ourselves or in current Thread Network Data.
+    // The `mAdvertisedOmrPrefixes` and the OMR prefix set in Network Data should eventually
+    // be equal, but there is time that they are not synchronized immediately:
+    // 1. Network Data could contain more OMR prefixes than `mAdvertisedOmrPrefixes` because
+    //    we added random delay before Evaluating routing policy when Network Data is changed.
+    // 2. `mAdvertisedOmrPrefixes` could contain more OMR prefixes than Network Data because
+    //    it takes time to sync a new OMR prefix into Network Data (multicast loopback RA
+    //    messages are usually faster than Thread Network Data propagation).
+    // They are the reasons why we need both the checks.
+    VerifyOrExit(!ContainsPrefix(prefix, mAdvertisedOmrPrefixes, mAdvertisedOmrPrefixNum));
     VerifyOrExit(!NetworkDataContainsOmrPrefix(prefix));
 
     otLogInfoBr("discovered OMR prefix (%s, %u seconds) from interface %u", prefix.ToString().AsCString(),
@@ -1080,9 +1092,12 @@ bool RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
     {
         mDiscoveredPrefixInvalidTimer.Stop();
 
-        // There are no valid on-link prefixes on infra link now, start Router Solicitation
-        // To find out more on-link prefixes or timeout to advertise my local on-link prefix.
-        StartRouterSolicitationDelay();
+        if (mAdvertisedOnLinkPrefix == nullptr)
+        {
+            // There are no valid on-link prefixes on infra link now, start Router Solicitation
+            // To find out more on-link prefixes or timeout to advertise my local on-link prefix.
+            StartRouterSolicitationDelay();
+        }
     }
     else
     {

@@ -78,7 +78,7 @@ ALL_NETWORK_BBRS_ADDRESS = 'ff32:40:fd00:db8:0:0:0:3'
 ALL_DOMAIN_BBRS_ADDRESS = 'ff32:40:fd00:7d03:7d03:7d03:0:3'
 ALL_DOMAIN_BBRS_ADDRESS_ALTER = 'ff32:40:fd00:7d04:7d04:7d04:0:3'
 
-ONLINK_PREFIX = 'fd00:dead:face::/64'
+ONLINK_GUA_PREFIX = '2021::/64'
 
 # Any address starts with 'fd' are considered on-link address.
 ONLINK_PREFIX_REGEX_PATTERN = '^fd'
@@ -113,6 +113,7 @@ class ADDRESS_TYPE(Enum):
     BACKBONE_GUA = 'BACKBONE_GUA'
     OMR = 'OMR'
     ONLINK_ULA = 'ONLINK_ULA'
+    ONLINK_GUA = 'ONLINK_GUA'
 
 
 RSSI = {
