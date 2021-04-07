@@ -85,9 +85,9 @@ public:
     /**
      * This method sets DNS-SD query callbacks.
      *
-     * @param[in] aContext      A pointer to the application-specific context.
      * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
      * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
+     * @param[in] aContext      A pointer to the application-specific context.
      *
      */
     void SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,

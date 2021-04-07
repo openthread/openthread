@@ -55,7 +55,7 @@ extern "C" {
  */
 
 /**
- * This function is called when a DNS-SD query subscribes either of:
+ * This function is called when a DNS-SD query subscribes one of:
  *      1. a service name.
  *      2. a service instance name.
  *      3. a host name.
@@ -67,7 +67,7 @@ extern "C" {
  * If @p aFullName is a host name, the DNS-SD query implementation should
  * discover the host information and notify the DNS-SD server using `otDnssdQueryHandleDiscoveredHost`.
  *
- * @note There can be multiple subscription to the same name. DNS-SD query implementation should  record the number of
+ * @note There can be multiple subscription to the same name. DNS-SD query implementation should record the number of
  * active subscriptions and stop notifying when there is no active subscription for @p aFullName.
  *
  * @param[in] aContext      A pointer to the application-specific context.
@@ -82,14 +82,14 @@ extern "C" {
 typedef void (*otDnssdQuerySubscribeCallback)(void *aContext, const char *aFullName);
 
 /**
- * This function is called when a DNS-SD query unsubscribes either of:
+ * This function is called when a DNS-SD query unsubscribes one of:
  *      1. a service name.
  *      2. a service instance name.
  *      3. a host name.
  *
  * The DNS-SD query implementation is responsible for identifying what @p aFullName is.
  *
- * @note There can be multiple subscription to the same name. DNS-SD query implementation should  record the number of
+ * @note There can be multiple subscription to the same name. DNS-SD query implementation should record the number of
  * active subscriptions and stop notifying when there is no active subscription for @p aFullName.
  *
  * @param[in] aContext      A pointer to the application-specific context.
@@ -124,20 +124,22 @@ typedef struct otDnssdServiceInstanceInfo
 typedef struct otDnssdHostInfo
 {
     uint8_t             mAddressNum; ///< Number of host IPv6 addresses.
-    const otIp6Address *mAddresses;  ///< Host IPv6 address.
+    const otIp6Address *mAddresses;  ///< Host IPv6 addresses.
     uint32_t            mTtl;        ///< Service TTL (in seconds).
 } otDnssdHostInfo;
 
 /**
- * This function sets DNS-SD server query callbacks. The DNS-SD server calls @p aSubscribe to subscribe to a service or
- * service instance to resolve a DNS-SD query and @p aUnsubscribe to unsubscribe when the query is resolved or timeout.
+ * This function sets DNS-SD server query callbacks.
  *
- * @note @p aSubscribe and @p aUnsubscribe should be both set or unset.
+ * The DNS-SD server calls @p aSubscribe to subscribe to a service or service instance to resolve a DNS-SD query and @p
+ * aUnsubscribe to unsubscribe when the query is resolved or timeout.
+ *
+ * @note @p aSubscribe and @p aUnsubscribe must be both set or unset.
  *
  * @param[in] aInstance     The OpenThread instance structure.
- * @param[in] aContext      A pointer to the application-specific context.
  * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
  * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
+ * @param[in] aContext      A pointer to the application-specific context.
  *
  */
 void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
@@ -146,8 +148,12 @@ void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
                               void *                          aContext);
 
 /**
- * This function notifies a discovered service instance. The external query resolver (e.g. Discovery Proxy) should call
- * this function to notify OpenThread core of the subscribed services or service instances.
+ * This function notifies a discovered service instance.
+ *
+ * The external query resolver (e.g. Discovery Proxy) should call this function to notify OpenThread core of the
+ * subscribed services or service instances.
+ *
+ * @note @p aInstanceInfo must not contain unspecified or link-local or loop-back or multicast IP addresses.
  *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aServiceFullName  The null-terminated full service name.
@@ -158,8 +164,12 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aIn
                                                  const char *                aServiceFullName,
                                                  otDnssdServiceInstanceInfo *aInstanceInfo);
 /**
- * This function notifies a discovered host. The external query resolver (e.g. Discovery Proxy) should call
- * this function to notify OpenThread core of the subscribed hosts.
+ * This function notifies a discovered host.
+ *
+ * The external query resolver (e.g. Discovery Proxy) should call this function to notify OpenThread core of the
+ * subscribed hosts.
+ *
+ * @note @p aHostInfo must not contain unspecified or link-local or loop-back or multicast IP addresses.
  *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aHostFullName     The null-terminated full host name.

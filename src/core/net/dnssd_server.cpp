@@ -152,12 +152,10 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
 #endif
 
     // Resolve the question using query callbacks if SRP server failed to resolve the questions.
-    if (responseHeader.GetAnswerCount() == 0)
+    if (responseHeader.GetAnswerCount() == 0 &&
+        kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
     {
-        if (kErrorNone == ResolveByQueryCallbacks(responseHeader, *responseMessage, compressInfo, aMessageInfo))
-        {
-            resolveByQueryCallbacks = true;
-        }
+        resolveByQueryCallbacks = true;
     }
 
 exit:
@@ -782,7 +780,7 @@ Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHead
                                            const NameCompressInfo &aCompressInfo,
                                            const Ip6::MessageInfo &aMessageInfo)
 {
-    QueryTransaction *newQeury = nullptr;
+    QueryTransaction *newQuery = nullptr;
 
     for (QueryTransaction &query : mQueryTransactions)
     {
@@ -792,16 +790,16 @@ Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHead
         }
 
         query.Init(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo);
-        ExitNow(newQeury = &query);
+        ExitNow(newQuery = &query);
     }
 
 exit:
 
-    if (newQeury != nullptr)
+    if (newQuery != nullptr)
     {
         ResetTimer();
     }
-    return newQeury;
+    return newQuery;
 }
 
 bool Server::CanAnswerQuery(const QueryTransaction &          aQuery,
