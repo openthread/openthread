@@ -245,20 +245,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
- *
- * Define as 1 to support IEEE 802.15.4-2015 Header IE (Information Element) generation and parsing, it must be set
- * to support following features:
- *    1. Time synchronization service feature (i.e., OPENTHREAD_CONFIG_TIME_SYNC_ENABLE is set).
- *
- * @note If it's enabled, plaforms must support interrupt context and concurrent access AES.
- *
- */
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#define OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT 1
-#endif
-
-/**
  * @def RADIO_CONFIG_SRC_MATCH_SHORT_ENTRY_NUM
  *
  * The number of short source address table entries.

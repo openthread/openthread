@@ -945,7 +945,6 @@ template <> void Frame::InitIeContentAt<Termination2Ie>(uint8_t &aIndex)
 {
     OT_UNUSED_VARIABLE(aIndex);
 }
-#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 {
@@ -974,6 +973,8 @@ const uint8_t *Frame::GetHeaderIe(uint8_t aIeId) const
 exit:
     return header;
 }
+
+#endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
@@ -1234,6 +1235,8 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const
     uint8_t  securityControlField;
     uint8_t  keyId;
 
+    OT_UNUSED_VARIABLE(aIeData);
+
     mChannel = aFrame.mChannel;
     memset(&mInfo.mTxInfo, 0, sizeof(mInfo.mTxInfo));
 
@@ -1316,12 +1319,14 @@ Error TxFrame::GenerateEnhAck(const RxFrame &aFrame, bool aIsFramePending, const
         SetKeyId(keyId);
     }
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
     // Set header IE
     if (aIeLength > 0)
     {
         OT_ASSERT(aIeData != nullptr);
         memcpy(&mPsdu[FindHeaderIeIndex()], aIeData, aIeLength);
     }
+#endif
 
     // Set frame length
     footerLength = GetFooterLength();
