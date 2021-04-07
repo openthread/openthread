@@ -80,11 +80,10 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
 
     OT_ASSERT(aConfig != nullptr);
 
-    SuccessOrExit(error = instance.Get<NetworkData::Local>().ValidateOnMeshPrefix(*config));
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (aConfig->mDp)
     {
+        SuccessOrExit(error = instance.Get<NetworkData::Local>().ValidateOnMeshPrefix(*config));
         instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
     }
     else
