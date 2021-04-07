@@ -179,12 +179,12 @@ class OTCI(object):
     )
 
     def ping(self,
-        ip: str,
-        size: int = 8,
-        count: int = 1,
-        interval: float = 1,
-        hoplimit: int = 64,
-        timeout: float = 3) -> Dict:
+             ip: str,
+             size: int = 8,
+             count: int = 1,
+             interval: float = 1,
+             hoplimit: int = 64,
+             timeout: float = 3) -> Dict:
         """Send an ICMPv6 Echo Request. 
         The default arguments are consistent with https://github.com/openthread/openthread/blob/main/src/core/utils/ping_sender.hpp.
 
