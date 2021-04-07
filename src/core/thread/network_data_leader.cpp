@@ -177,30 +177,6 @@ exit:
     return error;
 }
 
-Error LeaderBase::GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const
-{
-    Error           error = kErrorNotFound;
-    Lowpan::Context lowpanContext;
-
-    if ((GetContext(aContextId, lowpanContext)) == kErrorNone)
-    {
-        Iterator           iterator = kIteratorInit;
-        OnMeshPrefixConfig config;
-
-        while (GetNextOnMeshPrefix(iterator, config) == kErrorNone)
-        {
-            if (lowpanContext.mPrefix.ContainsPrefix(config.GetPrefix()))
-            {
-                aRloc16 = config.mRloc16;
-                ExitNow(error = kErrorNone);
-            }
-        }
-    }
-
-exit:
-    return error;
-}
-
 bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
 {
     const PrefixTlv *prefix = nullptr;
