@@ -82,6 +82,9 @@
 #define OT_DEFINE_ALIGNED_VAR(name, size, align_type) \
     align_type name[(((size) + (sizeof(align_type) - 1)) / sizeof(align_type))]
 
+// Calculate the offset of a given field within the structure or class.
+#define OT_FIELD_OFFSET(type, member) (static_cast<uint16_t>(offsetof(type, member)))
+
 /**
  * This macro returns the smaller of @p a and @p b.
  *

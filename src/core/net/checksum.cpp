@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
+#include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
@@ -140,6 +141,12 @@ void Checksum::UpdateMessageChecksum(Message &           aMessage,
     case Ip6::kProtoIcmp6:
         headerOffset = Ip6::Icmp::Header::kChecksumFieldOffset;
         break;
+
+#if (OPENTHREAD_FTD || OPENTHREAD_MTD) && OPENTHREAD_CONFIG_TCP_ENABLE
+    case Ip6::kProtoTcp:
+        headerOffset = Ip6::Tcp::Header::kChecksumFieldOffset;
+        break;
+#endif
 
     default:
         ExitNow();

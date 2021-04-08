@@ -57,6 +57,7 @@
 #include "cli/cli_network_data.hpp"
 #include "cli/cli_srp_client.hpp"
 #include "cli/cli_srp_server.hpp"
+#include "cli/cli_tcp.hpp"
 #include "cli/cli_udp.hpp"
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 #include "cli/cli_coap.hpp"
@@ -95,6 +96,7 @@ class Interpreter
     friend class NetworkData;
     friend class SrpClient;
     friend class SrpServer;
+    friend class TcpExample;
     friend class UdpExample;
 
 public:
@@ -523,6 +525,7 @@ private:
     otError ProcessDataset(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessTxPower(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessUdp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessTcp(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessUnsecurePort(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessVersion(uint8_t aArgsLength, char *aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -787,6 +790,9 @@ private:
         {"srp", &Interpreter::ProcessSrp},
 #endif
         {"state", &Interpreter::ProcessState},
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+        {"tcp", &Interpreter::ProcessTcp},
+#endif
         {"thread", &Interpreter::ProcessThread},
         {"txpower", &Interpreter::ProcessTxPower},
         {"udp", &Interpreter::ProcessUdp},
@@ -808,7 +814,10 @@ private:
 
     Dataset     mDataset;
     NetworkData mNetworkData;
-    UdpExample  mUdp;
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    TcpExample mTcp;
+#endif
+    UdpExample mUdp;
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;

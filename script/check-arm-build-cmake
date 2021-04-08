@@ -41,6 +41,7 @@ readonly OT_BASIC_CHECK_OPTIONS=(
     "-DOT_DHCP6_SERVER=ON"
     "-DOT_DNS_CLIENT=ON"
     "-DOT_JOINER=ON"
+    "-DOT_TCP=ON"
 )
 
 reset_source()

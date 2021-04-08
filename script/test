@@ -66,6 +66,7 @@ build_simulation()
         "-DOT_PING_SENDER=ON"
         "-DOT_DNSSD_SERVER=ON"
         "-DOT_DNS_CLIENT=ON"
+        "-DOT_TCP=ON"
     )
 
     if [[ ${FULL_LOGS} == 1 ]]; then
@@ -112,7 +113,7 @@ build_simulation()
 build_posix()
 {
     local version="$1"
-    local options=("-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
+    local options=("-DOT_TCP=ON" "-DOT_MESSAGE_USE_HEAP=ON" "-DOT_THREAD_VERSION=${version}" "-DBUILD_TESTING=ON")
 
     if [[ ${version} == "1.2" ]]; then
         options+=("-DOT_DUA=ON")
@@ -263,7 +264,7 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_DUA_ROUTING=ON"
+    local otbr_options="-DOT_TCP=ON -DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_DUA_ROUTING=ON"
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)

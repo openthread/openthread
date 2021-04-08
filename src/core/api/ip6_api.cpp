@@ -250,7 +250,8 @@ otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageI
     Instance &                      instance = *static_cast<Instance *>(aInstance);
     const Ip6::NetifUnicastAddress *netifAddr;
 
-    netifAddr = instance.Get<Ip6::Ip6>().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
+    netifAddr =
+        instance.Get<Ip6::Ip6>().SelectSourceAddress(static_cast<Ip6::MessageInfo *>(aMessageInfo)->GetPeerAddr());
     VerifyOrExit(netifAddr != nullptr, error = kErrorNotFound);
     aMessageInfo->mSockAddr = netifAddr->GetAddress();
 

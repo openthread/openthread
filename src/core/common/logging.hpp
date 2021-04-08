@@ -97,6 +97,7 @@ extern "C" {
 #define _OT_REGION_BR_PREFIX "-BR------: "
 #define _OT_REGION_SRP_PREFIX "-SRP-----: "
 #define _OT_REGION_DNS_PREFIX "-DNS-----: "
+#define _OT_REGION_TCP_PREFIX "-TCP-----: "
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -120,6 +121,7 @@ extern "C" {
 #define _OT_REGION_BR_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_SRP_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_DNS_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_TCP_PREFIX _OT_REGION_SUFFIX
 #endif
 
 /**
@@ -1362,6 +1364,20 @@ void otLogCertMeshCoP(const char *aFormat, ...);
 #define otLogNoteSrp(...)
 #define otLogInfoSrp(...)
 #define otLogDebgSrp(...)
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_TCP
+#define otLogCritTcp(...) otLogCrit(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogWarnTcp(...) otLogWarn(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogNoteTcp(...) otLogNote(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogInfoTcp(...) otLogInfo(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogDebgTcp(...) otLogDebg(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritTcp(...)
+#define otLogWarnTcp(...)
+#define otLogNoteTcp(...)
+#define otLogInfoTcp(...)
+#define otLogDebgTcp(...)
 #endif
 
 /**

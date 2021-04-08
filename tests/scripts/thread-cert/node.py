@@ -38,6 +38,7 @@ import sys
 import time
 import traceback
 import unittest
+from collections import Counter
 from typing import Union, Dict, Optional, List
 
 import pexpect
@@ -2197,7 +2198,7 @@ class NodeImpl:
         """
         cmd = 'coap resource %s %d' % (path, count)
         self.send_command(cmd)
-        self._expect('Done')
+        self._expect_done()
 
     def coap_set_content(self, content):
         """
@@ -2315,6 +2316,153 @@ class NodeImpl:
         for tlv in tlvs:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
+
+    def tcp_init(self):
+        cmd = 'tcp init'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_listen(self):
+        cmd = 'tcp listen'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_echo(self):
+        cmd = 'tcp echo'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_swallow(self):
+        cmd = 'tcp swallow'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_emit(self):
+        cmd = 'tcp emit'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_counters(self) -> Counter:
+        counters = Counter()
+        cmd = 'tcp counters'
+        self.send_command(cmd)
+        output = self._expect_command_output(cmd)
+        for line in output:
+            k, v = line.split('=')
+            counters[k] = int(v)
+
+        return counters
+
+    def tcp_bind(self, ip: str, port: int):
+        cmd = f'tcp bind {ip} {port}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_connect(self, ip: str, port: int):
+        cmd = f'tcp connect {ip} {port}'
+        self.send_command(cmd)
+        self._expect_command_output(cmd)
+
+    def tcp_send(self, data: bytes):
+        total_n = 0
+
+        while data:
+            n = self._tcp_send(data)
+            if n == 0:
+                break
+            else:
+                data = data[n:]
+                total_n += n
+
+        return total_n
+
+    def tcp_info(self):
+        cmd = 'tcp info'
+        self.send_command(cmd)
+        output = self._expect_command_output(cmd)
+        info = {}
+        for line in output:
+            k, v = line.split(': ')
+            if k == 'State':
+                info[k] = v
+            elif k in ['LocalAddr', 'PeerAddr']:
+                m = re.compile(r'\[(.+)\]:(\d+)').match(v)
+                assert m is not None, output
+                ip, port = m.groups()
+                info[k] = (ipaddress.IPv6Address(ip), int(port))
+            else:
+                assert False, output
+
+        return info
+
+    def _tcp_send(self, data: bytes):
+        if not data:
+            return 0
+
+        maxdatalen = 180
+
+        if len(data) > maxdatalen:
+            data = data[:maxdatalen]
+
+        hexstr = ''.join('%02x' % b for b in data)
+        cmd = f'tcp send -x {hexstr}'
+        self.send_command(cmd)
+        line = self._expect_command_output(cmd)[0]
+        return int(line.split()[0])
+
+    def tcp_recv(self) -> bytes:
+        recvdata = b''
+        while True:
+            rd = self._tcp_recv()
+            if not rd:
+                break
+
+            recvdata += rd
+
+        print('tcp_recv', recvdata)
+        return recvdata
+
+    def _tcp_recv(self) -> bytes:
+        cmd = 'tcp recv'
+        self.send_command(cmd)
+        line = self._expect_command_output(cmd)[0]
+        assert line.startswith('TCP[') and line.endswith(']'), line
+        hexstr = line[4:-1]
+        assert len(hexstr) % 2 == 0, result
+
+        data = bytes(int(hexstr[i:i + 2], 16) for i in range(0, len(hexstr), 2))
+        return data
+
+    def tcp_reset_next_segment(self):
+        cmd = 'tcp reset-next-seg'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_close(self):
+        cmd = 'tcp close'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_abort(self):
+        cmd = 'tcp abort'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_state(self):
+        cmd = 'tcp state'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
+    def tcp_set_segment_random_drop_prob(self, prob: int):
+        assert 0 <= prob <= 100
+        cmd = f'tcp drop {prob}'
+        self.send_command(cmd)
+        self._expect_done()
+
+    def tcp_config_rtt(self, minRtt, maxRtt):
+        cmd = f'tcp rtt {minRtt} {maxRtt}'
+        self.send_command(cmd)
+        self._expect_done()
 
     def udp_start(self, local_ipaddr, local_port):
         cmd = 'udp open'
@@ -2648,6 +2796,14 @@ class LinuxHost():
 
     def add_ipmaddr_ether(self, ip: str):
         cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.ETH_DEV} {ip} &'
+        self.bash(cmd)
+
+    def tcp_echo_start_server(self):
+        cmd = f'nohup python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/tcp_echo.py server &'
+        self.bash(cmd)
+
+    def tcp_echo_start_client(self, server_addr: str, datasize=1024):
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/tcp_echo.py client {server_addr} {datasize}'
         self.bash(cmd)
 
     def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None) -> int:

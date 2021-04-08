@@ -53,6 +53,7 @@
 #include "net/ip6_mpl.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
+#include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
@@ -120,6 +121,12 @@ public:
          *
          */
         kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
+
+        /**
+         * The length of reserved Ip6 message header length.
+         *
+         */
+        kMessageReserveHeaderLength = sizeof(Header) + sizeof(HopByHopHeader) + sizeof(OptionMpl),
     };
 
     /**
@@ -284,12 +291,12 @@ public:
     /**
      * This method perform default source address selection.
      *
-     * @param[in]  aMessageInfo  A reference to the message information.
+     * @param[in]  aDestination  A reference to the message information.
      *
      * @returns A pointer to the selected IPv6 source address or nullptr if no source address was found.
      *
      */
-    const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+    const NetifUnicastAddress *SelectSourceAddress(const Address &aDestination);
 
     /**
      * This method returns a reference to the send queue.
@@ -373,8 +380,11 @@ private:
     Tasklet       mSendQueueTask;
 
     Icmp mIcmp;
-    Udp  mUdp;
-    Mpl  mMpl;
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    Tcp mTcp;
+#endif
+    Udp mUdp;
+    Mpl mMpl;
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     MessageQueue mReassemblyList;

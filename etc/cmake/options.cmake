@@ -302,6 +302,11 @@ if (OT_SRP_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1")
 endif()
 
+option(OT_TCP "enable TCP support")
+if(OT_TCP)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TCP_ENABLE=1")
+endif()
+
 option(OT_TIME_SYNC "enable the time synchronization service feature")
 if(OT_TIME_SYNC)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TIME_SYNC_ENABLE=1")
