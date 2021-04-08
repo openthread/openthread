@@ -94,6 +94,7 @@ Error Server::UpdateService(void)
 
         if (!found)
         {
+            Get<ThreadNetif>().RemoveUnicastAddress(prefixAgent.GetAloc());
             prefixAgent.Clear();
             mPrefixAgentsCount--;
         }
