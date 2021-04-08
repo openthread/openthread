@@ -858,6 +858,10 @@ void Mle::ApplyMeshLocalPrefix(void)
     Get<Dhcp6::Server>().ApplyMeshLocalPrefix();
 #endif
 
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+    Get<NeighborDiscovery::Agent>().ApplyMeshLocalPrefix();
+#endif
+
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
     for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
@@ -1556,11 +1560,15 @@ void Mle::HandleNotifierEvents(Events aEvents)
 
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
         IgnoreError(Get<Dhcp6::Server>().UpdateService());
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+#endif
+
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+        Get<NeighborDiscovery::Agent>().UpdateService();
+#endif
 
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
         Get<Dhcp6::Client>().UpdateAddresses();
-#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#endif
     }
 
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadKeySeqCounterChanged))

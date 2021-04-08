@@ -506,6 +506,8 @@ openthread_core_files = [
   "net/ip6_headers.hpp",
   "net/ip6_mpl.cpp",
   "net/ip6_mpl.hpp",
+  "net/nd_agent.cpp",
+  "net/nd_agent.hpp",
   "net/netif.cpp",
   "net/netif.hpp",
   "net/sntp_client.cpp",

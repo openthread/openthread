@@ -339,6 +339,12 @@ private:
         kMessageEvict,           ///< Indicates that the message was evicted.
     };
 
+    enum AnycastType : uint8_t
+    {
+        kAnycastDhcp6Agent,
+        kAnycastNeighborDiscoveryAgent,
+    };
+
 #if OPENTHREAD_FTD
     class FragmentPriorityList : public Clearable<FragmentPriorityList>
     {
@@ -440,7 +446,7 @@ private:
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
-    Error ContextIdRouteLookup(uint8_t aContextId, uint16_t &aMeshDest) const;
+    Error ContextIdRouteLookup(uint8_t aContextId, AnycastType aType, uint16_t &aMeshDest) const;
     Error UpdateMeshRoute(Message &aMessage);
     bool  UpdateReassemblyList(void);
     void  UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,

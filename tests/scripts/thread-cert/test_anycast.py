@@ -93,6 +93,7 @@ class TestAnycast(thread_cert.TestCase):
 
         self.__test('ds')  # DHCPv6 Agent (IPv6 Address)
         self.__test('cs')  # DHCPv6 Agent (Other)
+        self.__test('ns')  # Neighbor Discovery Agent
 
     def __test(self, borderRouterFlags):
         # Single Server

@@ -402,7 +402,7 @@ exit:
     return error;
 }
 
-Error MeshForwarder::ContextIdRouteLookup(uint8_t aContextId, uint16_t &aMeshDest) const
+Error MeshForwarder::ContextIdRouteLookup(uint8_t aContextId, AnycastType aType, uint16_t &aMeshDest) const
 {
     Lowpan::Context                 context;
     NetworkData::Iterator           iterator = NetworkData::kIteratorInit;
@@ -422,6 +422,22 @@ Error MeshForwarder::ContextIdRouteLookup(uint8_t aContextId, uint16_t &aMeshDes
         if (config.GetPrefix() != context.mPrefix)
         {
             continue;
+        }
+
+        switch (aType)
+        {
+        case kAnycastDhcp6Agent:
+            if (!(config.mDhcp || config.mConfigure))
+            {
+                continue;
+            }
+            break;
+        case kAnycastNeighborDiscoveryAgent:
+            if (!config.mNdDns)
+            {
+                continue;
+            }
+            break;
         }
 
         // Path cost
@@ -507,8 +523,8 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
         }
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
-            uint8_t contextId = static_cast<uint8_t>(aloc16 & Mle::kAloc16DhcpAgentMask);
-            SuccessOrExit(error = ContextIdRouteLookup(contextId, mMeshDest));
+            uint8_t contextId = static_cast<uint8_t>(aloc16 - Mle::kAloc16DhcpAgentStart + 1);
+            SuccessOrExit(error = ContextIdRouteLookup(contextId, kAnycastDhcp6Agent, mMeshDest));
         }
         else if (aloc16 <= Mle::kAloc16ServiceEnd)
         {
@@ -526,9 +542,14 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
             mMeshDest = Get<BackboneRouter::Leader>().GetServer16();
         }
 #endif
+        else if ((aloc16 >= Mle::kAloc16NeighborDiscoveryAgentStart) &&
+                 (aloc16 <= Mle::kAloc16NeighborDiscoveryAgentEnd))
+        {
+            uint8_t contextId = static_cast<uint8_t>(aloc16 - Mle::kAloc16NeighborDiscoveryAgentStart + 1);
+            SuccessOrExit(error = ContextIdRouteLookup(contextId, kAnycastNeighborDiscoveryAgent, mMeshDest));
+        }
         else
         {
-            // TODO: support for Neighbor Discovery Agent ALOC
             ExitNow(error = kErrorDrop);
         }
     }
