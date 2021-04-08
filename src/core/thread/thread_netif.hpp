@@ -82,6 +82,7 @@
 #include "net/dns_client.hpp"
 #include "net/dnssd_server.hpp"
 #include "net/ip6_filter.hpp"
+#include "net/nd_agent.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_client.hpp"
@@ -195,10 +196,13 @@ private:
     Tmf::TmfAgent mTmfAgent;
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
-#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     Dhcp6::Server mDhcp6Server;
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+    NeighborDiscovery::Agent mNeighborDiscoveryAgent;
+#endif
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     Utils::Slaac mSlaac;
 #endif

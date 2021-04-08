@@ -230,6 +230,7 @@ SOURCES_COMMON                                  = \
     net/ip6_filter.cpp                            \
     net/ip6_headers.cpp                           \
     net/ip6_mpl.cpp                               \
+    net/nd_agent.cpp                              \
     net/netif.cpp                                 \
     net/sntp_client.cpp                           \
     net/socket.cpp                                \
@@ -486,6 +487,7 @@ HEADERS_COMMON                                  = \
     net/ip6_filter.hpp                            \
     net/ip6_headers.hpp                           \
     net/ip6_mpl.hpp                               \
+    net/nd_agent.hpp                              \
     net/netif.hpp                                 \
     net/sntp_client.hpp                           \
     net/socket.hpp                                \
