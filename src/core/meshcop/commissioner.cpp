@@ -40,7 +40,7 @@
 #include "coap/coap_message.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/string.hpp"
 #include "meshcop/joiner.hpp"

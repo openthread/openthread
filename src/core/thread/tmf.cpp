@@ -33,7 +33,7 @@
 
 #include "thread/tmf.hpp"
 
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 namespace ot {
 namespace Tmf {

@@ -43,7 +43,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "radio/radio.hpp"
 #include "utils/parse_cmdline.hpp"
 

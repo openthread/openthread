@@ -39,7 +39,7 @@
 
 #include "backbone_router/bbr_manager.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/topology.hpp"
 

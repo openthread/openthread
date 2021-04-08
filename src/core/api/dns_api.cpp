@@ -36,7 +36,7 @@
 #include <openthread/dns_client.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "net/dns_client.hpp"
 #include "net/dns_types.hpp"
 

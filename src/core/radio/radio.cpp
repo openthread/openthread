@@ -28,7 +28,7 @@
 
 #include "radio.hpp"
 
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "utils/otns.hpp"
 
 namespace ot {

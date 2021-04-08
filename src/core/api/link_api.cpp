@@ -36,7 +36,7 @@
 #include <openthread/link.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "mac/mac.hpp"
 #include "radio/radio.hpp"
 

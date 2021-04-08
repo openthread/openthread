@@ -383,8 +383,8 @@ HEADERS_COMMON                                  = \
     common/instance.hpp                           \
     common/iterator_utils.hpp                     \
     common/linked_list.hpp                        \
-    common/locator-getters.hpp                    \
     common/locator.hpp                            \
+    common/locator_getters.hpp                    \
     common/logging.hpp                            \
     common/message.hpp                            \
     common/new.hpp                                \
