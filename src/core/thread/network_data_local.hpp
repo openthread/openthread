@@ -110,8 +110,9 @@ public:
      *
      * @param[in]  aConfig       A reference to the external route configuration.
      *
-     * @retval kErrorNone     Successfully added the Has Route entry.
-     * @retval kErrorNoBufs   Insufficient space to add the Has Route entry.
+     * @retval kErrorNone         Successfully added the Has Route entry.
+     * @retval kErrorInvalidArgs  One or more parameters in @p aConfig were invalid.
+     * @retval kErrorNoBufs       Insufficient space to add the Has Route entry.
      *
      */
     Error AddHasRoutePrefix(const ExternalRouteConfig &aConfig);

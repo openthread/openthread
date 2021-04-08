@@ -227,6 +227,11 @@ OT_TOOL_PACKED_BEGIN
 class HasRouteEntry : public Equatable<HasRouteEntry>
 {
 public:
+    enum : uint8_t
+    {
+        kNat64Flag = 1 << 5, // NAT64 flag.
+    };
+
     /**
      * This method initializes the header.
      *
@@ -272,6 +277,31 @@ public:
                   (aPrf == OT_ROUTE_PREFERENCE_HIGH));
         mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
     }
+
+    /**
+     * This method gets the Flags value.
+     *
+     * @returns The Flags value.
+     *
+     */
+    uint16_t GetFlags(void) const { return (mFlags & ~kPreferenceMask); }
+
+    /**
+     * This method sets the Flags value.
+     *
+     * @param[in]  aFlags  The Flags value.
+     *
+     */
+    void SetFlags(uint8_t aFlags) { mFlags = (mFlags & kPreferenceMask) | (aFlags & ~kPreferenceMask); }
+
+    /**
+     * This method indicates whether or not the NAT64 flag is set.
+     *
+     * @retval TRUE   If the NAT64 flag is set.
+     * @retval FALSE  If the NAT64 flag is not set.
+     *
+     */
+    bool IsNat64(void) const { return (mFlags & kNat64Flag) != 0; }
 
     /**
      * This method returns a pointer to the next HasRouteEntry.
