@@ -77,7 +77,7 @@ Error Server::UpdateService(void)
 
         while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
         {
-            if (!config.mDhcp)
+            if (!(config.mDhcp || config.mConfigure))
             {
                 continue;
             }
@@ -105,7 +105,7 @@ Error Server::UpdateService(void)
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
     {
-        if (!config.mDhcp)
+        if (!(config.mDhcp || config.mConfigure))
         {
             continue;
         }
