@@ -36,7 +36,7 @@
 #include <openthread/udp.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/new.hpp"
 #include "net/udp6.hpp"
 

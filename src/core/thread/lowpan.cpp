@@ -37,7 +37,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
 #include "thread/network_data_leader.hpp"

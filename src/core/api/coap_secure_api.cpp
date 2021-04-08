@@ -41,7 +41,7 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 

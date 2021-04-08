@@ -36,7 +36,7 @@
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
 #include "net/dns_types.hpp"

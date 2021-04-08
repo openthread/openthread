@@ -38,7 +38,7 @@
 #include <openthread/srp_client.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "net/srp_client.hpp"
 
 using namespace ot;

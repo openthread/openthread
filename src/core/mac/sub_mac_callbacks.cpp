@@ -35,7 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #include "mac/mac.hpp"
