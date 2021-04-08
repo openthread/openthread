@@ -716,6 +716,7 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
 
                 OutputLine("delay: %d", otChannelManagerGetDelay(mInstance));
                 OutputLine("interval: %u", otChannelManagerGetAutoChannelSelectionInterval(mInstance));
+                OutputLine("cca threshold: 0x%04x", otChannelManagerGetCcaFailureRateThreshold(mInstance));
                 OutputLine("supported: %s", supportedMask.ToString().AsCString());
                 OutputLine("favored: %s", supportedMask.ToString().AsCString());
             }
@@ -775,6 +776,14 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, char *aArgs[])
             VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
             SuccessOrExit(error = ParseAsUint32(aArgs[2], mask));
             otChannelManagerSetFavoredChannels(mInstance, mask);
+        }
+        else if (strcmp(aArgs[1], "threshold") == 0)
+        {
+            uint16_t threshold;
+
+            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
+            SuccessOrExit(error = ParseAsUint16(aArgs[2], threshold));
+            otChannelManagerSetCcaFailureRateThreshold(mInstance, threshold);
         }
         else
         {

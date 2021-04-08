@@ -136,4 +136,18 @@ void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannel
     return instance.Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
 }
 
+uint16_t otChannelManagerGetCcaFailureRateThreshold(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Utils::ChannelManager>().GetCcaFailureRateThreshold();
+}
+
+void otChannelManagerSetCcaFailureRateThreshold(otInstance *aInstance, uint16_t aThreshold)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Utils::ChannelManager>().SetCcaFailureRateThreshold(aThreshold);
+}
+
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
