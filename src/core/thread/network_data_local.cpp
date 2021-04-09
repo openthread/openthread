@@ -159,7 +159,8 @@ exit:
 
 Error Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
 {
-    return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, 0, aConfig.mStable);
+    return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, /* aFlags */ 0,
+                     aConfig.mStable);
 }
 
 Error Local::RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)

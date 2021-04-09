@@ -84,7 +84,7 @@ public:
     Error AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
-     * This method validates on mesh prefix.
+     * This method validates an on-mesh prefix.
      *
      * @param[in]  aConfig        A reference to the on-mesh perfix configuration.
      *
