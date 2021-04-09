@@ -63,7 +63,7 @@ jobs:
         export ASAN_OPTIONS=symbolize=1
         export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
         ./bootstrap
-        make -f examples/Makefile-simulation distcheck
+        VERBOSE=1 make -f examples/Makefile-simulation distcheck
 
   cli-ftd-otns:
     runs-on: ubuntu-20.04

@@ -293,10 +293,27 @@ class OtbrDocker:
                     record[1] = int(record[1])
                     if record[3] == 'SRV':
                         record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
+                    elif record[3] == 'TXT':
+                        record[4:] = [self.__parse_dns_dig_txt(record[4:])]
 
                 dig_result[section].append(tuple(record))
 
         return dig_result
+
+    def __parse_dns_dig_txt(self, txt_entries):
+        # Example txt_entries:
+        # ['"nn=OpenThread"', '"xp=\\000\\013\\184\\000\\000\\000\\000\\000"', '"tv=1.2.0"', '"dd=\\022n\\010\\000\\000\\000\\000\\001"']
+        txt = {}
+        for entry in txt_entries:
+            assert entry.startswith('"') and entry.endswith('"')
+            entry = entry[1:-1]
+            if entry == "":
+                continue
+
+            k, v = entry.split('=')
+            txt[k] = v
+
+        return txt
 
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
