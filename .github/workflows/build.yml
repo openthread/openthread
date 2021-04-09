@@ -147,8 +147,6 @@ jobs:
         # use the minimal required cmake version
         sudo pip3 install --system -U cmake==3.10.3
         cmake --version | grep 3.10.3
-        # required for jn5189 and k32w061
-        pip install pycryptodome
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
