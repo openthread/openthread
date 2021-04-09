@@ -318,7 +318,6 @@ class OtbrDocker:
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra_rt_info_max_plen=64')
-        self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.force_mld_version=2')
 
 
 class OtCli:
@@ -2668,7 +2667,9 @@ class LinuxHost():
         cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.ETH_DEV} {ip} &'
         self.bash(cmd)
 
-    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None, interface=None) -> int:
+    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5,
+        ttl=None, interface=None) -> int:
+
         cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
         if size is not None:
             cmd += f' -s {size}'
