@@ -181,6 +181,26 @@ int Interpreter::OutputIp6Address(const otIp6Address &aAddress)
         HostSwap16(aAddress.mFields.m16[5]), HostSwap16(aAddress.mFields.m16[6]), HostSwap16(aAddress.mFields.m16[7]));
 }
 
+otError Interpreter::ParseEnableOrDisable(const char *aString, bool &aEnable)
+{
+    otError error = OT_ERROR_NONE;
+
+    if (strcmp(aString, "enable") == 0)
+    {
+        aEnable = true;
+    }
+    else if (strcmp(aString, "disable") == 0)
+    {
+        aEnable = false;
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_COMMAND;
+    }
+
+    return error;
+}
+
 otError Interpreter::ParseJoinerDiscerner(char *aString, otJoinerDiscerner &aDiscerner)
 {
     otError error     = OT_ERROR_NONE;
@@ -268,25 +288,13 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError Interpreter::ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[])
 {
-    otError error  = OT_ERROR_NONE;
-    bool    enable = false;
+    otError error = OT_ERROR_NONE;
+    bool    enable;
 
     VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(aArgs[0], "enable") == 0)
-    {
-        enable = true;
-    }
-    else if (strcmp(aArgs[0], "disable") == 0)
-    {
-        enable = false;
-    }
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_COMMAND);
-    }
-
-    SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, enable));
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+    error = otBorderRoutingSetEnabled(mInstance, enable);
 
 exit:
     return error;
@@ -439,14 +447,11 @@ otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, char *aArgs
 {
     otError                error = OT_ERROR_NONE;
     otBackboneRouterConfig config;
+    bool                   enable;
 
-    if (strcmp(aArgs[0], "disable") == 0)
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
-        otBackboneRouterSetEnabled(mInstance, false);
-    }
-    else if (strcmp(aArgs[0], "enable") == 0)
-    {
-        otBackboneRouterSetEnabled(mInstance, true);
+        otBackboneRouterSetEnabled(mInstance, enable);
     }
     else if (strcmp(aArgs[0], "jitter") == 0)
     {
@@ -1077,18 +1082,15 @@ otError Interpreter::ProcessCoapSecure(uint8_t aArgsLength, char *aArgs[])
 otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
+    bool    enable;
 
     if (aArgsLength == 0)
     {
         OutputEnabledDisabledStatus(otPlatRadioIsCoexEnabled(mInstance));
     }
-    else if (strcmp(aArgs[0], "enable") == 0)
+    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
     {
-        error = otPlatRadioSetCoexEnabled(mInstance, true);
-    }
-    else if (strcmp(aArgs[0], "disable") == 0)
-    {
-        error = otPlatRadioSetCoexEnabled(mInstance, false);
+        error = otPlatRadioSetCoexEnabled(mInstance, enable);
     }
     else if (strcmp(aArgs[0], "metrics") == 0)
     {
@@ -1404,20 +1406,7 @@ otError Interpreter::ProcessDns(uint8_t aArgsLength, char *aArgs[])
             bool enable;
 
             VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-
-            if (strcmp(aArgs[1], "enable") == 0)
-            {
-                enable = true;
-            }
-            else if (strcmp(aArgs[1], "disable") == 0)
-            {
-                enable = false;
-            }
-            else
-            {
-                ExitNow(error = OT_ERROR_INVALID_COMMAND);
-            }
-
+            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
             otDnsSetNameCompressionEnabled(enable);
         }
     }
@@ -2052,18 +2041,10 @@ otError Interpreter::ProcessMulticastPromiscuous(uint8_t aArgsLength, char *aArg
     }
     else
     {
-        if (strcmp(aArgs[0], "enable") == 0)
-        {
-            otIp6SetMulticastPromiscuousEnabled(mInstance, true);
-        }
-        else if (strcmp(aArgs[0], "disable") == 0)
-        {
-            otIp6SetMulticastPromiscuousEnabled(mInstance, false);
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
+        bool enable;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+        otIp6SetMulticastPromiscuousEnabled(mInstance, enable);
     }
 
 exit:
@@ -3357,19 +3338,20 @@ otError Interpreter::ProcessPromiscuous(uint8_t aArgsLength, char *aArgs[])
     }
     else
     {
-        if (strcmp(aArgs[0], "enable") == 0)
-        {
-            SuccessOrExit(error = otLinkSetPromiscuous(mInstance, true));
-            otLinkSetPcapCallback(mInstance, &HandleLinkPcapReceive, this);
-        }
-        else if (strcmp(aArgs[0], "disable") == 0)
+        bool enable;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+
+        if (!enable)
         {
             otLinkSetPcapCallback(mInstance, nullptr, nullptr);
-            SuccessOrExit(error = otLinkSetPromiscuous(mInstance, false));
         }
-        else
+
+        SuccessOrExit(error = otLinkSetPromiscuous(mInstance, enable));
+
+        if (enable)
         {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            otLinkSetPcapCallback(mInstance, &HandleLinkPcapReceive, this);
         }
     }
 
@@ -3902,17 +3884,12 @@ otError Interpreter::ProcessRouterEligible(uint8_t aArgsLength, char *aArgs[])
     {
         OutputEnabledDisabledStatus(otThreadIsRouterEligible(mInstance));
     }
-    else if (strcmp(aArgs[0], "enable") == 0)
-    {
-        error = otThreadSetRouterEligible(mInstance, true);
-    }
-    else if (strcmp(aArgs[0], "disable") == 0)
-    {
-        error = otThreadSetRouterEligible(mInstance, false);
-    }
     else
     {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
+        bool enable;
+
+        SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+        error = otThreadSetRouterEligible(mInstance, enable);
     }
 
 exit:

@@ -94,6 +94,7 @@ exit:
 otError SrpClient::ProcessAutoStart(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
+    bool    enable;
 
     if (aArgsLength == 0)
     {
@@ -103,17 +104,15 @@ otError SrpClient::ProcessAutoStart(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(aArgs[0], "enable") == 0)
+    SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[0], enable));
+
+    if (enable)
     {
         otSrpClientEnableAutoStartMode(mInterpreter.mInstance, /* aCallback */ nullptr, /* aContext */ nullptr);
     }
-    else if (strcmp(aArgs[0], "disable") == 0)
-    {
-        otSrpClientDisableAutoStartMode(mInterpreter.mInstance);
-    }
     else
     {
-        error = OT_ERROR_INVALID_COMMAND;
+        otSrpClientDisableAutoStartMode(mInterpreter.mInstance);
     }
 
 exit:
@@ -133,19 +132,7 @@ otError SrpClient::ProcessCallback(uint8_t aArgsLength, char *aArgs[])
     }
 
     VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-
-    if (strcmp(aArgs[0], "enable") == 0)
-    {
-        mCallbackEnabled = true;
-    }
-    else if (strcmp(aArgs[0], "disable") == 0)
-    {
-        mCallbackEnabled = false;
-    }
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
+    error = Interpreter::ParseEnableOrDisable(aArgs[0], mCallbackEnabled);
 
 exit:
     return error;
@@ -397,20 +384,7 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, char *aArgs[])
         }
 
         VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-
-        if (strcmp(aArgs[1], "enable") == 0)
-        {
-            enable = true;
-        }
-        else if (strcmp(aArgs[1], "disable") == 0)
-        {
-            enable = false;
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_COMMAND);
-        }
-
+        SuccessOrExit(error = Interpreter::ParseEnableOrDisable(aArgs[1], enable));
         otSrpClientSetServiceKeyRecordEnabled(mInterpreter.mInstance, enable);
     }
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
