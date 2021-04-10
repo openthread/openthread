@@ -38,7 +38,7 @@
 #include <openthread/channel_manager.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "utils/channel_manager.hpp"
 
 using namespace ot;

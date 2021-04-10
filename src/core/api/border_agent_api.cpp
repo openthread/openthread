@@ -38,7 +38,7 @@
 #include <openthread/border_agent.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 

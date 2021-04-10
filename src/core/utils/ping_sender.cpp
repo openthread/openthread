@@ -36,7 +36,7 @@
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
 #include "common/encoding.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/random.hpp"
 
 namespace ot {
