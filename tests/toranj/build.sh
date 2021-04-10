@@ -74,6 +74,9 @@ while [ $# -ge 2 ]; do
             tests=yes
             shift
             ;;
+        "")
+            shift
+            ;;
         *)
             echo "Error: Unknown option \"$1\""
             display_usage
