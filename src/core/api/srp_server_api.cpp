@@ -83,11 +83,11 @@ void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstanc
     instance.Get<Srp::Server>().SetServiceHandler(aServiceHandler, aContext);
 }
 
-void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, const otSrpServerHost *aHost, otError aError)
+void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, otSrpServerServiceUpdateId aId, otError aError)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Srp::Server>().HandleServiceUpdateResult(static_cast<const Srp::Server::Host *>(aHost), aError);
+    instance.Get<Srp::Server>().HandleServiceUpdateResult(aId, aError);
 }
 
 const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrpServerHost *aHost)
