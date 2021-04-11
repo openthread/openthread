@@ -32,7 +32,7 @@ import unittest
 
 import pktverify
 from pktverify import packet_verifier, packet_filter
-from pktverify.consts import MA1, MA1g, MA2
+from pktverify.consts import MA1, MA1g, MA2, PBBR_ALOC
 import config
 import thread_cert
 
@@ -162,7 +162,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # "coap://[<BR_1 RLOC or PBBR ALOC>]:MM/n/mr".
         # The payload contains "IPv6Address TLV: MA1".
         pkts.filter_wpan_src64(vars['TD']) \
-            .filter_ipv6_2dsts(vars['BR_1_RLOC'], vars['LEADER_ALOC']) \
+            .filter_ipv6_2dsts(vars['BR_1_RLOC'], PBBR_ALOC) \
             .filter_coap_request('/n/mr') \
             .filter(lambda p: p.thread_meshcop.tlv.ipv6_addr == [MA1]) \
             .must_next()
