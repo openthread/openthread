@@ -72,8 +72,6 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mRouterSolicitCount(0)
     , mRoutingPolicyTimer(aInstance, HandleRoutingPolicyTimer)
 {
-    mInfraIfLinkLocalAddress.Clear();
-
     mLocalOmrPrefix.Clear();
     memset(mAdvertisedOmrPrefixes, 0, sizeof(mAdvertisedOmrPrefixes));
 
@@ -82,7 +80,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     memset(mDiscoveredPrefixes, 0, sizeof(mDiscoveredPrefixes));
 }
 
-Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress)
+Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
     Error error;
 
@@ -95,7 +93,7 @@ Error RoutingManager::Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const
     mInfraIfIndex = aInfraIfIndex;
 
     // Initialize the infra interface status.
-    SuccessOrExit(error = HandleInfraIfStateChanged(mInfraIfIndex, aInfraIfIsRunning, aInfraIfLinkLocalAddress));
+    SuccessOrExit(error = HandleInfraIfStateChanged(mInfraIfIndex, aInfraIfIsRunning));
 
 exit:
     if (error != kErrorNone)
@@ -175,7 +173,7 @@ exit:
 
 void RoutingManager::EvaluateState(void)
 {
-    if (mIsEnabled && Get<Mle::MleRouter>().IsAttached() && mInfraIfIsRunning && mInfraIfLinkLocalAddress.IsLinkLocal())
+    if (mIsEnabled && Get<Mle::MleRouter>().IsAttached() && mInfraIfIsRunning)
     {
         Start();
     }
@@ -242,13 +240,9 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
 {
     Error                    error = kErrorNone;
     const Ip6::Icmp::Header *icmp6Header;
-    const Ip6::Address *     infraLinkLocalAddr;
 
     VerifyOrExit(IsInitialized() && mIsRunning, error = kErrorDrop);
-
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = kErrorDrop);
-    infraLinkLocalAddr = static_cast<const Ip6::Address *>(&mInfraIfLinkLocalAddress);
-
     VerifyOrExit(aBuffer != nullptr && aBufferLength >= sizeof(*icmp6Header), error = kErrorParse);
 
     icmp6Header = reinterpret_cast<const Ip6::Icmp::Header *>(aBuffer);
@@ -260,7 +254,7 @@ void RoutingManager::RecvIcmp6Message(uint32_t            aInfraIfIndex,
         break;
     case Ip6::Icmp::Header::kTypeRouterSolicit:
         // Drop Router Solicitations initiated from infra interface.
-        VerifyOrExit(aSrcAddress != *infraLinkLocalAddr, error = kErrorDrop);
+        VerifyOrExit(!otPlatInfraIfHasAddress(mInfraIfIndex, &aSrcAddress), error = kErrorDrop);
         HandleRouterSolicit(aSrcAddress, aBuffer, aBufferLength);
         break;
     default:
@@ -274,29 +268,18 @@ exit:
     }
 }
 
-Error RoutingManager::HandleInfraIfStateChanged(uint32_t            aInfraIfIndex,
-                                                bool                aIsRunning,
-                                                const Ip6::Address *aLinkLocalAddress)
+Error RoutingManager::HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning)
 {
     Error error = kErrorNone;
 
     VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
     VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = kErrorInvalidArgs);
-    VerifyOrExit(aLinkLocalAddress == nullptr || aLinkLocalAddress->IsLinkLocal(), error = kErrorInvalidArgs);
+    VerifyOrExit(aIsRunning != mInfraIfIsRunning);
 
-    otLogInfoBr("infra interface state changed: %s, link-local-addr=%s", aIsRunning ? "RUNNING" : "NOT RUNNING",
-                (aLinkLocalAddress != nullptr) ? aLinkLocalAddress->ToString().AsCString() : "(null)");
+    otLogInfoBr("infra interface (%u) state changed: %sRUNNING -> %sRUNNING", aInfraIfIndex,
+                (mInfraIfIsRunning ? "" : "NOT "), (aIsRunning ? "" : "NOT "));
 
     mInfraIfIsRunning = aIsRunning;
-    if (aLinkLocalAddress == nullptr)
-    {
-        mInfraIfLinkLocalAddress.Clear();
-    }
-    else
-    {
-        mInfraIfLinkLocalAddress = *aLinkLocalAddress;
-    }
-
     EvaluateState();
 
 exit:
