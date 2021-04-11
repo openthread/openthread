@@ -62,6 +62,8 @@ from consts import MA1, MA1g, MA2
 
 CHANNEL1 = 18
 
+MLR_NOTIFICATION_TIMEOUT = 3600
+
 
 class MATN_02_MLRFirstUse(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -105,19 +107,18 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         br1.start()
         self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
-        
+        self.assertTrue(br1.is_primary_backbone_router)
+
         td.start()
         self.simulator.go(5)
-        self.assertEqual('child', td.get_state())
+        self.assertEqual('router', td.get_state())
+
         br2.start()
         self.simulator.go(5)
-        host.start(start_radvd=True)
-
-        self.simulator.go(10)
-
-        self.assertEqual('leader', br1.get_state())
-        self.assertTrue(br1.is_primary_backbone_router)
         self.assertEqual('router', br2.get_state())
+
+        host.start(start_radvd=False)
+        self.simulator.go(10)
 
         # 1. TD registers for multicast address, MA1, at BR_1.
         td.add_ipmaddr(MA1)
@@ -128,23 +129,28 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         self.assertTrue(host.ping(MA1, backbone=True, ttl=10,
                                   interface=host.get_ip6_address(
                                       config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.simulator.go(5)
+
         # 11. Host sends a ping packet to the multicast address, MA2. No one
         # should respond.
         self.assertFalse(host.ping(MA2, backbone=True, ttl=10,
                                    interface=host.get_ip6_address(
                                        config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.simulator.go(5)
 
         # 14. Host sends a ping packet to the multicast address, MA1g. No one
         # should respond.
         self.assertFalse(host.ping(MA1g, backbone=True, ttl=10,
                                    interface=host.get_ip6_address(
                                        config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.simulator.go(5)
 
         # 17. Host sends a ping packet to the global unicast address of BR2. BR2
         # should respond.
         self.assertTrue(
             host.ping(br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
                       backbone=True, ttl=10))
+        self.simulator.go(5)
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
@@ -177,7 +183,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_1']) \
             .filter_ipv6_dst(vars['TD_RLOC']) \
             .filter_coap_ack('/n/mr') \
-            .filter(lambda p: p.coap.code == 68 and p.thread_nm.tlv.status == 0) \
+            .filter(lambda p: p.thread_nm.tlv.status == 0) \
             .must_next()
 
         # 3a. BR_2 does not respond to the multicast registration.
@@ -194,7 +200,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
             .filter_coap_request('/b/bmr') \
             .filter(lambda
                         p: p.thread_meshcop.tlv.ipv6_addr == [MA1] and
-                           p.thread_bl.tlv.timeout == 3600) \
+                           p.thread_bl.tlv.timeout == MLR_NOTIFICATION_TIMEOUT) \
             .must_next()
 
         # 6. BR_1 multicasts an MLDv2 message to start listening to MA1.
@@ -210,7 +216,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # 8. BR_2 does not forward the ping packet with multicast address MA1 to
         # its Thread Network.
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_ipv6_dst(MA1) \
+            .filter_AMPLFMA() \
             .filter_ping_request() \
             .must_not_next()
 
@@ -234,20 +240,21 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # TD receives the MPL packet containing an encapsulated ping packet to
         # MA1, sent by Host, and unicasts a ping response packet back to Host.
         pkts.filter_wpan_src64(vars['TD']) \
+            .filter_ipv6_src_dst(vars['TD_RLOC'], vars['Host_BLLA']) \
             .filter_ping_reply() \
             .must_next()
 
         # 13. BR_1 does not forward the ping packet with multicast address, MA2,
         # to the Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_ipv6_dst(MA2) \
+            .filter_AMPLFMA() \
             .filter_ping_request() \
             .must_not_next()
 
         # 15. BR_2 does not forward the ping packet with multicast address MA1g,
         # to the Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_ipv6_dst(MA1g) \
+            .filter_AMPLFMA() \
             .filter_ping_request() \
             .must_not_next()
 
