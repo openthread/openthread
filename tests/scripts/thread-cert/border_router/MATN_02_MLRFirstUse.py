@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,11 +28,11 @@
 #
 
 import logging
+import unittest
+
 import pktverify
 from pktverify import packet_verifier
 from pktverify.packet_verifier import consts
-import unittest
-
 import config
 import thread_cert
 
@@ -58,9 +58,7 @@ BR_2 = 2
 TD = 3
 HOST = 4
 
-MA1 = consts.MA1
-MA1g = consts.MA1g
-MA2 = consts.MA2
+from consts import MA1, MA1g, MA2
 
 CHANNEL1 = 18
 
@@ -106,8 +104,11 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
 
         br1.start()
         self.simulator.go(5)
+        self.assertEqual('leader', br1.get_state())
+        
         td.start()
         self.simulator.go(5)
+        self.assertEqual('child', td.get_state())
         br2.start()
         self.simulator.go(5)
         host.start(start_radvd=True)
@@ -120,7 +121,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
 
         # 1. TD registers for multicast address, MA1, at BR_1.
         td.add_ipmaddr(MA1)
-        self.simulator.go(10)
+        self.simulator.go(5)
 
         # 7. Host sends a ping packet to the multicast address, MA1. TD should
         # respond to the ping request.
