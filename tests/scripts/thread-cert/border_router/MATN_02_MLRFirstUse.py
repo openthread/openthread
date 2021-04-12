@@ -123,29 +123,24 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # 7. Host sends a ping packet to the multicast address, MA1. TD should
         # respond to the ping request.
         self.assertTrue(
-            host.ping(MA1, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 11. Host sends a ping packet to the multicast address, MA2. No one
         # should respond.
         self.assertFalse(
-            host.ping(MA2, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA2, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 14. Host sends a ping packet to the multicast address, MA1g. No one
         # should respond.
         self.assertFalse(
-            host.ping(MA1g, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1g, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 17. Host sends a ping packet to the global unicast address of BR2. BR2
         # should respond.
-        self.assertTrue(
-            host.ping(br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
-                      backbone=True, ttl=10))
+        self.assertTrue(host.ping(br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA), backbone=True, ttl=10))
         self.simulator.go(5)
 
         self.collect_ipaddrs()

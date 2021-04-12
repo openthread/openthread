@@ -573,14 +573,12 @@ class PacketFilter(object):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
 
     def filter_AMPLFMA(self, mpl_seed_id: (Ipv6Addr, int) = None, **kwargs):
-        f = self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA,
-                        **kwargs)
+        f = self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
         if mpl_seed_id is not None:
             rloc, rloc16 = mpl_seed_id
             rloc16 = Bytes([rloc16 >> 8, rloc16 & 0xFF])
-            f = f.filter(lambda p: (
-                                           p.ipv6.src == rloc and p.ipv6.opt.mpl.flag.s == 0) or (
-                                           p.ipv6.src != rloc and p.ipv6.opt.mpl.flag.s == 1 and p.ipv6.opt.mpl.seed_id == rloc16))
+            f = f.filter(lambda p: (p.ipv6.src == rloc and p.ipv6.opt.mpl.flag.s == 0) or
+                         (p.ipv6.src != rloc and p.ipv6.opt.mpl.flag.s == 1 and p.ipv6.opt.mpl.seed_id == rloc16))
         return f
 
     def filter_mle(self, **kwargs):
