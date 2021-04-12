@@ -110,8 +110,10 @@ static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
-    otInstance *        instance = nullptr;
-    ot::Posix::RadioUrl radioUrl(get802154RadioUrl(aPlatformConfig));
+    otInstance *instance = nullptr;
+    // radioUrl must be static to prevent from having dangling pointers after this function call ends
+    // and we still need to refer to the radioUrl from HdlcInterface object
+    static ot::Posix::RadioUrl radioUrl(get802154RadioUrl(aPlatformConfig));
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     // The last argument must be the node id

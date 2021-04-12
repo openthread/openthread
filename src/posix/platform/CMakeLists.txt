@@ -53,6 +53,17 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
+option(OT_SPINEL_RESET_CONNECTION "reset connection after hard resetting RCP(USB CDC ACM) device" OFF)
+if (OT_SPINEL_RESET_CONNECTION)
+    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION=1")
+    find_library(LIBUDEV "udev")
+    if (LIBUDEV)
+        set(UDEV_LINK_LIBRARIES "${LIBUDEV}")
+    else()
+        message(FATAL_ERROR "test for udev failed")
+    endif()
+endif()
+
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
@@ -86,6 +97,7 @@ target_link_libraries(openthread-posix
         openthread-url
         ot-config
         util
+        ${UDEV_LINK_LIBRARIES}
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
 )
 
