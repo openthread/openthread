@@ -283,6 +283,19 @@ public:
     void OutputEnabledDisabledStatus(bool aEnabled);
 
     /**
+     * This static method checks a given string against "enable" or "disable" commands.
+     *
+     * @param[in]  aString  The string to parse.
+     * @param[out] aEnable  Boolean variable to return outcome on success.
+     *                      Set to TRUE for "enable" command, and FALSE for "disable" command.
+     *
+     * @retval OT_ERROR_NONE             Successfully parsed the @p aString and updated @p aEnable.
+     * @retval OT_ERROR_INVALID_COMMAND  The @p aString is not "enable" or "disable" command.
+     *
+     */
+    static otError ParseEnableOrDisable(const char *aString, bool &aEnable);
+
+    /**
      * This method sets the user command table.
      *
      * @param[in]  aUserCommands  A pointer to an array with user commands.

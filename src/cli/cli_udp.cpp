@@ -216,17 +216,9 @@ otError UdpExample::ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[])
     {
         mInterpreter.OutputEnabledDisabledStatus(mLinkSecurityEnabled);
     }
-    else if (strcmp(aArgs[0], "enable") == 0)
-    {
-        mLinkSecurityEnabled = true;
-    }
-    else if (strcmp(aArgs[0], "disable") == 0)
-    {
-        mLinkSecurityEnabled = false;
-    }
     else
     {
-        error = OT_ERROR_INVALID_COMMAND;
+        error = Interpreter::ParseEnableOrDisable(aArgs[0], mLinkSecurityEnabled);
     }
 
     return error;
