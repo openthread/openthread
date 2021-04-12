@@ -205,7 +205,7 @@ void platformDaemonDisable(void)
 
     if (gPlatResetReason != OT_PLAT_RESET_REASON_SOFTWARE)
     {
-        otLogCritPlat("Removing daemon socket: %s", OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+        otLogDebgPlat("Removing daemon socket: %s", OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
         (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
     }
 
