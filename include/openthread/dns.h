@@ -38,6 +38,7 @@
 #include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/instance.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -139,6 +140,32 @@ void otDnsInitTxtEntryIterator(otDnsTxtEntryIterator *aIterator, const uint8_t *
  *
  */
 otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aEntry);
+
+/**
+ * This function enables/disables the "DNS name compression" mode.
+ *
+ * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This
+ * is applicable to OpenThread's DNS and SRP client/server modules.
+ *
+ * This is intended for testing only and available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` config is enabled.
+ *
+ * Note that in the case `OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE` is used, this mode applies to all OpenThread
+ * instances (i.e., calling this function enables/disables the compression mode on all OpenThread instances).
+ *
+ * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
+ *
+ */
+void otDnsSetNameCompressionEnabled(bool aEnabled);
+
+/**
+ * This function indicates whether the "DNS name compression" mode is enabled or not.
+ *
+ * This is intended for testing only and available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` config is enabled.
+ *
+ * @returns TRUE if the "DNS name compression" mode is enabled, FALSE otherwise.
+ *
+ */
+bool otDnsIsNameCompressionEnabled(void);
 
 /**
  * @}

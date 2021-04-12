@@ -34,6 +34,7 @@
 #include "openthread-core-config.h"
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+
 #include <openthread/backbone_router.h>
 #include "common/instance.hpp"
 

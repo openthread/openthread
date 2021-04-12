@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
 #include <openthread/dns_client.h>
 
 #include "common/clearable.hpp"
@@ -684,5 +686,7 @@ private:
 
 } // namespace Dns
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #endif // DNS_CLIENT_HPP_

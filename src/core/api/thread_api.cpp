@@ -33,16 +33,17 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
 #include <openthread/thread.h>
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/settings.hpp"
 
 using namespace ot;
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
 uint32_t otThreadGetChildTimeout(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -515,4 +516,5 @@ void otThreadRegisterParentResponseCallback(otInstance *                   aInst
 
     instance.Get<Mle::MleRouter>().RegisterParentResponseStatsCallback(aCallback, aContext);
 }
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

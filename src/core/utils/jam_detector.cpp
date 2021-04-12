@@ -33,14 +33,14 @@
 
 #include "jam_detector.hpp"
 
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 namespace ot {
 namespace Utils {

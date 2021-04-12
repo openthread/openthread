@@ -124,7 +124,8 @@
 /**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD
  *
- * Minimum CCA failure rate threshold on current channel before Channel Manager starts channel selection attempt.
+ * Default minimum CCA failure rate threshold on current channel before Channel Manager starts channel selection
+ * attempt.
  *
  * Value 0 maps to 0% and 0xffff maps to 100%.
  *

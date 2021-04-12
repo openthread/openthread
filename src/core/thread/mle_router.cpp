@@ -30,15 +30,15 @@
  *   This file implements MLE functionality required for the Thread Router and Leader roles.
  */
 
-#if OPENTHREAD_FTD
-
 #include "mle_router.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"

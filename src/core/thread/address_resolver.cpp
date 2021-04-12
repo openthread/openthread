@@ -31,16 +31,16 @@
  *   This file implements Thread's EID-to-RLOC mapping and caching.
  */
 
-#if OPENTHREAD_FTD
-
 #include "address_resolver.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/time.hpp"
 #include "mac/mac_types.hpp"

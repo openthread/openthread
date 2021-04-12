@@ -54,6 +54,7 @@
  * @{
  *
  * @defgroup api-dns                  DNSv6
+ * @defgroup api-dnssd-server         DNS-SD Server
  * @defgroup api-icmp6                ICMPv6
  * @defgroup api-ip6                  IPv6
  * @defgroup api-srp                  SRP

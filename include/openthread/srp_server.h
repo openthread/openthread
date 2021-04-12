@@ -68,6 +68,12 @@ typedef void otSrpServerHost;
 typedef void otSrpServerService;
 
 /**
+ * The ID of a SRP service update transaction on the SRP Server.
+ *
+ */
+typedef uint32_t otSrpServerServiceUpdateId;
+
+/**
  * This method returns the domain authorized to the SRP server.
  *
  * If the domain if not set by SetDomain, "default.service.arpa." will be returned.
@@ -144,11 +150,11 @@ otError otSrpServerSetLeaseRange(otInstance *aInstance,
  * if any validation fails. For example, an Advertising Proxy should advertise (or remove) the host and
  * services on a multicast-capable link and returns specific error code if any failure occurs.
  *
- * @param[in]  aHost     A pointer to the otSrpServerHost object which contains the SRP updates.
- *                       The pointer should be passed back to otSrpServerHandleServiceUpdateResult, but
- *                       the content MUST not be accessed after this method returns. The handler
- *                       should publish/un-publish the host and each service points to this host
- *                       with below rules:
+ * @param[in]  aId       The service update transaction ID. This ID must be passed back with
+ *                       `otSrpServerHandleServiceUpdateResult`.
+ * @param[in]  aHost     A pointer to the otSrpServerHost object which contains the SRP updates. The
+ *                       handler should publish/un-publish the host and each service points to this
+ *                       host with below rules:
  *                         1. If the host is not deleted (indicated by `otSrpServerHostIsDeleted`),
  *                            then it should be published or updated with mDNS. Otherwise, the host
  *                            should be un-published (remove AAAA RRs).
@@ -163,7 +169,10 @@ otError otSrpServerSetLeaseRange(otInstance *aInstance,
  * @sa otSrpServerHandleServiceUpdateResult
  *
  */
-typedef void (*otSrpServerServiceUpdateHandler)(const otSrpServerHost *aHost, uint32_t aTimeout, void *aContext);
+typedef void (*otSrpServerServiceUpdateHandler)(otSrpServerServiceUpdateId aId,
+                                                const otSrpServerHost *    aHost,
+                                                uint32_t                   aTimeout,
+                                                void *                     aContext);
 
 /**
  * This method sets the SRP service updates handler on SRP server.
@@ -185,12 +194,13 @@ void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstanc
  * processing of a SRP update.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
- * @param[in]  aHost      A pointer to the Host object which represents a SRP update.
+ * @param[in]  aId        The service update transaction ID. This should be the same ID
+ *                        provided via `otSrpServerServiceUpdateHandler`.
  * @param[in]  aError     An error to be returned to the SRP server. Use OT_ERROR_DUPLICATED
  *                        to represent DNS name conflicts.
  *
  */
-void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, const otSrpServerHost *aHost, otError aError);
+void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, otSrpServerServiceUpdateId aId, otError aError);
 
 /**
  * This method returns the next registered host on the SRP server.

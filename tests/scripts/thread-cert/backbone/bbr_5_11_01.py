@@ -126,9 +126,8 @@ class BBR_5_11_01(thread_cert.TestCase):
         self.assertTrue(self.nodes[BR_1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
                                               backbone=True))
 
-        # Step 23: Host sends ping packet to destination Dg
-        # TODO: (DUA) implement DUA routing on OTBR
-        self.assertFalse(self.nodes[HOST].ping(Dg, backbone=True))
+        # Step 23: Host sends ping packet to destination Dg (successful if DUA features work)
+        self.assertTrue(self.nodes[HOST].ping(Dg, backbone=True))
 
     def verify(self, pv: PacketVerifier):
         pkts = pv.pkts

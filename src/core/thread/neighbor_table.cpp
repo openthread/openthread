@@ -35,7 +35,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "thread/dua_manager.hpp"
 
 namespace ot {
@@ -267,7 +267,9 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
         {
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
         case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+#if OPENTHREAD_FTD
             static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<const Child &>(aNeighbor));
+#endif
             break;
 
         case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:

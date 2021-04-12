@@ -235,6 +235,7 @@ public:
      */
     void SetDiscoverParameters(const Mac::ChannelMask &aScanChannels);
 
+#if OPENTHREAD_FTD
     /**
      * This method frees any messages queued for an existing child.
      *
@@ -244,6 +245,7 @@ public:
      *
      */
     void RemoveMessages(Child &aChild, Message::SubType aSubType);
+#endif
 
     /**
      * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.

@@ -374,10 +374,9 @@ private:
     otError ProcessDiag(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessDiscover(uint8_t aArgsLength, char *aArgs[]);
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
     otError ProcessDns(uint8_t aArgsLength, char *aArgs[]);
-#endif
 #if OPENTHREAD_FTD
+    void    OutputEidCacheEntry(const otCacheEntryInfo &aEntry);
     otError ProcessEidCache(uint8_t aArgsLength, char *aArgs[]);
 #endif
     otError ProcessEui64(uint8_t aArgsLength, char *aArgs[]);
@@ -671,9 +670,7 @@ private:
         {"diag", &Interpreter::ProcessDiag},
 #endif
         {"discover", &Interpreter::ProcessDiscover},
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
         {"dns", &Interpreter::ProcessDns},
-#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"domainname", &Interpreter::ProcessDomainName},
 #endif

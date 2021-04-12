@@ -31,16 +31,16 @@
  *   This file implements the Joiner Router role.
  */
 
-#if OPENTHREAD_FTD
-
 #include "joiner_router.hpp"
+
+#if OPENTHREAD_FTD
 
 #include <stdio.h>
 
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_tlvs.hpp"

@@ -28,17 +28,17 @@
 
 #include "srp_client.hpp"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "common/string.hpp"
 #include "thread/network_data_service.hpp"
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 /**
  * @file

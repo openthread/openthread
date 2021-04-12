@@ -31,16 +31,16 @@
  *   This file implements a MeshCoP Leader.
  */
 
-#if OPENTHREAD_FTD
-
 #include "meshcop_leader.hpp"
+
+#if OPENTHREAD_FTD
 
 #include <stdio.h>
 
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"

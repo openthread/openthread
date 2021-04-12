@@ -33,16 +33,16 @@
 
 #include "network_data_local.hpp"
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
 namespace ot {
 namespace NetworkData {
@@ -54,10 +54,9 @@ Local::Local(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-Error Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
+Error Local::ValidateOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
-    Error    error;
-    uint16_t flags = 0;
+    Error error = kErrorNone;
 
     // Add Prefix validation check:
     // Thread 1.1 Specification 5.13.2 says
@@ -68,6 +67,19 @@ Error Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
     // An IPv6 address prefix used for stateless autoconfiguration [RFC4862]
     // of an IEEE 802.15.4 interface MUST have a length of 64 bits.
     VerifyOrExit(!aConfig.mSlaac || aConfig.mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = kErrorInvalidArgs);
+
+    SuccessOrExit(error = ValidatePrefixAndPreference(aConfig.GetPrefix(), aConfig.mPreference));
+
+exit:
+    return error;
+}
+
+Error Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
+{
+    uint16_t flags = 0;
+    Error    error = kErrorNone;
+
+    SuccessOrExit(error = ValidateOnMeshPrefix(aConfig));
 
     if (aConfig.mPreferred)
     {
@@ -123,6 +135,28 @@ Error Local::RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
     return RemovePrefix(aPrefix, NetworkDataTlv::kTypeBorderRouter);
 }
 
+Error Local::ValidatePrefixAndPreference(const Ip6::Prefix &aPrefix, int8_t aPrf)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit((aPrefix.GetLength() > 0) && aPrefix.IsValid(), error = kErrorInvalidArgs);
+
+    switch (aPrf)
+    {
+    case OT_ROUTE_PREFERENCE_LOW:
+    case OT_ROUTE_PREFERENCE_MED:
+    case OT_ROUTE_PREFERENCE_HIGH:
+        break;
+    default:
+        ExitNow(error = kErrorInvalidArgs);
+    }
+
+    // Check if the prefix overlaps mesh-local prefix.
+    VerifyOrExit(!aPrefix.ContainsPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix()), error = kErrorInvalidArgs);
+exit:
+    return error;
+}
+
 Error Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
 {
     return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, /* aFlags */ 0,
@@ -144,19 +178,7 @@ Error Local::AddPrefix(const Ip6::Prefix &  aPrefix,
     uint8_t    subTlvLength;
     PrefixTlv *prefixTlv;
 
-    VerifyOrExit((aPrefix.GetLength() > 0) && aPrefix.IsValid(), error = kErrorInvalidArgs);
-
-    switch (aPrf)
-    {
-    case OT_ROUTE_PREFERENCE_LOW:
-    case OT_ROUTE_PREFERENCE_MED:
-    case OT_ROUTE_PREFERENCE_HIGH:
-        break;
-    default:
-        ExitNow(error = kErrorInvalidArgs);
-    }
-
-    VerifyOrExit(!aPrefix.ContainsPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix()), error = kErrorInvalidArgs);
+    SuccessOrExit(error = ValidatePrefixAndPreference(aPrefix, aPrf));
 
     IgnoreError(RemovePrefix(aPrefix, aSubTlvType));
 

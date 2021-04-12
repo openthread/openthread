@@ -33,16 +33,16 @@
 
 #include "slaac_address.hpp"
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/sha256.hpp"
 #include "net/ip6_address.hpp"
-
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 namespace ot {
 namespace Utils {

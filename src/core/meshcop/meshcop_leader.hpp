@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "coap/coap.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -143,5 +145,7 @@ private:
 
 } // namespace MeshCoP
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // MESHCOP_LEADER_HPP_

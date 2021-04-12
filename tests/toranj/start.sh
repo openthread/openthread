@@ -114,18 +114,18 @@ esac
 if [ "$use_posix_with_rcp" = "no" ]; then
     if [ "$TORANJ_RADIO" = "multi" ]; then
         # Build all combinations
-        ./build.sh ${coverage_option} ncp-15.4 || die "ncp-15.4 build failed"
+        ./build.sh "${coverage_option}" ncp-15.4 || die "ncp-15.4 build failed"
         (cd ${top_builddir} && make clean) || die "cd and clean failed"
-        ./build.sh ${coverage_option} ncp-trel || die "ncp-trel build failed"
+        ./build.sh "${coverage_option}" ncp-trel || die "ncp-trel build failed"
         (cd ${top_builddir} && make clean) || die "cd and clean failed"
-        ./build.sh ${coverage_option} ncp-15.4+trel || die "ncp-15.4+trel build failed"
+        ./build.sh "${coverage_option}" ncp-15.4+trel || die "ncp-15.4+trel build failed"
         (cd ${top_builddir} && make clean) || die "cd and clean failed"
     else
-        ./build.sh ${coverage_option} ncp-"${TORANJ_RADIO}" || die "ncp build failed"
+        ./build.sh "${coverage_option}" ncp-"${TORANJ_RADIO}" || die "ncp build failed"
     fi
 else
-    ./build.sh ${coverage_option} rcp || die "rcp build failed"
-    ./build.sh ${coverage_option} posix-"${TORANJ_RADIO}" || die "posix build failed"
+    ./build.sh "${coverage_option}" rcp || die "rcp build failed"
+    ./build.sh "${coverage_option}" posix-"${TORANJ_RADIO}" || die "posix build failed"
 
     if [ "$TORANJ_RADIO" = "trel" ]; then
         prepare_trel_link

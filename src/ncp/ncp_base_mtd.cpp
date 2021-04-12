@@ -209,6 +209,84 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
+{
+    otError error   = OT_ERROR_NONE;
+    uint8_t metrics = 0;
+
+    SuccessOrExit(error = mDecoder.ReadUint8(metrics));
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_PDU_COUNT)
+    {
+        VerifyOrExit(aAllowPduCount, error = OT_ERROR_INVALID_ARGS);
+        aMetrics->mPduCount = true;
+    }
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_LQI)
+    {
+        aMetrics->mLqi = true;
+    }
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_LINK_MARGIN)
+    {
+        aMetrics->mLinkMargin = true;
+    }
+
+    if (metrics & SPINEL_THREAD_LINK_METRIC_RSSI)
+    {
+        aMetrics->mRssi = true;
+    }
+
+exit:
+    return error;
+}
+
+otError NcpBase::EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValues)
+{
+    otError error = OT_ERROR_NONE;
+
+    SuccessOrExit(error = mEncoder.OpenStruct());
+
+    if (aMetricsValues->mMetrics.mPduCount)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_PDU_COUNT));
+        SuccessOrExit(error = mEncoder.WriteUint32(aMetricsValues->mPduCountValue));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+    if (aMetricsValues->mMetrics.mLqi)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_LQI));
+        SuccessOrExit(error = mEncoder.WriteUint8(aMetricsValues->mLqiValue));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+    if (aMetricsValues->mMetrics.mLinkMargin)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_LINK_MARGIN));
+        SuccessOrExit(error = mEncoder.WriteUint8(aMetricsValues->mLinkMarginValue));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+    if (aMetricsValues->mMetrics.mRssi)
+    {
+        SuccessOrExit(error = mEncoder.OpenStruct());
+        SuccessOrExit(error = mEncoder.WriteUint8(SPINEL_THREAD_LINK_METRIC_RSSI));
+        SuccessOrExit(error = mEncoder.WriteInt8(aMetricsValues->mRssiValue));
+        SuccessOrExit(error = mEncoder.CloseStruct());
+    }
+
+    SuccessOrExit(error = mEncoder.CloseStruct());
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_CSL_PERIOD>(void)
 {
@@ -3039,6 +3117,105 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_QUERY>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    struct otIp6Address address;
+    uint8_t             seriesId;
+    otLinkMetrics       linkMetrics = {};
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
+    SuccessOrExit(error = DecodeLinkMetrics(&linkMetrics, true));
+
+    error =
+        otLinkMetricsQuery(mInstance, &address, seriesId, &linkMetrics, &NcpBase::HandleLinkMetricsReport_Jump, this);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_PROBE>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    struct otIp6Address address;
+    uint8_t             seriesId;
+    uint8_t             length;
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
+    SuccessOrExit(error = mDecoder.ReadUint8(length));
+
+    error = otLinkMetricsSendLinkProbe(mInstance, &address, seriesId, length);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK>(void)
+{
+    otError             error = OT_ERROR_NONE;
+    struct otIp6Address address;
+    uint8_t             controlFlags;
+    otLinkMetrics       linkMetrics = {};
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadUint8(controlFlags));
+    SuccessOrExit(error = DecodeLinkMetrics(&linkMetrics, false));
+
+    error = otLinkMetricsConfigEnhAckProbing(mInstance, &address, static_cast<otLinkMetricsEnhAckFlags>(controlFlags),
+                                             controlFlags ? &linkMetrics : nullptr,
+                                             &NcpBase::HandleLinkMetricsMgmtResponse_Jump, this,
+                                             &NcpBase::HandleLinkMetricsEnhAckProbingIeReport_Jump, this);
+
+exit:
+    return error;
+}
+
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD>(void)
+{
+    otError                  error = OT_ERROR_NONE;
+    struct otIp6Address      address;
+    uint8_t                  seriesId;
+    uint8_t                  types;
+    otLinkMetrics            linkMetrics = {};
+    otLinkMetricsSeriesFlags seriesFlags = {};
+
+    SuccessOrExit(error = mDecoder.ReadIp6Address(address));
+    SuccessOrExit(error = mDecoder.ReadUint8(seriesId));
+    SuccessOrExit(error = mDecoder.ReadUint8(types));
+
+    SuccessOrExit(error = DecodeLinkMetrics(&linkMetrics, true));
+
+    if (types & SPINEL_THREAD_FRAME_TYPE_MLE_LINK_PROBE)
+    {
+        seriesFlags.mLinkProbe = true;
+    }
+
+    if (types & SPINEL_THREAD_FRAME_TYPE_MAC_DATA)
+    {
+        seriesFlags.mMacData = true;
+    }
+
+    if (types & SPINEL_THREAD_FRAME_TYPE_MAC_DATA_REQUEST)
+    {
+        seriesFlags.mMacDataRequest = true;
+    }
+
+    if (types & SPINEL_THREAD_FRAME_TYPE_MAC_ACK)
+    {
+        seriesFlags.mMacAck = true;
+    }
+
+    error = otLinkMetricsConfigForwardTrackingSeries(mInstance, &address, seriesId, seriesFlags, &linkMetrics,
+                                                     &NcpBase::HandleLinkMetricsMgmtResponse_Jump, this);
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)
 {
     uint8_t          numericMode;
@@ -4122,6 +4299,78 @@ void NcpBase::HandleJoinerCallback(otError aError)
     }
 
     mUpdateChangedPropsTask.Post();
+}
+#endif
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address *       aSource,
+                                           const otLinkMetricsValues *aMetricsValues,
+                                           uint8_t                    aStatus,
+                                           void *                     aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleLinkMetricsReport(aSource, aMetricsValues, aStatus);
+}
+
+void NcpBase::HandleLinkMetricsReport(const otIp6Address *       aSource,
+                                      const otLinkMetricsValues *aMetricsValues,
+                                      uint8_t                    aStatus)
+{
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT));
+
+    SuccessOrExit(mEncoder.WriteIp6Address(*aSource));
+    SuccessOrExit(mEncoder.WriteUint8(aStatus));
+    SuccessOrExit(EncodeLinkMetricsValues(aMetricsValues));
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+void NcpBase::HandleLinkMetricsMgmtResponse_Jump(const otIp6Address *aSource, uint8_t aStatus, void *aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleLinkMetricsMgmtResponse(aSource, aStatus);
+}
+
+void NcpBase::HandleLinkMetricsMgmtResponse(const otIp6Address *aSource, uint8_t aStatus)
+{
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE));
+
+    SuccessOrExit(mEncoder.WriteIp6Address(*aSource));
+    SuccessOrExit(mEncoder.WriteUint8(aStatus));
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
+}
+
+void NcpBase::HandleLinkMetricsEnhAckProbingIeReport_Jump(otShortAddress             aShortAddress,
+                                                          const otExtAddress *       aExtAddress,
+                                                          const otLinkMetricsValues *aMetricsValues,
+                                                          void *                     aContext)
+{
+    static_cast<NcpBase *>(aContext)->HandleLinkMetricsEnhAckProbingIeReport(aShortAddress, aExtAddress,
+                                                                             aMetricsValues);
+}
+
+void NcpBase::HandleLinkMetricsEnhAckProbingIeReport(otShortAddress             aShortAddress,
+                                                     const otExtAddress *       aExtAddress,
+                                                     const otLinkMetricsValues *aMetricsValues)
+{
+    SuccessOrExit(mEncoder.BeginFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_PROP_VALUE_IS,
+                                      SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE));
+
+    SuccessOrExit(mEncoder.WriteUint16(aShortAddress));
+    SuccessOrExit(mEncoder.WriteEui64(*aExtAddress));
+    SuccessOrExit(EncodeLinkMetricsValues(aMetricsValues));
+
+    SuccessOrExit(mEncoder.EndFrame());
+
+exit:
+    return;
 }
 #endif
 

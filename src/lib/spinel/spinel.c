@@ -1191,7 +1191,7 @@ const char *spinel_command_to_cstr(spinel_command_t command)
         {SPINEL_CMD_PROP_VALUE_MULTI_GET, "PROP_VALUE_MULTI_GET"},
         {SPINEL_CMD_PROP_VALUE_MULTI_SET, "PROP_VALUE_MULTI_SET"},
         {SPINEL_CMD_PROP_VALUES_ARE, "PROP_VALUES_ARE"},
-        {0},
+        {0, NULL},
     };
 
     return spinel_to_cstr(spinel_commands_cstr, command);
@@ -1344,6 +1344,13 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         {SPINEL_PROP_THREAD_CSL_TIMEOUT, "THREAD_CSL_TIMEOUT"},
         {SPINEL_PROP_THREAD_CSL_CHANNEL, "THREAD_CSL_CHANNEL"},
         {SPINEL_PROP_THREAD_DOMAIN_NAME, "THREAD_DOMAIN_NAME"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_QUERY, "THREAD_LINK_METRICS_QUERY"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT, "THREAD_LINK_METRICS_QUERY_RESULT"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_PROBE, "THREAD_LINK_METRICS_PROBE"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK, "THREAD_LINK_METRICS_MGMT_ENH_ACK"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE, "THREAD_LINK_METRICS_MGMT_ENH_ACK_IE"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD, "THREAD_LINK_METRICS_MGMT_FORWARD"},
+        {SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE, "THREAD_LINK_METRICS_MGMT_RESPONSE"},
         {SPINEL_PROP_THREAD_MLR_REQUEST, "THREAD_MLR_REQUEST"},
         {SPINEL_PROP_THREAD_MLR_RESPONSE, "THREAD_MLR_RESPONSE"},
         {SPINEL_PROP_THREAD_BACKBONE_ROUTER_PRIMARY, "THREAD_BACKBONE_ROUTER_PRIMARY"},
@@ -1478,7 +1485,7 @@ const char *spinel_prop_key_to_cstr(spinel_prop_key_t prop_key)
         {SPINEL_PROP_RCP_MAC_KEY, "RCP_MAC_KEY"},
         {SPINEL_PROP_DEBUG_LOG_TIMESTAMP_BASE, "DEBUG_LOG_TIMESTAMP_BASE"},
         {SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE, "DEBUG_TREL_TEST_MODE_ENABLE"},
-        {0},
+        {0, NULL},
     };
 
     return spinel_to_cstr(spinel_prop_cstr, prop_key);
@@ -1491,7 +1498,7 @@ const char *spinel_net_role_to_cstr(uint8_t net_role)
         {SPINEL_NET_ROLE_CHILD, "NET_ROLE_CHILD"},
         {SPINEL_NET_ROLE_ROUTER, "NET_ROLE_ROUTER"},
         {SPINEL_NET_ROLE_LEADER, "NET_ROLE_LEADER"},
-        {0},
+        {0, NULL},
     };
 
     return spinel_to_cstr(spinel_net_cstr, net_role);
@@ -1503,7 +1510,7 @@ const char *spinel_mcu_power_state_to_cstr(uint8_t mcu_power_state)
         {SPINEL_MCU_POWER_STATE_ON, "MCU_POWER_STATE_ON"},
         {SPINEL_MCU_POWER_STATE_LOW_POWER, "MCU_POWER_STATE_LOW_POWER"},
         {SPINEL_MCU_POWER_STATE_OFF, "MCU_POWER_STATE_OFF"},
-        {0},
+        {0, NULL},
     };
 
     return spinel_to_cstr(spinel_mcu_power_state_cstr, mcu_power_state);
@@ -1550,7 +1557,7 @@ const char *spinel_status_to_cstr(spinel_status_t status)
         {SPINEL_STATUS_RESET_OTHER, "RESET_OTHER"},
         {SPINEL_STATUS_RESET_UNKNOWN, "RESET_UNKNOWN"},
         {SPINEL_STATUS_RESET_WATCHDOG, "RESET_WATCHDOG"},
-        {0},
+        {0, NULL},
     };
 
     return spinel_to_cstr(spinel_status_cstr, status);
@@ -1621,7 +1628,7 @@ const char *spinel_capability_to_cstr(spinel_capability_t capability)
         {SPINEL_CAP_NEST_LEGACY_INTERFACE, "NEST_LEGACY_INTERFACE"},
         {SPINEL_CAP_NEST_LEGACY_NET_WAKE, "NEST_LEGACY_NET_WAKE"},
         {SPINEL_CAP_NEST_TRANSMIT_HOOK, "NEST_TRANSMIT_HOOK"},
-        {0},
+        {0, NULL},
     };
 
     return spinel_to_cstr(spinel_cap_cstr, capability);

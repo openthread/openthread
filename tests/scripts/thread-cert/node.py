@@ -293,10 +293,27 @@ class OtbrDocker:
                     record[1] = int(record[1])
                     if record[3] == 'SRV':
                         record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
+                    elif record[3] == 'TXT':
+                        record[4:] = [self.__parse_dns_dig_txt(record[4:])]
 
                 dig_result[section].append(tuple(record))
 
         return dig_result
+
+    def __parse_dns_dig_txt(self, txt_entries):
+        # Example txt_entries:
+        # ['"nn=OpenThread"', '"xp=\\000\\013\\184\\000\\000\\000\\000\\000"', '"tv=1.2.0"', '"dd=\\022n\\010\\000\\000\\000\\000\\001"']
+        txt = {}
+        for entry in txt_entries:
+            assert entry.startswith('"') and entry.endswith('"')
+            entry = entry[1:-1]
+            if entry == "":
+                continue
+
+            k, v = entry.split('=')
+            txt[k] = v
+
+        return txt
 
     def _setup_sysctl(self):
         self.bash(f'sysctl net.ipv6.conf.{self.ETH_DEV}.accept_ra=2')
@@ -1751,28 +1768,23 @@ class NodeImpl:
             return self._expect_results(
                 r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
-    def ping(self, ipaddr, num_responses=1, size=None, timeout=5):
-        cmd = 'ping %s' % ipaddr
-        if size is not None:
-            cmd += ' %d' % size
+    def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64):
+        cmd = f'ping {ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
 
         self.send_command(cmd)
 
-        end = self.simulator.now() + timeout
+        wait_allowance = 3
+        end = self.simulator.now() + timeout + wait_allowance
 
         responders = {}
 
         result = True
         # ncp-sim doesn't print Done
         done = (self.node_type == 'ncp-sim')
-
-        # ncp-sim doesn't print statistics
-        received_statistics = (self.node_type == 'ncp-sim')
-        is_multicast = ipaddress.IPv6Address(ipaddr).is_multicast
-        while len(responders) < num_responses or not done or (not is_multicast and not received_statistics):
+        while len(responders) < num_responses or not done:
             self.simulator.go(1)
             try:
-                i = self._expect([r'from (\S+):', r'Done', r'packets transmitted'], timeout=0.1)
+                i = self._expect([r'from (\S+):', r'Done'], timeout=0.1)
             except (pexpect.TIMEOUT, socket.timeout):
                 if self.simulator.now() < end:
                     continue
@@ -1785,8 +1797,6 @@ class NodeImpl:
                     responders[self.pexpect.match.groups()[0]] = 1
                 elif i == 1:
                     done = True
-                elif i == 2:
-                    received_statistics = True
         return result
 
     def reset(self):
@@ -2677,7 +2687,7 @@ class LinuxHost():
         return resp_count
 
     def _getBackboneGua(self) -> Optional[str]:
-        for addr in self.get_addrs():
+        for addr in self.get_ether_addrs():
             if re.match(config.BACKBONE_PREFIX_REGEX_PATTERN, addr, re.I):
                 return addr
 
@@ -2687,11 +2697,18 @@ class LinuxHost():
         """ Returns the ULA addresses autoconfigured on the infra link.
         """
         addrs = []
-        for addr in self.get_addrs():
+        for addr in self.get_ether_addrs():
             if re.match(config.ONLINK_PREFIX_REGEX_PATTERN, addr, re.I):
                 addrs.append(addr)
 
         return addrs
+
+    def _getInfraGua(self) -> Optional[str]:
+        """ Returns the GUA addresses autoconfigured on the infra link.
+        """
+
+        gua_prefix = config.ONLINK_GUA_PREFIX.split('::/')[0]
+        return [addr for addr in self.get_ether_addrs() if addr.startswith(gua_prefix)]
 
     def ping(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)
@@ -2775,6 +2792,31 @@ class LinuxHost():
                 service['addresses'] = addresses
                 return service if service['addresses'] else None
 
+    def start_radvd_service(self, prefix, slaac):
+        self.bash("""cat >/etc/radvd.conf <<EOF
+interface eth0
+{
+	AdvSendAdvert on;
+
+	MinRtrAdvInterval 3;
+	MaxRtrAdvInterval 30;
+	AdvDefaultPreference low;
+
+	prefix %s
+	{
+		AdvOnLink on;
+		AdvAutonomous %s;
+		AdvRouterAddr off;
+	};
+};
+EOF
+""" % (prefix, 'on' if slaac else 'off'))
+        self.bash('service radvd start')
+        self.bash('service radvd status')  # Make sure radvd service is running
+
+    def stop_radvd_service(self):
+        self.bash('service radvd stop')
+
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
     is_otbr = True
@@ -2803,12 +2845,12 @@ class HostNode(LinuxHost, OtbrDocker):
     def start(self, start_radvd=True, prefix=config.DOMAIN_PREFIX, slaac=False):
         self._setup_sysctl()
         if start_radvd:
-            self._service_radvd_start(prefix, slaac)
+            self.start_radvd_service(prefix, slaac)
         else:
-            self._service_radvd_stop()
+            self.stop_radvd_service()
 
     def stop(self):
-        self._service_radvd_stop()
+        self.stop_radvd_service()
 
     def get_addrs(self) -> List[str]:
         return self.get_ether_addrs()
@@ -2836,39 +2878,15 @@ class HostNode(LinuxHost, OtbrDocker):
         Returns:
             IPv6 address string.
         """
-        assert address_type in [config.ADDRESS_TYPE.BACKBONE_GUA, config.ADDRESS_TYPE.ONLINK_ULA]
 
         if address_type == config.ADDRESS_TYPE.BACKBONE_GUA:
             return self._getBackboneGua()
-        if address_type == config.ADDRESS_TYPE.ONLINK_ULA:
+        elif address_type == config.ADDRESS_TYPE.ONLINK_ULA:
             return self._getInfraUla()
+        elif address_type == config.ADDRESS_TYPE.ONLINK_GUA:
+            return self._getInfraGua()
         else:
-            return None
-
-    def _service_radvd_start(self, prefix, slaac):
-        self.bash("""cat >/etc/radvd.conf <<EOF
-interface eth0
-{
-	AdvSendAdvert on;
-
-	MinRtrAdvInterval 3;
-	MaxRtrAdvInterval 30;
-	AdvDefaultPreference low;
-
-	prefix %s
-	{
-		AdvOnLink on;
-		AdvAutonomous %s;
-		AdvRouterAddr off;
-	};
-};
-EOF
-""" % (prefix, 'on' if slaac else 'off'))
-        self.bash('service radvd start')
-        self.bash('service radvd status')  # Make sure radvd service is running
-
-    def _service_radvd_stop(self):
-        self.bash('service radvd stop')
+            raise ValueError(f'unsupported address type: {address_type}')
 
 
 if __name__ == '__main__':

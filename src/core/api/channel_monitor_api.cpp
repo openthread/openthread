@@ -32,14 +32,15 @@
  */
 
 #include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+
 #include <openthread/channel_monitor.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 otError otChannelMonitorSetEnabled(otInstance *aInstance, bool aEnabled)
 {

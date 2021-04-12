@@ -147,8 +147,6 @@ jobs:
         # use the minimal required cmake version
         sudo pip3 install --system -U cmake==3.10.3
         cmake --version | grep 3.10.3
-        # required for jn5189 and k32w061
-        pip install pycryptodome
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
@@ -244,37 +242,30 @@ jobs:
         export PATH=/tmp/bin:$PATH
         script/check-gn-build
 
-  macos-clang:
+  macos:
+    name: macos-${{ matrix.CC }}
+    strategy:
+      matrix:
+        include:
+          - CC: clang
+            CXX: clang++
+          - CC: gcc
+            CXX: g++
     runs-on: macos-10.15
     env:
-      CC: clang
-      CXX: clang++
+      CC: ${{ matrix.CC }}
+      CXX: ${{ matrix.CXX }}
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
     - name: Bootstrap
       run: |
-        brew install automake ninja llvm
+        brew install automake m4 ninja
+        [ ${{ matrix.CC }} != clang ] || brew install llvm
     - name: Build
       run: |
-        script/check-posix-build
-        script/check-simulation-build
-
-  macos-gcc:
-    runs-on: macos-10.15
-    env:
-      CC: gcc
-      CXX: g++
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        brew install automake ninja
-    - name: Build
-      run: |
+        export PATH=$(brew --prefix m4)/bin:$PATH
         script/check-posix-build
         script/check-simulation-build
 

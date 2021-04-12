@@ -33,14 +33,14 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+
 #include <openthread/link_metrics.h>
 
 #include "common/instance.hpp"
 #include "net/ip6_address.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
 
 otError otLinkMetricsQuery(otInstance *                aInstance,
                            const otIp6Address *        aDestination,

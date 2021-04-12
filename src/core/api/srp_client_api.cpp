@@ -33,15 +33,15 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include <openthread/srp_client.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "net/srp_client.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 otError otSrpClientStart(otInstance *aInstance, const otSockAddr *aServerSockAddr)
 {

@@ -33,15 +33,15 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
 #include <openthread/coap_secure.h>
 #include <openthread/ip6.h>
 
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
-
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 

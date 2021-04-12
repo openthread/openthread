@@ -39,6 +39,7 @@ OPENTHREAD_PROJECT_CFLAGS                                                 ?= \
     $(NULL)
 
 OPENTHREAD_PUBLIC_CFLAGS                                         := \
+    -DOPENTHREAD_CONFIG_PING_SENDER_ENABLE=1                        \
     -DOPENTHREAD_CONFIG_COMMISSIONER_ENABLE=1                       \
     -DOPENTHREAD_CONFIG_IP6_SLAAC_ENABLE=1                          \
     -DOPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE=1                  \
@@ -171,6 +172,7 @@ LOCAL_SRC_FILES                                          := \
     src/core/api/dataset_updater_api.cpp                    \
     src/core/api/diags_api.cpp                              \
     src/core/api/dns_api.cpp                                \
+    src/core/api/dns_server_api.cpp                         \
     src/core/api/entropy_api.cpp                            \
     src/core/api/error_api.cpp                              \
     src/core/api/heap_api.cpp                               \

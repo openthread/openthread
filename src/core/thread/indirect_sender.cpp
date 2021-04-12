@@ -31,13 +31,13 @@
  *   This file includes definitions for handling indirect transmission.
  */
 
-#if OPENTHREAD_FTD
-
 #include "indirect_sender.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "thread/mesh_forwarder.hpp"

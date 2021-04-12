@@ -52,6 +52,9 @@ OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 Utils::Heap Instance::sHeap;
 #endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+bool Instance::sDnsNameCompressionEnabled = true;
+#endif
 #endif
 
 Instance::Instance(void)

@@ -32,13 +32,13 @@
 
 #include "trel_packet.hpp"
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
 namespace Trel {

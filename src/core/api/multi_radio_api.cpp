@@ -33,17 +33,17 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+
 #include <openthread/multi_radio.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "thread/radio_selector.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
 
 otError otMultiRadioGetNeighborInfo(otInstance *              aInstance,
                                     const otExtAddress *      aExtAddress,

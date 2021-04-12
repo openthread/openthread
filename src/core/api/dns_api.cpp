@@ -36,7 +36,7 @@
 #include <openthread/dns_client.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "net/dns_client.hpp"
 #include "net/dns_types.hpp"
 
@@ -51,6 +51,18 @@ otError otDnsGetNextTxtEntry(otDnsTxtEntryIterator *aIterator, otDnsTxtEntry *aE
 {
     return static_cast<Dns::TxtEntry::Iterator *>(aIterator)->GetNextEntry(*static_cast<Dns::TxtEntry *>(aEntry));
 }
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+void otDnsSetNameCompressionEnabled(bool aEnabled)
+{
+    Instance::SetDnsNameCompressionEnabled(aEnabled);
+}
+
+bool otDnsIsNameCompressionEnabled(void)
+{
+    return Instance::IsDnsNameCompressionEnabled();
+}
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 

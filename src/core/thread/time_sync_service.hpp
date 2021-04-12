@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
 #include <openthread/network_time.h>
 
 #include "common/locator.hpp"

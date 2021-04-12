@@ -36,7 +36,7 @@
 #include <openthread/srp_client_buffers.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "utils/srp_client_buffers.hpp"
 
 using namespace ot;

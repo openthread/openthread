@@ -208,8 +208,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
 
         leader_addr = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         router1_addr = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        self.assertTrue(self.nodes[ROUTER2].ping(leader_addr))
-        self.assertTrue(self.nodes[COMMISSIONER].ping(router1_addr))
+        self.assertTrue(self.nodes[ROUTER2].ping(leader_addr, timeout=10))
+        self.assertTrue(self.nodes[COMMISSIONER].ping(router1_addr, timeout=10))
 
     def verify(self, pv):
         pkts = pv.pkts

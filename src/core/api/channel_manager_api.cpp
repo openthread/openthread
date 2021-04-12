@@ -32,15 +32,16 @@
  */
 
 #include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+
 #include <openthread/channel_manager.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "utils/channel_manager.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 void otChannelManagerRequestChannelChange(otInstance *aInstance, uint8_t aChannel)
 {
@@ -133,6 +134,20 @@ void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannel
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<Utils::ChannelManager>().SetFavoredChannels(aChannelMask);
+}
+
+uint16_t otChannelManagerGetCcaFailureRateThreshold(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Utils::ChannelManager>().GetCcaFailureRateThreshold();
+}
+
+void otChannelManagerSetCcaFailureRateThreshold(otInstance *aInstance, uint16_t aThreshold)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Utils::ChannelManager>().SetCcaFailureRateThreshold(aThreshold);
 }
 
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD

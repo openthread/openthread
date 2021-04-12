@@ -36,12 +36,12 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
 #include <stdint.h>
 
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
-
-#if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
 namespace ot {
 namespace Mac {

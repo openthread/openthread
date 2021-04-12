@@ -65,6 +65,13 @@ const char *StringFind(const char *aString, char aChar)
     return ret;
 }
 
+bool StringEndsWith(const char *aString, char aChar)
+{
+    size_t len = strlen(aString);
+
+    return len > 0 && aString[len - 1] == aChar;
+}
+
 Error StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
 {
     Error error = kErrorNone;

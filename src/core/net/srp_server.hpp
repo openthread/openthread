@@ -71,12 +71,21 @@ namespace Srp {
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class UpdateMetadata;
+    friend class Service;
+    friend class Host;
 
 public:
     enum : uint16_t
     {
         kUdpPort = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT, ///< The SRP Server UDP listening port.
     };
+
+    /**
+     * The ID of SRP service update transaction.
+     *
+     */
+    typedef otSrpServerServiceUpdateId ServiceUpdateId;
 
     class Host;
     class Service;
@@ -243,6 +252,7 @@ public:
     {
         friend class LinkedListEntry<Host>;
         friend class Server;
+        friend class UpdateMetadata;
 
     public:
         /**
@@ -490,11 +500,11 @@ public:
      * This method receives the service update result from service handler set by
      * SetServiceHandler.
      *
-     * @param[in]  aHost   A pointer to the Host object which contains the SRP service updates.
+     * @param[in]  aId     The ID of the service update transaction.
      * @param[in]  aError  The service update result.
      *
      */
-    void HandleServiceUpdateResult(const Host *aHost, Error aError);
+    void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
 private:
     enum : uint16_t
@@ -511,11 +521,8 @@ private:
         kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT,
     };
 
-    /**
-     * This class includes metadata for processing a SRP update (register, deregister)
-     * and sending DNS response to the client.
-     *
-     */
+    // This class includes metadata for processing a SRP update (register, deregister)
+    // and sending DNS response to the client.
     class UpdateMetadata : public InstanceLocator, public LinkedListEntry<UpdateMetadata>
     {
         friend class LinkedListEntry<UpdateMetadata>;
@@ -528,9 +535,10 @@ private:
         void                     Free(void);
         TimeMilli                GetExpireTime(void) const { return mExpireTime; }
         const Dns::UpdateHeader &GetDnsHeader(void) const { return mDnsHeader; }
+        ServiceUpdateId          GetId(void) const { return mId; }
         Host &                   GetHost(void) { return *mHost; }
         const Ip6::MessageInfo & GetMessageInfo(void) const { return mMessageInfo; }
-        bool                     Matches(const Host *aHost) const { return mHost == aHost; }
+        bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
     private:
         UpdateMetadata(Instance &               aInstance,
@@ -540,6 +548,7 @@ private:
 
         TimeMilli         mExpireTime;
         Dns::UpdateHeader mDnsHeader;
+        ServiceUpdateId   mId;          // The ID of this service update transaction.
         Host *            mHost;        // The host will be updated. The UpdateMetadata has no ownership of this host.
         Ip6::MessageInfo  mMessageInfo; // The message info of the DNS update request.
         UpdateMetadata *  mNext;
@@ -552,6 +561,8 @@ private:
     void     UnpublishServerData(void);
     uint32_t GrantLease(uint32_t aLease) const;
     uint32_t GrantKeyLease(uint32_t aKeyLease) const;
+
+    ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
     void  CommitSrpUpdate(Error                    aError,
                           const Dns::UpdateHeader &aDnsHeader,
@@ -638,7 +649,8 @@ private:
     TimerMilli                 mOutstandingUpdatesTimer;
     LinkedList<UpdateMetadata> mOutstandingUpdates;
 
-    bool mEnabled;
+    ServiceUpdateId mServiceUpdateId;
+    bool            mEnabled;
 };
 
 } // namespace Srp

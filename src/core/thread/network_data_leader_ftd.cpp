@@ -31,16 +31,16 @@
  *   This file implements the Thread Network Data managed by the Thread Leader.
  */
 
-#if OPENTHREAD_FTD
-
 #include "network_data_leader.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "coap/coap_message.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"

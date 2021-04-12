@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+
 #include <openthread/commissioner.h>
 
 #include "coap/coap.hpp"
@@ -96,5 +98,7 @@ private:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
 #endif // ENERGY_SCAN_CLIENT_HPP_

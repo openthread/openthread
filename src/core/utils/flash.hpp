@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+
 #include <stdint.h>
 #include <string.h>
 
@@ -231,5 +233,7 @@ private:
 };
 
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
 #endif // FLASH_HPP_

@@ -33,12 +33,14 @@
 
 #include "commissioner.hpp"
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
 #include <stdio.h>
 
 #include "coap/coap_message.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/string.hpp"
 #include "meshcop/joiner.hpp"
@@ -48,8 +50,6 @@
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/uri_paths.hpp"
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 namespace ot {
 namespace MeshCoP {

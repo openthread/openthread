@@ -104,6 +104,7 @@ Done
 - [srp](README_SRP.md)
 - [thread](#thread-start)
 - [txpower](#txpower)
+- [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
 - [version](#version)
 
@@ -991,6 +992,33 @@ Send a service instance resolution DNS query for a given service instance. Servi
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
+### dns compression \[enable|disable\]
+
+Enable/Disable the "DNS name compression" mode.
+
+By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This is applicable to OpenThread's DNS and SRP client/server modules.
+
+This is intended for testing only and available under `REFERENCE_DEVICE` config.
+
+Get the current "DNS name compression" mode.
+
+```
+> dns compression
+Enabled
+```
+
+Set the "DNS name compression" mode.
+
+```
+> dns compression disable
+Done
+>
+>
+> dns compression
+Disabled
+Done
+```
+
 ### domainname
 
 Get the Thread Domain Name for Thread 1.2 device.
@@ -1044,8 +1072,8 @@ Print the EID-to-RLOC cache entries.
 
 ```bash
 > eidcache
-fdde:ad00:beef:0:bb1:ebd6:ad10:f33 ac00
-fdde:ad00:beef:0:110a:e041:8399:17cd 6000
+fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d 2000 cache canEvict=1 transTime=0 eid=fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d
+fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7f fffe retry canEvict=1 timeout=10 retryDelay=30
 Done
 ```
 
@@ -1855,7 +1883,7 @@ Set the preferred Thread Leader Partition ID.
 Done
 ```
 
-### ping \<ipaddr\> [size][count] [interval][hoplimit]
+### ping \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
 
 Send an ICMPv6 Echo Request.
 
@@ -1863,6 +1891,7 @@ Send an ICMPv6 Echo Request.
 - count: The number of ICMPv6 Echo Requests to be sent.
 - interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
 - hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
+- timeout: Time in seconds to wait for the final ICMPv6 Echo Reply after sending out the request. The value may have fractional form, for example `3.5`.
 
 ```bash
 > ping fdde:ad00:beef:0:558:f56b:d688:799

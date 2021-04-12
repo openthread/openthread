@@ -35,7 +35,7 @@
 
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/string.hpp"
 #include "crypto/pbkdf2_cmac.hpp"

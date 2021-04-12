@@ -33,13 +33,13 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+
 #include <openthread/netdiag.h>
 
 #include "common/instance.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
                                      otNetworkDiagIterator *aIterator,

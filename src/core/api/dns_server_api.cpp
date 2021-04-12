@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2018, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,72 +28,49 @@
 
 /**
  * @file
- *   This file implements the OpenThread Network Time Synchronization Service API.
+ *   This file implements the DNS-SD Server APIs.
  */
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-
-#include <openthread/network_time.h>
-
 #include "common/instance.hpp"
-#include "common/locator_getters.hpp"
+#include "net/dns_types.hpp"
+#include "net/dnssd_server.hpp"
 
 using namespace ot;
 
-otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime)
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+
+void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
+                              otDnssdQuerySubscribeCallback   aSubscribe,
+                              otDnssdQueryUnsubscribeCallback aUnsubscribe,
+                              void *                          aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<TimeSync>().GetTime(*aNetworkTime);
+    instance.Get<Dns::ServiceDiscovery::Server>().SetQueryCallbacks(aSubscribe, aUnsubscribe, aContext);
 }
 
-otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
-{
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
-
-    instance.Get<TimeSync>().SetTimeSyncPeriod(aTimeSyncPeriod);
-
-exit:
-    return error;
-}
-
-uint16_t otNetworkTimeGetSyncPeriod(otInstance *aInstance)
+void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aInstance,
+                                                 const char *                aServiceFullName,
+                                                 otDnssdServiceInstanceInfo *aInstanceInfo)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<TimeSync>().GetTimeSyncPeriod();
+    OT_ASSERT(aServiceFullName != nullptr);
+    OT_ASSERT(aInstanceInfo != nullptr);
+
+    instance.Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredServiceInstance(aServiceFullName, *aInstanceInfo);
 }
 
-otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXtalThreshold)
-{
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
-
-    instance.Get<TimeSync>().SetXtalThreshold(aXtalThreshold);
-
-exit:
-    return error;
-}
-
-uint16_t otNetworkTimeGetXtalThreshold(otInstance *aInstance)
+void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<TimeSync>().GetXtalThreshold();
+    OT_ASSERT(aHostFullName != nullptr);
+    OT_ASSERT(aHostInfo != nullptr);
+
+    instance.Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredHost(aHostFullName, *aHostInfo);
 }
 
-void otNetworkTimeSyncSetCallback(otInstance *aInstance, otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<TimeSync>().SetTimeSyncCallback(aCallback, aCallbackContext);
-}
-
-#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+#endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

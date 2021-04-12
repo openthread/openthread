@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+
 #include <openthread/netdiag.h>
 
 #include "coap/coap.hpp"
@@ -162,5 +164,7 @@ private:
 } // namespace NetworkDiagnostic
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
 #endif // NETWORK_DIAGNOSTIC_HPP_

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -45,8 +47,6 @@
 namespace ot {
 namespace Crypto {
 namespace Ecdsa {
-
-#if OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 /**
  * @addtogroup core-security
@@ -297,10 +297,10 @@ Error Sign(uint8_t *      aOutput,
  *
  */
 
-#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
-
 } // namespace Ecdsa
 } // namespace Crypto
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_ECDSA_ENABLE
 
 #endif // ECDSA_HPP_

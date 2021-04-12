@@ -33,14 +33,15 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
+
 #include <openthread/commissioner.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 otError otCommissionerStart(otInstance *                 aInstance,
                             otCommissionerStateCallback  aStateCallback,
                             otCommissionerJoinerCallback aJoinerCallback,

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include <stdint.h>
 
 #include "coap/coap.hpp"
@@ -316,5 +318,7 @@ private:
 
 } // namespace NetworkData
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // NETWORK_DATA_LEADER_FTD_HPP_

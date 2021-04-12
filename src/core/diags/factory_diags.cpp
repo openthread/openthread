@@ -33,6 +33,8 @@
 
 #include "factory_diags.hpp"
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -41,7 +43,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "radio/radio.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -64,7 +66,6 @@ otError otPlatDiagProcess(otInstance *aInstance,
 namespace ot {
 namespace FactoryDiags {
 
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
 #if OPENTHREAD_RADIO
 
 const struct Diags::Command Diags::sCommands[] = {
@@ -607,7 +608,7 @@ bool Diags::IsEnabled(void)
     return otPlatDiagModeGet();
 }
 
-#endif // OPENTHREAD_CONFIG_DIAG_ENABLE
-
 } // namespace FactoryDiags
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_DIAG_ENABLE

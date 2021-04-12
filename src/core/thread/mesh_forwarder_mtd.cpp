@@ -31,9 +31,9 @@
  *   This file implements MTD-specific mesh forwarding of IPv6/6LoWPAN messages.
  */
 
-#if OPENTHREAD_MTD
-
 #include "mesh_forwarder.hpp"
+
+#if OPENTHREAD_MTD
 
 namespace ot {
 

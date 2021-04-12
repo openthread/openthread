@@ -55,4 +55,14 @@
 #define OPENTHREAD_CONFIG_DNSSD_SERVER_PORT 53
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
+ *
+ * Specifies the default wait time that DNS-SD Server waits for a query response (e.g. from Discovery Proxy).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
+#define OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT 6000
+#endif
+
 #endif // CONFIG_DNSSD_SERVER_H_

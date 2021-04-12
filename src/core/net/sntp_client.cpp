@@ -29,15 +29,15 @@
 
 #include "sntp_client.hpp"
 
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
 /**
  * @file

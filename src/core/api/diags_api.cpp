@@ -33,14 +33,14 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
 #include <openthread/diag.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {

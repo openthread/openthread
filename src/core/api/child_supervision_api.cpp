@@ -32,14 +32,15 @@
  */
 
 #include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+
 #include <openthread/child_supervision.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {

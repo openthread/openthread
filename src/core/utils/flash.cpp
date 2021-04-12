@@ -28,14 +28,14 @@
 
 #include "flash.hpp"
 
+#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
+
 #include <stdio.h>
 
 #include <openthread/platform/flash.h>
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-
-#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
 
 namespace ot {
 
