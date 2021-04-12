@@ -31,8 +31,7 @@ import logging
 import unittest
 
 import pktverify
-from pktverify import packet_verifier
-from pktverify.packet_verifier import consts
+from pktverify import packet_verifier, packet_filter
 import config
 import thread_cert
 
@@ -162,7 +161,14 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pkts = pv.pkts
         vars = pv.vars
         pv.summary.show()
-        logging.info(f'{vars}')
+
+        def check_mpl_seed_id(rloc: packet_filter.Ipv6Addr, rloc16: int):
+            return lambda p: (p.ipv6.src == rloc and
+                              p.ipv6.opt.mpl.flag.s == 0) or (
+                                 p.ipv6.src != rloc and
+                                 p.ipv6.opt.mpl.flag.s == 1 and
+                                 rloc16.to_bytes(2,
+                                                 'big') == p.ipv6.opt.mpl.seed_id)
 
         # Ensure the topology is formed correctly
         pv.verify_attached('TD', 'BR_1')
@@ -225,9 +231,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_2']) \
             .filter_AMPLFMA() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(
-            lambda p: p.ipv6.opt.type != 0 and p.ipv6.opt.mpl.seed_id == vars[
-                'BR_2_RLOC16'].to_bytes(2, 'big')) \
+            .filter(check_mpl_seed_id(vars['BR_2_RLOC'], vars['BR_2_RLOC16'])) \
             .must_not_next()
 
         # 9. BR_1 forwards the ping packet to its Thread Network.
@@ -238,12 +242,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_1']) \
             .filter_AMPLFMA() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(lambda p: (p.ipv6.src == vars['BR_1_RLOC'] and
-                               p.ipv6.opt.mpl.flag.s == 0) or
-                              (p.ipv6.src != vars['BR_1_RLOC'] and
-                               p.ipv6.opt.mpl.flag.s == 1 and
-                               vars['BR_1_RLOC16'].to_bytes(2, 'big') ==
-                               p.ipv6.opt.mpl.seed_id)) \
+            .filter(check_mpl_seed_id(vars['BR_1_RLOC'], vars['BR_1_RLOC16'])) \
             .must_next()
 
         # 10. TD receives the multicast ping packet and sends a ping response
@@ -251,8 +250,8 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # TD receives the MPL packet containing an encapsulated ping packet to
         # MA1, sent by Host, and unicasts a ping response packet back to Host.
         pkts.filter_wpan_src64(vars['TD']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(lambda p: p.ipv6.dst in vars['Host_IPADDRS']) \
             .must_next()
 
         # 11. Host sends a ping packet to the multicast address, MA2.
@@ -266,20 +265,15 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_2']) \
             .filter_AMPLFMA() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(
-            lambda p: p.ipv6.opt.type != 0 and p.ipv6.opt.mpl.seed_id == vars[
-                'BR_1_RLOC16'].to_bytes(2, 'big')) \
+            .filter(check_mpl_seed_id(vars['BR_2_RLOC'], vars['BR_2_RLOC16'])) \
             .must_not_next()
 
         # 13. BR_1 does not forward the ping packet with multicast address, MA2,
         # to the Thread Network in whatever way.
-        #  !!!! we need to check the nested ipv6 packet
         pkts.filter_wpan_src64(vars['BR_1']) \
             .filter_AMPLFMA() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(
-            lambda p: p.ipv6.opt.type != 0 and p.ipv6.opt.mpl.seed_id == vars[
-                'BR_1_RLOC16'].to_bytes(2, 'big')) \
+            .filter(check_mpl_seed_id(vars['BR_1_RLOC'], vars['BR_1_RLOC16'])) \
             .must_not_next()
 
         # 14. Host sends a ping packet to the multicast address, MA1g.
@@ -293,26 +287,28 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pkts.filter_wpan_src64(vars['BR_2']) \
             .filter_AMPLFMA() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(
-            lambda p: p.ipv6.opt.type != 0 and p.ipv6.opt.mpl.seed_id == vars[
-                'BR_2_RLOC16'].to_bytes(2, 'big')) \
+            .filter(check_mpl_seed_id(vars['BR_2_RLOC'], vars['BR_2_RLOC16'])) \
             .must_not_next()
 
         # 16. BR_1 does not forward the ping packet with multicast address MA1g,
         # to its Thread Network in whatever way.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_ipv6_dst(MA1g) \
+            .filter_AMPLFMA() \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(
-            lambda p: p.ipv6.opt.type != 0 and p.ipv6.opt.mpl.seed_id == vars[
-                'BR_1_RLOC16'].to_bytes(2, 'big')) \
+            .filter(check_mpl_seed_id(vars['BR_1_RLOC'], vars['BR_1_RLOC16'])) \
             .must_not_next()
+
+        # 17. Host sends a ping packet to the BR_2's global unicast address, Gg.
+        _pkt = pkts.filter_eth_src(vars['Host_ETH']) \
+            .filter_ipv6_dst(vars['BR_2_BGUA']) \
+            .filter_ping_request() \
+            .must_next()
 
         # 18. BR_2 receives and provides the ping response.
         # BR_2 Must send back the ping response to the Host.
         pkts.filter_eth_src(vars['BR_2_ETH']) \
             .filter_ipv6_dst(vars['Host_BGUA']) \
-            .filter_ping_reply() \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 
 
