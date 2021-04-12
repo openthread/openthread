@@ -388,15 +388,15 @@ def check_prefix(prefix):
 
 
 def check_child_update_request_from_child(
-    command_msg,
-    source_address=CheckType.OPTIONAL,
-    leader_data=CheckType.OPTIONAL,
-    challenge=CheckType.OPTIONAL,
-    time_out=CheckType.OPTIONAL,
-    address_registration=CheckType.OPTIONAL,
-    tlv_request_tlv=CheckType.OPTIONAL,
-    active_timestamp=CheckType.OPTIONAL,
-    CIDs=(),
+        command_msg,
+        source_address=CheckType.OPTIONAL,
+        leader_data=CheckType.OPTIONAL,
+        challenge=CheckType.OPTIONAL,
+        time_out=CheckType.OPTIONAL,
+        address_registration=CheckType.OPTIONAL,
+        tlv_request_tlv=CheckType.OPTIONAL,
+        active_timestamp=CheckType.OPTIONAL,
+        CIDs=(),
 ):
 
     command_msg.assertMleMessageContainsTlv(mle.Mode)
@@ -485,16 +485,16 @@ def check_child_update_request_from_parent(
 
 
 def check_child_update_response(
-    command_msg,
-    timeout=CheckType.OPTIONAL,
-    address_registration=CheckType.OPTIONAL,
-    address16=CheckType.OPTIONAL,
-    leader_data=CheckType.OPTIONAL,
-    network_data=CheckType.OPTIONAL,
-    response=CheckType.OPTIONAL,
-    link_layer_frame_counter=CheckType.OPTIONAL,
-    mle_frame_counter=CheckType.OPTIONAL,
-    CIDs=(),
+        command_msg,
+        timeout=CheckType.OPTIONAL,
+        address_registration=CheckType.OPTIONAL,
+        address16=CheckType.OPTIONAL,
+        leader_data=CheckType.OPTIONAL,
+        network_data=CheckType.OPTIONAL,
+        response=CheckType.OPTIONAL,
+        link_layer_frame_counter=CheckType.OPTIONAL,
+        mle_frame_counter=CheckType.OPTIONAL,
+        CIDs=(),
 ):
     """Verify a properly formatted Child Update Response from parent
     """
