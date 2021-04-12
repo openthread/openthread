@@ -343,6 +343,7 @@ private:
     {
         kAnycastDhcp6Agent,
         kAnycastNeighborDiscoveryAgent,
+        kAnycastService,
     };
 
 #if OPENTHREAD_FTD
@@ -446,7 +447,8 @@ private:
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
-    Error ContextIdRouteLookup(uint8_t aContextId, AnycastType aType, uint16_t &aMeshDest) const;
+    void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
+    Error AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aMeshDest) const;
     Error UpdateMeshRoute(Message &aMessage);
     bool  UpdateReassemblyList(void);
     void  UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
@@ -483,8 +485,6 @@ private:
                                   const Mac::Address &aMeshSource,
                                   const Mac::Address &aMeshDest,
                                   Message::Priority & aPriority);
-
-    Error GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
 
     bool     CalcIePresent(const Message *aMessage);
     uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
