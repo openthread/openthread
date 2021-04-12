@@ -125,30 +125,25 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
 
         # 7. Host sends a ping packet to the multicast address, MA1. TD should
         # respond to the ping request.
-        self.assertTrue(host.ping(MA1, backbone=True, ttl=10,
-                                  interface=host.get_ip6_address(
-                                      config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertTrue(
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 11. Host sends a ping packet to the multicast address, MA2. No one
         # should respond.
-        self.assertFalse(host.ping(MA2, backbone=True, ttl=10,
-                                   interface=host.get_ip6_address(
-                                       config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertFalse(
+            host.ping(MA2, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 14. Host sends a ping packet to the multicast address, MA1g. No one
         # should respond.
-        self.assertFalse(host.ping(MA1g, backbone=True, ttl=10,
-                                   interface=host.get_ip6_address(
-                                       config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.assertFalse(
+            host.ping(MA1g, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 17. Host sends a ping packet to the global unicast address of BR2. BR2
         # should respond.
-        self.assertTrue(
-            host.ping(br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA),
-                      backbone=True, ttl=10))
+        self.assertTrue(host.ping(br2.get_ip6_address(config.ADDRESS_TYPE.BACKBONE_GUA), backbone=True, ttl=10))
         self.simulator.go(5)
 
         self.collect_ipaddrs()
@@ -163,12 +158,9 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         pv.summary.show()
 
         def check_mpl_seed_id(rloc: packet_filter.Ipv6Addr, rloc16: int):
-            return lambda p: (p.ipv6.src == rloc and
-                              p.ipv6.opt.mpl.flag.s == 0) or (
-                                 p.ipv6.src != rloc and
-                                 p.ipv6.opt.mpl.flag.s == 1 and
-                                 rloc16.to_bytes(2,
-                                                 'big') == p.ipv6.opt.mpl.seed_id)
+            return lambda p: (p.ipv6.src == rloc and p.ipv6.opt.mpl.flag.s
+                              == 0) or (p.ipv6.src != rloc and p.ipv6.opt.mpl.flag.s == 1 and rloc16.to_bytes(
+                                  2, 'big') == p.ipv6.opt.mpl.seed_id)
 
         # Ensure the topology is formed correctly
         pv.verify_attached('TD', 'BR_1')
