@@ -39,6 +39,7 @@
 #include <openthread/joiner.h>
 
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -54,6 +55,8 @@ class Interpreter;
 class Joiner
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -72,20 +75,20 @@ public:
      * @param[in]  aArgs        A pointer to an array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (Joiner::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Joiner::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
-    otError ProcessDiscerner(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessId(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessDiscerner(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessId(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
 
     static void HandleCallback(otError aError, void *aContext);
     void        HandleCallback(otError aError);

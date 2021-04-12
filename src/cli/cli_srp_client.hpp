@@ -41,6 +41,7 @@
 
 #include "cli/cli_config.h"
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
@@ -56,6 +57,8 @@ class Interpreter;
 class SrpClient
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -71,7 +74,7 @@ public:
      * @param[in]  aArgs        A pointer to an array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     enum : uint8_t
@@ -83,21 +86,21 @@ private:
     struct Command
     {
         const char *mName;
-        otError (SrpClient::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (SrpClient::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
-    otError ProcessAutoStart(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessCallback(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessHost(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessLeaseInterval(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessKeyLeaseInterval(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessServer(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessService(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessServiceAdd(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessState(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessAutoStart(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessCallback(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHost(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessLeaseInterval(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessKeyLeaseInterval(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessServer(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessService(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessServiceAdd(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessState(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
 
     void OutputHostInfo(uint8_t aIndentSize, const otSrpClientHostInfo &aHostInfo);
     void OutputServiceList(uint8_t aIndentSize, const otSrpClientService *aServices);

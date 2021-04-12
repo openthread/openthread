@@ -39,6 +39,7 @@
 #include <openthread/commissioner.h>
 
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
@@ -54,6 +55,8 @@ class Interpreter;
 class Commissioner
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -72,7 +75,7 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     enum
@@ -83,21 +86,21 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Commissioner::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Commissioner::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessAnnounce(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessEnergy(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessJoiner(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessMgmtGet(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessPanId(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessProvisioningUrl(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSessionId(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessState(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessAnnounce(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessEnergy(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessJoiner(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessMgmtGet(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessMgmtSet(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPanId(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessProvisioningUrl(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSessionId(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessState(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
 
     static void HandleStateChanged(otCommissionerState aState, void *aContext);
     void        HandleStateChanged(otCommissionerState aState);

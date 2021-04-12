@@ -38,10 +38,6 @@
 
 #include "cli/cli.hpp"
 #include "common/encoding.hpp"
-#include "utils/parse_cmdline.hpp"
-
-using ot::Encoding::BigEndian::HostSwap16;
-using ot::Utils::CmdLineParser::ParseAsHexString;
 
 namespace ot {
 namespace Cli {
@@ -205,7 +201,7 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
     mInterpreter.OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
 }
 
-otError NetworkData::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
+otError NetworkData::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -219,7 +215,7 @@ otError NetworkData::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-otError NetworkData::ProcessRegister(uint8_t aArgsLength, char *aArgs[])
+otError NetworkData::ProcessRegister(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -237,13 +233,13 @@ exit:
 }
 #endif
 
-otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, char *aArgs[])
+otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, Arg aArgs[])
 {
     otError           error = OT_ERROR_INVALID_ARGS;
     otExtAddress      addr;
     otJoinerDiscerner discerner;
 
-    VerifyOrExit((aArgsLength > 1) && (strcmp(aArgs[0], "check") == 0));
+    VerifyOrExit((aArgsLength > 1) && (aArgs[0] == "check"));
 
     discerner.mLength = 0;
 
@@ -251,7 +247,7 @@ otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, char *aArgs[])
 
     if (error == OT_ERROR_NOT_FOUND)
     {
-        SuccessOrExit(error = ParseAsHexString(aArgs[1], addr.m8));
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(addr.m8));
     }
     else if (error != OT_ERROR_NONE)
     {
@@ -325,7 +321,7 @@ exit:
     return error;
 }
 
-otError NetworkData::ProcessShow(uint8_t aArgsLength, char *aArgs[])
+otError NetworkData::ProcessShow(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error;
 
@@ -336,7 +332,7 @@ otError NetworkData::ProcessShow(uint8_t aArgsLength, char *aArgs[])
         OutputServices();
         error = OT_ERROR_NONE;
     }
-    else if (strcmp(aArgs[0], "-x") == 0)
+    else if (aArgs[0] == "-x")
     {
         error = OutputBinary();
     }
@@ -348,14 +344,14 @@ otError NetworkData::ProcessShow(uint8_t aArgsLength, char *aArgs[])
     return error;
 }
 
-otError NetworkData::Process(uint8_t aArgsLength, char *aArgs[])
+otError NetworkData::Process(uint8_t aArgsLength, Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
     VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
-    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);

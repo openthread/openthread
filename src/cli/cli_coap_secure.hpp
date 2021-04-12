@@ -41,6 +41,7 @@
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #ifndef CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER
 #define CLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER 0
@@ -58,6 +59,8 @@ class Interpreter;
 class CoapSecure
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -73,7 +76,7 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     enum
@@ -87,21 +90,21 @@ private:
     struct Command
     {
         const char *mName;
-        otError (CoapSecure::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (CoapSecure::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessConnect(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessDisconnect(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessPsk(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessRequest(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessResource(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessX509(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessConnect(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessDisconnect(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPsk(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessResource(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessX509(uint8_t aArgsLength, Arg aArgs[]);
 
     void Stop(void);
 
