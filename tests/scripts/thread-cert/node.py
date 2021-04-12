@@ -210,7 +210,7 @@ class OtbrDocker:
                     break
 
                 lines.append(line)
-                logging.info("%s $ %s", self, line.rstrip('\r\n'))
+                logging.info("%s $ %r", self, line.rstrip('\r\n'))
 
             proc.wait()
 
@@ -294,23 +294,21 @@ class OtbrDocker:
                     if record[3] == 'SRV':
                         record[4], record[5], record[6] = map(int, [record[4], record[5], record[6]])
                     elif record[3] == 'TXT':
-                        record[4:] = [self.__parse_dns_dig_txt(record[4:])]
+                        record[4:] = [self.__parse_dns_dig_txt(line)]
 
                 dig_result[section].append(tuple(record))
 
         return dig_result
 
-    def __parse_dns_dig_txt(self, txt_entries):
-        # Example txt_entries:
-        # ['"nn=OpenThread"', '"xp=\\000\\013\\184\\000\\000\\000\\000\\000"', '"tv=1.2.0"', '"dd=\\022n\\010\\000\\000\\000\\000\\001"']
+    def __parse_dns_dig_txt(self, line: str):
+        # Example TXT entry:
+        # "xp=\\000\\013\\184\\000\\000\\000\\000\\000"
         txt = {}
-        for entry in txt_entries:
-            assert entry.startswith('"') and entry.endswith('"')
-            entry = entry[1:-1]
+        for entry in re.findall(r'"(.*?)"', line):
             if entry == "":
                 continue
 
-            k, v = entry.split('=')
+            k, v = entry.split('=', 1)
             txt[k] = v
 
         return txt
@@ -321,7 +319,6 @@ class OtbrDocker:
 
 
 class OtCli:
-
     RESET_DELAY = 0.1
 
     def __init__(self, nodeid, is_mtd=False, version=None, is_bbr=False, **kwargs):
