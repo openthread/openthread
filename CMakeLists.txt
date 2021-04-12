@@ -89,6 +89,7 @@ endif()
 
 set(OT_PACKAGE_NAME "OPENTHREAD" CACHE STRING "OpenThread Package Name")
 target_compile_definitions(ot-config INTERFACE "PACKAGE_NAME=\"${OT_PACKAGE_NAME}\"")
+message(STATUS "Package Name: ${OT_PACKAGE_NAME}")
 
 set(OT_PACKAGE_VERSION "" CACHE STRING "OpenThread Package Version")
 if(OT_PACKAGE_VERSION STREQUAL "")
@@ -100,6 +101,7 @@ if(OT_PACKAGE_VERSION STREQUAL "")
     message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 endif()
 target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\"")
+message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
 set(OT_THREAD_VERSION "1.2" CACHE STRING "Thread version chosen by the user at configure time")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2")
