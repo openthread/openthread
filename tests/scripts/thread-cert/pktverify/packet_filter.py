@@ -29,7 +29,7 @@
 import logging
 import sys
 from operator import attrgetter
-from typing import Optional, Callable, Tuple
+from typing import Optional, Callable, Tuple, Union
 
 from pktverify import consts, errors
 from pktverify.addrs import EthAddr, ExtAddr, Ipv6Addr
@@ -572,11 +572,11 @@ class PacketFilter(object):
     def filter_LLARMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
 
-    def filter_AMPLFMA(self, mpl_seed_id: (Ipv6Addr, int) = None, **kwargs):
+    def filter_AMPLFMA(self, mpl_seed_id: Union[int, Tuple[Ipv6Addr, int]] = None, **kwargs):
         f = self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
         if mpl_seed_id is not None:
-            if len(mpl_seed_id) == 1:
-                rloc16 = mpl_seed_id
+            if isinstance(mpl_seed_id, int):
+                mpl_seed_id = Bytes([mpl_seed_id >> 8, mpl_seed_id & 0xFF])
                 f = f.filter(lambda p: p.ipv6.opt.mpl.seed_id == mpl_seed_id)
             else:
                 rloc, rloc16 = mpl_seed_id
