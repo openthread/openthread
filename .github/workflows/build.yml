@@ -261,6 +261,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
+        brew update
         brew install automake m4 ninja
         [ ${{ matrix.CC }} != clang ] || brew install llvm
     - name: Build
