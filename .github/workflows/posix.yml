@@ -52,6 +52,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
+        brew update
         brew install ninja
     - name: Run RCP Mode
       run: |
@@ -296,6 +297,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
+        brew update
         brew install ninja socat
     - name: Build
       run: |
