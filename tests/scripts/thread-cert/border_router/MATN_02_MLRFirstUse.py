@@ -32,6 +32,7 @@ import unittest
 
 import pktverify
 from pktverify import packet_verifier, packet_filter
+from pktverify.consts import MA1, MA1g, MA2
 import config
 import thread_cert
 
@@ -56,8 +57,6 @@ BR_1 = 1
 BR_2 = 2
 TD = 3
 HOST = 4
-
-from pktverify.consts import MA1, MA1g, MA2
 
 CHANNEL1 = 18
 
