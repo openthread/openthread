@@ -64,7 +64,7 @@ CHANNEL1 = 18
 MLR_TIMEOUT_MIN = 300
 
 
-class MATN_02_MLRFirstUse(thread_cert.TestCase):
+class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
