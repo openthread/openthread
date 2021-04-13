@@ -27,6 +27,7 @@
 #
 
 import logging
+import struct
 import sys
 from operator import attrgetter
 from typing import Optional, Callable, Tuple, Union
@@ -572,15 +573,15 @@ class PacketFilter(object):
     def filter_LLARMA(self, **kwargs):
         return self.filter(lambda p: p.ipv6.dst == consts.LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS, **kwargs)
 
-    def filter_AMPLFMA(self, mpl_seed_id: Union[int, Tuple[Ipv6Addr, int]] = None, **kwargs):
+    def filter_AMPLFMA(self, mpl_seed_id: Union[int, Ipv6Addr] = None, **kwargs):
         f = self.filter(lambda p: p.ipv6.dst == consts.ALL_MPL_FORWARDERS_MA, **kwargs)
         if mpl_seed_id is not None:
             if isinstance(mpl_seed_id, int):
                 mpl_seed_id = Bytes([mpl_seed_id >> 8, mpl_seed_id & 0xFF])
                 f = f.filter(lambda p: p.ipv6.opt.mpl.seed_id == mpl_seed_id)
             else:
-                rloc, rloc16 = mpl_seed_id
-                rloc16 = Bytes([rloc16 >> 8, rloc16 & 0xFF])
+                rloc = mpl_seed_id
+                rloc16 = bytes(rloc[-2:])
                 f = f.filter(lambda p: (p.ipv6.src == rloc and p.ipv6.opt.mpl.flag.s == 0) or
                              (p.ipv6.src != rloc and p.ipv6.opt.mpl.flag.s == 1 and p.ipv6.opt.mpl.seed_id == rloc16))
         return f
