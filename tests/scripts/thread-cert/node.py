@@ -304,7 +304,7 @@ class OtbrDocker:
         # Example TXT entry:
         # "xp=\\000\\013\\184\\000\\000\\000\\000\\000"
         txt = {}
-        for entry in re.findall(r'"(.*?)"', line):
+        for entry in re.findall(r'"(.*?[^\\])"', line):
             if entry == "":
                 continue
 
