@@ -721,22 +721,6 @@ public:
     void SetCslPeriod(uint16_t aPeriod);
 
     /**
-     * This method gets the CSL timeout.
-     *
-     * @returns CSL timeout in seconds.
-     *
-     */
-    uint32_t GetCslTimeout(void) const { return mLinks.GetSubMac().GetCslTimeout(); }
-
-    /**
-     * This method sets the CSL timeout.
-     *
-     * @param[in]  aTimeout  The CSL timeout in seconds.
-     *
-     */
-    void SetCslTimeout(uint32_t aTimeout);
-
-    /**
      * This method indicates whether CSL is started at the moment.
      *
      * @retval TURE if CSL is actually running at the moment, FALSE otherwise.

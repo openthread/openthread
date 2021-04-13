@@ -2467,21 +2467,6 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
     UpdateIdleMode();
 }
 
-void Mac::SetCslTimeout(uint32_t aTimeout)
-{
-    VerifyOrExit(GetCslTimeout() != aTimeout);
-
-    mLinks.GetSubMac().SetCslTimeout(aTimeout);
-
-    if (IsCslEnabled())
-    {
-        Get<Mle::Mle>().ScheduleChildUpdateRequest();
-    }
-
-exit:
-    return;
-}
-
 bool Mac::IsCslEnabled(void) const
 {
     return (GetCslPeriod() > 0) && !GetRxOnWhenIdle() && Get<Mle::MleRouter>().IsChild() &&

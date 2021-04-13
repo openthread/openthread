@@ -67,7 +67,6 @@ SubMac::SubMac(Instance &aInstance)
     , mKeyId(0)
     , mTimer(aInstance, SubMac::HandleTimer)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslTimeout(OPENTHREAD_CONFIG_CSL_TIMEOUT)
     , mCslPeriod(0)
     , mCslChannel(0)
     , mIsCslChannelSpecified(false)
@@ -970,11 +969,6 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
 
 exit:
     return;
-}
-
-void SubMac::SetCslTimeout(uint32_t aTimeout)
-{
-    mCslTimeout = aTimeout;
 }
 
 void SubMac::HandleCslTimer(Timer &aTimer)
