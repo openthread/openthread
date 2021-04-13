@@ -101,6 +101,31 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.nodes[SSED_1].set_pollperiod(0)
         self.simulator.go(5)
 
+        # Check if data poll is not sent if data packet with CSL IE is sent to parent
+        self.nodes[SSED_1].set_csl_period(consts.CSL_DEFAULT_PERIOD)
+        self.simulator.go(consts.CSL_DEFAULT_TIMEOUT / 2)
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.flush_all()
+        self.simulator.go(consts.CSL_DEFAULT_TIMEOUT / 2)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        self.assertIsNone(ssed_messages.next_data_poll())
+
+        # Check if data poll is used to sync SSED's parent before CSL timeout
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.flush_all()
+        self.simulator.go(consts.CSL_DEFAULT_TIMEOUT)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        self.assertIsNotNone(ssed_messages.next_data_poll())
+
+        # Check if data poll is used to resync SSED's parent after retransmission
+        leader_rloc = self.nodes[LEADER].get_rloc()
+        self.nodes[LEADER].stop()
+        self.flush_all()
+        self.assertFalse(self.nodes[SSED_1].ping(leader_rloc, timeout=timeout))
+        self.simulator.go(2)
+        ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
+        self.assertIsNotNone(ssed_messages.next_data_poll())
+
 
 if __name__ == '__main__':
     unittest.main()

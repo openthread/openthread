@@ -1536,18 +1536,20 @@ bool MeshForwarder::CalcIePresent(const Message *aMessage)
 
     OT_UNUSED_VARIABLE(aMessage);
 
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     iePresent |= (aMessage != nullptr && aMessage->IsTimeSync());
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     iePresent |= Get<Mac::Mac>().IsCslEnabled();
 #endif
+#endif
 
     return iePresent;
 }
 
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::Frame &aFrame)
+void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame)
 {
     uint8_t index     = 0;
     bool    iePresent = false;
