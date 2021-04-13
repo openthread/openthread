@@ -2458,6 +2458,8 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 {
     mLinks.GetSubMac().SetCslPeriod(aPeriod);
 
+    Get<DataPollSender>().RecalculatePollPeriod();
+
     if (IsCslEnabled())
     {
         IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
