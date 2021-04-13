@@ -30,13 +30,12 @@
 >> Device : OpenThread_BR THCI
 >> Class : OpenThread_BR
 """
-import re
-
 import logging
-import serial
+import re
 import sys
 import time
 
+import serial
 from IThci import IThci
 from THCI.OpenThread import OpenThreadTHCI, watched
 
@@ -76,18 +75,21 @@ class SSHHandle(object):
         return output
 
 
-def SerialHandle(object):
+class SerialHandle:
 
     def __init__(self, port, baudrate):
         self.port = port
         self.__handle = serial.Serial(port, baudrate, timeout=0)
+
+        self.__lines = ['']
+        assert len(self.__lines) >= 1, self.__lines
 
         self.log("inputing username ...")
         self.__bashWriteLine('pi')
         deadline = time.time() + 20
         loginOk = False
         while time.time() < deadline:
-            self.sleep(1)
+            time.sleep(1)
 
             lastLine = None
             while True:
@@ -134,7 +136,7 @@ def SerialHandle(object):
         """
         self.__bashClearLines()
         self.__bashWriteLine(cmd)
-        self.__bashExpect(cmd, endswith=True)
+        self.__bashExpect(cmd, timeout=timeout, endswith=True)
 
         response = []
 
@@ -142,7 +144,7 @@ def SerialHandle(object):
         while time.time() < deadline:
             line = self.__bashReadLine()
             if line is None:
-                self.sleep(0.01)
+                time.sleep(0.01)
                 continue
 
             if line == RPI_FULL_PROMPT:
@@ -154,14 +156,14 @@ def SerialHandle(object):
         self.__bashWrite('\x03')
         raise Exception('%s: failed to find end of response' % self.port)
 
-    def __bashExpect(self, expected, timeout=DEFAULT_COMMAND_TIMEOUT, endswith=False):
+    def __bashExpect(self, expected, timeout=20, endswith=False):
         print('[%s] Expecting [%r]' % (self.port, expected))
 
         deadline = time.time() + timeout
         while time.time() < deadline:
             line = self.__bashReadLine()
             if line is None:
-                self.sleep(0.01)
+                time.sleep(0.01)
                 continue
 
             print('[%s] Got line [%r]' % (self.port, line))
@@ -185,7 +187,7 @@ def SerialHandle(object):
         data = ''
         while True:
             piece = self.__handle.read()
-            data = data + piece
+            data = data + piece.decode('utf8')
             if piece:
                 continue
 
@@ -256,8 +258,6 @@ class OpenThread_BR(OpenThreadTHCI, IThci):
             self.__handle = SSHHandle(self.telnetIp, self.telnetPort, self.telnetUsername, self.telnetPassword)
         else:
             self.__handle = SerialHandle(self.port, 115200)
-        self.__lines = ['']
-        assert len(self.__lines) >= 1, self.__lines
 
         self.__truncateSyslog()
 
