@@ -87,17 +87,21 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     )
 endif()
 
-execute_process(
-    COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
-    WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-    OUTPUT_VARIABLE OT_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
-)
-message(STATUS "Version: ${OT_VERSION}")
+set(OT_PACKAGE_NAME "OPENTHREAD" CACHE STRING "OpenThread Package Name")
+target_compile_definitions(ot-config INTERFACE "PACKAGE_NAME=\"${OT_PACKAGE_NAME}\"")
+message(STATUS "Package Name: ${OT_PACKAGE_NAME}")
 
-target_compile_definitions(ot-config INTERFACE
-    "PACKAGE_NAME=\"OPENTHREAD\""
-    "PACKAGE_VERSION=\"${OT_VERSION}\""
-)
+set(OT_PACKAGE_VERSION "" CACHE STRING "OpenThread Package Version")
+if(OT_PACKAGE_VERSION STREQUAL "")
+    execute_process(
+        COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE OT_PACKAGE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+    message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
+endif()
+target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\"")
+message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
 set(OT_THREAD_VERSION "1.2" CACHE STRING "Thread version chosen by the user at configure time")
 set_property(CACHE OT_THREAD_VERSION PROPERTY STRINGS "1.1" "1.2")
