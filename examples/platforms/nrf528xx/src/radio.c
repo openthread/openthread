@@ -1222,11 +1222,8 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
 
     sTransmitFrame.mInfo.mTxInfo.mAesKey = &sCurrKey;
 
-    if (!sTransmitFrame.mInfo.mTxInfo.mIsARetx)
-    {
-        otMacFrameSetKeyId(&sTransmitFrame, sKeyId);
-        otMacFrameSetFrameCounter(&sTransmitFrame, sMacFrameCounter++);
-    }
+    otMacFrameSetKeyId(&sTransmitFrame, sKeyId);
+    otMacFrameSetFrameCounter(&sTransmitFrame, sMacFrameCounter++);
 
     processSecurity = true;
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
