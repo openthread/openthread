@@ -1927,6 +1927,7 @@ class NodeImpl:
         master_key=None,
         mesh_local=None,
         network_name=None,
+        security_policy=None,
         binary=None,
     ):
         cmd = 'dataset mgmtsetcommand active '
@@ -1954,6 +1955,10 @@ class NodeImpl:
 
         if network_name is not None:
             cmd += 'networkname %s ' % self._escape_escapable(network_name)
+
+        if security_policy is not None:
+            rotation, flags = security_policy
+            cmd += 'securitypolicy %d %s ' % (rotation, flags)
 
         if binary is not None:
             cmd += '-x %s ' % binary

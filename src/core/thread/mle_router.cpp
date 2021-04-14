@@ -2907,7 +2907,7 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     discoveryResponse.Init();
     discoveryResponse.SetVersion(kThreadVersion);
 
-    if (Get<KeyManager>().IsNativeCommissioningAllowed())
+    if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
     {
         SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, MeshCoP::kBorderAgentUdpPort));
 

@@ -1584,7 +1584,7 @@ void Mle::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventSecurityPolicyChanged))
     {
-        Get<Ip6::Filter>().AllowNativeCommissioner(Get<KeyManager>().IsNativeCommissioningAllowed());
+        Get<Ip6::Filter>().AllowNativeCommissioner(Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled);
     }
 
 exit:

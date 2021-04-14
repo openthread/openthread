@@ -105,6 +105,9 @@ private:
     void        HandleDatasetUpdater(otError aError);
 #endif
 
+    void  OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
+    Error ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, const char *aRotation, const char *aFlags);
+
     static constexpr Command sCommands[] = {
         {"active", &Dataset::ProcessActive},
         {"activetimestamp", &Dataset::ProcessActiveTimestamp},

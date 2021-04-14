@@ -971,52 +971,41 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const;
 
     /**
-     * This method returns the Rotation Time value.
+     * This method returns the Security Policy.
      *
-     * @returns The Rotation Time value.
+     * @returns  The Security Policy.
      *
      */
-    uint16_t GetRotationTime(void) const { return HostSwap16(mRotationTime); }
+    SecurityPolicy GetSecurityPolicy(void) const;
 
     /**
-     * This method sets the Rotation Time value.
+     * This method sets the Security Policy.
      *
-     * @param[in]  aRotationTime  The Rotation Time value.
-     *
-     */
-    void SetRotationTime(uint16_t aRotationTime) { mRotationTime = HostSwap16(aRotationTime); }
-
-    enum
-    {
-        kObtainMasterKeyFlag      = OT_SECURITY_POLICY_OBTAIN_MASTER_KEY,     ///< Obtaining the Master Key
-        kNativeCommissioningFlag  = OT_SECURITY_POLICY_NATIVE_COMMISSIONING,  ///< Native Commissioning
-        kRoutersFlag              = OT_SECURITY_POLICY_ROUTERS,               ///< Routers enabled
-        kExternalCommissionerFlag = OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER, ///< External Commissioner allowed
-        kBeaconsFlag              = OT_SECURITY_POLICY_BEACONS,               ///< Beacons enabled
-    };
-
-    /**
-     * This method returns the Flags value.
-     *
-     * @returns The Flags value.
+     * @param[in]  aSecurityPolicy  The Security Policy which will be set.
      *
      */
-    uint8_t GetFlags(void) const { return mFlags; }
-
-    /**
-     * This method sets the Flags value.
-     *
-     * @param[in]  aFlags  The Flags value.
-     *
-     */
-    void SetFlags(uint8_t aFlags) { mFlags = aFlags; }
+    void SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy);
 
 private:
+    enum : uint8_t
+    {
+        kThread11FlagsLength = 1, ///< The Thread 1.1 Security Policy Flags length.
+        kThread12FlagsLength = 2, ///< The Thread 1.2 Security Policy Flags length.
+    };
+
+    void     SetRotationTime(uint16_t aRotationTime) { mRotationTime = HostSwap16(aRotationTime); }
+    uint16_t GetRotationTime(void) const { return HostSwap16(mRotationTime); }
+    uint8_t  GetFlagsLength(void) const { return GetLength() - sizeof(mRotationTime); }
+
     uint16_t mRotationTime;
-    uint8_t  mFlags;
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    uint8_t mFlags[kThread12FlagsLength];
+#else
+    uint8_t mFlags[kThread11FlagsLength];
+#endif
 } OT_TOOL_PACKED_END;
 
 /**

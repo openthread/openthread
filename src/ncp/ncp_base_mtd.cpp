@@ -1343,10 +1343,17 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
+        uint8_t flags[2];
+
+        static_cast<const SecurityPolicy &>(aDataset.mSecurityPolicy).GetFlags(flags, sizeof(flags));
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_DATASET_SECURITY_POLICY));
         SuccessOrExit(error = mEncoder.WriteUint16(aDataset.mSecurityPolicy.mRotationTime));
-        SuccessOrExit(error = mEncoder.WriteUint8(aDataset.mSecurityPolicy.mFlags));
+        SuccessOrExit(error = mEncoder.WriteUint8(flags[0]));
+        if (otThreadGetVersion() >= OT_THREAD_VERSION_1_2)
+        {
+            SuccessOrExit(error = mEncoder.WriteUint8(flags[1]));
+        }
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1546,8 +1553,17 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
             if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
+                uint8_t flags[2];
+                uint8_t flagsLength = 1;
+
                 SuccessOrExit(error = mDecoder.ReadUint16(aDataset.mSecurityPolicy.mRotationTime));
-                SuccessOrExit(error = mDecoder.ReadUint8(aDataset.mSecurityPolicy.mFlags));
+                SuccessOrExit(error = mDecoder.ReadUint8(flags[0]));
+                if (otThreadGetVersion() >= OT_THREAD_VERSION_1_2 && mDecoder.GetRemainingLengthInStruct() > 0)
+                {
+                    SuccessOrExit(error = mDecoder.ReadUint8(flags[1]));
+                    ++flagsLength;
+                }
+                static_cast<SecurityPolicy &>(aDataset.mSecurityPolicy).SetFlags(flags, flagsLength);
             }
 
             aDataset.mComponents.mIsSecurityPolicyPresent = true;

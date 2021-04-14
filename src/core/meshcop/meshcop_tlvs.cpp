@@ -145,6 +145,33 @@ void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
     memcpy(aSteeringData.GetData(), mSteeringData, GetSteeringDataLength());
 }
 
+bool SecurityPolicyTlv::IsValid(void) const
+{
+    return GetLength() >= sizeof(mRotationTime) && GetRotationTime() >= SecurityPolicy::kMinKeyRotationTime &&
+           GetFlagsLength() >= kThread11FlagsLength;
+}
+
+SecurityPolicy SecurityPolicyTlv::GetSecurityPolicy(void) const
+{
+    OT_ASSERT(IsValid());
+
+    SecurityPolicy securityPolicy;
+    uint8_t        length = OT_MIN(static_cast<uint8_t>(sizeof(mFlags)), GetFlagsLength());
+
+    securityPolicy.mRotationTime = GetRotationTime();
+    securityPolicy.SetFlags(mFlags, length);
+
+    return securityPolicy;
+}
+
+void SecurityPolicyTlv::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
+{
+    SetRotationTime(aSecurityPolicy.mRotationTime);
+    aSecurityPolicy.GetFlags(mFlags, sizeof(mFlags));
+
+    OT_ASSERT(IsValid());
+}
+
 bool ChannelTlv::IsValid(void) const
 {
     bool ret = false;
