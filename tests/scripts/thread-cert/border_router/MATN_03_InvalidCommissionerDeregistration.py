@@ -113,8 +113,7 @@ class MATN_03_InvalidCommissionerDeregistration(thread_cert.TestCase):
 
         # Ensure that router can receive a multicast ping packet sent to MA1.
         self.assertTrue(
-            host.ping(MA1, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 1. Router attempts to deregister for multicast address, MA1, at BR_1.
@@ -122,8 +121,7 @@ class MATN_03_InvalidCommissionerDeregistration(thread_cert.TestCase):
 
         # 3. Host sends a ping packet to the multicast address, MA1.
         self.assertTrue(
-            host.ping(MA1, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         self.collect_ipaddrs()
@@ -136,7 +134,6 @@ class MATN_03_InvalidCommissionerDeregistration(thread_cert.TestCase):
         pkts = pv.pkts
         vars = pv.vars
         pv.summary.show()
-        logging.info(f'VARS = {vars}')
 
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
