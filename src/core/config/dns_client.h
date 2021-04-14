@@ -46,6 +46,28 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+ *
+ * Define to 1 to enable support for NAT64 address translation (from IPv4 to IPv6) during address resolution by DNS
+ * client.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED
+ *
+ * Specifies the default NAT64 mode, i.e., whether to allow or disallow NAT64 address translation during DNS client
+ * address resolution. This mode is only available when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
  *
  * Define to 1 to enable DNS based Service Discovery (DNS-SD) client.

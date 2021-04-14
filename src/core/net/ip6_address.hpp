@@ -892,7 +892,7 @@ public:
      * @param[in] aIp4Address  The IPv4 address to translate to IPv6.
      *
      */
-    void SetFromTranslatedIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address);
+    void SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address);
 
     /**
      * This method converts an IPv6 address string to binary.
