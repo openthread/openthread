@@ -101,10 +101,19 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         self.assertFalse(br2.is_primary_backbone_router)
 
         # 1. Router sends a ping packet with realm-local scope MA5.
-        self.assertTrue(router1.ping(MA5))
+        self.assertFalse(router1.ping(MA1))
+        self.simulator.go(5)
 
-        # 4. Sends a ping packet with admin-local scope (address ff04::...),
-        # encapsulated in an MPL packet.
+        # 4a. Switch off BR_1
+        br1.disable_backbone_router()
+        br1.thread_stop()
+        self.simulator.go(30)
+
+        # 4b. BR_2 Detects the missing Primary BBR and becomes the the Leader of
+        # the Thread Network.
+        self.assertEqual('leader', br2.get_state())
+        self.assertTrue(br2.is_primary_backbone_router)
+
 
 
 
