@@ -328,7 +328,10 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address *               
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
 #else
-    otLogWarnMlr("MLR.req sent without active commissioner session.");
+    if (!Get<MeshCoP::Commissioner>().IsActive())
+    {
+        otLogWarnMlr("MLR.req sent without active commissioner session.");
+    }
 #endif
 
     // Only allow one outstanding registration if callback is specified.

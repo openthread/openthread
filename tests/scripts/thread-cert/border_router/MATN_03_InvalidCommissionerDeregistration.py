@@ -104,6 +104,7 @@ class MATN_03_InvalidCommissionerDeregistration(thread_cert.TestCase):
         br2.start()
         self.simulator.go(5)
         self.assertEqual('router', router.get_state())
+        self.assertFalse(br2.is_primary_backbone_router)
 
         host.start(start_radvd=False)
         self.simulator.go(5)
