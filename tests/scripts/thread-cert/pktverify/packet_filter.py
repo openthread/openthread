@@ -27,7 +27,6 @@
 #
 
 import logging
-import struct
 import sys
 from operator import attrgetter
 from typing import Optional, Callable, Tuple, Union
