@@ -37,12 +37,10 @@ import config
 import thread_cert
 
 # Test description:
-# The purpose of this test case is to verify that a Thread device is able to
-# register a multicast address with a Primary BBR and that the Primary BBR can
-# notify devices on the backbone link of the multicast address. The test also
-# verifies that an IPv6 multicast packet originating from the backbone is
-# correctly forwarded (in the Thread Network) to the device that registered the
-# multicast address.
+# The purpose of this test case is to verify that a Primary BBR can remove an
+# entry from a Multicast Listeners Table, when the entry expires. The test case
+# also verifies that the Primary BBR accepts a new registration to the
+# previously expired multicast group.
 #
 # Topology:
 #    ----------------(eth)------------------
@@ -50,15 +48,13 @@ import thread_cert
 #          BR1 (Leader) ----- BR2   HOST
 #           |                  |
 #           |                  |
-#          TD -----------------+
+#          Router_1------------+
 #
 
 BR_1 = 1
 BR_2 = 2
 ROUTER_1 = 3
 HOST = 4
-
-CHANNEL1 = 18
 
 MLR_TIMEOUT_MIN = 300
 
