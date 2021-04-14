@@ -32,7 +32,7 @@ import unittest
 
 import pktverify
 from pktverify import packet_verifier, packet_filter, consts
-from pktverify.consts import MA1, MA1g, MA2
+from pktverify.consts import MA1
 import config
 import thread_cert
 
@@ -108,6 +108,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         br2.start()
         self.simulator.go(5)
         self.assertEqual('router', br2.get_state())
+        self.assertFalse(br2.is_primary_backbone_router)
 
         host.start(start_radvd=False)
         self.simulator.go(10)
@@ -117,8 +118,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
 
         # 1. Host sends a ping packet to the multicast address, MA1.
         self.assertTrue(
-            host.ping(MA1, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
 
         # 3a. By internal means, Router_1 stop listening to the multicast
         # address, MA1.
@@ -129,17 +129,15 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
 
         # 5. Host sends a ping packet to the multicast address, MA1.
         self.assertFalse(
-            host.ping(MA1, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
-        # 6. Router_1 registers for multicast address, MA1, at BR_1.
+        # 6a. Router_1 registers for multicast address, MA1, at BR_1.
         router.add_ipmaddr(MA1)
 
         # 7. Host sends a ping packet to MA1.
         self.assertTrue(
-            host.ping(MA1, backbone=True, ttl=10, interface=
-            host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+            host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
@@ -151,7 +149,6 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         pkts = pv.pkts
         vars = pv.vars
         pv.summary.show()
-        logging.info(f'VARS = {vars}')
 
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
@@ -166,14 +163,8 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         # 2. BR_1 forwards the ping packet with multicast address, MA1, to its
         # Thread Network encapsulated in an MPL packet.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA() \
+            .filter_AMPLFMA(vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(lambda p: (p.ipv6.src == vars['BR_1_RLOC'] and
-                               p.ipv6.opt.mpl.flag.s == 0) or (
-                                  p.ipv6.src != vars['BR_1_RLOC'] and
-                                  p.ipv6.opt.mpl.flag.s == 1 and
-                                  vars['BR_1_RLOC16'].to_bytes(2,
-                                                               'big') == p.ipv6.opt.mpl.seed_id)) \
             .must_next()
 
         # 3. Router_1 receives the MPL packet containing an encapsulated ping
@@ -198,14 +189,8 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         # 6. BR_1 does not forward the ping packet with multicast address, MA1,
         # to its Thread Network.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA() \
+            .filter_AMPLFMA(vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(lambda p: (p.ipv6.src == vars['BR_1_RLOC'] and
-                               p.ipv6.opt.mpl.flag.s == 0) or (
-                                  p.ipv6.src != vars['BR_1_RLOC'] and
-                                  p.ipv6.opt.mpl.flag.s == 1 and
-                                  vars['BR_1_RLOC16'].to_bytes(2,
-                                                               'big') == p.ipv6.opt.mpl.seed_id)) \
             .must_not_next()
 
         # 7. Host sends a ping packet to the multicast address, MA1.
@@ -217,14 +202,8 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         # 8. BR_1 forwards the ping packet with multicast address, MA1, to its
         # Thread Network encapsulated in an MPL packet.
         pkts.filter_wpan_src64(vars['BR_1']) \
-            .filter_AMPLFMA() \
+            .filter_AMPLFMA(vars['BR_1_RLOC']) \
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
-            .filter(lambda p: (p.ipv6.src == vars['BR_1_RLOC'] and
-                               p.ipv6.opt.mpl.flag.s == 0) or (
-                                  p.ipv6.src != vars['BR_1_RLOC'] and
-                                  p.ipv6.opt.mpl.flag.s == 1 and
-                                  vars['BR_1_RLOC16'].to_bytes(2,
-                                                               'big') == p.ipv6.opt.mpl.seed_id)) \
             .must_next()
 
         # 9. Router_1 receives the MPL packet containing an encapsulated ping
