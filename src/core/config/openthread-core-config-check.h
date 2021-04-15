@@ -504,4 +504,9 @@
 #error "OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED was replaced by OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER
+#error "OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER was removed. "\
+       "Service numbers are defined in `network_data_servcie.hpp` per spec"
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_
