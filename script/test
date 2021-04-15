@@ -526,7 +526,9 @@ do_upload_codecov()
     local retry_count=5
     local fail_count=0
     until ((fail_count > retry_count)); do
-        bash <(curl -s https://codecov.io/bash) -f final.info -Z && break
+        # TODO: removed the existing command due to security concerns
+        echo "WARNIING: CODECOV DISABLED"
+        break
         ((++fail_count))
         echo >&2 "Upload failed, retrying (${fail_count}/${retry_count})"
         sleep 1m
