@@ -345,8 +345,8 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
         # Use ROUTER_1_2 as the Commissioner
         commissioiner = self.nodes[ROUTER_1_2]
 
-        # TODO: Enable this line
-        # self.assertRaisesRegex(Exception, "InvalidState", lambda: commissioiner.register_multicast_listener("ff04::1"))
+        self.assertEqual((0, []),
+                         commissioiner.register_multicast_listener("ff04::1"))
 
         commissioiner.commissioner_start()
         self.simulator.go(10)
