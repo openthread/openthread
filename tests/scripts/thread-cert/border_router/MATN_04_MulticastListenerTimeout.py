@@ -56,7 +56,7 @@ BR_2 = 2
 ROUTER_1 = 3
 HOST = 4
 
-MLR_TIMEOUT_MIN = 300
+REG_DELAY = 10
 
 
 class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
@@ -95,7 +95,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
         router = self.nodes[ROUTER_1]
         host = self.nodes[HOST]
 
-        br1.set_backbone_router(reg_delay=10, mlr_timeout=MLR_TIMEOUT_MIN)
+        br1.set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=consts.MLR_TIMEOUT_MIN)
         br1.start()
         self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
@@ -115,17 +115,19 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
 
         # Router_1 registers for multicast address, MA1, at BR_1.
         router.add_ipmaddr(MA1)
+        self.simulator.go(5)
 
         # 1. Host sends a ping packet to the multicast address, MA1.
         self.assertTrue(
             host.ping(MA1, backbone=True, ttl=10, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        self.simulator.go(5)
 
         # 3a. By internal means, Router_1 stop listening to the multicast
         # address, MA1.
         router.del_ipmaddr(MA1)
 
         # 4. After (MLR_TIMEOUT_MIN+2) seconds
-        self.simulator.go(MLR_TIMEOUT_MIN + 2)
+        self.simulator.go(consts.MLR_TIMEOUT_MIN + 2)
 
         # 5. Host sends a ping packet to the multicast address, MA1.
         self.assertFalse(
@@ -134,6 +136,7 @@ class MATN_04_MulticastListenerTimeout(thread_cert.TestCase):
 
         # 6a. Router_1 registers for multicast address, MA1, at BR_1.
         router.add_ipmaddr(MA1)
+        self.simulator.go(5)
 
         # 7. Host sends a ping packet to MA1.
         self.assertTrue(
