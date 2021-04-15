@@ -42,7 +42,7 @@ from pktverify.null_field import nullField
 
 def _auto(v: Union[LayerFieldsContainer, LayerField]):
     """parse the layer field automatically according to its format"""
-    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1, v.fields
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1 or v.get_default_value() is not None, v.fields
     dv = v.get_default_value()
     rv = v.raw_value
 
