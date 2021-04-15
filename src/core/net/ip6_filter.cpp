@@ -88,7 +88,7 @@ bool Filter::Accept(Message &aMessage) const
         }
 
         // Allow native commissioner traffic
-        if (mAllowNativeCommissioner && dstport == MeshCoP::kBorderAgentUdpPort)
+        if (mAllowNativeCommissioner && dstport == MeshCoP::kNativeCommissionerUdpPort)
         {
             ExitNow(rval = true);
         }

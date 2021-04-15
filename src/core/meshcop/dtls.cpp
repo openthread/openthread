@@ -208,6 +208,11 @@ exit:
     return;
 }
 
+uint16_t Dtls::GetUdpPort(void) const
+{
+    return mSocket.GetSockName().GetPort();
+}
+
 Error Dtls::Bind(uint16_t aPort)
 {
     Error error;

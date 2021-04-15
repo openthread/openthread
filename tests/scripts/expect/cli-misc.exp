@@ -167,4 +167,7 @@ expect_line "Done"
 send "diag start\n"
 expect ": InvalidState"
 
+send "ba port\n"
+expect "Done"
+
 dispose_all

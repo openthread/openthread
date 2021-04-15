@@ -48,6 +48,10 @@
 namespace ot {
 namespace MeshCoP {
 
+namespace {
+constexpr uint16_t kBorderAgentUdpPort = OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT; ///< UDP port of border agent service.
+}
+
 void BorderAgent::ForwardContext::Init(Instance &           aInstance,
                                        const Coap::Message &aMessage,
                                        bool                 aPetition,
@@ -568,6 +572,11 @@ void BorderAgent::HandleConnected(bool aConnected)
         mState        = kStateStarted;
         mUdpProxyPort = 0;
     }
+}
+
+uint16_t BorderAgent::GetUdpPort(void) const
+{
+    return Get<Coap::CoapSecure>().GetUdpPort();
 }
 
 Error BorderAgent::Start(void)

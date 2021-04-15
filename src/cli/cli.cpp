@@ -285,6 +285,20 @@ otError Interpreter::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+otError Interpreter::ProcessBorderAgent(uint8_t aArgsLength, char *aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength == 1 && strcmp(aArgs[0], "port") == 0, error = OT_ERROR_INVALID_COMMAND);
+
+    OutputLine("%u", otBorderAgentGetUdpPort(mInstance));
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 otError Interpreter::ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[])
 {

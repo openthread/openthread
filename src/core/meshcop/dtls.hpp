@@ -136,6 +136,14 @@ public:
     Error Bind(uint16_t aPort);
 
     /**
+     * This method gets the UDP port of this session.
+     *
+     * @returns  UDP port number.
+     *
+     */
+    uint16_t GetUdpPort(void) const;
+
+    /**
      * This method binds this DTLS with a transport callback.
      *
      * @param[in]  aCallback  A pointer to a function for sending messages.
