@@ -68,8 +68,10 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
-    otInstance *        instance = nullptr;
+    otInstance *instance = nullptr;
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     ot::Posix::RadioUrl radioUrl(aPlatformConfig->mRadioUrl);
+#endif
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     // The last argument must be the node id
@@ -84,9 +86,13 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     }
 #endif
 
-    VerifyOrDie(radioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    VerifyOrDie(radioUrl.GetPath() != nullptr, OT_EXIT_INVALID_ARGUMENTS);
     platformRadioInit(&radioUrl);
+#endif
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelInit(aPlatformConfig->mTrelInterface);
 #endif
@@ -141,7 +147,9 @@ void otSysDeinit(void)
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
 #endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     platformRadioDeinit();
+#endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifDeinit();
 #endif
@@ -207,7 +215,9 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     virtualTimeUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet, &aMainloop->mMaxFd,
                            &aMainloop->mTimeout);
 #else
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     platformRadioUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
+#endif
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
@@ -272,7 +282,9 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
 #else
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     platformRadioProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);
+#endif
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelProcess(aInstance, &aMainloop->mReadFdSet, &aMainloop->mWriteFdSet);

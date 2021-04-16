@@ -105,7 +105,11 @@ Mac::Mac(Instance &aInstance)
     , mPanId(kPanIdBroadcast)
     , mPanChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
     , mRadioChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     , mSupportedChannelMask(Get<Radio>().GetSupportedChannelMask())
+#else
+    , mSupportedChannelMask(Radio::kSupportedChannels)
+#endif
     , mScanChannel(Radio::kChannelMin)
     , mScanDuration(0)
     , mMaxFrameRetriesDirect(kDefaultMaxFrameRetriesDirect)
