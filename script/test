@@ -510,7 +510,7 @@ do_generate_coverage()
     lcov --extract tmp/coverage.info "$PWD/src/core/common/message.cpp" | c++filt
 }
 
-do_upload_codecov()
+do_combine_coverage()
 {
     ls -R coverage/
 
@@ -522,21 +522,6 @@ do_upload_codecov()
         args+=("$i")
     done
     lcov "${args[@]}" -o final.info
-
-    local retry_count=5
-    local fail_count=0
-    until ((fail_count > retry_count)); do
-        # TODO: removed the existing command due to security concerns
-        echo "WARNIING: CODECOV DISABLED"
-        break
-        ((++fail_count))
-        echo >&2 "Upload failed, retrying (${fail_count}/${retry_count})"
-        sleep 1m
-    done
-
-    if ((fail_count > retry_count)); then
-        exit 1
-    fi
 }
 
 envsetup()
@@ -647,8 +632,8 @@ main()
                 shift
                 do_generate_coverage "$1"
                 ;;
-            upload_codecov)
-                do_upload_codecov
+            combine_coverage)
+                do_combine_coverage
                 ;;
             *)
                 echo

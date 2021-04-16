@@ -99,9 +99,14 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         path: coverage/
-    - name: Upload Coverage
+    - name: Combine Coverage
       run: |
-        script/test upload_codecov
+        script/test combine_coverage
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        files: final.info
+        fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage
