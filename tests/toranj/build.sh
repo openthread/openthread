@@ -100,6 +100,14 @@ configure_options=(
     "--enable-ncp"
 )
 
+posix_configure_options=(
+    "--disable-docs"
+    "--enable-tests=$tests"
+    "--enable-coverage=$coverage"
+    "--enable-ftd"
+    "--enable-cli"
+)
+
 if [ -n "${top_builddir}" ]; then
     top_srcdir=$(pwd)
     mkdir -p "${top_builddir}"
@@ -202,7 +210,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -218,7 +226,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -234,7 +242,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -250,7 +258,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 

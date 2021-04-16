@@ -109,12 +109,12 @@ static const char *BufferToString(const uint8_t *aBuffer, uint16_t aLength)
     char *   cur = &string[0];
     char *   end = &string[sizeof(string) - 1];
 
-    cur += snprintf(cur, end - cur, "[(len:%d) ", aLength);
+    cur += snprintf(cur, (uint16_t)(end - cur), "[(len:%d) ", aLength);
     VerifyOrExit(cur < end);
 
     while (aLength-- && (num < kMaxWrite))
     {
-        cur += snprintf(cur, end - cur, "%02x ", *aBuffer++);
+        cur += snprintf(cur, (uint16_t)(end - cur), "%02x ", *aBuffer++);
         VerifyOrExit(cur < end);
 
         num++;
@@ -122,7 +122,7 @@ static const char *BufferToString(const uint8_t *aBuffer, uint16_t aLength)
 
     if (aLength != 0)
     {
-        cur += snprintf(cur, end - cur, "... ");
+        cur += snprintf(cur, (uint16_t)(end - cur), "... ");
         VerifyOrExit(cur < end);
     }
 
@@ -168,7 +168,7 @@ static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAd
     request.ifa.ifa_prefixlen = TREL_UNICAST_ADDRESS_PREFIX_LEN;
     request.ifa.ifa_flags     = IFA_F_NODAD;
     request.ifa.ifa_scope     = TREL_UNICAST_ADDRESS_SCOPE;
-    request.ifa.ifa_index     = sInterfaceIndex;
+    request.ifa.ifa_index     = (unsigned int)(sInterfaceIndex);
 
     rta = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&request)) + NLMSG_ALIGN(request.nh.nlmsg_len));
     rta->rta_type = IFA_LOCAL;

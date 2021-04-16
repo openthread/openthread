@@ -257,14 +257,6 @@
 #define OPENTHREAD_CONFIG_MAC_FILTER_SIZE 80
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-
-/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level (used at compile time).
