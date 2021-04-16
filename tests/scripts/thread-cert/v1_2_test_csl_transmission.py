@@ -66,9 +66,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         self.assertEqual(self.nodes[SSED_1].get_state(), 'child')
 
         print('SSED rloc:%s' % self.nodes[SSED_1].get_rloc())
-        # Set ping timeout as two CSL periods.
-        timeout = 2 * consts.CSL_DEFAULT_PERIOD_IN_SECOND
-        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
@@ -80,12 +78,12 @@ class SSED_CslTransmission(thread_cert.TestCase):
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         msg = ssed_messages.next_mle_message(mle.CommandType.CHILD_UPDATE_REQUEST)
         msg.assertMleMessageContainsTlv(mle.CslChannel)
-        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
         self.nodes[SSED_1].set_csl_channel(0)
         self.simulator.go(1)
-        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(5)
 
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
@@ -93,7 +91,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         msg.assertMleMessageDoesNotContainTlv(mle.CslChannel)
 
         self.nodes[SSED_1].set_csl_period(0)
-        self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.assertFalse(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.simulator.go(2)
 
         self.nodes[SSED_1].set_pollperiod(1000)
@@ -104,14 +102,14 @@ class SSED_CslTransmission(thread_cert.TestCase):
         # Check if data poll is not sent if data packet with CSL IE is sent to parent
         self.nodes[SSED_1].set_csl_period(consts.CSL_DEFAULT_PERIOD)
         self.simulator.go(consts.CSL_DEFAULT_TIMEOUT / 2)
-        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.flush_all()
         self.simulator.go(consts.CSL_DEFAULT_TIMEOUT / 2)
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         self.assertIsNone(ssed_messages.next_data_poll())
 
         # Check if data poll is used to sync SSED's parent before CSL timeout
-        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc(), timeout=timeout))
+        self.assertTrue(self.nodes[LEADER].ping(self.nodes[SSED_1].get_rloc()))
         self.flush_all()
         self.simulator.go(consts.CSL_DEFAULT_TIMEOUT)
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
@@ -121,7 +119,7 @@ class SSED_CslTransmission(thread_cert.TestCase):
         leader_rloc = self.nodes[LEADER].get_rloc()
         self.nodes[LEADER].stop()
         self.flush_all()
-        self.assertFalse(self.nodes[SSED_1].ping(leader_rloc, timeout=timeout))
+        self.assertFalse(self.nodes[SSED_1].ping(leader_rloc))
         self.simulator.go(2)
         ssed_messages = self.simulator.get_messages_sent_by(SSED_1)
         self.assertIsNotNone(ssed_messages.next_data_poll())
