@@ -107,6 +107,7 @@ typedef void (*otPingSenderStatisticsCallback)(const otPingSenderStatistics *aSt
  */
 typedef struct otPingSenderConfig
 {
+    otIp6Address              mSource;        ///< Source address of the ping.
     otIp6Address              mDestination;   ///< Destination address to ping.
     otPingSenderReplyCallback mReplyCallback; ///< Callback function to report replies (can be NULL if not needed).
     otPingSenderStatisticsCallback
