@@ -128,6 +128,7 @@ void PingSender::SendPing(void)
     Message *        message = nullptr;
     Ip6::MessageInfo messageInfo;
 
+    messageInfo.SetSockAddr(mConfig.GetSource());
     messageInfo.SetPeerAddr(mConfig.GetDestination());
     messageInfo.mHopLimit          = mConfig.mHopLimit;
     messageInfo.mAllowZeroHopLimit = mConfig.mAllowZeroHopLimit;

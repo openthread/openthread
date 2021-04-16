@@ -95,6 +95,22 @@ public:
 
     public:
         /**
+         * This method gets the source IPv6 address of the ping.
+         *
+         * @returns The ping source IPv6 address.
+         *
+         */
+        Ip6::Address &GetSource(void) { return static_cast<Ip6::Address &>(mSource); }
+
+        /**
+         * This method gets the source IPv6 address of the ping.
+         *
+         * @returns The ping source IPv6 address.
+         *
+         */
+        const Ip6::Address &GetSource(void) const { return static_cast<const Ip6::Address &>(mSource); }
+
+        /**
          * This method gets the destination IPv6 address to ping.
          *
          * @returns The ping destination IPv6 address.
