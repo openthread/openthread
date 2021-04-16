@@ -509,6 +509,12 @@ otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
     }
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    if (otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) && !aFrame->mInfo.mTxInfo.mIsARetx)
+    {
+        otMacFrameSetKeyId(aFrame, sKeyId);
+        otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
+    }
+
     if (aFrame->mInfo.mTxInfo.mTxDelay != 0)
     {
         if (!nrf_802154_transmit_raw_at(&aFrame->mPsdu[-1], true, aFrame->mInfo.mTxInfo.mTxDelayBaseTime,
@@ -1221,9 +1227,6 @@ void nrf_802154_tx_started(const uint8_t *aFrame)
              !sTransmitFrame.mInfo.mTxInfo.mIsSecurityProcessed);
 
     sTransmitFrame.mInfo.mTxInfo.mAesKey = &sCurrKey;
-
-    otMacFrameSetKeyId(&sTransmitFrame, sKeyId);
-    otMacFrameSetFrameCounter(&sTransmitFrame, sMacFrameCounter++);
 
     processSecurity = true;
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
