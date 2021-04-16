@@ -55,6 +55,7 @@ target_link_libraries(ot-daemon PRIVATE
     openthread-hdlc
     openthread-spinel-rcp
     ${OT_MBEDTLS}
+    ot-config
 )
 
 add_executable(ot-ctl
