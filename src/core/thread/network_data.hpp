@@ -749,6 +749,31 @@ protected:
                                          uint8_t        aTlvsLength);
 
     /**
+     * This method returns the next pointer to a matching Service TLV.
+     *
+     * This method can be used to iterate over all Service TLVs that start with a given Service Data.
+     *
+     * Unlike `FindService()` method which searches for a Service TLV with an exact match with the given Service Data,
+     * this method performs a relaxed check allowing a matching Service TLV to contain additional bytes after
+     * @p aServiceData, i.e., a Service TLV is considered to match if its Service Data length is larger than or equal
+     * to @p aServiceDataLength and its first @p aServiceDataLength Service Data bytes are equal to @p aServiceData.
+     *
+     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first
+     *                                matching Service TLV), or a pointer to the previous Service TLV returned from
+     *                                this method to iterate to the next matching Service TLV.
+     * @param[in]  aEnterpriseNumber  Enterprise Number.
+     * @param[in]  aServiceData       A pointer to a Service Data to match with Service TLVs.
+     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     *
+     * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
+     *
+     */
+    const ServiceTlv *FindNextMatchingService(const ServiceTlv *aPrevServiceTlv,
+                                              uint32_t          aEnterpriseNumber,
+                                              const uint8_t *   aServiceData,
+                                              uint8_t           aServiceDataLength) const;
+
+    /**
      * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
      * number of bytes.
      *
@@ -1032,6 +1057,13 @@ private:
         ExternalRouteConfig *mExternalRoute;
         ServiceConfig *      mService;
     };
+
+    static const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
+                                         const uint8_t *aServiceData,
+                                         uint8_t        aServiceDataLength,
+                                         bool           aExactServiceDataMatch,
+                                         const uint8_t *aTlvs,
+                                         uint8_t        aTlvsLength);
 
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
