@@ -153,8 +153,6 @@ bool SecurityPolicyTlv::IsValid(void) const
 
 SecurityPolicy SecurityPolicyTlv::GetSecurityPolicy(void) const
 {
-    OT_ASSERT(IsValid());
-
     SecurityPolicy securityPolicy;
     uint8_t        length = OT_MIN(static_cast<uint8_t>(sizeof(mFlags)), GetFlagsLength());
 
@@ -168,8 +166,6 @@ void SecurityPolicyTlv::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
     SetRotationTime(aSecurityPolicy.mRotationTime);
     aSecurityPolicy.GetFlags(mFlags, sizeof(mFlags));
-
-    OT_ASSERT(IsValid());
 }
 
 bool ChannelTlv::IsValid(void) const
