@@ -61,7 +61,7 @@ jobs:
       run: |
         export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer`
         export ASAN_OPTIONS=symbolize=1
-        export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS="-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1 -DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191"
+        export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS="-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1"
         ./bootstrap
         VERBOSE=1 make -f examples/Makefile-simulation distcheck
 
@@ -137,7 +137,7 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 ./script/test build
+        ./script/test build
     - name: Get Thread-Wireshark
       run: |
         ./script/test get_thread_wireshark
@@ -184,7 +184,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 make -f examples/Makefile-simulation
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
@@ -229,7 +229,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 make -f examples/Makefile-simulation
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
@@ -269,7 +269,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 make -f examples/Makefile-simulation
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
@@ -384,7 +384,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 make -f examples/Makefile-simulation
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
@@ -426,7 +426,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 make -f examples/Makefile-simulation
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check
@@ -467,7 +467,7 @@ jobs:
     - name: Build
       run: |
         ./bootstrap
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 make -f examples/Makefile-simulation
+        make -f examples/Makefile-simulation
     - name: Run
       run: |
         VERBOSE=1 make -f examples/Makefile-simulation check

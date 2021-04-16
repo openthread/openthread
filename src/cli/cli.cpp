@@ -292,7 +292,7 @@ otError Interpreter::ProcessBorderAgent(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength == 1 && strcmp(aArgs[0], "port") == 0, error = OT_ERROR_INVALID_COMMAND);
 
-    OutputLine("%u", otBorderAgentGetUdpPort(mInstance));
+    OutputLine("%hu", otBorderAgentGetUdpPort(mInstance));
 
 exit:
     return error;

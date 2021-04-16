@@ -68,7 +68,7 @@
 /**
  * @def OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT
  *
- * Specifies the Border Agent UDP port.
+ * Specifies the Border Agent UDP port, and use 0 for ephemeral port.
  *
  */
 #ifndef OPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT

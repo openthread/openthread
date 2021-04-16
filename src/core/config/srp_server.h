@@ -48,7 +48,7 @@
 /**
  * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
  *
- * Specifies the SRP Server UDP port.
+ * Specifies the SRP Server UDP port, and use 0 for ephemeral port.
  *
  */
 #ifndef OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT

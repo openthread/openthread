@@ -70,7 +70,7 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 ./script/test build
+        ./script/test build
     - name: Run
       run: |
         ulimit -c unlimited
@@ -181,7 +181,7 @@ jobs:
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
-        CPPFLAGS=-DOPENTHREAD_CONFIG_BORDER_AGENT_UDP_PORT=49191 ./script/test build
+        ./script/test build
     - name: Get Thread-Wireshark
       run: |
         ./script/test get_thread_wireshark

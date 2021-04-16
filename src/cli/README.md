@@ -323,7 +323,7 @@ Print border agent service port.
 
 ```bash
 > ba port
-49191
+49152
 Done
 ```
 
