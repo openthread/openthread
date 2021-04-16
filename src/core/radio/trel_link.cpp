@@ -65,7 +65,6 @@ Link::Link(Instance &aInstance)
     mRxFrame.SetRadioType(Mac::kRadioTypeTrel);
 #endif
 
-    mTxTasklet.Post();
     mTimer.Start(kAckWaitWindow);
 }
 
