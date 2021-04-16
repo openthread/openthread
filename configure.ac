@@ -931,6 +931,8 @@ AM_CONDITIONAL(OPENTHREAD_BUILD_DOCS, [test "${nl_cv_build_docs}" = "yes"])
 
 AM_CONDITIONAL(OPENTHREAD_POSIX, [test "${with_platform}" = "posix" -o "${with_examples}" = "simulation"])
 
+AM_CONDITIONAL([OPENTHREAD_ENABLE_SPINEL_RCP], [test OPENTHREAD_PLATFORM_POSIX || test OPENTHREAD_ENABLE_RADIO_ONLY])
+
 #
 # Checks for libraries and packages.
 #

@@ -42,7 +42,6 @@ target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-cli PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
     ${OT_PLATFORM_DEFINES}
 )
 

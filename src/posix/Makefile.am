@@ -75,33 +75,6 @@ bin_PROGRAMS                                                           = \
     $(NULL)
 
 if OPENTHREAD_ENABLE_EXECUTABLE
-ot_ncp_CPPFLAGS                                                        = \
-    $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_NCP                    \
-    $(NULL)
-
-ot_ncp_SOURCES                                                         = \
-    main.c                                                               \
-    ncp.cpp                                                              \
-    $(NULL)
-
-ot_ncp_LDADD                                                           = \
-    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
-    $(LDADD_COMMON)                                                      \
-    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
-    $(LDADD_COMMON)                                                      \
-    $(NULL)
-
-ot_ncp_LDFLAGS                                                         = \
-    $(LDFLAGS_COMMON)                                                    \
-    $(NULL)
-
-ot_ncp_LIBTOOLFLAGS                                                    = \
-    $(LIBTOOLFLAGS_COMMON)                                               \
-    $(NULL)
-
 if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 bin_PROGRAMS                                                          += \
     ot-ctl                                                               \
@@ -111,11 +84,6 @@ else # OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 if OPENTHREAD_ENABLE_CLI
 bin_PROGRAMS                                                          += \
     ot-cli                                                               \
-    $(NULL)
-endif
-if OPENTHREAD_ENABLE_NCP
-bin_PROGRAMS                                                          += \
-    ot-ncp                                                               \
     $(NULL)
 endif
 endif # OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
@@ -130,7 +98,6 @@ ot_ctl_CPPFLAGS                                                        = \
 
 ot_daemon_CPPFLAGS                                                     = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                    \
     $(NULL)
 
 ot_daemon_SOURCES                                                      = \
@@ -139,12 +106,12 @@ ot_daemon_SOURCES                                                      = \
 
 ot_daemon_LDADD                                                        = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
-    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
-    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(top_builddir)/src/lib/spinel/libopenthread-spinel-rcp.a            \
+    $(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a                    \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
@@ -158,7 +125,6 @@ ot_daemon_LIBTOOLFLAGS                                                 = \
 
 ot_cli_CPPFLAGS                                                        = \
     $(CPPFLAGS_COMMON)                                                   \
-    -DOPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI                    \
     $(NULL)
 
 ot_cli_SOURCES                                                         = \
@@ -168,12 +134,12 @@ ot_cli_SOURCES                                                         = \
 
 ot_cli_LDADD                                                           = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
-    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
     $(LDADD_COMMON)                                                      \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a                      \
-    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
     $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(top_builddir)/src/lib/spinel/libopenthread-spinel-rcp.a            \
+    $(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a                    \
     $(LDADD_COMMON)                                                      \
     $(NULL)
 
@@ -186,7 +152,6 @@ ot_cli_LIBTOOLFLAGS                                                    = \
     $(NULL)
 
 if OPENTHREAD_ENABLE_LINKER_MAP
-ot_ncp_LDFLAGS                                                        += -Wl,-Map=ot-cli-ftd.map
 ot_cli_LDFLAGS                                                        += -Wl,-Map=ot-cli-mtd.map
 endif
 

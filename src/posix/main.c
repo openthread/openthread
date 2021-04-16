@@ -53,23 +53,15 @@
 #define HAVE_LIBREADLINE 0
 #endif
 
-#define OT_POSIX_APP_TYPE_NCP 1
-#define OT_POSIX_APP_TYPE_CLI 2
-
 #include <openthread/cli.h>
 #include <openthread/diag.h>
 #include <openthread/logging.h>
 #include <openthread/tasklet.h>
 #include <openthread/thread.h>
 #include <openthread/platform/radio.h>
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
-#include <openthread/ncp.h>
-#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 #include <openthread/cli.h>
-
 #include "cli/cli_config.h"
-#else
-#error "Unknown posix app type!"
 #endif
 #include <common/code_utils.hpp>
 #include <common/logging.hpp>
@@ -295,7 +287,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     aConfig->mPlatformConfig.mRadioUrl = aArgVector[optind];
 }
 
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
 {
     (void)aArgsLength;
@@ -304,7 +295,6 @@ static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
     otPlatformConfig *config = (otPlatformConfig *)aContext;
     otCliOutputFormat("%s\r\nDone\r\n", config->mRadioUrl);
 }
-#endif // OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 
 static otInstance *InitInstance(PosixConfig *aConfig)
 {
@@ -353,12 +343,10 @@ void otPlatReset(otInstance *aInstance)
 
 int main(int argc, char *argv[])
 {
-    otInstance *instance;
-    int         rval = 0;
-    PosixConfig config;
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
+    otInstance * instance;
+    int          rval = 0;
+    PosixConfig  config;
     otCliCommand radioUrlCommand = {"radiourl", PrintRadioUrl};
-#endif
 
 #ifdef __linux__
     // Ensure we terminate this process if the
@@ -380,14 +368,10 @@ int main(int argc, char *argv[])
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_DEBUG));
     instance = InitInstance(&config);
 
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
-    otAppNcpInit(instance);
-#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     otAppCliInit(instance);
 #endif
     otCliSetUserCommands(&radioUrlCommand, 1, &config.mPlatformConfig);
-#endif
 
     while (true)
     {
@@ -403,12 +387,8 @@ int main(int argc, char *argv[])
         mainloop.mTimeout.tv_sec  = 10;
         mainloop.mTimeout.tv_usec = 0;
 
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
-        otAppNcpUpdate(&mainloop);
-#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
         otAppCliUpdate(&mainloop);
-#endif
 #endif
 
         otSysMainloopUpdate(instance, &mainloop);
@@ -416,12 +396,8 @@ int main(int argc, char *argv[])
         if (otSysMainloopPoll(&mainloop) >= 0)
         {
             otSysMainloopProcess(instance, &mainloop);
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
-            otAppNcpProcess(&mainloop);
-#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
             otAppCliProcess(&mainloop);
-#endif
 #endif
         }
         else if (errno != EINTR)
@@ -431,12 +407,8 @@ int main(int argc, char *argv[])
         }
     }
 
-#if OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_NCP
-    // disable ncp
-#elif OPENTHREAD_POSIX_APP_TYPE == OT_POSIX_APP_TYPE_CLI
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     otAppCliDeinit();
-#endif
 #endif
 
 exit:

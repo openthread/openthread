@@ -38,7 +38,7 @@ if OPENTHREAD_ENABLE_MTD
 noinst_LIBRARIES                                 += libopenthread-spinel-ncp.a
 endif
 
-if OPENTHREAD_ENABLE_RADIO_ONLY
+if OPENTHREAD_ENABLE_SPINEL_RCP
 noinst_LIBRARIES                                 += libopenthread-spinel-rcp.a
 endif
 
