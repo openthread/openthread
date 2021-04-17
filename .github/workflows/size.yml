@@ -56,4 +56,9 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       run: |
         export PATH=$PATH:$HOME/.local/bin
+        if [ ${{ github.event_name }} == pull_request ]; then
+          curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
+          chmod a+x size-report
+          export OT_SIZE_REPORTER=./size-report
+        fi
         ./script/check-size
