@@ -840,7 +840,7 @@ void radioTransmit(struct RadioMessage *aMessage, const struct otRadioFrame *aFr
 #else  // OPENTHREAD_SIMULATION_VIRTUAL_TIME == 0
     struct Event event;
 
-    event.mDelay      = 1; // 1us for now
+    event.mDelay      = 0;
     event.mEvent      = OT_SIM_EVENT_RADIO_RECEIVED;
     event.mDataLength = 1 + aFrame->mLength; // include channel in first byte
     memcpy(event.mData, aMessage, event.mDataLength);

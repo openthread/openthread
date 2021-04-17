@@ -65,6 +65,7 @@ SED1 = 7
 
 class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         LEADER: {
@@ -161,6 +162,8 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
 
         for i in range(3, 13):
             self.nodes[i].start()
+            if i >= SED1:
+                self.nodes[i].set_pollperiod(1000)
             self.simulator.go(7)
             self.assertEqual(self.nodes[i].get_state(), 'child')
 
@@ -170,14 +173,14 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
         ipaddrs = self.nodes[SED1].get_addrs()
         for addr in ipaddrs:
             if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
-                self.assertTrue(self.nodes[LEADER].ping(addr, size=1232))
+                self.assertTrue(self.nodes[LEADER].ping(addr, size=1232, timeout=10))
                 break
 
         for i in range(3, 13):
             ipaddrs = self.nodes[i].get_addrs()
             for addr in ipaddrs:
                 if addr[0:4] != 'fe80' and 'ff:fe00' not in addr:
-                    self.assertTrue(self.nodes[LEADER].ping(addr, size=106))
+                    self.assertTrue(self.nodes[LEADER].ping(addr, size=106, timeout=10))
                     break
 
     def verify(self, pv: PacketVerifier):

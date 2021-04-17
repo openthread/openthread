@@ -753,6 +753,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_mode(self):
+        cmd = 'mode'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
     def debug(self, level):
         # `debug` command will not trigger interaction with simulator
         self.send_command('debug %d' % level, go=False)

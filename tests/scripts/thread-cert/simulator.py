@@ -122,7 +122,6 @@ class RealTime(BaseSimulator):
 
 
 class VirtualTime(BaseSimulator):
-
     OT_SIM_EVENT_ALARM_FIRED = 0
     OT_SIM_EVENT_RADIO_RECEIVED = 1
     OT_SIM_EVENT_UART_WRITE = 2
@@ -141,6 +140,7 @@ class VirtualTime(BaseSimulator):
     MAX_MESSAGE = 1024
     END_OF_TIME = float('inf')
     PORT_OFFSET = int(os.getenv('PORT_OFFSET', '0'))
+    WPAN_PHY_HEADER_SIZE = 6
 
     BLOCK_TIMEOUT = 10
 
@@ -331,8 +331,12 @@ class VirtualTime(BaseSimulator):
 
             elif type == self.OT_SIM_EVENT_RADIO_RECEIVED:
                 assert self._is_radio(addr)
+                assert delay == 0
                 # add radio receive events event queue
                 frame_info = wpan.dissect(data)
+
+                # Calculate frame transmission time = FrameSize / 250kbps
+                event_time += (len(data) + VirtualTime.WPAN_PHY_HEADER_SIZE) * 8 * 1000 // 250
 
                 recv_devices = None
                 if frame_info.frame_type == wpan.FrameType.ACK:
