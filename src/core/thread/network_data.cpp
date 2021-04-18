@@ -131,10 +131,8 @@ const NetworkDataTlv *NetworkData::FindTlv(const NetworkDataTlv *aStart,
 {
     const NetworkDataTlv *tlv;
 
-    for (tlv = aStart; tlv < aEnd; tlv = tlv->GetNext())
+    for (tlv = aStart; (tlv + 1 <= aEnd) && (tlv->GetNext() <= aEnd); tlv = tlv->GetNext())
     {
-        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd, tlv = nullptr);
-
         if (tlv->GetType() == aType)
         {
             ExitNow();
@@ -154,10 +152,8 @@ const NetworkDataTlv *NetworkData::FindTlv(const NetworkDataTlv *aStart,
 {
     const NetworkDataTlv *tlv;
 
-    for (tlv = aStart; tlv < aEnd; tlv = tlv->GetNext())
+    for (tlv = aStart; (tlv + 1 <= aEnd) && (tlv->GetNext() <= aEnd); tlv = tlv->GetNext())
     {
-        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd, tlv = nullptr);
-
         if ((tlv->GetType() == aType) && (tlv->IsStable() == aStable))
         {
             ExitNow();
@@ -252,7 +248,9 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
     Error               error = kErrorNotFound;
     NetworkDataIterator iterator(aIterator);
 
-    for (const NetworkDataTlv *cur; (cur = iterator.GetTlv(mTlvs)) < GetTlvsEnd(); iterator.AdvanceTlv(mTlvs))
+    for (const NetworkDataTlv *cur;
+         cur = iterator.GetTlv(mTlvs), (cur + 1 <= GetTlvsEnd()) && (cur->GetNext() <= GetTlvsEnd());
+         iterator.AdvanceTlv(mTlvs))
     {
         const NetworkDataTlv *subTlvs = nullptr;
 
@@ -279,7 +277,8 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
             continue;
         }
 
-        for (const NetworkDataTlv *subCur; (subCur = iterator.GetSubTlv(subTlvs)) < cur->GetNext();
+        for (const NetworkDataTlv *subCur; subCur = iterator.GetSubTlv(subTlvs),
+                                           (subCur + 1 <= cur->GetNext()) && (subCur->GetNext() <= cur->GetNext());
              iterator.AdvaceSubTlv(subTlvs))
         {
             if (cur->GetType() == NetworkDataTlv::kTypePrefix)
