@@ -166,6 +166,7 @@ private:
         kStateTransmit,
     };
 
+    void AfterInit(void);
     void SetState(State aState);
     void BeginTransmit(void);
     void InvokeSendDone(Error aError) { InvokeSendDone(aError, nullptr); }

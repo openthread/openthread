@@ -37,6 +37,7 @@
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "radio/trel_link.hpp"
 #include "utils/heap.hpp"
 
 namespace ot {
@@ -175,6 +176,10 @@ void Instance::AfterInit(void)
 
     Get<Settings>().Init();
     IgnoreError(Get<Mle::MleRouter>().Restore());
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Get<Trel::Link>().AfterInit();
+#endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

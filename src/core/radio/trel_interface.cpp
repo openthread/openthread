@@ -54,7 +54,7 @@ void Interface::Init(void)
 {
     Ip6::Address ip6Address;
 
-    VerifyOrExit(!mInitialized);
+    OT_ASSERT(!mInitialized);
 
     ip6Address.SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
     otPlatTrelUdp6Init(&GetInstance(), &ip6Address, kUdpPort);
@@ -63,9 +63,6 @@ void Interface::Init(void)
     otPlatTrelUdp6SubscribeMulticastAddress(&GetInstance(), &ip6Address);
 
     mInitialized = true;
-
-exit:
-    return;
 }
 
 void Interface::HandleExtAddressChange(void)

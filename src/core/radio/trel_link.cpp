@@ -65,15 +65,12 @@ Link::Link(Instance &aInstance)
     mRxFrame.SetRadioType(Mac::kRadioTypeTrel);
 #endif
 
-    // `mTxTasklet` is used for initializing the interface (in addition
-    // to handling `Send()` requests). Invoking `Interface::Init()` from
-    // a tasklet ensures that it happens after the constructors for
-    // `Instance` and all its objects are done, allowing the interface
-    // to safely use any of the core object methods (e.g., get the
-    // randomly generated MAC address).
-
-    mTxTasklet.Post();
     mTimer.Start(kAckWaitWindow);
+}
+
+void Link::AfterInit(void)
+{
+    mInterface.Init();
 }
 
 void Link::Enable(void)
@@ -120,11 +117,6 @@ void Link::HandleTxTasklet(Tasklet &aTasklet)
 
 void Link::HandleTxTasklet(void)
 {
-    if (!mInterface.IsInitialized())
-    {
-        mInterface.Init();
-    }
-
     BeginTransmit();
 }
 
