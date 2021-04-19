@@ -307,11 +307,11 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
 
     if (Get<Mle::MleRouter>().IsAttached())
     {
-        IgnoreError(Start());
+        Start();
     }
     else
     {
-        IgnoreError(Stop());
+        Stop();
     }
 
 exit:
@@ -579,7 +579,7 @@ uint16_t BorderAgent::GetUdpPort(void) const
     return Get<Coap::CoapSecure>().GetUdpPort();
 }
 
-Error BorderAgent::Start(void)
+void BorderAgent::Start(void)
 {
     Error             error;
     Coap::CoapSecure &coaps = Get<Coap::CoapSecure>();
@@ -606,8 +606,13 @@ Error BorderAgent::Start(void)
     mState        = kStateStarted;
     mUdpProxyPort = 0;
 
+    otLogInfoMeshCoP("Border Agent start listening on port %d", kBorderAgentUdpPort);
+
 exit:
-    return error;
+    if (error != kErrorNone)
+    {
+        otLogWarnMeshCoP("failed to start Border Agent on port %d: %s", kBorderAgentUdpPort, ErrorToString(error));
+    }
 }
 
 void BorderAgent::HandleTimeout(Timer &aTimer)
@@ -624,12 +629,11 @@ void BorderAgent::HandleTimeout(void)
     }
 }
 
-Error BorderAgent::Stop(void)
+void BorderAgent::Stop(void)
 {
-    Error             error = kErrorNone;
     Coap::CoapSecure &coaps = Get<Coap::CoapSecure>();
 
-    VerifyOrExit(mState != kStateStopped, error = kErrorAlready);
+    VerifyOrExit(mState != kStateStopped);
 
     mTimer.Stop();
 
@@ -651,8 +655,10 @@ Error BorderAgent::Stop(void)
     mState        = kStateStopped;
     mUdpProxyPort = 0;
 
+    otLogInfoMeshCoP("Border Agent stopped");
+
 exit:
-    return error;
+    return;
 }
 
 void BorderAgent::ApplyMeshLocalPrefix(void)

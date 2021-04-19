@@ -290,9 +290,37 @@ otError Interpreter::ProcessBorderAgent(uint8_t aArgsLength, char *aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aArgsLength == 1 && strcmp(aArgs[0], "port") == 0, error = OT_ERROR_INVALID_COMMAND);
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
 
-    OutputLine("%hu", otBorderAgentGetUdpPort(mInstance));
+    if (strcmp(aArgs[0], "port") == 0)
+    {
+        OutputLine("%hu", otBorderAgentGetUdpPort(mInstance));
+    }
+    else if (strcmp(aArgs[0], "state") == 0)
+    {
+        const char *state;
+
+        switch (otBorderAgentGetState(mInstance))
+        {
+        case OT_BORDER_AGENT_STATE_STOPPED:
+            state = "Stopped";
+            break;
+        case OT_BORDER_AGENT_STATE_STARTED:
+            state = "Started";
+            break;
+        case OT_BORDER_AGENT_STATE_ACTIVE:
+            state = "Active";
+            break;
+        default:
+            state = "Unknown";
+            break;
+        }
+        OutputLine(state);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
 
 exit:
     return error;

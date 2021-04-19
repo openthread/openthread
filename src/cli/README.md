@@ -21,7 +21,7 @@ Done
 
 ## OpenThread Command List
 
-- [ba](#ba-port)
+- [ba](#ba)
 - [bbr](#bbr)
 - [br](#br)
 - [bufferinfo](#bufferinfo)
@@ -317,6 +317,10 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 Done
 ```
 
+### ba
+
+Show current Border Agent information.
+
 ### ba port
 
 Print border agent service port.
@@ -324,6 +328,16 @@ Print border agent service port.
 ```bash
 > ba port
 49152
+Done
+```
+
+### ba state
+
+Print border agent state.
+
+```bash
+> ba state
+Started
 Done
 ```
 
