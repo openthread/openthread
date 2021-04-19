@@ -151,7 +151,7 @@ Neighbor *NeighborTable::FindNeighbor(const Ip6::Address &aIp6Address, Neighbor:
 
     if (!macAddress.IsNone())
     {
-        neighbor = FindChildOrRouter(Neighbor::AddressMatcher(macAddress, aFilter));
+        neighbor = FindNeighbor(Neighbor::AddressMatcher(macAddress, aFilter));
         ExitNow();
     }
 
