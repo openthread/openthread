@@ -209,12 +209,9 @@ class TestOTCI(unittest.TestCase):
         logging.info('leader bbr config: %r', bbr_config)
         logging.info('leader PBBR: %r', leader.get_primary_backbone_router_info())
 
-        leader.set_backbone_router_config(seqno=bbr_config['seqno'] + 1, delay=10, timeout=301)
-        self.assertEqual({
-            'seqno': bbr_config['seqno'] + 1,
-            'delay': 10,
-            'timeout': 301
-        }, leader.get_backbone_router_config())
+        new_bbr_seqno = (bbr_config['seqno'] + 1) % 256
+        leader.set_backbone_router_config(seqno=new_bbr_seqno, delay=10, timeout=301)
+        self.assertEqual({'seqno': new_bbr_seqno, 'delay': 10, 'timeout': 301}, leader.get_backbone_router_config())
 
         leader.enable_backbone_router()
         leader.wait(3)
