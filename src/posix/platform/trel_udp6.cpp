@@ -654,6 +654,11 @@ void platformTrelDeinit(void)
         close(sMulticastSocket);
     }
 
+    if (!otIp6IsAddressUnspecified(&sInterfaceAddress))
+    {
+        RemoveUnicastAddress(&sInterfaceAddress);
+    }
+
     otLogDebgPlat("[trel] platformTrelDeinit()");
 }
 
