@@ -641,7 +641,7 @@ protected:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     enum : uint8_t
     {
-        kSrpClientMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRSSES,
+        kSrpClientMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES,
     };
 
     otError EncodeSrpClientHostInfo(const otSrpClientHostInfo &aHostInfo);
