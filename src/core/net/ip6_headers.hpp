@@ -146,6 +146,8 @@ public:
      */
     void Init(uint32_t aVersionClassFlow) { mVersionClassFlow.m32 = HostSwap32(aVersionClassFlow); }
 
+    uint32_t GetM32() const { return mVersionClassFlow.m32; }
+
     /**
      * This method reads the IPv6 header from @p aMessage.
      *

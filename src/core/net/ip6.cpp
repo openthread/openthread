@@ -438,12 +438,19 @@ exit:
 
 void Ip6::EnqueueDatagram(Message &aMessage)
 {
+    otLogCritIp6("Enqueueing datagram %d", aMessage.GetDatagramTag());
+
     mSendQueue.Enqueue(aMessage);
     mSendQueueTask.Post();
 }
 
 Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aIpProto)
 {
+    bool isEcho = aIpProto == (kProtoIcmp6 + 100);
+    if (isEcho)
+    {
+        aIpProto -= 100;
+    }
     Error    error = kErrorNone;
     Header   header;
     uint16_t payloadLength = aMessage.GetLength();
@@ -496,6 +503,10 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
             {
                 otLogInfoIp6("Message copy for indirect transmission to sleepy children");
                 EnqueueDatagram(*messageCopy);
+                if (isEcho)
+                {
+                    otLogCritIp6("1111111111 ICMP's Ip6 m32 %u", header.GetM32());
+                }
             }
             else
             {
@@ -511,10 +522,18 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     if (aMessage.GetLength() > kMaxDatagramLength)
     {
+        if (isEcho)
+        {
+            otLogCritIp6("FRAGMENTING ICMP's Ip6 m32 %u", header.GetM32());
+        }
         error = FragmentDatagram(aMessage, aIpProto);
     }
     else
     {
+        if (isEcho)
+        {
+            otLogCritIp6("2222222222 ICMP's Ip6 m32 %u", header.GetM32());
+        }
         EnqueueDatagram(aMessage);
     }
 

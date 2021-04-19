@@ -207,10 +207,12 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
         replyMessageInfo.SetSockAddr(aMessageInfo.GetSockAddr());
     }
 
-    SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6));
+    SuccessOrExit(error = Get<Ip6>().SendDatagram(*replyMessage, replyMessageInfo, kProtoIcmp6 + 100));
 
     IgnoreError(replyMessage->Read(replyMessage->GetOffset(), icmp6Header));
-    otLogInfoIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
+    otLogCritIp6("Sending datagram; ICMP Header: ID %d,  seq: %d cksum: %d", icmp6Header.GetId(),
+                 icmp6Header.GetSequence(), icmp6Header.GetChecksum(), icmp6Header.GetType());
+    otLogCritIcmp("Sent Echo Reply (seq = %d)", icmp6Header.GetSequence());
 
 exit:
     FreeMessageOnError(replyMessage, error);
