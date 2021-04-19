@@ -1766,8 +1766,11 @@ class NodeImpl:
             return self._expect_results(
                 r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
-    def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64):
-        cmd = f'ping {ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
+    def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64, interface=None):
+        args = f'{ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
+        if interface is not None:
+            args = f'-I {interface} {args}'
+        cmd = f'ping {args}'
 
         self.send_command(cmd)
 
