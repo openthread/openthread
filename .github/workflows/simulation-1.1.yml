@@ -91,7 +91,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
         ./bootstrap
     - name: Run OTNS Tests
       env:
