@@ -94,16 +94,16 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
         host = self.nodes[HOST]
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('router', router1.get_state())
 
         br2.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('router', br2.get_state())
         self.assertFalse(br2.is_primary_backbone_router)
 
