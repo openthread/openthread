@@ -3252,12 +3252,10 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 {
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
-    uint8_t argsLength = aArgsLength;
-    char **args = aArgs;
 
-    VerifyOrExit(argsLength > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
-    if (strcmp(args[0], "stop") == 0)
+    if (strcmp(aArgs[0], "stop") == 0)
     {
         otPingSenderStop(mInstance);
         ExitNow();
@@ -3265,48 +3263,48 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 
     memset(&config, 0, sizeof(config));
 
-    if (argsLength >= 2)
+    if (aArgsLength >= 2)
     {
-        if (!strcmp(args[0], "-I"))
+        if (!strcmp(aArgs[0], "-I"))
         {
-            SuccessOrExit(error = ParseAsIp6Address(args[1], config.mSource));
-            args += 2;
-            argsLength -= 2;
+            SuccessOrExit(error = ParseAsIp6Address(aArgs[1], config.mSource));
+            aArgs += 2;
+            aArgsLength -= 2;
         }
     }
 
-    SuccessOrExit(error = ParseAsIp6Address(args[0], config.mDestination));
+    SuccessOrExit(error = ParseAsIp6Address(aArgs[0], config.mDestination));
 
-    if (argsLength > 1)
+    if (aArgsLength > 1)
     {
-        SuccessOrExit(error = ParseAsUint16(args[1], config.mSize));
+        SuccessOrExit(error = ParseAsUint16(aArgs[1], config.mSize));
     }
 
-    if (argsLength > 2)
+    if (aArgsLength > 2)
     {
-        SuccessOrExit(error = ParseAsUint16(args[2], config.mCount));
+        SuccessOrExit(error = ParseAsUint16(aArgs[2], config.mCount));
     }
 
-    if (argsLength > 3)
+    if (aArgsLength > 3)
     {
-        SuccessOrExit(error = ParsePingInterval(args[3], config.mInterval));
+        SuccessOrExit(error = ParsePingInterval(aArgs[3], config.mInterval));
     }
 
-    if (argsLength > 4)
+    if (aArgsLength > 4)
     {
-        SuccessOrExit(error = ParseAsUint8(args[4], config.mHopLimit));
+        SuccessOrExit(error = ParseAsUint8(aArgs[4], config.mHopLimit));
         config.mAllowZeroHopLimit = (config.mHopLimit == 0);
     }
 
-    if (argsLength > 5)
+    if (aArgsLength > 5)
     {
         uint32_t timeout;
-        SuccessOrExit(error = ParsePingInterval(args[5], timeout));
+        SuccessOrExit(error = ParsePingInterval(aArgs[5], timeout));
         VerifyOrExit(timeout <= NumericLimits<uint16_t>::Max(), error = OT_ERROR_INVALID_ARGS);
         config.mTimeout = static_cast<uint16_t>(timeout);
     }
 
-    VerifyOrExit(argsLength <= 6, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength <= 6, error = OT_ERROR_INVALID_ARGS);
 
     config.mReplyCallback      = Interpreter::HandlePingReply;
     config.mStatisticsCallback = Interpreter::HandlePingStatistics;

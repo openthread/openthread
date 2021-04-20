@@ -31,7 +31,7 @@ import logging
 import unittest
 
 import pktverify
-from pktverify import packet_verifier, packet_filter
+from pktverify import packet_verifier
 from pktverify.consts import MA1, MA1g, MA2
 import config
 import thread_cert
@@ -40,147 +40,102 @@ import thread_cert
 # The purpose of this test is to verify the functionality of ping command.
 #
 # Topology:
-#    ----------------(eth)------------------
-#           |                  |     |
-#          BR1 (Leader) ----- BR2   HOST
-#           |
-#           |
-#          TD
+#
+#
+#  ROUTER_2 ----- ROUTER_1 ---- ROUTER3
+#
 #
 
-BR_1 = 1
-BR_2 = 2
-TD = 3
-HOST = 4
+ROUTER_1 = 1
+ROUTER_2 = 2
+ROUTER_3 = 3
 
 
 class TestPing(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
-        BR_1: {
-            'name': 'BR_1',
-            'is_otbr': True,
-            'allowlist': [BR_2, TD],
+        ROUTER_1: {
+            'name': 'Router_1',
+            'allowlist': [ROUTER_2, ROUTER_3],
             'version': '1.2',
             'router_selection_jitter': 2,
         },
-        BR_2: {
-            'name': 'BR_2',
-            'allowlist': [BR_1],
-            'is_otbr': True,
+        ROUTER_2: {
+            'name': 'Router_2',
+            'allowlist': [ROUTER_1],
             'version': '1.2',
             'router_selection_jitter': 2,
         },
-        TD: {
-            'name': 'TD',
-            'allowlist': [BR_1],
+        ROUTER_3: {
+            'name': 'Router_3',
+            'allowlist': [ROUTER_1],
             'version': '1.2',
             'router_selection_jitter': 2,
-        },
-        HOST: {
-            'name': 'Host',
-            'is_host': True
         },
     }
 
     def test(self):
-        br1 = self.nodes[BR_1]
-        br2 = self.nodes[BR_2]
-        td = self.nodes[TD]
-        host = self.nodes[HOST]
+        router1 = self.nodes[ROUTER_1]
+        router2 = self.nodes[ROUTER_2]
+        router3 = self.nodes[ROUTER_3]
 
-        br1.start()
+        router1.start()
         self.simulator.go(5)
-        self.assertEqual('leader', br1.get_state())
-        self.assertTrue(br1.is_primary_backbone_router)
+        self.assertEqual('leader', router1.get_state())
 
-        td.start()
+        router2.start()
         self.simulator.go(5)
-        self.assertEqual('router', td.get_state())
+        self.assertEqual('router', router2.get_state())
 
-        br2.start()
+        router3.start()
         self.simulator.go(5)
-        self.assertEqual('router', br2.get_state())
-        self.assertFalse(br2.is_primary_backbone_router)
+        self.assertEqual('router', router3.get_state())
 
-        host.start(start_radvd=False)
-        self.simulator.go(10)
-
-        # 1. TD pings Host.
+        # 1. ROUTER_1 pings ROUTER_2.
         self.assertTrue(
-            td.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
-        self.simulator.go(5)
+            router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC)))
 
-        # 2. TD pings Host using specified interface.
+        # 2. ROUTER_1 pings ROUTER_2 multiple times.
         self.assertTrue(
-            td.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0],
-                    interface=td.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-        self.simulator.go(5)
+            router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC),
+                         count=5))
 
-        # 3. TD pings BR_2 using RLOC address. TD sends 5 echo requests and
-        # expects 5 responses.
-        self.assertTrue(td.ping(br2.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-                                interface=td.get_ip6_address(
-                                    config.ADDRESS_TYPE.RLOC), count=5,
-                                num_responses=5))
-        self.simulator.go(5)
-
-        # 4. TD pings BR_2 using link local address. TD should receive no
-        # response.
-        self.assertFalse(td.ping(br2.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-                                 interface=td.get_ip6_address(
-                                     config.ADDRESS_TYPE.LINK_LOCAL), count=5,
-                                 num_responses=5))
-        self.simulator.go(5)
-
-        # 5. TD pings BR_2's link local address. TD should receive no
-        # response.
-        self.assertFalse(
-            td.ping(br2.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL),
-                    interface=td.get_ip6_address(
-                        config.ADDRESS_TYPE.RLOC), count=5,
-                    num_responses=5))
-        self.simulator.go(5)
-
-        # 6. TD pings BR_1's link local address using TD's link local address.
-        self.assertFalse(
-            td.ping(br1.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL),
-                    interface=td.get_ip6_address(
-                        config.ADDRESS_TYPE.LINK_LOCAL), count=5,
-                    num_responses=5))
-        self.simulator.go(5)
-
-        # 7. TD subscribes multicast address MA1.
-        td.add_ipmaddr(MA1)
-        self.simulator.go(5)
-
-        # 8. BR_2 pings MA1. BR_2 should receive a response from TD.
-        self.assertTrue(br2.ping(MA1))
-        self.simulator.go(5)
-
-        # 9. BR_2 pings MA1 using a non-existent address. BR_2 should receive no
-        # response.
-        self.assertFalse(td.ping(MA1, interface='1::1'))
-        self.simulator.go(5)
-
-        # 10. Host pings TD's OMR address. Host should receive a response.
+        # 3. ROUTER_2 pings ROUTER_1 from the link-local address to the
+        # link-local address.
         self.assertTrue(
-            host.ping(td.get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                      backbone=True))
-        self.simulator.go(5)
+            router2.ping(
+                router1.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL),
+                interface=router2.get_ip6_address(
+                    config.ADDRESS_TYPE.LINK_LOCAL)))
 
-        # 11. Host pings TD's RLOC address. Host should receive no
-        # response.
+        # 4. ROUTER_2 pings ROUTER_3 using the RLOC.
+        self.assertTrue(
+            router2.ping(router3.get_ip6_address(config.ADDRESS_TYPE.RLOC)))
+
+        # 5. ROUTER_2 pings ROUTER_3's link-local address. The ping should fail.
         self.assertFalse(
-            host.ping(td.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-                      backbone=True))
-        self.simulator.go(5)
+            router2.ping(
+                router3.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)))
+
+        # 6. ROUTER_2 pings ROUTER_3's RLOC from the link-local address. The
+        # ping should fail.
+        self.assertFalse(
+            router2.ping(
+                router3.get_ip6_address(config.ADDRESS_TYPE.RLOC),
+                interface=router2.get_ip6_address(
+                    config.ADDRESS_TYPE.LINK_LOCAL)))
+
+        # 7. ROUTER_2 pings ROUTER_3's RLOC from an non-existent address. The
+        # ping should fail.
+        self.assertFalse(
+            router2.ping(
+                router3.get_ip6_address(config.ADDRESS_TYPE.RLOC),
+                interface='1::1'))
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
         self.collect_rlocs()
-        self.collect_leader_aloc(BR_1)
         self.collect_extra_vars()
 
     def verify(self, pv: pktverify.packet_verifier.PacketVerifier):
@@ -188,9 +143,92 @@ class TestPing(thread_cert.TestCase):
         vars = pv.vars
         pv.summary.show()
 
+        logging.info(f'vars = {vars}')
+
         # Ensure the topology is formed correctly
-        pv.verify_attached('TD', 'BR_1')
-        pv.verify_attached('BR_2')
+        pv.verify_attached('Router_2', 'Router_1')
+        pv.verify_attached('Router_3', 'Router_1')
+
+        # 1. Router_1 pings Router_2.
+        _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_ipv6_2dsts(vars['Router_2_RLOC'], vars['Router_2_LLA']) \
+            .filter_ping_request() \
+            .must_next()
+
+        pkts.filter_wpan_src64(vars['Router_2']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_next()
+
+        # 2. Router_1 pings Router_2 multiple times.
+        for i in range(5):
+            _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+                .filter_ipv6_2dsts(vars['Router_2_RLOC'], vars['Router_2_LLA']) \
+                .filter_ping_request() \
+                .must_next()
+            pkts.filter_wpan_src64(vars['Router_2']) \
+                .filter_ipv6_dst(_pkt.ipv6.src) \
+                .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+                .must_next()
+
+        # 3. Router_2 pings Router_1 from the link-local address to the
+        # link-local address.
+        _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
+            .filter_ipv6_src_dst(vars['Router_2_LLA'], vars['Router_1_LLA']) \
+            .filter_ping_request() \
+            .must_next()
+
+        pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_next()
+
+        # 4. Router_2 pings Router_3 using the RLOC.
+        _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
+            .filter_ipv6_dst(vars['Router_3_RLOC']) \
+            .filter_ping_request() \
+            .must_next()
+
+        pkts.filter_wpan_src64(vars['Router_3']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_next()
+
+        # 5. Router_2 pings Router_3's link-local address. The ping should fail.
+        _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
+            .filter_ipv6_dst(vars['Router_3_LLA']) \
+            .filter_ping_request() \
+            .must_next()
+
+        pkts.filter_wpan_src64(vars['Router_3']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_not_next()
+
+        # 5. Router_2 pings Router_3's RLOC from the link-local address. The
+        # ping should fail.
+        _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
+            .filter_ipv6_src_dst(vars['Router_2_LLA'], vars['Router_3_RLOC']) \
+            .filter_ping_request() \
+            .must_next()
+
+        # TODO: Enable this section
+        # pkts.filter_wpan_src64(vars['Router_3']) \
+        #     .filter_ipv6_dst(_pkt.ipv6.src) \
+        #     .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+        #     .must_not_next()
+
+        # 6. Router_2 pings Router_3's RLOC from an non-existent address. The
+        # ping should fail.
+        _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
+            .filter_ipv6_src_dst('1::1', vars['Router_3_RLOC']) \
+            .filter_ping_request() \
+            .must_next()
+
+        pkts.filter_wpan_src64(vars['Router_3']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_not_next()
 
 
 if __name__ == '__main__':
