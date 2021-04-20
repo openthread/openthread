@@ -38,17 +38,6 @@
 namespace ot {
 namespace NetworkData {
 
-class TestNetworkData : public NetworkData::NetworkData
-{
-public:
-    TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength)
-        : NetworkData::NetworkData(*aInstance, kTypeLeader)
-    {
-        memcpy(mTlvs, aTlvs, aTlvsLength);
-        mLength = aTlvsLength;
-    }
-};
-
 void PrintExternalRouteConfig(const ExternalRouteConfig &aConfig)
 {
     printf("\nprefix:");
@@ -73,6 +62,17 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
 
 void TestNetworkDataIterator(void)
 {
+    class TestNetworkData : public NetworkData
+    {
+    public:
+        TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength)
+            : NetworkData(*aInstance, kTypeLeader)
+        {
+            memcpy(mTlvs, aTlvs, aTlvsLength);
+            mLength = aTlvsLength;
+        }
+    };
+
     ot::Instance *      instance;
     Iterator            iter = kIteratorInit;
     ExternalRouteConfig config;
@@ -172,12 +172,108 @@ void TestNetworkDataIterator(void)
     testFreeInstance(instance);
 }
 
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+class TestNetworkData : public Local
+{
+public:
+    explicit TestNetworkData(ot::Instance &aInstance)
+        : Local(aInstance)
+    {
+    }
+
+    template <uint8_t kSize> Error AddService(const uint8_t (&aServiceData)[kSize])
+    {
+        return Local::AddService(ServiceTlv::kThreadEnterpriseNumber, aServiceData, kSize, true, nullptr, 0);
+    }
+
+    template <uint8_t kSize>
+    Error ValidateServiceData(const ServiceTlv *aServiceTlv, const uint8_t (&aServiceData)[kSize]) const
+    {
+        return
+
+            ((aServiceTlv != nullptr) && (aServiceTlv->GetServiceDataLength() == kSize) &&
+             (memcmp(aServiceTlv->GetServiceData(), aServiceData, kSize) == 0))
+                ? kErrorNone
+                : kErrorFailed;
+    }
+
+    void Test(void)
+    {
+        const uint8_t kServiceData1[] = {0x02};
+        const uint8_t kServiceData2[] = {0xab};
+        const uint8_t kServiceData3[] = {0xab, 0x00};
+        const uint8_t kServiceData4[] = {0x02, 0xab, 0xcd, 0xef};
+        const uint8_t kServiceData5[] = {0x02, 0xab, 0xcd};
+
+        const ServiceTlv *tlv;
+
+        SuccessOrQuit(AddService(kServiceData1), "AddService() failed");
+        SuccessOrQuit(AddService(kServiceData2), "AddService() failed");
+        SuccessOrQuit(AddService(kServiceData3), "AddService() failed");
+        SuccessOrQuit(AddService(kServiceData4), "AddService() failed");
+        SuccessOrQuit(AddService(kServiceData5), "AddService() failed");
+
+        DumpBuffer("netdata", mTlvs, mLength);
+
+        // Iterate through all entries that start with { 0x02 } (kServiceData1)
+        tlv = nullptr;
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData1), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
+
+        // Iterate through all entries that start with { 0xab } (kServiceData2)
+        tlv = nullptr;
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData2), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData3), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
+        VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
+
+        // Iterate through all entries that start with kServiceData5
+        tlv = nullptr;
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5), "FindNextMatchingService() failed");
+        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
+        VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
+    }
+};
+
+void TestNetworkDataFindNextService(void)
+{
+    ot::Instance *instance;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataFindNextService()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+
+    {
+        TestNetworkData netData(*instance);
+        netData.Test();
+    }
+}
+
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
 } // namespace NetworkData
 } // namespace ot
 
 int main(void)
 {
     ot::NetworkData::TestNetworkDataIterator();
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    ot::NetworkData::TestNetworkDataFindNextService();
+#endif
 
     printf("\nAll tests passed\n");
     return 0;

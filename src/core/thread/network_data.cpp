@@ -725,6 +725,17 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
                                            const uint8_t *aTlvs,
                                            uint8_t        aTlvsLength)
 {
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, /* aExactServiceDataMatch */ true, aTlvs,
+                       aTlvsLength);
+}
+
+const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
+                                           const uint8_t *aServiceData,
+                                           uint8_t        aServiceDataLength,
+                                           bool           aExactServiceDataMatch,
+                                           const uint8_t *aTlvs,
+                                           uint8_t        aTlvsLength)
+{
     const NetworkDataTlv *start = reinterpret_cast<const NetworkDataTlv *>(aTlvs);
     const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
     const ServiceTlv *    serviceTlv;
@@ -736,7 +747,8 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
         VerifyOrExit(serviceTlv != nullptr);
 
         if ((serviceTlv->GetEnterpriseNumber() == aEnterpriseNumber) &&
-            (serviceTlv->GetServiceDataLength() == aServiceDataLength) &&
+            (serviceTlv->GetServiceDataLength() >= aServiceDataLength) &&
+            (!aExactServiceDataMatch || (serviceTlv->GetServiceDataLength() == aServiceDataLength)) &&
             (memcmp(serviceTlv->GetServiceData(), aServiceData, aServiceDataLength) == 0))
         {
             ExitNow();
@@ -749,6 +761,29 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
 
 exit:
     return serviceTlv;
+}
+
+const ServiceTlv *NetworkData::FindNextMatchingService(const ServiceTlv *aPrevServiceTlv,
+                                                       uint32_t          aEnterpriseNumber,
+                                                       const uint8_t *   aServiceData,
+                                                       uint8_t           aServiceDataLength) const
+{
+    const uint8_t *tlvs;
+    uint8_t        length;
+
+    if (aPrevServiceTlv == nullptr)
+    {
+        tlvs   = mTlvs;
+        length = mLength;
+    }
+    else
+    {
+        tlvs   = reinterpret_cast<const uint8_t *>(aPrevServiceTlv->GetNext());
+        length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
+    }
+
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, /* aExactServiceDataMatch */ false, tlvs,
+                       length);
 }
 
 NetworkDataTlv *NetworkData::AppendTlv(uint16_t aTlvSize)
