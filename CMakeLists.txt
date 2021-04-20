@@ -41,6 +41,8 @@ option(OT_MBEDTLS_THREADING "enable mbedtls threading" OFF)
 
 add_library(ot-config INTERFACE)
 
+message(STATUS "OpenThread Source Directory: ${PROJECT_SOURCE_DIR}")
+
 target_include_directories(ot-config INTERFACE
     ${PROJECT_SOURCE_DIR}/include
     ${PROJECT_SOURCE_DIR}/src
