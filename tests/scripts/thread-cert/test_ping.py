@@ -41,52 +41,50 @@ import thread_cert
 #
 # Topology:
 #    ----------------(eth)------------------
-#           |                  |     |
-#          BR1 (Leader) ----- BR2   HOST
+#           |
+#           BR
 #           |
 #           |
-#          TD
+#          ROUTER
 #
 
-ROUTER_1 = 1
-ROUTER_2 = 2
+BR = 1
+ROUTER = 2
 
 
 class TestPing(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
-        ROUTER_1: {
-            'name': 'Router_1',
+        BR: {
+            'name': 'BR',
             'is_otbr': True,
-            'allowlist': [ROUTER_2],
+            'allowlist': [ROUTER],
             'version': '1.2',
             'router_selection_jitter': 2,
         },
-        ROUTER_2: {
-            'name': 'Router_2',
-            'allowlist': [ROUTER_1],
+        ROUTER: {
+            'name': 'Router',
+            'allowlist': [BR],
             'version': '1.2',
             'router_selection_jitter': 2,
         },
     }
 
     def test(self):
-        router1 = self.nodes[ROUTER_1]
-        router2 = self.nodes[ROUTER_2]
+        br = self.nodes[BR]
+        router = self.nodes[ROUTER]
 
-        router1.start()
+        br.start()
         self.simulator.go(10)
-        self.assertEqual('leader', router1.get_state())
+        self.assertEqual('leader', br.get_state())
 
-        router2.start()
+        router.start()
         self.simulator.go(10)
-        self.assertEqual('router', router2.get_state())
+        self.assertEqual('router', router.get_state())
 
-        # 3. ROUTER_1 pings ROUTER_2 using RLOC address. ROUTER_1 sends 5 echo
-        # requests and expects 5 responses.
         self.assertTrue(
-            router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.RLOC),
+            router.ping(br.get_ip6_address(config.ADDRESS_TYPE.RLOC),
                          count=5,
                          num_responses=5))
         self.simulator.go(5)
