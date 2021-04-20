@@ -42,7 +42,7 @@ import thread_cert
 # Topology:
 #
 #
-#  ROUTER_2 ----- ROUTER_1 ---- ROUTER3
+#  ROUTER_2 ----- ROUTER_1 ---- ROUTER_3
 #
 #
 
