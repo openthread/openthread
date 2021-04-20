@@ -570,8 +570,15 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 
 otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    return sRadioSpinel.SetRadioRegion(aRegionCode);
+    otError error;
+
+    SuccessOrExit(error = sRadioSpinel.SetRadioRegion(aRegionCode));
+
+    static_cast<ot::Instance *>(aInstance)->Get<ot::Mac::Mac>().SetSupportedChannelMask(
+        ot::Mac::ChannelMask(sRadioSpinel.GetRadioChannelMask(false)));
+
+exit:
+    return error;
 }
 
 otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)

@@ -1264,3 +1264,22 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 exit:
     return error;
 }
+
+uint32_t otPlatRadioGetSupportedChannelMask(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    enum
+    {
+        kChannelMask_11_25 = 0x3FFF800, // Channel mask 11 to 25.
+        kChannelMask_11_26 = 0x7FFF800, // Channel mask 11 to 26.
+    };
+
+    switch (sRegionCode)
+    {
+    case ('U' << 8) | 'S':
+        return kChannelMask_11_25;
+    default:
+        return kChannelMask_11_26;
+    }
+}
