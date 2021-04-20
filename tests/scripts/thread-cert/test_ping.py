@@ -93,45 +93,32 @@ class TestPing(thread_cert.TestCase):
         self.assertEqual('router', router3.get_state())
 
         # 1. ROUTER_1 pings ROUTER_2.
-        self.assertTrue(
-            router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC)))
+        self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC)))
 
         # 2. ROUTER_1 pings ROUTER_2 multiple times.
-        self.assertTrue(
-            router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-                         count=5))
+        self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC), count=5))
 
         # 3. ROUTER_2 pings ROUTER_1 from the link-local address to the
         # link-local address.
         self.assertTrue(
-            router2.ping(
-                router1.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL),
-                interface=router2.get_ip6_address(
-                    config.ADDRESS_TYPE.LINK_LOCAL)))
+            router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL),
+                         interface=router2.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)))
 
         # 4. ROUTER_2 pings ROUTER_3 using the RLOC.
-        self.assertTrue(
-            router2.ping(router3.get_ip6_address(config.ADDRESS_TYPE.RLOC)))
+        self.assertTrue(router2.ping(router3.get_ip6_address(config.ADDRESS_TYPE.RLOC)))
 
         # 5. ROUTER_2 pings ROUTER_3's link-local address. The ping should fail.
-        self.assertFalse(
-            router2.ping(
-                router3.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)))
+        self.assertFalse(router2.ping(router3.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)))
 
         # 6. ROUTER_2 pings ROUTER_3's RLOC from the link-local address. The
         # ping should fail.
         self.assertFalse(
-            router2.ping(
-                router3.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-                interface=router2.get_ip6_address(
-                    config.ADDRESS_TYPE.LINK_LOCAL)))
+            router2.ping(router3.get_ip6_address(config.ADDRESS_TYPE.RLOC),
+                         interface=router2.get_ip6_address(config.ADDRESS_TYPE.LINK_LOCAL)))
 
         # 7. ROUTER_2 pings ROUTER_3's RLOC from an non-existent address. The
-        # ping should fail.
-        self.assertFalse(
-            router2.ping(
-                router3.get_ip6_address(config.ADDRESS_TYPE.RLOC),
-                interface='1::1'))
+        # ping command should be rejected by CLI.
+        self.assertFalse(router2.ping(router3.get_ip6_address(config.ADDRESS_TYPE.RLOC), interface='1::1'))
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
@@ -223,11 +210,6 @@ class TestPing(thread_cert.TestCase):
         _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
             .filter_ipv6_src_dst('1::1', vars['Router_3_RLOC']) \
             .filter_ping_request() \
-            .must_next()
-
-        pkts.filter_wpan_src64(vars['Router_3']) \
-            .filter_ipv6_dst(_pkt.ipv6.src) \
-            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
             .must_not_next()
 
 
