@@ -58,6 +58,7 @@ class TestPing(thread_cert.TestCase):
     TOPOLOGY = {
         ROUTER_1: {
             'name': 'Router_1',
+            'is_otbr': True,
             'allowlist': [ROUTER_2],
             'version': '1.2',
             'router_selection_jitter': 2,
@@ -75,17 +76,17 @@ class TestPing(thread_cert.TestCase):
         router2 = self.nodes[ROUTER_2]
 
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('leader', router1.get_state())
 
         router2.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('router', router2.get_state())
 
         # 3. ROUTER_1 pings ROUTER_2 using RLOC address. ROUTER_1 sends 5 echo
         # requests and expects 5 responses.
         self.assertTrue(
-            router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.RLOC),
+            router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.RLOC),
                          count=5,
                          num_responses=5))
         self.simulator.go(5)
