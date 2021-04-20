@@ -47,6 +47,17 @@ extern "C" {
 #endif
 
 /**
+ * This method tells whether an infra interface has the given IPv6 address assigned.
+ *
+ * @param[in]  aInfraIfIndex  The index of the infra interface.
+ * @param[in]  aAddress       The IPv6 address.
+ *
+ * @returns  TRUE if the infra interface has given IPv6 address assigned, FALSE otherwise.
+ *
+ */
+bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress);
+
+/**
  * This method sends an ICMPv6 Neighbor Discovery message on given infrastructure interface.
  *
  * See RFC 4861: https://tools.ietf.org/html/rfc4861.
@@ -94,24 +105,22 @@ extern void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
  * The infra interface driver calls this method to notify OpenThread
  * of the interface state changes.
  *
+ * It is fine for the platform to call to method even when the running state
+ * of the interface hasn't changed. In this case, the Routing Manager state is
+ * not affected.
+ *
  * @param[in]  aInstance          The OpenThread instance structure.
  * @param[in]  aInfraIfIndex      The index of the infrastructure interface.
  * @param[in]  aIsRunning         A boolean that indicates whether the infrastructure
  *                                interface is running.
- * @param[in]  aLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
- *                                interface. NULL if the IPv6 link-local address is lost.
  *
  * @retval  OT_ERROR_NONE           Successfully updated the infra interface status.
  * @retval  OT_ERROR_INVALID_STATE  The Routing Manager is not initialized.
  * @retval  OT_ERROR_INVALID_ARGS   The @p aInfraIfIndex doesn't match the infra interface the
- *                                  Routing Manager are initialized with, or the @p aLinkLocalAddress
- *                                  is not a valid IPv6 link-local address.
+ *                                  Routing Manager are initialized with.
  *
  */
-extern otError otPlatInfraIfStateChanged(otInstance *        aInstance,
-                                         uint32_t            aInfraIfIndex,
-                                         bool                aIsRunning,
-                                         const otIp6Address *aLinkLocalAddress);
+extern otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning);
 
 #ifdef __cplusplus
 } // extern "C"

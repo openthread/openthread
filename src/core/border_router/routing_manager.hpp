@@ -85,17 +85,15 @@ public:
     /**
      * This method initializes the routing manager on given infrastructure interface.
      *
-     * @param[in]  aInfraIfIndex  An infrastructure network interface index.
-     * @param[in]  aInfraIfIsRunning         A boolean that indicates whether the infrastructure
-     *                                       interface is running.
-     * @param[in]  aInfraIfLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
-     *                                       interface. NULL if the IPv6 link-local address is missing.
+     * @param[in]  aInfraIfIndex      An infrastructure network interface index.
+     * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
+     *                                interface is running.
      *
-     * @retval  kErrorNone          Successfully started the routing manager.
-     * @retval  kErrorInvalidArgs   The index of the infra interface is not valid.
+     * @retval  kErrorNone         Successfully started the routing manager.
+     * @retval  kErrorInvalidArgs  The index of the infra interface is not valid.
      *
      */
-    Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning, const Ip6::Address *aInfraIfLinkLocalAddress);
+    Error Init(uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
     /**
      * This method enables/disables the Border Routing Manager.
@@ -129,20 +127,17 @@ public:
     /**
      * This method handles infrastructure interface state changes.
      *
-     * @param[in]  aInfraIfIndex      The index of the infrastructure interface.
-     * @param[in]  aIsRunning         A boolean that indicates whether the infrastructure
-     *                                interface is running.
-     * @param[in]  aLinkLocalAddress  A pointer to the IPv6 link local address of the infrastructure
-     *                                interface. NULL if the IPv6 link local address is lost.
+     * @param[in]  aInfraIfIndex  The index of the infrastructure interface.
+     * @param[in]  aIsRunning     A boolean that indicates whether the infrastructure
+     *                            interface is running.
      *
      * @retval  kErrorNone          Successfully updated the infra interface status.
      * @retval  kErrorInvalidState  The Routing Manager is not initialized.
-     * @retval  kErrorInvalidArgs   The @p aInfraIfIndex doesn't match the infra interface the Routing Manager are
-     *                              initialized with, or the @p aLinkLocalAddress is not a valid IPv6 link-local
-     *                              address.
+     * @retval  kErrorInvalidArgs   The @p aInfraIfIndex doesn't match the infra interface
+     *                              the Routing Manager is initialized with.
      *
      */
-    Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning, const Ip6::Address *aLinkLocalAddress);
+    Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
 private:
     enum : uint16_t
@@ -259,12 +254,6 @@ private:
     // The index of the infra interface on which Router Advertisement
     // messages will be sent.
     uint32_t mInfraIfIndex;
-
-    // The IPv6 link-local address of the infra interface. It's
-    // UNSPECIFIED if no valid IPv6 link-local address is associated
-    // with the infra interface and the Routing Manager will be
-    // stopped.
-    Ip6::Address mInfraIfLinkLocalAddress;
 
     // The OMR prefix loaded from local persistent storage or randomly
     // generated if non is found in persistent storage.

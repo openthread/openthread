@@ -44,15 +44,11 @@
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otBorderRoutingInit(otInstance *        aInstance,
-                            uint32_t            aInfraIfIndex,
-                            bool                aInfraIfIsRunning,
-                            const otIp6Address *aInfraIfLinkLocalAddress)
+otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<BorderRouter::RoutingManager>().Init(
-        aInfraIfIndex, aInfraIfIsRunning, static_cast<const Ip6::Address *>(aInfraIfLinkLocalAddress));
+    return instance.Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
 }
 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)

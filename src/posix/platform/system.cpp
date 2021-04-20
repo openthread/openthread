@@ -111,8 +111,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
         infraIfIndex = platformInfraIfInit(instance, aPlatformConfig->mBackboneInterfaceName);
 
-        SuccessOrDie(otBorderRoutingInit(instance, infraIfIndex, platformInfraIfIsRunning(),
-                                         platformInfraIfGetLinkLocalAddress()));
+        SuccessOrDie(otBorderRoutingInit(instance, infraIfIndex, platformInfraIfIsRunning()));
         SuccessOrDie(otBorderRoutingSetEnabled(instance, /* aEnabled */ true));
     }
 #endif
