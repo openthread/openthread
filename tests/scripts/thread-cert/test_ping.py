@@ -53,6 +53,7 @@ ROUTER_3 = 3
 
 class TestPing(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
+    SUPPORT_NCP = False
 
     TOPOLOGY = {
         ROUTER_1: {
