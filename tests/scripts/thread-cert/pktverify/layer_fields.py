@@ -686,7 +686,7 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
     layer_depth = 0
     layer_name = secs[0]
     if layer_name.endswith('inner'):
-        layer_name = layer_name.removesuffix('inner')
+        layer_name = layer_name[:-len('inner')]
         field_uri = '.'.join([layer_name] + secs[1:])
         layer_depth = 1
 
