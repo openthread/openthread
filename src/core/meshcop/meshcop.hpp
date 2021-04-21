@@ -59,7 +59,7 @@ namespace MeshCoP {
 
 enum
 {
-    kBorderAgentUdpPort = 49191, ///< UDP port of border agent service.
+    kNativeCommissionerUdpPort = 49191, ///< UDP port of native commissioner service.
 };
 
 /**

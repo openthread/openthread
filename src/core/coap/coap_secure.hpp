@@ -156,6 +156,14 @@ public:
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
 
     /**
+     * This method gets the UDP port of this agent.
+     *
+     * @returns  UDP port number.
+     *
+     */
+    uint16_t GetUdpPort(void) const { return mDtls.GetUdpPort(); }
+
+    /**
      * This method sets the PSK.
      *
      * @param[in]  aPsk        A pointer to the PSK.

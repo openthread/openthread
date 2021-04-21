@@ -75,6 +75,14 @@ public:
     explicit BorderAgent(Instance &aInstance);
 
     /**
+     * This method gets the UDP port of this service.
+     *
+     * @returns  UDP port number.
+     *
+     */
+    uint16_t GetUdpPort(void) const;
+
+    /**
      * This method starts the Border Agent service.
      *
      * @retval kErrorNone    Successfully started the Border Agent service.

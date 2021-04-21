@@ -332,6 +332,9 @@ private:
     otError ProcessCcaThreshold(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessBufferInfo(uint8_t aArgsLength, char *aArgs[]);
     otError ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    otError ProcessBorderAgent(uint8_t aArgsLength, char *aArgs[]);
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     otError ProcessBorderRouting(uint8_t aArgsLength, char *aArgs[]);
 #endif
@@ -638,6 +641,9 @@ private:
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
     static constexpr Command sCommands[] = {
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+        {"ba", &Interpreter::ProcessBorderAgent},
+#endif
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
         {"bbr", &Interpreter::ProcessBackboneRouter},
 #endif

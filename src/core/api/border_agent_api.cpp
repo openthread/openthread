@@ -49,4 +49,11 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance)
     return static_cast<otBorderAgentState>(instance.Get<MeshCoP::BorderAgent>().GetState());
 }
 
+uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<MeshCoP::BorderAgent>().GetUdpPort();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
