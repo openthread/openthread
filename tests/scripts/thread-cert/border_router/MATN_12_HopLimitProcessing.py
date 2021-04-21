@@ -32,54 +32,47 @@ import unittest
 
 import pktverify
 from pktverify import packet_verifier, packet_filter, consts
-from pktverify.consts import MA1
+from pktverify.consts import MA1, MA2
 import config
 import thread_cert
 
 # Test description:
-# The purpose of this test case is to verify that a Secondary BBR can take over
-# forwarding of inbound multicast transmissionsThread Network when the Primary
-# BBR disconnects. The Secondary in that case becomes Primary.
+# The purpose of this test case is to verify that a Primary BBR correctly
+# decrements the Hop Limit field by 1 if packet is forwarded with MPL, and if
+# forwarded from Thread Network (using MPL) to LAN. This test also verifies that
+# the BR drops a packet with Hop Limit 0. It also checks the use of IPv6 packets
+# that span multiple 6LoWPAN fragments.
 #
 # Topology:
 #    ----------------(eth)------------------
-#           |                  |      |
-#         BR_1 (Leader) ---- BR_2     |
-#           |                  |     HOST
-#           |                  |
-#          ROUTER_1 -----------+
+#           |                        |
+#         BR_1 (Leader)              |
+#           |                       HOST
+#           |
+#          ROUTER_1
 #
 
 BR_1 = 1
-BR_2 = 2
-ROUTER_1 = 3
-HOST = 4
+ROUTER_1 = 2
+HOST = 3
 
 
-class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
+class MATN_12_HopLimitProcessing(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
         BR_1: {
             'name': 'BR_1',
             'is_otbr': True,
-            'allowlist': [BR_2, ROUTER_1],
-            'version': '1.2',
-            'router_selection_jitter': 2,
-        },
-        BR_2: {
-            'name': 'BR_2',
-            'is_otbr': True,
-            'allowlist': [BR_1, ROUTER_1],
+            'allowlist': [ROUTER_1],
             'version': '1.2',
             'router_selection_jitter': 2,
         },
         ROUTER_1: {
             'name': 'Router_1',
-            'allowlist': [BR_1, BR_2],
+            'allowlist': [BR_1],
             'version': '1.2',
             'router_selection_jitter': 2,
-            'partition_id': 1,
         },
         HOST: {
             'name': 'Host',
@@ -89,7 +82,6 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
 
     def test(self):
         br1 = self.nodes[BR_1]
-        br2 = self.nodes[BR_2]
         router1 = self.nodes[ROUTER_1]
         host = self.nodes[HOST]
 
@@ -102,47 +94,53 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', router1.get_state())
 
-        br2.start()
-        self.simulator.go(5)
-        self.assertEqual('router', br2.get_state())
-        self.assertFalse(br2.is_primary_backbone_router)
-
         host.start(start_radvd=False)
         self.simulator.go(10)
 
-        # 1. Router_1 registers for multicast address, MA1, at BR_1.
+        # Router_1 registers a multicast address, MA1.
         router1.add_ipmaddr(MA1)
+        self.simulator.go(10)
+
+        # 1. Host multicasts a ping packet to the multicast address, MA1, with
+        # the IPv6 Hop Limit field set to 59. The size of the payload is 130
+        # bytes.
+        self.assertTrue(host.ping(MA1, backbone=True, ttl=59, size=130))
         self.simulator.go(5)
 
-        # 5. Host sends a ping packet to the multicast address, MA1.
-        self.assertTrue(host.ping(MA1, backbone=True, ttl=10,
-                                  interface=host.get_ip6_address(
-                                      config.ADDRESS_TYPE.ONLINK_ULA)[0]))
+        # 4. Host multicasts a ping packet to the multicast address, MA1, with
+        # the IPv6 Hop Limit field set to 1. The size of the payload is 130
+        # bytes.
+        self.assertTrue(host.ping(MA1, backbone=True, ttl=1, size=130))
         self.simulator.go(5)
 
-        # 8a. Switch off BR_1.
-        br1.thread_stop()
-        self.simulator.go(180)
-
-        # 8b. BR_2 detects the missing Primary BBR and becomes the Primary BBR
-        # of the Thread Network, distributing Dataset (with BR_2’s RLOC16) to
-        # Router_1.
-        self.assertTrue(br2.is_primary_backbone_router)
-
-        # 10. Host sends a ping packet to the multicast address, MA1.
-        host.ping(MA1, backbone=True, ttl=10,
-                  interface=host.get_ip6_address(
-                      config.ADDRESS_TYPE.ONLINK_ULA)[0])
+        # 6. Router_1 sends a ping packet encapsulated in an MPL packet to the
+        # multicast address, MA2, with the Hop Limit field of the inner packet
+        # set to 159. The size of the payload is 130 bytes.
+        self.assertFalse(router1.ping(MA2, hoplimit=159, size=130))
         self.simulator.go(5)
 
-        # 14. Router_1 re-registers for multicast address, MA1, at BR_2.
-        # router1.add_ipmaddr(MA1)
+        # 8. Router_1 sends a ping packet encapsulated in an MPL multicast
+        # packet to the multicast address, MA2, with the Hop Limit field of
+        # the inner (encapsulated) packet set to 2. The size of the payload is
+        # 130 bytes.
+        self.assertFalse(router1.ping(MA2, hoplimit=2, size=130))
+        self.simulator.go(5)
+
+        # 10. Router_1 sends a ping packet encapsulated in an MPL multicast
+        # packet to the multicast address, MA2, with the Hop Limit field of the
+        # inner packet set to 1. The size of the payload is 130 bytes.
+        self.assertFalse(router1.ping(MA2, hoplimit=1, size=130))
+        self.simulator.go(5)
+
+        # 11. Router_1 sends a ping packet encapsulated in an MPL multicast
+        # packet to the multicast address, MA2, with the Hop Limit field of the
+        # inner packet set to 0.
+        self.assertFalse(router1.ping(MA2, hoplimit=0, size=130))
         self.simulator.go(5)
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
         self.collect_rlocs()
-        self.collect_leader_aloc(BR_2)
         self.collect_extra_vars()
 
     def verify(self, pv: pktverify.packet_verifier.PacketVerifier):
@@ -153,7 +151,6 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
 
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
-        pv.verify_attached('BR_2')
 
 
 if __name__ == '__main__':
