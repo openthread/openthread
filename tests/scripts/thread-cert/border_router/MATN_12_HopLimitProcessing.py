@@ -55,6 +55,7 @@ import thread_cert
 BR_1 = 1
 ROUTER_1 = 2
 HOST = 3
+ICMP_HEADER_LEN = 8
 
 
 class MATN_12_HopLimitProcessing(thread_cert.TestCase):
@@ -99,18 +100,22 @@ class MATN_12_HopLimitProcessing(thread_cert.TestCase):
 
         # Router_1 registers a multicast address, MA1.
         router1.add_ipmaddr(MA1)
-        self.simulator.go(10)
+        self.simulator.go(5)
 
         # 1. Host multicasts a ping packet to the multicast address, MA1, with
         # the IPv6 Hop Limit field set to 59. The size of the payload is 130
         # bytes.
-        self.assertTrue(host.ping(MA1, backbone=True, ttl=59, size=130))
+        self.assertTrue(host.ping(MA1, backbone=True, ttl=59, size=130,
+                                  interface=host.get_ip6_address(
+                                      config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 4. Host multicasts a ping packet to the multicast address, MA1, with
         # the IPv6 Hop Limit field set to 1. The size of the payload is 130
         # bytes.
-        self.assertTrue(host.ping(MA1, backbone=True, ttl=1, size=130))
+        self.assertFalse(host.ping(MA1, backbone=True, ttl=1, size=130,
+                                   interface=host.get_ip6_address(
+                                       config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 6. Router_1 sends a ping packet encapsulated in an MPL packet to the
@@ -151,6 +156,117 @@ class MATN_12_HopLimitProcessing(thread_cert.TestCase):
 
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
+
+        # 1. Host multicasts a ping packet to the multicast address, MA1, with
+        # the IPv6 Hop Limit field set to 59. The size of the payload is 130
+        # bytes.
+        _pkt = pkts.filter_eth_src(vars['Host_ETH']) \
+            .filter_ipv6_dst(MA1) \
+            .filter_ping_request() \
+            .filter(lambda
+                        p: p.ipv6.hlim == 59 and p.ipv6.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 2. BR_1 forwards the ping packet to Router_1 as an MPL packet
+        # encapsulating the IPv6 packet with the Hop Limit field of the inner
+        # packet set to 58.
+        _pkt2 = pkts.filter_wpan_src64(vars['BR_1']) \
+            .filter_AMPLFMA(mpl_seed_id=vars['BR_1_RLOC']) \
+            .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
+            .filter(lambda
+                        p: p.ipv6inner.hlim == 58 and p.ipv6inner.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 3. Router_1 receives the multicast ping packet.
+        pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
+            .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_next()
+
+        # 4. Host multicasts a ping packet to the multicast address, MA1, with
+        # the IPv6 Hop Limit field set to 1. The size of the payload is 130
+        # bytes.
+        _pkt = pkts.filter_eth_src(vars['Host_ETH']) \
+            .filter_ipv6_dst(MA1) \
+            .filter_ping_request() \
+            .filter(
+            lambda
+                p: p.ipv6.hlim == 1 and p.ipv6.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 5. BR_1 does not forward the ping packet.
+        pkts.filter_wpan_src64(vars['BR_1']) \
+            .filter_AMPLFMA(mpl_seed_id=vars['BR_1']) \
+            .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_not_next()
+
+        # 6. Router_1 sends a ping packet encapsulated in an MPL packet to the
+        # multicast address, MA2, with the Hop Limit field of the inner
+        # packet set to 159. The size of the payload is 130 bytes.
+        _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
+            .filter_ping_request() \
+            .filter(lambda p: p.ipv6inner.dst == MA2 and
+                              p.ipv6inner.hlim == 159 and
+                              p.ipv6inner.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 7. BR_1 forwards the multicast ping packet to the LAN with the Hop
+        # Limit field set to 158.
+        pkts.filter_eth_src(vars['BR_1_ETH']) \
+            .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
+            .filter(lambda p: p.ipv6.hlim == 158) \
+            .must_next()
+
+        # 8. Router_1 sends a ping packet encapsulated in an MPL multicast
+        # packet to the multicast address, MA2, with the Hop Limit field of the
+        # inner packet set to 2. The size of the payload is 130 bytes
+        _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
+            .filter_ping_request() \
+            .filter(lambda p: p.ipv6inner.dst == MA2 and
+                              p.ipv6inner.hlim == 2 and
+                              p.ipv6inner.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 9. BR_1 forwards the multicast packet to the LAN with the Hop Limit
+        # field set to 1.
+        pkts.filter_eth_src(vars['BR_1_ETH']) \
+            .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
+            .filter(lambda p: p.ipv6.hlim == 1) \
+            .must_next()
+
+        # 10. Router_1 sends a ping packet encapsulated in an MPL multicast
+        # packet to the multicast address, MA2, with the Hop Limit field of the
+        # inner packet set to 1. The size of the payload is 130 bytes.
+        _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
+            .filter_ping_request() \
+            .filter(lambda p: p.ipv6inner.dst == MA2 and
+                              p.ipv6inner.hlim == 1 and
+                              p.ipv6inner.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 11. BR_1 does not forward the ping packet to the LAN.
+        pkts.filter_eth_src(vars['BR_1_ETH']) \
+            .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_not_next()
+
+        # 12. Router_1 sends a ping packet encapsulated in an MPL multicast
+        # packet to the multicast address, MA2, with the Hop Limit field of the
+        # inner packet set to 0.
+        _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+            .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
+            .filter_ping_request() \
+            .filter(lambda p: p.ipv6inner.dst == MA2 and
+                              p.ipv6inner.hlim == 0 and
+                              p.ipv6inner.plen == 130 + ICMP_HEADER_LEN) \
+            .must_next()
+
+        # 13. BR_1 does not forward the ping packet to the LAN.
+        pkts.filter_eth_src(vars['BR_1_ETH']) \
+            .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
+            .must_not_next()
 
 
 if __name__ == '__main__':
