@@ -394,7 +394,21 @@ public:
      * zero router lifetime, reachable time and retransmission timer.
      *
      */
-    RouterAdvMessage(void);
+    RouterAdvMessage(void) { SetToDefault(); }
+
+    /**
+     * This method sets the RA message to default values.
+     *
+     */
+    void SetToDefault(void);
+
+    /**
+     * This method sets the checksum value.
+     *
+     * @param[in]  aChecksum  The checksum value.
+     *
+     */
+    void SetChecksum(uint16_t aChecksum) { mHeader.SetChecksum(aChecksum); }
 
     /**
      * This method sets the Router Lifetime in seconds.
@@ -410,12 +424,28 @@ public:
     }
 
     /**
+     * This method returns the Router Lifetime.
+     *
+     * Zero Router Lifetime means we are not a default router.
+     *
+     * @returns  The router lifetime in seconds.
+     *
+     */
+    uint16_t GetRouterLifetime(void) const { return HostSwap16(mHeader.mData.m16[kRouteLifetimeIdx]); }
+
+    /**
      * This method returns the Managed Address Configuration ('m') flag.
      *
      * @returns  A boolean which indicates whether the 'm' flag is set.
      *
      */
     bool GetManagedAddrConfig(void) const { return (mHeader.mData.m8[kReservedIdx] & kManagedAddressConfigMask) != 0; }
+
+    /**
+     * This method overloads the assignment operator.
+     *
+     */
+    const RouterAdvMessage &operator=(const RouterAdvMessage &aOther);
 
 private:
     enum : uint8_t

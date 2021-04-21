@@ -64,7 +64,8 @@ bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddres
  *
  * @param[in]  aInfraIfIndex  The index of the infrastructure interface this message is sent to.
  * @param[in]  aDestAddress   The destination address this message is sent to.
- * @param[in]  aBuffer        The ICMPv6 message buffer.
+ * @param[in]  aBuffer        The ICMPv6 message buffer. The ICMPv6 checksum is left zero and the
+ *                            platform should do the checksum calculate.
  * @param[in]  aBufferLength  The length of the message buffer.
  *
  * @note  Per RFC 4861, the implementation should send the message with IPv6 link-local source address

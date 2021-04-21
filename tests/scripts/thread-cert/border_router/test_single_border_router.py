@@ -99,8 +99,8 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR     addrs: %r", br.get_addrs())
-        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("BR      addrs: %r", br.get_addrs())
+        logging.info("ROUTER  addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
         self.assertEqual(len(br.get_prefixes()), 1)

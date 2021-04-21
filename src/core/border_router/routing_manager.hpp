@@ -282,6 +282,11 @@ private:
     ExternalPrefix mDiscoveredPrefixes[kMaxDiscoveredPrefixNum];
     uint8_t        mDiscoveredPrefixNum;
 
+    // The RA header and parameters for the infra interface.
+    // This value is initialized with `RouterAdvMessage::SetToDefault`
+    // and updated with RA messages initiated from infra interface.
+    RouterAdv::RouterAdvMessage mRouterAdvMessage;
+
     TimerMilli mDiscoveredPrefixInvalidTimer;
 
     TimerMilli mRouterAdvertisementTimer;

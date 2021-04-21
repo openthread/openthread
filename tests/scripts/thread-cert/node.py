@@ -2812,18 +2812,21 @@ class LinuxHost():
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface eth0
 {
-	AdvSendAdvert on;
+    AdvSendAdvert on;
 
-	MinRtrAdvInterval 3;
-	MaxRtrAdvInterval 30;
-	AdvDefaultPreference low;
+    AdvReachableTime 200;
+    AdvRetransTimer 200;
+    AdvDefaultLifetime 1800;
+    MinRtrAdvInterval 3;
+    MaxRtrAdvInterval 30;
+    AdvDefaultPreference low;
 
-	prefix %s
-	{
-		AdvOnLink on;
-		AdvAutonomous %s;
-		AdvRouterAddr off;
-	};
+    prefix %s
+    {
+        AdvOnLink on;
+        AdvAutonomous %s;
+        AdvRouterAddr off;
+    };
 };
 EOF
 """ % (prefix, 'on' if slaac else 'off'))
