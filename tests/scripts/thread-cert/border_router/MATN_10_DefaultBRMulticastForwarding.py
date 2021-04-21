@@ -45,7 +45,7 @@ import thread_cert
 #    ----------------(eth)------------------
 #           |                  |      |
 #         BR_1 (Leader) ---- BR_2     |
-#           |                  |     Host
+#           |                  |     HOST
 #           |                  |
 #          ROUTER_1 -----------+
 #
@@ -94,25 +94,30 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
         host = self.nodes[HOST]
 
         br1.start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 
         router1.start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual('router', router1.get_state())
 
         br2.start()
-        self.simulator.go(10)
+        self.simulator.go(5)
         self.assertEqual('router', br2.get_state())
         self.assertFalse(br2.is_primary_backbone_router)
+
+        host.start(start_radvd=False)
+        self.simulator.go(10)
 
         # 1. Router_1 registers for multicast address, MA1, at BR_1.
         router1.add_ipmaddr(MA1)
         self.simulator.go(5)
 
         # 5. Host sends a ping packet to the multicast address, MA1.
-        self.assertTrue(host.ping(MA1, backbone=True))
+        self.assertTrue(host.ping(MA1, backbone=True, ttl=10,
+                                  interface=host.get_ip6_address(
+                                      config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(5)
 
         # 8a. Switch off BR_1.
@@ -125,11 +130,14 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
         self.assertTrue(br2.is_primary_backbone_router)
 
         # 10. Host sends a ping packet to the multicast address, MA1.
-        self.assertTrue(host.ping(MA1, backbone=True))
+        host.ping(MA1, backbone=True, ttl=10,
+                  interface=host.get_ip6_address(
+                      config.ADDRESS_TYPE.ONLINK_ULA)[0])
         self.simulator.go(5)
 
         # 14. Router_1 re-registers for multicast address, MA1, at BR_2.
-        router1.add_ipmaddr(MA1)
+        # router1.add_ipmaddr(MA1)
+        self.simulator.go(5)
 
         self.collect_ipaddrs()
         self.collect_rloc16s()
@@ -146,7 +154,6 @@ class MATN_10_FailureOfPrimaryBBRInboundMulticast(thread_cert.TestCase):
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
         pv.verify_attached('BR_2')
-
 
 
 if __name__ == '__main__':
