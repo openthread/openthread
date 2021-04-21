@@ -101,7 +101,8 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         self.assertEqual('router', br2.get_state())
         self.assertFalse(br2.is_primary_backbone_router)
 
-        # 1. Router sends a ping packet with realm-local scope MA5.
+        # 1. Router sends a ping packet to the multicast address, MA1,
+        # encapsulated in an MPL packet
         self.assertFalse(router1.ping(MA1))
         self.simulator.go(5)
 
