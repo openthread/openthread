@@ -113,9 +113,14 @@ otRadioCaps SubMac::GetCaps(void) const
     caps |= OT_RADIO_CAPS_TRANSMIT_TIMING;
 #endif
 
+#if OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE
+    caps |= OT_RADIO_CAPS_RECEIVE_TIMING;
+#endif
+
 #else
     caps = OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF | OT_RADIO_CAPS_TRANSMIT_RETRIES |
-           OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING;
+           OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
+           OT_RADIO_CAPS_RECEIVE_TIMING;
 #endif
 
     return caps;
@@ -949,9 +954,7 @@ void SubMac::SetCslPeriod(uint16_t aPeriod)
     if (mCslPeriod > 0)
     {
         mCslSampleTime = TimeMicro(static_cast<uint32_t>(otPlatRadioGetNow(&GetInstance())));
-        Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
-
-        mCslState = kCslSleep;
+        mCslState      = kCslSleep;
         HandleCslTimer();
     }
     else
@@ -984,11 +987,12 @@ void SubMac::HandleCslTimer(void)
      *    |                                                                          |                        |
      *    |<--Ahead-->|<--UnCert-->|<--Drift-->|<--Drift-->|<--UnCert-->|<--MinWin-->|                        |
      *    |           |            |           |           |            |            |                        |
-     * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|--
-     * -Ahead                               CslPhase                              +After                   -Ahead
+     * ---|-----------|------------|-----------|-----------|------------|------------|----------//------------|---
+     * -timeAhead                           CslPhase                             +timeAfter             -timeAhead
      */
-    uint32_t timeAhead;
-    uint32_t timeAfter;
+    uint32_t periodUs = mCslPeriod * kUsPerTenSymbols;
+    uint32_t timeAhead, timeAfter;
+
     GetCslWindowEdges(timeAhead, timeAfter);
 
     switch (mCslState)
@@ -1007,16 +1011,32 @@ void SubMac::HandleCslTimer(void)
         break;
 
     case kCslSleep:
-        mCslState = kCslSample;
+        mCslSampleTime += periodUs;
 
-        mCslTimer.FireAt(mCslSampleTime + timeAfter);
-        mCslSampleTime += mCslPeriod * kUsPerTenSymbols;
+        if (RadioSupportsReceiveTiming())
+        {
+            mCslTimer.FireAt(mCslSampleTime - timeAhead);
+            timeAhead -= kCslReceiveTimeAhead;
+        }
+        else
+        {
+            mCslTimer.FireAt(mCslSampleTime + timeAfter);
+            mCslState = kCslSample;
+        }
 
         Get<Radio>().UpdateCslSampleTime(mCslSampleTime.GetValue());
         if (mState == kStateCslSample)
         {
-            IgnoreError(Get<Radio>().Receive(mCslChannel));
-            otLogDebgMac("CSL sample %u, duration %u", mCslTimer.GetNow().GetValue(), timeAhead + timeAfter);
+            if (RadioSupportsReceiveTiming())
+            {
+                IgnoreError(Get<Radio>().ReceiveAt(mCslChannel, mCslSampleTime.GetValue() - periodUs - timeAhead,
+                                                   timeAhead + timeAfter));
+            }
+            else
+            {
+                IgnoreError(Get<Radio>().Receive(mCslChannel));
+                otLogDebgMac("CSL sample %u, duration %u", mCslTimer.GetNow().GetValue(), timeAhead + timeAfter);
+            }
         }
         break;
 

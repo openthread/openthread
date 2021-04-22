@@ -316,6 +316,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE
+ *
+ * Define to 1 to enable software reception target time logic.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE
+#define OPENTHREAD_CONFIG_MAC_SOFTWARE_RX_TIMING_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_SOFTWARE_ENERGY_SCAN_ENABLE
  *
  * Define to 1 to enable software energy scanning logic.
@@ -399,8 +409,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON
  *
- * The total duration, in units of microseconds, required for the CSL receiver to fully receive and acknowledge a frame
- * of maximum possible length.
+ * The minimum CSL receive window (in microseconds) required to receive an IEEE 802.15.4 frame.
  * - Maximum frame size with preamble: 6*2+127*2 symbols
  * - AIFS: 12 symbols
  * - Maximum ACK size with preamble: 6*2+33*2 symbols
