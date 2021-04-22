@@ -901,7 +901,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
         // Clear cached CoAP with old RLOC source
         if (oldRloc16 != Mac::kShortAddrInvalid)
         {
-            Get<Tmf::TmfAgent>().ClearRequests(mMeshLocal16.GetAddress());
+            Get<Tmf::Agent>().ClearRequests(mMeshLocal16.GetAddress());
         }
     }
 

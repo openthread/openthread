@@ -278,14 +278,14 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset set response");
 
@@ -405,12 +405,12 @@ exit:
 void ActiveDataset::StartLeader(void)
 {
     IgnoreError(GenerateLocal());
-    Get<Tmf::TmfAgent>().AddResource(mResourceSet);
+    Get<Tmf::Agent>().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mResourceSet);
+    Get<Tmf::Agent>().RemoveResource(mResourceSet);
 }
 
 void ActiveDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -431,12 +431,12 @@ exit:
 void PendingDataset::StartLeader(void)
 {
     StartDelayTimer();
-    Get<Tmf::TmfAgent>().AddResource(mResourceSet);
+    Get<Tmf::Agent>().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mResourceSet);
+    Get<Tmf::Agent>().RemoveResource(mResourceSet);
 }
 
 void PendingDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

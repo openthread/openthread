@@ -54,7 +54,7 @@ PanIdQueryClient::PanIdQueryClient(Instance &aInstance)
     , mContext(nullptr)
     , mPanIdQuery(UriPath::kPanIdConflict, &PanIdQueryClient::HandleConflict, this)
 {
-    Get<Tmf::TmfAgent>().AddResource(mPanIdQuery);
+    Get<Tmf::Agent>().AddResource(mPanIdQuery);
 }
 
 Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
@@ -69,7 +69,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kPanIdQuery));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -86,7 +86,7 @@ Error PanIdQueryClient::SendQuery(uint16_t                            aPanId,
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent panid query");
 
@@ -123,7 +123,7 @@ void PanIdQueryClient::HandleConflict(Coap::Message &aMessage, const Ip6::Messag
         mCallback(panId, mask, mContext);
     }
 
-    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, responseInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, responseInfo));
 
     otLogInfoMeshCoP("sent panid query conflict response");
 

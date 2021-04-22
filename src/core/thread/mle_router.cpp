@@ -105,7 +105,7 @@ void MleRouter::HandlePartitionChange(void)
     mPreviousPartitionIdTimeout        = GetNetworkIdTimeout();
 
     Get<AddressResolver>().Clear();
-    IgnoreError(Get<Tmf::TmfAgent>().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this));
+    IgnoreError(Get<Tmf::Agent>().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this));
     mRouterTable.Clear();
 }
 
@@ -221,8 +221,8 @@ exit:
 
 void MleRouter::StopLeader(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mAddressSolicit);
-    Get<Tmf::TmfAgent>().RemoveResource(mAddressRelease);
+    Get<Tmf::Agent>().RemoveResource(mAddressSolicit);
+    Get<Tmf::Agent>().RemoveResource(mAddressRelease);
     Get<MeshCoP::ActiveDataset>().StopLeader();
     Get<MeshCoP::PendingDataset>().StopLeader();
     StopAdvertiseTrickleTimer();
@@ -367,8 +367,8 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     Get<NetworkData::Leader>().Start();
     Get<MeshCoP::ActiveDataset>().StartLeader();
     Get<MeshCoP::PendingDataset>().StartLeader();
-    Get<Tmf::TmfAgent>().AddResource(mAddressSolicit);
-    Get<Tmf::TmfAgent>().AddResource(mAddressRelease);
+    Get<Tmf::Agent>().AddResource(mAddressSolicit);
+    Get<Tmf::Agent>().AddResource(mAddressRelease);
     Get<Ip6::Ip6>().SetForwardingEnabled(true);
     Get<Ip6::Mpl>().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     Get<Mac::Mac>().SetBeaconEnabled(true);
@@ -3531,7 +3531,7 @@ Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(!mAddressSolicitPending);
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressSolicit));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -3553,8 +3553,8 @@ Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     messageInfo.SetSockAddr(GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo,
-                                                           &MleRouter::HandleAddressSolicitResponse, this));
+    SuccessOrExit(
+        error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &MleRouter::HandleAddressSolicitResponse, this));
     mAddressSolicitPending = true;
 
     Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
@@ -3570,7 +3570,7 @@ void MleRouter::SendAddressRelease(void)
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressRelease));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -3582,7 +3582,7 @@ void MleRouter::SendAddressRelease(void)
     messageInfo.SetSockAddr(GetMeshLocal16());
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
 
@@ -3799,7 +3799,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
     ThreadRouterMaskTlv routerMaskTlv;
     Coap::Message *     message;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -3818,7 +3818,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
         SuccessOrExit(error = routerMaskTlv.AppendTo(*message));
     }
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
 
@@ -3853,7 +3853,7 @@ void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::Message
 
     IgnoreError(mRouterTable.Release(routerId));
 
-    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
     Log(kMessageSend, kTypeAddressReleaseReply, aMessageInfo.GetPeerAddr());
 

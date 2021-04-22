@@ -51,7 +51,7 @@ AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
     : AnnounceSenderBase(aInstance, AnnounceBeginServer::HandleTimer)
     , mAnnounceBegin(UriPath::kAnnounceBegin, &AnnounceBeginServer::HandleRequest, this)
 {
-    Get<Tmf::TmfAgent>().AddResource(mAnnounceBegin);
+    Get<Tmf::Agent>().AddResource(mAnnounceBegin);
 }
 
 void AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
@@ -82,7 +82,7 @@ void AnnounceBeginServer::HandleRequest(Coap::Message &aMessage, const Ip6::Mess
 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, responseInfo));
+        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, responseInfo));
         otLogInfoMeshCoP("sent announce begin response");
     }
 

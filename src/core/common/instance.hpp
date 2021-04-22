@@ -660,7 +660,7 @@ template <> inline Ip6::Mpl &Instance::Get(void)
     return mIp6.mMpl;
 }
 
-template <> inline Tmf::TmfAgent &Instance::Get(void)
+template <> inline Tmf::Agent &Instance::Get(void)
 {
     return mThreadNetif.mTmfAgent;
 }

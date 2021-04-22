@@ -167,7 +167,7 @@ void ThreadNetif::Up(void)
 
     SubscribeAllNodesMulticast();
     IgnoreError(Get<Mle::MleRouter>().Enable());
-    IgnoreError(Get<Tmf::TmfAgent>().Start());
+    IgnoreError(Get<Tmf::Agent>().Start());
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     IgnoreError(Get<Dns::ServiceDiscovery::Server>().Start());
 #endif
@@ -199,7 +199,7 @@ void ThreadNetif::Down(void)
 #if OPENTHREAD_CONFIG_DTLS_ENABLE
     Get<Coap::CoapSecure>().Stop();
 #endif
-    IgnoreError(Get<Tmf::TmfAgent>().Stop());
+    IgnoreError(Get<Tmf::Agent>().Stop());
     IgnoreError(Get<Mle::MleRouter>().Disable());
     RemoveAllExternalUnicastAddresses();
     UnsubscribeAllExternalMulticastAddresses();

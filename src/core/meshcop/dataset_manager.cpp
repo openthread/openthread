@@ -297,7 +297,7 @@ void DatasetManager::SendSet(void)
         }
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error =
                       message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveSet : UriPath::kPendingSet));
@@ -309,8 +309,8 @@ void DatasetManager::SendSet(void)
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(
-        error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
+    SuccessOrExit(error =
+                      Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
 
     otLogInfoMeshCoP("Sent %s set to leader", Dataset::TypeToString(GetType()));
 
@@ -407,7 +407,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 
     IgnoreError(Read(dataset));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -448,7 +448,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
                      aMessageInfo.GetPeerAddr().ToString().AsCString());
@@ -475,7 +475,7 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo, const ui
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error =
                       message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveSet : UriPath::kPendingSet));
@@ -523,7 +523,7 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo, const ui
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset set request to leader");
 
@@ -606,7 +606,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         datasetTlvs[length++] = Tlv::kChannelMask;
     }
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error =
                       message->InitAsConfirmablePost(IsActiveDataset() ? UriPath::kActiveGet : UriPath::kPendingGet));
@@ -644,7 +644,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent dataset get request");
 
@@ -660,7 +660,7 @@ ActiveDataset::ActiveDataset(Instance &aInstance)
     , mResourceSet(UriPath::kActiveSet, &ActiveDataset::HandleSet, this)
 #endif
 {
-    Get<Tmf::TmfAgent>().AddResource(mResourceGet);
+    Get<Tmf::Agent>().AddResource(mResourceGet);
 }
 
 bool ActiveDataset::IsPartiallyComplete(void) const
@@ -719,7 +719,7 @@ PendingDataset::PendingDataset(Instance &aInstance)
     , mResourceSet(UriPath::kPendingSet, &PendingDataset::HandleSet, this)
 #endif
 {
-    Get<Tmf::TmfAgent>().AddResource(mResourceGet);
+    Get<Tmf::Agent>().AddResource(mResourceGet);
 }
 
 void PendingDataset::Clear(void)
