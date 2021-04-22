@@ -361,11 +361,11 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     if (ip6Header.GetDestination().IsMulticast())
     {
-        // With the exception of MLE multicasts, an End Device
-        // transmits multicasts, as IEEE 802.15.4 unicasts to its
-        // parent.
+        // With the exception of MLE multicasts and any other message
+        // with link security disabled, an End Device transmits
+        // multicasts, as IEEE 802.15.4 unicasts to its parent.
 
-        if (mle.IsChild() && !aMessage.IsSubTypeMle())
+        if (mle.IsChild() && aMessage.IsLinkSecurityEnabled())
         {
             mMacDest.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
         }
