@@ -120,6 +120,14 @@
 #define OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE 1
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+ *
+ * Define to 1 to enable TMF anycast locator functionality.
+ *
+ */
+#define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 1
+
+/**
  * @def OPENTHREAD_CONFIG_LEGACY_ENABLE
  *
  * Define to 1 to enable legacy network support.

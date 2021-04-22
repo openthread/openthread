@@ -32,6 +32,7 @@ set -euxo pipefail
 readonly OT_SRCDIR="$(pwd)"
 
 readonly OT_BUILD_OPTIONS=(
+    "-DOT_ANYCAST_LOCATOR=ON"
     "-DOT_BUILD_EXECUTABLES=OFF"
     "-DOT_BORDER_AGENT=ON"
     "-DOT_BORDER_ROUTER=ON"

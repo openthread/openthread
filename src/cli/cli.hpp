@@ -337,6 +337,7 @@ private:
     };
 
     static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
+    static constexpr uint32_t kLocateTimeoutMsecs            = 2500;
 
     struct Command
     {
@@ -554,6 +555,14 @@ private:
     otError ProcessLinkMetricsMgmt(Arg aArgs[]);
     otError ProcessLinkMetricsProbe(Arg aArgs[]);
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags);
+#endif
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    otError     ProcessLocate(Arg aArgs[]);
+    static void HandleLocateResult(void *              aContext,
+                                   otError             aError,
+                                   const otIp6Address *aMeshLocalAddress,
+                                   uint16_t            aRloc16);
+    void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(Arg aArgs[]);
@@ -868,6 +877,9 @@ private:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
         {"linkmetrics", &Interpreter::ProcessLinkMetrics},
 #endif
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+        {"locate", &Interpreter::ProcessLocate},
+#endif
         {"log", &Interpreter::ProcessLog},
         {"mac", &Interpreter::ProcessMac},
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
@@ -1025,7 +1037,10 @@ private:
     bool     mIsLogging;
 #endif
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
-    bool mPingIsAsync;
+    bool mPingIsAsync : 1;
+#endif
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    bool mLocateInProgress : 1;
 #endif
 };
 

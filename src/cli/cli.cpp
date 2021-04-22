@@ -140,6 +140,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mOutputLength(0)
     , mIsLogging(false)
 #endif
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    , mLocateInProgress(false)
+#endif
 {
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
@@ -2553,6 +2556,57 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
+
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+
+otError Interpreter::ProcessLocate(Arg aArgs[])
+{
+    otError      error = OT_ERROR_INVALID_ARGS;
+    otIp6Address anycastAddress;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine(otThreadIsAnycastLocateInProgress(mInstance) ? "In Progress" : "Idle");
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(anycastAddress));
+    SuccessOrExit(error = otThreadLocateAnycastDestination(mInstance, &anycastAddress, HandleLocateResult, this));
+    SetCommandTimeout(kLocateTimeoutMsecs);
+    mLocateInProgress = true;
+    error             = OT_ERROR_PENDING;
+
+exit:
+    return error;
+}
+
+void Interpreter::HandleLocateResult(void *              aContext,
+                                     otError             aError,
+                                     const otIp6Address *aMeshLocalAddress,
+                                     uint16_t            aRloc16)
+{
+    static_cast<Interpreter *>(aContext)->HandleLocateResult(aError, aMeshLocalAddress, aRloc16);
+}
+
+void Interpreter::HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16)
+{
+    VerifyOrExit(mLocateInProgress);
+
+    mLocateInProgress = false;
+
+    if (aError == OT_ERROR_NONE)
+    {
+        OutputIp6Address(*aMeshLocalAddress);
+        OutputLine(" 0x%04x", aRloc16);
+    }
+
+    OutputResult(aError);
+
+exit:
+    return;
+}
+
+#endif //  OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessPskc(Arg aArgs[])
@@ -5191,7 +5245,17 @@ void Interpreter::HandleTimer(Timer &aTimer)
 
 void Interpreter::HandleTimer(void)
 {
-    OutputResult(kErrorNone);
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    if (mLocateInProgress)
+    {
+        mLocateInProgress = false;
+        OutputResult(OT_ERROR_RESPONSE_TIMEOUT);
+    }
+    else
+#endif
+    {
+        OutputResult(OT_ERROR_NONE);
+    }
 }
 
 void Interpreter::SetCommandTimeout(uint32_t aTimeoutMilli)

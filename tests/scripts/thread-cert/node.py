@@ -1082,6 +1082,22 @@ class NodeImpl:
         values = [key_value[1].strip('"') for key_value in key_values]
         return dict(zip(keys, values))
 
+    def locate(self, anycast_addr):
+        cmd = 'locate ' + anycast_addr
+        self.send_command(cmd)
+        self.simulator.go(5)
+        return self._parse_locate_result(self._expect_command_output(cmd)[0])
+
+    def _parse_locate_result(self, line: str):
+        """Parse anycast locate result as list of ml-eid and rloc16.
+
+           Example output for input
+           'fd00:db8:0:0:acf9:9d0:7f3c:b06e 0xa800'
+
+           [ 'fd00:db8:0:0:acf9:9d0:7f3c:b06e', '0xa800' ]
+        """
+        return line.split(' ')
+
     def enable_backbone_router(self):
         cmd = 'bbr enable'
         self.send_command(cmd)

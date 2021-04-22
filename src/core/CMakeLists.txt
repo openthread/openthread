@@ -177,6 +177,7 @@ set(COMMON_SOURCES
     thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
+    thread/anycast_locator.cpp
     thread/child_table.cpp
     thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp

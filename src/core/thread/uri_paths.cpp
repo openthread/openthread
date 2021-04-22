@@ -40,6 +40,7 @@ const char UriPath::kAddressNotify[]          = "a/an";
 const char UriPath::kAddressError[]           = "a/ae";
 const char UriPath::kAddressRelease[]         = "a/ar";
 const char UriPath::kAddressSolicit[]         = "a/as";
+const char UriPath::kAnycastLocate[]          = "a/yl";
 const char UriPath::kActiveGet[]              = "c/ag";
 const char UriPath::kActiveSet[]              = "c/as";
 const char UriPath::kDatasetChanged[]         = "c/dc";
