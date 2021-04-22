@@ -634,6 +634,11 @@ enum
 
 enum
 {
+    SPINEL_ROUTE_FLAG_NAT64 = (1 << 5),
+};
+
+enum
+{
     SPINEL_THREAD_MODE_FULL_NETWORK_DATA   = (1 << 0),
     SPINEL_THREAD_MODE_FULL_THREAD_DEV     = (1 << 1),
     SPINEL_THREAD_MODE_SECURE_DATA_REQUEST = (1 << 2),
@@ -2367,7 +2372,7 @@ enum
      *  `6`: IPv6 Prefix
      *  `C`: Prefix length in bits
      *  `b`: Stable flag
-     *  `C`: TLV flags
+     *  `C`: TLV flags (SPINEL_NET_FLAG_* definition)
      *  `b`: "Is defined locally" flag. Set if this network was locally
      *       defined. Assumed to be true for set, insert and replace. Clear if
      *       the on mesh network was defined by another node.
@@ -2388,7 +2393,7 @@ enum
      *  `6`: Route Prefix
      *  `C`: Prefix length in bits
      *  `b`: Stable flag
-     *  `C`: Route preference flags
+     *  `C`: Route flags (SPINEL_ROUTE_FLAG_* and SPINEL_ROUTE_PREFERNCE_* definitions)
      *  `b`: "Is defined locally" flag. Set if this route info was locally
      *       defined as part of local network data. Assumed to be true for set,
      *       insert and replace. Clear if the route is part of partition's network
