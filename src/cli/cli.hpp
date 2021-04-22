@@ -513,6 +513,14 @@ private:
     otError ProcessLinkMetricsProbe(Arg aArgs[]);
     otError ParseLinkMetricsFlags(otLinkMetrics &aLinkMetrics, const Arg &aFlags);
 #endif
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+    otError     ProcessLocate(Arg aArgs[]);
+    static void HandleLocateResult(void *              aContext,
+                                   otError             aError,
+                                   const otIp6Address *aMeshLocalAddress,
+                                   uint16_t            aRloc16);
+    void        HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16);
+#endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
     otError ProcessMlr(Arg aArgs[]);
 
@@ -797,6 +805,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
         {"linkmetrics", &Interpreter::ProcessLinkMetrics},
+#endif
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+        {"locate", &Interpreter::ProcessLocate},
 #endif
         {"log", &Interpreter::ProcessLog},
         {"mac", &Interpreter::ProcessMac},

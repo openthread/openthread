@@ -34,6 +34,11 @@ option(OT_FTD "enable FTD" ON)
 option(OT_MTD "enable MTD" ON)
 option(OT_RCP "enable RCP" ON)
 
+option(OT_ANYCAST_LOCATOR "enable anycast locator support")
+if(OT_ANYCAST_LOCATOR)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE=1")
+endif()
+
 option(OT_ASSERT "enable assert function OT_ASSERT()" ON)
 if(OT_ASSERT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ASSERT_ENABLE=1")

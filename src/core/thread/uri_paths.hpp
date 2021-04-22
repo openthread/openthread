@@ -50,6 +50,7 @@ struct UriPath
     static const char kAddressError[];           ///< The URI Path for Address Error ("a/ae").
     static const char kAddressRelease[];         ///< The URI Path for Address Release ("a/ar").
     static const char kAddressSolicit[];         ///< The URI Path for Address Solicit ("a/as").
+    static const char kAnycastLocate[];          ///< The URI Path for Anycast Locate ("a/yl")
     static const char kActiveGet[];              ///< The URI Path for MGMT_ACTIVE_GE ("c/ag")T
     static const char kActiveSet[];              ///< The URI Path for MGMT_ACTIVE_SET ("c/as").
     static const char kDatasetChanged[];         ///< The URI Path for MGMT_DATASET_CHANGED ("c/dc").
