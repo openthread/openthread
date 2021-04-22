@@ -3281,6 +3281,7 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
     {
         if (!strcmp(aArgs[0], "-I"))
         {
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
             bool                  valid        = false;
             const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(mInstance);
 
@@ -3293,10 +3294,7 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
                     break;
                 }
             }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
             VerifyOrExit(valid, error = OT_ERROR_INVALID_ARGS);
-#else
-            OT_UNUSED_VARIABLE(valid);
 #endif
             aArgs += 2;
             aArgsLength -= 2;
