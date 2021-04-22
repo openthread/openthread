@@ -332,7 +332,7 @@ static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments
     if (sTxLength == 0)
     {
         rval = vsnprintf(sTxBuffer, kTxBufferSize, aFormat, aArguments);
-        VerifyOrExit(rval > 0 && rval < kTxBufferSize, otLogWarnPlat("Failed to format CLI output `%s`", aFormat));
+        VerifyOrExit(rval >= 0 && rval < kTxBufferSize, otLogWarnPlat("Failed to format CLI output `%s`", aFormat));
         sTxHead     = 0;
         sTxLength   = static_cast<uint16_t>(rval);
         sSendLength = 0;
