@@ -169,6 +169,7 @@ EXTRA_DIST                                                         = \
     test_mle.py                                                      \
     test_network_data.py                                             \
     test_network_layer.py                                            \
+    test_ping.py                                                     \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \
@@ -225,6 +226,7 @@ check_SCRIPTS                                                      = \
     test_mle.py                                                      \
     test_network_data.py                                             \
     test_network_layer.py                                            \
+    test_ping.py                                                     \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \

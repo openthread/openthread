@@ -3277,6 +3277,33 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
 
     memset(&config, 0, sizeof(config));
 
+    if (aArgsLength >= 2)
+    {
+        if (!strcmp(aArgs[0], "-I"))
+        {
+            SuccessOrExit(error = ParseAsIp6Address(aArgs[1], config.mSource));
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+            {
+                bool                  valid        = false;
+                const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(mInstance);
+
+                SuccessOrExit(error = ParseAsIp6Address(aArgs[1], config.mSource));
+                for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
+                {
+                    if (otIp6IsAddressEqual(&addr->mAddress, &config.mSource))
+                    {
+                        valid = true;
+                        break;
+                    }
+                }
+                VerifyOrExit(valid, error = OT_ERROR_INVALID_ARGS);
+            }
+#endif
+            aArgs += 2;
+            aArgsLength -= 2;
+        }
+    }
+
     SuccessOrExit(error = ParseAsIp6Address(aArgs[0], config.mDestination));
 
     if (aArgsLength > 1)
