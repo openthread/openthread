@@ -3281,22 +3281,23 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, char *aArgs[])
     {
         if (!strcmp(aArgs[0], "-I"))
         {
-            bool                  valid        = false;
-            const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(mInstance);
-
             SuccessOrExit(error = ParseAsIp6Address(aArgs[1], config.mSource));
-            for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
             {
-                if (otIp6IsAddressEqual(&addr->mAddress, &config.mSource))
+                bool                  valid        = false;
+                const otNetifAddress *unicastAddrs = otIp6GetUnicastAddresses(mInstance);
+
+                SuccessOrExit(error = ParseAsIp6Address(aArgs[1], config.mSource));
+                for (const otNetifAddress *addr = unicastAddrs; addr; addr = addr->mNext)
                 {
-                    valid = true;
-                    break;
+                    if (otIp6IsAddressEqual(&addr->mAddress, &config.mSource))
+                    {
+                        valid = true;
+                        break;
+                    }
                 }
+                VerifyOrExit(valid, error = OT_ERROR_INVALID_ARGS);
             }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-            VerifyOrExit(valid, error = OT_ERROR_INVALID_ARGS);
-#else
-            OT_UNUSED_VARIABLE(valid);
 #endif
             aArgs += 2;
             aArgsLength -= 2;
