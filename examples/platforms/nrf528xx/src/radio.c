@@ -79,6 +79,7 @@
 #define SECURITY_ENABLED_BIT     (1 << 3)  ///< Security enabled bit.
 
 #define RSSI_SETTLE_TIME_US   40           ///< RSSI settle time in microseconds.
+#define SAFE_DELTA            1000         ///< A safe value for the `dt` parameter of delayed operations.
 
 #if defined(__ICCARM__)
 _Pragma("diag_suppress=Pe167")
@@ -488,12 +489,26 @@ otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
     }
 
     nrf_802154_tx_power_set(GetTransmitPowerForChannel(aChannel));
-
     result = nrf_802154_receive();
     clearPendingEvents();
 
     return result ? OT_ERROR_NONE : OT_ERROR_INVALID_STATE;
 }
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    bool result;
+
+    nrf_802154_tx_power_set(GetTransmitPowerForChannel(aChannel));
+    result = nrf_802154_receive_at(aStart - SAFE_DELTA, SAFE_DELTA, aDuration, aChannel);
+    clearPendingEvents();
+
+    return result ? OT_ERROR_NONE : OT_ERROR_FAILED;
+}
+#endif
 
 otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
 {
@@ -575,7 +590,7 @@ otRadioCaps otPlatRadioGetCaps(otInstance *aInstance)
 
     return (otRadioCaps)(OT_RADIO_CAPS_ENERGY_SCAN | OT_RADIO_CAPS_ACK_TIMEOUT | OT_RADIO_CAPS_CSMA_BACKOFF |
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-                         OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING |
+                         OT_RADIO_CAPS_TRANSMIT_SEC | OT_RADIO_CAPS_TRANSMIT_TIMING | OT_RADIO_CAPS_RECEIVE_TIMING |
 #endif
                          OT_RADIO_CAPS_SLEEP_TO_TX);
 }
@@ -1053,6 +1068,7 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     case NRF_802154_RX_ERROR_ABORTED:
     case NRF_802154_RX_ERROR_DELAYED_TIMESLOT_DENIED:
     case NRF_802154_RX_ERROR_INVALID_LENGTH:
+    case NRF_802154_RX_ERROR_DELAYED_ABORTED:
         sReceiveError = OT_ERROR_FAILED;
         break;
 
@@ -1065,7 +1081,17 @@ void nrf_802154_receive_failed(nrf_802154_rx_error_t error)
     sAckedWithSecEnhAck = false;
 #endif
 
-    setPendingEvent(kPendingEventReceiveFailed);
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+    if ((error == NRF_802154_RX_ERROR_DELAYED_TIMEOUT) || (error == NRF_802154_RX_ERROR_TIMESLOT_ENDED))
+    {
+        sReceiveError = OT_ERROR_NONE;
+        setPendingEvent(kPendingEventSleep);
+    }
+    else
+#endif
+    {
+        setPendingEvent(kPendingEventReceiveFailed);
+    }
 }
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE

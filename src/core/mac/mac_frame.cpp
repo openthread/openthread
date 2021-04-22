@@ -1061,7 +1061,7 @@ exit:
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 uint16_t Frame::GetMtu(void) const
 {
-    uint16_t mtu;
+    uint16_t mtu = 0;
 
     switch (GetRadioType())
     {
@@ -1076,9 +1076,6 @@ uint16_t Frame::GetMtu(void) const
         mtu = Trel::Link::kMtuSize;
         break;
 #endif
-
-    default:
-        OT_ASSERT(false);
     }
 
     return mtu;
@@ -1086,7 +1083,7 @@ uint16_t Frame::GetMtu(void) const
 
 uint8_t Frame::GetFcsSize(void) const
 {
-    uint8_t fcsSize;
+    uint8_t fcsSize = 0;
 
     switch (GetRadioType())
     {
@@ -1101,9 +1098,6 @@ uint8_t Frame::GetFcsSize(void) const
         fcsSize = Trel::Link::kFcsSize;
         break;
 #endif
-
-    default:
-        OT_ASSERT(false);
     }
 
     return fcsSize;
