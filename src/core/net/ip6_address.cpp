@@ -118,6 +118,12 @@ uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, ui
     return matchedLength;
 }
 
+bool Prefix::IsValidNat64(void) const
+{
+    return (mLength == 32) || (mLength == 40) || (mLength == 48) || (mLength == 56) || (mLength == 64) ||
+           (mLength == 96);
+}
+
 Prefix::InfoString Prefix::ToString(void) const
 {
     InfoString string;
@@ -480,16 +486,14 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
         kSkipIndex = 8,
     };
 
-    uint8_t prefixLen = aPrefix.GetLength();
     uint8_t ip6Index;
 
-    OT_ASSERT((prefixLen == 32) || (prefixLen == 40) || (prefixLen == 48) || (prefixLen == 56) || (prefixLen == 64) ||
-              (prefixLen == 96));
+    OT_ASSERT(aPrefix.IsValidNat64());
 
     Clear();
     SetPrefix(aPrefix);
 
-    ip6Index = prefixLen / CHAR_BIT;
+    ip6Index = aPrefix.GetLength() / CHAR_BIT;
 
     for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
     {

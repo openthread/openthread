@@ -159,8 +159,19 @@ exit:
 
 Error Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
 {
-    return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, /* aFlags */ 0,
-                     aConfig.mStable);
+    Error   error;
+    uint8_t flags = 0;
+
+    if (aConfig.mNat64)
+    {
+        VerifyOrExit(aConfig.GetPrefix().IsValidNat64(), error = kErrorInvalidArgs);
+        flags |= HasRouteEntry::kNat64Flag;
+    }
+
+    error = AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, flags, aConfig.mStable);
+
+exit:
+    return error;
 }
 
 Error Local::RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)
@@ -208,6 +219,7 @@ Error Local::AddPrefix(const Ip6::Prefix &  aPrefix,
         hasRouteTlv->SetLength(hasRouteTlv->GetLength() + sizeof(HasRouteEntry));
         hasRouteTlv->GetEntry(0)->Init();
         hasRouteTlv->GetEntry(0)->SetPreference(aPrf);
+        hasRouteTlv->GetEntry(0)->SetFlags(static_cast<uint8_t>(aFlags));
     }
 
     if (aStable)

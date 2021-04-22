@@ -76,6 +76,7 @@ void ExternalRouteConfig::SetFrom(Instance &           aInstance,
 
     aPrefixTlv.CopyPrefixTo(GetPrefix());
     mPreference          = aHasRouteEntry.GetPreference();
+    mNat64               = aHasRouteEntry.IsNat64();
     mStable              = aHasRouteTlv.IsStable();
     mRloc16              = aHasRouteEntry.GetRloc();
     mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::MleRouter>().GetRloc16());

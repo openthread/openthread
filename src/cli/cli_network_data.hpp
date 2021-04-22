@@ -111,6 +111,8 @@ private:
     void    OutputPrefixes(void);
     void    OutputRoutes(void);
     void    OutputServices(void);
+    void    OutputIp6Prefix(const otIp6Prefix &aPrefix);
+    void    OutputPreference(signed int aPreference);
 
     static constexpr Command sCommands[] = {
         {"help", &NetworkData::ProcessHelp},

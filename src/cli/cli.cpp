@@ -3737,6 +3737,10 @@ otError Interpreter::ProcessRouteAdd(uint8_t aArgsLength, char *aArgs[])
         {
             config.mStable = true;
         }
+        else if (strcmp(aArgs[argcur], "n") == 0)
+        {
+            config.mNat64 = true;
+        }
         else if (strcmp(aArgs[argcur], "high") == 0)
         {
             config.mPreference = OT_ROUTE_PREFERENCE_HIGH;
