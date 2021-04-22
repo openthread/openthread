@@ -1468,6 +1468,14 @@ class OTCI(object):
         """Disable multicast promiscuous mode."""
         self.execute_command('ipmaddr promiscuous disable')
 
+    def get_ipmaddr_llatn(self) -> Ip6Addr:
+        """Get Link Local All Thread Nodes Multicast Address"""
+        return self.__parse_ip6addr(self.execute_command('ipmaddr llatn'))
+
+    def get_ipmaddr_rlatn(self) -> Ip6Addr:
+        """Get Realm Local All Thread Nodes Multicast Address"""
+        return self.__parse_ip6addr(self.execute_command('ipmaddr rlatn'))
+
     #
     # Backbone Router Utilities
     #

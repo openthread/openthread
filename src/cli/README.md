@@ -1307,6 +1307,16 @@ Unsubscribe the Thread interface to the IPv6 multicast address.
 Done
 ```
 
+### ipmaddr llatn
+
+Get the Link-Local All Thread Nodes multicast address.
+
+```
+> ipmaddr llatn
+ff32:40:fdde:ad00:beef:0:0:1
+Done
+```
+
 ### ipmaddr promiscuous
 
 Get multicast promiscuous mode.
@@ -1332,6 +1342,16 @@ Disable multicast promiscuous mode.
 
 ```bash
 > ipmaddr promiscuous disable
+Done
+```
+
+### ipmaddr rlatn
+
+Get the Realm-Local All Thread Nodes multicast address.
+
+```
+> ipmaddr rlatn
+ff33:40:fdde:ad00:beef:0:0:1
 Done
 ```
 
@@ -1992,6 +2012,16 @@ Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 Done
 
 > prefix add fd00:7d03:7d03:7d03::/64 prosD med
+Done
+```
+
+### prefix meshlocal
+
+Get the mesh local prefix.
+
+```bash
+> prefix meshlocal
+fdde:ad00:beef:0::/64
 Done
 ```
 

@@ -463,6 +463,7 @@ private:
     otError ProcessNetworkDataPrefix(void);
     otError ProcessNetworkDataRoute(void);
     otError ProcessNetworkDataService(void);
+    void    OutputPrefix(const otMeshLocalPrefix &aPrefix);
     void    OutputPrefix(const otBorderRouterConfig &aConfig);
     void    OutputRoute(const otExternalRouteConfig &aConfig);
     void    OutputService(const otServiceConfig &aConfig);

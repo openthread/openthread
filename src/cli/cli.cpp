@@ -2091,6 +2091,16 @@ otError Interpreter::ProcessIpMulticastAddr(uint8_t aArgsLength, char *aArgs[])
         {
             SuccessOrExit(error = ProcessMulticastPromiscuous(aArgsLength - 1, aArgs + 1));
         }
+        else if (strcmp(aArgs[0], "llatn") == 0)
+        {
+            OutputIp6Address(*otThreadGetLinkLocalAllThreadNodesMulticastAddress(mInstance));
+            OutputLine("");
+        }
+        else if (strcmp(aArgs[0], "rlatn") == 0)
+        {
+            OutputIp6Address(*otThreadGetRealmLocalAllThreadNodesMulticastAddress(mInstance));
+            OutputLine("");
+        }
         else
         {
             ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -3612,6 +3622,11 @@ otError Interpreter::ProcessPrefix(uint8_t aArgsLength, char *aArgs[])
     {
         SuccessOrExit(error = ProcessPrefixRemove(aArgsLength - 1, aArgs + 1));
     }
+    else if (strcmp(aArgs[0], "meshlocal") == 0)
+    {
+        OutputPrefix(*otThreadGetMeshLocalPrefix(mInstance));
+        OutputLine("");
+    }
     else
     {
         ExitNow(error = OT_ERROR_INVALID_COMMAND);
@@ -4874,6 +4889,12 @@ void Interpreter::ProcessLine(char *aBuf)
 
 exit:
     return;
+}
+
+void Interpreter::OutputPrefix(const otMeshLocalPrefix &aPrefix)
+{
+    OutputFormat("%x:%x:%x:%x::/64", (aPrefix.m8[0] << 8) | aPrefix.m8[1], (aPrefix.m8[2] << 8) | aPrefix.m8[3],
+                 (aPrefix.m8[4] << 8) | aPrefix.m8[5], (aPrefix.m8[6] << 8) | aPrefix.m8[7]);
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE

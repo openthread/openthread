@@ -40,6 +40,15 @@ expect "ff0e:0:0:0:0:0:0:1"
 expect_line "Done"
 set addr [get_ipaddr mleid]
 
+set prefix [get_meshlocal_prefix]
+
+send "ipmaddr llatn\n"
+expect "ff32:40:$prefix:0:1"
+expect_line "Done"
+send "ipmaddr rlatn\n"
+expect "ff33:40:$prefix:0:1"
+expect_line "Done"
+
 switch_node 2
 send "ping ff0e::1\n"
 expect_line "Done"
