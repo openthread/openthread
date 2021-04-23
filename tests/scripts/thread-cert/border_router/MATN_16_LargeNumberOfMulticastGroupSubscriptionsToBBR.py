@@ -91,8 +91,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
         router1 = self.nodes[ROUTER_1]
         host = self.nodes[HOST]
 
-        br1.set_backbone_router(reg_delay=REG_DELAY,
-                                mlr_timeout=consts.MLR_TIMEOUT_MIN)
+        br1.set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=consts.MLR_TIMEOUT_MIN)
         br1.start()
         self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
@@ -109,8 +108,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
         for i in range(1, 6):
             # 1. Router_1 registers for 15 multicast addresses, MASi.
             for j in range(1, 16):
-                router1.register_multicast_listener(MAS[i][j],
-                                                    timeout=consts.MLR_TIMEOUT_MIN)
+                router1.register_multicast_listener(MAS[i][j], timeout=consts.MLR_TIMEOUT_MIN)
         self.simulator.go(5)
 
         # Loop steps 5 to 6 with i := 1 to 5.
@@ -118,18 +116,16 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # 5. Host sends a ping packet to the multicast address,
             # MASi[ 3 * i - 1], on the backbone link.
             self.assertFalse(
-                host.ping(MAS[i][i * 3 - 1], backbone=True, ttl=64,
-                          interface=host.get_ip6_address(
-                              config.ADDRESS_TYPE.ONLINK_ULA)[
-                              0]))
+                host.ping(MAS[i][i * 3 - 1],
+                          backbone=True,
+                          ttl=64,
+                          interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
 
             self.simulator.go(3)
 
         # 7. Host multicasts a packet to the multicast addresses, MA2.
-        self.assertFalse(host.ping(MA2, backbone=True, ttl=64,
-                                   interface=host.get_ip6_address(
-                                       config.ADDRESS_TYPE.ONLINK_ULA)[
-                                       0]))
+        self.assertFalse(
+            host.ping(MA2, backbone=True, ttl=64, interface=host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.simulator.go(3)
 
         self.collect_ipaddrs()
@@ -152,7 +148,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # 1. Router_1 registers for 15 multicast addresses, MASi.
             # [Automatic result:]
             # Unicasts an MLR.req CoAP request to BR_1 as follows:
-            # coap://[<BR_1 ALOC>]:MM/n/mr
+            # coap://[<BR_1 RLOC> or <PBBR ALOC>]:MM/n/mr
             # Where the payload contains:
             # IPv6 Addresses TLV: MASi (15 addresses)
             for j in range(1, 16):
