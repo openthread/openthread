@@ -2724,6 +2724,15 @@ class LinuxHost():
         else:
             return super().ping(*args, **kwargs)
 
+    def udp_send_host(self, ipaddr, port, data, hop_limit=None):
+        if hop_limit is None:
+            if ipaddress.ip_address(ipaddr).is_multicast:
+                hop_limit = 10
+            else:
+                hop_limit = 64
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/udp_send_host.py {ipaddr} {port} "{data}" {hop_limit}'
+        self.bash(cmd)
+
     def add_ipmaddr(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)
         if backbone:

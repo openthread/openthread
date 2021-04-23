@@ -30,7 +30,7 @@
 import logging
 import pktverify
 from pktverify import packet_verifier
-from pktverify.consts import MA1
+from pktverify.consts import MA1, PBBR_ALOC
 import unittest
 
 import config
@@ -147,7 +147,7 @@ class MATN_03_InvalidCommissionerDeregistration(thread_cert.TestCase):
         # IPv6 Addresses TLV: MA1
         # Timeout TLV: 0
         pkts.filter_wpan_src64(vars['Router_1']) \
-            .filter_ipv6_2dsts(vars['BR_1_RLOC'], vars['LEADER_ALOC']) \
+            .filter_ipv6_2dsts(vars['BR_1_RLOC'], PBBR_ALOC) \
             .filter_coap_request('/n/mr') \
             .filter(lambda p: p.thread_meshcop.tlv.ipv6_addr == [MA1] and
                               p.thread_nm.tlv.timeout == 0) \
