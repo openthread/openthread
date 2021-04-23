@@ -164,7 +164,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
                 # 2.04 changed
                 # Where the payload contains:
                 # Status TLV: ST_MLR_SUCCESS
-                pkts.filter_wpan_src64(vars['BR_1']) \
+                pkts.copy().filter_wpan_src64(vars['BR_1']) \
                     .filter_ipv6_dst(_pkt.ipv6.src) \
                     .filter_coap_ack('/n/mr') \
                     .filter(lambda p: p.thread_nm.tlv.status == 0) \
@@ -178,7 +178,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
                 # Where the payload contains:
                 # IPv6 Addresses TLV:  MASi (15 addresses)
                 # Timeout TLV:  default MLR timeout of BR_1
-                pkts.filter_eth_src(vars['BR_1_ETH']) \
+                pkts.copy().filter_eth_src(vars['BR_1_ETH']) \
                     .filter_ipv6_dst(config.ALL_NETWORK_BBRS_ADDRESS) \
                     .filter_coap_request('/b/bmr') \
                     .filter(
@@ -214,7 +214,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
 
             # 6. BR_1 forwards the ping packet of the previous step to its
             # Thread Network encapsulated in an MPL packet.
-            pkts.filter_wpan_src64(vars['BR_1']) \
+            pkts.copy().filter_wpan_src64(vars['BR_1']) \
                 .filter_AMPLFMA(mpl_seed_id=vars['BR_1_RLOC']) \
                 .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
                 .must_next()
