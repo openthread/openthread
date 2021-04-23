@@ -246,7 +246,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 f'{self.test_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
 
         if self._do_packet_verification:
-            time.sleep(3)
+            self.simulator.go(3)
 
         if self._has_backbone_traffic():
             # Stop Backbone sniffer before stopping nodes so that we don't capture Codecov Uploading traffic
