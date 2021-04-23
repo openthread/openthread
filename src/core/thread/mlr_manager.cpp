@@ -401,7 +401,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsConfirmablePost();
     SuccessOrExit(message->GenerateRandomToken(Coap::Message::kDefaultTokenLength));
@@ -444,7 +444,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(mle.GetMeshLocal16());
 
-    error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
+    error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
 
 exit:
     otLogInfoMlr("Send MLR.req: %s, addressNum=%d", ErrorToString(error), aAddressNum);

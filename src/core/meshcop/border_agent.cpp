@@ -462,7 +462,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
 
     SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRouterRloc));
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsNonConfirmablePost(UriPath::kRelayTx));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -477,7 +477,7 @@ void BorderAgent::HandleRelayTransmit(const Coap::Message &aMessage)
     messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.GetPeerAddr().GetIid().SetLocator(joinerRouterRloc);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("Sent to joiner router request on %s", UriPath::kRelayTx);
 
@@ -498,7 +498,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     Coap::Message *  message = nullptr;
     uint16_t         offset  = 0;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     if (aSeparate)
     {
@@ -527,7 +527,7 @@ Error BorderAgent::ForwardToLeader(const Coap::Message &   aMessage,
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetSockPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, forwardContext));
 
     // HandleCoapResponse is responsible to free this forward context.
     forwardContext = nullptr;
@@ -601,7 +601,7 @@ Error BorderAgent::Start(void)
     coaps.AddResource(mProxyTransmit);
     coaps.AddResource(mRelayTransmit);
 
-    Get<Tmf::TmfAgent>().AddResource(mRelayReceive);
+    Get<Tmf::Agent>().AddResource(mRelayReceive);
 
     mState        = kStateStarted;
     mUdpProxyPort = 0;
@@ -644,7 +644,7 @@ Error BorderAgent::Stop(void)
     coaps.RemoveResource(mProxyTransmit);
     coaps.RemoveResource(mRelayTransmit);
 
-    Get<Tmf::TmfAgent>().RemoveResource(mRelayReceive);
+    Get<Tmf::Agent>().RemoveResource(mRelayReceive);
 
     coaps.Stop();
 

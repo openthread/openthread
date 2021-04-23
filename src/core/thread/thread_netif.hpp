@@ -193,7 +193,7 @@ public:
     bool IsOnMesh(const Ip6::Address &aAddress) const;
 
 private:
-    Tmf::TmfAgent mTmfAgent;
+    Tmf::Agent mTmfAgent;
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
 #endif

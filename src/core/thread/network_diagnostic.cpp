@@ -63,10 +63,10 @@ NetworkDiagnostic::NetworkDiagnostic(Instance &aInstance)
     , mReceiveDiagnosticGetCallback(nullptr)
     , mReceiveDiagnosticGetCallbackContext(nullptr)
 {
-    Get<Tmf::TmfAgent>().AddResource(mDiagnosticGetRequest);
-    Get<Tmf::TmfAgent>().AddResource(mDiagnosticGetQuery);
-    Get<Tmf::TmfAgent>().AddResource(mDiagnosticGetAnswer);
-    Get<Tmf::TmfAgent>().AddResource(mDiagnosticReset);
+    Get<Tmf::Agent>().AddResource(mDiagnosticGetRequest);
+    Get<Tmf::Agent>().AddResource(mDiagnosticGetQuery);
+    Get<Tmf::Agent>().AddResource(mDiagnosticGetAnswer);
+    Get<Tmf::Agent>().AddResource(mDiagnosticReset);
 }
 
 Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDestination,
@@ -80,7 +80,7 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
     Ip6::MessageInfo      messageInfo;
     otCoapResponseHandler handler = nullptr;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     if (aDestination.IsMulticast())
     {
@@ -115,7 +115,7 @@ Error NetworkDiagnostic::SendDiagnosticGet(const Ip6::Address &           aDesti
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, handler, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, handler, this));
 
     mReceiveDiagnosticGetCallback        = aCallback;
     mReceiveDiagnosticGetCallbackContext = aCallbackContext;
@@ -174,7 +174,7 @@ void NetworkDiagnostic::HandleDiagnosticGetAnswer(Coap::Message &aMessage, const
         mReceiveDiagnosticGetCallback(kErrorNone, &aMessage, &aMessageInfo, mReceiveDiagnosticGetCallbackContext);
     }
 
-    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic answer acknowledgment");
 
@@ -477,13 +477,13 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
     // DIAG_GET.qry may be sent as a confirmable message.
     if (aMessage.IsConfirmable())
     {
-        if (Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+        if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
         {
             otLogInfoNetDiag("Sent diagnostic get query acknowledgment");
         }
     }
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticGetAnswer));
 
@@ -512,7 +512,7 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
         IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, nullptr, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, nullptr, this));
 
     otLogInfoNetDiag("Sent diagnostic get answer");
 
@@ -543,7 +543,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
 
     VerifyOrExit(networkDiagnosticTlv.GetType() == NetworkDiagnosticTlv::kTypeList, error = kErrorParse);
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -556,7 +556,7 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
         IgnoreError(message->SetLength(message->GetOffset() - 1));
     }
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoNetDiag("Sent diagnostic get response");
 
@@ -572,7 +572,7 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kDiagnosticReset));
 
@@ -598,7 +598,7 @@ Error NetworkDiagnostic::SendDiagnosticReset(const Ip6::Address &aDestination,
     messageInfo.SetPeerAddr(aDestination);
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoNetDiag("Sent network diagnostic reset");
 
@@ -646,7 +646,7 @@ void NetworkDiagnostic::HandleDiagnosticReset(Coap::Message &aMessage, const Ip6
         }
     }
 
-    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetDiag("Sent diagnostic reset acknowledgment");
 

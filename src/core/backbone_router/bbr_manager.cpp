@@ -95,11 +95,11 @@ void Manager::HandleNotifierEvents(Events aEvents)
         if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
         {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-            Get<Tmf::TmfAgent>().RemoveResource(mMulticastListenerRegistration);
+            Get<Tmf::Agent>().RemoveResource(mMulticastListenerRegistration);
             mMulticastListenersTable.Clear();
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-            Get<Tmf::TmfAgent>().RemoveResource(mDuaRegistration);
+            Get<Tmf::Agent>().RemoveResource(mDuaRegistration);
 #endif
             mTimer.Stop();
 
@@ -117,10 +117,10 @@ void Manager::HandleNotifierEvents(Events aEvents)
         else
         {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-            Get<Tmf::TmfAgent>().AddResource(mMulticastListenerRegistration);
+            Get<Tmf::Agent>().AddResource(mMulticastListenerRegistration);
 #endif
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
-            Get<Tmf::TmfAgent>().AddResource(mDuaRegistration);
+            Get<Tmf::Agent>().AddResource(mDuaRegistration);
 #endif
             if (!mTimer.IsRunning())
             {
@@ -301,7 +301,7 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message &   
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(message->SetPayloadMarker());
@@ -322,7 +322,7 @@ void Manager::SendMulticastListenerRegistrationResponse(const Coap::Message &   
         }
     }
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
 exit:
     FreeMessageOnError(message, error);
@@ -435,7 +435,7 @@ exit:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (duaRespCoapCode != Coap::kCodeEmpty)
         {
-            IgnoreError(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo, duaRespCoapCode));
+            IgnoreError(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo, duaRespCoapCode));
         }
         else
 #endif
@@ -453,7 +453,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     Error          error   = kErrorNone;
     Coap::Message *message = nullptr;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(message->SetDefaultResponseHeader(aMessage));
     SuccessOrExit(message->SetPayloadMarker());
@@ -461,7 +461,7 @@ void Manager::SendDuaRegistrationResponse(const Coap::Message &      aMessage,
     SuccessOrExit(Tlv::Append<ThreadStatusTlv>(*message, aStatus));
     SuccessOrExit(Tlv::Append<ThreadTargetTlv>(*message, aTarget));
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
 exit:
     FreeMessageOnError(message, error);
