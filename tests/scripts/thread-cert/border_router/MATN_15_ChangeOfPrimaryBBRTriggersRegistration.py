@@ -104,15 +104,13 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         router1 = self.nodes[ROUTER_1]
         td = self.nodes[TD]
 
-        br1.set_backbone_router(reg_delay=REG_DELAY,
-                                mlr_timeout=consts.MLR_TIMEOUT_MIN)
+        br1.set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=consts.MLR_TIMEOUT_MIN)
         br1.start()
         self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 
-        br2.set_backbone_router(reg_delay=REG_DELAY,
-                                mlr_timeout=consts.MLR_TIMEOUT_MIN)
+        br2.set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=consts.MLR_TIMEOUT_MIN)
         router1.start()
         self.simulator.go(5)
         self.assertEqual('router', router1.get_state())
