@@ -538,7 +538,7 @@ exit:
     otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), ErrorToString(error));
 }
 
-void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult)
+void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
     Error error;
@@ -552,10 +552,12 @@ void DuaManager::HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageIn
     }
 
     VerifyOrExit(aResult == kErrorNone, error = kErrorParse);
-    VerifyOrExit(aMessage.GetCode() == Coap::kCodeChanged || aMessage.GetCode() >= Coap::kCodeBadRequest,
+    OT_ASSERT(aMessage != nullptr);
+
+    VerifyOrExit(aMessage->GetCode() == Coap::kCodeChanged || aMessage->GetCode() >= Coap::kCodeBadRequest,
                  error = kErrorParse);
 
-    error = ProcessDuaResponse(aMessage);
+    error = ProcessDuaResponse(*aMessage);
 
 exit:
     if (error != kErrorResponseTimeout)
