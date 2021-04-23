@@ -196,6 +196,8 @@ class TestOTCI(unittest.TestCase):
         self.assertTrue(leader.get_ipaddr_rloc())
         self.assertTrue(leader.get_ipaddr_linklocal())
         self.assertTrue(leader.get_ipaddr_mleid())
+        self.assertTrue(leader.get_ipmaddr_llatn())
+        self.assertTrue(leader.get_ipmaddr_rlatn())
 
         leader.add_ipaddr('2001::1')
         leader.del_ipaddr('2001::1')
