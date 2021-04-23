@@ -2673,17 +2673,14 @@ class LinuxHost():
         cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.ETH_DEV} {ip} &'
         self.bash(cmd)
 
-    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None, interface=None) -> int:
+    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None, interface='eth0') -> int:
 
-        cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
+        cmd = f'ping -6 {ipaddr} -I {interface} -c {num_responses} -W {timeout}'
         if size is not None:
             cmd += f' -s {size}'
 
         if ttl is not None:
             cmd += f' -t {ttl}'
-
-        if interface is not None:
-            cmd += f' -I {interface}'
 
         resp_count = 0
 

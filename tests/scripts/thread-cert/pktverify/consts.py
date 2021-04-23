@@ -306,7 +306,7 @@ REAL_LAYER_NAMES = {
     'mdns',
 }
 
-FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop'}
+FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop', 'ipv6inner'}
 
 VALID_LAYER_NAMES = REAL_LAYER_NAMES | FAKE_LAYER_NAMES
 
