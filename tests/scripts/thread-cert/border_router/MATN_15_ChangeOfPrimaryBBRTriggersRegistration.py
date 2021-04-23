@@ -37,9 +37,9 @@ import config
 import thread_cert
 
 # Test description:
-# The purpose of this test case is to verify that a Primary BBR implements MLDv2
-# to receive IPv6 multicasts from upstream sources. Execute this test case with
-# the DUT in each of the following roles:
+# The purpose of this test case is to verify that a Thread End Device detects a
+# change of Primary BBR device and triggers a re-registration to its multicast
+# groups.
 #
 # Topology:
 #
@@ -104,13 +104,15 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         router1 = self.nodes[ROUTER_1]
         td = self.nodes[TD]
 
-        br1.set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=consts.MLR_TIMEOUT_MIN)
+        br1.set_backbone_router(reg_delay=REG_DELAY,
+                                mlr_timeout=consts.MLR_TIMEOUT_MIN)
         br1.start()
         self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
         self.assertTrue(br1.is_primary_backbone_router)
 
-        br2.set_backbone_router(reg_delay=REG_DELAY, mlr_timeout=consts.MLR_TIMEOUT_MIN)
+        br2.set_backbone_router(reg_delay=REG_DELAY,
+                                mlr_timeout=consts.MLR_TIMEOUT_MIN)
         router1.start()
         self.simulator.go(5)
         self.assertEqual('router', router1.get_state())
@@ -146,7 +148,6 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         self.collect_rloc16s()
         self.collect_rlocs()
         self.collect_extra_vars()
-        self.collect_leader_aloc(BR_2)
 
     def verify(self, pv: pktverify.packet_verifier.PacketVerifier):
         pkts = pv.pkts
