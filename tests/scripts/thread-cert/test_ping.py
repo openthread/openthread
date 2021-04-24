@@ -197,18 +197,6 @@ class TestPing(thread_cert.TestCase):
             .filter_ping_request() \
             .must_next()
 
-        # TODO: Enable this section
-        # pkts.filter_wpan_src64(vars['Router_3']) \
-        #     .filter_ipv6_dst(_pkt.ipv6.src) \
-        #     .filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier) \
-        #     .must_not_next()
-        # # 6. Router_2 pings Router_3's RLOC from an non-existent address. The
-        # # ping should fail.
-        # _pkt = pkts.filter_wpan_src64(vars['Router_2']) \
-        #     .filter_ipv6_src_dst('1::1', vars['Router_3_RLOC']) \
-        #     .filter_ping_request() \
-        #     .must_not_next()
-
 
 if __name__ == '__main__':
     unittest.main()
