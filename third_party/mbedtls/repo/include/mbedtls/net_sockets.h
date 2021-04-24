@@ -20,7 +20,7 @@
  *
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -34,19 +34,17 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_NET_SOCKETS_H
 #define MBEDTLS_NET_SOCKETS_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "config.h"
+#include "mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
 
-#include "ssl.h"
+#include "mbedtls/ssl.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -256,6 +254,13 @@ int mbedtls_net_send( void *ctx, const unsigned char *buf, size_t len );
  */
 int mbedtls_net_recv_timeout( void *ctx, unsigned char *buf, size_t len,
                       uint32_t timeout );
+
+/**
+ * \brief          Closes down the connection and free associated data
+ *
+ * \param ctx      The context to close
+ */
+void mbedtls_net_close( mbedtls_net_context *ctx );
 
 /**
  * \brief          Gracefully shutdown the connection and free associated data

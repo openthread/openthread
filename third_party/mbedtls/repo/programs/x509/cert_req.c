@@ -1,7 +1,7 @@
 /*
  *  Certificate request generation
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,8 +15,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -31,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define mbedtls_printf          printf
+#define mbedtls_exit            exit
 #define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif /* MBEDTLS_PLATFORM_C */
@@ -45,7 +44,7 @@ int main( void )
             "MBEDTLS_PK_PARSE_C and/or MBEDTLS_SHA256_C and/or "
             "MBEDTLS_ENTROPY_C and/or MBEDTLS_CTR_DRBG_C "
             "not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
 
@@ -64,7 +63,9 @@ int main( void )
 #define DFL_OUTPUT_FILENAME     "cert.req"
 #define DFL_SUBJECT_NAME        "CN=Cert,O=mbed TLS,C=UK"
 #define DFL_KEY_USAGE           0
+#define DFL_FORCE_KEY_USAGE     0
 #define DFL_NS_CERT_TYPE        0
+#define DFL_FORCE_NS_CERT_TYPE  0
 #define DFL_MD_ALG              MBEDTLS_MD_SHA256
 
 #define USAGE \
@@ -84,6 +85,8 @@ int main( void )
     "                          key_agreement\n"         \
     "                          key_cert_sign\n"  \
     "                          crl_sign\n"              \
+    "    force_key_usage=0/1  default: off\n"           \
+    "                          Add KeyUsage even if it is empty\n"  \
     "    ns_cert_type=%%s     default: (empty)\n"       \
     "                        Comma-separated-list of values:\n"     \
     "                          ssl_client\n"            \
@@ -93,12 +96,14 @@ int main( void )
     "                          ssl_ca\n"                \
     "                          email_ca\n"              \
     "                          object_signing_ca\n"     \
+    "    force_ns_cert_type=0/1 default: off\n"         \
+    "                          Add NsCertType even if it is empty\n"    \
     "    md=%%s               default: SHA256\n"       \
     "                          possible values:\n"     \
-    "                          MD4, MD5, SHA1\n"       \
-    "                          SHA224, SHA256\n"       \
-    "                          SHA384, SHA512\n"       \
+    "                          MD2, MD4, MD5, RIPEMD160, SHA1,\n" \
+    "                          SHA224, SHA256, SHA384, SHA512\n" \
     "\n"
+
 
 /*
  * global options
@@ -111,7 +116,9 @@ struct options
     const char *output_file;    /* where to store the constructed key file  */
     const char *subject_name;   /* subject name for certificate request */
     unsigned char key_usage;    /* key usage flags                      */
+    int force_key_usage;        /* Force adding the KeyUsage extension  */
     unsigned char ns_cert_type; /* NS cert type                         */
+    int force_ns_cert_type;     /* Force adding NsCertType extension    */
     mbedtls_md_type_t md_alg;   /* Hash algorithm used for signature.   */
 } opt;
 
@@ -178,7 +185,9 @@ int main( int argc, char *argv[] )
     opt.output_file         = DFL_OUTPUT_FILENAME;
     opt.subject_name        = DFL_SUBJECT_NAME;
     opt.key_usage           = DFL_KEY_USAGE;
+    opt.force_key_usage     = DFL_FORCE_KEY_USAGE;
     opt.ns_cert_type        = DFL_NS_CERT_TYPE;
+    opt.force_ns_cert_type  = DFL_FORCE_NS_CERT_TYPE;
     opt.md_alg              = DFL_MD_ALG;
 
     for( i = 1; i < argc; i++ )
@@ -207,51 +216,14 @@ int main( int argc, char *argv[] )
         }
         else if( strcmp( p, "md" ) == 0 )
         {
-            if( strcmp( q, "SHA256" ) == 0 )
+            const mbedtls_md_info_t *md_info =
+                mbedtls_md_info_from_string( q );
+            if( md_info == NULL )
             {
-                opt.md_alg = MBEDTLS_MD_SHA256;
-            }
-            else if( strcmp( q, "SHA224" ) == 0 )
-            {
-                opt.md_alg = MBEDTLS_MD_SHA224;
-            }
-            else
-#if defined(MBEDTLS_MD5_C)
-            if( strcmp( q, "MD5" ) == 0 )
-            {
-                opt.md_alg = MBEDTLS_MD_MD5;
-            }
-            else
-#endif /* MBEDTLS_MD5_C */
-#if defined(MBEDTLS_MD4_C)
-            if( strcmp( q, "MD4" ) == 0 )
-            {
-                opt.md_alg = MBEDTLS_MD_MD4;
-            }
-            else
-#endif /* MBEDTLS_MD5_C */
-#if defined(MBEDTLS_SHA1_C)
-            if( strcmp( q, "SHA1" ) == 0 )
-            {
-                opt.md_alg = MBEDTLS_MD_SHA1;
-            }
-            else
-#endif /* MBEDTLS_SHA1_C */
-#if defined(MBEDTLS_SHA512_C)
-            if( strcmp( q, "SHA384" ) == 0 )
-            {
-                opt.md_alg = MBEDTLS_MD_SHA384;
-            }
-            else
-            if( strcmp( q, "SHA512" ) == 0 )
-            {
-                opt.md_alg = MBEDTLS_MD_SHA512;
-            }
-            else
-#endif /* MBEDTLS_SHA512_C */
-            {
+                mbedtls_printf( "Invalid argument for option %s\n", p );
                 goto usage;
             }
+            opt.md_alg = mbedtls_md_get_type( md_info );
         }
         else if( strcmp( p, "key_usage" ) == 0 )
         {
@@ -278,6 +250,15 @@ int main( int argc, char *argv[] )
                     goto usage;
 
                 q = r;
+            }
+        }
+        else if( strcmp( p, "force_key_usage" ) == 0 )
+        {
+            switch( atoi( q ) )
+            {
+                case 0: opt.force_key_usage = 0; break;
+                case 1: opt.force_key_usage = 1; break;
+                default: goto usage;
             }
         }
         else if( strcmp( p, "ns_cert_type" ) == 0 )
@@ -307,16 +288,25 @@ int main( int argc, char *argv[] )
                 q = r;
             }
         }
+        else if( strcmp( p, "force_ns_cert_type" ) == 0 )
+        {
+            switch( atoi( q ) )
+            {
+                case 0: opt.force_ns_cert_type = 0; break;
+                case 1: opt.force_ns_cert_type = 1; break;
+                default: goto usage;
+            }
+        }
         else
             goto usage;
     }
 
     mbedtls_x509write_csr_set_md_alg( &req, opt.md_alg );
 
-    if( opt.key_usage )
+    if( opt.key_usage || opt.force_key_usage == 1 )
         mbedtls_x509write_csr_set_key_usage( &req, opt.key_usage );
 
-    if( opt.ns_cert_type )
+    if( opt.ns_cert_type || opt.force_ns_cert_type == 1 )
         mbedtls_x509write_csr_set_ns_cert_type( &req, opt.ns_cert_type );
 
     /*
@@ -407,7 +397,7 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
 #endif /* MBEDTLS_X509_CSR_WRITE_C && MBEDTLS_PK_PARSE_C && MBEDTLS_FS_IO &&
           MBEDTLS_ENTROPY_C && MBEDTLS_CTR_DRBG_C && MBEDTLS_PEM_WRITE_C */
