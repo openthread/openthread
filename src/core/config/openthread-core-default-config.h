@@ -270,9 +270,9 @@
 // Internal heap doesn't support size larger than 64K bytes.
 #define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (63 * 1024)
 #elif OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (3072 * sizeof(void *))
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (3136 * sizeof(void *))
 #else
-#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (1568 * sizeof(void *))
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (1616 * sizeof(void *))
 #endif
 #endif
 

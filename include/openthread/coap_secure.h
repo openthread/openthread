@@ -117,7 +117,8 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
 /**
  * This method returns the peer x509 certificate base64 encoded.
  *
- * @note This function requires the build-time feature `MBEDTLS_BASE64_C` to be enabled.
+ * @note This function requires the build-time features `MBEDTLS_BASE64_C` and
+ *       `MBEDTLS_SSL_KEEP_PEER_CERTIFICATE` to be enabled.
  *
  * @param[in]   aInstance        A pointer to an OpenThread instance.
  * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
