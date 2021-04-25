@@ -77,22 +77,24 @@ class TestOTCI(unittest.TestCase):
             sim = None
 
         if os.getenv('OT_CLI'):
-            executable = os.getenv('OT_CLI')
-            connector = otci.connect_cli_sim
+            connector = lambda nodeid: otci.connect_cli_sim(os.getenv('OT_CLI'), nodeid, simulator=sim)
+        elif os.getenv('OT_CLI_POSIX'):
+            connector = lambda nodeid: otci.connect_cli_posix(os.getenv('OT_CLI_POSIX'),
+                                                              f'spinel+hdlc+forkpty://{os.environ["RADIO_RCP"]}?forkpty-arg={nodeid}',
+                                                              args=os.getenv('OT_CLI_POSIX_ARGS').split(), sudo=True)
         elif os.getenv('OT_NCP'):
-            executable = os.getenv('OT_NCP')
-            connector = otci.connect_ncp_sim
+            connector = lambda nodeid: otci.connect_ncp_sim(os.getenv('OT_NCP'), nodeid, simulator=sim)
         else:
-            self.fail("Please set OT_CLI to test virtual device")
+            self.fail("Please set OT_CLI/OT_CLI_POSIX/OT_NCP to test virtual device")
 
-        node1 = connector(executable, 1, simulator=sim)
+        node1 = connector(1)
         self._test_otci_single_node(node1)
 
         node1.factory_reset()
 
-        node2 = connector(executable, 2, simulator=sim)
-        node3 = connector(executable, 3, simulator=sim)
-        node4 = connector(executable, 4, simulator=sim)
+        node2 = connector(2)
+        node3 = connector(3)
+        node4 = connector(4)
 
         self._test_otci_example(node1, node2)
 

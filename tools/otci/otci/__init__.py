@@ -31,6 +31,7 @@ from . import errors
 from .constants import THREAD_VERSION_1_1, THREAD_VERSION_1_2
 from .otci import OTCI
 from .otci import \
+    connect_cli_posix, \
     connect_cli_sim, \
     connect_cli_serial, \
     connect_ncp_sim, \
@@ -39,6 +40,7 @@ from .otci import \
 from .types import Rloc16, ChildId
 
 _connectors = [
+    'connect_cli_posix',
     'connect_cli_sim',
     'connect_cli_serial',
     'connect_ncp_sim',

@@ -1961,3 +1961,9 @@ def connect_otbr_ssh(host: str, port: int = 22, username='pi', password='raspber
 
 def connect_cmd_handler(cmd_handler: OTCommandHandler) -> OTCI:
     return OTCI(cmd_handler)
+
+
+def connect_cli_posix(executable: str, radio_url: str, args: List[str] = None, sudo=False) -> OTCI:
+    cli_handler = connectors.OtCliPosix(executable, radio_url, args=args, sudo=sudo)
+    cmd_handler = OtCliCommandRunner(cli_handler)
+    return OTCI(cmd_handler)

@@ -68,3 +68,32 @@ jobs:
         export PYTHONPATH=./tests/scripts/thread-cert/
         export OT_CLI=./output/simulation/bin/ot-cli-ftd
         python3 tools/otci/tests/test_otci.py
+
+  cli-posix:
+    runs-on: ubuntu-20.04
+    env:
+      REFERENCE_DEVICE: 1
+      VIRTUAL_TIME: 0
+      REAL_DEVICE: 0
+    steps:
+      - uses: actions/checkout@v2
+      - name: Bootstrap
+        run: |
+          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
+          sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel
+          python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
+      - name: Build
+        run: |
+          ./bootstrap
+          make -f src/posix/Makefile-posix THREAD_VERSION=1.2 DUA=1 MLR=1
+          make -f examples/Makefile-simulation
+      - name: Install OTCI Python Library
+        run: |
+          (cd tools/otci && python3 setup.py install --user)
+      - name: Run
+        run: |
+          export PYTHONPATH=./tests/scripts/thread-cert/
+          export OT_CLI_POSIX=output/posix/bin/ot-cli
+          export RADIO_RCP=output/simulation/bin/ot-rcp
+          export OT_CLI_POSIX_ARGS="-B eth0"
+          python3 tools/otci/tests/test_otci.py
