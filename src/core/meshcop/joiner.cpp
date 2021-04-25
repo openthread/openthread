@@ -525,19 +525,21 @@ void Joiner::HandleJoinerFinalizeResponse(void *               aContext,
                                           Error                aResult)
 {
     static_cast<Joiner *>(aContext)->HandleJoinerFinalizeResponse(
-        *static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Joiner::HandleJoinerFinalizeResponse(Coap::Message &aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
+void Joiner::HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     uint8_t state;
 
-    VerifyOrExit(mState == kStateConnected && aResult == kErrorNone && aMessage.IsAck() &&
-                 aMessage.GetCode() == Coap::kCodeChanged);
+    VerifyOrExit(mState == kStateConnected && aResult == kErrorNone);
+    OT_ASSERT(aMessage != nullptr);
 
-    SuccessOrExit(Tlv::Find<StateTlv>(aMessage, state));
+    VerifyOrExit(aMessage->IsAck() && aMessage->GetCode() == Coap::kCodeChanged);
+
+    SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
 
     SetState(kStateEntrust);
     mTimer.Start(kReponseTimeout);
@@ -545,7 +547,7 @@ void Joiner::HandleJoinerFinalizeResponse(Coap::Message &aMessage, const Ip6::Me
     otLogInfoMeshCoP("Joiner received finalize response %d", state);
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", aMessage);
+    LogCertMessage("[THCI] direction=recv | type=JOIN_FIN.rsp |", *aMessage);
 #endif
 
 exit:
