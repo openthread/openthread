@@ -107,7 +107,8 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
         # Loop steps 1 to 4 with i := 1 to 5.
         for i in range(1, 6):
             # 1. Router_1 registers for 15 multicast addresses, MASi.
-            self.assertEqual((0, []), router1.register_multicast_listener(*(MAS[i][1:]), timeout=consts.MLR_TIMEOUT_MIN))
+            self.assertEqual((0, []), router1.register_multicast_listener(*(MAS[i][1:]),
+                                                                          timeout=consts.MLR_TIMEOUT_MIN))
         self.simulator.go(5)
 
         # Loop steps 5 to 6 with i := 1 to 5.
