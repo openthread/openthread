@@ -45,6 +45,7 @@
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
+#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -147,7 +148,12 @@ public:
     void Finish(Hash &aHash);
 
 private:
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    psa_hash_operation_t mOperation;
+#else
     mbedtls_sha256_context mContext;
+#endif
+
 };
 
 /**

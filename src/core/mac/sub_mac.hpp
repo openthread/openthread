@@ -43,6 +43,7 @@
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
+#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -444,6 +445,44 @@ public:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method sets MAC key references and key index.
+     *
+     * @param[in] aKeyIdMode  MAC key ID mode.
+     * @param[in] aKeyId      The key ID.
+     * @param[in] aPrevKeyRef The reference to previous MAC key.
+     * @param[in] aCurrKeyRef The reference to current MAC key.
+     * @param[in] aNextKeyRef The reference to next MAC key.
+     *
+     */
+    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, otMacKeyRef aPrevKeyRef, otMacKeyRef aCurrKeyRef, otMacKeyRef aNextKeyRef);
+
+    /**
+     * This method returns a reference to the current MAC key.
+     *
+     * @returns A reference to the current MAC key.
+     *
+     */
+    otMacKeyRef GetCurrentMacKeyRef(void) { return mCurrKeyRef; }
+
+    /**
+     * This method returns a reference to the previous MAC key.
+     *
+     * @returns A reference to the previous MAC key.
+     *
+     */
+    otMacKeyRef GetPreviousMacKeyRef(void) { return mPrevKeyRef; }
+
+    /**
+     * This method returns a reference to the next MAC key.
+     *
+     * @returns A reference to the next MAC key.
+     *
+     */
+    otMacKeyRef GetNextMacKeyRef(void) { return mNextKeyRef; }
+
+#else
     /**
      * This method sets MAC keys and key index.
      *
@@ -457,7 +496,7 @@ public:
     void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
 
     /**
-     * This method returns a reference to the current MAC key.
+     * This method returns the current MAC key.
      *
      * @returns A reference to the current MAC key.
      *
@@ -479,6 +518,7 @@ public:
      *
      */
     const Key &GetNextMacKey(void) const { return mNextKey; }
+#endif
 
     /**
      * This method returns the current MAC frame counter value.
@@ -614,9 +654,15 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    otMacKeyRef        mPrevKeyRef;
+    otMacKeyRef        mCurrKeyRef;
+    otMacKeyRef        mNextKeyRef;
+#else
     Key                mPrevKey;
     Key                mCurrKey;
     Key                mNextKey;
+#endif
     uint32_t           mFrameCounter;
     uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

@@ -1196,6 +1196,20 @@ public:
      */
     const uint64_t &GetTimestamp(void) const { return mInfo.mRxInfo.mTimestamp; }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method performs AES CCM on the frame which is received.
+     *
+     * @param[in]  aExtAddress  A reference to the extended address, which will be used to generate nonce
+     *                          for AES CCM computation.
+     * @param[in]  aMacKeyRef   A reference to the MAC key to decrypt the received frame.
+     *
+     * @retval kErrorNone      Process of received frame AES CCM succeeded.
+     * @retval kErrorSecurity  Received frame MIC check failed.
+     *
+     */
+    Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, otMacKeyRef aMacKeyRef);
+#else
     /**
      * This method performs AES CCM on the frame which is received.
      *
@@ -1208,6 +1222,7 @@ public:
      *
      */
     Error ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey);
+#endif
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -1316,6 +1331,24 @@ public:
      */
     void SetCsmaCaEnabled(bool aCsmaCaEnabled) { mInfo.mTxInfo.mCsmaCaEnabled = aCsmaCaEnabled; }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method returns the reference to key used for frame encryption and authentication (AES CCM).
+     *
+     * @returns The reference to the key.
+     *
+     */
+     otMacKeyRef GetAesKeyRef(void) { return (mInfo.mTxInfo.mAesKeyRef); }
+
+    /**
+     * This method sets the reference to the key used for frame encryption and authentication (AES CCM).
+     *
+     * @param[in]  aAesKey  The pointer to the key.
+     *
+     */
+    void SetAesKey(otMacKeyRef aAesKeyRef) { mInfo.mTxInfo.mAesKeyRef = aAesKeyRef; }
+
+#else
     /**
      * This method returns the key used for frame encryption and authentication (AES CCM).
      *
@@ -1331,7 +1364,7 @@ public:
      *
      */
     void SetAesKey(const Mac::Key &aAesKey) { mInfo.mTxInfo.mAesKey = &aAesKey; }
-
+#endif
     /**
      * This method copies the PSDU and all attributes (except for frame link type) from another frame.
      *

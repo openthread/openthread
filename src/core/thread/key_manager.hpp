@@ -50,6 +50,7 @@
 #include "crypto/hmac_sha256.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
+#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -133,6 +134,22 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+class MasterKey : public otMasterKey, public Equatable<MasterKey>, public Clearable<MasterKey>
+{
+public:
+#if !OPENTHREAD_RADIO
+    /**
+     * This method generates a cryptographically secure random sequence to populate the Thread Master Key.
+     *
+     * @retval kErrorNone     Successfully generated a random Thread Master Key.
+     * @retval kErrorFailed   Failed to generate random sequence.
+     *
+     */
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
+#endif
+} OT_TOOL_PACKED_END;
+#else
 class MasterKey : public otMasterKey, public Equatable<MasterKey>
 {
 public:
@@ -147,6 +164,7 @@ public:
     Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
 } OT_TOOL_PACKED_END;
+#endif
 
 /**
  * This class represents a Thread Pre-Shared Key for the Commissioner (PSKc).
@@ -175,6 +193,15 @@ public:
  */
 typedef Mac::Key Kek;
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+/**
+ *
+ * This enum a reference to a key stored in PSA.
+ *
+ */
+typedef otMacKeyRef KeyRef;
+#endif
+
 /**
  * This class defines Thread Key Manager.
  *
@@ -202,6 +229,15 @@ public:
      */
     void Stop(void);
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method returns the Thread Master Key.
+     *
+     * @returns The Thread Master Key.
+     *
+     */
+    MasterKey &GetMasterKey(void);
+#else
     /**
      * This method returns the Thread Master Key.
      *
@@ -209,6 +245,7 @@ public:
      *
      */
     const MasterKey &GetMasterKey(void) const { return mMasterKey; }
+#endif
 
     /**
      * This method sets the Thread Master Key.
@@ -233,6 +270,15 @@ public:
      */
     bool IsPskcSet(void) const { return mIsPskcSet; }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method returns a pointer to the PSKc.
+     *
+     * @returns A reference to the PSKc.
+     *
+     */
+    Pskc &GetPskc(void);
+#else
     /**
      * This method returns a pointer to the PSKc.
      *
@@ -240,7 +286,7 @@ public:
      *
      */
     const Pskc &GetPskc(void) const { return mPskc; }
-
+#endif
     /**
      * This method sets the PSKc.
      *
@@ -286,6 +332,26 @@ public:
     const Mac::Key &GetTemporaryTrelMacKey(uint32_t aKeySequence);
 #endif
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method returns the reference to current MLE.
+     *
+     * @returns The reference to current MLE key.
+     *
+     */
+    KeyRef GetCurrentMleKeyRef(void) { return mMleKeyRef; }
+
+    /**
+     * This method returns a reference to temporary MLE key computed from the given key sequence.
+     *
+     * @param[in]  aKeySequence  The key sequence value.
+     *
+     * @returns The reference to temporary MLE key.
+     *
+     */
+    KeyRef GetTemporaryMleKeyRef(uint32_t aKeySequence);
+
+#else
     /**
      * This method returns the current MLE key.
      *
@@ -303,6 +369,7 @@ public:
      *
      */
     const Mle::Key &GetTemporaryMleKey(uint32_t aKeySequence);
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
@@ -384,6 +451,23 @@ public:
      */
     void IncrementMleFrameCounter(void);
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to the KEK.
+     *
+     */
+    KeyRef GetKekRef(void) { return mKekRef; }
+	
+	/**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to the KEK.
+     *
+     */
+    const Kek &GetKek(void);
+#else
     /**
      * This method returns the KEK.
      *
@@ -391,6 +475,7 @@ public:
      *
      */
     const Kek &GetKek(void) const { return mKek; }
+#endif	
 
     /**
      * This method sets the KEK.
@@ -485,6 +570,14 @@ private:
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    enum
+    {
+        kMasterKeyPsaItsOffset     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
+        kPkscPsaItsOffset          = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2
+    };
+#endif
+
     OT_TOOL_PACKED_BEGIN
     struct Keys
     {
@@ -507,6 +600,12 @@ private:
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
+    Error       StoreMasterKey(bool aOverWriteExisting);
+
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    Error ImportKek(const uint8_t *aKey, uint8_t aKeyLen);
+    void  CheckAndDestroyStoredKey(psa_key_id_t aKeyRef);
+#endif
 
     static const uint8_t kThreadString[];
 
@@ -518,8 +617,10 @@ private:
     MasterKey mMasterKey;
 
     uint32_t mKeySequence;
+#if !OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     Mle::Key mMleKey;
     Mle::Key mTemporaryMleKey;
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     Mac::Key mTrelKey;
@@ -544,6 +645,16 @@ private:
 
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
+
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    KeyRef         mMasterKeyRef;
+    KeyRef         mMleKeyRef;
+    KeyRef         mTemporaryMleKeyRef;
+    KeyRef         mKekRef;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD    
+    KeyRef         mPskcRef;
+#endif    
+#endif
 };
 
 /**

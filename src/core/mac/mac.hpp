@@ -829,6 +829,9 @@ private:
     static const otExtendedPanId sExtendedPanidInit;
     static const char            sNetworkNameInit[];
     static const char            sDomainNameInit[];
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    otMacKeyRef                  sMode2KeyRef;
+#endif
 
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;

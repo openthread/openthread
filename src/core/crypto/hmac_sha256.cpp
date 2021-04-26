@@ -38,6 +38,46 @@
 namespace ot {
 namespace Crypto {
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+HmacSha256::HmacSha256(void)
+{
+    mOperation = PSA_MAC_OPERATION_INIT;
+}
+
+HmacSha256::~HmacSha256(void)
+{
+    psa_status_t error = psa_mac_abort(&mOperation);
+    (void)error;
+}
+
+void HmacSha256::Start(uint32_t aKeyRef)
+{
+    psa_status_t error = psa_mac_sign_setup( &mOperation,
+                                             aKeyRef,
+                                             PSA_ALG_HMAC(PSA_ALG_SHA_256));
+
+    (void)error;
+}
+
+void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
+{
+    psa_status_t error = psa_mac_update(  &mOperation,
+                                          (const uint8_t *)aBuf,
+                                          (size_t)aBufLength);
+    (void)error;
+}
+
+void HmacSha256::Finish(Hash &aHash)
+{
+    size_t aMacLength = 0;
+
+    psa_status_t error = psa_mac_sign_finish(&mOperation,
+                                             aHash.m8,
+                                             aHash.kSize,
+                                             &aMacLength);
+    (void)error;
+}
+#else
 HmacSha256::HmacSha256(void)
 {
     const mbedtls_md_info_t *mdInfo = nullptr;
@@ -61,6 +101,12 @@ void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
     mbedtls_md_hmac_update(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
 }
 
+void HmacSha256::Finish(Hash &aHash)
+{
+    mbedtls_md_hmac_finish(&mContext, aHash.m8);
+}
+#endif
+
 void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Message::Chunk chunk;
@@ -73,11 +119,5 @@ void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLen
         aMessage.GetNextChunk(aLength, chunk);
     }
 }
-
-void HmacSha256::Finish(Hash &aHash)
-{
-    mbedtls_md_hmac_finish(&mContext, aHash.m8);
-}
-
 } // namespace Crypto
 } // namespace ot

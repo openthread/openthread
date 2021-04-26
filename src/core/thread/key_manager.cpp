@@ -186,6 +186,12 @@ KeyManager::KeyManager(Instance &aInstance)
 
     mMacFrameCounters.Reset();
     mPskc.Clear();
+
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    otPlatPsaInit();
+    mMasterKeyRef = 0;
+    StoreMasterKey(false);
+#endif
 }
 
 void KeyManager::Start(void)
@@ -199,6 +205,45 @@ void KeyManager::Stop(void)
     mKeyRotationTimer.Stop();
 }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+void KeyManager::SetPskc(const Pskc &aPskc)
+{
+    Error   error = kErrorNone;
+
+    mPskcRef = kPkscPsaItsOffset;
+
+    CheckAndDestroyStoredKey(mPskcRef);
+    IgnoreError(Get<Notifier>().Update(mPskc, aPskc, kEventPskcChanged));
+
+    error = otPlatPsaImportKey(&mPskcRef,
+                               PSA_KEY_TYPE_RAW_DATA,
+                               PSA_ALG_VENDOR_FLAG,
+                               PSA_KEY_USAGE_EXPORT,
+                               PSA_KEY_LIFETIME_PERSISTENT,
+                               mPskc.m8,
+                               OT_PSKC_MAX_SIZE);
+
+    OT_ASSERT(error == kErrorNone);
+
+    mPskc.Clear();
+    mIsPskcSet = true;
+}
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+Pskc & KeyManager::GetPskc(void)
+{
+  size_t aKeySize = 0;
+
+  Error error = otPlatPsaExportKey(mPskcRef, mPskc.m8, OT_PSKC_MAX_SIZE, &aKeySize);
+  OT_ASSERT(error == kErrorNone);
+
+  return mPskc;
+}
+
+#else
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
@@ -206,6 +251,48 @@ void KeyManager::SetPskc(const Pskc &aPskc)
     mIsPskcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif
+
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+Error KeyManager::StoreMasterKey(bool aOverWriteExisting)
+{
+    Error   error = kErrorNone;
+    psa_key_usage_t mKeyUsage = PSA_KEY_USAGE_SIGN_HASH;
+    
+    mMasterKeyRef = kMasterKeyPsaItsOffset;
+
+    if(!aOverWriteExisting) {
+        psa_key_attributes_t mKeyAttributes;
+
+        error = otPlatPsaGetKeyAttributes(mMasterKeyRef, &mKeyAttributes);
+        //We will be able to retrieve the key_attributes only if there is 
+        //already a master key stored in ITS. If stored, and we are not 
+        //overwriting the existing key, return without doing anything.
+        SuccessOrExit(error != OT_ERROR_NONE);
+    }
+
+    CheckAndDestroyStoredKey(mMasterKeyRef);
+
+#if OPENTHREAD_FTD
+    mKeyUsage |= PSA_KEY_USAGE_EXPORT;
+#endif
+
+    error = otPlatPsaImportKey(&mMasterKeyRef,
+                               PSA_KEY_TYPE_HMAC,
+                               PSA_ALG_HMAC(PSA_ALG_SHA_256),
+                               mKeyUsage,
+                               PSA_KEY_LIFETIME_PERSISTENT,
+                               mMasterKey.m8,
+                               OT_MASTER_KEY_SIZE);
+
+    OT_ASSERT(error == kErrorNone);
+
+    mMasterKey.Clear();
+
+exit:
+    return error;
+}
+#endif
 
 Error KeyManager::SetMasterKey(const MasterKey &aKey)
 {
@@ -214,6 +301,9 @@ Error KeyManager::SetMasterKey(const MasterKey &aKey)
 
     SuccessOrExit(Get<Notifier>().Update(mMasterKey, aKey, kEventMasterKeyChanged));
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE    
+    StoreMasterKey(true);
+#endif    
     mKeySequence = 0;
     UpdateKeyMaterial();
 
@@ -248,6 +338,31 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+MasterKey & KeyManager::GetMasterKey(void)
+{
+    size_t aKeySize = 0;
+
+    Error error = otPlatPsaExportKey(mMasterKeyRef, mMasterKey.m8, mKek.kSize, &aKeySize);
+    OT_ASSERT(error == kErrorNone);
+
+    return mMasterKey;
+}
+
+void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
+{
+    Crypto::HmacSha256 hmac;
+    uint8_t            keySequenceBytes[sizeof(uint32_t)];
+
+    hmac.Start(mMasterKeyRef);
+
+    Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
+    hmac.Update(keySequenceBytes);
+    hmac.Update(kThreadString);
+
+    hmac.Finish(aHashKeys.mHash);
+}
+#else
 void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 {
     Crypto::HmacSha256 hmac;
@@ -261,6 +376,7 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 
     hmac.Finish(aHashKeys.mHash);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
@@ -276,6 +392,80 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+void KeyManager::UpdateKeyMaterial(void)
+{
+    HashKeys    cur;
+    otMacKeyRef curMacKeyRef;
+    Error       error;
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    HashKeys    prev;
+    HashKeys    next;
+    otMacKeyRef prevMacKeyRef;
+    otMacKeyRef nextMacKeyRef;
+#endif
+
+    ComputeKeys(mKeySequence, cur);
+
+    error = otPlatPsaImportKey( &curMacKeyRef,
+                                PSA_KEY_TYPE_AES,
+                                PSA_ALG_ECB_NO_PADDING,
+                                (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
+                                PSA_KEY_LIFETIME_VOLATILE,
+                                cur.mKeys.mMacKey.GetKey(),
+                                cur.mKeys.mMacKey.kSize);
+    OT_ASSERT(error == kErrorNone);
+
+    CheckAndDestroyStoredKey(mMleKeyRef);
+
+    error = otPlatPsaImportKey( &mMleKeyRef,
+                                PSA_KEY_TYPE_AES,
+                                PSA_ALG_ECB_NO_PADDING,
+                                (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
+                                PSA_KEY_LIFETIME_VOLATILE,
+                                cur.mKeys.mMleKey.m8,
+                                cur.mKeys.mMleKey.kSize);
+    OT_ASSERT(error == kErrorNone);
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    ComputeKeys(mKeySequence - 1, prev);
+    ComputeKeys(mKeySequence + 1, next);
+
+    error = otPlatPsaImportKey(&prevMacKeyRef,
+                                PSA_KEY_TYPE_AES,
+                                PSA_ALG_ECB_NO_PADDING,
+                                (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
+                                PSA_KEY_LIFETIME_VOLATILE,
+                                prev.mKeys.mMacKey.m8,
+                                prev.mKeys.mMleKey.kSize);
+    OT_ASSERT(error == kErrorNone);
+
+    error = otPlatPsaImportKey(&nextMacKeyRef,
+                                PSA_KEY_TYPE_AES,
+                                PSA_ALG_ECB_NO_PADDING,
+                                (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
+                                PSA_KEY_LIFETIME_VOLATILE,
+                                next.mKeys.mMleKey.m8,
+                                next.mKeys.mMleKey.kSize);
+    OT_ASSERT(error == kErrorNone);
+
+    cur.mKeys.mMacKey.Clear();
+    cur.mKeys.mMleKey.Clear();
+    prev.mKeys.mMacKey.Clear();
+    prev.mKeys.mMacKey.Clear();
+    next.mKeys.mMacKey.Clear();
+    next.mKeys.mMacKey.Clear();
+
+    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevMacKeyRef,
+                                 curMacKeyRef, nextMacKeyRef);
+
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    ComputeTrelKey(mKeySequence, mTrelKey);
+#endif
+}
+#else
 void KeyManager::UpdateKeyMaterial(void)
 {
     HashKeys cur;
@@ -299,6 +489,7 @@ void KeyManager::UpdateKeyMaterial(void)
     ComputeTrelKey(mKeySequence, mTrelKey);
 #endif
 }
+#endif
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
@@ -328,6 +519,28 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+KeyRef KeyManager::GetTemporaryMleKeyRef(uint32_t aKeySequence)
+{
+    HashKeys hashKeys;
+
+    ComputeKeys(aKeySequence, hashKeys);
+
+    CheckAndDestroyStoredKey(mTemporaryMleKeyRef);
+    mTemporaryMleKeyRef = 0;
+
+    Error error = otPlatPsaImportKey(&mTemporaryMleKeyRef,
+                                    PSA_KEY_TYPE_AES,
+                                    PSA_ALG_ECB_NO_PADDING,
+                                    (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
+                                    PSA_KEY_LIFETIME_VOLATILE,
+                                    hashKeys.mKeys.mMleKey.m8,
+                                    hashKeys.mKeys.mMleKey.kSize);
+    OT_ASSERT(error == kErrorNone);
+
+    return mTemporaryMleKeyRef;
+}
+#else
 const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
     HashKeys hashKeys;
@@ -337,6 +550,7 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 
     return mTemporaryMleKey;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 const Mac::Key &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
@@ -394,6 +608,61 @@ void KeyManager::IncrementMleFrameCounter(void)
     }
 }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+
+void KeyManager::CheckAndDestroyStoredKey(psa_key_id_t aKeyRef)
+{
+  if(aKeyRef != 0) {
+      otPlatPsaDestroyKey(aKeyRef);
+  }
+}
+
+Error KeyManager::ImportKek(const uint8_t *aKey, uint8_t aKeyLen)
+{
+  Error error = kErrorNone;
+  psa_key_usage_t mKeyUsage = (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT | PSA_KEY_USAGE_EXPORT);
+
+  CheckAndDestroyStoredKey(mKekRef);
+
+  error = otPlatPsaImportKey( &mKekRef,
+                               PSA_KEY_TYPE_AES,
+                               PSA_ALG_ECB_NO_PADDING,
+                               mKeyUsage,
+                               PSA_KEY_LIFETIME_VOLATILE,
+                               aKey,
+                               aKeyLen);
+
+  return error;
+}
+
+void KeyManager::SetKek(const Kek &aKek)
+{
+    Error error = kErrorNone;
+
+    error = ImportKek(aKek.m8, aKek.kSize);
+    mKekFrameCounter = 0;
+    OT_ASSERT(error == kErrorNone);
+}
+
+void KeyManager::SetKek(const uint8_t *aKek)
+{
+    Error error;
+
+    error = ImportKek(aKek, 16);
+    mKekFrameCounter = 0;
+    OT_ASSERT(error == kErrorNone);
+}
+
+const Kek& KeyManager::GetKek(void)
+{
+    size_t aKeySize = 0;
+    Error error = otPlatPsaExportKey(mKekRef, mKek.m8, mKek.kSize, &aKeySize);
+    OT_ASSERT(error == kErrorNone);
+
+    return mKek;
+}
+
+#else
 void KeyManager::SetKek(const Kek &aKek)
 {
     mKek             = aKek;
@@ -405,6 +674,7 @@ void KeyManager::SetKek(const uint8_t *aKek)
     memcpy(mKek.m8, aKek, sizeof(mKek));
     mKekFrameCounter = 0;
 }
+#endif
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {

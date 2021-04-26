@@ -45,6 +45,21 @@
 
 using namespace ot::Crypto;
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+void otCryptoHmacSha256(uint32_t            aKeyRef,
+                        const uint8_t *     aBuf,
+                        uint16_t            aBufLength,
+                        otCryptoSha256Hash *aHash)
+{
+    HmacSha256 hmac;
+
+    OT_ASSERT((aKeyRef != 0) && (aBuf != nullptr) && (aHash != nullptr));
+
+    hmac.Start(aKeyRef);
+    hmac.Update(aBuf, aBufLength);
+    hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
+}
+#else
 void otCryptoHmacSha256(const uint8_t *     aKey,
                         uint16_t            aKeyLength,
                         const uint8_t *     aBuf,
@@ -59,7 +74,38 @@ void otCryptoHmacSha256(const uint8_t *     aKey,
     hmac.Update(aBuf, aBufLength);
     hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
 }
+#endif
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+void otCryptoAesCcm(uint32_t       aKeyRef,
+                    uint8_t        aTagLength,
+                    const void *   aNonce,
+                    uint8_t        aNonceLength,
+                    const void *   aHeader,
+                    uint32_t       aHeaderLength,
+                    void *         aPlainText,
+                    void *         aCipherText,
+                    uint32_t       aLength,
+                    bool           aEncrypt,
+                    void *         aTag)
+{
+    AesCcm aesCcm;
+    OT_ASSERT((aKeyRef != 0) && (aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) &&
+              (aTag != nullptr));
+
+    aesCcm.SetKey(aKeyRef);
+    aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
+
+    if (aHeaderLength != 0)
+    {
+        OT_ASSERT(aHeader != nullptr);
+        aesCcm.Header(aHeader, aHeaderLength);
+    }
+
+    aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt ? AesCcm::kEncrypt : AesCcm::kDecrypt);
+    aesCcm.Finalize(aTag);
+}
+#else
 void otCryptoAesCcm(const uint8_t *aKey,
                     uint16_t       aKeyLength,
                     uint8_t        aTagLength,
@@ -90,6 +136,7 @@ void otCryptoAesCcm(const uint8_t *aKey,
     aesCcm.Payload(aPlainText, aCipherText, aLength, aEncrypt ? AesCcm::kEncrypt : AesCcm::kDecrypt);
     aesCcm.Finalize(aTag);
 }
+#endif
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
 

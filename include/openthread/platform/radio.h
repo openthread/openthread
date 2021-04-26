@@ -38,8 +38,11 @@
 
 #include <stdint.h>
 
+#include "openthread-core-config.h"
+
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/psa.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -199,6 +202,12 @@ struct otMacKey
 typedef struct otMacKey otMacKey;
 
 /**
+ * This enum represents a MAC Key Ref used by PSA.
+ *
+ */
+typedef psa_key_id_t otMacKeyRef;
+
+/**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
@@ -230,7 +239,11 @@ typedef struct otRadioFrame
          */
         struct
         {
+ #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+            otMacKeyRef     mAesKeyRef;       ///< The key reference used for AES-CCM frame security.
+#else
             const otMacKey *mAesKey;          ///< The key used for AES-CCM frame security.
+#endif           
             otRadioIeInfo * mIeInfo;          ///< The pointer to the Header IE(s) related information.
             uint32_t        mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
             uint32_t        mTxDelayBaseTime; ///< The base time for the transmission delay.
@@ -543,6 +556,27 @@ bool otPlatRadioGetPromiscuous(otInstance *aInstance);
  */
 void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+/**
+ * Update MAC keys and key index
+ *
+ * This function is used when radio provides OT_RADIO_CAPS_TRANSMIT_SEC capability.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ * @param[in]   aKeyIdMode   The key ID mode.
+ * @param[in]   aKeyId       Current MAC key index.
+ * @param[in]   aPrevKeyRef  A Reference to the previous MAC key.
+ * @param[in]   aCurrKeyRef  A Reference to the current MAC key.
+ * @param[in]   aNextKeyRef  A Reference to the next MAC key.
+ *
+ */
+void otPlatRadioSetMacKeyRef(otInstance *aInstance,
+                            uint8_t     aKeyIdMode,
+                            uint8_t     aKeyId,
+                            otMacKeyRef aPrevKeyRef,
+                            otMacKeyRef aCurrKeyRef,
+                            otMacKeyRef aNextKeyRef);
+#else
 /**
  * Update MAC keys and key index
  *
@@ -562,6 +596,7 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
                           const otMacKey *aPrevKey,
                           const otMacKey *aCurrKey,
                           const otMacKey *aNextKey);
+#endif
 
 /**
  * This method sets the current MAC frame counter value.

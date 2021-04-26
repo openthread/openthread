@@ -78,9 +78,15 @@ SubMac::SubMac(Instance &aInstance)
 #endif
 {
     mExtAddress.Clear();
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    mPrevKeyRef = 0;
+    mCurrKeyRef = 0;
+    mNextKeyRef = 0;
+#else
     mPrevKey.Clear();
     mCurrKey.Clear();
     mNextKey.Clear();
+#endif
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -330,7 +336,11 @@ void SubMac::ProcessTransmitSecurity(void)
     SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    mTransmitFrame.SetAesKey(GetCurrentMacKeyRef());
+#else
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
+#endif
 
     if (!mTransmitFrame.IsARetransmission())
     {
@@ -821,6 +831,41 @@ void SubMac::SetState(State aState)
     }
 }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+void SubMac::SetMacKey(uint8_t      aKeyIdMode,
+                       uint8_t      aKeyId,
+                       otMacKeyRef  aPrevKeyRef,
+                       otMacKeyRef  aCurrKeyRef,
+                       otMacKeyRef  aNextKeyRef)
+{
+    switch (aKeyIdMode)
+    {
+    case Frame::kKeyIdMode0:
+    case Frame::kKeyIdMode2:
+        break;
+    case Frame::kKeyIdMode1:
+        mKeyId   = aKeyId;
+        otPlatPsaDestroyKey(mPrevKeyRef);
+        otPlatPsaDestroyKey(mCurrKeyRef);
+        otPlatPsaDestroyKey(mNextKeyRef);
+        mPrevKeyRef = aPrevKeyRef;
+        mCurrKeyRef = aCurrKeyRef;
+        mNextKeyRef = aNextKeyRef;
+        break;
+
+    default:
+        OT_ASSERT(false);
+        break;
+    }
+
+    VerifyOrExit(!ShouldHandleTransmitSecurity());
+
+    Get<Radio>().SetMacKey(aKeyIdMode, aKeyId, aPrevKeyRef, aCurrKeyRef, aNextKeyRef);
+
+exit:
+    return;
+}
+#else
 void SubMac::SetMacKey(uint8_t    aKeyIdMode,
                        uint8_t    aKeyId,
                        const Key &aPrevKey,
@@ -851,6 +896,7 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
 exit:
     return;
 }
+#endif
 
 void SubMac::UpdateFrameCounter(uint32_t aFrameCounter)
 {

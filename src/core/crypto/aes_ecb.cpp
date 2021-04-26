@@ -32,28 +32,44 @@
  */
 
 #include "aes_ecb.hpp"
+#include <openthread/platform/psa.h>
 
 namespace ot {
 namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
+#if !OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     mbedtls_aes_init(&mContext);
+#endif
 }
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+void AesEcb::SetKey(const uint32_t aKeyRef)
+{
+    mKeyRef = aKeyRef;
+}
+#else
 void AesEcb::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
     mbedtls_aes_setkey_enc(&mContext, aKey, aKeyLength);
 }
+#endif
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    otPlatPsaEcbEncrypt(mKeyRef, aInput, aOutput);
+#else
     mbedtls_aes_crypt_ecb(&mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
+#endif
 }
 
 AesEcb::~AesEcb(void)
 {
+#if !OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     mbedtls_aes_free(&mContext);
+#endif
 }
 
 } // namespace Crypto
