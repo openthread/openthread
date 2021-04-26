@@ -63,7 +63,8 @@ TD = 4
 
 REG_DELAY = 10
 
-NETWORK_ID_TIMEOUT = 300
+NETWORK_ID_TIMEOUT = 120
+WAIT_TIME_ALLOWANCE = 30
 
 
 class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
@@ -135,7 +136,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         br1.disable_backbone_router()
         br1.thread_stop()
         br1.interface_down()
-        self.simulator.go(NETWORK_ID_TIMEOUT)
+        self.simulator.go(NETWORK_ID_TIMEOUT + WAIT_TIME_ALLOWANCE)
 
         # Make sure that BR_2 becomes the primary BBR
         self.assertEqual('disabled', br1.get_state())
