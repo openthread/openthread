@@ -107,7 +107,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
         # Loop steps 1 to 4 with i := 1 to 5.
         for i in range(1, 6):
             # 1. Router_1 registers for 15 multicast addresses, MASi.
-            router1.register_multicast_listener(*(MAS[i][1:]), timeout=consts.MLR_TIMEOUT_MIN)
+            self.assertEqual((0, []), router1.register_multicast_listener(*(MAS[i][1:]), timeout=consts.MLR_TIMEOUT_MIN))
         self.simulator.go(5)
 
         # Loop steps 5 to 6 with i := 1 to 5.
@@ -160,7 +160,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # 2.04 changed
             # Where the payload contains:
             # Status TLV: ST_MLR_SUCCESS
-            pkts.copy().filter_wpan_src64(vars['BR_1']) \
+            pkts.filter_wpan_src64(vars['BR_1']) \
                 .filter_ipv6_dst(_pkt.ipv6.src) \
                 .filter_coap_ack('/n/mr') \
                 .filter(lambda p: p.coap.mid == _pkt.coap.mid and p.thread_nm.tlv.status == 0) \
@@ -174,7 +174,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # Where the payload contains:
             # IPv6 Addresses TLV:  MASi (15 addresses)
             # Timeout TLV:  default MLR timeout of BR_1
-            pkts.copy().filter_eth_src(vars['BR_1_ETH']) \
+            pkts.filter_eth_src(vars['BR_1_ETH']) \
                 .filter_ipv6_dst(config.ALL_NETWORK_BBRS_ADDRESS) \
                 .filter_coap_request('/b/bmr') \
                 .filter(
