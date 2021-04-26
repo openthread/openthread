@@ -63,6 +63,8 @@ TD = 4
 
 REG_DELAY = 10
 
+NETWORK_ID_TIMEOUT = 300
+
 
 class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
@@ -133,7 +135,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         br1.disable_backbone_router()
         br1.thread_stop()
         br1.interface_down()
-        self.simulator.go(300)
+        self.simulator.go(NETWORK_ID_TIMEOUT)
 
         # Make sure that BR_2 becomes the primary BBR
         self.assertEqual('disabled', br1.get_state())
@@ -151,7 +153,6 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         pkts = pv.pkts
         vars = pv.vars
         pv.summary.show()
-        logging.info(f'vars = {vars}')
 
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
