@@ -42,7 +42,9 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
+#include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
+#include "net/udp6.hpp"
 
 namespace ot {
 
@@ -267,6 +269,9 @@ public:
 
     /**
      * This method writes header to the message. This must be called before sending the message.
+     *
+     * This method also checks whether the payload marker is set (`SetPayloadMarker()`) but the message contains no
+     * payload, and if so it removes the payload marker from the message.
      *
      */
     void Finish(void);
@@ -961,10 +966,15 @@ private:
         uint16_t mOptionLast;
         uint16_t mHeaderOffset; ///< The byte offset for the CoAP Header
         uint16_t mHeaderLength;
+        bool     mPayloadMarkerSet;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         BlockWiseData mBlockWiseData;
 #endif
     };
+
+    static_assert(sizeof(HelpData) <= sizeof(Ip6::Header) + sizeof(Ip6::HopByHopHeader) + sizeof(Ip6::OptionMpl) +
+                                          sizeof(Ip6::Udp::Header),
+                  "HelpData size exceeds the size of the reserved region in the message");
 
     const HelpData &GetHelpData(void) const
     {

@@ -114,6 +114,16 @@ bool Message::IsNonConfirmablePostRequest(void) const
 
 void Message::Finish(void)
 {
+    // If the payload marker is set but the message contains no
+    // payload, we remove the payload marker from the message. Note
+    // that the presence of a marker followed by a zero-length payload
+    // will be processed as a message format error on the receiver.
+
+    if (GetHelpData().mPayloadMarkerSet && (GetHelpData().mHeaderLength == GetLength()))
+    {
+        IgnoreError(SetLength(GetLength() - 1));
+    }
+
     WriteBytes(0, &GetHelpData().mHeader, GetOptionStart());
 }
 
@@ -330,7 +340,8 @@ Error Message::SetPayloadMarker(void)
 
     VerifyOrExit(GetLength() < kMaxHeaderLength, error = kErrorNoBufs);
     SuccessOrExit(error = Append(marker));
-    GetHelpData().mHeaderLength = GetLength();
+    GetHelpData().mPayloadMarkerSet = true;
+    GetHelpData().mHeaderLength     = GetLength();
 
     // Set offset to the start of payload.
     SetOffset(GetHelpData().mHeaderLength);

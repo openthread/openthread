@@ -783,12 +783,6 @@ Error Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset 
         SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
-    if (message->GetLength() == message->GetOffset())
-    {
-        // no payload, remove coap payload marker
-        IgnoreError(message->SetLength(message->GetLength() - 1));
-    }
-
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
