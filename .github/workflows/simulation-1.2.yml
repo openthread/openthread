@@ -170,6 +170,7 @@ jobs:
       VIRTUAL_TIME: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.2
+      MULTIPLY: 3
     steps:
     - uses: actions/checkout@v2
       with:
@@ -187,10 +188,7 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
-        for i in {1..3}
-        do
-          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-        done
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
