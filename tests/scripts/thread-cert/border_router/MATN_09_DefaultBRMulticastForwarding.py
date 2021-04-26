@@ -49,6 +49,7 @@ import thread_cert
 #           |                  |
 #          ROUTER_1 -----------+
 #
+from pktverify.null_field import nullField
 
 BR_1 = 1
 BR_2 = 2
@@ -164,7 +165,9 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         # All fields in the Service TLV contain valid values.
         pkts.filter_wpan_src64(vars['BR_2']) \
             .filter_mle() \
-            .filter(lambda p: p.thread_nwd.tlv.server_16 == vars['BR_2_RLOC16']) \
+            .filter(
+            lambda p: p.thread_nwd.tlv.server_16 is not nullField and
+                      vars['BR_2_RLOC16'] in p.thread_nwd.tlv.server_16) \
             .must_next()
 
         # 5.Router_1 sends a ping packet to the multicast address, MA1,

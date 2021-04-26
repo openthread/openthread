@@ -42,7 +42,7 @@ from pktverify.null_field import nullField
 
 def _auto(v: Union[LayerFieldsContainer, LayerField]):
     """parse the layer field automatically according to its format"""
-    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1 or v.get_default_value() is not None, v.fields
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1, v.fields
     dv = v.get_default_value()
     rv = v.raw_value
 
@@ -616,7 +616,7 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.service.s_data.seqno': _auto,
     'thread_nwd.tlv.service.s_data.rrdelay': _auto,
     'thread_nwd.tlv.service.s_data.mlrtimeout': _auto,
-    'thread_nwd.tlv.server_16': _auto,
+    'thread_nwd.tlv.server_16': _list(_auto),
     'thread_nwd.tlv.border_router_16': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
     # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
