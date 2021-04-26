@@ -137,7 +137,6 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
         pkts = pv.pkts
         vars = pv.vars
         pv.summary.show()
-        logging.info(f'vars = {vars}')
 
         # Ensure the topology is formed correctly
         pv.verify_attached('Router_1', 'BR_1')
@@ -150,57 +149,54 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # coap://[<BR_1 RLOC> or <PBBR ALOC>]:MM/n/mr
             # Where the payload contains:
             # IPv6 Addresses TLV: MASi (15 addresses)
-            for j in range(1, 16):
-                _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
-                    .filter_ipv6_2dsts(vars['BR_1_RLOC'], consts.PBBR_ALOC) \
-                    .filter_coap_request('/n/mr') \
-                    .filter(
-                    lambda p: p.thread_meshcop.tlv.ipv6_addr == [MAS[i][j]]) \
-                    .must_next()
+            _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
+                .filter_ipv6_2dsts(vars['BR_1_RLOC'], consts.PBBR_ALOC) \
+                .filter_coap_request('/n/mr') \
+                .filter(lambda p: set(p.thread_meshcop.tlv.ipv6_addr) == set(MAS[i][1:])) \
+                .must_next()
 
-                # 2. BR_1 Responds to the multicast registration.
-                # BR_1 unicasts an MLR.rsp CoAP response to Router_1 as follows:
-                # 2.04 changed
-                # Where the payload contains:
-                # Status TLV: ST_MLR_SUCCESS
-                pkts.copy().filter_wpan_src64(vars['BR_1']) \
-                    .filter_ipv6_dst(_pkt.ipv6.src) \
-                    .filter_coap_ack('/n/mr') \
-                    .filter(lambda p: p.thread_nm.tlv.status == 0) \
-                    .must_next()
+            # 2. BR_1 Responds to the multicast registration.
+            # BR_1 unicasts an MLR.rsp CoAP response to Router_1 as follows:
+            # 2.04 changed
+            # Where the payload contains:
+            # Status TLV: ST_MLR_SUCCESS
+            pkts.copy().filter_wpan_src64(vars['BR_1']) \
+                .filter_ipv6_dst(_pkt.ipv6.src) \
+                .filter_coap_ack('/n/mr') \
+                .filter(lambda p: p.coap.mid == _pkt.coap.mid and p.thread_nm.tlv.status == 0) \
+                .must_next()
 
-                # 3. BR_1 informs other BBRs on the network of the multicast
-                # registrations.
-                # BR_1 multicasts a BMLR.ntf CoAP request to the Backbone Link,
-                # as follows:
-                # coap://[<All network BBRs multicast>]:BB/b/bmr
-                # Where the payload contains:
-                # IPv6 Addresses TLV:  MASi (15 addresses)
-                # Timeout TLV:  default MLR timeout of BR_1
-                pkts.copy().filter_eth_src(vars['BR_1_ETH']) \
-                    .filter_ipv6_dst(config.ALL_NETWORK_BBRS_ADDRESS) \
-                    .filter_coap_request('/b/bmr') \
-                    .filter(
-                    lambda p: p.thread_meshcop.tlv.ipv6_addr == [MAS[i][j]] and
-                              p.thread_bl.tlv.timeout == consts.MLR_TIMEOUT_MIN) \
-                    .must_next()
+            # 3. BR_1 informs other BBRs on the network of the multicast
+            # registrations.
+            # BR_1 multicasts a BMLR.ntf CoAP request to the Backbone Link,
+            # as follows:
+            # coap://[<All network BBRs multicast>]:BB/b/bmr
+            # Where the payload contains:
+            # IPv6 Addresses TLV:  MASi (15 addresses)
+            # Timeout TLV:  default MLR timeout of BR_1
+            pkts.copy().filter_eth_src(vars['BR_1_ETH']) \
+                .filter_ipv6_dst(config.ALL_NETWORK_BBRS_ADDRESS) \
+                .filter_coap_request('/b/bmr') \
+                .filter(
+                lambda p: set(p.thread_meshcop.tlv.ipv6_addr) == set(MAS[i][1:]) and
+                          p.thread_bl.tlv.timeout == consts.MLR_TIMEOUT_MIN) \
+                .must_next()
 
-                # 4. BR_1 multicasts an MLDv2 message of type “Version 2
-                # Multicast Listener Report” (see [RFC 3810] Section 5.2).
-                # Where:
-                # Nr of Mcast Address Records(M) >= 15
-                # Multicast Address Record[j]:
-                # Each of the j := 1 ... 15 Multicast Address Record
-                # containing an address of the set MASi contains the
-                # following:
-                # Record Type: 4 (CHANGE_TO_EXCLUDE_MODE)
-                # Number of Sources (N): 0
-                # Multicast Address: MASi[j]
-                # Alternatively, the DUT may also send multiple of above
-                # messages each with a portion of the 15 addresses MASi.
-                # In this case the Nr of Mcast Address Records can be < 15
-                # but the sum over all messages MUST be >= 15.
-                # TODO
+            # 4. BR_1 multicasts an MLDv2 message of type “Version 2
+            # Multicast Listener Report” (see [RFC 3810] Section 5.2).
+            # Where:
+            # Nr of Mcast Address Records(M) >= 15
+            # Multicast Address Record[j]:
+            # Each of the j := 1 ... 15 Multicast Address Record containing an
+            # address of the set MASi contains the following:
+            # Record Type: 4 (CHANGE_TO_EXCLUDE_MODE)
+            # Number of Sources (N): 0
+            # Multicast Address: MASi[j]
+            # Alternatively, the DUT may also send multiple of above messages
+            # each with a portion of the 15 addresses MASi.
+            # In this case the Nr of Mcast Address Records can be < 15
+            # but the sum over all messages MUST be >= 15.
+            # TODO
 
         # Loop steps 5 to 6 with i := 1 to 5.
         for i in range(1, 6):
