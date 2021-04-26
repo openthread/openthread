@@ -2817,8 +2817,8 @@ interface eth0
     AdvReachableTime 200;
     AdvRetransTimer 200;
     AdvDefaultLifetime 1800;
-    MinRtrAdvInterval 3;
-    MaxRtrAdvInterval 30;
+    MinRtrAdvInterval 1200;
+    MaxRtrAdvInterval 1800;
     AdvDefaultPreference low;
 
     prefix %s
@@ -2835,6 +2835,9 @@ EOF
 
     def stop_radvd_service(self):
         self.bash('service radvd stop')
+
+    def kill_radvd_service(self):
+        self.bash('pkill radvd')
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
@@ -2883,7 +2886,7 @@ class HostNode(LinuxHost, OtbrDocker):
 
         addrs = []
         for addr in self.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA):
-            if addr.startswith(prefix.split('::')[0]):
+            if ipaddress.IPv6Address(addr) in ipaddress.IPv6Network(prefix):
                 addrs.append(addr)
 
         return addrs
