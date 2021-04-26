@@ -93,6 +93,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
     USE_MESSAGE_FACTORY = True
     TOPOLOGY = None
     CASE_WIRESHARK_PREFS = None
+    SUPPORT_THREAD_1_1 = True
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -103,6 +104,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         self._do_packet_verification = PACKET_VERIFICATION and hasattr(self, 'verify')
 
     def setUp(self):
+        if ENV_THREAD_VERSION == '1.1' and not self.SUPPORT_THREAD_1_1:
+            self.skipTest('Thread 1.1 not supported.')
+
         try:
             self._setUp()
         except:
@@ -246,7 +250,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 f'{self.test_name}: Packet Verification not available on {os.uname().sysname} (Linux only).')
 
         if self._do_packet_verification:
-            time.sleep(3)
+            self.simulator.go(3)
 
         if self._has_backbone_traffic():
             # Stop Backbone sniffer before stopping nodes so that we don't capture Codecov Uploading traffic
