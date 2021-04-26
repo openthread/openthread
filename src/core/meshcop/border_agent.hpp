@@ -85,20 +85,14 @@ public:
     /**
      * This method starts the Border Agent service.
      *
-     * @retval kErrorNone    Successfully started the Border Agent service.
-     * @retval kErrorAlready Border Agent is already started.
-     *
      */
-    Error Start(void);
+    void Start(void);
 
     /**
      * This method stops the Border Agent service.
      *
-     * @retval kErrorNone    Successfully stopped the Border Agent service.
-     * @retval kErrorAlready Border Agent is already stopped.
-     *
      */
-    Error Stop(void);
+    void Stop(void);
 
     /**
      * This method gets the state of the Border Agent service.

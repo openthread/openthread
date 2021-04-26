@@ -304,8 +304,7 @@ Error Commissioner::Start(otCommissionerStateCallback  aStateCallback,
     VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
 
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-    error = Get<MeshCoP::BorderAgent>().Stop();
-    VerifyOrExit(error == kErrorNone || error == kErrorAlready);
+    Get<MeshCoP::BorderAgent>().Stop();
 #endif
 
     SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
@@ -358,6 +357,10 @@ Error Commissioner::Stop(bool aResign)
     {
         SendKeepAlive();
     }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().Start();
+#endif
 
 exit:
     LogError("stop commissioner", error);

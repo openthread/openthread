@@ -170,4 +170,7 @@ expect ": InvalidState"
 send "ba port\n"
 expect "Done"
 
+send "ba state\n"
+expect "Done"
+
 dispose_all
