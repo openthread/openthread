@@ -1179,7 +1179,7 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def register_multicast_listener(self, *ipaddrs: Union[ipaddress.IPv6Address, str], timeout=None):
+    def register_multicast_listener(self, *ipaddrs: List[Union[ipaddress.IPv6Address, str]], timeout=None):
         assert len(ipaddrs) > 0, ipaddrs
 
         ipaddrs = map(str, ipaddrs)
