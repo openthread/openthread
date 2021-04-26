@@ -52,6 +52,7 @@ MA6 = Ipv6Addr('ff02::1')
 MAe1 = Ipv6Addr('fd0e::1234:777a:1')
 MAe2 = Ipv6Addr('::')
 MAe3 = Ipv6Addr('cafe::e0ff')
+MAS = [[Ipv6Addr(f'ff0e::{j:x}:777a:{i:x}') for j in range(16)] for i in range(16)]
 ALL_MPL_FORWARDERS_MA = Ipv6Addr('ff03::fc')
 
 LINK_LOCAL_PREFIX = Bytes("fe80")
