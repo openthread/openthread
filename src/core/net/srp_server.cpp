@@ -128,6 +128,14 @@ exit:
     return;
 }
 
+void Server::GetLeaseRange(uint32_t &aMinLease, uint32_t &aMaxLease, uint32_t &aMinKeyLease, uint32_t &aMaxKeyLease)
+{
+    aMinLease    = mMinLease;
+    aMaxLease    = mMaxLease;
+    aMinKeyLease = mMinKeyLease;
+    aMaxKeyLease = mMaxKeyLease;
+}
+
 Error Server::SetLeaseRange(uint32_t aMinLease, uint32_t aMaxLease, uint32_t aMinKeyLease, uint32_t aMaxKeyLease)
 {
     Error error = kErrorNone;

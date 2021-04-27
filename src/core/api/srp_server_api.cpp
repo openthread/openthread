@@ -63,6 +63,17 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
     instance.Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
+void otSrpServerGetLeaseRange(otInstance *aInstance,
+                              uint32_t *  aMinLease,
+                              uint32_t *  aMaxLease,
+                              uint32_t *  aMinKeyLease,
+                              uint32_t *  aMaxKeyLease)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Srp::Server>().GetLeaseRange(*aMinLease, *aMaxLease, *aMinKeyLease, *aMaxKeyLease);
+}
+
 otError otSrpServerSetLeaseRange(otInstance *aInstance,
                                  uint32_t    aMinLease,
                                  uint32_t    aMaxLease,

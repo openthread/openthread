@@ -469,6 +469,17 @@ public:
     void SetEnabled(bool aEnabled);
 
     /**
+     * This method returns LEASE & KEY-LEASE range from the SRP server.
+     *
+     * @param[out]  aMinLease     A reference to the minimum LEASE interval in seconds.
+     * @param[out]  aMaxLease     A reference to the maximum LEASE interval in seconds.
+     * @param[out]  aMinKeyLease  A reference to the minimum KEY-LEASE interval in seconds.
+     * @param[out]  aMaxKeyLease  A reference to the maximum KEY-LEASE interval in seconds.
+     *
+     */
+    void GetLeaseRange(uint32_t &aMinLease, uint32_t &aMaxLease, uint32_t &aMinKeyLease, uint32_t &aMaxKeyLease);
+
+    /**
      * This method sets LEASE & KEY-LEASE range that is acceptable by the SRP server.
      *
      * When a LEASE time is requested from a client, the granted value will be

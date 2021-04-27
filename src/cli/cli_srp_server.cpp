@@ -106,13 +106,26 @@ otError SrpServer::ProcessLease(uint8_t aArgsLength, Arg aArgs[])
     uint32_t minKeyLease;
     uint32_t maxKeyLease;
 
-    VerifyOrExit(aArgsLength == 5, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = aArgs[1].ParseAsUint32(minLease));
-    SuccessOrExit(error = aArgs[2].ParseAsUint32(maxLease));
-    SuccessOrExit(error = aArgs[3].ParseAsUint32(minKeyLease));
-    SuccessOrExit(error = aArgs[4].ParseAsUint32(maxKeyLease));
-
-    error = otSrpServerSetLeaseRange(mInterpreter.mInstance, minLease, maxLease, minKeyLease, maxKeyLease);
+    if (aArgsLength == 5)
+    {
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(minLease));
+        SuccessOrExit(error = aArgs[2].ParseAsUint32(maxLease));
+        SuccessOrExit(error = aArgs[3].ParseAsUint32(minKeyLease));
+        SuccessOrExit(error = aArgs[4].ParseAsUint32(maxKeyLease));
+        error = otSrpServerSetLeaseRange(mInterpreter.mInstance, minLease, maxLease, minKeyLease, maxKeyLease);
+    }
+    else if (aArgsLength == 1)
+    {
+        otSrpServerGetLeaseRange(mInterpreter.mInstance, &minLease, &maxLease, &minKeyLease, &maxKeyLease);
+        mInterpreter.OutputLine("min lease: %u", minLease);
+        mInterpreter.OutputLine("max lease: %u", maxLease);
+        mInterpreter.OutputLine("min key-lease: %u", minKeyLease);
+        mInterpreter.OutputLine("max key-lease: %u", maxKeyLease);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;
