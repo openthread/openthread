@@ -57,6 +57,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "posix/platform/radio_url.hpp"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
@@ -622,11 +623,13 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // platformTrel system
 
-void platformTrelInit(const char *aInterfaceName)
+void platformTrelInit(const char *aTrelUrl)
 {
-    if (aInterfaceName != NULL)
+    if (aTrelUrl != NULL)
     {
-        strncpy(sInterfaceName, aInterfaceName, sizeof(sInterfaceName));
+        ot::Posix::RadioUrl url(aTrelUrl);
+
+        strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName));
     }
     else
     {
