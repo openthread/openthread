@@ -55,7 +55,6 @@ BR_1 = 1
 BR_2 = 2
 ROUTER_1 = 3
 
-
 class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
@@ -80,6 +79,7 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
             'version': '1.2',
             'router_selection_jitter': 2,
             'partition_id': 1,
+            'network_id_timeout': 150,
         },
     }
 
