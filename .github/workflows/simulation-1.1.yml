@@ -111,13 +111,13 @@ jobs:
         path: |
           ./output/*/bin/*.pcap
           ./output/*/bin/*.replay
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-cli-ftd-otns
-        path: tmp/coverage.info
+#    - name: Generate Coverage
+#      run: |
+#        ./script/test generate_coverage gcc
+#    - uses: actions/upload-artifact@v2
+#      with:
+#        name: cov-cli-ftd-otns
+#        path: tmp/coverage.info
 
   packet-verification:
     runs-on: ubuntu-20.04
