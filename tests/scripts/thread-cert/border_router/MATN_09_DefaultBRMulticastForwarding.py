@@ -55,6 +55,7 @@ BR_1 = 1
 BR_2 = 2
 ROUTER_1 = 3
 
+
 class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
