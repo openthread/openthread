@@ -38,6 +38,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <getopt.h>
 #include <inttypes.h>
 #include <libgen.h>
 #include <stddef.h>
@@ -49,6 +50,7 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 
+#include "file_logging.h"
 #include "utils/uart.h"
 
 uint32_t gNodeId = 1;
@@ -217,7 +219,10 @@ static void socket_init(void)
 
 void otSysInit(int argc, char *argv[])
 {
-    char *endptr;
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    char logFileName[128];
+    memset(logFileName, 0, sizeof(logFileName));
+#endif
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -225,24 +230,72 @@ void otSysInit(int argc, char *argv[])
         return;
     }
 
-    if (argc != 2)
-    {
-        exit(EXIT_FAILURE);
-    }
-
-    openlog(basename(argv[0]), LOG_PID, LOG_USER);
-    setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
-
     gArgumentsCount = argc;
     gArguments      = argv;
 
-    gNodeId = (uint32_t)strtol(argv[1], &endptr, 0);
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    struct option long_options[] = {
+        {"log-file", required_argument, 0, 'l'},
+    };
 
-    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
+    while (true)
     {
-        fprintf(stderr, "Invalid NodeId: %s\n", argv[1]);
+        int c = getopt_long(gArgumentsCount, gArguments, "", long_options, NULL);
+
+        if (c == -1)
+        {
+            break;
+        }
+
+        switch (c)
+        {
+        case 'l':
+            if (strlen(optarg) > sizeof(logFileName))
+            {
+                fprintf(stderr, "Log file name too long\n");
+                exit(EXIT_FAILURE);
+            }
+            sprintf(logFileName, "%s", optarg);
+            break;
+        case '?':
+            fprintf(stderr, "Syntax:\n    %s [--log-file=name] NodeId \n", gArguments[0]);
+            exit(EXIT_FAILURE);
+            break;
+        default:
+            break;
+        }
+    }
+#endif
+
+    if (optind != gArgumentsCount - 1)
+    {
+        fprintf(stderr, "Syntax:\n    %s [--log-file=name] NodeId \n", gArguments[0]);
         exit(EXIT_FAILURE);
     }
+
+    gNodeId = (uint32_t)strtol(gArguments[optind], NULL, 10);
+
+    if (gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
+    {
+        fprintf(stderr, "Invalid NodeId: %s\n", gArguments[optind]);
+        exit(EXIT_FAILURE);
+    }
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+    openlog(basename(argv[0]), LOG_PID, LOG_USER);
+    setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+#elif OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    if (strlen(logFileName) == 0)
+    {
+        sprintf(logFileName, "OpenThread-Node-%d.log", gNodeId);
+    }
+
+    if (!initLogFile(logFileName))
+    {
+        fprintf(stderr, "Init log file [%s] failed\n", logFileName);
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     socket_init();
 
@@ -262,6 +315,9 @@ bool otSysPseudoResetWasRequested(void)
 void otSysDeinit(void)
 {
     close(sSockFd);
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    deinitLogFile();
+#endif
 }
 
 void otSysProcessDrivers(otInstance *aInstance)
@@ -274,6 +330,9 @@ void otSysProcessDrivers(otInstance *aInstance)
 
     if (gTerminate)
     {
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+        deinitLogFile();
+#endif
         exit(0);
     }
 

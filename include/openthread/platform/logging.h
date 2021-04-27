@@ -107,6 +107,14 @@ extern "C" {
 #define OT_LOG_LEVEL_DEBG 5
 
 /**
+ * Maximum length for log file.
+ *
+ * @note This is only used when using OPENTHREAD_CONFIG_LOG_OUTPUT_FILE.
+ *
+ */
+#define OT_LOG_FILE_NAME_MAX_LEN 128
+
+/**
  * This type represents the log level.
  *
  */

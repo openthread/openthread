@@ -707,6 +707,26 @@ target_link_libraries(test-timer
 
 add_test(NAME test-timer COMMAND test-timer)
 
+add_executable(test-file-logging
+    test_file_logging.cpp
+    ${PROJECT_SOURCE_DIR}/examples/platforms/simulation/file_logging.c
+)
+
+target_include_directories(test-file-logging
+    PUBLIC
+        ${COMMON_INCLUDES}
+        ${PROJECT_SOURCE_DIR}/examples/platforms
+        ${PROJECT_SOURCE_DIR}/examples/platforms/simulation
+)
+
+target_compile_options(test-file-logging
+    PRIVATE
+        -DOPENTHREAD_CONFIG_FILE="openthread-core-simulation-config.h"
+        -DOPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+)
+
+add_test(NAME test-file-logging COMMAND test-file-logging)
+
 set_target_properties(
     test-platform
     test-aes
@@ -716,6 +736,7 @@ set_target_properties(
     test-cmd-line-parser
     test-dns
     test-ecdsa
+    test-file-logging
     test-flash
     test-heap
     test-hkdf-sha256

@@ -45,6 +45,7 @@
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_APP
  * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+ * - @sa OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
  * - and others
  *
  * Note:
@@ -67,6 +68,8 @@
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_APP 2
 /** Log output is handled by a platform defined function */
 #define OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED 3
+/** Log output goes to a specified file. This is only supported on simulation platform */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT_FILE 4
 
 /**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL

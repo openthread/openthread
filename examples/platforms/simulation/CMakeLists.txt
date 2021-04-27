@@ -64,6 +64,7 @@ add_library(openthread-simulation
     entropy.c
     flash.c
     logging.c
+    file_logging.c
     misc.c
     radio.c
     spi-stubs.c

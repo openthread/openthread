@@ -38,6 +38,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <getopt.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -48,6 +49,8 @@
 #include <openthread/tasklet.h>
 #include <openthread/platform/alarm-milli.h>
 #include <openthread/platform/radio.h>
+
+#include "file_logging.h"
 
 uint32_t gNodeId = 1;
 
@@ -65,9 +68,11 @@ static void handleSignal(int aSignal)
 
 void otSysInit(int aArgCount, char *aArgVector[])
 {
-    char *   endptr;
     uint32_t speedUpFactor = 1;
-    int      argIndex      = 0;
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    char logFileName[128];
+    memset(logFileName, 0, sizeof(logFileName));
+#endif
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -75,44 +80,85 @@ void otSysInit(int aArgCount, char *aArgVector[])
         return;
     }
 
-    if (aArgCount < 2)
+    struct option long_options[] =
     {
-        fprintf(stderr, "Syntax:\n    %s [--sleep-to-tx] NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
+        {"sleep-to-tx", no_argument, 0, 's'},
+        {"time-speed-up-factor", required_argument, 0, 't'},
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+        {"log-file", required_argument, 0, 'l'},
+#endif
+    };
+
+    while (true)
+    {
+        int c = getopt_long(aArgCount, aArgVector, "", long_options, NULL);
+
+        if (c == -1)
+        {
+            break;
+        }
+
+        switch (c)
+        {
+        case 's':
+            gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+            break;
+        case 't':
+            speedUpFactor = (uint32_t)strtol(optarg, NULL, 10);
+            break;
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+        case 'l':
+            if (strlen(optarg) > sizeof(logFileName))
+            {
+                fprintf(stderr, "Log file name too long\n");
+                exit(EXIT_FAILURE);
+            }
+            sprintf(logFileName, "%s", optarg);
+            break;
+#endif
+        case '?':
+            fprintf(stderr, "Syntax:\n    %s [--sleep-to-tx] [--time-speed-up-factor=val] [--log-file=name] NodeId \n",
+                    aArgVector[0]);
+            exit(EXIT_FAILURE);
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (optind != aArgCount - 1)
+    {
+        fprintf(stderr, "Syntax:\n    %s [--sleep-to-tx] [--time-speed-up-factor=val] [--log-file=name] NodeId \n",
+                aArgVector[0]);
         exit(EXIT_FAILURE);
     }
 
-    openlog(basename(aArgVector[argIndex++]), LOG_PID, LOG_USER);
+    gNodeId = (uint32_t)strtol(aArgVector[optind], NULL, 10);
+
+    if (gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
+    {
+        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[optind]);
+        exit(EXIT_FAILURE);
+    }
+
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+    openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
+#elif OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    if (strlen(logFileName) == 0)
+    {
+        sprintf(logFileName, "OpenThread-Node-%d.log", gNodeId);
+    }
+
+    if (!initLogFile(logFileName))
+    {
+        fprintf(stderr, "Init log file [%s] failed\n", logFileName);
+        exit(EXIT_FAILURE);
+    }
+#endif
 
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);
-
-    if (!strcmp(aArgVector[argIndex], "--sleep-to-tx"))
-    {
-        gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
-        ++argIndex;
-    }
-
-    gNodeId = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
-
-    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
-    {
-        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[argIndex]);
-        exit(EXIT_FAILURE);
-    }
-
-    ++argIndex;
-
-    if (aArgCount > argIndex)
-    {
-        speedUpFactor = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
-
-        if (*endptr != '\0' || speedUpFactor == 0)
-        {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[argIndex]);
-            exit(EXIT_FAILURE);
-        }
-    }
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
@@ -132,6 +178,9 @@ void otSysDeinit(void)
     platformRadioDeinit();
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelDeinit();
+#endif
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+    deinitLogFile();
 #endif
 }
 
@@ -181,6 +230,9 @@ void otSysProcessDrivers(otInstance *aInstance)
 
     if (gTerminate)
     {
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE
+        deinitLogFile();
+#endif
         exit(0);
     }
 }

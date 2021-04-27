@@ -141,6 +141,7 @@ set(OT_LOG_OUTPUT_VALUES
     "DEBUG_UART"
     "NONE"
     "PLATFORM_DEFINED"
+    "FILE"
 )
 if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
     set(OT_LOG_OUTPUT "APP" CACHE STRING "Set log output to application for reference device")

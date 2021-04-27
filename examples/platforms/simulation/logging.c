@@ -41,6 +41,7 @@
 #include <openthread/platform/logging.h>
 #include <openthread/platform/toolchain.h>
 
+#include "file_logging.h"
 #include "utils/code_utils.h"
 
 // Macro to append content to end of the log string.
@@ -74,6 +75,33 @@ OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const 
 
 exit:
     syslog(LOG_CRIT, "%s", logString);
+}
+
+#elif (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_FILE)
+OT_TOOL_WEAK void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    OT_UNUSED_VARIABLE(aLogLevel);
+    OT_UNUSED_VARIABLE(aLogRegion);
+
+    char         logString[512];
+    unsigned int offset;
+    int          charsWritten;
+    va_list      args;
+
+    offset = 0;
+
+    va_start(args, aFormat);
+    charsWritten = vsnprintf(&logString[offset], sizeof(logString) - offset, aFormat, args);
+    va_end(args);
+
+    otEXPECT_ACTION(charsWritten >= 0, logString[offset] = 0);
+    offset += (unsigned int)charsWritten;
+    otEXPECT_ACTION(offset < sizeof(logString), logString[sizeof(logString) - 1] = 0);
+
+    LOG_PRINTF("\n");
+
+exit:
+    writeFileLog(logString, offset);
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED)
