@@ -95,7 +95,7 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         self.assertTrue(br1.is_primary_backbone_router)
 
         router1.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('router', router1.get_state())
 
         br2.start()
@@ -156,7 +156,8 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
             .filter_ping_request(identifier=_pkt.icmpv6.echo.identifier) \
             .must_next()
 
-        pv.verify_attached('Router_1', 'BR_2')
+        with pkts.save_index():
+            pv.verify_attached('Router_1', 'BR_2')
 
         # 4b. BR_2 detects the missing Primary BBR and becomes the Leader of the
         # Thread Network, distributing its BBR dataset.
