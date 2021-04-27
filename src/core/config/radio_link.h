@@ -72,4 +72,19 @@
 #define OPENTHREAD_CONFIG_MULTI_RADIO 0
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
+ *
+ * Specifies the fragment tag timeout interval in milliseconds.
+ *
+ * The default value is calculated as follows: The fragment tag is 16-bit wide, so 2^15 values are considered ahead of
+ * current tag value (using mod 2^16 arithmetic). It is incremented for every tx message that includes the fragment
+ * header. Considering a pessimistic average of 8 messages tx per second (containing fragment header), gives us
+ * `2^15/8 = 4096` seconds (or ~68 minutes).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT
+#define OPENTHREAD_CONFIG_MULTI_RADIO_FRAG_TAG_TIMEOUT (4096 * 1000)
+#endif
+
 #endif // CONFIG_RADIO_LINK_H_
