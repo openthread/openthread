@@ -114,7 +114,7 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         br1.interface_down()
         self.simulator.go(180)
 
-        # 4b. BR_2 Detects the missing Primary BBR and becomes the the Leader of
+        # 4b. BR_2 detects the missing Primary BBR and becomes the the Leader of
         # the Thread Network.
         self.assertEqual('disabled', br1.get_state())
         self.assertEqual('leader', br2.get_state())
