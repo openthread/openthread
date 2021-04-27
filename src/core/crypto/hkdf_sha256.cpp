@@ -32,7 +32,7 @@
  */
 
 #include "hkdf_sha256.hpp"
-#include "utils/code_utils.h"
+#include "common/code_utils.hpp"
 
 #include <string.h>
 
@@ -49,20 +49,32 @@ void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, psa_key_id_
     error = psa_key_derivation_setup(&mOperation,
                                      PSA_ALG_HKDF(PSA_ALG_SHA_256));
 
-    otEXPECT_ACTION(error == PSA_SUCCESS, psa_key_derivation_abort(&mOperation));
+    if(error != PSA_SUCCESS)
+    {
+        psa_key_derivation_abort(&mOperation);
+        ExitNow();
+    }
 
     error = psa_key_derivation_input_bytes(&mOperation,
                                            PSA_KEY_DERIVATION_INPUT_SALT,
                                            aSalt,
                                            aSaltLength);
 
-    otEXPECT_ACTION(error == PSA_SUCCESS, psa_key_derivation_abort(&mOperation));
+    if(error != PSA_SUCCESS)
+    {
+        psa_key_derivation_abort(&mOperation);
+        ExitNow();
+    }
 
     error = psa_key_derivation_input_key(&mOperation,
                                          PSA_KEY_DERIVATION_INPUT_SECRET,
                                          aInputKeyRef);
 
-    otEXPECT_ACTION(error == PSA_SUCCESS, psa_key_derivation_abort(&mOperation));
+    if(error != PSA_SUCCESS)
+    {
+        psa_key_derivation_abort(&mOperation);
+        ExitNow();
+    }
 
 exit:
   return;
@@ -90,13 +102,21 @@ void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOu
                                            aInfo,
                                            aInfoLength);
 
-    otEXPECT_ACTION(error == PSA_SUCCESS, psa_key_derivation_abort(&mOperation));
+    if(error != PSA_SUCCESS)
+    {
+        psa_key_derivation_abort(&mOperation);
+        ExitNow();
+    }
 
     error = psa_key_derivation_output_bytes(&mOperation,
                                             aOutputKey,
                                             aOutputKeyLength);
 
-    otEXPECT_ACTION(error == PSA_SUCCESS, psa_key_derivation_abort(&mOperation));
+    if(error != PSA_SUCCESS)
+    {
+        psa_key_derivation_abort(&mOperation);
+        ExitNow();
+    }
 
 exit:
       return;

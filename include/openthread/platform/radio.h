@@ -201,11 +201,13 @@ struct otMacKey
  */
 typedef struct otMacKey otMacKey;
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
 /**
  * This enum represents a MAC Key Ref used by PSA.
  *
  */
 typedef psa_key_id_t otMacKeyRef;
+#endif
 
 /**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.

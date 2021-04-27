@@ -35,10 +35,14 @@
 #ifndef OPENTHREAD_PLATFORM_PSA_H_
 #define OPENTHREAD_PLATFORM_PSA_H_
 
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+
 #include <stdint.h>
 
 #include <openthread/error.h>
-#include "security_manager.h"
+#include "psa/crypto.h"
+#include <psa/crypto_types.h>
+#include "psa/crypto_values.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -238,4 +242,5 @@ otError otPlatPsaGetKeyAttributes(psa_key_id_t          aKeyId,
 } // end of extern "C"
 #endif
 
+#endif // OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
 #endif // OPENTHREAD_PLATFORM_PSA_H_
