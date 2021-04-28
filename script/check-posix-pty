@@ -127,6 +127,8 @@ do_check()
         # sleep a while for daemon ready
         sleep 2
         sudo "${OT_CLI_CMD}" factoryreset
+        # sleep a while for daemon ready
+        sleep 2
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"
