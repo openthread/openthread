@@ -42,10 +42,10 @@
 
 #include <openthread/crypto.h>
 
+#include <openthread/platform/psa.h>
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
-#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -153,7 +153,6 @@ private:
 #else
     mbedtls_sha256_context mContext;
 #endif
-
 };
 
 /**

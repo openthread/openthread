@@ -258,9 +258,9 @@ const Key *Links::GetCurrentMacKey(const Frame &aFrame) const
 {
     // Gets the security MAC key (for Key Mode 1) based on radio link type of `aFrame`.
 
-    const Key *key = nullptr;
+    const Key *key       = nullptr;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radioType = aFrame.GetRadioType();
+    RadioType  radioType = aFrame.GetRadioType();
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -292,9 +292,9 @@ const Key *Links::GetTemporaryMacKey(const Frame &aFrame, uint32_t aKeySequence)
     // Gets the security MAC key (for Key Mode 1) based on radio link
     // type of `aFrame` and given Key Sequence.
 
-    const Key *key = nullptr;
+    const Key *key       = nullptr;
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radioType = aFrame.GetRadioType();
+    RadioType  radioType = aFrame.GetRadioType();
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE

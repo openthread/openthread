@@ -46,43 +46,37 @@ void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, psa_key_id_
     mOperation = PSA_KEY_DERIVATION_OPERATION_INIT;
 
     // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
-    error = psa_key_derivation_setup(&mOperation,
-                                     PSA_ALG_HKDF(PSA_ALG_SHA_256));
+    error = psa_key_derivation_setup(&mOperation, PSA_ALG_HKDF(PSA_ALG_SHA_256));
 
-    if(error != PSA_SUCCESS)
+    if (error != PSA_SUCCESS)
     {
         psa_key_derivation_abort(&mOperation);
         ExitNow();
     }
 
-    error = psa_key_derivation_input_bytes(&mOperation,
-                                           PSA_KEY_DERIVATION_INPUT_SALT,
-                                           aSalt,
-                                           aSaltLength);
+    error = psa_key_derivation_input_bytes(&mOperation, PSA_KEY_DERIVATION_INPUT_SALT, aSalt, aSaltLength);
 
-    if(error != PSA_SUCCESS)
+    if (error != PSA_SUCCESS)
     {
         psa_key_derivation_abort(&mOperation);
         ExitNow();
     }
 
-    error = psa_key_derivation_input_key(&mOperation,
-                                         PSA_KEY_DERIVATION_INPUT_SECRET,
-                                         aInputKeyRef);
+    error = psa_key_derivation_input_key(&mOperation, PSA_KEY_DERIVATION_INPUT_SECRET, aInputKeyRef);
 
-    if(error != PSA_SUCCESS)
+    if (error != PSA_SUCCESS)
     {
         psa_key_derivation_abort(&mOperation);
         ExitNow();
     }
 
 exit:
-  return;
+    return;
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    psa_status_t     error;
+    psa_status_t error;
 
     // The aOutputKey is calculated as follows [RFC5889]:
     //
@@ -97,29 +91,24 @@ void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOu
     //   T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
     //   ...
 
-    error = psa_key_derivation_input_bytes(&mOperation,
-                                           PSA_KEY_DERIVATION_INPUT_INFO,
-                                           aInfo,
-                                           aInfoLength);
+    error = psa_key_derivation_input_bytes(&mOperation, PSA_KEY_DERIVATION_INPUT_INFO, aInfo, aInfoLength);
 
-    if(error != PSA_SUCCESS)
+    if (error != PSA_SUCCESS)
     {
         psa_key_derivation_abort(&mOperation);
         ExitNow();
     }
 
-    error = psa_key_derivation_output_bytes(&mOperation,
-                                            aOutputKey,
-                                            aOutputKeyLength);
+    error = psa_key_derivation_output_bytes(&mOperation, aOutputKey, aOutputKeyLength);
 
-    if(error != PSA_SUCCESS)
+    if (error != PSA_SUCCESS)
     {
         psa_key_derivation_abort(&mOperation);
         ExitNow();
     }
 
 exit:
-      return;
+    return;
 }
 #else
 void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8_t *aInputKey, uint16_t aInputKeyLength)

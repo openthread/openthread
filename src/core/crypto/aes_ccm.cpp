@@ -45,7 +45,7 @@ namespace Crypto {
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
 void AesCcm::SetKey(otMacKeyRef aKeyRef)
 {
-  mEcb.SetKey(aKeyRef);
+    mEcb.SetKey(aKeyRef);
 }
 
 #else

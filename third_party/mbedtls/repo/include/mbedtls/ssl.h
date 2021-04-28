@@ -1205,7 +1205,7 @@ extern int (*mbedtls_ssl_hw_record_finish)(mbedtls_ssl_context *ssl);
  *
  * \return              a string containing the ciphersuite name
  */
-const char *mbedtls_ssl_get_ciphersuite_name( const int ciphersuite_id );
+const char *mbedtls_ssl_get_ciphersuite_name( int ciphersuite_id );
 
 /**
  * \brief               Return the ID of the ciphersuite associated with the

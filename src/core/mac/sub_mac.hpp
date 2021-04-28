@@ -38,12 +38,12 @@
 
 #include <openthread/link.h>
 
+#include <openthread/platform/psa.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
-#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -456,7 +456,11 @@ public:
      * @param[in] aNextKeyRef The reference to next MAC key.
      *
      */
-    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, otMacKeyRef aPrevKeyRef, otMacKeyRef aCurrKeyRef, otMacKeyRef aNextKeyRef);
+    void SetMacKey(uint8_t     aKeyIdMode,
+                   uint8_t     aKeyId,
+                   otMacKeyRef aPrevKeyRef,
+                   otMacKeyRef aCurrKeyRef,
+                   otMacKeyRef aNextKeyRef);
 
     /**
      * This method returns a reference to the current MAC key.
@@ -655,16 +659,16 @@ private:
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    otMacKeyRef        mPrevKeyRef;
-    otMacKeyRef        mCurrKeyRef;
-    otMacKeyRef        mNextKeyRef;
+    otMacKeyRef mPrevKeyRef;
+    otMacKeyRef mCurrKeyRef;
+    otMacKeyRef mNextKeyRef;
 #else
-    Key                mPrevKey;
-    Key                mCurrKey;
-    Key                mNextKey;
+    Key        mPrevKey;
+    Key        mCurrKey;
+    Key        mNextKey;
 #endif
-    uint32_t           mFrameCounter;
-    uint8_t            mKeyId;
+    uint32_t mFrameCounter;
+    uint8_t  mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else

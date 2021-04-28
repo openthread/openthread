@@ -2636,9 +2636,9 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t         command;
     Neighbor *      neighbor;
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    KeyRef          mleKeyRef;
+    KeyRef mleKeyRef;
 #else
-    const Key *     mleKey;
+    const Key *mleKey;
 #endif
 
     otLogDebgMle("Receive UDP message");
@@ -2676,7 +2676,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     VerifyOrExit(header.GetSecuritySuite() == Header::k154Security, error = kErrorParse);
 
     keySequence = header.GetKeyId();
-	
+
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     if (keySequence == Get<KeyManager>().GetCurrentKeySequence())
     {

@@ -39,9 +39,9 @@
 
 #include <stdint.h>
 
+#include <psa/crypto_types.h>
 #include <openthread/error.h>
 #include "psa/crypto.h"
-#include <psa/crypto_types.h>
 #include "psa/crypto_values.h"
 
 #ifdef __cplusplus
@@ -96,12 +96,12 @@ otError otPlatPsaEcbEncrypt(psa_key_id_t aKeyId, const uint8_t *aInput, uint8_t 
  * @retval OT_ERROR_INVALID_ARGS  @p aInput or @p aOutput was set to NULL.
  *
  */
-otError otPlatPsaGenerateKey(psa_key_id_t           *aKeyId,
-                             psa_key_type_t         aKeyType,
-                             psa_algorithm_t        aKeyAlgorithm,
-                             psa_key_usage_t        aKeyUsage,
-                             psa_key_persistence_t  aKeyPersistence,
-                             size_t                 aKeyLen);
+otError otPlatPsaGenerateKey(psa_key_id_t *        aKeyId,
+                             psa_key_type_t        aKeyType,
+                             psa_algorithm_t       aKeyAlgorithm,
+                             psa_key_usage_t       aKeyUsage,
+                             psa_key_persistence_t aKeyPersistence,
+                             size_t                aKeyLen);
 
 /**
  * Import a key into PSA ITS.
@@ -119,13 +119,13 @@ otError otPlatPsaGenerateKey(psa_key_id_t           *aKeyId,
  * @retval OT_ERROR_INVALID_ARGS  @p aInput or @p aOutput was set to NULL.
  *
  */
-otError otPlatPsaImportKey(psa_key_id_t             *aKeyId,
-                           psa_key_type_t           aKeyType,
-                           psa_algorithm_t          aKeyAlgorithm,
-                           psa_key_usage_t          aKeyUsage,
-                           psa_key_persistence_t    aKeyPersistence,
-                           const uint8_t            *aKey,
-                           size_t                   aKeyLen);
+otError otPlatPsaImportKey(psa_key_id_t *        aKeyId,
+                           psa_key_type_t        aKeyType,
+                           psa_algorithm_t       aKeyAlgorithm,
+                           psa_key_usage_t       aKeyUsage,
+                           psa_key_persistence_t aKeyPersistence,
+                           const uint8_t *       aKey,
+                           size_t                aKeyLen);
 
 /**
  * Export a key stored in PSA ITS.
@@ -140,10 +140,7 @@ otError otPlatPsaImportKey(psa_key_id_t             *aKeyId,
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was NULL
  *
  */
-otError otPlatPsaExportKey(psa_key_id_t aKeyId,
-                           uint8_t      *aBuffer,
-                           uint8_t      aBufferLen,
-                           size_t       *aKeyLen);
+otError otPlatPsaExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, uint8_t aBufferLen, size_t *aKeyLen);
 
 /**
  * Destroy a key stored in PSA ITS.
@@ -169,10 +166,7 @@ otError otPlatPsaDestroyKey(psa_key_id_t aKeyId);
  * @retval OT_ERROR_INVALID_ARGS  @p aOutput or @p aOutputLen was NULL
  *
  */
-otError otPlatPsaExportPublicKey(psa_key_id_t   aKeyId,
-                                 uint8_t        *aOutput,
-                                 size_t         aOutputSize,
-                                 size_t         *aOutputLen);
+otError otPlatPsaExportPublicKey(psa_key_id_t aKeyId, uint8_t *aOutput, size_t aOutputSize, size_t *aOutputLen);
 
 /**
  * Sign a message hash using a key stored.
@@ -191,11 +185,11 @@ otError otPlatPsaExportPublicKey(psa_key_id_t   aKeyId,
  */
 otError otPlatPsaSignHash(psa_key_id_t    aKeyId,
                           psa_algorithm_t aKeyAlgorithm,
-                          uint8_t         *aHash,
+                          uint8_t *       aHash,
                           size_t          aHashSize,
-                          uint8_t         *aSignature,
+                          uint8_t *       aSignature,
                           size_t          aSignatureSize,
-                          size_t          *aSignatureLen);
+                          size_t *        aSignatureLen);
 
 /**
  * Verify a signature using a key stored.
@@ -213,11 +207,10 @@ otError otPlatPsaSignHash(psa_key_id_t    aKeyId,
  */
 otError otPlatPsaVerifyHash(psa_key_id_t    aKeyId,
                             psa_algorithm_t aKeyAlgorithm,
-                            uint8_t         *aHash,
+                            uint8_t *       aHash,
                             size_t          aHashSize,
-                            uint8_t         *aSignature,
+                            uint8_t *       aSignature,
                             size_t          aSignatureSize);
-
 
 /**
  * Get Attributes for a key stored in PSA ITS.
@@ -229,9 +222,7 @@ otError otPlatPsaVerifyHash(psa_key_id_t    aKeyId,
  * @retval OT_ERROR_FAILED        Failed to sign @p aHash.
  *
  */
-otError otPlatPsaGetKeyAttributes(psa_key_id_t          aKeyId,
-                                  psa_key_attributes_t  *aKeyAttributes);
-
+otError otPlatPsaGetKeyAttributes(psa_key_id_t aKeyId, psa_key_attributes_t *aKeyAttributes);
 
 /**
  * @}

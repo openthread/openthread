@@ -88,7 +88,7 @@ public:
      * @param[in]  aKeyLength  The key length in bits.
      *
      */
-    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+    void                SetKey(const uint8_t *aKey, uint16_t aKeyLength);
 #endif
 
     /**
@@ -102,7 +102,7 @@ public:
 
 private:
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    uint32_t            mKeyRef;
+    uint32_t mKeyRef;
 #else
     mbedtls_aes_context mContext;
 #endif

@@ -38,10 +38,10 @@
 
 #include <openthread/platform/radio.h>
 
+#include <openthread/platform/psa.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"
-#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -285,8 +285,8 @@ public:
      * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t         aKeyIdMode,
-                   uint8_t         aKeyId,
+    void SetMacKey(uint8_t aKeyIdMode,
+                   uint8_t aKeyId,
                    const Mac::Key &aPrevKey,
                    const Mac::Key &aCurrKey,
                    const Mac::Key &aNextKey);
@@ -692,12 +692,7 @@ inline void Radio::SetMacKey(uint8_t     aKeyIdMode,
                              otMacKeyRef aCurrKeyRef,
                              otMacKeyRef aNextKeyRef)
 {
-    otPlatRadioSetMacKeyRef(GetInstancePtr(), 
-                            aKeyIdMode, 
-                            aKeyId, 
-                            aPrevKeyRef, 
-                            aCurrKeyRef, 
-                            aNextKeyRef);
+    otPlatRadioSetMacKeyRef(GetInstancePtr(), aKeyIdMode, aKeyId, aPrevKeyRef, aCurrKeyRef, aNextKeyRef);
 }
 #else
 inline void Radio::SetMacKey(uint8_t         aKeyIdMode,

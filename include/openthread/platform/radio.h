@@ -241,16 +241,16 @@ typedef struct otRadioFrame
          */
         struct
         {
- #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-            otMacKeyRef     mAesKeyRef;       ///< The key reference used for AES-CCM frame security.
+#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+            otMacKeyRef mAesKeyRef; ///< The key reference used for AES-CCM frame security.
 #else
-            const otMacKey *mAesKey;          ///< The key used for AES-CCM frame security.
-#endif           
-            otRadioIeInfo * mIeInfo;          ///< The pointer to the Header IE(s) related information.
-            uint32_t        mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
-            uint32_t        mTxDelayBaseTime; ///< The base time for the transmission delay.
-            uint8_t         mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
-            uint8_t         mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
+            const otMacKey *mAesKey; ///< The key used for AES-CCM frame security.
+#endif
+            otRadioIeInfo *mIeInfo;          ///< The pointer to the Header IE(s) related information.
+            uint32_t       mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
+            uint32_t       mTxDelayBaseTime; ///< The base time for the transmission delay.
+            uint8_t        mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
+            uint8_t        mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
              * Indicates whether the frame is a retransmission or not.
@@ -573,11 +573,11 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  *
  */
 void otPlatRadioSetMacKeyRef(otInstance *aInstance,
-                            uint8_t     aKeyIdMode,
-                            uint8_t     aKeyId,
-                            otMacKeyRef aPrevKeyRef,
-                            otMacKeyRef aCurrKeyRef,
-                            otMacKeyRef aNextKeyRef);
+                             uint8_t     aKeyIdMode,
+                             uint8_t     aKeyId,
+                             otMacKeyRef aPrevKeyRef,
+                             otMacKeyRef aCurrKeyRef,
+                             otMacKeyRef aNextKeyRef);
 #else
 /**
  * Update MAC keys and key index
@@ -592,9 +592,9 @@ void otPlatRadioSetMacKeyRef(otInstance *aInstance,
  * @param[in]   aNextKey     A pointer to the next MAC key.
  *
  */
-void otPlatRadioSetMacKey(otInstance *    aInstance,
-                          uint8_t         aKeyIdMode,
-                          uint8_t         aKeyId,
+void otPlatRadioSetMacKey(otInstance *aInstance,
+                          uint8_t aKeyIdMode,
+                          uint8_t aKeyId,
                           const otMacKey *aPrevKey,
                           const otMacKey *aCurrKey,
                           const otMacKey *aNextKey);

@@ -83,7 +83,7 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 
 void Sha256::Finish(Hash &aHash)
 {
-    size_t aHashLength = 0;
+    size_t       aHashLength = 0;
     psa_status_t error;
 
     error = psa_hash_finish(&mOperation, aHash.m8, aHash.kSize, &aHashLength);

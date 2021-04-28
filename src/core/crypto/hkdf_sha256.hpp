@@ -56,7 +56,6 @@ namespace Crypto {
 class HkdfSha256
 {
 public:
-
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     /**
      * This method performs the HKDF Extract step.

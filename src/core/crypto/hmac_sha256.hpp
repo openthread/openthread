@@ -99,7 +99,7 @@ public:
      * @param[in]  aKeyLength  The key length in bytes.
      *
      */
-    void Start(const uint8_t *aKey, uint16_t aKeyLength);
+    void                 Start(const uint8_t *aKey, uint16_t aKeyLength);
 #endif
     /**
      * This method inputs bytes into the HMAC computation.

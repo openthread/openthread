@@ -832,11 +832,11 @@ void SubMac::SetState(State aState)
 }
 
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-void SubMac::SetMacKey(uint8_t      aKeyIdMode,
-                       uint8_t      aKeyId,
-                       otMacKeyRef  aPrevKeyRef,
-                       otMacKeyRef  aCurrKeyRef,
-                       otMacKeyRef  aNextKeyRef)
+void SubMac::SetMacKey(uint8_t     aKeyIdMode,
+                       uint8_t     aKeyId,
+                       otMacKeyRef aPrevKeyRef,
+                       otMacKeyRef aCurrKeyRef,
+                       otMacKeyRef aNextKeyRef)
 {
     switch (aKeyIdMode)
     {
@@ -844,7 +844,7 @@ void SubMac::SetMacKey(uint8_t      aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
-        mKeyId   = aKeyId;
+        mKeyId = aKeyId;
         otPlatPsaDestroyKey(mPrevKeyRef);
         otPlatPsaDestroyKey(mCurrKeyRef);
         otPlatPsaDestroyKey(mNextKeyRef);
@@ -866,8 +866,8 @@ exit:
     return;
 }
 #else
-void SubMac::SetMacKey(uint8_t    aKeyIdMode,
-                       uint8_t    aKeyId,
+void SubMac::SetMacKey(uint8_t aKeyIdMode,
+                       uint8_t aKeyId,
                        const Key &aPrevKey,
                        const Key &aCurrKey,
                        const Key &aNextKey)
@@ -878,7 +878,7 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
-        mKeyId   = aKeyId;
+        mKeyId = aKeyId;
         mPrevKey = aPrevKey;
         mCurrKey = aCurrKey;
         mNextKey = aNextKey;

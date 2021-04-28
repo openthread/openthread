@@ -40,6 +40,7 @@
 
 #include <openthread/dataset.h>
 
+#include <openthread/platform/psa.h>
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -50,7 +51,6 @@
 #include "crypto/hmac_sha256.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
-#include <openthread/platform/psa.h>
 
 namespace ot {
 
@@ -459,8 +459,8 @@ public:
      *
      */
     KeyRef GetKekRef(void) { return mKekRef; }
-	
-	/**
+
+    /**
      * This method returns the KEK.
      *
      * @returns A pointer to the KEK.
@@ -475,7 +475,7 @@ public:
      *
      */
     const Kek &GetKek(void) const { return mKek; }
-#endif	
+#endif
 
     /**
      * This method sets the KEK.
@@ -571,11 +571,8 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    enum
-    {
-        kMasterKeyPsaItsOffset     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
-        kPkscPsaItsOffset          = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2
-    };
+    enum {kMasterKeyPsaItsOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
+          kPkscPsaItsOffset      = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2};
 #endif
 
     OT_TOOL_PACKED_BEGIN
@@ -647,13 +644,13 @@ private:
     bool           mIsPskcSet : 1;
 
 #if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    KeyRef         mMasterKeyRef;
-    KeyRef         mMleKeyRef;
-    KeyRef         mTemporaryMleKeyRef;
-    KeyRef         mKekRef;
-#if OPENTHREAD_MTD || OPENTHREAD_FTD    
-    KeyRef         mPskcRef;
-#endif    
+    KeyRef mMasterKeyRef;
+    KeyRef mMleKeyRef;
+    KeyRef mTemporaryMleKeyRef;
+    KeyRef mKekRef;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    KeyRef mPskcRef;
+#endif
 #endif
 };
 

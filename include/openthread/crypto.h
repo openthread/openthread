@@ -84,10 +84,7 @@ typedef struct otCryptoSha256Hash otCryptoSha256Hash;
  * @param[out]    aHash          A pointer to a `otCryptoSha256Hash` structure to output the hash value.
  *
  */
-void otCryptoHmacSha256(uint32_t            aKeyRef,
-                        const uint8_t *     aBuf,
-                        uint16_t            aBufLength,
-                        otCryptoSha256Hash *aHash);
+void otCryptoHmacSha256(uint32_t aKeyRef, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash);
 #else
 /**
  * This function performs HMAC computation.
@@ -126,17 +123,17 @@ void otCryptoHmacSha256(const uint8_t *     aKey,
  * @param[out]    aTag           A pointer to the tag.
  *
  */
-void otCryptoAesCcm(uint32_t       aKeyRef,
-                    uint8_t        aTagLength,
-                    const void *   aNonce,
-                    uint8_t        aNonceLength,
-                    const void *   aHeader,
-                    uint32_t       aHeaderLength,
-                    void *         aPlainText,
-                    void *         aCipherText,
-                    uint32_t       aLength,
-                    bool           aEncrypt,
-                    void *         aTag);
+void otCryptoAesCcm(uint32_t    aKeyRef,
+                    uint8_t     aTagLength,
+                    const void *aNonce,
+                    uint8_t     aNonceLength,
+                    const void *aHeader,
+                    uint32_t    aHeaderLength,
+                    void *      aPlainText,
+                    void *      aCipherText,
+                    uint32_t    aLength,
+                    bool        aEncrypt,
+                    void *      aTag);
 #else
 /**
  * This method performs AES CCM computation.

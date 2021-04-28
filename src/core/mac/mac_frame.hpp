@@ -1338,7 +1338,7 @@ public:
      * @returns The reference to the key.
      *
      */
-     otMacKeyRef GetAesKeyRef(void) { return (mInfo.mTxInfo.mAesKeyRef); }
+    otMacKeyRef GetAesKeyRef(void) { return (mInfo.mTxInfo.mAesKeyRef); }
 
     /**
      * This method sets the reference to the key used for frame encryption and authentication (AES CCM).

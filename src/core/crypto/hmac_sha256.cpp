@@ -52,18 +52,14 @@ HmacSha256::~HmacSha256(void)
 
 void HmacSha256::Start(uint32_t aKeyRef)
 {
-    psa_status_t error = psa_mac_sign_setup( &mOperation,
-                                             aKeyRef,
-                                             PSA_ALG_HMAC(PSA_ALG_SHA_256));
+    psa_status_t error = psa_mac_sign_setup(&mOperation, aKeyRef, PSA_ALG_HMAC(PSA_ALG_SHA_256));
 
     (void)error;
 }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    psa_status_t error = psa_mac_update(  &mOperation,
-                                          (const uint8_t *)aBuf,
-                                          (size_t)aBufLength);
+    psa_status_t error = psa_mac_update(&mOperation, (const uint8_t *)aBuf, (size_t)aBufLength);
     (void)error;
 }
 
@@ -71,10 +67,7 @@ void HmacSha256::Finish(Hash &aHash)
 {
     size_t aMacLength = 0;
 
-    psa_status_t error = psa_mac_sign_finish(&mOperation,
-                                             aHash.m8,
-                                             aHash.kSize,
-                                             &aMacLength);
+    psa_status_t error = psa_mac_sign_finish(&mOperation, aHash.m8, aHash.kSize, &aMacLength);
     (void)error;
 }
 #else
