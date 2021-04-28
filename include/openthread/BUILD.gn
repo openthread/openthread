@@ -107,6 +107,7 @@ source_set("openthread") {
     "platform/messagepool.h",
     "platform/misc.h",
     "platform/otns.h",
+    "platform/psa.h",
     "platform/radio.h",
     "platform/settings.h",
     "platform/spi-slave.h",

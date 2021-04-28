@@ -103,6 +103,7 @@ ot_platform_headers                     = \
     openthread/platform/messagepool.h     \
     openthread/platform/misc.h            \
     openthread/platform/otns.h            \
+    openthread/platform/psa.h             \
     openthread/platform/radio.h           \
     openthread/platform/settings.h        \
     openthread/platform/spi-slave.h       \
