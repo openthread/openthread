@@ -60,8 +60,9 @@ third_party/nlbuild-autotools/repo/third_party/autoconf/m4/lt~obsolete.m4
 third_party/nlbuild-autotools/repo/third_party/autoconf/missing
 /tmp/
 
-# C-Lion / IDEA files
+# IDE / editor files
 .idea/**
+.vscode/**
 cmake-build-*/**
 
 # Python bytecodes
