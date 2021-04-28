@@ -343,12 +343,6 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
         }
     }
 
-    if (message->GetLength() == message->GetOffset())
-    {
-        // no payload, remove coap payload marker
-        IgnoreError(message->SetLength(message->GetLength() - 1));
-    }
-
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset get response");

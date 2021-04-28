@@ -442,12 +442,6 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         }
     }
 
-    if (message->GetLength() == message->GetOffset())
-    {
-        // no payload, remove coap payload marker
-        IgnoreError(message->SetLength(message->GetLength() - 1));
-    }
-
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent %s dataset get response to %s", (GetType() == Dataset::kActive ? "active" : "pending"),
@@ -512,12 +506,6 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo, const ui
     if (aLength > 0)
     {
         SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
-    }
-
-    if (message->GetLength() == message->GetOffset())
-    {
-        // no payload, remove coap payload marker
-        IgnoreError(message->SetLength(message->GetLength() - 1));
     }
 
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());

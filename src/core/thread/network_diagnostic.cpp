@@ -506,12 +506,6 @@ void NetworkDiagnostic::HandleDiagnosticGetQuery(Coap::Message &aMessage, const 
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
 
-    if (message->GetLength() == message->GetOffset())
-    {
-        // Remove Payload Marker if payload is actually empty.
-        IgnoreError(message->SetLength(message->GetLength() - 1));
-    }
-
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, nullptr, this));
 
     otLogInfoNetDiag("Sent diagnostic get answer");
@@ -549,12 +543,6 @@ void NetworkDiagnostic::HandleDiagnosticGetRequest(Coap::Message &aMessage, cons
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = FillRequestedTlvs(aMessage, *message, networkDiagnosticTlv));
-
-    if (message->GetLength() == message->GetOffset())
-    {
-        // Remove Payload Marker if payload is actually empty.
-        IgnoreError(message->SetLength(message->GetOffset() - 1));
-    }
 
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
