@@ -59,6 +59,7 @@ target_link_libraries(ot-cli
     openthread-spinel-rcp
     ${OT_MBEDTLS}
     ${READLINE_LINK_LIBRARIES}
+    ot-config
 )
 
 
