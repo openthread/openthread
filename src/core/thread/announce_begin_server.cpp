@@ -56,7 +56,10 @@ AnnounceBeginServer::AnnounceBeginServer(Instance &aInstance)
 
 void AnnounceBeginServer::SendAnnounce(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod)
 {
-    AnnounceSenderBase::SendAnnounce(Mac::ChannelMask(aChannelMask), aCount, aPeriod, kDefaultJitter);
+    SetChannelMask(Mac::ChannelMask(aChannelMask));
+    SetPeriod(aPeriod);
+    SetJitter(kDefaultJitter);
+    AnnounceSenderBase::SendAnnounce(aCount);
 }
 
 void AnnounceBeginServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
