@@ -501,6 +501,18 @@ const otIp6Address *otThreadGetLinkLocalAllThreadNodesMulticastAddress(otInstanc
 const otIp6Address *otThreadGetRealmLocalAllThreadNodesMulticastAddress(otInstance *aInstance);
 
 /**
+ * This function retrieves the Service ALOC for given Service ID.
+ *
+ * @param[in]   aInstance     A pointer to an OpenThread instance.
+ * @param[in]   aServiceId    Service ID to get ALOC for.
+ * @param[out]  aServiceAloc  A pointer to output the Service ALOC. MUST NOT BE NULL.
+ *
+ * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
+ * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+ */
+otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6Address *aServiceAloc);
+
+/**
  * Get the Thread Network Name.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
