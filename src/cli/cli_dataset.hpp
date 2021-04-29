@@ -41,6 +41,7 @@
 #include <openthread/dataset.h>
 
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -54,6 +55,8 @@ class Interpreter;
 class Dataset
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     explicit Dataset(Interpreter &aInterpreter)
         : mInterpreter(aInterpreter)
     {
@@ -66,47 +69,47 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (Dataset::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Dataset::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
     otError Print(otOperationalDataset &aDataset);
 
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessActive(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessActiveTimestamp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessChannel(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessChannelMask(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessClear(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessCommit(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessDelay(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessExtPanId(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessInit(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessMasterKey(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessMeshLocalPrefix(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessNetworkName(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessPanId(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessPending(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessPendingTimestamp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessMgmtGetCommand(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessPskc(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSecurityPolicy(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessActive(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessActiveTimestamp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessChannel(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessChannelMask(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessClear(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessCommit(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessDelay(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessExtPanId(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessInit(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessMeshLocalPrefix(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessNetworkName(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPanId(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPending(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPendingTimestamp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessMgmtSetCommand(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessMgmtGetCommand(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPskc(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSecurityPolicy(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, Arg aArgs[]);
 
 #if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
-    otError     ProcessUpdater(uint8_t aArgsLength, char *aArgs[]);
+    otError     ProcessUpdater(uint8_t aArgsLength, Arg aArgs[]);
     static void HandleDatasetUpdater(otError aError, void *aContext);
     void        HandleDatasetUpdater(otError aError);
 #endif
 
     void  OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
-    Error ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, const char *aRotation, const char *aFlags);
+    Error ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t aArgsLength, Arg aArgs[]);
 
     static constexpr Command sCommands[] = {
         {"active", &Dataset::ProcessActive},

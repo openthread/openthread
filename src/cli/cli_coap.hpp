@@ -40,6 +40,7 @@
 
 #include "coap/coap_message.hpp"
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -53,6 +54,8 @@ class Interpreter;
 class Coap
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -68,7 +71,7 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     enum
@@ -80,7 +83,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Coap::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (Coap::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -90,16 +93,16 @@ private:
 
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-    otError ProcessCancel(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessCancel(uint8_t aArgsLength, Arg aArgs[]);
 #endif
-    otError ProcessParameters(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessRequest(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessResource(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSet(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessParameters(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessResource(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSet(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);

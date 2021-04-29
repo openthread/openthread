@@ -84,7 +84,7 @@ exit:
     return error;
 }
 
-Error ParseCmd(char *aCommandString, uint8_t &aArgsLength, char *aArgs[], uint8_t aArgsLengthMax)
+Error ParseCmd(char *aCommandString, uint8_t &aArgsLength, Arg *aArgs, uint8_t aArgsLengthMax)
 {
     Error error = kErrorNone;
     char *cmd;
@@ -106,7 +106,8 @@ Error ParseCmd(char *aCommandString, uint8_t &aArgsLength, char *aArgs[], uint8_
         if ((*cmd != '\0') && ((aArgsLength == 0) || (*(cmd - 1) == '\0')))
         {
             VerifyOrExit(aArgsLength < aArgsLengthMax, error = kErrorInvalidArgs);
-            aArgs[aArgsLength++] = cmd;
+
+            aArgs[aArgsLength++].SetCString(cmd);
         }
     }
 
@@ -334,6 +335,14 @@ Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer, H
 
 exit:
     return error;
+}
+
+void Arg::CopyArgsToStringArray(Arg aArgs[], uint8_t aArgsLength, char *aStrings[])
+{
+    for (uint8_t i = 0; i < aArgsLength; i++)
+    {
+        aStrings[i] = aArgs[i].GetCString();
+    }
 }
 
 } // namespace CmdLineParser

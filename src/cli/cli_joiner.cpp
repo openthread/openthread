@@ -36,7 +36,6 @@
 #include <inttypes.h>
 
 #include "cli/cli.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_JOINER_ENABLE
 
@@ -45,7 +44,7 @@ namespace Cli {
 
 constexpr Joiner::Command Joiner::sCommands[];
 
-otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
+otError Joiner::ProcessDiscerner(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
@@ -54,7 +53,8 @@ otError Joiner::ProcessDiscerner(uint8_t aArgsLength, char *aArgs[])
         otJoinerDiscerner discerner;
 
         memset(&discerner, 0, sizeof(discerner));
-        if (strcmp(aArgs[1], "clear") == 0)
+
+        if (aArgs[1] == "clear")
         {
             SuccessOrExit(error = otJoinerSetDiscerner(mInterpreter.mInstance, nullptr));
         }
@@ -82,7 +82,7 @@ exit:
     return error;
 }
 
-otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
+otError Joiner::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -95,7 +95,7 @@ otError Joiner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
+otError Joiner::ProcessId(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -106,7 +106,7 @@ otError Joiner::ProcessId(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
+otError Joiner::ProcessStart(uint8_t aArgsLength, Arg aArgs[])
 {
     otError     error;
     const char *provisioningUrl = nullptr;
@@ -115,17 +115,17 @@ otError Joiner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength > 2)
     {
-        provisioningUrl = aArgs[2];
+        provisioningUrl = aArgs[2].GetCString();
     }
 
-    error = otJoinerStart(mInterpreter.mInstance, aArgs[1], provisioningUrl, PACKAGE_NAME,
+    error = otJoinerStart(mInterpreter.mInstance, aArgs[1].GetCString(), provisioningUrl, PACKAGE_NAME,
                           OPENTHREAD_CONFIG_PLATFORM_INFO, PACKAGE_VERSION, nullptr, &Joiner::HandleCallback, this);
 
 exit:
     return error;
 }
 
-otError Joiner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
+otError Joiner::ProcessStop(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -135,14 +135,14 @@ otError Joiner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Joiner::Process(uint8_t aArgsLength, char *aArgs[])
+otError Joiner::Process(uint8_t aArgsLength, Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
     VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
-    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength, aArgs);
