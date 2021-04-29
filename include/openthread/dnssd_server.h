@@ -37,6 +37,7 @@
 
 #include <stdint.h>
 
+#include <openthread/dns.h>
 #include <openthread/error.h>
 #include <openthread/ip6.h>
 
@@ -100,6 +101,12 @@ typedef void (*otDnssdQuerySubscribeCallback)(void *aContext, const char *aFullN
 typedef void (*otDnssdQueryUnsubscribeCallback)(void *aContext, const char *aFullName);
 
 /**
+ * This opaque type represents a DNS-SD query.
+ *
+ */
+typedef void otDnssdQuery;
+
+/**
  * This structure represents information of a discovered service instance for a DNS-SD query.
  *
  */
@@ -127,6 +134,18 @@ typedef struct otDnssdHostInfo
     const otIp6Address *mAddresses;  ///< Host IPv6 addresses.
     uint32_t            mTtl;        ///< Service TTL (in seconds).
 } otDnssdHostInfo;
+
+/**
+ * This enumeration specifies a DNS-SD query type.
+ *
+ */
+typedef enum
+{
+    OT_DNSSD_QUERY_TYPE_NONE         = 0, ///< Service type unspecified.
+    OT_DNSSD_QUERY_TYPE_BROWSE       = 1, ///< Service type browse service.
+    OT_DNSSD_QUERY_TYPE_RESOLVE      = 2, ///< Service type resolve service instance.
+    OT_DNSSD_QUERY_TYPE_RESOLVE_HOST = 3, ///< Service type resolve hostname.
+} otDnssdQueryType;
 
 /**
  * This function sets DNS-SD server query callbacks.
@@ -177,6 +196,28 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aIn
  *
  */
 void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo);
+
+/**
+ * This function aquires the next query in the DNS-SD server.
+ *
+ * @param[in] aInstance         The OpenThread instance structure.
+ * @param[in] aQuery            The query pointer. Pass NULL to get the first query.
+ *
+ * @returns  A pointer to the query or NULL if no more queries.
+ *
+ */
+const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery);
+
+/**
+ * This function aquires the DNS-SD query type and name for a specific query.
+ *
+ * @param[in]   aQuery            The query pointer acquired from `otDnssdGetNextQuery`.
+ * @param[out]  aNameOutput       The name output buffer, which should be `OT_DNS_MAX_NAME_SIZE` bytes long.
+ *
+ * @returns The DNS-SD query type.
+ *
+ */
+otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE]);
 
 /**
  * @}

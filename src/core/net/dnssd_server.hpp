@@ -58,76 +58,10 @@ namespace ServiceDiscovery {
  */
 class Server : public InstanceLocator, private NonCopyable
 {
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance     A reference to the OpenThread instance.
-     *
-     */
-    explicit Server(Instance &aInstance);
-
-    /**
-     * This method starts the DNS-SD server.
-     *
-     * @retval kErrorNone     Successfully started the DNS-SD server.
-     * @retval kErrorFailed   If failed to open or bind the UDP socket.
-     *
-     */
-    Error Start(void);
-
-    /**
-     * This method stops the DNS-SD server.
-     *
-     */
-    void Stop(void);
-
-    /**
-     * This method sets DNS-SD query callbacks.
-     *
-     * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
-     * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
-     * @param[in] aContext      A pointer to the application-specific context.
-     *
-     */
-    void SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
-                           otDnssdQueryUnsubscribeCallback aUnsubscribe,
-                           void *                          aContext);
-
-    /**
-     * This method notifies a discovered service instance.
-     *
-     * @param[in] aServiceFullName  The null-terminated full service name.
-     * @param[in] aInstanceInfo     A pointer to the discovered service instance information.
-     *
-     */
-    void HandleDiscoveredServiceInstance(const char *aServiceFullName, const otDnssdServiceInstanceInfo &aInstanceInfo);
-
-    /**
-     * This method notifies a discovered host.
-     *
-     * @param[in] aHostFullName     The null-terminated full host name.
-     * @param[in] aHostInfo         A pointer to the discovered host information.
-     *
-     */
-    void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
-
 private:
-    enum
-    {
-        kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
-        kProtocolLabelLength  = 4,
-        kMaxConcurrentQueries = 32,
-    };
-
     class NameCompressInfo : public Clearable<NameCompressInfo>
     {
     public:
-        enum : uint16_t
-        {
-            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
-        };
-
         explicit NameCompressInfo(void) = default;
 
         explicit NameCompressInfo(const char *aDomainName)
@@ -138,6 +72,11 @@ private:
             , mHostNameOffset(kUnknownOffset)
         {
         }
+
+        enum : uint16_t
+        {
+            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
+        };
 
         uint16_t GetDomainNameOffset(void) const { return mDomainNameOffset; }
 
@@ -188,17 +127,172 @@ private:
             }
         }
 
-    private:
         static bool MatchCompressedName(const Message &aMessage, uint16_t aOffset, const char *aName)
         {
             return aOffset != kUnknownOffset && Name::CompareName(aMessage, aOffset, aName) == kErrorNone;
         }
 
+    private:
         const char *mDomainName;         // The serialized domain name.
         uint16_t    mDomainNameOffset;   // Offset of domain name serialization into the response message.
         uint16_t    mServiceNameOffset;  // Offset of service name serialization into the response message.
         uint16_t    mInstanceNameOffset; // Offset of instance name serialization into the response message.
         uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
+    };
+
+    /**
+     * This enumeration specifies a dns-sd query type.
+     *
+     */
+    enum DnsQueryType : uint8_t
+    {
+        kDnsQueryNone        = OT_DNSSD_QUERY_TYPE_NONE,         ///< Service type unspecified.
+        kDnsQueryBrowse      = OT_DNSSD_QUERY_TYPE_BROWSE,       ///< Service type browse service.
+        kDnsQueryResolve     = OT_DNSSD_QUERY_TYPE_RESOLVE,      ///< Service type resolve service instance.
+        kDnsQueryResolveHost = OT_DNSSD_QUERY_TYPE_RESOLVE_HOST, ///< Service type resolve hostname.
+    };
+
+public:
+    /**
+     * This class contains the compress information for a dns packet.
+     *
+     */
+    class QueryTransaction
+    {
+        friend class Server;
+
+    public:
+        explicit QueryTransaction(void)
+            : mResponseMessage(nullptr)
+        {
+        }
+
+        /**
+         * This method acquires the response header for the query.
+         *
+         * @returns A const reference to the response header.
+         *
+         */
+        const Header &GetResponseHeader(void) const { return mResponseHeader; }
+
+        /**
+         * This method acquires the response message for the query.
+         *
+         * @returns A const reference to the response message.
+         *
+         */
+        const Message &GetResponseMessage(void) const { return *mResponseMessage; }
+
+        /**
+         * This method checks whether the query is valid.
+         *
+         * @returns Whether the query is valid.
+         *
+         */
+        bool IsValid(void) const { return mResponseMessage != nullptr; }
+
+    private:
+        void                    Init(const Header &          aResponseHeader,
+                                     Message &               aResponseMessage,
+                                     const NameCompressInfo &aCompressInfo,
+                                     const Ip6::MessageInfo &aMessageInfo);
+        const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+        Header &                GetResponseHeader(void) { return mResponseHeader; }
+        Message &               GetResponseMessage(void) { return *mResponseMessage; }
+        TimeMilli               GetStartTime(void) const { return mStartTime; }
+        NameCompressInfo &      GetNameCompressInfo(void) { return mCompressInfo; };
+        void                    Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket);
+
+        Header           mResponseHeader;
+        Message *        mResponseMessage;
+        NameCompressInfo mCompressInfo;
+        Ip6::MessageInfo mMessageInfo;
+        TimeMilli        mStartTime;
+    };
+
+    /**
+     * This constructor initializes the object.
+     *
+     * @param[in]  aInstance     A reference to the OpenThread instance.
+     *
+     */
+    explicit Server(Instance &aInstance);
+
+    /**
+     * This method starts the DNS-SD server.
+     *
+     * @retval kErrorNone     Successfully started the DNS-SD server.
+     * @retval kErrorFailed   If failed to open or bind the UDP socket.
+     *
+     */
+    Error Start(void);
+
+    /**
+     * This method stops the DNS-SD server.
+     *
+     */
+    void Stop(void);
+
+    /**
+     * This method sets DNS-SD query callbacks.
+     *
+     * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
+     * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
+     * @param[in] aContext      A pointer to the application-specific context.
+     *
+     */
+    void SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
+                           otDnssdQueryUnsubscribeCallback aUnsubscribe,
+                           void *                          aContext);
+
+    /**
+     * This method notifies a discovered service instance.
+     *
+     * @param[in] aServiceFullName  The null-terminated full service name.
+     * @param[in] aInstanceInfo     A reference to the discovered service instance information.
+     *
+     */
+    void HandleDiscoveredServiceInstance(const char *aServiceFullName, const otDnssdServiceInstanceInfo &aInstanceInfo);
+
+    /**
+     * This method notifies a discovered host.
+     *
+     * @param[in] aHostFullName     The null-terminated full host name.
+     * @param[in] aHostInfo         A reference to the discovered host information.
+     *
+     */
+    void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
+
+    /**
+     * This function aquires the next query in the server.
+     *
+     * @param[in] aQuery            The query pointer. Pass nullptr to get the first query.
+     *
+     * @returns  A pointer to the query or nullptr if no more queries.
+     *
+     */
+    const QueryTransaction *GetNextQuery(const QueryTransaction *aQuery) const;
+
+    /**
+     * This function aquires the dns-sd query type and name for a specific query.
+     *
+     * @param[in]   aHeader           The query header.
+     * @param[in]   aMessage          The query message.
+     * @param[out]  aNameOutput       The name output buffer.
+     *
+     * @returns The dns-sd query type.
+     *
+     */
+    static DnsQueryType GetQueryTypeAndName(const Header & aHeader,
+                                            const Message &aMessage,
+                                            char (&aName)[Name::kMaxNameSize]);
+
+private:
+    enum
+    {
+        kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
+        kProtocolLabelLength  = 4,
+        kMaxConcurrentQueries = 32,
     };
 
     // This structure represents the splitting information of a full name.
@@ -235,44 +329,6 @@ private:
     enum : uint32_t
     {
         kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT,
-    };
-
-    class QueryTransaction
-    {
-    public:
-        explicit QueryTransaction(void)
-            : mResponseMessage(nullptr)
-        {
-        }
-
-        void                    Init(const Header &          aResponseHeader,
-                                     Message &               aResponseMessage,
-                                     const NameCompressInfo &aCompressInfo,
-                                     const Ip6::MessageInfo &aMessageInfo);
-        bool                    IsValid(void) const { return mResponseMessage != nullptr; }
-        const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
-        Header &                GetResponseHeader(void) { return mResponseHeader; }
-        const Header &          GetResponseHeader(void) const { return mResponseHeader; }
-        Message &               GetResponseMessage(void) { return *mResponseMessage; }
-        const Message &         GetResponseMessage(void) const { return *mResponseMessage; }
-        TimeMilli               GetStartTime(void) const { return mStartTime; }
-        NameCompressInfo &      GetNameCompressInfo(void) { return mCompressInfo; };
-        void                    Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket);
-
-    private:
-        Header           mResponseHeader;
-        Message *        mResponseMessage;
-        NameCompressInfo mCompressInfo;
-        Ip6::MessageInfo mMessageInfo;
-        TimeMilli        mStartTime;
-    };
-
-    enum DnsQueryType
-    {
-        kDnsQueryNone,
-        kDnsQueryBrowse,
-        kDnsQueryResolve,
-        kDnsQueryResolveHost,
     };
 
     bool        IsRunning(void) const { return mSocket.IsBound(); }
@@ -354,9 +410,8 @@ private:
                                   const char *                      aServiceFullName,
                                   const otDnssdServiceInstanceInfo &aInstanceInfo);
     static bool       CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *aHostFullName);
-    void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
-    void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
-    static DnsQueryType GetQueryType(const Header &aHeader, const Message &aMessage, char (&aName)[Name::kMaxNameSize]);
+    void        AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
+    void        FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
     static bool HasQuestion(const Header &aHeader, const Message &aMessage, const char *aName, uint16_t aQuestionType);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
