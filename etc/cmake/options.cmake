@@ -172,6 +172,8 @@ if(OT_DNSSD_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE=1")
 endif()
 
+option(OT_DOC "Build OpenThread documentation")
+
 option(OT_ECDSA "enable ECDSA support")
 if(OT_ECDSA)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ECDSA_ENABLE=1")

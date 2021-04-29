@@ -201,6 +201,10 @@ elseif(OT_PLATFORM)
     add_subdirectory(examples)
 endif()
 
+if (OT_DOC)
+    add_subdirectory(doc)
+endif()
+
 add_subdirectory(src)
 add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
