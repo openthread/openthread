@@ -2507,7 +2507,14 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    child->ClearLastRxFragmentTag();
+    // We clear the fragment tag only if the "Child Update Request" is
+    // from a detached child trying to restore its link with its
+    // parent which is indicated by the presence of Challenge TLV in
+    // the message.
+    if (challenge.mLength != 0)
+    {
+        child->ClearLastRxFragmentTag();
+    }
 #endif
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, challenge);

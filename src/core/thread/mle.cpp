@@ -3598,6 +3598,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
         tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
         break;
     case kErrorNotFound:
+        challenge.mLength = 0;
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3655,7 +3656,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aNeighbor != nullptr)
+    if ((aNeighbor != nullptr) && (challenge.mLength != 0))
     {
         aNeighbor->ClearLastRxFragmentTag();
     }
