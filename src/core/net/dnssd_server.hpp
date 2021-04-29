@@ -237,6 +237,14 @@ private:
         kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT,
     };
 
+    enum DnsQueryType
+    {
+        kDnsQueryNone,
+        kDnsQueryBrowse,
+        kDnsQueryResolve,
+        kDnsQueryResolveHost,
+    };
+
     class QueryTransaction
     {
     public:
@@ -258,6 +266,7 @@ private:
         TimeMilli               GetStartTime(void) const { return mStartTime; }
         NameCompressInfo &      GetNameCompressInfo(void) { return mCompressInfo; };
         void                    Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket);
+        bool                    HasQuestionName(const char *aName, DnsQueryType aQueryType) const;
 
     private:
         Header           mResponseHeader;
@@ -265,14 +274,6 @@ private:
         NameCompressInfo mCompressInfo;
         Ip6::MessageInfo mMessageInfo;
         TimeMilli        mStartTime;
-    };
-
-    enum DnsQueryType
-    {
-        kDnsQueryNone,
-        kDnsQueryBrowse,
-        kDnsQueryResolve,
-        kDnsQueryResolveHost,
     };
 
     bool        IsRunning(void) const { return mSocket.IsBound(); }
@@ -356,6 +357,7 @@ private:
     static bool       CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *aHostFullName);
     void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
     void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
+    bool HasSameQuery(const char *aName, DnsQueryType aQueryType);
     static DnsQueryType GetQueryType(const Header &aHeader, const Message &aMessage, char (&aName)[Name::kMaxNameSize]);
     static bool HasQuestion(const Header &aHeader, const Message &aMessage, const char *aName, uint16_t aQuestionType);
     static void HandleTimer(Timer &aTimer);

@@ -758,6 +758,7 @@ Error Server::ResolveByQueryCallbacks(Header &                aResponseHeader,
     QueryTransaction *query = nullptr;
     DnsQueryType      queryType;
     char              name[Name::kMaxNameSize];
+    bool              firstQuery;
 
     Error error = kErrorNone;
 
@@ -766,10 +767,14 @@ Error Server::ResolveByQueryCallbacks(Header &                aResponseHeader,
     queryType = GetQueryType(aResponseHeader, aResponseMessage, name);
     VerifyOrExit(queryType != kDnsQueryNone, error = kErrorNotImplemented);
 
-    query = NewQuery(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo);
+    firstQuery = !HasSameQuery(name, queryType);
+    query      = NewQuery(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo);
     VerifyOrExit(query != nullptr, error = kErrorNoBufs);
 
-    mQuerySubscribe(mQueryCallbackContext, name);
+    if (firstQuery)
+    {
+        mQuerySubscribe(mQueryCallbackContext, name);
+    }
 
 exit:
     return error;
@@ -1103,8 +1108,32 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
     OT_ASSERT(sdType != kDnsQueryNone);
     OT_UNUSED_VARIABLE(sdType);
 
-    mQueryUnsubscribe(mQueryCallbackContext, name);
     aQuery.Finalize(aResponseCode, mSocket);
+    // We are the last subscribing this name
+    if (!HasSameQuery(name, sdType))
+    {
+        mQueryUnsubscribe(mQueryCallbackContext, name);
+    }
+}
+
+bool Server::HasSameQuery(const char *aName, DnsQueryType aQueryType)
+{
+    bool found = false;
+
+    for (QueryTransaction &query : mQueryTransactions)
+    {
+        if (!query.IsValid())
+        {
+            continue;
+        }
+
+        if (query.HasQuestionName(aName, aQueryType))
+        {
+            found = true;
+            break;
+        }
+    }
+    return found;
 }
 
 void Server::QueryTransaction::Init(const Header &          aResponseHeader,
@@ -1127,6 +1156,46 @@ void Server::QueryTransaction::Finalize(Header::Response aResponseMessage, Ip6::
 
     SendResponse(mResponseHeader, aResponseMessage, *mResponseMessage, mMessageInfo, aSocket);
     mResponseMessage = nullptr;
+}
+
+bool Server::QueryTransaction::HasQuestionName(const char *aName, DnsQueryType aQueryType) const
+{
+    bool found = false;
+
+    for (uint16_t i = 0, readOffset = sizeof(Header); i < mResponseHeader.GetQuestionCount(); i++)
+    {
+        Error    error;
+        Question question;
+
+        error = Name::CompareName(*mResponseMessage, readOffset, aName);
+        IgnoreError(mResponseMessage->Read(readOffset, question));
+        if (error == kErrorNone)
+        {
+            switch (question.GetType())
+            {
+            case ResourceRecord::kTypePtr:
+                found = (aQueryType == kDnsQueryBrowse);
+                break;
+            case ResourceRecord::kTypeSrv:
+            case ResourceRecord::kTypeTxt:
+                found = (aQueryType == kDnsQueryResolve);
+                break;
+            case ResourceRecord::kTypeAaaa:
+            case ResourceRecord::kTypeA:
+                found = (aQueryType == kDnsQueryResolveHost);
+                break;
+            default:
+                break;
+            }
+        }
+        if (found)
+        {
+            break;
+        }
+        readOffset += sizeof(question);
+    }
+
+    return found;
 }
 
 } // namespace ServiceDiscovery
