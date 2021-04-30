@@ -360,14 +360,13 @@ otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, Arg aArgs[])
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     else
     {
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         if (aArgs[0] == "mgmt")
         {
             if (aArgsLength < 2)
             {
                 ExitNow(error = OT_ERROR_INVALID_COMMAND);
             }
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_DUA_NDPROXYING_ENABLE && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
             else if (aArgs[1] == "dua")
             {
                 uint8_t                   status;
@@ -396,7 +395,6 @@ otError Interpreter::ProcessBackboneRouter(uint8_t aArgsLength, Arg aArgs[])
             }
 #endif
         }
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         SuccessOrExit(error = ProcessBackboneRouterLocal(aArgsLength, aArgs));
     }
 
@@ -407,7 +405,7 @@ exit:
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_INVALID_COMMAND;
@@ -421,6 +419,7 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, Arg aArgs
             PrintMulticastListenersTable();
             error = OT_ERROR_NONE;
         }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         else if (aArgs[1] == "clear")
         {
             otBackboneRouterMulticastListenerClear(mInstance);
@@ -442,7 +441,9 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, Arg aArgs
 
             error = otBackboneRouterMulticastListenerAdd(mInstance, &address, timeout);
         }
+#endif
     }
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (aArgs[0] == "response")
     {
         uint8_t status;
@@ -452,6 +453,7 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, Arg aArgs
 
         otBackboneRouterConfigNextMulticastListenerRegistrationResponse(mInstance, status);
     }
+#endif
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
@@ -473,7 +475,7 @@ void Interpreter::PrintMulticastListenersTable(void)
     }
 }
 
-#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+#endif // OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
 
 otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, Arg aArgs[])
 {
