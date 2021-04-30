@@ -189,6 +189,8 @@ class TestOTCI(unittest.TestCase):
         leader.set_allowlist([leader.get_extaddr()])
         leader.disable_allowlist()
 
+        self.assertEqual([], leader.backbone_router_get_multicast_listeners())
+
         leader.add_ipmaddr('ff04::1')
         leader.del_ipmaddr('ff04::1')
         leader.add_ipmaddr('ff04::2')
@@ -223,6 +225,10 @@ class TestOTCI(unittest.TestCase):
         logging.info('leader bbr state: %r', leader.get_backbone_router_state())
         logging.info('leader bbr config: %r', leader.get_backbone_router_config())
         logging.info('leader PBBR: %r', leader.get_primary_backbone_router_info())
+
+        leader.wait(10)
+        self.assertEqual(1, len(leader.backbone_router_get_multicast_listeners()))
+        self.assertEqual('ff04::2', leader.backbone_router_get_multicast_listeners()[0][0])
 
         logging.info('leader bufferinfo: %r', leader.get_message_buffer_info())
 
