@@ -57,11 +57,6 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-enum
-{
-    kNativeCommissionerUdpPort = 49191, ///< UDP port of native commissioner service.
-};
-
 /**
  * This type represents a Joiner PSKd.
  *

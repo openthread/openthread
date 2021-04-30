@@ -2914,14 +2914,16 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     discoveryResponse.Init();
     discoveryResponse.SetVersion(kThreadVersion);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
     {
-        SuccessOrExit(error =
-                          Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, MeshCoP::kNativeCommissionerUdpPort));
+        SuccessOrExit(
+            error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, Get<MeshCoP::BorderAgent>().GetUdpPort()));
 
         discoveryResponse.SetNativeCommissioner(true);
     }
     else
+#endif
     {
         discoveryResponse.SetNativeCommissioner(false);
     }
