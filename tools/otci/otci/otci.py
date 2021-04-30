@@ -1993,6 +1993,15 @@ class OTCI(object):
         """Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD."""
         self.execute_command(f'bbr jitter {val}')
 
+    def backbone_router_get_multicast_listeners(self) -> List[Tuple[Ip6Addr, int]]:
+        """Get Backbone Router Multicast Listeners."""
+        listeners = []
+        for line in self.execute_command('bbr mgmt mlr listener'):
+            ip, timeout = line.split()
+            listeners.append((Ip6Addr(ip), int(timeout)))
+
+        return listeners
+
     #
     # Thread 1.2 and DUA/MLR utilities
     #
