@@ -142,9 +142,11 @@ After the device successfully attaches to a Thread network, the device will retr
 ## Command List
 
 - [help](#help)
+- [publish](#publish)
 - [register](#register)
 - [show](#show)
 - [steeringdata](#steeringdata-check-eui64discerner)
+- [unpublish](#unpublish)
 
 ## Command Details
 
@@ -157,9 +159,36 @@ Print netdata help menu.
 ```bash
 > netdata help
 help
+publish
 register
 show
 steeringdata
+unpublish
+Done
+```
+
+### publish
+
+The Network Data Publisher provides mechanisms to limit the number of similar DNS/SRP service entries in the Thread Network Data by monitoring the Network Data and managing if or when to add or remove entries.
+
+The Publisher requires `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE` and `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE`.
+
+The following formats are available: :
+
+- `netdata publish dnssrp anycast <seq-num>` to publish "DNS/SRP Service Anycast Address" with a given sequence number to be published in the Thread Network Data.
+- `netdata publish dnssrp unicast <address> <port>` to publish "DNS/SRP Service Unicast Address" with given address and port number info. The address/port info is included in Service TLV data.
+- `netdata publish dnssrp unicast <port>` to publish "DNS/SRP Service Unicast Address" with given port number and the device's mesh-local EID for the address. The address and port info is included in Server TLV data.
+
+A new call to `netdata publish dnssrp [anycast|unicast] [...]` command will remove and replace any previous "DNS/SRP Service" entry that was being published (from earlier `netdata publish dnssrp [...]` commands).
+
+```bash
+> netdata publish dnssrp anycast 1
+Done
+
+> netdata publish dnssrp unicast fd00::1234 5353
+Done
+
+> netdata publish dnssrp unicast 9053
 Done
 ```
 
@@ -211,4 +240,15 @@ Done
 Done
 > netdata steeringdata check 0xdef/12
 Error 23: NotFound
+```
+
+### unpublish dnssrp
+
+This command unpublishes a previously published Network Data "DNS/SRP Service" entry (anycast or unciast).
+
+This command requires `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE` and `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE`.
+
+```bash
+> netdata unpublish dnssrp
+Done
 ```

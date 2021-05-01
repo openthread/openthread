@@ -92,6 +92,7 @@ source_set("openthread") {
     "multi_radio.h",
     "ncp.h",
     "netdata.h",
+    "netdata_publisher.h",
     "netdiag.h",
     "network_time.h",
     "ping_sender.h",

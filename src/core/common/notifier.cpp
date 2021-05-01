@@ -189,6 +189,12 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+    // The `NetworkData::Publisher` is notified after SRP/DNS
+    // server/client to allow them to request changes to what is
+    // published (if needed).
+    Get<NetworkData::Publisher>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {

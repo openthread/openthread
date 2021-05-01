@@ -42,6 +42,10 @@
 #error "OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
 #endif
 
+#if !OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+#error "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
+#endif
+
 #if !OPENTHREAD_CONFIG_ECDSA_ENABLE
 #error "OPENTHREAD_CONFIG_ECDSA_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
 #endif
@@ -580,11 +584,9 @@ private:
         UpdateMetadata *  mNext;
     };
 
-    void  Start(void);
-    void  Stop(void);
-    void  HandleNotifierEvents(Events aEvents);
-    Error PublishServerData(void);
-    void  UnpublishServerData(void);
+    void Start(void);
+    void Stop(void);
+    void HandleNotifierEvents(Events aEvents);
 
     ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
