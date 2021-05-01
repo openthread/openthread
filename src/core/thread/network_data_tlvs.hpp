@@ -391,7 +391,7 @@ public:
      * @returns The preference value.
      *
      */
-    int8_t GetPreference(void) const { return static_cast<int8_t>(mFlags) >> kPreferenceOffset; }
+    int8_t GetPreference(void) const { return PreferenceFromFlags(GetFlags()); }
 
     /**
      * This method gets the Flags value.
@@ -433,6 +433,30 @@ public:
      *
      */
     const HasRouteEntry *GetNext(void) const { return (this + 1); }
+
+    /**
+     * This static method returns an updated flags bitmask by removing the preference bits (sets them to zero) from a
+     * given flags bitmask.
+     *
+     * @param[in] aFlags  The flags bitmask.
+     *
+     * @returns An updated version @p aFlags with preference bits cleared.
+     *
+     */
+    static uint8_t FlagsWithoutPreference(uint8_t aFlags) { return (aFlags & ~kPreferenceMask); }
+
+    /**
+     * This static method gets the preference field from a flags bitmask.
+     *
+     * @param[in] aFlags  The flags.
+     *
+     * @returns The preference field from the @p aFlags.
+     *
+     */
+    static int8_t PreferenceFromFlags(uint8_t aFlags)
+    {
+        return static_cast<int8_t>(static_cast<int8_t>(aFlags) >> kPreferenceOffset);
+    }
 
 private:
     static constexpr uint8_t kPreferenceOffset = 6;
@@ -890,10 +914,7 @@ public:
      * @returns the Preference value.
      *
      */
-    int8_t GetPreference(void) const
-    {
-        return static_cast<int8_t>(static_cast<int16_t>(HostSwap16(mFlags)) >> kPreferenceOffset);
-    }
+    int8_t GetPreference(void) const { return PreferenceFromFlags(GetFlags()); }
 
     /**
      * This method indicates whether or not the Preferred flag is set.
@@ -982,6 +1003,30 @@ public:
      *
      */
     const BorderRouterEntry *GetNext(void) const { return (this + 1); }
+
+    /**
+     * This static method returns an updated flags bitmask by removing the preference bits (sets them to zero) from a
+     * given flags bitmask.
+     *
+     * @param[in] aFlags  The flags bitmask.
+     *
+     * @returns An updated version @p aFlags with preference bits cleared.
+     *
+     */
+    static uint16_t FlagsWithoutPreference(uint16_t aFlags) { return (aFlags & ~kPreferenceMask); }
+
+    /**
+     * This static method gets the preference field from a flags bitmask.
+     *
+     * @param[in] aFlags  The flags.
+     *
+     * @returns The preference field from the @p aFlags.
+     *
+     */
+    static int8_t PreferenceFromFlags(uint16_t aFlags)
+    {
+        return static_cast<int8_t>(static_cast<int16_t>(aFlags) >> kPreferenceOffset);
+    }
 
 private:
     static constexpr uint8_t  kPreferenceOffset = 14;

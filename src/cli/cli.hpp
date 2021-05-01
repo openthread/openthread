@@ -412,6 +412,10 @@ private:
     otError ParsePingInterval(const Arg &aArg, uint32_t &aInterval);
 #endif
     static otError ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner);
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    static otError ParsePrefix(Arg aArgs[], otBorderRouterConfig &aConfig);
+    static otError ParseRoute(Arg aArgs[], otExternalRouteConfig &aConfig);
+#endif
 
     otError ProcessUserCommands(Arg aArgs[]);
     otError ProcessHelp(Arg aArgs[]);

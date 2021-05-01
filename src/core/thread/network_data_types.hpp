@@ -56,6 +56,7 @@ namespace NetworkData {
 // Forward declarations
 class NetworkData;
 class Local;
+class Publisher;
 class PrefixTlv;
 class BorderRouterTlv;
 class BorderRouterEntry;
@@ -74,6 +75,7 @@ class OnMeshPrefixConfig : public otBorderRouterConfig,
 {
     friend class NetworkData;
     friend class Local;
+    friend class Publisher;
 
 public:
     /**
@@ -125,6 +127,7 @@ class ExternalRouteConfig : public otExternalRouteConfig,
 {
     friend class NetworkData;
     friend class Local;
+    friend class Publisher;
 
 public:
     /**

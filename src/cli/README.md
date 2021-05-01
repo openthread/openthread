@@ -2168,11 +2168,12 @@ Get the external route list in the local Network Data.
 Done
 ```
 
-### route add \<prefix\> [s][prf]
+### route add \<prefix\> [sn][prf]
 
 Add a valid external route to the Network Data.
 
 - s: Stable flag
+- n: NAT64 flag
 - prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash

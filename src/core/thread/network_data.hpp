@@ -106,6 +106,7 @@ constexpr Iterator kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT; ///< Initializ
 class NetworkData : public InstanceLocator
 {
     friend class Service::Manager;
+    friend class Publisher;
 
 public:
     static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
