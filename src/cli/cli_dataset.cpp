@@ -822,7 +822,7 @@ Error Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t aA
     memset(&policy, 0, sizeof(policy));
     SuccessOrExit(error = aArgs[0].ParseAsUint16(policy.mRotationTime));
 
-    VerifyOrExit(aArgsLength >= 1);
+    VerifyOrExit(aArgsLength >= 2);
 
     for (const char *flag = aArgs[1].GetCString(); *flag != '\0'; flag++)
     {
