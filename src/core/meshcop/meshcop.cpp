@@ -164,22 +164,23 @@ bool JoinerDiscerner::operator==(const JoinerDiscerner &aOther) const
 
 JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
 {
-    InfoString str;
+    InfoString   str;
+    StringWriter writer(str);
 
     if (mLength <= sizeof(uint16_t) * CHAR_BIT)
     {
-        IgnoreError(str.Set("0x%04x", static_cast<uint16_t>(mValue)));
+        writer.Append("0x%04x", static_cast<uint16_t>(mValue));
     }
     else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
     {
-        IgnoreError(str.Set("0x%08x", static_cast<uint32_t>(mValue)));
+        writer.Append("0x%08x", static_cast<uint32_t>(mValue));
     }
     else
     {
-        IgnoreError(str.Set("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue)));
+        writer.Append("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue));
     }
 
-    IgnoreError(str.Append("/len:%d", mLength));
+    writer.Append("/len:%d", mLength);
 
     return str;
 }

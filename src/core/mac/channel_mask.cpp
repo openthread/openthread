@@ -95,12 +95,13 @@ exit:
 
 ChannelMask::InfoString ChannelMask::ToString(void) const
 {
-    InfoString string;
-    uint8_t    channel  = kChannelIteratorFirst;
-    bool       addComma = false;
-    Error      error;
+    InfoString   string;
+    StringWriter writer(string);
+    uint8_t      channel  = kChannelIteratorFirst;
+    bool         addComma = false;
+    Error        error;
 
-    IgnoreError(string.Append("{"));
+    writer.Append("{");
 
     error = GetNextChannel(channel);
 
@@ -119,16 +120,16 @@ ChannelMask::InfoString ChannelMask::ToString(void) const
             rangeEnd = channel;
         }
 
-        IgnoreError(string.Append("%s%d", addComma ? ", " : " ", rangeStart));
+        writer.Append("%s%d", addComma ? ", " : " ", rangeStart);
         addComma = true;
 
         if (rangeStart < rangeEnd)
         {
-            IgnoreError(string.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd));
+            writer.Append("%s%d", rangeEnd == rangeStart + 1 ? ", " : "-", rangeEnd);
         }
     }
 
-    IgnoreError(string.Append(" }"));
+    writer.Append(" }");
 
     return string;
 }
