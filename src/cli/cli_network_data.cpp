@@ -34,6 +34,7 @@
 #include "cli_network_data.hpp"
 
 #include <openthread/border_router.h>
+#include <openthread/netdata_publisher.h>
 #include <openthread/server.h>
 
 #include "cli/cli.hpp"
@@ -215,6 +216,71 @@ otError NetworkData::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+otError NetworkData::ProcessPublish(uint8_t aArgsLength, Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength >= 3, error = OT_ERROR_INVALID_ARGS);
+
+    if (aArgs[0] == "dnssrp")
+    {
+        if (aArgs[1] == "anycast")
+        {
+            error = mInterpreter.ProcessSet(aArgsLength - 2, aArgs + 2, otNetDataPublishDnsSrpServiceAnycast);
+            ExitNow();
+        }
+
+        if (aArgs[1] == "unicast")
+        {
+            if (aArgsLength == 3)
+            {
+                error = mInterpreter.ProcessSet(aArgsLength - 2, aArgs + 2,
+                                                otNetDataPublishDnsSrpServiceUnicastMeshLocalEid);
+                ExitNow();
+            }
+
+            if (aArgsLength == 4)
+            {
+                otIp6Address address;
+                uint16_t     port;
+
+                SuccessOrExit(error = aArgs[2].ParseAsIp6Address(address));
+                SuccessOrExit(error = aArgs[3].ParseAsUint16(port));
+                otNetDataPublishDnsSrpServiceUnicast(mInterpreter.mInstance, &address, port);
+                ExitNow();
+            }
+        }
+    }
+
+    error = OT_ERROR_INVALID_ARGS;
+
+exit:
+    return error;
+}
+
+otError NetworkData::ProcessUnpublish(uint8_t aArgsLength, Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+
+    if (aArgs[0] == "dnssrp")
+    {
+        VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+        otNetDataUnpublishDnsSrpService(mInterpreter.mInstance);
+        ExitNow();
+    }
+
+    error = OT_ERROR_INVALID_ARGS;
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError NetworkData::ProcessRegister(uint8_t aArgsLength, Arg aArgs[])

@@ -42,8 +42,16 @@
 #error "OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
 #endif
 
+#if !OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+#error "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
+#endif
+
 #if !OPENTHREAD_CONFIG_ECDSA_ENABLE
 #error "OPENTHREAD_CONFIG_ECDSA_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
+#endif
+
+#if !OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+#error "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE is required for OPENTHREAD_CONFIG_SRP_SERVER_ENABLE"
 #endif
 
 #include <openthread/ip6.h>
@@ -60,6 +68,7 @@
 #include "net/ip6.hpp"
 #include "net/ip6_address.hpp"
 #include "net/udp6.hpp"
+#include "thread/network_data_publisher.hpp"
 
 namespace ot {
 namespace Srp {
@@ -70,7 +79,7 @@ namespace Srp {
  */
 class Server : public InstanceLocator, private NonCopyable
 {
-    friend class ot::Notifier;
+    friend class NetworkData::Publisher;
     friend class UpdateMetadata;
     friend class Service;
     friend class Host;
@@ -481,7 +490,7 @@ public:
      * @returns  A boolean that indicates whether the server is running.
      *
      */
-    bool IsRunning(void) const;
+    bool IsRunning(void) const { return mRunning; }
 
     /**
      * This method enables/disables the SRP server.
@@ -582,11 +591,10 @@ private:
         UpdateMetadata *  mNext;
     };
 
-    void  Start(void);
-    void  Stop(void);
-    void  HandleNotifierEvents(Events aEvents);
-    Error PublishServerData(void);
-    void  UnpublishServerData(void);
+    void Start(void);
+    void Stop(void);
+    void SelectPort(void);
+    void HandleNetDataPublisherEntryChange(bool aAdded);
 
     ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
@@ -673,7 +681,9 @@ private:
     LinkedList<UpdateMetadata> mOutstandingUpdates;
 
     ServiceUpdateId mServiceUpdateId;
+    uint16_t        mPort;
     bool            mEnabled : 1;
+    bool            mRunning : 1;
     bool            mHasRegisteredAnyService : 1;
 };
 

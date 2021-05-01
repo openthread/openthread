@@ -1708,6 +1708,22 @@ class NodeImpl:
         self.send_command('netdata register')
         self._expect_done()
 
+    def netdata_publish_dnssrp_anycast(self, seqnum):
+        self.send_command('netdata publish dnssrp anycast %s' % seqnum)
+        self._expect_done()
+
+    def netdata_publish_dnssrp_unicast(self, address, port):
+        self.send_command('netdata publish dnssrp unicast %s %s' % (address, port))
+        self._expect_done()
+
+    def netdata_publish_dnssrp_unicast_mleid(self, port):
+        self.send_command('netdata publish dnssrp unicast %s' % port)
+        self._expect_done()
+
+    def netdata_unpublish_dnssrp(self):
+        self.send_command('netdata unpublish dnssrp')
+        self._expect_done()
+
     def send_network_diag_get(self, addr, tlv_types):
         self.send_command('networkdiagnostic get %s %s' % (addr, ' '.join([str(t.value) for t in tlv_types])))
 
