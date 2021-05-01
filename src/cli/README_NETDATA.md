@@ -142,9 +142,11 @@ After the device successfully attaches to a Thread network, the device will retr
 ## Command List
 
 - [help](#help)
+- [publish](#publish)
 - [register](#register)
 - [show](#show)
 - [steeringdata](#steeringdata-check-eui64discerner)
+- [unpublish](#unpublish)
 
 ## Command Details
 
@@ -157,9 +159,75 @@ Print netdata help menu.
 ```bash
 > netdata help
 help
+publish
 register
 show
 steeringdata
+unpublish
+Done
+```
+
+### publish
+
+The Network Data Publisher provides mechanisms to limit the number of similar Service and/or Prefix (on-mesh prefix or external route) entries in the Thread Network Data by monitoring the Network Data and managing if or when to add or remove entries.
+
+The Publisher requires `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE`.
+
+### publish dnssrp
+
+Publish DNS/SRP service entry.
+
+This command requires `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE`.
+
+The following formats are available: :
+
+- `netdata publish dnssrp anycast <seq-num>` to publish "DNS/SRP Service Anycast Address" with a given sequence number.
+- `netdata publish dnssrp unicast <address> <port>` to publish "DNS/SRP Service Unicast Address" with given address and port number info. The address/port info is included in Service TLV data.
+- `netdata publish dnssrp unicast <port>` to publish "DNS/SRP Service Unicast Address" with given port number and the device's mesh-local EID for the address. The address and port info is included in Server TLV data.
+
+A new call to `netdata publish dnssrp [anycast|unicast] [...]` command will remove and replace any previous "DNS/SRP Service" entry that was being published (from earlier `netdata publish dnssrp [...]` commands).
+
+```bash
+> netdata publish dnssrp anycast 1
+Done
+
+> netdata publish dnssrp unicast fd00::1234 51525
+Done
+
+> netdata publish dnssrp unicast 50152
+Done
+```
+
+### publish prefix \<prefix\> [padcrosnD][prf]
+
+Publish an on-mesh prefix entry.
+
+- p: Preferred flag
+- a: Stateless IPv6 Address Autoconfiguration flag
+- d: DHCPv6 IPv6 Address Configuration flag
+- c: DHCPv6 Other Configuration flag
+- r: Default Route flag
+- o: On Mesh flag
+- s: Stable flag
+- n: Nd Dns flag
+- D: Domain Prefix flag (only available for Thread 1.2).
+- prf: Preference, which may be 'high', 'med', or 'low'.
+
+```bash
+> netdata publish prefix fd00:1234:5678::/64 paos med
+Done
+```
+
+### publish route \<prefix\> [sn][prf]
+
+Publish an external route entry.
+
+- s: Stable flag
+- n: NAT64 flag
+- prf: Preference, which may be: 'high', 'med', or 'low'.
+
+```bash
+> netdata publish route fd00:1234:5678::/64 s high
 Done
 ```
 
@@ -211,4 +279,30 @@ Done
 Done
 > netdata steeringdata check 0xdef/12
 Error 23: NotFound
+```
+
+### unpublish
+
+This command unpublishes a previously published Network Data entry.
+
+This command requires `OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE`.
+
+### unpublish dnssrp
+
+Unpublishes DNS/SRP Service entry (available when `OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE` is enabled):
+
+- `netdata unpublish dnssrp` to unpublish "DNS/SRP Service" entry (anycast or unciast).
+
+```bash
+> netdata unpublish dnssrp
+Done
+```
+
+### unpublish \<prefix\>
+
+Unpublishes a previously published on-mesh prefix or external route entry.
+
+```bash
+> netdata unpublish fd00:1234:5678::/64
+Done
 ```

@@ -70,6 +70,7 @@ MLR                       ?= 0
 MTD_NETDIAG               ?= 0
 MULTIPLE_INSTANCE         ?= 0
 NEIGHBOR_DISCOVERY_AGENT  ?= 0
+NETDATA_PUBLISHER         ?= 0
 OTNS                      ?= 0
 PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
@@ -263,6 +264,10 @@ endif
 
 ifeq ($(NEIGHBOR_DISCOVERY_AGENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE=1
+endif
+
+ifeq ($(NETDATA_PUBLISHER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE=1
 endif
 
 ifeq ($(PING_SENDER),1)

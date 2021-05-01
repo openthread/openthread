@@ -640,6 +640,13 @@ template <> inline NetworkData::Notifier &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+template <> inline NetworkData::Publisher &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataPublisher;
+}
+#endif
+
 template <> inline NetworkData::Service::Manager &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataServiceManager;

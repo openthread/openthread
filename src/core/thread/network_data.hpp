@@ -109,6 +109,7 @@ typedef otNetworkDataIterator Iterator;
 class NetworkData : public InstanceLocator
 {
     friend class Service::Manager;
+    friend class Publisher;
 
 public:
     enum
