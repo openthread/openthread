@@ -234,3 +234,22 @@ endif()
 if(OT_RCP)
     include(radio.cmake)
 endif()
+
+add_executable(ot-test-parse-cmd
+    utils/parse_cmdline.cpp
+)
+set_target_properties(
+    ot-test-parse-cmd
+    PROPERTIES
+        C_STANDARD 99
+        CXX_STANDARD 11
+)
+target_compile_definitions(ot-test-parse-cmd PRIVATE
+    SELF_TEST=1
+)
+target_link_libraries(ot-test-parse-cmd PRIVATE
+    ot-config)
+add_test(
+    NAME ot-test-parse-cmd
+    COMMAND ot-test-parse-cmd
+)

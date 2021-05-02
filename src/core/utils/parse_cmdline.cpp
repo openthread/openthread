@@ -50,7 +50,7 @@ static bool IsSeparator(char aChar)
 
 static bool IsEscapable(char aChar)
 {
-    return IsSeparator(aChar) || (aChar == '\\');
+    return IsSeparator(aChar) || (aChar == '\\') || (aChar = '"');
 }
 
 static Error ParseDigit(char aDigitChar, uint8_t &aValue)
@@ -86,33 +86,107 @@ exit:
 
 Error ParseCmd(char *aCommandString, uint8_t &aArgsLength, Arg *aArgs, uint8_t aArgsLengthMax)
 {
-    Error error = kErrorNone;
-    char *cmd;
+    enum ParseState : uint8_t
+    {
+        kSeparator,
+        kPlain,
+        kPlainEscape,
+        kQuote,
+        kQuoteEscape,
+    };
+
+    ParseState state = kSeparator;
 
     aArgsLength = 0;
 
-    for (cmd = aCommandString; *cmd; cmd++)
+    for (char *cmd = aCommandString; *cmd; cmd++)
     {
-        if ((*cmd == '\\') && IsEscapable(*(cmd + 1)))
+        switch (state)
         {
-            // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
-            memmove(cmd, cmd + 1, strlen(cmd));
-        }
-        else if (IsSeparator(*cmd))
-        {
-            *cmd = '\0';
-        }
-
-        if ((*cmd != '\0') && ((aArgsLength == 0) || (*(cmd - 1) == '\0')))
-        {
-            VerifyOrExit(aArgsLength < aArgsLengthMax, error = kErrorInvalidArgs);
-
-            aArgs[aArgsLength++].SetCString(cmd);
+        case kSeparator:
+            if (IsSeparator(*cmd))
+            {
+                continue;
+            }
+            else if (aArgsLength >= aArgsLengthMax)
+            {
+                return kErrorInvalidArgs;
+            }
+            else if (*cmd == '\\')
+            {
+                state = kPlainEscape;
+                aArgs[aArgsLength++].SetCString(cmd + 1);
+            }
+            else if (*cmd == '"')
+            {
+                state = kQuote;
+                aArgs[aArgsLength++].SetCString(cmd + 1);
+            }
+            else
+            {
+                state = kPlain;
+                aArgs[aArgsLength++].SetCString(cmd);
+            }
+            break;
+        case kQuote:
+            if (*cmd == '\\')
+            {
+                // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
+                memmove(cmd, cmd + 1, strlen(cmd));
+                cmd--;
+                state = kQuoteEscape;
+            }
+            else if (*cmd == '"')
+            {
+                memmove(cmd, cmd + 1, strlen(cmd));
+                cmd--;
+                state = kPlain;
+            }
+            break;
+        case kQuoteEscape:
+            if (*cmd == '\\' || *cmd == '"')
+            {
+                state = kQuote;
+            }
+            else
+            {
+                return kErrorInvalidArgs;
+            }
+            break;
+        case kPlain:
+            if (IsSeparator(*cmd))
+            {
+                *cmd  = '\0';
+                state = kSeparator;
+            }
+            else if (*cmd == '"')
+            {
+                // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
+                memmove(cmd, cmd + 1, strlen(cmd));
+                cmd--;
+                state = kQuote;
+            }
+            else if (*cmd == '\\')
+            {
+                // include the null terminator: strlen(cmd) = strlen(cmd + 1) + 1
+                memmove(cmd, cmd + 1, strlen(cmd));
+                cmd--;
+                state = kPlainEscape;
+            }
+            break;
+        case kPlainEscape:
+            if (IsEscapable(*cmd))
+            {
+                state = kPlain;
+            }
+            else
+            {
+                return kErrorInvalidArgs;
+            }
+            break;
         }
     }
-
-exit:
-    return error;
+    return state <= kPlain ? kErrorNone : kErrorInvalidArgs;
 }
 
 template <typename UintType> Error ParseUint(const char *aString, UintType &aUint)
@@ -344,6 +418,130 @@ void Arg::CopyArgsToStringArray(Arg aArgs[], uint8_t aArgsLength, char *aStrings
         aStrings[i] = aArgs[i].GetCString();
     }
 }
+
+#ifndef SELF_TEST
+#define SELF_TEST 0
+#endif
+
+#if SELF_TEST
+#include <assert.h>
+
+extern "C" int main()
+{
+    constexpr uint8_t kMaxArgs = 10;
+
+    Arg     args[kMaxArgs];
+    uint8_t argsLength;
+
+    // empty command
+    {
+        char cmd[] = "";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 0);
+    }
+
+    // normal case
+    {
+        char cmd[] = "cmd arg1 arg2 arg3";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 4);
+        assert(args[0] == "cmd");
+        assert(args[1] == "arg1");
+        assert(args[2] == "arg2");
+        assert(args[3] == "arg3");
+    }
+
+    // consecutive separators
+    {
+        char cmd[] = " \r\n cmd  \r arg1  \n arg2  \t arg3";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 4);
+        assert(args[0] == "cmd");
+        assert(args[1] == "arg1");
+        assert(args[2] == "arg2");
+        assert(args[3] == "arg3");
+    }
+
+    // separators in argument
+    {
+        char cmd[] = " \" a\rr\ng\ts\"  ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == " a\rr\ng\ts");
+    }
+
+    // no arguments
+    {
+        char cmd[] = "    ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 0);
+    }
+
+    {
+        char cmd[] = "  a  ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == "a");
+    }
+
+    // space argument
+    {
+        char cmd[] = " \\  ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == " ");
+    }
+
+    // empty argument
+    {
+        char cmd[] = " \"\"  ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == "");
+    }
+
+    // escape in quote
+    {
+        char cmd[] = " \"\\\"\"  ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == "\"");
+    }
+
+    // quoted segmented argument
+    {
+        char cmd[] = " \"My\"\" \"\"Network\"  ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == "My Network");
+    }
+
+    // escape at begin and end of an argument
+    {
+        char cmd[] = " \\\"My\\ Network\\\" ";
+        assert(kErrorNone == ParseCmd(cmd, argsLength, args, kMaxArgs));
+        assert(argsLength == 1);
+        assert(args[0] == "\"My Network\"");
+    }
+
+    // incomplete quote
+    {
+        char cmd[] = " \"net";
+
+        assert(kErrorInvalidArgs == ParseCmd(cmd, argsLength, args, kMaxArgs));
+    }
+
+    // incomplete escape
+    {
+        char cmd[] = " net\"";
+
+        assert(kErrorInvalidArgs == ParseCmd(cmd, argsLength, args, kMaxArgs));
+    }
+
+    return 0;
+}
+
+#endif // SELF_TEST
 
 } // namespace CmdLineParser
 } // namespace Utils
