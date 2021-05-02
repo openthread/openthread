@@ -30,12 +30,6 @@ include(${PROJECT_SOURCE_DIR}/third_party/silabs/cmake/utility.cmake)
 
 add_library(silabs-mbedtls)
 
-set_target_properties(silabs-mbedtls
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 set(SILABS_MBEDTLS_DIR "${SILABS_GSDK_DIR}/util/third_party/crypto/mbedtls")
 
 target_compile_definitions(silabs-mbedtls

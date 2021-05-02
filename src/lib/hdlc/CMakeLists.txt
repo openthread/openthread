@@ -30,13 +30,6 @@ add_library(openthread-hdlc
     hdlc.cpp
 )
 
-set_target_properties(
-    openthread-hdlc
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_include_directories(openthread-hdlc
     PUBLIC
         ${OT_PUBLIC_INCLUDES}
