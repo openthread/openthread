@@ -43,6 +43,11 @@ target_compile_definitions(silabs-mbedtls
         ${OT_PLATFORM_DEFINES}
 )
 
+target_link_libraries(silabs-mbedtls
+    PRIVATE
+        ot-config
+)
+
 target_include_directories(silabs-mbedtls
     PUBLIC
         ${SILABS_MBEDTLS_DIR}/include
@@ -84,12 +89,14 @@ set(SILABS_MBEDTLS_SOURCES
     ${SILABS_MBEDTLS_DIR}/library/ecp.c
     ${SILABS_MBEDTLS_DIR}/library/entropy.c
     ${SILABS_MBEDTLS_DIR}/library/error.c
+    ${SILABS_MBEDTLS_DIR}/library/hmac_drbg.c
     ${SILABS_MBEDTLS_DIR}/library/md.c
     ${SILABS_MBEDTLS_DIR}/library/oid.c
     ${SILABS_MBEDTLS_DIR}/library/pem.c
     ${SILABS_MBEDTLS_DIR}/library/pk_wrap.c
     ${SILABS_MBEDTLS_DIR}/library/pk.c
     ${SILABS_MBEDTLS_DIR}/library/pkparse.c
+    ${SILABS_MBEDTLS_DIR}/library/pkwrite.c
     ${SILABS_MBEDTLS_DIR}/library/platform_util.c
     ${SILABS_MBEDTLS_DIR}/library/platform.c
     ${SILABS_MBEDTLS_DIR}/library/rsa_internal.c

@@ -20,6 +20,18 @@
 #define MBEDTLS_SSL_MAX_CONTENT_LEN 768 /**< Maximum fragment length in bytes */
 #endif
 
+// Enable necessary mbedtls functions when ECDSA is enabled
+#if OPENTHREAD_CONFIG_ECDSA_ENABLE
+#define MBEDTLS_BASE64_C
+#define MBEDTLS_ECDH_C
+#define MBEDTLS_ECDSA_C
+#define MBEDTLS_ECDSA_DETERMINISTIC
+#define MBEDTLS_HMAC_DRBG_C
+#define MBEDTLS_OID_C
+#define MBEDTLS_PEM_PARSE_C
+#define MBEDTLS_PK_WRITE_C
+#endif
+
 // <q SL_MBEDTLS_SSL_MAX_FRAGMENT_LENGTH> Enable support for RFC 6066 max_fragment_length extension in SSL.
 // <i> Default: 1
 // <i> Enable support for RFC 6066 max_fragment_length extension in SSL.
