@@ -418,11 +418,11 @@
  * Define to 1 to support proprietary radio configurations defined by platform.
  *
  * @note If this setting is set to 1, the channel range is defined by the platform. Choosing this option requires
- * the folowing configuration options:
+ * the following configuration options to be defined by Platform:
  * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE,
  * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN,
  * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX and,
- * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK, to be defined by Platform.
+ * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK.
  *
  * @def OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
  *
