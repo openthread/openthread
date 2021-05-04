@@ -658,7 +658,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
     uint8_t  buffer[kMaxRouterAdvMessageLength];
     uint16_t bufferLength = 0;
 
-    static_assert(sizeof(mRouterAdvMessage) <= sizeof(buffer));
+    static_assert(sizeof(mRouterAdvMessage) <= sizeof(buffer), "RA buffer too small");
     memcpy(buffer, &mRouterAdvMessage, sizeof(mRouterAdvMessage));
     bufferLength += sizeof(mRouterAdvMessage);
 
