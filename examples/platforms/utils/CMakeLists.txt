@@ -36,13 +36,6 @@ add_library(openthread-platform-utils OBJECT
     soft_source_match_table.c
 )
 
-set_target_properties(
-    openthread-platform-utils
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_compile_definitions(openthread-platform-utils PRIVATE
     $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
 )

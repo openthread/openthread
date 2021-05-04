@@ -106,12 +106,6 @@ add_library(openthread-nrf52840-softdevice-sdk
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(openthread-nrf52840 openthread-nrf52840-transport openthread-nrf52840-sdk openthread-nrf52840-softdevice-sdk
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_link_libraries(openthread-nrf52840
     PUBLIC
         ${OT_MBEDTLS}

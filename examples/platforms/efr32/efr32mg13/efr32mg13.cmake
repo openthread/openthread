@@ -57,12 +57,6 @@ add_library(openthread-efr32mg13
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(openthread-efr32mg13
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_link_libraries(openthread-efr32mg13
     PUBLIC
         ${EFR32_COMMON_3RD_LIBS}
