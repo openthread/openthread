@@ -4901,7 +4901,7 @@ void Interpreter::ProcessLine(char *aBuf)
         ExitNow();
     }
 
-    SuccessOrExit(ProcessUserCommands(argsLength, args));
+    VerifyOrExit(ProcessUserCommands(argsLength, args) != OT_ERROR_NONE);
     OutputResult(OT_ERROR_INVALID_COMMAND);
 
 exit:
