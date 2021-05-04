@@ -204,10 +204,9 @@ endif()
 add_subdirectory(src)
 add_subdirectory(third_party EXCLUDE_FROM_ALL)
 
-if(OT_PLATFORM STREQUAL "simulation")
+if(OT_BUILD_TESTING)
     enable_testing()
 endif()
-
 add_subdirectory(tests)
 
 add_custom_target(print-ot-config ALL
