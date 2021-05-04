@@ -76,15 +76,15 @@ enum
     OT_SIM_OPT_UNKNOWN     = '?',
 };
 
-static void printUsage(const char *aProgramName, int aExitCode)
+static void PrintUsage(const char *aProgramName, int aExitCode)
 {
     fprintf(stderr,
             "Syntax:\n"
             "    %s [Options] NodeId\n"
             "Options:\n"
-            "    --help              Display this usage information.\n"
-            "    --sleep-to-tx       Let radio support direct transition from sleep to TX with CSMA.\n"
-            "    --time-speed=val    Speed up the time in simulation.\n",
+            "    -h --help              Display this usage information.\n"
+            "    -t --sleep-to-tx       Let radio support direct transition from sleep to TX with CSMA.\n"
+            "    -s --time-speed=val    Speed up the time in simulation.\n",
             aProgramName);
 
     exit(aExitCode);
@@ -95,7 +95,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
     char *   endptr;
     uint32_t speedUpFactor = 1;
 
-    struct option long_options[] = {
+    static const struct option long_options[] = {
         {"help", no_argument, 0, OT_SIM_OPT_HELP},
         {"sleep-to-tx", no_argument, 0, OT_SIM_OPT_SLEEP_TO_TX},
         {"time-speed", required_argument, 0, OT_SIM_OPT_TIME_SPEED},
@@ -108,9 +108,11 @@ void otSysInit(int aArgCount, char *aArgVector[])
         return;
     }
 
+    optind = 1;
+
     while (true)
     {
-        int c = getopt_long(aArgCount, aArgVector, "", long_options, NULL);
+        int c = getopt_long(aArgCount, aArgVector, "hts:", long_options, NULL);
 
         if (c == -1)
         {
@@ -120,10 +122,10 @@ void otSysInit(int aArgCount, char *aArgVector[])
         switch (c)
         {
         case OT_SIM_OPT_UNKNOWN:
-            printUsage(aArgVector[0], EXIT_FAILURE);
+            PrintUsage(aArgVector[0], EXIT_FAILURE);
             break;
         case OT_SIM_OPT_HELP:
-            printUsage(aArgVector[0], EXIT_SUCCESS);
+            PrintUsage(aArgVector[0], EXIT_SUCCESS);
             break;
         case OT_SIM_OPT_SLEEP_TO_TX:
             gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
@@ -143,7 +145,7 @@ void otSysInit(int aArgCount, char *aArgVector[])
 
     if (optind != aArgCount - 1)
     {
-        printUsage(aArgVector[0], EXIT_FAILURE);
+        PrintUsage(aArgVector[0], EXIT_FAILURE);
     }
 
     gNodeId = (uint32_t)strtol(aArgVector[optind], &endptr, 0);
