@@ -140,7 +140,7 @@ void HdlcInterface::OnRcpReset(void)
     mHdlcDecoder.Reset();
 }
 
-otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
+otError HdlcInterface::Init(const Url::Url &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
@@ -411,7 +411,7 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
+int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
 {
     int fd   = -1;
     int rval = 0;
@@ -587,7 +587,7 @@ exit:
 }
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-int HdlcInterface::ForkPty(const RadioUrl &aRadioUrl)
+int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
 {
     int fd   = -1;
     int pid  = -1;
