@@ -161,6 +161,11 @@ exit:
     return ok;
 }
 
+static bool IsSeparator(char aChar)
+{
+    return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
+}
+
 int main(int argc, char *argv[])
 {
     bool   isInteractive = true;
@@ -179,10 +184,15 @@ int main(int argc, char *argv[])
 
         for (int i = 1; i < argc; i++)
         {
-            int rval = snprintf(&buffer[count], (sizeof(buffer) - count), "%s ", argv[i]);
-
-            VerifyOrExit(rval > 0 && static_cast<size_t>(rval) < (sizeof(buffer) - count), ret = OT_EXIT_FAILURE);
-            count += static_cast<size_t>(rval);
+            for (const char *c = argv[i]; *c; ++c)
+            {
+                if (IsSeparator(*c))
+                {
+                    buffer[count++] = '\\';
+                }
+                buffer[count++] = *c;
+            }
+            buffer[count++] = ' ';
         }
 
         // replace the trailing space with newline
