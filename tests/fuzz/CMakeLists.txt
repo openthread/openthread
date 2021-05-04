@@ -47,83 +47,83 @@ set(COMMON_LIBS
     ot-config
 )
 
-add_executable(cli-received-fuzzer
+add_executable(ot-cli-received-fuzzer
     cli_received.cpp
     ${COMMON_SOURCES}
 )
 
-target_compile_options(cli-received-fuzzer
+target_compile_options(ot-cli-received-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_include_directories(cli-received-fuzzer
+target_include_directories(ot-cli-received-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_link_libraries(cli-received-fuzzer
+target_link_libraries(ot-cli-received-fuzzer
     PRIVATE
         openthread-cli-ftd
         ${COMMON_LIBS}
 )
 
-add_executable(ip6-send-fuzzer
+add_executable(ot-ip6-send-fuzzer
     ip6_send.cpp
     ${COMMON_SOURCES}
 )
 
-target_compile_options(ip6-send-fuzzer
+target_compile_options(ot-ip6-send-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_include_directories(ip6-send-fuzzer
+target_include_directories(ot-ip6-send-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_link_libraries(ip6-send-fuzzer
+target_link_libraries(ot-ip6-send-fuzzer
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_executable(radio-receive-done-fuzzer
+add_executable(ot-radio-receive-done-fuzzer
     radio_receive_done.cpp
     ${COMMON_SOURCES}
 )
 
-target_compile_options(radio-receive-done-fuzzer
+target_compile_options(ot-radio-receive-done-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_include_directories(radio-receive-done-fuzzer
+target_include_directories(ot-radio-receive-done-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_link_libraries(radio-receive-done-fuzzer
+target_link_libraries(ot-radio-receive-done-fuzzer
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_executable(ncp-hdlc-received-fuzzer
+add_executable(ot-ncp-hdlc-received-fuzzer
     ncp_hdlc_received.cpp
     ${COMMON_SOURCES}
 )
 
-target_compile_options(ncp-hdlc-received-fuzzer
+target_compile_options(ot-ncp-hdlc-received-fuzzer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_include_directories(ncp-hdlc-received-fuzzer
+target_include_directories(ot-ncp-hdlc-received-fuzzer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_link_libraries(ncp-hdlc-received-fuzzer
+target_link_libraries(ot-ncp-hdlc-received-fuzzer
     PRIVATE
         openthread-ncp-ftd
         ${COMMON_LIBS}
