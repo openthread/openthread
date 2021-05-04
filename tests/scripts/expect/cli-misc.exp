@@ -173,4 +173,7 @@ expect "Done"
 send "ba state\n"
 expect "Done"
 
+send "invalidcommand\n"
+expect_line "Error 35: InvalidCommand"
+
 dispose_all
