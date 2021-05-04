@@ -28,13 +28,6 @@
 
 add_library(openthread-ncp-ftd)
 
-set_target_properties(
-    openthread-ncp-ftd
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_compile_definitions(openthread-ncp-ftd PRIVATE
     OPENTHREAD_FTD=1
     OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1

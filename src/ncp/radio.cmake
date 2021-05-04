@@ -28,13 +28,6 @@
 
 add_library(openthread-rcp)
 
-set_target_properties(
-    openthread-rcp
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_compile_definitions(openthread-rcp PRIVATE
     OPENTHREAD_RADIO=1
     OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1

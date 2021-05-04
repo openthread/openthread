@@ -31,13 +31,6 @@ add_executable(ot-cli
     cli.cpp
 )
 
-set_target_properties(
-    ot-cli
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-cli PRIVATE

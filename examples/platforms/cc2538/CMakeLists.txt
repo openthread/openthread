@@ -55,13 +55,6 @@ add_library(openthread-cc2538
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(
-    openthread-cc2538
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_link_libraries(openthread-cc2538
     PRIVATE
         ot-config
