@@ -73,6 +73,7 @@ install_packages_apt()
             && sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
     fi
 
+    command -v cmake-format || python3 -m pip install cmake-format==0.6.13
     if [ "$PLATFORM" != "Raspbian" ]; then
         install_packages_pretty_format
     fi
@@ -118,6 +119,9 @@ install_packages_brew()
 
     # add yapf for pretty
     python3 -m pip install yapf || echo 'Failed to install python code formatter yapf. Install it manually if you need.'
+
+    # add cmake-format
+    command -v cmake-format || python3 -m pip install cmake-format==0.6.10
 }
 
 install_packages_source()

@@ -70,6 +70,7 @@ readonly OT_EXCLUDE_DIRS=(third_party doc/site)
 readonly OT_CLANG_SOURCES=('*.c' '*.cc' '*.cpp' '*.h' '*.hpp')
 readonly OT_MARKDOWN_SOURCES=('*.md')
 readonly OT_PYTHON_SOURCES=('*.py')
+readonly OT_CMAKE_FILES=('*.cmake' 'CMakeLists.txt' '*/CMakeLists.txt')
 
 readonly OT_CLANG_TIDY_FIX_DIRS=('examples' 'include' 'src' 'tests')
 readonly OT_CLANG_TIDY_BUILD_OPTS=(
@@ -137,6 +138,26 @@ readability-static-accessed-through-instance,\
 "
 
 #performance-for-range-copy\
+
+do_cmake_format()
+{
+    echo -e '====================='
+    echo -e '     format cmake    '
+    echo -e '====================='
+
+    git ls-files "${OT_CMAKE_FILES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n3 -P"$OT_BUILD_JOBS" cmake-format -i
+}
+
+do_cmake_check()
+{
+    echo -e '====================='
+    echo -e '     check cmake    '
+    echo -e '====================='
+
+    git ls-files "${OT_CMAKE_FILES[@]}" | grep -v -E "^($(echo "${OT_EXCLUDE_DIRS[@]}" | tr ' ' '|'))" \
+        | xargs -n3 -P"$OT_BUILD_JOBS" cmake-format --check
+}
 
 do_clang_format()
 {
@@ -259,12 +280,16 @@ do_check()
     if [ $# == 0 ]; then
         do_clang_format_check
         do_clang_tidy_check
+        do_cmake_check
         do_markdown_check
         do_python_check
         do_shell_check
     elif [ "$1" == 'clang' ]; then
+        do_clang_check
         do_clang_format_check
         do_clang_tidy_check
+    elif [ "$1" == 'cmake' ]; then
+        do_cmake_check
     elif [ "$1" == 'clang-format' ]; then
         do_clang_format_check
     elif [ "$1" == 'clang-tidy' ]; then
@@ -287,12 +312,15 @@ main()
     if [ $# == 0 ]; then
         do_clang_tidy_fix
         do_clang_format
+        do_cmake_format
         do_markdown_format
         do_python_format
         do_shell_format
     elif [ "$1" == 'clang' ]; then
         do_clang_tidy_fix
         do_clang_format
+    elif [ "$1" == 'cmake' ]; then
+        do_cmake_format
     elif [ "$1" == 'clang-format' ]; then
         do_clang_format
     elif [ "$1" == 'clang-tidy' ]; then

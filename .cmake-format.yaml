@@ -1,0 +1,13 @@
+format:
+  autosort: true
+  command_case: 'canonical'
+  dangle_parens: true
+  enable_sort: true
+  keyword_case: 'upper'
+  line_width: 120
+  max_subgroups_hwrap: 3
+  max_pargs_hwrap: 6
+  tab_size: 4
+
+markup:
+  first_comment_is_literal: true
