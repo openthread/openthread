@@ -280,11 +280,18 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         }
     }
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (optind >= aArgCount)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
     aConfig->mPlatformConfig.mRadioUrl = aArgVector[optind];
+#endif
+
+    if (aConfig->mPlatformConfig.mRadioUrl == NULL && aConfig->mPlatformConfig.mTrelInterface == NULL)
+    {
+        PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
+    }
 }
 
 static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
