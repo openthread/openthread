@@ -26,17 +26,14 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-
-# Purpose of this CMake script is to support printing of properties fetched
-# using a generator expression.
+# Purpose of this CMake script is to support printing of properties fetched using a generator expression.
 #
-# Depending on the generator in use, Ninja, Makefile, other, it is not possible
-# to always ensure proper new line on all platforms when calling echo.
-# The print.cmake handles this issue by taking a CMake list and prints each item
-# in the list on a new line.
+# Depending on the generator in use, Ninja, Makefile, other, it is not possible to always ensure proper new line on all
+# platforms when calling echo. The print.cmake handles this issue by taking a CMake list and prints each item in the
+# list on a new line.
 #
 # This script can be invoked as: `cmake -DLIST="itemA;itemB;..." -P print.cmake`
 
 foreach(item ${LIST})
-  execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${item})
+    execute_process(COMMAND ${CMAKE_COMMAND} -E echo ${item})
 endforeach()

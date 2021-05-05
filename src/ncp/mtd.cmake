@@ -28,26 +28,15 @@
 
 add_library(openthread-ncp-mtd)
 
-target_compile_definitions(openthread-ncp-mtd PRIVATE
-    OPENTHREAD_MTD=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
-)
+target_compile_definitions(openthread-ncp-mtd PRIVATE OPENTHREAD_MTD=1 OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
 
-target_compile_options(openthread-ncp-mtd PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-ncp-mtd PRIVATE ${OT_CFLAGS})
 
 target_include_directories(openthread-ncp-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-ncp-mtd PRIVATE ${COMMON_NCP_SOURCES})
 target_include_directories(openthread-ncp-mtd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(openthread-ncp-mtd
-    PUBLIC
-        openthread-mtd
-    PRIVATE
-        ${OT_MBEDTLS}
-        openthread-hdlc
-        openthread-spinel-ncp
-        ot-config
+target_link_libraries(
+    openthread-ncp-mtd PUBLIC openthread-mtd PRIVATE ${OT_MBEDTLS} openthread-hdlc openthread-spinel-ncp ot-config
 )

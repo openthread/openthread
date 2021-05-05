@@ -29,37 +29,23 @@
 add_library(openthread-spinel-ncp)
 add_library(openthread-spinel-rcp)
 
-target_compile_definitions(openthread-spinel-ncp PRIVATE
-    OPENTHREAD_FTD=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
+target_compile_definitions(
+    openthread-spinel-ncp PRIVATE OPENTHREAD_FTD=1 OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
-target_compile_definitions(openthread-spinel-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
+target_compile_definitions(
+    openthread-spinel-rcp PRIVATE OPENTHREAD_RADIO=1 OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
     PUBLIC OPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0
 )
 
-target_compile_options(openthread-spinel-ncp PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-spinel-ncp PRIVATE ${OT_CFLAGS})
 
-target_compile_options(openthread-spinel-rcp PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-spinel-rcp PRIVATE ${OT_CFLAGS})
 
-set(COMMON_INCLUDES
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
-)
+set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/core)
 
-set(COMMON_SOURCES
-    spinel.c
-    spinel_buffer.cpp
-    spinel_decoder.cpp
-    spinel_encoder.cpp
-)
+set(COMMON_SOURCES spinel.c spinel_buffer.cpp spinel_decoder.cpp spinel_encoder.cpp)
 
 target_include_directories(openthread-spinel-ncp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 target_include_directories(openthread-spinel-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})

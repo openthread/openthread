@@ -28,20 +28,12 @@
 
 add_library(openthread-mtd)
 
-target_compile_definitions(openthread-mtd PRIVATE
-    OPENTHREAD_MTD=1
-)
+target_compile_definitions(openthread-mtd PRIVATE OPENTHREAD_MTD=1)
 
-target_compile_options(openthread-mtd PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-mtd PRIVATE ${OT_CFLAGS})
 
 target_include_directories(openthread-mtd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-mtd PRIVATE ${COMMON_SOURCES})
 
-target_link_libraries(openthread-mtd
-    PRIVATE
-        ${OT_MBEDTLS}
-        ot-config
-)
+target_link_libraries(openthread-mtd PRIVATE ${OT_MBEDTLS} ot-config)

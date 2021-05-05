@@ -28,25 +28,13 @@
 
 add_library(openthread-rcp)
 
-target_compile_definitions(openthread-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
-)
+target_compile_definitions(openthread-rcp PRIVATE OPENTHREAD_RADIO=1 OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
 
-target_compile_options(openthread-rcp PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-rcp PRIVATE ${OT_CFLAGS})
 
 target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
 target_include_directories(openthread-rcp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(openthread-rcp
-    PUBLIC
-        openthread-radio
-    PRIVATE
-        openthread-hdlc
-        openthread-spinel-rcp
-        ot-config
-)
+target_link_libraries(openthread-rcp PUBLIC openthread-radio PRIVATE openthread-hdlc openthread-spinel-rcp ot-config)

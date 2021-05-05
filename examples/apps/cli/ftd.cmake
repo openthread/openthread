@@ -26,22 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli-ftd
-    cli_uart.cpp
-    main.c
-)
+add_executable(ot-cli-ftd cli_uart.cpp main.c)
 
 target_include_directories(ot-cli-ftd PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-cli-ftd PRIVATE
-    openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-ftd
-    ${OT_PLATFORM_LIB}
-    openthread-cli-ftd
-    ${OT_MBEDTLS}
-    ot-config
+target_link_libraries(
+    ot-cli-ftd
+    PRIVATE openthread-cli-ftd
+            ${OT_PLATFORM_LIB}
+            openthread-ftd
+            ${OT_PLATFORM_LIB}
+            openthread-cli-ftd
+            ${OT_MBEDTLS}
+            ot-config
 )
 
-install(TARGETS ot-cli-ftd
-    DESTINATION bin)
+install(TARGETS ot-cli-ftd DESTINATION bin)

@@ -28,7 +28,7 @@
 
 find_package(Doxygen)
 
-if (DOXYGEN_FOUND)
+if(DOXYGEN_FOUND)
     set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
     set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
@@ -43,12 +43,14 @@ if (DOXYGEN_FOUND)
 
     add_custom_target(ot-doc)
 
-    add_custom_target(ot-doxygen ALL
+    add_custom_target(
+        ot-doxygen ALL
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
         COMMAND cmake -E copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/images ${CMAKE_CURRENT_BINARY_DIR}/html/doc/images
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating documentation with Doxygen"
-        VERBATIM)
+        VERBATIM
+    )
     add_dependencies(ot-doc ot-doxygen)
 
 else()

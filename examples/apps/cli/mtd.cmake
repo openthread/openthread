@@ -26,22 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli-mtd
-    cli_uart.cpp
-    main.c
-)
+add_executable(ot-cli-mtd cli_uart.cpp main.c)
 
 target_include_directories(ot-cli-mtd PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-cli-mtd PRIVATE
-    openthread-cli-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-cli-mtd
-    ${OT_MBEDTLS}
-    ot-config
+target_link_libraries(
+    ot-cli-mtd
+    PRIVATE openthread-cli-mtd
+            ${OT_PLATFORM_LIB}
+            openthread-mtd
+            ${OT_PLATFORM_LIB}
+            openthread-cli-mtd
+            ${OT_MBEDTLS}
+            ot-config
 )
 
-install(TARGETS ot-cli-mtd
-    DESTINATION bin)
+install(TARGETS ot-cli-mtd DESTINATION bin)

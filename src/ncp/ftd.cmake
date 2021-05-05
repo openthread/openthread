@@ -28,27 +28,16 @@
 
 add_library(openthread-ncp-ftd)
 
-target_compile_definitions(openthread-ncp-ftd PRIVATE
-    OPENTHREAD_FTD=1
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
-)
+target_compile_definitions(openthread-ncp-ftd PRIVATE OPENTHREAD_FTD=1 OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1)
 
-target_compile_options(openthread-ncp-ftd PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-ncp-ftd PRIVATE ${OT_CFLAGS})
 
 target_include_directories(openthread-ncp-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-ncp-ftd PRIVATE ${COMMON_NCP_SOURCES})
 target_include_directories(openthread-ncp-ftd PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(openthread-ncp-ftd
-    PUBLIC
-        openthread-ftd
-    PRIVATE
-        ${OT_PLATFORM_LIB}
-        ${OT_MBEDTLS}
-        openthread-hdlc
-        openthread-spinel-ncp
-        ot-config
+target_link_libraries(
+    openthread-ncp-ftd PUBLIC openthread-ftd PRIVATE ${OT_PLATFORM_LIB} ${OT_MBEDTLS} openthread-hdlc
+                                                     openthread-spinel-ncp ot-config
 )

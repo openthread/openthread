@@ -26,23 +26,18 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-cli
-    main.c
-    cli.cpp
-)
+add_executable(ot-cli cli.cpp main.c)
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
-target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    ${OT_PLATFORM_DEFINES}
+target_compile_definitions(
+    ot-cli PRIVATE $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1> ${OT_PLATFORM_DEFINES}
 )
 
-target_compile_options(ot-cli PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(ot-cli PRIVATE ${OT_CFLAGS})
 
-target_link_libraries(ot-cli
+target_link_libraries(
+    ot-cli
     openthread-cli-ftd
     ${OT_PLATFORM_LIB}
     openthread-ftd
@@ -55,6 +50,4 @@ target_link_libraries(ot-cli
     ot-config
 )
 
-
 install(TARGETS ot-cli DESTINATION bin)
-

@@ -26,8 +26,6 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-url EXCLUDE_FROM_ALL
-    url.cpp
-)
+add_library(openthread-url EXCLUDE_FROM_ALL url.cpp)
 
 target_link_libraries(openthread-url PRIVATE ot-config)

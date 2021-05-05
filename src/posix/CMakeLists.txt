@@ -26,18 +26,11 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
-    ${PROJECT_SOURCE_DIR}/src/posix/platform
-    ${PROJECT_SOURCE_DIR}/src/posix/platform/include
+set(COMMON_INCLUDES ${OT_PUBLIC_INCLUDES} ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/core
+                    ${PROJECT_SOURCE_DIR}/src/posix/platform ${PROJECT_SOURCE_DIR}/src/posix/platform/include
 )
 
-set(OT_READLINE_VALUES
-    "readline"
-    "edit"
-)
+set(OT_READLINE_VALUES "readline" "edit")
 
 set(OT_READLINE "" CACHE STRING "set readline library name")
 set_property(CACHE OT_READLINE PROPERTY STRINGS ${OT_READLINE_VALUES})
@@ -45,7 +38,7 @@ set_property(CACHE OT_READLINE PROPERTY STRINGS ${OT_READLINE_VALUES})
 if(OT_READLINE STREQUAL "")
     foreach(X IN LISTS OT_READLINE_VALUES)
         find_library(READLINE ${X})
-        if (READLINE)
+        if(READLINE)
             set(OT_READLINE ${X})
             break()
         endif()
@@ -53,16 +46,16 @@ if(OT_READLINE STREQUAL "")
 elseif(OT_READLINE)
     find_library(READLINE ${OT_READLINE})
 
-    if (NOT READLINE)
+    if(NOT READLINE)
         message(FATAL_ERROR "Failed to find ${OT_READLINE}")
     endif()
 endif()
 
-if (READLINE)
+if(READLINE)
     message(STATUS "Readline: ${OT_READLINE}")
 
     find_library(NCURSES ncurses)
-    if (NOT NCURSES)
+    if(NOT NCURSES)
         message(FATAL_ERROR "Failed to find ncurses")
     endif()
 

@@ -38,7 +38,9 @@ elseif(BOARD_LOWERCASE STREQUAL "brd4166a")
 elseif(BOARD_LOWERCASE STREQUAL "brd4170a")
     set(MCU "EFR32MG12P433F1024GM68")
 else()
-    message(FATAL_ERROR "
+    message(
+        FATAL_ERROR
+            "
     BOARD=${BOARD} not supported.
 
     Please provide a value for BOARD variable e.g BOARD=brd4161a.
@@ -47,7 +49,8 @@ else()
     - brd4166a
     - brd4170a
     - brd4304a
-    ")
+    "
+    )
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES "${MCU}")
@@ -61,38 +64,17 @@ set(OT_PLATFORM_LIB ${OT_PLATFORM_LIB} PARENT_SCOPE)
 
 set(LD_FILE "${CMAKE_CURRENT_SOURCE_DIR}/efr32mg12/efr32mg12.ld")
 
-add_library(openthread-efr32mg12
-    ${EFR32_COMMON_SOURCES}
-    $<TARGET_OBJECTS:openthread-platform-utils>
+add_library(openthread-efr32mg12 ${EFR32_COMMON_SOURCES} $<TARGET_OBJECTS:openthread-platform-utils>)
+
+target_link_libraries(
+    openthread-efr32mg12 PUBLIC ${EFR32_COMMON_3RD_LIBS} silabs-libnvm3_CM4_gcc silabs-efr32mg12-sdk -T${LD_FILE}
+                                -Wl,--gc-sections -Wl,-Map=$<TARGET_PROPERTY:NAME>.map PRIVATE ot-config
 )
 
-target_link_libraries(openthread-efr32mg12
-    PUBLIC
-        ${EFR32_COMMON_3RD_LIBS}
-        silabs-libnvm3_CM4_gcc
-        silabs-efr32mg12-sdk
-        -T${LD_FILE}
-        -Wl,--gc-sections
-        -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
-    PRIVATE
-        ot-config
-)
+target_compile_definitions(openthread-efr32mg12 PUBLIC ${OT_PLATFORM_DEFINES})
 
-target_compile_definitions(openthread-efr32mg12
-    PUBLIC
-        ${OT_PLATFORM_DEFINES}
-)
+target_compile_options(openthread-efr32mg12 PRIVATE ${EFR32_CFLAGS})
 
-target_compile_options(openthread-efr32mg12
-    PRIVATE
-        ${EFR32_CFLAGS}
+target_include_directories(
+    openthread-efr32mg12 PUBLIC ${EFR32_INCLUDES} PRIVATE ${SILABS_EFR32MG1X_INCLUDES} ${OT_PUBLIC_INCLUDES}
 )
-
-target_include_directories(openthread-efr32mg12
-    PUBLIC
-        ${EFR32_INCLUDES}
-    PRIVATE
-        ${SILABS_EFR32MG1X_INCLUDES}
-        ${OT_PUBLIC_INCLUDES}
-)
-

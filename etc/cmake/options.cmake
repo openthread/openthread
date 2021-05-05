@@ -180,7 +180,7 @@ if(OT_ECDSA)
 endif()
 
 option(OT_SRP_CLIENT "enable SRP client support")
-if (OT_SRP_CLIENT)
+if(OT_SRP_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE=1")
 endif()
 
@@ -230,7 +230,7 @@ if(OT_LINK_RAW)
 endif()
 
 option(OT_LINK_METRICS "enable link metrics")
-if (OT_LINK_METRICS)
+if(OT_LINK_METRICS)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE=1")
 endif()
 
@@ -305,7 +305,7 @@ if(OT_SNTP_CLIENT)
 endif()
 
 option(OT_SRP_SERVER "enable SRP server")
-if (OT_SRP_SERVER)
+if(OT_SRP_SERVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_SRP_SERVER_ENABLE=1")
 endif()
 
@@ -315,7 +315,7 @@ if(OT_TIME_SYNC)
 endif()
 
 option(OT_TREL "enable TREL radio link for Thread over Infrastructure feature")
-if (OT_TREL)
+if(OT_TREL)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE=1")
 endif()
 
@@ -340,7 +340,9 @@ endif()
 
 set(OT_RCP_RESTORATION_MAX_COUNT "0" CACHE STRING "set max RCP restoration count")
 if(OT_RCP_RESTORATION_MAX_COUNT MATCHES "^[0-9]+$")
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT=${OT_RCP_RESTORATION_MAX_COUNT}")
+    target_compile_definitions(
+        ot-config INTERFACE "OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT=${OT_RCP_RESTORATION_MAX_COUNT}"
+    )
 else()
     message(FATAL_ERROR "Invalid max RCP restoration count: ${OT_RCP_RESTORATION_MAX_COUNT}")
 endif()

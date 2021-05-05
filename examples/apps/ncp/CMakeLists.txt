@@ -26,11 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
-)
+set(COMMON_INCLUDES ${OT_PUBLIC_INCLUDES} ${PROJECT_SOURCE_DIR}/examples/platforms ${PROJECT_SOURCE_DIR}/src/core)
 
 if(OT_APP_NCP)
     if(OT_FTD)
