@@ -36,6 +36,7 @@
 
 #include "openthread-core-config.h"
 
+#include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
 
@@ -56,14 +57,16 @@ namespace Ip6 {
  * This class implements an IPv6 datagram filter.
  *
  */
-class Filter : private NonCopyable
+class Filter : public InstanceLocator, private NonCopyable
 {
 public:
     /**
      * This constructor initializes the Filter object.
      *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     *
      */
-    Filter(void);
+    explicit Filter(Instance &aInstance);
 
     /**
      * This method indicates whether or not the IPv6 datagram passes the filter.
@@ -128,21 +131,12 @@ public:
      */
     const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const;
 
-    /**
-     * This method sets whether to allow native commissioner traffic.
-     *
-     * @param[in]   aAllow  Whether to allow native commissioner traffic.
-     *
-     */
-    void AllowNativeCommissioner(bool aAllow) { mAllowNativeCommissioner = aAllow; }
-
 private:
     enum
     {
         kMaxUnsecurePorts = 2,
     };
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
-    bool     mAllowNativeCommissioner;
 };
 
 } // namespace Ip6

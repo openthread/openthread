@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
@@ -47,8 +48,8 @@
 namespace ot {
 namespace Ip6 {
 
-Filter::Filter(void)
-    : mAllowNativeCommissioner(true)
+Filter::Filter(Instance &aInstance)
+    : InstanceLocator(aInstance)
 {
     memset(mUnsecurePorts, 0, sizeof(mUnsecurePorts));
 }
@@ -73,6 +74,12 @@ bool Filter::Accept(Message &aMessage) const
     // Allow only link-local unicast or multicast
     VerifyOrExit(ip6.GetDestination().IsLinkLocal() || ip6.GetDestination().IsLinkLocalMulticast());
 
+    // Allow all link-local IPv6 datagrams when Thread is not enabled
+    if (Get<Mle::MleRouter>().GetRole() == Mle::kRoleDisabled)
+    {
+        ExitNow(rval = true);
+    }
+
     switch (ip6.GetNextHeader())
     {
     case kProtoUdp:
@@ -87,11 +94,14 @@ bool Filter::Accept(Message &aMessage) const
             ExitNow(rval = true);
         }
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         // Allow native commissioner traffic
-        if (mAllowNativeCommissioner && dstport == MeshCoP::kNativeCommissionerUdpPort)
+        if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled &&
+            dstport == Get<MeshCoP::BorderAgent>().GetUdpPort())
         {
             ExitNow(rval = true);
         }
+#endif
         break;
 
     case kProtoTcp:
