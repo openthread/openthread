@@ -959,16 +959,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
     // initiated from the infra interface.
     if (otPlatInfraIfHasAddress(mInfraIfIndex, &aSrcAddress))
     {
-        if (routerAdvMessage->GetRouterLifetime() == 0)
-        {
-            mRouterAdvMessage.SetToDefault();
-        }
-        else
-        {
-            mRouterAdvMessage = *routerAdvMessage;
-            // TODO: add a timer for invalidating the learned RA parameters
-            // for cases that the other RA daemon crashed or is force killed.
-        }
+        needReevaluate |= UpdateRouterAdvMessage(*routerAdvMessage);
     }
 
     if (needReevaluate)
@@ -1196,6 +1187,27 @@ bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) co
     }
 
     return contain;
+}
+
+// Update the `mRouterAdvMessage` with given Router Advertisement message.
+// Returns a boolean which indicates whether there are changes of `mRouterAdvMessage`.
+bool RoutingManager::UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage &aRouterAdvMessage)
+{
+    RouterAdv::RouterAdvMessage oldRouterAdvMessage;
+
+    oldRouterAdvMessage = mRouterAdvMessage;
+    if (aRouterAdvMessage.GetRouterLifetime() == 0)
+    {
+        mRouterAdvMessage.SetToDefault();
+    }
+    else
+    {
+        mRouterAdvMessage = aRouterAdvMessage;
+        // TODO: add a timer for invalidating the learned RA parameters
+        // for cases that the other RA daemon crashed or is force killed.
+    }
+
+    return (mRouterAdvMessage != oldRouterAdvMessage);
 }
 
 } // namespace BorderRouter
