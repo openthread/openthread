@@ -320,7 +320,7 @@ jobs:
         name: cov-expects
         path: tmp/coverage.info
 
-  external-commissioner:
+  ot-commissioner:
     runs-on: ubuntu-20.04
     env:
       THREAD_VERSION: 1.1
@@ -360,7 +360,7 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-external-commissioner
+        name: cov-ot-commissioner
         path: tmp/coverage.info
 
   multiple-instance:
@@ -490,7 +490,7 @@ jobs:
     - cli-mtd
     - cli-time-sync
     - expects
-    - external-commissioner
+    - ot-commissioner
     - multiple-instance
     - ncp-gcc-m32
     - ncp-clang

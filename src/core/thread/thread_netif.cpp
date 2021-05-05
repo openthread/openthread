@@ -79,6 +79,7 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
 #endif
     , mActiveDataset(aInstance)
     , mPendingDataset(aInstance)
+    , mIp6Filter(aInstance)
     , mKeyManager(aInstance)
     , mLowpan(aInstance)
     , mMac(aInstance)
