@@ -104,6 +104,23 @@ template <uint16_t kSize> class String
 
 public:
     /**
+     * This constructor initializes the `String` as an empty string.
+     *
+     */
+    String(void) { mBuffer[0] = '\0'; }
+
+    /**
+     * This constructor initializes the `String` with a given C string.
+     *
+     * If @p aCString does not fit in `kSize` characters, the result will be truncated (i.e., the first `kSize - 1`
+     * characters will be copied).
+     *
+     * @param[in] aCString   A pointer to a null terminated C string.
+     *
+     */
+    explicit String(const char *aCString);
+
+    /**
      * This method returns the string as a null-terminated C string.
      *
      * @returns The null-terminated C string.
@@ -236,6 +253,11 @@ bool IsValidUtf8String(const char *aString);
  *
  */
 bool IsValidUtf8String(const char *aString, size_t aLength);
+
+template <uint16_t kSize> inline String<kSize>::String(const char *aCString)
+{
+    StringWriter(*this).Append(aCString);
+}
 
 /**
  * @}

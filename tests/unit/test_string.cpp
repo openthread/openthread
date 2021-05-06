@@ -49,9 +49,13 @@ template <uint16_t kSize> void PrintString(const char *aName, const String<kSize
 void TestStringWriter(void)
 {
     String<kStringSize> str;
+    String<kStringSize> strWithInitialValue("test");
     constexpr char      kLongString[] = "abcdefghijklmnopqratuvwxyzabcdefghijklmnopqratuvwxyz";
 
-    printf("\nTest 1: StringWriter constructor\n");
+    printf("\nTest 1: String and StringWriter constructor\n");
+
+    VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
+    VerifyOrQuit(strcmp(strWithInitialValue.AsCString(), "test") == 0, "String content is incorrect");
 
     VerifyOrQuit(StringWriter(str).GetSize() == kStringSize, "GetSize() failed");
     VerifyOrQuit(StringWriter(str).GetLength() == 0, "GetLength() failed for empty string");
@@ -59,6 +63,7 @@ void TestStringWriter(void)
     VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
 
     PrintString("str", str);
+    PrintString("strWithInitialValue", strWithInitialValue);
 
     printf(" -- PASS\n");
 
