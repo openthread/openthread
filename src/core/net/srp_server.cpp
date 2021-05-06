@@ -704,11 +704,10 @@ Error Server::ProcessHostDescriptionInstruction(Host &                   aHost,
             Dns::Ecdsa256KeyRecord key;
 
             VerifyOrExit(record.GetClass() == aZone.GetClass(), error = kErrorFailed);
-            VerifyOrExit(aHost.GetKey() == nullptr, error = kErrorFailed);
-
             SuccessOrExit(error = aMessage.Read(aOffset, key));
             VerifyOrExit(key.IsValid(), error = kErrorParse);
 
+            VerifyOrExit(aHost.GetKey() == nullptr || *aHost.GetKey() == key, error = kErrorSecurity);
             aHost.SetKey(key);
 
             aOffset += record.GetSize();
