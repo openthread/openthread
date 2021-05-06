@@ -31,12 +31,10 @@ function(ot_get_platforms arg_platforms)
     list(APPEND result "NO" "posix" "external")
     set(platforms_dir "${PROJECT_SOURCE_DIR}/examples/platforms")
     file(GLOB platforms RELATIVE "${platforms_dir}" "${platforms_dir}/*"
-            RELATIVE "${platforms_dir}/nrf528xx" "${platforms_dir}/nrf528xx/nrf*"
-            RELATIVE "${platforms_dir}/efr32" "${platforms_dir}/efr32/efr32*")
+            RELATIVE "${platforms_dir}/nrf528xx" "${platforms_dir}/nrf528xx/nrf*")
     foreach(platform IN LISTS platforms)
         if((IS_DIRECTORY "${platforms_dir}/${platform}") OR
-            (IS_DIRECTORY "${platforms_dir}/nrf528xx/${platform}") OR
-            (IS_DIRECTORY "${platforms_dir}/efr32/${platform}"))
+            (IS_DIRECTORY "${platforms_dir}/nrf528xx/${platform}"))
             list(APPEND result "${platform}")
         endif()
     endforeach()
