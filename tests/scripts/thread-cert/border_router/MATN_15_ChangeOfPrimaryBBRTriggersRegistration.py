@@ -64,7 +64,7 @@ TD = 4
 REG_DELAY = 10
 
 NETWORK_ID_TIMEOUT = 120
-WAIT_TIME_ALLOWANCE = 30
+WAIT_TIME_ALLOWANCE = 60
 
 
 class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
@@ -140,8 +140,6 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
 
         # Make sure that BR_2 becomes the primary BBR
         self.assertEqual('disabled', br1.get_state())
-        self.assertEqual('leader', br2.get_state())
-        self.assertEqual('router', router1.get_state())
         self.assertFalse(br1.is_primary_backbone_router)
         self.assertTrue(br2.is_primary_backbone_router)
 
