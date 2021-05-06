@@ -447,6 +447,30 @@ public:
      */
     const RouterAdvMessage &operator=(const RouterAdvMessage &aOther);
 
+    /**
+     * This method overloads operator `==` to evaluate whether or not
+     * two instances of `RouterAdvMessage` are equal.
+     *
+     * @param[in]  aOther  The other `RouterAdvMessage` instance to compare with.
+     *
+     * @retval TRUE   If the two `RouterAdvMessage` instances are equal.
+     * @retval FALSE  If the two `RouterAdvMessage` instances are not equal.
+     *
+     */
+    bool operator==(const RouterAdvMessage &aOther) const;
+
+    /**
+     * This method overloads operator `!=` to evaluate whether or not
+     * two instances of `RouterAdvMessage` are equal.
+     *
+     * @param[in]  aOther  The other `RouterAdvMessage` instance to compare with.
+     *
+     * @retval TRUE   If the two `RouterAdvMessage` instances are not equal.
+     * @retval FALSE  If the two `RouterAdvMessage` instances are equal.
+     *
+     */
+    bool operator!=(const RouterAdvMessage &aOther) const { return !(*this == aOther); }
+
 private:
     enum : uint8_t
     {
