@@ -31,7 +31,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 EXTRA_DIST                              = \
     nlbuild-autotools                     \
     openthread-test-driver                \
-    NordicSemiconductor                   \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.
@@ -41,43 +40,8 @@ DIST_SUBDIRS                            = \
     mbedtls                               \
     $(NULL)
 
-SUBDIRS =
-
-if OPENTHREAD_PLATFORM_NRF52811
-SUBDIRS                                += \
-    NordicSemiconductor                   \
+SUBDIRS =                                 \
     $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52811
-SUBDIRS                                += \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_NRF52833
-SUBDIRS                                += \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52833
-SUBDIRS                                += \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_NRF52840
-SUBDIRS                                += \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52840
-SUBDIRS                                += \
-    jlink                                 \
-    $(NULL)
-endif
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 SUBDIRS                                += \

@@ -45,18 +45,6 @@ if OPENTHREAD_EXAMPLES_CC2538
 include $(top_srcdir)/examples/platforms/cc2538/Makefile.platform.am
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52811
-include $(top_srcdir)/examples/platforms/nrf528xx/nrf52811/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52833
-include $(top_srcdir)/examples/platforms/nrf528xx/nrf52833/Makefile.platform.am
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52840
-include $(top_srcdir)/examples/platforms/nrf528xx/nrf52840/Makefile.platform.am
-endif
-
 if OPENTHREAD_EXAMPLES_SIMULATION
 include $(top_srcdir)/examples/platforms/simulation/Makefile.platform.am
 endif

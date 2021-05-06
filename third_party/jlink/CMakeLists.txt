@@ -34,34 +34,3 @@ add_library(jlinkrtt
 target_include_directories(jlinkrtt PRIVATE
     ${PROJECT_SOURCE_DIR}/include
 )
-
-if(OT_PLATFORM MATCHES "^nrf*")
-
-    if(OT_PLATFORM STREQUAL "nrf52811")
-        target_compile_options(jlinkrtt PRIVATE
-            -DNRF52811_XXAA
-        )
-    elseif(OT_PLATFORM STREQUAL "nrf52833")
-        target_compile_options(jlinkrtt PRIVATE
-            -DNRF52833_XXAA
-        )
-    else()
-        target_compile_options(jlinkrtt PRIVATE
-            -DNRF52840_XXAA
-        )
-    endif()
-
-    target_compile_options(jlinkrtt PRIVATE
-        -DSEGGER_RTT_CONFIG_H=\"${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/segger_rtt/SEGGER_RTT_Conf.h\"
-        -DUSE_APP_CONFIG=1
-    )
-
-    target_include_directories(jlinkrtt PRIVATE
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/cmsis
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/config/${OT_PLATFORM}/config
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/dependencies
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/libraries/app_error
-        ${PROJECT_SOURCE_DIR}/third_party/NordicSemiconductor/nrfx/mdk
-    )
-endif()
