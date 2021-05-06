@@ -35,7 +35,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies DNS-SD server works on a Duckhorn BR and is accessible from a Host.
+#   This test verifies DNS-SD server works on a BR and is accessible from a Host.
 #
 # Topology:
 #    ----------------(eth)--------------------
