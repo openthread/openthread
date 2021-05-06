@@ -149,6 +149,8 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
             .filter_ping_request() \
             .must_next()
 
+        initial_identifier = _pkt.icmpv6.echo.identifier
+
         # 2. BR_1 forwards the multicast ping packet with multicast address,
         # MA1, to the LAN.
         pkts.filter_eth_src(vars['BR_1_ETH']) \
@@ -177,6 +179,7 @@ class MATN_09_FailureOfPrimaryBBROutboundMulticast(thread_cert.TestCase):
         _pkt = pkts.filter_wpan_src64(vars['Router_1']) \
             .filter_AMPLFMA(mpl_seed_id=vars['Router_1_RLOC']) \
             .filter_ping_request() \
+            .filter(lambda p: p.icmpv6.echo.identifier != initial_identifier) \
             .must_next()
 
         # 6. BR_2 forwards the multicast ping packet with multicast address,
