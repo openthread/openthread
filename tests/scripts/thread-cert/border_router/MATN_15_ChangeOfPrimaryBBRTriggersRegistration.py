@@ -181,7 +181,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         # Where the payload contains:
         # Status TLV: ST_MLR_SUCCESS
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_ipv6_dst(vars['TD_RLOC']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_coap_ack('/n/mr') \
             .filter(lambda
                         p: p.coap.mid == _pkt.coap.mid and
@@ -190,7 +190,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
 
         # 5. Router_1 forwards the response to TD.
         pkts.filter_wpan_src64(vars['Router_1']) \
-            .filter_ipv6_2dsts(vars['TD_RLOC'], vars['TD_LLA']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_coap_ack('/n/mr') \
             .filter(lambda
                         p: p.coap.mid == _pkt.coap.mid and
