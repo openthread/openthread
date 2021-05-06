@@ -90,79 +90,75 @@ const char *StringFind(const char *aString, char aChar);
  */
 bool StringEndsWith(const char *aString, char aChar);
 
-/**
- * This class defines the base class for `String`.
- *
- */
-class StringBase
-{
-protected:
-    /**
-     * This method appends `printf()` style formatted data to a given character string buffer.
-     *
-     * @param[in]    aBuffer  A pointer to buffer containing the string.
-     * @param[in]    aSize    The size of the buffer (in bytes).
-     * @param[inout] aLength  A reference to variable containing current length of string. On exit length is updated.
-     * @param[in]    aFormat  A pointer to the format string.
-     * @param[in]    aArgs    Arguments for the format specification.
-     *
-     * @retval kErrorNone          Updated the string successfully.
-     * @retval kErrorNoBufs        String could not fit in the storage.
-     * @retval kErrorInvalidArgs   Arguments do not match the format string.
-     */
-    static Error Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs);
-};
+class StringWriter;
 
 /**
  * This class defines a fixed-size string.
  *
  */
-template <uint16_t SIZE> class String : private StringBase
+template <uint16_t kSize> class String
+{
+    friend class StringWriter;
+
+    static_assert(kSize > 0, "String buffer cannot be empty.");
+
+public:
+    /**
+     * This method returns the string as a null-terminated C string.
+     *
+     * @returns The null-terminated C string.
+     *
+     */
+    const char *AsCString(void) const { return mBuffer; }
+
+private:
+    char mBuffer[kSize];
+};
+
+/**
+ * This class implements writing to a string buffer.
+ *
+ */
+class StringWriter
 {
 public:
-    enum
-    {
-        kSize = SIZE, ///< Size (number of characters) in the buffer storage for the string.
-    };
-
     /**
-     * This constructor initializes the `String` object as empty.
+     * This constructor initializes the object as cleared on the provided buffer.
      *
      */
-    String(void)
-        : mLength(0)
+    StringWriter(char *aBuffer, uint16_t aSize);
+
+    /**
+     * This constructor initializes the object as cleared on a fixed-size string.
+     *
+     */
+    template <uint16_t kSize>
+    explicit StringWriter(String<kSize> &aStringBuffer)
+        : StringWriter(aStringBuffer.mBuffer, kSize)
     {
-        mBuffer[0] = 0;
     }
 
     /**
-     * This constructor initializes the `String` object using `printf()` style formatted data.
+     * This method clears the string writer.
      *
-     * @param[in] aFormat    A pointer to the format string.
-     * @param[in] ...        Arguments for the format specification.
-     *
-     */
-    explicit String(const char *aFormat, ...)
-        : mLength(0)
-    {
-        va_list args;
-        va_start(args, aFormat);
-        IgnoreError(Write(mBuffer, kSize, mLength, aFormat, args));
-        va_end(args);
-    }
-
-    /**
-     * This method clears the string.
+     * @returns The string writer.
      *
      */
-    void Clear(void)
-    {
-        mBuffer[0] = 0;
-        mLength    = 0;
-    }
+    StringWriter &Clear(void);
 
     /**
-     * This method gets the length of the string.
+     * This method returns whether the output is truncated.
+     *
+     * @note If the output is truncated, the buffer is still null-terminated.
+     *
+     * @retval  true    The output is truncated.
+     * @retval  false   The output is not truncated.
+     *
+     */
+    bool IsTruncated(void) const { return mLength >= mSize; }
+
+    /**
+     * This method gets the length of the wanted string.
      *
      * Similar to `strlen()` the length does not include the null character at the end of the string.
      *
@@ -172,107 +168,50 @@ public:
     uint16_t GetLength(void) const { return mLength; }
 
     /**
-     * This method returns the size (number of chars) in the buffer storage for the string.
+     * This method returns the size (number of chars) in the buffer.
      *
-     * @returns The size of the buffer storage for the string.
-     *
-     */
-    uint16_t GetSize(void) const { return kSize; }
-
-    /**
-     * This method returns the string as a null-terminated C string.
-     *
-     * @returns The null-terminated C string.
+     * @returns The size of the buffer.
      *
      */
-    const char *AsCString(void) const { return mBuffer; }
+    uint16_t GetSize(void) const { return mSize; }
 
     /**
-     * This method sets the string using `printf()` style formatted data.
+     * This method appends `printf()` style formatted data to the buffer.
      *
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] ...        Arguments for the format specification.
      *
-     * @retval kErrorNone          Updated the string successfully.
-     * @retval kErrorNoBufs        String could not fit in the storage.
-     * @retval kErrorInvalidArgs   Arguments do not match the format string.
+     * @returns The string writer.
      *
      */
-    Error Set(const char *aFormat, ...)
-    {
-        va_list args;
-        Error   error;
-
-        va_start(args, aFormat);
-        mLength = 0;
-        error   = Write(mBuffer, kSize, mLength, aFormat, args);
-        va_end(args);
-
-        return error;
-    }
+    StringWriter &Append(const char *aFormat, ...);
 
     /**
-     * This method appends `printf()` style formatted data to the `String` object.
-     *
-     * @param[in] aFormat    A pointer to the format string.
-     * @param[in] ...        Arguments for the format specification.
-     *
-     * @retval kErrorNone          Updated the string successfully.
-     * @retval kErrorNoBufs        String could not fit in the storage.
-     * @retval kErrorInvalidArgs   Arguments do not match the format string.
-     *
-     */
-    Error Append(const char *aFormat, ...)
-    {
-        va_list args;
-        Error   error;
-
-        va_start(args, aFormat);
-        error = Write(mBuffer, kSize, mLength, aFormat, args);
-        va_end(args);
-
-        return error;
-    }
-
-    /**
-     * This method appends `printf()` style formatted data to the `String` object.
+     * This method appends `printf()` style formatted data to the buffer.
      *
      * @param[in] aFormat    A pointer to the format string.
      * @param[in] aArgs      Arguments for the format specification (as `va_list`).
      *
-     * @retval kErrorNone          Updated the string successfully.
-     * @retval kErrorNoBufs        String could not fit in the storage.
-     * @retval kErrorInvalidArgs   Arguments do not match the format string.
+     * @returns The string writer.
      *
      */
-    Error AppendVarArgs(const char *aFormat, va_list aArgs) { return Write(mBuffer, kSize, mLength, aFormat, aArgs); }
+    StringWriter &AppendVarArgs(const char *aFormat, va_list aArgs);
 
     /**
-     * This method appends an array of bytes in hex representation (using "%02x" style) to the `String` object.
+     * This method appends an array of bytes in hex representation (using "%02x" style) to the buffer.
      *
      * @param[in] aBytes    A pointer to buffer containing the bytes to append.
      * @param[in] aLength   The length of @p aBytes buffer (in bytes).
      *
-     * @retval kErrorNone          Updated the string successfully.
-     * @retval kErrorNoBufs        String could not fit in the storage.
+     * @returns The string writer.
      *
      */
-    Error AppendHexBytes(const uint8_t *aBytes, uint16_t aLength)
-    {
-        Error error = kErrorNone;
-
-        while (aLength--)
-        {
-            SuccessOrExit(error = Append("%02x", *aBytes++));
-        }
-
-    exit:
-        return error;
-    }
+    StringWriter &AppendHexBytes(const uint8_t *aBytes, uint16_t aLength);
 
 private:
-    uint16_t mLength;
-    char     mBuffer[kSize];
+    char *         mBuffer;
+    uint16_t       mLength;
+    const uint16_t mSize;
 };
 
 /**
