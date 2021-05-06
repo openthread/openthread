@@ -55,10 +55,12 @@ void DeviceMode::Set(const ModeConfig &aModeConfig)
 
 DeviceMode::InfoString DeviceMode::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no",
-                                IsFullThreadDevice() ? "yes" : "no", IsFullNetworkData() ? "yes" : "no");
+    writer.Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
+                  IsFullNetworkData() ? "yes" : "no");
+
     return string;
 }
 

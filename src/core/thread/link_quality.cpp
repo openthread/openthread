@@ -106,11 +106,11 @@ exit:
 
 RssAverager::InfoString RssAverager::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
     VerifyOrExit(mCount != 0);
-    StringWriter(string).Append("%d.%s", -(mAverage >> kPrecisionBitShift),
-                                kDigitsString[mAverage & kPrecisionBitMask]);
+    writer.Append("%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]);
 
 exit:
     return string;
@@ -167,10 +167,12 @@ uint8_t LinkQualityInfo::GetLinkMargin(void) const
 
 LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).Append("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(),
-                                GetLastRss(), GetLinkQuality());
+    writer.Append("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(), GetLastRss(),
+                  GetLinkQuality());
+
     return string;
 }
 
