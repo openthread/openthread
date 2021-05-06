@@ -28,23 +28,12 @@
 
 add_library(openthread-cli-ftd)
 
-target_compile_definitions(openthread-cli-ftd
-    PRIVATE
-        OPENTHREAD_FTD=1
-)
+target_compile_definitions(openthread-cli-ftd PRIVATE OPENTHREAD_FTD=1)
 
-target_compile_options(openthread-cli-ftd PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-cli-ftd PRIVATE ${OT_CFLAGS})
 
 target_include_directories(openthread-cli-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
 target_sources(openthread-cli-ftd PRIVATE ${COMMON_SOURCES})
 
-target_link_libraries(openthread-cli-ftd
-    PUBLIC
-        openthread-ftd
-    PRIVATE
-        ${OT_MBEDTLS}
-        ot-config
-)
+target_link_libraries(openthread-cli-ftd PUBLIC openthread-ftd PRIVATE ${OT_MBEDTLS} ot-config)

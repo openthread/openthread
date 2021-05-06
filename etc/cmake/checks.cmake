@@ -26,4 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-configure_file(${PROJECT_SOURCE_DIR}/etc/cmake/openthread-config-generic.h.in ${PROJECT_BINARY_DIR}/etc/cmake/openthread-config-generic.h)
+configure_file(
+    ${PROJECT_SOURCE_DIR}/etc/cmake/openthread-config-generic.h.in
+    ${PROJECT_BINARY_DIR}/etc/cmake/openthread-config-generic.h
+)

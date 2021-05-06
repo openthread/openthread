@@ -45,14 +45,12 @@ set(CMAKE_C_STANDARD 99)
 
 message(STATUS "OpenThread Source Directory: ${PROJECT_SOURCE_DIR}")
 
-target_include_directories(ot-config INTERFACE
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
+target_include_directories(
+    ot-config INTERFACE ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/core
 )
 
 include(TestBigEndian)
-TEST_BIG_ENDIAN(OT_BIG_ENDIAN)
+test_big_endian(OT_BIG_ENDIAN)
 if(OT_BIG_ENDIAN)
     target_compile_definitions(ot-config INTERFACE "BYTE_ORDER_BIG_ENDIAN=1")
 endif()
@@ -62,20 +60,20 @@ include("${PROJECT_SOURCE_DIR}/etc/cmake/options.cmake")
 include("${PROJECT_SOURCE_DIR}/etc/cmake/functions.cmake")
 
 if(NOT CMAKE_BUILD_TYPE)
-    # Check if this is a top-level CMake.
-    # If it is not, do not set the CMAKE_BUILD_TYPE because OpenThread is a part of something bigger.
-    if ("${CMAKE_PROJECT_NAME}" STREQUAL "openthread")
+    # Check if this is a top-level CMake. If it is not, do not set the CMAKE_BUILD_TYPE because OpenThread is a part of
+    # something bigger.
+    if("${CMAKE_PROJECT_NAME}" STREQUAL "openthread")
         set(CMAKE_BUILD_TYPE "Debug" CACHE STRING "default build type: Debug" FORCE)
-    endif ()
+    endif()
 endif()
 
-if (CMAKE_BUILD_TYPE)
+if(CMAKE_BUILD_TYPE)
     message(STATUS "OpenThread CMake build type: ${CMAKE_BUILD_TYPE}")
-endif ()
+endif()
 
 if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     option(OT_COMPILE_WARNING_AS_ERROR "whether to include -Werror -pedantic-errors with gcc-compatible compilers")
-    if (OT_COMPILE_WARNING_AS_ERROR)
+    if(OT_COMPILE_WARNING_AS_ERROR)
         set(OT_CFLAGS -Werror -pedantic-errors)
     endif()
 
@@ -86,8 +84,16 @@ if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "(Apple)?[Cc]lang")
     endif()
 
     set(OT_CFLAGS
-        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS} -Wall -Wextra -Wshadow>
-        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS} -Wall -Wextra -Wshadow -Wno-c++14-compat -fno-exceptions>
+        $<$<COMPILE_LANGUAGE:C>:${OT_CFLAGS}
+        -Wall
+        -Wextra
+        -Wshadow>
+        $<$<COMPILE_LANGUAGE:CXX>:${OT_CFLAGS}
+        -Wall
+        -Wextra
+        -Wshadow
+        -Wno-c++14-compat
+        -fno-exceptions>
     )
 endif()
 
@@ -100,7 +106,8 @@ if(OT_PACKAGE_VERSION STREQUAL "")
     execute_process(
         COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
         WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        OUTPUT_VARIABLE OT_PACKAGE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
+        OUTPUT_VARIABLE OT_PACKAGE_VERSION
+        OUTPUT_STRIP_TRAILING_WHITESPACE
     )
     message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 endif()
@@ -125,25 +132,13 @@ if(NOT OT_PLATFORM IN_LIST OT_PLATFORMS)
 endif()
 
 set(OT_LOG_LEVEL "" CACHE STRING "set OpenThread log level")
-set(OT_LOG_LEVEL_VALUES
-    "NONE"
-    "CRIT"
-    "WARN"
-    "NOTE"
-    "INFO"
-    "DEBG"
-)
+set(OT_LOG_LEVEL_VALUES "NONE" "CRIT" "WARN" "NOTE" "INFO" "DEBG")
 set_property(CACHE OT_LOG_LEVEL PROPERTY STRINGS ${OT_LOG_LEVEL_VALUES})
 if(OT_LOG_LEVEL)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_${OT_LOG_LEVEL}")
 endif()
 
-set(OT_LOG_OUTPUT_VALUES
-    "APP"
-    "DEBUG_UART"
-    "NONE"
-    "PLATFORM_DEFINED"
-)
+set(OT_LOG_OUTPUT_VALUES "APP" "DEBUG_UART" "NONE" "PLATFORM_DEFINED")
 if(OT_REFERENCE_DEVICE AND NOT OT_PLATFORM STREQUAL "posix")
     set(OT_LOG_OUTPUT "APP" CACHE STRING "Set log output to application for reference device")
 else()
@@ -154,15 +149,15 @@ if(OT_LOG_OUTPUT)
     if(NOT OT_LOG_OUTPUT IN_LIST OT_LOG_OUTPUT_VALUES)
         message(FATAL_ERROR "Log output unknown: ${OT_LOG_OUTPUT}")
     endif()
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}")
+    target_compile_definitions(
+        ot-config INTERFACE "OPENTHREAD_CONFIG_LOG_OUTPUT=OPENTHREAD_CONFIG_LOG_OUTPUT_${OT_LOG_OUTPUT}"
+    )
     message(STATUS "Log output: ${OT_LOG_OUTPUT}")
 endif()
 
-# OT_CONFIG allows users to specify the path to a customized OpenThread
-# config header file. The default value of this parameter is empty string.
-# When not specified by user (value is ""), a platform cmake file may
-# choose to change this variable to provide its own OpenThread config header
-# file instead.
+# OT_CONFIG allows users to specify the path to a customized OpenThread config header file. The default value of this
+# parameter is empty string. When not specified by user (value is ""), a platform cmake file may choose to change this
+# variable to provide its own OpenThread config header file instead.
 
 set(OT_CONFIG "" CACHE STRING "OpenThread project-specific config header file chosen by user at configure time")
 
@@ -203,7 +198,7 @@ elseif(OT_PLATFORM)
     add_subdirectory(examples)
 endif()
 
-if (OT_DOC)
+if(OT_DOC)
     add_subdirectory(doc)
 endif()
 
@@ -216,8 +211,7 @@ endif()
 
 add_subdirectory(tests)
 
-add_custom_target(print-ot-config ALL
-                  COMMAND ${CMAKE_COMMAND}
-                  -DLIST="$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>"
-                  -P ${PROJECT_SOURCE_DIR}/etc/cmake/print.cmake
+add_custom_target(
+    print-ot-config ALL COMMAND ${CMAKE_COMMAND} -DLIST="$<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>" -P
+                                ${PROJECT_SOURCE_DIR}/etc/cmake/print.cmake
 )

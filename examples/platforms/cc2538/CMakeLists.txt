@@ -33,47 +33,38 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
-list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2538-config-check.h\""
-    "OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-cc2538-config-check.h\""
+     "OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-cc2538
+add_library(
+    openthread-cc2538
+    $<TARGET_OBJECTS:openthread-platform-utils>
     alarm.c
     diag.c
     entropy.c
     flash.c
+    logging.c
     misc.c
     radio.c
     startup-gcc.c
     system.c
-    logging.c
     uart.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-target_link_libraries(openthread-cc2538
-    PRIVATE
-        ot-config
-    PUBLIC
-        -T${PROJECT_SOURCE_DIR}/examples/platforms/cc2538/cc2538.ld
-        -Wl,--gc-sections -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
+target_link_libraries(
+    openthread-cc2538 PRIVATE ot-config PUBLIC -T${PROJECT_SOURCE_DIR}/examples/platforms/cc2538/cc2538.ld
+                                               -Wl,--gc-sections -Wl,-Map=$<TARGET_PROPERTY:NAME>.map
 )
 
-target_compile_definitions(openthread-cc2538
-    PUBLIC
-        ${OT_PLATFORM_DEFINES}
-)
+target_compile_definitions(openthread-cc2538 PUBLIC ${OT_PLATFORM_DEFINES})
 
-target_compile_options(openthread-cc2538 PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-cc2538 PRIVATE ${OT_CFLAGS})
 
-target_include_directories(openthread-cc2538 PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src/core
+target_include_directories(
+    openthread-cc2538 PRIVATE ${OT_PUBLIC_INCLUDES} ${PROJECT_SOURCE_DIR}/examples/platforms
+                              ${PROJECT_SOURCE_DIR}/src/core
 )

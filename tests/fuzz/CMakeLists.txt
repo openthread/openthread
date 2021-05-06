@@ -26,105 +26,42 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${PROJECT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/src/core
-)
+set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/include ${PROJECT_SOURCE_DIR}/src/core)
 
-set(COMMON_COMPILE_OPTIONS
-    -DOPENTHREAD_FTD=1
-    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
-)
+set(COMMON_COMPILE_OPTIONS -DOPENTHREAD_FTD=1 -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1)
 
-set(COMMON_SOURCES
-    fuzzer_platform.cpp
-)
+set(COMMON_SOURCES fuzzer_platform.cpp)
 
-set(COMMON_LIBS
-    openthread-ftd
-    ${OT_MBEDTLS}
-    $ENV{LIB_FUZZING_ENGINE}
-    ot-config
-)
+set(COMMON_LIBS openthread-ftd ${OT_MBEDTLS} $ENV{LIB_FUZZING_ENGINE} ot-config)
 
-add_executable(ot-cli-received-fuzzer
-    cli_received.cpp
-    ${COMMON_SOURCES}
-)
+add_executable(ot-cli-received-fuzzer ${COMMON_SOURCES} cli_received.cpp)
 
-target_compile_options(ot-cli-received-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
+target_compile_options(ot-cli-received-fuzzer PRIVATE ${COMMON_COMPILE_OPTIONS})
 
-target_include_directories(ot-cli-received-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
+target_include_directories(ot-cli-received-fuzzer PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-cli-received-fuzzer
-    PRIVATE
-        openthread-cli-ftd
-        ${COMMON_LIBS}
-)
+target_link_libraries(ot-cli-received-fuzzer PRIVATE openthread-cli-ftd ${COMMON_LIBS})
 
-add_executable(ot-ip6-send-fuzzer
-    ip6_send.cpp
-    ${COMMON_SOURCES}
-)
+add_executable(ot-ip6-send-fuzzer ${COMMON_SOURCES} ip6_send.cpp)
 
-target_compile_options(ot-ip6-send-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
+target_compile_options(ot-ip6-send-fuzzer PRIVATE ${COMMON_COMPILE_OPTIONS})
 
-target_include_directories(ot-ip6-send-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
+target_include_directories(ot-ip6-send-fuzzer PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-ip6-send-fuzzer
-    PRIVATE
-        ${COMMON_LIBS}
-)
+target_link_libraries(ot-ip6-send-fuzzer PRIVATE ${COMMON_LIBS})
 
-add_executable(ot-radio-receive-done-fuzzer
-    radio_receive_done.cpp
-    ${COMMON_SOURCES}
-)
+add_executable(ot-radio-receive-done-fuzzer ${COMMON_SOURCES} radio_receive_done.cpp)
 
-target_compile_options(ot-radio-receive-done-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
+target_compile_options(ot-radio-receive-done-fuzzer PRIVATE ${COMMON_COMPILE_OPTIONS})
 
-target_include_directories(ot-radio-receive-done-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
+target_include_directories(ot-radio-receive-done-fuzzer PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-radio-receive-done-fuzzer
-    PRIVATE
-        ${COMMON_LIBS}
-)
+target_link_libraries(ot-radio-receive-done-fuzzer PRIVATE ${COMMON_LIBS})
 
-add_executable(ot-ncp-hdlc-received-fuzzer
-    ncp_hdlc_received.cpp
-    ${COMMON_SOURCES}
-)
+add_executable(ot-ncp-hdlc-received-fuzzer ${COMMON_SOURCES} ncp_hdlc_received.cpp)
 
-target_compile_options(ot-ncp-hdlc-received-fuzzer
-    PRIVATE
-        ${COMMON_COMPILE_OPTIONS}
-)
+target_compile_options(ot-ncp-hdlc-received-fuzzer PRIVATE ${COMMON_COMPILE_OPTIONS})
 
-target_include_directories(ot-ncp-hdlc-received-fuzzer
-    PRIVATE
-        ${COMMON_INCLUDES}
-)
+target_include_directories(ot-ncp-hdlc-received-fuzzer PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-ncp-hdlc-received-fuzzer
-    PRIVATE
-        openthread-ncp-ftd
-        ${COMMON_LIBS}
-)
+target_link_libraries(ot-ncp-hdlc-received-fuzzer PRIVATE openthread-ncp-ftd ${COMMON_LIBS})

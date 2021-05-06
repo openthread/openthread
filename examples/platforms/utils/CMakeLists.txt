@@ -26,7 +26,8 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-platform-utils OBJECT
+add_library(
+    openthread-platform-utils OBJECT
     debug_uart.c
     link_metrics.cpp
     logging_rtt.c
@@ -36,16 +37,13 @@ add_library(openthread-platform-utils OBJECT
     soft_source_match_table.c
 )
 
-target_compile_definitions(openthread-platform-utils PRIVATE
-    $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>
-)
+target_compile_definitions(openthread-platform-utils PRIVATE $<TARGET_PROPERTY:ot-config,INTERFACE_COMPILE_DEFINITIONS>)
 
-target_include_directories(openthread-platform-utils PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/examples/platforms/utils
-    ${PROJECT_SOURCE_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
+target_include_directories(
+    openthread-platform-utils
+    PRIVATE ${OT_PUBLIC_INCLUDES} $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+            ${PROJECT_SOURCE_DIR}/examples/platforms ${PROJECT_SOURCE_DIR}/examples/platforms/utils
+            ${PROJECT_SOURCE_DIR}/third_party/jlink/SEGGER_RTT_V640/RTT
 )
 
 # Provide a static library implementation of platform-utils for non-cmake platforms

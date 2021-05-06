@@ -30,7 +30,6 @@ include(${PROJECT_SOURCE_DIR}/third_party/silabs/cmake/utility.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/silabs/cmake/includes.cmake)
 include(${PROJECT_SOURCE_DIR}/third_party/silabs/cmake/imported_libs.cmake)
 
-
 # ==============================================================================
 # Common sources and includes
 # ==============================================================================
@@ -66,26 +65,24 @@ set(EFR32_INCLUDES
     ${PROJECT_SOURCE_DIR}/src/core
 )
 
-set(EFR32_CFLAGS
-    -Wno-sign-compare
-    -Wno-unused-parameter
-    -Wno-missing-field-initializers
-)
+set(EFR32_CFLAGS -Wno-sign-compare -Wno-unused-parameter -Wno-missing-field-initializers)
 
 # ==============================================================================
 # mbedtls
 # ==============================================================================
 if(NOT OT_EXTERNAL_MBEDTLS)
-    message(FATAL_ERROR "OT_EXTERNAL_MBEDTLS is not set. Please include the define when running cmake\n\t-DOT_EXTERNAL_MBEDTLS=silabs-mbedtls")
+    message(
+        FATAL_ERROR
+            "OT_EXTERNAL_MBEDTLS is not set. Please include the define when running cmake\n\t-DOT_EXTERNAL_MBEDTLS=silabs-mbedtls"
+    )
 else()
     list(APPEND OT_PLATFORM_DEFINES "MBEDTLS_CONFIG_FILE=\"mbedtls_config.h\"")
 endif()
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 if(PLATFORM_LOWERCASE MATCHES "^efr32mg2\\d*")
-    list(APPEND OT_PUBLIC_INCLUDES
-        "${SILABS_GSDK_DIR}/util/third_party/crypto/sl_component/se_manager/inc"
-        "${SILABS_GSDK_DIR}/util/third_party/crypto/sl_component/se_manager/src"
+    list(APPEND OT_PUBLIC_INCLUDES "${SILABS_GSDK_DIR}/util/third_party/crypto/sl_component/se_manager/inc"
+         "${SILABS_GSDK_DIR}/util/third_party/crypto/sl_component/se_manager/src"
     )
     set(OT_PUBLIC_INCLUDES ${OT_PUBLIC_INCLUDES} PARENT_SCOPE)
 endif()
@@ -97,9 +94,8 @@ endif()
 # ==============================================================================
 # Filter out CFLAGS
 # ==============================================================================
-set(ignored_flags
-    "-pedantic-errors"  # Needed for RAIL lib
-    "-Wshadow"          # Needed for RAIL lib
+set(ignored_flags "-pedantic-errors" # Needed for RAIL lib
+                  "-Wshadow" # Needed for RAIL lib
 )
 
 foreach(flag IN LISTS ignored_flags)
@@ -114,19 +110,15 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
-list(APPEND OT_PLATFORM_DEFINES
-    "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\""
-    "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-efr32-config-check.h\""
+list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\""
+     "OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE=\"openthread-core-efr32-config-check.h\""
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 # ==============================================================================
 # Platform targets
 # ==============================================================================
-set(EFR32_COMMON_3RD_LIBS
-    jlinkrtt
-    ${OT_MBEDTLS}
-)
+set(EFR32_COMMON_3RD_LIBS jlinkrtt ${OT_MBEDTLS})
 
 include(${PLATFORM_LOWERCASE}/${PLATFORM_LOWERCASE}.cmake)
 

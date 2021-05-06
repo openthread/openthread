@@ -40,7 +40,9 @@ endif()
 
 option(OT_SIMULATION_MAX_NETWORK_SIZE "set maximum network size (default: 33)")
 if(OT_SIMULATION_MAX_NETWORK_SIZE)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=${OT_SIMULATION_MAX_NETWORK_SIZE}")
+    target_compile_definitions(
+        ot-config INTERFACE "OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=${OT_SIMULATION_MAX_NETWORK_SIZE}"
+    )
 endif()
 
 if(NOT OT_CONFIG)
@@ -48,17 +50,16 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
 endif()
 
-list(APPEND OT_PLATFORM_DEFINES
-    "_BSD_SOURCE=1"
-    "_DEFAULT_SOURCE=1"
-    "OPENTHREAD_EXAMPLES_SIMULATION=1"
-    "OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
+list(APPEND OT_PLATFORM_DEFINES "_BSD_SOURCE=1" "_DEFAULT_SOURCE=1" "OPENTHREAD_EXAMPLES_SIMULATION=1"
+     "OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
-add_library(openthread-simulation
+add_library(
+    openthread-simulation
+    $<TARGET_OBJECTS:openthread-platform-utils>
     alarm.c
     diag.c
     entropy.c
@@ -72,7 +73,6 @@ add_library(openthread-simulation
     uart.c
     virtual_time/alarm-sim.c
     virtual_time/platform-sim.c
-    $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
 find_library(LIBRT rt)
@@ -80,24 +80,15 @@ if(LIBRT)
     target_link_libraries(openthread-simulation PRIVATE ${LIBRT})
 endif()
 
-target_link_libraries(openthread-simulation PRIVATE
-    openthread-platform
-    ot-config)
+target_link_libraries(openthread-simulation PRIVATE openthread-platform ot-config)
 
-target_compile_definitions(openthread-simulation
-    PUBLIC
-        ${OT_PLATFORM_DEFINES}
-)
+target_compile_definitions(openthread-simulation PUBLIC ${OT_PLATFORM_DEFINES})
 
-target_compile_options(openthread-simulation PRIVATE
-    ${OT_CFLAGS}
-)
+target_compile_options(openthread-simulation PRIVATE ${OT_CFLAGS})
 
-target_include_directories(openthread-simulation PRIVATE
-    ${OT_PUBLIC_INCLUDES}
-    ${PROJECT_SOURCE_DIR}/examples/platforms
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
+target_include_directories(
+    openthread-simulation PRIVATE ${OT_PUBLIC_INCLUDES} ${PROJECT_SOURCE_DIR}/examples/platforms
+                                  ${PROJECT_SOURCE_DIR}/src ${PROJECT_SOURCE_DIR}/src/core
 )
 
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

@@ -26,21 +26,19 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_executable(ot-ncp-mtd
-    main.c
-    ncp.c
-)
+add_executable(ot-ncp-mtd main.c ncp.c)
 
 target_include_directories(ot-ncp-mtd PRIVATE ${COMMON_INCLUDES})
 
-target_link_libraries(ot-ncp-mtd PRIVATE
-    openthread-ncp-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-mtd
-    ${OT_PLATFORM_LIB}
-    openthread-ncp-mtd
-    ${OT_MBEDTLS}
-    ot-config
+target_link_libraries(
+    ot-ncp-mtd
+    PRIVATE openthread-ncp-mtd
+            ${OT_PLATFORM_LIB}
+            openthread-mtd
+            ${OT_PLATFORM_LIB}
+            openthread-ncp-mtd
+            ${OT_MBEDTLS}
+            ot-config
 )
 
 install(TARGETS ot-ncp-mtd DESTINATION bin)

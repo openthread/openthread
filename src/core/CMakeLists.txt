@@ -26,9 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${PROJECT_SOURCE_DIR}/src/core
-)
+set(COMMON_INCLUDES ${PROJECT_SOURCE_DIR}/src/core)
 
 set(COMMON_SOURCES
     api/backbone_router_api.cpp
@@ -219,8 +217,8 @@ set(COMMON_SOURCES
 
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")
 if(OT_VENDOR_EXTENSION)
-  target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_VENDOR_EXTENSION=1")
-  list(APPEND COMMON_SOURCES ${OT_VENDOR_EXTENSION})
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_VENDOR_EXTENSION=1")
+    list(APPEND COMMON_SOURCES ${OT_VENDOR_EXTENSION})
 endif()
 
 if(OT_FTD)
