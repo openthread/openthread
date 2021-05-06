@@ -287,21 +287,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     }
 }
 
-static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    (void)aArgsLength;
-    (void)aArgs;
-
-    uint8_t i;
-
-    otPlatformConfig *config = (otPlatformConfig *)aContext;
-    for (i = 0; i < config->mRadioUrlNum; i++)
-    {
-        otCliOutputFormat("%s\r\n", config->mRadioUrls[i]);
-    }
-    otCliOutputFormat("Done\r\n");
-}
-
 static otInstance *InitInstance(PosixConfig *aConfig)
 {
     otInstance *instance = NULL;
@@ -347,12 +332,22 @@ void otPlatReset(otInstance *aInstance)
     assert(false);
 }
 
+static void ProcessNetif(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otCliOutputFormat("%s:%u\r\n", otSysGetThreadNetifName(), otSysGetThreadNetifIndex());
+}
+
+static const otCliCommand kCommands[] = {{"netif", ProcessNetif}};
+
 int main(int argc, char *argv[])
 {
-    otInstance * instance;
-    int          rval = 0;
-    PosixConfig  config;
-    otCliCommand radioUrlCommand = {"radiourl", PrintRadioUrl};
+    otInstance *instance;
+    int         rval = 0;
+    PosixConfig config;
 
 #ifdef __linux__
     // Ensure we terminate this process if the
@@ -377,7 +372,7 @@ int main(int argc, char *argv[])
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     otAppCliInit(instance);
 #endif
-    otCliSetUserCommands(&radioUrlCommand, 1, &config.mPlatformConfig);
+    otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance);
 
     while (true)
     {

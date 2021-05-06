@@ -472,9 +472,6 @@ private:
     void    OutputRoute(const otExternalRouteConfig &aConfig);
     void    OutputService(const otServiceConfig &aConfig);
 
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    otError ProcessNetif(uint8_t aArgsLength, Arg aArgs[]);
-#endif
     otError ProcessNetstat(uint8_t aArgsLength, Arg aArgs[]);
     int     OutputSocketAddress(const otSockAddr &aAddress);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -748,9 +745,6 @@ private:
         {"neighbor", &Interpreter::ProcessNeighbor},
 #endif
         {"netdata", &Interpreter::ProcessNetworkData},
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-        {"netif", &Interpreter::ProcessNetif},
-#endif
         {"netstat", &Interpreter::ProcessNetstat},
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
         {"networkdiagnostic", &Interpreter::ProcessNetworkDiagnostic},

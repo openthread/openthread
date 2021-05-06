@@ -150,6 +150,16 @@ extern int
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 
+const char *otSysGetThreadNetifName(void)
+{
+    return gNetifName;
+}
+
+unsigned int otSysGetThreadNetifIndex(void)
+{
+    return gNetifIndex;
+}
+
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include "posix/platform/ip6_utils.hpp"
 
@@ -1567,20 +1577,4 @@ exit:
     return;
 }
 
-otError otPlatGetNetif(otInstance *aInstance, const char **outNetIfName, unsigned int *outNetIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error;
-
-    VerifyOrExit(gNetifIndex != 0, error = OT_ERROR_FAILED);
-
-    *outNetIfName  = gNetifName;
-    *outNetIfIndex = gNetifIndex;
-    error          = OT_ERROR_NONE;
-
-exit:
-
-    return error;
-}
 #endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
