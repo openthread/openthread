@@ -195,7 +195,7 @@ void ChannelMonitor::LogResults(void)
 
     for (uint16_t channel : mChannelOccupancy)
     {
-        IgnoreError(logString.Append("%02x ", channel >> 8));
+        StringWriter(logString).Append("%02x ", channel >> 8);
     }
 
     otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, logString.AsCString());

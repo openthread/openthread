@@ -212,6 +212,7 @@ void Notifier::LogEvents(Events aEvents) const
     bool                           addSpace = false;
     bool                           didLog   = false;
     String<kFlagsStringBufferSize> string;
+    StringWriter                   writer(string);
 
     for (uint8_t bit = 0; bit < sizeof(Events::Flags) * CHAR_BIT; bit++)
     {
@@ -219,16 +220,16 @@ void Notifier::LogEvents(Events aEvents) const
 
         if (flags & (1 << bit))
         {
-            if (string.GetLength() >= kFlagsStringLineLimit)
+            if (writer.GetLength() >= kFlagsStringLineLimit)
             {
                 otLogInfoCore("Notifier: StateChanged (0x%08x) %s%s ...", aEvents.GetAsFlags(), didLog ? "... " : "[",
                               string.AsCString());
-                string.Clear();
+                writer.Clear();
                 didLog   = true;
                 addSpace = false;
             }
 
-            IgnoreError(string.Append("%s%s", addSpace ? " " : "", EventToString(static_cast<Event>(1 << bit))));
+            writer.Append("%s%s", addSpace ? " " : "", EventToString(static_cast<Event>(1 << bit)));
             addSpace = true;
 
             flags ^= (1 << bit);

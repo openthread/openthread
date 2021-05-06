@@ -369,8 +369,9 @@ void RadioSelector::Log(otLogLevel      aLogLevel,
     {
         if (aNeighbor.GetSupportedRadioTypes().Contains(radio))
         {
-            IgnoreError(preferenceString.Append("%s%s:%d", isFirstEntry ? "" : " ", RadioTypeToString(radio),
-                                                aNeighbor.GetRadioPreference(radio)));
+            StringWriter(preferenceString)
+                .Append("%s%s:%d", isFirstEntry ? "" : " ", RadioTypeToString(radio),
+                        aNeighbor.GetRadioPreference(radio));
             isFirstEntry = false;
         }
     }

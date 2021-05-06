@@ -77,35 +77,35 @@ uint16_t Header::GetSize(Type aType)
 
 Header::InfoString Header::ToString(void) const
 {
-    Type       type = GetType();
-    InfoString string;
+    Type         type = GetType();
+    InfoString   string;
+    StringWriter writer(string);
 
     switch (type)
     {
     case kTypeBroadcast:
-        IgnoreError(string.Set("broadcast ch:%d", GetChannel()));
+        writer.Append("broadcast ch:%d", GetChannel());
         break;
 
     case kTypeUnicast:
-        IgnoreError(string.Set("unicast ch:%d", GetChannel()));
+        writer.Append("unicast ch:%d", GetChannel());
         break;
 
     case kTypeAck:
-        IgnoreError(string.Set("ack"));
+        writer.Append("ack");
         break;
     }
 
-    IgnoreError(
-        string.Append(" panid:%04x num:%lu src:%s", GetPanId(), GetPacketNumber(), GetSource().ToString().AsCString()));
+    writer.Append(" panid:%04x num:%lu src:%s", GetPanId(), GetPacketNumber(), GetSource().ToString().AsCString());
 
     if ((type == kTypeUnicast) || (type == kTypeAck))
     {
-        IgnoreError(string.Append(" dst:%s", GetDestination().ToString().AsCString()));
+        writer.Append(" dst:%s", GetDestination().ToString().AsCString());
     }
 
     if ((type == kTypeUnicast) || (type == kTypeBroadcast))
     {
-        IgnoreError(string.Append(GetAckMode() == kNoAck ? " no-ack" : " ack-req"));
+        writer.Append(GetAckMode() == kNoAck ? " no-ack" : " ack-req");
     }
 
     return string;
