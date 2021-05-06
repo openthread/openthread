@@ -156,6 +156,22 @@ const char *otSysGetRadioUrlHelpString(void);
 
 extern otPlatResetReason gPlatResetReason;
 
+/**
+ * This method returns the Thread network interface name.
+ *
+ * @returns The Thread network interface name.
+ *
+ */
+const char *otSysGetThreadNetifName(void);
+
+/**
+ * This method returns the Thread network interface index.
+ *
+ * @returns The Thread network interface index.
+ *
+ */
+unsigned int otSysGetThreadNetifIndex(void);
+
 #ifdef __cplusplus
 } // end of extern "C"
 #endif

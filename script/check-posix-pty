@@ -146,9 +146,6 @@ spawn ${OT_CLI_CMD}
 expect_after {
     timeout { error }
 }
-send "radiourl\r\n"
-expect "${RADIO_URL}"
-expect "Done"
 send "region\r\n"
 expect "US"
 expect "Done"
