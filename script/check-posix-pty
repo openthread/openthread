@@ -129,6 +129,20 @@ do_check()
         sudo "${OT_CLI_CMD}" factoryreset
         # sleep a while for daemon ready
         sleep 2
+
+        readonly OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH=640
+        local -r kMaxStringLength="$((OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH - 1))"
+
+        # verify success if command length doesn't exceeds the limit
+        for len in $(seq 1 ${kMaxStringLength}); do
+            sudo "${OT_CLI_CMD}" "$(printf '1%.0s' $(seq 1 "${len}"))"
+        done
+
+        # verify failure if command length exceeds the limit
+        len=${OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH}
+        if sudo "${OT_CLI_CMD}" "$(printf '1%.0s' $(seq 1 "${len}"))"; then
+            die
+        fi
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"

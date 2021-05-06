@@ -270,7 +270,8 @@ void platformDaemonProcess(const otSysMainloopContext *aContext)
     {
         uint8_t buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
 
-        rval = read(sSessionSocket, buffer, sizeof(buffer));
+        // leave 1 byte for the null terminator
+        rval = read(sSessionSocket, buffer, sizeof(buffer) - 1);
 
         if (rval > 0)
         {
