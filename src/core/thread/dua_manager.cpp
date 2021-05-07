@@ -536,7 +536,7 @@ exit:
         UpdateCheckDelay(Mle::kNoBufDelay);
     }
 
-    otLogInfoDua("DuaManager::PerformNextRegistration(): %s", ErrorToString(error));
+    otLogInfoDua("PerformNextRegistration: %s", ErrorToString(error));
     FreeMessageOnError(message, error);
 }
 

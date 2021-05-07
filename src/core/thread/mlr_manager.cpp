@@ -449,7 +449,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
     otLogInfoMlr("Sent MLR.req: addressNum=%d", aAddressNum);
 
 exit:
-    otLogInfoMlr("MlrManager::SendMulticastListenerRegistrationMessage(): %s", ErrorToString(error));
+    otLogInfoMlr("SendMulticastListenerRegistrationMessage(): %s", ErrorToString(error));
     FreeMessageOnError(message, error);
     return error;
 }
