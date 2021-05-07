@@ -307,6 +307,8 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
 {
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
 
+    VerifyOrExit(mle.IsAttached(), mDelay.mValue = 0);
+
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
         if (mle.HasRestored())
@@ -333,6 +335,9 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
         UpdateRegistrationDelay(kNewDuaRegistrationDelay);
     }
 #endif
+
+exit:
+    return;
 }
 
 void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
