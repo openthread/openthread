@@ -88,9 +88,11 @@ exit:
 
 Address::InfoString Address::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
+    writer.Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
+
     return string;
 }
 

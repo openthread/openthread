@@ -65,9 +65,10 @@ void ExtAddress::GenerateRandom(void)
 
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).AppendHexBytes(m8, sizeof(ExtAddress));
+    writer.AppendHexBytes(m8, sizeof(ExtAddress));
 
     return string;
 }
@@ -92,19 +93,20 @@ void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder a
 
 Address::InfoString Address::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
     if (mType == kTypeExtended)
     {
-        string = GetExtended().ToString();
+        writer.AppendHexBytes(GetExtended().m8, sizeof(ExtAddress));
     }
     else if (mType == kTypeNone)
     {
-        StringWriter(string).Append("None");
+        writer.Append("None");
     }
     else
     {
-        StringWriter(string).Append("0x%04x", GetShort());
+        writer.Append("0x%04x", GetShort());
     }
 
     return string;
@@ -112,9 +114,10 @@ Address::InfoString Address::ToString(void) const
 
 ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).AppendHexBytes(m8, sizeof(ExtendedPanId));
+    writer.AppendHexBytes(m8, sizeof(ExtendedPanId));
 
     return string;
 }

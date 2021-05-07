@@ -247,9 +247,10 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
 
 InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).AppendHexBytes(mFields.m8, kSize);
+    writer.AppendHexBytes(mFields.m8, kSize);
 
     return string;
 }
@@ -630,11 +631,12 @@ exit:
 
 Address::InfoString Address::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    StringWriter(string).Append("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
-                                HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
-                                HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+    writer.Append("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
+                  HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
+                  HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
     return string;
 }
 
