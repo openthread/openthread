@@ -495,7 +495,7 @@ public:
      * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      */
-    void GetLeaseConfig(LeaseConfig &aLeaseConfig);
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const;
 
     /**
      * This method sets the LEASE and KEY-LEASE configurations.

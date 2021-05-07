@@ -164,7 +164,7 @@ uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
     return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
 }
 
-void Server::GetLeaseConfig(LeaseConfig &aLeaseConfig)
+void Server::GetLeaseConfig(LeaseConfig &aLeaseConfig) const
 {
     aLeaseConfig = mLeaseConfig;
 }

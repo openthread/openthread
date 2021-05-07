@@ -79,10 +79,10 @@ typedef uint32_t otSrpServerServiceUpdateId;
  */
 typedef struct otSrpServerLeaseConfig
 {
-    uint32_t mMinLease;    // The minimum LEASE interval in seconds.
-    uint32_t mMaxLease;    // The maximum LEASE interval in seconds.
-    uint32_t mMinKeyLease; // The minimum KEY-LEASE interval in seconds.
-    uint32_t mMaxKeyLease; // The maximum KEY-LEASE interval in seconds.
+    uint32_t mMinLease;    ///< The minimum LEASE interval in seconds.
+    uint32_t mMaxLease;    ///< The maximum LEASE interval in seconds.
+    uint32_t mMinKeyLease; ///< The minimum KEY-LEASE interval in seconds.
+    uint32_t mMaxKeyLease; ///< The maximum KEY-LEASE interval in seconds.
 } otSrpServerLeaseConfig;
 
 /**
