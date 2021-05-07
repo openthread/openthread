@@ -92,7 +92,7 @@ void Manager::HandleNotifierEvents(Events aEvents)
 
     if (aEvents.Contains(kEventThreadBackboneRouterStateChanged))
     {
-        if (Get<BackboneRouter::Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
+        if (Get<Local>().GetState() == OT_BACKBONE_ROUTER_STATE_DISABLED)
         {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
             Get<Tmf::Agent>().RemoveResource(mMulticastListenerRegistration);
@@ -156,7 +156,7 @@ void Manager::HandleTimer(void)
 void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     Error                      error     = kErrorNone;
-    bool                       isPrimary = Get<BackboneRouter::Local>().IsPrimary();
+    bool                       isPrimary = Get<Local>().IsPrimary();
     ThreadStatusTlv::MlrStatus status    = ThreadStatusTlv::kMlrSuccess;
     BackboneRouterConfig       config;
 
@@ -210,7 +210,7 @@ void Manager::HandleMulticastListenerRegistration(const Coap::Message &aMessage,
 
     if (!processTimeoutTlv)
     {
-        IgnoreError(Get<BackboneRouter::Leader>().GetConfig(config));
+        IgnoreError(Get<Leader>().GetConfig(config));
 
         timeout = config.mMlrTimeout;
     }
@@ -353,7 +353,7 @@ void Manager::SendBackboneMulticastListenerRegistration(const Ip6::Address *aAdd
 
     SuccessOrExit(error = Tlv::Append<ThreadTimeoutTlv>(*message, aTimeout));
 
-    messageInfo.SetPeerAddr(Get<BackboneRouter::Local>().GetAllNetworkBackboneRoutersAddress());
+    messageInfo.SetPeerAddr(Get<Local>().GetAllNetworkBackboneRoutersAddress());
     messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort); // TODO: Provide API for configuring Backbone COAP port.
 
     messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
@@ -372,7 +372,7 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
 {
     Error                      error     = kErrorNone;
     ThreadStatusTlv::DuaStatus status    = ThreadStatusTlv::kDuaSuccess;
-    bool                       isPrimary = Get<BackboneRouter::Local>().IsPrimary();
+    bool                       isPrimary = Get<Local>().IsPrimary();
     uint32_t                   lastTransactionTime;
     bool                       hasLastTransactionTime;
     Ip6::Address               target;
@@ -404,8 +404,8 @@ void Manager::HandleDuaRegistration(const Coap::Message &aMessage, const Ip6::Me
 #endif
 
     VerifyOrExit(isPrimary, status = ThreadStatusTlv::kDuaNotPrimary);
-    VerifyOrExit(Get<BackboneRouter::Leader>().HasDomainPrefix(), status = ThreadStatusTlv::kDuaGeneralFailure);
-    VerifyOrExit(Get<BackboneRouter::Leader>().IsDomainUnicast(target), status = ThreadStatusTlv::kDuaInvalid);
+    VerifyOrExit(Get<Leader>().HasDomainPrefix(), status = ThreadStatusTlv::kDuaGeneralFailure);
+    VerifyOrExit(Get<Leader>().IsDomainUnicast(target), status = ThreadStatusTlv::kDuaInvalid);
 
     hasLastTransactionTime = (Tlv::Find<ThreadLastTransactionTimeTlv>(aMessage, lastTransactionTime) == kErrorNone);
 
@@ -531,7 +531,7 @@ Error Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(Get<BackboneRouter::Local>().IsPrimary(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Local>().IsPrimary(), error = kErrorInvalidState);
 
     VerifyOrExit((message = mBackboneTmfAgent.NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
@@ -545,7 +545,7 @@ Error Manager::SendBackboneQuery(const Ip6::Address &aDua, uint16_t aRloc16)
         SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
 
-    messageInfo.SetPeerAddr(Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress());
+    messageInfo.SetPeerAddr(Get<Local>().GetAllDomainBackboneRoutersAddress());
     messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort);
 
     messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
@@ -651,9 +651,8 @@ Error Manager::SendProactiveBackboneNotification(const Ip6::Address &           
                                                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                                  uint32_t                        aTimeSinceLastTransaction)
 {
-    return SendBackboneAnswer(Get<BackboneRouter::Local>().GetAllDomainBackboneRoutersAddress(),
-                              BackboneRouter::kBackboneUdpPort, aDua, aMeshLocalIid, aTimeSinceLastTransaction,
-                              Mac::kShortAddrInvalid);
+    return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), BackboneRouter::kBackboneUdpPort, aDua,
+                              aMeshLocalIid, aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
