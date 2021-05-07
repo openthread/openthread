@@ -528,14 +528,16 @@ void DuaManager::PerformNextRegistration(void)
         Get<DataPollSender>().SendFastPolls();
     }
 
+    otLogInfoDua("Sent DUA.req for DUA %s", dua.ToString().AsCString());
+
 exit:
     if (error == kErrorNoBufs)
     {
         UpdateCheckDelay(Mle::kNoBufDelay);
     }
 
+    otLogInfoDua("DuaManager::PerformNextRegistration(): %s", ErrorToString(error));
     FreeMessageOnError(message, error);
-    otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), ErrorToString(error));
 }
 
 void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
@@ -565,7 +567,7 @@ exit:
         mRegistrationTask.Post();
     }
 
-    otLogInfoDua("Received DUA.req: %s", ErrorToString(error));
+    otLogInfoDua("Received DUA.rsp: %s", ErrorToString(error));
 }
 
 void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
