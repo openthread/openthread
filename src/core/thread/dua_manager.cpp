@@ -524,6 +524,7 @@ void DuaManager::PerformNextRegistration(void)
 
     mIsDuaPending   = true;
     mRegisteringDua = dua;
+    mDelay.mValue   = 0;
 
     // Generally Thread 1.2 Router would send DUA.req on behalf for DUA registered by its MTD child.
     // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send DUA.req to PBBR itself.
