@@ -72,7 +72,7 @@ if(OT_BORDER_ROUTER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE=1")
 endif()
 
-option(OT_BORDER_ROUTING "enable (duckhorn) border routing support")
+option(OT_BORDER_ROUTING "enable border routing support")
 if(OT_BORDER_ROUTING)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE=1")
 endif()
