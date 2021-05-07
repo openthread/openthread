@@ -38,6 +38,7 @@
 
 #include <assert.h>
 #include <errno.h>
+#include <getopt.h>
 #include <libgen.h>
 #include <stddef.h>
 #include <stdint.h>
@@ -63,11 +64,43 @@ static void handleSignal(int aSignal)
     gTerminate = true;
 }
 
+/**
+ * This enumeration defines the argument return values.
+ *
+ */
+enum
+{
+    OT_SIM_OPT_HELP        = 'h',
+    OT_SIM_OPT_SLEEP_TO_TX = 't',
+    OT_SIM_OPT_TIME_SPEED  = 's',
+    OT_SIM_OPT_UNKNOWN     = '?',
+};
+
+static void PrintUsage(const char *aProgramName, int aExitCode)
+{
+    fprintf(stderr,
+            "Syntax:\n"
+            "    %s [Options] NodeId\n"
+            "Options:\n"
+            "    -h --help              Display this usage information.\n"
+            "    -t --sleep-to-tx       Let radio support direct transition from sleep to TX with CSMA.\n"
+            "    -s --time-speed=val    Speed up the time in simulation.\n",
+            aProgramName);
+
+    exit(aExitCode);
+}
+
 void otSysInit(int aArgCount, char *aArgVector[])
 {
     char *   endptr;
     uint32_t speedUpFactor = 1;
-    int      argIndex      = 0;
+
+    static const struct option long_options[] = {
+        {"help", no_argument, 0, OT_SIM_OPT_HELP},
+        {"sleep-to-tx", no_argument, 0, OT_SIM_OPT_SLEEP_TO_TX},
+        {"time-speed", required_argument, 0, OT_SIM_OPT_TIME_SPEED},
+        {0, 0, 0, 0},
+    };
 
     if (gPlatformPseudoResetWasRequested)
     {
@@ -75,44 +108,59 @@ void otSysInit(int aArgCount, char *aArgVector[])
         return;
     }
 
-    if (aArgCount < 2)
+    optind = 1;
+
+    while (true)
     {
-        fprintf(stderr, "Syntax:\n    %s [--sleep-to-tx] NodeId [TimeSpeedUpFactor]\n", aArgVector[0]);
+        int c = getopt_long(aArgCount, aArgVector, "hts:", long_options, NULL);
+
+        if (c == -1)
+        {
+            break;
+        }
+
+        switch (c)
+        {
+        case OT_SIM_OPT_UNKNOWN:
+            PrintUsage(aArgVector[0], EXIT_FAILURE);
+            break;
+        case OT_SIM_OPT_HELP:
+            PrintUsage(aArgVector[0], EXIT_SUCCESS);
+            break;
+        case OT_SIM_OPT_SLEEP_TO_TX:
+            gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
+            break;
+        case OT_SIM_OPT_TIME_SPEED:
+            speedUpFactor = (uint32_t)strtol(optarg, &endptr, 10);
+            if (*endptr != '\0' || speedUpFactor == 0)
+            {
+                fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", optarg);
+                exit(EXIT_FAILURE);
+            }
+            break;
+        default:
+            break;
+        }
+    }
+
+    if (optind != aArgCount - 1)
+    {
+        PrintUsage(aArgVector[0], EXIT_FAILURE);
+    }
+
+    gNodeId = (uint32_t)strtol(aArgVector[optind], &endptr, 0);
+
+    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
+    {
+        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[optind]);
         exit(EXIT_FAILURE);
     }
 
-    openlog(basename(aArgVector[argIndex++]), LOG_PID, LOG_USER);
+    openlog(basename(aArgVector[0]), LOG_PID, LOG_USER);
     setlogmask(setlogmask(0) & LOG_UPTO(LOG_NOTICE));
 
     signal(SIGTERM, &handleSignal);
     signal(SIGHUP, &handleSignal);
-
-    if (!strcmp(aArgVector[argIndex], "--sleep-to-tx"))
-    {
-        gRadioCaps |= OT_RADIO_CAPS_SLEEP_TO_TX;
-        ++argIndex;
-    }
-
-    gNodeId = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
-
-    if (*endptr != '\0' || gNodeId < 1 || gNodeId > MAX_NETWORK_SIZE)
-    {
-        fprintf(stderr, "Invalid NodeId: %s\n", aArgVector[argIndex]);
-        exit(EXIT_FAILURE);
-    }
-
-    ++argIndex;
-
-    if (aArgCount > argIndex)
-    {
-        speedUpFactor = (uint32_t)strtol(aArgVector[argIndex], &endptr, 0);
-
-        if (*endptr != '\0' || speedUpFactor == 0)
-        {
-            fprintf(stderr, "Invalid value for TimerSpeedUpFactor: %s\n", aArgVector[argIndex]);
-            exit(EXIT_FAILURE);
-        }
-    }
 
     platformAlarmInit(speedUpFactor);
     platformRadioInit();
