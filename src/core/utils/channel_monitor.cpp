@@ -192,10 +192,11 @@ void ChannelMonitor::LogResults(void)
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL == 1)
     const size_t        kStringSize = 128;
     String<kStringSize> logString;
+    StringWriter        writer(logString);
 
     for (uint16_t channel : mChannelOccupancy)
     {
-        StringWriter(logString).Append("%02x ", channel >> 8);
+        writer.Append("%02x ", channel >> 8);
     }
 
     otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, logString.AsCString());

@@ -1447,14 +1447,15 @@ Frame::InfoString Frame::ToInfoString(void) const
 
 BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
-    NetworkName name;
-    InfoString  string;
+    NetworkName  name;
+    InfoString   string;
+    StringWriter writer(string);
 
     IgnoreError(name.Set(GetNetworkName()));
 
-    StringWriter(string).Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
-                                mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
-                                IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
+    writer.Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
+                  mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
+                  IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
     return string;
 }
 
