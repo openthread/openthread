@@ -49,7 +49,7 @@ ROUTER = 2
 HOST = 3
 
 # The two prefixes are set small enough that a random-generated OMR prefix is
-# very likely greater than them. So that the duckhorn BR will remove the random-generated one.
+# very likely greater than them. So that the BR will remove the random-generated one.
 ON_MESH_PREFIX1 = "fd00:00:00:01::/64"
 ON_MESH_PREFIX2 = "fd00:00:00:02::/64"
 
