@@ -403,6 +403,27 @@ public:
     };
 
     /**
+     * This class handles LEASE and KEY-LEASE configurations.
+     *
+     */
+    class LeaseConfig : public otSrpServerLeaseConfig
+    {
+        friend class Server;
+
+    public:
+        /**
+         * This constructor initialize to default LEASE and KEY-LEASE configurations.
+         *
+         */
+        LeaseConfig(void);
+
+    private:
+        bool     IsValid(void) const;
+        uint32_t GrantLease(uint32_t aLease) const;
+        uint32_t GrantKeyLease(uint32_t aKeyLease) const;
+    };
+
+    /**
      * This constructor initializes the SRP server object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
@@ -469,33 +490,27 @@ public:
     void SetEnabled(bool aEnabled);
 
     /**
-     * This method returns LEASE & KEY-LEASE range from the SRP server.
+     * This method returns the LEASE and KEY-LEASE configurations.
      *
-     * @param[out]  aMinLease     A reference to the minimum LEASE interval in seconds.
-     * @param[out]  aMaxLease     A reference to the maximum LEASE interval in seconds.
-     * @param[out]  aMinKeyLease  A reference to the minimum KEY-LEASE interval in seconds.
-     * @param[out]  aMaxKeyLease  A reference to the maximum KEY-LEASE interval in seconds.
+     * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      */
-    void GetLeaseRange(uint32_t &aMinLease, uint32_t &aMaxLease, uint32_t &aMinKeyLease, uint32_t &aMaxKeyLease);
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig);
 
     /**
-     * This method sets LEASE & KEY-LEASE range that is acceptable by the SRP server.
+     * This method sets the LEASE and KEY-LEASE configurations.
      *
      * When a LEASE time is requested from a client, the granted value will be
      * limited in range [aMinLease, aMaxLease]; and a KEY-LEASE will be granted
      * in range [aMinKeyLease, aMaxKeyLease].
      *
-     * @param[in]  aMinLease     The minimum LEASE interval in seconds.
-     * @param[in]  aMaxLease     The maximum LEASE interval in seconds.
-     * @param[in]  aMinKeyLease  The minimum KEY-LEASE interval in seconds.
-     * @param[in]  aMaxKeyLease  The maximum KEY-LEASE interval in seconds.
+     * @param[in]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      * @retval  kErrorNone         Successfully set the LEASE and KEY-LEASE ranges.
      * @retval  kErrorInvalidArgs  The LEASE or KEY-LEASE range is not valid.
      *
      */
-    Error SetLeaseRange(uint32_t aMinLease, uint32_t aMaxLease, uint32_t aMinKeyLease, uint32_t aMaxKeyLease);
+    Error SetLeaseConfig(const LeaseConfig &aLeaseConfig);
 
     /**
      * This method returns the next registered SRP host.
@@ -565,13 +580,11 @@ private:
         UpdateMetadata *  mNext;
     };
 
-    void     Start(void);
-    void     Stop(void);
-    void     HandleNotifierEvents(Events aEvents);
-    Error    PublishServerData(void);
-    void     UnpublishServerData(void);
-    uint32_t GrantLease(uint32_t aLease) const;
-    uint32_t GrantKeyLease(uint32_t aKeyLease) const;
+    void  Start(void);
+    void  Stop(void);
+    void  HandleNotifierEvents(Events aEvents);
+    Error PublishServerData(void);
+    void  UnpublishServerData(void);
 
     ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
@@ -649,10 +662,7 @@ private:
 
     char *mDomain;
 
-    uint32_t mMinLease;    // The minimum lease time in seconds.
-    uint32_t mMaxLease;    // The maximum lease time in seconds.
-    uint32_t mMinKeyLease; // The minimum key-lease time in seconds.
-    uint32_t mMaxKeyLease; // The maximum key-lease time in seconds.
+    LeaseConfig mLeaseConfig;
 
     LinkedList<Host> mHosts;
     TimerMilli       mLeaseTimer;

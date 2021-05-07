@@ -100,27 +100,24 @@ otError SrpServer::ProcessDisable(uint8_t aArgsLength, Arg aArgs[])
 
 otError SrpServer::ProcessLease(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t minLease;
-    uint32_t maxLease;
-    uint32_t minKeyLease;
-    uint32_t maxKeyLease;
+    otError                error = OT_ERROR_NONE;
+    otSrpServerLeaseConfig leaseConfig;
 
     if (aArgsLength == 5)
     {
-        SuccessOrExit(error = aArgs[1].ParseAsUint32(minLease));
-        SuccessOrExit(error = aArgs[2].ParseAsUint32(maxLease));
-        SuccessOrExit(error = aArgs[3].ParseAsUint32(minKeyLease));
-        SuccessOrExit(error = aArgs[4].ParseAsUint32(maxKeyLease));
-        error = otSrpServerSetLeaseRange(mInterpreter.mInstance, minLease, maxLease, minKeyLease, maxKeyLease);
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(leaseConfig.mMinLease));
+        SuccessOrExit(error = aArgs[2].ParseAsUint32(leaseConfig.mMaxLease));
+        SuccessOrExit(error = aArgs[3].ParseAsUint32(leaseConfig.mMinKeyLease));
+        SuccessOrExit(error = aArgs[4].ParseAsUint32(leaseConfig.mMaxKeyLease));
+        error = otSrpServerSetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
     }
     else if (aArgsLength == 1)
     {
-        otSrpServerGetLeaseRange(mInterpreter.mInstance, &minLease, &maxLease, &minKeyLease, &maxKeyLease);
-        mInterpreter.OutputLine("min lease: %u", minLease);
-        mInterpreter.OutputLine("max lease: %u", maxLease);
-        mInterpreter.OutputLine("min key-lease: %u", minKeyLease);
-        mInterpreter.OutputLine("max key-lease: %u", maxKeyLease);
+        otSrpServerGetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
+        mInterpreter.OutputLine("min lease: %u", leaseConfig.mMinLease);
+        mInterpreter.OutputLine("max lease: %u", leaseConfig.mMaxLease);
+        mInterpreter.OutputLine("min key-lease: %u", leaseConfig.mMinKeyLease);
+        mInterpreter.OutputLine("max key-lease: %u", leaseConfig.mMaxKeyLease);
     }
     else
     {

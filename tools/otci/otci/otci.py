@@ -947,7 +947,7 @@ class OTCI(object):
 
         return txt_dict
 
-    def srp_server_get_lease(self):
+    def srp_server_get_lease(self) -> Tuple[int, int, int, int]:
         """Get SRP server LEASE & KEY-LEASE range (in seconds)."""
         lines = self.execute_command(f'srp server lease')
         return tuple([int(line.split(':')[1].strip()) for line in lines])

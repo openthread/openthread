@@ -74,6 +74,18 @@ typedef void otSrpServerService;
 typedef uint32_t otSrpServerServiceUpdateId;
 
 /**
+ * This structure includes SRP server LEASE and KEY-LEASE configurations.
+ *
+ */
+typedef struct otSrpServerLeaseConfig
+{
+    uint32_t mMinLease;    // The minimum LEASE interval in seconds.
+    uint32_t mMaxLease;    // The maximum LEASE interval in seconds.
+    uint32_t mMinKeyLease; // The minimum KEY-LEASE interval in seconds.
+    uint32_t mMaxKeyLease; // The maximum KEY-LEASE interval in seconds.
+} otSrpServerLeaseConfig;
+
+/**
  * This function returns the domain authorized to the SRP server.
  *
  * If the domain if not set by SetDomain, "default.service.arpa." will be returned.
@@ -113,23 +125,16 @@ otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain);
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
- * This function returns LEASE & KEY-LEASE range from the SRP server.
+ * This function returns SRP server LEASE and KEY-LEASE configurations.
  *
  * @param[in]   aInstance     A pointer to an OpenThread instance.
- * @param[out]  aMinLease     A pointer to the minimum LEASE interval in seconds.
- * @param[out]  aMaxLease     A pointer to the maximum LEASE interval in seconds.
- * @param[out]  aMinKeyLease  A pointer to the minimum KEY-LEASE interval in seconds.
- * @param[out]  aMaxKeyLease  A pointer to the maximum KEY-LEASE interval in seconds.
+ * @param[out]  aLeaseConfig  A pointer to an `otSrpServerLeaseConfig` instance.
  *
  */
-void otSrpServerGetLeaseRange(otInstance *aInstance,
-                              uint32_t *  aMinLease,
-                              uint32_t *  aMaxLease,
-                              uint32_t *  aMinKeyLease,
-                              uint32_t *  aMaxKeyLease);
+void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aLeaseConfig);
 
 /**
- * This function sets LEASE & KEY-LEASE range that is acceptable by the SRP server.
+ * This function sets SRP server LEASE and KEY-LEASE configurations.
  *
  * When a non-zero LEASE time is requested from a client, the granted value will be
  * limited in range [aMinLease, aMaxLease]; and a non-zero KEY-LEASE will be granted
@@ -137,20 +142,13 @@ void otSrpServerGetLeaseRange(otInstance *aInstance,
  * be granted.
  *
  * @param[in]  aInstance     A pointer to an OpenThread instance.
- * @param[in]  aMinLease     The minimum LEASE interval in seconds.
- * @param[in]  aMaxLease     The maximum LEASE interval in seconds.
- * @param[in]  aMinKeyLease  The minimum KEY-LEASE interval in seconds.
- * @param[in]  aMaxKeyLease  The maximum KEY-LEASE interval in seconds.
+ * @param[in]  aLeaseConfig  A pointer to an `otSrpServerLeaseConfig` instance.
  *
  * @retval  OT_ERROR_NONE          Successfully set the LEASE and KEY-LEASE ranges.
  * @retval  OT_ERROR_INVALID_ARGS  The LEASE or KEY-LEASE range is not valid.
  *
  */
-otError otSrpServerSetLeaseRange(otInstance *aInstance,
-                                 uint32_t    aMinLease,
-                                 uint32_t    aMaxLease,
-                                 uint32_t    aMinKeyLease,
-                                 uint32_t    aMaxKeyLease);
+otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseConfig *aLeaseConfig);
 
 /**
  * This function handles SRP service updates.
