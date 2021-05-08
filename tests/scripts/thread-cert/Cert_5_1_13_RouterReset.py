@@ -63,13 +63,11 @@ class Cert_5_1_13_RouterReset(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
     }

@@ -66,11 +66,11 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface
         },
         JOINER: {
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
-            'mode': 'rdn',        },
+            'mode': 'rdn',
+        },
     }
 
     def test(self):

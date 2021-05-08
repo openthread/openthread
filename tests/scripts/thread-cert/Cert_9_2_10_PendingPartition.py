@@ -57,7 +57,6 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'active_dataset': {
                 'timestamp': 15,
-                'panid': 0xface,
                 'channel': 19
             },
             'mode': 'rdn',
@@ -67,7 +66,6 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'LEADER',
             'active_dataset': {
                 'timestamp': 15,
-                'panid': 0xface,
                 'channel': 19
             },
             'mode': 'rdn',
@@ -78,7 +76,6 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'name': 'ROUTER',
             'active_dataset': {
                 'timestamp': 15,
-                'panid': 0xface,
                 'channel': 19
             },
             'mode': 'rdn',
@@ -89,7 +86,6 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'channel': 19,
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         SED1: {
@@ -97,7 +93,6 @@ class Cert_9_2_10_PendingPartition(thread_cert.TestCase):
             'channel': 19,
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER1]
         },

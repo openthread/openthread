@@ -75,71 +75,71 @@ class Cert_5_2_7_REEDSynchronization_Base(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         DUT_ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         4: {
             'name': 'ROUTER_3',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         5: {
             'name': 'ROUTER_4',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         6: {
             'name': 'ROUTER_5',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         7: {
             'name': 'ROUTER_6',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         8: {
             'name': 'ROUTER_7',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         9: {
             'name': 'ROUTER_8',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         10: {
             'name': 'ROUTER_9',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         11: {
             'name': 'ROUTER_10',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         12: {
             'name': 'ROUTER_11',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         13: {
             'name': 'ROUTER_12',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         14: {
             'name': 'ROUTER_13',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         15: {
             'name': 'ROUTER_14',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         16: {
             'name': 'ROUTER_15',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
         DUT_REED: {
             'name': 'REED',
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
     }
 
     DUT = 0

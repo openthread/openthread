@@ -41,18 +41,15 @@ class TestReset(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER, ED]
         },
         ED: {
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
     }

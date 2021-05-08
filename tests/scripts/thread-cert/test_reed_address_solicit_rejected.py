@@ -52,11 +52,10 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface
         },
         REED: {
             'mode': 'rdn',
-            'panid': 0xface,        },
+        },
     }
 
     def testAddressSolicitRejectedBeforeSvrData(self):

@@ -42,12 +42,10 @@ class TestCoaps(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
     }

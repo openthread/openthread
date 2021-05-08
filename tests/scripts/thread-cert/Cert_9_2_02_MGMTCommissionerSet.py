@@ -63,13 +63,11 @@ class Cert_9_2_02_MGMTCommissionerSet(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [COMMISSIONER]
         },
     }

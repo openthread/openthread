@@ -79,7 +79,8 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                 'master_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrcb']
             },
-            'mode': 'rdn',        },
+            'mode': 'rdn',
+        },
         COMMISSIONER_1: {
             'name': 'COMMISSIONER_1',
             'active_dataset': {
@@ -104,7 +105,8 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
                 'master_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrcb']
             },
-            'mode': 'rdn',        },
+            'mode': 'rdn',
+        },
     }
 
     def test(self):

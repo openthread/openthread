@@ -61,9 +61,9 @@ DEFAULT_PARAMS = {
     'is_otbr': False,
     'is_host': False,
     'mode': 'rdn',
-    'panid': 0xface,
     'allowlist': None,
     'version': ENV_THREAD_VERSION,
+    'panid': 0xface,
 }
 """Default configurations when creating nodes."""
 

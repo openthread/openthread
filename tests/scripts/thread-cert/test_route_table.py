@@ -46,17 +46,14 @@ class TestRouteTable(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
     }

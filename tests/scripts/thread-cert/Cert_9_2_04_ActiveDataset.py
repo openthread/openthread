@@ -46,7 +46,6 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'active_dataset': {
                 'timestamp': 10,
-                'panid': 0xface,
                 'master_key': '00112233445566778899aabbccddeeff'
             },
             'mode': 'rdn',
@@ -56,7 +55,6 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             'name': 'LEADER',
             'active_dataset': {
                 'timestamp': 10,
-                'panid': 0xface,
                 'master_key': '00112233445566778899aabbccddeeff'
             },
             'mode': 'rdn',

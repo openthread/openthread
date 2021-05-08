@@ -44,24 +44,20 @@ class Test_OnMeshPrefix(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         SED1: {
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER]
         },

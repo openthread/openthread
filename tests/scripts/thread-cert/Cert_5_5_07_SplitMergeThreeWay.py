@@ -44,25 +44,21 @@ class Cert_5_5_7_SplitMergeThreeWay(thread_cert.TestCase):
         LEADER1: {
             'name': 'LEADER_1',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER2, ROUTER3]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER1]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER1]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER1]
         },
     }

@@ -49,27 +49,22 @@ class TestAnycast(thread_cert.TestCase):
     TOPOLOGY = {
         ROUTER1: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER2],
         },
         ROUTER2: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER3],
         },
         ROUTER3: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER2, ROUTER4],
         },
         ROUTER4: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER3, ROUTER5],
         },
         ROUTER5: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER4],
         },
     }

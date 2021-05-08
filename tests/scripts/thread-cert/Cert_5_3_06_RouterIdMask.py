@@ -64,19 +64,16 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
         DUT_LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [DUT_LEADER, ROUTER2]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
     }

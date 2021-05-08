@@ -43,20 +43,17 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER, ED]
         },
         ED: {
             'name': 'ED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'timeout': 10,
             'allowlist': [ROUTER]
         },

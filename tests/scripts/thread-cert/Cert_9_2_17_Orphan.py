@@ -67,7 +67,8 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
                 'channel': CHANNEL2,
                 'channel_mask': CHANNEL_MASK
             },
-            'mode': 'rdn',        },
+            'mode': 'rdn',
+        },
         ED1: {
             'name': 'ED',
             'channel': CHANNEL1,

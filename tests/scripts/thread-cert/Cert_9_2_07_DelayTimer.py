@@ -59,21 +59,19 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'partition_id': 0xffffffff,
             'allowlist': [COMMISSIONER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'partition_id': 1,        },
+            'partition_id': 1,
+        },
     }
 
     def test(self):

@@ -54,15 +54,12 @@ class TestDnssd(thread_cert.TestCase):
     TOPOLOGY = {
         SERVER: {
             'mode': 'rdn',
-            'panid': 0xface,
         },
         CLIENT1: {
             'mode': 'rdn',
-            'panid': 0xface,
         },
         CLIENT2: {
             'mode': 'rdn',
-            'panid': 0xface,
         },
     }
 
