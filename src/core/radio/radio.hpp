@@ -74,8 +74,8 @@ class Radio : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration defines the IEEE 802.15.4 channel related parameters.
-     *
+     * This enumeration defines the IEEE 802.15.4 channel related parameters. It also
+     * supports proprietary channel parameters defined by platform.
      */
     enum
     {
@@ -97,11 +97,20 @@ public:
         kChannelMin            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
         kChannelMax            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
         kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_0_MASK,
+#elif OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+        kNumChannelPages       = 1,
+        kSupportedChannels     = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK,
+        kChannelMin            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN,
+        kChannelMax            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX,
+        kSupportedChannelPages = (1U << OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE),
 #endif
     };
 
-    static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT),
-                  "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
+    static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
+                   OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
+                  "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT "
+                  "or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
+                  "or OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT "
                   "must be set to 1 to specify the radio mode");
 
     /**
