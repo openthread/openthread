@@ -64,7 +64,6 @@ class Test_Service(thread_cert.TestCase):
             'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
@@ -72,7 +71,6 @@ class Test_Service(thread_cert.TestCase):
             'mode': 'rdn',
             'network_name': 'OpenThread',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER1]
         },
     }

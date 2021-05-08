@@ -84,21 +84,18 @@ class Cert_5_3_10_AddressQuery(thread_cert.TestCase):
             'name': 'BR',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, DUT_ROUTER2]
         },
         DUT_ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER1, MED1]
         },
         MED1: {

@@ -76,14 +76,12 @@ class Cert_6_1_6_REEDAttachLinkQuality_Base(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, MTD]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, (MTD, -85)]
         },
         MTD: {

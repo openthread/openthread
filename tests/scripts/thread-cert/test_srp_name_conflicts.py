@@ -64,16 +64,12 @@ class SrpNameConflicts(thread_cert.TestCase):
             'name': 'SRP_CLIENT1',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
         CLIENT2: {
             'name': 'SRP_CLIENT2',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
     }
 
     def test(self):

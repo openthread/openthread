@@ -53,7 +53,6 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
         ROUTER: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'whitelist': [LEADER]
         },
     }

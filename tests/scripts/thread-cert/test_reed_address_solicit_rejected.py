@@ -56,9 +56,7 @@ class TestREEDAddressSolicitRejected(thread_cert.TestCase):
         },
         REED: {
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
     }
 
     def testAddressSolicitRejectedBeforeSvrData(self):

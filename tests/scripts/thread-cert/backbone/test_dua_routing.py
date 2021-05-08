@@ -69,7 +69,6 @@ class TestNdProxy(thread_cert.TestCase):
             'allowlist': [SBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH1,
         },
         SBBR: {
@@ -77,14 +76,12 @@ class TestNdProxy(thread_cert.TestCase):
             'allowlist': [PBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH1,
         },
         ROUTER1: {
             'name': 'ROUTER1',
             'allowlist': [PBBR, SBBR],
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH1,
         },
         HOST: {
@@ -95,13 +92,11 @@ class TestNdProxy(thread_cert.TestCase):
             'name': 'PBBR2',
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH2,
         },
         ROUTER2: {
             'name': 'ROUTER2',
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH2,
         },
     }

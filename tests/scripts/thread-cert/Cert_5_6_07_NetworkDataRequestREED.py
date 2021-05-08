@@ -53,92 +53,77 @@ class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, REED1]
         },
         ROUTER3: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         5: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         6: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         7: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         8: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         9: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         10: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         11: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         12: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         13: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         14: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         15: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ROUTER15: {
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         REED1: {

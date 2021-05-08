@@ -66,9 +66,7 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         DUT_ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
     }
 
     def test(self):

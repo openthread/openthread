@@ -64,14 +64,12 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER]
         },
     }

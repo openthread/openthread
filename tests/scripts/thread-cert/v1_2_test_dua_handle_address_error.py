@@ -41,7 +41,6 @@ MED = 4
 
 WAIT_ATTACH = 5
 WAIT_REDUNDANCE = 3
-ROUTER_SELECTION_JITTER = 1
 BBR_REGISTRATION_JITTER = 5
 SED_POLL_PERIOD = 2000  # 2s
 MED_TIMEOUT = 20  # 20s
@@ -64,13 +63,11 @@ class TestDomainUnicastAddress(thread_cert.TestCase):
         BBR_1: {
             'version': '1.2',
             'allowlist': [ROUTER],
-            'router_selection_jitter': ROUTER_SELECTION_JITTER,
             'is_bbr': True
         },
         ROUTER: {
             'version': '1.2',
             'allowlist': [BBR_1, FED, MED],
-            'router_selection_jitter': ROUTER_SELECTION_JITTER,
         },
         FED: {
             'version': '1.2',

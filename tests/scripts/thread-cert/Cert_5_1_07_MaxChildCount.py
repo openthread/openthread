@@ -78,7 +78,6 @@ class Cert_5_1_07_MaxChildCount(thread_cert.TestCase):
             'max_children': 10,
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, 3, 4, 5, 6, SED1, 8, 9, 10, 11, 12]
         },
         3: {

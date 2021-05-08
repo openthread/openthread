@@ -57,7 +57,6 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
                 'channel_mask': CHANNEL_MASK
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [ED1]
         },
         LEADER2: {
@@ -68,9 +67,7 @@ class Cert_9_2_17_Orphan(thread_cert.TestCase):
                 'channel': CHANNEL2,
                 'channel_mask': CHANNEL_MASK
             },
-            'mode': 'rdn',
-            'router_selection_jitter': 1
-        },
+            'mode': 'rdn',        },
         ED1: {
             'name': 'ED',
             'channel': CHANNEL1,

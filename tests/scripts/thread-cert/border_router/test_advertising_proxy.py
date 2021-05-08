@@ -60,13 +60,11 @@ class SingleHostAndService(thread_cert.TestCase):
             'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         ROUTER: {
             'name': 'Router_1',
             'allowlist': [BR],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         HOST: {
             'name': 'Host',

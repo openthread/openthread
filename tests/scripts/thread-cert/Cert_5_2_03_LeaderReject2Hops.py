@@ -87,7 +87,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER, ROUTER_32]
         },
@@ -96,7 +95,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -105,7 +103,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -114,7 +111,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -123,7 +119,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -132,7 +127,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -141,7 +135,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -150,7 +143,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -159,7 +151,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -168,7 +159,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -177,7 +167,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -186,7 +175,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -195,7 +183,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -204,7 +191,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -213,7 +199,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -222,7 +207,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -231,7 +215,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -240,7 +223,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -249,7 +231,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -258,7 +239,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -267,7 +247,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -276,7 +255,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -285,7 +263,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -294,7 +271,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -303,7 +279,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -312,7 +287,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -321,7 +295,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -330,7 +303,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -339,7 +311,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -348,7 +319,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -357,7 +327,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [DUT_LEADER]
         },
@@ -366,7 +335,6 @@ class Cert_5_2_3_LeaderReject2Hops(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 33,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 33,
             'allowlist': [ROUTER_1]
         },

@@ -51,7 +51,6 @@ class Cert_6_2_2_NewPartition(thread_cert.TestCase):
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2, ED]
         },
         ROUTER2: {
@@ -59,7 +58,6 @@ class Cert_6_2_2_NewPartition(thread_cert.TestCase):
             'mode': 'rdn',
             'network_id_timeout': 110,
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER1]
         },
         ED: {

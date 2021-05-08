@@ -65,16 +65,12 @@ class SrpAutoStartMode(thread_cert.TestCase):
             'name': 'SRP_SERVER1',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
         SERVER2: {
             'name': 'SRP_SERVER2',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
     }
 
     def test(self):

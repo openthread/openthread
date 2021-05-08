@@ -60,7 +60,6 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
@@ -68,16 +67,13 @@ class Cert_9_2_7_DelayTimer(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'partition_id': 0xffffffff,
-            'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'partition_id': 1,
-            'router_selection_jitter': 1
-        },
+            'partition_id': 1,        },
     }
 
     def test(self):

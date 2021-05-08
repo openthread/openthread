@@ -59,17 +59,14 @@ class TestPing(thread_cert.TestCase):
         ROUTER_1: {
             'name': 'Router_1',
             'allowlist': [ROUTER_2, ROUTER_3],
-            'router_selection_jitter': 2,
         },
         ROUTER_2: {
             'name': 'Router_2',
             'allowlist': [ROUTER_1],
-            'router_selection_jitter': 2,
         },
         ROUTER_3: {
             'name': 'Router_3',
             'allowlist': [ROUTER_1],
-            'router_selection_jitter': 2,
         },
     }
 

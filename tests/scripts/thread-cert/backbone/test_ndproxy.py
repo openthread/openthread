@@ -64,20 +64,17 @@ class TestNdProxy(thread_cert.TestCase):
             'allowlist': [SBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         SBBR: {
             'name': 'SBBR',
             'allowlist': [PBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'ROUTER1',
             'allowlist': [PBBR, SBBR],
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'HOST',

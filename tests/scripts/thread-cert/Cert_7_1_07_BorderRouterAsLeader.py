@@ -80,21 +80,18 @@ class Cert_7_1_7_BorderRouterAsLeader(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER_1, ROUTER_2, MED, SED]
         },
         ROUTER_1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ROUTER_2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         MED: {

@@ -66,26 +66,22 @@ class BBR_5_11_01(thread_cert.TestCase):
             'allowlist': [SBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         SBBR: {
             'name': 'SBBR',
             'allowlist': [PBBR, ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'ROUTER1',
             'allowlist': [PBBR, SBBR, COMMISSIONER],
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'allowlist': [ROUTER1],
             'version': '1.2',
-            'router_selection_jitter': 1,
         }
     }
 

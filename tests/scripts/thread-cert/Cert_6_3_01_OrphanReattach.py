@@ -50,7 +50,6 @@ class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED]
         },
         ED: {

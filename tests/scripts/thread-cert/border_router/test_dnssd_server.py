@@ -73,15 +73,12 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             'name': 'SERVER',
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         CLIENT1: {
             'name': 'CLIENT1',
-            'router_selection_jitter': 1,
         },
         CLIENT2: {
             'name': 'CLIENT2',
-            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'Host',

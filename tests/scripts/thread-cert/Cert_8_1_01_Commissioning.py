@@ -71,9 +71,7 @@ class Cert_8_1_01_Commissioning(thread_cert.TestCase):
         JOINER: {
             'name': 'JOINER',
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
-            'mode': 'rdn',
-            'router_selection_jitter': 1
-        },
+            'mode': 'rdn',        },
     }
 
     def test(self):

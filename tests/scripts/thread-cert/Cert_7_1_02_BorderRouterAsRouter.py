@@ -55,7 +55,6 @@ class Cert_7_1_2_BorderRouterAsRouter(thread_cert.TestCase):
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED2, SED2]
         },
         ED2: {

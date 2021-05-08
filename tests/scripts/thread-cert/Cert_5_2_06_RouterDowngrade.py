@@ -69,21 +69,17 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         DUT_ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         4: {
@@ -91,7 +87,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         5: {
@@ -99,7 +94,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         6: {
@@ -107,7 +101,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         7: {
@@ -115,7 +108,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         8: {
@@ -123,7 +115,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         9: {
@@ -131,7 +122,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         10: {
@@ -139,7 +129,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         11: {
@@ -147,7 +136,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         12: {
@@ -155,7 +143,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         13: {
@@ -163,7 +150,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         14: {
@@ -171,7 +157,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         15: {
@@ -179,7 +164,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         16: {
@@ -187,7 +171,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         17: {
@@ -195,7 +178,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         18: {
@@ -203,7 +185,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         19: {
@@ -211,7 +192,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         20: {
@@ -219,7 +199,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         21: {
@@ -227,7 +206,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         22: {
@@ -235,7 +213,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         23: {
@@ -243,7 +220,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         ROUTER23: {
@@ -251,7 +227,6 @@ class Cert_5_2_06_RouterDowngrade(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
     }

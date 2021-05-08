@@ -55,12 +55,10 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
             'name': 'BR_1',
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'Router_1',
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
     }
 

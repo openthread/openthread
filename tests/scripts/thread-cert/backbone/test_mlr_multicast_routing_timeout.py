@@ -62,14 +62,12 @@ class TestMlrTimeout(thread_cert.TestCase):
             'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
         },
         ROUTER: {
             'name': 'ROUTER',
             'allowlist': [PBBR],
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'Host',

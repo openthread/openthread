@@ -76,27 +76,23 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
             'is_otbr': True,
             'allowlist': [BR_2, ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         BR_2: {
             'name': 'BR_2',
             'is_otbr': True,
             'allowlist': [BR_1, ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         ROUTER_1: {
             'name': 'Router_1',
             'allowlist': [BR_1, BR_2, TD],
             'version': '1.2',
-            'router_selection_jitter': 2,
             'partition_id': 1,
         },
         TD: {
             'name': 'TD',
             'allowlist': [ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
             'partition_id': 1,
         },
     }

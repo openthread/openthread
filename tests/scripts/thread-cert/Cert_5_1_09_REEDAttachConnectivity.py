@@ -74,7 +74,6 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, REED1]
         },
         REED1: {
@@ -95,7 +94,6 @@ class Cert_5_1_09_REEDAttachConnectivity(thread_cert.TestCase):
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [REED1, REED2]
         },
     }

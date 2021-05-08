@@ -46,21 +46,15 @@ class Cert_8_2_02_JoinerRouter(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
-        },
+            'panid': 0xface,        },
         JOINER_ROUTER: {
             'name': 'JOINER_ROUTER',
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
-            'mode': 'rdn',
-            'router_selection_jitter': 1
-        },
+            'mode': 'rdn',        },
         JOINER: {
             'name': 'JOINER',
             'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
-            'mode': 'rdn',
-            'router_selection_jitter': 1
-        },
+            'mode': 'rdn',        },
     }
 
     def test(self):

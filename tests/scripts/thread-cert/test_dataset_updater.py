@@ -52,7 +52,6 @@ class TestDatasetUpdater(thread_cert.TestCase):
             'mode': 'rdn',
             'channel': 11,
             'panid': 0xface,
-            'router_selection_jitter': 1,
         },
         MED: {
             'mode': 'rn',

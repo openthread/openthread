@@ -76,14 +76,12 @@ class Cert_5_2_01_REEDAttach(thread_cert.TestCase):
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, REED1]
         },
         REED1: {
             'name': 'REED_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 1,
             'allowlist': [DUT_ROUTER1, MED1]
         },

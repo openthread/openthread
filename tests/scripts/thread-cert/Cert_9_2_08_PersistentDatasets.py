@@ -81,7 +81,6 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
             'mode': 'rdn',
             'panid': PANID_INIT,
             'channel': CHANNEL_INIT,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
@@ -332,7 +331,6 @@ class Cert_9_2_8_PersistentDatasets_Base(thread_cert.TestCase):
 class Cert_9_2_8_PersistentDatasets_ROUTER(Cert_9_2_8_PersistentDatasets_Base):
     TOPOLOGY = copy.deepcopy(Cert_9_2_8_PersistentDatasets_Base.TOPOLOGY)
     TOPOLOGY[DUT]['mode'] = 'rdn'
-    TOPOLOGY[DUT]['router_selection_jitter'] = 1
 
 
 class Cert_9_2_8_PersistentDatasets_ED(Cert_9_2_8_PersistentDatasets_Base):

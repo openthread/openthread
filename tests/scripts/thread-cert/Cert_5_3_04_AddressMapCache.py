@@ -77,7 +77,6 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, SED1]
         },
         SED1: {

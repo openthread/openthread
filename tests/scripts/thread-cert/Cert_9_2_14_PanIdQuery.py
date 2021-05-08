@@ -47,7 +47,6 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER1]
         },
         LEADER1: {
@@ -60,7 +59,6 @@ class Cert_9_2_14_PanIdQuery(thread_cert.TestCase):
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER1, LEADER2]
         },
         LEADER2: {

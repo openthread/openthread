@@ -46,14 +46,12 @@ class Cert_5_5_2_LeaderReboot(thread_cert.TestCase):
             'name': 'LEADER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED]
         },
         ED: {

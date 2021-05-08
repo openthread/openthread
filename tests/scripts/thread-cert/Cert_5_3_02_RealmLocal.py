@@ -72,14 +72,12 @@ class Cert_5_3_2_RealmLocal(thread_cert.TestCase):
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, DUT_ROUTER2]
         },
         DUT_ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER1, SED1]
         },
         SED1: {

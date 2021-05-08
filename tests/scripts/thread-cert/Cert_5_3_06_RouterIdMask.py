@@ -71,14 +71,12 @@ class Cert_5_3_6_RouterIdMask(thread_cert.TestCase):
             'name': 'ROUTER_1',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER, ROUTER2]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
             'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER1]
         },
     }
