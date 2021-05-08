@@ -63,8 +63,7 @@
 
 #include "platform-posix.h"
 
-namespace ot {
-namespace Client {
+namespace {
 
 struct Config
 {
@@ -231,7 +230,9 @@ Config ParseArg(int &aArgCount, char **&aArgVector)
     return config;
 }
 
-extern "C" int main(int argc, char *argv[])
+} // namespace
+
+int main(int argc, char *argv[])
 {
     bool   isInteractive = true;
     bool   isFinished    = false;
@@ -393,6 +394,3 @@ exit:
 
     return ret;
 }
-
-} // namespace Client
-} // namespace ot
