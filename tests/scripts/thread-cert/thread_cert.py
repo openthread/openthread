@@ -425,6 +425,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             # BBRs must use thread version 1.2
             assert params.get('version', '1.2') == '1.2', params
             params['version'] = '1.2'
+            params.setdefault('bbr_registration_jitter', config.DEFAULT_BBR_REGISTRATION_JITTER)
         elif params.get('is_host'):
             # Hosts must not specify thread version
             assert params.get('version', '') == '', params
