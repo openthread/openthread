@@ -42,6 +42,10 @@
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE."
 #endif
 
+#if !OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#error "OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE is required for OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE."
+#endif
+
 #if !OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 #error "OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE is required for OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE."
 #endif
@@ -205,8 +209,11 @@ public:
      *
      * @param[in]  aConfig A reference to the Domain Prefix configuration.
      *
+     * @returns kErrorNone          Successfully set the local Domain Prefix.
+     * @returns kErrorInvalidArgs   @p aConfig is invalid.
+     *
      */
-    void SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
+    Error SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig);
 
     /**
      * This method returns a reference to the All Network Backbone Routers Multicast Address.

@@ -310,8 +310,12 @@ exit:
     return error;
 }
 
-void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
+Error Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
 {
+    Error error = kErrorNone;
+
+    VerifyOrExit(aConfig.IsValid(GetInstance()), error = kErrorInvalidArgs);
+
     if (IsEnabled())
     {
         RemoveDomainPrefixFromNetworkData();
@@ -324,6 +328,9 @@ void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
     {
         AddDomainPrefixToNetworkData();
     }
+
+exit:
+    return error;
 }
 
 void Local::ApplyMeshLocalPrefix(void)

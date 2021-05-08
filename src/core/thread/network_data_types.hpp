@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for managing Thread Network Data.
+ *   This file includes definitions for Network Data types and constants.
  */
 
 #ifndef NETWORK_DATA_TYPES_HPP_
@@ -38,8 +38,8 @@
 
 #include <openthread/netdata.h>
 
-#include "common/equatable.hpp"
 #include "common/clearable.hpp"
+#include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -53,8 +53,9 @@ namespace NetworkData {
  *
  */
 
-// Forward decelerations
+// Forward declarations
 class NetworkData;
+class Local;
 class PrefixTlv;
 class BorderRouterTlv;
 class BorderRouterEntry;
@@ -64,7 +65,7 @@ class ServiceTlv;
 class ServerTlv;
 
 /**
- * This class represents an On Mesh Prefix (Border Router) configuration.
+ * This class represents an On-mesh Prefix (Border Router) configuration.
  *
  */
 class OnMeshPrefixConfig : public otBorderRouterConfig,
@@ -72,6 +73,7 @@ class OnMeshPrefixConfig : public otBorderRouterConfig,
                            public Equatable<OnMeshPrefixConfig>
 {
     friend class NetworkData;
+    friend class Local;
 
 public:
     /**
@@ -90,10 +92,27 @@ public:
      */
     Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    /**
+     * This method indicates whether or not the prefix configuration is valid.
+     *
+     * @param[in] aInstance   A reference to the OpenThread instance.
+     *
+     * @retval TRUE   The config is a valid on-mesh prefix.
+     * @retval FALSE  The config is not a valid on-mesh prefix.
+     *
+     */
+    bool IsValid(Instance &aInstance) const;
+#endif
+
 private:
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    uint16_t ConvertToTlvFlags(void) const;
+#endif
     void SetFrom(const PrefixTlv &        aPrefixTlv,
                  const BorderRouterTlv &  aBorderRouterTlv,
                  const BorderRouterEntry &aBorderRouterEntry);
+    void SetFromTlvFlags(uint16_t aFlags);
 };
 
 /**
@@ -105,6 +124,7 @@ class ExternalRouteConfig : public otExternalRouteConfig,
                             public Equatable<ExternalRouteConfig>
 {
     friend class NetworkData;
+    friend class Local;
 
 public:
     /**
@@ -131,11 +151,28 @@ public:
      */
     void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    /**
+     * This method indicates whether or not the external route configuration is valid.
+     *
+     * @param[in] aInstance   A reference to the OpenThread instance.
+     *
+     * @retval TRUE   The config is a valid external route.
+     * @retval FALSE  The config is not a valid extern route.
+     *
+     */
+    bool IsValid(Instance &aInstance) const;
+#endif
+
 private:
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    uint8_t ConvertToTlvFlags(void) const;
+#endif
     void SetFrom(Instance &           aInstance,
                  const PrefixTlv &    aPrefixTlv,
                  const HasRouteTlv &  aHasRouteTlv,
                  const HasRouteEntry &aHasRouteEntry);
+    void SetFromTlvFlags(uint8_t aFlags);
 };
 
 /**

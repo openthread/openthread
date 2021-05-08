@@ -1,4 +1,3 @@
-
 /*
  *  Copyright (c) 2016, The OpenThread Authors.
  *  All rights reserved.
@@ -82,17 +81,6 @@ public:
      *
      */
     Error AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
-
-    /**
-     * This method validates an on-mesh prefix.
-     *
-     * @param[in]  aConfig        A reference to the on-mesh perfix configuration.
-     *
-     * @retval kErrorNone         Successfully verified the on-mesh prefix.
-     * @retval kErrorInvalidArgs  The prefix is not a valid on-mesh prefix.
-     *
-     */
-    Error ValidateOnMeshPrefix(const OnMeshPrefixConfig &aConfig);
 
     /**
      * This method removes a Border Router entry from the Thread Network Data.
@@ -182,12 +170,7 @@ public:
 private:
     void UpdateRloc(void);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    Error ValidatePrefixAndPreference(const Ip6::Prefix &aPrefix, int8_t aPrf);
-    Error AddPrefix(const Ip6::Prefix &  aPrefix,
-                    NetworkDataTlv::Type aSubTlvType,
-                    int8_t               aPrf,
-                    uint16_t             aFlags,
-                    bool                 aStable);
+    Error AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType, uint16_t aFlags, bool aStable);
     Error RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType);
     void  UpdateRloc(PrefixTlv &aPrefixTlv);
     bool  IsOnMeshPrefixConsistent(void) const;

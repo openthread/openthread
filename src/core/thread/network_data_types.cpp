@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file implements config types for Thread Network Data.
+ *   This file implements Thread Network Data related types and constants.
  */
 
 #include "network_data_types.hpp"
@@ -39,6 +39,103 @@
 namespace ot {
 namespace NetworkData {
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
+static bool IsPreferenceValid(int8_t aPrf)
+{
+    return (aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) || (aPrf == OT_ROUTE_PREFERENCE_HIGH);
+}
+
+static bool IsPrefixValid(Instance &aInstance, const Ip6::Prefix &aPrefix)
+{
+    // Check that prefix length is within the valid range and the prefix
+    // does not overlap with the mesh-local prefix.
+
+    return (aPrefix.GetLength() > 0) && aPrefix.IsValid() &&
+           !aPrefix.ContainsPrefix(aInstance.Get<Mle::Mle>().GetMeshLocalPrefix());
+}
+
+bool OnMeshPrefixConfig::IsValid(Instance &aInstance) const
+{
+    bool isValid = false;
+
+    if (mDhcp && mSlaac)
+    {
+        // A valid prefix MUST NOT allow both DHCPv6 and SLAAC for
+        // address configuration.
+        ExitNow();
+    }
+
+    if (mSlaac)
+    {
+        // An IPv6 address prefix used for stateless auto-configuration
+        // [RFC4862] of an IEEE 802.15.4 interface MUST have a length of
+        // 64 bits.
+        VerifyOrExit(GetPrefix().GetLength() == Ip6::NetworkPrefix::kLength);
+    }
+
+    VerifyOrExit(IsPreferenceValid(mPreference));
+    VerifyOrExit(IsPrefixValid(aInstance, GetPrefix()));
+
+    isValid = true;
+
+exit:
+    return isValid;
+}
+
+uint16_t OnMeshPrefixConfig::ConvertToTlvFlags(void) const
+{
+    uint16_t flags = 0;
+
+    if (mPreferred)
+    {
+        flags |= BorderRouterEntry::kPreferredFlag;
+    }
+
+    if (mSlaac)
+    {
+        flags |= BorderRouterEntry::kSlaacFlag;
+    }
+
+    if (mDhcp)
+    {
+        flags |= BorderRouterEntry::kDhcpFlag;
+    }
+
+    if (mConfigure)
+    {
+        flags |= BorderRouterEntry::kConfigureFlag;
+    }
+
+    if (mDefaultRoute)
+    {
+        flags |= BorderRouterEntry::kDefaultRouteFlag;
+    }
+
+    if (mOnMesh)
+    {
+        flags |= BorderRouterEntry::kOnMeshFlag;
+    }
+
+    if (mNdDns)
+    {
+        flags |= BorderRouterEntry::kNdDnsFlag;
+    }
+
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    if (mDp)
+    {
+        flags |= BorderRouterEntry::kDpFlag;
+    }
+#endif
+
+    flags |= (static_cast<uint16_t>(mPreference) << BorderRouterEntry::kPreferenceOffset);
+
+    return flags;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
 void OnMeshPrefixConfig::SetFrom(const PrefixTlv &        aPrefixTlv,
                                  const BorderRouterTlv &  aBorderRouterTlv,
                                  const BorderRouterEntry &aBorderRouterEntry)
@@ -46,18 +143,58 @@ void OnMeshPrefixConfig::SetFrom(const PrefixTlv &        aPrefixTlv,
     Clear();
 
     aPrefixTlv.CopyPrefixTo(GetPrefix());
-    mPreference   = aBorderRouterEntry.GetPreference();
-    mPreferred    = aBorderRouterEntry.IsPreferred();
-    mSlaac        = aBorderRouterEntry.IsSlaac();
-    mDhcp         = aBorderRouterEntry.IsDhcp();
-    mConfigure    = aBorderRouterEntry.IsConfigure();
-    mDefaultRoute = aBorderRouterEntry.IsDefaultRoute();
-    mOnMesh       = aBorderRouterEntry.IsOnMesh();
-    mStable       = aBorderRouterTlv.IsStable();
-    mRloc16       = aBorderRouterEntry.GetRloc();
-    mNdDns        = aBorderRouterEntry.IsNdDns();
-    mDp           = aBorderRouterEntry.IsDp();
+    SetFromTlvFlags(aBorderRouterEntry.GetFlags());
+    mRloc16 = aBorderRouterEntry.GetRloc();
+    mStable = aBorderRouterTlv.IsStable();
 }
+
+void OnMeshPrefixConfig::SetFromTlvFlags(uint16_t aFlags)
+{
+    mPreferred    = ((aFlags & BorderRouterEntry::kPreferredFlag) != 0);
+    mSlaac        = ((aFlags & BorderRouterEntry::kSlaacFlag) != 0);
+    mDhcp         = ((aFlags & BorderRouterEntry::kDhcpFlag) != 0);
+    mConfigure    = ((aFlags & BorderRouterEntry::kConfigureFlag) != 0);
+    mDefaultRoute = ((aFlags & BorderRouterEntry::kDefaultRouteFlag) != 0);
+    mOnMesh       = ((aFlags & BorderRouterEntry::kOnMeshFlag) != 0);
+    mNdDns        = ((aFlags & BorderRouterEntry::kNdDnsFlag) != 0);
+    mDp           = ((aFlags & BorderRouterEntry::kDpFlag) != 0);
+    mPreference   = static_cast<int8_t>(aFlags >> BorderRouterEntry::kPreferenceOffset);
+}
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+bool ExternalRouteConfig::IsValid(Instance &aInstance) const
+{
+    bool isValid = false;
+
+    if (mNat64)
+    {
+        VerifyOrExit(GetPrefix().IsValidNat64());
+    }
+
+    VerifyOrExit(IsPreferenceValid(mPreference));
+    VerifyOrExit(IsPrefixValid(aInstance, GetPrefix()));
+
+    isValid = true;
+
+exit:
+    return isValid;
+}
+
+uint8_t ExternalRouteConfig::ConvertToTlvFlags(void) const
+{
+    uint8_t flags = 0;
+
+    if (mNat64)
+    {
+        flags |= HasRouteEntry::kNat64Flag;
+    }
+
+    flags |= (static_cast<uint8_t>(mPreference) << HasRouteEntry::kPreferenceOffset);
+
+    return flags;
+}
+
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 void ExternalRouteConfig::SetFrom(Instance &           aInstance,
                                   const PrefixTlv &    aPrefixTlv,
@@ -67,11 +204,16 @@ void ExternalRouteConfig::SetFrom(Instance &           aInstance,
     Clear();
 
     aPrefixTlv.CopyPrefixTo(GetPrefix());
-    mPreference          = aHasRouteEntry.GetPreference();
-    mNat64               = aHasRouteEntry.IsNat64();
+    SetFromTlvFlags(aHasRouteEntry.GetFlags());
     mStable              = aHasRouteTlv.IsStable();
     mRloc16              = aHasRouteEntry.GetRloc();
     mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::MleRouter>().GetRloc16());
+}
+
+void ExternalRouteConfig::SetFromTlvFlags(uint8_t aFlags)
+{
+    mNat64      = ((aFlags & HasRouteEntry::kNat64Flag) != 0);
+    mPreference = static_cast<int8_t>(aFlags >> HasRouteEntry::kPreferenceOffset);
 }
 
 bool ServiceConfig::ServerConfig::operator==(const ServerConfig &aOther) const
