@@ -81,10 +81,6 @@ Server::Server(Instance &aInstance)
     , mServiceUpdateHandler(nullptr)
     , mServiceUpdateHandlerContext(nullptr)
     , mDomain(nullptr)
-    , mMinLease(kDefaultMinLease)
-    , mMaxLease(kDefaultMaxLease)
-    , mMinKeyLease(kDefaultMinKeyLease)
-    , mMaxKeyLease(kDefaultMaxKeyLease)
     , mLeaseTimer(aInstance, HandleLeaseTimer)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
@@ -128,39 +124,60 @@ exit:
     return;
 }
 
-Error Server::SetLeaseRange(uint32_t aMinLease, uint32_t aMaxLease, uint32_t aMinKeyLease, uint32_t aMaxKeyLease)
+Server::LeaseConfig::LeaseConfig(void)
 {
-    Error error = kErrorNone;
+    mMinLease    = kDefaultMinLease;
+    mMaxLease    = kDefaultMaxLease;
+    mMinKeyLease = kDefaultMinKeyLease;
+    mMaxKeyLease = kDefaultMaxKeyLease;
+}
+
+bool Server::LeaseConfig::IsValid(void) const
+{
+    bool valid = false;
 
     // TODO: Support longer LEASE.
     // We use milliseconds timer for LEASE & KEY-LEASE, this is to avoid overflow.
-    VerifyOrExit(aMaxKeyLease <= Time::MsecToSec(TimerMilli::kMaxDelay), error = kErrorInvalidArgs);
-    VerifyOrExit(aMinLease <= aMaxLease, error = kErrorInvalidArgs);
-    VerifyOrExit(aMinKeyLease <= aMaxKeyLease, error = kErrorInvalidArgs);
-    VerifyOrExit(aMinLease <= aMinKeyLease, error = kErrorInvalidArgs);
-    VerifyOrExit(aMaxLease <= aMaxKeyLease, error = kErrorInvalidArgs);
+    VerifyOrExit(mMaxKeyLease <= Time::MsecToSec(TimerMilli::kMaxDelay));
+    VerifyOrExit(mMinLease <= mMaxLease);
+    VerifyOrExit(mMinKeyLease <= mMaxKeyLease);
+    VerifyOrExit(mMinLease <= mMinKeyLease);
+    VerifyOrExit(mMaxLease <= mMaxKeyLease);
 
-    mMinLease    = aMinLease;
-    mMaxLease    = aMaxLease;
-    mMinKeyLease = aMinKeyLease;
-    mMaxKeyLease = aMaxKeyLease;
+    valid = true;
 
 exit:
-    return error;
+    return valid;
 }
 
-uint32_t Server::GrantLease(uint32_t aLease) const
+uint32_t Server::LeaseConfig::GrantLease(uint32_t aLease) const
 {
     OT_ASSERT(mMinLease <= mMaxLease);
 
     return (aLease == 0) ? 0 : OT_MAX(mMinLease, OT_MIN(mMaxLease, aLease));
 }
 
-uint32_t Server::GrantKeyLease(uint32_t aKeyLease) const
+uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
 {
     OT_ASSERT(mMinKeyLease <= mMaxKeyLease);
 
     return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
+}
+
+void Server::GetLeaseConfig(LeaseConfig &aLeaseConfig) const
+{
+    aLeaseConfig = mLeaseConfig;
+}
+
+Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLeaseConfig.IsValid(), error = kErrorInvalidArgs);
+    mLeaseConfig = aLeaseConfig;
+
+exit:
+    return error;
 }
 
 const char *Server::GetDomain(void) const
@@ -340,8 +357,8 @@ void Server::CommitSrpUpdate(Error                    aError,
 
     hostLease       = aHost.GetLease();
     hostKeyLease    = aHost.GetKeyLease();
-    grantedLease    = GrantLease(hostLease);
-    grantedKeyLease = GrantKeyLease(hostKeyLease);
+    grantedLease    = mLeaseConfig.GrantLease(hostLease);
+    grantedKeyLease = mLeaseConfig.GrantKeyLease(hostKeyLease);
 
     aHost.SetLease(grantedLease);
     aHost.SetKeyLease(grantedKeyLease);
