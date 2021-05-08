@@ -146,6 +146,7 @@ extern int
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
+#include "posix/platform/udp.hpp"
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
@@ -1475,7 +1476,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpInit(gNetifName);
+    ot::Posix::Udp::Get().Init(aInstance, gNetifName);
 #endif
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
