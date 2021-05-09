@@ -328,6 +328,17 @@ Remove a service with a give instance name and service name.
 Done
 ```
 
+### service clear
+
+Usage: `srp client service clear <instancename> <servicename>`
+
+Clear a service with a give instance name and service name (unlike `service remove`, with `service clear` no update is sent to server and the entry is immediately removed from client list).
+
+```bash
+> srp client service clear ins2 _test2._udp
+Done
+```
+
 ### service key
 
 Usage `srp client service key [enable|disable]`

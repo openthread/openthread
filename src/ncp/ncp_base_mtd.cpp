@@ -3890,10 +3890,16 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_SRP_CLIENT_SERVICE
     otError                   error = OT_ERROR_NONE;
     const char *              serviceName;
     const char *              instanceName;
+    bool                      toClear = false;
     const otSrpClientService *service;
 
     SuccessOrExit(error = mDecoder.ReadUtf8(serviceName));
     SuccessOrExit(error = mDecoder.ReadUtf8(instanceName));
+
+    if (!mDecoder.IsAllReadInStruct())
+    {
+        SuccessOrExit(error = mDecoder.ReadBool(toClear));
+    }
 
     for (service = otSrpClientGetServices(mInstance); service != nullptr; service = service->mNext)
     {
@@ -3904,7 +3910,17 @@ template <> otError NcpBase::HandlePropertyRemove<SPINEL_PROP_SRP_CLIENT_SERVICE
     }
 
     VerifyOrExit(service != nullptr, error = OT_ERROR_NOT_FOUND);
-    error = otSrpClientRemoveService(mInstance, const_cast<otSrpClientService *>(service));
+
+    if (toClear)
+    {
+        SuccessOrExit(error = otSrpClientClearService(mInstance, const_cast<otSrpClientService *>(service)));
+        otSrpClientBuffersFreeService(
+            mInstance, reinterpret_cast<otSrpClientBuffersServiceEntry *>(const_cast<otSrpClientService *>(service)));
+    }
+    else
+    {
+        error = otSrpClientRemoveService(mInstance, const_cast<otSrpClientService *>(service));
+    }
 
 exit:
     return error;
