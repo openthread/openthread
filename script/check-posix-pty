@@ -117,18 +117,21 @@ do_check()
     RADIO_URL="spinel+hdlc+uart://${CORE_PTY}?region=US&max-power-table=11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26"
 
     if [[ ${OT_DAEMON} == 'on' ]]; then
-        sudo "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" &
+        sudo "$PWD/build/posix/src/posix/ot-daemon" -d7 -v -I "${VALID_NETIF_NAME}" "${RADIO_URL}" 2>&1 | tee "${OT_OUTPUT}" &
         sleep 3
-        OT_CLI_CMD="$PWD/build/posix/src/posix/ot-ctl"
-        sudo "${OT_CLI_CMD}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
+        # macOS cannot explicitly set network interface name
+        NETIF_NAME=$(grep -o 'Thread interface: .\+' "${OT_OUTPUT}" | cut -d: -f2 | tr -d ' \r\n')
+        OT_CTL="$PWD/build/posix/src/posix/ot-ctl"
+        sudo "${OT_CTL}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
         # verify this reset and factoryreset end immediately
-        sudo "${OT_CLI_CMD}" reset
+        sudo "${OT_CTL}" -I "${NETIF_NAME}" reset
         # sleep a while for daemon ready
         sleep 2
-        sudo "${OT_CLI_CMD}" factoryreset
+        sudo "${OT_CTL}" -I "${NETIF_NAME}" factoryreset
         # sleep a while for daemon ready
         sleep 2
+        OT_CLI_CMD="${OT_CTL} -I ${NETIF_NAME}"
     else
         OT_CLI="$PWD/build/posix/src/posix/ot-cli"
         sudo "${OT_CLI}" -I "${VALID_NETIF_NAME}" -n "${RADIO_URL}"
@@ -201,9 +204,9 @@ EOF
     if [[ ${OT_DAEMON} == 'on' ]]; then
         sudo killall -9 expect || true
         sudo killall -9 ot-ctl || true
-        NETIF_INDEX=$(ip link show "${VALID_NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
+        NETIF_INDEX=$(ip link show "${NETIF_NAME}" | cut -f 1 -d ":" | head -n 1)
         sudo PATH="$(dirname "${OT_CLI_CMD}"):${PATH}" \
-            python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" \
+            python3 "$PWD/tests/scripts/misc/test_multicast_join.py" "${NETIF_INDEX}" "${NETIF_NAME}" \
             || die 'multicast group join failed'
     fi
 

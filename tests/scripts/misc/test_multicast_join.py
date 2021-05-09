@@ -36,21 +36,22 @@ import time
 from ipaddress import ip_address
 
 
-def get_maddrs():
-    lines = subprocess.run(['ot-ctl', 'ipmaddr'], stdout=subprocess.PIPE).stdout.decode().split()
+def get_maddrs(if_name):
+    lines = subprocess.run(['ot-ctl', '-I', if_name, 'ipmaddr'], stdout=subprocess.PIPE).stdout.decode().split()
     return [ip_address(l) for l in lines if l.startswith('ff')]
 
 
 def main():
     group = 'ff02::158'
     if_index = int(sys.argv[1])
+    if_name = sys.argv[2]
 
     with socket.socket(socket.AF_INET6, socket.SOCK_DGRAM) as s:
         s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_MULTICAST_IF, if_index)
         s.setsockopt(socket.IPPROTO_IPV6, socket.IPV6_JOIN_GROUP,
                      struct.pack('16si', socket.inet_pton(socket.AF_INET6, group), if_index))
         time.sleep(2)
-        maddrs = get_maddrs()
+        maddrs = get_maddrs(if_name)
         print(maddrs)
         if not any(addr == ip_address(group) for addr in maddrs):
             return -1
@@ -59,7 +60,7 @@ def main():
                      struct.pack('16si', socket.inet_pton(socket.AF_INET6, group), if_index))
 
         time.sleep(2)
-        maddrs = get_maddrs()
+        maddrs = get_maddrs(if_name)
         print(maddrs)
         if any(addr == ip_address(group) for addr in maddrs):
             return -1

@@ -43,6 +43,7 @@
 #define OPENTHREAD_USE_READLINE (HAVE_LIBEDIT || HAVE_LIBREADLINE)
 
 #include <assert.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -62,6 +63,13 @@
 
 #include "platform-posix.h"
 
+namespace {
+
+struct Config
+{
+    const char *mNetifName;
+};
+
 enum
 {
     kLineBufferSize = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
@@ -71,10 +79,10 @@ static_assert(kLineBufferSize >= sizeof("> "), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Done\r\n"), "kLineBufferSize is too small");
 static_assert(kLineBufferSize >= sizeof("Error "), "kLineBufferSize is too small");
 
-static int sSessionFd = -1;
+int sSessionFd = -1;
 
 #if OPENTHREAD_USE_READLINE
-static void InputCallback(char *aLine)
+void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
     {
@@ -89,7 +97,7 @@ static void InputCallback(char *aLine)
 }
 #endif // OPENTHREAD_USE_READLINE
 
-static bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
+bool DoWrite(int aFile, const void *aBuffer, size_t aSize)
 {
     bool ret = true;
 
@@ -111,7 +119,7 @@ exit:
     return ret;
 }
 
-static int ConnectSession(void)
+int ConnectSession(const Config &aConfig)
 {
     int ret;
 
@@ -128,7 +136,12 @@ static int ConnectSession(void)
 
         memset(&sockname, 0, sizeof(struct sockaddr_un));
         sockname.sun_family = AF_UNIX;
-        strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+        ret = snprintf(sockname.sun_path, sizeof(sockname.sun_path), OPENTHREAD_POSIX_DAEMON_SOCKET_NAME,
+                       aConfig.mNetifName);
+        VerifyOrExit(ret >= 0 && static_cast<size_t>(ret) < sizeof(sockname.sun_path), {
+            errno = EINVAL;
+            ret   = -1;
+        });
 
         ret = connect(sSessionFd, reinterpret_cast<const struct sockaddr *>(&sockname), sizeof(struct sockaddr_un));
     }
@@ -137,7 +150,7 @@ exit:
     return ret;
 }
 
-static bool ReconnectSession(void)
+bool ReconnectSession(Config &aConfig)
 {
     bool     ok    = false;
     uint32_t delay = 0; // 100ms
@@ -149,7 +162,7 @@ static bool ReconnectSession(void)
         usleep(delay);
         delay = delay > 0 ? delay * 2 : 100000;
 
-        rval = ConnectSession();
+        rval = ConnectSession(aConfig);
 
         VerifyOrExit(rval == -1, ok = true);
 
@@ -161,10 +174,63 @@ exit:
     return ok;
 }
 
-static bool IsSeparator(char aChar)
+enum
+{
+    kOptInterfaceName = 'I',
+    kOptHelp          = 'h',
+};
+
+const struct option kOptions[] = {
+    {"interface-name", required_argument, NULL, kOptInterfaceName},
+    {"help", required_argument, NULL, kOptHelp},
+};
+
+void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
+{
+    fprintf(aStream,
+            "Syntax:\n"
+            "    %s [Options] [--] ...\n"
+            "Options:\n"
+            "    -h  --help                    Display this usage information.\n"
+            "    -I  --interface-name name     Thread network interface name.\n",
+            aProgramName);
+    exit(aExitCode);
+}
+
+bool IsSeparator(char aChar)
 {
     return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
 }
+
+Config ParseArg(int &aArgCount, char **&aArgVector)
+{
+    Config config = {"wpan0"};
+
+    optind = 1;
+
+    for (int index, option; (option = getopt_long(aArgCount, aArgVector, "I:h", kOptions, &index)) != -1;)
+    {
+        switch (option)
+        {
+        case kOptInterfaceName:
+            config.mNetifName = optarg;
+            break;
+        case kOptHelp:
+            PrintUsage(aArgVector[0], stdout, OT_EXIT_SUCCESS);
+            break;
+        default:
+            PrintUsage(aArgVector[0], stderr, OT_EXIT_FAILURE);
+            break;
+        }
+    }
+
+    aArgCount -= optind;
+    aArgVector += optind;
+
+    return config;
+}
+
+} // namespace
 
 int main(int argc, char *argv[])
 {
@@ -174,15 +240,18 @@ int main(int argc, char *argv[])
     char   lineBuffer[kLineBufferSize];
     size_t lineBufferWritePos = 0;
     int    ret;
+    Config config;
 
-    VerifyOrExit(ConnectSession() != -1, perror("connect session failed"); ret = OT_EXIT_FAILURE);
+    config = ParseArg(argc, argv);
 
-    if (argc > 1)
+    VerifyOrExit(ConnectSession(config) != -1, perror("connect session failed"); ret = OT_EXIT_FAILURE);
+
+    if (argc > 0)
     {
         char   buffer[kLineBufferSize];
         size_t count = 0;
 
-        for (int i = 1; i < argc; i++)
+        for (int i = 0; i < argc; i++)
         {
             for (const char *c = argv[i]; *c; ++c)
             {
@@ -259,7 +328,7 @@ int main(int argc, char *argv[])
             if (rval == 0)
             {
                 // daemon closed sSessionFd
-                if (isInteractive && ReconnectSession())
+                if (isInteractive && ReconnectSession(config))
                 {
                     continue;
                 }
