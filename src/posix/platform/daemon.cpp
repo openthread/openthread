@@ -148,7 +148,18 @@ void platformDaemonEnable(otInstance *aInstance)
         DieNow(OT_EXIT_FAILURE);
     }
 
-    sDaemonLock = open(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    {
+        static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK) == sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME),
+                      "sock and lock file name pattern should have the same length!");
+        char lockfile[sizeof(sockname.sun_path)];
+
+        ret = snprintf(lockfile, sizeof(lockfile), OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, gNetifName);
+        if (ret < 0 && static_cast<size_t>(ret) >= sizeof(lockfile))
+        {
+            DieNowWithMessage("lockfile", OT_EXIT_INVALID_ARGUMENTS);
+        }
+        sDaemonLock = open(lockfile, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    }
 
     if (sDaemonLock == -1)
     {
@@ -162,10 +173,13 @@ void platformDaemonEnable(otInstance *aInstance)
 
     memset(&sockname, 0, sizeof(struct sockaddr_un));
 
-    (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-
     sockname.sun_family = AF_UNIX;
-    strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+    ret = snprintf(sockname.sun_path, sizeof(sockname.sun_path), OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, gNetifName);
+    if (ret < 0 && static_cast<size_t>(ret) >= sizeof(sockname.sun_path))
+    {
+        DieNowWithMessage("sockfile", OT_EXIT_INVALID_ARGUMENTS);
+    }
+    (void)unlink(sockname.sun_path);
 
     ret = bind(sListenSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
 

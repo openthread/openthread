@@ -296,6 +296,7 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
     instance = otSysInit(&aConfig->mPlatformConfig);
+    syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
 
     atexit(otSysDeinit);
 

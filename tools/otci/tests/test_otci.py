@@ -373,6 +373,12 @@ class TestOTCI(unittest.TestCase):
         server.srp_server_set_domain('default.service.arpa.')
         self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
 
+        default_leases = server.srp_server_get_lease()
+        self.assertEqual(default_leases, (1800, 7200, 86400, 1209600))
+        server.srp_server_set_lease(1801, 7201, 86401, 1209601)
+        leases = server.srp_server_get_lease()
+        self.assertEqual(leases, (1801, 7201, 86401, 1209601))
+
         self.assertFalse(client.srp_client_get_state())
         self.assertEqual('Removed', client.srp_client_get_host_state())
         self.assertEqual(('::', 0), client.srp_client_get_server())

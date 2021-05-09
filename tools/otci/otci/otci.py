@@ -947,6 +947,11 @@ class OTCI(object):
 
         return txt_dict
 
+    def srp_server_get_lease(self) -> Tuple[int, int, int, int]:
+        """Get SRP server LEASE & KEY-LEASE range (in seconds)."""
+        lines = self.execute_command(f'srp server lease')
+        return tuple([int(line.split(':')[1].strip()) for line in lines])
+
     def srp_server_set_lease(self, min_lease: int, max_lease: int, min_key_lease: int, max_key_lease: int):
         """Configure SRP server LEASE & KEY-LEASE range (in seconds)."""
         self.execute_command(f'srp server lease {min_lease} {max_lease} {min_key_lease} {max_key_lease}')
