@@ -69,7 +69,7 @@ DEFAULT_PARAMS = {
 
 FTD_DEFAULT_PARAMS = {
     'is_ftd': True,
-    'router_selection_jitter': 1,
+    'router_selection_jitter': config.DEFAULT_ROUTER_SELECTION_JITTER,
 }
 
 EXTENDED_ADDRESS_BASE = 0x166e0a0000000000
