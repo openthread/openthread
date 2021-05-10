@@ -279,6 +279,10 @@ if(OT_PLATFORM_UDP)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE=1")
 endif()
 
+if(OT_POSIX_SETTINGS_PATH)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_POSIX_SETTINGS_PATH=${OT_POSIX_SETTINGS_PATH}")
+endif()
+
 option(OT_REFERENCE_DEVICE "enable Thread Test Harness reference device support")
 if(OT_REFERENCE_DEVICE)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE=1")
