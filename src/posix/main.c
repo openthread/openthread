@@ -342,7 +342,23 @@ static void ProcessNetif(void *aContext, uint8_t aArgsLength, char *aArgs[])
     otCliOutputFormat("%s:%u\r\n", otSysGetThreadNetifName(), otSysGetThreadNetifIndex());
 }
 
-static const otCliCommand kCommands[] = {{"netif", ProcessNetif}};
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    exit(EXIT_SUCCESS);
+}
+#endif
+
+static const otCliCommand kCommands[] = {
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    {"exit", ProcessExit},
+#endif
+    {"netif", ProcessNetif},
+};
 
 int main(int argc, char *argv[])
 {

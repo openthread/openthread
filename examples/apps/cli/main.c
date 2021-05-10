@@ -37,6 +37,7 @@
 
 #include "openthread-system.h"
 #include "cli/cli_config.h"
+#include "common/code_utils.hpp"
 
 /**
  * This function initializes the CLI app.
@@ -75,6 +76,18 @@ void otTaskletsSignalPending(otInstance *aInstance)
 {
     OT_UNUSED_VARIABLE(aInstance);
 }
+
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    exit(EXIT_SUCCESS);
+}
+static const otCliCommand kCommands[] = {{"exit", ProcessExit}};
+#endif
 
 int main(int argc, char *argv[])
 {
@@ -116,6 +129,10 @@ pseudo_reset:
     assert(instance);
 
     otAppCliInit(instance);
+
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+    otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance);
+#endif
 
     while (!otSysPseudoResetWasRequested())
     {

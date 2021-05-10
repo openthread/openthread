@@ -1761,18 +1761,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-otError Interpreter::ProcessExit(uint8_t aArgsLength, Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    exit(EXIT_SUCCESS);
-
-    return OT_ERROR_NONE;
-}
-#endif
-
 otError Interpreter::ProcessLog(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
