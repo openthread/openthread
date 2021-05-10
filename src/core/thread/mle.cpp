@@ -823,6 +823,19 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+Error Mle::SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMlIid)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(mMeshLocal64), error = kErrorInvalidState);
+
+    mMeshLocal64.GetAddress().SetIid(aMlIid);
+exit:
+    return error;
+}
+#endif
+
 void Mle::ApplyMeshLocalPrefix(void)
 {
     mLinkLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());

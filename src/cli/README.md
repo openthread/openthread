@@ -66,6 +66,7 @@ Done
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
 - [masterkey](#masterkey)
+- [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [multiradio](#multiradio)
@@ -1623,6 +1624,19 @@ Set the Thread Master Key value.
 
 ```bash
 > masterkey 00112233445566778899aabbccddeeff
+Done
+```
+
+### mliid \<iid\>
+
+Set the Mesh Local IID.
+
+It must be used before Thread stack is enabled.
+
+Only for testing/reference device.
+
+```bash
+> mliid 1122334455667788
 Done
 ```
 

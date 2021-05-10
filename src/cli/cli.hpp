@@ -432,6 +432,9 @@ private:
     otError ProcessLeaderWeight(uint8_t aArgsLength, Arg aArgs[]);
 #endif
     otError ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[]);
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    otError ProcessMlIid(uint8_t aArgsLength, Arg aArgs[]);
+#endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     otError ProcessLinkMetrics(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessLinkMetricsQuery(uint8_t aArgsLength, Arg aArgs[]);
@@ -733,6 +736,9 @@ private:
         {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
         {"masterkey", &Interpreter::ProcessMasterKey},
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        {"mliid", &Interpreter::ProcessMlIid},
+#endif
 #if (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE) && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
         {"mlr", &Interpreter::ProcessMlr},
 #endif
