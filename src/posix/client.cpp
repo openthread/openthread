@@ -197,7 +197,7 @@ void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-static bool IsEscapable(char aChar)
+static bool ShouldEscape(char aChar)
 {
     return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n') || (aChar == '\\');
 }
@@ -255,7 +255,7 @@ int main(int argc, char *argv[])
         {
             for (const char *c = argv[i]; *c && count < sizeof(buffer);)
             {
-                if (IsEscapable(*c))
+                if (ShouldEscape(*c))
                 {
                     buffer[count++] = '\\';
 

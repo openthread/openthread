@@ -135,7 +135,7 @@ do_check()
         readonly OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH=640
         local -r kMaxStringLength="$((OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH - 1))"
 
-        # verify success if command length doesn't exceeds the limit
+        # verify success if command length doesn't exceed the limit
         for len in $(seq 1 ${kMaxStringLength}); do
             sudo "${OT_CTL}" -I "${NETIF_NAME}" "$(printf '1%.0s' $(seq 1 "${len}"))"
         done
