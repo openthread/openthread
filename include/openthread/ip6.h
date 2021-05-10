@@ -720,6 +720,20 @@ otError otIp6RegisterMulticastListeners(otInstance *                            
                                         void *                                  aContext);
 
 /**
+ * This function sets the Mesh Local IID (for test purpose).
+ *
+ * Only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[in]   aIid        A pointer to the Mesh Local IID to set.
+ *
+ * @retval  OT_ERROR_NONE           Successfully set the Mesh Local IID.
+ * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ */
+otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid);
+
+/**
  * @}
  *
  */

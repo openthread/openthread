@@ -2621,6 +2621,11 @@ class NodeImpl:
 
         return result
 
+    def set_mliid(self, mliid: str):
+        cmd = f'mliid {mliid}'
+        self.send_command(cmd)
+        self._expect_command_output(cmd)
+
 
 class Node(NodeImpl, OtCli):
     pass
