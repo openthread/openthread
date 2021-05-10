@@ -73,6 +73,7 @@ AM_CPPFLAGS                                                        += \
 endif
 
 COMMON_LDADD                                                        = \
+    $(top_builddir)/third_party/tcplp/libtcplp.a                      \
     $(NULL)
 
 if OPENTHREAD_ENABLE_NCP
@@ -292,4 +293,3 @@ endif # OPENTHREAD_BUILD_COVERAGE
 endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
-

@@ -44,6 +44,8 @@
 #include "common/instance.hpp"
 #include "net/ip6.hpp"
 
+#include "../third_party/tcplp/tcplp.h"
+
 namespace ot {
 namespace Ip6 {
 
