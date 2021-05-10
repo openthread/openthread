@@ -70,11 +70,10 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  aArgsLength  The number of elements in @p aArgs.
-     * @param[in]  aArgs        A pointer to an array of command line arguments.
+     * @param[in]  aArgs        A pointer an array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, Arg aArgs[]);
+    otError Process(Arg aArgs[]);
 
 private:
     enum : uint8_t
@@ -86,21 +85,21 @@ private:
     struct Command
     {
         const char *mName;
-        otError (SrpClient::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
+        otError (SrpClient::*mHandler)(Arg aArgs[]);
     };
 
-    otError ProcessAutoStart(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessCallback(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessHost(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessLeaseInterval(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessKeyLeaseInterval(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessServer(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessService(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessServiceAdd(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessState(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessAutoStart(Arg aArgs[]);
+    otError ProcessCallback(Arg aArgs[]);
+    otError ProcessHelp(Arg aArgs[]);
+    otError ProcessHost(Arg aArgs[]);
+    otError ProcessLeaseInterval(Arg aArgs[]);
+    otError ProcessKeyLeaseInterval(Arg aArgs[]);
+    otError ProcessServer(Arg aArgs[]);
+    otError ProcessService(Arg aArgs[]);
+    otError ProcessServiceAdd(Arg aArgs[]);
+    otError ProcessStart(Arg aArgs[]);
+    otError ProcessState(Arg aArgs[]);
+    otError ProcessStop(Arg aArgs[]);
 
     void OutputHostInfo(uint8_t aIndentSize, const otSrpClientHostInfo &aHostInfo);
     void OutputServiceList(uint8_t aIndentSize, const otSrpClientService *aServices);

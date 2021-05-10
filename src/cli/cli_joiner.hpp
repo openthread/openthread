@@ -71,24 +71,23 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  aArgsLength  The number of elements in @p aArgs.
      * @param[in]  aArgs        A pointer to an array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, Arg aArgs[]);
+    otError Process(Arg aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (Joiner::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
+        otError (Joiner::*mHandler)(Arg aArgs[]);
     };
 
-    otError ProcessDiscerner(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessId(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessDiscerner(Arg aArgs[]);
+    otError ProcessHelp(Arg aArgs[]);
+    otError ProcessId(Arg aArgs[]);
+    otError ProcessStart(Arg aArgs[]);
+    otError ProcessStop(Arg aArgs[]);
 
     static void HandleCallback(otError aError, void *aContext);
     void        HandleCallback(otError aError);

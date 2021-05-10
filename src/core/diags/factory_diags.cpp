@@ -520,10 +520,11 @@ Error Diags::ParseLong(char *aString, long &aLong)
 Error Diags::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[])
 {
     Error                     error;
-    Utils::CmdLineParser::Arg args[kMaxArgs];
+    Utils::CmdLineParser::Arg args[kMaxArgs + 1];
 
-    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aString, aArgsLength, args, aArgsLength));
-    Utils::CmdLineParser::Arg::CopyArgsToStringArray(args, aArgsLength, aArgs);
+    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aString, args));
+    aArgsLength = Utils::CmdLineParser::Arg::GetArgsLength(args);
+    Utils::CmdLineParser::Arg::CopyArgsToStringArray(args, aArgs);
 
 exit:
     return error;
@@ -544,8 +545,7 @@ void Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen
     VerifyOrExit(StringLength(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = kErrorNoBufs);
 
     strcpy(buffer, aString);
-    argCount = kMaxArgs;
-    error    = ParseCmd(buffer, argCount, args);
+    error = ParseCmd(buffer, argCount, args);
 
 exit:
 

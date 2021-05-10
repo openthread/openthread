@@ -74,11 +74,10 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  aArgsLength  The number of elements in @p aArgs.
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, Arg aArgs[]);
+    otError Process(Arg aArgs[]);
 
 private:
     enum
@@ -92,7 +91,7 @@ private:
     struct Command
     {
         const char *mName;
-        otError (CoapSecure::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
+        otError (CoapSecure::*mHandler)(Arg aArgs[]);
     };
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -105,21 +104,21 @@ private:
 
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessConnect(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessDelete(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessDisconnect(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessGet(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessPost(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessPsk(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessPut(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessResource(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessSet(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessX509(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessConnect(Arg aArgs[]);
+    otError ProcessDelete(Arg aArgs[]);
+    otError ProcessDisconnect(Arg aArgs[]);
+    otError ProcessGet(Arg aArgs[]);
+    otError ProcessHelp(Arg aArgs[]);
+    otError ProcessPost(Arg aArgs[]);
+    otError ProcessPsk(Arg aArgs[]);
+    otError ProcessPut(Arg aArgs[]);
+    otError ProcessResource(Arg aArgs[]);
+    otError ProcessSet(Arg aArgs[]);
+    otError ProcessStart(Arg aArgs[]);
+    otError ProcessStop(Arg aArgs[]);
+    otError ProcessX509(Arg aArgs[]);
 
-    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode);
+    otError ProcessRequest(Arg aArgs[], otCoapCode aCoapCode);
 
     void Stop(void);
 

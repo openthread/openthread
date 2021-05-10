@@ -91,9 +91,8 @@ void CoapSecure::PrintPayload(otMessage *aMessage) const
     mInterpreter.OutputLine("");
 }
 
-otError CoapSecure::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessHelp(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     for (const Command &command : sCommands)
@@ -104,11 +103,11 @@ otError CoapSecure::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessResource(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessResource(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgsLength > 0)
+    if (!aArgs[0].IsEmpty())
     {
         VerifyOrExit(aArgs[0].GetLength() < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
 
@@ -120,7 +119,7 @@ otError CoapSecure::ProcessResource(uint8_t aArgsLength, Arg aArgs[])
         mResource.mReceiveHook  = &CoapSecure::BlockwiseReceiveHook;
         mResource.mTransmitHook = &CoapSecure::BlockwiseTransmitHook;
 
-        if (aArgsLength > 1)
+        if (!aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[1].ParseAsUint32(mBlockCount));
         }
@@ -142,11 +141,11 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessSet(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessSet(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgsLength > 0)
+    if (!aArgs[0].IsEmpty())
     {
         VerifyOrExit(aArgs[0].GetLength() < sizeof(mResourceContent), error = OT_ERROR_INVALID_ARGS);
         strncpy(mResourceContent, aArgs[0].GetCString(), sizeof(mResourceContent));
@@ -161,12 +160,12 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessStart(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessStart(Arg aArgs[])
 {
-    otError error;
+    otError error          = OT_ERROR_NONE;
     bool    verifyPeerCert = true;
 
-    if (aArgsLength > 0)
+    if (!aArgs[0].IsEmpty())
     {
         if (aArgs[0] == "false")
         {
@@ -185,15 +184,14 @@ otError CoapSecure::ProcessStart(uint8_t aArgsLength, Arg aArgs[])
     otCoapSecureSetDefaultHandler(mInterpreter.mInstance, &CoapSecure::DefaultHandler, this);
 #endif
 
-    SuccessOrExit(error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT));
+    error = otCoapSecureStart(mInterpreter.mInstance, OT_DEFAULT_COAP_SECURE_PORT);
 
 exit:
     return error;
 }
 
-otError CoapSecure::ProcessStop(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessStop(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -215,27 +213,27 @@ otError CoapSecure::ProcessStop(uint8_t aArgsLength, Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError CoapSecure::ProcessGet(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessGet(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_GET);
+    return ProcessRequest(aArgs, OT_COAP_CODE_GET);
 }
 
-otError CoapSecure::ProcessPost(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessPost(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_POST);
+    return ProcessRequest(aArgs, OT_COAP_CODE_POST);
 }
 
-otError CoapSecure::ProcessPut(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessPut(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_PUT);
+    return ProcessRequest(aArgs, OT_COAP_CODE_PUT);
 }
 
-otError CoapSecure::ProcessDelete(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessDelete(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_DELETE);
+    return ProcessRequest(aArgs, OT_COAP_CODE_DELETE);
 }
 
-otError CoapSecure::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode)
+otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
 {
     otError    error         = OT_ERROR_NONE;
     otMessage *message       = nullptr;
@@ -250,12 +248,12 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode 
     BlockType      coapBlockType = (aCoapCode == OT_COAP_CODE_GET) ? kBlockType2 : kBlockType1;
 #endif
 
-    if (aArgsLength > 0)
+    if (!aArgs[0].IsEmpty())
     {
         strncpy(coapUri, aArgs[0].GetCString(), sizeof(coapUri) - 1);
     }
 
-    if (aArgsLength > 1)
+    if (!aArgs[1].IsEmpty())
     {
         if (aArgs[1] == "con")
         {
@@ -328,7 +326,7 @@ otError CoapSecure::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode 
     }
 #endif
 
-    if (aArgsLength > 2)
+    if (!aArgs[2].IsEmpty())
     {
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         if (coapBlock)
@@ -386,18 +384,16 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessConnect(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessConnect(Arg aArgs[])
 {
     otError    error;
     otSockAddr sockaddr;
-
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     memset(&sockaddr, 0, sizeof(sockaddr));
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress));
     sockaddr.mPort = OT_DEFAULT_COAP_SECURE_PORT;
 
-    if (aArgsLength > 1)
+    if (!aArgs[1].IsEmpty())
     {
         SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     }
@@ -408,9 +404,8 @@ exit:
     return error;
 }
 
-otError CoapSecure::ProcessDisconnect(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessDisconnect(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     otCoapSecureDisconnect(mInterpreter.mInstance);
@@ -419,12 +414,12 @@ otError CoapSecure::ProcessDisconnect(uint8_t aArgsLength, Arg aArgs[])
 }
 
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
-otError CoapSecure::ProcessPsk(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessPsk(Arg aArgs[])
 {
     otError  error = OT_ERROR_NONE;
     uint16_t length;
 
-    VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     length = aArgs[0].GetLength();
     VerifyOrExit(length <= sizeof(mPsk), error = OT_ERROR_INVALID_ARGS);
@@ -445,9 +440,8 @@ exit:
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
 #ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
-otError CoapSecure::ProcessX509(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::ProcessX509(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     otCoapSecureSetCertificate(mInterpreter.mInstance, reinterpret_cast<const uint8_t *>(OT_CLI_COAPS_X509_CERT),
@@ -463,17 +457,21 @@ otError CoapSecure::ProcessX509(uint8_t aArgsLength, Arg aArgs[])
 }
 #endif
 
-otError CoapSecure::Process(uint8_t aArgsLength, Arg aArgs[])
+otError CoapSecure::Process(Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_ARGS;
     const Command *command;
 
-    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
+    if (aArgs[0].IsEmpty())
+    {
+        IgnoreError(ProcessHelp(aArgs));
+        ExitNow();
+    }
 
     command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
 
-    error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
+    error = (this->*command->mHandler)(aArgs + 1);
 
 exit:
     return error;

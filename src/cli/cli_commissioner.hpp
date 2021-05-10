@@ -71,11 +71,10 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  aArgsLength  The number of elements in @p aArgs.
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, Arg aArgs[]);
+    otError Process(Arg aArgs[]);
 
 private:
     enum
@@ -86,21 +85,21 @@ private:
     struct Command
     {
         const char *mName;
-        otError (Commissioner::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
+        otError (Commissioner::*mHandler)(Arg aArgs[]);
     };
 
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessAnnounce(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessEnergy(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessJoiner(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessMgmtGet(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessMgmtSet(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessPanId(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessProvisioningUrl(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessSessionId(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessState(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHelp(Arg aArgs[]);
+    otError ProcessAnnounce(Arg aArgs[]);
+    otError ProcessEnergy(Arg aArgs[]);
+    otError ProcessJoiner(Arg aArgs[]);
+    otError ProcessMgmtGet(Arg aArgs[]);
+    otError ProcessMgmtSet(Arg aArgs[]);
+    otError ProcessPanId(Arg aArgs[]);
+    otError ProcessProvisioningUrl(Arg aArgs[]);
+    otError ProcessSessionId(Arg aArgs[]);
+    otError ProcessStart(Arg aArgs[]);
+    otError ProcessState(Arg aArgs[]);
+    otError ProcessStop(Arg aArgs[]);
 
     static void HandleStateChanged(otCommissionerState aState, void *aContext);
     void        HandleStateChanged(otCommissionerState aState);
