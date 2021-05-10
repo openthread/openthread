@@ -213,14 +213,17 @@ typedef struct otSockAddr
  */
 typedef struct otMessageInfo
 {
-    otIp6Address mSockAddr;      ///< The local IPv6 address.
-    otIp6Address mPeerAddr;      ///< The peer IPv6 address.
-    uint16_t     mSockPort;      ///< The local transport-layer port.
-    uint16_t     mPeerPort;      ///< The peer transport-layer port.
-    const void * mLinkInfo;      ///< A pointer to link-specific information.
-    uint8_t      mHopLimit;      ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
-                                 ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
-                                 ///< Otherwise, specifies the IPv6 Hop Limit.
+    otIp6Address mSockAddr; ///< The local IPv6 address.
+    otIp6Address mPeerAddr; ///< The peer IPv6 address.
+    uint16_t     mSockPort; ///< The local transport-layer port.
+    uint16_t     mPeerPort; ///< The peer transport-layer port.
+    const void * mLinkInfo; ///< A pointer to link-specific information.
+    uint32_t
+        mVersionClassFlow; ///< Version, class, and flow information. If version is not 6 (0b110), a default is used.
+                           ///< DSCP bits of this field are overridden by the priority attached to the otMessage.
+    uint8_t mHopLimit;     ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
+                           ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
+                           ///< Otherwise, specifies the IPv6 Hop Limit.
     bool mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
     bool mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
     bool mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
