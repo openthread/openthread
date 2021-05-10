@@ -174,6 +174,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_TCP
+ *
+ * Define to enable IPv6 logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_TCP
+#define OPENTHREAD_CONFIG_LOG_TCP 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_MAC
  *
  * Define to enable IEEE 802.15.4 MAC logging.
