@@ -49,6 +49,7 @@
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/radio_spinel.hpp"
 #include "lib/spinel/spinel_decoder.hpp"
+#include "lib/spinel/spinel_prop_display.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
 #include "radio/radio.hpp"
@@ -73,6 +74,12 @@
 
 #ifndef RCP_TIME_OFFSET_CHECK_INTERVAL
 #define RCP_TIME_OFFSET_CHECK_INTERVAL (60 * US_PER_S)
+#endif
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
+#define LogSpinelProp(...) LogSpinelProperty(__VA_ARGS__)
+#else
+#define LogSpinelProp(...)
 #endif
 
 using ot::Spinel::Decoder;
@@ -802,6 +809,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleWaitingResponse(uint3
 
                 VerifyOrExit(unpacked > 0, mError = OT_ERROR_PARSE);
                 mError = OT_ERROR_NONE;
+
+                LogSpinelProp(aKey, mPropertyFormat, true, mPropertyArgs);
             }
         }
         else
@@ -1588,6 +1597,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Set(spinel_prop_key_t aK
     } while (mRcpFailed);
 #endif
 
+    LogSpinelProp(aKey, mPropertyFormat, false, mPropertyArgs);
     return error;
 }
 
@@ -1636,6 +1646,22 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Remove(spinel_prop_key_t
 
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
+template <typename InterfaceType, typename ProcessContextType>
+void RadioSpinel<InterfaceType, ProcessContextType>::LogSpinelProperty(spinel_prop_key_t aKey,
+                                                                       const char *      aFormat,
+                                                                       bool              aGet,
+                                                                       va_list           aArgs)
+{
+    memset(mPropLogBuffer, 0, sizeof(mPropLogBuffer));
+
+    if (SpinelPropDisplay(aKey, aFormat, aGet, aArgs, mPropLogBuffer, kPropLogBufferSize) > 0)
+    {
+        otLogDebgPlat(aGet ? "Get property, %s" : "Set property, %s", mPropLogBuffer);
+    }
+}
+#endif
 
 template <typename InterfaceType, typename ProcessContextType>
 otError RadioSpinel<InterfaceType, ProcessContextType>::WaitResponse(void)

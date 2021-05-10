@@ -706,3 +706,20 @@ target_link_libraries(ot-test-timer
 )
 
 add_test(NAME ot-test-timer COMMAND ot-test-timer)
+
+add_executable(ot-test-spinel-prop-display
+    test_spinel_prop_display.cpp
+)
+
+target_include_directories(ot-test-spinel-prop-display
+    PRIVATE
+        ${PROJECT_SOURCE_DIR}/src/lib/spinel
+        ${COMMON_INCLUDES}
+)
+
+target_link_libraries(ot-test-spinel-prop-display
+    PRIVATE
+        openthread-spinel-ncp
+)
+
+add_test(NAME ot-test-spinel-prop-display COMMAND ot-test-spinel-prop-display)
