@@ -2,7 +2,7 @@
  *  \brief  Generic file encryption program using generic wrappers for configured
  *          security.
  *
- *  Copyright (C) 2006-2016, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -16,14 +16,12 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 /* Enable definition of fileno() even when compiling with -std=c99. Must be
  * set before config.h, which pulls in glibc's features.h indirectly.
  * Harmless on other platforms. */
-#define _POSIX_C_SOURCE 1
+#define _POSIX_C_SOURCE 200112L
 
 #if !defined(MBEDTLS_CONFIG_FILE)
 #include "mbedtls/config.h"
@@ -38,6 +36,7 @@
 #include <stdlib.h>
 #define mbedtls_fprintf         fprintf
 #define mbedtls_printf          printf
+#define mbedtls_exit            exit
 #define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif /* MBEDTLS_PLATFORM_C */
@@ -77,12 +76,15 @@
 int main( void )
 {
     mbedtls_printf("MBEDTLS_CIPHER_C and/or MBEDTLS_MD_C and/or MBEDTLS_FS_IO not defined.\n");
-    return( 0 );
+    mbedtls_exit( 0 );
 }
 #else
+
+
 int main( int argc, char *argv[] )
 {
-    int ret = 1, i, n;
+    int ret = 1, i;
+    unsigned n;
     int exit_code = MBEDTLS_EXIT_FAILURE;
     int mode;
     size_t keylen, ilen, olen;
@@ -216,7 +218,7 @@ int main( int argc, char *argv[] )
             p = &argv[6][4];
             keylen = 0;
 
-            while( sscanf( p, "%02X", &n ) > 0 &&
+            while( sscanf( p, "%02X", (unsigned int*) &n ) > 0 &&
                    keylen < (int) sizeof( key ) )
             {
                 key[keylen++] = (unsigned char) n;
@@ -414,7 +416,7 @@ int main( int argc, char *argv[] )
             ( ( filesize - mbedtls_md_get_size( md_info ) ) %
                 mbedtls_cipher_get_block_size( &cipher_ctx ) ) != 0 )
         {
-            mbedtls_fprintf( stderr, "File content not a multiple of the block size (%d).\n",
+            mbedtls_fprintf( stderr, "File content not a multiple of the block size (%u).\n",
                      mbedtls_cipher_get_block_size( &cipher_ctx ));
             goto exit;
         }
@@ -481,7 +483,7 @@ int main( int argc, char *argv[] )
 
             if( fread( buffer, 1, ilen, fin ) != ilen )
             {
-                mbedtls_fprintf( stderr, "fread(%d bytes) failed\n",
+                mbedtls_fprintf( stderr, "fread(%u bytes) failed\n",
                     mbedtls_cipher_get_block_size( &cipher_ctx ) );
                 goto exit;
             }
@@ -559,6 +561,6 @@ exit:
     mbedtls_cipher_free( &cipher_ctx );
     mbedtls_md_free( &md_ctx );
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
 #endif /* MBEDTLS_CIPHER_C && MBEDTLS_MD_C && MBEDTLS_FS_IO */
