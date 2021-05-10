@@ -208,7 +208,7 @@ Config ParseArg(int &aArgCount, char **&aArgVector)
 
     optind = 1;
 
-    for (int index, option; (option = getopt_long(aArgCount, aArgVector, "I:h", kOptions, &index)) != -1;)
+    for (int index, option; (option = getopt_long(aArgCount, aArgVector, "+I:h", kOptions, &index)) != -1;)
     {
         switch (option)
         {
