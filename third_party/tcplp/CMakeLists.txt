@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,8 +26,24 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(NOT OT_EXTERNAL_MBEDTLS)
-    add_subdirectory(mbedtls)
-endif()
+project("TCPlp" C)
 
-add_subdirectory(tcplp)
+set(src_tcplp
+    bsdtcp/tcp_usrreq.c
+    bsdtcp/tcp_subr.c
+    bsdtcp/tcp_output.c
+    bsdtcp/cc/cc_newreno.c
+    bsdtcp/tcp_reass.c
+    bsdtcp/tcp_timewait.c
+    bsdtcp/tcp_sack.c
+    bsdtcp/tcp_input.c
+    bsdtcp/tcp_timer.c
+    lib/bitmap.c
+    lib/cbuf.c
+    lib/lbuf.c
+)
+
+set(tcplp_static_target "tcplp")
+
+add_library(${tcplp_static_target} STATIC ${src_tcplp})
+set_target_properties(${tcplp_static_target} PROPERTIES OUTPUT_NAME tcplp)
