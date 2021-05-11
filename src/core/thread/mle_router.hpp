@@ -327,11 +327,11 @@ public:
     /**
      * This method returns if the REED is expected to become Router soon.
      *
-     * @retval TRUE   If the REED is going to become Router.
-     * @retval FALSE  Otherwise.
+     * @retval TRUE   If the REED is going to become a Router soon.
+     * @retval FALSE  If the REED is not going to become a Router soon.
      *
      */
-    bool IsExpectedToBecomeRouter(void) const;
+    bool IsExpectedToBecomeRouterSoon(void) const;
 
     /**
      * This method removes a link to a neighbor.
