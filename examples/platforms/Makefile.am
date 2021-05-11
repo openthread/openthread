@@ -35,6 +35,7 @@ EXTRA_DIST                              = \
     gp712                                 \
     k32w                                  \
     kw41z                                 \
+    nrf528xx                              \
     qpg6095                               \
     qpg6100                               \
     qpg7015m                              \
@@ -45,7 +46,6 @@ EXTRA_DIST                              = \
 
 DIST_SUBDIRS                            = \
     cc2538                                \
-    nrf528xx                              \
     simulation                            \
     utils                                 \
     $(NULL)
@@ -58,10 +58,6 @@ SUBDIRS                                 = \
 
 if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
-endif
-
-if OPENTHREAD_PLATFORM_NRF528XX
-SUBDIRS                                += nrf528xx
 endif
 
 if OPENTHREAD_PLATFORM_SIMULATION
