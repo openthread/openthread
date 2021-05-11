@@ -81,11 +81,45 @@ static_assert(kLineBufferSize >= sizeof("Error "), "kLineBufferSize is too small
 
 int sSessionFd = -1;
 
+void QuitOnExit(const char *aBuffer)
+{
+    constexpr char kExit[] = "exit";
+
+    while (*aBuffer == ' ' || *aBuffer == '\t')
+    {
+        ++aBuffer;
+    }
+
+    VerifyOrExit(strstr(aBuffer, kExit) == aBuffer);
+
+    aBuffer += sizeof(kExit) - 1;
+
+    while (*aBuffer == ' ' || *aBuffer == '\t')
+    {
+        ++aBuffer;
+    }
+
+    switch (*aBuffer)
+    {
+    case '\0':
+    case '\r':
+    case '\n':
+        exit(OT_EXIT_SUCCESS);
+        break;
+    default:
+        break;
+    }
+
+exit:
+    return;
+}
+
 #if OPENTHREAD_USE_READLINE
 void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
     {
+        QuitOnExit(aLine);
         add_history(aLine);
         dprintf(sSessionFd, "%s\n", aLine);
         free(aLine);
@@ -323,6 +357,7 @@ int main(int argc, char *argv[])
 #else
             VerifyOrExit(fgets(buffer, sizeof(buffer), stdin) != nullptr, ret = OT_EXIT_FAILURE);
 
+            QuitOnExit(buffer);
             VerifyOrExit(DoWrite(sSessionFd, buffer, strlen(buffer)), ret = OT_EXIT_FAILURE);
 #endif
         }
