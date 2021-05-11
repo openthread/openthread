@@ -197,9 +197,9 @@ void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
     exit(aExitCode);
 }
 
-bool IsSeparator(char aChar)
+static bool ShouldEscape(char aChar)
 {
-    return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n');
+    return (aChar == ' ') || (aChar == '\t') || (aChar == '\r') || (aChar == '\n') || (aChar == '\\');
 }
 
 Config ParseArg(int &aArgCount, char **&aArgVector)
@@ -253,20 +253,27 @@ int main(int argc, char *argv[])
 
         for (int i = 0; i < argc; i++)
         {
-            for (const char *c = argv[i]; *c; ++c)
+            for (const char *c = argv[i]; *c && count < sizeof(buffer);)
             {
-                if (IsSeparator(*c))
+                if (ShouldEscape(*c))
                 {
                     buffer[count++] = '\\';
+
+                    VerifyOrExit(count < sizeof(buffer), ret = OT_EXIT_INVALID_ARGUMENTS);
                 }
-                buffer[count++] = *c;
+
+                buffer[count++] = *c++;
             }
+
+            VerifyOrExit(count < sizeof(buffer), ret = OT_EXIT_INVALID_ARGUMENTS);
             buffer[count++] = ' ';
         }
 
-        // replace the trailing space with newline
-        buffer[count - 1] = '\n';
-        VerifyOrExit(DoWrite(sSessionFd, buffer, count), ret = OT_EXIT_FAILURE);
+        // ignore the trailing space
+        if (--count)
+        {
+            VerifyOrExit(DoWrite(sSessionFd, buffer, count), ret = OT_EXIT_FAILURE);
+        }
 
         isInteractive = false;
     }
