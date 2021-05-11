@@ -56,23 +56,18 @@ class Test_Service(thread_cert.TestCase):
             'channel': 12,
             'mode': 'rdn',
             'network_name': 'OpenThread',
-            'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'channel': 12,
             'mode': 'rdn',
             'network_name': 'OpenThread',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
             'channel': 12,
             'mode': 'rdn',
             'network_name': 'OpenThread',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER1]
         },
     }

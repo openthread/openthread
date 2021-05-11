@@ -51,36 +51,28 @@ class Cert_5_5_3_SplitMergeChildren(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED2]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED3]
         },
         ED2: {
             'name': 'MED_2',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         ED3: {
             'name': 'MED_3',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER2]
         },
     }

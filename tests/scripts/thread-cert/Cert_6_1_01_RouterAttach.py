@@ -64,13 +64,11 @@ class Cert_6_1_1_RouterAttach_Base(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ED]
         },
         ED: {
             'name': 'DUT',
             'is_mtd': True,
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
     }

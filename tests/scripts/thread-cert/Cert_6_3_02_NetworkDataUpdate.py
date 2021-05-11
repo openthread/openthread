@@ -42,14 +42,12 @@ class Cert_6_3_2_NetworkDataUpdate(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ED]
         },
         ED: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'timeout': 10,
             'allowlist': [LEADER]
         },

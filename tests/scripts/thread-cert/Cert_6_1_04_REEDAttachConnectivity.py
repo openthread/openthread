@@ -67,34 +67,28 @@ class Cert_6_1_4_REEDAttachConnectivity_Base(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER, REED_1, REED_2]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, REED_1]
         },
         REED_1: {
             'name': 'REED_1',
             'mode': 'rdn',
-            'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, ROUTER, MTD]
         },
         REED_2: {
             'name': 'REED_2',
             'mode': 'rdn',
-            'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, MTD]
         },
         MTD: {
             'name': 'DUT',
             'is_mtd': True,
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [REED_1, REED_2]
         },

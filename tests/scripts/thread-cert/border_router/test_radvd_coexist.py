@@ -67,7 +67,6 @@ class SingleBorderRouter(thread_cert.TestCase):
             'name': 'Router',
             'allowlist': [BR],
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'Host',

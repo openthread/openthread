@@ -78,23 +78,19 @@ class TestMulticastListenerRegistration(thread_cert.TestCase):
             'version': '1.2',
             'allowlist': [BBR_2, ROUTER_1_2],
             'is_bbr': True,
-            'router_selection_jitter': 1,
         },
         BBR_2: {
             'version': '1.2',
             'allowlist': [BBR_1, ROUTER_1_2, ROUTER_1_1],
             'is_bbr': True,
-            'router_selection_jitter': 1,
         },
         ROUTER_1_2: {
             'version': '1.2',
             'allowlist': [BBR_1, BBR_2, SED_1, MED_1, MED_2, FED_1],
-            'router_selection_jitter': 1,
         },
         ROUTER_1_1: {
             'version': '1.1',
             'allowlist': [BBR_2],
-            'router_selection_jitter': 1,
         },
         MED_1: {
             'mode': 'rn',

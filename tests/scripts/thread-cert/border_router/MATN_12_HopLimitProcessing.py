@@ -67,13 +67,11 @@ class MATN_12_HopLimitProcessing(thread_cert.TestCase):
             'is_otbr': True,
             'allowlist': [ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         ROUTER_1: {
             'name': 'Router_1',
             'allowlist': [BR_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         HOST: {
             'name': 'Host',

@@ -47,13 +47,10 @@ class TestCoapObserve(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
     }

@@ -66,7 +66,6 @@ class TestMlr(thread_cert.TestCase):
             'allowlist': [ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
             'channel': CH1,
         },
@@ -74,7 +73,6 @@ class TestMlr(thread_cert.TestCase):
             'name': 'ROUTER1',
             'allowlist': [PBBR1],
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH1,
         },
         PBBR2: {
@@ -82,7 +80,6 @@ class TestMlr(thread_cert.TestCase):
             'allowlist': [ROUTER2],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
             'channel': CH2,
         },
@@ -90,7 +87,6 @@ class TestMlr(thread_cert.TestCase):
             'name': 'ROUTER2',
             'allowlist': [PBBR2],
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH2,
         },
         HOST: {
