@@ -58,6 +58,7 @@ public:
         mAddress      = &aAddress.GetAddress();
         mPrefixLength = kMulticastPrefixLength;
         mScope        = aAddress.GetAddress().GetScope();
+        mPreferred    = false;
     }
 
 private:
