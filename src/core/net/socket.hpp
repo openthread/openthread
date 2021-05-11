@@ -296,6 +296,14 @@ public:
     const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
 
     /**
+     * This method sets the IPv6 address.
+     *
+     * @param[in] aAddress The IPv6 address.
+     *
+     */
+    void SetAddress(const Address &aAddress) { mAddress = aAddress; }
+
+    /**
      * This method returns the socket address port number.
      *
      * @returns The port number

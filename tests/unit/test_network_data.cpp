@@ -30,7 +30,9 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "thread/network_data_leader.hpp"
 #include "thread/network_data_local.hpp"
+#include "thread/network_data_service.hpp"
 
 #include "test_platform.h"
 #include "test_util.hpp"
@@ -312,6 +314,140 @@ void TestNetworkDataFindNextService(void)
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
+void TestNetworkDataDsnSrpServices(void)
+{
+    class TestLeader : public Leader
+    {
+    public:
+        void Populate(const uint8_t *aTlvs, uint8_t aTlvsLength)
+        {
+            memcpy(mTlvs, aTlvs, aTlvsLength);
+            mLength = aTlvsLength;
+        }
+    };
+
+    ot::Instance *instance;
+
+    printf("\n\n-------------------------------------------------");
+    printf("\nTestNetworkDataDsnSrpServices()\n");
+
+    instance = testInitInstance();
+    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+
+    {
+        struct AnycastEntry
+        {
+            uint16_t mAloc16;
+            uint8_t  mSequenceNumber;
+
+            bool Matches(Service::DnsSrpAnycast::Info aInfo) const
+            {
+                VerifyOrQuit(aInfo.mAnycastAddress.GetIid().IsAnycastServiceLocator(), "Anycast address is invalid");
+
+                return (aInfo.mAnycastAddress.GetIid().GetLocator() == mAloc16) &&
+                       (aInfo.mSequenceNumber == mSequenceNumber);
+            }
+        };
+
+        struct UnicastEntry
+        {
+            const char *mAddress;
+            uint16_t    mPort;
+
+            bool Matches(Service::DnsSrpUnicast::Info aInfo) const
+            {
+                Ip6::SockAddr sockAddr;
+
+                SuccessOrQuit(sockAddr.GetAddress().FromString(mAddress), "Ip6::Address::FromString() failed");
+                sockAddr.SetPort(mPort);
+
+                return (aInfo.mSockAddr == sockAddr);
+            }
+        };
+
+        const uint8_t kNetworkData[] = {
+            0x0b, 0x08, 0x80, 0x02, 0x5c, 0x02, 0x0d, 0x02, 0x28, 0x00, 0x0b, 0x08, 0x81, 0x02, 0x5c, 0xff, 0x0d, 0x02,
+            0x6c, 0x00, 0x0b, 0x09, 0x82, 0x02, 0x5c, 0x03, 0x0d, 0x03, 0x4c, 0x00, 0xaa, 0x0b, 0x35, 0x83, 0x13, 0x5d,
+            0xfd, 0xde, 0xad, 0x00, 0xbe, 0xef, 0x00, 0x00, 0x2d, 0x0e, 0xc6, 0x27, 0x55, 0x56, 0x18, 0xd9, 0x12, 0x34,
+            0x0d, 0x02, 0x00, 0x00, 0x0d, 0x14, 0x6c, 0x00, 0xfd, 0x00, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff, 0x00, 0x11,
+            0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0xab, 0xcd, 0x0d, 0x04, 0x28, 0x00, 0x56, 0x78, 0x0b, 0x23, 0x84, 0x01,
+            0x5d, 0x0d, 0x02, 0x00, 0x00, 0x0d, 0x14, 0x4c, 0x00, 0xfd, 0x00, 0x12, 0x34, 0x56, 0x78, 0x9a, 0xbc, 0xde,
+            0xf0, 0x01, 0x23, 0x45, 0x67, 0x89, 0xab, 0x00, 0x0e, 0x0d, 0x04, 0x6c, 0x00, 0xcd, 0x12,
+        };
+
+        const AnycastEntry kAnycastEntries[] = {
+            {0xfc10, 0x02},
+            {0xfc11, 0xff},
+            {0xfc12, 0x03},
+        };
+
+        const UnicastEntry kUnicastEntries[] = {
+            {"fdde:ad00:beef:0:2d0e:c627:5556:18d9", 0x1234}, {"fd00:aabb:ccdd:eeff:11:2233:4455:6677", 0xabcd},
+            {"fdde:ad00:beef:0:0:ff:fe00:2800", 0x5678},      {"fd00:1234:5678:9abc:def0:123:4567:89ab", 0x0e},
+            {"fdde:ad00:beef:0:0:ff:fe00:6c00", 0xcd12},
+        };
+
+        const uint8_t kPreferredAnycastEntryIndex = 2;
+
+        Service::Manager &           manager = instance->Get<Service::Manager>();
+        Service::Manager::Iterator   iterator;
+        Service::DnsSrpAnycast::Info anycastInfo;
+        Service::DnsSrpUnicast::Info unicastInfo;
+
+        reinterpret_cast<TestLeader &>(instance->Get<Leader>()).Populate(kNetworkData, sizeof(kNetworkData));
+
+        DumpBuffer("netdata", kNetworkData, sizeof(kNetworkData));
+
+        // Verify all the "DNS/SRP Anycast Service" entries in Network Data
+
+        printf("\n- - - - - - - - - - - - - - - - - - - -");
+        printf("\nDNS/SRP Anycast Service entries\n");
+
+        for (const AnycastEntry &entry : kAnycastEntries)
+        {
+            SuccessOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo), "GetNextDnsSrpAnycastInfo() failed");
+
+            printf("\nanycastInfo { %s, seq:%d }", anycastInfo.mAnycastAddress.ToString().AsCString(),
+                   anycastInfo.mSequenceNumber);
+
+            VerifyOrQuit(entry.Matches(anycastInfo), "GetNextDnsSrpAnycastInfo() returned incorrect info");
+        }
+
+        VerifyOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNotFound,
+                     "GetNextDnsSrpAnycastInfo() returned unexpected extra entry");
+
+        // Find the preferred "DNS/SRP Anycast Service" entries in Network Data
+
+        SuccessOrQuit(manager.FindPreferredDnsSrpAnycastInfo(anycastInfo), "FindPreferredDnsSrpAnycastInfo() failed");
+
+        printf("\n\nPreferred anycastInfo { %s, seq:%d }", anycastInfo.mAnycastAddress.ToString().AsCString(),
+               anycastInfo.mSequenceNumber);
+
+        VerifyOrQuit(kAnycastEntries[kPreferredAnycastEntryIndex].Matches(anycastInfo),
+                     "FindPreferredDnsSrpAnycastInfo() returned invalid info");
+
+        printf("\n\n- - - - - - - - - - - - - - - - - - - -");
+        printf("\nDNS/SRP Unicast Service entries\n");
+
+        iterator.Clear();
+
+        for (const UnicastEntry &entry : kUnicastEntries)
+        {
+            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo), "GetNextDnsSrpUnicastInfo() failed");
+            printf("\nunicastInfo %s", unicastInfo.mSockAddr.ToString().AsCString());
+
+            VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");
+        }
+
+        VerifyOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNotFound,
+                     "GetNextDnsSrpUnicastInfo() returned unexpected extra entry");
+
+        printf("\n");
+    }
+
+    testFreeInstance(instance);
+}
+
 } // namespace NetworkData
 } // namespace ot
 
@@ -321,6 +457,7 @@ int main(void)
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     ot::NetworkData::TestNetworkDataFindNextService();
 #endif
+    ot::NetworkData::TestNetworkDataDsnSrpServices();
 
     printf("\nAll tests passed\n");
     return 0;

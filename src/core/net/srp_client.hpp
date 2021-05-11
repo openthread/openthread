@@ -710,6 +710,11 @@ private:
         kAutoStartDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE,
     };
 
+    enum : uint16_t
+    {
+        kAnycastServerPort = 53, // Port number to use when server is discovered using "network data anycast service".
+    };
+
     // This enumeration type is used by the private `Start()` and
     // `Stop()` methods to indicate whether it is being requested by the
     // user or by the auto-start feature.
@@ -794,6 +799,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     bool mAutoStartModeEnabled : 1;
     bool mAutoStartDidSelectServer : 1;
+    bool mAutoStartIsUsingAnycastAddress : 1;
 #endif
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     bool mServiceKeyRecordEnabled : 1;
@@ -815,6 +821,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     AutoStartCallback mAutoStartCallback;
     void *            mAutoStartContext;
+    uint8_t           mServerSequenceNumber;
 #endif
 
     const char *        mDomainName;

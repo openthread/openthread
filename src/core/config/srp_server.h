@@ -56,16 +56,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER
- *
- * Specifies the Thread Network Data Service number for SRP Server.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER
-#define OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_NUMBER 0x5du
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT
  *
  * Specifies the timeout value (in milliseconds) for the service update handler.
