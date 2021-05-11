@@ -32,19 +32,14 @@ set(COMMON_INCLUDES
 
 set(COMMON_SOURCES
     api/backbone_router_api.cpp
-    api/backbone_router_ftd_api.cpp
     api/border_agent_api.cpp
     api/border_router_api.cpp
-    api/channel_manager_api.cpp
     api/channel_monitor_api.cpp
     api/child_supervision_api.cpp
     api/coap_api.cpp
     api/coap_secure_api.cpp
-    api/commissioner_api.cpp
     api/crypto_api.cpp
     api/dataset_api.cpp
-    api/dataset_ftd_api.cpp
-    api/dataset_updater_api.cpp
     api/diags_api.cpp
     api/dns_api.cpp
     api/dns_server_api.cpp
@@ -75,7 +70,6 @@ set(COMMON_SOURCES
     api/srp_server_api.cpp
     api/tasklet_api.cpp
     api/thread_api.cpp
-    api/thread_ftd_api.cpp
     api/udp_api.cpp
     backbone_router/backbone_tmf.cpp
     backbone_router/bbr_leader.cpp
@@ -113,7 +107,6 @@ set(COMMON_SOURCES
     crypto/sha256.cpp
     diags/factory_diags.cpp
     mac/channel_mask.cpp
-    mac/data_poll_handler.cpp
     mac/data_poll_sender.cpp
     mac/link_raw.cpp
     mac/mac.cpp
@@ -129,7 +122,6 @@ set(COMMON_SOURCES
     meshcop/dataset.cpp
     meshcop/dataset_local.cpp
     meshcop/dataset_manager.cpp
-    meshcop/dataset_manager_ftd.cpp
     meshcop/dataset_updater.cpp
     meshcop/dtls.cpp
     meshcop/energy_scan_client.cpp
@@ -166,44 +158,34 @@ set(COMMON_SOURCES
     radio/trel_interface.cpp
     radio/trel_link.cpp
     radio/trel_packet.cpp
-    thread/address_resolver.cpp
     thread/announce_begin_server.cpp
     thread/announce_sender.cpp
-    thread/child_table.cpp
-    thread/csl_tx_scheduler.cpp
     thread/discover_scanner.cpp
     thread/dua_manager.cpp
     thread/energy_scan_server.cpp
-    thread/indirect_sender.cpp
     thread/key_manager.cpp
     thread/link_metrics.cpp
     thread/link_quality.cpp
     thread/lowpan.cpp
     thread/mesh_forwarder.cpp
-    thread/mesh_forwarder_ftd.cpp
     thread/mesh_forwarder_mtd.cpp
     thread/mle.cpp
-    thread/mle_router.cpp
     thread/mle_types.cpp
     thread/mlr_manager.cpp
     thread/neighbor_table.cpp
     thread/network_data.cpp
     thread/network_data_leader.cpp
-    thread/network_data_leader_ftd.cpp
     thread/network_data_local.cpp
     thread/network_data_notifier.cpp
     thread/network_data_service.cpp
     thread/network_diagnostic.cpp
     thread/panid_query_server.cpp
     thread/radio_selector.cpp
-    thread/router_table.cpp
-    thread/src_match_controller.cpp
     thread/thread_netif.cpp
     thread/time_sync_service.cpp
     thread/tmf.cpp
     thread/topology.cpp
     thread/uri_paths.cpp
-    utils/channel_manager.cpp
     utils/channel_monitor.cpp
     utils/child_supervision.cpp
     utils/flash.cpp

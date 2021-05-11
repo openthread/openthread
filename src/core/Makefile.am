@@ -112,16 +112,16 @@ SOURCES_COMMON                                  = \
     api/backbone_router_ftd_api.cpp               \
     api/border_agent_api.cpp                      \
     api/border_router_api.cpp                     \
-    api/channel_manager_api.cpp                   \
+    api/channel_manager_ftd_api.cpp               \
     api/channel_monitor_api.cpp                   \
     api/child_supervision_api.cpp                 \
     api/coap_api.cpp                              \
     api/coap_secure_api.cpp                       \
-    api/commissioner_api.cpp                      \
+    api/commissioner_ftd_api.cpp                  \
     api/crypto_api.cpp                            \
     api/dataset_api.cpp                           \
     api/dataset_ftd_api.cpp                       \
-    api/dataset_updater_api.cpp                   \
+    api/dataset_updater_ftd_api.cpp               \
     api/diags_api.cpp                             \
     api/dns_api.cpp                               \
     api/dns_server_api.cpp                        \
@@ -190,7 +190,7 @@ SOURCES_COMMON                                  = \
     crypto/sha256.cpp                             \
     diags/factory_diags.cpp                       \
     mac/channel_mask.cpp                          \
-    mac/data_poll_handler.cpp                     \
+    mac/data_poll_handler_ftd.cpp                 \
     mac/data_poll_sender.cpp                      \
     mac/link_raw.cpp                              \
     mac/mac.cpp                                   \
@@ -243,15 +243,15 @@ SOURCES_COMMON                                  = \
     radio/trel_interface.cpp                      \
     radio/trel_link.cpp                           \
     radio/trel_packet.cpp                         \
-    thread/address_resolver.cpp                   \
+    thread/address_resolver_ftd.cpp               \
     thread/announce_begin_server.cpp              \
     thread/announce_sender.cpp                    \
-    thread/child_table.cpp                        \
-    thread/csl_tx_scheduler.cpp                   \
+    thread/child_table_ftd.cpp                    \
+    thread/csl_tx_scheduler_ftd.cpp               \
     thread/discover_scanner.cpp                   \
     thread/dua_manager.cpp                        \
     thread/energy_scan_server.cpp                 \
-    thread/indirect_sender.cpp                    \
+    thread/indirect_sender_ftd.cpp                \
     thread/key_manager.cpp                        \
     thread/link_metrics.cpp                       \
     thread/link_quality.cpp                       \
@@ -260,7 +260,7 @@ SOURCES_COMMON                                  = \
     thread/mesh_forwarder_ftd.cpp                 \
     thread/mesh_forwarder_mtd.cpp                 \
     thread/mle.cpp                                \
-    thread/mle_router.cpp                         \
+    thread/mle_router_ftd.cpp                     \
     thread/mle_types.cpp                          \
     thread/mlr_manager.cpp                        \
     thread/neighbor_table.cpp                     \
@@ -273,14 +273,14 @@ SOURCES_COMMON                                  = \
     thread/network_diagnostic.cpp                 \
     thread/panid_query_server.cpp                 \
     thread/radio_selector.cpp                     \
-    thread/router_table.cpp                       \
-    thread/src_match_controller.cpp               \
+    thread/router_table_ftd.cpp                   \
+    thread/src_match_controller_ftd.cpp           \
     thread/thread_netif.cpp                       \
     thread/time_sync_service.cpp                  \
     thread/tmf.cpp                                \
     thread/topology.cpp                           \
     thread/uri_paths.cpp                          \
-    utils/channel_manager.cpp                     \
+    utils/channel_manager_ftd.cpp                 \
     utils/channel_monitor.cpp                     \
     utils/child_supervision.cpp                   \
     utils/flash.cpp                               \

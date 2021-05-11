@@ -28,6 +28,27 @@
 
 add_library(openthread-ftd)
 
+set(FTD_ONLY_SOURCES
+    api/backbone_router_ftd_api.cpp
+    api/channel_manager_ftd_api.cpp
+    api/commissioner_ftd_api.cpp
+    api/dataset_ftd_api.cpp
+    api/dataset_updater_ftd_api.cpp
+    api/thread_ftd_api.cpp
+    mac/data_poll_handler_ftd.cpp
+    meshcop/dataset_manager_ftd.cpp
+    thread/address_resolver_ftd.cpp
+    thread/child_table_ftd.cpp
+    thread/csl_tx_scheduler_ftd.cpp
+    thread/indirect_sender_ftd.cpp
+    thread/mesh_forwarder_ftd.cpp
+    thread/mle_router_ftd.cpp
+    thread/network_data_leader_ftd.cpp
+    thread/router_table_ftd.cpp
+    thread/src_match_controller_ftd.cpp
+    utils/channel_manager_ftd.cpp
+)
+
 target_compile_definitions(openthread-ftd PRIVATE
     OPENTHREAD_FTD=1
 )
@@ -38,7 +59,10 @@ target_compile_options(openthread-ftd PRIVATE
 
 target_include_directories(openthread-ftd PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-target_sources(openthread-ftd PRIVATE ${COMMON_SOURCES})
+target_sources(openthread-ftd PRIVATE
+    ${COMMON_SOURCES}
+    ${FTD_ONLY_SOURCES}
+)
 
 target_link_libraries(openthread-ftd
     PRIVATE

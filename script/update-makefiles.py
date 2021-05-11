@@ -111,6 +111,8 @@ core_cpp_files = get_file_list(src_core_path, '.cpp')
 core_cpp_files = [item for item in core_cpp_files if not item.endswith("extension_example.cpp")]
 core_hpp_cpp_files = sorted(core_hpp_files + core_cpp_files)
 core_h_hpp_files = sorted(core_h_files + core_hpp_files)
+core_cpp_ftd_files = [item for item in core_cpp_files if "ftd" in item]
+core_cpp_common_files = [item for item in core_cpp_files if item not in core_cpp_ftd_files]
 
 include_path = "./include/openthread"
 include_h_files = get_file_list(include_path, '.h')
@@ -121,9 +123,13 @@ include_platform_h_files = [name[8:] for name in include_h_files if name.startsw
 # Update CMakeLists.txt files
 
 core_cmakelist_txt_file = "./src/core/CMakeLists.txt"
+core_ftd_cmake_file = "./src/core/ftd.cmake"
 
-formatted_list = ["    {}\n".format(file_name[9:]) for file_name in core_cpp_files]
+formatted_list = ["    {}\n".format(file_name[9:]) for file_name in core_cpp_common_files]
 update_build_file(core_cmakelist_txt_file, "set(COMMON_SOURCES\n", ")\n", formatted_list)
+
+formatted_list = ["    {}\n".format(file_name[9:]) for file_name in core_cpp_ftd_files]
+update_build_file(core_ftd_cmake_file, "set(FTD_ONLY_SOURCES\n", ")\n", formatted_list)
 
 print("Updated " + core_cmakelist_txt_file)
 

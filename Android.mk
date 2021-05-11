@@ -161,16 +161,16 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/backbone_router_ftd_api.cpp                        \
     src/core/api/border_agent_api.cpp                               \
     src/core/api/border_router_api.cpp                              \
-    src/core/api/channel_manager_api.cpp                            \
+    src/core/api/channel_manager_ftd_api.cpp                        \
     src/core/api/channel_monitor_api.cpp                            \
     src/core/api/child_supervision_api.cpp                          \
     src/core/api/coap_api.cpp                                       \
     src/core/api/coap_secure_api.cpp                                \
-    src/core/api/commissioner_api.cpp                               \
+    src/core/api/commissioner_ftd_api.cpp                           \
     src/core/api/crypto_api.cpp                                     \
     src/core/api/dataset_api.cpp                                    \
     src/core/api/dataset_ftd_api.cpp                                \
-    src/core/api/dataset_updater_api.cpp                            \
+    src/core/api/dataset_updater_ftd_api.cpp                        \
     src/core/api/diags_api.cpp                                      \
     src/core/api/dns_api.cpp                                        \
     src/core/api/dns_server_api.cpp                                 \
@@ -239,7 +239,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/crypto/sha256.cpp                                      \
     src/core/diags/factory_diags.cpp                                \
     src/core/mac/channel_mask.cpp                                   \
-    src/core/mac/data_poll_handler.cpp                              \
+    src/core/mac/data_poll_handler_ftd.cpp                          \
     src/core/mac/data_poll_sender.cpp                               \
     src/core/mac/link_raw.cpp                                       \
     src/core/mac/mac.cpp                                            \
@@ -292,15 +292,15 @@ LOCAL_SRC_FILES                                                  := \
     src/core/radio/trel_interface.cpp                               \
     src/core/radio/trel_link.cpp                                    \
     src/core/radio/trel_packet.cpp                                  \
-    src/core/thread/address_resolver.cpp                            \
+    src/core/thread/address_resolver_ftd.cpp                        \
     src/core/thread/announce_begin_server.cpp                       \
     src/core/thread/announce_sender.cpp                             \
-    src/core/thread/child_table.cpp                                 \
-    src/core/thread/csl_tx_scheduler.cpp                            \
+    src/core/thread/child_table_ftd.cpp                             \
+    src/core/thread/csl_tx_scheduler_ftd.cpp                        \
     src/core/thread/discover_scanner.cpp                            \
     src/core/thread/dua_manager.cpp                                 \
     src/core/thread/energy_scan_server.cpp                          \
-    src/core/thread/indirect_sender.cpp                             \
+    src/core/thread/indirect_sender_ftd.cpp                         \
     src/core/thread/key_manager.cpp                                 \
     src/core/thread/link_metrics.cpp                                \
     src/core/thread/link_quality.cpp                                \
@@ -309,7 +309,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/mesh_forwarder_ftd.cpp                          \
     src/core/thread/mesh_forwarder_mtd.cpp                          \
     src/core/thread/mle.cpp                                         \
-    src/core/thread/mle_router.cpp                                  \
+    src/core/thread/mle_router_ftd.cpp                              \
     src/core/thread/mle_types.cpp                                   \
     src/core/thread/mlr_manager.cpp                                 \
     src/core/thread/neighbor_table.cpp                              \
@@ -322,14 +322,14 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/network_diagnostic.cpp                          \
     src/core/thread/panid_query_server.cpp                          \
     src/core/thread/radio_selector.cpp                              \
-    src/core/thread/router_table.cpp                                \
-    src/core/thread/src_match_controller.cpp                        \
+    src/core/thread/router_table_ftd.cpp                            \
+    src/core/thread/src_match_controller_ftd.cpp                    \
     src/core/thread/thread_netif.cpp                                \
     src/core/thread/time_sync_service.cpp                           \
     src/core/thread/tmf.cpp                                         \
     src/core/thread/topology.cpp                                    \
     src/core/thread/uri_paths.cpp                                   \
-    src/core/utils/channel_manager.cpp                              \
+    src/core/utils/channel_manager_ftd.cpp                          \
     src/core/utils/channel_monitor.cpp                              \
     src/core/utils/child_supervision.cpp                            \
     src/core/utils/flash.cpp                                        \

@@ -42,6 +42,7 @@
 
 using namespace ot;
 
+#if OPENTHREAD_FTD
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -55,6 +56,7 @@ void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval)
 
     instance.Get<Utils::ChildSupervisor>().SetSupervisionInterval(aInterval);
 }
+#endif
 
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance)
 {
