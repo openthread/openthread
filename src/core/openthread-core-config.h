@@ -88,6 +88,8 @@
 
 #include "config/openthread-core-config-check.h"
 
+#include "config/derived.h"
+
 #ifdef OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
 #include OPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE
 #endif
