@@ -255,7 +255,7 @@ Error Manager::IterateToNextServer(Iterator &aIterator) const
 
     VerifyOrExit(aIterator.mServiceTlv != nullptr);
 
-    aIterator.mServerSubTlv = NetworkData::FindTlv<ServerTlv>(
+    aIterator.mServerSubTlv = NetworkDataTlv::Find<ServerTlv>(
         /* aStart */ (aIterator.mServerSubTlv != nullptr) ? aIterator.mServerSubTlv->GetNext()
                                                           : aIterator.mServiceTlv->GetSubTlvs(),
         /* aEnd */ aIterator.mServiceTlv->GetNext());

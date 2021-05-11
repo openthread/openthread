@@ -270,6 +270,7 @@ SOURCES_COMMON                                  = \
     thread/network_data_local.cpp                 \
     thread/network_data_notifier.cpp              \
     thread/network_data_service.cpp               \
+    thread/network_data_tlvs.cpp                  \
     thread/network_data_types.cpp                 \
     thread/network_diagnostic.cpp                 \
     thread/panid_query_server.cpp                 \
