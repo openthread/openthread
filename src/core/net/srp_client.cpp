@@ -127,6 +127,16 @@ exit:
     return;
 }
 
+bool Client::Service::Matches(const Service &aOther) const
+{
+    // This method indicates whether or not two service entries match,
+    // i.e., have the same service and instance names. This is intended
+    // for use by `LinkedList::FindMatching()` to search within the
+    // `mServices` list.
+
+    return (strcmp(GetName(), aOther.GetName()) == 0) && (strcmp(GetInstanceName(), aOther.GetInstanceName()) == 0);
+}
+
 //---------------------------------------------------------------------
 // Client
 
@@ -386,7 +396,7 @@ Error Client::AddService(Service &aService)
 {
     Error error;
 
-    VerifyOrExit(!mServices.Contains(aService), error = kErrorAlready);
+    VerifyOrExit(mServices.FindMatching(aService) == nullptr, error = kErrorAlready);
 
     SuccessOrExit(error = aService.Init());
     mServices.Push(aService);
