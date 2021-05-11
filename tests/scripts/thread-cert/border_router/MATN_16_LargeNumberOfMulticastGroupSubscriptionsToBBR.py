@@ -161,7 +161,7 @@ class MATN_16_LargeNumberOfMulticastGroupSubscriptionsToBBR(thread_cert.TestCase
             # 2.04 changed
             # Where the payload contains:
             # Status TLV: ST_MLR_SUCCESS
-            pkts.copy().filter_wpan_src64(vars['BR_1']) \
+            pkts.filter_wpan_src64(vars['BR_1']) \
                 .filter_ipv6_dst(_pkt.ipv6.src) \
                 .filter_coap_ack('/n/mr') \
                 .filter(lambda p: p.coap.mid == _pkt.coap.mid and p.thread_nm.tlv.status == 0) \
