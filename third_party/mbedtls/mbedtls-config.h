@@ -96,8 +96,6 @@
 #define MBEDTLS_PEM_PARSE_C
 #define MBEDTLS_X509_USE_C
 #define MBEDTLS_X509_CRT_PARSE_C
-#define MBEDTLS_X509_USE_C
-#define MBEDTLS_X509_CRT_PARSE_C
 #endif
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
@@ -136,10 +134,6 @@
 #if defined(\
     MBEDTLS_USER_CONFIG_FILE)
 #include MBEDTLS_USER_CONFIG_FILE
-#endif
-
-#if defined(MBEDTLS_ECP_ALT) && !defined(MBEDTLS_ECP_RESTARTABLE)
-typedef void mbedtls_ecp_restart_ctx;
 #endif
 
 #include "mbedtls/check_config.h"

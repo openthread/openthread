@@ -81,7 +81,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    otError Init(const RadioUrl &aRadioUrl);
+    otError Init(const Url::Url &aRadioUrl);
 
     /**
      * This method deinitializes the interface to the RCP.
@@ -212,9 +212,9 @@ private:
     static void HandleHdlcFrame(void *aContext, otError aError);
     void        HandleHdlcFrame(otError aError);
 
-    int OpenFile(const RadioUrl &aRadioUrl);
+    int OpenFile(const Url::Url &aRadioUrl);
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-    static int ForkPty(const RadioUrl &aRadioUrl);
+    static int ForkPty(const Url::Url &aRadioUrl);
 #endif
 
     enum

@@ -28,13 +28,6 @@
 
 add_library(openthread-ftd)
 
-set_target_properties(
-    openthread-ftd
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_compile_definitions(openthread-ftd PRIVATE
     OPENTHREAD_FTD=1
 )

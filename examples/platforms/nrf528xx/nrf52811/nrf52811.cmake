@@ -82,12 +82,6 @@ add_library(openthread-nrf52811-sdk
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(openthread-nrf52811 openthread-nrf52811-transport openthread-nrf52811-sdk
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_link_libraries(openthread-nrf52811
     PUBLIC
         ${OT_MBEDTLS}

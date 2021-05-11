@@ -47,6 +47,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6.hpp"
 
@@ -112,7 +113,7 @@ public:
      * @param[in]  aSize  The size of the option in unit of 1 byte.
      *
      */
-    void SetSize(uint16_t aSize) { mLength = (aSize + kLengthUnit - 1) / kLengthUnit; }
+    void SetSize(uint16_t aSize) { mLength = static_cast<uint8_t>((aSize + kLengthUnit - 1) / kLengthUnit); }
 
     /**
      * This method returns the size of the option (in bytes).
@@ -386,7 +387,7 @@ static_assert(sizeof(RouteInfoOption) == 24, "invalid RouteInfoOption structure"
  *
  */
 OT_TOOL_PACKED_BEGIN
-class RouterAdvMessage
+class RouterAdvMessage : public Unequatable<RouterAdvMessage>
 {
 public:
     /**
@@ -446,6 +447,18 @@ public:
      *
      */
     const RouterAdvMessage &operator=(const RouterAdvMessage &aOther);
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not
+     * two instances of `RouterAdvMessage` are equal.
+     *
+     * @param[in]  aOther  The other `RouterAdvMessage` instance to compare with.
+     *
+     * @retval TRUE   If the two `RouterAdvMessage` instances are equal.
+     * @retval FALSE  If the two `RouterAdvMessage` instances are not equal.
+     *
+     */
+    bool operator==(const RouterAdvMessage &aOther) const;
 
 private:
     enum : uint8_t

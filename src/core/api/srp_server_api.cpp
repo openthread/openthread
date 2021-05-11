@@ -63,15 +63,18 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
     instance.Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
-otError otSrpServerSetLeaseRange(otInstance *aInstance,
-                                 uint32_t    aMinLease,
-                                 uint32_t    aMaxLease,
-                                 uint32_t    aMinKeyLease,
-                                 uint32_t    aMaxKeyLease)
+void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aLeaseConfig)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Srp::Server>().SetLeaseRange(aMinLease, aMaxLease, aMinKeyLease, aMaxKeyLease);
+    instance.Get<Srp::Server>().GetLeaseConfig(static_cast<Srp::Server::LeaseConfig &>(*aLeaseConfig));
+}
+
+otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseConfig *aLeaseConfig)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Server>().SetLeaseConfig(static_cast<const Srp::Server::LeaseConfig &>(*aLeaseConfig));
 }
 
 void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstance,

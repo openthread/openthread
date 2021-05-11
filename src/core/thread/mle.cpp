@@ -1582,11 +1582,6 @@ void Mle::HandleNotifierEvents(Events aEvents)
         }
     }
 
-    if (aEvents.Contains(kEventSecurityPolicyChanged))
-    {
-        Get<Ip6::Filter>().AllowNativeCommissioner(Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled);
-    }
-
 exit:
     return;
 }
@@ -2801,7 +2796,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
-            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo, keySequence);
+            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo);
         }
         else
 #endif
@@ -4119,10 +4114,11 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
     };
 
     String<kRlocStringSize> rlocString;
+    StringWriter            writer(rlocString);
 
     if (aRloc != Mac::kShortAddrInvalid)
     {
-        IgnoreError(rlocString.Set(",0x%04x", aRloc));
+        writer.Append(",0x%04x", aRloc);
     }
 
     otLogInfoMle("%s %s%s (%s%s)", MessageActionToString(aAction), MessageTypeToString(aType),

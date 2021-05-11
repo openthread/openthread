@@ -28,13 +28,6 @@
 
 add_library(openthread-cli-mtd)
 
-set_target_properties(
-    openthread-cli-mtd
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_compile_definitions(openthread-cli-mtd
     PRIVATE
         OPENTHREAD_MTD=1

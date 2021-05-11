@@ -150,7 +150,6 @@ enum
     OT_POSIX_OPT_HELP                    = 'h',
     OT_POSIX_OPT_INTERFACE_NAME          = 'I',
     OT_POSIX_OPT_TIME_SPEED              = 's',
-    OT_POSIX_OPT_TREL_INTERFACE          = 't',
     OT_POSIX_OPT_VERBOSE                 = 'v',
 
     OT_POSIX_OPT_SHORT_MAX = 128,
@@ -168,7 +167,6 @@ static const struct option kOptions[] = {
     {"radio-version", no_argument, NULL, OT_POSIX_OPT_RADIO_VERSION},
     {"real-time-signal", required_argument, NULL, OT_POSIX_OPT_REAL_TIME_SIGNAL},
     {"time-speed", required_argument, NULL, OT_POSIX_OPT_TIME_SPEED},
-    {"trel-interface", required_argument, NULL, OT_POSIX_OPT_TREL_INTERFACE},
     {"verbose", no_argument, NULL, OT_POSIX_OPT_VERBOSE},
     {0, 0, 0, 0}};
 
@@ -176,7 +174,7 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
 {
     fprintf(aStream,
             "Syntax:\n"
-            "    %s [Options] RadioURL\n"
+            "    %s [Options] RadioURL [RadioURL]\n"
             "Options:\n"
             "    -B  --backbone-interface-name Backbone network interface name.\n"
             "    -d  --debug-level             Debug level of logging.\n"
@@ -185,7 +183,6 @@ static void PrintUsage(const char *aProgramName, FILE *aStream, int aExitCode)
             "    -n  --dry-run                 Just verify if arguments is valid and radio spinel is compatible.\n"
             "        --radio-version           Print radio firmware version.\n"
             "    -s  --time-speed factor       Time speed up factor.\n"
-            "    -t  --trel-interface name   Interface name for TREL platform (e.g., wlan0 netif).\n"
             "    -v  --verbose                 Also log to stderr.\n",
             aProgramName);
 #ifdef __linux__
@@ -213,7 +210,7 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     while (true)
     {
         int index  = 0;
-        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:t:ns:v", kOptions, &index);
+        int option = getopt_long(aArgCount, aArgVector, "B:d:hI:ns:v", kOptions, &index);
 
         if (option == -1)
         {
@@ -233,9 +230,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
             break;
         case OT_POSIX_OPT_BACKBONE_INTERFACE_NAME:
             aConfig->mPlatformConfig.mBackboneInterfaceName = optarg;
-            break;
-        case OT_POSIX_OPT_TREL_INTERFACE:
-            aConfig->mPlatformConfig.mTrelInterface = optarg;
             break;
         case OT_POSIX_OPT_DRY_RUN:
             aConfig->mIsDryRun = true;
@@ -280,20 +274,17 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
         }
     }
 
-    if (optind >= aArgCount)
+    for (; optind < aArgCount; optind++)
+    {
+        VerifyOrDie(aConfig->mPlatformConfig.mRadioUrlNum < OT_ARRAY_LENGTH(aConfig->mPlatformConfig.mRadioUrls),
+                    OT_EXIT_INVALID_ARGUMENTS);
+        aConfig->mPlatformConfig.mRadioUrls[aConfig->mPlatformConfig.mRadioUrlNum++] = aArgVector[optind];
+    }
+
+    if (aConfig->mPlatformConfig.mRadioUrlNum == 0)
     {
         PrintUsage(aArgVector[0], stderr, OT_EXIT_INVALID_ARGUMENTS);
     }
-    aConfig->mPlatformConfig.mRadioUrl = aArgVector[optind];
-}
-
-static void PrintRadioUrl(void *aContext, uint8_t aArgsLength, char *aArgs[])
-{
-    (void)aArgsLength;
-    (void)aArgs;
-
-    otPlatformConfig *config = (otPlatformConfig *)aContext;
-    otCliOutputFormat("%s\r\nDone\r\n", config->mRadioUrl);
 }
 
 static otInstance *InitInstance(PosixConfig *aConfig)
@@ -305,6 +296,7 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
     instance = otSysInit(&aConfig->mPlatformConfig);
+    syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
 
     atexit(otSysDeinit);
 
@@ -341,12 +333,38 @@ void otPlatReset(otInstance *aInstance)
     assert(false);
 }
 
+static void ProcessNetif(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otCliOutputFormat("%s:%u\r\n", otSysGetThreadNetifName(), otSysGetThreadNetifIndex());
+}
+
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    exit(EXIT_SUCCESS);
+}
+#endif
+
+static const otCliCommand kCommands[] = {
+#if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    {"exit", ProcessExit},
+#endif
+    {"netif", ProcessNetif},
+};
+
 int main(int argc, char *argv[])
 {
-    otInstance * instance;
-    int          rval = 0;
-    PosixConfig  config;
-    otCliCommand radioUrlCommand = {"radiourl", PrintRadioUrl};
+    otInstance *instance;
+    int         rval = 0;
+    PosixConfig config;
 
 #ifdef __linux__
     // Ensure we terminate this process if the
@@ -371,7 +389,7 @@ int main(int argc, char *argv[])
 #if !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     otAppCliInit(instance);
 #endif
-    otCliSetUserCommands(&radioUrlCommand, 1, &config.mPlatformConfig);
+    otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance);
 
     while (true)
     {

@@ -1761,18 +1761,6 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
-otError Interpreter::ProcessExit(uint8_t aArgsLength, Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    exit(EXIT_SUCCESS);
-
-    return OT_ERROR_NONE;
-}
-#endif
-
 otError Interpreter::ProcessLog(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2946,25 +2934,6 @@ exit:
     return error;
 }
 #endif // OPENTHREAD_FTD
-
-#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-otError Interpreter::ProcessNetif(uint8_t aArgsLength, Arg aArgs[])
-{
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aArgs);
-
-    otError      error    = OT_ERROR_NONE;
-    const char * netif    = nullptr;
-    unsigned int netifidx = 0;
-
-    SuccessOrExit(error = otPlatGetNetif(mInstance, &netif, &netifidx));
-
-    OutputLine("%s:%u", netif ? netif : "(null)", netifidx);
-
-exit:
-    return error;
-}
-#endif
 
 otError Interpreter::ProcessNetstat(uint8_t aArgsLength, Arg aArgs[])
 {
@@ -4881,6 +4850,7 @@ void Interpreter::ProcessLine(char *aBuf)
     Arg            args[kMaxArgs];
     uint8_t        argsLength;
     const Command *command;
+    otError        error;
 
     VerifyOrExit(aBuf != nullptr && StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1);
 
@@ -4897,12 +4867,13 @@ void Interpreter::ProcessLine(char *aBuf)
 
     if (command != nullptr)
     {
-        OutputResult((this->*command->mHandler)(argsLength - 1, &args[1]));
-        ExitNow();
+        error = (this->*command->mHandler)(argsLength - 1, &args[1]);
     }
-
-    SuccessOrExit(ProcessUserCommands(argsLength, args));
-    OutputResult(OT_ERROR_INVALID_COMMAND);
+    else
+    {
+        error = ProcessUserCommands(argsLength, args);
+    }
+    OutputResult(error);
 
 exit:
     return;
@@ -4910,7 +4881,7 @@ exit:
 
 otError Interpreter::ProcessUserCommands(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NOT_FOUND;
+    otError error = OT_ERROR_INVALID_COMMAND;
 
     for (uint8_t i = 0; i < mUserCommandsLength; i++)
     {

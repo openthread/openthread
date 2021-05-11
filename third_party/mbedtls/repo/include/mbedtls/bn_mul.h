@@ -4,7 +4,7 @@
  * \brief Multi-precision integer library
  */
 /*
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -18,8 +18,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  *      Multiply source vector [s] with b, add result
@@ -38,7 +36,13 @@
 #ifndef MBEDTLS_BN_MUL_H
 #define MBEDTLS_BN_MUL_H
 
-#include "bignum.h"
+#if !defined(MBEDTLS_CONFIG_FILE)
+#include "mbedtls/config.h"
+#else
+#include MBEDTLS_CONFIG_FILE
+#endif
+
+#include "mbedtls/bignum.h"
 
 #if defined(MBEDTLS_HAVE_ASM)
 
@@ -170,19 +174,19 @@
 
 #define MULADDC_INIT                        \
     asm(                                    \
-        "xorq   %%r8, %%r8          \n\t"
+        "xorq   %%r8, %%r8\n"
 
 #define MULADDC_CORE                        \
-        "movq   (%%rsi), %%rax      \n\t"   \
-        "mulq   %%rbx               \n\t"   \
-        "addq   $8,      %%rsi      \n\t"   \
-        "addq   %%rcx,   %%rax      \n\t"   \
-        "movq   %%r8,    %%rcx      \n\t"   \
-        "adcq   $0,      %%rdx      \n\t"   \
-        "nop                        \n\t"   \
-        "addq   %%rax,   (%%rdi)    \n\t"   \
-        "adcq   %%rdx,   %%rcx      \n\t"   \
-        "addq   $8,      %%rdi      \n\t"
+        "movq   (%%rsi), %%rax\n"           \
+        "mulq   %%rbx\n"                    \
+        "addq   $8, %%rsi\n"                \
+        "addq   %%rcx, %%rax\n"             \
+        "movq   %%r8, %%rcx\n"              \
+        "adcq   $0, %%rdx\n"                \
+        "nop    \n"                         \
+        "addq   %%rax, (%%rdi)\n"           \
+        "adcq   %%rdx, %%rcx\n"             \
+        "addq   $8, %%rdi\n"
 
 #define MULADDC_STOP                        \
         : "+c" (c), "+D" (d), "+S" (s)      \
@@ -191,6 +195,30 @@
     );
 
 #endif /* AMD64 */
+
+#if defined(__aarch64__)
+
+#define MULADDC_INIT                \
+    asm(
+
+#define MULADDC_CORE                \
+        "ldr x4, [%2], #8   \n\t"   \
+        "ldr x5, [%1]       \n\t"   \
+        "mul x6, x4, %3     \n\t"   \
+        "umulh x7, x4, %3   \n\t"   \
+        "adds x5, x5, x6    \n\t"   \
+        "adc x7, x7, xzr    \n\t"   \
+        "adds x5, x5, %0    \n\t"   \
+        "adc %0, x7, xzr    \n\t"   \
+        "str x5, [%1], #8   \n\t"
+
+#define MULADDC_STOP                        \
+         : "+r" (c),  "+r" (d), "+r" (s)    \
+         : "r" (b)                          \
+         : "x4", "x5", "x6", "x7", "cc"     \
+    );
+
+#endif /* Aarch64 */
 
 #if defined(__mc68020__) || defined(__mcpu32__)
 
@@ -636,7 +664,8 @@
            "r6", "r7", "r8", "r9", "cc"         \
          );
 
-#elif defined (__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1)
+#elif (__ARM_ARCH >= 6) && \
+    defined (__ARM_FEATURE_DSP) && (__ARM_FEATURE_DSP == 1)
 
 #define MULADDC_INIT                            \
     asm(
@@ -750,7 +779,7 @@
         "sw     $10, %2         \n\t"   \
         : "=m" (c), "=m" (d), "=m" (s)                      \
         : "m" (s), "m" (d), "m" (c), "m" (b)                \
-        : "$9", "$10", "$11", "$12", "$13", "$14", "$15"    \
+        : "$9", "$10", "$11", "$12", "$13", "$14", "$15", "lo", "hi" \
     );
 
 #endif /* MIPS */

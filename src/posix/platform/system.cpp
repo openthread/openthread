@@ -47,6 +47,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
+#include "posix/platform/radio_url.hpp"
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
@@ -66,10 +67,51 @@ static void processStateChange(otChangedFlags aFlags, void *aContext)
 }
 #endif
 
+static const char *get802154RadioUrl(otPlatformConfig *aPlatformConfig)
+{
+    const char *radioUrl = nullptr;
+
+    for (uint8_t i = 0; i < aPlatformConfig->mRadioUrlNum; i++)
+    {
+        ot::Posix::RadioUrl url(aPlatformConfig->mRadioUrls[i]);
+
+        if (strcmp(url.GetProtocol(), "trel") == 0)
+        {
+            continue;
+        }
+
+        radioUrl = aPlatformConfig->mRadioUrls[i];
+        break;
+    }
+
+    VerifyOrDie(radioUrl != nullptr, OT_EXIT_INVALID_ARGUMENTS);
+    return radioUrl;
+}
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
+{
+    const char *radioUrl = nullptr;
+
+    for (uint8_t i = 0; i < aPlatformConfig->mRadioUrlNum; i++)
+    {
+        ot::Posix::RadioUrl url(aPlatformConfig->mRadioUrls[i]);
+
+        if (strcmp(url.GetProtocol(), "trel") == 0)
+        {
+            radioUrl = aPlatformConfig->mRadioUrls[i];
+            break;
+        }
+    }
+
+    return radioUrl;
+}
+#endif
+
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *        instance = nullptr;
-    ot::Posix::RadioUrl radioUrl(aPlatformConfig->mRadioUrl);
+    ot::Posix::RadioUrl radioUrl(get802154RadioUrl(aPlatformConfig));
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     // The last argument must be the node id
@@ -88,7 +130,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
     platformRadioInit(&radioUrl);
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    platformTrelInit(aPlatformConfig->mTrelInterface);
+    platformTrelInit(getTrelRadioUrl(aPlatformConfig));
 #endif
     platformRandomInit();
 
@@ -120,6 +162,8 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     platformNetifInit(instance, aPlatformConfig->mInterfaceName);
 #elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpInit(aPlatformConfig->mInterfaceName);
+#else
+    gNetifName[0] = '\0';
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

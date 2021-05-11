@@ -47,6 +47,7 @@ otError Url::Init(char *aUrl)
 
     url = strstr(aUrl, "://");
     VerifyOrExit(url != nullptr, error = OT_ERROR_PARSE);
+    *url = '\0';
     url += sizeof("://") - 1;
     mPath = url;
 

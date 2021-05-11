@@ -126,20 +126,21 @@ bool Prefix::IsValidNat64(void) const
 
 Prefix::InfoString Prefix::ToString(void) const
 {
-    InfoString string;
-    uint8_t    sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
+    InfoString   string;
+    StringWriter writer(string);
+    uint8_t      sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
 
     for (uint16_t i = 0; i < sizeInUint16; i++)
     {
-        IgnoreError(string.Append("%s%x", (i > 0) ? ":" : "", HostSwap16(mPrefix.mFields.m16[i])));
+        writer.Append("%s%x", (i > 0) ? ":" : "", HostSwap16(mPrefix.mFields.m16[i]));
     }
 
     if (GetBytesSize() < Address::kSize - 1)
     {
-        IgnoreError(string.Append("::"));
+        writer.Append("::");
     }
 
-    IgnoreError(string.Append("/%d", mLength));
+    writer.Append("/%d", mLength);
 
     return string;
 }
@@ -246,9 +247,10 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
 
 InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
 {
-    InfoString string;
+    InfoString   string;
+    StringWriter writer(string);
 
-    IgnoreError(string.AppendHexBytes(mFields.m8, kSize));
+    writer.AppendHexBytes(mFields.m8, kSize);
 
     return string;
 }
@@ -629,9 +631,13 @@ exit:
 
 Address::InfoString Address::ToString(void) const
 {
-    return InfoString("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
-                      HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
-                      HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+    InfoString   string;
+    StringWriter writer(string);
+
+    writer.Append("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
+                  HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
+                  HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+    return string;
 }
 
 const Address &Address::GetLinkLocalAllNodesMulticast(void)

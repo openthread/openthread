@@ -208,6 +208,12 @@ const RouterAdvMessage &RouterAdvMessage::operator=(const RouterAdvMessage &aOth
     return *this;
 }
 
+bool RouterAdvMessage::operator==(const RouterAdvMessage &aOther) const
+{
+    return memcmp(&mHeader.mData, &aOther.mHeader.mData, sizeof(mHeader.mData)) == 0 &&
+           mReachableTime == aOther.mReachableTime && mRetransTimer == aOther.mRetransTimer;
+}
+
 RouterSolicitMessage::RouterSolicitMessage(void)
 {
     mHeader.Clear();

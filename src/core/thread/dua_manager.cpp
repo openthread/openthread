@@ -307,6 +307,8 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
 {
     Mle::MleRouter &mle = Get<Mle::MleRouter>();
 
+    VerifyOrExit(mle.IsAttached(), mDelay.mValue = 0);
+
     if (aEvents.Contains(kEventThreadRoleChanged))
     {
         if (mle.HasRestored())
@@ -333,6 +335,9 @@ void DuaManager::HandleNotifierEvents(Events aEvents)
         UpdateRegistrationDelay(kNewDuaRegistrationDelay);
     }
 #endif
+
+exit:
+    return;
 }
 
 void DuaManager::HandleBackboneRouterPrimaryUpdate(BackboneRouter::Leader::State               aState,
@@ -519,6 +524,7 @@ void DuaManager::PerformNextRegistration(void)
 
     mIsDuaPending   = true;
     mRegisteringDua = dua;
+    mDelay.mValue   = 0;
 
     // Generally Thread 1.2 Router would send DUA.req on behalf for DUA registered by its MTD child.
     // When Thread 1.2 MTD attaches to Thread 1.1 parent, 1.2 MTD should send DUA.req to PBBR itself.
@@ -528,14 +534,16 @@ void DuaManager::PerformNextRegistration(void)
         Get<DataPollSender>().SendFastPolls();
     }
 
+    otLogInfoDua("Sent DUA.req for DUA %s", dua.ToString().AsCString());
+
 exit:
     if (error == kErrorNoBufs)
     {
         UpdateCheckDelay(Mle::kNoBufDelay);
     }
 
+    otLogInfoDua("PerformNextRegistration: %s", ErrorToString(error));
     FreeMessageOnError(message, error);
-    otLogInfoDua("Sent DUA.req for DUA %s: %s", dua.ToString().AsCString(), ErrorToString(error));
 }
 
 void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
@@ -565,7 +573,7 @@ exit:
         mRegistrationTask.Post();
     }
 
-    otLogInfoDua("Received DUA.req: %s", ErrorToString(error));
+    otLogInfoDua("Received DUA.rsp: %s", ErrorToString(error));
 }
 
 void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

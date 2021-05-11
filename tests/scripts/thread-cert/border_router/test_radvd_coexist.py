@@ -114,7 +114,7 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
         # Stop the radvd service and wait for the Border Router
-        # to start adverting on-link prefix on its own.
+        # to reset the RA parameters.
         br.stop_radvd_service()
         self.simulator.go(15)
 

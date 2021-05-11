@@ -331,8 +331,8 @@ class Node(object):
         self._interface_name = self._INTFC_NAME_PREFIX + str(index)
         self._verbose = verbose
 
-        ncp_socket_path = 'system:{}{} {} {}'.format(self._OT_NCP_FTD, '' if radios is None else radios, index,
-                                                     self._SPEED_UP_FACTOR)
+        ncp_socket_path = 'system:{}{} {} --time-speed={}'.format(self._OT_NCP_FTD, '' if radios is None else radios,
+                                                                  index, self._SPEED_UP_FACTOR)
 
         cmd = self._WPANTUND + \
             ' -o Config:NCP:SocketPath \"{}\"'.format(ncp_socket_path) + \

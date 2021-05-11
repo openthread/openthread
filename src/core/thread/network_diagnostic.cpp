@@ -410,7 +410,7 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
         case NetworkDiagnosticTlv::kChannelPages:
         {
             uint8_t         length   = 0;
-            uint8_t         pageMask = Radio::kSupportedChannelPages;
+            uint32_t        pageMask = Radio::kSupportedChannelPages;
             ChannelPagesTlv tlv;
 
             tlv.Init();

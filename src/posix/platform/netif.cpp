@@ -150,6 +150,16 @@ extern int
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 
+const char *otSysGetThreadNetifName(void)
+{
+    return gNetifName;
+}
+
+unsigned int otSysGetThreadNetifIndex(void)
+{
+    return gNetifIndex;
+}
+
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include "posix/platform/ip6_utils.hpp"
 
@@ -576,8 +586,14 @@ static void processTransmit(otInstance *aInstance)
     rval = read(sTunFd, packet, sizeof(packet));
     VerifyOrExit(rval > 0, error = OT_ERROR_FAILED);
 
-    message = otIp6NewMessage(aInstance, nullptr);
-    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    {
+        otMessageSettings settings;
+
+        settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
+        settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
+        message                       = otIp6NewMessage(aInstance, &settings);
+        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    }
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers have (for legacy reasons), may have a 4-byte header on them
@@ -1561,20 +1577,4 @@ exit:
     return;
 }
 
-otError otPlatGetNetif(otInstance *aInstance, const char **outNetIfName, unsigned int *outNetIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error;
-
-    VerifyOrExit(gNetifIndex != 0, error = OT_ERROR_FAILED);
-
-    *outNetIfName  = gNetifName;
-    *outNetIfIndex = gNetifIndex;
-    error          = OT_ERROR_NONE;
-
-exit:
-
-    return error;
-}
 #endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

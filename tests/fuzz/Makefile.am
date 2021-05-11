@@ -29,10 +29,10 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 bin_PROGRAMS                                              = \
-    cli-received-fuzzer                                     \
-    ip6-send-fuzzer                                         \
-    radio-receive-done-fuzzer                               \
-    ncp-hdlc-received-fuzzer                                \
+    ot-cli-received-fuzzer                                  \
+    ot-ip6-send-fuzzer                                      \
+    ot-radio-receive-done-fuzzer                            \
+    ot-ncp-hdlc-received-fuzzer                             \
     $(NULL)
 
 AM_CPPFLAGS                                               = \
@@ -51,40 +51,40 @@ COMMON_SOURCES                                            = \
     fuzzer_platform.h                                       \
     $(NULL)
 
-cli_received_fuzzer_LDADD                                 = \
+ot_cli_received_fuzzer_LDADD                              = \
     $(top_builddir)/src/cli/libopenthread-cli-ftd.a         \
     $(COMMON_LDADD)                                         \
     $(NULL)
 
-cli_received_fuzzer_SOURCES                               = \
+ot_cli_received_fuzzer_SOURCES                            = \
     $(COMMON_SOURCES)                                       \
     cli_received.cpp                                        \
     $(NULL)
 
-ip6_send_fuzzer_LDADD                                     = \
+ot_ip6_send_fuzzer_LDADD                                  = \
     $(COMMON_LDADD)                                         \
     $(NULL)
 
-ip6_send_fuzzer_SOURCES                                   = \
+ot_ip6_send_fuzzer_SOURCES                                = \
     $(COMMON_SOURCES)                                       \
     ip6_send.cpp                                            \
     $(NULL)
 
-radio_receive_done_fuzzer_LDADD                           = \
+ot_radio_receive_done_fuzzer_LDADD                        = \
     $(COMMON_LDADD)                                         \
     $(NULL)
 
-radio_receive_done_fuzzer_SOURCES                         = \
+ot_radio_receive_done_fuzzer_SOURCES                      = \
     $(COMMON_SOURCES)                                       \
     radio_receive_done.cpp                                  \
     $(NULL)
 
-ncp_hdlc_received_fuzzer_LDADD                            = \
+ot_ncp_hdlc_received_fuzzer_LDADD                         = \
     $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a         \
     $(COMMON_LDADD)                                         \
     $(NULL)
 
-ncp_hdlc_received_fuzzer_SOURCES                          = \
+ot_ncp_hdlc_received_fuzzer_SOURCES                       = \
     $(COMMON_SOURCES)                                       \
     ncp_hdlc_received.cpp                                   \
     $(NULL)

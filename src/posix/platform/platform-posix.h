@@ -53,8 +53,8 @@
 
 #include "common/logging.hpp"
 
-#include "radio_url.hpp"
 #include "lib/platform/exit_code.h"
+#include "lib/url/url.hpp"
 
 /**
  * @def OPENTHREAD_POSIX_VIRTUAL_TIME

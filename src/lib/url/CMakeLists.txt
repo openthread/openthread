@@ -30,11 +30,4 @@ add_library(openthread-url EXCLUDE_FROM_ALL
     url.cpp
 )
 
-set_target_properties(
-    openthread-url
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_link_libraries(openthread-url PRIVATE ot-config)

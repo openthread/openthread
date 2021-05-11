@@ -270,9 +270,9 @@
 // Internal heap doesn't support size larger than 64K bytes.
 #define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (63 * 1024)
 #elif OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (3072 * sizeof(void *))
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (3136 * sizeof(void *))
 #else
-#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (1568 * sizeof(void *))
+#define OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE (1616 * sizeof(void *))
 #endif
 #endif
 
@@ -413,6 +413,17 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+ *
+ * Define to 1 to support proprietary radio configurations defined by platform.
+ *
+ * @note If this setting is set to 1, the channel range is defined by the platform. Choosing this option requires
+ * the following configuration options to be defined by Platform:
+ * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE,
+ * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN,
+ * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX and,
+ * OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK.
+ *
  * @def OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
  *
  * Define to 1 to support OQPSK modulation in 915MHz frequency band. The physical layer parameters are defined in
@@ -427,13 +438,16 @@
  *
  * @note If this settings is set to 1, the IEEE 802.15.4 channel range is 11 to 26.
  *
- * @note At least one of these two settings must be set to 1. The platform must support the modulation and frequency
+ * @note At least one of these settings must be set to 1. The platform must support the modulation and frequency
  *       band configured by the setting.
  */
+#ifndef OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
 #ifndef OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
 #ifndef OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
+#define OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT 0
 #define OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT 0
 #define OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT 1
+#endif
 #endif
 #endif
 

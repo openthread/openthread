@@ -503,8 +503,7 @@ void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8
 }
 #endif
 
-#ifdef MBEDTLS_BASE64_C
-
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 Error Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
     Error error = kErrorNone;
@@ -518,8 +517,8 @@ Error Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLeng
 exit:
     return error;
 }
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
-#endif
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_SSL_SRV_C

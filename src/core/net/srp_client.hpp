@@ -163,6 +163,7 @@ public:
     class Service : public otSrpClientService, public LinkedListEntry<Service>
     {
         friend class Client;
+        friend class LinkedList<Service>;
 
     public:
         /**
@@ -242,6 +243,7 @@ public:
         void      SetState(ItemState aState);
         TimeMilli GetLeaseRenewTime(void) const { return TimeMilli(mData); }
         void      SetLeaseRenewTime(TimeMilli aTime) { mData = aTime.GetValue(); }
+        bool      Matches(const Service &aOther) const;
     };
 
     /**
@@ -477,7 +479,7 @@ public:
      *
      * @retval kErrorNone          The addition of service started successfully. The `Callback` will be called to
      *                             report the status.
-     * @retval kErrorAlready       The same service is already in the list.
+     * @retval kErrorAlready       A service with the same service and instance names is already in the list.
      * @retval kErrorInvalidArgs   The service structure is invalid (e.g., bad service name or `TxEntry`).
      *
      */
