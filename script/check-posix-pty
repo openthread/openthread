@@ -124,6 +124,9 @@ do_check()
         OT_CTL="$PWD/build/posix/src/posix/ot-ctl"
         sudo "${OT_CTL}" -I "${NETIF_NAME}" panid 0xface | grep 'Done' || die 'failed to set panid with ot-ctl'
 
+        # verify supports options in OpenThread commands without separator --
+        sudo "${OT_CTL}" -I "${NETIF_NAME}" pskc -p 123456 | grep 'Done' || die 'unable to set pskc'
+
         # verify this reset and factoryreset end immediately
         sudo "${OT_CTL}" -I "${NETIF_NAME}" reset
         # sleep a while for daemon ready
