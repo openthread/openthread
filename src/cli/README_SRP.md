@@ -2,19 +2,6 @@
 
 ## Quick Start
 
-### Build with SRP Server & Client support
-
-Use the `SRP_SERVER=1 SERVICE=1 ECDSA=1` build switches to enable SRP Server API support, and the `SRP_CLIENT=1 ECDSA=1` build switches for SRP Client API support.
-
-Make simulation SRP Server & Client:
-
-```bash
-./bootstrap
-make -f examples/Makefile-simulation SRP_SERVER=1 SRP_CLIENT=1 SERVICE=1 ECDSA=1
-```
-
-## Simulation Example
-
 ### Start SRP Server
 
 Start the SRP Server node:
