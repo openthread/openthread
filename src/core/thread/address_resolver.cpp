@@ -331,6 +331,10 @@ void AddressResolver::RemoveCacheEntry(CacheEntry &    aEntry,
 
 Error AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
+    // This method updates an existing cache entry for the EID (if any).
+    // Returns `kErrorNone` if entry is found and successfully updated,
+    // `kErrorNotFound` if no matching entry.
+
     Error           error = kErrorNone;
     CacheEntryList *list;
     CacheEntry *    entry;
@@ -365,10 +369,28 @@ exit:
     return error;
 }
 
-void AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
+                                              Mac::ShortAddress   aRloc16,
+                                              Mac::ShortAddress   aDest)
 {
-    uint16_t    numNonEvictable = 0;
-    CacheEntry *entry;
+    uint16_t          numNonEvictable = 0;
+    CacheEntry *      entry;
+    Mac::ShortAddress macAddress;
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
+
+    VerifyOrExit(UpdateCacheEntry(aEid, aRloc16) != kErrorNone);
+
+    // Skip if the `aRloc16` (i.e., the source of the snooped message)
+    // is this device or an MTD (minimal) child of the device itself.
+
+    macAddress = Get<Mac::Mac>().GetShortAddress();
+    VerifyOrExit((aRloc16 != macAddress) && !Get<Mle::MleRouter>().IsMinimalChild(aRloc16));
+
+    // Ensure that the destination of the snooped message is this device
+    // or a minimal child of this device.
+
+    VerifyOrExit((aDest == macAddress) || Get<Mle::MleRouter>().IsMinimalChild(aDest));
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);

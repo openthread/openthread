@@ -819,22 +819,11 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     if (!ip6Header.GetSource().GetIid().IsLocator() &&
         Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
     {
-        if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) == kErrorNotFound)
-        {
-            // Thread 1.1 Specification 5.5.2.2: FTDs MAY add/update
-            // EID-to-RLOC Map Cache entries by inspecting packets
-            // being received. We exclude frames from an MTD child
-            // source and verify that the destination is the device
-            // itself or an MTD child of the device.
+        // FTDs MAY add/update EID-to-RLOC Map Cache entries by
+        // inspecting packets being received.
 
-            if (Get<Mle::MleRouter>().IsFullThreadDevice() &&
-                !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) &&
-                (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
-                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())))
-            {
-                Get<AddressResolver>().AddSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
-            }
-        }
+        Get<AddressResolver>().UpdateSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort(),
+                                                       aMeshDest.GetShort());
     }
 
     neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetSource());
