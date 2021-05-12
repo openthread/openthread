@@ -56,15 +56,21 @@ ENV_THREAD_VERSION = os.getenv('THREAD_VERSION', '1.1')
 
 DEFAULT_PARAMS = {
     'is_mtd': False,
+    'is_ftd': False,
     'is_bbr': False,
     'is_otbr': False,
     'is_host': False,
     'mode': 'rdn',
-    'panid': 0xface,
     'allowlist': None,
     'version': ENV_THREAD_VERSION,
+    'panid': 0xface,
 }
 """Default configurations when creating nodes."""
+
+FTD_DEFAULT_PARAMS = {
+    'is_ftd': True,
+    'router_selection_jitter': config.DEFAULT_ROUTER_SELECTION_JITTER,
+}
 
 EXTENDED_ADDRESS_BASE = 0x166e0a0000000000
 """Extended address base to keep U/L bit 1. The value is borrowed from Thread Test Harness."""
@@ -175,8 +181,9 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if 'network_name' in params:
                 self.nodes[i].set_network_name(params['network_name'])
 
-            if 'router_selection_jitter' in params:
+            if params['is_ftd']:
                 self.nodes[i].set_router_selection_jitter(params['router_selection_jitter'])
+
             if 'router_upgrade_threshold' in params:
                 self.nodes[i].set_router_upgrade_threshold(params['router_upgrade_threshold'])
             if 'router_downgrade_threshold' in params:
@@ -431,12 +438,16 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             assert params.get('version', '') == '', params
             params['version'] = ''
 
-        if params:
-            params = dict(DEFAULT_PARAMS, **params)
-        else:
-            params = DEFAULT_PARAMS.copy()
+        is_ftd = (not params.get('is_mtd') and not params.get('is_host'))
 
-        return params
+        effective_params = DEFAULT_PARAMS.copy()
+
+        if is_ftd:
+            effective_params.update(FTD_DEFAULT_PARAMS)
+
+        effective_params.update(params)
+
+        return effective_params
 
     def _has_backbone_traffic(self):
         for param in self.TOPOLOGY.values():

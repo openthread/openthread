@@ -72,20 +72,17 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
             'is_otbr': True,
             'allowlist': [BR_2, TD],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         BR_2: {
             'name': 'BR_2',
             'allowlist': [BR_1, TD],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         TD: {
             'name': 'TD',
             'allowlist': [BR_1, BR_2],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         HOST: {
             'name': 'Host',

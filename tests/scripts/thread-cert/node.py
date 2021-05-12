@@ -931,8 +931,9 @@ class NodeImpl:
             # TODO: for now, we are using 0xfd as the SRP service data.
             #       May use a dedicated bit flag for SRP server.
             if int(service[1], 16) == 0x5d:
-                # The SRP server data are 2-bytes UDP port number.
-                return int(service[2], 16)
+                # The SRP server data contains IPv6 address (16 bytes)
+                # followed by UDP port number.
+                return int(service[2][2 * 16:], 16)
 
     def srp_client_start(self, server_address, server_port):
         self.send_command(f'srp client start {server_address} {server_port}')

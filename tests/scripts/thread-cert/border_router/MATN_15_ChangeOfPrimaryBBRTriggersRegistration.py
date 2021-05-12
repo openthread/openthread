@@ -76,27 +76,23 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
             'is_otbr': True,
             'allowlist': [BR_2, ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         BR_2: {
             'name': 'BR_2',
             'is_otbr': True,
             'allowlist': [BR_1, ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         ROUTER_1: {
             'name': 'Router_1',
             'allowlist': [BR_1, BR_2, TD],
             'version': '1.2',
-            'router_selection_jitter': 2,
             'partition_id': 1,
         },
         TD: {
             'name': 'TD',
             'allowlist': [ROUTER_1],
             'version': '1.2',
-            'router_selection_jitter': 2,
             'partition_id': 1,
         },
     }
@@ -181,7 +177,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         # Where the payload contains:
         # Status TLV: ST_MLR_SUCCESS
         pkts.filter_wpan_src64(vars['BR_2']) \
-            .filter_ipv6_dst(vars['TD_RLOC']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_coap_ack('/n/mr') \
             .filter(lambda
                         p: p.coap.mid == _pkt.coap.mid and
@@ -190,7 +186,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
 
         # 5. Router_1 forwards the response to TD.
         pkts.filter_wpan_src64(vars['Router_1']) \
-            .filter_ipv6_2dsts(vars['TD_RLOC'], vars['TD_LLA']) \
+            .filter_ipv6_dst(_pkt.ipv6.src) \
             .filter_coap_ack('/n/mr') \
             .filter(lambda
                         p: p.coap.mid == _pkt.coap.mid and

@@ -50,14 +50,12 @@ class LowPower_test_ForwardTrackingSeries(thread_cert.TestCase):
             'version': '1.2',
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [CHILD],
         },
         CHILD: {
             'version': '1.2',
             'name': 'CHILD',
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [LEADER],
         }
     }

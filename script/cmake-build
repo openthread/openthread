@@ -42,10 +42,6 @@
 #
 #      script/cmake-build ${platform} -D${option}=OFF
 #
-#  Need to add build type when compilling nrf528xx:
-#
-#      script/cmake-build ${platform} ${nrf_build_type} -D${option}=ON -D${option}=OFF
-#
 #  Compile with the specified ninja build target:
 #
 #      OT_CMAKE_NINJA_TARGET="ot-cli-ftd" script/cmake-build ${platform}
@@ -68,8 +64,7 @@ set -euxo pipefail
 OT_CMAKE_NINJA_TARGET=${OT_CMAKE_NINJA_TARGET:-}
 
 readonly OT_SRCDIR="$(pwd)"
-readonly OT_PLATFORMS=(cc2538 nrf52811 nrf52833 nrf52840 simulation posix)
-readonly OT_NRF528XX_BUILD_TYPES=(UART_trans USB_trans_bl SPI_trans_NCP soft_crypto soft_crypto_threading)
+readonly OT_PLATFORMS=(cc2538 simulation posix)
 readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_BORDER_AGENT=ON"
     "-DOT_BORDER_ROUTER=ON"
@@ -104,33 +99,6 @@ readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_COMPILE_WARNING_AS_ERROR=ON"
     "-DOT_RCP_RESTORATION_MAX_COUNT=2"
 )
-
-readonly OT_nrf52811_OPTIONS=(
-    "-DOT_BORDER_ROUTER=ON"
-    "-DOT_COAP=ON"
-    "-DOT_DNS_CLIENT=ON"
-    "-DOT_LINK_RAW=ON"
-    "-DOT_MAC_FILTER=ON"
-    "-DOT_MTD_NETDIAG=ON"
-)
-
-readonly OT_nrf52833_OPTIONS=(
-    "-DOT_BORDER_AGENT=ON"
-    "-DOT_BORDER_ROUTER=ON"
-    "-DOT_COAP=ON"
-    "-DOT_COAPS=ON"
-    "-DOT_ECDSA=ON"
-    "-DOT_FULL_LOGS=ON"
-    "-DOT_IP6_FRAGM=ON"
-    "-DOT_LINK_RAW=ON"
-    "-DOT_MAC_FILTER=ON"
-    "-DOT_MTD_NETDIAG=ON"
-    "-DOT_SERVICE=ON"
-    "-DOT_SNTP_CLIENT=ON"
-    "-DOT_UDP_FORWARD=ON"
-)
-
-readonly OT_nrf52840_OPTIONS=("${OT_nrf52833_OPTIONS[@]:0}")
 
 die()
 {
@@ -169,13 +137,6 @@ main()
     # Check if the platform supports cmake.
     echo "${OT_PLATFORMS[@]}" | grep -wq "${platform}" || die "${platform}"
 
-    local nrf_build_type=""
-    if [[ ${platform} == nrf528* ]]; then
-        nrf_build_type="$2"
-        echo "${OT_NRF528XX_BUILD_TYPES[@]}" | grep -wq "${nrf_build_type}" || die "${nrf_build_type}"
-        shift
-    fi
-
     shift
     local local_options=()
     local options=(
@@ -197,55 +158,6 @@ main()
             ;;
         cc2538)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=MinSizeRel")
-            ;;
-        nrf52811)
-            local_options+=("${OT_nrf52811_OPTIONS[@]}" "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
-            case "${nrf_build_type}" in
-                UART_trans)
-                    OT_CMAKE_NINJA_TARGET=("ot-cli-mtd" "ot-ncp-mtd" "ot-rcp")
-                    options+=("${local_options[@]}")
-                    ;;
-                SPI_trans_NCP)
-                    OT_CMAKE_NINJA_TARGET=("ot-ncp-mtd" "ot-rcp")
-                    options+=("${local_options[@]}" "-DOT_NCP_SPI=ON")
-                    ;;
-            esac
-            ;;
-        nrf52833)
-            local_options+=("${OT_nrf52833_OPTIONS[@]}" "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
-            case "${nrf_build_type}" in
-                UART_trans)
-                    options+=("${local_options[@]}")
-                    ;;
-                USB_trans_bl)
-                    options+=("${local_options[@]}" "-DOT_USB=ON" "-DOT_BOOTLOADER=USB")
-                    ;;
-                SPI_trans_NCP)
-                    OT_CMAKE_NINJA_TARGET=("ot-ncp-ftd" "ot-ncp-mtd" "ot-rcp")
-                    options+=("${local_options[@]}" "-DOT_NCP_SPI=ON")
-                    ;;
-            esac
-            ;;
-        nrf52840)
-            local_options+=("${OT_nrf52840_OPTIONS[@]}" "-DCMAKE_TOOLCHAIN_FILE=examples/platforms/nrf528xx/${platform}/arm-none-eabi.cmake" "-DCMAKE_BUILD_TYPE=Release")
-            case "${nrf_build_type}" in
-                UART_trans)
-                    options+=("${local_options[@]}" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
-                    ;;
-                USB_trans_bl)
-                    options+=("${local_options[@]}" "-DOT_USB=ON" "-DOT_BOOTLOADER=USB" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
-                    ;;
-                SPI_trans_NCP)
-                    OT_CMAKE_NINJA_TARGET=("ot-ncp-ftd" "ot-ncp-mtd" "ot-rcp")
-                    options+=("${local_options[@]}" "-DOT_NCP_SPI=ON" "-DOT_EXTERNAL_MBEDTLS=nordicsemi-mbedtls")
-                    ;;
-                soft_crypto)
-                    options+=("${local_options[@]}")
-                    ;;
-                soft_crypto_threading)
-                    options+=("${local_options[@]}" "-DOT_MBEDTLS_THREADING=ON")
-                    ;;
-            esac
             ;;
         *)
             options+=("-DCMAKE_TOOLCHAIN_FILE=examples/platforms/${platform}/arm-none-eabi.cmake")

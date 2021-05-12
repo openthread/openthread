@@ -52,21 +52,18 @@ class LowPower_7_2_01_ForwardTrackingSeries(thread_cert.TestCase):
             'version': '1.2',
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [SED_1, SSED_1],
         },
         SED_1: {
             'version': '1.2',
             'name': 'SED_1',
             'mode': '-',
-            'panid': 0xface,
             'allowlist': [LEADER],
         },
         SSED_1: {
             'version': '1.2',
             'name': 'SSED_1',
             'mode': '-',
-            'panid': 0xface,
             'allowlist': [LEADER],
         }
     }

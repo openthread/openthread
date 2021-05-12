@@ -48,25 +48,19 @@ class Cert_9_2_13_EnergyScan_Base(thread_cert.TestCase):
         COMMISSIONER: {
             'name': 'COMMISSIONER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED]
         },
         ED: {
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
     }

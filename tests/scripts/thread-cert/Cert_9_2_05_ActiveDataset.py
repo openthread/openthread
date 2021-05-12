@@ -60,19 +60,15 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         ROUTER: {
             'name': 'ROUTER',
             'channel': 11,
-            'panid': 0xface,
             'master_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
             'channel': 11,
-            'panid': 0xface,
             'master_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER]
         },
     }

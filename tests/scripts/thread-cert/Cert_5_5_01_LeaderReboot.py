@@ -64,14 +64,11 @@ class Cert_5_5_1_LeaderReboot(thread_cert.TestCase):
         DUT_LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [DUT_ROUTER1]
         },
         DUT_ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER]
         },
     }

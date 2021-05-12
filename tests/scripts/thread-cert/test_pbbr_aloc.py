@@ -57,18 +57,15 @@ class TestPing(thread_cert.TestCase):
         LEADER: {
             'name': 'Router_1',
             'allowlist': [PBBR, ROUTER],
-            'router_selection_jitter': 2,
         },
         PBBR: {
             'name': 'Router_2',
             'allowlist': [LEADER],
-            'router_selection_jitter': 2,
             'is_bbr': True,
         },
         ROUTER: {
             'name': 'Router_3',
             'allowlist': [LEADER],
-            'router_selection_jitter': 2,
         },
     }
 

@@ -59,40 +59,12 @@ build_cc2538()
     "$(dirname "$0")"/cmake-build cc2538 "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}" "${options[@]}"
 }
 
-build_nrf52811()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build nrf52811 "$1" "${OT_COMMON_OPTIONS[@]}"
-}
-
-build_nrf52833()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build nrf52833 "$1" "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
-build_nrf52840()
-{
-    reset_source
-    "$(dirname "$0")"/cmake-build nrf52840 "$1" "${OT_COMMON_OPTIONS[@]}" "${OT_BASIC_CHECK_OPTIONS[@]}"
-}
-
 main()
 {
     export CPPFLAGS="${CPPFLAGS:-} -DNDEBUG"
 
     if [[ $# == 0 ]]; then
         build_cc2538
-        # UART transport
-        build_nrf52840 UART_trans
-        # USB transport with bootloader e.g. to support PCA10059 dongle
-        build_nrf52840 USB_trans_bl
-        # SPI transport for NCP
-        build_nrf52840 SPI_trans_NCP
-        # Software cryptography
-        build_nrf52840 soft_crypto
-        # Software cryptography with threading support
-        build_nrf52840 soft_crypto_threading
         return 0
     fi
 

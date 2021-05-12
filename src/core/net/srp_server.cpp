@@ -506,18 +506,17 @@ exit:
 
 Error Server::PublishServerData(void)
 {
-    NetworkData::Service::SrpServer::ServerData serverData;
+    NetworkData::Service::DnsSrpUnicast::ServerData serverData(Get<Mle::Mle>().GetMeshLocal64(),
+                                                               mSocket.GetSockName().GetPort());
 
     OT_ASSERT(mSocket.IsBound());
 
-    serverData.SetPort(mSocket.GetSockName().GetPort());
-
-    return Get<NetworkData::Service::Manager>().Add<NetworkData::Service::SrpServer>(serverData);
+    return Get<NetworkData::Service::Manager>().Add<NetworkData::Service::DnsSrpUnicast>(serverData);
 }
 
 void Server::UnpublishServerData(void)
 {
-    Error error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::SrpServer>();
+    Error error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::DnsSrpUnicast>();
 
     if (error != kErrorNone)
     {

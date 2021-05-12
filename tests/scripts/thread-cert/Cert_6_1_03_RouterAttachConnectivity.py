@@ -46,35 +46,27 @@ class Cert_6_1_3_RouterAttachConnectivity(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER2, ROUTER3]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER3]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER1, ED]
         },
         ED: {
             'name': 'ED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER2, ROUTER3]
         },
     }

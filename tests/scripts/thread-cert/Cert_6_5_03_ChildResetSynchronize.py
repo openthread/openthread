@@ -43,14 +43,12 @@ class Cert_6_5_3_ChildResetSynchronize(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ED]
         },
         ED: {
             'name': 'ED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER]
         },
