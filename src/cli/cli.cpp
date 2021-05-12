@@ -2638,6 +2638,22 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError Interpreter::ProcessMlIid(uint8_t aArgsLength, Arg aArgs[])
+{
+    otError                  error = OT_ERROR_NONE;
+    otIp6InterfaceIdentifier iid;
+
+    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
+
+    SuccessOrExit(error = aArgs[0].ParseAsHexString(iid.mFields.m8));
+    SuccessOrExit(error = otIp6SetMeshLocalIid(mInstance, &iid));
+
+exit:
+    return error;
+}
+#endif
+
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 otError Interpreter::ProcessMlr(uint8_t aArgsLength, Arg aArgs[])

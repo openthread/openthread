@@ -272,8 +272,6 @@ do_build_otbr_docker()
         "-DOT_SRP_CLIENT=ON"
         "-DOT_TREL=OFF"
         "-DOTBR_DUA_ROUTING=ON"
-        "-DOTBR_REST=OFF"
-        "-DOTBR_WEB=OFF"
     )
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
@@ -293,6 +291,8 @@ do_build_otbr_docker()
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
             --build-arg NAT64=0 \
+            --build-arg REST_API=0 \
+            --build-arg WEB_GUI=0 \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
 

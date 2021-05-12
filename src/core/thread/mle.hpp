@@ -348,6 +348,21 @@ public:
      */
     void SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix);
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method sets the Mesh Local IID.
+     *
+     * Available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+     *
+     * @param[in] aMlIid  The Mesh Local IID.
+     *
+     * @retval kErrorNone           Successfully configured Mesh Local IID.
+     * @retval kErrorInvalidState   If the Thread stack is already enabled.
+     *
+     */
+    Error SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMlIid);
+#endif
+
     /**
      * This method applies the Mesh Local Prefix.
      *
