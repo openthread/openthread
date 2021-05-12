@@ -3698,10 +3698,13 @@ exit:
     InformPreviousChannel();
 }
 
-bool MleRouter::IsExpectedToBecomeRouter(void) const
+bool MleRouter::IsExpectedToBecomeRouterSoon(void) const
 {
+    static constexpr uint8_t kMaxDelay = 10;
+
     return IsRouterEligible() && IsChild() && !mAddressSolicitRejected &&
-           (GetRouterSelectionJitterTimeout() != 0 || mAddressSolicitPending);
+           ((GetRouterSelectionJitterTimeout() != 0 && GetRouterSelectionJitterTimeout() <= kMaxDelay) ||
+            mAddressSolicitPending);
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

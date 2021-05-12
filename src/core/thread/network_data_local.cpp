@@ -402,13 +402,11 @@ Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *
     bool     isConsistent = true;
 
 #if OPENTHREAD_FTD
-
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouter())
+    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouterSoon())
     {
         ExitNow(error = kErrorInvalidState);
     }
-
 #endif
 
     UpdateRloc();
