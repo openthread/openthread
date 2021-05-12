@@ -319,6 +319,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/network_data_local.cpp                          \
     src/core/thread/network_data_notifier.cpp                       \
     src/core/thread/network_data_service.cpp                        \
+    src/core/thread/network_data_types.cpp                          \
     src/core/thread/network_diagnostic.cpp                          \
     src/core/thread/panid_query_server.cpp                          \
     src/core/thread/radio_selector.cpp                              \

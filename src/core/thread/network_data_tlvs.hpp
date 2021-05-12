@@ -42,6 +42,7 @@
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "net/ip6_address.hpp"
+#include "thread/network_data_types.hpp"
 
 namespace ot {
 namespace NetworkData {
@@ -226,12 +227,9 @@ private:
 OT_TOOL_PACKED_BEGIN
 class HasRouteEntry : public Equatable<HasRouteEntry>
 {
-public:
-    enum : uint8_t
-    {
-        kNat64Flag = 1 << 5, // NAT64 flag.
-    };
+    friend class ExternalRouteConfig;
 
+public:
     /**
      * This method initializes the header.
      *
@@ -266,25 +264,12 @@ public:
     int8_t GetPreference(void) const { return static_cast<int8_t>(mFlags) >> kPreferenceOffset; }
 
     /**
-     * This method sets the Preference value.
-     *
-     * @param[in]  aPrf  The Preference value.
-     *
-     */
-    void SetPreference(int8_t aPrf)
-    {
-        OT_ASSERT((aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) ||
-                  (aPrf == OT_ROUTE_PREFERENCE_HIGH));
-        mFlags = (mFlags & ~kPreferenceMask) | ((static_cast<uint8_t>(aPrf) << kPreferenceOffset) & kPreferenceMask);
-    }
-
-    /**
      * This method gets the Flags value.
      *
      * @returns The Flags value.
      *
      */
-    uint16_t GetFlags(void) const { return (mFlags & ~kPreferenceMask); }
+    uint8_t GetFlags(void) const { return mFlags; }
 
     /**
      * This method sets the Flags value.
@@ -292,7 +277,7 @@ public:
      * @param[in]  aFlags  The Flags value.
      *
      */
-    void SetFlags(uint8_t aFlags) { mFlags = (mFlags & kPreferenceMask) | (aFlags & ~kPreferenceMask); }
+    void SetFlags(uint8_t aFlags) { mFlags = aFlags; }
 
     /**
      * This method indicates whether or not the NAT64 flag is set.
@@ -320,10 +305,11 @@ public:
     const HasRouteEntry *GetNext(void) const { return (this + 1); }
 
 private:
-    enum
+    enum : uint8_t
     {
         kPreferenceOffset = 6,
         kPreferenceMask   = 3 << kPreferenceOffset,
+        kNat64Flag        = 1 << 5,
     };
 
     uint16_t mRloc;
@@ -629,21 +615,9 @@ private:
 OT_TOOL_PACKED_BEGIN
 class BorderRouterEntry : public Equatable<BorderRouterEntry>
 {
-public:
-    enum
-    {
-        kPreferenceOffset = 14,
-        kPreferenceMask   = 3 << kPreferenceOffset,
-        kPreferredFlag    = 1 << 13,
-        kSlaacFlag        = 1 << 12,
-        kDhcpFlag         = 1 << 11,
-        kConfigureFlag    = 1 << 10,
-        kDefaultRouteFlag = 1 << 9,
-        kOnMeshFlag       = 1 << 8,
-        kNdDnsFlag        = 1 << 7,
-        kDpFlag           = 1 << 6,
-    };
+    friend class OnMeshPrefixConfig;
 
+public:
     /**
      * This method initializes the TLV.
      *
@@ -675,7 +649,7 @@ public:
      * @returns The Flags value.
      *
      */
-    uint16_t GetFlags(void) const { return HostSwap16(mFlags) & ~kPreferenceMask; }
+    uint16_t GetFlags(void) const { return HostSwap16(mFlags); }
 
     /**
      * This method sets the Flags value.
@@ -683,10 +657,7 @@ public:
      * @param[in]  aFlags  The Flags value.
      *
      */
-    void SetFlags(uint16_t aFlags)
-    {
-        mFlags = HostSwap16((HostSwap16(mFlags) & kPreferenceMask) | (aFlags & ~kPreferenceMask));
-    }
+    void SetFlags(uint16_t aFlags) { mFlags = HostSwap16(aFlags); }
 
     /**
      * This method returns the Preference value.
@@ -697,17 +668,6 @@ public:
     int8_t GetPreference(void) const
     {
         return static_cast<int8_t>(static_cast<int16_t>(HostSwap16(mFlags)) >> kPreferenceOffset);
-    }
-
-    /**
-     * This method sets the Preference value.
-     *
-     * @param[in]  aPrf  The Preference value.
-     *
-     */
-    void SetPreference(int8_t aPrf)
-    {
-        mFlags = HostSwap16(GetFlags() | ((static_cast<uint16_t>(aPrf) << kPreferenceOffset) & kPreferenceMask));
     }
 
     /**
@@ -799,6 +759,24 @@ public:
     const BorderRouterEntry *GetNext(void) const { return (this + 1); }
 
 private:
+    enum : uint8_t
+    {
+        kPreferenceOffset = 14,
+    };
+
+    enum : uint16_t
+    {
+        kPreferenceMask   = 3 << kPreferenceOffset,
+        kPreferredFlag    = 1 << 13,
+        kSlaacFlag        = 1 << 12,
+        kDhcpFlag         = 1 << 11,
+        kConfigureFlag    = 1 << 10,
+        kDefaultRouteFlag = 1 << 9,
+        kOnMeshFlag       = 1 << 8,
+        kNdDnsFlag        = 1 << 7,
+        kDpFlag           = 1 << 6,
+    };
+
     uint16_t mRloc;
     uint16_t mFlags;
 } OT_TOOL_PACKED_END;

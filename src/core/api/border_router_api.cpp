@@ -70,7 +70,7 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    Error                                  error;
+    Error                                  error    = kErrorNone;
     Instance &                             instance = *static_cast<Instance *>(aInstance);
     const NetworkData::OnMeshPrefixConfig *config   = static_cast<const NetworkData::OnMeshPrefixConfig *>(aConfig);
 
@@ -79,16 +79,14 @@ otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRoute
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
     if (aConfig->mDp)
     {
-        SuccessOrExit(error = instance.Get<NetworkData::Local>().ValidateOnMeshPrefix(*config));
-        instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
+        error = instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
     }
     else
 #endif
     {
-        SuccessOrExit(error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config));
+        error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config);
     }
 
-exit:
     return error;
 }
 
