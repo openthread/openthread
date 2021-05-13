@@ -348,7 +348,8 @@ Usage: `dataset meshlocalprefix [prefix]`
 Get mesh local prefix.
 
 ```bash
-> dataset meshlocalprefix fd00:db8:0:0::/64
+> dataset meshlocalprefix
+fd00:db8:0:0::/64
 Done
 ```
 
