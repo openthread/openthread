@@ -167,7 +167,7 @@ class MATN_02_MLRFirstUse(thread_cert.TestCase):
         # 3. BR_1 responds to the multicast registration.
         # BR_1 unicasts an MLR.rsp CoAP response to TD as "2.04 changed".
         # The payload contains "Status TLV: ST_MLR_SUCCESS".
-        pkts.filter_wpan_src64(vars['BR_1']) \
+        pkts.copy().filter_wpan_src64(vars['BR_1']) \
             .filter_ipv6_dst(vars['TD_RLOC']) \
             .filter_coap_ack('/n/mr') \
             .filter(lambda p: p.thread_nm.tlv.status == 0) \
