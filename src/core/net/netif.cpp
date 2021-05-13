@@ -45,12 +45,12 @@ namespace Ip6 {
 class AddressInfo : public otIp6AddressInfo
 {
 public:
-    AddressInfo(const NetifUnicastAddress &aAddress, Instance &aInstance)
+    explicit AddressInfo(const NetifUnicastAddress &aAddress)
     {
         mAddress      = &aAddress.mAddress;
         mPrefixLength = aAddress.mPrefixLength;
         mScope        = aAddress.GetScope();
-        mIsAnycast    = aInstance.Get<Mle::MleRouter>().IsAnycastLocator(aAddress.GetAddress());
+        mPreferred    = aAddress.mPreferred;
     }
 
     explicit AddressInfo(const NetifMulticastAddress &aAddress)
@@ -58,7 +58,7 @@ public:
         mAddress      = &aAddress.GetAddress();
         mPrefixLength = kMulticastPrefixLength;
         mScope        = aAddress.GetAddress().GetScope();
-        mIsAnycast    = false;
+        mPreferred    = false;
     }
 
 private:
@@ -439,7 +439,7 @@ void Netif::AddUnicastAddress(NetifUnicastAddress &aAddress)
     VerifyOrExit(mAddressCallback != nullptr);
 
     {
-        AddressInfo addressInfo(aAddress, GetInstance());
+        AddressInfo addressInfo(aAddress);
 
         mAddressCallback(&addressInfo,
                          /* IsAdded */ true, mAddressCallbackContext);
@@ -457,7 +457,7 @@ void Netif::RemoveUnicastAddress(const NetifUnicastAddress &aAddress)
 
     VerifyOrExit(mAddressCallback != nullptr);
     {
-        AddressInfo addressInfo(aAddress, GetInstance());
+        AddressInfo addressInfo(aAddress);
 
         mAddressCallback(&addressInfo, /* IsAdded */ false, mAddressCallbackContext);
     }
@@ -543,12 +543,12 @@ bool Netif::IsUnicastAddressExternal(const NetifUnicastAddress &aAddress) const
     return mExtUnicastAddressPool.IsPoolEntry(aAddress);
 }
 
-void NetifUnicastAddress::InitAsThreadOrigin(void)
+void NetifUnicastAddress::InitAsThreadOrigin(bool aPreferred)
 {
     Clear();
     mPrefixLength  = NetworkPrefix::kLength;
     mAddressOrigin = OT_ADDRESS_ORIGIN_THREAD;
-    mPreferred     = true;
+    mPreferred     = aPreferred;
     mValid         = true;
 }
 

@@ -427,7 +427,7 @@ typedef struct otIp6AddressInfo
     const otIp6Address *mAddress;       ///< A pointer to the IPv6 address.
     uint8_t             mPrefixLength;  ///< The prefix length of mAddress if it is a unicast address.
     uint8_t             mScope : 4;     ///< The scope of this address.
-    bool                mIsAnycast : 1; ///< Whether this is an anycast address.
+    bool                mPreferred : 1; ///< Whether this is a preferred address.
 } otIp6AddressInfo;
 
 /**
