@@ -75,11 +75,16 @@ add_library(openthread-posix
     entropy.cpp
     hdlc_interface.cpp
     infra_if.cpp
+    ip6_utils.cpp
     logging.cpp
     mainloop.cpp
     memory.cpp
     misc.cpp
     multicast_routing.cpp
+    netif_manager.cpp
+    netif_manager_bsd.cpp
+    netif_manager_linux.cpp
+    netlink_manager.cpp
     netif.cpp
     radio.cpp
     radio_url.cpp

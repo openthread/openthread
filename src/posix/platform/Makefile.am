@@ -56,6 +56,10 @@ libopenthread_posix_a_SOURCES             = \
     misc.cpp                                \
     multicast_routing.cpp                   \
     netif.cpp                               \
+    netif_manager.cpp                       \
+    netif_manager_bsd.cpp                   \
+    netif_manager_linux.cpp                 \
+    netlink_manager.cpp                     \
     radio.cpp                               \
     radio_url.cpp                           \
     settings.cpp                            \
@@ -75,6 +79,8 @@ noinst_HEADERS                            = \
     hdlc_interface.hpp                      \
     mainloop.hpp                            \
     multicast_routing.hpp                   \
+    netif_manager.hpp                       \
+    netlink_manager.hpp                     \
     openthread-posix-config.h               \
     platform-posix.h                        \
     radio_url.hpp                           \

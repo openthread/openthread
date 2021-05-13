@@ -50,6 +50,8 @@
 #include <unistd.h>
 #ifdef __linux__
 #include <linux/rtnetlink.h>
+#else
+#include <net/route.h>
 #endif
 
 #include <openthread/border_router.h>
@@ -59,33 +61,12 @@
 #include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
 #include "posix/platform/infra_if.hpp"
+#include "posix/platform/netif_manager.hpp"
+#include "posix/platform/netlink_manager.hpp"
 
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
-    bool            ret     = false;
-    struct ifaddrs *ifAddrs = nullptr;
-
-    VerifyOrDie(getifaddrs(&ifAddrs) != -1, OT_EXIT_ERROR_ERRNO);
-
-    for (struct ifaddrs *addr = ifAddrs; addr != nullptr; addr = addr->ifa_next)
-    {
-        struct sockaddr_in6 *ip6Addr;
-
-        if (if_nametoindex(addr->ifa_name) != aInfraIfIndex || addr->ifa_addr->sa_family != AF_INET6)
-        {
-            continue;
-        }
-
-        ip6Addr = reinterpret_cast<sockaddr_in6 *>(addr->ifa_addr);
-        if (memcmp(&ip6Addr->sin6_addr, aAddress, sizeof(*aAddress)) == 0)
-        {
-            ExitNow(ret = true);
-        }
-    }
-
-exit:
-    freeifaddrs(ifAddrs);
-    return ret;
+    return ot::Posix::NetifManager::Get().HasAddress(aInfraIfIndex, *aAddress);
 }
 
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
@@ -145,27 +126,6 @@ int CreateIcmp6Socket(void)
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     rval = setsockopt(sock, IPPROTO_IPV6, IPV6_MULTICAST_HOPS, &kHopLimit, sizeof(kHopLimit));
-    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
-
-    return sock;
-}
-
-// Create a net-link socket that subscribes to link & addresses events.
-int CreateNetLinkSocket(void)
-{
-    int                sock;
-    int                rval;
-    struct sockaddr_nl addr;
-
-    sock = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketBlock);
-    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
-
-    memset(&addr, 0, sizeof(addr));
-    addr.nl_family = AF_NETLINK;
-    addr.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-    addr.nl_pid    = getpid();
-
-    rval = bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
     return sock;
@@ -249,21 +209,7 @@ exit:
 
 bool InfraNetif::IsRunning(void) const
 {
-    int          sock;
-    struct ifreq ifReq;
-
-    OT_ASSERT(mInfraIfIndex != 0);
-
-    sock = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketBlock);
-    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
-
-    memset(&ifReq, 0, sizeof(ifReq));
-    strncpy(ifReq.ifr_name, mInfraIfName, sizeof(ifReq.ifr_name));
-    VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
-
-    close(sock);
-
-    return (ifReq.ifr_flags & IFF_RUNNING);
+    return ot::Posix::NetifManager::Get().IsRunning(mInfraIfName);
 }
 
 void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
@@ -293,8 +239,7 @@ void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
 #endif // __linux__
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
 
-    mNetLinkSocket = CreateNetLinkSocket();
-
+    mNetLinkSocket = NetlinkManager::CreateNetlinkSocket();
     SuccessOrDie(otBorderRoutingInit(aInstance, ifIndex, platformInfraIfIsRunning()));
     SuccessOrDie(otBorderRoutingSetEnabled(aInstance, /* aEnabled */ true));
 
@@ -345,8 +290,12 @@ void InfraNetif::ReceiveNetLinkMessage(void)
     ssize_t      len;
     union
     {
+#ifdef __linux__
         nlmsghdr mHeader;
-        uint8_t  mBuffer[kMaxNetLinkBufSize];
+#else
+        rt_msghdr mHeader;
+#endif
+        uint8_t mBuffer[kMaxNetLinkBufSize];
     } msgBuffer;
 
     len = recv(mNetLinkSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
@@ -356,20 +305,34 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         ExitNow();
     }
 
+#ifdef __linux__
     for (struct nlmsghdr *header = &msgBuffer.mHeader; NLMSG_OK(header, static_cast<size_t>(len));
          header                  = NLMSG_NEXT(header, len))
+#endif
     {
+#ifdef __linux__
         switch (header->nlmsg_type)
+#else
+        switch (msgBuffer.mHeader.rtm_type)
+#endif
         {
         // There are no effective netlink message types to get us notified
         // of interface RUNNING state changes. But addresses events are
         // usually associated with interface state changes.
         case RTM_NEWADDR:
         case RTM_DELADDR:
+#ifdef RTM_NEWLINK
         case RTM_NEWLINK:
+#endif
+#ifdef RTM_DELLINK
         case RTM_DELLINK:
+#endif
+#ifdef RTM_IFINFO
+        case RTM_IFINFO:
+#endif
             SuccessOrDie(otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, platformInfraIfIsRunning()));
             break;
+#ifdef __linux__
         case NLMSG_ERROR:
         {
             struct nlmsgerr *errMsg = reinterpret_cast<struct nlmsgerr *>(NLMSG_DATA(header));
@@ -377,6 +340,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
             OT_UNUSED_VARIABLE(errMsg);
             otLogWarnPlat("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
         }
+#endif
         default:
             break;
         }

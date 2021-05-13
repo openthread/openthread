@@ -47,16 +47,12 @@
 #include <sys/ioctl.h>
 #include <sys/socket.h>
 #include <unistd.h>
-#if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
-#include <linux/if_tun.h>
-#include <linux/netlink.h>
-#include <linux/rtnetlink.h>
-#endif
 
 #include <openthread/platform/trel-udp6.h>
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "posix/platform/netif_manager.hpp"
 #include "posix/platform/radio_url.hpp"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -85,7 +81,7 @@ static TxPacket *   sFreeTxPacketHead;  // A singly linked list of free/availabl
 static TxPacket *   sTxPacketQueueTail; // A circular linked list for queued tx packets.
 static char         sInterfaceName[IFNAMSIZ + 1];
 static bool         sEnabled         = false;
-static int          sInterfaceIndex  = -1;
+static unsigned int sInterfaceIndex  = 0;
 static int          sMulticastSocket = -1;
 static int          sSocket          = -1;
 static uint16_t     sUdpPort         = 0;
@@ -141,60 +137,20 @@ exit:
 
 #if OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
 
-static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAdd)
-{
-    int            netlinkSocket;
-    int            ret;
-    struct rtattr *rta;
-
-    struct
-    {
-        struct nlmsghdr  nh;
-        struct ifaddrmsg ifa;
-        char             buf[64];
-    } request;
-
-    netlinkSocket = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-    VerifyOrDie(netlinkSocket >= 0, OT_EXIT_ERROR_ERRNO);
-
-    memset(&request, 0, sizeof(request));
-
-    request.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-    request.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
-    request.nh.nlmsg_type  = aToAdd ? RTM_NEWADDR : RTM_DELADDR;
-    request.nh.nlmsg_pid   = 0;
-    request.nh.nlmsg_seq   = 0;
-
-    request.ifa.ifa_family    = AF_INET6;
-    request.ifa.ifa_prefixlen = TREL_UNICAST_ADDRESS_PREFIX_LEN;
-    request.ifa.ifa_flags     = IFA_F_NODAD;
-    request.ifa.ifa_scope     = TREL_UNICAST_ADDRESS_SCOPE;
-    request.ifa.ifa_index     = (unsigned int)(sInterfaceIndex);
-
-    rta = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&request)) + NLMSG_ALIGN(request.nh.nlmsg_len));
-    rta->rta_type = IFA_LOCAL;
-    rta->rta_len  = RTA_LENGTH(sizeof(otIp6Address));
-
-    memcpy(RTA_DATA(rta), aUnicastAddress, sizeof(otIp6Address));
-
-    request.nh.nlmsg_len = NLMSG_ALIGN(request.nh.nlmsg_len) + rta->rta_len;
-
-    ret = send(netlinkSocket, &request, request.nh.nlmsg_len, 0);
-    VerifyOrDie(ret != -1, OT_EXIT_ERROR_ERRNO);
-
-    close(netlinkSocket);
-}
-
 static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 {
     otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
-    UpdateUnicastAddress(aUnicastAddress, /* aToAdd */ true);
+    ot::Posix::NetifManager::Get().AddUnicast(
+        sInterfaceIndex,
+        otIp6AddressInfo{aUnicastAddress, TREL_UNICAST_ADDRESS_PREFIX_LEN, TREL_UNICAST_ADDRESS_SCOPE, true});
 }
 
 static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
 {
     otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
-    UpdateUnicastAddress(aUnicastAddress, /* aToAdd */ false);
+    ot::Posix::NetifManager::Get().RemoveUnicast(
+        sInterfaceIndex,
+        otIp6AddressInfo{aUnicastAddress, TREL_UNICAST_ADDRESS_PREFIX_LEN, TREL_UNICAST_ADDRESS_SCOPE, true});
 }
 
 #else // OPENTHREAD_CONFIG_POSIX_TREL_USE_NETLINK_SOCKET
@@ -276,8 +232,9 @@ static void PrepareSocket(void)
     // of multicast tx and set the multicast hop limit to 1 to reach
     // a single sub-net.
 
-    val = sInterfaceIndex;
-    VerifyOrDie(setsockopt(sSocket, IPPROTO_IPV6, IPV6_MULTICAST_IF, &val, sizeof(val)) == 0, OT_EXIT_ERROR_ERRNO);
+    VerifyOrDie(setsockopt(sSocket, IPPROTO_IPV6, IPV6_MULTICAST_IF, &sInterfaceAddress, sizeof(sInterfaceAddress)) ==
+                    0,
+                OT_EXIT_ERROR_ERRNO);
 
     val = 0;
     VerifyOrDie(setsockopt(sSocket, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &val, sizeof(val)) == 0, OT_EXIT_ERROR_ERRNO);
@@ -305,7 +262,7 @@ static void PrepareSocket(void)
     sockAddr.sin6_family = AF_INET6;
     sockAddr.sin6_port   = htons(sUdpPort);
     memcpy(&sockAddr.sin6_addr, &sInterfaceAddress, sizeof(otIp6Address));
-    sockAddr.sin6_scope_id = (uint32_t)sInterfaceIndex;
+    sockAddr.sin6_scope_id = sInterfaceIndex;
 
     startTime = otPlatTimeGet();
 
@@ -500,9 +457,9 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
 
     sUdpPort          = aUdpPort;
     sInterfaceAddress = *aUnicastAddress;
-    sInterfaceIndex   = (int)if_nametoindex(sInterfaceName);
+    sInterfaceIndex   = if_nametoindex(sInterfaceName);
 
-    if (sInterfaceIndex <= 0)
+    if (sInterfaceIndex == 0)
     {
         otLogCritPlat("[trel] Failed to find index of TREL netif \"%s\"", sInterfaceName);
         DieNow(OT_EXIT_ERROR_ERRNO);
@@ -523,7 +480,7 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
     sockAddr.sin6_family   = AF_INET6;
     sockAddr.sin6_port     = htons(sUdpPort);
     sockAddr.sin6_addr     = in6addr_any;
-    sockAddr.sin6_scope_id = (uint32_t)sInterfaceIndex;
+    sockAddr.sin6_scope_id = sInterfaceIndex;
 
     if (bind(sMulticastSocket, (struct sockaddr *)&sockAddr, sizeof(sockAddr)) == -1)
     {
@@ -572,7 +529,7 @@ void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6A
     assert(sMulticastSocket != -1);
 
     memcpy(&mr.ipv6mr_multiaddr, aMulticastAddress, sizeof(otIp6Address));
-    mr.ipv6mr_interface = (unsigned int)sInterfaceIndex;
+    mr.ipv6mr_interface = sInterfaceIndex;
     VerifyOrDie(setsockopt(sMulticastSocket, IPPROTO_IPV6, IPV6_JOIN_GROUP, &mr, sizeof(mr)) == 0, OT_EXIT_ERROR_ERRNO);
 
     otLogDebgPlat("[trel] otPlatTrelUdp6SubscribeMulticastAddress(%s)", Ip6AddrToString(aMulticastAddress));

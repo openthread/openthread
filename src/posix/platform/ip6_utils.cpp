@@ -26,63 +26,42 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-posix-config.h"
-#include "platform-posix.h"
+#include "posix/platform/ip6_utils.hpp"
 
-#include <arpa/inet.h>
+#include <limits.h>
+
+#include "core/net/ip6_address.hpp"
 
 namespace ot {
 namespace Posix {
 namespace Ip6Utils {
 
-/**
- * This utility class converts binary IPv6 address to text format.
- *
- */
-class Ip6AddressString
+namespace {
+constexpr uint8_t kAllOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+                                0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+}
+
+uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 &aNetmask)
 {
-public:
-    /**
-     * The constructor of this converter.
-     *
-     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
-     *
-     */
-    explicit Ip6AddressString(const void *aAddress)
+    return otIp6PrefixMatch(reinterpret_cast<const otIp6Address *>(aNetmask.sin6_addr.s6_addr),
+                            reinterpret_cast<const otIp6Address *>(kAllOnes));
+}
+
+void InitNetmaskWithPrefixLength(struct in6_addr &aNetmask, uint8_t aPrefixLength)
+{
+    constexpr uint8_t kMaxPrefixLength = (OT_IP6_ADDRESS_SIZE * CHAR_BIT);
+
+    if (aPrefixLength > kMaxPrefixLength)
     {
-        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
+        aPrefixLength = kMaxPrefixLength;
     }
 
-    /**
-     * This method returns the string as a null-terminated C string.
-     *
-     * @returns The null-terminated C string.
-     *
-     */
-    const char *AsCString(void) const { return mBuffer; }
+    Ip6::Address addr;
 
-private:
-    char mBuffer[INET6_ADDRSTRLEN];
-};
-
-/**
- * This function converts netmask to prefix length.
- *
- * @param[in]   aNetmask    A reference to the netmask.
- *
- * @returns The prefix length.
- *
- */
-uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 &aNetmask);
-
-/**
- * This function constructs a netmask for a given prefix length.
- *
- * @param[out]  aNetmask        A reference to the netmask.
- * @param[in]   aPrefixLength   The prefix length.
- *
- */
-void InitNetmaskWithPrefixLength(struct in6_addr &aNetmask, uint8_t aPrefixLength);
+    addr.Clear();
+    addr.SetPrefix(kAllOnes, aPrefixLength);
+    memcpy(&aNetmask, addr.mFields.m8, sizeof(addr.mFields.m8));
+}
 
 } // namespace Ip6Utils
 } // namespace Posix

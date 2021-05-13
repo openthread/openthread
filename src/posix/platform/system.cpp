@@ -49,6 +49,8 @@
 #include "common/code_utils.hpp"
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
+#include "posix/platform/netif_manager.hpp"
+#include "posix/platform/netlink_manager.hpp"
 #include "posix/platform/radio_url.hpp"
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
@@ -116,7 +118,11 @@ static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 {
     otInstance *instance = nullptr;
-
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE || OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || \
+    OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    ot::Posix::NetlinkManager::Get().Init();
+    ot::Posix::NetifManager::Get().Init();
+#endif
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -171,6 +177,11 @@ void otSysDeinit(void)
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     ot::Posix::InfraNetif::Get().Deinit();
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE || OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || \
+    OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    ot::Posix::NetlinkManager::Get().Deinit();
+    ot::Posix::NetifManager::Get().Deinit();
 #endif
 }
 

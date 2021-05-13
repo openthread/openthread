@@ -362,6 +362,10 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/misc.cpp                                     \
     src/posix/platform/multicast_routing.cpp                        \
     src/posix/platform/netif.cpp                                    \
+    src/posix/platform/netif_manager.cpp                            \
+    src/posix/platform/netif_manager_bsd.cpp                        \
+    src/posix/platform/netif_manager_linux.cpp                      \
+    src/posix/platform/netlink_manager.cpp                          \
     src/posix/platform/radio.cpp                                    \
     src/posix/platform/radio_url.cpp                                \
     src/posix/platform/settings.cpp                                 \

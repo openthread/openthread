@@ -92,29 +92,10 @@
 #if defined(__APPLE__) || defined(__FreeBSD__)
 #include <net/if_var.h>
 #endif // defined(__APPLE__) || defined(__FreeBSD__)
+
+#include <net/if_dl.h> // struct sockaddr_dl
 #include <net/route.h>
 #include <netinet6/in6_var.h>
-#if defined(__APPLE__) || defined(__FreeBSD__)
-// the prf_ra structure is defined inside another structure (in6_prflags), and C++
-//   treats that as out of scope if another structure tries to use it -- this (slightly gross)
-//   workaround makes us dependent on our definition remaining in sync (at least the size of it),
-//   so we add a compile-time check that will fail if the SDK ever changes
-//
-// our definition of the struct:
-struct prf_ra
-{
-    u_char onlink : 1;
-    u_char autonomous : 1;
-    u_char reserved : 6;
-} prf_ra;
-// object that contains the SDK's version of the structure:
-struct in6_prflags compile_time_check_prflags;
-// compile time check to make sure they're the same size:
-extern int
-    compile_time_check_struct_prf_ra[(sizeof(struct prf_ra) == sizeof(compile_time_check_prflags.prf_ra)) ? 1 : -1];
-#endif
-#include <net/if_dl.h>    // struct sockaddr_dl
-#include <netinet6/nd6.h> // ND6_INFINITE_LIFETIME
 
 #ifdef __APPLE__
 #if OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN
@@ -147,6 +128,8 @@ extern int
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
 
+#include "posix/platform/netif_manager.hpp"
+
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
 
@@ -162,6 +145,7 @@ unsigned int otSysGetThreadNetifIndex(void)
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include "posix/platform/ip6_utils.hpp"
+#include "posix/platform/netlink_manager.hpp"
 
 using namespace ot::Posix::Ip6Utils;
 
@@ -183,10 +167,6 @@ using namespace ot::Posix::Ip6Utils;
 #endif
 
 #endif // OPENTHREAD_TUN_DEVICE
-
-#if defined(__linux__)
-static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
-#endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
@@ -211,13 +191,8 @@ static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
 #endif
 #endif
 
-#if defined(__NetBSD__) || defined(__FreeBSD__)
-static otError destroyTunnel(void);
-#endif
-
 static otInstance *sInstance  = nullptr;
 static int         sTunFd     = -1; ///< Used to exchange IPv6 packets.
-static int         sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
 static int         sNetlinkFd = -1; ///< Used to receive netlink events.
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 static int sMLDMonitorFd = -1; ///< Used to receive MLD events.
@@ -254,7 +229,7 @@ enum
 };
 #endif
 
-static constexpr size_t kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
+static constexpr int kMaxIp6Size = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
 static bool sIsSyncingState = false;
 #endif
@@ -281,238 +256,26 @@ static bool UnicastAddressIsSubscribed(otInstance *aInstance, const otNetifAddre
 }
 #endif
 
-#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-static const uint8_t allOnes[] = {0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
-                                  0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
-static void InitNetaskWithPrefixLength(struct in6_addr *address, uint8_t prefixLen)
-{
-#define MAX_PREFIX_LENGTH (OT_IP6_ADDRESS_SIZE * CHAR_BIT)
-    if (prefixLen > MAX_PREFIX_LENGTH)
-    {
-        prefixLen = MAX_PREFIX_LENGTH;
-    }
-
-    ot::Ip6::Address addr;
-
-    addr.Clear();
-    addr.SetPrefix(allOnes, prefixLen);
-    memcpy(address, addr.mFields.m8, sizeof(addr.mFields.m8));
-}
-
-static uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 *netmask)
-{
-    return otIp6PrefixMatch(reinterpret_cast<const otIp6Address *>(netmask->sin6_addr.s6_addr),
-                            reinterpret_cast<const otIp6Address *>(allOnes));
-}
-#endif
-
-#if defined(__linux__)
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wcast-align"
-
-static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
-{
-    struct rtattr *rta;
-
-    struct
-    {
-        struct nlmsghdr  nh;
-        struct ifaddrmsg ifa;
-        char             buf[512];
-    } req;
-
-    memset(&req, 0, sizeof(req));
-
-    req.nh.nlmsg_len   = NLMSG_LENGTH(sizeof(struct ifaddrmsg));
-    req.nh.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
-    req.nh.nlmsg_type  = aIsAdded ? RTM_NEWADDR : RTM_DELADDR;
-    req.nh.nlmsg_pid   = 0;
-    req.nh.nlmsg_seq   = ++sNetlinkSequence;
-
-    req.ifa.ifa_family    = AF_INET6;
-    req.ifa.ifa_prefixlen = aAddressInfo.mPrefixLength;
-    req.ifa.ifa_flags     = IFA_F_NODAD;
-    req.ifa.ifa_scope     = aAddressInfo.mScope;
-    req.ifa.ifa_index     = gNetifIndex;
-
-    rta           = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&req)) + NLMSG_ALIGN(req.nh.nlmsg_len));
-    rta->rta_type = IFA_LOCAL;
-    rta->rta_len  = RTA_LENGTH(sizeof(*aAddressInfo.mAddress));
-
-    memcpy(RTA_DATA(rta), aAddressInfo.mAddress, sizeof(*aAddressInfo.mAddress));
-
-    req.nh.nlmsg_len = NLMSG_ALIGN(req.nh.nlmsg_len) + rta->rta_len;
-
-    if (!aAddressInfo.mPreferred)
-    {
-        struct ifa_cacheinfo cacheinfo;
-
-        rta           = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(rta)) + rta->rta_len);
-        rta->rta_type = IFA_CACHEINFO;
-        rta->rta_len  = RTA_LENGTH(sizeof(cacheinfo));
-
-        memset(&cacheinfo, 0, sizeof(cacheinfo));
-        cacheinfo.ifa_valid = UINT32_MAX;
-
-        memcpy(RTA_DATA(rta), &cacheinfo, sizeof(cacheinfo));
-
-        req.nh.nlmsg_len += rta->rta_len;
-    }
-
-    if (send(sNetlinkFd, &req, req.nh.nlmsg_len, 0) != -1)
-    {
-        otLogInfoPlat("Sent request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
-                      Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
-    }
-    else
-    {
-        otLogInfoPlat("Failed to send request#%u to %s %s/%u", sNetlinkSequence, (aIsAdded ? "add" : "remove"),
-                      Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
-    }
-}
-
-#pragma GCC diagnostic pop
-#endif // defined(__linux__)
-
-static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddressInfo, bool aIsAdded)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    assert(sInstance == aInstance);
-    assert(sIpFd >= 0);
-
-#if defined(__linux__)
-    UpdateUnicastLinux(aAddressInfo, aIsAdded);
-#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    {
-        int                 rval;
-        struct in6_aliasreq ifr6;
-
-        memset(&ifr6, 0, sizeof(ifr6));
-        strlcpy(ifr6.ifra_name, gNetifName, sizeof(ifr6.ifra_name));
-        ifr6.ifra_addr.sin6_family = AF_INET6;
-        ifr6.ifra_addr.sin6_len    = sizeof(ifr6.ifra_addr);
-        memcpy(&ifr6.ifra_addr.sin6_addr, aAddressInfo.mAddress, sizeof(struct in6_addr));
-        ifr6.ifra_prefixmask.sin6_family = AF_INET6;
-        ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
-        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, aAddressInfo.mPrefixLength);
-        ifr6.ifra_lifetime.ia6t_vltime    = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_pltime    = ND6_INFINITE_LIFETIME;
-
-#if defined(__APPLE__)
-        ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_preferred = (aAddressInfo.mPreferred ? ND6_INFINITE_LIFETIME : 0);
-#endif
-
-        rval = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
-        if (rval == 0)
-        {
-            otLogInfoPlat("%s %s/%u", (aIsAdded ? "Added" : "Removed"),
-                          Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength);
-        }
-        else if (errno != EALREADY)
-        {
-            otLogWarnPlat("Failed to %s %s/%u: %s", (aIsAdded ? "add" : "remove"),
-                          Ip6AddressString(aAddressInfo.mAddress).AsCString(), aAddressInfo.mPrefixLength,
-                          strerror(errno));
-        }
-    }
-#endif
-}
-
-static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress, bool aIsAdded)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    struct ipv6_mreq mreq;
-    otError          error = OT_ERROR_NONE;
-
-    assert(sInstance == aInstance);
-
-    VerifyOrExit(sIpFd >= 0);
-    memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
-    mreq.ipv6mr_interface = gNetifIndex;
-
-    int err;
-    err = setsockopt(sIpFd, IPPROTO_IPV6, (aIsAdded ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP), &mreq, sizeof(mreq));
-#if defined(__APPLE__) || defined(__FreeBSD__)
-    if ((err != 0) && (errno == EINVAL) && (IN6_IS_ADDR_MC_LINKLOCAL(&mreq.ipv6mr_multiaddr)))
-    {
-        // FIX ME
-        // on mac OS (and FreeBSD), the first time we run (but not subsequently), we get a failure on this
-        // particular join. do we need to bring up the interface at least once prior to joining? we need to figure
-        // out why so we can get rid of this workaround
-        char addressString[INET6_ADDRSTRLEN + 1];
-
-        inet_ntop(AF_INET6, mreq.ipv6mr_multiaddr.s6_addr, addressString, sizeof(addressString));
-        otLogWarnPlat("ignoring %s failure (EINVAL) for MC LINKLOCAL address (%s)",
-                      aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", addressString);
-        err = 0;
-    }
-#endif
-
-    if (err != 0)
-    {
-        otLogWarnPlat("%s failure (%d)", aIsAdded ? "IPV6_JOIN_GROUP" : "IPV6_LEAVE_GROUP", errno);
-    }
-
-    VerifyOrExit(err == 0, perror("setsockopt"); error = OT_ERROR_FAILED);
-
-exit:
-    SuccessOrDie(error);
-    otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
-}
-
 static void UpdateLink(otInstance *aInstance)
 {
-    otError      error = OT_ERROR_NONE;
-    struct ifreq ifr;
-    bool         ifState = false;
-    bool         otState = false;
-
-    assert(sInstance == aInstance);
-
-    VerifyOrExit(sIpFd >= 0);
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
-    VerifyOrExit(ioctl(sIpFd, SIOCGIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
-
-    ifState = ((ifr.ifr_flags & IFF_UP) == IFF_UP) ? true : false;
-    otState = otIp6IsEnabled(aInstance);
-
-    otLogNotePlat("changing interface state to %s%s.", otState ? "up" : "down",
-                  (ifState == otState) ? " (already done, ignoring)" : "");
-    if (ifState != otState)
-    {
-        ifr.ifr_flags = otState ? (ifr.ifr_flags | IFF_UP) : (ifr.ifr_flags & ~IFF_UP);
-        VerifyOrExit(ioctl(sIpFd, SIOCSIFFLAGS, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
+    ot::Posix::NetifManager::Get().UpdateLink(gNetifName, otIp6IsEnabled(aInstance));
 #if defined(RTM_NEWLINK) && defined(RTM_DELLINK)
-        // wait for RTM_NEWLINK event before processing notification from kernel to avoid infinite loop
-        sIsSyncingState = true;
+    // wait for RTM_NEWLINK event before processing notification from kernel to avoid infinite loop
+    sIsSyncingState = true;
 #endif
-    }
-
-exit:
-    if (error == OT_ERROR_NONE)
-    {
-        otLogInfoPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
-    else
-    {
-        otLogWarnPlat("%s: %s", __func__, otThreadErrorToString(error));
-    }
 }
 
 static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
+    OT_UNUSED_VARIABLE(aContext);
+
     if (aAddressInfo->mAddress->mFields.m8[0] == 0xff)
     {
-        UpdateMulticast(static_cast<otInstance *>(aContext), *aAddressInfo->mAddress, aIsAdded);
+        ot::Posix::NetifManager::Get().UpdateMulticast(gNetifIndex, *aAddressInfo->mAddress, aIsAdded);
     }
     else
     {
-        UpdateUnicast(static_cast<otInstance *>(aContext), *aAddressInfo, aIsAdded);
+        ot::Posix::NetifManager::Get().UpdateUnicast(gNetifIndex, *aAddressInfo, aIsAdded);
     }
 }
 
@@ -816,7 +579,7 @@ exit:
 
 static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 {
-    otError            error;
+    otError            error = OT_ERROR_NONE;
     struct ifa_msghdr *ifam;
 #ifdef RTM_NEWMADDR
     struct ifma_msghdr *ifmam;
@@ -907,14 +670,13 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                 bool           subscribed;
 
                 netAddr.mAddress      = addr;
-                netAddr.mPrefixLength = NetmaskToPrefixLength(&netmask);
+                netAddr.mPrefixLength = NetmaskToPrefixLength(netmask);
 
                 subscribed = UnicastAddressIsSubscribed(aInstance, &netAddr);
 
                 if (subscribed)
                 {
                     logAddrEvent(kAddAddress, kUnicastAddress, addr6, OT_ERROR_ALREADY);
-                    error = OT_ERROR_NONE;
                 }
                 else
                 {
@@ -922,43 +684,17 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                     {
                         // remove the stack-added link-local address
 
-                        int                 err;
-                        struct in6_aliasreq ifr6;
-                        char                addressString[INET6_ADDRSTRLEN + 1];
+                        otLogInfoPlat("Removing stack-added link-local address %s",
+                                      Ip6AddressString(addr6.sin6_addr.s6_addr).AsCString());
 
-                        OT_UNUSED_VARIABLE(addressString); // if otLog*Plat is disabled, we'll get a warning
+                        otIp6AddressInfo info;
 
-                        memset(&ifr6, 0, sizeof(ifr6));
-                        strlcpy(ifr6.ifra_name, gNetifName, sizeof(ifr6.ifra_name));
-                        ifr6.ifra_addr.sin6_family = AF_INET6;
-                        ifr6.ifra_addr.sin6_len    = sizeof(ifr6.ifra_addr);
-                        memcpy(&ifr6.ifra_addr.sin6_addr, &addr6.sin6_addr, sizeof(struct in6_addr));
-                        ifr6.ifra_prefixmask.sin6_family = AF_INET6;
-                        ifr6.ifra_prefixmask.sin6_len    = sizeof(ifr6.ifra_prefixmask);
-                        InitNetaskWithPrefixLength(&ifr6.ifra_prefixmask.sin6_addr, netAddr.mPrefixLength);
-                        ifr6.ifra_lifetime.ia6t_vltime = ND6_INFINITE_LIFETIME;
-                        ifr6.ifra_lifetime.ia6t_pltime = ND6_INFINITE_LIFETIME;
+                        info.mAddress      = reinterpret_cast<const struct otIp6Address *>(&addr6.sin6_addr);
+                        info.mPrefixLength = netAddr.mPrefixLength;
+                        info.mScope        = 0;
+                        info.mPreferred    = true;
 
-#if defined(__APPLE__)
-                        ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
-                        ifr6.ifra_lifetime.ia6t_preferred = ND6_INFINITE_LIFETIME;
-#endif
-
-                        err = ioctl(sIpFd, SIOCDIFADDR_IN6, &ifr6);
-                        if (err != 0)
-                        {
-                            otLogWarnPlat(
-                                "error (%d) removing stack-addded link-local address %s", errno,
-                                inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
-                            error = OT_ERROR_FAILED;
-                        }
-                        else
-                        {
-                            otLogNotePlat(
-                                "        %s (removed stack-added link-local)",
-                                inet_ntop(AF_INET6, addr6.sin6_addr.s6_addr, addressString, sizeof(addressString)));
-                            error = OT_ERROR_NONE;
-                        }
+                        ot::Posix::NetifManager::Get().RemoveUnicast(gNetifIndex, info);
                     }
                     else
                     {
@@ -1014,7 +750,8 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
         }
     }
 
-exit:;
+exit:
+    return;
 }
 
 static void processNetifInfoEvent(otInstance *aInstance, struct rt_msghdr *rtm)
@@ -1138,20 +875,8 @@ void platformNetifDeinit(void)
         sTunFd = -1;
 
 #if defined(__NetBSD__) || defined(__FreeBSD__)
-        destroyTunnel();
+        ot::Posix::NetifManager::Get().Destroy(gNetifName);
 #endif
-    }
-
-    if (sIpFd != -1)
-    {
-        close(sIpFd);
-        sIpFd = -1;
-    }
-
-    if (sNetlinkFd != -1)
-    {
-        close(sNetlinkFd);
-        sNetlinkFd = -1;
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
@@ -1317,8 +1042,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 
     strncpy(deviceName, ifr.ifr_name, deviceNameLen);
 
-    ifr.ifr_mtu = static_cast<int>(kMaxIp6Size);
-    VerifyOrDie(ioctl(sIpFd, SIOCSIFMTU, static_cast<void *>(&ifr)) == 0, OT_EXIT_ERROR_ERRNO);
+    ot::Posix::NetifManager::Get().SetMtu(deviceName, kMaxIp6Size);
 }
 #endif
 
@@ -1358,22 +1082,7 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     VerifyOrDie(err == 0, OT_EXIT_ERROR_ERRNO);
 
     otLogInfoPlat("Tunnel device name = '%s'", deviceName);
-}
-#endif
-
-#if defined(__NetBSD__) || defined(__FreeBSD__)
-static otError destroyTunnel(void)
-{
-    otError      error;
-    struct ifreq ifr;
-
-    memset(&ifr, 0, sizeof(ifr));
-    strncpy(ifr.ifr_name, gNetifName, sizeof(ifr.ifr_name));
-    VerifyOrExit(ioctl(sIpFd, SIOCIFDESTROY, &ifr) == 0, perror("ioctl"); error = OT_ERROR_FAILED);
-    error = OT_ERROR_NONE;
-
-exit:
-    return error;
+    ot::Posix::NetifManager::Get().SetMtu(deviceName, kMaxIp6Size);
 }
 #endif
 
@@ -1415,60 +1124,9 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 }
 #endif
 
-static void platformConfigureNetLink(void)
-{
-#if defined(__linux__)
-    sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
-#elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    sNetlinkFd = socket(PF_ROUTE, SOCK_RAW, 0);
-#else
-#error "!! Unknown platform !!"
-#endif
-    VerifyOrDie(sNetlinkFd >= 0, OT_EXIT_ERROR_ERRNO);
-
-#if defined(__linux__)
-    {
-        struct sockaddr_nl sa;
-
-        memset(&sa, 0, sizeof(sa));
-        sa.nl_family = AF_NETLINK;
-        sa.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-        VerifyOrDie(bind(sNetlinkFd, reinterpret_cast<struct sockaddr *>(&sa), sizeof(sa)) == 0, OT_EXIT_ERROR_ERRNO);
-    }
-#endif
-
-#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    {
-        int status;
-#ifdef ROUTE_FILTER
-        unsigned int msgfilter = ROUTE_FILTER(RTM_IFINFO) | ROUTE_FILTER(RTM_NEWADDR) | ROUTE_FILTER(RTM_DELADDR) |
-                                 ROUTE_FILTER(RTM_NEWMADDR) | ROUTE_FILTER(RTM_DELMADDR);
-#define FILTER_CMD ROUTE_MSGFILTER
-#define FILTER_ARG msgfilter
-#define FILTER_ARG_SZ sizeof(msgfilter)
-#endif
-#ifdef RO_MSGFILTER
-        uint8_t msgfilter[] = {RTM_IFINFO, RTM_NEWADDR, RTM_DELADDR};
-#define FILTER_CMD RO_MSGFILTER
-#define FILTER_ARG msgfilter
-#define FILTER_ARG_SZ sizeof(msgfilter)
-#endif
-#if defined(ROUTE_FILTER) || defined(RO_MSGFILTER)
-        status = setsockopt(sNetlinkFd, AF_ROUTE, FILTER_CMD, FILTER_ARG, FILTER_ARG_SZ);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
-#endif
-        status = fcntl(sNetlinkFd, F_SETFL, O_NONBLOCK);
-        VerifyOrDie(status == 0, OT_EXIT_ERROR_ERRNO);
-    }
-#endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-}
-
 void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
 {
-    sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
-    VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
-
-    platformConfigureNetLink();
+    sNetlinkFd = ot::Posix::NetlinkManager::Get().GetFd();
     platformConfigureTunDevice(aInstance, aInterfaceName, gNetifName, sizeof(gNetifName));
 
     gNetifIndex = if_nametoindex(gNetifName);
@@ -1500,7 +1158,6 @@ void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *a
 
     assert(sTunFd >= 0);
     assert(sNetlinkFd >= 0);
-    assert(sIpFd >= 0);
 
     FD_SET(sTunFd, aReadFdSet);
     FD_SET(sTunFd, aErrorFdSet);
