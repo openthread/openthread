@@ -64,9 +64,9 @@ jobs:
     - name: Bootstrap
       run: |
         sudo dpkg --add-architecture i386
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
-        sudo apt-get --no-install-recommends install -y libreadline-dev:i386 libncurses-dev:i386
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y ninja-build python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
