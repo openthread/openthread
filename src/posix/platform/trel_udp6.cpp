@@ -629,11 +629,11 @@ void platformTrelInit(const char *aTrelUrl)
     {
         ot::Posix::RadioUrl url(aTrelUrl);
 
-        strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName));
+        strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName) - 1);
     }
     else
     {
-        strncpy(sInterfaceName, OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME, sizeof(sInterfaceName));
+        strncpy(sInterfaceName, OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME, sizeof(sInterfaceName) - 1);
     }
 
     sInterfaceName[sizeof(sInterfaceName) - 1] = 0;
