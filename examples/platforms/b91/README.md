@@ -32,7 +32,7 @@ $ make -f examples/Makefile-b91
 
 If the build completed successfully, the `elf` files may be found in `<path-to-openthread>/output/b91/bin`.
 
-You can download the [BDT tool][bdt-tool] and refer to the [user guide][user-guide] provided by Telink to burn the images to the board, in order to load the images with the [BDT tool][bdt-tool], the images must be converted to `bin`. This is done using `riscv32-elf-objcopy`
+You can download the [BDT tool][bdt-tool] and refer to the [user guide][user-guide] provided by Telink to burn the images to the board, in order to load the images with the [BDT tool][bdt-tool], the images must be converted to `bin`. This is done using `riscv32-elf-objcopy`.
 
 ```bash
 $ cd <path-to-openthread>/output/b91/bin
