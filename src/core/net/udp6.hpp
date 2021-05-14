@@ -172,6 +172,14 @@ public:
         Error Open(otUdpReceive aHandler, void *aContext);
 
         /**
+         * This method returns if the UDP socket is open.
+         *
+         * @returns If the UDP socket is open.
+         *
+         */
+        bool IsOpen(void) const;
+
+        /**
          * This method binds the UDP socket.
          *
          * @param[in]  aSockAddr            A reference to the socket address.
@@ -445,6 +453,16 @@ public:
      *
      */
     Error Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext);
+
+    /**
+     * This method returns if a UDP socket is open.
+     *
+     * @param[in]  aSocket   A reference to the socket.
+     *
+     * @returns If the UDP socket is open.
+     *
+     */
+    bool IsOpen(const SocketHandle &aSocket) const { return mSockets.Contains(aSocket); }
 
     /**
      * This method binds a UDP socket.

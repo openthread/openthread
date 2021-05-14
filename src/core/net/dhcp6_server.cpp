@@ -133,8 +133,13 @@ Error Server::UpdateService(void)
 
 void Server::Start(void)
 {
+    VerifyOrExit(!mSocket.IsOpen());
+
     IgnoreError(mSocket.Open(&Server::HandleUdpReceive, this));
     IgnoreError(mSocket.Bind(kDhcpServerPort));
+
+exit:
+    return;
 }
 
 void Server::Stop(void)

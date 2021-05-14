@@ -87,6 +87,11 @@ Error Udp::Socket::Open(otUdpReceive aHandler, void *aContext)
     return Get<Udp>().Open(*this, aHandler, aContext);
 }
 
+bool Udp::Socket::IsOpen(void) const
+{
+    return Get<Udp>().IsOpen(*this);
+}
+
 Error Udp::Socket::Bind(const SockAddr &aSockAddr, otNetifIdentifier aNetifIdentifier)
 {
     return Get<Udp>().Bind(*this, aSockAddr, aNetifIdentifier);
@@ -185,6 +190,8 @@ exit:
 Error Udp::Open(SocketHandle &aSocket, otUdpReceive aHandler, void *aContext)
 {
     Error error = kErrorNone;
+
+    OT_ASSERT(!IsOpen(aSocket));
 
     aSocket.GetSockName().Clear();
     aSocket.GetPeerName().Clear();
@@ -307,6 +314,8 @@ exit:
 Error Udp::Close(SocketHandle &aSocket)
 {
     Error error = kErrorNone;
+
+    VerifyOrExit(IsOpen(aSocket));
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     error = otPlatUdpClose(&aSocket);
