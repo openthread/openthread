@@ -57,6 +57,7 @@ void MulticastRoutingManager::Init(otInstance *aInstance)
 
     otBackboneRouterSetMulticastListenerCallback(aInstance,
                                                  &MulticastRoutingManager::HandleBackboneMulticastListenerEvent, this);
+    Mainloop::Manager::Get().Add(*this);
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void *                                 aContext,
@@ -138,24 +139,24 @@ exit:
     return found;
 }
 
-void MulticastRoutingManager::UpdateFdSet(fd_set &aReadFdSet, int &aMaxFd) const
+void MulticastRoutingManager::Update(otSysMainloopContext &aContext)
 {
     VerifyOrExit(IsEnabled());
 
-    FD_SET(mMulticastRouterSock, &aReadFdSet);
-    aMaxFd = OT_MAX(aMaxFd, mMulticastRouterSock);
+    FD_SET(mMulticastRouterSock, &aContext.mReadFdSet);
+    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mMulticastRouterSock);
 
 exit:
     return;
 }
 
-void MulticastRoutingManager::Process(const fd_set &aReadFdSet)
+void MulticastRoutingManager::Process(const otSysMainloopContext &aContext)
 {
     VerifyOrExit(IsEnabled());
 
     ExpireMulticastForwardingCache();
 
-    if (FD_ISSET(mMulticastRouterSock, &aReadFdSet))
+    if (FD_ISSET(mMulticastRouterSock, &aContext.mReadFdSet))
     {
         ProcessMulticastRouterMessages();
     }

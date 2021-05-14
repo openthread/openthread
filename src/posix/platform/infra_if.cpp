@@ -58,16 +58,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "lib/platform/exit_code.h"
-
-static char     sInfraIfName[IFNAMSIZ];
-static uint32_t sInfraIfIndex       = 0;
-static int      sInfraIfIcmp6Socket = -1;
-static int      sNetLinkSocket      = -1;
-
-static int  CreateIcmp6Socket(void);
-static int  CreateNetLinkSocket(void);
-static void ReceiveNetLinkMessage(otInstance *aInstance);
-static void ReceiveIcmp6Message(otInstance *aInstance);
+#include "posix/platform/infra_if.hpp"
 
 bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
 {
@@ -102,95 +93,19 @@ otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const uint8_t *     aBuffer,
                                  uint16_t            aBufferLength)
 {
-    otError error = OT_ERROR_NONE;
-
-    struct iovec        iov;
-    struct in6_pktinfo *packetInfo;
-
-    int                 hopLimit = 255;
-    uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo)) + CMSG_SPACE(sizeof(hopLimit))];
-    struct msghdr       msgHeader;
-    struct cmsghdr *    cmsgPointer;
-    ssize_t             rval;
-    struct sockaddr_in6 dest;
-
-    VerifyOrExit(sInfraIfIcmp6Socket >= 0, error = OT_ERROR_FAILED);
-    VerifyOrExit(aInfraIfIndex == sInfraIfIndex, error = OT_ERROR_DROP);
-
-    memset(cmsgBuffer, 0, sizeof(cmsgBuffer));
-
-    // Send the message
-    memset(&dest, 0, sizeof(dest));
-    dest.sin6_family = AF_INET6;
-    memcpy(&dest.sin6_addr, aDestAddress, sizeof(*aDestAddress));
-    if (IN6_IS_ADDR_LINKLOCAL(&dest.sin6_addr) || IN6_IS_ADDR_MC_LINKLOCAL(&dest.sin6_addr))
-    {
-        dest.sin6_scope_id = sInfraIfIndex;
-    }
-
-    iov.iov_base = const_cast<uint8_t *>(aBuffer);
-    iov.iov_len  = aBufferLength;
-
-    msgHeader.msg_namelen    = sizeof(dest);
-    msgHeader.msg_name       = &dest;
-    msgHeader.msg_iov        = &iov;
-    msgHeader.msg_iovlen     = 1;
-    msgHeader.msg_control    = cmsgBuffer;
-    msgHeader.msg_controllen = sizeof(cmsgBuffer);
-
-    // Specify the interface.
-    cmsgPointer             = CMSG_FIRSTHDR(&msgHeader);
-    cmsgPointer->cmsg_level = IPPROTO_IPV6;
-    cmsgPointer->cmsg_type  = IPV6_PKTINFO;
-    cmsgPointer->cmsg_len   = CMSG_LEN(sizeof(*packetInfo));
-    packetInfo              = (struct in6_pktinfo *)CMSG_DATA(cmsgPointer);
-    memset(packetInfo, 0, sizeof(*packetInfo));
-    packetInfo->ipi6_ifindex = sInfraIfIndex;
-
-    // Per section 6.1.2 of RFC 4861, we need to send the ICMPv6 message with IP Hop Limit 255.
-    cmsgPointer             = CMSG_NXTHDR(&msgHeader, cmsgPointer);
-    cmsgPointer->cmsg_level = IPPROTO_IPV6;
-    cmsgPointer->cmsg_type  = IPV6_HOPLIMIT;
-    cmsgPointer->cmsg_len   = CMSG_LEN(sizeof(hopLimit));
-    memcpy(CMSG_DATA(cmsgPointer), &hopLimit, sizeof(hopLimit));
-
-    rval = sendmsg(sInfraIfIcmp6Socket, &msgHeader, 0);
-    if (rval < 0)
-    {
-        otLogWarnPlat("failed to send ICMPv6 message: %s", strerror(errno));
-        ExitNow(error = OT_ERROR_FAILED);
-    }
-
-    if (static_cast<size_t>(rval) != iov.iov_len)
-    {
-        otLogWarnPlat("failed to send ICMPv6 message: partially sent");
-        ExitNow(error = OT_ERROR_FAILED);
-    }
-
-exit:
-    return error;
+    return ot::Posix::InfraNetif::Get().SendIcmp6Nd(aInfraIfIndex, *aDestAddress, aBuffer, aBufferLength);
 }
 
 bool platformInfraIfIsRunning(void)
 {
-    int          sock;
-    struct ifreq ifReq;
-
-    OT_ASSERT(sInfraIfIndex != 0);
-
-    sock = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketBlock);
-    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
-
-    memset(&ifReq, 0, sizeof(ifReq));
-    strncpy(ifReq.ifr_name, sInfraIfName, sizeof(ifReq.ifr_name));
-    VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
-
-    close(sock);
-
-    return (ifReq.ifr_flags & IFF_RUNNING);
+    return ot::Posix::InfraNetif::Get().IsRunning();
 }
 
-static int CreateIcmp6Socket(void)
+namespace ot {
+namespace Posix {
+namespace {
+
+int CreateIcmp6Socket(void)
 {
     int                 sock;
     int                 rval;
@@ -235,76 +150,8 @@ static int CreateIcmp6Socket(void)
     return sock;
 }
 
-uint32_t platformInfraIfInit(otInstance *aInstance, const char *aIfName)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    ssize_t  rval;
-    uint32_t ifIndex = 0;
-
-    if (strlen(aIfName) >= sizeof(sInfraIfName))
-    {
-        otLogCritPlat("infra interface name '%s' is too long", aIfName);
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    strcpy(sInfraIfName, aIfName);
-
-    // Initializes the infra interface.
-    ifIndex = if_nametoindex(aIfName);
-    if (ifIndex == 0)
-    {
-        otLogCritPlat("failed to get the index for infra interface %s", aIfName);
-        DieNow(OT_EXIT_INVALID_ARGUMENTS);
-    }
-    sInfraIfIndex = ifIndex;
-
-    sInfraIfIcmp6Socket = CreateIcmp6Socket();
-#ifdef __linux__
-    rval = setsockopt(sInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, sInfraIfName, strlen(sInfraIfName));
-#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
-    rval = setsockopt(sInfraIfIcmp6Socket, IPPROTO_IP, IP_BOUND_IF, &sInfraIfIndex, sizeof(sInfraIfIndex));
-#endif // __linux__
-    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
-
-    sNetLinkSocket = CreateNetLinkSocket();
-
-    return sInfraIfIndex;
-}
-
-void platformInfraIfDeinit(void)
-{
-    if (sInfraIfIcmp6Socket != -1)
-    {
-        close(sInfraIfIcmp6Socket);
-        sInfraIfIcmp6Socket = -1;
-    }
-
-    if (sNetLinkSocket != -1)
-    {
-        close(sNetLinkSocket);
-        sNetLinkSocket = -1;
-    }
-
-    sInfraIfIndex = 0;
-}
-
-void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
-{
-    VerifyOrExit(sInfraIfIcmp6Socket != -1);
-    VerifyOrExit(sNetLinkSocket != -1);
-
-    FD_SET(sInfraIfIcmp6Socket, &aReadFdSet);
-    aMaxFd = OT_MAX(aMaxFd, sInfraIfIcmp6Socket);
-
-    FD_SET(sNetLinkSocket, &aReadFdSet);
-    aMaxFd = OT_MAX(aMaxFd, sNetLinkSocket);
-
-exit:
-    return;
-}
-
 // Create a net-link socket that subscribes to link & addresses events.
-static int CreateNetLinkSocket(void)
+int CreateNetLinkSocket(void)
 {
     int                sock;
     int                rval;
@@ -324,7 +171,175 @@ static int CreateNetLinkSocket(void)
     return sock;
 }
 
-static void ReceiveNetLinkMessage(otInstance *aInstance)
+} // namespace
+
+otError InfraNetif::SendIcmp6Nd(uint32_t            aInfraIfIndex,
+                                const otIp6Address &aDestAddress,
+                                const uint8_t *     aBuffer,
+                                uint16_t            aBufferLength)
+{
+    otError error = OT_ERROR_NONE;
+
+    struct iovec        iov;
+    struct in6_pktinfo *packetInfo;
+
+    int                 hopLimit = 255;
+    uint8_t             cmsgBuffer[CMSG_SPACE(sizeof(*packetInfo)) + CMSG_SPACE(sizeof(hopLimit))];
+    struct msghdr       msgHeader;
+    struct cmsghdr *    cmsgPointer;
+    ssize_t             rval;
+    struct sockaddr_in6 dest;
+
+    VerifyOrExit(mInfraIfIcmp6Socket >= 0, error = OT_ERROR_FAILED);
+    VerifyOrExit(aInfraIfIndex == mInfraIfIndex, error = OT_ERROR_DROP);
+
+    memset(cmsgBuffer, 0, sizeof(cmsgBuffer));
+
+    // Send the message
+    memset(&dest, 0, sizeof(dest));
+    dest.sin6_family = AF_INET6;
+    memcpy(&dest.sin6_addr, &aDestAddress, sizeof(aDestAddress));
+    if (IN6_IS_ADDR_LINKLOCAL(&dest.sin6_addr) || IN6_IS_ADDR_MC_LINKLOCAL(&dest.sin6_addr))
+    {
+        dest.sin6_scope_id = mInfraIfIndex;
+    }
+
+    iov.iov_base = const_cast<uint8_t *>(aBuffer);
+    iov.iov_len  = aBufferLength;
+
+    msgHeader.msg_namelen    = sizeof(dest);
+    msgHeader.msg_name       = &dest;
+    msgHeader.msg_iov        = &iov;
+    msgHeader.msg_iovlen     = 1;
+    msgHeader.msg_control    = cmsgBuffer;
+    msgHeader.msg_controllen = sizeof(cmsgBuffer);
+
+    // Specify the interface.
+    cmsgPointer             = CMSG_FIRSTHDR(&msgHeader);
+    cmsgPointer->cmsg_level = IPPROTO_IPV6;
+    cmsgPointer->cmsg_type  = IPV6_PKTINFO;
+    cmsgPointer->cmsg_len   = CMSG_LEN(sizeof(*packetInfo));
+    packetInfo              = (struct in6_pktinfo *)CMSG_DATA(cmsgPointer);
+    memset(packetInfo, 0, sizeof(*packetInfo));
+    packetInfo->ipi6_ifindex = mInfraIfIndex;
+
+    // Per section 6.1.2 of RFC 4861, we need to send the ICMPv6 message with IP Hop Limit 255.
+    cmsgPointer             = CMSG_NXTHDR(&msgHeader, cmsgPointer);
+    cmsgPointer->cmsg_level = IPPROTO_IPV6;
+    cmsgPointer->cmsg_type  = IPV6_HOPLIMIT;
+    cmsgPointer->cmsg_len   = CMSG_LEN(sizeof(hopLimit));
+    memcpy(CMSG_DATA(cmsgPointer), &hopLimit, sizeof(hopLimit));
+
+    rval = sendmsg(mInfraIfIcmp6Socket, &msgHeader, 0);
+    if (rval < 0)
+    {
+        otLogWarnPlat("failed to send ICMPv6 message: %s", strerror(errno));
+        ExitNow(error = OT_ERROR_FAILED);
+    }
+
+    if (static_cast<size_t>(rval) != iov.iov_len)
+    {
+        otLogWarnPlat("failed to send ICMPv6 message: partially sent");
+        ExitNow(error = OT_ERROR_FAILED);
+    }
+
+exit:
+    return error;
+}
+
+bool InfraNetif::IsRunning(void) const
+{
+    int          sock;
+    struct ifreq ifReq;
+
+    OT_ASSERT(mInfraIfIndex != 0);
+
+    sock = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketBlock);
+    VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
+
+    memset(&ifReq, 0, sizeof(ifReq));
+    strncpy(ifReq.ifr_name, mInfraIfName, sizeof(ifReq.ifr_name));
+    VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
+
+    close(sock);
+
+    return (ifReq.ifr_flags & IFF_RUNNING);
+}
+
+void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
+{
+    ssize_t  rval;
+    uint32_t ifIndex = 0;
+
+    VerifyOrExit(aIfName != nullptr);
+
+    VerifyOrDie(strnlen(aIfName, sizeof(mInfraIfName)) <= sizeof(mInfraIfName) - 1, OT_EXIT_INVALID_ARGUMENTS);
+    strncpy(mInfraIfName, aIfName, sizeof(mInfraIfName));
+
+    // Initializes the infra interface.
+    ifIndex = if_nametoindex(aIfName);
+    if (ifIndex == 0)
+    {
+        otLogCritPlat("failed to get the index for infra interface %s", aIfName);
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+    mInfraIfIndex = ifIndex;
+
+    mInfraIfIcmp6Socket = CreateIcmp6Socket();
+#ifdef __linux__
+    rval = setsockopt(mInfraIfIcmp6Socket, SOL_SOCKET, SO_BINDTODEVICE, mInfraIfName, strlen(mInfraIfName));
+#else  // __NetBSD__ || __FreeBSD__ || __APPLE__
+    rval = setsockopt(mInfraIfIcmp6Socket, IPPROTO_IP, IP_BOUND_IF, &mInfraIfIndex, sizeof(mInfraIfIndex));
+#endif // __linux__
+    VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
+
+    mNetLinkSocket = CreateNetLinkSocket();
+
+    SuccessOrDie(otBorderRoutingInit(aInstance, ifIndex, platformInfraIfIsRunning()));
+    SuccessOrDie(otBorderRoutingSetEnabled(aInstance, /* aEnabled */ true));
+
+    mInstance = aInstance;
+    Mainloop::Manager::Get().Add(*this);
+
+exit:
+    return;
+}
+
+void InfraNetif::Deinit(void)
+{
+    Mainloop::Manager::Get().Remove(*this);
+
+    if (mInfraIfIcmp6Socket != -1)
+    {
+        close(mInfraIfIcmp6Socket);
+        mInfraIfIcmp6Socket = -1;
+    }
+
+    if (mNetLinkSocket != -1)
+    {
+        close(mNetLinkSocket);
+        mNetLinkSocket = -1;
+    }
+
+    mInfraIfIndex = 0;
+}
+
+void InfraNetif::Update(otSysMainloopContext &aContext)
+{
+    VerifyOrExit(mInfraIfIcmp6Socket != -1);
+    VerifyOrExit(mNetLinkSocket != -1);
+
+    FD_SET(mInfraIfIcmp6Socket, &aContext.mReadFdSet);
+    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mInfraIfIcmp6Socket);
+
+    FD_SET(mNetLinkSocket, &aContext.mReadFdSet);
+    aContext.mMaxFd = OT_MAX(aContext.mMaxFd, mNetLinkSocket);
+
+exit:
+    return;
+}
+
+void InfraNetif::ReceiveNetLinkMessage(void)
 {
     const size_t kMaxNetLinkBufSize = 8192;
     ssize_t      len;
@@ -334,7 +349,7 @@ static void ReceiveNetLinkMessage(otInstance *aInstance)
         uint8_t  mBuffer[kMaxNetLinkBufSize];
     } msgBuffer;
 
-    len = recv(sNetLinkSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
+    len = recv(mNetLinkSocket, msgBuffer.mBuffer, sizeof(msgBuffer.mBuffer), 0);
     if (len < 0)
     {
         otLogCritPlat("failed to receive netlink message: %s", strerror(errno));
@@ -353,7 +368,7 @@ static void ReceiveNetLinkMessage(otInstance *aInstance)
         case RTM_DELADDR:
         case RTM_NEWLINK:
         case RTM_DELLINK:
-            SuccessOrDie(otPlatInfraIfStateChanged(aInstance, sInfraIfIndex, platformInfraIfIsRunning()));
+            SuccessOrDie(otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, platformInfraIfIsRunning()));
             break;
         case NLMSG_ERROR:
         {
@@ -371,7 +386,7 @@ exit:
     return;
 }
 
-static void ReceiveIcmp6Message(otInstance *aInstance)
+void InfraNetif::ReceiveIcmp6Message(void)
 {
     otError  error = OT_ERROR_NONE;
     uint8_t  buffer[1500];
@@ -400,7 +415,7 @@ static void ReceiveIcmp6Message(otInstance *aInstance)
     msg.msg_control    = cmsgbuf;
     msg.msg_controllen = sizeof(cmsgbuf);
 
-    rval = recvmsg(sInfraIfIcmp6Socket, &msg, 0);
+    rval = recvmsg(mInfraIfIcmp6Socket, &msg, 0);
     if (rval < 0)
     {
         otLogWarnPlat("failed to receive ICMPv6 message: %s", strerror(errno));
@@ -427,13 +442,13 @@ static void ReceiveIcmp6Message(otInstance *aInstance)
         }
     }
 
-    VerifyOrExit(ifIndex == sInfraIfIndex, error = OT_ERROR_DROP);
+    VerifyOrExit(ifIndex == mInfraIfIndex, error = OT_ERROR_DROP);
 
     // We currently accept only RA & RS messages for the Border Router and it requires that
     // the hoplimit must be 255 and the source address must be a link-local address.
     VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr), error = OT_ERROR_DROP);
 
-    otPlatInfraIfRecvIcmp6Nd(aInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
+    otPlatInfraIfRecvIcmp6Nd(mInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
                              bufferLength);
 
 exit:
@@ -443,23 +458,32 @@ exit:
     }
 }
 
-void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet)
+void InfraNetif::Process(const otSysMainloopContext &aContext)
 {
-    VerifyOrExit(sInfraIfIcmp6Socket != -1);
-    VerifyOrExit(sNetLinkSocket != -1);
+    VerifyOrExit(mInfraIfIcmp6Socket != -1);
+    VerifyOrExit(mNetLinkSocket != -1);
 
-    if (FD_ISSET(sInfraIfIcmp6Socket, &aReadFdSet))
+    if (FD_ISSET(mInfraIfIcmp6Socket, &aContext.mReadFdSet))
     {
-        ReceiveIcmp6Message(aInstance);
+        ReceiveIcmp6Message();
     }
 
-    if (FD_ISSET(sNetLinkSocket, &aReadFdSet))
+    if (FD_ISSET(mNetLinkSocket, &aContext.mReadFdSet))
     {
-        ReceiveNetLinkMessage(aInstance);
+        ReceiveNetLinkMessage();
     }
 
 exit:
     return;
 }
 
+InfraNetif &InfraNetif::Get(void)
+{
+    static InfraNetif sInstance;
+
+    return sInstance;
+}
+
+} // namespace Posix
+} // namespace ot
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
