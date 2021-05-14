@@ -663,7 +663,6 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             break;
         case ThreadStatusTlv::kDuaInvalid:
         case ThreadStatusTlv::kDuaDuplicate:
-            SendAddressNotification(target, static_cast<ThreadStatusTlv::DuaStatus>(status), *child);
             IgnoreError(child->RemoveIp6Address(target));
             mChildDuaMask.Set(mChildIndexDuaRegistering, false);
             mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
@@ -673,6 +672,11 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         case ThreadStatusTlv::kDuaGeneralFailure:
             UpdateReregistrationDelay();
             break;
+        }
+
+        if (status != ThreadStatusTlv::kDuaSuccess)
+        {
+            SendAddressNotification(target, static_cast<ThreadStatusTlv::DuaStatus>(status), *child);
         }
     }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
