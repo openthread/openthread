@@ -117,6 +117,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
         break;
     }
 
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     case Message::kTypeSupervision:
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
@@ -124,6 +125,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
         mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
+#endif
 
     default:
         aMessage.SetDirectTransmission();
