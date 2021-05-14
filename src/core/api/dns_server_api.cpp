@@ -41,8 +41,6 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-using QueryTransaction = ot::Dns::ServiceDiscovery::Server::QueryTransaction;
-
 void otDnssdQuerySetCallbacks(otInstance *                    aInstance,
                               otDnssdQuerySubscribeCallback   aSubscribe,
                               otDnssdQueryUnsubscribeCallback aUnsubscribe,
@@ -77,22 +75,18 @@ void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFu
 
 const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery)
 {
-    Instance &              instance = *static_cast<Instance *>(aInstance);
-    const QueryTransaction *query    = static_cast<const QueryTransaction *>(aQuery);
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Dns::ServiceDiscovery::Server>().GetNextQuery(query);
+    return instance.Get<Dns::ServiceDiscovery::Server>().GetNextQuery(aQuery);
 }
 
 otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE])
 {
-    otDnssdQueryType        type  = OT_DNSSD_QUERY_TYPE_NONE;
-    const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
+    otDnssdQueryType type = OT_DNSSD_QUERY_TYPE_NONE;
 
     OT_ASSERT(aQuery != nullptr);
     OT_ASSERT(aNameOutput != nullptr);
-    OT_ASSERT(query->IsValid());
-    type = static_cast<otDnssdQueryType>(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(
-        query->GetResponseHeader(), query->GetResponseMessage(), *aNameOutput));
+    type = static_cast<otDnssdQueryType>(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(aQuery, *aNameOutput));
 
     return type;
 }

@@ -962,14 +962,15 @@ void Server::HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostIn
     }
 }
 
-const Server::QueryTransaction *Server::GetNextQuery(const QueryTransaction *aQuery) const
+const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
 {
     const QueryTransaction *now   = &mQueryTransactions[0];
     const QueryTransaction *found = nullptr;
+    const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
 
     if (aQuery != nullptr)
     {
-        now = aQuery + 1;
+        now = query + 1;
     }
     for (; now < &mQueryTransactions[OT_ARRAY_LENGTH(mQueryTransactions)]; now++)
     {
@@ -979,7 +980,15 @@ const Server::QueryTransaction *Server::GetNextQuery(const QueryTransaction *aQu
             break;
         }
     }
-    return found;
+    return static_cast<const otDnssdQuery *>(found);
+}
+
+Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize])
+{
+    const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
+
+    OT_ASSERT(query->IsValid());
+    return GetQueryTypeAndName(query->GetResponseHeader(), query->GetResponseMessage(), aName);
 }
 
 Server::DnsQueryType Server::GetQueryTypeAndName(const Header & aHeader,
