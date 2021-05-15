@@ -2,6 +2,7 @@
 FROM ubuntu:18.04
 
 ENV DEBIAN_FRONTEND noninteractive
+ARG OT_GIT_REF=main
 
 # Install dependencies:
 RUN apt-get update -qq
@@ -12,10 +13,11 @@ RUN apt-get --no-install-recommends install -y git sudo software-properties-comm
     && update-ca-certificates
 
 # Install OpenThread
-RUN mkdir -p ~/src && \
-    cd ~/src && \
-    git clone --recursive https://github.com/openthread/openthread.git && \
-    cd openthread && \
+RUN mkdir -p ~/src/openthread && \
+    cd ~/src/openthread && \
+    git init . && \
+    git fetch https://github.com/openthread/openthread.git ${OT_GIT_REF} && \
+    git checkout FETCH_HEAD && \
     ./script/bootstrap && \
     ./bootstrap && \
     make -f examples/Makefile-simulation
