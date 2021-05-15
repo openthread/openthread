@@ -16,70 +16,98 @@ The figure below shows the architecture of OpenThread running in transceiver mod
          POSIX                                          Chip
 ```
 
-## Build
+## Build POSIX CLI
 
 ```sh
-# build core for POSIX
-make -f src/posix/Makefile-posix
-# build transceiver, where xxxx is the platform name, such as cc2538, nrf52840 and so on
-make -f examples/Makefile-xxxx
+./script/cmake-build posix
 ```
 
-## Test
+If built successfully, the binary should be found at: `build/posix/src/posix/ot-cli`.
+
+## Transceivers on different platforms
+
+### Simulation
+
+OpenThread provides an implemenation on the simulation platform which enables running a simulated transceiver on the host.
+
+#### Build
+
+```sh
+# Only build RCP so that it goes faster
+./script/cmake-build simulation -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
+```
+
+#### Run
 
 **NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md). You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
 
-### With Simulation
-
 ```sh
-make -f examples/Makefile-simulation
-./output/posix/bin/ot-cli 'spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
+./build/posix/src/posix/ot-cli 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 ```
 
-### With Real Device
+### nRF52840
 
-#### nRF52840
+The nRF example platform driver can be found in the [ot-nrf528xx](https://github.com/openthread/ot-nrf528xx) repo. To build transceivers on the nRF platform, we must clone that repo.
 
-- USB=0
+#### Clone the repo
 
 ```sh
-make -f examples/Makefile-nrf52840
-arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
+# `cd` to your directory to clone the repo
+git clone https://github.com/openthread/ot-nrf528xx.git
+cd ot-nrf528xx
+
+# Init and update submodules
+git submodule init
+git submodule update --recursive
+```
+
+#### Build
+
+- DK
+
+```sh
+./script/build nrf52840 UART_trans -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
+```
+
+- Dongle
+
+```sh
+./script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
+```
+
+#### Flash
+
+```sh
+arm-none-eabi-objcopy -O ihex build/bin/ot-rcp ot-rcp.hex
 nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
-nrfjprog -f nrf52 --pinresetenable
-nrfjprog -f nrf52 --reset
-
-# Disable MSD
-expect <<EOF
-spawn JLinkExe
-expect "J-Link>"
-send "msddisable\n"
-expect "Probe configured successfully."
-exit
-EOF
-
-./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 ```
 
-- USB=1
+#### Run
 
 ```sh
-# without USB=1 may result in failure for serial port issue
-make -f examples/Makefile-nrf52840 USB=1
-arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
-nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
-# plug the CDC serial USB port
-./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 ```
 
-#### CC2538
+### CC2538
+
+#### Build
+
+```
+./script/cmake-build cc2538 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
+```
+
+#### Flash
 
 ```sh
-make -f examples/Makefile-cc2538
-arm-none-eabi-objcopy -O binary output/cc2538/bin/ot-rcp ot-rcp.bin
+arm-none-eabi-objcopy -O ihex build/cc2538/examples/apps/ncp/ot-rcp ot-rcp.bin
 # see https://github.com/JelmerT/cc2538-bsl
 python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
-./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
+```
+
+#### Run
+
+```sh
+./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
 ```
 
 ## Daemon Mode
@@ -88,11 +116,11 @@ OpenThread Posix Daemon mode uses a unix socket as input and output, so that Ope
 
 ```
 # build daemon mode core stack for POSIX
-make -f src/posix/Makefile-posix DAEMON=1
+./script/cmake-build posix -DOT_DAEMON=ON
 # Daemon with simulation
-./output/posix/bin/ot-daemon 'spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 # Daemon with real device
-./output/posix/bin/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 # Built-in controller
-./output/posix/bin/ot-ctl
+./build/posix/src/posix/ot-ctl
 ```
