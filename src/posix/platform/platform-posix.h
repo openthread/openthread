@@ -160,10 +160,10 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
  * @note Even when @p aPlatformConfig->mResetRadio is false, a reset event (i.e. a PROP_LAST_STATUS between
  * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
  *
- * @param[in]  aPlatformConfig  Platform configuration structure.
+ * @param[in]   aUrl  A pointer to the null-terminated radio URL.
  *
  */
-void platformRadioInit(otUrl *aRadioUrl);
+void platformRadioInit(const char *aUrl);
 
 /**
  * This function shuts down the radio service used by OpenThread.
