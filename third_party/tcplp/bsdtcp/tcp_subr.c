@@ -30,6 +30,7 @@
  */
 
 #include <errno.h>
+#include <stddef.h>
 #include <string.h>
 
 #include "../tcplp.h"
@@ -226,17 +227,15 @@ tcp_state_change(struct tcpcb *tp, int newstate)
 
  /* This is based on tcp_newtcb in tcp_subr.c, and tcp_usr_attach in tcp_usrreq.c.
     The length of the reassembly bitmap is fixed at ceil(0.125 * recvbuflen). */
-__attribute__((used)) void initialize_tcb(struct tcpcb* tp, const struct in6_addr* laddr, uint16_t lport, uint8_t* sendbuf, size_t sendbuflen, uint8_t* recvbuf, size_t recvbuflen, uint8_t* reassbmp) {
+__attribute__((used)) void initialize_tcb(struct tcpcb* tp) {
 	uint32_t ticks = tcplp_sys_get_ticks();
-	otInstance *instance = tp->instance;
 
-    memset(tp, 0x00, sizeof(struct tcpcb));
+    memset(((uint8_t*) tp) + offsetof(struct tcpcb, laddr), 0x00, sizeof(struct tcpcb) - offsetof(struct tcpcb, laddr));
     tp->reass_fin_index = -1;
-    if (laddr != NULL) {
-        memcpy(&tp->laddr, laddr, sizeof(tp->laddr));
-    }
-    tp->lport = lport;
-    tp->instance = instance;
+    // if (laddr != NULL) {
+    //     memcpy(&tp->laddr, laddr, sizeof(tp->laddr));
+    // }
+    // tp->lport = lport;
     // Congestion control algorithm.
 
     // I only implement New Reno, so I'm not going to waste memory in each socket describing what the congestion algorithm is; it's always New Reno
@@ -271,13 +270,6 @@ __attribute__((used)) void initialize_tcb(struct tcpcb* tp, const struct in6_add
 
 	/* From tcp_usr_attach in tcp_usrreq.c. */
 	tp->t_state = TCP6S_CLOSED;
-
-	cbuf_init(&tp->sendbuf, sendbuf, sendbuflen);
-	if (recvbuf) {
-	    cbuf_init(&tp->recvbuf, recvbuf, recvbuflen);
-	    tp->reassbmp = reassbmp;
-	    bmp_init(tp->reassbmp, BITS_TO_BYTES(recvbuflen));
-	}
 }
 
 void
@@ -630,7 +622,7 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 
     otMessageWrite(message, 0, &th, sizeof(struct tcphdr));
 
-    tcplp_sys_send_message(tp->instance, message, &ip6info);
+    tcplp_sys_send_message(instance, message, &ip6info);
 #if 0
 	/* Essentially all the code needs to be discarded because I need to send packets the TinyOS way.
 	   There are some parts that I copied; I didn't want to comment out everything except the few

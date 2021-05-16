@@ -37,6 +37,7 @@
 #include <sys/types.h>
 
 #include <openthread/message.h>
+#include <openthread/tcp.h>
 
 /*
  * Copiers for copying from/into cbufs into/from arrays or OpenThraed messages
@@ -167,6 +168,22 @@ size_t cbuf_pop(struct cbufhead* chdr, size_t numbytes) {
     }
     chdr->r_index = (chdr->r_index + numbytes) % chdr->size;
     return numbytes;
+}
+
+void cbuf_reference(const struct cbufhead* chdr, otLinkedBuffer* first, otLinkedBuffer* second) {
+    if (chdr->w_index >= chdr->r_index) {
+        first->mNext = NULL;
+        first->mData = &chdr->buf[chdr->r_index];
+        first->mLength = chdr->w_index - chdr->r_index;
+    } else {
+        first->mNext = second;
+        first->mData = &chdr->buf[chdr->r_index];
+        first->mLength = chdr->size - chdr->r_index;
+
+        second->mNext = NULL;
+        second->mData = &chdr->buf[0];
+        second->mLength = chdr->w_index;
+    }
 }
 
 /* Writes DATA to the unused portion of the buffer, at the position OFFSET past

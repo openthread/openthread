@@ -103,6 +103,7 @@ struct tcptemp {
 struct tcpcb_listen {
     int t_state;     /* Always CLOSED or LISTEN. */
     otInstance* instance;
+	struct in6_addr laddr;
     uint16_t lport;
 };
 
@@ -136,7 +137,6 @@ struct tcpcb_listen {
  * Organized for 16 byte cacheline efficiency.
  */
 struct tcpcb {
-    uint8_t	t_state;		/* state of this connection */
 
 	/* Extra fields that I added. */
 	otInstance *instance;
@@ -146,14 +146,16 @@ struct tcpcb {
 	struct cbufhead sendbuf;
 	struct cbufhead recvbuf;
 	uint8_t* reassbmp;
-	int16_t reass_fin_index;
+	int32_t reass_fin_index;
+
+	struct in6_addr laddr; // local IP address
+	struct in6_addr faddr; // foreign IP address
 
 	uint16_t lport; // local port, network byte order
 	uint16_t fport; // foreign port, network byte order
 	uint8_t miscflags;
 
-	struct in6_addr laddr; // local IP address
-	struct in6_addr faddr; // foreign IP address
+	uint8_t	t_state;		/* state of this connection */
 
 #if 0 // I used unused space in the receive buffer for the reassembly queue
 	struct	tsegqe_head t_segq;	/* segment reassembly queue */
@@ -301,7 +303,7 @@ struct tcpcb {
 };
 
 /* Defined in tcp_subr.c. */
-void initialize_tcb(struct tcpcb* tp, const struct in6_addr* laddr, uint16_t lport, uint8_t* sendbuf, size_t sendbuflen, uint8_t* recvbuf, size_t recvbuflen, uint8_t* reassbmp);
+void initialize_tcb(struct tcpcb* tp);
 
 /* Copied from the "dead" portions below. */
 
