@@ -479,13 +479,13 @@ tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otIn
 	if (th->th_flags & TH_ACK) {
 //		tcp_respond(tp, mtod(m, void *), th, m, (tcp_seq)0,
 //		    th->th_ack, TH_RST);
-		tcp_respond(tp, tp->instance, ip6, th, (tcp_seq) 0, th->th_ack, TH_RST);
+		tcp_respond(tp, instance, ip6, th, (tcp_seq) 0, th->th_ack, TH_RST);
 	} else {
 		if (th->th_flags & TH_SYN)
 			tlen++;
 //		tcp_respond(tp, mtod(m, void *), th, m, th->th_seq+tlen,
 //		    (tcp_seq)0, TH_RST|TH_ACK);
-		tcp_respond(tp, tp->instance, ip6, th, th->th_seq + tlen, (tcp_seq) 0, TH_RST | TH_ACK);
+		tcp_respond(tp, instance, ip6, th, th->th_seq + tlen, (tcp_seq) 0, TH_RST | TH_ACK);
 	}
 	return;
 /*
