@@ -82,12 +82,9 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
-#include "common/encoding.hpp"
 #include "common/new.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
-
-using ot::Encoding::BigEndian::HostSwap16;
 
 namespace ot {
 namespace Cli {
@@ -164,10 +161,11 @@ void Interpreter::OutputEnabledDisabledStatus(bool aEnabled)
 
 int Interpreter::OutputIp6Address(const otIp6Address &aAddress)
 {
-    return OutputFormat(
-        "%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(aAddress.mFields.m16[0]), HostSwap16(aAddress.mFields.m16[1]),
-        HostSwap16(aAddress.mFields.m16[2]), HostSwap16(aAddress.mFields.m16[3]), HostSwap16(aAddress.mFields.m16[4]),
-        HostSwap16(aAddress.mFields.m16[5]), HostSwap16(aAddress.mFields.m16[6]), HostSwap16(aAddress.mFields.m16[7]));
+    char string[OT_IP6_ADDRESS_STRING_SIZE];
+
+    otIp6AddressToString(&aAddress, string, sizeof(string));
+
+    return OutputFormat("%s", string);
 }
 
 otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)

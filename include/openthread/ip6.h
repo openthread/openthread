@@ -562,7 +562,7 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
- * Convert a human-readable IPv6 address string into a binary representation.
+ * This function converts a human-readable IPv6 address string into a binary representation.
  *
  * @param[in]   aString   A pointer to a NULL-terminated string.
  * @param[out]  aAddress  A pointer to an IPv6 address.
@@ -572,6 +572,39 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
  *
  */
 otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
+
+#define OT_IP6_ADDRESS_STRING_SIZE 40 ///< Recommended size for string representation of an IPv6 address.
+
+/**
+ * This function converts a given IPv6 address to a human-readable string.
+ *
+ * The IPv6 address string is formatted as 16 hex values separated by ':' (i.e., "%x:%x:%x:...:%x").
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aAddress  A pointer to an IPv6 address (MUST NOT be NULL).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_ADDRESS_STRING_SIZE`.
+ *
+ */
+void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize);
+
+#define OT_IP6_PREFIX_STRING_SIZE 45 ///< Recommended size for string representation of an IPv6 prefix.
+/**
+ * This function converts a given IPv6 prefix to a human-readable string.
+ *
+ * The IPv6 address string is formatted as "%x:%x:%x:...[::]/plen".
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aPrefix   A pointer to an IPv6 prefix (MUST NOT be NULL).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_PREFIX_STRING_SIZE`.
+ *
+ */
+void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize);
 
 /**
  * This function returns the prefix match length (bits) for two IPv6 addresses.

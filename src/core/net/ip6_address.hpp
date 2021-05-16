@@ -101,7 +101,7 @@ public:
 
     enum : uint16_t
     {
-        kInfoStringSize = 45, ///< Max chars for the info string (`ToString()`).
+        kInfoStringSize = OT_IP6_PREFIX_STRING_SIZE, ///< Max chars for the info string (`ToString()`).
     };
 
     /**
@@ -275,11 +275,29 @@ public:
     /**
      * This method converts the prefix to a string.
      *
+     * The IPv6 prefix string is formatted as "%x:%x:%x:...[::]/plen".
+     *
      * @returns An `InfoString` containing the string representation of the Prefix.
      *
      */
     InfoString ToString(void) const;
 
+    /**
+     * This method converts the prefix to a string.
+     *
+     * The IPv6 prefix string is formatted as "%x:%x:%x:...[::]/plen".
+     *
+     * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
+     * truncated but the outputted string is always null-terminated.
+     *
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be nullptr).
+     * @param[in]  aSize     The size of @p aBuffer (in bytes).
+     *
+     */
+    void ToString(char *aBuffer, uint16_t aSize) const;
+
+private:
+    void ToString(StringWriter &aWriter) const;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -489,6 +507,8 @@ private:
 OT_TOOL_PACKED_BEGIN
 class Address : public otIp6Address, public Equatable<Address>, public Clearable<Address>
 {
+    friend class Prefix;
+
 public:
     /**
      * Masks
@@ -505,8 +525,8 @@ public:
      */
     enum
     {
-        kSize                 = OT_IP6_ADDRESS_SIZE, ///< Size of an IPv6 Address (in bytes).
-        kIp6AddressStringSize = 40, ///< Max buffer size in bytes to store an IPv6 address in string format.
+        kSize           = OT_IP6_ADDRESS_SIZE,        ///< Size of an IPv6 Address (in bytes).
+        kInfoStringSize = OT_IP6_ADDRESS_STRING_SIZE, ///< Max string size for an IPv6 address in string format.
     };
 
     /**
@@ -540,7 +560,7 @@ public:
      * This type defines the fixed-length `String` object returned from `ToString()`.
      *
      */
-    typedef String<kIp6AddressStringSize> InfoString;
+    typedef String<kInfoStringSize> InfoString;
 
     /**
      * This method gets the IPv6 address as a pointer to a byte array.
@@ -917,12 +937,28 @@ public:
     Error FromString(const char *aString);
 
     /**
-     * This method converts an IPv6 address object to a string
+     * This method converts the IPv6 address to a string.
+     *
+     * The IPv6 address string is formatted as 16 hex values separated by ':' (i.e., "%x:%x:%x:...:%x").
      *
      * @returns An `InfoString` representing the IPv6 address.
      *
      */
     InfoString ToString(void) const;
+
+    /**
+     * This method convert the IPv6 address to a C string.
+     *
+     * The IPv6 address string is formatted as 16 hex values separated by ':' (i.e., "%x:%x:%x:...:%x").
+     *
+     * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
+     * truncated but the outputted string is always null-terminated.
+     *
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be nullptr).
+     * @param[in]  aSize     The size of @p aBuffer (in bytes).
+     *
+     */
+    void ToString(char *aBuffer, uint16_t aSize) const;
 
     /**
      * This method overloads operator `<` to compare two IPv6 addresses.
@@ -938,6 +974,8 @@ public:
 private:
     void SetPrefix(uint8_t aOffset, const uint8_t *aPrefix, uint8_t aPrefixLength);
     void SetToLocator(const NetworkPrefix &aNetworkPrefix, uint16_t aLocator);
+    void ToString(StringWriter &aWriter) const;
+    void AppendHexWords(StringWriter &aWriter, uint8_t aLength) const;
 
     static const Address &GetLinkLocalAllNodesMulticast(void);
     static const Address &GetLinkLocalAllRoutersMulticast(void);
