@@ -139,8 +139,12 @@ ThreadNetif::ThreadNetif(Instance &aInstance)
     , mSrpServer(aInstance)
 #endif
 
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
     , mChildSupervisor(aInstance)
+#endif
     , mSupervisionListener(aInstance)
+#endif
     , mAnnounceBegin(aInstance)
     , mPanIdQuery(aInstance)
     , mEnergyScan(aInstance)
