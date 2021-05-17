@@ -1559,6 +1559,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
                 uint8_t flagsLength = 1;
 
                 SuccessOrExit(error = mDecoder.ReadUint16(aDataset.mSecurityPolicy.mRotationTime));
+                VerifyOrExit(aDataset.mSecurityPolicy.mRotationTime != 0, error = OT_ERROR_INVALID_ARGS);
                 SuccessOrExit(error = mDecoder.ReadUint8(flags[0]));
                 if (otThreadGetVersion() >= OT_THREAD_VERSION_1_2 && mDecoder.GetRemainingLengthInStruct() > 0)
                 {

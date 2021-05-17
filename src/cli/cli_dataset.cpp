@@ -821,6 +821,7 @@ Error Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t aA
 
     memset(&policy, 0, sizeof(policy));
     SuccessOrExit(error = aArgs[0].ParseAsUint16(policy.mRotationTime));
+    VerifyOrExit(policy.mRotationTime != 0, error = OT_ERROR_INVALID_ARGS);
 
     VerifyOrExit(aArgsLength >= 2);
 
