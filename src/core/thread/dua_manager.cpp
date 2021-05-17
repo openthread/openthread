@@ -476,7 +476,7 @@ void DuaManager::PerformNextRegistration(void)
         const Ip6::Address *duaPtr = nullptr;
         Child *             child  = nullptr;
 
-        if (!mRegisterCurrentChildIndex)
+        if (!mRegisterCurrentChildIndex || !mChildDuaMask.Get(mChildIndexDuaRegistering))
         {
             for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
             {
@@ -623,8 +623,11 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             mDuaState             = kRegistered;
             break;
         case ThreadStatusTlv::kDuaReRegister:
-            mDuaState                  = kToRegister;
-            mDelay.mFields.mCheckDelay = Mle::kImmediateReRegisterDelay;
+            if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
+            {
+                RemoveDomainUnicastAddress();
+                AddDomainUnicastAddress();
+            }
             break;
         case ThreadStatusTlv::kDuaInvalid:
             // Domain Prefix might be invalid.
@@ -659,7 +662,9 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             break;
         case ThreadStatusTlv::kDuaReRegister:
             mRegisterCurrentChildIndex = true;
-            mDelay.mFields.mCheckDelay = Mle::kImmediateReRegisterDelay;
+            // Parent stops registering for the Child's DUA until next Child Update Request
+            mChildDuaMask.Set(mChildIndexDuaRegistering, false);
+            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
             break;
         case ThreadStatusTlv::kDuaInvalid:
         case ThreadStatusTlv::kDuaDuplicate:
@@ -747,7 +752,8 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         mChildDuaRegisteredMask.Set(childIndex, false);
     }
 
-    if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged)
+    if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged ||
+        (aState == Mle::ChildDuaState::kUnchanged && !mChildDuaMask.Get(childIndex)))
     {
         if (mChildDuaMask == mChildDuaRegisteredMask)
         {
