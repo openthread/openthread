@@ -145,6 +145,7 @@ LOCAL_EXPORT_C_INCLUDE_DIRS     := \
 
 LOCAL_CPPFLAGS                                                              := \
     -std=c++11                                                                 \
+    -Wno-error=non-virtual-dtor                                                \
     -pedantic-errors                                                           \
     $(NULL)
 
@@ -355,6 +356,7 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/hdlc_interface.cpp                           \
     src/posix/platform/infra_if.cpp                                 \
     src/posix/platform/logging.cpp                                  \
+    src/posix/platform/mainloop.cpp                                 \
     src/posix/platform/memory.cpp                                   \
     src/posix/platform/misc.cpp                                     \
     src/posix/platform/multicast_routing.cpp                        \

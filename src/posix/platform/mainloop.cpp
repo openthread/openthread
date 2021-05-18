@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,56 +26,61 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements the platform Backbone interface management on Linux.
- */
-
-#include "openthread-posix-config.h"
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-
-#include "multicast_routing.hpp"
-#include "platform-posix.h"
-#include "common/code_utils.hpp"
 #include "posix/platform/mainloop.hpp"
 
-char         gBackboneNetifName[IFNAMSIZ] = "";
-unsigned int gBackboneNetifIndex          = 0;
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-static ot::Posix::MulticastRoutingManager sMulticastRoutingManager;
-#endif
+#include <assert.h>
 
-void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
+#include "core/common/code_utils.hpp"
+
+namespace ot {
+namespace Posix {
+namespace Mainloop {
+
+void Manager::Add(Source &aSource)
 {
-    OT_UNUSED_VARIABLE(aInstance);
+    assert(aSource.mNext == nullptr);
 
-    VerifyOrExit(aInterfaceName != nullptr);
-
-    VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strncpy(gBackboneNetifName, aInterfaceName, sizeof(gBackboneNetifName));
-
-    gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
-    VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
-
-    otLogInfoPlat("Backbone interface is configured to %s (%d)", gBackboneNetifName, gBackboneNetifIndex);
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    sMulticastRoutingManager.Init(aInstance);
-#endif
-
-exit:
-    return;
+    aSource.mNext = mSources;
+    mSources      = &aSource;
 }
 
-void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)
+void Manager::Remove(Source &aSource)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aFlags);
+    for (Source **pnext = &mSources; *pnext != nullptr; pnext = &(*pnext)->mNext)
+    {
+        if (*pnext == &aSource)
+        {
+            *pnext = aSource.mNext;
+            break;
+        }
+    }
 
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    sMulticastRoutingManager.HandleStateChange(aInstance, aFlags);
-#endif
+    aSource.mNext = nullptr;
 }
 
-#endif
+void Manager::Update(otSysMainloopContext &aContext)
+{
+    for (Source *source = mSources; source != nullptr; source = source->mNext)
+    {
+        source->Update(aContext);
+    }
+}
+
+void Manager::Process(const otSysMainloopContext &aContext)
+{
+    for (Source *source = mSources; source != nullptr; source = source->mNext)
+    {
+        source->Process(aContext);
+    }
+}
+
+Manager &Manager::Get(void)
+{
+    static Manager sInstance;
+
+    return sInstance;
+}
+
+} // namespace Mainloop
+} // namespace Posix
+} // namespace ot

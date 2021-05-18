@@ -76,6 +76,7 @@ add_library(openthread-posix
     hdlc_interface.cpp
     infra_if.cpp
     logging.cpp
+    mainloop.cpp
     memory.cpp
     misc.cpp
     multicast_routing.cpp
