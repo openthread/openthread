@@ -539,7 +539,8 @@ LOCAL_LDLIBS                               := \
     -lutil
 
 LOCAL_SRC_FILES                            := \
-    src/posix/cli.cpp                         \
+    src/posix/cli_readline.cpp                \
+    src/posix/cli_stdio.cpp                   \
     src/posix/main.c                          \
     $(NULL)
 
