@@ -61,7 +61,6 @@ DuaManager::DuaManager(Instance &aInstance)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     , mChildIndexDuaRegistering(0)
-    , mRegisterCurrentChildIndex(false)
 #endif
 {
     mDelay.mValue = 0;
@@ -98,7 +97,6 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
         {
             mChildDuaMask.Clear();
             mChildDuaRegisteredMask.Clear();
-            mRegisterCurrentChildIndex = false;
         }
 #endif
     }
@@ -476,7 +474,7 @@ void DuaManager::PerformNextRegistration(void)
         const Ip6::Address *duaPtr = nullptr;
         Child *             child  = nullptr;
 
-        if (!mRegisterCurrentChildIndex || !mChildDuaMask.Get(mChildIndexDuaRegistering))
+        if (!mChildDuaMask.Get(mChildIndexDuaRegistering))
         {
             for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
             {
@@ -652,8 +650,6 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         VerifyOrExit(child != nullptr, error = kErrorNotFound);
         VerifyOrExit(child->HasIp6Address(target), error = kErrorNotFound);
 
-        mRegisterCurrentChildIndex = false;
-
         switch (status)
         {
         case ThreadStatusTlv::kDuaSuccess:
@@ -661,7 +657,6 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, true);
             break;
         case ThreadStatusTlv::kDuaReRegister:
-            mRegisterCurrentChildIndex = true;
             // Parent stops registering for the Child's DUA until next Child Update Request
             mChildDuaMask.Set(mChildIndexDuaRegistering, false);
             mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
@@ -743,9 +738,6 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
 #endif
         {
             IgnoreError(Get<Tmf::Agent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
-
-            // Reset mRegisterCurrentChildIndex properly
-            mRegisterCurrentChildIndex = mRegisterCurrentChildIndex && (aState == Mle::ChildDuaState::kRemoved);
         }
 
         mChildDuaMask.Set(childIndex, false);

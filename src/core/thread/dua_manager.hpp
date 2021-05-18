@@ -257,10 +257,9 @@ private:
     // TODO: (DUA) may re-evaluate the alternative option of distributing the flags into the child table:
     //       - Child class itself have some padding - may save some RAM
     //       - Avoid cross reference between a bit-vector and the child entry
-    ChildMask mChildDuaMask;           ///< Child Mask for child who registers DUA via Child Update Request.
-    ChildMask mChildDuaRegisteredMask; ///< Child Mask for child's DUA that was registered by the parent on behalf.
-    uint16_t  mChildIndexDuaRegistering : 15; ///< Child Index of the DUA being registered.
-    bool      mRegisterCurrentChildIndex : 1; ///< Re-register the child just registered.
+    ChildMask mChildDuaMask;             ///< Child Mask for child who registers DUA via Child Update Request.
+    ChildMask mChildDuaRegisteredMask;   ///< Child Mask for child's DUA that was registered by the parent on behalf.
+    uint16_t  mChildIndexDuaRegistering; ///< Child Index of the DUA being registered.
 #endif
 };
 
