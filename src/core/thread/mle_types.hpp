@@ -296,9 +296,10 @@ static_assert(kTimeSinceLastTransactionMax * 1000 > kTimeSinceLastTransactionMax
  */
 enum class ChildDuaState : uint8_t
 {
-    kAdded,   ///< A new DUA registered by the Child via Address Registration.
-    kChanged, ///< A different DUA registered by the Child via Address Registration.
-    kRemoved, ///< DUA registered by the Child is removed and not in Address Registration.
+    kAdded,     ///< A new DUA registered by the Child via Address Registration.
+    kChanged,   ///< A different DUA registered by the Child via Address Registration.
+    kRemoved,   ///< DUA registered by the Child is removed and not in Address Registration.
+    kUnchanged, ///< The Child registers the same DUA again.
 };
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2

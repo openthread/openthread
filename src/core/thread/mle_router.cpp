@@ -2052,10 +2052,8 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
 
                 if (oldDuaPtr != nullptr)
                 {
-                    if (oldDua != address)
-                    {
-                        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kChanged);
-                    }
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(
+                        aChild, oldDua != address ? ChildDuaState::kChanged : ChildDuaState::kUnchanged);
                 }
                 else
                 {

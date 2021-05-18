@@ -61,7 +61,6 @@ DuaManager::DuaManager(Instance &aInstance)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     , mChildIndexDuaRegistering(0)
-    , mRegisterCurrentChildIndex(false)
 #endif
 {
     mDelay.mValue = 0;
@@ -98,7 +97,6 @@ void DuaManager::HandleDomainPrefixUpdate(BackboneRouter::Leader::DomainPrefixSt
         {
             mChildDuaMask.Clear();
             mChildDuaRegisteredMask.Clear();
-            mRegisterCurrentChildIndex = false;
         }
 #endif
     }
@@ -476,7 +474,7 @@ void DuaManager::PerformNextRegistration(void)
         const Ip6::Address *duaPtr = nullptr;
         Child *             child  = nullptr;
 
-        if (!mRegisterCurrentChildIndex)
+        if (!mChildDuaMask.Get(mChildIndexDuaRegistering))
         {
             for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
             {
@@ -623,8 +621,11 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             mDuaState             = kRegistered;
             break;
         case ThreadStatusTlv::kDuaReRegister:
-            mDuaState                  = kToRegister;
-            mDelay.mFields.mCheckDelay = Mle::kImmediateReRegisterDelay;
+            if (Get<ThreadNetif>().HasUnicastAddress(GetDomainUnicastAddress()))
+            {
+                RemoveDomainUnicastAddress();
+                AddDomainUnicastAddress();
+            }
             break;
         case ThreadStatusTlv::kDuaInvalid:
             // Domain Prefix might be invalid.
@@ -649,8 +650,6 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         VerifyOrExit(child != nullptr, error = kErrorNotFound);
         VerifyOrExit(child->HasIp6Address(target), error = kErrorNotFound);
 
-        mRegisterCurrentChildIndex = false;
-
         switch (status)
         {
         case ThreadStatusTlv::kDuaSuccess:
@@ -658,8 +657,9 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
             mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, true);
             break;
         case ThreadStatusTlv::kDuaReRegister:
-            mRegisterCurrentChildIndex = true;
-            mDelay.mFields.mCheckDelay = Mle::kImmediateReRegisterDelay;
+            // Parent stops registering for the Child's DUA until next Child Update Request
+            mChildDuaMask.Set(mChildIndexDuaRegistering, false);
+            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
             break;
         case ThreadStatusTlv::kDuaInvalid:
         case ThreadStatusTlv::kDuaDuplicate:
@@ -738,16 +738,14 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
 #endif
         {
             IgnoreError(Get<Tmf::Agent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
-
-            // Reset mRegisterCurrentChildIndex properly
-            mRegisterCurrentChildIndex = mRegisterCurrentChildIndex && (aState == Mle::ChildDuaState::kRemoved);
         }
 
         mChildDuaMask.Set(childIndex, false);
         mChildDuaRegisteredMask.Set(childIndex, false);
     }
 
-    if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged)
+    if (aState == Mle::ChildDuaState::kAdded || aState == Mle::ChildDuaState::kChanged ||
+        (aState == Mle::ChildDuaState::kUnchanged && !mChildDuaMask.Get(childIndex)))
     {
         if (mChildDuaMask == mChildDuaRegisteredMask)
         {
