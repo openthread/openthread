@@ -589,6 +589,7 @@ openthread_core_files = [
   "thread/network_data_notifier.hpp",
   "thread/network_data_service.cpp",
   "thread/network_data_service.hpp",
+  "thread/network_data_tlvs.cpp",
   "thread/network_data_tlvs.hpp",
   "thread/network_data_types.cpp",
   "thread/network_data_types.hpp",

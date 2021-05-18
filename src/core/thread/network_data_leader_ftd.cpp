@@ -575,7 +575,7 @@ bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const
     // Check whether `aPrefix` has a Has Route sub-TLV with stable
     // flag `aStable` containing a matching entry to `aEntry`.
 
-    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(FindHasRoute(*aPrefix, aStable), aEntry);
+    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(aPrefix->FindSubTlv<HasRouteTlv>(aStable), aEntry);
 }
 
 bool Leader::ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry)
@@ -604,7 +604,7 @@ bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const
     // Check whether `aPrefix` has a Border Router sub-TLV with stable
     // flag `aStable` containing a matching entry to `aEntry`.
 
-    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(FindBorderRouter(*aPrefix, aStable), aEntry);
+    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(aPrefix->FindSubTlv<BorderRouterTlv>(aStable), aEntry);
 }
 
 bool Leader::ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const BorderRouterEntry &aEntry)
@@ -634,22 +634,23 @@ bool Leader::ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv 
     // Check whether the `aService` has a matching Server sub-TLV
     // same as `aServer`.
 
-    bool             contains = false;
-    const ServerTlv *server;
+    bool contains = false;
 
-    VerifyOrExit(aService != nullptr);
-
-    for (const NetworkDataTlv *start = aService->GetSubTlvs();
-         (server = FindTlv<ServerTlv>(start, aService->GetNext(), aServer.IsStable())) != nullptr;
-         start = server->GetNext())
+    if (aService != nullptr)
     {
-        if (*server == aServer)
+        const ServerTlv *server;
+        TlvIterator      subTlvIterator(*aService);
+
+        while ((server = subTlvIterator.Iterate<ServerTlv>(aServer.IsStable())) != nullptr)
         {
-            ExitNow(contains = true);
+            if (*server == aServer)
+            {
+                contains = true;
+                break;
+            }
         }
     }
 
-exit:
     return contains;
 }
 
@@ -804,7 +805,7 @@ Error Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags
                          aService.GetServiceDataLength());
     }
 
-    server = FindTlv<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
+    server = NetworkDataTlv::Find<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
     OT_ASSERT(server != nullptr);
 
     SuccessOrExit(error = AddServer(*server, *dstService, aChangedFlags));
@@ -827,7 +828,7 @@ exit:
 Error Leader::AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags)
 {
     Error                error       = kErrorNone;
-    HasRouteTlv *        dstHasRoute = FindHasRoute(aDstPrefix, aHasRoute.IsStable());
+    HasRouteTlv *        dstHasRoute = aDstPrefix.FindSubTlv<HasRouteTlv>(aHasRoute.IsStable());
     const HasRouteEntry *entry       = aHasRoute.GetFirstEntry();
 
     if (dstHasRoute == nullptr)
@@ -864,8 +865,8 @@ exit:
 Error Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags)
 {
     Error                    error           = kErrorNone;
-    BorderRouterTlv *        dstBorderRouter = FindBorderRouter(aDstPrefix, aBorderRouter.IsStable());
-    ContextTlv *             dstContext      = FindContext(aDstPrefix);
+    BorderRouterTlv *        dstBorderRouter = aDstPrefix.FindSubTlv<BorderRouterTlv>(aBorderRouter.IsStable());
+    ContextTlv *             dstContext      = aDstPrefix.FindSubTlv<ContextTlv>();
     uint8_t                  contextId       = 0;
     const BorderRouterEntry *entry           = aBorderRouter.GetFirstEntry();
 
@@ -976,20 +977,17 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
 
 const ServiceTlv *Leader::FindServiceById(uint8_t aServiceId) const
 {
-    const NetworkDataTlv *start = GetTlvsStart();
-    const ServiceTlv *    service;
+    const ServiceTlv *service;
+    TlvIterator       tlvIterator(GetTlvsStart(), GetTlvsEnd());
 
-    while ((service = FindTlv<ServiceTlv>(start, GetTlvsEnd())) != nullptr)
+    while ((service = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
     {
         if (service->GetServiceId() == aServiceId)
         {
-            ExitNow();
+            break;
         }
-
-        start = service->GetNext();
     }
 
-exit:
     return service;
 }
 
@@ -1154,7 +1152,7 @@ void Leader::RemoveRlocInPrefix(PrefixTlv &      aPrefix,
         cur = cur->GetNext();
     }
 
-    if ((context = FindContext(aPrefix)) != nullptr)
+    if ((context = aPrefix.FindSubTlv<ContextTlv>()) != nullptr)
     {
         if (aPrefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
@@ -1181,7 +1179,7 @@ void Leader::RemoveRlocInService(ServiceTlv &      aService,
     NetworkDataTlv *start = aService.GetSubTlvs();
     ServerTlv *     server;
 
-    while ((server = FindTlv<ServerTlv>(start, aService.GetNext())) != nullptr)
+    while ((server = NetworkDataTlv::Find<ServerTlv>(start, aService.GetNext())) != nullptr)
     {
         if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode) && !ContainsMatchingServer(aExcludeService, *server))
         {
@@ -1260,7 +1258,7 @@ void Leader::RemoveContext(uint8_t aContextId)
     NetworkDataTlv *start = GetTlvsStart();
     PrefixTlv *     prefix;
 
-    while ((prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr)
+    while ((prefix = NetworkDataTlv::Find<PrefixTlv>(start, GetTlvsEnd())) != nullptr)
     {
         RemoveContext(*prefix, aContextId);
 
@@ -1279,7 +1277,7 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     NetworkDataTlv *start = aPrefix.GetSubTlvs();
     ContextTlv *    context;
 
-    while ((context = FindTlv<ContextTlv>(start, aPrefix.GetNext())) != nullptr)
+    while ((context = NetworkDataTlv::Find<ContextTlv>(start, aPrefix.GetNext())) != nullptr)
     {
         if (context->GetContextId() == aContextId)
         {
@@ -1295,13 +1293,12 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
 void Leader::UpdateContextsAfterReset(void)
 {
-    NetworkDataTlv *start;
-    PrefixTlv *     prefix;
+    const PrefixTlv *prefix;
+    TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
 
-    for (start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr;
-         start = prefix->GetNext())
+    while ((prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
-        ContextTlv *context = FindContext(*prefix);
+        const ContextTlv *context = prefix->FindSubTlv<ContextTlv>();
 
         if (context == nullptr)
         {
