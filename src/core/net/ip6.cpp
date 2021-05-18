@@ -49,6 +49,7 @@
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
+#include "openthread/ip6.h"
 #include "thread/mle.hpp"
 
 using IcmpType = ot::Ip6::Icmp::Header::Type;
@@ -1029,8 +1030,8 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
             Udp::Header udp;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
-            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = kErrorNoRoute);
-
+            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort())
+                         && !Get<Udp>().IsPortInUse(udp.GetDestinationPort()), error = kErrorNoRoute);
             break;
         }
 

@@ -530,6 +530,25 @@ exit:
     return;
 }
 
+bool Udp::IsPortInUse(uint16_t aPort) const
+{
+    bool found = false;
+    for (const SocketHandle *socket = mSockets.GetHead(); socket != nullptr; socket = socket->GetNext())
+    {
+        if (socket->GetSockName().GetPort() == aPort)
+        {
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+            if (!IsBackboneSocket(*socket))
+#endif
+            {
+                found = true;
+            }
+            break;
+        }
+    }
+    return found;
+}
+
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
     return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
