@@ -47,6 +47,7 @@
 
 #include <openthread/ip6.h>
 #include <openthread/message.h>
+#include <openthread/tcp.h>
 
 // From ip_compat.h
 #define	bcopy(a,b,c)	memmove(b,a,c)
@@ -295,7 +296,7 @@ after_sack_rexmit:
 			 * itself.
 			 */
 //			if (off < sbused(&so->so_snd))
-			if (off < cbuf_used_space(&tp->sendbuf))
+			if (off < lbuf_used_space(&tp->sendbuf))
 				flags &= ~TH_FIN;
 			sendwin = 1;
 		} else {
@@ -322,7 +323,7 @@ after_sack_rexmit:
 	if (sack_rxmit == 0) {
 		if (sack_bytes_rxmt == 0)
 //			len = ((long)ulmin(sbavail(&so->so_snd), sendwin) -
-			len = ((long) ulmin(cbuf_used_space(&tp->sendbuf), sendwin) -
+			len = ((long) ulmin(lbuf_used_space(&tp->sendbuf), sendwin) -
 			    off);
 		else {
 			long cwin;
@@ -332,7 +333,7 @@ after_sack_rexmit:
 			 * sending new data, having retransmitted all the
 			 * data possible in the scoreboard.
 			 */
-			len = ((long)ulmin(/*sbavail(&so->so_snd)*/cbuf_used_space(&tp->sendbuf), tp->snd_wnd) -
+			len = ((long)ulmin(/*sbavail(&so->so_snd)*/lbuf_used_space(&tp->sendbuf), tp->snd_wnd) -
 			    off);
 			/*
 			 * Don't remove this (len > 0) check !
@@ -393,7 +394,7 @@ after_sack_rexmit:
 		 */
 		len = 0;
 		if ((sendwin == 0) && (TCPS_HAVEESTABLISHED(tp->t_state)) &&
-			(off < (int) /*sbavail(&so->so_snd)*/cbuf_used_space(&tp->sendbuf))) {
+			(off < (int) /*sbavail(&so->so_snd)*/lbuf_used_space(&tp->sendbuf))) {
 			tcp_timer_activate(tp, TT_REXMT, 0);
 			tp->t_rxtshift = 0;
 			tp->snd_nxt = tp->snd_una;
@@ -491,12 +492,12 @@ after_sack_rexmit:
 
 	if (sack_rxmit) {
 //		if (SEQ_LT(p->rxmit + len, tp->snd_una + sbused(&so->so_snd)))
-		if (SEQ_LT(p->rxmit + len, tp->snd_una + cbuf_used_space(&tp->sendbuf)))
+		if (SEQ_LT(p->rxmit + len, tp->snd_una + lbuf_used_space(&tp->sendbuf)))
 			flags &= ~TH_FIN;
 	} else {
 		if (SEQ_LT(tp->snd_nxt + len, tp->snd_una +
 //		    sbused(&so->so_snd)))
-			cbuf_used_space(&tp->sendbuf)))
+			lbuf_used_space(&tp->sendbuf)))
 			flags &= ~TH_FIN;
 	}
 
@@ -528,7 +529,7 @@ after_sack_rexmit:
 		if (!(tp->t_flags & TF_MORETOCOME) &&	/* normal case */
 		    (idle || (tp->t_flags & TF_NODELAY)) &&
 //		    len + off >= sbavail(&so->so_snd) &&
-			len + off >= cbuf_used_space(&tp->sendbuf) &&
+			len + off >= lbuf_used_space(&tp->sendbuf) &&
 		    (tp->t_flags & TF_NOPUSH) == 0) {
 			goto send;
 		}
@@ -662,7 +663,7 @@ dontupdate:
 	 * if window is nonzero, transmit what we can,
 	 * otherwise force out a byte.
 	 */
-	if (/*sbavail(&so->so_snd)*/cbuf_used_space(&tp->sendbuf) && !tcp_timer_active(tp, TT_REXMT) &&
+	if (/*sbavail(&so->so_snd)*/lbuf_used_space(&tp->sendbuf) && !tcp_timer_active(tp, TT_REXMT) &&
 	    !tcp_timer_active(tp, TT_PERSIST)) {
 		tp->t_rxtshift = 0;
 		tcp_setpersist(tp);
@@ -1083,7 +1084,7 @@ memsendfail:
 		goto out;
 	}
 	if (len) {
-	    uint32_t used_space = cbuf_used_space(&tp->sendbuf);
+	    uint32_t used_space = lbuf_used_space(&tp->sendbuf);
 
 		/*
 		 * The TinyOS version has a way to avoid the copying we have to do here.
@@ -1097,10 +1098,32 @@ memsendfail:
 		 * that precludes this optimization. But, now that we have moved to
 		 * cbufs, this is not relevant anymore.
 		 */
-		int written = (int) cbuf_read_offset(&tp->sendbuf, message, otMessageGetOffset(message) + sizeof(struct tcphdr) + optlen, len, off, cbuf_copy_into_message);
-
-		//int written = iov_read(lbuf_to_iovec(&tp->sendbuf), off, len, payload->data);
- 		KASSERT(written == len, ("Reading send buffer out of range!\n"));
+		{
+			otLinkedBuffer* start;
+			size_t start_offset;
+			otLinkedBuffer* end;
+			size_t end_offset;
+			int rv = lbuf_getrange(&tp->sendbuf, off, len, &start, &start_offset, &end, &end_offset);
+			KASSERT(rv == 0, ("Reading send buffer out of range!\n"));
+			size_t message_offset = otMessageGetOffset(message) + sizeof(struct tcphdr) + optlen;
+			for (otLinkedBuffer* curr = start; curr != end->mNext; curr = curr->mNext) {
+				const uint8_t* data_to_copy = curr->mData;
+				size_t length_to_copy = curr->mLength;
+				if (curr == start) {
+					data_to_copy += start_offset;
+					length_to_copy -= start_offset;
+				}
+				if (curr == end) {
+					length_to_copy -= end_offset;
+				}
+				otMessageWrite(message, message_offset, data_to_copy, length_to_copy);
+				message_offset += length_to_copy;
+			}
+		}
+		// int written = (int) cbuf_read_offset(&tp->sendbuf, message, otMessageGetOffset(message) + sizeof(struct tcphdr) + optlen, len, off, cbuf_copy_into_message);
+		//
+		// //int written = iov_read(lbuf_to_iovec(&tp->sendbuf), off, len, payload->data);
+ 		// KASSERT(written == len, ("Reading send buffer out of range!\n"));
 
 		/*
 		 * If we're sending everything we've got, set PUSH.
@@ -1610,7 +1633,7 @@ timer:
 				tp->t_rxtshift = 0;
 			}
 			tcp_timer_activate(tp, TT_REXMT, tp->t_rxtcur);
-		} else if (len == 0 && /*sbavail(&so->so_snd)*/cbuf_used_space(&tp->sendbuf) &&
+		} else if (len == 0 && /*sbavail(&so->so_snd)*/lbuf_used_space(&tp->sendbuf) &&
 		    !tcp_timer_active(tp, TT_REXMT) &&
 		    !tcp_timer_active(tp, TT_PERSIST)) {
 			/*

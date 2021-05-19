@@ -78,12 +78,10 @@ Error Tcp::Endpoint::Initialize(Instance &aInstance, otTcpEndpointInitializeArgs
     /*
      * Initialize buffers --- formerly in initialize_tcb.
      */
-    uint8_t *sendbuf    = static_cast<uint8_t *>(aArgs.mReceiveBuffer);
-    size_t   sendbuflen = aArgs.mReceiveBufferSize >> 1;
-    uint8_t *recvbuf    = sendbuf + sendbuflen;
-    size_t   recvbuflen = (aArgs.mReceiveBufferSize >> 1) - (aArgs.mReceiveBufferSize >> 4);
+    uint8_t *recvbuf    = static_cast<uint8_t *>(aArgs.mReceiveBuffer);
+    size_t   recvbuflen = aArgs.mReceiveBufferSize - ((aArgs.mReceiveBufferSize + 8) / 9);
     uint8_t *reassbmp   = recvbuf + recvbuflen;
-    cbuf_init(&mTcb.sendbuf, sendbuf, sendbuflen);
+    lbuf_init(&mTcb.sendbuf);
     if (recvbuf)
     {
         cbuf_init(&mTcb.recvbuf, recvbuf, recvbuflen);
@@ -161,15 +159,9 @@ Error Tcp::Endpoint::SendByReference(otLinkedBuffer &aBuffer, uint32_t aFlags)
 {
     Error error;
 
-    size_t bytesSent  = 0;
-    bool   moreToCome = (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0;
-    int    bsdError   = tcp_usr_send(&mTcb, moreToCome ? 1 : 0, aBuffer.mData, aBuffer.mLength, &bytesSent);
+    bool moreToCome = (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0;
+    int  bsdError   = tcp_usr_send(&mTcb, moreToCome ? 1 : 0, &aBuffer);
     SuccessOrExit(error = BsdErrorToOtError(bsdError));
-
-    if (mSendDoneCallback != nullptr)
-    {
-        mSendDoneCallback(this, &aBuffer);
-    }
 
 exit:
     return error;
@@ -382,11 +374,13 @@ Error Tcp::ProcessReceivedSegment(ot::Ip6::Header &aIp6Header, Message &aMessage
     endpoint = mEndpoints.FindMatching(aMessageInfo, endpointPrev);
     if (endpoint != nullptr)
     {
-        uint8_t signals;
-        int     nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, &endpoint->mTcb, nullptr, &signals);
+        struct signals  sig;
+        otLinkedBuffer *priorHead = lbuf_head(&endpoint->mTcb.sendbuf);
+        memset(&sig, 0x00, sizeof(sig));
+        int nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, &endpoint->mTcb, nullptr, &sig);
         if (nextAction != RELOOKUP_REQUIRED)
         {
-            ProcessSignals(*endpoint, signals);
+            ProcessSignals(*endpoint, priorHead, sig);
             ExitNow();
         }
         /* If the matching socket was in the TIME-WAIT state, then we try passive sockets. */
@@ -406,19 +400,24 @@ exit:
     return error;
 }
 
-void Tcp::ProcessSignals(Endpoint &aEndpoint, uint8_t aSignals)
+void Tcp::ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct signals &aSignals)
 {
-    if ((aSignals & SIG_CONN_ESTABLISHED) != 0 && aEndpoint.mEstablishedCallback != nullptr)
+    if (aEndpoint.mSendDoneCallback != nullptr)
+    {
+        otLinkedBuffer *curr = aPriorHead;
+        for (int i = 0; i != aSignals.links_popped; i++)
+        {
+            otLinkedBuffer *next = curr->mNext;
+            curr->mNext          = nullptr;
+            aEndpoint.mSendDoneCallback(&aEndpoint, curr);
+            curr = next;
+        }
+    }
+    if (aSignals.conn_established && aEndpoint.mEstablishedCallback != nullptr)
     {
         aEndpoint.mEstablishedCallback(&aEndpoint);
     }
-    if ((aSignals & SIG_RECVBUF_NOTEMPTY) != 0 && aEndpoint.mReceiveAvailableCallback != nullptr)
-    {
-        aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.mTcb.recvbuf),
-                                            aEndpoint.mTcb.reass_fin_index != -1,
-                                            cbuf_free_space(&aEndpoint.mTcb.recvbuf));
-    }
-    if ((aSignals & SIG_RCVD_FIN) != 0 && aEndpoint.mReceiveAvailableCallback != nullptr)
+    if ((aSignals.recvbuf_notempty || aSignals.rcvd_fin) && aEndpoint.mReceiveAvailableCallback != nullptr)
     {
         aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.mTcb.recvbuf),
                                             aEndpoint.mTcb.reass_fin_index != -1,

@@ -103,7 +103,7 @@ static void	 tcp_dooptions(struct tcpopt *, u_char *, int, int);
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
-    uint8_t* signals);
+    struct signals* sig);
 static void	 tcp_xmit_timer(struct tcpcb *, int);
 void tcp_hc_get(/*struct in_conninfo *inc*/ struct tcpcb* tp, struct hc_metrics_lite *hc_metrics_lite);
 static void	 tcp_newreno_partial_ack(struct tcpcb *, struct tcphdr *);
@@ -508,7 +508,7 @@ drop:
 /* NOTE: tcp_fields_to_host(th) must be called before this function is called. */
 int
 tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
-          uint8_t* signals)
+          struct signals* sig)
 {
 	int tlen = 0, off;
 	int thflags;
@@ -1523,7 +1523,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	 * state.  tcp_do_segment() always consumes the mbuf chain, unlocks
 	 * the inpcb, and unlocks pcbinfo.
 	 */
-	tcp_do_segment(ip6, th, msg, tp, drop_hdrlen, tlen, iptos, signals);
+	tcp_do_segment(ip6, th, msg, tp, drop_hdrlen, tlen, iptos, sig);
 //	INP_INFO_UNLOCK_ASSERT(&V_tcbinfo);
 	return (IPPROTO_DONE);
 
@@ -1594,7 +1594,7 @@ tcp_do_segment(struct mbuf *m, struct tcphdr *th, struct socket *so,
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
-    uint8_t* signals)
+    struct signals* sig)
 {
 	int thflags, acked, ourfinisacked, needoutput = 0;
 	int rstreason, todrop, win;
@@ -1868,19 +1868,8 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 //				TCPSTAT_INC(tcps_rcvackpack);
 //				TCPSTAT_ADD(tcps_rcvackbyte, acked);
 //				sbdrop(&so->so_snd, acked);
-                //poppedbytes = lbuf_pop(&tp->sendbuf, acked, &ntraversed);
-                size_t freebefore = cbuf_free_space(&tp->sendbuf);
-                poppedbytes = cbuf_pop(&tp->sendbuf, acked);
+                poppedbytes = lbuf_pop(&tp->sendbuf, acked, &sig->links_popped);
 				KASSERT(poppedbytes == acked, ("More bytes were acked than are in the send buffer"));
-				//*freedentries += ntraversed;
-                if (poppedbytes > 0) {
-                    if (freebefore == 0) {
-                        *signals |= SIG_SENDBUF_NOTFULL;
-                    }
-                    if (cbuf_empty(&tp->sendbuf)) {
-                        *signals |= SIG_SENDBUF_EMPTY;
-                    }
-                }
 				if (SEQ_GT(tp->snd_una, tp->snd_recover) &&
 				    SEQ_LEQ(th->th_ack, tp->snd_recover))
 					tp->snd_recover = th->th_ack - 1;
@@ -1927,7 +1916,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					tcp_timer_activate(tp, TT_REXMT,
 						      tp->t_rxtcur);
 //				sowwakeup(so);
-				if (cbuf_used_space(&tp->sendbuf))
+				if (lbuf_used_space(&tp->sendbuf))
 //				if (sbavail(&so->so_snd))
 					(void) tcp_output(tp);
 				goto check_delack;
@@ -2054,7 +2043,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				size_t usedbefore = cbuf_used_space(&tp->recvbuf);
 				cbuf_write(&tp->recvbuf, msg, otMessageGetOffset(msg) + drop_hdrlen, tlen, cbuf_copy_from_message);
 				if (usedbefore == 0 && tlen > 0) {
-					*signals |= SIG_RECVBUF_NOTEMPTY;
+                    sig->recvbuf_notempty = true;
 				}
 			} else {
 				/* Sam: We already know tlen != 0, so if we got here, then it means
@@ -2190,7 +2179,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 				thflags &= ~TH_SYN;
 			} else {
 				tcp_state_change(tp, TCPS_ESTABLISHED);
-				*signals |= SIG_CONN_ESTABLISHED;
+                sig->conn_established = true;
 //				TCP_PROBE5(connect__established, NULL, tp,
 //				    mtod(m, const char *), tp, th);
 				cc_conn_init(tp);
@@ -2576,7 +2565,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 			tp->t_flags &= ~TF_NEEDFIN;
 		} else {
 			tcp_state_change(tp, TCPS_ESTABLISHED);
-			*signals |= SIG_CONN_ESTABLISHED;
+            sig->conn_established = true;
 //			TCP_PROBE5(accept__established, NULL, tp,
 //			    mtod(m, const char *), tp, th);
 			cc_conn_init(tp);
@@ -2600,7 +2589,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 		 */
 		if (tlen == 0 && (thflags & TH_FIN) == 0)
 			(void) tcp_reass(tp, (struct tcphdr *)0, 0,
-			    (/*struct mbuf **/ otMessage*)0, 0, signals);
+			    (/*struct mbuf **/ otMessage*)0, 0, sig);
 
 		tp->snd_wl1 = th->th_seq - 1;
 		/* FALLTHROUGH */
@@ -2801,7 +2790,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 //					SOCKBUF_LOCK(&so->so_snd);
 //					avail = sbavail(&so->so_snd) -
 //					    (tp->snd_nxt - tp->snd_una);
-					avail = cbuf_used_space(&tp->sendbuf) - (tp->snd_nxt - tp->snd_una);
+					avail = lbuf_used_space(&tp->sendbuf) - (tp->snd_nxt - tp->snd_una);
 //					SOCKBUF_UNLOCK(&so->so_snd);
 					if (avail > 0)
 						(void) tcp_output(tp);
@@ -2942,44 +2931,26 @@ process_ACK:
 		cc_ack_received(tp, th, CC_ACK);
 
 //		SOCKBUF_LOCK(&so->so_snd);
-		if (acked > /*sbavail(&so->so_snd)*/cbuf_used_space(&tp->sendbuf)) {
+		if (acked > /*sbavail(&so->so_snd)*/lbuf_used_space(&tp->sendbuf)) {
 			uint32_t poppedbytes;
 			//int ntraversed = 0;
-			uint32_t usedspace = cbuf_used_space(&tp->sendbuf);
+			uint32_t usedspace = lbuf_used_space(&tp->sendbuf);
 			//tp->snd_wnd -= sbavail(&so->so_snd);
 			tp->snd_wnd -= usedspace;
 //			mfree = sbcut_locked(&so->so_snd,
 //			    (int)sbavail(&so->so_snd));
 			//poppedbytes = lbuf_pop(&tp->sendbuf, usedspace, &ntraversed);
             //*freedentries += ntraversed;
-            size_t freebefore = cbuf_free_space(&tp->sendbuf);
-            poppedbytes = cbuf_pop(&tp->sendbuf, usedspace);
+            poppedbytes = lbuf_pop(&tp->sendbuf, usedspace, &sig->links_popped);
 			KASSERT(poppedbytes == usedspace, ("Could not fully empty send buffer"));
-            if (poppedbytes > 0) {
-                if (freebefore == 0) {
-                    *signals |= SIG_SENDBUF_NOTFULL;
-                }
-                if (cbuf_empty(&tp->sendbuf)) {
-                    *signals |= SIG_SENDBUF_EMPTY;
-                }
-            }
 			ourfinisacked = 1;
 		} else {
 //			mfree = sbcut_locked(&so->so_snd, acked);
 			//int ntraversed = 0;
 			//uint32_t poppedbytes = lbuf_pop(&tp->sendbuf, acked, &ntraversed);
             //*freedentries += ntraversed;
-            size_t freebefore = cbuf_free_space(&tp->sendbuf);
-            uint32_t poppedbytes = cbuf_pop(&tp->sendbuf, acked);
+            uint32_t poppedbytes = lbuf_pop(&tp->sendbuf, acked, &sig->links_popped);
 			KASSERT(poppedbytes == acked, ("Could not remove acked bytes from send buffer"));
-            if (poppedbytes > 0) {
-                if (freebefore == 0) {
-                    *signals |= SIG_SENDBUF_NOTFULL;
-                }
-                if (cbuf_empty(&tp->sendbuf)) {
-                    *signals |= SIG_SENDBUF_EMPTY;
-                }
-            }
 			tp->snd_wnd -= acked;
 			ourfinisacked = 0;
 		}
@@ -3211,7 +3182,7 @@ step6:
 				size_t usedbefore = cbuf_used_space(&tp->recvbuf);
 				cbuf_write(&tp->recvbuf, msg, otMessageGetOffset(msg) + drop_hdrlen, tlen, cbuf_copy_from_message);
 				if (usedbefore == 0 && tlen > 0) {
-					*signals |= SIG_RECVBUF_NOTEMPTY;
+                    sig->recvbuf_notempty = true;
 				}
 			} else if (tlen > 0) {
 				/* Sam: We already know tlen != 0, so if we got here, then it means
@@ -3235,7 +3206,7 @@ step6:
 			 * m_adj() doesn't actually frees any mbufs
 			 * when trimming from the head.
 			 */
-			thflags = tcp_reass(tp, th, &tlen, msg, otMessageGetOffset(msg) + drop_hdrlen, signals);
+			thflags = tcp_reass(tp, th, &tlen, msg, otMessageGetOffset(msg) + drop_hdrlen, sig);
 			tp->t_flags |= TF_ACKNOW;
 		}
 		// Only place tlen is used after the call to tcp_reass is below
@@ -3281,7 +3252,7 @@ step6:
 			tp->rcv_nxt++;
 		}
 		if (tp->reass_fin_index != -2) {
-			*signals |= SIG_RCVD_FIN;
+            sig->rcvd_fin = true;
 			tp->reass_fin_index = -2; // Added by Sam: make sure not to consider any more FINs in reassembly
 		}
 		switch (tp->t_state) {

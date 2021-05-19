@@ -34,7 +34,7 @@
 #include <stdio.h>
 
 #include "../tcplp.h"
-#include "../lib/cbuf.h"
+#include "../lib/lbuf.h"
 #include "tcp_fsm.h"
 #include "tcp_timer.h"
 #include "tcp_var.h"
@@ -275,7 +275,7 @@ tcp_timer_persist(struct tcpcb* tp)
 
 	tcp_setpersist(tp);
 	tp->t_flags |= TF_FORCEDATA;
-	printf("Persist output: %zu bytes in sendbuf\n", cbuf_used_space(&tp->sendbuf));
+	tcplp_sys_log("Persist output: %zu bytes in sendbuf\n", lbuf_used_space(&tp->sendbuf));
 	(void) tcp_output(tp);
 	tp->t_flags &= ~TF_FORCEDATA;
 
