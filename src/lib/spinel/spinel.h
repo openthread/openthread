@@ -853,6 +853,12 @@ enum
 
 enum
 {
+    SPINEL_RESET_PLATFORM = 1,
+    SPINEL_RESET_STACK    = 2,
+};
+
+enum
+{
     /**
      * No-Operation command (Host -> NCP)
      *
@@ -870,14 +876,16 @@ enum
     /**
      * Reset NCP command (Host -> NCP)
      *
-     * Encoding: Empty
+     * Encoding: Empty or `C`
      *
      * Causes the NCP to perform a software reset. Due to the nature of
      * this command, the TID is ignored. The host should instead wait
      * for a `CMD_PROP_VALUE_IS` command from the NCP indicating
      * `PROP_LAST_STATUS` has been set to `STATUS_RESET_SOFTWARE`.
      *
-     * The command payload for this command SHOULD be empty.
+     * The optional command payload specifies the reset type, can be
+     * `SPINEL_RESET_PLATFORM` or `SPINEL_RESET_STACK`. Defaults to stack
+     * reset if unspecified.
      *
      * If an error occurs, the value of `PROP_LAST_STATUS` will be emitted
      * instead with the value set to the generated status code for the error.

@@ -33,6 +33,41 @@
 
 namespace ot {
 
+void Radio::Init(void)
+{
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Error error = OT_ERROR_NONE;
+
+    OT_UNUSED_VARIABLE(error);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    error = EnableCsl(0, Mac::kShortAddrInvalid, nullptr);
+    OT_ASSERT(error == OT_ERROR_NONE);
+#endif
+
+    EnableSrcMatch(false);
+    ClearSrcMatchShortEntries();
+    ClearSrcMatchExtEntries();
+
+    if (IsEnabled())
+    {
+        error = Sleep();
+        OT_ASSERT(error == OT_ERROR_NONE);
+
+        error = Disable();
+        OT_ASSERT(error == OT_ERROR_NONE);
+    }
+
+    SetPanId(Mac::kPanIdBroadcast);
+    SetExtendedAddress(Mac::ExtAddress{});
+    SetShortAddress(Mac::kShortAddrInvalid);
+    SetMacKey(0, 0, Mac::KeyMaterial{}, Mac::KeyMaterial{}, Mac::KeyMaterial{});
+    SetMacFrameCounter(0);
+
+    SetPromiscuous(false);
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+}
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)

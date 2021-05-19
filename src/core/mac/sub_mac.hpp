@@ -207,6 +207,12 @@ public:
     explicit SubMac(Instance &aInstance);
 
     /**
+     * This method initializes the states of the sub-MAC layer.
+     *
+     */
+    void Init(void);
+
+    /**
      * This method gets the capabilities provided by platform radio.
      *
      * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).

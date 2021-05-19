@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (166)
+#define OPENTHREAD_API_VERSION (167)
 
 /**
  * @addtogroup api-instance
@@ -254,6 +254,13 @@ void otInstanceReset(otInstance *aInstance);
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
 void otInstanceFactoryReset(otInstance *aInstance);
+
+/**
+ * This method resets the internal states of the OpenThread radio stack. Callbacks and configurations are preserved.
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ */
+void otInstanceResetRadioStack(otInstance *aInstance);
 
 /**
  * This function erases all the OpenThread persistent info (network settings) stored on non-volatile memory.
