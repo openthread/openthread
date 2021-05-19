@@ -50,26 +50,26 @@
  */
 struct ip {
 //#if BYTE_ORDER == LITTLE_ENDIAN
-	u_char	ip_hl:4,		/* header length */
+	uint8_t	ip_hl:4,		/* header length */
 		ip_v:4;			/* version */
 //#endif
 #if 0
 #if BYTE_ORDER == BIG_ENDIAN
-	u_char	ip_v:4,			/* version */
+	uint8_t	ip_v:4,			/* version */
 		ip_hl:4;		/* header length */
 #endif
 #endif
-	u_char	ip_tos;			/* type of service */
-	u_short	ip_len;			/* total length */
-	u_short	ip_id;			/* identification */
-	u_short	ip_off;			/* fragment offset field */
+	uint8_t	ip_tos;			/* type of service */
+	uint16_t	ip_len;			/* total length */
+	uint16_t	ip_id;			/* identification */
+	uint16_t	ip_off;			/* fragment offset field */
 #define	IP_RF 0x8000			/* reserved fragment flag */
 #define	IP_DF 0x4000			/* dont fragment flag */
 #define	IP_MF 0x2000			/* more fragments flag */
 #define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits */
-	u_char	ip_ttl;			/* time to live */
-	u_char	ip_p;			/* protocol */
-	u_short	ip_sum;			/* checksum */
+	uint8_t	ip_ttl;			/* time to live */
+	uint8_t	ip_p;			/* protocol */
+	uint16_t	ip_sum;			/* checksum */
 	struct	in_addr ip_src,ip_dst;	/* source and dest address */
 } __packed __aligned(2);
 #endif
@@ -169,15 +169,15 @@ struct ip {
  * Time stamp option structure.
  */
 struct	ip_timestamp {
-	u_char	ipt_code;		/* IPOPT_TS */
-	u_char	ipt_len;		/* size of structure (variable) */
-	u_char	ipt_ptr;		/* index of current entry */
+	uint8_t	ipt_code;		/* IPOPT_TS */
+	uint8_t	ipt_len;		/* size of structure (variable) */
+	uint8_t	ipt_ptr;		/* index of current entry */
 #if BYTE_ORDER == LITTLE_ENDIAN
-	u_char	ipt_flg:4,		/* flags, see below */
+	uint8_t	ipt_flg:4,		/* flags, see below */
 		ipt_oflw:4;		/* overflow counter */
 #endif
 #if BYTE_ORDER == BIG_ENDIAN
-	u_char	ipt_oflw:4,		/* overflow counter */
+	uint8_t	ipt_oflw:4,		/* overflow counter */
 		ipt_flg:4;		/* flags, see below */
 #endif
 	union ipt_timestamp {
@@ -223,9 +223,9 @@ struct	ip_timestamp {
 struct ippseudo {
 	struct	in_addr	ippseudo_src;	/* source internet address */
 	struct	in_addr	ippseudo_dst;	/* destination internet address */
-	u_char		ippseudo_pad;	/* pad, must be zero */
-	u_char		ippseudo_p;	/* protocol */
-	u_short		ippseudo_len;	/* protocol length */
+	uint8_t		ippseudo_pad;	/* pad, must be zero */
+	uint8_t		ippseudo_p;	/* protocol */
+	uint16_t		ippseudo_len;	/* protocol length */
 };
 #endif
 

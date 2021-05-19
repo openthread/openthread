@@ -67,7 +67,7 @@ struct tcphdr {
 		th_off:4;		/* data offset */
 #endif
 #if 0 //BYTE_ORDER == BIG_ENDIAN
-	u_char	th_off:4,		/* data offset */
+	uint8_t	th_off:4,		/* data offset */
 		th_x2:4;		/* (unused) */
 #endif
 	uint8_t	th_flags;

@@ -113,7 +113,7 @@ tcp_output(struct tcpcb *tp)
 	struct ip *ip = NULL;
 	struct ipovly *ipov = NULL;
 	struct tcphdr *th;
-	u_char opt[TCP_MAXOLEN];
+	uint8_t opt[TCP_MAXOLEN];
 	unsigned ipoptlen, optlen, hdrlen;
 #ifdef IPSEC
 	unsigned ipsec_optlen = 0;
@@ -156,7 +156,7 @@ tcp_output(struct tcpcb *tp)
   	//struct lbufent* endptr = NULL;
   	//uint32_t startoffset;
   	//uint32_t endextra;
-  	u_char opt[TCP_MAXOLEN];
+  	uint8_t opt[TCP_MAXOLEN];
   	uint32_t ticks = tcplp_sys_get_ticks();
 #if 0
 #ifdef TCP_OFFLOAD
@@ -747,7 +747,7 @@ send:
 			    tp->rcv_numsacks > 0) {
 				to.to_flags |= TOF_SACK;
 				to.to_nsacks = tp->rcv_numsacks;
-				to.to_sacks = (u_char *)tp->sackblks;
+				to.to_sacks = (uint8_t *)tp->sackblks;
 			}
 		}
 
@@ -787,11 +787,11 @@ send:
 		flags &= ~TH_FIN;
 #if 0
 		if (tso) {
-			u_int if_hw_tsomax;
-			u_int if_hw_tsomaxsegcount;
-			u_int if_hw_tsomaxsegsize;
+			uint32_t if_hw_tsomax;
+			uint32_t if_hw_tsomaxsegcount;
+			uint32_t if_hw_tsomaxsegsize;
 			struct mbuf *mb;
-			u_int moff;
+			uint32_t moff;
 			int max_len;
 
 			/* extract TSO information */
@@ -842,8 +842,8 @@ send:
 				mb = sbsndmbuf(&so->so_snd, off, &moff);
 
 				while (mb != NULL && max_len < len) {
-					u_int mlen;
-					u_int frags;
+					uint32_t mlen;
+					uint32_t frags;
 
 					/*
 					 * Get length of mbuf fragment
@@ -951,7 +951,7 @@ send:
 #if 0
 	if (len) {
 		struct mbuf *mb;
-		u_int moff;
+		uint32_t moff;
 
 		if ((tp->t_flags & TF_FORCEDATA) && len == 1)
 			TCPSTAT_INC(tcps_sndprobe);
@@ -1335,10 +1335,10 @@ memsendfail:
 	 * case is handled in syncache.
 	 */
 	if (flags & TH_SYN)
-		th->th_win = htons((u_short)
+		th->th_win = htons((uint16_t)
 				(min(cbuf_size(&tp->recvbuf), TCP_MAXWIN)));
 	else
-		th->th_win = htons((u_short)(recwin >> tp->rcv_scale));
+		th->th_win = htons((uint16_t)(recwin >> tp->rcv_scale));
 
 	/*
 	 * Adjust the RXWIN0SENT flag - indicate that we have advertised
@@ -1354,7 +1354,7 @@ memsendfail:
 	} else
 		tp->t_flags &= ~TF_RXWIN0SENT;
 	if (SEQ_GT(tp->snd_up, tp->snd_nxt)) {
-		th->th_urp = htons((u_short)(tp->snd_up - tp->snd_nxt));
+		th->th_urp = htons((uint16_t)(tp->snd_up - tp->snd_nxt));
 		th->th_flags |= TH_URG;
 	} else
 		/*
@@ -1369,7 +1369,7 @@ memsendfail:
 	if (tp->t_flags & TF_SIGNATURE) {
 		int sigoff = to.to_signature - opt;
 		tcp_signature_compute(m, 0, len, optlen,
-		    (u_char *)(th + 1) + sigoff, IPSEC_DIR_OUTBOUND);
+		    (uint8_t *)(th + 1) + sigoff, IPSEC_DIR_OUTBOUND);
 	}
 #endif
 #endif
@@ -1439,7 +1439,7 @@ memsendfail:
 	 * Trace.
 	 */
 	if (so->so_options & SO_DEBUG) {
-		u_short save = 0;
+		uint16_t save = 0;
 #ifdef INET6
 		if (!isipv6)
 #endif
@@ -1794,9 +1794,9 @@ timer:
  * we only have 10 bytes for SACK options (40 - (12 + 18)).
  */
 int
-tcp_addoptions(struct tcpopt *to, u_char *optp)
+tcp_addoptions(struct tcpopt *to, uint8_t *optp)
 {
-	u_int mask, optlen = 0;
+	uint32_t mask, optlen = 0;
 
 	for (mask = 1; mask < TOF_MAXOPT; mask <<= 1) {
 		if ((to->to_flags & mask) != mask)
@@ -1815,7 +1815,7 @@ tcp_addoptions(struct tcpopt *to, u_char *optp)
 			*optp++ = TCPOPT_MAXSEG;
 			*optp++ = TCPOLEN_MAXSEG;
 			to->to_mss = htons(to->to_mss);
-			bcopy((u_char *)&to->to_mss, optp, sizeof(to->to_mss));
+			bcopy((uint8_t *)&to->to_mss, optp, sizeof(to->to_mss));
 			optp += sizeof(to->to_mss);
 			break;
 		case TOF_SCALE:
@@ -1853,9 +1853,9 @@ tcp_addoptions(struct tcpopt *to, u_char *optp)
 			*optp++ = TCPOLEN_TIMESTAMP;
 			to->to_tsval = htonl(to->to_tsval);
 			to->to_tsecr = htonl(to->to_tsecr);
-			bcopy((u_char *)&to->to_tsval, optp, sizeof(to->to_tsval));
+			bcopy((uint8_t *)&to->to_tsval, optp, sizeof(to->to_tsval));
 			optp += sizeof(to->to_tsval);
-			bcopy((u_char *)&to->to_tsecr, optp, sizeof(to->to_tsecr));
+			bcopy((uint8_t *)&to->to_tsecr, optp, sizeof(to->to_tsecr));
 			optp += sizeof(to->to_tsecr);
 			break;
 		case TOF_SIGNATURE:
@@ -1895,10 +1895,10 @@ tcp_addoptions(struct tcpopt *to, u_char *optp)
 			*optp++ = TCPOLEN_SACKHDR + sackblks * TCPOLEN_SACK;
 			while (sackblks--) {
 				sack_seq = htonl(sack->start);
-				bcopy((u_char *)&sack_seq, optp, sizeof(sack_seq));
+				bcopy((uint8_t *)&sack_seq, optp, sizeof(sack_seq));
 				optp += sizeof(sack_seq);
 				sack_seq = htonl(sack->end);
-				bcopy((u_char *)&sack_seq, optp, sizeof(sack_seq));
+				bcopy((uint8_t *)&sack_seq, optp, sizeof(sack_seq));
 				optp += sizeof(sack_seq);
 				optlen += TCPOLEN_SACK;
 				sack++;

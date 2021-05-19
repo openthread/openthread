@@ -140,7 +140,7 @@ static const char *tcptimers[] =
 #endif
 
 int tcp_timer_active(struct tcpcb *tp, uint32_t timer_type);
-void tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, u_int delta);
+void tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, uint32_t delta);
 void tcp_cancel_timers(struct tcpcb* tp);
 
 /* I moved the definition of TCPT_RANGESET to tcp_const.h. */

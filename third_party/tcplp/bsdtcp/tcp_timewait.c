@@ -74,8 +74,8 @@ tcp_twrespond(struct tcpcb* tp, int flags)
 	struct tcphdr* nth;
 	//struct ip_iovec* iov;
 	struct tcpopt to;
-	u_int optlen = 0;
-	u_char opt[TCP_MAXOLEN];
+	uint32_t optlen = 0;
+	uint8_t opt[TCP_MAXOLEN];
 	//int alen;
 	//char* bufreal;
 	int win = 0;
@@ -178,7 +178,7 @@ tcp_twrespond(struct tcpcb* tp, int flags)
 #ifdef INET
 	struct ip *ip = NULL;
 #endif
-	u_int hdrlen, optlen;
+	uint32_t hdrlen, optlen;
 	int error = 0;			/* Keep compiler happy */
 	struct tcpopt to;
 #ifdef INET6
@@ -228,7 +228,7 @@ tcp_twrespond(struct tcpcb* tp, int flags)
 		to.to_tsval = tcp_ts_getticks() + tw->ts_offset;
 		to.to_tsecr = tw->t_recent;
 	}
-	optlen = tcp_addoptions(&to, (u_char *)(th + 1));
+	optlen = tcp_addoptions(&to, (uint8_t *)(th + 1));
 
 	m->m_len = hdrlen + optlen;
 	m->m_pkthdr.len = m->m_len;
