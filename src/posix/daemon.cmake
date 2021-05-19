@@ -55,8 +55,12 @@ add_executable(ot-ctl
     client.cpp
 )
 
+if (READLINE)
 target_compile_definitions(ot-ctl PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
+    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
+endif()
+
+target_compile_definitions(ot-ctl PRIVATE
     ${OT_PLATFORM_DEFINES}
 )
 

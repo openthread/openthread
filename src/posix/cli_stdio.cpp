@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -33,31 +33,12 @@
 #include <openthread/config.h>
 #include <openthread/openthread-system.h>
 
-#include <assert.h>
+#if !(defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE))
+
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
 #include <unistd.h>
-
-#ifndef HAVE_LIBEDIT
-#define HAVE_LIBEDIT 0
-#endif
-
-#ifndef HAVE_LIBREADLINE
-#define HAVE_LIBREADLINE 0
-#endif
-
-#if HAVE_LIBEDIT || HAVE_LIBREADLINE
-#define OPENTHREAD_USE_READLINE 1
-#if HAVE_LIBEDIT
-#include <editline/readline.h>
-#elif HAVE_LIBREADLINE
-#include <readline/history.h>
-#include <readline/readline.h>
-#endif
-#else
-#define OPENTHREAD_USE_READLINE 0
-#endif
 
 #include <openthread/cli.h>
 
@@ -67,53 +48,24 @@
 #include "openthread-core-config.h"
 #include "platform-posix.h"
 
-static const char sPrompt[] = "> ";
+namespace {
+constexpr char sPrompt[] = "> ";
 
-#if OPENTHREAD_USE_READLINE
-static void InputCallback(char *aLine)
-{
-    if (aLine != nullptr)
-    {
-        if (aLine[0] != '\0')
-        {
-            add_history(aLine);
-            otCliInputLine(aLine);
-        }
-        free(aLine);
-    }
-    else
-    {
-        exit(OT_EXIT_SUCCESS);
-    }
-}
-#endif
-
-static int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
+int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
 {
     OT_UNUSED_VARIABLE(aContext);
 
     return vdprintf(STDOUT_FILENO, aFormat, aArguments);
 }
+} // namespace
 
 extern "C" void otAppCliInit(otInstance *aInstance)
 {
-#if OPENTHREAD_USE_READLINE
-    rl_instream           = stdin;
-    rl_outstream          = stdout;
-    rl_inhibit_completion = true;
-
-    rl_set_screen_size(0, OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH);
-
-    rl_callback_handler_install(sPrompt, InputCallback);
-#endif
     otCliInit(aInstance, OutputCallback, nullptr);
 }
 
 extern "C" void otAppCliDeinit(void)
 {
-#if OPENTHREAD_USE_READLINE
-    rl_callback_handler_remove();
-#endif
 }
 
 extern "C" void otAppCliUpdate(otSysMainloopContext *aMainloop)
@@ -136,9 +88,6 @@ extern "C" void otAppCliProcess(const otSysMainloopContext *aMainloop)
 
     if (FD_ISSET(STDIN_FILENO, &aMainloop->mReadFdSet))
     {
-#if OPENTHREAD_USE_READLINE
-        rl_callback_read_char();
-#else
         char buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
 
         if (fgets(buffer, sizeof(buffer), stdin) != nullptr)
@@ -150,8 +99,8 @@ extern "C" void otAppCliProcess(const otSysMainloopContext *aMainloop)
         {
             exit(OT_EXIT_SUCCESS);
         }
-#endif
     }
 }
 
+#endif // !(defined(HAVE_LIBEDIT) || defined(HAVE_LIBREADLINE))
 #endif // !OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE

@@ -28,13 +28,18 @@
 
 add_executable(ot-cli
     main.c
-    cli.cpp
+    cli_readline.cpp
+    cli_stdio.cpp
 )
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
+if (READLINE)
 target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
+    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
+endif()
+
+target_compile_definitions(ot-cli PRIVATE
     ${OT_PLATFORM_DEFINES}
 )
 
