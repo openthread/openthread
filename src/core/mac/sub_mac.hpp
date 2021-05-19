@@ -199,6 +199,12 @@ public:
     explicit SubMac(Instance &aInstance);
 
     /**
+     * This method resets the states of the sub-MAC layer.
+     *
+     */
+    void Reset(void);
+
+    /**
      * This method gets the capabilities provided by platform radio.
      *
      * @returns The capability bit vector (see `OT_RADIO_CAP_*` definitions).

@@ -190,6 +190,14 @@ public:
      */
     void Reset(void);
 
+#if OPENTHREAD_RADIO
+    /**
+     * This method resets the internal states of the instance.
+     *
+     */
+    void StackReset(void);
+#endif
+
     /**
      * This method returns the active log level.
      *

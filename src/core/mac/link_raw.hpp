@@ -66,6 +66,12 @@ public:
     explicit LinkRaw(Instance &aInstance);
 
     /**
+     * This method resets the states of the raw link-layer
+     *
+     */
+    void Reset(void);
+
+    /**
      * This method returns true if the raw link-layer is enabled.
      *
      * @returns true if enabled, false otherwise.

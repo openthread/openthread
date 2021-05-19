@@ -33,6 +33,59 @@
 
 namespace ot {
 
+namespace {
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+constexpr Mac::PanId        kDefaultPanId        = 0xffff;
+constexpr Mac::ShortAddress kDefaultShortAddress = 0xfffe;
+#endif
+} // namespace
+
+void Radio::Reset(void)
+{
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Error error = OT_ERROR_NONE;
+
+    Mac::ExtAddress extAddr{};
+    Mac::Key        prevKey{};
+    Mac::Key        currKey{};
+    Mac::Key        nextKey{};
+
+    OT_UNUSED_VARIABLE(error);
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    error = EnableCsl(0, kDefaultShortAddress, nullptr);
+    OT_ASSERT(error == OT_ERROR_NONE);
+#endif
+
+    EnableSrcMatch(false);
+    ClearSrcMatchShortEntries();
+    ClearSrcMatchExtEntries();
+
+    if (IsEnabled())
+    {
+        error = Sleep();
+        OT_ASSERT(error == OT_ERROR_NONE);
+
+        error = Disable();
+        OT_ASSERT(error == OT_ERROR_NONE);
+    }
+
+    SetPanId(kDefaultPanId);
+    SetExtendedAddress(extAddr);
+    SetShortAddress(kDefaultShortAddress);
+    SetMacKey(0, 0, prevKey, currKey, nextKey);
+    SetMacFrameCounter(0);
+
+    error = SetTransmitPower(0);
+    OT_ASSERT(error == OT_ERROR_NONE);
+
+    error = SetCcaEnergyDetectThreshold(0);
+    OT_ASSERT(error == OT_ERROR_NONE);
+
+    SetPromiscuous(false);
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+}
+
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
 void Radio::SetExtendedAddress(const Mac::ExtAddress &aExtAddress)

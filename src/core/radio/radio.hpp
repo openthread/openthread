@@ -243,6 +243,12 @@ public:
     int8_t GetReceiveSensitivity(void);
 
     /**
+     * This method resets the states of the Thread radio.
+     *
+     */
+    void Reset(void);
+
+    /**
      * This method sets the PAN ID for address filtering.
      *
      * @param[in] aPanId     The IEEE 802.15.4 PAN ID.

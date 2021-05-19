@@ -1212,6 +1212,19 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
 
     otError error = OT_ERROR_NONE;
 
+#if OPENTHREAD_RADIO
+    mInstance->StackReset();
+
+    mIsRawStreamEnabled = false;
+    mCurTransmitTID     = 0;
+    mCurScanChannel     = kInvalidScanChannel;
+    mSrcMatchEnabled    = false;
+
+    ResetCounters();
+
+    error = WriteLastStatusFrame(SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_STATUS_RESET_POWER_ON);
+    OT_ASSERT(error == OT_ERROR_NONE);
+#else
     // Signal a platform reset. If implemented, this function
     // shouldn't return.
     otInstanceReset(mInstance);
@@ -1220,12 +1233,12 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
     // We only get to this point if the
     // platform doesn't support resetting.
     // In such a case we fake it.
-
     IgnoreError(otThreadSetEnabled(mInstance, false));
     IgnoreError(otIp6SetEnabled(mInstance, false));
 #endif
 
     sNcpInstance = nullptr;
+#endif
 
     return error;
 }

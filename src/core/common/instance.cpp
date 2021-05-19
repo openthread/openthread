@@ -167,6 +167,14 @@ void Instance::Reset(void)
     otPlatReset(this);
 }
 
+#if OPENTHREAD_RADIO
+void Instance::StackReset(void)
+{
+    mRadio.Reset();
+    mLinkRaw.Reset();
+}
+#endif
+
 void Instance::AfterInit(void)
 {
     mIsInitialized = true;

@@ -64,6 +64,21 @@ LinkRaw::LinkRaw(Instance &aInstance)
 {
 }
 
+void LinkRaw::Reset(void)
+{
+    mEnergyScanDoneCallback = nullptr;
+    mTransmitDoneCallback   = nullptr;
+    mReceiveDoneCallback    = nullptr;
+
+    mReceiveChannel      = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
+    mPanId               = kPanIdBroadcast;
+    mReceiveDoneCallback = nullptr;
+#if OPENTHREAD_RADIO
+    mSubMac.Reset();
+    mSubMac.SetPanId(mPanId);
+#endif
+}
+
 Error LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
 {
     Error error  = kErrorNone;

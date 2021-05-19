@@ -83,6 +83,39 @@ SubMac::SubMac(Instance &aInstance)
     mNextKey.Clear();
 }
 
+void SubMac::Reset(void)
+{
+    mState           = kStateDisabled;
+    mCsmaBackoffs    = 0;
+    mTransmitRetries = 0;
+    mShortAddress    = kShortAddrInvalid;
+    mExtAddress.Clear();
+    mRxOnWhenBackoff   = true;
+    mEnergyScanMaxRssi = kInvalidRssiValue;
+    mEnergyScanEndTime = Time{0};
+
+    mPrevKey.Clear();
+    mCurrKey.Clear();
+    mNextKey.Clear();
+
+    mFrameCounter = 0;
+    mKeyId        = 0;
+    mTimer.Stop();
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    mCslPeriod             = 0;
+    mCslChannel            = 0;
+    mIsCslChannelSpecified = false;
+    mCslSampleTime         = TimeMicro{0};
+    mCslLastSync           = TimeMicro{0};
+    mCslState              = kCslIdle;
+    mCslTimer.Stop();
+#endif
+
+    SetShortAddress(mShortAddress);
+    SetExtAddress(mExtAddress);
+}
+
 otRadioCaps SubMac::GetCaps(void) const
 {
     otRadioCaps caps = mRadioCaps;
