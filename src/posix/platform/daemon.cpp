@@ -81,7 +81,8 @@ int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments)
 
     VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
 
-    VerifyOrExit(sSessionSocket != -1, otLogDebgPlat("%s", buf));
+    otLogInfoPlat("%s", buf);
+    VerifyOrExit(sSessionSocket != -1);
 
 #if defined(__linux__)
     // Don't die on SIGPIPE
