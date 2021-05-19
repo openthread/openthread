@@ -911,7 +911,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_ASSISTING_PORT
     {
         uint16_t port;
 
-        IgnoreError(mDecoder.ReadUint16(port));
+        SuccessOrExit(error = mDecoder.ReadUint16(port));
         SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, port));
     }
 
