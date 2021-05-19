@@ -47,3 +47,11 @@ set(tcplp_static_target "tcplp")
 
 add_library(${tcplp_static_target} STATIC ${src_tcplp})
 set_target_properties(${tcplp_static_target} PROPERTIES OUTPUT_NAME tcplp)
+target_include_directories(${tcplp_static_target}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/bsdtcp
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+)

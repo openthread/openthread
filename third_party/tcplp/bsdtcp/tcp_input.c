@@ -99,7 +99,7 @@ static int imin(int a, int b) { return (a < b ? a : b); }
 
 static int min(int a, int b) { return imin(a, b); }
 
-static void	 tcp_dooptions(struct tcpopt *, u_char *, int, int);
+static void	 tcp_dooptions(struct tcpopt *, uint8_t *, int, int);
 static void
 tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
     struct tcpcb *tp, int drop_hdrlen, int tlen, uint8_t iptos,
@@ -397,12 +397,12 @@ tcp_hc_get(/*struct in_conninfo *inc*/ struct tcpcb* tp, struct hc_metrics_lite 
  * Taken from tcp_hostcache.c.
  * Sam: I changed this always act as if there is a miss.
  */
-u_long
+uint64_t
 tcp_hc_getmtu(/*struct in_conninfo *inc*/ struct tcpcb* tp)
 {
 #if 0
 	struct hc_metrics *hc_entry;
-	u_long mtu;
+	uint64_t mtu;
 
 	hc_entry = tcp_hc_lookup(inc);
 	if (hc_entry == NULL) {
@@ -517,7 +517,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	int rstreason = 0;
 	//uint32_t ticks = get_ticks();
 	struct tcpopt to;		/* options in this segment */
-	u_char* optp = NULL;
+	uint8_t* optp = NULL;
 	int optlen = 0;
 	to.to_flags = 0;
 	KASSERT(tp || tpl, ("One of tp and tpl must be positive"));
@@ -528,7 +528,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	struct inpcb *inp = NULL;
 	struct tcpcb *tp = NULL;
 	struct socket *so = NULL;
-	u_char *optp = NULL;
+	uint8_t *optp = NULL;
 	int off0;	/* It seems that this is the offset of the TCP header from the IP header. */
 	int optlen = 0;
 #ifdef INET
@@ -561,7 +561,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 	 * The size of tcp_saveipgen must be the size of the max ip header,
 	 * now IPv6.
 	 */
-	u_char tcp_saveipgen[IP6_HDR_LEN];
+	uint8_t tcp_saveipgen[IP6_HDR_LEN];
 	struct tcphdr tcp_savetcp;
 	short ostate = 0;
 #endif
@@ -729,7 +729,7 @@ tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* 
 #endif
 #endif
 		optlen = off - sizeof (struct tcphdr);
-		optp = (u_char *)(th + 1);
+		optp = (uint8_t *)(th + 1);
 	}
 
 	thflags = th->th_flags;
@@ -1598,7 +1598,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 {
 	int thflags, acked, ourfinisacked, needoutput = 0;
 	int rstreason, todrop, win;
-	u_long tiwin;
+	uint64_t tiwin;
 	//char *s;
 	//struct in_conninfo *inc;
 	//struct mbuf *mfree;
@@ -1611,7 +1611,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	 * The size of tcp_saveipgen must be the size of the max ip header,
 	 * now IPv6.
 	 */
-	u_char tcp_saveipgen[IP6_HDR_LEN];
+	uint8_t tcp_saveipgen[IP6_HDR_LEN];
 	struct tcphdr tcp_savetcp;
 	short ostate = 0;
 #endif
@@ -1702,7 +1702,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 	/*
 	 * Parse options on any incoming segment.
 	 */
-	tcp_dooptions(&to, (u_char *)(th + 1),
+	tcp_dooptions(&to, (uint8_t *)(th + 1),
 	    (th->th_off << 2) - sizeof(struct tcphdr),
 	    (thflags & TH_SYN) ? TO_SYN : 0);
 
@@ -1844,7 +1844,7 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 
 				if ((to.to_flags & TOF_TS) != 0 &&
 				    to.to_tsecr) {
-					u_int t;
+					uint32_t t;
 
 					t = tcp_ts_getticks() - to.to_tsecr;
 					if (!tp->t_rttlow || tp->t_rttlow > t)
@@ -2760,9 +2760,9 @@ tcp_do_segment(struct ip6_hdr* ip6, struct tcphdr *th, otMessage* msg,
 					 * segment. Restore the original
 					 * snd_cwnd after packet transmission.
 					 */
-					u_long oldcwnd;
+					uint64_t oldcwnd;
 					tcp_seq oldsndmax;
-					u_int sent;
+					uint32_t sent;
 					int avail;
 					cc_ack_received(tp, th, CC_DUPACK);
 					oldcwnd = tp->snd_cwnd;
@@ -2891,7 +2891,7 @@ process_ACK:
 		 */
 
 		if ((to.to_flags & TOF_TS) != 0 && to.to_tsecr) {
-			u_int t;
+			uint32_t t;
 
 			t = tcp_ts_getticks() - to.to_tsecr;
 			if (!tp->t_rttlow || tp->t_rttlow > t)
@@ -3113,7 +3113,7 @@ step6:
 		 * but if two URG's are pending at once, some out-of-band
 		 * data may creep in... ick.
 		 */
-		if (th->th_urp <= (u_long)tlen &&
+		if (th->th_urp <= (uint64_t)tlen &&
 		    !(so->so_options & SO_OOBINLINE)) {
 			/* hdr drop is delayed */
 			tcp_pulloutofband(so, th, m, drop_hdrlen);
@@ -3409,7 +3409,7 @@ drop:
  * Parse TCP options and place in tcpopt.
  */
 static void
-tcp_dooptions(struct tcpopt *to, u_char *cp, int cnt, int flags)
+tcp_dooptions(struct tcpopt *to, uint8_t *cp, int cnt, int flags)
 {
 	int opt, optlen;
 
@@ -3634,7 +3634,7 @@ tcp_mss_update(struct tcpcb *tp, int offer, int mtuoffer,
     struct hc_metrics_lite *metricptr, struct tcp_ifcap *cap)
 {
 	int mss = 0;
-	u_long maxmtu = 0;
+	uint64_t maxmtu = 0;
 //	struct inpcb *inp = tp->t_inpcb;
 	struct hc_metrics_lite metrics;
 	int origoffer;
@@ -3801,7 +3801,7 @@ void
 tcp_mss(struct tcpcb *tp, int offer)
 {
 	//int mss;
-	//u_long bufsize;
+	//uint64_t bufsize;
 //	struct inpcb *inp;
 //	struct socket *so;
 	struct hc_metrics_lite metrics;
@@ -3882,8 +3882,8 @@ int
 tcp_mssopt(/*struct in_conninfo *inc*/struct tcpcb* tp)
 {
 	int mss = 0;
-	u_long maxmtu = 0;
-	u_long thcmtu = 0;
+	uint64_t maxmtu = 0;
+	uint64_t thcmtu = 0;
 	size_t min_protoh;
 
 //	KASSERT(inc != NULL, ("tcp_mssopt with NULL in_conninfo pointer"));
@@ -3930,7 +3930,7 @@ static void
 tcp_newreno_partial_ack(struct tcpcb *tp, struct tcphdr *th)
 {
 	tcp_seq onxt = tp->snd_nxt;
-	u_long  ocwnd = tp->snd_cwnd;
+	uint64_t  ocwnd = tp->snd_cwnd;
 
 //	INP_WLOCK_ASSERT(tp->t_inpcb);
 

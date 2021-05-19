@@ -322,7 +322,7 @@ tcp_discardcb(struct tcpcb *tp)
 	 */
 	if (tp->t_rttupdated >= 4) {
 		struct hc_metrics_lite metrics;
-		u_long ssthresh;
+		uint64_t ssthresh;
 
 		bzero(&metrics, sizeof(metrics));
 		/*
@@ -343,7 +343,7 @@ tcp_discardcb(struct tcpcb *tp)
 			ssthresh = (ssthresh + tp->t_maxseg / 2) / tp->t_maxseg;
 			if (ssthresh < 2)
 				ssthresh = 2;
-			ssthresh *= (u_long)(tp->t_maxseg +
+			ssthresh *= (uint64_t)(tp->t_maxseg +
 #ifdef INET6
 			    (isipv6 ? sizeof (struct ip6_hdr) +
 				sizeof (struct tcphdr) :
@@ -614,9 +614,9 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 	nth->th_off = sizeof(struct tcphdr) >> 2;
 	nth->th_flags = flags;
 	if (tp != NULL)
-		nth->th_win = htons((u_short) (win >> tp->rcv_scale));
+		nth->th_win = htons((uint16_t) (win >> tp->rcv_scale));
 	else
-		nth->th_win = htons((u_short)win);
+		nth->th_win = htons((uint16_t)win);
 	nth->th_urp = 0;
     nth->th_sum = 0;
 
@@ -667,9 +667,9 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 	nth->th_off = sizeof (struct tcphdr) >> 2;
 	nth->th_flags = flags;
 	if (tp != NULL)
-		nth->th_win = htons((u_short) (win >> tp->rcv_scale));
+		nth->th_win = htons((uint16_t) (win >> tp->rcv_scale));
 	else
-		nth->th_win = htons((u_short)win);
+		nth->th_win = htons((uint16_t)win);
 	nth->th_urp = 0;
 	send_message(tp, msg, nth, sizeof(struct tcphdr));
 	ip_free(bufreal);
@@ -809,9 +809,9 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 	nth->th_off = sizeof (struct tcphdr) >> 2;
 	nth->th_flags = flags;
 	if (tp != NULL)
-		nth->th_win = htons((u_short) (win >> tp->rcv_scale));
+		nth->th_win = htons((uint16_t) (win >> tp->rcv_scale));
 	else
-		nth->th_win = htons((u_short)win);
+		nth->th_win = htons((uint16_t)win);
 	nth->th_urp = 0;
 
 	m->m_pkthdr.csum_data = offsetof(struct tcphdr, th_sum);
@@ -832,7 +832,7 @@ tcp_respond(struct tcpcb *tp, otInstance* instance, struct ip6_hdr* ip6gen, stru
 	{
 		m->m_pkthdr.csum_flags = CSUM_TCP;
 		nth->th_sum = in_pseudo(ip->ip_src.s_addr, ip->ip_dst.s_addr,
-		    htons((u_short)(tlen - sizeof(struct ip) + ip->ip_p)));
+		    htons((uint16_t)(tlen - sizeof(struct ip) + ip->ip_p)));
 	}
 #endif /* INET */
 #ifdef TCPDEBUG
@@ -897,10 +897,10 @@ tcp_drop(struct tcpcb *tp, int errnum)
  * is called by TCP routines that access the rmx structure and by
  * tcp_mss_update to get the peer/interface MTU.
  */
-u_long
+uint64_t
 tcp_maxmtu6(/*struct in_conninfo *inc,*/struct tcpcb* tp, struct tcp_ifcap *cap)
 {
-	u_long maxmtu = 0;
+	uint64_t maxmtu = 0;
 
 	KASSERT (tp != NULL, ("tcp_maxmtu6 with NULL tcpcb pointer"));
 	if (!IN6_IS_ADDR_UNSPECIFIED(&tp->faddr)) {
@@ -912,7 +912,7 @@ tcp_maxmtu6(/*struct in_conninfo *inc,*/struct tcpcb* tp, struct tcp_ifcap *cap)
 #if 0 // I rewrote this function above
 	struct route_in6 sro6;
 	struct ifnet *ifp;
-	u_long maxmtu = 0;
+	uint64_t maxmtu = 0;
 
 	KASSERT(inc != NULL, ("tcp_maxmtu6 with NULL in_conninfo pointer"));
 

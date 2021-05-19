@@ -42,13 +42,13 @@
 #include <stdint.h>
 
 // I'm omitting these since they seem to come predefined in Linux, sometimes differently
-typedef uint8_t u_char;
-typedef uint16_t u_short;
-typedef uint32_t u_int;
-typedef uint64_t u_long;
+// typedef uint8_t u_char;
+// typedef uint16_t u_short;
+// typedef uint32_t u_int;
+// typedef uint64_t u_long;
 
-typedef uint16_t ushort;
-typedef uint32_t uint;
+// typedef uint16_t ushort;
+// typedef uint32_t uint;
 
 typedef uint8_t __uint8_t;
 typedef uint16_t __uint16_t;

@@ -89,9 +89,9 @@ enum tcp_timer_consts {
  */
 #define	TCPT_RANGESET(tv, value, tvmin, tvmax) do { \
 	(tv) = (value) + tcp_rexmit_slop; \
-	if ((u_long)(tv) < (u_long)(tvmin)) \
+	if ((uint64_t)(tv) < (uint64_t)(tvmin)) \
 		(tv) = (tvmin); \
-	if ((u_long)(tv) > (u_long)(tvmax)) \
+	if ((uint64_t)(tv) > (uint64_t)(tvmax)) \
 		(tv) = (tvmax); \
 } while(0)
 

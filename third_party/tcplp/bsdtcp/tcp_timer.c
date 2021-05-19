@@ -673,7 +673,7 @@ tcp_timer_active(struct tcpcb *tp, uint32_t timer_type)
 }
 
 void
-tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, u_int delta) {
+tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, uint32_t delta) {
 	uint8_t tos_timer;
 	switch (timer_type) {
 	case TT_DELACK:

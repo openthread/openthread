@@ -149,7 +149,7 @@ tcp6_connect(struct tcpcb *tp, struct sockaddr_in6 *nam)
 		error = EINVAL; // The port must be bound
 		goto out;
 	}
-	if (memcmp(&tp->laddr, &in6addr_any, sizeof(tp->laddr)) == 0) {
+	if (IN6_IS_ADDR_UNSPECIFIED(&tp->laddr)) {
 		const struct in6_addr* source = tcplp_sys_get_source_ipv6_address(tp->instance, &nam->sin6_addr); // choose address dynamically
 		if (source == NULL) {
 			error = EINVAL;
