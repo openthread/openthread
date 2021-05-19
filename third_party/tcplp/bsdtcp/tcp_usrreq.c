@@ -49,6 +49,8 @@
 
 #include "tcp_const.h"
 
+#include <openthread/tcp.h>
+
 //static void	tcp_disconnect(struct tcpcb *);
 static void	tcp_usrclosed(struct tcpcb *);
 
@@ -297,10 +299,9 @@ out:
 tcp_usr_send(struct socket *so, int flags, struct mbuf *m,
     struct sockaddr *nam, struct mbuf *control, struct thread *td)*/
 /* Returns error condition, and stores bytes sent into SENT. */
-int tcp_usr_send(struct tcpcb* tp, int moretocome, const uint8_t* data, size_t datalen, size_t* bytessent)
+int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data)
 {
 	int error = 0;
-	*bytessent = 0;
 //	struct inpcb *inp;
 //	struct tcpcb *tp = NULL;
 #if 0
@@ -370,8 +371,8 @@ int tcp_usr_send(struct tcpcb* tp, int moretocome, const uint8_t* data, size_t d
 	if (!(flags & PRUS_OOB)) {
 #endif // DON'T SUPPORT URGENT DATA
 		/*sbappendstream(&so->so_snd, m, flags);*/
-        *bytessent = cbuf_write(&tp->sendbuf, data, 0, datalen, cbuf_copy_from_buffer);
-        if (*bytessent == 0) {
+        lbuf_append(&tp->sendbuf, data);
+        if (data->mLength == 0) {
              goto out;
         }
 #if 0 // DON'T SUPPORT IMPLIED CONNECTION

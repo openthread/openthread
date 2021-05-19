@@ -62,13 +62,13 @@ extern "C" {
  * otLinkedBuffer structures.
  *
  */
-struct otLinkedBuffer
+typedef struct otLinkedBuffer
 {
     struct otLinkedBuffer
         *          mNext; ///< Pointer to the next linked buffer in this chain, or NULL if this is the end of the chain
     const uint8_t *mData; ///< Pointer to data referenced by this linked buffer
     uint16_t       mLength; ///< Length of this linked buffer
-};
+} otLinkedBuffer;
 
 struct otTcpEndpoint;
 typedef struct otTcpEndpoint otTcpEndpoint;

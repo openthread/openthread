@@ -31,86 +31,81 @@
 
 #include "lbuf.h"
 #include <string.h>
+#include <openthread/tcp.h>
 
 void lbuf_init(struct lbufhead* buffer) {
     memset(buffer, 0x00, sizeof(struct lbufhead));
 }
 
-struct ip_iovec* lbuf_to_iovec(struct lbufhead* buffer) {
-    if (buffer == NULL || buffer->head == NULL) {
-        return NULL;
-    } else {
-        return &buffer->head->iov;
-    }
-}
-
-int lbuf_append(struct lbufhead* buffer, struct lbufent* newentry) {
-    struct lbufent* tail = buffer->tail;
+void lbuf_append(struct lbufhead* buffer, otLinkedBuffer* newentry) {
+    otLinkedBuffer* tail = buffer->tail;
     if (tail == NULL) {
         buffer->head = newentry;
         buffer->tail = newentry;
-        buffer->length = (uint32_t) newentry->iov.iov_len;
-        newentry->iov.iov_next = NULL;
-    } else if (newentry->iov.iov_len <= (uint32_t) tail->extraspace) {
-        memcpy(tail->iov.iov_base + tail->iov.iov_len,
-               newentry->iov.iov_base, newentry->iov.iov_len);
-        tail->extraspace -= newentry->iov.iov_len;
-        buffer->length += (uint32_t) newentry->iov.iov_len;
-        tail->iov.iov_len += newentry->iov.iov_len;
-        return 2;
+        buffer->offset = 0;
+        buffer->length = newentry->mLength;
+        newentry->mNext = NULL;
     } else {
-        tail->iov.iov_next = &newentry->iov;
+        tail->mNext = newentry;
         buffer->tail = newentry;
-        buffer->length += (uint32_t) newentry->iov.iov_len;
-        newentry->iov.iov_next = NULL;
+        buffer->length += newentry->mLength;
+        newentry->mNext = NULL;
     }
-    return 1;
 }
 
-uint32_t lbuf_pop(struct lbufhead* buffer, uint32_t numbytes, int* ntraversed) {
-    struct lbufent* curr = buffer->head;
-    uint32_t bytesleft = numbytes;
-    while (bytesleft >= curr->iov.iov_len) {
+void lbuf_extend(struct lbufhead* buffer, size_t numbytes) {
+    buffer->tail->mLength += numbytes;
+}
+
+size_t lbuf_pop(struct lbufhead* buffer, size_t numbytes, int* ntraversed) {
+    otLinkedBuffer* curr = buffer->head;
+    size_t bytesleft = numbytes;
+    size_t curroffset = buffer->offset;
+    if (curr == NULL) {
+        return 0;
+    }
+    while (bytesleft >= curr->mLength - curroffset) {
         ++*ntraversed;
-        buffer->head = IOV_TO_LBUFENT(curr->iov.iov_next);
-        bytesleft -= curr->iov.iov_len;
-        buffer->length -= curr->iov.iov_len;
+        bytesleft -= (curr->mLength - curroffset);
+        buffer->length -= (curr->mLength - curroffset);
         if (buffer->tail == curr) {
-            /* buffer->head should be NULL. */
+            buffer->head = NULL;
             buffer->tail = NULL;
+            buffer->offset = 0;
             return numbytes - bytesleft;
         }
-        curr = buffer->head;
+        curr = curr->mNext;
+        curroffset = 0;
     }
     /* Handle the last entry. */
-    curr->iov.iov_base += bytesleft;
-    curr->iov.iov_len -= bytesleft;
+    buffer->head = curr;
+    buffer->offset = curroffset + bytesleft;
     buffer->length -= bytesleft;
     return numbytes;
 }
 
-int lbuf_getrange(struct lbufhead* buffer, uint32_t offset, uint32_t numbytes,
-                  struct lbufent** first, uint32_t* firstoffset,
-                  struct lbufent** last, uint32_t* lastextra) {
-    struct lbufent* curr = buffer->head;
-    uint32_t offsetleft = offset;
+int lbuf_getrange(struct lbufhead* buffer, size_t offset, size_t numbytes,
+                  otLinkedBuffer** first, size_t* firstoffset,
+                  otLinkedBuffer** last, size_t* lastextra) {
+    otLinkedBuffer* curr = buffer->head;
+    uint32_t offsetleft = offset + buffer->offset;
     uint32_t bytesleft = numbytes;
     if (buffer->length < offset + numbytes) {
         return 1; // out of range
     }
-    while (offsetleft > 0 && offsetleft >= curr->iov.iov_len) {
-        offsetleft -= curr->iov.iov_len;
-        curr = IOV_TO_LBUFENT(curr->iov.iov_next);
+    while (offsetleft > 0 && offsetleft >= curr->mLength) {
+        offsetleft -= curr->mLength;
+        curr = curr->mNext;
     }
     *first = curr;
     *firstoffset = offsetleft;
     bytesleft += offsetleft;
-    while (bytesleft > 0 && bytesleft > curr->iov.iov_len) {
-        bytesleft -= curr->iov.iov_len;
-        curr = IOV_TO_LBUFENT(curr->iov.iov_next);
+    while (bytesleft > 0 && bytesleft > curr->mLength) {
+        bytesleft -= curr->mLength;
+        curr = curr->mNext;
     }
     *last = curr;
-    *lastextra = curr->iov.iov_len - bytesleft;
+    *lastextra = curr->mLength - bytesleft;
     return 0;
 }
 

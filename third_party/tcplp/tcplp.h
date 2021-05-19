@@ -64,6 +64,13 @@ extern "C" {
 #define RELOOKUP_REQUIRED -1
 #define CONN_LOST_NORMAL 0
 
+struct signals {
+    int links_popped;
+    bool conn_established;
+    bool recvbuf_notempty;
+    bool rcvd_fin;
+};
+
 /*
  * Functions that the TCP protocol logic can call to interact with the rest of
  * the system.

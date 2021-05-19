@@ -38,6 +38,7 @@
 
 #include "../lib/bitmap.h"
 #include "../lib/cbuf.h"
+#include "../lib/lbuf.h"
 #include "cc.h"
 #include "tcp.h"
 #include "types.h"
@@ -130,6 +131,8 @@ struct tcpcb_listen {
 #define SACKHOLE_POOL_SIZE MAX_SACKHOLES
 #define SACKHOLE_BMP_SIZE BITS_TO_BYTES(SACKHOLE_POOL_SIZE)
 
+struct signals;
+
 // You can set the maximum number of SACK blocks in tcp.h
 
 /*
@@ -143,7 +146,7 @@ struct tcpcb {
 
 	struct tcpcb_listen* accepted_from;
 
-	struct cbufhead sendbuf;
+	struct lbufhead sendbuf;
 	struct cbufhead recvbuf;
 	uint8_t* reassbmp;
 	int32_t reass_fin_index;
@@ -320,7 +323,7 @@ void	cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type);
 
 /* Added, since there is no header file for tcp_usrreq.c. */
 int tcp6_usr_connect(struct tcpcb* tp, struct sockaddr_in6* sinp6);
-int tcp_usr_send(struct tcpcb* tp, int moretocome, const uint8_t* data, size_t datalen, size_t* bytessent);
+int tcp_usr_send(struct tcpcb* tp, int moretocome, struct otLinkedBuffer* data);
 int tcp_usr_rcvd(struct tcpcb* tp);
 int tcp_usr_shutdown(struct tcpcb* tp);
 void tcp_usr_abort(struct tcpcb* tp);
@@ -662,14 +665,14 @@ int	 tcp_twcheck(struct tcpcb*,/*struct inpcb *, struct tcpopt *,*/ struct tcphd
 void tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otInstance* instance,
     int tlen, int rstreason);
 int tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
-          uint8_t* signals);
+          struct signals* sig);
 int	 tcp_output(struct tcpcb *);
 void tcpip_maketemplate(struct /*inp*/tcpcb *, struct tcptemp*);
 void	 tcpip_fillheaders(struct /*inp*/tcpcb *, /*void*/ otMessageInfo *, void *);
 u_long	 tcp_maxmtu6(/*struct in_conninfo **/ struct tcpcb*, struct tcp_ifcap *);
 int	 tcp_addoptions(struct tcpopt *, u_char *);
 int	 tcp_mssopt(/*struct in_conninfo **/ struct tcpcb*);
-int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, /*struct mbuf*/otMessage *, off_t, uint8_t*);
+int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, /*struct mbuf*/otMessage *, off_t, struct signals*);
 void tcp_sack_init(void); // Sam: new function that I added
 void	 tcp_sack_doack(struct tcpcb *, struct tcpopt *, tcp_seq);
 void	 tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_laststart, tcp_seq rcv_lastend);

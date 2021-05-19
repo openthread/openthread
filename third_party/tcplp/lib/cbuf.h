@@ -41,7 +41,6 @@
 #include <sys/types.h>
 
 struct otLinkedBuffer;
-typedef struct otLinkedBuffer otLinkedBuffer;
 
 struct cbufhead {
     size_t r_index;
@@ -69,7 +68,7 @@ size_t cbuf_free_space(struct cbufhead* chdr);
 size_t cbuf_size(struct cbufhead* chdr);
 bool cbuf_empty(struct cbufhead* chdr);
 
-void cbuf_reference(const struct cbufhead* chdr, otLinkedBuffer* first, otLinkedBuffer* second);
+void cbuf_reference(const struct cbufhead* chdr, struct otLinkedBuffer* first, struct otLinkedBuffer* second);
 
 size_t cbuf_reass_write(struct cbufhead* chdr, size_t offset, const void* data, off_t data_offset, size_t numbytes, uint8_t* bitmap, size_t* firstindex, cbuf_copier_t copy_from);
 size_t cbuf_reass_merge(struct cbufhead* chdr, size_t numbytes, uint8_t* bitmap);
