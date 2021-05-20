@@ -49,13 +49,12 @@ template <uint16_t kSize> void PrintString(const char *aName, const String<kSize
 void TestStringWriter(void)
 {
     String<kStringSize> str;
-    StringWriter        writer(str);
     constexpr char      kLongString[] = "abcdefghijklmnopqratuvwxyzabcdefghijklmnopqratuvwxyz";
 
     printf("\nTest 1: StringWriter constructor\n");
 
-    VerifyOrQuit(writer.GetSize() == kStringSize, "GetSize() failed");
-    VerifyOrQuit(writer.GetLength() == 0, "GetLength() failed for empty string");
+    VerifyOrQuit(str.GetSize() == kStringSize, "GetSize() failed");
+    VerifyOrQuit(str.GetLength() == 0, "GetLength() failed for empty string");
 
     VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
 
@@ -65,40 +64,41 @@ void TestStringWriter(void)
 
     printf("\nTest 2: StringWriter::Append() method\n");
 
-    writer.Append("Hi");
-    VerifyOrQuit(writer.GetLength() == 2, "GetLength() failed");
+    str.Append("Hi");
+    VerifyOrQuit(str.GetLength() == 2, "GetLength() failed");
     VerifyOrQuit(strcmp(str.AsCString(), "Hi") == 0, "String content is incorrect");
     PrintString("str", str);
 
-    writer.Append("%s%d", "!", 12);
-    VerifyOrQuit(writer.GetLength() == 5, "GetLength() failed");
+    str.Append("%s%d", "!", 12);
+    VerifyOrQuit(str.GetLength() == 5, "GetLength() failed");
     VerifyOrQuit(strcmp(str.AsCString(), "Hi!12") == 0, "String content is incorrect");
     PrintString("str", str);
 
-    writer.Append(kLongString);
-    VerifyOrQuit(writer.IsTruncated() && writer.GetLength() == 5 + sizeof(kLongString) - 1,
+    str.Append(kLongString);
+    VerifyOrQuit(str.IsTruncated() && str.GetLength() == 5 + sizeof(kLongString) - 1,
                  "String::Append() did not handle overflow buffer correctly");
     PrintString("str", str);
 
     printf("\nTest 3: StringWriter::Clear() method\n");
 
-    writer.Clear();
-    writer.Append("Hello");
-    VerifyOrQuit(writer.GetLength() == 5, "GetLength() failed for empty string");
+    str.Clear();
+    str.Append("Hello");
+    VerifyOrQuit(str.GetLength() == 5, "GetLength() failed for empty string");
     VerifyOrQuit(strcmp(str.AsCString(), "Hello") == 0, "String content is incorrect");
     PrintString("str", str);
 
-    writer.Clear();
-    VerifyOrQuit(writer.GetLength() == 0, "GetLength() failed for empty string");
+    str.Clear();
+    VerifyOrQuit(str.GetLength() == 0, "GetLength() failed for empty string");
     VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
 
-    writer.Append("%d", 12);
-    VerifyOrQuit(writer.GetLength() == 2, "GetLength() failed");
+    str.Append("%d", 12);
+    VerifyOrQuit(str.GetLength() == 2, "GetLength() failed");
     VerifyOrQuit(strcmp(str.AsCString(), "12") == 0, "String content is incorrect");
     PrintString("str", str);
 
-    writer.Clear().Append(kLongString);
-    VerifyOrQuit(writer.IsTruncated() && writer.GetLength() == sizeof(kLongString) - 1,
+    str.Clear();
+    str.Append(kLongString);
+    VerifyOrQuit(str.IsTruncated() && str.GetLength() == sizeof(kLongString) - 1,
                  "String::Clear() + String::Append() did not handle overflow buffer correctly");
     PrintString("str", str);
 

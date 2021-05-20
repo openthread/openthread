@@ -4127,11 +4127,10 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
     };
 
     String<kRlocStringSize> rlocString;
-    StringWriter            writer(rlocString);
 
     if (aRloc != Mac::kShortAddrInvalid)
     {
-        writer.Append(",0x%04x", aRloc);
+        rlocString.Append(",0x%04x", aRloc);
     }
 
     otLogInfoMle("%s %s%s (%s%s)", MessageActionToString(aAction), MessageTypeToString(aType),
