@@ -591,6 +591,7 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
 void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize);
 
 #define OT_IP6_PREFIX_STRING_SIZE 45 ///< Recommended size for string representation of an IPv6 prefix.
+
 /**
  * This function converts a given IPv6 prefix to a human-readable string.
  *

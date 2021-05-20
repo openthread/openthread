@@ -142,7 +142,7 @@ public:
      *
      * @tparam kSize  The size of the string (number of chars).
      *
-     * @param[in] aStringBuffer   A reference to a `String<kSize` to write into.
+     * @param[in] aStringBuffer   A reference to a `String<kSize>` to write into.
      *
      */
     template <uint16_t kSize>
