@@ -1223,11 +1223,12 @@ void Server::HandleLeaseTimer(void)
             otLogInfoSrp("[server] LEASE of host %s expired", host->GetFullName());
 
             // If the host expired, delete all resources of this host and its services.
-            RemoveHost(host, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
             while ((service = host->GetNextService(service)) != nullptr)
             {
-                host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
+                // Don't need to notify the service handler as `RemoveHost` at below will do.
+                host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
+            RemoveHost(host, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
 
             earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
         }
@@ -1576,15 +1577,8 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
         otLogInfoSrp("[server] fully remove service '%s'", aService->mFullName);
     }
 
-    IgnoreError(mServices.Remove(*aService));
-
     if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
     {
-        LinkedList<Service> remainingServices = mServices;
-
-        mServices.Clear();
-        IgnoreError(mServices.Add(*aService));
-
         server.mServiceUpdateHandler(server.AllocateId(), this, kDefaultEventsHandlerTimeout,
                                      server.mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
@@ -1592,16 +1586,11 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
         // Because removing a service should fail only when there is system
         // failure of the platform mDNS implementation and in which case the
         // service is not expected to be still registered.
-
-        mServices = remainingServices;
     }
 
-    if (aRetainName)
+    if (!aRetainName)
     {
-        IgnoreError(mServices.Add(*aService));
-    }
-    else
-    {
+        IgnoreError(mServices.Remove(*aService));
         aService->Free();
     }
 

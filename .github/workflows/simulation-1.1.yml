@@ -450,8 +450,8 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
-      CC: clang
-      CXX: clang++
+      CC: clang-10
+      CXX: clang++-10
     steps:
     - uses: actions/checkout@v2
       with:
@@ -459,7 +459,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build

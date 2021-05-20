@@ -128,21 +128,31 @@ Prefix::InfoString Prefix::ToString(void) const
 {
     InfoString   string;
     StringWriter writer(string);
-    uint8_t      sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
 
-    for (uint16_t i = 0; i < sizeInUint16; i++)
-    {
-        writer.Append("%s%x", (i > 0) ? ":" : "", HostSwap16(mPrefix.mFields.m16[i]));
-    }
+    ToString(writer);
+
+    return string;
+}
+
+void Prefix::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+
+    ToString(writer);
+}
+
+void Prefix::ToString(StringWriter &aWriter) const
+{
+    uint8_t sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
+
+    static_cast<const Address &>(mPrefix).AppendHexWords(aWriter, sizeInUint16);
 
     if (GetBytesSize() < Address::kSize - 1)
     {
-        writer.Append("::");
+        aWriter.Append("::");
     }
 
-    writer.Append("/%d", mLength);
-
-    return string;
+    aWriter.Append("/%d", mLength);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -634,10 +644,36 @@ Address::InfoString Address::ToString(void) const
     InfoString   string;
     StringWriter writer(string);
 
-    writer.Append("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
-                  HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
-                  HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+    ToString(writer);
+
     return string;
+}
+
+void Address::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+    ToString(writer);
+}
+
+void Address::ToString(StringWriter &aWriter) const
+{
+    AppendHexWords(aWriter, OT_ARRAY_LENGTH(mFields.m16));
+}
+
+void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
+{
+    // Appends the first `aLength` elements in `mFields.m16[]` array
+    // as hex words.
+
+    for (uint8_t index = 0; index < aLength; index++)
+    {
+        if (index > 0)
+        {
+            aWriter.Append(":");
+        }
+
+        aWriter.Append("%x", HostSwap16(mFields.m16[index]));
+    }
 }
 
 const Address &Address::GetLinkLocalAllNodesMulticast(void)

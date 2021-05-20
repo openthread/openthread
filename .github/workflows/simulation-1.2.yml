@@ -55,7 +55,7 @@ jobs:
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
       matrix:
-        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
+        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang-10", cxx: "clang++-10", gcov: "llvm"}]
         arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
@@ -65,7 +65,7 @@ jobs:
       run: |
         sudo dpkg --add-architecture i386
         sudo apt-get update
-        sudo apt-get --no-install-recommends install -y ninja-build python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build python3-setuptools python3-wheel llvm lcov
         sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build

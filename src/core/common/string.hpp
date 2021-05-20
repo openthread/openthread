@@ -131,11 +131,18 @@ public:
     /**
      * This constructor initializes the object as cleared on the provided buffer.
      *
+     * @param[in] aBuffer  A pointer to the char buffer to write into.
+     * @param[in] aSize    The size of @p aBuffer.
+     *
      */
     StringWriter(char *aBuffer, uint16_t aSize);
 
     /**
      * This constructor initializes the object as cleared on a fixed-size string.
+     *
+     * @tparam kSize  The size of the string (number of chars).
+     *
+     * @param[in] aStringBuffer   A reference to a `String<kSize>` to write into.
      *
      */
     template <uint16_t kSize>
