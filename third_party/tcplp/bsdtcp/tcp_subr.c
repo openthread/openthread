@@ -71,8 +71,6 @@ tcp_seq tcp_new_isn(struct tcpcb* tp) {
 
 /* This is based on tcp_init in tcp_subr.c. */
 void tcp_init(void) {
-	// Added by Sam: Need to initialize the sackhole pool.
-	tcp_sack_init();
 #if 0 // I'M NOT USING A HASH TABLE TO STORE TCBS.
 	const char *tcbhash_tuneable;
 	int hashsize;
@@ -270,6 +268,9 @@ __attribute__((used)) void initialize_tcb(struct tcpcb* tp) {
 
 	/* From tcp_usr_attach in tcp_usrreq.c. */
 	tp->t_state = TCP6S_CLOSED;
+
+    // Added by Sam: Need to initialize the sackhole pool.
+	tcp_sack_init(tp);
 }
 
 void
