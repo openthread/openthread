@@ -34,45 +34,6 @@
 #ifndef _NETINET_IP_H_
 #define	_NETINET_IP_H_
 
-
-#if 0
-#include <sys/cdefs.h>
-
-/*
- * Definitions for internet protocol version 4.
- *
- * Per RFC 791, September 1981.
- */
-#define	IPVERSION	4
-
-/*
- * Structure of an internet header, naked of options.
- */
-struct ip {
-//#if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t	ip_hl:4,		/* header length */
-		ip_v:4;			/* version */
-//#endif
-#if 0
-#if BYTE_ORDER == BIG_ENDIAN
-	uint8_t	ip_v:4,			/* version */
-		ip_hl:4;		/* header length */
-#endif
-#endif
-	uint8_t	ip_tos;			/* type of service */
-	uint16_t	ip_len;			/* total length */
-	uint16_t	ip_id;			/* identification */
-	uint16_t	ip_off;			/* fragment offset field */
-#define	IP_RF 0x8000			/* reserved fragment flag */
-#define	IP_DF 0x4000			/* dont fragment flag */
-#define	IP_MF 0x2000			/* more fragments flag */
-#define	IP_OFFMASK 0x1fff		/* mask for fragmenting bits */
-	uint8_t	ip_ttl;			/* time to live */
-	uint8_t	ip_p;			/* protocol */
-	uint16_t	ip_sum;			/* checksum */
-	struct	in_addr ip_src,ip_dst;	/* source and dest address */
-} __packed __aligned(2);
-#endif
 #define	IP_MAXPACKET	65535		/* maximum packet size */
 
 /*
@@ -164,33 +125,6 @@ struct ip {
 #define	IPOPT_OFFSET		2		/* offset within option */
 #define	IPOPT_MINOFF		4		/* min value of above */
 
-#if 0
-/*
- * Time stamp option structure.
- */
-struct	ip_timestamp {
-	uint8_t	ipt_code;		/* IPOPT_TS */
-	uint8_t	ipt_len;		/* size of structure (variable) */
-	uint8_t	ipt_ptr;		/* index of current entry */
-#if BYTE_ORDER == LITTLE_ENDIAN
-	uint8_t	ipt_flg:4,		/* flags, see below */
-		ipt_oflw:4;		/* overflow counter */
-#endif
-#if BYTE_ORDER == BIG_ENDIAN
-	uint8_t	ipt_oflw:4,		/* overflow counter */
-		ipt_flg:4;		/* flags, see below */
-#endif
-	union ipt_timestamp {
-		uint32_t	ipt_time[1];	/* network format */
-		struct	ipt_ta {
-			struct in_addr ipt_addr;
-			uint32_t ipt_time;	/* network format */
-		} ipt_ta[1];
-	} ipt_timestamp;
-};
-
-#endif
-
 /* Flag bits for ipt_flg. */
 #define	IPOPT_TS_TSONLY		0		/* timestamps only */
 #define	IPOPT_TS_TSANDADDR	1		/* timestamps and addresses */
@@ -213,20 +147,5 @@ struct	ip_timestamp {
 #define	IPFRAGTTL	60		/* time to live for frags, slowhz */
 #define	IPTTLDEC	1		/* subtracted when forwarding */
 #define	IP_MSS		576		/* default maximum segment size */
-
-#if 0
-/*
- * This is the real IPv4 pseudo header, used for computing the TCP and UDP
- * checksums. For the Internet checksum, struct ipovly can be used instead.
- * For stronger checksums, the real thing must be used.
- */
-struct ippseudo {
-	struct	in_addr	ippseudo_src;	/* source internet address */
-	struct	in_addr	ippseudo_dst;	/* destination internet address */
-	uint8_t		ippseudo_pad;	/* pad, must be zero */
-	uint8_t		ippseudo_p;	/* protocol */
-	uint16_t		ippseudo_len;	/* protocol length */
-};
-#endif
 
 #endif

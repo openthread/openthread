@@ -46,8 +46,6 @@
 
 #include "sys/queue.h"
 
-// #include <openthread/types.h>
-
 /* Implement byte-order-specific functions using host. */
 uint16_t tcplp_sys_hostswap16(uint16_t hostport);
 uint32_t tcplp_sys_hostswap32(uint32_t hostport);
@@ -67,29 +65,6 @@ static inline uint32_t htonl(uint32_t hostport) {
 static inline uint32_t ntohl(uint32_t hostport) {
 	return tcplp_sys_hostswap32(hostport);
 }
-
-#if 0 //#ifdef _KERNEL
-#include <net/vnet.h>
-#include <sys/mbuf.h>
-
-/*
- * Kernel variables for tcp.
- */
-VNET_DECLARE(int, tcp_do_rfc1323);
-#define	V_tcp_do_rfc1323	VNET(tcp_do_rfc1323)
-
-#endif /* _KERNEL */
-
-#if 0 // I have a segment queue, but it is not implemented like this
-/* TCP segment queue entry */
-struct tseg_qent {
-	LIST_ENTRY(tseg_qent) tqe_q;
-	int	tqe_len;		/* TCP segment data length */
-	struct	tcphdr *tqe_th;		/* a pointer to tcp header */
-	struct	mbuf	*tqe_m;		/* mbuf contains packet */
-};
-LIST_HEAD(tsegqe_head, tseg_qent);
-#endif
 
 struct sackblk {
 	tcp_seq start;		/* start seq no. of sack block */
@@ -151,8 +126,6 @@ struct tcpcb_listen {
 #define SACKHOLE_BMP_SIZE BITS_TO_BYTES(SACKHOLE_POOL_SIZE)
 
 struct signals;
-
-// You can set the maximum number of SACK blocks in tcp.h
 
 /*
  * Tcp control block, one per tcp; fields:
@@ -484,35 +457,6 @@ void	 tcp_mss(struct tcpcb *, int);
 void	 tcp_mss_update(struct tcpcb *, int, int, struct hc_metrics_lite *,
 	    struct tcp_ifcap *);
 
-#ifndef _NETINET_IN_PCB_H_
-struct in_conninfo;
-#endif /* _NETINET_IN_PCB_H_ */
-
-#if 0 // we won't need these declarations (I think)
-struct tcptw {
-	struct inpcb	*tw_inpcb;	/* XXX back pointer to internet pcb */
-	tcp_seq		snd_nxt;
-	tcp_seq		rcv_nxt;
-	tcp_seq		iss;
-	tcp_seq		irs;
-	uint16_t		last_win;	/* cached window value */
-	uint16_t		tw_so_options;	/* copy of so_options */
-	struct ucred	*tw_cred;	/* user credentials */
-	u_int32_t	t_recent;
-	u_int32_t	ts_offset;	/* our timestamp offset */
-	uint32_t		t_starttime;
-	int		tw_time;
-	TAILQ_ENTRY(tcptw) tw_2msl;
-	void		*tw_pspare;	/* TCP_SIGNATURE */
-	uint32_t		*tw_spare;	/* TCP_SIGNATURE */
-};
-
-#define	intotcpcb(ip)	((struct tcpcb *)(ip)->inp_ppcb)
-#define	intotw(ip)	((struct tcptw *)(ip)->inp_ppcb)
-#define	sototcpcb(so)	(intotcpcb(sotoinpcb(so)))
-
-#endif
-
 /*
  * The smoothed round-trip time and estimated variance
  * are stored as fixed point numbers scaled by the values below.
@@ -551,125 +495,6 @@ struct tcptw {
 	max((tp)->t_rttmin, (((tp)->t_srtt >> (TCP_RTT_SHIFT - TCP_DELTA_SHIFT))  \
 	  + (tp)->t_rttvar) >> TCP_DELTA_SHIFT)
 
-/*
- * TCP statistics.
- * Many of these should be kept per connection,
- * but that's inconvenient at the moment.
- */
-struct	tcpstat {
-	uint64_t tcps_connattempt;	/* connections initiated */
-	uint64_t tcps_accepts;		/* connections accepted */
-	uint64_t tcps_connects;		/* connections established */
-	uint64_t tcps_drops;		/* connections dropped */
-	uint64_t tcps_conndrops;	/* embryonic connections dropped */
-	uint64_t tcps_minmssdrops;	/* average minmss too low drops */
-	uint64_t tcps_closed;		/* conn. closed (includes drops) */
-	uint64_t tcps_segstimed;	/* segs where we tried to get rtt */
-	uint64_t tcps_rttupdated;	/* times we succeeded */
-	uint64_t tcps_delack;		/* delayed acks sent */
-	uint64_t tcps_timeoutdrop;	/* conn. dropped in rxmt timeout */
-	uint64_t tcps_rexmttimeo;	/* retransmit timeouts */
-	uint64_t tcps_persisttimeo;	/* persist timeouts */
-	uint64_t tcps_keeptimeo;	/* keepalive timeouts */
-	uint64_t tcps_keepprobe;	/* keepalive probes sent */
-	uint64_t tcps_keepdrops;	/* connections dropped in keepalive */
-
-	uint64_t tcps_sndtotal;		/* total packets sent */
-	uint64_t tcps_sndpack;		/* data packets sent */
-	uint64_t tcps_sndbyte;		/* data bytes sent */
-	uint64_t tcps_sndrexmitpack;	/* data packets retransmitted */
-	uint64_t tcps_sndrexmitbyte;	/* data bytes retransmitted */
-	uint64_t tcps_sndrexmitbad;	/* unnecessary packet retransmissions */
-	uint64_t tcps_sndacks;		/* ack-only packets sent */
-	uint64_t tcps_sndprobe;		/* window probes sent */
-	uint64_t tcps_sndurg;		/* packets sent with URG only */
-	uint64_t tcps_sndwinup;		/* window update-only packets sent */
-	uint64_t tcps_sndctrl;		/* control (SYN|FIN|RST) packets sent */
-
-	uint64_t tcps_rcvtotal;		/* total packets received */
-	uint64_t tcps_rcvpack;		/* packets received in sequence */
-	uint64_t tcps_rcvbyte;		/* bytes received in sequence */
-	uint64_t tcps_rcvbadsum;	/* packets received with ccksum errs */
-	uint64_t tcps_rcvbadoff;	/* packets received with bad offset */
-	uint64_t tcps_rcvreassfull;	/* packets dropped for no reass space */
-	uint64_t tcps_rcvshort;		/* packets received too short */
-	uint64_t tcps_rcvduppack;	/* duplicate-only packets received */
-	uint64_t tcps_rcvdupbyte;	/* duplicate-only bytes received */
-	uint64_t tcps_rcvpartduppack;	/* packets with some duplicate data */
-	uint64_t tcps_rcvpartdupbyte;	/* dup. bytes in part-dup. packets */
-	uint64_t tcps_rcvoopack;	/* out-of-order packets received */
-	uint64_t tcps_rcvoobyte;	/* out-of-order bytes received */
-	uint64_t tcps_rcvpackafterwin;	/* packets with data after window */
-	uint64_t tcps_rcvbyteafterwin;	/* bytes rcvd after window */
-	uint64_t tcps_rcvafterclose;	/* packets rcvd after "close" */
-	uint64_t tcps_rcvwinprobe;	/* rcvd window probe packets */
-	uint64_t tcps_rcvdupack;	/* rcvd duplicate acks */
-	uint64_t tcps_rcvacktoomuch;	/* rcvd acks for unsent data */
-	uint64_t tcps_rcvackpack;	/* rcvd ack packets */
-	uint64_t tcps_rcvackbyte;	/* bytes acked by rcvd acks */
-	uint64_t tcps_rcvwinupd;	/* rcvd window update packets */
-	uint64_t tcps_pawsdrop;		/* segments dropped due to PAWS */
-	uint64_t tcps_predack;		/* times hdr predict ok for acks */
-	uint64_t tcps_preddat;		/* times hdr predict ok for data pkts */
-	uint64_t tcps_pcbcachemiss;
-	uint64_t tcps_cachedrtt;	/* times cached RTT in route updated */
-	uint64_t tcps_cachedrttvar;	/* times cached rttvar updated */
-	uint64_t tcps_cachedssthresh;	/* times cached ssthresh updated */
-	uint64_t tcps_usedrtt;		/* times RTT initialized from route */
-	uint64_t tcps_usedrttvar;	/* times RTTVAR initialized from rt */
-	uint64_t tcps_usedssthresh;	/* times ssthresh initialized from rt*/
-	uint64_t tcps_persistdrop;	/* timeout in persist state */
-	uint64_t tcps_badsyn;		/* bogus SYN, e.g. premature ACK */
-	uint64_t tcps_mturesent;	/* resends due to MTU discovery */
-	uint64_t tcps_listendrop;	/* listen queue overflows */
-	uint64_t tcps_badrst;		/* ignored RSTs in the window */
-
-	uint64_t tcps_sc_added;		/* entry added to syncache */
-	uint64_t tcps_sc_retransmitted;	/* syncache entry was retransmitted */
-	uint64_t tcps_sc_dupsyn;	/* duplicate SYN packet */
-	uint64_t tcps_sc_dropped;	/* could not reply to packet */
-	uint64_t tcps_sc_completed;	/* successful extraction of entry */
-	uint64_t tcps_sc_bucketoverflow;/* syncache per-bucket limit hit */
-	uint64_t tcps_sc_cacheoverflow;	/* syncache cache limit hit */
-	uint64_t tcps_sc_reset;		/* RST removed entry from syncache */
-	uint64_t tcps_sc_stale;		/* timed out or listen socket gone */
-	uint64_t tcps_sc_aborted;	/* syncache entry aborted */
-	uint64_t tcps_sc_badack;	/* removed due to bad ACK */
-	uint64_t tcps_sc_unreach;	/* ICMP unreachable received */
-	uint64_t tcps_sc_zonefail;	/* zalloc() failed */
-	uint64_t tcps_sc_sendcookie;	/* SYN cookie sent */
-	uint64_t tcps_sc_recvcookie;	/* SYN cookie received */
-
-	uint64_t tcps_hc_added;		/* entry added to hostcache */
-	uint64_t tcps_hc_bucketoverflow;/* hostcache per bucket limit hit */
-
-	uint64_t tcps_finwait2_drops;    /* Drop FIN_WAIT_2 connection after time limit */
-
-	/* SACK related stats */
-	uint64_t tcps_sack_recovery_episode; /* SACK recovery episodes */
-	uint64_t tcps_sack_rexmits;	    /* SACK rexmit segments   */
-	uint64_t tcps_sack_rexmit_bytes;    /* SACK rexmit bytes      */
-	uint64_t tcps_sack_rcv_blocks;	    /* SACK blocks (options) received */
-	uint64_t tcps_sack_send_blocks;	    /* SACK blocks (options) sent     */
-	uint64_t tcps_sack_sboverflow;	    /* times scoreboard overflowed */
-
-	/* ECN related stats */
-	uint64_t tcps_ecn_ce;		/* ECN Congestion Experienced */
-	uint64_t tcps_ecn_ect0;		/* ECN Capable Transport */
-	uint64_t tcps_ecn_ect1;		/* ECN Capable Transport */
-	uint64_t tcps_ecn_shs;		/* ECN successful handshakes */
-	uint64_t tcps_ecn_rcwnd;	/* # times ECN reduced the cwnd */
-
-	/* TCP_SIGNATURE related stats */
-	uint64_t tcps_sig_rcvgoodsig;	/* Total matching signature received */
-	uint64_t tcps_sig_rcvbadsig;	/* Total bad signature received */
-	uint64_t tcps_sig_err_buildsig;	/* Mismatching signature received */
-	uint64_t tcps_sig_err_sigopt;	/* No signature expected by socket */
-	uint64_t tcps_sig_err_nosigopt;	/* No signature provided by segment */
-
-	uint64_t _pad[12];		/* 6 UTO, 6 TBD */
-};
-
 /* Copied from below. */
 static inline void
 tcp_fields_to_host(struct tcphdr *th)
@@ -707,66 +532,6 @@ void	 tcp_free_sackholes(struct tcpcb *tp);
 
 #define	tcps_rcvmemdrop	tcps_rcvreassfull	/* compat */0
 
-#ifdef _KERNEL
-#include <sys/counter.h>
-
-VNET_PCPUSTAT_DECLARE(struct tcpstat, tcpstat);	/* tcp statistics */
-/*
- * In-kernel consumers can use these accessor macros directly to update
- * stats.
- */
-#define	TCPSTAT_ADD(name, val)	\
-    VNET_PCPUSTAT_ADD(struct tcpstat, tcpstat, name, (val))
-#define	TCPSTAT_INC(name)	TCPSTAT_ADD(name, 1)
-
-/*
- * Kernel module consumers must use this accessor macro.
- */
-void	kmod_tcpstat_inc(int statnum);
-#define	KMOD_TCPSTAT_INC(name)						\
-    kmod_tcpstat_inc(offsetof(struct tcpstat, name) / sizeof(uint64_t))
-
-/*
- * TCP specific helper hook point identifiers.
- */
-#define	HHOOK_TCP_EST_IN		0
-#define	HHOOK_TCP_EST_OUT		1
-#define	HHOOK_TCP_LAST			HHOOK_TCP_EST_OUT
-
-struct tcp_hhook_data {
-	struct tcpcb	*tp;
-	struct tcphdr	*th;
-	struct tcpopt	*to;
-	long		len;
-	int		tso;
-	tcp_seq		curack;
-};
-#endif
-
-/*
- * TCB structure exported to user-land via sysctl(3).
- * Evil hack: declare only if in_pcb.h and sys/socketvar.h have been
- * included.  Not all of our clients do.
- */
-#if defined(_NETINET_IN_PCB_H_) && defined(_SYS_SOCKETVAR_H_)
-struct xtcp_timer {
-	int tt_rexmt;	/* retransmit timer */
-	int tt_persist;	/* retransmit persistence */
-	int tt_keep;	/* keepalive */
-	int tt_2msl;	/* 2*msl TIME_WAIT timer */
-	int tt_delack;	/* delayed ACK timer */
-	int t_rcvtime;	/* Time since last packet received */
-};
-struct	xtcpcb {
-	size_t	xt_len;
-	struct	inpcb	xt_inp;
-	struct	tcpcb	xt_tp;
-	struct	xsocket	xt_socket;
-	struct	xtcp_timer xt_timer;
-	u_quad_t	xt_alignment_hack;
-};
-#endif
-
 /*
  * Identifiers for TCP sysctl nodes
  */
@@ -784,166 +549,5 @@ struct	xtcpcb {
 #define	TCPCTL_V6MSSDFLT	13	/* MSS default for IPv6 */
 #define	TCPCTL_SACK		14	/* Selective Acknowledgement,rfc 2018 */
 #define	TCPCTL_DROP		15	/* drop tcp connection */
-
-#ifdef _KERNEL
-#ifdef SYSCTL_DECL
-SYSCTL_DECL(_net_inet_tcp);
-SYSCTL_DECL(_net_inet_tcp_sack);
-MALLOC_DECLARE(M_TCPLOG);
-#endif
-
-VNET_DECLARE(struct inpcbhead, tcb);		/* queue of active tcpcb's */
-VNET_DECLARE(struct inpcbinfo, tcbinfo);
-extern	int tcp_log_in_vain;
-VNET_DECLARE(int, tcp_mssdflt);	/* XXX */
-VNET_DECLARE(int, tcp_minmss);
-VNET_DECLARE(int, tcp_delack_enabled);
-VNET_DECLARE(int, tcp_do_rfc3390);
-VNET_DECLARE(int, tcp_initcwnd_segments);
-VNET_DECLARE(int, tcp_sendspace);
-VNET_DECLARE(int, tcp_recvspace);
-VNET_DECLARE(int, path_mtu_discovery);
-VNET_DECLARE(int, tcp_do_rfc3465);
-VNET_DECLARE(int, tcp_abc_l_var);
-#define	V_tcb			VNET(tcb)
-#define	V_tcbinfo		VNET(tcbinfo)
-#define	V_tcp_mssdflt		VNET(tcp_mssdflt)
-#define	V_tcp_minmss		VNET(tcp_minmss)
-#define	V_tcp_delack_enabled	VNET(tcp_delack_enabled)
-#define	V_tcp_do_rfc3390	VNET(tcp_do_rfc3390)
-#define	V_tcp_initcwnd_segments	VNET(tcp_initcwnd_segments)
-#define	V_tcp_sendspace		VNET(tcp_sendspace)
-#define	V_tcp_recvspace		VNET(tcp_recvspace)
-#define	V_path_mtu_discovery	VNET(path_mtu_discovery)
-#define	V_tcp_do_rfc3465	VNET(tcp_do_rfc3465)
-#define	V_tcp_abc_l_var		VNET(tcp_abc_l_var)
-
-VNET_DECLARE(int, tcp_do_sack);			/* SACK enabled/disabled */
-VNET_DECLARE(int, tcp_sc_rst_sock_fail);	/* RST on sock alloc failure */
-#define	V_tcp_do_sack		VNET(tcp_do_sack)
-#define	V_tcp_sc_rst_sock_fail	VNET(tcp_sc_rst_sock_fail)
-
-VNET_DECLARE(int, tcp_do_ecn);			/* TCP ECN enabled/disabled */
-VNET_DECLARE(int, tcp_ecn_maxretries);
-#define	V_tcp_do_ecn		VNET(tcp_do_ecn)
-#define	V_tcp_ecn_maxretries	VNET(tcp_ecn_maxretries)
-
-VNET_DECLARE(struct hhook_head *, tcp_hhh[HHOOK_TCP_LAST + 1]);
-#define	V_tcp_hhh		VNET(tcp_hhh)
-
-int	 tcp_addoptions(struct tcpopt *, uint8_t *);
-int	 tcp_ccalgounload(struct cc_algo *unload_algo);
-struct tcpcb *
-	 tcp_close(struct tcpcb *);
-void	 tcp_discardcb(struct tcpcb *);
-void	 tcp_twstart(struct tcpcb *);
-void	 tcp_twclose(struct tcptw *, int);
-void	 tcp_ctlinput(int, struct sockaddr *, void *);
-int	 tcp_ctloutput(struct socket *, struct sockopt *);
-struct tcpcb *
-	 tcp_drop(struct tcpcb *, int);
-void	 tcp_drain(void);
-#ifdef VIMAGE
-void	 tcp_destroy(void);
-#endif
-void	 tcp_fini(void *);
-char	*tcp_log_addrs(struct in_conninfo *, struct tcphdr *, void *,
-	    const void *);
-char	*tcp_log_vain(struct in_conninfo *, struct tcphdr *, void *,
-	    const void *);
-int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, struct mbuf *);
-void	 tcp_reass_global_init(void);
-void	 tcp_reass_flush(struct tcpcb *);
-int	 tcp_input(struct mbuf **, int *, int);
-uint64_t	 tcp_maxmtu(struct in_conninfo *, struct tcp_ifcap *);
-uint64_t	 tcp_maxmtu6(struct in_conninfo *, struct tcp_ifcap *);
-void	 tcp_mss_update(struct tcpcb *, int, int, struct hc_metrics_lite *,
-	    struct tcp_ifcap *);
-void	 tcp_mss(struct tcpcb *, int);
-int	 tcp_mssopt(struct in_conninfo *);
-struct inpcb *
-	 tcp_drop_syn_sent(struct inpcb *, int);
-struct tcpcb *
-	 tcp_newtcpcb(struct inpcb *);
-int	 tcp_output(struct tcpcb *);
-void	 tcp_state_change(struct tcpcb *, int);
-void	 tcp_respond(struct tcpcb *, void *,
-	    struct tcphdr *, struct mbuf *, tcp_seq, tcp_seq, int);
-void	 tcp_tw_init(void);
-#ifdef VIMAGE
-void	 tcp_tw_destroy(void);
-#endif
-void	 tcp_tw_zone_change(void);
-int	 tcp_twcheck(struct inpcb *, struct tcpopt *, struct tcphdr *,
-	    struct mbuf *, int);
-void	 tcp_setpersist(struct tcpcb *);
-#ifdef TCP_SIGNATURE
-struct secasvar;
-struct secasvar *tcp_get_sav(struct mbuf *, u_int);
-int	 tcp_signature_do_compute(struct mbuf *, int, int, uint8_t *,
-	    struct secasvar *);
-int	 tcp_signature_compute(struct mbuf *, int, int, int, uint8_t *, u_int);
-int	 tcp_signature_verify(struct mbuf *, int, int, int, struct tcpopt *,
-	    struct tcphdr *, u_int);
-int	tcp_signature_check(struct mbuf *m, int off0, int tlen, int optlen,
-	    struct tcpopt *to, struct tcphdr *th, uint32_t tcpbflag);
-#endif
-void	 tcp_slowtimo(void);
-struct tcptemp *
-	 tcpip_maketemplate(struct inpcb *);
-void	 tcpip_fillheaders(struct inpcb *, void *, void *);
-void	 tcp_timer_activate(struct tcpcb *, uint32_t, u_int);
-int	 tcp_timer_active(struct tcpcb *, uint32_t);
-void	 tcp_timer_stop(struct tcpcb *, uint32_t);
-void	 tcp_trace(short, short, struct tcpcb *, void *, struct tcphdr *, int);
-/*
- * All tcp_hc_* functions are IPv4 and IPv6 (via in_conninfo)
- */
-void	 tcp_hc_init(void);
-#ifdef VIMAGE
-void	 tcp_hc_destroy(void);
-#endif
-void	 tcp_hc_get(struct in_conninfo *, struct hc_metrics_lite *);
-uint64_t	 tcp_hc_getmtu(struct in_conninfo *);
-void	 tcp_hc_updatemtu(struct in_conninfo *, uint64_t);
-void	 tcp_hc_update(struct in_conninfo *, struct hc_metrics_lite *);
-
-extern	struct pr_usrreqs tcp_usrreqs;
-tcp_seq tcp_new_isn(struct tcpcb *);
-
-void	 tcp_sack_doack(struct tcpcb *, struct tcpopt *, tcp_seq);
-void	 tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_laststart, tcp_seq rcv_lastend);
-void	 tcp_clean_sackreport(struct tcpcb *tp);
-void	 tcp_sack_adjust(struct tcpcb *tp);
-struct sackhole *tcp_sack_output(struct tcpcb *tp, int *sack_bytes_rexmt);
-void	 tcp_sack_partialack(struct tcpcb *, struct tcphdr *);
-void	 tcp_free_sackholes(struct tcpcb *tp);
-int	 tcp_newreno(struct tcpcb *, struct tcphdr *);
-uint64_t	 tcp_seq_subtract(uint64_t, uint64_t );
-
-void	cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type);
-
-static inline void
-tcp_fields_to_host(struct tcphdr *th)
-{
-
-	th->th_seq = ntohl(th->th_seq);
-	th->th_ack = ntohl(th->th_ack);
-	th->th_win = ntohs(th->th_win);
-	th->th_urp = ntohs(th->th_urp);
-}
-
-#ifdef TCP_SIGNATURE
-static inline void
-tcp_fields_to_net(struct tcphdr *th)
-{
-
-	th->th_seq = htonl(th->th_seq);
-	th->th_ack = htonl(th->th_ack);
-	th->th_win = htons(th->th_win);
-	th->th_urp = htons(th->th_urp);
-}
-#endif
-#endif /* _KERNEL */
 
 #endif /* _NETINET_TCP_VAR_H_ */
