@@ -160,9 +160,11 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
 
 void NetworkData::OutputIp6Prefix(const otIp6Prefix &aPrefix)
 {
-    mInterpreter.OutputFormat("%x:%x:%x:%x::/%d", HostSwap16(aPrefix.mPrefix.mFields.m16[0]),
-                              HostSwap16(aPrefix.mPrefix.mFields.m16[1]), HostSwap16(aPrefix.mPrefix.mFields.m16[2]),
-                              HostSwap16(aPrefix.mPrefix.mFields.m16[3]), aPrefix.mLength);
+    char string[OT_IP6_PREFIX_STRING_SIZE];
+
+    otIp6PrefixToString(&aPrefix, string, sizeof(string));
+
+    mInterpreter.OutputFormat("%s", string);
 }
 
 void NetworkData::OutputPreference(signed int aPreference)

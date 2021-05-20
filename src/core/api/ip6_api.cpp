@@ -232,6 +232,16 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
     return static_cast<Ip6::Address *>(aAddress)->FromString(aString);
 }
 
+void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
+{
+    static_cast<const Ip6::Address *>(aAddress)->ToString(aBuffer, aSize);
+}
+
+void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
+{
+    static_cast<const Ip6::Prefix *>(aPrefix)->ToString(aBuffer, aSize);
+}
+
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
     OT_ASSERT(aFirst != nullptr && aSecond != nullptr);
