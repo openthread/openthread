@@ -179,6 +179,10 @@ struct tcpcb {
 
 	uint8_t	t_state;		/* state of this connection */
 
+	/* Pool of SACK holes. */
+	struct sackhole sackhole_pool[SACKHOLE_POOL_SIZE];
+	uint8_t sackhole_bmp[SACKHOLE_BMP_SIZE];
+
 #if 0 // I used unused space in the receive buffer for the reassembly queue
 	struct	tsegqe_head t_segq;	/* segment reassembly queue */
 	void	*t_pspare[2];		/* new reassembly queue */
@@ -692,7 +696,7 @@ uint64_t	 tcp_maxmtu6(/*struct in_conninfo **/ struct tcpcb*, struct tcp_ifcap *
 int	 tcp_addoptions(struct tcpopt *, uint8_t *);
 int	 tcp_mssopt(/*struct in_conninfo **/ struct tcpcb*);
 int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, /*struct mbuf*/otMessage *, off_t, struct signals*);
-void tcp_sack_init(void); // Sam: new function that I added
+void tcp_sack_init(struct tcpcb *); // Sam: new function that I added
 void	 tcp_sack_doack(struct tcpcb *, struct tcpopt *, tcp_seq);
 void	 tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_laststart, tcp_seq rcv_lastend);
 void	 tcp_clean_sackreport(struct tcpcb *tp);

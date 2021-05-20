@@ -168,30 +168,26 @@ const int V_tcp_sack_globalmaxholes = 65536;
 int V_tcp_sack_globalholes = 0;
 #endif
 
-/* Pool of SACK holes, used for allocation. */
-struct sackhole sackhole_pool[SACKHOLE_POOL_SIZE];
-uint8_t sackhole_bmp[SACKHOLE_BMP_SIZE];
-
 /* Initialize the pool of SACK holes. */
 void
-tcp_sack_init(void)
+tcp_sack_init(struct tcpcb* tp)
 {
-	bmp_init(sackhole_bmp, SACKHOLE_BMP_SIZE);
+	bmp_init(tp->sackhole_bmp, SACKHOLE_BMP_SIZE);
 }
 
-struct sackhole* sackhole_alloc(void) {
-    size_t freeindex = bmp_countset(sackhole_bmp, SACKHOLE_BMP_SIZE, 0, SACKHOLE_BMP_SIZE);
+struct sackhole* sackhole_alloc(struct tcpcb* tp) {
+    size_t freeindex = bmp_countset(tp->sackhole_bmp, SACKHOLE_BMP_SIZE, 0, SACKHOLE_BMP_SIZE);
     if (freeindex >= SACKHOLE_BMP_SIZE) {
     	return NULL; // all sackholes are allocated already!
     }
-    bmp_setrange(sackhole_bmp, freeindex, 1);
-    return &sackhole_pool[freeindex];
+    bmp_setrange(tp->sackhole_bmp, freeindex, 1);
+    return &tp->sackhole_pool[freeindex];
 }
 
-void sackhole_free(struct sackhole* tofree) {
-	size_t freeindex = (size_t) (tofree - &sackhole_pool[0]);
-	KASSERT(tofree == &sackhole_pool[freeindex], ("sackhole pool unaligned\n"));
-	bmp_clrrange(sackhole_bmp, freeindex, 1);
+void sackhole_free(struct tcpcb* tp, struct sackhole* tofree) {
+	size_t freeindex = (size_t) (tofree - &tp->sackhole_pool[0]);
+	KASSERT(tofree == &tp->sackhole_pool[freeindex], ("sackhole pool unaligned\n"));
+	bmp_clrrange(tp->sackhole_bmp, freeindex, 1);
 }
 
 
@@ -312,7 +308,7 @@ tcp_sackhole_alloc(struct tcpcb *tp, tcp_seq start, tcp_seq end)
 	}
 
 //	hole = (struct sackhole *)uma_zalloc(V_sack_hole_zone, M_NOWAIT);
-	hole = sackhole_alloc();
+	hole = sackhole_alloc(tp);
 	if (hole == NULL)
 		return NULL;
 
@@ -334,7 +330,7 @@ tcp_sackhole_free(struct tcpcb *tp, struct sackhole *hole)
 {
 
 //	uma_zfree(V_sack_hole_zone, hole);
-	sackhole_free(hole);
+	sackhole_free(tp, hole);
 
 	tp->snd_numholes--;
 //	atomic_subtract_int(&V_tcp_sack_globalholes, 1);
