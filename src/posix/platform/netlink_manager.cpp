@@ -39,6 +39,7 @@
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "lib/platform/exit_code.h"
+#include "posix/platform/platform-posix.h"
 
 namespace ot {
 namespace Posix {
@@ -48,9 +49,9 @@ int NetlinkManager::CreateNetlinkSocket(void)
     int fd;
 
 #if defined(__linux__)
-    fd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    fd = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
 #else
-    fd = socket(PF_ROUTE, SOCK_RAW, 0);
+    fd = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, 0, kSocketNonBlock);
 #endif
     VerifyOrDie(fd >= 0, OT_EXIT_ERROR_ERRNO);
 

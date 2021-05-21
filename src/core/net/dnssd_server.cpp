@@ -445,6 +445,7 @@ Error Server::AppendInstanceName(Message &aMessage, const char *aName, NameCompr
 exit:
     return error;
 }
+
 Error Server::AppendTxtRecord(Message &         aMessage,
                               const char *      aInstanceName,
                               const void *      aTxtData,
@@ -763,7 +764,7 @@ Error Server::ResolveByQueryCallbacks(Header &                aResponseHeader,
 
     VerifyOrExit(mQuerySubscribe != nullptr, error = kErrorFailed);
 
-    queryType = GetQueryType(aResponseHeader, aResponseMessage, name);
+    queryType = GetQueryTypeAndName(aResponseHeader, aResponseMessage, name);
     VerifyOrExit(queryType != kDnsQueryNone, error = kErrorNotImplemented);
 
     query = NewQuery(aResponseHeader, aResponseMessage, aCompressInfo, aMessageInfo);
@@ -810,7 +811,7 @@ bool Server::CanAnswerQuery(const QueryTransaction &          aQuery,
     DnsQueryType sdType;
     bool         canAnswer = false;
 
-    sdType = GetQueryType(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
+    sdType = GetQueryTypeAndName(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
 
     switch (sdType)
     {
@@ -832,7 +833,7 @@ bool Server::CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *
     char         name[Name::kMaxNameSize];
     DnsQueryType sdType;
 
-    sdType = GetQueryType(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
+    sdType = GetQueryTypeAndName(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
     return (sdType == kDnsQueryResolveHost) && (strcmp(name, aHostFullName) == 0);
 }
 
@@ -961,9 +962,38 @@ void Server::HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostIn
     }
 }
 
-Server::DnsQueryType Server::GetQueryType(const Header & aHeader,
-                                          const Message &aMessage,
-                                          char (&aName)[Name::kMaxNameSize])
+const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
+{
+    const QueryTransaction *now   = &mQueryTransactions[0];
+    const QueryTransaction *found = nullptr;
+    const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
+
+    if (aQuery != nullptr)
+    {
+        now = query + 1;
+    }
+    for (; now < &mQueryTransactions[OT_ARRAY_LENGTH(mQueryTransactions)]; now++)
+    {
+        if (now->IsValid())
+        {
+            found = now;
+            break;
+        }
+    }
+    return static_cast<const otDnssdQuery *>(found);
+}
+
+Server::DnsQueryType Server::GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize])
+{
+    const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
+
+    OT_ASSERT(query->IsValid());
+    return GetQueryTypeAndName(query->GetResponseHeader(), query->GetResponseMessage(), aName);
+}
+
+Server::DnsQueryType Server::GetQueryTypeAndName(const Header & aHeader,
+                                                 const Message &aMessage,
+                                                 char (&aName)[Name::kMaxNameSize])
 {
     DnsQueryType sdType = kDnsQueryNone;
 
@@ -1098,7 +1128,7 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
 
     OT_ASSERT(mQueryUnsubscribe != nullptr);
 
-    sdType = GetQueryType(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
+    sdType = GetQueryTypeAndName(aQuery.GetResponseHeader(), aQuery.GetResponseMessage(), name);
 
     OT_ASSERT(sdType != kDnsQueryNone);
     OT_UNUSED_VARIABLE(sdType);

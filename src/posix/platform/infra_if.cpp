@@ -220,7 +220,7 @@ void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
     VerifyOrExit(aIfName != nullptr);
 
     VerifyOrDie(strnlen(aIfName, sizeof(mInfraIfName)) <= sizeof(mInfraIfName) - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strncpy(mInfraIfName, aIfName, sizeof(mInfraIfName));
+    strcpy(mInfraIfName, aIfName);
 
     // Initializes the infra interface.
     ifIndex = if_nametoindex(aIfName);

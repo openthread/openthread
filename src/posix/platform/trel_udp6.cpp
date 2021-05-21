@@ -168,7 +168,7 @@ static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 
     otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
-    mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    mgmtFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memcpy(&ifr6.ifr6_addr, aUnicastAddress, sizeof(otIp6Address));
@@ -200,7 +200,7 @@ static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
 
     otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
-    mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    mgmtFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memcpy(&ifr6.ifr6_addr, aUnicastAddress, sizeof(otIp6Address));
@@ -225,7 +225,7 @@ static void PrepareSocket(void)
 
     otLogDebgPlat("[trel] PrepareSocket()");
 
-    sSocket = socket(AF_INET6, SOCK_DGRAM, 0);
+    sSocket = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, kSocketNonBlock);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     // Set the multicast interface index (for tx), disable loop back
@@ -467,7 +467,7 @@ void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddre
 
     AddUnicastAddress(aUnicastAddress);
 
-    sMulticastSocket = socket(AF_INET6, SOCK_DGRAM, 0);
+    sMulticastSocket = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, kSocketNonBlock);
     VerifyOrDie(sMulticastSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     val = 1;

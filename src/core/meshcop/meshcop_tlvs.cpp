@@ -173,7 +173,6 @@ bool ChannelTlv::IsValid(void) const
     bool ret = false;
 
     VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
-    VerifyOrExit(mChannelPage <= OT_RADIO_CHANNEL_PAGE_MAX);
     VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
     VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax);
     ret = true;
@@ -201,8 +200,9 @@ void ChannelTlv::SetChannel(uint16_t aChannel)
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
-    if ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN <= aChannel) &&
-        (aChannel <= OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX))
+    if ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN == aChannel) ||
+        ((OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN < aChannel) &&
+         (aChannel <= OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX)))
     {
         channelPage = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE;
     }
@@ -228,7 +228,11 @@ bool ChannelMaskBaseTlv::IsValid(void) const
 
         channelPage = cur->GetChannelPage();
 
+#if OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+        if (channelPage == OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE)
+#else
         if ((channelPage == OT_RADIO_CHANNEL_PAGE_0) || (channelPage == OT_RADIO_CHANNEL_PAGE_2))
+#endif
         {
             VerifyOrExit(static_cast<const ChannelMaskEntry *>(cur)->IsValid());
         }

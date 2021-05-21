@@ -635,7 +635,8 @@ public:
      */
     static bool IsCslChannelValid(uint8_t aCslChannel)
     {
-        return (aCslChannel == 0) || ((kChannelMin <= aCslChannel) && (aCslChannel <= kChannelMax));
+        return ((aCslChannel == 0) ||
+                ((kChannelMin == aCslChannel) || ((kChannelMin < aCslChannel) && (aCslChannel <= kChannelMax))));
     }
 
 private:
