@@ -91,6 +91,14 @@ void SettingsBase::LogPrefix(const char *aAction, const char *aPrefixName, const
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+void SettingsBase::LogSrpClientInfo(const char *aAction, const SrpClientInfo &aSrpClientInfo) const
+{
+    otLogInfoCore("Non-volatile: %s SrpClientInfo {Server:[%s]:%u}", aAction,
+                  aSrpClientInfo.GetServerAddress().ToString().AsCString(), aSrpClientInfo.GetServerPort());
+}
+#endif
+
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
@@ -571,6 +579,55 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+
+Error Settings::SaveSrpClientInfo(const SrpClientInfo &aSrpClientInfo)
+{
+    Error         error = kErrorNone;
+    SrpClientInfo prevInfo;
+    uint16_t      length = sizeof(SrpClientInfo);
+
+    if ((Read(kKeySrpClientInfo, &prevInfo, length) == kErrorNone) && (length == sizeof(SrpClientInfo)) &&
+        (prevInfo == aSrpClientInfo))
+    {
+        LogSrpClientInfo("Re-saved", aSrpClientInfo);
+        ExitNow();
+    }
+
+    SuccessOrExit(error = Save(kKeySrpClientInfo, &aSrpClientInfo, sizeof(SrpClientInfo)));
+    LogSrpClientInfo("Saved", aSrpClientInfo);
+
+exit:
+    LogFailure(error, "saving SrpClientInfo", /* aIsDelete */ false);
+    return error;
+}
+
+Error Settings::ReadSrpClientInfo(SrpClientInfo &aSrpClientInfo) const
+{
+    Error    error;
+    uint16_t length = sizeof(SrpClientInfo);
+
+    aSrpClientInfo.Init();
+    SuccessOrExit(error = Read(kKeySrpClientInfo, &aSrpClientInfo, length));
+    LogSrpClientInfo("Read", aSrpClientInfo);
+
+exit:
+    return error;
+}
+
+Error Settings::DeleteSrpClientInfo(void)
+{
+    Error error;
+
+    SuccessOrExit(error = Delete(kKeySrpClientInfo));
+    otLogInfoCore("Non-volatile: Deleted SrpClientInfo");
+
+exit:
+    LogFailure(error, "deleting SrpClientInfo", true);
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 Error Settings::Read(Key aKey, void *aBuffer, uint16_t &aSize) const
