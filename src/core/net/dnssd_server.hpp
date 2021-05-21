@@ -60,6 +60,18 @@ class Server : public InstanceLocator, private NonCopyable
 {
 public:
     /**
+     * This enumeration specifies a dns-sd query type.
+     *
+     */
+    enum DnsQueryType : uint8_t
+    {
+        kDnsQueryNone        = OT_DNSSD_QUERY_TYPE_NONE,         ///< Service type unspecified.
+        kDnsQueryBrowse      = OT_DNSSD_QUERY_TYPE_BROWSE,       ///< Service type browse service.
+        kDnsQueryResolve     = OT_DNSSD_QUERY_TYPE_RESOLVE,      ///< Service type resolve service instance.
+        kDnsQueryResolveHost = OT_DNSSD_QUERY_TYPE_RESOLVE_HOST, ///< Service type resolve hostname.
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -98,7 +110,7 @@ public:
      * This method notifies a discovered service instance.
      *
      * @param[in] aServiceFullName  The null-terminated full service name.
-     * @param[in] aInstanceInfo     A pointer to the discovered service instance information.
+     * @param[in] aInstanceInfo     A reference to the discovered service instance information.
      *
      */
     void HandleDiscoveredServiceInstance(const char *aServiceFullName, const otDnssdServiceInstanceInfo &aInstanceInfo);
@@ -107,27 +119,36 @@ public:
      * This method notifies a discovered host.
      *
      * @param[in] aHostFullName     The null-terminated full host name.
-     * @param[in] aHostInfo         A pointer to the discovered host information.
+     * @param[in] aHostInfo         A reference to the discovered host information.
      *
      */
     void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
 
-private:
-    enum
-    {
-        kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
-        kProtocolLabelLength  = 4,
-        kMaxConcurrentQueries = 32,
-    };
+    /**
+     * This function aquires the next query in the server.
+     *
+     * @param[in] aQuery            The query pointer. Pass nullptr to get the first query.
+     *
+     * @returns  A pointer to the query or nullptr if no more queries.
+     *
+     */
+    const otDnssdQuery *GetNextQuery(const otDnssdQuery *aQuery) const;
 
+    /**
+     * This function aquires the dns-sd query type and name for a specific query.
+     *
+     * @param[in]   aQuery            The query pointer.
+     * @param[out]  aNameOutput       The name output buffer.
+     *
+     * @returns The dns-sd query type.
+     *
+     */
+    static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize]);
+
+private:
     class NameCompressInfo : public Clearable<NameCompressInfo>
     {
     public:
-        enum : uint16_t
-        {
-            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
-        };
-
         explicit NameCompressInfo(void) = default;
 
         explicit NameCompressInfo(const char *aDomainName)
@@ -138,6 +159,11 @@ private:
             , mHostNameOffset(kUnknownOffset)
         {
         }
+
+        enum : uint16_t
+        {
+            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
+        };
 
         uint16_t GetDomainNameOffset(void) const { return mDomainNameOffset; }
 
@@ -201,6 +227,13 @@ private:
         uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
     };
 
+    enum
+    {
+        kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
+        kProtocolLabelLength  = 4,
+        kMaxConcurrentQueries = 32,
+    };
+
     // This structure represents the splitting information of a full name.
     struct NameComponentsOffsetInfo
     {
@@ -232,11 +265,10 @@ private:
                                  // instance.
     };
 
-    enum : uint32_t
-    {
-        kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT,
-    };
-
+    /**
+     * This class contains the compress information for a dns packet.
+     *
+     */
     class QueryTransaction
     {
     public:
@@ -251,15 +283,14 @@ private:
                                      const Ip6::MessageInfo &aMessageInfo);
         bool                    IsValid(void) const { return mResponseMessage != nullptr; }
         const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
-        Header &                GetResponseHeader(void) { return mResponseHeader; }
         const Header &          GetResponseHeader(void) const { return mResponseHeader; }
-        Message &               GetResponseMessage(void) { return *mResponseMessage; }
+        Header &                GetResponseHeader(void) { return mResponseHeader; }
         const Message &         GetResponseMessage(void) const { return *mResponseMessage; }
+        Message &               GetResponseMessage(void) { return *mResponseMessage; }
         TimeMilli               GetStartTime(void) const { return mStartTime; }
         NameCompressInfo &      GetNameCompressInfo(void) { return mCompressInfo; };
         void                    Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket);
 
-    private:
         Header           mResponseHeader;
         Message *        mResponseMessage;
         NameCompressInfo mCompressInfo;
@@ -267,12 +298,9 @@ private:
         TimeMilli        mStartTime;
     };
 
-    enum DnsQueryType
+    enum : uint32_t
     {
-        kDnsQueryNone,
-        kDnsQueryBrowse,
-        kDnsQueryResolve,
-        kDnsQueryResolveHost,
+        kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT,
     };
 
     bool        IsRunning(void) const { return mSocket.IsBound(); }
@@ -323,7 +351,6 @@ private:
                                          Message &               aMessage,
                                          const Ip6::MessageInfo &aMessageInfo,
                                          Ip6::Udp::Socket &      aSocket);
-
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     Header::Response                   ResolveBySrp(Header &                  aResponseHeader,
                                                     Message &                 aResponseMessage,
@@ -356,7 +383,9 @@ private:
     static bool       CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *aHostFullName);
     void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
     void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
-    static DnsQueryType GetQueryType(const Header &aHeader, const Message &aMessage, char (&aName)[Name::kMaxNameSize]);
+    static DnsQueryType GetQueryTypeAndName(const Header & aHeader,
+                                            const Message &aMessage,
+                                            char (&aName)[Name::kMaxNameSize]);
     static bool HasQuestion(const Header &aHeader, const Message &aMessage, const char *aName, uint16_t aQuestionType);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
