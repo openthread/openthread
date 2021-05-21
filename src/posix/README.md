@@ -55,77 +55,77 @@ To build and program the device with RCP application, complete the following ste
 
 1. Clone the OpenThread nRF528xx platform repository into the current directory:
 
-    ```sh
-    git clone --recursive https://github.com/openthread/ot-nrf528xx.git
-    ```
+   ```sh
+   git clone --recursive https://github.com/openthread/ot-nrf528xx.git
+   ```
 
 2. Enter the `ot-nrf528xx` directory:
 
-    ```sh
-    cd ot-nrf528xx
-    ```
+   ```sh
+   cd ot-nrf528xx
+   ```
 
 3. Install the OpenThread dependencies:
 
-    ```sh
-    ./script/bootstrap
-    ```
+   ```sh
+   ./script/bootstrap
+   ```
 
 4. Build the RCP example for the hardware platform and the transport of your choice:
 
-    a. nRF52840 Dongle (USB transport)
+   a. nRF52840 Dongle (USB transport)
 
-    ```sh
-    rm -rf build
-    script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB -DOT_THREAD_VERSION=1.2
-    ```
+   ```sh
+   rm -rf build
+   script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB -DOT_THREAD_VERSION=1.2
+   ```
 
-    b. For nRF52840 Development Kit
+   b. For nRF52840 Development Kit
 
-    ```sh
-    rm -rf build
-    script/build nrf52840 UART_trans -DOT_THREAD_VERSION=1.2
-    ```
+   ```sh
+   rm -rf build
+   script/build nrf52840 UART_trans -DOT_THREAD_VERSION=1.2
+   ```
 
-    This creates an RCP image at `build/bin/ot-rcp`.
+   This creates an RCP image at `build/bin/ot-rcp`.
 
 5. Depending on the hardware platform, complete the following steps to program the device:
 
-    a. nRF52840 Dongle (USB transport)
+   a. nRF52840 Dongle (USB transport)
 
-    ```sh
-    # Install nRF Util:
-    python3 -m pip install -U nrfutil
+   ```sh
+   # Install nRF Util:
+   python3 -m pip install -U nrfutil
 
-    # Generate the RCP firmware package:
-    nrfutil pkg generate --hw-version 52 --sd-req=0x00 \
-        --application build/bin/ot-rcp.hex --application-version 1 build/bin/ot-rcp.zip
-    ```
-        
-    Connect the nRF52840 Dongle to the USB port and press the **RESET** button on the dongle to put it into the DFU mode. The LED on the dongle starts blinking red.
+   # Generate the RCP firmware package:
+   nrfutil pkg generate --hw-version 52 --sd-req=0x00 \
+       --application build/bin/ot-rcp.hex --application-version 1 build/bin/ot-rcp.zip
+   ```
 
-    ```sh
-    # Install the RCP firmware package onto the dongle
-    nrfutil dfu usb-serial -pkg build/bin/ot-rcp.zip -p /dev/ttyACM0
-    ```
+   Connect the nRF52840 Dongle to the USB port and press the **RESET** button on the dongle to put it into the DFU mode. The LED on the dongle starts blinking red.
 
-    b. nRF52840 Development Kit
+   ```sh
+   # Install the RCP firmware package onto the dongle
+   nrfutil dfu usb-serial -pkg build/bin/ot-rcp.zip -p /dev/ttyACM0
+   ```
 
-    ```sh
-    # Program the image using the nrfjprog utility.
-    nrfjprog -f nrf52 --chiperase --program build/bin/ot-rcp.hex --reset
-    ```
+   b. nRF52840 Development Kit
 
-    Disable the Mass Storage feature on the device, so that it does not interfere with the core RCP functionalities:
+   ```sh
+   # Program the image using the nrfjprog utility.
+   nrfjprog -f nrf52 --chiperase --program build/bin/ot-rcp.hex --reset
+   ```
 
-    ```sh
-    JLinkExe -device NRF52840_XXAA -if SWD -speed 4000 -autoconnect 1
-    J-Link>MSDDisable
-    Probe configured successfully.
-    J-Link>exit
-    ```
-    
-    Power-cycle the device to apply the changes.
+   Disable the Mass Storage feature on the device, so that it does not interfere with the core RCP functionalities:
+
+   ```sh
+   JLinkExe -device NRF52840_XXAA -if SWD -speed 4000 -autoconnect 1
+   J-Link>MSDDisable
+   Probe configured successfully.
+   J-Link>exit
+   ```
+
+   Power-cycle the device to apply the changes.
 
 #### Run
 
