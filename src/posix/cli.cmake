@@ -39,19 +39,15 @@ target_compile_definitions(ot-cli PRIVATE
     $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
 endif()
 
-target_compile_definitions(ot-cli PRIVATE
-    ${OT_PLATFORM_DEFINES}
-)
-
 target_compile_options(ot-cli PRIVATE
     ${OT_CFLAGS}
 )
 
 target_link_libraries(ot-cli
     openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
+    openthread-posix
     openthread-ftd
-    ${OT_PLATFORM_LIB}
+    openthread-posix
     openthread-cli-ftd
     openthread-hdlc
     openthread-spinel-rcp

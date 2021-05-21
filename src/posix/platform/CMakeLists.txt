@@ -28,34 +28,46 @@
 
 set(OT_PLATFORM_LIB "openthread-posix" PARENT_SCOPE)
 
+add_library(ot-posix-config INTERFACE)
+
 option(OT_DAEMON "Enable daemon mode" OFF)
 if(OT_DAEMON)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1")
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE=1"
+    )
 endif()
 
 option(OT_POSIX_VIRTUAL_TIME "enable virtual time" OFF)
 if(OT_POSIX_VIRTUAL_TIME)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_VIRTUAL_TIME=1")
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_VIRTUAL_TIME=1"
+    )
 endif()
 
 option(OT_POSIX_MAX_POWER_TABLE  "enable max power table" OFF)
 if(OT_POSIX_MAX_POWER_TABLE)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE=1")
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_MAX_POWER_TABLE_ENABLE=1"
+    )
 endif()
 
 set(OT_POSIX_CONFIG_RCP_BUS "" CACHE STRING "RCP bus type")
 if(OT_POSIX_CONFIG_RCP_BUS)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_${OT_POSIX_CONFIG_RCP_BUS}")
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_POSIX_CONFIG_RCP_BUS=OT_POSIX_RCP_BUS_${OT_POSIX_CONFIG_RCP_BUS}"
+    )
 endif()
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-posix-config.h")
-    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
+    set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()
 
 option(OT_SPINEL_RESET_CONNECTION "reset connection after hard resetting RCP(USB CDC ACM) device" OFF)
 if (OT_SPINEL_RESET_CONNECTION)
-    list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION=1")
+    target_compile_definitions(ot-posix-config
+        INTERFACE "OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION=1"
+    )
+
     find_library(LIBUDEV "udev")
     if (LIBUDEV)
         set(UDEV_LINK_LIBRARIES "${LIBUDEV}")
@@ -63,10 +75,6 @@ if (OT_SPINEL_RESET_CONNECTION)
         message(FATAL_ERROR "test for udev failed")
     endif()
 endif()
-
-set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
-list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-posix
     alarm.cpp
@@ -97,6 +105,7 @@ target_link_libraries(openthread-posix
     PRIVATE
         openthread-url
         ot-config
+        ot-posix-config
         util
         ${UDEV_LINK_LIBRARIES}
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
@@ -106,7 +115,6 @@ target_compile_definitions(openthread-posix
     PUBLIC
         ${OT_PUBLIC_DEFINES}
     PRIVATE
-        ${OT_PLATFORM_DEFINES}
         OPENTHREAD_FTD=1
         OPENTHREAD_MTD=0
 )
