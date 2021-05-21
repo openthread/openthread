@@ -173,6 +173,7 @@ bool ChannelTlv::IsValid(void) const
     bool ret = false;
 
     VerifyOrExit(GetLength() == sizeof(*this) - sizeof(Tlv));
+    VerifyOrExit(mChannelPage < sizeof(uint32_t) * CHAR_BIT);
     VerifyOrExit((1U << mChannelPage) & Radio::kSupportedChannelPages);
     VerifyOrExit(Radio::kChannelMin <= GetChannel() && GetChannel() <= Radio::kChannelMax);
     ret = true;
