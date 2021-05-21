@@ -4,17 +4,16 @@
 
 # What is OpenThread?
 
-OpenThread released by Google is... <a href="http://threadgroup.org/technology/ourtechnology#certifiedproducts"> <img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right"> </a>
+OpenThread released by Google is... <a href="https://www.threadgroup.org/What-is-Thread/Thread-Benefits#certifiedproducts"> <img src="https://cdn.rawgit.com/openthread/openthread/ab4c4e1e/doc/images/certified.svg" alt="Thread Certified Component" width="150px" align="right"> </a>
 
-**...an open-source implementation of the [Thread](http://threadgroup.org/technology/ourtechnology) networking protocol.** Google Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
+**...an open-source implementation of the [Thread](https://www.threadgroup.org/What-is-Thread/Overview) networking protocol.** Google Nest has released OpenThread to make the technology used in Nest products more broadly available to developers to accelerate the development of products for the connected home.
 
 **...OS and platform agnostic**, with a narrow platform abstraction layer and a small memory footprint, making it highly portable. It supports both system-on-chip (SoC) and network co-processor (NCP) designs.
 
-**...a Thread Certified Component**, implementing all features defined in the [Thread 1.1.1 specification](http://threadgroup.org/technology/ourtechnology#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles, as well as [Border Router](https://github.com/openthread/ot-br-posix) support.
+**...a Thread Certified Component**, implementing all features defined in the [Thread 1.1.1 specification](https://www.threadgroup.org/support#specifications), including all Thread networking layers (IPv6, 6LoWPAN, IEEE 802.15.4 with MAC security, Mesh Link Establishment, Mesh Routing) and device roles, as well as [Border Router](https://github.com/openthread/ot-br-posix) support.
 
 More information about Thread can be found at [threadgroup.org](http://threadgroup.org/). Thread is a registered trademark of the Thread Group, Inc.
 
-[thread]: http://threadgroup.org/technology/ourtechnology
 [ot-repo]: https://github.com/openthread/openthread
 [ot-logo]: doc/images/openthread_logo.png
 [ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amain+event%3Apush
