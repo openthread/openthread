@@ -165,4 +165,4 @@ Once unzipped:
 
 ## Contributing Documentation
 
-Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](/doc/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
+Documentation undergoes the same review process as code and contributions may be mirrored on our [openthread.io](https://openthread.io) website. See the [Documentation Style Guide](https://github.com/openthread/ot-docs/blob/main/STYLE_GUIDE.md) for more information on how to author and format documentation for contribution.
