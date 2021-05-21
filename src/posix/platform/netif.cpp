@@ -1418,9 +1418,9 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 static void platformConfigureNetLink(void)
 {
 #if defined(__linux__)
-    sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    sNetlinkFd = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    sNetlinkFd = socket(PF_ROUTE, SOCK_RAW, 0);
+    sNetlinkFd = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, 0, kSocketNonBlock);
 #else
 #error "!! Unknown platform !!"
 #endif

@@ -154,7 +154,7 @@ static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAd
         char             buf[64];
     } request;
 
-    netlinkSocket = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    netlinkSocket = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
     VerifyOrDie(netlinkSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&request, 0, sizeof(request));
@@ -212,7 +212,7 @@ static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 
     otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
-    mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    mgmtFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memcpy(&ifr6.ifr6_addr, aUnicastAddress, sizeof(otIp6Address));
@@ -244,7 +244,7 @@ static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
 
     otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
-    mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    mgmtFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memcpy(&ifr6.ifr6_addr, aUnicastAddress, sizeof(otIp6Address));
@@ -269,7 +269,7 @@ static void PrepareSocket(void)
 
     otLogDebgPlat("[trel] PrepareSocket()");
 
-    sSocket = socket(AF_INET6, SOCK_DGRAM, 0);
+    sSocket = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, kSocketNonBlock);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     // Set the multicast interface index (for tx), disable loop back
