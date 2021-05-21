@@ -126,10 +126,9 @@ bool Prefix::IsValidNat64(void) const
 
 Prefix::InfoString Prefix::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
-    ToString(writer);
+    ToString(string);
 
     return string;
 }
@@ -257,10 +256,9 @@ bool InterfaceIdentifier::IsAnycastServiceLocator(void) const
 
 InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
-    writer.AppendHexBytes(mFields.m8, kSize);
+    string.AppendHexBytes(mFields.m8, kSize);
 
     return string;
 }
@@ -641,10 +639,9 @@ exit:
 
 Address::InfoString Address::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
-    ToString(writer);
+    ToString(string);
 
     return string;
 }

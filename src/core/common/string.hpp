@@ -90,37 +90,6 @@ const char *StringFind(const char *aString, char aChar);
  */
 bool StringEndsWith(const char *aString, char aChar);
 
-class StringWriter;
-
-/**
- * This class defines a fixed-size string.
- *
- */
-template <uint16_t kSize> class String
-{
-    friend class StringWriter;
-
-    static_assert(kSize > 0, "String buffer cannot be empty.");
-
-public:
-    /**
-     * This method clears the string (sets it to empty).
-     *
-     */
-    void Clear(void) { mBuffer[0] = '\0'; }
-
-    /**
-     * This method returns the string as a null-terminated C string.
-     *
-     * @returns The null-terminated C string.
-     *
-     */
-    const char *AsCString(void) const { return mBuffer; }
-
-private:
-    char mBuffer[kSize];
-};
-
 /**
  * This class implements writing to a string buffer.
  *
@@ -136,20 +105,6 @@ public:
      *
      */
     StringWriter(char *aBuffer, uint16_t aSize);
-
-    /**
-     * This constructor initializes the object as cleared on a fixed-size string.
-     *
-     * @tparam kSize  The size of the string (number of chars).
-     *
-     * @param[in] aStringBuffer   A reference to a `String<kSize>` to write into.
-     *
-     */
-    template <uint16_t kSize>
-    explicit StringWriter(String<kSize> &aStringBuffer)
-        : StringWriter(aStringBuffer.mBuffer, kSize)
-    {
-    }
 
     /**
      * This method clears the string writer.
@@ -225,6 +180,36 @@ private:
     char *         mBuffer;
     uint16_t       mLength;
     const uint16_t mSize;
+};
+
+/**
+ * This class defines a fixed-size string.
+ *
+ */
+template <uint16_t kSize> class String : public StringWriter
+{
+    static_assert(kSize > 0, "String buffer cannot be empty.");
+
+public:
+    /**
+     * This constructor initializes the string as empty.
+     *
+     */
+    String(void)
+        : StringWriter(mBuffer, sizeof(mBuffer))
+    {
+    }
+
+    /**
+     * This method returns the string as a null-terminated C string.
+     *
+     * @returns The null-terminated C string.
+     *
+     */
+    const char *AsCString(void) const { return mBuffer; }
+
+private:
+    char mBuffer[kSize];
 };
 
 /**
