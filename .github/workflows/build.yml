@@ -56,6 +56,15 @@ jobs:
       run: |
         script/make-pretty check
 
+  markdown-lint-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-verbose-mode: 'yes'
+        max-depth: 3
+
   cmake-version:
     runs-on: ubuntu-18.04
     steps:
