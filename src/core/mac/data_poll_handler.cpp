@@ -272,7 +272,7 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
             {
                 uint32_t frameCounter;
                 uint8_t  keyId;
-                Error   error;
+                Error    error;
 
                 error = aFrame.GetFrameCounter(frameCounter);
                 OT_ASSERT(error == kErrorNone);
