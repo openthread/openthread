@@ -329,7 +329,7 @@ Error Mle::Restore(void)
     Get<DuaManager>().Restore();
 #endif
 
-    SuccessOrExit(error = Get<Settings>().ReadNetworkInfo(networkInfo));
+    SuccessOrExit(error = Get<Settings>().Read(networkInfo));
 
     Get<KeyManager>().SetCurrentKeySequence(networkInfo.GetKeySequence());
     Get<KeyManager>().SetMleFrameCounter(networkInfo.GetMleFrameCounter());
@@ -362,7 +362,7 @@ Error Mle::Restore(void)
 
     if (!IsActiveRouter(networkInfo.GetRloc16()))
     {
-        error = Get<Settings>().ReadParentInfo(parentInfo);
+        error = Get<Settings>().Read(parentInfo);
 
         if (error != kErrorNone)
         {
@@ -433,7 +433,7 @@ Error Mle::Store(void)
             parentInfo.SetExtAddress(mParent.GetExtAddress());
             parentInfo.SetVersion(mParent.GetVersion());
 
-            SuccessOrExit(error = Get<Settings>().SaveParentInfo(parentInfo));
+            SuccessOrExit(error = Get<Settings>().Save(parentInfo));
         }
     }
     else
@@ -446,7 +446,7 @@ Error Mle::Store(void)
         // address. If there is a previously saved `NetworkInfo`, we
         // just update the key sequence and MAC and MLE frame counters.
 
-        SuccessOrExit(Get<Settings>().ReadNetworkInfo(networkInfo));
+        SuccessOrExit(Get<Settings>().Read(networkInfo));
     }
 
     networkInfo.SetKeySequence(Get<KeyManager>().GetCurrentKeySequence());
@@ -456,7 +456,7 @@ Error Mle::Store(void)
                                    OPENTHREAD_CONFIG_STORE_FRAME_COUNTER_AHEAD);
     networkInfo.SetDeviceMode(mDeviceMode.Get());
 
-    SuccessOrExit(error = Get<Settings>().SaveNetworkInfo(networkInfo));
+    SuccessOrExit(error = Get<Settings>().Save(networkInfo));
 
     Get<KeyManager>().SetStoredMleFrameCounter(networkInfo.GetMleFrameCounter());
     Get<KeyManager>().SetStoredMacFrameCounter(networkInfo.GetMacFrameCounter());

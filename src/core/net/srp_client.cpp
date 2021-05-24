@@ -559,7 +559,7 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
     {
         if (mAutoStartIsUsingAnycastAddress)
         {
-            IgnoreError(Get<Settings>().DeleteSrpClientInfo());
+            IgnoreError(Get<Settings>().Delete<Settings::SrpClientInfo>());
         }
         else
         {
@@ -568,7 +568,7 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
             info.SetServerAddress(GetServerAddress().GetAddress());
             info.SetServerPort(GetServerAddress().GetPort());
 
-            IgnoreError(Get<Settings>().SaveSrpClientInfo(info));
+            IgnoreError(Get<Settings>().Save(info));
         }
     }
 #endif
@@ -745,7 +745,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 {
     Error error;
 
-    error = Get<Settings>().ReadSrpKey(aKeyPair);
+    error = Get<Settings>().Read<Settings::SrpEcdsaKey>(aKeyPair);
 
     if (error == kErrorNone)
     {
@@ -758,7 +758,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
     }
 
     SuccessOrExit(error = aKeyPair.Generate());
-    IgnoreError(Get<Settings>().SaveSrpKey(aKeyPair));
+    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyPair));
 
 exit:
     return error;
@@ -1566,7 +1566,7 @@ void Client::ProcessAutoStart(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
     if (!IsRunning())
     {
-        hasSavedServerInfo = (Get<Settings>().ReadSrpClientInfo(savedInfo) == kErrorNone);
+        hasSavedServerInfo = (Get<Settings>().Read(savedInfo) == kErrorNone);
     }
 #endif
 
