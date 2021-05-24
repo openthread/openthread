@@ -438,15 +438,17 @@ public:
     /** This method enables CSL sampling in radio.
      *
      * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
-     * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms
-     * generate enhanced ack, platforms may need to know acks to which address should include CSL IE).
+     * @param[in]  aShortAddr    The short source address of CSL receiver's peer.
+     * @param[in]  aExtAddr      The extended source address of CSL receiver's peer.
+     *
+     * @note Platforms should use CSL peer addresses to include CSL IE when generating enhanced acks.
      *
      * @retval  kErrorNotImplemented Radio driver doesn't support CSL.
      * @retval  kErrorFailed         Other platform specific errors.
      * @retval  kErrorNone           Successfully enabled or disabled CSL.
      *
      */
-    Error EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+    Error EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
 
     /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
@@ -769,9 +771,9 @@ inline Error Radio::ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDurat
     return otPlatRadioReceiveAt(GetInstancePtr(), aChannel, aStart, aDuration);
 }
 
-inline Error Radio::EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+inline Error Radio::EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
 {
-    return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aExtAddr);
+    return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aShortAddr, aExtAddr);
 }
 
 inline uint8_t Radio::GetCslAccuracy()
@@ -927,7 +929,7 @@ inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t)
     return kErrorNone;
 }
 
-inline Error Radio::EnableCsl(uint32_t, const otExtAddress *)
+inline Error Radio::EnableCsl(uint32_t, otShortAddress aShortAddr, const otExtAddress *)
 {
     return kErrorNotImplemented;
 }
