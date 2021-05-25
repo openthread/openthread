@@ -29,7 +29,7 @@
 add_library(openthread-cli-mtd)
 
 target_compile_definitions(openthread-cli-mtd
-    PRIVATE
+    PUBLIC
         OPENTHREAD_MTD=1
 )
 
