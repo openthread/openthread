@@ -93,6 +93,7 @@ dist_openthread_HEADERS = $(openthread_headers)
 ot_platform_headers                     = \
     openthread/platform/alarm-micro.h     \
     openthread/platform/alarm-milli.h     \
+    openthread/platform/crypto.h          \
     openthread/platform/debug_uart.h      \
     openthread/platform/diag.h            \
     openthread/platform/entropy.h         \
@@ -103,7 +104,6 @@ ot_platform_headers                     = \
     openthread/platform/messagepool.h     \
     openthread/platform/misc.h            \
     openthread/platform/otns.h            \
-    openthread/platform/psa.h             \
     openthread/platform/radio.h           \
     openthread/platform/settings.h        \
     openthread/platform/spi-slave.h       \

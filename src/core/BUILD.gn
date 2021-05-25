@@ -411,6 +411,7 @@ openthread_core_files = [
   "crypto/aes_ccm.hpp",
   "crypto/aes_ecb.cpp",
   "crypto/aes_ecb.hpp",
+  "crypto/crypto_platform.cpp",
   "crypto/ecdsa.cpp",
   "crypto/ecdsa.hpp",
   "crypto/hkdf_sha256.cpp",
