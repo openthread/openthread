@@ -42,10 +42,10 @@
 
 #include <openthread/crypto.h>
 
-#include <openthread/platform/psa.h>
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
+#include <openthread/platform/crypto.h>
 
 namespace ot {
 
@@ -148,11 +148,10 @@ public:
     void Finish(Hash &aHash);
 
 private:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    void *GetContext(void);
+
     psa_hash_operation_t mOperation;
-#else
     mbedtls_sha256_context mContext;
-#endif
 };
 
 /**

@@ -202,22 +202,6 @@ OT_TOOL_WEAK otRadioState otPlatRadioGetState(otInstance *aInstance)
     return OT_RADIO_STATE_INVALID;
 }
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-OT_TOOL_WEAK void otPlatRadioSetMacKeyRef(otInstance *aInstance,
-                                          uint8_t     aKeyIdMode,
-                                          uint8_t     aKeyId,
-                                          otMacKeyRef aPrevKeyRef,
-                                          otMacKeyRef aCurrKeyRef,
-                                          otMacKeyRef aNextKeyRef)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKeyIdMode);
-    OT_UNUSED_VARIABLE(aKeyId);
-    OT_UNUSED_VARIABLE(aPrevKeyRef);
-    OT_UNUSED_VARIABLE(aCurrKeyRef);
-    OT_UNUSED_VARIABLE(aNextKeyRef);
-}
-#else
 OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance *    aInstance,
                                        uint8_t         aKeyIdMode,
                                        uint8_t         aKeyId,
@@ -232,7 +216,6 @@ OT_TOOL_WEAK void otPlatRadioSetMacKey(otInstance *    aInstance,
     OT_UNUSED_VARIABLE(aCurrKey);
     OT_UNUSED_VARIABLE(aNextKey);
 }
-#endif
 
 OT_TOOL_WEAK void otPlatRadioSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)
 {

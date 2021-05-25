@@ -338,7 +338,7 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
 
     if (aDatasetInfo.IsMasterKeyPresent())
     {
-        IgnoreError(SetTlv(Tlv::kNetworkMasterKey, aDatasetInfo.GetMasterKey()));
+        IgnoreError(SetTlv(Tlv::kNetworkMasterKey, aDatasetInfo.GetMasterKey().mKeyMaterial));
     }
 
     if (aDatasetInfo.IsNetworkNamePresent())
@@ -565,8 +565,10 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated
         case Tlv::kNetworkMasterKey:
         {
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
+            uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
+            keyManager.GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
 
-            if (aIsMasterKeyUpdated && (key->GetNetworkMasterKey() != keyManager.GetMasterKey()))
+            if (aIsMasterKeyUpdated && (key->GetNetworkMasterKey().mKeyMaterial.m8 != masterKeyLiteral))
             {
                 *aIsMasterKeyUpdated = true;
             }

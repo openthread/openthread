@@ -347,7 +347,7 @@ Error GeneratePskc(const char *              aPassPhrase,
     saltLen += networkNameLen;
 
     Crypto::Pbkdf2::GenerateKey(reinterpret_cast<const uint8_t *>(aPassPhrase), passphraseLen, salt, saltLen, 16384,
-                                OT_PSKC_MAX_SIZE, aPskc.m8);
+                                OT_PSKC_MAX_SIZE, aPskc.mKeyMaterial.m8);
 
 exit:
     return error;

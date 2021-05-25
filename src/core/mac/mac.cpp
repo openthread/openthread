@@ -148,12 +148,23 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    Error error = otPlatPsaImportKey(&sMode2KeyRef, PSA_KEY_TYPE_AES, PSA_ALG_ECB_NO_PADDING,
-                                     (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT), PSA_KEY_LIFETIME_VOLATILE,
-                                     sMode2Key.m8, sizeof(sMode2Key.m8));
-    OT_ASSERT(error == kErrorNone);
-#endif
+    memcpy(sMode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
+
+    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+    {
+        otMacKeyRef aKeyRef = 0;
+        Error error = otPlatCryptoImportKey(&aKeyRef,
+                                        PSA_KEY_TYPE_AES,
+                                        PSA_ALG_ECB_NO_PADDING,
+                                        (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
+                                        PSA_KEY_LIFETIME_VOLATILE,
+                                        sMode2Key.m8,
+                                        sizeof(sMode2Key.m8));
+
+        sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
+
+        OT_ASSERT(error == kErrorNone);
+    }
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -1012,11 +1023,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        aFrame.SetAesKey(keyManager.GetKekRef());
-#else
         aFrame.SetAesKey(keyManager.GetKek());
-#endif
         extAddress = &GetExtAddress();
 
         if (!aFrame.IsARetransmission())
@@ -1060,11 +1067,8 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        aFrame.SetAesKey(sMode2KeyRef);
-#else
-        aFrame.SetAesKey(static_cast<const Key &>(sMode2Key));
-#endif
+        aFrame.SetAesKey(static_cast<const Key &>(sMode2KeyMaterial));
+
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
@@ -1691,18 +1695,15 @@ void Mac::HandleTimer(void)
 
 Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
-    KeyManager &keyManager = Get<KeyManager>();
-    Error       error      = kErrorSecurity;
-    uint8_t     securityLevel;
-    uint8_t     keyIdMode;
-    uint32_t    frameCounter;
-    uint8_t     keyid;
-    uint32_t    keySequence = 0;
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    KeyRef macKeyRef;
-#else
-    const Key *macKey;
-#endif
+    KeyManager &      keyManager = Get<KeyManager>();
+    Error             error      = kErrorSecurity;
+    uint8_t           securityLevel;
+    uint8_t           keyIdMode;
+    uint32_t          frameCounter;
+    uint8_t           keyid;
+    uint32_t          keySequence = 0;
+    const Key *       macKey;
+
     const ExtAddress *extAddress;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
@@ -1718,11 +1719,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     switch (keyIdMode)
     {
     case Frame::kKeyIdMode0:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        macKeyRef = keyManager.GetKekRef();
-#else
-        macKey = &keyManager.GetKek();
-#endif
+        macKey     = &keyManager.GetKek();
         extAddress = &aSrcAddr.GetExtended();
         break;
 
@@ -1735,29 +1732,17 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         if (keyid == (keyManager.GetCurrentKeySequence() & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence();
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-            macKeyRef = mLinks.GetCurrentMacKeyRef(aFrame);
-#else
-            macKey = mLinks.GetCurrentMacKey(aFrame);
-#endif
+            macKey      = mLinks.GetCurrentMacKey(aFrame);
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() - 1;
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-            macKeyRef = mLinks.GetTemporaryMacKeyRef(aFrame, keySequence);
-#else
-            macKey = mLinks.GetTemporaryMacKey(aFrame, keySequence);
-#endif
+            macKey      = mLinks.GetTemporaryMacKey(aFrame, keySequence);
         }
         else if (keyid == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
         {
             keySequence = keyManager.GetCurrentKeySequence() + 1;
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-            macKeyRef = mLinks.GetTemporaryMacKeyRef(aFrame, keySequence);
-#else
-            macKey = mLinks.GetTemporaryMacKey(aFrame, keySequence);
-#endif
+            macKey      = mLinks.GetTemporaryMacKey(aFrame, keySequence);
         }
         else
         {
@@ -1795,11 +1780,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        macKeyRef = sMode2KeyRef;
-#else
-        macKey = static_cast<const Key *>(&sMode2Key);
-#endif
+        macKey     = static_cast<const Key *>(&sMode2KeyMaterial);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
 
@@ -1807,11 +1788,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         ExitNow();
         OT_UNREACHABLE_CODE(break);
     }
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, macKeyRef));
-#else
     SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
-#endif
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
     {
@@ -1864,11 +1841,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     Address     dstAddr;
     Neighbor *  neighbor   = nullptr;
     KeyManager &keyManager = Get<KeyManager>();
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    KeyRef macKeyRef;
-#else
-    const Key *macKey;
-#endif
+    const Key * macKey;
 
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());
@@ -1915,27 +1888,15 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     if (ackKeyId == (keyManager.GetCurrentKeySequence() & 0x7f))
     {
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        macKeyRef = mLinks.GetSubMac().GetCurrentMacKeyRef();
-#else
-        macKey = &mLinks.GetSubMac().GetCurrentMacKey();
-#endif
+        macKey    = &mLinks.GetSubMac().GetCurrentMacKey();
     }
     else if (ackKeyId == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
     {
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        macKeyRef = mLinks.GetSubMac().GetPreviousMacKeyRef();
-#else
-        macKey = &mLinks.GetSubMac().GetPreviousMacKey();
-#endif
+        macKey    = &mLinks.GetSubMac().GetPreviousMacKey();
     }
     else if (ackKeyId == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
     {
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-        macKeyRef = mLinks.GetSubMac().GetNextMacKeyRef();
-#else
-        macKey = &mLinks.GetSubMac().GetNextMacKey();
-#endif
+        macKey    = &mLinks.GetSubMac().GetNextMacKey();
     }
     else
     {
@@ -1946,11 +1907,8 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     {
         VerifyOrExit(frameCounter >= neighbor->GetLinkAckFrameCounter());
     }
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), macKeyRef);
-#else
+
     error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
-#endif
 
     SuccessOrExit(error);
 

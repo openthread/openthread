@@ -42,7 +42,7 @@
 
 #include "crypto/sha256.hpp"
 
-#include <openthread/platform/psa.h>
+#include <openthread/platform/crypto.h>
 
 namespace ot {
 
@@ -82,7 +82,6 @@ public:
      */
     ~HmacSha256(void);
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     /**
      * This method sets the key and starts the HMAC computation.
      *
@@ -90,17 +89,8 @@ public:
      * @param[in]  aKeyLength  The key length in bytes.
      *
      */
-    void Start(uint32_t aKeyRef);
-#else
-    /**
-     * This method sets the key and starts the HMAC computation.
-     *
-     * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bytes.
-     *
-     */
-    void                 Start(const uint8_t *aKey, uint16_t aKeyLength);
-#endif
+    void Start(otCryptoKey *aKey);
+
     /**
      * This method inputs bytes into the HMAC computation.
      *
@@ -143,11 +133,10 @@ public:
     void Finish(Hash &aHash);
 
 private:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
+    void *GetContext(void);
+
     psa_mac_operation_t mOperation;
-#else
     mbedtls_md_context_t mContext;
-#endif
 };
 
 /**

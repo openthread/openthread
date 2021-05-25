@@ -32,73 +32,40 @@
  */
 
 #include "hmac_sha256.hpp"
-
 #include "common/message.hpp"
 
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
 HmacSha256::HmacSha256(void)
 {
-    mOperation = PSA_MAC_OPERATION_INIT;
+    void *mCtx = GetContext();
+    otPlatCryptoHmacSha256Init(mCtx);
 }
 
 HmacSha256::~HmacSha256(void)
 {
-    psa_status_t error = psa_mac_abort(&mOperation);
-    (void)error;
+    void *mCtx = GetContext();
+    otPlatCryptoHmacSha256UnInit(mCtx);
 }
 
-void HmacSha256::Start(uint32_t aKeyRef)
+void HmacSha256::Start(otCryptoKey *aKey)
 {
-    psa_status_t error = psa_mac_sign_setup(&mOperation, aKeyRef, PSA_ALG_HMAC(PSA_ALG_SHA_256));
-
-    (void)error;
+    void *mCtx = GetContext();
+    otPlatCryptoHmacSha256Start(mCtx, aKey);
 }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    psa_status_t error = psa_mac_update(&mOperation, (const uint8_t *)aBuf, (size_t)aBufLength);
-    (void)error;
+    void *mCtx = GetContext();    
+    otPlatCryptoHmacSha256Update(mCtx, aBuf, aBufLength);
 }
 
 void HmacSha256::Finish(Hash &aHash)
 {
-    size_t aMacLength = 0;
-
-    psa_status_t error = psa_mac_sign_finish(&mOperation, aHash.m8, aHash.kSize, &aMacLength);
-    (void)error;
+    void *mCtx = GetContext();   
+    otPlatCryptoHmacSha256Finish(mCtx, aHash.m8, aHash.kSize);
 }
-#else
-HmacSha256::HmacSha256(void)
-{
-    const mbedtls_md_info_t *mdInfo = nullptr;
-    mbedtls_md_init(&mContext);
-    mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-    mbedtls_md_setup(&mContext, mdInfo, 1);
-}
-
-HmacSha256::~HmacSha256(void)
-{
-    mbedtls_md_free(&mContext);
-}
-
-void HmacSha256::Start(const uint8_t *aKey, uint16_t aKeyLength)
-{
-    mbedtls_md_hmac_starts(&mContext, aKey, aKeyLength);
-}
-
-void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
-{
-    mbedtls_md_hmac_update(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
-}
-
-void HmacSha256::Finish(Hash &aHash)
-{
-    mbedtls_md_hmac_finish(&mContext, aHash.m8);
-}
-#endif
 
 void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
@@ -111,6 +78,22 @@ void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLen
         Update(chunk.GetData(), chunk.GetLength());
         aMessage.GetNextChunk(aLength, chunk);
     }
+}
+
+void *HmacSha256::GetContext(void)
+{
+    void *mCtx = nullptr;
+
+    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+    {
+        mCtx = (void *)&mOperation;
+    }
+    else
+    {
+        mCtx = (void *)&mContext;
+    }
+
+    return mCtx;
 }
 } // namespace Crypto
 } // namespace ot

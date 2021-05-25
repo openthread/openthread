@@ -35,7 +35,7 @@
 #define AES_ECB_HPP_
 
 #include "openthread-core-config.h"
-
+#include <openthread/platform/crypto.h>
 #include <mbedtls/aes.h>
 
 namespace ot {
@@ -72,24 +72,13 @@ public:
      */
     ~AesEcb(void);
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     /**
      * This method sets the key.
      *
      * @param[in]  aKeyRef     Key Reference for ECB operation
      *
      */
-    void SetKey(const uint32_t aKeyRef);
-#else
-    /**
-     * This method sets the key.
-     *
-     * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bits.
-     *
-     */
-    void                SetKey(const uint8_t *aKey, uint16_t aKeyLength);
-#endif
+    void SetKey(otCryptoKey *aKey);
 
     /**
      * This method encrypts data.
@@ -101,11 +90,10 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    uint32_t mKeyRef;
-#else
+    void *              GetContext(void);
+
+    uint32_t            mKeyRef;
     mbedtls_aes_context mContext;
-#endif
 };
 
 /**

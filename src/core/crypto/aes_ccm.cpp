@@ -42,23 +42,32 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-void AesCcm::SetKey(otMacKeyRef aKeyRef)
+void AesCcm::SetKey(otCryptoKey *aKey)
 {
-    mEcb.SetKey(aKeyRef);
+  mEcb.SetKey(aKey);
 }
 
-#else
 void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
-    mEcb.SetKey(aKey, CHAR_BIT * aKeyLength);
+    otCryptoKey aCryptoKey;
+
+    aCryptoKey.mKey         = aKey;
+    aCryptoKey.mKeyLength   = aKeyLength;
+    aCryptoKey.mKeyRef      = 0;
+
+    mEcb.SetKey(&aCryptoKey);
 }
 
 void AesCcm::SetKey(const Mac::Key &aMacKey)
 {
-    SetKey(aMacKey.GetKey(), Mac::Key::kSize);
+    otCryptoKey aCryptoKey;
+
+    aCryptoKey.mKey         = aMacKey.GetKey();
+    aCryptoKey.mKeyLength   = Mac::Key::kSize;
+    aCryptoKey.mKeyRef      = aMacKey.mKeyMaterial.mKeyRef;
+
+    SetKey(&aCryptoKey);
 }
-#endif
 
 void AesCcm::Init(uint32_t    aHeaderLength,
                   uint32_t    aPlainTextLength,

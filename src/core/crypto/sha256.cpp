@@ -38,34 +38,28 @@
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-
 Sha256::Sha256(void)
 {
-    mOperation = PSA_HASH_OPERATION_INIT;
+    void *mCtx = GetContext();
+    otPlatCryptoSha256Init(mCtx);
 }
 
 Sha256::~Sha256(void)
 {
-    psa_status_t error = psa_hash_abort(&mOperation);
-
-    (void)error;
+    void *mCtx = GetContext();
+    otPlatCryptoSha256Uninit(mCtx);
 }
 
 void Sha256::Start(void)
 {
-    psa_status_t error = psa_hash_setup(&mOperation, PSA_ALG_SHA_256);
-
-    (void)error;
+    void *mCtx = GetContext();
+    otPlatCryptoSha256Start(mCtx);
 }
 
 void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    psa_status_t error;
-
-    error = psa_hash_update(&mOperation, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
-
-    (void)error;
+    void *mCtx = GetContext();
+    otPlatCryptoSha256Update(mCtx, aBuf, aBufLength);
 }
 
 void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
@@ -83,51 +77,24 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 
 void Sha256::Finish(Hash &aHash)
 {
-    size_t       aHashLength = 0;
-    psa_status_t error;
-
-    error = psa_hash_finish(&mOperation, aHash.m8, aHash.kSize, &aHashLength);
-
-    (void)error;
-}
-#else
-Sha256::Sha256(void)
-{
-    mbedtls_sha256_init(&mContext);
+    void *mCtx = GetContext();
+    otPlatCryptoSha256Finish(mCtx, aHash.m8, aHash.kSize);
 }
 
-Sha256::~Sha256(void)
+void *Sha256::GetContext(void)
 {
-    mbedtls_sha256_free(&mContext);
-}
+    void *mCtx = nullptr;
 
-void Sha256::Start(void)
-{
-    mbedtls_sha256_starts_ret(&mContext, 0);
-}
-
-void Sha256::Update(const void *aBuf, uint16_t aBufLength)
-{
-    mbedtls_sha256_update_ret(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
-}
-
-void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
-{
-    Message::Chunk chunk;
-
-    aMessage.GetFirstChunk(aOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
+    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
-        Update(chunk.GetData(), chunk.GetLength());
-        aMessage.GetNextChunk(aLength, chunk);
+        mCtx = (void *)&mOperation;
     }
-}
+    else
+    {
+        mCtx = (void *)&mContext;
+    }
 
-void Sha256::Finish(Hash &aHash)
-{
-    mbedtls_sha256_finish_ret(&mContext, aHash.m8);
+    return mCtx;
 }
-#endif
 } // namespace Crypto
 } // namespace ot

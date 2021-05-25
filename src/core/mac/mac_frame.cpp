@@ -1189,11 +1189,8 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
     Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    aesCcm.SetKey(GetAesKeyRef());
-#else
     aesCcm.SetKey(GetAesKey());
-#endif
+
     tagLength = GetFooterLength() - GetFcsSize();
 
     aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
@@ -1337,56 +1334,6 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, otMacKeyRef aMacKeyRef)
-{
-#if OPENTHREAD_RADIO
-    OT_UNUSED_VARIABLE(aExtAddress);
-    OT_UNUSED_VARIABLE(aMacKey);
-
-    return kErrorNone;
-#else
-    Error          error        = kErrorSecurity;
-    uint32_t       frameCounter = 0;
-    uint8_t        securityLevel;
-    uint8_t        nonce[Crypto::AesCcm::kNonceSize];
-    uint8_t        tag[kMaxMicSize];
-    uint8_t        tagLength;
-    Crypto::AesCcm aesCcm;
-
-    VerifyOrExit(GetSecurityEnabled(), error = kErrorNone);
-
-    SuccessOrExit(GetSecurityLevel(securityLevel));
-    SuccessOrExit(GetFrameCounter(frameCounter));
-
-    Crypto::AesCcm::GenerateNonce(aExtAddress, frameCounter, securityLevel, nonce);
-
-    aesCcm.SetKey(aMacKeyRef);
-    tagLength = GetFooterLength() - GetFcsSize();
-
-    aesCcm.Init(GetHeaderLength(), GetPayloadLength(), tagLength, nonce, sizeof(nonce));
-    aesCcm.Header(GetHeader(), GetHeaderLength());
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    aesCcm.Payload(GetPayload(), GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#else
-    // For fuzz tests, execute AES but do not alter the payload
-    uint8_t fuzz[OT_RADIO_FRAME_MAX_SIZE];
-    aesCcm.Payload(fuzz, GetPayload(), GetPayloadLength(), Crypto::AesCcm::kDecrypt);
-#endif
-    aesCcm.Finalize(tag);
-
-#ifndef FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION
-    VerifyOrExit(memcmp(tag, GetFooter(), tagLength) == 0);
-#endif
-
-    error = kErrorNone;
-
-exit:
-    return error;
-#endif // OPENTHREAD_RADIO
-}
-
-#else
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey)
 {
 #if OPENTHREAD_RADIO
@@ -1434,7 +1381,6 @@ exit:
     return error;
 #endif // OPENTHREAD_RADIO
 }
-#endif
 
 // LCOV_EXCL_START
 

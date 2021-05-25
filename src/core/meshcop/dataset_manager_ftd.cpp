@@ -154,9 +154,12 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check network master key
     if (Tlv::Find<NetworkMasterKeyTlv>(aMessage, masterKey) == kErrorNone)
     {
+        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
+
+        Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
         hasMasterKey = true;
 
-        if (masterKey != Get<KeyManager>().GetMasterKey())
+        if (memcmp(masterKey.mKeyMaterial.m8, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
         {
             doesAffectConnectivity = true;
             doesAffectMasterKey    = true;
@@ -164,12 +167,19 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (type == Tlv::kPendingTimestamp && (!hasMasterKey || (masterKey == Get<KeyManager>().GetMasterKey())))
+    if (type == Tlv::kPendingTimestamp)
     {
-        // no change to master key, active timestamp must be ahead
-        const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
+        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
 
-        VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0);
+        Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
+
+        if(!hasMasterKey || (memcmp(masterKey.mKeyMaterial.m8, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
+        {
+            // no change to master key, active timestamp must be ahead
+            const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
+
+            VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0);
+        }
     }
 
     // check commissioner session id
@@ -353,7 +363,9 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<NetworkMasterKeyTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, Get<KeyManager>().GetMasterKey()));
+        otMasterKey aMasterKey;
+        Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.m8, OT_MASTER_KEY_SIZE);
+        IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, aMasterKey));
     }
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
@@ -370,18 +382,17 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<PskcTlv>() == nullptr)
     {
-        if (Get<KeyManager>().IsPskcSet())
-        {
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, Get<KeyManager>().GetPskc()));
-        }
-        else
+        uint8_t aPskc[OT_PSKC_MAX_SIZE];
+ 
+        if (!Get<KeyManager>().IsPskcSet())
         {
             // PSKc has not yet been configured, generate new PSKc at random
             Pskc pskc;
-
             SuccessOrExit(error = pskc.GenerateRandom());
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
         }
+
+        Get<KeyManager>().GetPskc().CopyKey(aPskc, OT_PSKC_MAX_SIZE);
+        IgnoreError(dataset.SetTlv(Tlv::kPskc, aPskc));
     }
 
     if (dataset.GetTlv<SecurityPolicyTlv>() == nullptr)

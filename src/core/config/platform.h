@@ -108,16 +108,6 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
- *
- * Define to 1 if you want to use PSA Crypto APIs.
- *
- */
-#ifndef OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-#define OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE 0
-#endif
-
-/**
  * @def OPENTHREAD_CONFIG_PLATFORM_RADIO_SPINEL_RX_FRAME_BUFFER_SIZE
  *
  * Specifies the rx frame buffer size used by `SpinelInterface` in RCP host (posix) code. This is applicable/used when

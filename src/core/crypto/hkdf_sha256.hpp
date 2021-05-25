@@ -56,19 +56,7 @@ namespace Crypto {
 class HkdfSha256
 {
 public:
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    /**
-     * This method performs the HKDF Extract step.
-     *
-     * In the Extract step getting an input key extracts from it a pseudo-random key.
-     *
-     * @param[in] aSalt             A pointer to buffer containing salt.
-     * @param[in] aSaltLength       The salt length (in bytes).
-     * @param[in] aInputKeyRef      A reference to the input key.
-     *
-     */
-    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, psa_key_id_t aInputKeyRef);
-#else
+
     /**
      * This method performs the HKDF Extract step.
      *
@@ -80,8 +68,8 @@ public:
      * @param[in] aInputKeyLength   The input key length (in bytes).
      *
      */
-    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8_t *aInputKey, uint16_t aInputKeyLength);
-#endif
+    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey *aKey);
+
     /**
      * This method performs the HKDF Expand step.
      *
@@ -98,9 +86,7 @@ public:
 
 private:
     HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
     psa_key_derivation_operation_t mOperation;
-#endif
 };
 
 /**

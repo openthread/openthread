@@ -102,7 +102,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
         mInterpreter.OutputFormat("Master Key: ");
-        mInterpreter.OutputBytes(aDataset.mMasterKey.m8);
+        mInterpreter.OutputBytes(aDataset.mMasterKey.mKeyMaterial.m8);
         mInterpreter.OutputLine("");
     }
 
@@ -120,7 +120,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.OutputFormat("PSKc: ");
-        mInterpreter.OutputBytes(aDataset.mPskc.m8);
+        mInterpreter.OutputBytes(aDataset.mPskc.mKeyMaterial.m8);
         mInterpreter.OutputLine("");
     }
 
@@ -401,13 +401,13 @@ otError Dataset::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsMasterKeyPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mMasterKey.m8);
+            mInterpreter.OutputBytes(sDataset.mMasterKey.mKeyMaterial.m8);
             mInterpreter.OutputLine("");
         }
     }
     else
     {
-        SuccessOrExit(error = ParseAsHexString(aArgs[0], sDataset.mMasterKey.m8));
+        SuccessOrExit(error = ParseAsHexString(aArgs[0], sDataset.mMasterKey.mKeyMaterial.m8));
         sDataset.mComponents.mIsMasterKeyPresent = true;
     }
 
@@ -544,7 +544,7 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, char *aArgs[])
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mComponents.mIsMasterKeyPresent = true;
-            SuccessOrExit(error = ParseAsHexString(aArgs[index], dataset.mMasterKey.m8));
+            SuccessOrExit(error = ParseAsHexString(aArgs[index], dataset.mMasterKey.mKeyMaterial.m8));
         }
         else if (strcmp(aArgs[index], "networkname") == 0)
         {
@@ -738,13 +738,13 @@ otError Dataset::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     {
         if (sDataset.mComponents.mIsPskcPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mPskc.m8);
+            mInterpreter.OutputBytes(sDataset.mPskc.mKeyMaterial.m8);
             mInterpreter.OutputLine("");
         }
     }
     else if (aArgsLength == 1)
     {
-        SuccessOrExit(error = ParseAsHexString(aArgs[0], sDataset.mPskc.m8));
+        SuccessOrExit(error = ParseAsHexString(aArgs[0], sDataset.mPskc.mKeyMaterial.m8));
     }
 #if OPENTHREAD_FTD
     else if (aArgsLength == 2 && !strcmp(aArgs[0], "-p"))

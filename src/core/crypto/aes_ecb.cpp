@@ -32,44 +32,48 @@
  */
 
 #include "aes_ecb.hpp"
-#include <openthread/platform/psa.h>
 
 namespace ot {
 namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-#if !OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    mbedtls_aes_init(&mContext);
-#endif
+    void *context = GetContext();
+    otPlatCryptoAesInit(context);
 }
 
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-void AesEcb::SetKey(const uint32_t aKeyRef)
+void AesEcb::SetKey(otCryptoKey *aKey)
 {
-    mKeyRef = aKeyRef;
+    void *context = GetContext();
+    otPlatCryptoAesSetKey(context, aKey);
 }
-#else
-void AesEcb::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
-{
-    mbedtls_aes_setkey_enc(&mContext, aKey, aKeyLength);
-}
-#endif
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
-#if OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    otPlatPsaEcbEncrypt(mKeyRef, aInput, aOutput);
-#else
-    mbedtls_aes_crypt_ecb(&mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
-#endif
+    void *context = GetContext();
+    otPlatCryptoAesEncrypt(context, aInput, aOutput);
 }
 
 AesEcb::~AesEcb(void)
 {
-#if !OPENTHREAD_CONFIG_PSA_CRYPTO_ENABLE
-    mbedtls_aes_free(&mContext);
-#endif
+    void *context = GetContext();
+    otPlatCryptoAesFree(context);
+}
+
+void *AesEcb::GetContext(void)
+{
+    void *context = nullptr;
+
+    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+    {
+        context = (void *)&mKeyRef;
+    }
+    else
+    {
+        context = (void *)&mContext;
+    }
+
+    return context;
 }
 
 } // namespace Crypto

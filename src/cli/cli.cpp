@@ -2554,7 +2554,23 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
     {
         const otPskc *pskc = otThreadGetPskc(mInstance);
 
-        OutputBytes(pskc->m8);
+        if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+        {
+            uint8_t mPskcBuffer[OT_PSKC_MAX_SIZE];
+            size_t mKeyLen;
+
+            otPlatCryptoExportKey(pskc->mKeyMaterial.m32,
+                                  mPskcBuffer,
+                                  OT_PSKC_MAX_SIZE,
+                                  &mKeyLen); 
+
+            OutputBytes(mPskcBuffer);  
+        }
+        else
+        {
+            OutputBytes(pskc->mKeyMaterial.m8);
+        }
+
         OutputLine("");
     }
     else
@@ -2563,7 +2579,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, char *aArgs[])
 
         if (aArgsLength == 1)
         {
-            SuccessOrExit(error = ParseAsHexString(aArgs[0], pskc.m8));
+            SuccessOrExit(error = ParseAsHexString(aArgs[0], pskc.mKeyMaterial.m8));
         }
         else if (!strcmp(aArgs[0], "-p"))
         {
@@ -2590,14 +2606,32 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, char *aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputBytes(otThreadGetMasterKey(mInstance)->m8);
+        const otMasterKey *masterKey = otThreadGetMasterKey(mInstance);
+
+        if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+        {
+            uint8_t mMasterKeyBuffer[OT_MASTER_KEY_SIZE];
+            size_t mKeyLen;
+
+            otPlatCryptoExportKey(masterKey->mKeyMaterial.m32,
+                                  mMasterKeyBuffer,
+                                  OT_MASTER_KEY_SIZE,
+                                  &mKeyLen); 
+
+            OutputBytes(mMasterKeyBuffer);  
+        }
+        else
+        {
+            OutputBytes(masterKey->mKeyMaterial.m8);
+        }
+
         OutputLine("");
     }
     else
     {
         otMasterKey key;
 
-        SuccessOrExit(error = ParseAsHexString(aArgs[0], key.m8));
+        SuccessOrExit(error = ParseAsHexString(aArgs[0], key.mKeyMaterial.m8));
         SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 

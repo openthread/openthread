@@ -660,7 +660,14 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_MASTER_KEY>(void)
 {
-    return mEncoder.WriteData(otThreadGetMasterKey(mInstance)->m8, OT_MASTER_KEY_SIZE);
+    otError        error = OT_ERROR_NONE;
+
+    //PSA is not supported for NCP and RCP builds.
+    VerifyOrExit(otPlatCryptoGetType() != OT_CRYPTO_TYPE_PSA, error = OT_ERROR_NOT_FOUND);
+    mEncoder.WriteData(otThreadGetMasterKey(mInstance)->mKeyMaterial.m8, OT_MASTER_KEY_SIZE);
+
+exit:
+    return error;    
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_MASTER_KEY>(void)
@@ -1269,7 +1276,7 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_MASTER_KEY));
-        SuccessOrExit(error = mEncoder.WriteData(aDataset.mMasterKey.m8, OT_MASTER_KEY_SIZE));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mMasterKey.mKeyMaterial.m8, OT_MASTER_KEY_SIZE));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1337,7 +1344,7 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
-        SuccessOrExit(error = mEncoder.WriteData(aDataset.mPskc.m8, sizeof(spinel_net_pskc_t)));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mPskc.mKeyMaterial.m8, sizeof(spinel_net_pskc_t)));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1448,7 +1455,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
                 SuccessOrExit(error = mDecoder.ReadData(key, len));
                 VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mMasterKey.m8, key, len);
+                memcpy(aDataset.mMasterKey.mKeyMaterial.m8, key, len);
             }
 
             aDataset.mComponents.mIsMasterKeyPresent = true;
@@ -1543,7 +1550,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
                 SuccessOrExit(error = mDecoder.ReadData(psk, len));
                 VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
+                memcpy(aDataset.mPskc.mKeyMaterial.m8, psk, OT_PSKC_MAX_SIZE);
             }
 
             aDataset.mComponents.mIsPskcPresent = true;
