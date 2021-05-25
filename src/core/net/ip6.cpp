@@ -946,19 +946,13 @@ Error Ip6::HandlePayload(Message &          aMessage,
                          Message::Ownership aMessageOwnership)
 {
     Error    error   = kErrorNone;
-    Message *message = nullptr;
+    Message *message = (aMessageOwnership == Message::kTakeCustody) ? &aMessage : nullptr;
 
     VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
 
-    switch (aMessageOwnership)
+    if (aMessageOwnership == Message::kCopyToUse)
     {
-    case Message::kTakeCustody:
-        message = &aMessage;
-        break;
-
-    case Message::kCopyToUse:
         VerifyOrExit((message = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
-        break;
     }
 
     switch (aIpProto)
