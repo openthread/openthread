@@ -179,6 +179,27 @@ const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance)
     return &instance.Get<Mle::MleRouter>().GetLinkLocalAddress();
 }
 
+const otIp6Address *otThreadGetLinkLocalAllThreadNodesMulticastAddress(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.Get<Mle::MleRouter>().GetLinkLocalAllThreadNodesAddress();
+}
+
+const otIp6Address *otThreadGetRealmLocalAllThreadNodesMulticastAddress(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return &instance.Get<Mle::MleRouter>().GetRealmLocalAllThreadNodesAddress();
+}
+
+otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6Address *aServiceAloc)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mle::MleRouter>().GetServiceAloc(aServiceId, *static_cast<Ip6::Address *>(aServiceAloc));
+}
+
 const char *otThreadGetNetworkName(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

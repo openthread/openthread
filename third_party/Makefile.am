@@ -31,8 +31,6 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 EXTRA_DIST                              = \
     nlbuild-autotools                     \
     openthread-test-driver                \
-    NordicSemiconductor                   \
-    silabs                                \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.
@@ -42,71 +40,8 @@ DIST_SUBDIRS                            = \
     mbedtls                               \
     $(NULL)
 
-SUBDIRS =
-
-if OPENTHREAD_PLATFORM_EFR32MG1
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
+SUBDIRS =                                 \
     $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG12
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG13
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_EFR32MG21
-SUBDIRS                                += \
-    silabs                                \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_NRF52811
-SUBDIRS                                += \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52811
-SUBDIRS                                += \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_NRF52833
-SUBDIRS                                += \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52833
-SUBDIRS                                += \
-    jlink                                 \
-    $(NULL)
-endif
-
-if OPENTHREAD_PLATFORM_NRF52840
-SUBDIRS                                += \
-    NordicSemiconductor                   \
-    $(NULL)
-endif
-
-if OPENTHREAD_EXAMPLES_NRF52840
-SUBDIRS                                += \
-    jlink                                 \
-    $(NULL)
-endif
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 SUBDIRS                                += \

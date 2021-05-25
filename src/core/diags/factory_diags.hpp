@@ -122,6 +122,11 @@ public:
     void TransmitDone(Error aError);
 
 private:
+    enum : uint8_t
+    {
+        kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
+    };
+
     struct Command
     {
         const char *mName;
@@ -140,6 +145,7 @@ private:
         uint8_t  mLastLqi;
     };
 
+    Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
     Error ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);

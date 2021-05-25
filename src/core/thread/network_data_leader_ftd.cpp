@@ -76,16 +76,16 @@ void Leader::Reset(void)
 
 void Leader::Start(void)
 {
-    Get<Tmf::TmfAgent>().AddResource(mServerData);
-    Get<Tmf::TmfAgent>().AddResource(mCommissioningDataGet);
-    Get<Tmf::TmfAgent>().AddResource(mCommissioningDataSet);
+    Get<Tmf::Agent>().AddResource(mServerData);
+    Get<Tmf::Agent>().AddResource(mCommissioningDataGet);
+    Get<Tmf::Agent>().AddResource(mCommissioningDataSet);
 }
 
 void Leader::Stop(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mServerData);
-    Get<Tmf::TmfAgent>().RemoveResource(mCommissioningDataGet);
-    Get<Tmf::TmfAgent>().RemoveResource(mCommissioningDataSet);
+    Get<Tmf::Agent>().RemoveResource(mServerData);
+    Get<Tmf::Agent>().RemoveResource(mCommissioningDataGet);
+    Get<Tmf::Agent>().RemoveResource(mCommissioningDataSet);
 }
 
 void Leader::IncrementVersion(void)
@@ -164,7 +164,7 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
                             networkData.GetLength());
     }
 
-    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoNetData("Sent network data registration acknowledgment");
 
@@ -304,7 +304,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
     uint8_t *             data   = nullptr;
     uint8_t               length = 0;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -343,13 +343,7 @@ void Leader::SendCommissioningGetResponse(const Coap::Message &   aRequest,
         }
     }
 
-    if (message->GetLength() == message->GetOffset())
-    {
-        // no payload, remove coap payload marker
-        IgnoreError(message->SetLength(message->GetLength() - 1));
-    }
-
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset get response");
 
@@ -364,14 +358,14 @@ void Leader::SendCommissioningSetResponse(const Coap::Message &    aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<MeshCoP::StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent commissioning dataset set response");
 
@@ -581,7 +575,7 @@ bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const
     // Check whether `aPrefix` has a Has Route sub-TLV with stable
     // flag `aStable` containing a matching entry to `aEntry`.
 
-    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(FindHasRoute(*aPrefix, aStable), aEntry);
+    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(aPrefix->FindSubTlv<HasRouteTlv>(aStable), aEntry);
 }
 
 bool Leader::ContainsMatchingEntry(const HasRouteTlv *aHasRoute, const HasRouteEntry &aEntry)
@@ -610,7 +604,7 @@ bool Leader::ContainsMatchingEntry(const PrefixTlv *aPrefix, bool aStable, const
     // Check whether `aPrefix` has a Border Router sub-TLV with stable
     // flag `aStable` containing a matching entry to `aEntry`.
 
-    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(FindBorderRouter(*aPrefix, aStable), aEntry);
+    return (aPrefix == nullptr) ? false : ContainsMatchingEntry(aPrefix->FindSubTlv<BorderRouterTlv>(aStable), aEntry);
 }
 
 bool Leader::ContainsMatchingEntry(const BorderRouterTlv *aBorderRouter, const BorderRouterEntry &aEntry)
@@ -640,22 +634,23 @@ bool Leader::ContainsMatchingServer(const ServiceTlv *aService, const ServerTlv 
     // Check whether the `aService` has a matching Server sub-TLV
     // same as `aServer`.
 
-    bool             contains = false;
-    const ServerTlv *server;
+    bool contains = false;
 
-    VerifyOrExit(aService != nullptr);
-
-    for (const NetworkDataTlv *start = aService->GetSubTlvs();
-         (server = FindTlv<ServerTlv>(start, aService->GetNext(), aServer.IsStable())) != nullptr;
-         start = server->GetNext())
+    if (aService != nullptr)
     {
-        if (*server == aServer)
+        const ServerTlv *server;
+        TlvIterator      subTlvIterator(*aService);
+
+        while ((server = subTlvIterator.Iterate<ServerTlv>(aServer.IsStable())) != nullptr)
         {
-            ExitNow(contains = true);
+            if (*server == aServer)
+            {
+                contains = true;
+                break;
+            }
         }
     }
 
-exit:
     return contains;
 }
 
@@ -810,7 +805,7 @@ Error Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags
                          aService.GetServiceDataLength());
     }
 
-    server = FindTlv<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
+    server = NetworkDataTlv::Find<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
     OT_ASSERT(server != nullptr);
 
     SuccessOrExit(error = AddServer(*server, *dstService, aChangedFlags));
@@ -833,7 +828,7 @@ exit:
 Error Leader::AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags)
 {
     Error                error       = kErrorNone;
-    HasRouteTlv *        dstHasRoute = FindHasRoute(aDstPrefix, aHasRoute.IsStable());
+    HasRouteTlv *        dstHasRoute = aDstPrefix.FindSubTlv<HasRouteTlv>(aHasRoute.IsStable());
     const HasRouteEntry *entry       = aHasRoute.GetFirstEntry();
 
     if (dstHasRoute == nullptr)
@@ -870,8 +865,8 @@ exit:
 Error Leader::AddBorderRouter(const BorderRouterTlv &aBorderRouter, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags)
 {
     Error                    error           = kErrorNone;
-    BorderRouterTlv *        dstBorderRouter = FindBorderRouter(aDstPrefix, aBorderRouter.IsStable());
-    ContextTlv *             dstContext      = FindContext(aDstPrefix);
+    BorderRouterTlv *        dstBorderRouter = aDstPrefix.FindSubTlv<BorderRouterTlv>(aBorderRouter.IsStable());
+    ContextTlv *             dstContext      = aDstPrefix.FindSubTlv<ContextTlv>();
     uint8_t                  contextId       = 0;
     const BorderRouterEntry *entry           = aBorderRouter.GetFirstEntry();
 
@@ -982,20 +977,17 @@ Error Leader::AllocateServiceId(uint8_t &aServiceId) const
 
 const ServiceTlv *Leader::FindServiceById(uint8_t aServiceId) const
 {
-    const NetworkDataTlv *start = GetTlvsStart();
-    const ServiceTlv *    service;
+    const ServiceTlv *service;
+    TlvIterator       tlvIterator(GetTlvsStart(), GetTlvsEnd());
 
-    while ((service = FindTlv<ServiceTlv>(start, GetTlvsEnd())) != nullptr)
+    while ((service = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
     {
         if (service->GetServiceId() == aServiceId)
         {
-            ExitNow();
+            break;
         }
-
-        start = service->GetNext();
     }
 
-exit:
     return service;
 }
 
@@ -1160,7 +1152,7 @@ void Leader::RemoveRlocInPrefix(PrefixTlv &      aPrefix,
         cur = cur->GetNext();
     }
 
-    if ((context = FindContext(aPrefix)) != nullptr)
+    if ((context = aPrefix.FindSubTlv<ContextTlv>()) != nullptr)
     {
         if (aPrefix.GetSubTlvsLength() == sizeof(ContextTlv))
         {
@@ -1187,7 +1179,7 @@ void Leader::RemoveRlocInService(ServiceTlv &      aService,
     NetworkDataTlv *start = aService.GetSubTlvs();
     ServerTlv *     server;
 
-    while ((server = FindTlv<ServerTlv>(start, aService.GetNext())) != nullptr)
+    while ((server = NetworkDataTlv::Find<ServerTlv>(start, aService.GetNext())) != nullptr)
     {
         if (RlocMatch(server->GetServer16(), aRloc16, aMatchMode) && !ContainsMatchingServer(aExcludeService, *server))
         {
@@ -1266,7 +1258,7 @@ void Leader::RemoveContext(uint8_t aContextId)
     NetworkDataTlv *start = GetTlvsStart();
     PrefixTlv *     prefix;
 
-    while ((prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr)
+    while ((prefix = NetworkDataTlv::Find<PrefixTlv>(start, GetTlvsEnd())) != nullptr)
     {
         RemoveContext(*prefix, aContextId);
 
@@ -1285,7 +1277,7 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
     NetworkDataTlv *start = aPrefix.GetSubTlvs();
     ContextTlv *    context;
 
-    while ((context = FindTlv<ContextTlv>(start, aPrefix.GetNext())) != nullptr)
+    while ((context = NetworkDataTlv::Find<ContextTlv>(start, aPrefix.GetNext())) != nullptr)
     {
         if (context->GetContextId() == aContextId)
         {
@@ -1301,13 +1293,12 @@ void Leader::RemoveContext(PrefixTlv &aPrefix, uint8_t aContextId)
 
 void Leader::UpdateContextsAfterReset(void)
 {
-    NetworkDataTlv *start;
-    PrefixTlv *     prefix;
+    const PrefixTlv *prefix;
+    TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
 
-    for (start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr;
-         start = prefix->GetNext())
+    while ((prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
-        ContextTlv *context = FindContext(*prefix);
+        const ContextTlv *context = prefix->FindSubTlv<ContextTlv>();
 
         if (context == nullptr)
         {

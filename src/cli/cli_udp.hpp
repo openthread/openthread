@@ -39,6 +39,7 @@
 #include <openthread/udp.h>
 
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -52,6 +53,8 @@ class Interpreter;
 class UdpExample
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -67,13 +70,13 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (UdpExample::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (UdpExample::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
     enum PayloadType
@@ -83,13 +86,13 @@ private:
         kTypeHexString = 2,
     };
 
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessBind(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessClose(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessConnect(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessOpen(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSend(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessLinkSecurity(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessBind(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessClose(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessConnect(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessOpen(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSend(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessLinkSecurity(uint8_t aArgsLength, Arg aArgs[]);
     otError WriteCharToBuffer(otMessage *aMessage, uint16_t aMessageSize);
 
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

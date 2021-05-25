@@ -37,7 +37,6 @@
 
 #include "cli/cli.hpp"
 #include "common/string.hpp"
-#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
@@ -46,14 +45,14 @@ namespace Cli {
 
 constexpr SrpServer::Command SrpServer::sCommands[];
 
-otError SrpServer::Process(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::Process(uint8_t aArgsLength, Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
     VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
-    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength, aArgs);
@@ -62,13 +61,13 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessDomain(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessDomain(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
     if (aArgsLength > 1)
     {
-        SuccessOrExit(error = otSrpServerSetDomain(mInterpreter.mInstance, aArgs[1]));
+        SuccessOrExit(error = otSrpServerSetDomain(mInterpreter.mInstance, aArgs[1].GetCString()));
     }
     else
     {
@@ -79,7 +78,7 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessEnable(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessEnable(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -89,7 +88,7 @@ otError SrpServer::ProcessEnable(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError SrpServer::ProcessDisable(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessDisable(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -99,27 +98,37 @@ otError SrpServer::ProcessDisable(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError SrpServer::ProcessLease(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessLease(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t minLease;
-    uint32_t maxLease;
-    uint32_t minKeyLease;
-    uint32_t maxKeyLease;
+    otError                error = OT_ERROR_NONE;
+    otSrpServerLeaseConfig leaseConfig;
 
-    VerifyOrExit(aArgsLength == 5, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[1], minLease));
-    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[2], maxLease));
-    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[3], minKeyLease));
-    SuccessOrExit(error = Utils::CmdLineParser::ParseAsUint32(aArgs[4], maxKeyLease));
-
-    error = otSrpServerSetLeaseRange(mInterpreter.mInstance, minLease, maxLease, minKeyLease, maxKeyLease);
+    if (aArgsLength == 5)
+    {
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(leaseConfig.mMinLease));
+        SuccessOrExit(error = aArgs[2].ParseAsUint32(leaseConfig.mMaxLease));
+        SuccessOrExit(error = aArgs[3].ParseAsUint32(leaseConfig.mMinKeyLease));
+        SuccessOrExit(error = aArgs[4].ParseAsUint32(leaseConfig.mMaxKeyLease));
+        error = otSrpServerSetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
+    }
+    else if (aArgsLength == 1)
+    {
+        otSrpServerGetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
+        mInterpreter.OutputLine("min lease: %u", leaseConfig.mMinLease);
+        mInterpreter.OutputLine("max lease: %u", leaseConfig.mMaxLease);
+        mInterpreter.OutputLine("min key-lease: %u", leaseConfig.mMinKeyLease);
+        mInterpreter.OutputLine("max key-lease: %u", leaseConfig.mMaxKeyLease);
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_ARGS);
+    }
 
 exit:
     return error;
 }
 
-otError SrpServer::ProcessHost(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessHost(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -183,7 +192,7 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
     mInterpreter.OutputFormat("]");
 }
 
-otError SrpServer::ProcessService(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessService(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
@@ -231,7 +240,7 @@ exit:
     return error;
 }
 
-otError SrpServer::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
+otError SrpServer::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);

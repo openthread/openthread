@@ -100,7 +100,6 @@ class Cert_9_2_06_DatasetDissemination(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
@@ -111,7 +110,6 @@ class Cert_9_2_06_DatasetDissemination(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER]
         },
         ROUTER: {
@@ -122,7 +120,6 @@ class Cert_9_2_06_DatasetDissemination(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, MED, SED]
         },
         MED: {

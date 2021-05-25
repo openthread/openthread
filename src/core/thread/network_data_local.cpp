@@ -54,77 +54,15 @@ Local::Local(Instance &aInstance)
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-Error Local::ValidateOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
-{
-    Error error = kErrorNone;
-
-    // Add Prefix validation check:
-    // Thread 1.1 Specification 5.13.2 says
-    // "A valid prefix MUST NOT allow both DHCPv6 and SLAAC for address configuration"
-    VerifyOrExit(!aConfig.mDhcp || !aConfig.mSlaac, error = kErrorInvalidArgs);
-
-    // RFC 4944 Section 6 says:
-    // An IPv6 address prefix used for stateless autoconfiguration [RFC4862]
-    // of an IEEE 802.15.4 interface MUST have a length of 64 bits.
-    VerifyOrExit(!aConfig.mSlaac || aConfig.mPrefix.mLength == OT_IP6_PREFIX_BITSIZE, error = kErrorInvalidArgs);
-
-    SuccessOrExit(error = ValidatePrefixAndPreference(aConfig.GetPrefix(), aConfig.mPreference));
-
-exit:
-    return error;
-}
 
 Error Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
 {
-    uint16_t flags = 0;
-    Error    error = kErrorNone;
+    Error error = kErrorInvalidArgs;
 
-    SuccessOrExit(error = ValidateOnMeshPrefix(aConfig));
-
-    if (aConfig.mPreferred)
-    {
-        flags |= BorderRouterEntry::kPreferredFlag;
-    }
-
-    if (aConfig.mSlaac)
-    {
-        flags |= BorderRouterEntry::kSlaacFlag;
-    }
-
-    if (aConfig.mDhcp)
-    {
-        flags |= BorderRouterEntry::kDhcpFlag;
-    }
-
-    if (aConfig.mConfigure)
-    {
-        flags |= BorderRouterEntry::kConfigureFlag;
-    }
-
-    if (aConfig.mDefaultRoute)
-    {
-        flags |= BorderRouterEntry::kDefaultRouteFlag;
-    }
-
-    if (aConfig.mOnMesh)
-    {
-        flags |= BorderRouterEntry::kOnMeshFlag;
-    }
-
-    if (aConfig.mNdDns)
-    {
-        flags |= BorderRouterEntry::kNdDnsFlag;
-    }
-
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    if (aConfig.mDp)
-    {
-        flags |= BorderRouterEntry::kDpFlag;
-    }
-#endif
+    VerifyOrExit(aConfig.IsValid(GetInstance()));
 
     error =
-        AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeBorderRouter, aConfig.mPreference, flags, aConfig.mStable);
+        AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeBorderRouter, aConfig.ConvertToTlvFlags(), aConfig.mStable);
 
 exit:
     return error;
@@ -135,32 +73,16 @@ Error Local::RemoveOnMeshPrefix(const Ip6::Prefix &aPrefix)
     return RemovePrefix(aPrefix, NetworkDataTlv::kTypeBorderRouter);
 }
 
-Error Local::ValidatePrefixAndPreference(const Ip6::Prefix &aPrefix, int8_t aPrf)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit((aPrefix.GetLength() > 0) && aPrefix.IsValid(), error = kErrorInvalidArgs);
-
-    switch (aPrf)
-    {
-    case OT_ROUTE_PREFERENCE_LOW:
-    case OT_ROUTE_PREFERENCE_MED:
-    case OT_ROUTE_PREFERENCE_HIGH:
-        break;
-    default:
-        ExitNow(error = kErrorInvalidArgs);
-    }
-
-    // Check if the prefix overlaps mesh-local prefix.
-    VerifyOrExit(!aPrefix.ContainsPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix()), error = kErrorInvalidArgs);
-exit:
-    return error;
-}
-
 Error Local::AddHasRoutePrefix(const ExternalRouteConfig &aConfig)
 {
-    return AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.mPreference, /* aFlags */ 0,
-                     aConfig.mStable);
+    Error error = kErrorInvalidArgs;
+
+    VerifyOrExit(aConfig.IsValid(GetInstance()));
+
+    error = AddPrefix(aConfig.GetPrefix(), NetworkDataTlv::kTypeHasRoute, aConfig.ConvertToTlvFlags(), aConfig.mStable);
+
+exit:
+    return error;
 }
 
 Error Local::RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)
@@ -168,17 +90,11 @@ Error Local::RemoveHasRoutePrefix(const Ip6::Prefix &aPrefix)
     return RemovePrefix(aPrefix, NetworkDataTlv::kTypeHasRoute);
 }
 
-Error Local::AddPrefix(const Ip6::Prefix &  aPrefix,
-                       NetworkDataTlv::Type aSubTlvType,
-                       int8_t               aPrf,
-                       uint16_t             aFlags,
-                       bool                 aStable)
+Error Local::AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvType, uint16_t aFlags, bool aStable)
 {
     Error      error = kErrorNone;
     uint8_t    subTlvLength;
     PrefixTlv *prefixTlv;
-
-    SuccessOrExit(error = ValidatePrefixAndPreference(aPrefix, aPrf));
 
     IgnoreError(RemovePrefix(aPrefix, aSubTlvType));
 
@@ -198,7 +114,6 @@ Error Local::AddPrefix(const Ip6::Prefix &  aPrefix,
         brTlv->Init();
         brTlv->SetLength(brTlv->GetLength() + sizeof(BorderRouterEntry));
         brTlv->GetEntry(0)->Init();
-        brTlv->GetEntry(0)->SetPreference(aPrf);
         brTlv->GetEntry(0)->SetFlags(aFlags);
     }
     else // aSubTlvType is NetworkDataTlv::kTypeHasRoute
@@ -207,7 +122,7 @@ Error Local::AddPrefix(const Ip6::Prefix &  aPrefix,
         hasRouteTlv->Init();
         hasRouteTlv->SetLength(hasRouteTlv->GetLength() + sizeof(HasRouteEntry));
         hasRouteTlv->GetEntry(0)->Init();
-        hasRouteTlv->GetEntry(0)->SetPreference(aPrf);
+        hasRouteTlv->GetEntry(0)->SetFlags(static_cast<uint8_t>(aFlags));
     }
 
     if (aStable)
@@ -228,7 +143,7 @@ Error Local::RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubT
     PrefixTlv *tlv;
 
     VerifyOrExit((tlv = FindPrefix(aPrefix)) != nullptr, error = kErrorNotFound);
-    VerifyOrExit(FindTlv(tlv->GetSubTlvs(), tlv->GetNext(), aSubTlvType) != nullptr, error = kErrorNotFound);
+    VerifyOrExit(tlv->FindSubTlv(aSubTlvType) != nullptr, error = kErrorNotFound);
     RemoveTlv(tlv);
 
 exit:
@@ -390,13 +305,11 @@ Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *
     bool     isConsistent = true;
 
 #if OPENTHREAD_FTD
-
     // Don't send this Server Data Notification if the device is going to upgrade to Router
-    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouter())
+    if (Get<Mle::MleRouter>().IsExpectedToBecomeRouterSoon())
     {
         ExitNow(error = kErrorInvalidState);
     }
-
 #endif
 
     UpdateRloc();

@@ -48,7 +48,7 @@ enum
  * This class implements functionality of the Thread TMF agent.
  *
  */
-class TmfAgent : public Coap::Coap
+class Agent : public Coap::Coap
 {
 public:
     /**
@@ -57,7 +57,7 @@ public:
      * @param[in] aInstance      A reference to the OpenThread instance.
      *
      */
-    explicit TmfAgent(Instance &aInstance)
+    explicit Agent(Instance &aInstance)
         : Coap::Coap(aInstance)
     {
         SetInterceptor(&Filter, this);

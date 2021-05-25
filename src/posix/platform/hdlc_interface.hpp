@@ -37,6 +37,7 @@
 #include "openthread-posix-config.h"
 #include "platform-posix.h"
 #include "lib/hdlc/hdlc.hpp"
+#include "lib/spinel/openthread-spinel-config.h"
 #include "lib/spinel/spinel_interface.hpp"
 
 #if OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_UART
@@ -81,7 +82,7 @@ public:
      * @retval OT_ERROR_INVALID_ARGS  The UART device or executable cannot be found or failed to open/run.
      *
      */
-    otError Init(const RadioUrl &aRadioUrl);
+    otError Init(const Url::Url &aRadioUrl);
 
     /**
      * This method deinitializes the interface to the RCP.
@@ -162,6 +163,14 @@ public:
      */
     void OnRcpReset(void);
 
+#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
+    /**
+     * This method is called when RCP is reset to recreate the connection with it.
+     *
+     */
+    otError ResetConnection(void);
+#endif
+
 private:
     /**
      * This method instructs `HdlcInterface` to read and decode data from radio over the socket.
@@ -212,9 +221,39 @@ private:
     static void HandleHdlcFrame(void *aContext, otError aError);
     void        HandleHdlcFrame(otError aError);
 
-    int OpenFile(const RadioUrl &aRadioUrl);
+    /**
+     * This method opens file specified by aRadioUrl.
+     *
+     * @param[in] aRadioUrl  A reference to object containing path to file and data for configuring
+     *                       the connection with tty type file.
+     *
+     * @retval The file descriptor of newly opened file.
+     */
+    int OpenFile(const Url::Url &aRadioUrl);
+
+    /**
+     * This method closes file associated with the file descriptor.
+     *
+     */
+    void CloseFile(void);
+
+#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
+    /**
+     * This method waits until enumeration of RCP(USB CDC ACM) device ends.
+     *
+     * This is blocking call, this method waits for up to 10 seconds.
+     *
+     * @param[in] aRadioUrlPath  A path to RCP device.
+     *
+     * @retval OT_ERROR_NONE    The RCP device has been added to the host OS before timeout ends.
+     * @retval OT_ERROR_FAILED  The RCP device has not been added to the host OS before timeout ends.
+     *
+     */
+    otError WaitForUsbDevice(const char *aRadioUrlPath);
+#endif
+
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-    static int ForkPty(const RadioUrl &aRadioUrl);
+    static int ForkPty(const Url::Url &aRadioUrl);
 #endif
 
     enum
@@ -227,9 +266,10 @@ private:
     void *                                        mReceiveFrameContext;
     Spinel::SpinelInterface::RxFrameBuffer &      mReceiveFrameBuffer;
 
-    int           mSockFd;
-    uint32_t      mBaudRate;
-    Hdlc::Decoder mHdlcDecoder;
+    int             mSockFd;
+    uint32_t        mBaudRate;
+    Hdlc::Decoder   mHdlcDecoder;
+    const Url::Url *mRadioUrl;
 
     // Non-copyable, intentionally not implemented.
     HdlcInterface(const HdlcInterface &);

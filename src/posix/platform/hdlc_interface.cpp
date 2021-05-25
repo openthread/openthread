@@ -47,6 +47,9 @@
 #include <pty.h>
 #endif
 #endif
+#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
+#include <libudev.h>
+#endif
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -132,6 +135,7 @@ HdlcInterface::HdlcInterface(SpinelInterface::ReceiveFrameCallback aCallback,
     , mSockFd(-1)
     , mBaudRate(0)
     , mHdlcDecoder(aFrameBuffer, HandleHdlcFrame, this)
+    , mRadioUrl(nullptr)
 {
 }
 
@@ -140,7 +144,7 @@ void HdlcInterface::OnRcpReset(void)
     mHdlcDecoder.Reset();
 }
 
-otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
+otError HdlcInterface::Init(const Url::Url &aRadioUrl)
 {
     otError     error = OT_ERROR_NONE;
     struct stat st;
@@ -167,6 +171,8 @@ otError HdlcInterface::Init(const RadioUrl &aRadioUrl)
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
+    mRadioUrl = &aRadioUrl;
+
 exit:
     return error;
 }
@@ -178,15 +184,7 @@ HdlcInterface::~HdlcInterface(void)
 
 void HdlcInterface::Deinit(void)
 {
-    VerifyOrExit(mSockFd != -1);
-
-    VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
-    VerifyOrExit(-1 != wait(nullptr) || errno == ECHILD, perror("wait RCP"));
-
-    mSockFd = -1;
-
-exit:
-    return;
+    CloseFile();
 }
 
 void HdlcInterface::Read(void)
@@ -411,7 +409,7 @@ exit:
     return error;
 }
 
-int HdlcInterface::OpenFile(const RadioUrl &aRadioUrl)
+int HdlcInterface::OpenFile(const Url::Url &aRadioUrl)
 {
     int fd   = -1;
     int rval = 0;
@@ -586,8 +584,21 @@ exit:
     return fd;
 }
 
+void HdlcInterface::CloseFile(void)
+{
+    VerifyOrExit(mSockFd != -1);
+
+    VerifyOrExit(0 == close(mSockFd), perror("close RCP"));
+    VerifyOrExit(-1 != wait(nullptr) || errno == ECHILD, perror("wait RCP"));
+
+    mSockFd = -1;
+
+exit:
+    return;
+}
+
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
-int HdlcInterface::ForkPty(const RadioUrl &aRadioUrl)
+int HdlcInterface::ForkPty(const Url::Url &aRadioUrl)
 {
     int fd   = -1;
     int pid  = -1;
@@ -655,6 +666,91 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
         otLogWarnPlat("Error decoding hdlc frame: %s", otThreadErrorToString(aError));
     }
 }
+
+#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
+otError HdlcInterface::ResetConnection(void)
+{
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(mRadioUrl != nullptr, error = OT_ERROR_FAILED);
+    SuccessOrExit(error = WaitForUsbDevice(mRadioUrl->GetPath()));
+
+    CloseFile();
+
+    mSockFd = OpenFile(*mRadioUrl);
+    VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+otError HdlcInterface::WaitForUsbDevice(const char *aRadioUrlPath)
+{
+    int                  fd;
+    uint64_t             end;
+    struct udev_monitor *mon;
+    otError              error = OT_ERROR_NONE;
+
+    struct udev *udev = udev_new();
+    VerifyOrExit(udev != nullptr, error = OT_ERROR_FAILED);
+
+    mon = udev_monitor_new_from_netlink(udev, "udev");
+    udev_monitor_filter_add_match_subsystem_devtype(mon, "tty", NULL);
+    udev_monitor_enable_receiving(mon);
+    fd = udev_monitor_get_fd(mon);
+
+    // wait maximally 10 seconds
+    end = otPlatTimeGet() + 10 * US_PER_S;
+    do
+    {
+        int            ret;
+        fd_set         fds;
+        struct timeval tv;
+
+        tv.tv_sec  = 0;
+        tv.tv_usec = 100 * US_PER_MS;
+
+        FD_ZERO(&fds);
+        FD_SET(fd, &fds);
+
+        ret = select(fd + 1, &fds, NULL, NULL, &tv);
+        if (ret > 0 && FD_ISSET(fd, &fds))
+        {
+            struct udev_device *dev = udev_monitor_receive_device(mon);
+            if (dev)
+            {
+                const char *action = udev_device_get_action(dev);
+                VerifyOrExit(action != nullptr, error = OT_ERROR_FAILED);
+                if (strcmp(action, "add") == 0)
+                {
+                    struct udev_list_entry *entry;
+                    udev_list_entry_foreach(entry, udev_device_get_devlinks_list_entry(dev))
+                    {
+                        const char *name = udev_list_entry_get_name(entry);
+                        VerifyOrExit(name != nullptr, error = OT_ERROR_FAILED);
+                        if (strcmp(name, aRadioUrlPath) == 0)
+                        {
+                            udev_device_unref(dev);
+                            ExitNow();
+                        }
+                    }
+                }
+                udev_device_unref(dev);
+            }
+        }
+    } while (end > otPlatTimeGet());
+
+    error = OT_ERROR_FAILED;
+
+exit:
+    if (udev)
+    {
+        udev_unref(udev);
+    }
+
+    return error;
+}
+#endif // OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
 
 } // namespace Posix
 } // namespace ot

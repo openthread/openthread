@@ -105,7 +105,7 @@ void SpiInterface::OnRcpReset(void)
     usleep(static_cast<useconds_t>(mSpiResetDelay) * kUsecPerMsec);
 }
 
-otError SpiInterface::Init(const RadioUrl &aRadioUrl)
+otError SpiInterface::Init(const Url::Url &aRadioUrl)
 {
     const char *spiGpioIntDevice;
     const char *spiGpioResetDevice;

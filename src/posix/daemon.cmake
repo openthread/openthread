@@ -30,13 +30,6 @@ add_executable(ot-daemon
     main.c
 )
 
-set_target_properties(
-    ot-daemon
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_include_directories(ot-daemon PRIVATE ${COMMON_INCLUDES})
 
 target_compile_definitions(ot-daemon PRIVATE
@@ -55,21 +48,19 @@ target_link_libraries(ot-daemon PRIVATE
     openthread-hdlc
     openthread-spinel-rcp
     ${OT_MBEDTLS}
+    ot-config
 )
 
 add_executable(ot-ctl
     client.cpp
 )
 
-set_target_properties(
-    ot-ctl
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+if (READLINE)
+target_compile_definitions(ot-ctl PRIVATE
+    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
+endif()
 
 target_compile_definitions(ot-ctl PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
     ${OT_PLATFORM_DEFINES}
 )
 

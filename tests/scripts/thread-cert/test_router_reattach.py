@@ -37,226 +37,162 @@ class test_router_reattach(thread_cert.TestCase):
     TOPOLOGY = {
         1: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         2: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         3: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         4: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         5: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         6: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         7: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         8: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         9: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         10: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         11: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         12: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         13: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         14: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         15: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         16: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         17: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         18: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         19: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         20: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         21: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         22: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         23: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         24: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         25: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         26: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         27: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         28: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         29: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         30: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         31: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
         32: {
             'mode': 'rdn',
-            'panid': 0xface,
             'router_downgrade_threshold': 32,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 32
         },
     }

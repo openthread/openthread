@@ -615,6 +615,9 @@ class PacketFilter(object):
         return self.filter(lambda p:
                            (p.icmpv6.is_neighbor_advertisement and p.icmpv6.nd.na.target_address == target_address))
 
+    def filter_icmpv6_nd_ra(self):
+        return self.filter(lambda p: p.icmpv6.is_router_advertisement)
+
     def filter_has_bbr_dataset(self):
         return self.filter("""
                 thread_nwd.tlv.server.has('16')

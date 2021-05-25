@@ -80,7 +80,7 @@ namespace Ncp {
 
 static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &aConfig)
 {
-    uint8_t flags(0);
+    uint8_t flags = 0;
 
     if (aConfig.mPreferred)
     {
@@ -119,7 +119,7 @@ static uint8_t BorderRouterConfigToFlagByte(const otBorderRouterConfig &aConfig)
 
 static uint8_t BorderRouterConfigToFlagByteExtended(const otBorderRouterConfig &aConfig)
 {
-    uint8_t flags(0);
+    uint8_t flags = 0;
 
     if (aConfig.mNdDns)
     {
@@ -134,27 +134,29 @@ static uint8_t BorderRouterConfigToFlagByteExtended(const otBorderRouterConfig &
     return flags;
 }
 
-static uint8_t ExternalRoutePreferenceToFlagByte(int aPreference)
+static uint8_t ExternalRouteConfigToFlagByte(const otExternalRouteConfig &aConfig)
 {
-    uint8_t flags;
+    uint8_t flags = 0;
 
-    switch (aPreference)
+    switch (aConfig.mPreference)
     {
     case OT_ROUTE_PREFERENCE_LOW:
-        flags = SPINEL_ROUTE_PREFERENCE_LOW;
+        flags |= SPINEL_ROUTE_PREFERENCE_LOW;
         break;
 
     case OT_ROUTE_PREFERENCE_HIGH:
-        flags = SPINEL_ROUTE_PREFERENCE_HIGH;
+        flags |= SPINEL_ROUTE_PREFERENCE_HIGH;
         break;
 
     case OT_ROUTE_PREFERENCE_MED:
-
-        OT_FALL_THROUGH;
-
     default:
-        flags = SPINEL_ROUTE_PREFERENCE_MEDIUM;
+        flags |= SPINEL_ROUTE_PREFERENCE_MEDIUM;
         break;
+    }
+
+    if (aConfig.mNat64)
+    {
+        flags |= SPINEL_ROUTE_FLAG_NAT64;
     }
 
     return flags;
@@ -2156,7 +2158,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_OFF_MESH_ROUTE
         SuccessOrExit(error = mEncoder.WriteIp6Address(routeConfig.mPrefix.mPrefix));
         SuccessOrExit(error = mEncoder.WriteUint8(routeConfig.mPrefix.mLength));
         SuccessOrExit(error = mEncoder.WriteBool(routeConfig.mStable));
-        SuccessOrExit(error = mEncoder.WriteUint8(ExternalRoutePreferenceToFlagByte(routeConfig.mPreference)));
+        SuccessOrExit(error = mEncoder.WriteUint8(ExternalRouteConfigToFlagByte(routeConfig)));
         SuccessOrExit(error = mEncoder.WriteBool(false)); // IsLocal
         SuccessOrExit(error = mEncoder.WriteBool(routeConfig.mNextHopIsThisDevice));
         SuccessOrExit(error = mEncoder.WriteUint16(routeConfig.mRloc16));
@@ -2175,7 +2177,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_OFF_MESH_ROUTE
         SuccessOrExit(error = mEncoder.WriteIp6Address(routeConfig.mPrefix.mPrefix));
         SuccessOrExit(error = mEncoder.WriteUint8(routeConfig.mPrefix.mLength));
         SuccessOrExit(error = mEncoder.WriteBool(routeConfig.mStable));
-        SuccessOrExit(error = mEncoder.WriteUint8(ExternalRoutePreferenceToFlagByte(routeConfig.mPreference)));
+        SuccessOrExit(error = mEncoder.WriteUint8(ExternalRouteConfigToFlagByte(routeConfig)));
         SuccessOrExit(error = mEncoder.WriteBool(true)); // IsLocal
         SuccessOrExit(error = mEncoder.WriteBool(routeConfig.mNextHopIsThisDevice));
         SuccessOrExit(error = mEncoder.WriteUint16(routeConfig.mRloc16));
@@ -2231,6 +2233,7 @@ template <> otError NcpBase::HandlePropertyInsert<SPINEL_PROP_THREAD_OFF_MESH_RO
     routeConfig.mPrefix.mLength = prefixLength;
     routeConfig.mStable         = stable;
     routeConfig.mPreference     = FlagByteToExternalRoutePreference(flags);
+    routeConfig.mNat64          = ((flags & SPINEL_ROUTE_FLAG_NAT64) != 0);
 
     error = otBorderRouterAddRoute(mInstance, &routeConfig);
 

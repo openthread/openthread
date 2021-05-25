@@ -59,9 +59,9 @@ AddressResolver::AddressResolver(Instance &aInstance)
     , mCacheEntryPool(aInstance)
     , mIcmpHandler(&AddressResolver::HandleIcmpReceive, this)
 {
-    Get<Tmf::TmfAgent>().AddResource(mAddressError);
-    Get<Tmf::TmfAgent>().AddResource(mAddressQuery);
-    Get<Tmf::TmfAgent>().AddResource(mAddressNotification);
+    Get<Tmf::Agent>().AddResource(mAddressError);
+    Get<Tmf::Agent>().AddResource(mAddressQuery);
+    Get<Tmf::Agent>().AddResource(mAddressNotification);
 
     IgnoreError(Get<Ip6::Icmp>().RegisterHandler(mIcmpHandler));
 }
@@ -331,6 +331,10 @@ void AddressResolver::RemoveCacheEntry(CacheEntry &    aEntry,
 
 Error AddressResolver::UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
 {
+    // This method updates an existing cache entry for the EID (if any).
+    // Returns `kErrorNone` if entry is found and successfully updated,
+    // `kErrorNotFound` if no matching entry.
+
     Error           error = kErrorNone;
     CacheEntryList *list;
     CacheEntry *    entry;
@@ -365,10 +369,28 @@ exit:
     return error;
 }
 
-void AddressResolver::AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16)
+void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
+                                              Mac::ShortAddress   aRloc16,
+                                              Mac::ShortAddress   aDest)
 {
-    uint16_t    numNonEvictable = 0;
-    CacheEntry *entry;
+    uint16_t          numNonEvictable = 0;
+    CacheEntry *      entry;
+    Mac::ShortAddress macAddress;
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsFullThreadDevice());
+
+    VerifyOrExit(UpdateCacheEntry(aEid, aRloc16) != kErrorNone);
+
+    // Skip if the `aRloc16` (i.e., the source of the snooped message)
+    // is this device or an MTD (minimal) child of the device itself.
+
+    macAddress = Get<Mac::Mac>().GetShortAddress();
+    VerifyOrExit((aRloc16 != macAddress) && !Get<Mle::MleRouter>().IsMinimalChild(aRloc16));
+
+    // Ensure that the destination of the snooped message is this device
+    // or a minimal child of this device.
+
+    VerifyOrExit((aDest == macAddress) || Get<Mle::MleRouter>().IsMinimalChild(aDest));
 
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);
@@ -523,7 +545,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsNonConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressQuery));
@@ -536,7 +558,7 @@ Error AddressResolver::SendAddressQuery(const Ip6::Address &aEid)
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sending address query for %s", aEid.ToString().AsCString());
 
@@ -622,7 +644,7 @@ void AddressResolver::HandleAddressNotification(Coap::Message &aMessage, const I
 
     LogCacheEntryChange(kEntryUpdated, kReasonReceivedNotification, *entry);
 
-    if (Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+    if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
     {
         otLogInfoArp("Sending address notification acknowledgment");
     }
@@ -641,7 +663,7 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     message->Init(aDestination == nullptr ? Coap::kTypeNonConfirmable : Coap::kTypeConfirmable, Coap::kCodePost);
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressError));
@@ -662,7 +684,7 @@ void AddressResolver::SendAddressError(const Ip6::Address &            aTarget,
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sending address error for target %s", aTarget.ToString().AsCString());
 
@@ -695,7 +717,7 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
 
     if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
     {
-        if (Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
+        if (Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo) == kErrorNone)
         {
             otLogInfoArp("Sent address error notification acknowledgment");
         }
@@ -820,7 +842,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kAddressNotify));
@@ -839,7 +861,7 @@ void AddressResolver::SendAddressQueryResponse(const Ip6::Address &            a
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoArp("Sending address notification for target %s", aTarget.ToString().AsCString());
 

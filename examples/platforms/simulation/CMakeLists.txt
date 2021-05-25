@@ -75,13 +75,6 @@ add_library(openthread-simulation
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(
-    openthread-simulation
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 find_library(LIBRT rt)
 if(LIBRT)
     target_link_libraries(openthread-simulation PRIVATE ${LIBRT})

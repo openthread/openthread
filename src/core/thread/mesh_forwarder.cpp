@@ -361,11 +361,11 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
 
     if (ip6Header.GetDestination().IsMulticast())
     {
-        // With the exception of MLE multicasts, an End Device
-        // transmits multicasts, as IEEE 802.15.4 unicasts to its
-        // parent.
+        // With the exception of MLE multicasts and any other message
+        // with link security disabled, an End Device transmits
+        // multicasts, as IEEE 802.15.4 unicasts to its parent.
 
-        if (mle.IsChild() && !aMessage.IsSubTypeMle())
+        if (mle.IsChild() && aMessage.IsLinkSecurityEnabled())
         {
             mMacDest.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
         }
@@ -407,12 +407,16 @@ void MeshForwarder::SetRxOnWhenIdle(bool aRxOnWhenIdle)
     if (aRxOnWhenIdle)
     {
         mDataPollSender.StopPolling();
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
         Get<Utils::SupervisionListener>().Stop();
+#endif
     }
     else
     {
         mDataPollSender.StartPolling();
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
         Get<Utils::SupervisionListener>().Start();
+#endif
     }
 }
 
@@ -1111,7 +1115,9 @@ void MeshForwarder::HandleReceivedFrame(Mac::RxFrame &aFrame)
     payload       = aFrame.GetPayload();
     payloadLength = aFrame.GetPayloadLength();
 
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     Get<Utils::SupervisionListener>().UpdateOnReceive(macSource, linkInfo.IsLinkSecurityEnabled());
+#endif
 
     switch (aFrame.GetType())
     {
@@ -1567,7 +1573,12 @@ void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame
     if (Get<Mac::Mac>().IsCslEnabled())
     {
         IgnoreError(aFrame.AppendHeaderIeAt<Mac::CslIe>(index));
-        iePresent = true;
+        aFrame.mInfo.mTxInfo.mCslPresent = true;
+        iePresent                        = true;
+    }
+    else
+    {
+        aFrame.mInfo.mTxInfo.mCslPresent = false;
     }
 #endif
 

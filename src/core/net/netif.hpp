@@ -80,12 +80,14 @@ public:
      * This method clears and initializes the unicast address as a preferred, valid, thread-origin address with 64-bit
      * prefix length.
      *
+     * @param[in]   aPreferred  Whether to initialize as a preferred address.
+     *
      */
-    void InitAsThreadOrigin(void);
+    void InitAsThreadOrigin(bool aPreferred = false);
 
     /**
-     * This method clears and initializes the unicast address as a preferred, valid, thread-origin, realm-local scope
-     * (overridden) address with 64-bit prefix length.
+     * This method clears and initializes the unicast address as a valid (but not preferred), thread-origin, realm-local
+     * scope (overridden) address with 64-bit prefix length.
      *
      */
     void InitAsThreadOriginRealmLocalScope(void);

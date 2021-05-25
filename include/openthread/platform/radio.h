@@ -127,6 +127,7 @@ enum
     OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
     OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
     OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6, ///< Radio supports tx at specific time.
+    OT_RADIO_CAPS_RECEIVE_TIMING   = 1 << 7, ///< Radio supports rx at specific time.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -703,6 +704,18 @@ otError otPlatRadioSleep(otInstance *aInstance);
  *
  */
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
+
+/**
+ * Schedule a radio reception window at a specific time and duration.
+ *
+ * @param[in]  aChannel   The radio channel on which to receive.
+ * @param[in]  aStart     The receive window start time, in microseconds.
+ * @param[in]  aDuration  The receive window duration, in microseconds
+ *
+ * @retval OT_ERROR_NONE    Successfully scheduled receive window.
+ * @retval OT_ERROR_FAILED  The receive window could not be scheduled.
+ */
+otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration);
 
 /**
  * The radio driver calls this method to notify OpenThread of a received frame.

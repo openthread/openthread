@@ -49,11 +49,26 @@
 static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME) < sizeof(sockaddr_un::sun_path),
               "OpenThread daemon socket name too long!");
 
-static int sListenSocket  = -1;
-static int sDaemonLock    = -1;
-static int sSessionSocket = -1;
+namespace {
 
-static int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments)
+int sListenSocket  = -1;
+int sDaemonLock    = -1;
+int sSessionSocket = -1;
+
+typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
+
+void GetFilename(Filename &aFilename, const char *aPattern)
+{
+    int rval;
+
+    rval = snprintf(aFilename, sizeof(aFilename), aPattern, gNetifName);
+    if (rval < 0 && static_cast<size_t>(rval) >= sizeof(aFilename))
+    {
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+}
+
+int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments)
 {
     OT_UNUSED_VARIABLE(aContext);
 
@@ -66,7 +81,8 @@ static int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments
 
     VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
 
-    VerifyOrExit(sSessionSocket != -1, otLogDebgPlat("%s", buf));
+    otLogInfoPlat("%s", buf);
+    VerifyOrExit(sSessionSocket != -1);
 
 #if defined(__linux__)
     // Don't die on SIGPIPE
@@ -86,7 +102,7 @@ exit:
     return rval;
 }
 
-static void InitializeSessionSocket(void)
+void InitializeSessionSocket(void)
 {
     int newSessionSocket;
     int rval;
@@ -133,6 +149,8 @@ exit:
     }
 }
 
+} // namespace
+
 void platformDaemonEnable(otInstance *aInstance)
 {
     struct sockaddr_un sockname;
@@ -148,7 +166,15 @@ void platformDaemonEnable(otInstance *aInstance)
         DieNow(OT_EXIT_FAILURE);
     }
 
-    sDaemonLock = open(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    {
+        static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK) == sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME),
+                      "sock and lock file name pattern should have the same length!");
+        Filename lockfile;
+
+        GetFilename(lockfile, OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK);
+
+        sDaemonLock = open(lockfile, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    }
 
     if (sDaemonLock == -1)
     {
@@ -162,10 +188,9 @@ void platformDaemonEnable(otInstance *aInstance)
 
     memset(&sockname, 0, sizeof(struct sockaddr_un));
 
-    (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-
     sockname.sun_family = AF_UNIX;
-    strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+    GetFilename(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+    (void)unlink(sockname.sun_path);
 
     ret = bind(sListenSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
 
@@ -205,8 +230,11 @@ void platformDaemonDisable(void)
 
     if (gPlatResetReason != OT_PLAT_RESET_REASON_SOFTWARE)
     {
-        otLogDebgPlat("Removing daemon socket: %s", OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-        (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+        Filename sockfile;
+
+        GetFilename(sockfile, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+        otLogDebgPlat("Removing daemon socket: %s", sockfile);
+        (void)unlink(sockfile);
     }
 
     if (sDaemonLock != -1)
@@ -270,7 +298,8 @@ void platformDaemonProcess(const otSysMainloopContext *aContext)
     {
         uint8_t buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
 
-        rval = read(sSessionSocket, buffer, sizeof(buffer));
+        // leave 1 byte for the null terminator
+        rval = read(sSessionSocket, buffer, sizeof(buffer) - 1);
 
         if (rval > 0)
         {

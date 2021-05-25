@@ -327,11 +327,11 @@ public:
     /**
      * This method returns if the REED is expected to become Router soon.
      *
-     * @retval TRUE   If the REED is going to become Router.
-     * @retval FALSE  Otherwise.
+     * @retval TRUE   If the REED is going to become a Router soon.
+     * @retval FALSE  If the REED is not going to become a Router soon.
      *
      */
-    bool IsExpectedToBecomeRouter(void) const;
+    bool IsExpectedToBecomeRouterSoon(void) const;
 
     /**
      * This method removes a link to a neighbor.
@@ -586,14 +586,14 @@ private:
     Error HandleAdvertisement(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *);
     void  HandleParentRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
     void  HandleChildIdRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    void HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, uint32_t aKeySequence);
-    void HandleChildUpdateResponse(const Message &         aMessage,
-                                   const Ip6::MessageInfo &aMessageInfo,
-                                   uint32_t                aKeySequence,
-                                   Neighbor *              aNeighbor);
-    void HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
-    void HandleNetworkDataUpdateRouter(void);
-    void HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void  HandleChildUpdateResponse(const Message &         aMessage,
+                                    const Ip6::MessageInfo &aMessageInfo,
+                                    uint32_t                aKeySequence,
+                                    Neighbor *              aNeighbor);
+    void  HandleDataRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
+    void  HandleNetworkDataUpdateRouter(void);
+    void  HandleDiscoveryRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     void HandleTimeSync(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor);
 #endif

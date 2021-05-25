@@ -2,9 +2,20 @@
 
 # compat.sh
 #
-# This file is part of mbed TLS (https://tls.mbed.org)
+# Copyright The Mbed TLS Contributors
+# SPDX-License-Identifier: Apache-2.0
 #
-# Copyright (c) 2012-2016, ARM Limited, All Rights Reserved
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 #
 # Purpose
 #
@@ -15,13 +26,17 @@
 
 set -u
 
+# Limit the size of each log to 10 GiB, in case of failures with this script
+# where it may output seemingly unlimited length error logs.
+ulimit -f 20971520
+
 # initialise counters
 TESTS=0
 FAILED=0
 SKIPPED=0
 SRVMEM=0
 
-# default commands, can be overriden by the environment
+# default commands, can be overridden by the environment
 : ${M_SRV:=../programs/ssl/ssl_server2}
 : ${M_CLI:=../programs/ssl/ssl_client2}
 : ${OPENSSL_CMD:=openssl} # OPENSSL would conflict with the build system
@@ -62,7 +77,8 @@ FILTER=""
 #   avoid plain DES but keep 3DES-EDE-CBC (mbedTLS), DES-CBC3 (OpenSSL)
 # - ARIA: not in default config.h + requires OpenSSL >= 1.1.1
 # - ChachaPoly: requires OpenSSL >= 1.1.0
-EXCLUDE='NULL\|DES-CBC-\|RC4\|ARCFOUR\|ARIA\|CHACHA20-POLY1305'
+# - 3DES: not in default config
+EXCLUDE='NULL\|DES\|RC4\|ARCFOUR\|ARIA\|CHACHA20-POLY1305'
 VERBOSE=""
 MEMCHECK=0
 PEERS="OpenSSL$PEER_GNUTLS mbedTLS"
@@ -74,12 +90,12 @@ PEERS="OpenSSL$PEER_GNUTLS mbedTLS"
 print_usage() {
     echo "Usage: $0"
     printf "  -h|--help\tPrint this help.\n"
-    printf "  -f|--filter\tOnly matching ciphersuites are tested (Default: '$FILTER')\n"
-    printf "  -e|--exclude\tMatching ciphersuites are excluded (Default: '$EXCLUDE')\n"
-    printf "  -m|--modes\tWhich modes to perform (Default: '$MODES')\n"
-    printf "  -t|--types\tWhich key exchange type to perform (Default: '$TYPES')\n"
-    printf "  -V|--verify\tWhich verification modes to perform (Default: '$VERIFIES')\n"
-    printf "  -p|--peers\tWhich peers to use (Default: '$PEERS')\n"
+    printf "  -f|--filter\tOnly matching ciphersuites are tested (Default: '%s')\n" "$FILTER"
+    printf "  -e|--exclude\tMatching ciphersuites are excluded (Default: '%s')\n" "$EXCLUDE"
+    printf "  -m|--modes\tWhich modes to perform (Default: '%s')\n" "$MODES"
+    printf "  -t|--types\tWhich key exchange type to perform (Default: '%s')\n" "$TYPES"
+    printf "  -V|--verify\tWhich verification modes to perform (Default: '%s')\n" "$VERIFIES"
+    printf "  -p|--peers\tWhich peers to use (Default: '%s')\n" "$PEERS"
     printf "            \tAlso available: GnuTLS (needs v3.2.15 or higher)\n"
     printf "  -M|--memcheck\tCheck memory leaks and errors.\n"
     printf "  -v|--verbose\tSet verbose output.\n"
@@ -211,14 +227,13 @@ filter_ciphersuites()
         G_CIPHERS=$( filter "$G_CIPHERS" )
     fi
 
-    # OpenSSL 1.0.1h doesn't support DTLS 1.2
-    if [ `minor_ver "$MODE"` -ge 3 ] && is_dtls "$MODE"; then
+    # OpenSSL <1.0.2 doesn't support DTLS 1.2. Check what OpenSSL
+    # supports from the s_server help. (The s_client help isn't
+    # accurate as of 1.0.2g: it supports DTLS 1.2 but doesn't list it.
+    # But the s_server help seems to be accurate.)
+    if ! $OPENSSL_CMD s_server -help 2>&1 | grep -q "^ *-$MODE "; then
+        M_CIPHERS=""
         O_CIPHERS=""
-        case "$PEER" in
-            [Oo]pen*)
-                M_CIPHERS=""
-                ;;
-        esac
     fi
 
     # For GnuTLS client -> mbed TLS server,
@@ -892,7 +907,7 @@ setup_arguments()
     M_SERVER_ARGS="server_port=$PORT server_addr=0.0.0.0 force_version=$MODE arc4=1"
     O_SERVER_ARGS="-accept $PORT -cipher NULL,ALL -$MODE -dhparam data_files/dhparams.pem"
     G_SERVER_ARGS="-p $PORT --http $G_MODE"
-    G_SERVER_PRIO="NORMAL:${G_PRIO_CCM}+ARCFOUR-128:+NULL:+MD5:+PSK:+DHE-PSK:+ECDHE-PSK:+RSA-PSK:-VERS-TLS-ALL:$G_PRIO_MODE"
+    G_SERVER_PRIO="NORMAL:${G_PRIO_CCM}+ARCFOUR-128:+NULL:+MD5:+PSK:+DHE-PSK:+ECDHE-PSK:+SHA256:+SHA384:+RSA-PSK:-VERS-TLS-ALL:$G_PRIO_MODE"
 
     # with OpenSSL 1.0.1h, -www, -WWW and -HTTP break DTLS handshakes
     if is_dtls "$MODE"; then
@@ -941,39 +956,29 @@ setup_arguments()
             ;;
 
         "RSA")
-            M_SERVER_ARGS="$M_SERVER_ARGS crt_file=data_files/server2.crt key_file=data_files/server2.key"
-            O_SERVER_ARGS="$O_SERVER_ARGS -cert data_files/server2.crt -key data_files/server2.key"
-            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2.crt --x509keyfile data_files/server2.key"
+            M_SERVER_ARGS="$M_SERVER_ARGS crt_file=data_files/server2-sha256.crt key_file=data_files/server2.key"
+            O_SERVER_ARGS="$O_SERVER_ARGS -cert data_files/server2-sha256.crt -key data_files/server2.key"
+            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2-sha256.crt --x509keyfile data_files/server2.key"
 
             if [ "X$VERIFY" = "XYES" ]; then
-                M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=data_files/server1.crt key_file=data_files/server1.key"
-                O_CLIENT_ARGS="$O_CLIENT_ARGS -cert data_files/server1.crt -key data_files/server1.key"
-                G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile data_files/server1.crt --x509keyfile data_files/server1.key"
+                M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=data_files/cert_sha256.crt key_file=data_files/server1.key"
+                O_CLIENT_ARGS="$O_CLIENT_ARGS -cert data_files/cert_sha256.crt -key data_files/server1.key"
+                G_CLIENT_ARGS="$G_CLIENT_ARGS --x509certfile data_files/cert_sha256.crt --x509keyfile data_files/server1.key"
             else
                 M_CLIENT_ARGS="$M_CLIENT_ARGS crt_file=none key_file=none"
             fi
-
-            # Allow SHA-1. It's disabled by default for security reasons but
-            # our tests still use certificates signed with it.
-            M_SERVER_ARGS="$M_SERVER_ARGS allow_sha1=1"
-            M_CLIENT_ARGS="$M_CLIENT_ARGS allow_sha1=1"
             ;;
 
         "PSK")
             # give RSA-PSK-capable server a RSA cert
             # (should be a separate type, but harder to close with openssl)
-            M_SERVER_ARGS="$M_SERVER_ARGS psk=6162636465666768696a6b6c6d6e6f70 ca_file=none crt_file=data_files/server2.crt key_file=data_files/server2.key"
+            M_SERVER_ARGS="$M_SERVER_ARGS psk=6162636465666768696a6b6c6d6e6f70 ca_file=none crt_file=data_files/server2-sha256.crt key_file=data_files/server2.key"
             O_SERVER_ARGS="$O_SERVER_ARGS -psk 6162636465666768696a6b6c6d6e6f70 -nocert"
-            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2.crt --x509keyfile data_files/server2.key --pskpasswd data_files/passwd.psk"
+            G_SERVER_ARGS="$G_SERVER_ARGS --x509certfile data_files/server2-sha256.crt --x509keyfile data_files/server2.key --pskpasswd data_files/passwd.psk"
 
             M_CLIENT_ARGS="$M_CLIENT_ARGS psk=6162636465666768696a6b6c6d6e6f70 crt_file=none key_file=none"
             O_CLIENT_ARGS="$O_CLIENT_ARGS -psk 6162636465666768696a6b6c6d6e6f70"
             G_CLIENT_ARGS="$G_CLIENT_ARGS --pskusername Client_identity --pskkey=6162636465666768696a6b6c6d6e6f70"
-
-            # Allow SHA-1. It's disabled by default for security reasons but
-            # our tests still use certificates signed with it.
-            M_SERVER_ARGS="$M_SERVER_ARGS allow_sha1=1"
-            M_CLIENT_ARGS="$M_CLIENT_ARGS allow_sha1=1"
             ;;
     esac
 }
@@ -1102,7 +1107,7 @@ run_client() {
     VERIF=$(echo $VERIFY | tr '[:upper:]' '[:lower:]')
     TITLE="`echo $1 | head -c1`->`echo $SERVER_NAME | head -c1`"
     TITLE="$TITLE $MODE,$VERIF $2"
-    printf "$TITLE "
+    printf "%s " "$TITLE"
     LEN=$(( 72 - `echo "$TITLE" | wc -c` ))
     for i in `seq 1 $LEN`; do printf '.'; done; printf ' '
 
@@ -1215,7 +1220,7 @@ run_client() {
             cp $CLI_OUT c-cli-${TESTS}.log
             echo "  ! outputs saved to c-srv-${TESTS}.log, c-cli-${TESTS}.log"
 
-            if [ "X${USER:-}" = Xbuildbot -o "X${LOGNAME:-}" = Xbuildbot -o "${LOG_FAILURE_ON_STDOUT:-0}" != 0 ]; then
+            if [ "${LOG_FAILURE_ON_STDOUT:-0}" != 0 ]; then
                 echo "  ! server output:"
                 cat c-srv-${TESTS}.log
                 echo "  ! ==================================================="

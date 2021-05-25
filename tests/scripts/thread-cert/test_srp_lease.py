@@ -59,14 +59,11 @@ class SrpRegisterSingleService(thread_cert.TestCase):
             'name': 'SRP_SERVER',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface
         },
         CLIENT: {
             'name': 'SRP_CLIENT',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
         },
     }
 

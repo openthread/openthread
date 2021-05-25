@@ -47,13 +47,10 @@ class TestCoapBlockTransfer(thread_cert.TestCase):
     TOPOLOGY = {
         LEADER: {
             'mode': 'rdn',
-            'panid': 0xface,
             'whitelist': [ROUTER]
         },
         ROUTER: {
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'whitelist': [LEADER]
         },
     }

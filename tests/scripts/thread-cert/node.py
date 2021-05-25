@@ -304,7 +304,7 @@ class OtbrDocker:
         # Example TXT entry:
         # "xp=\\000\\013\\184\\000\\000\\000\\000\\000"
         txt = {}
-        for entry in re.findall(r'"(.*?[^\\])"', line):
+        for entry in re.findall(r'"((?:[^\\]|\\.)*?)"', line):
             if entry == "":
                 continue
 
@@ -931,8 +931,9 @@ class NodeImpl:
             # TODO: for now, we are using 0xfd as the SRP service data.
             #       May use a dedicated bit flag for SRP server.
             if int(service[1], 16) == 0x5d:
-                # The SRP server data are 2-bytes UDP port number.
-                return int(service[2], 16)
+                # The SRP server data contains IPv6 address (16 bytes)
+                # followed by UDP port number.
+                return int(service[2][2 * 16:], 16)
 
     def srp_client_start(self, server_address, server_port):
         self.send_command(f'srp client start {server_address} {server_port}')
@@ -1766,8 +1767,11 @@ class NodeImpl:
             return self._expect_results(
                 r'\|\s(\S+)\s+\|\s(\S+)\s+\|\s([0-9a-fA-F]{4})\s\|\s([0-9a-fA-F]{16})\s\|\s(\d+)')
 
-    def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64):
-        cmd = f'ping {ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
+    def ping(self, ipaddr, num_responses=1, size=8, timeout=5, count=1, interval=1, hoplimit=64, interface=None):
+        args = f'{ipaddr} {size} {count} {interval} {hoplimit} {timeout}'
+        if interface is not None:
+            args = f'-I {interface} {args}'
+        cmd = f'ping {args}'
 
         self.send_command(cmd)
 
@@ -2618,6 +2622,11 @@ class NodeImpl:
 
         return result
 
+    def set_mliid(self, mliid: str):
+        cmd = f'mliid {mliid}'
+        self.send_command(cmd)
+        self._expect_command_output(cmd)
+
 
 class Node(NodeImpl, OtCli):
     pass
@@ -2670,17 +2679,14 @@ class LinuxHost():
         cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/mcast6.py {self.ETH_DEV} {ip} &'
         self.bash(cmd)
 
-    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None, interface=None) -> int:
+    def ping_ether(self, ipaddr, num_responses=1, size=None, timeout=5, ttl=None, interface='eth0') -> int:
 
-        cmd = f'ping -6 {ipaddr} -I eth0 -c {num_responses} -W {timeout}'
+        cmd = f'ping -6 {ipaddr} -I {interface} -c {num_responses} -W {timeout}'
         if size is not None:
             cmd += f' -s {size}'
 
         if ttl is not None:
             cmd += f' -t {ttl}'
-
-        if interface is not None:
-            cmd += f' -I {interface}'
 
         resp_count = 0
 
@@ -2723,6 +2729,15 @@ class LinuxHost():
             return self.ping_ether(*args, **kwargs)
         else:
             return super().ping(*args, **kwargs)
+
+    def udp_send_host(self, ipaddr, port, data, hop_limit=None):
+        if hop_limit is None:
+            if ipaddress.ip_address(ipaddr).is_multicast:
+                hop_limit = 10
+            else:
+                hop_limit = 64
+        cmd = f'python3 /app/third_party/openthread/repo/tests/scripts/thread-cert/udp_send_host.py {ipaddr} {port} "{data}" {hop_limit}'
+        self.bash(cmd)
 
     def add_ipmaddr(self, *args, **kwargs):
         backbone = kwargs.pop('backbone', False)
@@ -2803,18 +2818,21 @@ class LinuxHost():
         self.bash("""cat >/etc/radvd.conf <<EOF
 interface eth0
 {
-	AdvSendAdvert on;
+    AdvSendAdvert on;
 
-	MinRtrAdvInterval 3;
-	MaxRtrAdvInterval 30;
-	AdvDefaultPreference low;
+    AdvReachableTime 200;
+    AdvRetransTimer 200;
+    AdvDefaultLifetime 1800;
+    MinRtrAdvInterval 1200;
+    MaxRtrAdvInterval 1800;
+    AdvDefaultPreference low;
 
-	prefix %s
-	{
-		AdvOnLink on;
-		AdvAutonomous %s;
-		AdvRouterAddr off;
-	};
+    prefix %s
+    {
+        AdvOnLink on;
+        AdvAutonomous %s;
+        AdvRouterAddr off;
+    };
 };
 EOF
 """ % (prefix, 'on' if slaac else 'off'))
@@ -2823,6 +2841,9 @@ EOF
 
     def stop_radvd_service(self):
         self.bash('service radvd stop')
+
+    def kill_radvd_service(self):
+        self.bash('pkill radvd')
 
 
 class OtbrNode(LinuxHost, NodeImpl, OtbrDocker):
@@ -2871,7 +2892,7 @@ class HostNode(LinuxHost, OtbrDocker):
 
         addrs = []
         for addr in self.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA):
-            if addr.startswith(prefix.split('::')[0]):
+            if ipaddress.IPv6Address(addr) in ipaddress.IPv6Network(prefix):
                 addrs.append(addr)
 
         return addrs

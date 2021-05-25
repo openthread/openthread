@@ -71,22 +71,17 @@ class Cert_7_1_8_BorderRouterAsFED(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, FED]
         },
         FED: {
             'name': 'FED',
             'mode': 'rdn',
-            'panid': 0xface,
             'router_upgrade_threshold': 0,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER]
         },
     }

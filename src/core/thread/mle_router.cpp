@@ -105,7 +105,7 @@ void MleRouter::HandlePartitionChange(void)
     mPreviousPartitionIdTimeout        = GetNetworkIdTimeout();
 
     Get<AddressResolver>().Clear();
-    IgnoreError(Get<Tmf::TmfAgent>().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this));
+    IgnoreError(Get<Tmf::Agent>().AbortTransaction(&MleRouter::HandleAddressSolicitResponse, this));
     mRouterTable.Clear();
 }
 
@@ -221,8 +221,8 @@ exit:
 
 void MleRouter::StopLeader(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mAddressSolicit);
-    Get<Tmf::TmfAgent>().RemoveResource(mAddressRelease);
+    Get<Tmf::Agent>().RemoveResource(mAddressSolicit);
+    Get<Tmf::Agent>().RemoveResource(mAddressRelease);
     Get<MeshCoP::ActiveDataset>().StopLeader();
     Get<MeshCoP::PendingDataset>().StopLeader();
     StopAdvertiseTrickleTimer();
@@ -367,8 +367,8 @@ void MleRouter::SetStateLeader(uint16_t aRloc16)
     Get<NetworkData::Leader>().Start();
     Get<MeshCoP::ActiveDataset>().StartLeader();
     Get<MeshCoP::PendingDataset>().StartLeader();
-    Get<Tmf::TmfAgent>().AddResource(mAddressSolicit);
-    Get<Tmf::TmfAgent>().AddResource(mAddressRelease);
+    Get<Tmf::Agent>().AddResource(mAddressSolicit);
+    Get<Tmf::Agent>().AddResource(mAddressRelease);
     Get<Ip6::Ip6>().SetForwardingEnabled(true);
     Get<Ip6::Mpl>().SetTimerExpirations(kMplRouterDataMessageTimerExpirations);
     Get<Mac::Mac>().SetBeaconEnabled(true);
@@ -2052,10 +2052,8 @@ Error MleRouter::UpdateChildAddresses(const Message &aMessage, uint16_t aOffset,
 
                 if (oldDuaPtr != nullptr)
                 {
-                    if (oldDua != address)
-                    {
-                        Get<DuaManager>().UpdateChildDomainUnicastAddress(aChild, ChildDuaState::kChanged);
-                    }
+                    Get<DuaManager>().UpdateChildDomainUnicastAddress(
+                        aChild, oldDua != address ? ChildDuaState::kChanged : ChildDuaState::kUnchanged);
                 }
                 else
                 {
@@ -2314,9 +2312,7 @@ exit:
     LogProcessError(kTypeChildIdRequest, error);
 }
 
-void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
-                                         const Ip6::MessageInfo &aMessageInfo,
-                                         uint32_t                aKeySequence)
+void MleRouter::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     static const uint8_t kMaxResponseTlvs = 10;
 
@@ -2354,17 +2350,15 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         ExitNow(error = kErrorParse);
     }
 
-    // Find Child
+    tlvs[tlvslength++] = Tlv::kSourceAddress;
+
     aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(extAddr);
     child = mChildTable.FindChild(extAddr, Child::kInStateAnyExceptInvalid);
 
-    tlvs[tlvslength++] = Tlv::kSourceAddress;
-
-    // Not proceed if the Child Update Request is from the peer which is not the device's child or
-    // which was the device's child but becomes invalid.
-    if (child == nullptr || child->IsStateInvalid())
+    if (child == nullptr)
     {
-        // For invalid non-sleepy child, Send Child Update Response with status TLV (error)
+        // For invalid non-sleepy child, send Child Update Response with
+        // Status TLV (error).
         if (mode.IsRxOnWhenIdle())
         {
             tlvs[tlvslength++] = Tlv::kStatus;
@@ -2373,6 +2367,14 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
 
         ExitNow();
     }
+
+    // Ignore "Child Update Request" from a child that is present in the
+    // child table but it is not yet in valid state. For example, a
+    // child which is being restored (due to parent reset) or is in the
+    // middle of the attach process (in `kStateParentRequest` or
+    // `kStateChildIdRequest`).
+
+    VerifyOrExit(child->IsStateValid());
 
     oldMode = child->GetDeviceMode();
     child->SetDeviceMode(mode);
@@ -2493,21 +2495,20 @@ void MleRouter::HandleChildUpdateRequest(const Message &         aMessage,
         Get<IndirectSender>().HandleChildModeChange(*child, oldMode);
     }
 
-    if (child->IsStateRestoring())
+    if (childDidChange)
     {
-        SetChildStateToValid(*child);
-        child->SetKeySequence(aKeySequence);
-    }
-    else if (child->IsStateValid())
-    {
-        if (childDidChange)
-        {
-            IgnoreError(mChildTable.StoreChild(*child));
-        }
+        IgnoreError(mChildTable.StoreChild(*child));
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    child->ClearLastRxFragmentTag();
+    // We clear the fragment tag only if the "Child Update Request" is
+    // from a detached child trying to restore its link with its
+    // parent which is indicated by the presence of Challenge TLV in
+    // the message.
+    if (challenge.mLength != 0)
+    {
+        child->ClearLastRxFragmentTag();
+    }
 #endif
 
     SendChildUpdateResponse(child, aMessageInfo, tlvs, tlvslength, challenge);
@@ -2907,13 +2908,16 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
     discoveryResponse.Init();
     discoveryResponse.SetVersion(kThreadVersion);
 
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
     if (Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled)
     {
-        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, MeshCoP::kBorderAgentUdpPort));
+        SuccessOrExit(
+            error = Tlv::Append<MeshCoP::CommissionerUdpPortTlv>(*message, Get<MeshCoP::BorderAgent>().GetUdpPort()));
 
         discoveryResponse.SetNativeCommissioner(true);
     }
     else
+#endif
     {
         discoveryResponse.SetNativeCommissioner(false);
     }
@@ -3530,7 +3534,7 @@ Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
 
     VerifyOrExit(!mAddressSolicitPending);
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressSolicit));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -3552,8 +3556,8 @@ Error MleRouter::SendAddressSolicit(ThreadStatusTlv::Status aStatus)
     messageInfo.SetSockAddr(GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo,
-                                                           &MleRouter::HandleAddressSolicitResponse, this));
+    SuccessOrExit(
+        error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &MleRouter::HandleAddressSolicitResponse, this));
     mAddressSolicitPending = true;
 
     Log(kMessageSend, kTypeAddressSolicit, messageInfo.GetPeerAddr());
@@ -3569,7 +3573,7 @@ void MleRouter::SendAddressRelease(void)
     Ip6::MessageInfo messageInfo;
     Coap::Message *  message;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kAddressRelease));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -3581,7 +3585,7 @@ void MleRouter::SendAddressRelease(void)
     messageInfo.SetSockAddr(GetMeshLocal16());
     SuccessOrExit(error = GetLeaderAddress(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     Log(kMessageSend, kTypeAddressRelease, messageInfo.GetPeerAddr());
 
@@ -3692,10 +3696,13 @@ exit:
     InformPreviousChannel();
 }
 
-bool MleRouter::IsExpectedToBecomeRouter(void) const
+bool MleRouter::IsExpectedToBecomeRouterSoon(void) const
 {
+    static constexpr uint8_t kMaxDelay = 10;
+
     return IsRouterEligible() && IsChild() && !mAddressSolicitRejected &&
-           (GetRouterSelectionJitterTimeout() != 0 || mAddressSolicitPending);
+           ((GetRouterSelectionJitterTimeout() != 0 && GetRouterSelectionJitterTimeout() <= kMaxDelay) ||
+            mAddressSolicitPending);
 }
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -3798,7 +3805,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
     ThreadRouterMaskTlv routerMaskTlv;
     Coap::Message *     message;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewPriorityMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -3817,7 +3824,7 @@ void MleRouter::SendAddressSolicitResponse(const Coap::Message &   aRequest,
         SuccessOrExit(error = routerMaskTlv.AppendTo(*message));
     }
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     Log(kMessageSend, kTypeAddressReply, aMessageInfo.GetPeerAddr());
 
@@ -3852,7 +3859,7 @@ void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::Message
 
     IgnoreError(mRouterTable.Release(routerId));
 
-    SuccessOrExit(Get<Tmf::TmfAgent>().SendEmptyAck(aMessage, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
     Log(kMessageSend, kTypeAddressReleaseReply, aMessageInfo.GetPeerAddr());
 

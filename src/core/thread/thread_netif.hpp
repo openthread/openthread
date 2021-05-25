@@ -193,7 +193,7 @@ public:
     bool IsOnMesh(const Ip6::Address &aAddress) const;
 
 private:
-    Tmf::TmfAgent mTmfAgent;
+    Tmf::Agent mTmfAgent;
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
 #endif
@@ -288,11 +288,15 @@ private:
     Srp::Server mSrpServer;
 #endif
 
-    Utils::ChildSupervisor     mChildSupervisor;
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
+    Utils::ChildSupervisor mChildSupervisor;
+#endif
     Utils::SupervisionListener mSupervisionListener;
-    AnnounceBeginServer        mAnnounceBegin;
-    PanIdQueryServer           mPanIdQuery;
-    EnergyScanServer           mEnergyScan;
+#endif
+    AnnounceBeginServer mAnnounceBegin;
+    PanIdQueryServer    mPanIdQuery;
+    EnergyScanServer    mEnergyScan;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeSync mTimeSync;

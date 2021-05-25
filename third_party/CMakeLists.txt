@@ -29,11 +29,3 @@
 if(NOT OT_EXTERNAL_MBEDTLS)
     add_subdirectory(mbedtls)
 endif()
-
-if(OT_PLATFORM MATCHES "^nrf*")
-    add_subdirectory(jlink)
-    add_subdirectory(NordicSemiconductor)
-elseif(OT_PLATFORM MATCHES "^efr*")
-    add_subdirectory(jlink)
-    add_subdirectory(silabs)
-endif()

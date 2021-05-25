@@ -156,6 +156,14 @@ public:
     MeshCoP::Dtls &GetDtls(void) { return mDtls; }
 
     /**
+     * This method gets the UDP port of this agent.
+     *
+     * @returns  UDP port number.
+     *
+     */
+    uint16_t GetUdpPort(void) const { return mDtls.GetUdpPort(); }
+
+    /**
      * This method sets the PSK.
      *
      * @param[in]  aPsk        A pointer to the PSK.
@@ -230,7 +238,7 @@ public:
     }
 #endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
 
-#ifdef MBEDTLS_BASE64_C
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
     /**
      * This method returns the peer x509 certificate base64 encoded.
      *
@@ -248,7 +256,7 @@ public:
     {
         return mDtls.GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
     }
-#endif // MBEDTLS_BASE64_C
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
     /**
      * This method sets the connected callback to indicate, when a Client connect to the CoAP Secure server.

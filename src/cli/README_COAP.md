@@ -4,15 +4,6 @@ The OpenThread CoAP APIs may be invoked via the OpenThread CLI.
 
 ## Quick Start
 
-### Build with CoAP API support
-
-Use the `COAP=1` build switch to enable CoAP API support.
-
-```bash
-> ./bootstrap
-> make -f examples/Makefile-simulation COAP=1
-```
-
 ### Form Network
 
 Form a network with at least two devices.

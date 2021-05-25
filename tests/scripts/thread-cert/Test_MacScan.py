@@ -42,14 +42,12 @@ class Test_MacScan(thread_cert.TestCase):
             'channel': 12,
             'mode': 'rdn',
             'network_name': 'OpenThread',
-            'panid': 0xface,
             'allowlist': [ROUTER]
         },
         ROUTER: {
             'channel': 12,
             'mode': 'rdn',
             'network_name': 'OpenThread',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
     }

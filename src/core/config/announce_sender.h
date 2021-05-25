@@ -40,9 +40,7 @@
  *
  * Define as 1 to enable `AnnounceSender` which will periodically send MLE Announce message on all channels.
  *
- * The list of channels is determined from the Operational Dataset's ChannelMask. The period intervals are determined
- * by `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER` and `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED`
- * configuration options.
+ * The list of channels is determined from the Operational Dataset's ChannelMask.
  *
  */
 #ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
@@ -50,9 +48,9 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER
+ * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL
  *
- * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles on a device in Router role.
+ * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles.
  *
  * In a cycle, the `AnnounceSender` sends MLE Announcement on all channels in Active Operational Dataset's ChannelMask.
  * The transmissions on different channels happen uniformly over the given interval (i.e., if there are 16 channels,
@@ -62,22 +60,34 @@
  * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE`).
  *
  */
-#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER
-#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER 688000 // 668 seconds = 11 min and 28 sec.
+#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL
+#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL 688000 // 688 seconds = 11 min and 28 sec.
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED
+ * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT
  *
- * Specifies the time interval (in milliseconds) between `AnnounceSender` transmit cycles on a device in REED role.
+ * Specifies the number of MLE Announcement messages that the device must receive within a cycle interval to skip
+ * sending the Announcement itself.
  *
- * This is similar to `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_ROUTER` but used when device is in REED role.
+ * This is used as the trickle timer redundancy constant in `AnnounceSender`.
  *
  * Applicable only if `AnnounceSender` feature is enabled (see `OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE`).
  *
  */
-#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED
-#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL_REED (668000 * 3)
+#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT
+#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT 8
+#endif
+
+/**
+ *  @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL
+ *
+ * Specifies the jitter interval (in milliseconds) used by `AnnounceSender`. A random jitter interval is applied to
+ * the period between any two successive MLE Announcement transmissions (possibly) on different channels.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL
+#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL 500
 #endif
 
 #endif // CONFIG_ANNOUNCE_SENDER_H_

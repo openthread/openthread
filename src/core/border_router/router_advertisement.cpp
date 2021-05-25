@@ -187,15 +187,31 @@ bool RouteInfoOption::IsValid(void) const
            (pref == OT_ROUTE_PREFERENCE_LOW || pref == OT_ROUTE_PREFERENCE_MED || pref == OT_ROUTE_PREFERENCE_HIGH);
 }
 
-RouterAdvMessage::RouterAdvMessage(void)
-    : mReachableTime(0)
-    , mRetransTimer(0)
+void RouterAdvMessage::SetToDefault(void)
 {
-    OT_UNUSED_VARIABLE(mReachableTime);
-    OT_UNUSED_VARIABLE(mRetransTimer);
-
     mHeader.Clear();
     mHeader.SetType(Ip6::Icmp::Header::kTypeRouterAdvert);
+    mReachableTime = 0;
+    mRetransTimer  = 0;
+}
+
+const RouterAdvMessage &RouterAdvMessage::operator=(const RouterAdvMessage &aOther)
+{
+    mHeader = aOther.mHeader;
+
+    // Set zero value and let platform do the calculation.
+    mHeader.SetChecksum(0);
+
+    mReachableTime = aOther.mReachableTime;
+    mRetransTimer  = aOther.mRetransTimer;
+
+    return *this;
+}
+
+bool RouterAdvMessage::operator==(const RouterAdvMessage &aOther) const
+{
+    return memcmp(&mHeader.mData, &aOther.mHeader.mData, sizeof(mHeader.mData)) == 0 &&
+           mReachableTime == aOther.mReachableTime && mRetransTimer == aOther.mRetransTimer;
 }
 
 RouterSolicitMessage::RouterSolicitMessage(void)

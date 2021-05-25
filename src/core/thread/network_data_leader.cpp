@@ -96,17 +96,16 @@ exit:
 const PrefixTlv *LeaderBase::FindNextMatchingPrefix(const Ip6::Address &aAddress, const PrefixTlv *aPrevTlv) const
 {
     const PrefixTlv *prefixTlv;
+    TlvIterator      tlvIterator((aPrevTlv == nullptr) ? GetTlvsStart() : aPrevTlv->GetNext(), GetTlvsEnd());
 
-    for (const NetworkDataTlv *start = (aPrevTlv == nullptr) ? GetTlvsStart() : aPrevTlv->GetNext();
-         (prefixTlv = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr; start = prefixTlv->GetNext())
+    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
         if (aAddress.MatchesPrefix(prefixTlv->GetPrefix(), prefixTlv->GetPrefixLength()))
         {
-            ExitNow();
+            break;
         }
     }
 
-exit:
     return prefixTlv;
 }
 
@@ -126,7 +125,7 @@ Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aCon
 
     while ((prefix = FindNextMatchingPrefix(aAddress, prefix)) != nullptr)
     {
-        contextTlv = FindContext(*prefix);
+        contextTlv = prefix->FindSubTlv<ContextTlv>();
 
         if (contextTlv == nullptr)
         {
@@ -147,6 +146,7 @@ Error LeaderBase::GetContext(const Ip6::Address &aAddress, Lowpan::Context &aCon
 Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) const
 {
     Error            error = kErrorNotFound;
+    TlvIterator      tlvIterator(GetTlvsStart(), GetTlvsEnd());
     const PrefixTlv *prefix;
 
     if (aContextId == Mle::kMeshLocalPrefixContextId)
@@ -157,10 +157,9 @@ Error LeaderBase::GetContext(uint8_t aContextId, Lowpan::Context &aContext) cons
         ExitNow(error = kErrorNone);
     }
 
-    for (const NetworkDataTlv *start = GetTlvsStart(); (prefix = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr;
-         start                       = prefix->GetNext())
+    while ((prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
-        const ContextTlv *contextTlv = FindContext(*prefix);
+        const ContextTlv *contextTlv = prefix->FindSubTlv<ContextTlv>();
 
         if ((contextTlv == nullptr) || (contextTlv->GetContextId() != aContextId))
         {
@@ -189,7 +188,7 @@ bool LeaderBase::IsOnMesh(const Ip6::Address &aAddress) const
         // check both stable and temporary Border Router TLVs
         for (int i = 0; i < 2; i++)
         {
-            const BorderRouterTlv *borderRouter = FindBorderRouter(*prefix, /* aStable */ (i == 0));
+            const BorderRouterTlv *borderRouter = prefix->FindSubTlv<BorderRouterTlv>(/* aStable */ (i == 0));
 
             if (borderRouter == nullptr)
             {
@@ -247,15 +246,16 @@ Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
                                       uint16_t *          aRloc16) const
 {
     Error                error = kErrorNoRoute;
+    TlvIterator          tlvIterator(GetTlvsStart(), GetTlvsEnd());
     const PrefixTlv *    prefixTlv;
     const HasRouteEntry *bestRouteEntry  = nullptr;
     uint8_t              bestMatchLength = 0;
 
-    for (const NetworkDataTlv *start = GetTlvsStart(); (prefixTlv = FindTlv<PrefixTlv>(start, GetTlvsEnd())) != nullptr;
-         start                       = prefixTlv->GetNext())
+    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
         const HasRouteTlv *hasRoute;
         uint8_t            prefixLength = prefixTlv->GetPrefixLength();
+        TlvIterator        subTlvIterator(*prefixTlv);
 
         if (prefixTlv->GetDomainId() != aDomainId)
         {
@@ -272,9 +272,7 @@ Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
             continue;
         }
 
-        for (const NetworkDataTlv *subStart = prefixTlv->GetSubTlvs();
-             (hasRoute = FindTlv<HasRouteTlv>(subStart, prefixTlv->GetNext())) != nullptr;
-             subStart = hasRoute->GetNext())
+        while ((hasRoute = subTlvIterator.Iterate<HasRouteTlv>()) != nullptr)
         {
             for (const HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
                  entry                      = entry->GetNext())
@@ -314,12 +312,11 @@ Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
 Error LeaderBase::DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const
 {
     Error                    error = kErrorNoRoute;
+    TlvIterator              subTlvIterator(aPrefix);
     const BorderRouterTlv *  borderRouter;
     const BorderRouterEntry *route = nullptr;
 
-    for (const NetworkDataTlv *start = aPrefix.GetSubTlvs();
-         (borderRouter = FindTlv<BorderRouterTlv>(start, aPrefix.GetNext())) != nullptr;
-         start = borderRouter->GetNext())
+    while ((borderRouter = subTlvIterator.Iterate<BorderRouterTlv>()) != nullptr)
     {
         for (const BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
              entry                          = entry->GetNext())
@@ -421,7 +418,7 @@ exit:
 
 const CommissioningDataTlv *LeaderBase::GetCommissioningData(void) const
 {
-    return FindTlv<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
+    return NetworkDataTlv::Find<CommissioningDataTlv>(GetTlvsStart(), GetTlvsEnd());
 }
 
 const MeshCoP::Tlv *LeaderBase::GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType) const

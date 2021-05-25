@@ -263,7 +263,7 @@ class OpenThreadTHCI(object):
     def log(self, fmt, *args):
         try:
             msg = fmt % args
-            logging.info('%s - %s', self, msg)
+            print('%s - %s - %s' % (self.port, time.strftime('%b %d %H:%M:%S'), msg))
         except Exception:
             pass
 
@@ -1271,6 +1271,8 @@ class OpenThreadTHCI(object):
         print('%s call reset' % self)
         self.__sendCommand('factoryreset', expectEcho=False)
         self.sleep(0.5)
+
+        self._onReset()
 
     @API
     def removeRouter(self, xRouterId):
@@ -3044,6 +3046,9 @@ class OpenThread(OpenThreadTHCI, IThci):
         if self.__handle:
             self.__handle.close()
             self.__handle = None
+
+    def _onReset(self):
+        pass
 
     def __socRead(self, size=512):
         if self._is_net:

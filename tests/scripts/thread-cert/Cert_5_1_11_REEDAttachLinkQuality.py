@@ -66,28 +66,22 @@ class Cert_5_1_11_REEDAttachLinkQuality(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [REED, ROUTER2]
         },
         REED: {
             'name': 'REED_1',
             'mode': 'rdn',
-            'panid': 0xface,
             'router_upgrade_threshold': 0,
             'allowlist': [LEADER, ROUTER1]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, (ROUTER1, -85)]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [REED, ROUTER2]
         },
     }

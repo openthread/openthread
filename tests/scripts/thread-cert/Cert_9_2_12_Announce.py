@@ -69,7 +69,6 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'channel': DATASET1_CHANNEL
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER1, LEADER2]
         },
         LEADER2: {
@@ -80,7 +79,6 @@ class Cert_9_2_12_Announce(thread_cert.TestCase):
                 'channel': DATASET2_CHANNEL
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [MED, ROUTER1]
         },
         MED: {

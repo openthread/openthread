@@ -232,6 +232,16 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
     return static_cast<Ip6::Address *>(aAddress)->FromString(aString);
 }
 
+void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize)
+{
+    static_cast<const Ip6::Address *>(aAddress)->ToString(aBuffer, aSize);
+}
+
+void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
+{
+    static_cast<const Ip6::Prefix *>(aPrefix)->ToString(aBuffer, aSize);
+}
+
 uint8_t otIp6PrefixMatch(const otIp6Address *aFirst, const otIp6Address *aSecond)
 {
     OT_ASSERT(aFirst != nullptr && aSecond != nullptr);
@@ -302,3 +312,14 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
 }
 
 #endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+
+otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mle::MleRouter>().SetMeshLocalIid(static_cast<const Ip6::InterfaceIdentifier &>(*aIid));
+}
+
+#endif

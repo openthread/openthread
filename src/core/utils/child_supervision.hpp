@@ -85,7 +85,9 @@ namespace Utils {
  *
  */
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+
+#if OPENTHREAD_FTD
 
 /**
  * This class implements a child supervisor.
@@ -171,23 +173,7 @@ private:
     uint16_t mSupervisionInterval;
 };
 
-#else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
-
-class ChildSupervisor
-{
-public:
-    explicit ChildSupervisor(otInstance &) {}
-    void     Start(void) {}
-    void     Stop(void) {}
-    void     SetSupervisionInterval(uint16_t) {}
-    uint16_t GetSupervisionInterval(void) const { return 0; }
-    Child *  GetDestination(const Message &) const { return nullptr; }
-    void     UpdateOnSend(Child &) {}
-};
-
-#endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE && OPENTHREAD_FTD
-
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#endif // #if OPENTHREAD_FTD
 
 /**
  * This class implements a child supervision listener.
@@ -260,19 +246,6 @@ private:
 
     uint16_t   mTimeout;
     TimerMilli mTimer;
-};
-
-#else // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
-
-class SupervisionListener : private NonCopyable
-{
-public:
-    SupervisionListener(otInstance &) {}
-    void     Start(void) {}
-    void     Stop(void) {}
-    void     SetTimeout(uint16_t) {}
-    uint16_t GetTimeout(void) const { return 0; }
-    void     UpdateOnReceive(const Mac::Address &, bool) {}
 };
 
 #endif // #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

@@ -40,6 +40,8 @@ set(OT_EXTERNAL_MBEDTLS "" CACHE STRING "Specify external mbedtls library")
 option(OT_MBEDTLS_THREADING "enable mbedtls threading" OFF)
 
 add_library(ot-config INTERFACE)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_C_STANDARD 99)
 
 message(STATUS "OpenThread Source Directory: ${PROJECT_SOURCE_DIR}")
 
@@ -173,12 +175,6 @@ if(OT_PLATFORM STREQUAL "posix")
     add_subdirectory("${PROJECT_SOURCE_DIR}/src/posix/platform")
 elseif(OT_PLATFORM STREQUAL "external")
     # skip in this case
-elseif(OT_PLATFORM MATCHES "^nrf*")
-    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx/${OT_PLATFORM})
-    add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/nrf528xx")
-elseif(OT_PLATFORM MATCHES "^efr*")
-    target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/efr32/${OT_PLATFORM})
-    add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/efr32")
 else()
     target_include_directories(ot-config INTERFACE ${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM})
     add_subdirectory("${PROJECT_SOURCE_DIR}/examples/platforms/${OT_PLATFORM}")
@@ -199,6 +195,10 @@ if(OT_PLATFORM STREQUAL "posix")
     endif()
 elseif(OT_PLATFORM)
     add_subdirectory(examples)
+endif()
+
+if (OT_DOC)
+    add_subdirectory(doc)
 endif()
 
 add_subdirectory(src)

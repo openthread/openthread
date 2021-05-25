@@ -52,6 +52,7 @@ This page lists the available common switches with description. Unless stated ot
 | OTNS | OT_OTNS | Enables support for [OpenThread Network Simulator](https://github.com/openthread/ot-ns). Enable this switch if you are building OpenThread for OpenThread Network Simulator. |
 | PLATFORM_UDP | OT_PLATFORM_UDP | Enables platform UDP support. |
 | REFERENCE_DEVICE | OT_REFERENCE_DEVICE | Enables support for Thread Test Harness reference device. Enable this switch on the reference device during certification. |
+| RESET_CONNECTION | OT_SPINEL_RESET_CONNECTION | Enables resetting connection with RCP device. Enable this switch if RCP uses USB transport and performs hard reset. Use symlink instead of file name pointing the RCP device i.e. /dev/serial/by-id/usb-device-name instead of /dev/ttyUSB0 in a connection configuration. |
 | SERVICE | OT_SERVICE | Enables support for injecting Service entries into the Thread Network Data. |
 | SETTINGS_RAM | OT_SETTINGS_RAM | Enables volatile-only storage of settings. |
 | SLAAC | OT_SLAAC | Enables support for adding auto-configured SLAAC addresses by OpenThread. This feature is enabled by default. |

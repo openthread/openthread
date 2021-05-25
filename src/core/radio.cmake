@@ -28,13 +28,6 @@
 
 add_library(openthread-radio)
 
-set_target_properties(
-    openthread-radio
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 target_compile_definitions(openthread-radio PRIVATE
     OPENTHREAD_RADIO=1
 )

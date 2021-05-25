@@ -34,13 +34,6 @@
 #include "cli_commissioner.hpp"
 
 #include "cli/cli.hpp"
-#include "utils/parse_cmdline.hpp"
-
-using ot::Utils::CmdLineParser::ParseAsHexString;
-using ot::Utils::CmdLineParser::ParseAsIp6Address;
-using ot::Utils::CmdLineParser::ParseAsUint16;
-using ot::Utils::CmdLineParser::ParseAsUint32;
-using ot::Utils::CmdLineParser::ParseAsUint8;
 
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
@@ -49,7 +42,7 @@ namespace Cli {
 
 constexpr Commissioner::Command Commissioner::sCommands[];
 
-otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -62,7 +55,7 @@ otError Commissioner::ProcessHelp(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Commissioner::ProcessAnnounce(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessAnnounce(uint8_t aArgsLength, Arg aArgs[])
 {
     otError      error;
     uint32_t     mask;
@@ -72,10 +65,10 @@ otError Commissioner::ProcessAnnounce(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength > 4, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = ParseAsUint32(aArgs[1], mask));
-    SuccessOrExit(error = ParseAsUint8(aArgs[2], count));
-    SuccessOrExit(error = ParseAsUint16(aArgs[3], period));
-    SuccessOrExit(error = ParseAsIp6Address(aArgs[4], address));
+    SuccessOrExit(error = aArgs[1].ParseAsUint32(mask));
+    SuccessOrExit(error = aArgs[2].ParseAsUint8(count));
+    SuccessOrExit(error = aArgs[3].ParseAsUint16(period));
+    SuccessOrExit(error = aArgs[4].ParseAsIp6Address(address));
 
     SuccessOrExit(error = otCommissionerAnnounceBegin(mInterpreter.mInstance, mask, count, period, &address));
 
@@ -83,7 +76,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessEnergy(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessEnergy(uint8_t aArgsLength, Arg aArgs[])
 {
     otError      error;
     uint32_t     mask;
@@ -94,11 +87,11 @@ otError Commissioner::ProcessEnergy(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength > 5, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = ParseAsUint32(aArgs[1], mask));
-    SuccessOrExit(error = ParseAsUint8(aArgs[2], count));
-    SuccessOrExit(error = ParseAsUint16(aArgs[3], period));
-    SuccessOrExit(error = ParseAsUint16(aArgs[4], scanDuration));
-    SuccessOrExit(error = ParseAsIp6Address(aArgs[5], address));
+    SuccessOrExit(error = aArgs[1].ParseAsUint32(mask));
+    SuccessOrExit(error = aArgs[2].ParseAsUint8(count));
+    SuccessOrExit(error = aArgs[3].ParseAsUint16(period));
+    SuccessOrExit(error = aArgs[4].ParseAsUint16(scanDuration));
+    SuccessOrExit(error = aArgs[5].ParseAsIp6Address(address));
 
     SuccessOrExit(error = otCommissionerEnergyScan(mInterpreter.mInstance, mask, count, period, scanDuration, &address,
                                                    &Commissioner::HandleEnergyReport, this));
@@ -107,7 +100,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessJoiner(uint8_t aArgsLength, Arg aArgs[])
 {
     otError             error;
     otExtAddress        addr;
@@ -118,13 +111,13 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 
     memset(&discerner, 0, sizeof(discerner));
 
-    if (strcmp(aArgs[2], "*") == 0)
+    if (aArgs[2] == "*")
     {
         // Intentionally empty
     }
     else if ((error = Interpreter::ParseJoinerDiscerner(aArgs[2], discerner)) == OT_ERROR_NOT_FOUND)
     {
-        SuccessOrExit(error = ParseAsHexString(aArgs[2], addr.m8));
+        SuccessOrExit(error = aArgs[2].ParseAsHexString(addr.m8));
         addrPtr = &addr;
     }
     else if (error != OT_ERROR_NONE)
@@ -132,7 +125,7 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
         ExitNow();
     }
 
-    if (strcmp(aArgs[1], "add") == 0)
+    if (aArgs[1] == "add")
     {
         VerifyOrExit(aArgsLength > 3, error = OT_ERROR_INVALID_ARGS);
         // Timeout parameter is optional - if not specified, use default value.
@@ -140,20 +133,21 @@ otError Commissioner::ProcessJoiner(uint8_t aArgsLength, char *aArgs[])
 
         if (aArgsLength > 4)
         {
-            SuccessOrExit(error = ParseAsUint32(aArgs[4], timeout));
+            SuccessOrExit(error = aArgs[4].ParseAsUint32(timeout));
         }
 
         if (discerner.mLength)
         {
-            SuccessOrExit(
-                error = otCommissionerAddJoinerWithDiscerner(mInterpreter.mInstance, &discerner, aArgs[3], timeout));
+            SuccessOrExit(error = otCommissionerAddJoinerWithDiscerner(mInterpreter.mInstance, &discerner,
+                                                                       aArgs[3].GetCString(), timeout));
         }
         else
         {
-            SuccessOrExit(error = otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[3], timeout));
+            SuccessOrExit(error =
+                              otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[3].GetCString(), timeout));
         }
     }
-    else if (strcmp(aArgs[1], "remove") == 0)
+    else if (aArgs[1] == "remove")
     {
         if (discerner.mLength)
         {
@@ -173,7 +167,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessMgmtGet(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessMgmtGet(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
     uint8_t tlvs[32];
@@ -183,29 +177,29 @@ otError Commissioner::ProcessMgmtGet(uint8_t aArgsLength, char *aArgs[])
     {
         VerifyOrExit(static_cast<size_t>(length) < sizeof(tlvs), error = OT_ERROR_NO_BUFS);
 
-        if (strcmp(aArgs[index], "locator") == 0)
+        if (aArgs[index] == "locator")
         {
             tlvs[length++] = OT_MESHCOP_TLV_BORDER_AGENT_RLOC;
         }
-        else if (strcmp(aArgs[index], "sessionid") == 0)
+        else if (aArgs[index] == "sessionid")
         {
             tlvs[length++] = OT_MESHCOP_TLV_COMM_SESSION_ID;
         }
-        else if (strcmp(aArgs[index], "steeringdata") == 0)
+        else if (aArgs[index] == "steeringdata")
         {
             tlvs[length++] = OT_MESHCOP_TLV_STEERING_DATA;
         }
-        else if (strcmp(aArgs[index], "joinerudpport") == 0)
+        else if (aArgs[index] == "joinerudpport")
         {
             tlvs[length++] = OT_MESHCOP_TLV_JOINER_UDP_PORT;
         }
-        else if (strcmp(aArgs[index], "-x") == 0)
+        else if (aArgs[index] == "-x")
         {
             uint16_t readLength;
 
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             readLength = static_cast<uint16_t>(sizeof(tlvs) - length);
-            SuccessOrExit(error = ParseAsHexString(aArgs[index], readLength, tlvs + length));
+            SuccessOrExit(error = aArgs[index].ParseAsHexString(readLength, tlvs + length));
             length += static_cast<uint8_t>(readLength);
         }
         else
@@ -220,7 +214,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, Arg aArgs[])
 {
     otError                error;
     otCommissioningDataset dataset;
@@ -233,41 +227,41 @@ otError Commissioner::ProcessMgmtSet(uint8_t aArgsLength, char *aArgs[])
 
     for (uint8_t index = 1; index < aArgsLength; index++)
     {
-        if (strcmp(aArgs[index], "locator") == 0)
+        if (aArgs[index] == "locator")
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsLocatorSet = true;
-            SuccessOrExit(error = ParseAsUint16(aArgs[index], dataset.mLocator));
+            SuccessOrExit(error = aArgs[index].ParseAsUint16(dataset.mLocator));
         }
-        else if (strcmp(aArgs[index], "sessionid") == 0)
+        else if (aArgs[index] == "sessionid")
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsSessionIdSet = true;
-            SuccessOrExit(error = ParseAsUint16(aArgs[index], dataset.mSessionId));
+            SuccessOrExit(error = aArgs[index].ParseAsUint16(dataset.mSessionId));
         }
-        else if (strcmp(aArgs[index], "steeringdata") == 0)
+        else if (aArgs[index] == "steeringdata")
         {
             uint16_t length;
 
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsSteeringDataSet = true;
             length                     = sizeof(dataset.mSteeringData.m8);
-            SuccessOrExit(error = ParseAsHexString(aArgs[index], length, dataset.mSteeringData.m8));
+            SuccessOrExit(error = aArgs[index].ParseAsHexString(length, dataset.mSteeringData.m8));
             dataset.mSteeringData.mLength = static_cast<uint8_t>(length);
         }
-        else if (strcmp(aArgs[index], "joinerudpport") == 0)
+        else if (aArgs[index] == "joinerudpport")
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mIsJoinerUdpPortSet = true;
-            SuccessOrExit(error = ParseAsUint16(aArgs[index], dataset.mJoinerUdpPort));
+            SuccessOrExit(error = aArgs[index].ParseAsUint16(dataset.mJoinerUdpPort));
         }
-        else if (strcmp(aArgs[index], "-x") == 0)
+        else if (aArgs[index] == "-x")
         {
             uint16_t length;
 
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             length = sizeof(tlvs);
-            SuccessOrExit(error = ParseAsHexString(aArgs[index], length, tlvs));
+            SuccessOrExit(error = aArgs[index].ParseAsHexString(length, tlvs));
             tlvsLength = static_cast<uint8_t>(length);
         }
         else
@@ -282,7 +276,7 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessPanId(uint8_t aArgsLength, Arg aArgs[])
 {
     otError      error;
     uint16_t     panId;
@@ -291,9 +285,9 @@ otError Commissioner::ProcessPanId(uint8_t aArgsLength, char *aArgs[])
 
     VerifyOrExit(aArgsLength > 3, error = OT_ERROR_INVALID_ARGS);
 
-    SuccessOrExit(error = ParseAsUint16(aArgs[1], panId));
-    SuccessOrExit(error = ParseAsUint32(aArgs[2], mask));
-    SuccessOrExit(error = ParseAsIp6Address(aArgs[3], address));
+    SuccessOrExit(error = aArgs[1].ParseAsUint16(panId));
+    SuccessOrExit(error = aArgs[2].ParseAsUint32(mask));
+    SuccessOrExit(error = aArgs[3].ParseAsIp6Address(address));
 
     SuccessOrExit(error = otCommissionerPanIdQuery(mInterpreter.mInstance, panId, mask, &address,
                                                    &Commissioner::HandlePanIdConflict, this));
@@ -302,12 +296,13 @@ exit:
     return error;
 }
 
-otError Commissioner::ProcessProvisioningUrl(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessProvisioningUrl(uint8_t aArgsLength, Arg aArgs[])
 {
-    return otCommissionerSetProvisioningUrl(mInterpreter.mInstance, (aArgsLength > 1) ? aArgs[1] : nullptr);
+    return otCommissionerSetProvisioningUrl(mInterpreter.mInstance,
+                                            (aArgsLength > 1) ? aArgs[1].GetCString() : nullptr);
 }
 
-otError Commissioner::ProcessSessionId(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessSessionId(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -317,7 +312,7 @@ otError Commissioner::ProcessSessionId(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Commissioner::ProcessStart(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessStart(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -399,7 +394,7 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
     mInterpreter.OutputLine("");
 }
 
-otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessStop(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -407,7 +402,7 @@ otError Commissioner::ProcessStop(uint8_t aArgsLength, char *aArgs[])
     return otCommissionerStop(mInterpreter.mInstance);
 }
 
-otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::ProcessState(uint8_t aArgsLength, Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
@@ -417,14 +412,14 @@ otError Commissioner::ProcessState(uint8_t aArgsLength, char *aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Commissioner::Process(uint8_t aArgsLength, char *aArgs[])
+otError Commissioner::Process(uint8_t aArgsLength, Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
     VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
 
-    command = Utils::LookupTable::Find(aArgs[0], sCommands);
+    command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
     error = (this->*command->mHandler)(aArgsLength, aArgs);

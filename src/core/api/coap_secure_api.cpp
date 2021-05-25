@@ -93,7 +93,7 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
-#ifdef MBEDTLS_BASE64_C
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              unsigned char *aPeerCert,
                                              size_t *       aCertLength,
@@ -103,7 +103,7 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
 
     return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
-#endif // MBEDTLS_BASE64_C
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate)
 {

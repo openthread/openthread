@@ -65,8 +65,8 @@ namespace BorderRouter {
 /**
  * This class implements bi-directional routing between Thread and Infrastructure networks.
  *
- * The Border Routing manager works on both Thread interface and infrastructure interface. All ICMPv6 messages are
- * sent/received on the infrastructure interface.
+ * The Border Routing manager works on both Thread interface and infrastructure interface.
+ * All ICMPv6 messages are sent/received on the infrastructure interface.
  *
  */
 class RoutingManager : public InstanceLocator
@@ -156,8 +156,14 @@ private:
 
     enum : uint32_t
     {
-        kDefaultOmrPrefixLifetime    = 1800u,                  // The default OMR prefix valid lifetime. In seconds.
-        kDefaultOnLinkPrefixLifetime = 1800u,                  // The default on-link prefix valid lifetime. In seconds.
+        kMaxInitRtrAdvertisements = 3, // The maximum number of initial Router Advertisements.
+        kMaxRtrSolicitations = 3, // The Maximum number of Router Solicitations before sending Router Advertisements.
+    };
+
+    enum : uint32_t
+    {
+        kDefaultOmrPrefixLifetime    = 1800,                   // The default OMR prefix valid lifetime. In seconds.
+        kDefaultOnLinkPrefixLifetime = 1800,                   // The default on-link prefix valid lifetime. In seconds.
         kMaxRtrAdvInterval           = 600,                    // Maximum Router Advertisement Interval. In seconds.
         kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3, // Minimum Router Advertisement Interval. In seconds.
         kMaxInitRtrAdvInterval       = 16,  // Maximum Initial Router Advertisement Interval. In seconds.
@@ -165,25 +171,40 @@ private:
         kRtrSolicitationInterval     = 4,   // The interval between Router Solicitations. In seconds.
         kMaxRtrSolicitationDelay     = 1,   // The maximum delay for initial solicitation. In seconds.
         kMaxRoutingPolicyDelay       = 1,   // The maximum delay for routing policy evaluation. In seconds.
+
+        // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
+        // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
+        // seconds. The Routing Manager will then start Router Solicitation to verify
+        // that the STALE prefix is not being advertised anymore and remove the STALE
+        // prefix.
+        // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
+        kRtrAdvStaleTime = 1800,
+
+        // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
+        // the discovered prefixes invalid if they are not refreshed after receiving
+        // a Router Solicitation message.
+        // The value is equal to Router Solicitation timeout.
+        kVicariousSolicitationTime = kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay,
     };
 
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
     static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");
     static_assert(kDefaultOnLinkPrefixLifetime >= kMaxRtrAdvInterval, "invalid default on-link prefix lifetime");
-
-    enum : uint32_t
-    {
-        kMaxInitRtrAdvertisements = 3, // The maximum number of initial Router Advertisements.
-        kMaxRtrSolicitations = 3, // The Maximum number of Router Solicitations before sending Router Advertisements.
-    };
+    static_assert(kRtrAdvStaleTime >= 1800 && kRtrAdvStaleTime <= kDefaultOnLinkPrefixLifetime,
+                  "invalid RA STALE time");
 
     // This struct represents an external prefix which is
     // discovered on the infrastructure interface.
     struct ExternalPrefix : public Clearable<ExternalPrefix>
     {
         Ip6::Prefix mPrefix;
-        TimeMilli   mExpireTime;
+        uint32_t    mValidLifetime;
+        TimeMilli   mTimeLastUpdate;
         bool        mIsOnLinkPrefix;
+
+        TimeMilli       GetExpireTime(void) const { return mTimeLastUpdate + GetPrefixExpireDelay(mValidLifetime); }
+        TimeMilli       GetStaleTime(void) const { return mTimeLastUpdate + TimeMilli::SecToMsec(kRtrAdvStaleTime); }
+        static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
     };
 
     void  EvaluateState(void);
@@ -212,13 +233,14 @@ private:
 
     static void HandleRouterAdvertisementTimer(Timer &aTimer);
     void        HandleRouterAdvertisementTimer(void);
-
+    static void HandleVicariousRouterSolicitTimer(Timer &aTimer);
+    void        HandleVicariousRouterSolicitTimer(void);
     static void HandleRouterSolicitTimer(Timer &aTimer);
     void        HandleRouterSolicitTimer(void);
-
     static void HandleDiscoveredPrefixInvalidTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixInvalidTimer(void);
-
+    static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
+    void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
 
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
@@ -232,13 +254,13 @@ private:
                              uint32_t           aLifetime,
                              otRoutePreference  aRoutePreference = OT_ROUTE_PREFERENCE_MED);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
+    bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
 
-    static bool     IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
-    static bool     IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
-    static bool     IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig);
-    static bool     IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
-    static bool     ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
-    static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
+    static bool IsValidOmrPrefix(const NetworkData::OnMeshPrefixConfig &aOnMeshPrefixConfig);
+    static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
+    static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig);
+    static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
+    static bool ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
 
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;
@@ -282,12 +304,22 @@ private:
     ExternalPrefix mDiscoveredPrefixes[kMaxDiscoveredPrefixNum];
     uint8_t        mDiscoveredPrefixNum;
 
+    // The RA header and parameters for the infra interface.
+    // This value is initialized with `RouterAdvMessage::SetToDefault`
+    // and updated with RA messages initiated from infra interface.
+    RouterAdv::RouterAdvMessage mRouterAdvMessage;
+    TimeMilli                   mTimeRouterAdvMessageLastUpdate;
+
     TimerMilli mDiscoveredPrefixInvalidTimer;
+    TimerMilli mDiscoveredPrefixStaleTimer;
 
     TimerMilli mRouterAdvertisementTimer;
     uint32_t   mRouterAdvertisementCount;
 
+    TimerMilli mVicariousRouterSolicitTimer;
+    TimeMilli  mTimeVicariousRouterSolicitStart;
     TimerMilli mRouterSolicitTimer;
+    TimeMilli  mTimeRouterSolicitStart;
     uint8_t    mRouterSolicitCount;
 
     TimerMilli mRoutingPolicyTimer;

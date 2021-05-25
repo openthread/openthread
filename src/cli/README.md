@@ -21,6 +21,7 @@ Done
 
 ## OpenThread Command List
 
+- [ba](#ba)
 - [bbr](#bbr)
 - [br](#br)
 - [bufferinfo](#bufferinfo)
@@ -65,6 +66,7 @@ Done
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
 - [masterkey](#masterkey)
+- [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [multiradio](#multiradio)
@@ -313,6 +315,30 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 
 ```bash
 > bbr jitter 10
+Done
+```
+
+### ba
+
+Show current Border Agent information.
+
+### ba port
+
+Print border agent service port.
+
+```bash
+> ba port
+49152
+Done
+```
+
+### ba state
+
+Print border agent state.
+
+```bash
+> ba state
+Started
 Done
 ```
 
@@ -1296,6 +1322,16 @@ Unsubscribe the Thread interface to the IPv6 multicast address.
 Done
 ```
 
+### ipmaddr llatn
+
+Get the Link-Local All Thread Nodes multicast address.
+
+```
+> ipmaddr llatn
+ff32:40:fdde:ad00:beef:0:0:1
+Done
+```
+
 ### ipmaddr promiscuous
 
 Get multicast promiscuous mode.
@@ -1321,6 +1357,16 @@ Disable multicast promiscuous mode.
 
 ```bash
 > ipmaddr promiscuous disable
+Done
+```
+
+### ipmaddr rlatn
+
+Get the Realm-Local All Thread Nodes multicast address.
+
+```
+> ipmaddr rlatn
+ff33:40:fdde:ad00:beef:0:0:1
 Done
 ```
 
@@ -1578,6 +1624,19 @@ Set the Thread Master Key value.
 
 ```bash
 > masterkey 00112233445566778899aabbccddeeff
+Done
+```
+
+### mliid \<iid\>
+
+Set the Mesh Local IID.
+
+It must be used before Thread stack is enabled.
+
+Only for testing/reference device.
+
+```bash
+> mliid 1122334455667788
 Done
 ```
 
@@ -1981,6 +2040,16 @@ Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 Done
 
 > prefix add fd00:7d03:7d03:7d03::/64 prosD med
+Done
+```
+
+### prefix meshlocal
+
+Get the mesh local prefix.
+
+```bash
+> prefix meshlocal
+fdde:ad00:beef:0::/64
 Done
 ```
 

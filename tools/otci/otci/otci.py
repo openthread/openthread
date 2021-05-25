@@ -719,6 +719,402 @@ class OTCI(object):
 
         return table
 
+    #
+    # DNS server & client utilities
+    #
+
+    _IPV6_SERVER_PORT_PATTERN = re.compile(r'\[(.*)\]:(\d+)')
+
+    def dns_get_config(self):
+        """Get DNS client query config."""
+        output = self.execute_command('dns config')
+        config = {}
+        for line in output:
+            k, v = line.split(': ')
+            if k == 'Server':
+                ip, port = re.match(OTCI._IPV6_SERVER_PORT_PATTERN, v).groups()
+                config['server'] = (Ip6Addr(ip), int(port))
+            elif k == 'ResponseTimeout':
+                config['response_timeout'] = int(v[:-3])
+            elif k == 'MaxTxAttempts':
+                config['max_tx_attempts'] = int(v)
+            elif k == 'RecursionDesired':
+                config['recursion_desired'] = (v == 'yes')
+            else:
+                logging.warning("dns config ignored: %s", line)
+
+        return config
+
+    def dns_set_config(self,
+                       server: Tuple[Union[str, ipaddress.IPv6Address], int],
+                       response_timeout: int = None,
+                       max_tx_attempts: int = None,
+                       recursion_desired: bool = None):
+        """Set DNS client query config."""
+        cmd = f'dns config {str(server[0])} {server[1]}'
+        if response_timeout is not None:
+            cmd += f' {response_timeout}'
+
+        assert max_tx_attempts is None or response_timeout is not None, "must specify `response_timeout` if `max_tx_attempts` is specified."
+        if max_tx_attempts is not None:
+            cmd += f' {max_tx_attempts}'
+
+        assert recursion_desired is None or max_tx_attempts is not None, 'must specify `max_tx_attempts` if `recursion_desired` is specified.'
+        if recursion_desired is not None:
+            cmd += f' {1 if recursion_desired else 0}'
+
+        self.execute_command(cmd)
+
+    def dns_get_compression(self) -> bool:
+        """Get DNS compression mode."""
+        return self.__parse_Enabled_or_Disabled(self.execute_command('dns compression'))
+
+    def dns_enable_compression(self):
+        """Enable DNS compression mode."""
+        self.execute_command('dns compression enable')
+
+    def dns_disable_compression(self):
+        """Disable DNS compression mode."""
+        self.execute_command('dns compression disable')
+
+    def dns_browse(self, service: str) -> List[Dict]:
+        """Browse DNS service instances."""
+        cmd = f'dns browse {service}'
+        output = '\n'.join(self.execute_command(cmd))
+
+        result = []
+        for ins, port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl in re.findall(
+                r'(.*?)\s+Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s*Host:(\S+)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT:(\[.*?\]) TTL:(\d+)',
+                output):
+            result.append({
+                'instance': ins,
+                'service': service,
+                'port': int(port),
+                'priority': int(priority),
+                'weight': int(weight),
+                'host': hostname,
+                'address': Ip6Addr(address),
+                'txt': self.__parse_srp_server_service_txt(txt_data),
+                'srv_ttl': int(srv_ttl),
+                'txt_ttl': int(txt_ttl),
+                'aaaa_ttl': int(aaaa_ttl),
+            })
+
+        return result
+
+    def dns_resolve(self, hostname: str) -> List[Dict]:
+        """Resolve a DNS host name."""
+        cmd = f'dns resolve {hostname}'
+        output = self.execute_command(cmd)
+        dns_resp = output[0]
+        addrs = dns_resp.strip().split(' - ')[1].split(' ')
+        ips = [Ip6Addr(item.strip()) for item in addrs[::2]]
+        ttls = [int(item.split('TTL:')[1]) for item in addrs[1::2]]
+
+        return [{
+            'address': ip,
+            'ttl': ttl,
+        } for ip, ttl in zip(ips, ttls)]
+
+    def dns_resolve_service(self, instance: str, service: str) -> Dict:
+        """Resolves aservice instance."""
+        cmd = f'dns service {instance} {service}'
+        output = self.execute_command(cmd)
+
+        m = re.match(
+            r'.*Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s+Host:(.*?)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT:(\[.*?\]) TTL:(\d+)',
+            '\t'.join(output))
+        if m:
+            port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl = m.groups()
+            return {
+                'instance': instance,
+                'service': service,
+                'port': int(port),
+                'priority': int(priority),
+                'weight': int(weight),
+                'host': hostname,
+                'address': Ip6Addr(address),
+                'txt': self.__parse_srp_server_service_txt(txt_data),
+                'srv_ttl': int(srv_ttl),
+                'txt_ttl': int(txt_ttl),
+                'aaaa_ttl': int(aaaa_ttl),
+            }
+        else:
+            raise CommandError(cmd, output)
+
+    #
+    # SRP server & client utilities
+    #
+
+    def srp_server_enable(self):
+        """Enable SRP server."""
+        self.execute_command('srp server enable')
+
+    def srp_server_disable(self):
+        """Disable SRP server."""
+        self.execute_command('srp server disable')
+
+    def srp_server_get_domain(self) -> str:
+        """Get the SRP server domain."""
+        return self.__parse_str(self.execute_command('srp server domain'))
+
+    def srp_server_set_domain(self, domain: str):
+        """Set the SRP server domain."""
+        self.execute_command(f'srp server domain {domain}')
+
+    def srp_server_get_hosts(self) -> List[Dict]:
+        """Get SRP server registered hosts."""
+        return self.__parse_srp_server_hosts(self.execute_command('srp server host'))
+
+    def srp_server_get_services(self) -> List[Dict]:
+        """Get SRP server registered services."""
+        output = self.execute_command('srp server service')
+        return self.__parse_srp_server_services(output)
+
+    def __parse_srp_server_hosts(self, output: List[str]) -> List[Dict]:
+        result = []
+        info = None
+        for line in output:
+            if not line.startswith(' '):
+                info = {'host': line}
+                result.append(info)
+            else:
+                k, v = line.strip().split(': ')
+                if k == 'deleted':
+                    if v not in ('true', 'false'):
+                        raise UnexpectedCommandOutput(output)
+
+                    info['deleted'] = (v == 'true')
+
+                elif k == 'addresses':
+                    if not v.startswith('[') or not v.endswith(']'):
+                        raise UnexpectedCommandOutput(output)
+
+                    v = v[1:-1]
+                    info['addresses'] = list(map(Ip6Addr, v.split(', ')))
+                else:
+                    raise UnexpectedCommandOutput(output)
+
+        return result
+
+    def __parse_srp_server_services(self, output: List[str]) -> List[Dict]:
+        result = []
+        info = None
+        for line in output:
+            if not line.startswith(' '):
+                info = {'instance': line}
+                result.append(info)
+            else:
+                k, v = line.strip().split(': ')
+                if k == 'deleted':
+                    if v not in ('true', 'false'):
+                        raise UnexpectedCommandOutput(output)
+
+                    info['deleted'] = (v == 'true')
+
+                elif k == 'addresses':
+                    if not v.startswith('[') or not v.endswith(']'):
+                        raise UnexpectedCommandOutput(output)
+
+                    v = v[1:-1]
+                    info['addresses'] = list(map(Ip6Addr, v.split(', ')))
+                elif k in ('port', 'weight', 'priority'):
+                    info[k] = int(v)
+                elif k in ('host',):
+                    info[k] = v
+                elif k == 'TXT':
+                    info['txt'] = self.__parse_srp_server_service_txt(v)
+                else:
+                    raise UnexpectedCommandOutput(output)
+
+        return result
+
+    def __parse_srp_server_service_txt(self, txt: str) -> Dict[str, Union[bytes, bool]]:
+        # example value: [txt11=76616c3131, txt12=76616c3132]
+        assert txt.startswith('[') and txt.endswith(']')
+        txt_dict = {}
+        for entry in txt[1:-1].split(', '):
+            if not entry:
+                continue
+
+            equal_pos = entry.find('=')
+
+            if equal_pos != -1:
+                k, v = entry[:equal_pos], entry[equal_pos + 1:]
+                txt_dict[k] = bytes(int(v[i:i + 2], 16) for i in range(0, len(v), 2))
+            else:
+                txt_dict[entry] = True
+
+        return txt_dict
+
+    def srp_server_get_lease(self) -> Tuple[int, int, int, int]:
+        """Get SRP server LEASE & KEY-LEASE range (in seconds)."""
+        lines = self.execute_command(f'srp server lease')
+        return tuple([int(line.split(':')[1].strip()) for line in lines])
+
+    def srp_server_set_lease(self, min_lease: int, max_lease: int, min_key_lease: int, max_key_lease: int):
+        """Configure SRP server LEASE & KEY-LEASE range (in seconds)."""
+        self.execute_command(f'srp server lease {min_lease} {max_lease} {min_key_lease} {max_key_lease}')
+
+    def srp_client_get_state(self) -> bool:
+        """Get SRP client state."""
+        return self.__parse_Enabled_or_Disabled(self.execute_command('srp client state'))
+
+    def srp_client_start(self, server_ip: Union[str, ipaddress.IPv6Address], server_port: int):
+        """Start SRP client."""
+        self.execute_command(f'srp client start {str(server_ip)} {server_port}')
+
+    def srp_client_stop(self):
+        """Stop SRP client."""
+        self.execute_command('srp client stop')
+
+    def srp_client_get_autostart(self) -> bool:
+        """Get SRP client autostart mode."""
+        return self.__parse_Enabled_or_Disabled(self.execute_command('srp client autostart'))
+
+    def srp_client_enable_autostart(self):
+        """Enable SRP client autostart mode."""
+        self.execute_command('srp client autostart enable')
+
+    def srp_client_disable_autostart(self):
+        """Disable SRP client autostart mode."""
+        self.execute_command('srp client autostart disable')
+
+    def srp_client_get_callback(self) -> bool:
+        """Get SRP client callback mode."""
+        return self.__parse_Enabled_or_Disabled(self.execute_command('srp client callback'))
+
+    def srp_client_enable_callback(self):
+        """Enable SRP client callback mode."""
+        self.execute_command('srp client callback enable')
+
+    def srp_client_disable_callback(self):
+        """Disable SRP client callback mode."""
+        self.execute_command('srp client callback disable')
+
+    def srp_client_set_host_name(self, name: str):
+        """Set SRP client host name."""
+        self.execute_command(f'srp client host name {name}')
+
+    def srp_client_get_host(self) -> Dict:
+        """Get SRP client host."""
+        output = self.__parse_str(self.execute_command('srp client host'))
+        return self.__parse_srp_client_host(output)
+
+    _SRP_CLIENT_HOST_PATTERN = re.compile(r'name:("(.*)"|(\(null\))), state:(\S+), addrs:\[(.*)\]')
+
+    def __parse_srp_client_host(self, line: str) -> Dict:
+        m = re.match(OTCI._SRP_CLIENT_HOST_PATTERN, line)
+        if not m:
+            raise UnexpectedCommandOutput([line])
+
+        _, host, _, state, addrs = m.groups()
+        return {
+            'host': host or '',
+            'state': state,
+            'addresses': [Ip6Addr(ip) for ip in addrs.split(', ')] if addrs else [],
+        }
+
+    def srp_client_get_host_name(self) -> str:
+        """Get SRP client host name."""
+        name = self.__parse_str(self.execute_command('srp client host name'))
+        return name if name != '(null)' else ''
+
+    def srp_client_get_host_addresses(self) -> List[Ip6Addr]:
+        """Get SRP client host addresses."""
+        return self.__parse_ip6addr_list(self.execute_command('srp client host address'))
+
+    def srp_client_set_host_addresses(self, *addrs: Union[str, ipaddress.IPv6Address]):
+        """Set SRP client host addresses."""
+        self.execute_command(f'srp client host address {" ".join(map(str, addrs))}')
+
+    def srp_client_get_host_state(self):
+        """Get SRP client host state."""
+        return self.__parse_str(self.execute_command('srp client host state'))
+
+    def srp_client_remove_host(self, remove_key_lease=False):
+        """Remove SRP client host."""
+        cmd = 'srp client host remove'
+        if remove_key_lease:
+            cmd += ' 1'
+
+        self.execute_command(cmd)
+
+    def srp_client_get_services(self) -> List[Dict]:
+        """Get SRP client services."""
+        output = self.execute_command('srp client service')
+        return [self.__parse_srp_client_service(line) for line in output]
+
+    _SRP_CLIENT_SERVICE_PATTERN = re.compile(
+        r'instance:"(.*)", name:"(.*)", state:(\S+), port:(\d+), priority:(\d+), weight:(\d+)')
+
+    def __parse_srp_client_service(self, line: str) -> Dict:
+        # e.g. instance:"ins2", name:"_meshcop._udp", state:ToAdd, port:2000, priority:2, weight:2
+        m = OTCI._SRP_CLIENT_SERVICE_PATTERN.match(line)
+        if m is None:
+            raise UnexpectedCommandOutput([line])
+
+        instance, service, state, port, priority, weight = m.groups()
+        port, priority, weight = int(port), int(priority), int(weight)
+        return {
+            'instance': instance,
+            'service': service,
+            'state': state,
+            'port': port,
+            'priority': priority,
+            'weight': weight,
+        }
+
+    def srp_client_add_service(self,
+                               instance: str,
+                               service: str,
+                               port: int,
+                               priority: int = 0,
+                               weight: int = 0,
+                               txt: Dict[str, Union[str, bytes, bool]] = None):
+        cmd = f'srp client service add {instance} {service} {port} {priority} {weight}'
+        if txt:
+            cmd += f' {self.__txt_to_hex(txt)}'
+        self.execute_command(cmd)
+
+    def srp_client_remove_service(self, instance: str, service: str):
+        """Remove a service from SRP client."""
+        self.execute_command(f'srp client service remove {instance} {service}')
+
+    def srp_client_get_key_lease_interval(self) -> int:
+        """Get SRP client key lease interval (in seconds)."""
+        return self.__parse_int(self.execute_command('srp client keyleaseinterval'))
+
+    def srp_client_set_key_lease_interval(self, interval: int):
+        """Set SRP client key lease interval (in seconds)."""
+        self.execute_command(f'srp client keyleaseinterval {interval}')
+
+    def srp_client_get_lease_interval(self) -> int:
+        """Get SRP client lease interval (in seconds)."""
+        return self.__parse_int(self.execute_command('srp client leaseinterval'))
+
+    def srp_client_set_lease_interval(self, interval: int):
+        """Set SRP client lease interval (in seconds)."""
+        self.execute_command(f'srp client leaseinterval {interval}')
+
+    def srp_client_get_server(self) -> Tuple[Ip6Addr, int]:
+        """Get the SRP server (IP, port)."""
+        result = self.__parse_str(self.execute_command('srp client server'))
+        ip, port = re.match(OTCI._IPV6_SERVER_PORT_PATTERN, result).groups()
+        return Ip6Addr(ip), int(port)
+
+    def srp_client_get_service_key(self) -> bool:
+        """Get SRP client "service key record inclusion" mode."""
+        return self.__parse_Enabled_or_Disabled(self.execute_command('srp client service key'))
+
+    def srp_client_enable_service_key(self):
+        """Enable SRP client "service key record inclusion" mode."""
+        self.execute_command('srp client service key enable')
+
+    def srp_client_disable_service_key(self):
+        """Disable SRP client "service key record inclusion" mode."""
+        self.execute_command('srp client service key disable')
+
     def __split_table_row(self, row: str) -> List[str]:
         if not (row.startswith('|') and row.endswith('|')):
             raise ValueError(row)
@@ -1468,6 +1864,14 @@ class OTCI(object):
         """Disable multicast promiscuous mode."""
         self.execute_command('ipmaddr promiscuous disable')
 
+    def get_ipmaddr_llatn(self) -> Ip6Addr:
+        """Get Link Local All Thread Nodes Multicast Address"""
+        return self.__parse_ip6addr(self.execute_command('ipmaddr llatn'))
+
+    def get_ipmaddr_rlatn(self) -> Ip6Addr:
+        """Get Realm Local All Thread Nodes Multicast Address"""
+        return self.__parse_ip6addr(self.execute_command('ipmaddr rlatn'))
+
     #
     # Backbone Router Utilities
     #
@@ -1593,6 +1997,15 @@ class OTCI(object):
     def set_backbone_router_jitter(self, val: int):
         """Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD."""
         self.execute_command(f'bbr jitter {val}')
+
+    def backbone_router_get_multicast_listeners(self) -> List[Tuple[Ip6Addr, int]]:
+        """Get Backbone Router Multicast Listeners."""
+        listeners = []
+        for line in self.execute_command('bbr mgmt mlr listener'):
+            ip, timeout = line.split()
+            listeners.append((Ip6Addr(ip), int(timeout)))
+
+        return listeners
 
     #
     # Thread 1.2 and DUA/MLR utilities
@@ -1839,6 +2252,9 @@ class OTCI(object):
     def __parse_ip6addr(self, output: List[str]) -> Ip6Addr:
         return Ip6Addr(self.__parse_str(output))
 
+    def __parse_ip6addr_list(self, output: List[str]) -> List[Ip6Addr]:
+        return [Ip6Addr(line) for line in output]
+
     def __parse_int(self, output: List[str], base=10) -> int:
         if len(output) != 1:
             raise UnexpectedCommandOutput(output)
@@ -1926,6 +2342,26 @@ class OTCI(object):
         # it might cause ot-ctl to quit abnormally.
         # So we sleep for a while after reset.
         time.sleep(3)
+
+    def __txt_to_hex(self, txt: Dict[str, Union[str, bytes, bool]]) -> str:
+        txt_bin = b''
+        for k, v in txt.items():
+            assert '=' not in k, 'TXT key must not contain `=`'
+
+            if isinstance(v, str):
+                entry = f'{k}={v}'.encode('utf8')
+            elif isinstance(v, bytes):
+                entry = f'{k}='.encode('utf8') + v
+            else:
+                assert v is True, 'TXT val must be str or bytes or True'
+                entry = k.encode('utf8')
+
+            assert len(entry) <= 255, 'TXT entry is too long'
+
+            txt_bin += bytes([len(entry)])
+            txt_bin += entry
+
+        return ''.join('%02x' % b for b in txt_bin)
 
 
 def connect_cli_sim(executable: str, nodeid: int, simulator: Optional[Simulator] = None) -> OTCI:

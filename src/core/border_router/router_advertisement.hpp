@@ -47,6 +47,7 @@
 #include <openthread/platform/toolchain.h>
 
 #include "common/encoding.hpp"
+#include "common/equatable.hpp"
 #include "net/icmp6.hpp"
 #include "net/ip6.hpp"
 
@@ -112,7 +113,7 @@ public:
      * @param[in]  aSize  The size of the option in unit of 1 byte.
      *
      */
-    void SetSize(uint16_t aSize) { mLength = (aSize + kLengthUnit - 1) / kLengthUnit; }
+    void SetSize(uint16_t aSize) { mLength = static_cast<uint8_t>((aSize + kLengthUnit - 1) / kLengthUnit); }
 
     /**
      * This method returns the size of the option (in bytes).
@@ -386,7 +387,7 @@ static_assert(sizeof(RouteInfoOption) == 24, "invalid RouteInfoOption structure"
  *
  */
 OT_TOOL_PACKED_BEGIN
-class RouterAdvMessage
+class RouterAdvMessage : public Unequatable<RouterAdvMessage>
 {
 public:
     /**
@@ -394,7 +395,21 @@ public:
      * zero router lifetime, reachable time and retransmission timer.
      *
      */
-    RouterAdvMessage(void);
+    RouterAdvMessage(void) { SetToDefault(); }
+
+    /**
+     * This method sets the RA message to default values.
+     *
+     */
+    void SetToDefault(void);
+
+    /**
+     * This method sets the checksum value.
+     *
+     * @param[in]  aChecksum  The checksum value.
+     *
+     */
+    void SetChecksum(uint16_t aChecksum) { mHeader.SetChecksum(aChecksum); }
 
     /**
      * This method sets the Router Lifetime in seconds.
@@ -410,12 +425,40 @@ public:
     }
 
     /**
+     * This method returns the Router Lifetime.
+     *
+     * Zero Router Lifetime means we are not a default router.
+     *
+     * @returns  The router lifetime in seconds.
+     *
+     */
+    uint16_t GetRouterLifetime(void) const { return HostSwap16(mHeader.mData.m16[kRouteLifetimeIdx]); }
+
+    /**
      * This method returns the Managed Address Configuration ('m') flag.
      *
      * @returns  A boolean which indicates whether the 'm' flag is set.
      *
      */
     bool GetManagedAddrConfig(void) const { return (mHeader.mData.m8[kReservedIdx] & kManagedAddressConfigMask) != 0; }
+
+    /**
+     * This method overloads the assignment operator.
+     *
+     */
+    const RouterAdvMessage &operator=(const RouterAdvMessage &aOther);
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not
+     * two instances of `RouterAdvMessage` are equal.
+     *
+     * @param[in]  aOther  The other `RouterAdvMessage` instance to compare with.
+     *
+     * @retval TRUE   If the two `RouterAdvMessage` instances are equal.
+     * @retval FALSE  If the two `RouterAdvMessage` instances are not equal.
+     *
+     */
+    bool operator==(const RouterAdvMessage &aOther) const;
 
 private:
     enum : uint8_t

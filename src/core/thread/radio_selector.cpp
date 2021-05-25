@@ -361,6 +361,7 @@ void RadioSelector::Log(otLogLevel      aLogLevel,
                         const Neighbor &aNeighbor)
 {
     String<kRadioPreferenceStringSize> preferenceString;
+    StringWriter                       writer(preferenceString);
     bool                               isFirstEntry = true;
 
     VerifyOrExit(otLoggingGetLevel() >= aLogLevel);
@@ -369,8 +370,8 @@ void RadioSelector::Log(otLogLevel      aLogLevel,
     {
         if (aNeighbor.GetSupportedRadioTypes().Contains(radio))
         {
-            IgnoreError(preferenceString.Append("%s%s:%d", isFirstEntry ? "" : " ", RadioTypeToString(radio),
-                                                aNeighbor.GetRadioPreference(radio)));
+            writer.Append("%s%s:%d", isFirstEntry ? "" : " ", RadioTypeToString(radio),
+                          aNeighbor.GetRadioPreference(radio));
             isFirstEntry = false;
         }
     }

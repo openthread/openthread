@@ -129,7 +129,8 @@ ot_cli_CPPFLAGS                                                        = \
 
 ot_cli_SOURCES                                                         = \
     main.c                                                               \
-    cli.cpp                                                              \
+    cli_readline.cpp                                                     \
+    cli_stdio.cpp                                                        \
     $(NULL)
 
 ot_cli_LDADD                                                           = \

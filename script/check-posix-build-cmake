@@ -45,6 +45,13 @@ build()
     )
 
     "$(dirname "$0")"/cmake-build posix "${options[@]}"
+
+    options+=(
+        "-DOT_TREL=ON"
+    )
+
+    reset_source
+    "$(dirname "$0")"/cmake-build posix "${options[@]}"
 }
 
 main()

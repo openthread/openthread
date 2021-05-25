@@ -42,7 +42,7 @@ from pktverify.null_field import nullField
 
 def _auto(v: Union[LayerFieldsContainer, LayerField]):
     """parse the layer field automatically according to its format"""
-    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1, v.fields
+    assert not isinstance(v, LayerFieldsContainer) or len(v.fields) == 1 or v.get_default_value() is not None, v.fields
     dv = v.get_default_value()
     rv = v.raw_value
 
@@ -616,7 +616,7 @@ _LAYER_FIELDS = {
     'thread_nwd.tlv.service.s_data.seqno': _auto,
     'thread_nwd.tlv.service.s_data.rrdelay': _auto,
     'thread_nwd.tlv.service.s_data.mlrtimeout': _auto,
-    'thread_nwd.tlv.server_16': _auto,
+    'thread_nwd.tlv.server_16': _list(_auto),
     'thread_nwd.tlv.border_router_16': _list(_auto),
     'thread_nwd.tlv.sub_tlvs': _list(_str),
     # TODO: support thread_nwd.tlv.prefix.length and thread_nwd.tlv.prefix.domain_id
@@ -683,11 +683,19 @@ def get_layer_field(packet: RawPacket, field_uri: str) -> Any:
     """
     assert isinstance(packet, RawPacket)
     secs = field_uri.split('.')
+    layer_depth = 0
     layer_name = secs[0]
+    if layer_name.endswith('inner'):
+        layer_name = layer_name[:-len('inner')]
+        field_uri = '.'.join([layer_name] + secs[1:])
+        layer_depth = 1
 
     if is_layer_field(field_uri):
         candidate_layers = _get_candidate_layers(packet, layer_name)
-        for layer in candidate_layers:
+        for layers in candidate_layers:
+            if layer_depth >= len(layers):
+                continue
+            layer = layers[layer_depth]
             v = layer.get_field(field_uri)
             if v is not None:
                 try:
@@ -724,10 +732,11 @@ def check_layer_field_exists(packet, field_uri):
         raise NotImplementedError('%s is neither a field or field container' % field_uri)
 
     candidate_layers = _get_candidate_layers(packet, layer_name)
-    for layer in candidate_layers:
-        for k, v in layer._all_fields.items():
-            if k == field_uri or k.startswith(field_uri + '.'):
-                return True
+    for layers in candidate_layers:
+        for layer in layers:
+            for k, v in layer._all_fields.items():
+                if k == field_uri or k.startswith(field_uri + '.'):
+                    return True
 
     return False
 
@@ -749,6 +758,6 @@ def _get_candidate_layers(packet, layer_name):
     layers = []
     for ln in candidate_layer_names:
         if hasattr(packet, ln):
-            layers.append(getattr(packet, ln))
+            layers.append(packet.get_multiple_layers(ln))
 
     return layers

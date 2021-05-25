@@ -55,7 +55,7 @@ jobs:
       CXX: ${{ matrix.compiler.cxx }}
     strategy:
       matrix:
-        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang", cxx: "clang++", gcov: "llvm"}]
+        compiler: [{c: "gcc", cxx: "g++", gcov: "gcc"}, { c: "clang-10", cxx: "clang++-10", gcov: "llvm"}]
         arch: ["m32", "m64"]
     steps:
     - uses: actions/checkout@v2
@@ -64,9 +64,9 @@ jobs:
     - name: Bootstrap
       run: |
         sudo dpkg --add-architecture i386
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib ninja-build python3-setuptools python3-wheel llvm lcov
-        sudo apt-get --no-install-recommends install -y libreadline-dev:i386 libncurses-dev:i386
+        sudo apt-get update
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 ninja-build python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
     - name: Build
       run: |
@@ -170,6 +170,7 @@ jobs:
       VIRTUAL_TIME: 1
       PACKET_VERIFICATION: 1
       THREAD_VERSION: 1.2
+      MULTIPLY: 3
     steps:
     - uses: actions/checkout@v2
       with:
@@ -187,10 +188,7 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
-        for i in {1..3}
-        do
-          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-        done
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:

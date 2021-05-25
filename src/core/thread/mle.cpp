@@ -124,7 +124,7 @@ Mle::Mle(Instance &aInstance)
     mParentCandidate.Clear();
     ResetCounters();
 
-    mLinkLocal64.InitAsThreadOrigin();
+    mLinkLocal64.InitAsThreadOrigin(/* aPreferred */ true);
     mLinkLocal64.GetAddress().SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
 
     mLeaderAloc.InitAsThreadOriginRealmLocalScope();
@@ -823,6 +823,19 @@ exit:
     return;
 }
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+Error Mle::SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMlIid)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(!Get<ThreadNetif>().HasUnicastAddress(mMeshLocal64), error = kErrorInvalidState);
+
+    mMeshLocal64.GetAddress().SetIid(aMlIid);
+exit:
+    return error;
+}
+#endif
+
 void Mle::ApplyMeshLocalPrefix(void)
 {
     mLinkLocalAllThreadNodes.GetAddress().SetMulticastNetworkPrefix(GetMeshLocalPrefix());
@@ -901,7 +914,7 @@ void Mle::SetRloc16(uint16_t aRloc16)
         // Clear cached CoAP with old RLOC source
         if (oldRloc16 != Mac::kShortAddrInvalid)
         {
-            Get<Tmf::TmfAgent>().ClearRequests(mMeshLocal16.GetAddress());
+            Get<Tmf::Agent>().ClearRequests(mMeshLocal16.GetAddress());
         }
     }
 
@@ -1580,11 +1593,6 @@ void Mle::HandleNotifierEvents(Events aEvents)
         {
             IgnoreError(Store());
         }
-    }
-
-    if (aEvents.Contains(kEventSecurityPolicyChanged))
-    {
-        Get<Ip6::Filter>().AllowNativeCommissioner(Get<KeyManager>().GetSecurityPolicy().mNativeCommissioningEnabled);
     }
 
 exit:
@@ -2801,7 +2809,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #if OPENTHREAD_FTD
         if (IsRouterOrLeader())
         {
-            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo, keySequence);
+            Get<MleRouter>().HandleChildUpdateRequest(aMessage, aMessageInfo);
         }
         else
 #endif
@@ -3598,6 +3606,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
         tlvs[numTlvs++] = Tlv::kLinkFrameCounter;
         break;
     case kErrorNotFound:
+        challenge.mLength = 0;
         break;
     default:
         ExitNow(error = kErrorParse);
@@ -3655,7 +3664,7 @@ void Mle::HandleChildUpdateRequest(const Message &aMessage, const Ip6::MessageIn
     }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    if (aNeighbor != nullptr)
+    if ((aNeighbor != nullptr) && (challenge.mLength != 0))
     {
         aNeighbor->ClearLastRxFragmentTag();
     }
@@ -3840,10 +3849,14 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
     }
     else
     {
-        // do nothing
-        // timestamps are equal: no behaviour specified by the Thread spec.
-        // If SendAnnounce is executed at this point, there exists a scenario where
-        // multiple devices keep sending MLE Announce messages to one another indefinitely.
+        // Timestamps are equal.
+
+#if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
+        // Notify `AnnounceSender` of the received Announce
+        // message so it can update its state to determine
+        // whether to send Announce or not.
+        Get<AnnounceSender>().UpdateOnReceivedAnnounce();
+#endif
     }
 
 exit:
@@ -4114,10 +4127,11 @@ void Mle::Log(MessageAction aAction, MessageType aType, const Ip6::Address &aAdd
     };
 
     String<kRlocStringSize> rlocString;
+    StringWriter            writer(rlocString);
 
     if (aRloc != Mac::kShortAddrInvalid)
     {
-        IgnoreError(rlocString.Set(",0x%04x", aRloc));
+        writer.Append(",0x%04x", aRloc);
     }
 
     otLogInfoMle("%s %s%s (%s%s)", MessageActionToString(aAction), MessageTypeToString(aType),

@@ -446,7 +446,7 @@ otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *a
 
  * @retval OT_ERROR_NONE          The addition of service started successfully. The `otSrpClientCallback` will be
  *                                called to report the status.
- * @retval OT_ERROR_ALREADY       The same service is already in the list.
+ * @retval OT_ERROR_ALREADY       A service with the same service and instance names is already in the list.
  * @retval OT_ERROR_INVALID_ARGS  The service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
  *
  */

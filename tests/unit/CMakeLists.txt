@@ -38,708 +38,671 @@ set(COMMON_COMPILE_OPTIONS
     -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1
 )
 
-add_library(test-platform
+add_library(ot-test-platform
     test_platform.cpp
     test_util.cpp
 )
 
-target_include_directories(test-platform
+target_include_directories(ot-test-platform
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-platform
+target_compile_options(ot-test-platform
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-platform
+target_link_libraries(ot-test-platform
     PRIVATE
         ot-config
         ${OT_MBEDTLS}
 )
 
 set(COMMON_LIBS
-    test-platform
+    ot-test-platform
     openthread-ftd
-    test-platform
+    ot-test-platform
     ${OT_MBEDTLS}
     ot-config
 )
 
-add_executable(test-aes
+add_executable(ot-test-aes
     test_aes.cpp
 )
 
-target_include_directories(test-aes
+target_include_directories(ot-test-aes
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-aes
+target_compile_options(ot-test-aes
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-aes
+target_link_libraries(ot-test-aes
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-aes COMMAND test-aes)
+add_test(NAME ot-test-aes COMMAND ot-test-aes)
 
-add_executable(test-child
+add_executable(ot-test-child
     test_child.cpp
 )
 
-add_executable(test-checksum
+add_executable(ot-test-checksum
     test_checksum.cpp
 )
 
-target_include_directories(test-checksum
+target_include_directories(ot-test-checksum
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-checksum
+target_compile_options(ot-test-checksum
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-checksum
+target_link_libraries(ot-test-checksum
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-checksum COMMAND test-checksum)
+add_test(NAME ot-test-checksum COMMAND ot-test-checksum)
 
 
-target_include_directories(test-child
+target_include_directories(ot-test-child
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-child
+target_compile_options(ot-test-child
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-child
+target_link_libraries(ot-test-child
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-child COMMAND test-child)
+add_test(NAME ot-test-child COMMAND ot-test-child)
 
-add_executable(test-child-table
+add_executable(ot-test-child-table
     test_child_table.cpp
 )
 
-target_include_directories(test-child-table
+target_include_directories(ot-test-child-table
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-child-table
+target_compile_options(ot-test-child-table
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-child-table
+target_link_libraries(ot-test-child-table
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-child-table COMMAND test-child-table)
+add_test(NAME ot-test-child-table COMMAND ot-test-child-table)
 
-add_executable(test-cmd-line-parser
+add_executable(ot-test-cmd-line-parser
     test_cmd_line_parser.cpp
 )
 
-target_include_directories(test-cmd-line-parser
+target_include_directories(ot-test-cmd-line-parser
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-cmd-line-parser
+target_compile_options(ot-test-cmd-line-parser
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-cmd-line-parser
+target_link_libraries(ot-test-cmd-line-parser
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-cmd-line-parser COMMAND test-cmd-line-parser)
+add_test(NAME ot-test-cmd-line-parser COMMAND ot-test-cmd-line-parser)
 
-add_executable(test-dns
+add_executable(ot-test-dns
     test_dns.cpp
 )
 
-target_include_directories(test-dns
+target_include_directories(ot-test-dns
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-dns
+target_compile_options(ot-test-dns
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-dns
+target_link_libraries(ot-test-dns
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-dns COMMAND test-dns)
+add_test(NAME ot-test-dns COMMAND ot-test-dns)
 
-add_executable(test-ecdsa
+add_executable(ot-test-ecdsa
     test_ecdsa.cpp
 )
 
-target_include_directories(test-ecdsa
+target_include_directories(ot-test-ecdsa
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-ecdsa
+target_compile_options(ot-test-ecdsa
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-ecdsa
+target_link_libraries(ot-test-ecdsa
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-ecdsa COMMAND test-ecdsa)
+add_test(NAME ot-test-ecdsa COMMAND ot-test-ecdsa)
 
 
-add_executable(test-flash
+add_executable(ot-test-flash
     test_flash.cpp
 )
 
-target_include_directories(test-flash
+target_include_directories(ot-test-flash
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-flash
+target_compile_options(ot-test-flash
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-flash
+target_link_libraries(ot-test-flash
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-flash COMMAND test-flash)
+add_test(NAME ot-test-flash COMMAND ot-test-flash)
 
-add_executable(test-heap
+add_executable(ot-test-heap
     test_heap.cpp
 )
 
-target_include_directories(test-heap
+target_include_directories(ot-test-heap
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-heap
+target_compile_options(ot-test-heap
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-heap
+target_link_libraries(ot-test-heap
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-heap COMMAND test-heap)
+add_test(NAME ot-test-heap COMMAND ot-test-heap)
 
-add_executable(test-hkdf-sha256
+add_executable(ot-test-hkdf-sha256
     ${COMMON_SOURCES}
     test_hkdf_sha256.cpp
 )
 
-target_include_directories(test-hkdf-sha256
+target_include_directories(ot-test-hkdf-sha256
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_definitions(test-hkdf-sha256
+target_compile_definitions(ot-test-hkdf-sha256
     PRIVATE
         ${OT_PRIVATE_DEFINES}
 )
 
-target_compile_options(test-hkdf-sha256
+target_compile_options(ot-test-hkdf-sha256
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-hkdf-sha256
+target_link_libraries(ot-test-hkdf-sha256
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-hkdf-sha256 COMMAND test-hkdf-sha256)
+add_test(NAME ot-test-hkdf-sha256 COMMAND ot-test-hkdf-sha256)
 
-add_executable(test-hmac-sha256
+add_executable(ot-test-hmac-sha256
     test_hmac_sha256.cpp
 )
 
-target_include_directories(test-hmac-sha256
+target_include_directories(ot-test-hmac-sha256
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-hmac-sha256
+target_compile_options(ot-test-hmac-sha256
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-hmac-sha256
+target_link_libraries(ot-test-hmac-sha256
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-hmac-sha256 COMMAND test-hmac-sha256)
+add_test(NAME ot-test-hmac-sha256 COMMAND ot-test-hmac-sha256)
 
-add_executable(test-ip-address
+add_executable(ot-test-ip-address
     test_ip_address.cpp
 )
 
-target_include_directories(test-ip-address
+target_include_directories(ot-test-ip-address
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-ip-address
+target_compile_options(ot-test-ip-address
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-ip-address
+target_link_libraries(ot-test-ip-address
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-ip-address COMMAND test-ip-address)
+add_test(NAME ot-test-ip-address COMMAND ot-test-ip-address)
 
-add_executable(test-link-quality
+add_executable(ot-test-link-quality
     test_link_quality.cpp
 )
 
-target_include_directories(test-link-quality
+target_include_directories(ot-test-link-quality
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-link-quality
+target_compile_options(ot-test-link-quality
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-link-quality
+target_link_libraries(ot-test-link-quality
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-link-quality COMMAND test-link-quality)
+add_test(NAME ot-test-link-quality COMMAND ot-test-link-quality)
 
-add_executable(test-linked-list
+add_executable(ot-test-linked-list
     test_linked_list.cpp
 )
 
-target_include_directories(test-linked-list
+target_include_directories(ot-test-linked-list
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-linked-list
+target_compile_options(ot-test-linked-list
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-linked-list
+target_link_libraries(ot-test-linked-list
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-linked-list COMMAND test-linked-list)
+add_test(NAME ot-test-linked-list COMMAND ot-test-linked-list)
 
-add_executable(test-lookup-table
+add_executable(ot-test-lookup-table
     test_lookup_table.cpp
 )
 
-target_include_directories(test-lookup-table
+target_include_directories(ot-test-lookup-table
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-lookup-table
+target_compile_options(ot-test-lookup-table
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-lookup-table
+target_link_libraries(ot-test-lookup-table
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-lookup-table COMMAND test-lookup-table)
+add_test(NAME ot-test-lookup-table COMMAND ot-test-lookup-table)
 
-add_executable(test-lowpan
+add_executable(ot-test-lowpan
     test_lowpan.cpp
 )
 
-target_include_directories(test-lowpan
+target_include_directories(ot-test-lowpan
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-lowpan
+target_compile_options(ot-test-lowpan
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-lowpan
+target_link_libraries(ot-test-lowpan
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-lowpan COMMAND test-lowpan)
+add_test(NAME ot-test-lowpan COMMAND ot-test-lowpan)
 
-add_executable(test-mac-frame
+add_executable(ot-test-mac-frame
     test_mac_frame.cpp
 )
 
-target_include_directories(test-mac-frame
+target_include_directories(ot-test-mac-frame
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-mac-frame
+target_compile_options(ot-test-mac-frame
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-mac-frame
+target_link_libraries(ot-test-mac-frame
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-mac-frame COMMAND test-mac-frame)
+add_test(NAME ot-test-mac-frame COMMAND ot-test-mac-frame)
 
-add_executable(test-macros
+add_executable(ot-test-macros
     test_macros.cpp
 )
 
-target_include_directories(test-macros
+target_include_directories(ot-test-macros
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-macros
+target_compile_options(ot-test-macros
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-macros
+target_link_libraries(ot-test-macros
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-macros COMMAND test-macros)
+add_test(NAME ot-test-macros COMMAND ot-test-macros)
 
-add_executable(test-message
+add_executable(ot-test-message
     test_message.cpp
 )
 
-target_include_directories(test-message
+target_include_directories(ot-test-message
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-message
+target_compile_options(ot-test-message
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-message
+target_link_libraries(ot-test-message
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-message COMMAND test-message)
+add_test(NAME ot-test-message COMMAND ot-test-message)
 
-add_executable(test-message-queue
+add_executable(ot-test-message-queue
     test_message_queue.cpp
 )
 
-target_include_directories(test-message-queue
+target_include_directories(ot-test-message-queue
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-message-queue
+target_compile_options(ot-test-message-queue
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-message-queue
+target_link_libraries(ot-test-message-queue
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-message-queue COMMAND test-message-queue)
+add_test(NAME ot-test-message-queue COMMAND ot-test-message-queue)
 
-add_executable(test-multicast-listeners-table
+add_executable(ot-test-multicast-listeners-table
     test_multicast_listeners_table.cpp
 )
 
-target_include_directories(test-multicast-listeners-table
+target_include_directories(ot-test-multicast-listeners-table
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-multicast-listeners-table
+target_compile_options(ot-test-multicast-listeners-table
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-multicast-listeners-table
+target_link_libraries(ot-test-multicast-listeners-table
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-multicast-listeners-table COMMAND test-multicast-listeners-table)
+add_test(NAME ot-test-multicast-listeners-table COMMAND ot-test-multicast-listeners-table)
 
-add_executable(test-ndproxy-table
+add_executable(ot-test-ndproxy-table
     test_ndproxy_table.cpp
 )
 
-target_include_directories(test-ndproxy-table
+target_include_directories(ot-test-ndproxy-table
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-ndproxy-table
+target_compile_options(ot-test-ndproxy-table
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
 
-target_link_libraries(test-ndproxy-table
+target_link_libraries(ot-test-ndproxy-table
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-ndproxy-table COMMAND test-ndproxy-table)
+add_test(NAME ot-test-ndproxy-table COMMAND ot-test-ndproxy-table)
 
 
-add_executable(test-netif
+add_executable(ot-test-netif
     test_netif.cpp
 )
 
-target_include_directories(test-netif
+target_include_directories(ot-test-netif
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-netif
+target_compile_options(ot-test-netif
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-netif
+target_link_libraries(ot-test-netif
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-netif COMMAND test-netif)
+add_test(NAME ot-test-netif COMMAND ot-test-netif)
 
-add_executable(test-network-data
+add_executable(ot-test-network-data
     test_network_data.cpp
 )
 
-target_include_directories(test-network-data
+target_include_directories(ot-test-network-data
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-network-data
+target_compile_options(ot-test-network-data
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-network-data
+target_link_libraries(ot-test-network-data
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-network-data COMMAND test-network-data)
+add_test(NAME ot-test-network-data COMMAND ot-test-network-data)
 
-add_executable(test-pool
+add_executable(ot-test-pool
     test_pool.cpp
 )
 
-target_include_directories(test-pool
+target_include_directories(ot-test-pool
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-pool
+target_compile_options(ot-test-pool
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-pool
+target_link_libraries(ot-test-pool
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-pool COMMAND test-pool)
+add_test(NAME ot-test-pool COMMAND ot-test-pool)
 
-add_executable(test-priority-queue
+add_executable(ot-test-priority-queue
     test_priority_queue.cpp
 )
 
-target_include_directories(test-priority-queue
+target_include_directories(ot-test-priority-queue
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-priority-queue
+target_compile_options(ot-test-priority-queue
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-priority-queue
+target_link_libraries(ot-test-priority-queue
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-priority-queue COMMAND test-priority-queue)
+add_test(NAME ot-test-priority-queue COMMAND ot-test-priority-queue)
 
-add_executable(test-pskc
+add_executable(ot-test-pskc
     test_pskc.cpp
 )
 
-target_include_directories(test-pskc
+target_include_directories(ot-test-pskc
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-pskc
+target_compile_options(ot-test-pskc
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-pskc
+target_link_libraries(ot-test-pskc
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-pskc COMMAND test-pskc)
+add_test(NAME ot-test-pskc COMMAND ot-test-pskc)
 
-add_executable(test-steering-data
+add_executable(ot-test-steering-data
     test_steering_data.cpp
 )
 
-target_include_directories(test-steering-data
+target_include_directories(ot-test-steering-data
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-steering-data
+target_compile_options(ot-test-steering-data
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-steering-data
+target_link_libraries(ot-test-steering-data
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-steering-data COMMAND test-steering-data)
+add_test(NAME ot-test-steering-data COMMAND ot-test-steering-data)
 
-add_executable(test-string
+add_executable(ot-test-string
     test_string.cpp
 )
 
-target_include_directories(test-string
+target_include_directories(ot-test-string
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-string
+target_compile_options(ot-test-string
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-string
+target_link_libraries(ot-test-string
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-string COMMAND test-string)
+add_test(NAME ot-test-string COMMAND ot-test-string)
 
-add_executable(test-timer
+add_executable(ot-test-timer
     test_timer.cpp
 )
 
-target_include_directories(test-timer
+target_include_directories(ot-test-timer
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(test-timer
+target_compile_options(ot-test-timer
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(test-timer
+target_link_libraries(ot-test-timer
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME test-timer COMMAND test-timer)
-
-set_target_properties(
-    test-platform
-    test-aes
-    test-checksum
-    test-child
-    test-child-table
-    test-cmd-line-parser
-    test-dns
-    test-ecdsa
-    test-flash
-    test-heap
-    test-hkdf-sha256
-    test-hmac-sha256
-    test-ip-address
-    test-link-quality
-    test-linked-list
-    test-lookup-table
-    test-lowpan
-    test-mac-frame
-    test-macros
-    test-message
-    test-message-queue
-    test-multicast-listeners-table
-    test-ndproxy-table
-    test-netif
-    test-network-data
-    test-pool
-    test-priority-queue
-    test-pskc
-    test-steering-data
-    test-string
-    test-timer
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
+add_test(NAME ot-test-timer COMMAND ot-test-timer)

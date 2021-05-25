@@ -1,7 +1,7 @@
 /*
  *  Key writing application
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,8 +15,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 
 #if !defined(MBEDTLS_CONFIG_FILE)
@@ -31,6 +29,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #define mbedtls_printf          printf
+#define mbedtls_exit            exit
 #define MBEDTLS_EXIT_SUCCESS    EXIT_SUCCESS
 #define MBEDTLS_EXIT_FAILURE    EXIT_FAILURE
 #endif /* MBEDTLS_PLATFORM_C */
@@ -87,13 +86,17 @@
     USAGE_OUT                                           \
     "\n"
 
-#if !defined(MBEDTLS_PK_WRITE_C) || !defined(MBEDTLS_FS_IO)
+#if !defined(MBEDTLS_PK_PARSE_C) || \
+    !defined(MBEDTLS_PK_WRITE_C) || \
+    !defined(MBEDTLS_FS_IO)
 int main( void )
 {
-    mbedtls_printf( "MBEDTLS_PK_WRITE_C and/or MBEDTLS_FS_IO not defined.\n" );
-    return( 0 );
+    mbedtls_printf( "MBEDTLS_PK_PARSE_C and/or MBEDTLS_PK_WRITE_C and/or MBEDTLS_FS_IO not defined.\n" );
+    mbedtls_exit( 0 );
 }
 #else
+
+
 /*
  * global options
  */
@@ -173,7 +176,7 @@ static int write_private_key( mbedtls_pk_context *key, const char *output_file )
             return( ret );
 
         len = ret;
-        c = output_buf + sizeof(output_buf) - len - 1;
+        c = output_buf + sizeof(output_buf) - len;
     }
 
     if( ( f = fopen( output_file, "w" ) ) == NULL )
@@ -294,7 +297,7 @@ int main( int argc, char *argv[] )
         if( ret != 0 )
         {
             mbedtls_strerror( ret, (char *) buf, sizeof(buf) );
-            mbedtls_printf( " failed\n  !  mbedtls_pk_parse_keyfile returned -0x%04x - %s\n\n", -ret, buf );
+            mbedtls_printf( " failed\n  !  mbedtls_pk_parse_keyfile returned -0x%04x - %s\n\n", (unsigned int) -ret, buf );
             goto exit;
         }
 
@@ -355,7 +358,7 @@ int main( int argc, char *argv[] )
         if( ret != 0 )
         {
             mbedtls_strerror( ret, (char *) buf, sizeof(buf) );
-            mbedtls_printf( " failed\n  !  mbedtls_pk_parse_public_key returned -0x%04x - %s\n\n", -ret, buf );
+            mbedtls_printf( " failed\n  !  mbedtls_pk_parse_public_key returned -0x%04x - %s\n\n", (unsigned int) -ret, buf );
             goto exit;
         }
 
@@ -431,6 +434,6 @@ exit:
     fflush( stdout ); getchar();
 #endif
 
-    return( exit_code );
+    mbedtls_exit( exit_code );
 }
-#endif /* MBEDTLS_PK_WRITE_C && MBEDTLS_FS_IO */
+#endif /* MBEDTLS_PK_PARSE_C && MBEDTLS_PK_WRITE_C && MBEDTLS_FS_IO */

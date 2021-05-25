@@ -38,6 +38,7 @@
 #include "multicast_routing.hpp"
 #include "platform-posix.h"
 #include "common/code_utils.hpp"
+#include "posix/platform/mainloop.hpp"
 
 char         gBackboneNetifName[IFNAMSIZ] = "";
 unsigned int gBackboneNetifIndex          = 0;
@@ -49,10 +50,10 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    VerifyOrDie(aInterfaceName != nullptr, OT_EXIT_INVALID_ARGUMENTS);
+    VerifyOrExit(aInterfaceName != nullptr);
 
     VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strcpy(gBackboneNetifName, aInterfaceName);
+    strncpy(gBackboneNetifName, aInterfaceName, sizeof(gBackboneNetifName));
 
     gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
     VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
@@ -62,25 +63,9 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.Init(aInstance);
 #endif
-}
 
-void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd)
-{
-    OT_UNUSED_VARIABLE(aReadFdSet);
-    OT_UNUSED_VARIABLE(aMaxFd);
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    sMulticastRoutingManager.UpdateFdSet(aReadFdSet, aMaxFd);
-#endif
-}
-
-void platformBackboneProcess(const fd_set &aReadSet)
-{
-    OT_UNUSED_VARIABLE(aReadSet);
-
-#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
-    sMulticastRoutingManager.Process(aReadSet);
-#endif
+exit:
+    return;
 }
 
 void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)

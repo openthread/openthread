@@ -60,13 +60,11 @@ class SingleHostAndService(thread_cert.TestCase):
             'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         ROUTER: {
             'name': 'Router_1',
             'allowlist': [BR],
             'version': '1.2',
-            'router_selection_jitter': 2,
         },
         HOST: {
             'name': 'Host',
@@ -99,17 +97,20 @@ class SingleHostAndService(thread_cert.TestCase):
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
+        client.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
         client.srp_client_enable_auto_start_mode()
         self.simulator.go(2)
 
-        self.check_host_and_service(server, client, '2001::1')
+        self.check_host_and_service(server, client, '2001::1', 'my-service')
+        self.check_host_and_service(server, client, '2001::1', 'my-service-1')
 
         #
         # 2. Discover the service by the HOST on the ethernet. This makes sure
         #    the Advertising Proxy multicasts the same service on ethernet.
         #
 
-        self.host_check_mdns_service(host, '2001::1')
+        self.host_check_mdns_service(host, '2001::1', 'my-service')
+        self.host_check_mdns_service(host, '2001::1', 'my-service-1')
 
         #
         # 3. Check if the Advertising Proxy removes the service from ethernet
@@ -120,6 +121,7 @@ class SingleHostAndService(thread_cert.TestCase):
         self.simulator.go(2)
 
         self.assertIsNone(host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host'))
+        self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
         #
         # 4. Check if we can discover the mDNS service again when re-registering the
@@ -129,10 +131,13 @@ class SingleHostAndService(thread_cert.TestCase):
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
         client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
+        client.srp_client_add_service('my-service-1', '_ipps._tcp', 12345)
         self.simulator.go(2)
 
-        self.check_host_and_service(server, client, '2001::1')
-        self.host_check_mdns_service(host, '2001::1')
+        self.check_host_and_service(server, client, '2001::1', 'my-service')
+        self.check_host_and_service(server, client, '2001::1', 'my-service-1')
+        self.host_check_mdns_service(host, '2001::1', 'my-service')
+        self.host_check_mdns_service(host, '2001::1', 'my-service-1')
 
         #
         # 5. Update the SRP host address and make sure the Advertising Proxy
@@ -142,8 +147,10 @@ class SingleHostAndService(thread_cert.TestCase):
         client.srp_client_set_host_address('2001::2')
         self.simulator.go(8)
 
-        self.check_host_and_service(server, client, '2001::2')
-        self.host_check_mdns_service(host, '2001::2')
+        self.check_host_and_service(server, client, '2001::2', 'my-service')
+        self.check_host_and_service(server, client, '2001::2', 'my-service-1')
+        self.host_check_mdns_service(host, '2001::2', 'my-service')
+        self.host_check_mdns_service(host, '2001::2', 'my-service-1')
 
         #
         # 6. Check if the service is removed by the Advertising Proxy when the SRP server is stopped.
@@ -155,12 +162,15 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(len(server.srp_server_get_hosts()), 0)
         self.assertEqual(len(server.srp_server_get_services()), 0)
         self.assertIsNone(host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host'))
+        self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
         server.srp_server_set_enabled(True)
         self.simulator.go(LEASE)
 
-        self.check_host_and_service(server, client, '2001::2')
-        self.host_check_mdns_service(host, '2001::2')
+        self.check_host_and_service(server, client, '2001::2', 'my-service')
+        self.check_host_and_service(server, client, '2001::2', 'my-service-1')
+        self.host_check_mdns_service(host, '2001::2', 'my-service')
+        self.host_check_mdns_service(host, '2001::2', 'my-service-1')
 
         #
         # 7. Check if the expired service is removed by the Advertising Proxy.
@@ -170,11 +180,12 @@ class SingleHostAndService(thread_cert.TestCase):
         self.simulator.go(LEASE + 2)
 
         self.assertIsNone(host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host'))
+        self.assertIsNone(host.discover_mdns_service('my-service-1', '_ipps._tcp', 'my-host'))
 
-    def host_check_mdns_service(self, host, host_addr):
-        service = host.discover_mdns_service('my-service', '_ipps._tcp', 'my-host')
+    def host_check_mdns_service(self, host, host_addr, service_instance):
+        service = host.discover_mdns_service(service_instance, '_ipps._tcp', 'my-host')
         self.assertIsNotNone(service)
-        self.assertEqual(service['instance'], 'my-service')
+        self.assertEqual(service['instance'], service_instance)
         self.assertEqual(service['name'], '_ipps._tcp')
         self.assertEqual(service['port'], 12345)
         self.assertEqual(service['priority'], 0)
@@ -183,17 +194,18 @@ class SingleHostAndService(thread_cert.TestCase):
         self.assertEqual(ipaddress.ip_address(service['addresses'][0]), ipaddress.ip_address(host_addr))
         self.assertEqual(len(service['addresses']), 1)
 
-    def check_host_and_service(self, server, client, host_addr):
+    def check_host_and_service(self, server, client, host_addr, service_instance):
         """Check that we have properly registered host and service instance.
         """
 
         client_services = client.srp_client_get_services()
         print(client_services)
+        client_services = [service for service in client_services if service['instance'] == service_instance]
         self.assertEqual(len(client_services), 1)
         client_service = client_services[0]
 
         # Verify that the client possesses correct service resources.
-        self.assertEqual(client_service['instance'], 'my-service')
+        self.assertEqual(client_service['instance'], service_instance)
         self.assertEqual(client_service['name'], '_ipps._tcp')
         self.assertEqual(int(client_service['port']), 12345)
         self.assertEqual(int(client_service['priority']), 0)
@@ -204,6 +216,7 @@ class SingleHostAndService(thread_cert.TestCase):
 
         server_services = server.srp_server_get_services()
         print(server_services)
+        server_services = [service for service in server_services if service['instance'] == service_instance]
         self.assertEqual(len(server_services), 1)
         server_service = server_services[0]
 

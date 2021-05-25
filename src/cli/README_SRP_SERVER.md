@@ -92,7 +92,29 @@ srp-api-test-0.default.service.arpa.
 Done
 ```
 
-### srp server service
+### lease
+
+Usage: `srp server lease [<min-lease>] [<max-lease>] [<min-key-lease>] [<max-key-lease>]`
+
+Get LEASE and KEY-LEASE values.
+
+```bash
+> srp server lease
+min lease: 1800
+max lease: 7200
+min key-lease: 86400
+max key-lease: 1209600
+Done
+```
+
+Set LEASE and KEY-LEASE values.
+
+```bash
+> srp server lease 1800 7200 86400 1209600
+Done
+```
+
+### service
 
 Usage: `srp server service`
 

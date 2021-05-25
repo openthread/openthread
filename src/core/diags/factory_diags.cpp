@@ -515,23 +515,35 @@ Error Diags::ParseLong(char *aString, long &aLong)
     return (*endptr == '\0') ? kErrorNone : kErrorParse;
 }
 
+Error Diags::ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[])
+{
+    Error                     error;
+    Utils::CmdLineParser::Arg args[kMaxArgs];
+
+    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aString, aArgsLength, args, aArgsLength));
+    Utils::CmdLineParser::Arg::CopyArgsToStringArray(args, aArgsLength, aArgs);
+
+exit:
+    return error;
+}
+
 void Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
     enum
     {
-        kMaxArgs          = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
         kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE,
     };
 
     Error   error = kErrorNone;
     char    buffer[kMaxCommandBuffer];
-    char *  aArgsector[kMaxArgs];
+    char *  args[kMaxArgs];
     uint8_t argCount = 0;
 
     VerifyOrExit(StringLength(aString, kMaxCommandBuffer) < kMaxCommandBuffer, error = kErrorNoBufs);
 
     strcpy(buffer, aString);
-    error = ot::Utils::CmdLineParser::ParseCmd(buffer, argCount, aArgsector, kMaxArgs);
+    argCount = kMaxArgs;
+    error    = ParseCmd(buffer, argCount, args);
 
 exit:
 
@@ -539,7 +551,7 @@ exit:
     {
     case kErrorNone:
         aOutput[0] = '\0'; // In case there is no output.
-        IgnoreError(ProcessCmd(argCount, &aArgsector[0], aOutput, aOutputMaxLen));
+        IgnoreError(ProcessCmd(argCount, &args[0], aOutput, aOutputMaxLen));
         break;
 
     case kErrorNoBufs:

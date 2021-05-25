@@ -53,8 +53,8 @@
 
 #include "common/logging.hpp"
 
-#include "radio_url.hpp"
 #include "lib/platform/exit_code.h"
+#include "lib/url/url.hpp"
 
 /**
  * @def OPENTHREAD_POSIX_VIRTUAL_TIME
@@ -160,10 +160,10 @@ void platformAlarmAdvanceNow(uint64_t aDelta);
  * @note Even when @p aPlatformConfig->mResetRadio is false, a reset event (i.e. a PROP_LAST_STATUS between
  * [SPINEL_STATUS_RESET__BEGIN, SPINEL_STATUS_RESET__END]) is still expected from RCP.
  *
- * @param[in]  aPlatformConfig  Platform configuration structure.
+ * @param[in]   aUrl  A pointer to the null-terminated radio URL.
  *
  */
-void platformRadioInit(otUrl *aRadioUrl);
+void platformRadioInit(const char *aUrl);
 
 /**
  * This function shuts down the radio service used by OpenThread.
@@ -463,23 +463,6 @@ extern unsigned int gNetifIndex;
 void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
 
 /**
- * This function updates the file descriptor sets with file descriptors used by the platform Backbone network.
- *
- * @param[inout]  aReadFdSet   A reference to the read file descriptors.
- * @param[inout]  aMaxFd       A reference to the max file descriptor.
- *
- */
-void platformBackboneUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
-
-/**
- * This function performs platform Backbone network processing.
- *
- * @param[in]   aReadFdSet  A reference to the read file descriptors.
- *
- */
-void platformBackboneProcess(const fd_set &aReadSet);
-
-/**
  * This function performs notifies state changes to platform Backbone network.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.
@@ -501,47 +484,12 @@ extern char gBackboneNetifName[IFNAMSIZ];
 extern unsigned int gBackboneNetifIndex;
 
 /**
- * This function initializes the infrastructure interface.
- *
- * @param[in]  aInstance  The OpenThread instance.
- * @param[in]  aIfName    The name of the infrastructure interface.
- *
- * @returns  The index of the infrastructure interface.
- *
- */
-uint32_t platformInfraIfInit(otInstance *aInstance, const char *aIfName);
-
-/**
- * This function deinitializes the infrastructure interface.
- *
- */
-void platformInfraIfDeinit(void);
-
-/**
  * This function tells if the infrastructure interface is running.
  *
  * @returns TRUE if the infrastructure interface is running, FALSE if not.
  *
  */
 bool platformInfraIfIsRunning(void);
-
-/**
- * This function updates the read fd set.
- *
- * @param[out]  aReadFdSet  The fd set to be updated.
- * @param[out]  aMaxFd      The maximum fd to be updated.
- *
- */
-void platformInfraIfUpdateFdSet(fd_set &aReadFdSet, int &aMaxFd);
-
-/**
- * This function processes possible events on the infrastructure interface.
- *
- * @param[in]  aInstance   The OpenThread instance.
- * @param[in]  aReadFdSet  The fd set which may contain read vents.
- *
- */
-void platformInfraIfProcess(otInstance *aInstance, const fd_set &aReadFdSet);
 
 /**
  * This function enables daemon.

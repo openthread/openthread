@@ -43,6 +43,7 @@
 #include "core/common/non_copyable.hpp"
 #include "core/net/ip6_address.hpp"
 #include "lib/url/url.hpp"
+#include "posix/platform/mainloop.hpp"
 
 namespace ot {
 namespace Posix {
@@ -51,7 +52,7 @@ namespace Posix {
  * This class implements Multicast Routing management.
  *
  */
-class MulticastRoutingManager : private NonCopyable
+class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
 {
 public:
     /**
@@ -59,9 +60,9 @@ public:
      *
      */
     explicit MulticastRoutingManager()
+
         : mLastExpireTime(0)
         , mMulticastRouterSock(-1)
-        , mInstance(nullptr)
     {
     }
 
@@ -76,19 +77,18 @@ public:
     /**
      * This method updates the fd_set and timeout for mainloop.
      *
-     * @param[inout]    aReadFdSet      A reference to fd_set for polling read.
-     * @param[inout]    aMaxFd          A reference to the current max fd in fd_sets.
+     * @param[inout]    aContext    A reference to the mainloop context.
      *
      */
-    void UpdateFdSet(fd_set &aReadFdSet, int &aMaxFd) const;
+    void Update(otSysMainloopContext &aContext) override;
 
     /**
      * This method performs Multicast Routing processing.
      *
-     * @param[in]   aReadFdSet   A reference to read file descriptors.
+     * @param[in]   aContext    A reference to the mainloop context.
      *
      */
-    void Process(const fd_set &aReadFdSet);
+    void Process(const otSysMainloopContext &aContext) override;
 
     /**
      * This method handles Thread state changes.

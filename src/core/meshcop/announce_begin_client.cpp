@@ -64,7 +64,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     Coap::Message *         message = nullptr;
 
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
-    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kAnnounceBegin));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -83,7 +83,7 @@ Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
     messageInfo.SetPeerAddr(aAddress);
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent announce begin query");
 

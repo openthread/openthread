@@ -467,6 +467,52 @@ otError otThreadSetMeshLocalPrefix(otInstance *aInstance, const otMeshLocalPrefi
 const otIp6Address *otThreadGetLinkLocalIp6Address(otInstance *aInstance);
 
 /**
+ * This function returns the Thread Link-Local All Thread Nodes multicast address.
+ *
+ * The address is a link-local Unicast Prefix-Based Multcast Address [RFC 3306], with:
+ *   - flgs set to 3 (P = 1 and T = 1)
+ *   - scop set to 2
+ *   - plen set to 64
+ *   - network prefix set to the Mesh Local Prefix
+ *   - group ID set to 1
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to Thread Link-Local All Thread Nodes multicast address.
+ *
+ */
+const otIp6Address *otThreadGetLinkLocalAllThreadNodesMulticastAddress(otInstance *aInstance);
+
+/**
+ * This function returns the Thread Realm-Local All Thread Nodes multicast address.
+ *
+ * The address is a realm-local Unicast Prefix-Based Multcast Address [RFC 3306], with:
+ *   - flgs set to 3 (P = 1 and T = 1)
+ *   - scop set to 3
+ *   - plen set to 64
+ *   - network prefix set to the Mesh Local Prefix
+ *   - group ID set to 1
+ *
+ * @param[in]  aInstance A pointer to an OpenThread instance.
+ *
+ * @returns A pointer to Thread Realm-Local All Thread Nodes multicast address.
+ *
+ */
+const otIp6Address *otThreadGetRealmLocalAllThreadNodesMulticastAddress(otInstance *aInstance);
+
+/**
+ * This function retrieves the Service ALOC for given Service ID.
+ *
+ * @param[in]   aInstance     A pointer to an OpenThread instance.
+ * @param[in]   aServiceId    Service ID to get ALOC for.
+ * @param[out]  aServiceAloc  A pointer to output the Service ALOC. MUST NOT BE NULL.
+ *
+ * @retval OT_ERROR_NONE      Successfully retrieved the Service ALOC.
+ * @retval OT_ERROR_DETACHED  The Thread interface is not currently attached to a Thread Partition.
+ */
+otError otThreadGetServiceAloc(otInstance *aInstance, uint8_t aServiceId, otIp6Address *aServiceAloc);
+
+/**
  * Get the Thread Network Name.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.

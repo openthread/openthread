@@ -35,7 +35,7 @@ import config
 import thread_cert
 
 # Test description:
-#   This test verifies DNS-SD server works on a Duckhorn BR and is accessible from a Host.
+#   This test verifies DNS-SD server works on a BR and is accessible from a Host.
 #
 # Topology:
 #    ----------------(eth)--------------------
@@ -73,15 +73,12 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             'name': 'SERVER',
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         CLIENT1: {
             'name': 'CLIENT1',
-            'router_selection_jitter': 1,
         },
         CLIENT2: {
             'name': 'CLIENT2',
-            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'Host',
@@ -232,13 +229,16 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         dp_instance_name = f'{network_name}._meshcop._udp.default.service.arpa.'
         dp_hostname = lambda x: x.endswith('.default.service.arpa.')
 
+        def check_border_agent_port(port):
+            return 0 < port <= 65535
+
         dig_result = self.nodes[DIGGER].dns_dig(server_addr, dp_service_name, 'PTR')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
                 'ANSWER': [(dp_service_name, 'IN', 'PTR', dp_instance_name),],
                 'ADDITIONAL': [
-                    (dp_instance_name, 'IN', 'SRV', 0, 0, config.BORDER_AGENT_UDP_PORT, dp_hostname),
+                    (dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),
                     (dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
                         'nn') == network_name and 'xp' in txt and 'tv' in txt and 'dd' in txt)),
                 ],
@@ -258,7 +258,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(dp_instance_name, 'IN', 'SRV'),],
-                'ANSWER': [(dp_instance_name, 'IN', 'SRV', 0, 0, config.BORDER_AGENT_UDP_PORT, dp_hostname),],
+                'ANSWER': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
                 'ADDITIONAL': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
                     'nn') == network_name and 'xp' in txt and 'tv' in txt and 'dd' in txt)),],
             })
@@ -269,7 +269,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 'QUESTION': [(dp_instance_name, 'IN', 'TXT'),],
                 'ANSWER': [(dp_instance_name, 'IN', 'TXT', lambda txt: (isinstance(txt, dict) and txt.get(
                     'nn') == network_name and 'xp' in txt and 'tv' in txt and 'dd' in txt)),],
-                'ADDITIONAL': [(dp_instance_name, 'IN', 'SRV', 0, 0, config.BORDER_AGENT_UDP_PORT, dp_hostname),],
+                'ADDITIONAL': [(dp_instance_name, 'IN', 'SRV', 0, 0, check_border_agent_port, dp_hostname),],
             })
 
         if dp_ip6_address is not None:

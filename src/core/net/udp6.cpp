@@ -409,14 +409,17 @@ uint16_t Udp::GetEphemeralPort(void)
 {
     uint16_t rval = mEphemeralPort;
 
-    if (mEphemeralPort < kDynamicPortMax)
+    do
     {
-        mEphemeralPort++;
-    }
-    else
-    {
-        mEphemeralPort = kDynamicPortMin;
-    }
+        if (mEphemeralPort < kDynamicPortMax)
+        {
+            mEphemeralPort++;
+        }
+        else
+        {
+            mEphemeralPort = kDynamicPortMin;
+        }
+    } while (rval == Tmf::kUdpPort);
 
     return rval;
 }

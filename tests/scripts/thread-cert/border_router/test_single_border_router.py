@@ -49,7 +49,7 @@ ROUTER = 2
 HOST = 3
 
 # The two prefixes are set small enough that a random-generated OMR prefix is
-# very likely greater than them. So that the duckhorn BR will remove the random-generated one.
+# very likely greater than them. So that the BR will remove the random-generated one.
 ON_MESH_PREFIX1 = "fd00:00:00:01::/64"
 ON_MESH_PREFIX2 = "fd00:00:00:02::/64"
 
@@ -68,7 +68,6 @@ class SingleBorderRouter(thread_cert.TestCase):
             'name': 'Router',
             'allowlist': [BR],
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         HOST: {
             'name': 'Host',
@@ -99,8 +98,8 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.simulator.go(10)
         self.collect_ipaddrs()
 
-        logging.info("BR     addrs: %r", br.get_addrs())
-        logging.info("ROUTER addrs: %r", router.get_addrs())
+        logging.info("BR      addrs: %r", br.get_addrs())
+        logging.info("ROUTER  addrs: %r", router.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
         self.assertEqual(len(br.get_prefixes()), 1)

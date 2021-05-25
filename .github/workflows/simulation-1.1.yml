@@ -126,6 +126,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      MULTIPLY: 3
     steps:
     - uses: actions/checkout@v2
       with:
@@ -143,10 +144,7 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
-        for i in {1..10}
-        do
-          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-        done
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -322,7 +320,7 @@ jobs:
         name: cov-expects
         path: tmp/coverage.info
 
-  external-commissioner:
+  ot-commissioner:
     runs-on: ubuntu-20.04
     env:
       THREAD_VERSION: 1.1
@@ -362,7 +360,7 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-external-commissioner
+        name: cov-ot-commissioner
         path: tmp/coverage.info
 
   multiple-instance:
@@ -452,8 +450,8 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
-      CC: clang
-      CXX: clang++
+      CC: clang-10
+      CXX: clang++-10
     steps:
     - uses: actions/checkout@v2
       with:
@@ -461,7 +459,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
@@ -492,7 +490,7 @@ jobs:
     - cli-mtd
     - cli-time-sync
     - expects
-    - external-commissioner
+    - ot-commissioner
     - multiple-instance
     - ncp-gcc-m32
     - ncp-clang

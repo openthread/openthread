@@ -47,21 +47,18 @@ class LowPower_7_1_01(thread_cert.TestCase):
             'version': '1.2',
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [SED_1, SSED_1],
         },
         SED_1: {
             'version': '1.2',
             'name': 'SED_1',
             'mode': '-',
-            'panid': 0xface,
             'allowlist': [LEADER],
         },
         SSED_1: {
             'version': '1.2',
             'name': 'SSED_1',
             'mode': '-',
-            'panid': 0xface,
             'allowlist': [LEADER],
         }
     }
@@ -84,8 +81,8 @@ class LowPower_7_1_01(thread_cert.TestCase):
 
         leader_addr = self.nodes[LEADER].get_ip6_address(ADDRESS_TYPE.LINK_LOCAL)
 
-        # Step 3 - Verify connectivity by instructing each device to sending an ICMPv6 Echo Request to the DUT
-        self.assertTrue(self.nodes[SED_1].ping(leader_addr, timeout=POLL_PERIOD / 1000))
+        # Step 3 - Verify connectivity by instructing each device to send an ICMPv6 Echo Request to the DUT
+        self.assertTrue(self.nodes[SED_1].ping(leader_addr, timeout=POLL_PERIOD * 2 / 1000))
         self.assertTrue(self.nodes[SSED_1].ping(leader_addr))
         self.simulator.go(5)
 

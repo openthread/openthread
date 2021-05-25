@@ -70,21 +70,17 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [DUT_ROUTER1, MED1, MED2, MED3, MED4]
         },
         DUT_ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, SED1]
         },
         SED1: {
             'name': 'SED',
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'timeout': 5,
             'allowlist': [DUT_ROUTER1]
         },
@@ -92,28 +88,24 @@ class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
             'name': 'MED_1',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
         MED2: {
             'name': 'MED_2',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
         MED3: {
             'name': 'MED_3',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
         MED4: {
             'name': 'MED_4',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
     }
