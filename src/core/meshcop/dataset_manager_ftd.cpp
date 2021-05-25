@@ -155,8 +155,8 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     if (Tlv::Find<NetworkMasterKeyTlv>(aMessage, masterKey) == kErrorNone)
     {
         uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-
-        Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
+        
+        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
         hasMasterKey = true;
 
         if (memcmp(masterKey.mKeyMaterial.m8, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
@@ -170,8 +170,8 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     if (type == Tlv::kPendingTimestamp)
     {
         uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-
-        Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
+        
+        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
 
         if(!hasMasterKey || (memcmp(masterKey.mKeyMaterial.m8, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
         {
@@ -364,7 +364,7 @@ Error ActiveDataset::GenerateLocal(void)
     if (dataset.GetTlv<NetworkMasterKeyTlv>() == nullptr)
     {
         otMasterKey aMasterKey;
-        Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.m8, OT_MASTER_KEY_SIZE);
+        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.m8, OT_MASTER_KEY_SIZE));
         IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, aMasterKey));
     }
 
@@ -391,7 +391,7 @@ Error ActiveDataset::GenerateLocal(void)
             SuccessOrExit(error = pskc.GenerateRandom());
         }
 
-        Get<KeyManager>().GetPskc().CopyKey(aPskc, OT_PSKC_MAX_SIZE);
+        IgnoreError(Get<KeyManager>().GetPskc().CopyKey(aPskc, OT_PSKC_MAX_SIZE));
         IgnoreError(dataset.SetTlv(Tlv::kPskc, aPskc));
     }
 

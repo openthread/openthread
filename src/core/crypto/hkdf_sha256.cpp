@@ -33,6 +33,7 @@
 
 #include "hkdf_sha256.hpp"
 #include "common/code_utils.hpp"
+#include "common/error.hpp"
 
 #include <string.h>
 
@@ -44,7 +45,8 @@ void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey
     
     if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
-        otPlatCryptoHkdfExtract(&mOperation, aSalt, aSaltLength, aKey->mKeyRef);
+        Error err = otPlatCryptoHkdfExtract(&mOperation, aSalt, aSaltLength, aKey->mKeyRef);
+        (void)err;
     }
     else
     {
@@ -66,7 +68,8 @@ void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOu
 {
     if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
-        otPlatCryptoHkdfExpand(&mOperation, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+        Error err = otPlatCryptoHkdfExpand(&mOperation, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+        (void)err;
     }
     else
     {

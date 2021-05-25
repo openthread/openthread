@@ -840,17 +840,20 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     case Frame::kKeyIdMode1:
         if(mPrevKey.mCryptoType == kUsePsa)
         {
-            otPlatCryptoDestroyKey(mPrevKey.GetKeyRef());
+            Error err = otPlatCryptoDestroyKey(mPrevKey.GetKeyRef());
+            (void)err;
         }
 
         if(mCurrKey.mCryptoType == kUsePsa)
         {
-            otPlatCryptoDestroyKey(mCurrKey.GetKeyRef());
+            Error err = otPlatCryptoDestroyKey(mCurrKey.GetKeyRef());
+            (void)err;
         }
 
         if(mNextKey.mCryptoType == kUsePsa)
         {
-            otPlatCryptoDestroyKey(mNextKey.GetKeyRef());
+            Error err = otPlatCryptoDestroyKey(mNextKey.GetKeyRef());
+            (void)err;
         }
         
         mKeyId   = aKeyId;

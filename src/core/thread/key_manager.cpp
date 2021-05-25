@@ -183,8 +183,8 @@ KeyManager::KeyManager(Instance &aInstance)
 
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     { 
-        otPlatCryptoInit();
-        StoreMasterKey(false);
+        IgnoreError(otPlatCryptoInit());
+        IgnoreError(StoreMasterKey(false));
     }
 
     Error error = mMasterKey.GenerateRandom();
@@ -239,7 +239,7 @@ void KeyManager::SetPskc(const Pskc &aPskc)
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
         mPskc.mCryptoType = Mac::CryptoType::kUsePsa;
-        StorePskc();
+        IgnoreError(StorePskc());
     } 
     else
     {
@@ -302,7 +302,7 @@ Error KeyManager::SetMasterKey(const MasterKey &aKey)
     
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
-        StoreMasterKey(true);
+        IgnoreError(StoreMasterKey(true));
         mMasterKey.mCryptoType = Mac::CryptoType::kUsePsa;
     }
     else
@@ -603,7 +603,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 void KeyManager::CheckAndDestroyStoredKey(otMacKeyRef aKeyRef)
 {
   if(aKeyRef != 0) {
-      otPlatCryptoDestroyKey(aKeyRef);
+      IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
   }
 }
 
@@ -746,7 +746,7 @@ Error Pskc::GenerateRandom(void)
 
     if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
-        otPlatCryptoDestroyKey(aKeyRef);
+        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
 
         error = otPlatCryptoImportKey(&aKeyRef,
                                       PSA_KEY_TYPE_RAW_DATA,
@@ -807,7 +807,7 @@ Error MasterKey::GenerateRandom(void)
 
     if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
-        otPlatCryptoDestroyKey(aKeyRef);
+        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
 
         error = otPlatCryptoImportKey(&aKeyRef,
                                       PSA_KEY_TYPE_HMAC,

@@ -228,9 +228,13 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
                            const otMacKey *aCurrKey,
                            const otMacKey *aNextKey)
 {
+    otMacKeyMaterial *aPrevKeyMaterial = (otMacKeyMaterial *) aPrevKey;
+    otMacKeyMaterial *aCurrKeyMaterial = (otMacKeyMaterial *) aCurrKey;
+    otMacKeyMaterial *aNextKeyMaterial = (otMacKeyMaterial *) aNextKey;
+
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacKey(
-        aKeyIdMode, aKeyId, *static_cast<const Mac::Key *>(aPrevKey), *static_cast<const Mac::Key *>(aCurrKey),
-        *static_cast<const Mac::Key *>(aNextKey));
+        aKeyIdMode, aKeyId, *static_cast<const Mac::Key *>(aPrevKeyMaterial), *static_cast<const Mac::Key *>(aCurrKeyMaterial),
+        *static_cast<const Mac::Key *>(aNextKeyMaterial));
 }
 
 otError otLinkRawSetMacFrameCounter(otInstance *aInstance, uint32_t aMacFrameCounter)

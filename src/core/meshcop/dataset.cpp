@@ -566,7 +566,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated
         {
             const NetworkMasterKeyTlv *key = static_cast<const NetworkMasterKeyTlv *>(cur);
             uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-            keyManager.GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
+            IgnoreError(keyManager.GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
 
             if (aIsMasterKeyUpdated && (key->GetNetworkMasterKey().mKeyMaterial.m8 != masterKeyLiteral))
             {

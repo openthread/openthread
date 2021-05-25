@@ -2589,10 +2589,12 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
             uint8_t mPskcBuffer[OT_PSKC_MAX_SIZE];
             size_t mKeyLen;
 
-            otPlatCryptoExportKey(pskc->mKeyMaterial.m32,
-                                  mPskcBuffer,
-                                  OT_PSKC_MAX_SIZE,
-                                  &mKeyLen); 
+            Error err = otPlatCryptoExportKey(pskc->mKeyMaterial.m32,
+                                                mPskcBuffer,
+                                                OT_PSKC_MAX_SIZE,
+                                                &mKeyLen); 
+
+            (void)err;
 
             OutputBytes(mPskcBuffer);  
         }
@@ -2644,11 +2646,12 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
             uint8_t mMasterKeyBuffer[OT_MASTER_KEY_SIZE];
             size_t mKeyLen;
 
-            otPlatCryptoExportKey(masterKey->mKeyMaterial.m32,
-                                  mMasterKeyBuffer,
-                                  OT_MASTER_KEY_SIZE,
-                                  &mKeyLen); 
+            Error err = otPlatCryptoExportKey(masterKey->mKeyMaterial.m32,
+                                                mMasterKeyBuffer,
+                                                OT_MASTER_KEY_SIZE,
+                                                &mKeyLen); 
 
+            (void)err;
             OutputBytes(mMasterKeyBuffer);  
         }
         else

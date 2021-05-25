@@ -150,11 +150,11 @@ otRadioCaps gRadioCaps =
     OT_RADIO_CAPS_NONE;
 #endif
 
-static uint32_t        sMacFrameCounter;
-static uint8_t         sKeyId;
-static struct otMacKey sPrevKey;
-static struct otMacKey sCurrKey;
-static struct otMacKey sNextKey;
+static uint32_t                 sMacFrameCounter;
+static uint8_t                  sKeyId;
+static struct otMacKeyMaterial  sPrevKey;
+static struct otMacKeyMaterial  sCurrKey;
+static struct otMacKeyMaterial  sNextKey;
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -606,7 +606,7 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    struct otMacKey *key = NULL;
+    struct otMacKeyMaterial *key = NULL;
     uint8_t          keyId;
 
     otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
@@ -1192,12 +1192,12 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-void otPlatRadioSetMacKey(otInstance *    aInstance,
-                          uint8_t         aKeyIdMode,
-                          uint8_t         aKeyId,
-                          const otMacKey *aPrevKey,
-                          const otMacKey *aCurrKey,
-                          const otMacKey *aNextKey)
+void otPlatRadioSetMacKey(otInstance *           aInstance,
+                          uint8_t                aKeyIdMode,
+                          uint8_t                aKeyId,
+                          const otMacKeyMaterial *aPrevKey,
+                          const otMacKeyMaterial *aCurrKey,
+                          const otMacKeyMaterial *aNextKey)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIdMode);
@@ -1205,9 +1205,9 @@ void otPlatRadioSetMacKey(otInstance *    aInstance,
     otEXPECT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
     sKeyId = aKeyId;
-    memcpy(sPrevKey.m8, aPrevKey->m8, OT_MAC_KEY_SIZE);
-    memcpy(sCurrKey.m8, aCurrKey->m8, OT_MAC_KEY_SIZE);
-    memcpy(sNextKey.m8, aNextKey->m8, OT_MAC_KEY_SIZE);
+    memcpy(sPrevKey.mKeyMaterial.mKey.m8, aPrevKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(sCurrKey.mKeyMaterial.mKey.m8, aCurrKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(sNextKey.mKeyMaterial.mKey.m8, aNextKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
 
 exit:
     return;

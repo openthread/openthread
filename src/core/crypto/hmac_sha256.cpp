@@ -40,31 +40,36 @@ namespace Crypto {
 HmacSha256::HmacSha256(void)
 {
     void *mCtx = GetContext();
-    otPlatCryptoHmacSha256Init(mCtx);
+    Error err = otPlatCryptoHmacSha256Init(mCtx);
+    (void)err;
 }
 
 HmacSha256::~HmacSha256(void)
 {
     void *mCtx = GetContext();
-    otPlatCryptoHmacSha256UnInit(mCtx);
+    Error err = otPlatCryptoHmacSha256UnInit(mCtx);
+    (void)err;
 }
 
 void HmacSha256::Start(otCryptoKey *aKey)
 {
     void *mCtx = GetContext();
-    otPlatCryptoHmacSha256Start(mCtx, aKey);
+    Error err = otPlatCryptoHmacSha256Start(mCtx, aKey);
+    (void)err;
 }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
     void *mCtx = GetContext();    
-    otPlatCryptoHmacSha256Update(mCtx, aBuf, aBufLength);
+    Error err = otPlatCryptoHmacSha256Update(mCtx, aBuf, aBufLength);
+    (void)err;
 }
 
 void HmacSha256::Finish(Hash &aHash)
 {
     void *mCtx = GetContext();   
-    otPlatCryptoHmacSha256Finish(mCtx, aHash.m8, aHash.kSize);
+    Error err = otPlatCryptoHmacSha256Finish(mCtx, aHash.m8, aHash.kSize);
+    (void)err;
 }
 
 void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
