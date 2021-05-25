@@ -29,7 +29,7 @@
 add_library(openthread-cli-ftd)
 
 target_compile_definitions(openthread-cli-ftd
-    PRIVATE
+    PUBLIC
         OPENTHREAD_FTD=1
 )
 
