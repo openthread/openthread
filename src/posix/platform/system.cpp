@@ -47,6 +47,7 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
+#include "posix/platform/daemon.hpp"
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/radio_url.hpp"
@@ -148,7 +149,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonEnable(instance);
+    ot::Posix::Daemon::Get().Enable(instance);
 #endif
     return instance;
 }
@@ -156,7 +157,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 void otSysDeinit(void)
 {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonDisable();
+    ot::Posix::Daemon::Get().Disable();
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
@@ -229,10 +230,6 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     platformTrelUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
 #endif
 
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonUpdate(aMainloop);
-#endif
-
     if (otTaskletsArePending(aInstance))
     {
         aMainloop->mTimeout.tv_sec  = 0;
@@ -301,9 +298,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
 #endif
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
     platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
-#endif
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonProcess(aMainloop);
 #endif
 }
 
