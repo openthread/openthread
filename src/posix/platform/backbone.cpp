@@ -50,7 +50,7 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    VerifyOrExit(aInterfaceName != nullptr && aInterfaceName != "");
+    VerifyOrExit(aInterfaceName != nullptr && aInterfaceName[0] != '\0');
 
     VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
     strncpy(gBackboneNetifName, aInterfaceName, sizeof(gBackboneNetifName));
