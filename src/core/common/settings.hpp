@@ -590,6 +590,57 @@ public:
     } OT_TOOL_PACKED_END;
 
     /**
+     * This structure represents the SRP client info (selected server address).
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class SrpClientInfo : public Equatable<SrpClientInfo>, private Clearable<SrpClientInfo>
+    {
+    public:
+        /**
+         * This method initializes the `SrpClientInfo` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method returns the server IPv6 address.
+         *
+         * @returns The server IPv6 address.
+         *
+         */
+        const Ip6::Address &GetServerAddress(void) const { return mServerAddress; }
+
+        /**
+         * This method sets the server IPv6 address.
+         *
+         * @param[in] aAddress  The server IPv6 address.
+         *
+         */
+        void SetServerAddress(const Ip6::Address &aAddress) { mServerAddress = aAddress; }
+
+        /**
+         * This method returns the server port number.
+         *
+         * @returns The server port number.
+         *
+         */
+        uint16_t GetServerPort(void) const { return Encoding::LittleEndian::HostSwap16(mServerPort); }
+
+        /**
+         * This method sets the server port number.
+         *
+         * @param[in] aPort  The server port number.
+         *
+         */
+        void SetServerPort(uint16_t aPort) { mServerPort = Encoding::LittleEndian::HostSwap16(aPort); }
+
+    private:
+        Ip6::Address mServerAddress;
+        uint16_t     mServerPort; // (in little-endian encoding)
+    } OT_TOOL_PACKED_END;
+
+    /**
      * This enumeration defines the keys of settings.
      *
      */
@@ -606,6 +657,7 @@ public:
         kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
         kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+        kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
     };
 
 protected:
@@ -624,6 +676,7 @@ protected:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     void LogPrefix(const char *aAction, const char *aPrefixName, const Ip6::Prefix &aOmrPrefix) const;
 #endif
+    void LogSrpClientInfo(const char *aAction, const SrpClientInfo &aSrpClientInfo) const;
 #else // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
     void LogNetworkInfo(const char *, const NetworkInfo &) const {}
     void LogParentInfo(const char *, const ParentInfo &) const {}
@@ -634,6 +687,7 @@ protected:
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     void LogPrefix(const char *, const char *, const Ip6::Prefix &) const {}
 #endif
+    void LogSrpClientInfo(const char *, const SrpClientInfo &) const {}
 #endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
@@ -1092,6 +1146,41 @@ public:
      *
      */
     Error DeleteSrpKey(void);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    /**
+     * This method saves SRP client info.
+     *
+     * @param[in] aSrpClientInfo      The `SrpClientInfo` to save.
+     *
+     * @retval kErrorNone             Successfully saved the information in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *
+     */
+    Error SaveSrpClientInfo(const SrpClientInfo &aSrpClientInfo);
+
+    /**
+     * This method reads SRP client info.
+     *
+     * @param[out] aSrpClientInfo     A reference to a `SrpClientInfo` to output the read content.
+     *
+     * @retval kErrorNone             Successfully read the information.
+     * @retval kErrorNotFound         No corresponding value in the setting store.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *
+     */
+    Error ReadSrpClientInfo(SrpClientInfo &aSrpClientInfo) const;
+
+    /**
+     * This method deletes SRP client info from settings.
+     *
+     * @retval kErrorNone            Successfully deleted the value.
+     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
+     *
+     */
+    Error DeleteSrpClientInfo(void);
+
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 private:
