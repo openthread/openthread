@@ -692,10 +692,10 @@ exit:
     return status;
 }
 
-void Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
+void Leader::RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength)
 {
     Error                 error = kErrorNone;
-    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
+    const NetworkDataTlv *end   = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
     ChangedFlags          flags;
 
     VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNoRoute);
@@ -707,6 +707,8 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t
     // Remove all entries matching `aRloc16` excluding entries that are
     // present in `aTlvs`
     RemoveRloc(aRloc16, kMatchModeRloc16, aTlvs, aTlvsLength, flags);
+
+    UpdateDomainIds(aTlvs, aTlvsLength);
 
     // Now add all new entries in `aTlvs` to Network Data.
     for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
@@ -735,6 +737,125 @@ exit:
     if (error != kErrorNone)
     {
         otLogNoteNetData("Failed to register network data: %s", ErrorToString(error));
+    }
+}
+
+void Leader::UpdateDomainIds(uint8_t *aTlvs, uint8_t aTlvsLength) const
+{
+    // This method updates the domain ID values of prefix TLVs in the
+    // `aTlvs` to prepare them to be incorporated in the Network Data.
+    // A border router adding an external route entry can specify
+    // which source prefix(es) should be used with the external route
+    // by assigning the same domain ID to the related prefix TLVs.
+    //
+    // Leader changes the domain ID values assigning new IDs to new
+    // prefixes and the same IDs to any existing prefixes in the
+    // Network Data, while ensuring to maintain the same relationships
+    // between prefix TLVs.
+
+    uint8_t          domainId = 0;
+    const PrefixTlv *prefix;
+    DomainIds        usedDomainIds;
+
+    // First, we find all used domain ID values and update the domain
+    // IDs in `aTlvs` (while maintaining their relationships) such
+    // that they use new (currently unused) ID values.
+
+    usedDomainIds.Clear();
+
+    for (TlvIterator tlvIterator(GetTlvsStart(), GetTlvsEnd()); (prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr;)
+    {
+        usedDomainIds.Add(prefix->GetDomainId());
+    }
+
+    for (TlvIterator tlvIterator(aTlvs, aTlvsLength); (prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr;)
+    {
+        if (usedDomainIds.Contains(prefix->GetDomainId()))
+        {
+            // Find the next unused domain ID (i.e., not used in the
+            // Network Data and not used in `aTlvs`).
+
+            while (usedDomainIds.Contains(domainId) || ContainsDomainId(domainId, aTlvs, aTlvsLength))
+            {
+                domainId++;
+            }
+
+            ChangeDomainId(/* aOldId */ prefix->GetDomainId(), /* aNewId */ domainId, aTlvs, aTlvsLength);
+        }
+    }
+
+    // Next, we change the domain ID of prefix TLVs in `aTlvs` to use
+    // the same domain ID of an existing matching prefix if a match can
+    // be found in the Network Data. Again we try to maintain domain ID
+    // relationships in `aTlvs`.
+
+    for (TlvIterator tlvIterator(aTlvs, aTlvsLength); (prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr;)
+    {
+        const PrefixTlv *existingPrefix = FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength());
+
+        if (existingPrefix == nullptr)
+        {
+            continue;
+        }
+
+        if (!usedDomainIds.Contains(prefix->GetDomainId()))
+        {
+            ChangeDomainId(prefix->GetDomainId(), existingPrefix->GetDomainId(), aTlvs, aTlvsLength);
+        }
+        else if (existingPrefix->GetDomainId() != prefix->GetDomainId())
+        {
+            // We can potentially get here if there is a conflict in how
+            // the prefixes are added by different border routers (though
+            // it is expected to be rather unlikely). In such a situation,
+            // the new `prefix` TLV has an ID already in `usedDomainIds`
+            // which indicates that it was changed due to its relationship
+            // in `aTlvs` with another existing prefix. We also see that
+            // `prefix` has an existing match in the Network Data. If the
+            // IDs do not match, then we cannot keep the relationship
+            // anymore. The Thread spec does not specify a resolution
+            // mechanism for such a situation, so we just log it.
+
+            otLogWarnNetData("Failed to maintain domain ID relations due to prefix conflict");
+        }
+    }
+}
+
+bool Leader::ContainsDomainId(uint8_t aDomainId, const uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    // This method indicates whether `aTlvs` contains a Prefix TLV with
+    // the given `aDomainId`.
+
+    const PrefixTlv *prefix;
+
+    for (TlvIterator tlvIterator(aTlvs, aTlvsLength); (prefix = tlvIterator.Iterate<PrefixTlv>()) != nullptr;)
+    {
+        if (prefix->GetDomainId() == aDomainId)
+        {
+            break;
+        }
+    }
+
+    return (prefix != nullptr);
+}
+
+void Leader::ChangeDomainId(uint8_t aOldId, uint8_t aNewId, uint8_t *aTlvs, uint8_t aTlvsLength)
+{
+    // This method changes the domain ID values of prefix TLVs in `aTlvs`
+    // that match `aOldId` to `aNewId`.
+
+    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
+
+    for (NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    {
+        if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+        {
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+
+            if (prefix->GetDomainId() == aOldId)
+            {
+                prefix->SetDomaindId(aNewId);
+            }
+        }
     }
 }
 

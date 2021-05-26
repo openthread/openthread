@@ -610,6 +610,14 @@ public:
     uint8_t GetDomainId(void) const { return mDomainId; }
 
     /**
+     * This method sets the Domain ID value.
+     *
+     * @param[in] aDomainId  The Domain ID.
+     *
+     */
+    void SetDomaindId(uint8_t aDomainId) { mDomainId = aDomainId; }
+
+    /**
      * This method returns the Prefix Length value.
      *
      * @returns The Prefix Length value (in bits).

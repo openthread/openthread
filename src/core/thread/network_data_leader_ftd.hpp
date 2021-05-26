@@ -203,13 +203,26 @@ private:
         kTlvUpdated, // TLV stable flag is updated based on its sub TLVs.
     };
 
+    // A list of domain ID (`uint8_t`) values (implemented as a bit-vector).
+    class DomainIds : private BitVector<sizeof(uint8_t) * CHAR_BIT>
+    {
+    public:
+        void Add(uint8_t aDomindId) { Set(aDomindId, true); }
+        bool Contains(uint16_t aDomindId) const { return Get(aDomindId); }
+        void Clear(void) { return BitVector::Clear(); }
+    };
+
     static void HandleServerData(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    void RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    void RegisterNetworkData(uint16_t aRloc16, uint8_t *aTlvs, uint8_t aTlvsLength);
+
+    void        UpdateDomainIds(uint8_t *aTlvs, uint8_t aTlvsLength) const;
+    static bool ContainsDomainId(uint8_t aDomainId, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    static void ChangeDomainId(uint8_t aOldId, uint8_t aNewId, uint8_t *aTlvs, uint8_t aTlvsLength);
 
     Error AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
     Error AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);

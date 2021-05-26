@@ -120,6 +120,8 @@ OFF_MESH_ADDR_3 = OFF_MESH_ROUTE_3 + "3"
 
 # Add on-mesh prefix
 r1.config_gateway(ON_MESH_PREFIX)
+r2.config_gateway(ON_MESH_PREFIX)
+fed1.config_gateway(ON_MESH_PREFIX)
 
 # The off-mesh-routes are added as follows:
 # - `r1` adds OFF_MESH_ROUTE_1,
