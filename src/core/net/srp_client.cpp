@@ -447,6 +447,19 @@ void Client::UpdateServiceStateToRemove(Service &aService)
     }
 }
 
+Error Client::ClearService(Service &aService)
+{
+    Error error;
+
+    SuccessOrExit(error = mServices.Remove(aService));
+    aService.SetNext(nullptr);
+    aService.SetState(kRemoved);
+    UpdateState();
+
+exit:
+    return error;
+}
+
 Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
 {
     Error error = kErrorNone;
