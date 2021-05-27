@@ -92,7 +92,10 @@ void SubMac::Reset(void)
     void *             pcapCallbackContext = mPcapCallbackContext;
 
     mTimer.Stop();
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mCslTimer.Stop();
+#endif
 
     this->~SubMac();
     new (this) SubMac(instance);
