@@ -2293,7 +2293,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RestoreProperties(void)
 
     if (mInstance != nullptr)
     {
-        SuccessOrDie(static_cast<Instance *>(mInstance)->template Get<Settings>().ReadNetworkInfo(networkInfo));
+        SuccessOrDie(static_cast<Instance *>(mInstance)->template Get<Settings>().Read(networkInfo));
         SuccessOrDie(
             Set(SPINEL_PROP_RCP_MAC_FRAME_COUNTER, SPINEL_DATATYPE_UINT32_S, networkInfo.GetMacFrameCounter()));
     }

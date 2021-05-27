@@ -326,7 +326,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 {
     Error error;
 
-    error = Get<Settings>().ReadSlaacIidSecretKey(aKey);
+    error = Get<Settings>().Read<Settings::SlaacIidSecretKey>(aKey);
     VerifyOrExit(error != kErrorNone);
 
     // If there is no previously saved secret key, generate
@@ -339,7 +339,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
         IgnoreError(Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey)));
     }
 
-    IgnoreError(Get<Settings>().SaveSlaacIidSecretKey(aKey));
+    IgnoreError(Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey));
 
     otLogInfoUtil("SLAAC: Generated and saved secret key");
 
