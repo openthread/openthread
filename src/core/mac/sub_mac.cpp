@@ -43,6 +43,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
+#include "common/new.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
 
@@ -85,35 +86,20 @@ SubMac::SubMac(Instance &aInstance)
 
 void SubMac::Reset(void)
 {
-    mState           = kStateDisabled;
-    mCsmaBackoffs    = 0;
-    mTransmitRetries = 0;
-    mShortAddress    = kShortAddrInvalid;
-    mExtAddress.Clear();
-    mRxOnWhenBackoff   = true;
-    mEnergyScanMaxRssi = kInvalidRssiValue;
-    mEnergyScanEndTime = Time{0};
+    Instance &         instance            = GetInstance();
+    Callbacks          callbacks           = mCallbacks;
+    otLinkPcapCallback pcapCallback        = mPcapCallback;
+    void *             pcapCallbackContext = mPcapCallbackContext;
 
-    mPrevKey.Clear();
-    mCurrKey.Clear();
-    mNextKey.Clear();
-
-    mFrameCounter = 0;
-    mKeyId        = 0;
     mTimer.Stop();
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    mCslPeriod             = 0;
-    mCslChannel            = 0;
-    mIsCslChannelSpecified = false;
-    mCslSampleTime         = TimeMicro{0};
-    mCslLastSync           = TimeMicro{0};
-    mCslState              = kCslIdle;
     mCslTimer.Stop();
-#endif
 
-    SetShortAddress(mShortAddress);
-    SetExtAddress(mExtAddress);
+    this->~SubMac();
+    new (this) SubMac(instance);
+
+    mCallbacks           = callbacks;
+    mPcapCallback        = pcapCallback;
+    mPcapCallbackContext = pcapCallbackContext;
 }
 
 otRadioCaps SubMac::GetCaps(void) const

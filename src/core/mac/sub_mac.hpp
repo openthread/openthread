@@ -87,7 +87,7 @@ namespace Mac {
  * addresses and PAN Id.
  *
  */
-class SubMac : public InstanceLocator, private NonCopyable
+class SubMac final : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
 
