@@ -1213,7 +1213,7 @@ otError NcpBase::CommandHandler_RESET(uint8_t aHeader)
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_RADIO
-    mInstance->StackReset();
+    mInstance->RadioStackReset();
 
     mIsRawStreamEnabled = false;
     mCurTransmitTID     = 0;

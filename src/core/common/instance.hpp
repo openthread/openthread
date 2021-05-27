@@ -192,10 +192,10 @@ public:
 
 #if OPENTHREAD_RADIO
     /**
-     * This method resets the internal states of the instance.
+     * This method resets the internal states of the radio.
      *
      */
-    void StackReset(void);
+    void RadioStackReset(void);
 #endif
 
     /**

@@ -168,7 +168,7 @@ void Instance::Reset(void)
 }
 
 #if OPENTHREAD_RADIO
-void Instance::StackReset(void)
+void Instance::RadioStackReset(void)
 {
     mRadio.Reset();
     mLinkRaw.Reset();
