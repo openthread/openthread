@@ -40,9 +40,21 @@ SockAddr::InfoString SockAddr::ToString(void) const
 {
     InfoString string;
 
-    string.Append("[%s]:%u", GetAddress().ToString().AsCString(), GetPort());
+    ToString(string);
 
     return string;
+}
+
+void SockAddr::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+
+    ToString(writer);
+}
+
+void SockAddr::ToString(StringWriter &aWriter) const
+{
+    aWriter.Append("[%s]:%u", GetAddress().ToString().AsCString(), GetPort());
 }
 
 } // namespace Ip6

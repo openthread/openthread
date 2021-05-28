@@ -303,9 +303,10 @@ otError SrpClient::ProcessServer(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.OutputFormat("[");
-        mInterpreter.OutputIp6Address(serverSockAddr->mAddress);
-        mInterpreter.OutputLine("]:%u", serverSockAddr->mPort);
+        char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
+
+        otIp6SockAddrToString(serverSockAddr, string, sizeof(string));
+        mInterpreter.OutputLine(string);
         ExitNow();
     }
 

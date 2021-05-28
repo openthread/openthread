@@ -3025,64 +3025,23 @@ exit:
 
 otError Interpreter::ProcessNetstat(uint8_t aArgsLength, Arg aArgs[])
 {
-    otUdpSocket *socket = otUdpGetSockets(mInstance);
-
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    OutputLine("|                 Local Address                 |                  Peer Address                 |");
-    OutputLine("+-----------------------------------------------+-----------------------------------------------+");
+    char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
 
-    while (socket)
+    OutputLine("|                  Local Address                  |                   Peer Address                  |");
+    OutputLine("+-------------------------------------------------+-------------------------------------------------+");
+
+    for (const otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
     {
-        constexpr int kMaxOutputLength = 45;
-        int           outputLength;
-
-        OutputFormat("| ");
-
-        outputLength = OutputSocketAddress(socket->mSockName);
-        for (int i = outputLength; 0 <= i && i < kMaxOutputLength; ++i)
-        {
-            OutputFormat(" ");
-        }
-        OutputFormat(" | ");
-
-        outputLength = OutputSocketAddress(socket->mPeerName);
-        for (int i = outputLength; 0 <= i && i < kMaxOutputLength; ++i)
-        {
-            OutputFormat(" ");
-        }
-        OutputLine(" |");
-
-        socket = socket->mNext;
+        otIp6SockAddrToString(&socket->mSockName, string, sizeof(string));
+        OutputFormat("| %-47s ", string);
+        otIp6SockAddrToString(&socket->mPeerName, string, sizeof(string));
+        OutputLine("| %-47s |", string);
     }
 
     return OT_ERROR_NONE;
-}
-
-int Interpreter::OutputSocketAddress(const otSockAddr &aAddress)
-{
-    int outputLength;
-    int result = 0;
-
-    VerifyOrExit((outputLength = OutputIp6Address(aAddress.mAddress)) >= 0, result = -1);
-    result += outputLength;
-
-    VerifyOrExit((outputLength = OutputFormat(":")) >= 0, result = -1);
-    result += outputLength;
-    if (aAddress.mPort == 0)
-    {
-        VerifyOrExit((outputLength = OutputFormat("*")) >= 0, result = -1);
-        result += outputLength;
-    }
-    else
-    {
-        VerifyOrExit((outputLength = OutputFormat("%d", aAddress.mPort)) >= 0, result = -1);
-        result += outputLength;
-    }
-
-exit:
-    return result;
 }
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

@@ -590,6 +590,24 @@ otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
  */
 void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize);
 
+#define OT_IP6_SOCK_ADDR_STRING_SIZE 48 ///< Recommended size for string representation of an IPv6 socket address.
+
+/**
+ * This function converts a given IPv6 socket address to a human-readable string.
+ *
+ * The IPv6 socket address string is formatted as "[<address>]:<port>" where `<address> is shown as 16 hex values
+ * separated by ':' and `<port>` is the port number in decimal format (i.e., "[%x:%x:...:%x]:%u")
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aSockAddr A pointer to an IPv6 socket address (MUST NOT be NULL).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_SOCK_ADDR_STRING_SIZE`.
+ *
+ */
+void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize);
+
 #define OT_IP6_PREFIX_STRING_SIZE 45 ///< Recommended size for string representation of an IPv6 prefix.
 
 /**
