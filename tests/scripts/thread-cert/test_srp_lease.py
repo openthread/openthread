@@ -84,7 +84,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
 
         client.srp_server_set_enabled(False)
         client.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual(client.get_state(), 'router')
 
         #
