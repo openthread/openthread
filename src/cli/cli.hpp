@@ -313,6 +313,14 @@ private:
         otError (Interpreter::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
+    void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
+
+    template <uint8_t kTableNumColumns>
+    void OutputTableHeader(const char *const (&aTitles)[kTableNumColumns], const uint8_t (&aWidths)[kTableNumColumns])
+    {
+        OutputTableHeader(kTableNumColumns, &aTitles[0], aWidths);
+    }
+
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     otError ParsePingInterval(const Arg &aArg, uint32_t &aInterval);
 #endif
@@ -545,6 +553,7 @@ private:
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
     static void HandlePingStatistics(const otPingSenderStatistics *aStatistics, void *aContext);
 #endif
+    void        OutputScanTableHeader(void);
     static void HandleActiveScanResult(otActiveScanResult *aResult, void *aContext);
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);

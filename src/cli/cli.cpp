@@ -168,6 +168,46 @@ int Interpreter::OutputIp6Address(const otIp6Address &aAddress)
     return OutputFormat("%s", string);
 }
 
+void Interpreter::OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[])
+{
+    for (uint8_t index = 0; index < aNumColumns; index++)
+    {
+        const char *title       = aTitles[index];
+        uint8_t     width       = aWidths[index];
+        size_t      titleLength = strlen(title);
+
+        if (titleLength + 2 <= width)
+        {
+            // `title` fits in column width so we write it with extra space
+            // at beginning and end ("| Title    |").
+
+            OutputFormat("| %*s", -static_cast<int>(width - 1), title);
+        }
+        else
+        {
+            // Use narrow style (no space at beginning) and write as many
+            // chars from `title` as it can fit in the given column width
+            // ("|Title|").
+
+            OutputFormat("|%*.*s", -static_cast<int>(width), width, title);
+        }
+    }
+
+    OutputLine("|");
+
+    for (uint8_t index = 0; index < aNumColumns; index++)
+    {
+        OutputFormat("+");
+
+        for (uint8_t width = aWidths[index]; width != 0; width--)
+        {
+            OutputFormat("-");
+        }
+    }
+
+    OutputLine("+");
+}
+
 otError Interpreter::ParseEnableOrDisable(const Arg &aArg, bool &aEnable)
 {
     otError error = OT_ERROR_NONE;
@@ -871,10 +911,16 @@ otError Interpreter::ProcessChild(uint8_t aArgsLength, Arg aArgs[])
 
         if (isTable)
         {
-            OutputLine(
-                "| ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |");
-            OutputLine(
-                "+-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+");
+            static const char *const kChildTableTitles[] = {
+                "ID", "RLOC16", "Timeout", "Age", "LQ In",   "C_VN",         "R",
+                "D",  "N",      "Ver",     "CSL", "QMsgCnt", "Extended MAC",
+            };
+
+            static const uint8_t kChildTableColumnWidths[] = {
+                5, 8, 12, 12, 7, 6, 1, 1, 1, 3, 3, 7, 18,
+            };
+
+            OutputTableHeader(kChildTableTitles, kChildTableColumnWidths);
         }
 
         maxChildren = otThreadGetMaxAllowedChildren(mInstance);
@@ -1432,8 +1478,8 @@ otError Interpreter::ProcessDiscover(uint8_t aArgsLength, Arg aArgs[])
 
     SuccessOrExit(error = otThreadDiscover(mInstance, scanChannels, OT_PANID_BROADCAST, false, false,
                                            &Interpreter::HandleActiveScanResult, this));
-    OutputLine("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |");
-    OutputLine("+---+------------------+------------------+------+------------------+----+-----+-----+");
+
+    OutputScanTableHeader();
 
     error = OT_ERROR_PENDING;
 
@@ -2985,8 +3031,15 @@ otError Interpreter::ProcessNeighbor(uint8_t aArgsLength, Arg aArgs[])
     {
         if (isTable)
         {
-            OutputLine("| Role | RLOC16 | Age | Avg RSSI | Last RSSI |R|D|N| Extended MAC     |");
-            OutputLine("+------+--------+-----+----------+-----------+-+-+-+------------------+");
+            static const char *const kNeighborTableTitles[] = {
+                "Role", "RLOC16", "Age", "Avg RSSI", "Last RSSI", "R", "D", "N", "Extended MAC",
+            };
+
+            static const uint8_t kNeighborTableColumnWidths[] = {
+                6, 8, 5, 10, 11, 1, 1, 1, 18,
+            };
+
+            OutputTableHeader(kNeighborTableTitles, kNeighborTableColumnWidths);
         }
 
         while (otThreadGetNextNeighborInfo(mInstance, &iterator, &neighborInfo) == OT_ERROR_NONE)
@@ -3028,10 +3081,12 @@ otError Interpreter::ProcessNetstat(uint8_t aArgsLength, Arg aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
+    static const char *const kNetstatTableTitles[]       = {"Local Address", "Peer Address"};
+    static const uint8_t     kNetstatTableColumnWidths[] = {49, 49};
+
     char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
 
-    OutputLine("|                  Local Address                  |                   Peer Address                  |");
-    OutputLine("+-------------------------------------------------+-------------------------------------------------+");
+    OutputTableHeader(kNetstatTableTitles, kNetstatTableColumnWidths);
 
     for (const otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
     {
@@ -3890,8 +3945,15 @@ otError Interpreter::ProcessRouter(uint8_t aArgsLength, Arg aArgs[])
 
         if (isTable)
         {
-            OutputLine("| ID | RLOC16 | Next Hop | Path Cost | LQ In | LQ Out | Age | Extended MAC     | Link |");
-            OutputLine("+----+--------+----------+-----------+-------+--------+-----+------------------+------+");
+            static const char *const kRouterTableTitles[] = {
+                "ID", "RLOC16", "Next Hop", "Path Cost", "LQ In", "LQ Out", "Age", "Extended MAC", "Link",
+            };
+
+            static const uint8_t kRouterTableColumnWidths[] = {
+                4, 8, 10, 11, 7, 8, 5, 18, 6,
+            };
+
+            OutputTableHeader(kRouterTableTitles, kRouterTableColumnWidths);
         }
 
         maxRouterId = otThreadGetMaxRouterId(mInstance);
@@ -4068,15 +4130,16 @@ otError Interpreter::ProcessScan(uint8_t aArgsLength, Arg aArgs[])
 
     if (energyScan)
     {
-        OutputLine("| Ch | RSSI |");
-        OutputLine("+----+------+");
+        static const char *const kEnergyScanTableTitles[]       = {"Ch", "RSSI"};
+        static const uint8_t     kEnergyScanTableColumnWidths[] = {4, 6};
+
+        OutputTableHeader(kEnergyScanTableTitles, kEnergyScanTableColumnWidths);
         SuccessOrExit(error = otLinkEnergyScan(mInstance, scanChannels, scanDuration,
                                                &Interpreter::HandleEnergyScanResult, this));
     }
     else
     {
-        OutputLine("| J | Network Name     | Extended PAN     | PAN  | MAC Address      | Ch | dBm | LQI |");
-        OutputLine("+---+------------------+------------------+------+------------------+----+-----+-----+");
+        OutputScanTableHeader();
         SuccessOrExit(error = otLinkActiveScan(mInstance, scanChannels, scanDuration,
                                                &Interpreter::HandleActiveScanResult, this));
     }
@@ -4085,6 +4148,19 @@ otError Interpreter::ProcessScan(uint8_t aArgsLength, Arg aArgs[])
 
 exit:
     return error;
+}
+
+void Interpreter::OutputScanTableHeader(void)
+{
+    static const char *const kScanTableTitles[] = {
+        "J", "Network Name", "Extended PAN", "PAN", "MAC Address", "Ch", "dBm", "LQI",
+    };
+
+    static const uint8_t kScanTableColumnWidths[] = {
+        3, 18, 18, 6, 18, 4, 5, 5,
+    };
+
+    OutputTableHeader(kScanTableTitles, kScanTableColumnWidths);
 }
 
 void Interpreter::HandleActiveScanResult(otActiveScanResult *aResult, void *aContext)
