@@ -311,7 +311,6 @@ void Daemon::Process(const otSysMainloopContext &aContext)
             buffer[rval] = '\0';
             otLogInfoPlat("> %s", reinterpret_cast<const char *>(buffer));
             otCliInputLine(reinterpret_cast<char *>(buffer));
-            otCliOutputFormat("> ");
         }
         else
         {

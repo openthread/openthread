@@ -336,6 +336,8 @@ private:
         kMaxLineLength    = OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH,
     };
 
+    static constexpr uint32_t kNetworkDiagnosticTimeoutMsecs = 5000;
+
     struct Command
     {
         const char *mName;
@@ -432,6 +434,7 @@ private:
         OutputTableSeperator(kTableNumColumns, aWidths);
     }
 
+    void OutputPrompt(void);
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     otError ParsePingInterval(const Arg &aArg, uint32_t &aInterval);
 #endif
@@ -760,6 +763,10 @@ private:
     bool IsLogging(void) const { return mIsLogging; }
     void SetIsLogging(bool aIsLogging) { mIsLogging = aIsLogging; }
 #endif
+    void SetCommandTimeout(uint32_t aTimeoutMilli);
+
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
 
     static constexpr Command sCommands[] = {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
@@ -945,6 +952,7 @@ private:
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
+    bool                mCommandIsPending;
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif
@@ -956,6 +964,8 @@ private:
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     TcpExample mTcp;
 #endif
+
+    TimerMilliContext mTimer;
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;
@@ -989,6 +999,9 @@ private:
     char     mOutputString[OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE];
     uint16_t mOutputLength;
     bool     mIsLogging;
+#endif
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    bool mPingIsAsync;
 #endif
 };
 

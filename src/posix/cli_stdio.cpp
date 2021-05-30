@@ -49,7 +49,6 @@
 #include "platform-posix.h"
 
 namespace {
-constexpr char sPrompt[] = "> ";
 
 int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
 {
@@ -93,7 +92,6 @@ extern "C" void otAppCliProcess(const otSysMainloopContext *aMainloop)
         if (fgets(buffer, sizeof(buffer), stdin) != nullptr)
         {
             otCliInputLine(buffer);
-            dprintf(STDOUT_FILENO, "%s", sPrompt);
         }
         else
         {
