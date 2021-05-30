@@ -217,7 +217,7 @@ void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
     ssize_t  rval;
     uint32_t ifIndex = 0;
 
-    VerifyOrExit(aIfName != nullptr);
+    VerifyOrExit(aIfName != nullptr && aIfName[0] != '\0');
 
     VerifyOrDie(strnlen(aIfName, sizeof(mInfraIfName)) <= sizeof(mInfraIfName) - 1, OT_EXIT_INVALID_ARGUMENTS);
     strcpy(mInfraIfName, aIfName);

@@ -165,6 +165,13 @@ otError otSrpClientRemoveService(otInstance *aInstance, otSrpClientService *aSer
     return instance.Get<Srp::Client>().RemoveService(*static_cast<Srp::Client::Service *>(aService));
 }
 
+otError otSrpClientClearService(otInstance *aInstance, otSrpClientService *aService)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Client>().ClearService(*static_cast<Srp::Client::Service *>(aService));
+}
+
 const otSrpClientService *otSrpClientGetServices(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

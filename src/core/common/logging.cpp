@@ -59,7 +59,6 @@ static void Log(otLogLevel  aLogLevel,
                 va_list     aArgs)
 {
     ot::String<OPENTHREAD_CONFIG_LOG_MAX_SIZE> logString;
-    ot::StringWriter                           writer(logString);
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     VerifyOrExit(otLoggingGetLevel() >= aLogLevel);
@@ -97,12 +96,12 @@ static void Log(otLogLevel  aLogLevel,
             break;
         }
 
-        writer.Append("%s", levelStr);
+        logString.Append("%s", levelStr);
     }
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
-    writer.Append("%s", aRegionPrefix);
-    writer.AppendVarArgs(aFormat, aArgs);
+    logString.Append("%s", aRegionPrefix);
+    logString.AppendVarArgs(aFormat, aArgs);
     otPlatLog(aLogLevel, aLogRegion, "%s" OPENTHREAD_CONFIG_LOG_SUFFIX, logString.AsCString());
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
@@ -236,28 +235,27 @@ enum : uint8_t
 static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t *aBytes, const size_t aLength)
 {
     ot::String<kStringLineLength> string;
-    ot::StringWriter              writer(string);
 
-    writer.Append("|");
+    string.Append("|");
 
     for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
     {
         if (i < aLength)
         {
-            writer.Append(" %02X", aBytes[i]);
+            string.Append(" %02X", aBytes[i]);
         }
         else
         {
-            writer.Append(" ..");
+            string.Append(" ..");
         }
 
         if (!((i + 1) % 8))
         {
-            writer.Append(" |");
+            string.Append(" |");
         }
     }
 
-    writer.Append(" ");
+    string.Append(" ");
 
     for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
     {
@@ -273,7 +271,7 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t
             }
         }
 
-        writer.Append("%c", c);
+        string.Append("%c", c);
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());
@@ -288,18 +286,17 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
 
     size_t                        idLen = strlen(aId);
     ot::String<kStringLineLength> string;
-    ot::StringWriter              writer(string);
 
     for (size_t i = 0; i < (kWidth - idLen) / 2 - 5; i++)
     {
-        writer.Append("=");
+        string.Append("=");
     }
 
-    writer.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength));
+    string.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength));
 
     for (size_t i = 0; i < (kWidth - idLen) / 2 - 4; i++)
     {
-        writer.Append("=");
+        string.Append("=");
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());
@@ -310,11 +307,11 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
                  OT_MIN((aLength - i), static_cast<size_t>(kDumpBytesPerLine)));
     }
 
-    writer.Clear();
+    string.Clear();
 
     for (size_t i = 0; i < kWidth; i++)
     {
-        writer.Append("-");
+        string.Append("-");
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());

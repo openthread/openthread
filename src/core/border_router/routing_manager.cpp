@@ -125,7 +125,7 @@ Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
     Error error = kErrorNone;
 
-    if (Get<Settings>().ReadOmrPrefix(mLocalOmrPrefix) != kErrorNone || !IsValidOmrPrefix(mLocalOmrPrefix))
+    if (Get<Settings>().Read<Settings::OmrPrefix>(mLocalOmrPrefix) != kErrorNone || !IsValidOmrPrefix(mLocalOmrPrefix))
     {
         Ip6::NetworkPrefix randomOmrPrefix;
 
@@ -139,7 +139,7 @@ Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
         }
 
         mLocalOmrPrefix.Set(randomOmrPrefix);
-        IgnoreError(Get<Settings>().SaveOmrPrefix(mLocalOmrPrefix));
+        IgnoreError(Get<Settings>().Save<Settings::OmrPrefix>(mLocalOmrPrefix));
     }
 
 exit:
@@ -150,7 +150,8 @@ Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
 {
     Error error = kErrorNone;
 
-    if (Get<Settings>().ReadOnLinkPrefix(mLocalOnLinkPrefix) != kErrorNone || !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
+    if (Get<Settings>().Read<Settings::OnLinkPrefix>(mLocalOnLinkPrefix) != kErrorNone ||
+        !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
     {
         Ip6::NetworkPrefix randomOnLinkPrefix;
 
@@ -167,7 +168,7 @@ Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
         randomOnLinkPrefix.m8[7] = 0;
         mLocalOnLinkPrefix.Set(randomOnLinkPrefix);
 
-        IgnoreError(Get<Settings>().SaveOnLinkPrefix(mLocalOnLinkPrefix));
+        IgnoreError(Get<Settings>().Save<Settings::OnLinkPrefix>(mLocalOnLinkPrefix));
     }
 
 exit:

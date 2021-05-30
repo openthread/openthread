@@ -447,6 +447,19 @@ void Client::UpdateServiceStateToRemove(Service &aService)
     }
 }
 
+Error Client::ClearService(Service &aService)
+{
+    Error error;
+
+    SuccessOrExit(error = mServices.Remove(aService));
+    aService.SetNext(nullptr);
+    aService.SetState(kRemoved);
+    UpdateState();
+
+exit:
+    return error;
+}
+
 Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
 {
     Error error = kErrorNone;
@@ -542,12 +555,36 @@ exit:
 
 void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
 {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    ItemState oldHostState = mHostInfo.GetState();
+#endif
+
     mHostInfo.SetState(aNewStates[mHostInfo.GetState()]);
 
     for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
     {
         service->SetState(aNewStates[service->GetState()]);
     }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    if (mAutoStartModeEnabled && mAutoStartDidSelectServer && (oldHostState != kRegistered) &&
+        (mHostInfo.GetState() == kRegistered))
+    {
+        if (mAutoStartIsUsingAnycastAddress)
+        {
+            IgnoreError(Get<Settings>().Delete<Settings::SrpClientInfo>());
+        }
+        else
+        {
+            Settings::SrpClientInfo info;
+
+            info.SetServerAddress(GetServerAddress().GetAddress());
+            info.SetServerPort(GetServerAddress().GetPort());
+
+            IgnoreError(Get<Settings>().Save(info));
+        }
+    }
+#endif
 }
 
 void Client::InvokeCallback(Error aError) const
@@ -721,7 +758,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 {
     Error error;
 
-    error = Get<Settings>().ReadSrpKey(aKeyPair);
+    error = Get<Settings>().Read<Settings::SrpEcdsaKey>(aKeyPair);
 
     if (error == kErrorNone)
     {
@@ -734,7 +771,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
     }
 
     SuccessOrExit(error = aKeyPair.Generate());
-    IgnoreError(Get<Settings>().SaveSrpKey(aKeyPair));
+    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyPair));
 
 exit:
     return error;
@@ -1515,6 +1552,10 @@ void Client::ProcessAutoStart(void)
     Ip6::SockAddr                             serverSockAddr;
     bool                                      serverIsAnycast = false;
     NetworkData::Service::DnsSrpAnycast::Info anycastInfo;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    Settings::SrpClientInfo savedInfo;
+    bool                    hasSavedServerInfo = false;
+#endif
 
     VerifyOrExit(mAutoStartModeEnabled);
 
@@ -1534,6 +1575,13 @@ void Client::ProcessAutoStart(void)
     VerifyOrExit(!IsRunning() || mAutoStartDidSelectServer);
 
     // Now `IsRunning()` implies `mAutoStartDidSelectServer`.
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    if (!IsRunning())
+    {
+        hasSavedServerInfo = (Get<Settings>().Read(savedInfo) == kErrorNone);
+    }
+#endif
 
     if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
     {
@@ -1563,6 +1611,19 @@ void Client::ProcessAutoStart(void)
             {
                 ExitNow();
             }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+            if (hasSavedServerInfo && (unicastInfo.mSockAddr.GetAddress() == savedInfo.GetServerAddress()) &&
+                (unicastInfo.mSockAddr.GetPort() == savedInfo.GetServerPort()))
+            {
+                // Stop the search if we see a match for the previously
+                // saved server info in the network data entries.
+
+                serverSockAddr  = unicastInfo.mSockAddr;
+                serverIsAnycast = false;
+                break;
+            }
+#endif
 
             numServers++;
 

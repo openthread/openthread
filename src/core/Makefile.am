@@ -399,6 +399,7 @@ HEADERS_COMMON                                  = \
     common/random.hpp                             \
     common/random_manager.hpp                     \
     common/settings.hpp                           \
+    common/settings_driver.hpp                    \
     common/string.hpp                             \
     common/tasklet.hpp                            \
     common/time.hpp                               \

@@ -65,10 +65,9 @@ void ExtAddress::GenerateRandom(void)
 
 ExtAddress::InfoString ExtAddress::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
-    writer.AppendHexBytes(m8, sizeof(ExtAddress));
+    string.AppendHexBytes(m8, sizeof(ExtAddress));
 
     return string;
 }
@@ -93,20 +92,19 @@ void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder a
 
 Address::InfoString Address::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
     if (mType == kTypeExtended)
     {
-        writer.AppendHexBytes(GetExtended().m8, sizeof(ExtAddress));
+        string.AppendHexBytes(GetExtended().m8, sizeof(ExtAddress));
     }
     else if (mType == kTypeNone)
     {
-        writer.Append("None");
+        string.Append("None");
     }
     else
     {
-        writer.Append("0x%04x", GetShort());
+        string.Append("0x%04x", GetShort());
     }
 
     return string;
@@ -114,10 +112,9 @@ Address::InfoString Address::ToString(void) const
 
 ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
-    writer.AppendHexBytes(m8, sizeof(ExtendedPanId));
+    string.AppendHexBytes(m8, sizeof(ExtendedPanId));
 
     return string;
 }
@@ -220,15 +217,14 @@ void RadioTypes::AddAll(void)
 
 RadioTypes::InfoString RadioTypes::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
-    bool         addComma = false;
+    InfoString string;
+    bool       addComma = false;
 
-    writer.Append("{");
+    string.Append("{");
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (Contains(kRadioTypeIeee802154))
     {
-        writer.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeIeee802154));
+        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeIeee802154));
         addComma = true;
     }
 #endif
@@ -236,14 +232,14 @@ RadioTypes::InfoString RadioTypes::ToString(void) const
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     if (Contains(kRadioTypeTrel))
     {
-        writer.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeTrel));
+        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeTrel));
         addComma = true;
     }
 #endif
 
     OT_UNUSED_VARIABLE(addComma);
 
-    writer.Append(" }");
+    string.Append(" }");
 
     return string;
 }

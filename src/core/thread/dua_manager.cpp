@@ -213,7 +213,7 @@ void DuaManager::Restore(void)
 {
     Settings::DadInfo dadInfo;
 
-    SuccessOrExit(Get<Settings>().ReadDadInfo(dadInfo));
+    SuccessOrExit(Get<Settings>().Read(dadInfo));
     mDadCounter = dadInfo.GetDadCounter();
 
 exit:
@@ -225,7 +225,7 @@ Error DuaManager::Store(void)
     Settings::DadInfo dadInfo;
 
     dadInfo.SetDadCounter(mDadCounter);
-    return Get<Settings>().SaveDadInfo(dadInfo);
+    return Get<Settings>().Save(dadInfo);
 }
 
 void DuaManager::AddDomainUnicastAddress(void)

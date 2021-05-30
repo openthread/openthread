@@ -25,75 +25,37 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef OT_POSIX_PLATFORM_DAEMON_HPP_
+#define OT_POSIX_PLATFORM_DAEMON_HPP_
 
-/**
- * @file
- *   This file implements IPv4 address related functionality.
- */
+#include "openthread-posix-config.h"
 
-#include "ip4_address.hpp"
-
-#include "common/code_utils.hpp"
-#include "common/numeric_limits.hpp"
+#include "core/common/non_copyable.hpp"
+#include "posix/platform/mainloop.hpp"
 
 namespace ot {
-namespace Ip4 {
+namespace Posix {
 
-Error Address::FromString(const char *aString)
+class Daemon : public Mainloop::Source, private NonCopyable
 {
-    enum : char
-    {
-        kSeperatorChar = '.',
-        kNullChar      = '\0',
-    };
+public:
+    static Daemon &Get(void);
 
-    Error error = kErrorParse;
+    void Enable(otInstance *aInstance);
+    void Disable(void);
+    void Update(otSysMainloopContext &aContext) override;
+    void Process(const otSysMainloopContext &aContext) override;
 
-    for (uint8_t index = 0;; index++)
-    {
-        uint16_t value         = 0;
-        uint8_t  hasFirstDigit = false;
+private:
+    int  OutputFormatV(const char *aFormat, va_list aArguments);
+    void InitializeSessionSocket(void);
 
-        for (char digitChar = *aString;; ++aString, digitChar = *aString)
-        {
-            if ((digitChar < '0') || (digitChar > '9'))
-            {
-                break;
-            }
+    int mListenSocket  = -1;
+    int mDaemonLock    = -1;
+    int mSessionSocket = -1;
+};
 
-            value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
-            VerifyOrExit(value <= NumericLimits<uint8_t>::Max());
-            hasFirstDigit = true;
-        }
-
-        VerifyOrExit(hasFirstDigit);
-
-        mBytes[index] = static_cast<uint8_t>(value);
-
-        if (index == sizeof(Address) - 1)
-        {
-            break;
-        }
-
-        VerifyOrExit(*aString == kSeperatorChar);
-        aString++;
-    }
-
-    VerifyOrExit(*aString == kNullChar);
-    error = kErrorNone;
-
-exit:
-    return error;
-}
-
-Address::InfoString Address::ToString(void) const
-{
-    InfoString string;
-
-    string.Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
-
-    return string;
-}
-
-} // namespace Ip4
+} // namespace Posix
 } // namespace ot
+
+#endif // OT_POSIX_PLATFORM_DAEMON_HPP_

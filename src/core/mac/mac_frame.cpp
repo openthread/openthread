@@ -1381,27 +1381,26 @@ exit:
 
 Frame::InfoString Frame::ToInfoString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
-    uint8_t      commandId, type;
-    Address      src, dst;
+    InfoString string;
+    uint8_t    commandId, type;
+    Address    src, dst;
 
-    writer.Append("len:%d, seqnum:%d, type:", mLength, GetSequence());
+    string.Append("len:%d, seqnum:%d, type:", mLength, GetSequence());
 
     type = GetType();
 
     switch (type)
     {
     case kFcfFrameBeacon:
-        writer.Append("Beacon");
+        string.Append("Beacon");
         break;
 
     case kFcfFrameData:
-        writer.Append("Data");
+        string.Append("Data");
         break;
 
     case kFcfFrameAck:
-        writer.Append("Ack");
+        string.Append("Ack");
         break;
 
     case kFcfFrameMacCmd:
@@ -1413,33 +1412,33 @@ Frame::InfoString Frame::ToInfoString(void) const
         switch (commandId)
         {
         case kMacCmdDataRequest:
-            writer.Append("Cmd(DataReq)");
+            string.Append("Cmd(DataReq)");
             break;
 
         case kMacCmdBeaconRequest:
-            writer.Append("Cmd(BeaconReq)");
+            string.Append("Cmd(BeaconReq)");
             break;
 
         default:
-            writer.Append("Cmd(%d)", commandId);
+            string.Append("Cmd(%d)", commandId);
             break;
         }
 
         break;
 
     default:
-        writer.Append("%d", type);
+        string.Append("%d", type);
         break;
     }
 
     IgnoreError(GetSrcAddr(src));
     IgnoreError(GetDstAddr(dst));
 
-    writer.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
+    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
                   GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    writer.Append(", radio:%s", RadioTypeToString(GetRadioType()));
+    string.Append(", radio:%s", RadioTypeToString(GetRadioType()));
 #endif
 
     return string;
@@ -1447,13 +1446,12 @@ Frame::InfoString Frame::ToInfoString(void) const
 
 BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
-    NetworkName  name;
-    InfoString   string;
-    StringWriter writer(string);
+    NetworkName name;
+    InfoString  string;
 
     IgnoreError(name.Set(GetNetworkName()));
 
-    writer.Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
+    string.Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
                   mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
                   IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
     return string;
