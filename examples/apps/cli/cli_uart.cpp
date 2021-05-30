@@ -134,9 +134,9 @@ static otError ProcessCommand(void);
 
 static void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 {
-    static const char sEraseString[]   = {'\b', ' ', '\b'};
-    static const char CRNL[]           = {'\r', '\n'};
-    static const char sCommandPrompt[] = {'>', ' '};
+    static const char sEraseString[] = {'\b', ' ', '\b'};
+    static const char CRNL[]         = {'\r', '\n'};
+    static uint8_t    sLastChar      = '\0';
     const uint8_t *   end;
 
     end = aBuf + aBufLength;
@@ -147,15 +147,12 @@ static void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
         {
         case '\r':
         case '\n':
-            Output(CRNL, sizeof(CRNL));
-            if (sRxLength > 0)
+            if (!(sLastChar == '\r' && *aBuf == '\n'))
             {
+                Output(CRNL, sizeof(CRNL));
                 sRxBuffer[sRxLength] = '\0';
                 IgnoreError(ProcessCommand());
             }
-
-            Output(sCommandPrompt, sizeof(sCommandPrompt));
-
             break;
 
 #if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
@@ -187,6 +184,8 @@ static void ReceiveTask(const uint8_t *aBuf, uint16_t aBufLength)
 
             break;
         }
+
+        sLastChar = *aBuf;
     }
 }
 
@@ -194,7 +193,7 @@ static otError ProcessCommand(void)
 {
     otError error = OT_ERROR_NONE;
 
-    while (sRxBuffer[sRxLength - 1] == '\n' || sRxBuffer[sRxLength - 1] == '\r')
+    while (sRxLength > 0 && (sRxBuffer[sRxLength - 1] == '\n' || sRxBuffer[sRxLength - 1] == '\r'))
     {
         sRxBuffer[--sRxLength] = '\0';
     }
@@ -227,10 +226,7 @@ static otError ProcessCommand(void)
     otLogInfoCli("execute command: %s", sRxBuffer);
 #endif
 #endif
-    if (sRxLength > 0)
-    {
-        otCliInputLine(sRxBuffer);
-    }
+    otCliInputLine(sRxBuffer);
 
     sRxLength = 0;
 

@@ -166,7 +166,7 @@ class OtCliCommandRunner(OTCommandHandler):
             if line.startswith('> '):
                 line = line[2:]
 
-            logging.debug('%s: %s', self.__otcli, line)
+            logging.debug('%s: %r', self.__otcli, line)
 
             if not OtCliCommandRunner.__PATTERN_LOG_LINE.match(line):
                 self.__pending_lines.put(line)

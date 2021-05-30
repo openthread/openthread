@@ -413,6 +413,7 @@ private:
         OutputTableHeader(kTableNumColumns, &aTitles[0], aWidths);
     }
 
+    void OutputPrompt(void);
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     otError ParsePingInterval(const Arg &aArg, uint32_t &aInterval);
 #endif
@@ -907,6 +908,7 @@ private:
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
+    bool                mCommandIsExecuting;
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif
