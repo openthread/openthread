@@ -454,7 +454,7 @@ void Server::Start(void)
         it.Clear();
         while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info) == kErrorNone)
         {
-            if (Get<Mle::Mle>().GetMeshLocal16() == info.mSockAddr.GetAddress())
+            if (Get<Mle::Mle>().GetMeshLocal64() == info.mSockAddr.GetAddress())
             {
                 hasRecord = true;
                 if (port == info.mSockAddr.GetPort())
