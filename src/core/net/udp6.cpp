@@ -407,8 +407,6 @@ exit:
 
 uint16_t Udp::GetEphemeralPort(void)
 {
-    uint16_t &rval = mEphemeralPort;
-
     do
     {
         if (mEphemeralPort < kDynamicPortMax)
@@ -419,9 +417,9 @@ uint16_t Udp::GetEphemeralPort(void)
         {
             mEphemeralPort = kDynamicPortMin;
         }
-    } while (rval == Tmf::kUdpPort);
+    } while (mEphemeralPort == Tmf::kUdpPort);
 
-    return rval;
+    return mEphemeralPort;
 }
 
 Message *Udp::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
