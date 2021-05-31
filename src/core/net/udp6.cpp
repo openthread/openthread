@@ -407,7 +407,7 @@ exit:
 
 uint16_t Udp::GetEphemeralPort(void)
 {
-    uint16_t rval = mEphemeralPort;
+    uint16_t &rval = mEphemeralPort;
 
     do
     {
