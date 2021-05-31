@@ -587,9 +587,13 @@ public:
 private:
     enum
     {
-        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
-        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMin   = 49152, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMax   = 65535, ///< Service Name and Transport Protocol Port Number Registry
+        kSrpServerPortMin = OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MIN,
+        kSrpServerPortMax = OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MAX,
     };
+
+    static bool IsReservedPort(uint16_t aPort);
 
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);

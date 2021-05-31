@@ -78,7 +78,9 @@ class Server : public InstanceLocator, private NonCopyable
 public:
     enum : uint16_t
     {
-        kUdpPort = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT, ///< The SRP Server UDP listening port.
+        kUdpPort         = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT, ///< The SRP Server UDP listening port.
+        kReservedPortMin = OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MIN,
+        kReservedPortMax = OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MAX,
     };
 
     /**
@@ -655,6 +657,7 @@ private:
 
     void                  HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError);
     const UpdateMetadata *FindOutstandingUpdate(const Ip6::MessageInfo &aMessageInfo, uint16_t aDnsMessageId);
+    uint16_t              FindPort() const;
 
     Ip6::Udp::Socket                mSocket;
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;

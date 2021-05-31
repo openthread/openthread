@@ -438,13 +438,42 @@ exit:
 
 void Server::Start(void)
 {
-    Error error = kErrorNone;
+    Error                                     error = kErrorNone;
+    uint16_t                                  port  = 0;
+    NetworkData::Service::Manager::Iterator   it;
+    NetworkData::Service::DnsSrpUnicast::Info info;
+    bool                                      found     = true;
+    bool                                      hasRecord = false;
 
     VerifyOrExit(!IsRunning());
 
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(kUdpPort, OT_NETIF_THREAD));
-
+    for (port = kReservedPortMin; port <= kReservedPortMax; ++port)
+    {
+        found = true;
+        it.Clear();
+        while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info) == kErrorNone)
+        {
+            if (Get<Mle::Mle>().GetMeshLocal16() == info.mSockAddr.GetAddress())
+            {
+                hasRecord = true;
+                if (port == info.mSockAddr.GetPort())
+                {
+                    found = false;
+                    break;
+                }
+            }
+        }
+        if (found)
+        {
+            break;
+        }
+    }
+    if (!hasRecord || !found)
+    {
+        port = Random::NonCrypto::GetUint16InRange(kReservedPortMin, kReservedPortMax);
+    }
+    SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
     SuccessOrExit(error = PublishServerData());
 
     otLogInfoSrp("[server] start listening on port %hu", mSocket.GetSockName().mPort);

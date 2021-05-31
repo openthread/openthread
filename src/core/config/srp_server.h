@@ -56,6 +56,26 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
+ *
+ * Specifies the minimum port number of the reserved UDP port range for the SRP server.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MIN
+#define OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MIN 53535
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
+ *
+ * Specifies the maximum port number of the reserved UDP port range for the SRP server.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MAX
+#define OPENTHREAD_CONFIG_SRP_SERVER_RESERVED_UDP_PORT_MAX 53553
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT
  *
  * Specifies the timeout value (in milliseconds) for the service update handler.
