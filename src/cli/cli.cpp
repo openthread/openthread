@@ -484,12 +484,7 @@ otError Interpreter::ProcessBackboneRouterMgmtMlr(uint8_t aArgsLength, Arg aArgs
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (aArgs[0] == "response")
     {
-        uint8_t status;
-
-        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = aArgs[1].ParseAsUint8(status));
-
-        otBackboneRouterConfigNextMulticastListenerRegistrationResponse(mInstance, status);
+        error = ProcessSet(aArgsLength - 1, aArgs + 1, otBackboneRouterConfigNextMulticastListenerRegistrationResponse);
     }
 #endif
     else
@@ -527,17 +522,8 @@ otError Interpreter::ProcessBackboneRouterLocal(uint8_t aArgsLength, Arg aArgs[]
     }
     else if (aArgs[0] == "jitter")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%d", otBackboneRouterGetRegistrationJitter(mInstance));
-        }
-        else if (aArgsLength == 2)
-        {
-            uint8_t jitter;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint8(jitter));
-            otBackboneRouterSetRegistrationJitter(mInstance, jitter);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otBackboneRouterGetRegistrationJitter,
+                              otBackboneRouterSetRegistrationJitter);
     }
     else if (aArgs[0] == "register")
     {
@@ -729,14 +715,13 @@ exit:
 
 otError Interpreter::ProcessChannel(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t channel;
+    otError error;
 
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otLinkGetChannel(mInstance));
-    }
-    else if (aArgs[0] == "supported")
+    error = ProcessGetSet(aArgsLength, aArgs, otLinkGetChannel, otLinkSetChannel);
+
+    VerifyOrExit(error != OT_ERROR_NONE);
+
+    if (aArgs[0] == "supported")
     {
         OutputLine("0x%x", otPlatRadioGetSupportedChannelMask(mInstance));
     }
@@ -761,7 +746,7 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, Arg aArgs[])
                 OutputLine("count: %u", otChannelMonitorGetSampleCount(mInstance));
 
                 OutputLine("occupancies:");
-                for (channel = 0; channel < channelNum; channel++)
+                for (uint8_t channel = 0; channel < channelNum; channel++)
                 {
                     uint32_t occupancy = 0;
 
@@ -815,9 +800,7 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, Arg aArgs[])
         }
         else if (aArgs[1] == "change")
         {
-            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aArgs[2].ParseAsUint8(channel));
-            otChannelManagerRequestChannelChange(mInstance, channel);
+            error = ProcessSet(aArgsLength - 2, &aArgs[2], otChannelManagerRequestChannelChange);
         }
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
         else if (aArgs[1] == "select")
@@ -839,55 +822,26 @@ otError Interpreter::ProcessChannel(uint8_t aArgsLength, Arg aArgs[])
         }
         else if (aArgs[1] == "delay")
         {
-            uint8_t delay;
-
-            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aArgs[2].ParseAsUint8(delay));
-            error = otChannelManagerSetDelay(mInstance, delay);
+            error = ProcessSet(aArgsLength - 2, aArgs + 2, otChannelManagerSetDelay);
         }
         else if (aArgs[1] == "interval")
         {
-            uint32_t interval;
-
-            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aArgs[2].ParseAsUint32(interval));
-            error = otChannelManagerSetAutoChannelSelectionInterval(mInstance, interval);
+            error = ProcessSet(aArgsLength - 2, aArgs + 2, otChannelManagerSetAutoChannelSelectionInterval);
         }
         else if (aArgs[1] == "supported")
         {
-            uint32_t mask;
-
-            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aArgs[2].ParseAsUint32(mask));
-            otChannelManagerSetSupportedChannels(mInstance, mask);
+            error = ProcessSet(aArgsLength - 2, aArgs + 2, otChannelManagerSetSupportedChannels);
         }
         else if (aArgs[1] == "favored")
         {
-            uint32_t mask;
-
-            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aArgs[2].ParseAsUint32(mask));
-            otChannelManagerSetFavoredChannels(mInstance, mask);
+            error = ProcessSet(aArgsLength - 2, aArgs + 2, otChannelManagerSetFavoredChannels);
         }
         else if (aArgs[1] == "threshold")
         {
-            uint16_t threshold;
-
-            VerifyOrExit(aArgsLength > 2, error = OT_ERROR_INVALID_ARGS);
-            SuccessOrExit(error = aArgs[2].ParseAsUint16(threshold));
-            otChannelManagerSetCcaFailureRateThreshold(mInstance, threshold);
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
+            error = ProcessSet(aArgsLength - 2, aArgs + 2, otChannelManagerSetCcaFailureRateThreshold);
         }
     }
 #endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
-    else
-    {
-        SuccessOrExit(error = aArgs[0].ParseAsUint8(channel));
-        error = otLinkSetChannel(mInstance, channel);
-    }
 
 exit:
     return error;
@@ -1036,101 +990,45 @@ otError Interpreter::ProcessChildIp(uint8_t aArgsLength, Arg aArgs[])
     }
     else if (aArgs[0] == "max")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%d", otThreadGetMaxChildIpAddresses(mInstance));
-        }
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-        else if (aArgsLength == 2)
-        {
-            uint8_t maxIpAddresses;
-            SuccessOrExit(error = aArgs[1].ParseAsUint8(maxIpAddresses));
-            SuccessOrExit(error = otThreadSetMaxChildIpAddresses(mInstance, maxIpAddresses));
-        }
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        error = ProcessGet(aArgsLength - 1, otThreadGetMaxChildIpAddresses);
+#else
+        error =
+            ProcessGetSet(aArgsLength - 1, aArgs + 1, otThreadGetMaxChildIpAddresses, otThreadSetMaxChildIpAddresses);
 #endif
-        else
-        {
-            error = OT_ERROR_INVALID_ARGS;
-        }
     }
     else
     {
         error = OT_ERROR_INVALID_COMMAND;
     }
 
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-exit:
-#endif
     return error;
 }
 
 otError Interpreter::ProcessChildMax(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetMaxAllowedChildren(mInstance));
-    }
-    else
-    {
-        uint16_t maxChildren;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint16(maxChildren));
-        SuccessOrExit(error = otThreadSetMaxAllowedChildren(mInstance, maxChildren));
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetMaxAllowedChildren, otThreadSetMaxAllowedChildren);
 }
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
 otError Interpreter::ProcessChildSupervision(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint16_t value;
+    otError error = OT_ERROR_INVALID_ARGS;
 
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength > 0);
 
     if (aArgs[0] == "checktimeout")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%u", otChildSupervisionGetCheckTimeout(mInstance));
-        }
-        else if (aArgsLength == 2)
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsUint16(value));
-            otChildSupervisionSetCheckTimeout(mInstance, value);
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otChildSupervisionGetCheckTimeout,
+                              otChildSupervisionSetCheckTimeout);
     }
 #if OPENTHREAD_FTD
     else if (aArgs[0] == "interval")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%u", otChildSupervisionGetInterval(mInstance));
-        }
-        else if (aArgsLength == 2)
-        {
-            SuccessOrExit(error = aArgs[1].ParseAsUint16(value));
-            otChildSupervisionSetInterval(mInstance, value);
-        }
-        else
-        {
-            ExitNow(error = OT_ERROR_INVALID_ARGS);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otChildSupervisionGetInterval, otChildSupervisionSetInterval);
     }
 #endif
-    else
-    {
-        ExitNow(error = OT_ERROR_INVALID_ARGS);
-    }
 
 exit:
     return error;
@@ -1139,22 +1037,7 @@ exit:
 
 otError Interpreter::ProcessChildTimeout(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetChildTimeout(mInstance));
-    }
-    else
-    {
-        uint32_t timeout;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint32(timeout));
-        otThreadSetChildTimeout(mInstance, timeout);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetChildTimeout, otThreadSetChildTimeout);
 }
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
@@ -1249,22 +1132,7 @@ exit:
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessContextIdReuseDelay(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetContextIdReuseDelay(mInstance));
-    }
-    else
-    {
-        uint32_t delay;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint32(delay));
-        otThreadSetContextIdReuseDelay(mInstance, delay);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetContextIdReuseDelay, otThreadSetContextIdReuseDelay);
 }
 #endif
 
@@ -1411,28 +1279,18 @@ otError Interpreter::ProcessCsl(uint8_t aArgsLength, Arg aArgs[])
     {
         if (aArgs[0] == "channel")
         {
-            uint8_t channel;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint8(channel));
-            SuccessOrExit(error = otLinkCslSetChannel(mInstance, channel));
+            error = ProcessSet(aArgsLength - 1, aArgs + 1, otLinkCslSetChannel);
         }
         else if (aArgs[0] == "period")
         {
-            uint16_t period;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint16(period));
-            SuccessOrExit(error = otLinkCslSetPeriod(mInstance, period));
+            error = ProcessSet(aArgsLength - 1, aArgs + 1, otLinkCslSetPeriod);
         }
         else if (aArgs[0] == "timeout")
         {
-            uint32_t timeout;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint32(timeout));
-            SuccessOrExit(error = otLinkCslSetTimeout(mInstance, timeout));
+            error = ProcessSet(aArgsLength - 1, aArgs + 1, otLinkCslSetTimeout);
         }
     }
 
-exit:
     return error;
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
@@ -2245,31 +2103,11 @@ otError Interpreter::ProcessKeySequence(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgs[0] == "counter")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%d", otThreadGetKeySequenceCounter(mInstance));
-        }
-        else
-        {
-            uint32_t counter;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint32(counter));
-            otThreadSetKeySequenceCounter(mInstance, counter);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otThreadGetKeySequenceCounter, otThreadSetKeySequenceCounter);
     }
     else if (aArgs[0] == "guardtime")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%d", otThreadGetKeySwitchGuardTime(mInstance));
-        }
-        else
-        {
-            uint32_t guardTime;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint32(guardTime));
-            otThreadSetKeySwitchGuardTime(mInstance, guardTime);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otThreadGetKeySwitchGuardTime, otThreadSetKeySwitchGuardTime);
     }
     else
     {
@@ -2315,21 +2153,9 @@ otError Interpreter::ProcessPartitionId(uint8_t aArgsLength, Arg aArgs[])
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (aArgs[0] == "preferred")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%u", otThreadGetPreferredLeaderPartitionId(mInstance));
-            error = OT_ERROR_NONE;
-        }
-        else if (aArgsLength == 2)
-        {
-            uint32_t partitionId;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint32(partitionId));
-            otThreadSetPreferredLeaderPartitionId(mInstance, partitionId);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otThreadGetPreferredLeaderPartitionId,
+                              otThreadSetPreferredLeaderPartitionId);
     }
-
-exit:
 #endif
 
     return error;
@@ -2337,22 +2163,7 @@ exit:
 
 otError Interpreter::ProcessLeaderWeight(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetLocalLeaderWeight(mInstance));
-    }
-    else
-    {
-        uint8_t weight;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint8(weight));
-        otThreadSetLocalLeaderWeight(mInstance, weight);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetLocalLeaderWeight, otThreadSetLocalLeaderWeight);
 }
 #endif // OPENTHREAD_FTD
 
@@ -3167,22 +2978,7 @@ otError Interpreter::ProcessNetworkData(uint8_t aArgsLength, Arg aArgs[])
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetNetworkIdTimeout(mInstance));
-    }
-    else
-    {
-        uint8_t timeout;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint8(timeout));
-        otThreadSetNetworkIdTimeout(mInstance, timeout);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetNetworkIdTimeout, otThreadSetNetworkIdTimeout);
 }
 #endif
 
@@ -3268,13 +3064,9 @@ otError Interpreter::ProcessPanId(uint8_t aArgsLength, Arg aArgs[])
     }
     else
     {
-        uint16_t panId;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint16(panId));
-        error = otLinkSetPanId(mInstance, panId);
+        error = ProcessSet(aArgsLength, aArgs, otLinkSetPanId);
     }
 
-exit:
     return error;
 }
 
@@ -3302,22 +3094,7 @@ exit:
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessParentPriority(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetParentPriority(mInstance));
-    }
-    else
-    {
-        int8_t priority;
-
-        SuccessOrExit(error = aArgs[0].ParseAsInt8(priority));
-        error = otThreadSetParentPriority(mInstance, priority);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetParentPriority, otThreadSetParentPriority);
 }
 #endif
 
@@ -3454,22 +3231,7 @@ exit:
 
 otError Interpreter::ProcessPollPeriod(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otLinkGetPollPeriod(mInstance));
-    }
-    else
-    {
-        uint32_t pollPeriod;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint32(pollPeriod));
-        error = otLinkSetPollPeriod(mInstance, pollPeriod);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otLinkGetPollPeriod, otLinkSetPollPeriod);
 }
 
 otError Interpreter::ProcessPromiscuous(uint8_t aArgsLength, Arg aArgs[])
@@ -3733,15 +3495,7 @@ exit:
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessPreferRouterId(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t routerId;
-
-    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = aArgs[0].ParseAsUint8(routerId));
-    error = otThreadSetPreferredRouterId(mInstance, routerId);
-
-exit:
-    return error;
+    return ProcessSet(aArgsLength, aArgs, otThreadSetPreferredRouterId);
 }
 #endif
 
@@ -3792,16 +3546,7 @@ exit:
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessReleaseRouterId(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-    uint8_t routerId;
-
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
-
-    SuccessOrExit(error = aArgs[0].ParseAsUint8(routerId));
-    SuccessOrExit(error = otThreadReleaseRouterId(mInstance, routerId));
-
-exit:
-    return error;
+    return ProcessSet(aArgsLength, aArgs, otThreadReleaseRouterId);
 }
 #endif
 
@@ -4018,22 +3763,7 @@ exit:
 
 otError Interpreter::ProcessRouterDowngradeThreshold(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetRouterDowngradeThreshold(mInstance));
-    }
-    else
-    {
-        uint8_t threshold;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint8(threshold));
-        otThreadSetRouterDowngradeThreshold(mInstance, threshold);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetRouterDowngradeThreshold, otThreadSetRouterDowngradeThreshold);
 }
 
 otError Interpreter::ProcessRouterEligible(uint8_t aArgsLength, Arg aArgs[])
@@ -4058,42 +3788,12 @@ exit:
 
 otError Interpreter::ProcessRouterSelectionJitter(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetRouterSelectionJitter(mInstance));
-    }
-    else
-    {
-        uint8_t jitter;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint8(jitter));
-        otThreadSetRouterSelectionJitter(mInstance, jitter);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetRouterSelectionJitter, otThreadSetRouterSelectionJitter);
 }
 
 otError Interpreter::ProcessRouterUpgradeThreshold(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetRouterUpgradeThreshold(mInstance));
-    }
-    else
-    {
-        uint8_t threshold;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint8(threshold));
-        otThreadSetRouterUpgradeThreshold(mInstance, threshold);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetRouterUpgradeThreshold, otThreadSetRouterUpgradeThreshold);
 }
 #endif // OPENTHREAD_FTD
 
@@ -4470,11 +4170,7 @@ otError Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgs[0] == "add")
     {
-        uint16_t port;
-
-        VerifyOrExit(aArgsLength == 2, error = OT_ERROR_INVALID_ARGS);
-        SuccessOrExit(error = aArgs[1].ParseAsUint16(port));
-        SuccessOrExit(error = otIp6AddUnsecurePort(mInstance, port));
+        error = ProcessSet(aArgsLength - 1, aArgs + 1, otIp6AddUnsecurePort);
     }
     else if (aArgs[0] == "remove")
     {
@@ -4486,10 +4182,7 @@ otError Interpreter::ProcessUnsecurePort(uint8_t aArgsLength, Arg aArgs[])
         }
         else
         {
-            uint16_t port;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint16(port));
-            SuccessOrExit(error = otIp6RemoveUnsecurePort(mInstance, port));
+            error = ProcessSet(aArgsLength - 1, aArgs + 1, otIp6RemoveUnsecurePort);
         }
     }
     else if (aArgs[0] == "get")
@@ -4558,22 +4251,7 @@ otError Interpreter::ProcessJoiner(uint8_t aArgsLength, Arg aArgs[])
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessJoinerPort(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputLine("%d", otThreadGetJoinerUdpPort(mInstance));
-    }
-    else
-    {
-        uint16_t port;
-
-        SuccessOrExit(error = aArgs[0].ParseAsUint16(port));
-        error = otThreadSetJoinerUdpPort(mInstance, port);
-    }
-
-exit:
-    return error;
+    return ProcessGetSet(aArgsLength, aArgs, otThreadGetJoinerUdpPort, otThreadSetJoinerUdpPort);
 }
 #endif
 
@@ -4889,32 +4567,14 @@ otError Interpreter::ProcessMacRetries(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgs[0] == "direct")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%d", otLinkGetMaxFrameRetriesDirect(mInstance));
-        }
-        else
-        {
-            uint8_t retries;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint8(retries));
-            otLinkSetMaxFrameRetriesDirect(mInstance, retries);
-        }
+        error =
+            ProcessGetSet(aArgsLength - 1, aArgs + 1, otLinkGetMaxFrameRetriesDirect, otLinkSetMaxFrameRetriesDirect);
     }
 #if OPENTHREAD_FTD
     else if (aArgs[0] == "indirect")
     {
-        if (aArgsLength == 1)
-        {
-            OutputLine("%d", otLinkGetMaxFrameRetriesIndirect(mInstance));
-        }
-        else
-        {
-            uint8_t retries;
-
-            SuccessOrExit(error = aArgs[1].ParseAsUint8(retries));
-            otLinkSetMaxFrameRetriesIndirect(mInstance, retries);
-        }
+        error = ProcessGetSet(aArgsLength - 1, aArgs + 1, otLinkGetMaxFrameRetriesIndirect,
+                              otLinkSetMaxFrameRetriesIndirect);
     }
 #endif
     else

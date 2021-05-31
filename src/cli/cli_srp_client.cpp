@@ -260,40 +260,13 @@ exit:
 
 otError SrpClient::ProcessLeaseInterval(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t interval;
-
-    if (aArgsLength == 0)
-    {
-        mInterpreter.OutputLine("%u", otSrpClientGetLeaseInterval(mInterpreter.mInstance));
-        ExitNow();
-    }
-
-    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = aArgs[0].ParseAsUint32(interval));
-    otSrpClientSetLeaseInterval(mInterpreter.mInstance, interval);
-
-exit:
-    return error;
+    return mInterpreter.ProcessGetSet(aArgsLength, aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
 }
 
 otError SrpClient::ProcessKeyLeaseInterval(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t interval;
-
-    if (aArgsLength == 0)
-    {
-        mInterpreter.OutputLine("%u", otSrpClientGetKeyLeaseInterval(mInterpreter.mInstance));
-        ExitNow();
-    }
-
-    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = aArgs[0].ParseAsUint32(interval));
-    otSrpClientSetKeyLeaseInterval(mInterpreter.mInstance, interval);
-
-exit:
-    return error;
+    return mInterpreter.ProcessGetSet(aArgsLength, aArgs, otSrpClientGetKeyLeaseInterval,
+                                      otSrpClientSetKeyLeaseInterval);
 }
 
 otError SrpClient::ProcessServer(uint8_t aArgsLength, Arg aArgs[])
