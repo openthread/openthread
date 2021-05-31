@@ -52,7 +52,7 @@ namespace Mac {
  * This class defines the raw link-layer object.
  *
  */
-class LinkRaw final : public InstanceLocator, private NonCopyable
+class LinkRaw : public InstanceLocator, private NonCopyable
 {
     friend class ot::Instance;
 

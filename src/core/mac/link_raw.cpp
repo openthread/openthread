@@ -43,7 +43,6 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
-#include "common/new.hpp"
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
 
@@ -67,10 +66,17 @@ LinkRaw::LinkRaw(Instance &aInstance)
 
 void LinkRaw::Reset(void)
 {
-    Instance &instance = GetInstance();
+    mEnergyScanDoneCallback = nullptr;
+    mTransmitDoneCallback   = nullptr;
+    mReceiveDoneCallback    = nullptr;
 
-    this->~LinkRaw();
-    new (this) LinkRaw(instance);
+    mReceiveChannel      = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
+    mPanId               = kPanIdBroadcast;
+    mReceiveDoneCallback = nullptr;
+#if OPENTHREAD_RADIO
+    mSubMac.Reset();
+    mSubMac.SetPanId(mPanId);
+#endif
 }
 
 Error LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
