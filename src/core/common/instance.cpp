@@ -170,8 +170,8 @@ void Instance::Reset(void)
 #if OPENTHREAD_RADIO
 void Instance::RadioStackReset(void)
 {
-    mRadio.Reset();
-    mLinkRaw.Reset();
+    mRadio.Init();
+    mLinkRaw.Init();
 }
 #endif
 

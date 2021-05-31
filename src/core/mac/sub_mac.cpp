@@ -52,38 +52,21 @@ namespace Mac {
 SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRadioCaps(Get<Radio>().GetCaps())
-    , mState(kStateDisabled)
-    , mCsmaBackoffs(0)
-    , mTransmitRetries(0)
-    , mShortAddress(kShortAddrInvalid)
-    , mRxOnWhenBackoff(true)
-    , mEnergyScanMaxRssi(kInvalidRssiValue)
-    , mEnergyScanEndTime(0)
     , mTransmitFrame(Get<Radio>().GetTransmitBuffer())
     , mCallbacks(aInstance)
     , mPcapCallback(nullptr)
     , mPcapCallbackContext(nullptr)
-    , mFrameCounter(0)
-    , mKeyId(0)
     , mTimer(aInstance, SubMac::HandleTimer)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslPeriod(0)
-    , mCslChannel(0)
-    , mIsCslChannelSpecified(false)
-    , mCslLastSync(0)
     , mCslParentDrift(kCslWorstCrystalPpm)
     , mCslParentUncert(kCslWorstUncertainty)
-    , mCslState(kCslIdle)
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
 {
-    mExtAddress.Clear();
-    mPrevKey.Clear();
-    mCurrKey.Clear();
-    mNextKey.Clear();
+    Init();
 }
 
-void SubMac::Reset(void)
+void SubMac::Init(void)
 {
     mState           = kStateDisabled;
     mCsmaBackoffs    = 0;
@@ -111,9 +94,6 @@ void SubMac::Reset(void)
     mCslState              = kCslIdle;
     mCslTimer.Stop();
 #endif
-
-    SetShortAddress(mShortAddress);
-    SetExtAddress(mExtAddress);
 }
 
 otRadioCaps SubMac::GetCaps(void) const

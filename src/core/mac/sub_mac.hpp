@@ -199,10 +199,10 @@ public:
     explicit SubMac(Instance &aInstance);
 
     /**
-     * This method resets the states of the sub-MAC layer.
+     * This method initializes the states of the sub-MAC layer.
      *
      */
-    void Reset(void);
+    void Init(void);
 
     /**
      * This method gets the capabilities provided by platform radio.

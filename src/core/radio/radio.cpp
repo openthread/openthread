@@ -35,12 +35,11 @@ namespace ot {
 
 namespace {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-constexpr Mac::PanId        kDefaultPanId        = 0xffff;
 constexpr Mac::ShortAddress kDefaultShortAddress = 0xfffe;
 #endif
 } // namespace
 
-void Radio::Reset(void)
+void Radio::Init(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     Error error = OT_ERROR_NONE;
@@ -70,7 +69,7 @@ void Radio::Reset(void)
         OT_ASSERT(error == OT_ERROR_NONE);
     }
 
-    SetPanId(kDefaultPanId);
+    SetPanId(Mac::kPanIdBroadcast);
     SetExtendedAddress(extAddr);
     SetShortAddress(kDefaultShortAddress);
     SetMacKey(0, 0, prevKey, currKey, nextKey);

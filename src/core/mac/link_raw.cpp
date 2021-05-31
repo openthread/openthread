@@ -51,20 +51,16 @@ namespace Mac {
 
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
-    , mPanId(kPanIdBroadcast)
-    , mReceiveDoneCallback(nullptr)
-    , mTransmitDoneCallback(nullptr)
-    , mEnergyScanDoneCallback(nullptr)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mSubMac(aInstance.Get<SubMac>())
 #endif
 {
+    Init();
 }
 
-void LinkRaw::Reset(void)
+void LinkRaw::Init(void)
 {
     mEnergyScanDoneCallback = nullptr;
     mTransmitDoneCallback   = nullptr;
@@ -74,8 +70,7 @@ void LinkRaw::Reset(void)
     mPanId               = kPanIdBroadcast;
     mReceiveDoneCallback = nullptr;
 #if OPENTHREAD_RADIO
-    mSubMac.Reset();
-    mSubMac.SetPanId(mPanId);
+    mSubMac.Init();
 #endif
 }
 

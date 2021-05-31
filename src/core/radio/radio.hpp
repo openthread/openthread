@@ -243,10 +243,10 @@ public:
     int8_t GetReceiveSensitivity(void);
 
     /**
-     * This method resets the states of the Thread radio.
+     * This method initializes the states of the Thread radio.
      *
      */
-    void Reset(void);
+    void Init(void);
 
     /**
      * This method sets the PAN ID for address filtering.
