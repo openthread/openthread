@@ -633,21 +633,36 @@ otError Interpreter::ProcessBufferInfo(uint8_t aArgsLength, Arg aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
+    struct BufferInfoName
+    {
+        const uint16_t otBufferInfo::*mNumMessagesPtr;
+        const uint16_t otBufferInfo::*mNumBuffersPtr;
+        const char *                  mName;
+    };
+
+    static const BufferInfoName kBufferInfoNames[] = {
+        {&otBufferInfo::m6loSendMessages, &otBufferInfo::m6loSendBuffers, "6lo send"},
+        {&otBufferInfo::m6loReassemblyMessages, &otBufferInfo::m6loReassemblyBuffers, "6lo reas"},
+        {&otBufferInfo::mIp6Messages, &otBufferInfo::mIp6Buffers, "ip6"},
+        {&otBufferInfo::mMplMessages, &otBufferInfo::mMplBuffers, "mpl"},
+        {&otBufferInfo::mMleMessages, &otBufferInfo::mMleBuffers, "mle"},
+        {&otBufferInfo::mArpMessages, &otBufferInfo::mArpBuffers, "arp"},
+        {&otBufferInfo::mCoapMessages, &otBufferInfo::mCoapBuffers, "coap"},
+        {&otBufferInfo::mCoapSecureMessages, &otBufferInfo::mCoapSecureBuffers, "coap secure"},
+        {&otBufferInfo::mApplicationCoapMessages, &otBufferInfo::mApplicationCoapBuffers, "application coap"},
+    };
+
     otBufferInfo bufferInfo;
 
     otMessageGetBufferInfo(mInstance, &bufferInfo);
 
     OutputLine("total: %d", bufferInfo.mTotalBuffers);
     OutputLine("free: %d", bufferInfo.mFreeBuffers);
-    OutputLine("6lo send: %d %d", bufferInfo.m6loSendMessages, bufferInfo.m6loSendBuffers);
-    OutputLine("6lo reas: %d %d", bufferInfo.m6loReassemblyMessages, bufferInfo.m6loReassemblyBuffers);
-    OutputLine("ip6: %d %d", bufferInfo.mIp6Messages, bufferInfo.mIp6Buffers);
-    OutputLine("mpl: %d %d", bufferInfo.mMplMessages, bufferInfo.mMplBuffers);
-    OutputLine("mle: %d %d", bufferInfo.mMleMessages, bufferInfo.mMleBuffers);
-    OutputLine("arp: %d %d", bufferInfo.mArpMessages, bufferInfo.mArpBuffers);
-    OutputLine("coap: %d %d", bufferInfo.mCoapMessages, bufferInfo.mCoapBuffers);
-    OutputLine("coap secure: %d %d", bufferInfo.mCoapSecureMessages, bufferInfo.mCoapSecureBuffers);
-    OutputLine("application coap: %d %d", bufferInfo.mApplicationCoapMessages, bufferInfo.mApplicationCoapBuffers);
+
+    for (const BufferInfoName &info : kBufferInfoNames)
+    {
+        OutputLine("%s: %d %d", info.mName, bufferInfo.*info.mNumMessagesPtr, bufferInfo.*info.mNumBuffersPtr);
+    }
 
     return OT_ERROR_NONE;
 }
@@ -1126,6 +1141,35 @@ otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, Arg aArgs[])
     }
     else if (aArgs[0] == "metrics")
     {
+        struct RadioCoexMetricName
+        {
+            const uint32_t otRadioCoexMetrics::*mValuePtr;
+            const char *                        mName;
+        };
+
+        static const RadioCoexMetricName kTxMetricNames[] = {
+            {&otRadioCoexMetrics::mNumTxRequest, "Request"},
+            {&otRadioCoexMetrics::mNumTxGrantImmediate, "Grant Immediate"},
+            {&otRadioCoexMetrics::mNumTxGrantWait, "Grant Wait"},
+            {&otRadioCoexMetrics::mNumTxGrantWaitActivated, "Grant Wait Activated"},
+            {&otRadioCoexMetrics::mNumTxGrantWaitTimeout, "Grant Wait Timeout"},
+            {&otRadioCoexMetrics::mNumTxGrantDeactivatedDuringRequest, "Grant Deactivated During Request"},
+            {&otRadioCoexMetrics::mNumTxDelayedGrant, "Delayed Grant"},
+            {&otRadioCoexMetrics::mAvgTxRequestToGrantTime, "Average Request To Grant Time"},
+        };
+
+        static const RadioCoexMetricName kRxMetricNames[] = {
+            {&otRadioCoexMetrics::mNumRxRequest, "Request"},
+            {&otRadioCoexMetrics::mNumRxGrantImmediate, "Grant Immediate"},
+            {&otRadioCoexMetrics::mNumRxGrantWait, "Grant Wait"},
+            {&otRadioCoexMetrics::mNumRxGrantWaitActivated, "Grant Wait Activated"},
+            {&otRadioCoexMetrics::mNumRxGrantWaitTimeout, "Grant Wait Timeout"},
+            {&otRadioCoexMetrics::mNumRxGrantDeactivatedDuringRequest, "Grant Deactivated During Request"},
+            {&otRadioCoexMetrics::mNumRxDelayedGrant, "Delayed Grant"},
+            {&otRadioCoexMetrics::mAvgRxRequestToGrantTime, "Average Request To Grant Time"},
+            {&otRadioCoexMetrics::mNumRxGrantNone, "Grant None"},
+        };
+
         otRadioCoexMetrics metrics;
 
         SuccessOrExit(error = otPlatRadioGetCoexMetrics(mInstance, &metrics));
@@ -1133,24 +1177,18 @@ otError Interpreter::ProcessCoexMetrics(uint8_t aArgsLength, Arg aArgs[])
         OutputLine("Stopped: %s", metrics.mStopped ? "true" : "false");
         OutputLine("Grant Glitch: %u", metrics.mNumGrantGlitch);
         OutputLine("Transmit metrics");
-        OutputLine(kIndentSize, "Request: %u", metrics.mNumTxRequest);
-        OutputLine(kIndentSize, "Grant Immediate: %u", metrics.mNumTxGrantImmediate);
-        OutputLine(kIndentSize, "Grant Wait: %u", metrics.mNumTxGrantWait);
-        OutputLine(kIndentSize, "Grant Wait Activated: %u", metrics.mNumTxGrantWaitActivated);
-        OutputLine(kIndentSize, "Grant Wait Timeout: %u", metrics.mNumTxGrantWaitTimeout);
-        OutputLine(kIndentSize, "Grant Deactivated During Request: %u", metrics.mNumTxGrantDeactivatedDuringRequest);
-        OutputLine(kIndentSize, "Delayed Grant: %u", metrics.mNumTxDelayedGrant);
-        OutputLine(kIndentSize, "Average Request To Grant Time: %u", metrics.mAvgTxRequestToGrantTime);
+
+        for (const RadioCoexMetricName &metric : kTxMetricNames)
+        {
+            OutputLine(kIndentSize, "%s: %u", metric.mName, metrics.*metric.mValuePtr);
+        }
+
         OutputLine("Receive metrics");
-        OutputLine(kIndentSize, "Request: %u", metrics.mNumRxRequest);
-        OutputLine(kIndentSize, "Grant Immediate: %u", metrics.mNumRxGrantImmediate);
-        OutputLine(kIndentSize, "Grant Wait: %u", metrics.mNumRxGrantWait);
-        OutputLine(kIndentSize, "Grant Wait Activated: %u", metrics.mNumRxGrantWaitActivated);
-        OutputLine(kIndentSize, "Grant Wait Timeout: %u", metrics.mNumRxGrantWaitTimeout);
-        OutputLine(kIndentSize, "Grant Deactivated During Request: %u", metrics.mNumRxGrantDeactivatedDuringRequest);
-        OutputLine(kIndentSize, "Delayed Grant: %u", metrics.mNumRxDelayedGrant);
-        OutputLine(kIndentSize, "Average Request To Grant Time: %u", metrics.mAvgRxRequestToGrantTime);
-        OutputLine(kIndentSize, "Grant None: %u", metrics.mNumRxGrantNone);
+
+        for (const RadioCoexMetricName &metric : kRxMetricNames)
+        {
+            OutputLine(kIndentSize, "%s: %u", metric.mName, metrics.*metric.mValuePtr);
+        }
     }
     else
     {
@@ -1197,39 +1235,62 @@ otError Interpreter::ProcessCounters(uint8_t aArgsLength, Arg aArgs[])
     {
         if (aArgsLength == 1)
         {
+            struct MacCounterName
+            {
+                const uint32_t otMacCounters::*mValuePtr;
+                const char *                   mName;
+            };
+
+            static const MacCounterName kTxCounterNames[] = {
+                {&otMacCounters::mTxUnicast, "TxUnicast"},
+                {&otMacCounters::mTxBroadcast, "TxBroadcast"},
+                {&otMacCounters::mTxAckRequested, "TxAckRequested"},
+                {&otMacCounters::mTxAcked, "TxAcked"},
+                {&otMacCounters::mTxNoAckRequested, "TxNoAckRequested"},
+                {&otMacCounters::mTxData, "TxData"},
+                {&otMacCounters::mTxDataPoll, "TxDataPoll"},
+                {&otMacCounters::mTxBeacon, "TxBeacon"},
+                {&otMacCounters::mTxBeaconRequest, "TxBeaconRequest"},
+                {&otMacCounters::mTxOther, "TxOther"},
+                {&otMacCounters::mTxRetry, "TxRetry"},
+                {&otMacCounters::mTxErrCca, "TxErrCca"},
+                {&otMacCounters::mTxErrBusyChannel, "TxErrBusyChannel"},
+            };
+
+            static const MacCounterName kRxCounterNames[] = {
+                {&otMacCounters::mRxUnicast, "RxUnicast"},
+                {&otMacCounters::mRxBroadcast, "RxBroadcast"},
+                {&otMacCounters::mRxData, "RxData"},
+                {&otMacCounters::mRxDataPoll, "RxDataPoll"},
+                {&otMacCounters::mRxBeacon, "RxBeacon"},
+                {&otMacCounters::mRxBeaconRequest, "RxBeaconRequest"},
+                {&otMacCounters::mRxOther, "RxOther"},
+                {&otMacCounters::mRxAddressFiltered, "RxAddressFiltered"},
+                {&otMacCounters::mRxDestAddrFiltered, "RxDestAddrFiltered"},
+                {&otMacCounters::mRxDuplicated, "RxDuplicated"},
+                {&otMacCounters::mRxErrNoFrame, "RxErrNoFrame"},
+                {&otMacCounters::mRxErrUnknownNeighbor, "RxErrNoUnknownNeighbor"},
+                {&otMacCounters::mRxErrInvalidSrcAddr, "RxErrInvalidSrcAddr"},
+                {&otMacCounters::mRxErrSec, "RxErrSec"},
+                {&otMacCounters::mRxErrFcs, "RxErrFcs"},
+                {&otMacCounters::mRxErrOther, "RxErrOther"},
+            };
+
             const otMacCounters *macCounters = otLinkGetCounters(mInstance);
 
             OutputLine("TxTotal: %d", macCounters->mTxTotal);
-            OutputLine(kIndentSize, "TxUnicast: %d", macCounters->mTxUnicast);
-            OutputLine(kIndentSize, "TxBroadcast: %d", macCounters->mTxBroadcast);
-            OutputLine(kIndentSize, "TxAckRequested: %d", macCounters->mTxAckRequested);
-            OutputLine(kIndentSize, "TxAcked: %d", macCounters->mTxAcked);
-            OutputLine(kIndentSize, "TxNoAckRequested: %d", macCounters->mTxNoAckRequested);
-            OutputLine(kIndentSize, "TxData: %d", macCounters->mTxData);
-            OutputLine(kIndentSize, "TxDataPoll: %d", macCounters->mTxDataPoll);
-            OutputLine(kIndentSize, "TxBeacon: %d", macCounters->mTxBeacon);
-            OutputLine(kIndentSize, "TxBeaconRequest: %d", macCounters->mTxBeaconRequest);
-            OutputLine(kIndentSize, "TxOther: %d", macCounters->mTxOther);
-            OutputLine(kIndentSize, "TxRetry: %d", macCounters->mTxRetry);
-            OutputLine(kIndentSize, "TxErrCca: %d", macCounters->mTxErrCca);
-            OutputLine(kIndentSize, "TxErrBusyChannel: %d", macCounters->mTxErrBusyChannel);
+
+            for (const MacCounterName &counter : kTxCounterNames)
+            {
+                OutputLine(kIndentSize, "%s: %u", counter.mName, macCounters->*counter.mValuePtr);
+            }
+
             OutputLine("RxTotal: %d", macCounters->mRxTotal);
-            OutputLine(kIndentSize, "RxUnicast: %d", macCounters->mRxUnicast);
-            OutputLine(kIndentSize, "RxBroadcast: %d", macCounters->mRxBroadcast);
-            OutputLine(kIndentSize, "RxData: %d", macCounters->mRxData);
-            OutputLine(kIndentSize, "RxDataPoll: %d", macCounters->mRxDataPoll);
-            OutputLine(kIndentSize, "RxBeacon: %d", macCounters->mRxBeacon);
-            OutputLine(kIndentSize, "RxBeaconRequest: %d", macCounters->mRxBeaconRequest);
-            OutputLine(kIndentSize, "RxOther: %d", macCounters->mRxOther);
-            OutputLine(kIndentSize, "RxAddressFiltered: %d", macCounters->mRxAddressFiltered);
-            OutputLine(kIndentSize, "RxDestAddrFiltered: %d", macCounters->mRxDestAddrFiltered);
-            OutputLine(kIndentSize, "RxDuplicated: %d", macCounters->mRxDuplicated);
-            OutputLine(kIndentSize, "RxErrNoFrame: %d", macCounters->mRxErrNoFrame);
-            OutputLine(kIndentSize, "RxErrNoUnknownNeighbor: %d", macCounters->mRxErrUnknownNeighbor);
-            OutputLine(kIndentSize, "RxErrInvalidSrcAddr: %d", macCounters->mRxErrInvalidSrcAddr);
-            OutputLine(kIndentSize, "RxErrSec: %d", macCounters->mRxErrSec);
-            OutputLine(kIndentSize, "RxErrFcs: %d", macCounters->mRxErrFcs);
-            OutputLine(kIndentSize, "RxErrOther: %d", macCounters->mRxErrOther);
+
+            for (const MacCounterName &counter : kRxCounterNames)
+            {
+                OutputLine(kIndentSize, "%s: %u", counter.mName, macCounters->*counter.mValuePtr);
+            }
         }
         else if ((aArgsLength == 2) && (aArgs[1] == "reset"))
         {
@@ -1244,17 +1305,30 @@ otError Interpreter::ProcessCounters(uint8_t aArgsLength, Arg aArgs[])
     {
         if (aArgsLength == 1)
         {
+            struct MleCounterName
+            {
+                const uint16_t otMleCounters::*mValuePtr;
+                const char *                   mName;
+            };
+
+            static const MleCounterName kCounterNames[] = {
+                {&otMleCounters::mDisabledRole, "Role Disabled"},
+                {&otMleCounters::mDetachedRole, "Role Detached"},
+                {&otMleCounters::mChildRole, "Role Child"},
+                {&otMleCounters::mRouterRole, "Role Router"},
+                {&otMleCounters::mLeaderRole, "Role Leader"},
+                {&otMleCounters::mAttachAttempts, "Attach Attempts"},
+                {&otMleCounters::mPartitionIdChanges, "Partition Id Changes"},
+                {&otMleCounters::mBetterPartitionAttachAttempts, "Better Partition Attach Attempts"},
+                {&otMleCounters::mParentChanges, "Parent Changes"},
+            };
+
             const otMleCounters *mleCounters = otThreadGetMleCounters(mInstance);
 
-            OutputLine("Role Disabled: %d", mleCounters->mDisabledRole);
-            OutputLine("Role Detached: %d", mleCounters->mDetachedRole);
-            OutputLine("Role Child: %d", mleCounters->mChildRole);
-            OutputLine("Role Router: %d", mleCounters->mRouterRole);
-            OutputLine("Role Leader: %d", mleCounters->mLeaderRole);
-            OutputLine("Attach Attempts: %d", mleCounters->mAttachAttempts);
-            OutputLine("Partition Id Changes: %d", mleCounters->mPartitionIdChanges);
-            OutputLine("Better Partition Attach Attempts: %d", mleCounters->mBetterPartitionAttachAttempts);
-            OutputLine("Parent Changes: %d", mleCounters->mParentChanges);
+            for (const MleCounterName &counter : kCounterNames)
+            {
+                OutputLine("%s: %d", counter.mName, mleCounters->*counter.mValuePtr);
+            }
         }
         else if ((aArgsLength == 2) && (aArgs[1] == "reset"))
         {
