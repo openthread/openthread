@@ -460,7 +460,6 @@ private:
     void    OutputPrefix(const otMeshLocalPrefix &aPrefix);
 
     otError ProcessNetstat(uint8_t aArgsLength, Arg aArgs[]);
-    int     OutputSocketAddress(const otSockAddr &aAddress);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     otError ProcessService(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessServiceList(void);

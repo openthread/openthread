@@ -239,7 +239,7 @@ class SockAddr : public otSockAddr, public Clearable<SockAddr>, public Unequatab
 public:
     enum : uint16_t
     {
-        kInfoStringSize = 50, ///< Max chars for the info string (`ToString()`).
+        kInfoStringSize = OT_IP6_SOCK_ADDR_STRING_SIZE, ///< Max chars for the info string (`ToString()`).
     };
 
     /**
@@ -343,6 +343,23 @@ public:
      *
      */
     InfoString ToString(void) const;
+
+    /**
+     * This method converts a given IPv6 socket address to a human-readable string.
+     *
+     * The IPv6 socket address string is formatted as "[<ipv6 address>]:<port>".
+     *
+     * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be
+     * truncated but the outputted string is always null-terminated.
+     *
+     * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+     * @param[in]  aSize     The size of @p aBuffer (in bytes).
+     *
+     */
+    void ToString(char *aBuffer, uint16_t aSize) const;
+
+private:
+    void ToString(StringWriter &aWriter) const;
 };
 
 /**

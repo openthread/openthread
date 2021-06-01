@@ -237,6 +237,11 @@ void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t 
     static_cast<const Ip6::Address *>(aAddress)->ToString(aBuffer, aSize);
 }
 
+void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize)
+{
+    static_cast<const Ip6::SockAddr *>(aSockAddr)->ToString(aBuffer, aSize);
+}
+
 void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize)
 {
     static_cast<const Ip6::Prefix *>(aPrefix)->ToString(aBuffer, aSize);
