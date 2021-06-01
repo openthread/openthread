@@ -161,7 +161,7 @@ Error Tcp::Endpoint::SendByReference(otLinkedBuffer &aBuffer, uint32_t aFlags)
     Error error;
 
     bool moreToCome = (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0;
-    int  bsdError   = tcp_usr_send(&mTcb, moreToCome ? 1 : 0, &aBuffer);
+    int  bsdError   = tcp_usr_send(&mTcb, moreToCome ? 1 : 0, &aBuffer, 0);
     SuccessOrExit(error = BsdErrorToOtError(bsdError));
 
 exit:
@@ -170,10 +170,18 @@ exit:
 
 Error Tcp::Endpoint::SendByExtension(size_t aNumBytes, uint32_t aFlags)
 {
-    OT_UNUSED_VARIABLE(aNumBytes);
-    OT_UNUSED_VARIABLE(aFlags);
+    Error error;
 
-    return kErrorNotImplemented;
+    bool moreToCome = (aFlags & OT_TCP_SEND_MORE_TO_COME) != 0;
+    int  bsdError;
+
+    VerifyOrExit(lbuf_head(&mTcb.sendbuf) != nullptr, error = kErrorInvalidState);
+
+    bsdError = tcp_usr_send(&mTcb, moreToCome ? 1 : 0, nullptr, aNumBytes);
+    SuccessOrExit(error = BsdErrorToOtError(bsdError));
+
+exit:
+    return error;
 }
 
 Error Tcp::Endpoint::ReceiveByReference(const otLinkedBuffer *&aBuffer)
