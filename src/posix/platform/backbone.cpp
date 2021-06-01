@@ -53,7 +53,7 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName)
     VerifyOrExit(aInterfaceName != nullptr && aInterfaceName[0] != '\0');
 
     VerifyOrDie(strnlen(aInterfaceName, IFNAMSIZ) <= IFNAMSIZ - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strncpy(gBackboneNetifName, aInterfaceName, sizeof(gBackboneNetifName));
+    strncpy(gBackboneNetifName, aInterfaceName, sizeof(gBackboneNetifName) - 1);
 
     gBackboneNetifIndex = if_nametoindex(gBackboneNetifName);
     VerifyOrDie(gBackboneNetifIndex > 0, OT_EXIT_FAILURE);
