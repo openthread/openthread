@@ -319,7 +319,7 @@ void	cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type);
 
 /* Added, since there is no header file for tcp_usrreq.c. */
 int tcp6_usr_connect(struct tcpcb* tp, struct sockaddr_in6* sinp6);
-int tcp_usr_send(struct tcpcb* tp, int moretocome, struct otLinkedBuffer* data);
+int tcp_usr_send(struct tcpcb* tp, int moretocome, struct otLinkedBuffer* data, size_t extendby);
 int tcp_usr_rcvd(struct tcpcb* tp);
 int tcp_usr_shutdown(struct tcpcb* tp);
 void tcp_usr_abort(struct tcpcb* tp);

@@ -299,7 +299,7 @@ out:
 tcp_usr_send(struct socket *so, int flags, struct mbuf *m,
     struct sockaddr *nam, struct mbuf *control, struct thread *td)*/
 /* Returns error condition, and stores bytes sent into SENT. */
-int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data)
+int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t extendby)
 {
 	int error = 0;
 //	struct inpcb *inp;
@@ -371,9 +371,16 @@ int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data)
 	if (!(flags & PRUS_OOB)) {
 #endif // DON'T SUPPORT URGENT DATA
 		/*sbappendstream(&so->so_snd, m, flags);*/
-        lbuf_append(&tp->sendbuf, data);
-        if (data->mLength == 0) {
-             goto out;
+        if (data == NULL) {
+            if (extendby == 0) {
+                goto out;
+            }
+            lbuf_extend(&tp->sendbuf, extendby);
+        } else {
+            if (data->mLength == 0) {
+                 goto out;
+            }
+            lbuf_append(&tp->sendbuf, data);
         }
 #if 0 // DON'T SUPPORT IMPLIED CONNECTION
 		if (nam && tp->t_state < TCPS_SYN_SENT) {
