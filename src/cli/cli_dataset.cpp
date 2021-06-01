@@ -85,11 +85,9 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsMeshLocalPrefixPresent)
     {
-        const uint8_t *prefix = aDataset.mMeshLocalPrefix.m8;
-        mInterpreter.OutputLine(
-            "Mesh Local Prefix: %x:%x:%x:%x::/64", (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
-            (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3], (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
-            (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
+        mInterpreter.OutputFormat("Mesh Local Prefix: ");
+        mInterpreter.OutputPrefix(aDataset.mMeshLocalPrefix);
+        mInterpreter.OutputLine("");
     }
 
     if (aDataset.mComponents.mIsMasterKeyPresent)
@@ -119,7 +117,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
 
     if (aDataset.mComponents.mIsSecurityPolicyPresent)
     {
-        mInterpreter.OutputFormat("Security Policy: ", aDataset.mSecurityPolicy.mRotationTime);
+        mInterpreter.OutputFormat("Security Policy: ");
         OutputSecurityPolicy(aDataset.mSecurityPolicy);
         mInterpreter.OutputLine("");
     }
@@ -416,12 +414,9 @@ otError Dataset::ProcessMeshLocalPrefix(uint8_t aArgsLength, Arg aArgs[])
     {
         if (sDataset.mComponents.mIsMeshLocalPrefixPresent)
         {
-            const uint8_t *prefix = sDataset.mMeshLocalPrefix.m8;
-            mInterpreter.OutputLine("Mesh Local Prefix: %x:%x:%x:%x::/64",
-                                    (static_cast<uint16_t>(prefix[0]) << 8) | prefix[1],
-                                    (static_cast<uint16_t>(prefix[2]) << 8) | prefix[3],
-                                    (static_cast<uint16_t>(prefix[4]) << 8) | prefix[5],
-                                    (static_cast<uint16_t>(prefix[6]) << 8) | prefix[7]);
+            mInterpreter.OutputFormat("Mesh Local Prefix: ");
+            mInterpreter.OutputPrefix(sDataset.mMeshLocalPrefix);
+            mInterpreter.OutputLine("");
         }
     }
     else
