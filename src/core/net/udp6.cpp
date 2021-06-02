@@ -371,6 +371,11 @@ exit:
     return error;
 }
 
+bool Udp::IsPortReserved(uint16_t port)
+{
+    return port == Tmf::kUdpPort || (kSrpServerPortMin <= port && port <= kSrpServerPortMax);
+}
+
 void Udp::AddSocket(SocketHandle &aSocket)
 {
     SuccessOrExit(mSockets.Add(aSocket));
@@ -417,7 +422,7 @@ uint16_t Udp::GetEphemeralPort(void)
         {
             mEphemeralPort = kDynamicPortMin;
         }
-    } while (mEphemeralPort == Tmf::kUdpPort);
+    } while (IsPortReserved(mEphemeralPort));
 
     return mEphemeralPort;
 }

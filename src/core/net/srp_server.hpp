@@ -78,7 +78,8 @@ class Server : public InstanceLocator, private NonCopyable
 public:
     enum : uint16_t
     {
-        kUdpPort = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT, ///< The SRP Server UDP listening port.
+        kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, ///< The reserved min SRP Server UDP listening port.
+        kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, ///< The reserved max SRP Server UDP listening port.
     };
 
     /**

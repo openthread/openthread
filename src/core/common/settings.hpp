@@ -125,9 +125,10 @@ public:
         kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
         kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
         kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
+        kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
     };
 
-    static constexpr Key kLastKey = kKeySrpClientInfo; ///< The last (numerically) enumerator value in `Key`.
+    static constexpr Key kLastKey = kKeySrpServerInfo; ///< The last (numerically) enumerator value in `Key`.
 
     /**
      * This structure represents the device's own network information for settings storage.
@@ -677,6 +678,65 @@ public:
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+    /**
+     * This structure represents the SRP client info (selected server address).
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class SrpServerInfo : private Clearable<SrpServerInfo>
+    {
+        friend class Settings;
+
+    public:
+        static constexpr Key kKey = kKeySrpServerInfo; ///< The associated key.
+
+        /**
+         * This method initializes the `SrpServerInfo` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method returns the server IPv6 address.
+         *
+         * @returns The server IPv6 address.
+         *
+         */
+        const Ip6::Address &GetAddress(void) const { return mAddress; }
+
+        /**
+         * This method sets the server IPv6 address.
+         *
+         * @param[in] aAddress  The server IPv6 address.
+         *
+         */
+        void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
+
+        /**
+         * This method returns the server port number.
+         *
+         * @returns The server port number.
+         *
+         */
+        uint16_t GetPort(void) const { return Encoding::LittleEndian::HostSwap16(mPort); }
+
+        /**
+         * This method sets the server port number.
+         *
+         * @param[in] aPort  The server port number.
+         *
+         */
+        void SetPort(uint16_t aPort) { mPort = Encoding::LittleEndian::HostSwap16(aPort); }
+
+    private:
+        void Log(Action aAction) const;
+
+        Ip6::Address mAddress;
+        uint16_t     mPort; // (in little-endian encoding)
+    } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+
 protected:
     explicit SettingsBase(Instance &aInstance)
         : InstanceLocator(aInstance)
@@ -1002,7 +1062,7 @@ public:
          * @returns A reference to the `ChildInfo` entry currently pointed by the iterator.
          *
          */
-        const ChildInfo &operator*(void)const { return mChildInfo; }
+        const ChildInfo &operator*(void) const { return mChildInfo; }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two iterator instances are equal.
