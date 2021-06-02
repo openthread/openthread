@@ -560,6 +560,21 @@ public:
     NameData GetAsData(void) const;
 
     /**
+     * This method sets the IEEE 802.15.4 Network Name from a given null terminated C string.
+     *
+     * This method also validates that the given @p aNameString follows UTF-8 encoding and can fit in `kMaxSize`
+     * chars.
+     *
+     * @param[in] aNameString      A name C string.
+     *
+     * @retval kErrorNone          Successfully set the IEEE 802.15.4 Network Name.
+     * @retval kErrorAlready       The name is already set to the same string.
+     * @retval kErrorInvalidArgs   Given name is invalid (too long or does not follow UTF-8 encoding).
+     *
+     */
+    Error Set(const char *aNameString);
+
+    /**
      * This method sets the IEEE 802.15.4 Network Name.
      *
      * @param[in]  aNameData           A reference to name data.
@@ -585,55 +600,11 @@ public:
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 /**
- * This structure represents a Thread Domain Name.
+ * This type represents a Thread Domain Name.
  *
  */
-class DomainName
-{
-public:
-    enum
-    {
-        kMaxSize = 16, // Maximum number of chars in Domain Name (excludes null char).
-    };
-
-    /**
-     * This constructor initializes the Thread Domain Name as an empty string.
-     *
-     */
-    DomainName(void) { m8[0] = '\0'; }
-
-    /**
-     * This method gets the Thread Domain Name as a null terminated C string.
-     *
-     * @returns The Domain Name as a null terminated C string array.
-     *
-     */
-    const char *GetAsCString(void) const { return m8; }
-
-    /**
-     * This method gets the Thread Domain Name as NameData.
-     *
-     * @returns The Domain Name as NameData.
-     *
-     */
-    NameData GetAsData(void) const;
-
-    /**
-     * This method sets the Thread Domain Name.
-     *
-     * @param[in]  aNameData           A reference to name data.
-     *
-     * @retval kErrorNone          Successfully set the Thread Domain Name.
-     * @retval kErrorAlready       The name is already set to the same string.
-     * @retval kErrorInvalidArgs   Given name is too long.
-     *
-     */
-    Error Set(const NameData &aNameData);
-
-private:
-    char m8[kMaxSize + 1]; ///< Byte values.
-};
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+typedef NetworkName DomainName;
+#endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 

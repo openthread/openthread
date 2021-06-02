@@ -75,10 +75,12 @@ typedef struct otMasterKey otMasterKey;
 /**
  * This structure represents a Network Name.
  *
+ * The `otNetworkName` is a null terminated C string (i.e., `m8` char array MUST end with null char `\0`).
+ *
  */
 typedef struct otNetworkName
 {
-    char m8[OT_NETWORK_NAME_MAX_SIZE + 1]; ///< Byte values
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1]; ///< Byte values. The `+ 1` is for null char.
 } otNetworkName;
 
 #define OT_EXT_PAN_ID_SIZE 8 ///< Size of a Thread PAN ID (bytes)
@@ -514,6 +516,21 @@ otError otDatasetGeneratePskc(const char *           aPassPhrase,
                               const otNetworkName *  aNetworkName,
                               const otExtendedPanId *aExtPanId,
                               otPskc *               aPskc);
+
+/**
+ * This function sets an `otNetworkName` instance from a given null terminated C string.
+ *
+ * This function also validates that the given @p aNameString follows UTF-8 encoding and its length is not longer than
+ * `OT_NETWORK_NAME_MAX_SIZE`.
+ *
+ * @param[out] aNetworkName        A pointer to the `otNetworkName` to set.
+ * @param[in]  aNameString         A name C string.
+ *
+ * @retval OT_ERROR_NONE           Successfully set @p aNetworkName from @p aNameString.
+ * @retval OT_ERROR_INVALID_ARGS   @p aNameStrng is invalid (too long or does not follow UTF-8 encoding).
+ *
+ */
+otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
 /**
  * @}

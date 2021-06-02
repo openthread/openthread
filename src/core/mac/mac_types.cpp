@@ -142,6 +142,27 @@ NameData NetworkName::GetAsData(void) const
     return NameData(m8, len);
 }
 
+Error NetworkName::Set(const char *aNameString)
+{
+    // When setting `NetworkName` from a string, we treat it as `NameData`
+    // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
+    // for null char in the data (within its given size) to calculate
+    // the name's length and ensure that the name fits in `kMaxSize`
+    // chars. The `+ 1` ensures that a `aNameString` with length
+    // longer than `kMaxSize` is correctly rejected (returning error
+    // `kErrorInvalidArgs`).
+
+    Error    error;
+    NameData data(aNameString, kMaxSize + 1);
+
+    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
+
+    error = Set(data);
+
+exit:
+    return error;
+}
+
 Error NetworkName::Set(const NameData &aNameData)
 {
     Error   error  = kErrorNone;
@@ -167,32 +188,6 @@ bool NetworkName::operator==(const NetworkName &aOther) const
     return (data.GetLength() == otherData.GetLength()) &&
            (memcmp(data.GetBuffer(), otherData.GetBuffer(), data.GetLength()) == 0);
 }
-
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-NameData DomainName::GetAsData(void) const
-{
-    uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
-
-    return NameData(m8, len);
-}
-
-Error DomainName::Set(const NameData &aNameData)
-{
-    Error   error  = kErrorNone;
-    uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
-
-    VerifyOrExit(newLen <= kMaxSize, error = kErrorInvalidArgs);
-
-    // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
-
-    memcpy(m8, aNameData.GetBuffer(), newLen);
-    m8[newLen] = '\0';
-
-exit:
-    return error;
-}
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
