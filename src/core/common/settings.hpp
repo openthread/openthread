@@ -716,7 +716,7 @@ public:
     private:
         void Log(Action aAction) const;
 
-        uint16_t     mPort; // (in little-endian encoding)
+        uint16_t mPort; // (in little-endian encoding)
     } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
 
@@ -1045,7 +1045,7 @@ public:
          * @returns A reference to the `ChildInfo` entry currently pointed by the iterator.
          *
          */
-        const ChildInfo &operator*(void) const { return mChildInfo; }
+        const ChildInfo &operator*(void)const { return mChildInfo; }
 
         /**
          * This method overloads operator `==` to evaluate whether or not two iterator instances are equal.
