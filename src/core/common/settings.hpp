@@ -680,7 +680,7 @@ public:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
     /**
-     * This structure represents the SRP client info (selected server address).
+     * This structure represents the SRP server info.
      *
      */
     OT_TOOL_PACKED_BEGIN
@@ -696,22 +696,6 @@ public:
          *
          */
         void Init(void) { Clear(); }
-
-        /**
-         * This method returns the server IPv6 address.
-         *
-         * @returns The server IPv6 address.
-         *
-         */
-        const Ip6::Address &GetAddress(void) const { return mAddress; }
-
-        /**
-         * This method sets the server IPv6 address.
-         *
-         * @param[in] aAddress  The server IPv6 address.
-         *
-         */
-        void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
 
         /**
          * This method returns the server port number.
@@ -732,7 +716,6 @@ public:
     private:
         void Log(Action aAction) const;
 
-        Ip6::Address mAddress;
         uint16_t     mPort; // (in little-endian encoding)
     } OT_TOOL_PACKED_END;
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO

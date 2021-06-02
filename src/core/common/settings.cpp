@@ -101,8 +101,7 @@ void SettingsBase::SrpClientInfo::Log(Action aAction) const
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
 void SettingsBase::SrpServerInfo::Log(Action aAction) const
 {
-    otLogInfoCore("[settings] %s SrpServerInfo {Server:[%s]:%u}", ActionToString(aAction),
-                  GetAddress().ToString().AsCString(), GetPort());
+    otLogInfoCore("[settings] %s SrpServerInfo {port:%u}", ActionToString(aAction), GetPort());
 }
 #endif
 

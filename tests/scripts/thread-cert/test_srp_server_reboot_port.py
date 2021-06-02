@@ -35,8 +35,8 @@ import command
 import thread_cert
 
 # Test description:
-#   This test verifies an SRP server will try to bind to a UDP port that wasn't
-# previously used by the same device.
+#   This test verifies when an SRP server reboots, it will listen to a UDP port
+#   that wasn't used in the last time.
 #
 # Topology:
 #
@@ -98,8 +98,6 @@ class SrpAutoStartMode(thread_cert.TestCase):
 
         # Repeat the following steps for 20 times
         for i in range(25):
-            print(f'i = {i}')
-
             #
             # 2. Disable server and check client is stopped/disabled.
             #
