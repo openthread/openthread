@@ -452,8 +452,13 @@ void Server::Start(void)
     {
         found = true;
         it.Clear();
-        while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info) == kErrorNone)
+        otLogInfoSrp("Get Anycast Info: %d", Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info));
+        it.Clear();
+        while (Get<NetworkData::Leader>().Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info) ==
+               kErrorNone)
         {
+            otLogInfoSrp("MLEID: %s My Address: %s", Get<Mle::Mle>().GetMeshLocal64().ToString().AsCString(),
+                         info.mSockAddr.GetAddress().ToString().AsCString());
             if (Get<Mle::Mle>().GetMeshLocal64() == info.mSockAddr.GetAddress())
             {
                 hasRecord = true;
@@ -464,6 +469,7 @@ void Server::Start(void)
                 }
             }
         }
+        otLogInfoSrp("Failed to get info: %d", Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info));
         if (found)
         {
             break;
@@ -472,6 +478,11 @@ void Server::Start(void)
     if (!hasRecord || !found)
     {
         port = Random::NonCrypto::GetUint16InRange(kReservedPortMin, kReservedPortMax);
+        otLogInfoSrp("[server] will be listening on random port: %u", port);
+    }
+    else
+    {
+        otLogInfoSrp("[server] will be listening on determined port: %u", port);
     }
     SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
     SuccessOrExit(error = PublishServerData());

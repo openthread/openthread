@@ -28,6 +28,7 @@
 #
 
 import ipaddress
+import logging
 import unittest
 
 import command
@@ -39,15 +40,11 @@ import thread_cert
 #
 # Topology:
 #
-#   CLIENT (leader) -- SERVER1 (router)
-#      |
-#      |
-#   SERVER2 (router)
+#   CLIENT (leader) -- SERVER (router)
 #
 
 CLIENT = 1
-SERVER1 = 2
-SERVER2 = 3
+SERVER = 2
 
 
 class SrpAutoStartMode(thread_cert.TestCase):
@@ -60,13 +57,8 @@ class SrpAutoStartMode(thread_cert.TestCase):
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
-        SERVER1: {
-            'name': 'SRP_SERVER1',
-            'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rdn',
-        },
-        SERVER2: {
-            'name': 'SRP_SERVER2',
+        SERVER: {
+            'name': 'SRP_SERVER',
             'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
@@ -74,8 +66,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
 
     def test(self):
         client = self.nodes[CLIENT]
-        server1 = self.nodes[SERVER1]
-        server2 = self.nodes[SERVER2]
+        server = self.nodes[SERVER]
 
         #
         # 0. Start the server & client devices.
@@ -86,16 +77,13 @@ class SrpAutoStartMode(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual(client.get_state(), 'leader')
 
-        server1.srp_server_set_enabled(True)
-        server2.srp_server_set_enabled(False)
-        server1.start()
-        server2.start()
+        server.srp_server_set_enabled(True)
+        server.start()
         self.simulator.go(5)
-        self.assertEqual(server1.get_state(), 'router')
-        self.assertEqual(server2.get_state(), 'router')
+        self.assertEqual(server.get_state(), 'router')
 
         #
-        # 1. Enable auto start mode on client and check that server1 is used.
+        # 1. Enable auto start mode on client and check that server is used.
         #
 
         self.assertEqual(client.srp_client_get_state(), 'Disabled')
@@ -104,42 +92,35 @@ class SrpAutoStartMode(thread_cert.TestCase):
         self.simulator.go(2)
 
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertTrue(server1.has_ipaddr(client.srp_client_get_server_address()))
+        self.assertTrue(server.has_ipaddr(client.srp_client_get_server_address()))
 
-        #
-        # 2. Disable server1 and check client is stopped/disabled.
-        #
+        ports = []
 
-        server1.srp_server_set_enabled(False)
-        self.simulator.go(5)
-        self.assertEqual(client.srp_client_get_state(), 'Disabled')
+        # Repeat the following steps for 20 times
+        for i in range(1):
+            print(f'i = {i}')
 
-        #
-        # 3. Enable server2 and check client starts again.
-        #
+            #
+            # 2. Disable server and check client is stopped/disabled.
+            #
 
-        server2.srp_server_set_enabled(True)
-        self.simulator.go(5)
-        self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        server2_address = client.srp_client_get_server_address()
+            old_port = server.get_srp_server_port()
+            server.srp_server_set_enabled(False)
+            server.reset()
+            server.start()
+            self.simulator.go(5)
 
-        #
-        # 4. Enable both servers and check client stays with server2.
-        #
+            #
+            # 3. Enable server and check client starts again. Verify that the
+            # server is using a different port.
 
-        server1.srp_server_set_enabled(True)
-        self.simulator.go(2)
-        self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertEqual(client.srp_client_get_server_address(), server2_address)
-
-        #
-        # 5. Disable server2 and check client switches to server1.
-        #
-
-        server2.srp_server_set_enabled(False)
-        self.simulator.go(5)
-        self.assertEqual(client.srp_client_get_state(), 'Enabled')
-        self.assertNotEqual(client.srp_client_get_server_address(), server2_address)
+            server.srp_server_set_enabled(True)
+            self.simulator.go(5)
+            self.assertEqual(client.srp_client_get_state(), 'Enabled')
+            self.assertEqual(client.srp_client_get_server_address(), server.get_mleid())
+            self.assertNotEqual(old_port, server.get_srp_server_port())
+            ports.append(server.get_srp_server_port())
+        logging.info(f'ports = {ports}')
 
 
 if __name__ == '__main__':

@@ -1495,6 +1495,11 @@ exit:
 
 void Mle::HandleNotifierEvents(Events aEvents)
 {
+    NetworkData::Service::Manager::Iterator   it;
+    NetworkData::Service::DnsSrpUnicast::Info info;
+    otLogInfoMle("!!!!!!!!!!!!! get it: %s %d", Get<>(),
+                 Get<NetworkData::Leader>().Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(it, info));
+
     VerifyOrExit(!IsDisabled());
 
     if (aEvents.Contains(kEventThreadRoleChanged))
@@ -4263,7 +4268,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
     static_assert(kTypeLinkProbe == 30, "kTypeLinkProbe value is incorrect)");
 #endif
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#else  // OPENTHREAD_FTD
+#else // OPENTHREAD_FTD
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
     static_assert(kTypeLinkMetricsManagementRequest == 16, "kTypeLinkMetricsManagementRequest value is incorrect)");
     static_assert(kTypeLinkMetricsManagementResponse == 17, "kTypeLinkMetricsManagementResponse value is incorrect)");
