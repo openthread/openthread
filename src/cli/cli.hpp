@@ -68,6 +68,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/type_traits.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -312,6 +313,97 @@ private:
         const char *mName;
         otError (Interpreter::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
+
+    template <typename ValueType> using GetHandler         = ValueType (&)(otInstance *);
+    template <typename ValueType> using SetHandler         = void (&)(otInstance *, ValueType);
+    template <typename ValueType> using SetHandlerFailable = otError (&)(otInstance *, ValueType);
+
+    // Returns format string to output a `ValueType` (e.g., "%u" for `uint16_t`).
+    template <typename ValueType> static constexpr const char *FormatStringFor(void);
+
+    template <typename ValueType> otError ProcessGet(uint8_t aArgsLength, GetHandler<ValueType> aGetHandler)
+    {
+        static_assert(
+            TypeTraits::IsSame<ValueType, uint8_t>::kValue || TypeTraits::IsSame<ValueType, uint16_t>::kValue ||
+                TypeTraits::IsSame<ValueType, uint32_t>::kValue || TypeTraits::IsSame<ValueType, int8_t>::kValue ||
+                TypeTraits::IsSame<ValueType, int16_t>::kValue || TypeTraits::IsSame<ValueType, int32_t>::kValue,
+            "ValueType must be an  8, 16, or 32 bit `int` or `uint` type");
+
+        otError error = OT_ERROR_NONE;
+
+        VerifyOrExit(aArgsLength == 0, error = OT_ERROR_INVALID_ARGS);
+        OutputLine(FormatStringFor<ValueType>(), aGetHandler(mInstance));
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType> otError ParseValue(uint8_t aArgsLength, Arg aArgs[], ValueType &aValue)
+    {
+        otError error = OT_ERROR_INVALID_ARGS;
+
+        VerifyOrExit(aArgsLength == 1);
+        error = aArgs[0].ParseAs<ValueType>(aValue);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType>
+    otError ProcessSet(uint8_t aArgsLength, Arg aArgs[], SetHandler<ValueType> aSetHandler)
+    {
+        otError   error;
+        ValueType value;
+
+        SuccessOrExit(error = ParseValue(aArgsLength, aArgs, value));
+        aSetHandler(mInstance, value);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType>
+    otError ProcessSet(uint8_t aArgsLength, Arg aArgs[], SetHandlerFailable<ValueType> aSetHandler)
+    {
+        otError   error;
+        ValueType value;
+
+        SuccessOrExit(error = ParseValue(aArgsLength, aArgs, value));
+        error = aSetHandler(mInstance, value);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType>
+    otError ProcessGetSet(uint8_t               aArgsLength,
+                          Arg                   aArgs[],
+                          GetHandler<ValueType> aGetHandler,
+                          SetHandler<ValueType> aSetHandler)
+    {
+        otError error = ProcessGet(aArgsLength, aGetHandler);
+
+        VerifyOrExit(error != OT_ERROR_NONE);
+        error = ProcessSet(aArgsLength, aArgs, aSetHandler);
+
+    exit:
+        return error;
+    }
+
+    template <typename ValueType>
+    otError ProcessGetSet(uint8_t                       aArgsLength,
+                          Arg                           aArgs[],
+                          GetHandler<ValueType>         aGetHandler,
+                          SetHandlerFailable<ValueType> aSetHandler)
+    {
+        otError error = ProcessGet(aArgsLength, aGetHandler);
+
+        VerifyOrExit(error != OT_ERROR_NONE);
+        error = ProcessSet(aArgsLength, aArgs, aSetHandler);
+
+    exit:
+        return error;
+    }
 
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
 
@@ -847,6 +939,38 @@ private:
     SrpServer mSrpServer;
 #endif
 };
+
+// Specializations of `FormatStringFor<ValueType>()`
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<uint8_t>(void)
+{
+    return "%u";
+}
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<uint16_t>(void)
+{
+    return "%u";
+}
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<uint32_t>(void)
+{
+    return "%u";
+}
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<int8_t>(void)
+{
+    return "%d";
+}
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<int16_t>(void)
+{
+    return "%d";
+}
+
+template <> inline constexpr const char *Interpreter::FormatStringFor<int32_t>(void)
+{
+    return "%d";
+}
 
 } // namespace Cli
 } // namespace ot
