@@ -595,7 +595,7 @@ private:
             OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, // The max port in the port range reserved for SRP server.
     };
 
-    static bool IsPortReserved(uint16_t port);
+    static bool IsPortReserved(uint16_t aPort);
 
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);

@@ -40,11 +40,13 @@ import thread_cert
 #
 # Topology:
 #
-#   CLIENT (leader) -- SERVER (router)
+#   LEADER (SRP client) -- ROUTER (SRP server)
 #
 
 CLIENT = 1
 SERVER = 2
+
+REBOOT_TIMES = 25
 
 
 class SrpAutoStartMode(thread_cert.TestCase):
@@ -54,12 +56,10 @@ class SrpAutoStartMode(thread_cert.TestCase):
     TOPOLOGY = {
         CLIENT: {
             'name': 'SRP_CLIENT',
-            'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         SERVER: {
             'name': 'SRP_SERVER',
-            'masterkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
     }
@@ -90,14 +90,20 @@ class SrpAutoStartMode(thread_cert.TestCase):
         client.srp_client_enable_auto_start_mode()
         self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
         self.simulator.go(2)
-
         self.assertEqual(client.srp_client_get_state(), 'Enabled')
         self.assertTrue(server.has_ipaddr(client.srp_client_get_server_address()))
 
+        # Register a service
+        client.srp_client_set_host_name('my-host')
+        client.srp_client_set_host_address('2001::1')
+        client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
+        self.simulator.go(5)
+        self.check_host_and_service(server, client, '2001::1')
+
         ports = [server.get_srp_server_port()]
 
-        # Repeat the following steps for 20 times
-        for i in range(25):
+        # Reboot the SRP server several times
+        for i in range(REBOOT_TIMES):
             #
             # 2. Disable server and check client is stopped/disabled.
             #
@@ -110,15 +116,64 @@ class SrpAutoStartMode(thread_cert.TestCase):
 
             #
             # 3. Enable server and check client starts again. Verify that the
-            # server is using a different port.
+            # server is using a different port, and the service have been
+            # re-registered.
+            #
 
             server.srp_server_set_enabled(True)
             self.simulator.go(5)
             self.assertEqual(client.srp_client_get_state(), 'Enabled')
             self.assertEqual(client.srp_client_get_server_address(), server.get_mleid())
             self.assertNotEqual(old_port, server.get_srp_server_port())
+            self.check_host_and_service(server, client, '2001::1')
             ports.append(server.get_srp_server_port())
         logging.info(f'ports = {ports}')
+
+    def check_host_and_service(self, server, client, host_addr):
+        # Check that we have properly registered host and service instance.
+        # Originally used in test_srp_register_single_service.py.
+
+        client_services = client.srp_client_get_services()
+        print(client_services)
+        self.assertEqual(len(client_services), 1)
+        client_service = client_services[0]
+
+        # Verify that the client possesses correct service resources.
+        self.assertEqual(client_service['instance'], 'my-service')
+        self.assertEqual(client_service['name'], '_ipps._tcp')
+        self.assertEqual(int(client_service['port']), 12345)
+        self.assertEqual(int(client_service['priority']), 0)
+        self.assertEqual(int(client_service['weight']), 0)
+
+        # Verify that the client received a SUCCESS response for the server.
+        self.assertEqual(client_service['state'], 'Registered')
+
+        server_services = server.srp_server_get_services()
+        self.assertEqual(len(server_services), 1)
+        server_service = server_services[0]
+
+        # Verify that the server accepted the SRP registration and stores
+        # the same service resources.
+        self.assertEqual(server_service['deleted'], 'false')
+        self.assertEqual(server_service['instance'], client_service['instance'])
+        self.assertEqual(server_service['name'], client_service['name'])
+        self.assertEqual(int(server_service['port']), int(client_service['port']))
+        self.assertEqual(int(server_service['priority']), int(client_service['priority']))
+        self.assertEqual(int(server_service['weight']), int(client_service['weight']))
+        # We output value of TXT entry as HEX string.
+        print(server_service['TXT'])
+        self.assertEqual(server_service['TXT'], ['abc', 'def=', 'xyz=58595a'])
+        self.assertEqual(server_service['host'], 'my-host')
+
+        server_hosts = server.srp_server_get_hosts()
+        print(server_hosts)
+        self.assertEqual(len(server_hosts), 1)
+        server_host = server_hosts[0]
+
+        self.assertEqual(server_host['deleted'], 'false')
+        self.assertEqual(server_host['fullname'], server_service['host_fullname'])
+        self.assertEqual(len(server_host['addresses']), 1)
+        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address(host_addr))
 
 
 if __name__ == '__main__':

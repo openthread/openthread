@@ -371,9 +371,9 @@ exit:
     return error;
 }
 
-bool Udp::IsPortReserved(uint16_t port)
+bool Udp::IsPortReserved(uint16_t aPort)
 {
-    return port == Tmf::kUdpPort || (kSrpServerPortMin <= port && port <= kSrpServerPortMax);
+    return aPort == Tmf::kUdpPort || (kSrpServerPortMin <= aPort && aPort <= kSrpServerPortMax);
 }
 
 void Udp::AddSocket(SocketHandle &aSocket)

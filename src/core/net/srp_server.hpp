@@ -81,6 +81,7 @@ public:
         kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, ///< The reserved min SRP Server UDP listening port.
         kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, ///< The reserved max SRP Server UDP listening port.
     };
+    static_assert(kUdpPortMin <= kUdpPortMax, "invalid port range");
 
     /**
      * The ID of SRP service update transaction.

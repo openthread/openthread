@@ -441,25 +441,25 @@ void Server::Start(void)
     Error    error = kErrorNone;
     uint16_t port  = kUdpPortMin;
 
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+    VerifyOrExit(!IsRunning());
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
     Settings::SrpServerInfo info;
     if (Get<Settings>().Read(info) == kErrorNone)
     {
         port = info.GetPort() + 1;
-        if (port > kUdpPortMax)
+        if (port < kUdpPortMin || port > kUdpPortMax)
         {
             port = kUdpPortMin;
         }
     }
 #endif
-
-    VerifyOrExit(!IsRunning());
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
 
     SuccessOrExit(error = PublishServerData());
 
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+#if OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
     info.SetPort(port);
     IgnoreError(Get<Settings>().Save(info));
 #endif
