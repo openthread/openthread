@@ -443,26 +443,29 @@ void Server::Start(void)
 
     VerifyOrExit(!IsRunning());
 
-#if OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
-    Settings::SrpServerInfo info;
-    if (Get<Settings>().Read(info) == kErrorNone)
     {
-        port = info.GetPort() + 1;
-        if (port < kUdpPortMin || port > kUdpPortMax)
+#if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+        Settings::SrpServerInfo info;
+
+        if (Get<Settings>().Read(info) == kErrorNone)
         {
-            port = kUdpPortMin;
+            port = info.GetPort() + 1;
+            if (port < kUdpPortMin || port > kUdpPortMax)
+            {
+                port = kUdpPortMin;
+            }
         }
+#endif
+        SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
+        SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
+
+        SuccessOrExit(error = PublishServerData());
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+        info.SetPort(port);
+        IgnoreError(Get<Settings>().Save(info));
+#endif
     }
-#endif
-    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
-
-    SuccessOrExit(error = PublishServerData());
-
-#if OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
-    info.SetPort(port);
-    IgnoreError(Get<Settings>().Save(info));
-#endif
 
     otLogInfoSrp("[server] start listening on port %hu", mSocket.GetSockName().mPort);
 

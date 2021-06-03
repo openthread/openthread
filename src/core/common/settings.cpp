@@ -98,7 +98,7 @@ void SettingsBase::SrpClientInfo::Log(Action aAction) const
 }
 #endif
 
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
 void SettingsBase::SrpServerInfo::Log(Action aAction) const
 {
     otLogInfoCore("[settings] %s SrpServerInfo {port:%u}", ActionToString(aAction), GetPort());
@@ -441,7 +441,7 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
             break;
 #endif
 
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         case kKeySrpServerInfo:
             reinterpret_cast<const SrpServerInfo *>(aValue)->Log(aAction);
             break;
