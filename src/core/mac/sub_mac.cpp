@@ -331,14 +331,14 @@ void SubMac::ProcessTransmitSecurity(void)
     VerifyOrExit(mTransmitFrame.GetSecurityEnabled());
     VerifyOrExit(!mTransmitFrame.IsSecurityProcessed());
 
+    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
+
     if (!mTransmitFrame.IsARetransmission())
     {
         mTransmitFrame.SetKeyId(mKeyId);
     }
 
     VerifyOrExit(ShouldHandleTransmitSecurity());
-
-    SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
     VerifyOrExit(keyIdMode == Frame::kKeyIdMode1);
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
