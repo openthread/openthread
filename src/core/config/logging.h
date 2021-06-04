@@ -180,7 +180,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_LOG_MAC
-#define OPENTHREAD_CONFIG_LOG_MAC 1
+#define OPENTHREAD_CONFIG_LOG_MAC 0
 #endif
 
 /**
