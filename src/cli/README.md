@@ -1946,7 +1946,7 @@ Done
 
 Send an ICMPv6 Echo Request.
 
-- interface: The source IPv6 address of the echo request.
+- source: The source IPv6 address of the echo request.
 - size: The number of data bytes to be sent.
 - count: The number of ICMPv6 Echo Requests to be sent.
 - interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
