@@ -718,7 +718,7 @@ public:
 
         uint16_t mPort; // (in little-endian encoding)
     } OT_TOOL_PACKED_END;
-#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
 
 protected:
     explicit SettingsBase(Instance &aInstance)

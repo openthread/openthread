@@ -66,13 +66,13 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_SAVE_INFO
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
  *
  * Define to 1 to enable SRP server feature to save its own port in non-volatile settings.
  *
- * When enabled, the SRP server will save the its port in the non-volatile settings. On a server
- * restart (e.g., due to a device reset) it will choose a UDP port different from the saved one. The info is written to
- * Settings after an SRP server successfully starts.
+ * When enabled, the SRP server will save its port in the non-volatile settings. On a server
+ * restart (e.g., due to a device reset) it will restore the port and change to a different one. The info is written to
+ * Settings after the SRP server successfully starts.
  *
  */
 #ifndef OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE

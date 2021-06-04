@@ -674,6 +674,7 @@ private:
 
     ServiceUpdateId mServiceUpdateId;
     bool            mEnabled;
+    bool            mHasRegisteredAnyService;
 };
 
 } // namespace Srp

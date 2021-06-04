@@ -85,6 +85,7 @@ Server::Server(Instance &aInstance)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mEnabled(false)
+    , mHasRegisteredAnyService(false)
 {
     IgnoreError(SetDomain(kDefaultDomain));
 }
@@ -420,6 +421,15 @@ void Server::CommitSrpUpdate(Error                    aError,
     {
         otLogInfoSrp("[server] add new host %s", aHost.GetFullName());
         AddHost(&aHost);
+#if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+        if (!mHasRegisteredAnyService)
+        {
+            mHasRegisteredAnyService = true;
+            Settings::SrpServerInfo info;
+            info.SetPort(mSocket.mSockName.mPort);
+            IgnoreError(Get<Settings>().Save(info));
+        }
+#endif
     }
 
     // Re-schedule the lease timer.
@@ -456,16 +466,10 @@ void Server::Start(void)
             }
         }
 #endif
-        SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-        SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
-
-        SuccessOrExit(error = PublishServerData());
-
-#if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
-        info.SetPort(port);
-        IgnoreError(Get<Settings>().Save(info));
-#endif
     }
+    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
+    SuccessOrExit(error = PublishServerData());
 
     otLogInfoSrp("[server] start listening on port %hu", mSocket.GetSockName().mPort);
 
