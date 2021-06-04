@@ -108,8 +108,8 @@ private:
     void        HandleDatasetUpdater(otError aError);
 #endif
 
-    void  OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
-    Error ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t aArgsLength, Arg aArgs[]);
+    void    OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
+    otError ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t aArgsLength, Arg aArgs[]);
 
     static constexpr Command sCommands[] = {
         {"active", &Dataset::ProcessActive},
