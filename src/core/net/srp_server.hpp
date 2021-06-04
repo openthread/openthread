@@ -673,8 +673,8 @@ private:
     LinkedList<UpdateMetadata> mOutstandingUpdates;
 
     ServiceUpdateId mServiceUpdateId;
-    bool            mEnabled;
-    bool            mHasRegisteredAnyService;
+    bool            mEnabled : 1;
+    bool            mHasRegisteredAnyService : 1;
 };
 
 } // namespace Srp

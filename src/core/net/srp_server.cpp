@@ -424,8 +424,9 @@ void Server::CommitSrpUpdate(Error                    aError,
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         if (!mHasRegisteredAnyService)
         {
-            mHasRegisteredAnyService = true;
             Settings::SrpServerInfo info;
+
+            mHasRegisteredAnyService = true;
             info.SetPort(mSocket.mSockName.mPort);
             IgnoreError(Get<Settings>().Save(info));
         }
