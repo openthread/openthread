@@ -1942,7 +1942,7 @@ Set the preferred Thread Leader Partition ID.
 Done
 ```
 
-### ping \[-I interface\] \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
+### ping \[-I source\] \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
 
 Send an ICMPv6 Echo Request.
 
