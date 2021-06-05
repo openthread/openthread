@@ -55,7 +55,7 @@ otError SrpServer::Process(uint8_t aArgsLength, Arg aArgs[])
     command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
-    error = (this->*command->mHandler)(aArgsLength, aArgs);
+    error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
 
 exit:
     return error;
@@ -65,9 +65,9 @@ otError SrpServer::ProcessDomain(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgsLength > 1)
+    if (aArgsLength > 0)
     {
-        SuccessOrExit(error = otSrpServerSetDomain(mInterpreter.mInstance, aArgs[1].GetCString()));
+        SuccessOrExit(error = otSrpServerSetDomain(mInterpreter.mInstance, aArgs[0].GetCString()));
     }
     else
     {
@@ -103,15 +103,15 @@ otError SrpServer::ProcessLease(uint8_t aArgsLength, Arg aArgs[])
     otError                error = OT_ERROR_NONE;
     otSrpServerLeaseConfig leaseConfig;
 
-    if (aArgsLength == 5)
+    if (aArgsLength == 4)
     {
-        SuccessOrExit(error = aArgs[1].ParseAsUint32(leaseConfig.mMinLease));
-        SuccessOrExit(error = aArgs[2].ParseAsUint32(leaseConfig.mMaxLease));
-        SuccessOrExit(error = aArgs[3].ParseAsUint32(leaseConfig.mMinKeyLease));
-        SuccessOrExit(error = aArgs[4].ParseAsUint32(leaseConfig.mMaxKeyLease));
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(leaseConfig.mMinLease));
+        SuccessOrExit(error = aArgs[1].ParseAsUint32(leaseConfig.mMaxLease));
+        SuccessOrExit(error = aArgs[2].ParseAsUint32(leaseConfig.mMinKeyLease));
+        SuccessOrExit(error = aArgs[3].ParseAsUint32(leaseConfig.mMaxKeyLease));
         error = otSrpServerSetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
     }
-    else if (aArgsLength == 1)
+    else if (aArgsLength == 0)
     {
         otSrpServerGetLeaseConfig(mInterpreter.mInstance, &leaseConfig);
         mInterpreter.OutputLine("min lease: %u", leaseConfig.mMinLease);
@@ -135,7 +135,7 @@ otError SrpServer::ProcessHost(uint8_t aArgsLength, Arg aArgs[])
     otError                error = OT_ERROR_NONE;
     const otSrpServerHost *host;
 
-    VerifyOrExit(aArgsLength <= 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength == 0, error = OT_ERROR_INVALID_ARGS);
 
     host = nullptr;
     while ((host = otSrpServerGetNextHost(mInterpreter.mInstance, host)) != nullptr)
@@ -199,7 +199,7 @@ otError SrpServer::ProcessService(uint8_t aArgsLength, Arg aArgs[])
     otError                error = OT_ERROR_NONE;
     const otSrpServerHost *host;
 
-    VerifyOrExit(aArgsLength <= 1, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgsLength == 0, error = OT_ERROR_INVALID_ARGS);
 
     host = nullptr;
     while ((host = otSrpServerGetNextHost(mInterpreter.mInstance, host)) != nullptr)
