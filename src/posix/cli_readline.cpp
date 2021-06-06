@@ -56,8 +56,6 @@
 #include "openthread-core-config.h"
 #include "platform-posix.h"
 
-static const char sPrompt[] = "> ";
-
 static void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
@@ -90,7 +88,7 @@ extern "C" void otAppCliInit(otInstance *aInstance)
 
     rl_set_screen_size(0, OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH);
 
-    rl_callback_handler_install(sPrompt, InputCallback);
+    rl_callback_handler_install("", InputCallback);
     otCliInit(aInstance, OutputCallback, nullptr);
 }
 
