@@ -72,7 +72,7 @@
  *
  * When enabled, the SRP server will save its port in the non-volatile settings. On a server
  * restart (e.g., due to a device reset) it will restore the port and change to a different one. The info is written to
- * Settings after the SRP server successfully starts.
+ * Settings after the first service has been registered due to receiving an SRP Update.
  *
  */
 #ifndef OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE

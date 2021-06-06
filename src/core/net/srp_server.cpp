@@ -454,8 +454,8 @@ void Server::Start(void)
 
     VerifyOrExit(!IsRunning());
 
-    {
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+    {
         Settings::SrpServerInfo info;
 
         if (Get<Settings>().Read(info) == kErrorNone)
@@ -466,8 +466,9 @@ void Server::Start(void)
                 port = kUdpPortMin;
             }
         }
-#endif
     }
+#endif
+
     SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
     SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
     SuccessOrExit(error = PublishServerData());
