@@ -80,7 +80,6 @@ int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
 
     VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
 
-    otLogInfoPlat("%s", buf);
     VerifyOrExit(mSessionSocket != -1);
 
 #if defined(__linux__)
