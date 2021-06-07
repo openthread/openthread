@@ -293,6 +293,7 @@ do_build_otbr_docker()
             --build-arg NAT64=0 \
             --build-arg REST_API=0 \
             --build-arg WEB_GUI=0 \
+            --build-arg MDNS="${OTBR_MDNS:-mDNSResponder}" \
             --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
 

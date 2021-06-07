@@ -103,6 +103,9 @@ jobs:
 
   thread-border-router:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        otbr_mdns: ["mDNSResponder", "avahi"]
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
@@ -111,6 +114,7 @@ jobs:
       INTER_OP: 1
       COVERAGE: 1
       MULTIPLY: 1
+      OTBR_MDNS: ${{ matrix.otbr_mdns }}
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
       BORDER_ROUTING: 1
