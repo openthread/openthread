@@ -2589,10 +2589,10 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
             uint8_t mPskcBuffer[OT_PSKC_MAX_SIZE];
             size_t mKeyLen;
 
-            Error err = otPlatCryptoExportKey(pskc->mKeyMaterial.m32,
+            SuccessOrExit(error = otPlatCryptoExportKey(pskc->mKeyMaterial.m32,
                                                 mPskcBuffer,
                                                 OT_PSKC_MAX_SIZE,
-                                                &mKeyLen); 
+                                                &mKeyLen)); 
 
             (void)err;
 
