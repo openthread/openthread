@@ -72,6 +72,7 @@ enum
     OT_SETTINGS_KEY_ON_LINK_PREFIX       = 0x000a, ///< On-link prefix for infrastructure link.
     OT_SETTINGS_KEY_SRP_ECDSA_KEY        = 0x000b, ///< SRP client ECDSA public/private key pair.
     OT_SETTINGS_KEY_SRP_CLIENT_INFO      = 0x000c, ///< The SRP client info (selected SRP server address).
+    OT_SETTINGS_KEY_SRP_SERVER_INFO      = 0x000d, ///< The SRP server info (UDP port).
 };
 
 /**

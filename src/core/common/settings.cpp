@@ -98,6 +98,13 @@ void SettingsBase::SrpClientInfo::Log(Action aAction) const
 }
 #endif
 
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+void SettingsBase::SrpServerInfo::Log(Action aAction) const
+{
+    otLogInfoCore("[settings] %s SrpServerInfo {port:%u}", ActionToString(aAction), GetPort());
+}
+#endif
+
 #endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 
 #if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
@@ -146,6 +153,7 @@ const char *SettingsBase::KeyToString(Key aKey)
         "OnLinkPrefix",      // (10) kKeyOnLinkPrefix
         "SrpEcdsaKey",       // (11) kKeySrpEcdsaKey
         "SrpClientInfo",     // (12) kKeySrpClientInfo
+        "SrpServerInfo",     // (13) kKeySrpServerInfo
     };
 
     static_assert(1 == kKeyActiveDataset, "kKeyActiveDataset value is incorrect");
@@ -160,8 +168,9 @@ const char *SettingsBase::KeyToString(Key aKey)
     static_assert(10 == kKeyOnLinkPrefix, "kKeyOnLinkPrefix value is incorrect");
     static_assert(11 == kKeySrpEcdsaKey, "kKeySrpEcdsaKey value is incorrect");
     static_assert(12 == kKeySrpClientInfo, "kKeySrpClientInfo value is incorrect");
+    static_assert(13 == kKeySrpServerInfo, "kKeySrpServerInfo value is incorrect");
 
-    static_assert(kLastKey == kKeySrpClientInfo, "kLastKey is not valid");
+    static_assert(kLastKey == kKeySrpServerInfo, "kLastKey is not valid");
 
     OT_ASSERT(aKey <= kLastKey);
 
@@ -429,6 +438,12 @@ void Settings::Log(Action aAction, Error aError, Key aKey, const void *aValue)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
         case kKeySrpClientInfo:
             reinterpret_cast<const SrpClientInfo *>(aValue)->Log(aAction);
+            break;
+#endif
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+        case kKeySrpServerInfo:
+            reinterpret_cast<const SrpServerInfo *>(aValue)->Log(aAction);
             break;
 #endif
 

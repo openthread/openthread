@@ -589,7 +589,13 @@ private:
     {
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
+        kSrpServerPortMin =
+            OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, // The min port in the port range reserved for SRP server.
+        kSrpServerPortMax =
+            OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, // The max port in the port range reserved for SRP server.
     };
+
+    static bool IsPortReserved(uint16_t aPort);
 
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);
