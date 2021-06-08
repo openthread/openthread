@@ -125,6 +125,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
 
         self.nodes[ROUTER2].reset()
         self._setUpRouter2()
+        self.simulator.go(100)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=20,
@@ -133,7 +134,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             mesh_local='fd00:0db7::',
             panid=PANID_FINAL,
         )
-        self.simulator.go(101)
+        self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)
