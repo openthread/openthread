@@ -51,6 +51,7 @@
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/radio_url.hpp"
+#include "posix/platform/udp.hpp"
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
@@ -139,7 +140,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(instance, aPlatformConfig->mInterfaceName);
 #elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpInit(aPlatformConfig->mInterfaceName);
+    ot::Posix::Udp::Init(instance, aPlatformConfig->mInterfaceName);
 #else
     gNetifName[0] = '\0';
 #endif
@@ -163,6 +164,9 @@ void otSysDeinit(void)
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    ot::Posix::Udp::Get().Deinit();
+#endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifDeinit();
 #endif
@@ -213,9 +217,6 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     ot::Posix::Mainloop::Manager::Get().Update(*aMainloop);
 
     platformAlarmUpdateTimeout(&aMainloop->mTimeout);
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpUpdateFdSet(aInstance, &aMainloop->mReadFdSet, &aMainloop->mMaxFd);
-#endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
                              &aMainloop->mMaxFd);
@@ -295,9 +296,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
-#endif
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
 #endif
 }
 

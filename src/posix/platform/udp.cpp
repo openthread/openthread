@@ -56,32 +56,36 @@
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
 
 #include "posix/platform/ip6_utils.hpp"
+#include "posix/platform/mainloop.hpp"
+#include "posix/platform/udp.hpp"
 
 using namespace ot::Posix::Ip6Utils;
 
-static const size_t kMaxUdpSize = 1280;
+namespace {
 
-static void *FdToHandle(int aFd)
+constexpr size_t kMaxUdpSize = 1280;
+
+void *FdToHandle(int aFd)
 {
     return reinterpret_cast<void *>(aFd);
 }
 
-static int FdFromHandle(void *aHandle)
+int FdFromHandle(void *aHandle)
 {
     return static_cast<int>(reinterpret_cast<long>(aHandle));
 }
 
-static bool IsLinkLocal(const struct in6_addr &aAddress)
+bool IsLinkLocal(const struct in6_addr &aAddress)
 {
     return aAddress.s6_addr[0] == 0xfe && aAddress.s6_addr[1] == 0x80;
 }
 
-static bool IsMulticast(const otIp6Address &aAddress)
+bool IsMulticast(const otIp6Address &aAddress)
 {
     return aAddress.mFields.m8[0] == 0xff;
 }
 
-static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
+otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, const otMessageInfo &aMessageInfo)
 {
 #ifdef __APPLE__
     // use fixed value for CMSG_SPACE is not a constant expression on macOS
@@ -122,18 +126,16 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     msg.msg_iovlen     = 1;
     msg.msg_flags      = 0;
 
-    cmsg = CMSG_FIRSTHDR(&msg);
-
     {
         int hopLimit = (aMessageInfo.mHopLimit ? aMessageInfo.mHopLimit : OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT);
 
+        cmsg             = CMSG_FIRSTHDR(&msg);
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_HOPLIMIT;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(int));
 
         memcpy(CMSG_DATA(cmsg), &hopLimit, sizeof(int));
 
-        cmsg = CMSG_NXTHDR(&msg, cmsg);
         controlLength += CMSG_SPACE(sizeof(int));
     }
 
@@ -142,6 +144,7 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
     {
         struct in6_pktinfo pktinfo;
 
+        cmsg             = CMSG_NXTHDR(&msg, cmsg);
         cmsg->cmsg_level = IPPROTO_IPV6;
         cmsg->cmsg_type  = IPV6_PKTINFO;
         cmsg->cmsg_len   = CMSG_LEN(sizeof(pktinfo));
@@ -152,7 +155,6 @@ static otError transmitPacket(int aFd, uint8_t *aPayload, uint16_t aLength, cons
         memcpy(CMSG_DATA(cmsg), &pktinfo, sizeof(pktinfo));
 
         controlLength += CMSG_SPACE(sizeof(pktinfo));
-        cmsg = CMSG_NXTHDR(&msg, cmsg);
     }
 
 #ifdef __APPLE__
@@ -175,7 +177,7 @@ exit:
     return error;
 }
 
-static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
+otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMessageInfo &aMessageInfo)
 {
     struct sockaddr_in6 peerAddr;
     uint8_t             control[kMaxUdpSize];
@@ -227,6 +229,8 @@ static otError receivePacket(int aFd, uint8_t *aPayload, uint16_t &aLength, otMe
 exit:
     return rval > 0 ? OT_ERROR_NONE : OT_ERROR_FAILED;
 }
+
+} // namespace
 
 otError otPlatUdpSocket(otUdpSocket *aUdpSocket)
 {
@@ -539,11 +543,14 @@ exit:
     return error;
 }
 
-void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd)
+namespace ot {
+namespace Posix {
+
+void Udp::Update(otSysMainloopContext &aContext)
 {
     VerifyOrExit(gNetifIndex != 0);
 
-    for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd;
 
@@ -553,11 +560,11 @@ void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMax
         }
 
         fd = FdFromHandle(socket->mHandle);
-        FD_SET(fd, aReadFdSet);
+        FD_SET(fd, &aContext.mReadFdSet);
 
-        if (aMaxFd != nullptr && *aMaxFd < fd)
+        if (aContext.mMaxFd < fd)
         {
-            *aMaxFd = fd;
+            aContext.mMaxFd = fd;
         }
     }
 
@@ -565,7 +572,7 @@ exit:
     return;
 }
 
-void platformUdpInit(const char *aIfName)
+void Udp::Init(otInstance *aInstance, const char *aIfName)
 {
     if (aIfName == nullptr)
     {
@@ -582,17 +589,35 @@ void platformUdpInit(const char *aIfName)
     }
 
     assert(gNetifIndex != 0);
+
+    mInstance = aInstance;
+    Mainloop::Manager::Get().Add(*this);
 }
 
-void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
+void Udp::Deinit(void)
+{
+    // TODO All platform sockets should be closed
+
+    mInstance = nullptr;
+    Mainloop::Manager::Get().Remove(*this);
+}
+
+Udp &Udp::Get(void)
+{
+    static Udp sInstance;
+
+    return sInstance;
+}
+
+void Udp::Process(const otSysMainloopContext &aContext)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    for (otUdpSocket *socket = otUdpGetSockets(aInstance); socket != nullptr; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd = FdFromHandle(socket->mHandle);
 
-        if (fd > 0 && FD_ISSET(fd, aReadFdSet))
+        if (fd > 0 && FD_ISSET(fd, &aContext.mReadFdSet))
         {
             otMessageInfo messageInfo;
             otMessage *   message = nullptr;
@@ -607,7 +632,7 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
                 continue;
             }
 
-            message = otUdpNewMessage(aInstance, &msgSettings);
+            message = otUdpNewMessage(mInstance, &msgSettings);
 
             if (message == nullptr)
             {
@@ -630,4 +655,6 @@ void platformUdpProcess(otInstance *aInstance, const fd_set *aReadFdSet)
     return;
 }
 
+} // namespace Posix
+} // namespace ot
 #endif // #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
