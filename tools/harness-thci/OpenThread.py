@@ -43,6 +43,9 @@ from abc import abstractmethod
 import serial
 from Queue import Queue
 
+import commissioner
+from commissioner_impl import OTCommissioner
+
 TESTHARNESS_1_1 = '1.1'
 TESTHARNESS_1_2 = '1.2'
 
@@ -181,11 +184,14 @@ class OpenThreadTHCI(object):
     LINK_QUALITY_CHANGE_TIME = 100
     DEFAULT_COMMAND_TIMEOUT = 10
     firmwarePrefix = 'OPENTHREAD/'
+    DOMAIN_NAME = 'Thread'
+    MLR_TIMEOUT_MIN = 300
 
     IsBorderRouter = False
     IsBackboneRouter = False
     IsHost = False
 
+    externalCommissioner = None
     _update_router_status = False
 
     if TESTHARNESS_VERSION == TESTHARNESS_1_2:
@@ -1443,7 +1449,7 @@ class OpenThreadTHCI(object):
         self.xpanId = ModuleHelper.Default_XpanId
         self.meshLocalPrefix = ModuleHelper.Default_MLPrefix
         # OT only accept hex format PSKc for now
-        self.pskc = '00000000000000000000000000000000'
+        self.pskc = '00000000000000000000000000000001'
         self.securityPolicySecs = ModuleHelper.Default_SecurityPolicy
         self.securityPolicyFlags = 'onrcb'
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
@@ -2241,6 +2247,46 @@ class OpenThreadTHCI(object):
         cmd = 'joiner start %s' % (strPSKc)
         print(cmd)
         return self.__executeCommand(cmd)[-1] == 'Done'
+
+    @API
+    def getBorderAgentPort(self):
+        return int(self.__executeCommand('ba port')[0])
+
+    @API
+    def startExternalCommissioner(self, baAddr, baPort):
+        """Start external commissioner
+        Args:
+            baAddr: A string represents the border agent address.
+            baPort: An integer represents the border agent port.
+        Returns:
+            A boolean indicates whether this function succeed.
+        """
+        if self.externalCommissioner is None:
+            config = commissioner.Configuration()
+            config.isCcmMode = False
+            config.domainName = OpenThreadTHCI.DOMAIN_NAME
+            config.pskc = bytearray.fromhex(self.pskc)
+
+            self.externalCommissioner = OTCommissioner(config, self)
+
+        if not self.externalCommissioner.isActive():
+            self.externalCommissioner.start(baAddr, baPort)
+
+        if not self.externalCommissioner.isActive():
+            raise commissioner.Error("external commissioner is not active")
+
+        return True
+
+    @API
+    def stopExternalCommissioner(self):
+        """Stop external commissioner
+        Returns:
+            A boolean indicates whether this function succeed.
+        """
+
+        if self.externalCommissioner is not None:
+            self.externalCommissioner.stop()
+            return not self.externalCommissioner.isActive()
 
     @API
     def startCollapsedCommissioner(self, role=Thread_Device_Role.Leader):
@@ -3308,7 +3354,7 @@ class OpenThreadTHCI(object):
         return True
 
     @API
-    def registerMulticast(self, sAddr='ff04::1234:777a:1'):
+    def registerMulticast(self, sAddr='ff04::1234:777a:1', timeout=MLR_TIMEOUT_MIN):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
 
         note: workaround agreed before finial decision discussed in the DEV-1819.
@@ -3316,12 +3362,14 @@ class OpenThreadTHCI(object):
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
-        print('%s call registerMulticast' % self.port)
-
         # convert to list for single element, for possible extension
         # requirements.
         if not isinstance(sAddr, list):
             sAddr = [sAddr]
+
+        if self.externalCommissioner is not None:
+            self.externalCommissioner.MLR(sAddr, timeout)
+            return True
 
         # subscribe address one by one
         for addr in sAddr:
@@ -3334,6 +3382,19 @@ class OpenThreadTHCI(object):
                     pass
                 else:
                     raise
+
+    def deregisterMulticast(self, sAddr):
+        """
+        Unsubscribe to a given IPv6 address.
+        Only used by External Commissioner.
+
+        Args:
+            sAddr   : str : Multicast address to be unsubscribed.
+        """
+        if not isinstance(sAddr, list):
+            sAddr = [sAddr]
+        self.externalCommissioner.MLR(sAddr, 0)
+        return True
 
     @API
     def migrateNetwork(self, channel=None, net_name=None):

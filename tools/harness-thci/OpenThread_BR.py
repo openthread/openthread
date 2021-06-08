@@ -93,7 +93,7 @@ class SSHHandle(object):
                 output = [r.encode('utf8').rstrip('\r\n') for r in stdout.readlines()]
                 return output
 
-            except SSHException:
+            except Exception:
                 if i < retry - 1:
                     print('SSH connection is lost, try reconnect after 1 second.')
                     time.sleep(1)
