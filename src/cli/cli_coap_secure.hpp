@@ -38,8 +38,10 @@
 
 #if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
-#include "coap/coap_message.hpp"
-#include "coap/coap_secure.hpp"
+#include <mbedtls/ssl.h>
+
+#include <openthread/coap_secure.h>
+
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -93,18 +95,31 @@ private:
         otError (CoapSecure::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    enum BlockType : uint8_t
+    {
+        kBlockType1,
+        kBlockType2,
+    };
+#endif
+
     void PrintPayload(otMessage *aMessage) const;
 
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessConnect(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessDelete(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessDisconnect(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessGet(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPost(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessPsk(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPut(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessResource(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessSet(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessX509(uint8_t aArgsLength, Arg aArgs[]);
+
+    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode);
 
     void Stop(void);
 
@@ -145,15 +160,15 @@ private:
 
     static constexpr Command sCommands[] = {
         {"connect", &CoapSecure::ProcessConnect},
-        {"delete", &CoapSecure::ProcessRequest},
+        {"delete", &CoapSecure::ProcessDelete},
         {"disconnect", &CoapSecure::ProcessDisconnect},
-        {"get", &CoapSecure::ProcessRequest},
+        {"get", &CoapSecure::ProcessGet},
         {"help", &CoapSecure::ProcessHelp},
-        {"post", &CoapSecure::ProcessRequest},
+        {"post", &CoapSecure::ProcessPost},
 #ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
         {"psk", &CoapSecure::ProcessPsk},
 #endif
-        {"put", &CoapSecure::ProcessRequest},
+        {"put", &CoapSecure::ProcessPut},
         {"resource", &CoapSecure::ProcessResource},
         {"set", &CoapSecure::ProcessSet},
         {"start", &CoapSecure::ProcessStart},

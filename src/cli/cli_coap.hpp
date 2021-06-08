@@ -38,7 +38,8 @@
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
 
-#include "coap/coap_message.hpp"
+#include <openthread/coap.h>
+
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -86,6 +87,14 @@ private:
         otError (Coap::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
+#if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
+    enum BlockType : uint8_t
+    {
+        kBlockType1,
+        kBlockType2,
+    };
+#endif
+
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otError CancelResourceSubscription(void);
     void    CancelSubscriber(void);
@@ -97,12 +106,24 @@ private:
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otError ProcessCancel(uint8_t aArgsLength, Arg aArgs[]);
 #endif
+    otError ProcessDelete(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessGet(uint8_t aArgsLength, Arg aArgs[]);
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otError ProcessObserve(uint8_t aArgsLength, Arg aArgs[]);
+#endif
     otError ProcessParameters(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPost(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessPut(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessResource(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessSet(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessStart(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessStop(uint8_t aArgsLength, Arg aArgs[]);
+
+#if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
+    otError ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode, bool aCoapObserve = false);
+#else
+    otError        ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode);
+#endif
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(otMessage *aMessage, const otMessageInfo *aMessageInfo);
@@ -153,15 +174,15 @@ private:
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
         {"cancel", &Coap::ProcessCancel},
 #endif
-        {"delete", &Coap::ProcessRequest},
-        {"get", &Coap::ProcessRequest},
+        {"delete", &Coap::ProcessDelete},
+        {"get", &Coap::ProcessGet},
         {"help", &Coap::ProcessHelp},
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-        {"observe", &Coap::ProcessRequest},
+        {"observe", &Coap::ProcessObserve},
 #endif
         {"parameters", &Coap::ProcessParameters},
-        {"post", &Coap::ProcessRequest},
-        {"put", &Coap::ProcessRequest},
+        {"post", &Coap::ProcessPost},
+        {"put", &Coap::ProcessPut},
         {"resource", &Coap::ProcessResource},
         {"set", &Coap::ProcessSet},
         {"start", &Coap::ProcessStart},
