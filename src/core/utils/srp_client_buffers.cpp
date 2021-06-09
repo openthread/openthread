@@ -58,6 +58,7 @@ SrpClientBuffers::ServiceEntry *SrpClientBuffers::AllocateService(void)
     entry->Clear();
     entry->mService.mName          = entry->mServiceName;
     entry->mService.mInstanceName  = entry->mInstanceName;
+    entry->mService.mSubTypeLabels = entry->mSubTypeLabels;
     entry->mService.mTxtEntries    = &entry->mTxtEntry;
     entry->mService.mNumTxtEntries = 1;
     entry->mTxtEntry.mValue        = entry->mTxtBuffer;
