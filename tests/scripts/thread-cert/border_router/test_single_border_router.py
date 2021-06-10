@@ -212,9 +212,6 @@ class SingleBorderRouter(thread_cert.TestCase):
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 0)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 0)
 
-        # Per RFC 4862, the host will not immediately remove the ULA address, but deprecate it.
-        self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
-
         br.enable_br()
 
         # It takes around 10 seconds to start sending RA messages.
