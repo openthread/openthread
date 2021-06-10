@@ -98,11 +98,7 @@ message(STATUS "Package Name: ${OT_PACKAGE_NAME}")
 
 set(OT_PACKAGE_VERSION "" CACHE STRING "OpenThread Package Version")
 if(OT_PACKAGE_VERSION STREQUAL "")
-    execute_process(
-        COMMAND bash "-c" "third_party/nlbuild-autotools/repo/scripts/mkversion -b ${OT_DEFAULT_VERSION}"
-        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
-        OUTPUT_VARIABLE OT_PACKAGE_VERSION OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
+    ot_git_version(OT_PACKAGE_VERSION)
     message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 endif()
 target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\"")
