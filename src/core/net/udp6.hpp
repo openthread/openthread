@@ -580,7 +580,7 @@ public:
      * @param[in]   aPort       The udp port
      *
      * @retval True when port is used by the OpenThread
-     * @retval False when the port is not used by OpenThrad.
+     * @retval False when the port is not used by OpenThread.
      *
      */
     bool IsPortInUse(uint16_t aPort) const;
