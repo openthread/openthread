@@ -940,6 +940,10 @@ private:
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     SrpServer mSrpServer;
 #endif
+
+#if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
+    bool mPingIsAsync;
+#endif
 };
 
 // Specializations of `FormatStringFor<ValueType>()`

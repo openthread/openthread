@@ -3148,13 +3148,18 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
     }
 
     OutputLine("");
-    OutputResult(OT_ERROR_NONE);
+
+    if (!mPingIsAsync)
+    {
+        OutputResult(OT_ERROR_NONE);
+    }
 }
 
 otError Interpreter::ProcessPing(uint8_t aArgsLength, Arg aArgs[])
 {
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
+    bool               async = false;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -3162,6 +3167,11 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, Arg aArgs[])
     {
         otPingSenderStop(mInstance);
         ExitNow();
+    }
+    else if (aArgs[0] == "async")
+    {
+        async = true;
+        aArgs++, aArgsLength--;
     }
 
     memset(&config, 0, sizeof(config));
@@ -3232,7 +3242,14 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, Arg aArgs[])
     config.mStatisticsCallback = Interpreter::HandlePingStatistics;
     config.mCallbackContext    = this;
 
-    error = otPingSenderPing(mInstance, &config);
+    SuccessOrExit(error = otPingSenderPing(mInstance, &config));
+
+    mPingIsAsync = async;
+
+    if (!async)
+    {
+        error = kErrorPending;
+    }
 
 exit:
     return error;

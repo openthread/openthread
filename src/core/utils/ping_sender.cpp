@@ -97,7 +97,7 @@ PingSender::PingSender(Instance &aInstance)
 
 Error PingSender::Ping(const Config &aConfig)
 {
-    Error error = kErrorPending;
+    Error error = kErrorNone;
 
     VerifyOrExit(!mTimer.IsRunning(), error = kErrorBusy);
 
