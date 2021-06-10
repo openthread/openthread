@@ -42,7 +42,7 @@ class CryptoEngine:
     def __init__(self, crypto_material_creator):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
         self._crypto_material_creator = crypto_material_creator
@@ -94,13 +94,13 @@ class CryptoMaterialCreator(object):
 
     _salt = b'Thread'
 
-    def __init__(self, master_key):
+    def __init__(self, network_key):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
-        self.master_key = master_key
+        self.network_key = network_key
 
     def _generate_keys(self, sequence_counter):
         """ Generate MLE and MAC keys.
@@ -114,7 +114,7 @@ class CryptoMaterialCreator(object):
             tuple: MLE and MAC as bytes
 
         """
-        k = self.master_key
+        k = self.network_key
         s = struct.pack(">L", sequence_counter) + self._salt
         d = hmac.new(k, s, digestmod=hashlib.sha256).digest()
 
@@ -132,13 +132,13 @@ class CryptoMaterialCreator(object):
 
 class MacCryptoMaterialCreator(CryptoMaterialCreator):
 
-    def __init__(self, master_key):
+    def __init__(self, network_key):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
-        super(MacCryptoMaterialCreator, self).__init__(master_key)
+        super(MacCryptoMaterialCreator, self).__init__(network_key)
 
     def _create_nonce(self, eui64, frame_counter, security_level):
         """ Create CCM Nonce required by AES-128 CCM for encryption and decryption.
@@ -196,13 +196,13 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
 
 class MleCryptoMaterialCreator(CryptoMaterialCreator):
 
-    def __init__(self, master_key):
+    def __init__(self, network_key):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
-        super(MleCryptoMaterialCreator, self).__init__(master_key)
+        super(MleCryptoMaterialCreator, self).__init__(network_key)
 
     def _create_nonce(self, source_eui64, frame_counter, security_level):
         """ Create CCM Nonce required by AES-128 CCM for encryption and decryption.

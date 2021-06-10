@@ -23,7 +23,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
    Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
    Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
-   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
    PSKc: c23a76e98f1a6483639b1ac1271e2e27
@@ -92,7 +92,7 @@ Border Router and service information may be stable or temporary. Stable Thread 
 
 ### Attach to Existing Network
 
-Only the Master Key is required for a device to attach to a Thread network.
+Only the Network Key is required for a device to attach to a Thread network.
 
 While not required, specifying the channel avoids the need to search across multiple channels, improving both latency and efficiency of the attach process.
 
@@ -101,7 +101,7 @@ After the device successfully attaches to a Thread network, the device will retr
 1. Create a partial Active Operational Dataset.
 
    ```bash
-   > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+   > dataset networkkey dfd34f0f05cad978ec4e32b0413038ff
    Done
    > dataset commit active
    Done

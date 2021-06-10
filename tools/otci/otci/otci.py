@@ -362,14 +362,14 @@ class OTCI(object):
         """Get network name."""
         return self.__parse_str(self.execute_command('networkname'))
 
-    def get_master_key(self) -> str:
-        """Get the network master key."""
-        return self.__parse_master_key(self.execute_command('masterkey'))
+    def get_network_key(self) -> str:
+        """Get the network network key."""
+        return self.__parse_network_key(self.execute_command('networkkey'))
 
-    def set_master_key(self, masterkey: str):
-        """Set the network master key."""
-        self.__validate_master_key(masterkey)
-        self.execute_command(f'masterkey {masterkey}')
+    def set_network_key(self, networkkey: str):
+        """Set the network network key."""
+        self.__validate_network_key(networkkey)
+        self.execute_command(f'networkkey {networkkey}')
 
     def get_key_sequence_counter(self) -> int:
         """Get the Thread Key Sequence Counter."""
@@ -1652,7 +1652,7 @@ class OTCI(object):
         # Channel Mask: 0x07fff800
         # Ext PAN ID: 5c93ae980ff22d35
         # Mesh Local Prefix: fdc7:55fe:6363:bd01::/64
-        # Master Key: d1a8348d59fb1fac1d6c4f95007d487a
+        # Network Key: d1a8348d59fb1fac1d6c4f95007d487a
         # Network Name: OpenThread-7caa
         # PAN ID: 0x7caa
         # PSKc: 167d89fd169e439ca0b8266de248090f
@@ -1674,8 +1674,8 @@ class OTCI(object):
                 dataset['extpanid'] = val
             elif key == 'Mesh Local Prefix':
                 dataset['mesh_local_prefix'] = val
-            elif key == 'Master Key':
-                dataset['masterkey'] = val
+            elif key == 'Network Key':
+                dataset['networkkey'] = val
             elif key == 'Network Name':
                 dataset['network_name'] = val
             elif key == 'PAN ID':
@@ -1706,7 +1706,7 @@ class OTCI(object):
                            channel_mask: int = None,
                            extpanid: str = None,
                            mesh_local_prefix: str = None,
-                           master_key: str = None,
+                           network_key: str = None,
                            network_name: str = None,
                            panid: int = None,
                            pskc: str = None,
@@ -1727,8 +1727,8 @@ class OTCI(object):
         if mesh_local_prefix is not None:
             self.execute_command(f'dataset meshlocalprefix {mesh_local_prefix}')
 
-        if master_key is not None:
-            self.execute_command(f'dataset masterkey {master_key}')
+        if network_key is not None:
+            self.execute_command(f'dataset networkkey {network_key}')
 
         if network_name is not None:
             self.execute_command(f'dataset networkname {self.__escape_escapable(network_name)}')
@@ -2261,21 +2261,21 @@ class OTCI(object):
 
         return int(output[0], base)
 
-    def __parse_master_key(self, output: List[str]) -> str:
-        masterkey = self.__parse_str(output)
+    def __parse_network_key(self, output: List[str]) -> str:
+        networkkey = self.__parse_str(output)
 
         try:
-            self.__validate_master_key(masterkey)
+            self.__validate_network_key(networkkey)
         except ValueError:
             raise UnexpectedCommandOutput(output)
 
-        return masterkey
+        return networkkey
 
-    def __validate_master_key(self, masterkey: str):
-        if len(masterkey) != 32:
-            raise ValueError(masterkey)
+    def __validate_network_key(self, networkkey: str):
+        if len(networkkey) != 32:
+            raise ValueError(networkkey)
 
-        int(masterkey, 16)
+        int(networkkey, 16)
 
     def __parse_hex64b(self, output: List[str]) -> str:
         extaddr = self.__parse_str(output)

@@ -36,7 +36,7 @@ import ipaddress
 import common
 import net_crypto
 
-master_key = bytearray(
+network_key = bytearray(
     [0x00, 0x11, 0x22, 0x33, 0x44, 0x55, 0x66, 0x77, 0x88, 0x99, 0xaa, 0xbb, 0xcc, 0xdd, 0xee, 0xff])
 
 
@@ -90,7 +90,7 @@ def any_data(length=None):
     return bytearray([random.getrandbits(8) for _ in range(length)])
 
 
-def any_master_key():
+def any_network_key():
     return bytearray([random.getrandbits(8) for _ in range(16)])
 
 
@@ -118,7 +118,7 @@ class TestCryptoEngine(unittest.TestCase):
 
         mic = bytearray([0xe1, 0xb5, 0xa2, 0x53])
 
-        net_crypto_engine = net_crypto.CryptoEngine(net_crypto.MleCryptoMaterialCreator(master_key))
+        net_crypto_engine = net_crypto.CryptoEngine(net_crypto.MleCryptoMaterialCreator(network_key))
 
         # WHEN
         mle_msg = net_crypto_engine.decrypt(data, mic, message_info)
@@ -150,7 +150,7 @@ class TestCryptoEngine(unittest.TestCase):
             0x0b, 0x08, 0x65, 0x5e, 0x0f, 0x83, 0x40, 0xc7, 0x83, 0x31
         ])
 
-        net_crypto_engine = net_crypto.CryptoEngine(net_crypto.MleCryptoMaterialCreator(master_key))
+        net_crypto_engine = net_crypto.CryptoEngine(net_crypto.MleCryptoMaterialCreator(network_key))
 
         # WHEN
         encrypted_data, mic = net_crypto_engine.encrypt(mle_msg, message_info)
@@ -167,7 +167,7 @@ class TestCryptoEngine(unittest.TestCase):
         # GIVEN
         data = any_data()
 
-        master_key = any_master_key()
+        network_key = any_network_key()
 
         key_id_mode = 2
         security_level = 5
@@ -184,7 +184,7 @@ class TestCryptoEngine(unittest.TestCase):
                                                                       key_id=any_key_id(key_id_mode))
         message_info.aux_sec_hdr_bytes = convert_aux_sec_hdr_to_bytearray(message_info.aux_sec_hdr)
 
-        net_crypto_engine = net_crypto.CryptoEngine(net_crypto.MleCryptoMaterialCreator(master_key))
+        net_crypto_engine = net_crypto.CryptoEngine(net_crypto.MleCryptoMaterialCreator(network_key))
 
         # WHEN
         enc_data, mic = net_crypto_engine.encrypt(data, message_info)
@@ -210,7 +210,7 @@ class TestCryptoMaterialCreator(unittest.TestCase):
         # GIVEN
         sequence_counter = 0
 
-        creator = net_crypto.CryptoMaterialCreator(master_key)
+        creator = net_crypto.CryptoMaterialCreator(network_key)
 
         # WHEN
         mle_key, mac_key = creator._generate_keys(sequence_counter)
@@ -233,7 +233,7 @@ class TestCryptoMaterialCreator(unittest.TestCase):
         # GIVEN
         sequence_counter = 1
 
-        creator = net_crypto.CryptoMaterialCreator(master_key)
+        creator = net_crypto.CryptoMaterialCreator(network_key)
 
         # WHEN
         mle_key, mac_key = creator._generate_keys(sequence_counter)
@@ -256,7 +256,7 @@ class TestCryptoMaterialCreator(unittest.TestCase):
         # GIVEN
         sequence_counter = 2
 
-        creator = net_crypto.CryptoMaterialCreator(master_key)
+        creator = net_crypto.CryptoMaterialCreator(network_key)
 
         # WHEN
         mle_key, mac_key = creator._generate_keys(sequence_counter)
@@ -280,7 +280,7 @@ class TestMleCryptoMaterialCreator(unittest.TestCase):
         frame_counter = any_frame_counter()
         security_level = any_security_level()
 
-        creator = net_crypto.MleCryptoMaterialCreator(master_key)
+        creator = net_crypto.MleCryptoMaterialCreator(network_key)
 
         # WHEN
         nonce = creator._create_nonce(source_eui64, frame_counter, security_level)
@@ -303,7 +303,7 @@ class TestMleCryptoMaterialCreator(unittest.TestCase):
         destination_address = any_ip_address()
         auxiliary_security_header_bytes = convert_aux_sec_hdr_to_bytearray(any_auxiliary_security_header())
 
-        creator = net_crypto.MleCryptoMaterialCreator(master_key)
+        creator = net_crypto.MleCryptoMaterialCreator(network_key)
 
         # WHEN
         authenticated_data = creator._create_authenticated_data(source_address, destination_address,
@@ -327,7 +327,7 @@ class TestMleCryptoMaterialCreator(unittest.TestCase):
         message_info.aux_sec_hdr = any_auxiliary_security_header()
         message_info.aux_sec_hdr_bytes = convert_aux_sec_hdr_to_bytearray(message_info.aux_sec_hdr)
 
-        creator = net_crypto.MleCryptoMaterialCreator(master_key)
+        creator = net_crypto.MleCryptoMaterialCreator(network_key)
 
         # WHEN
         key, nonce, auth_data = creator.create_key_and_nonce_and_authenticated_data(message_info)

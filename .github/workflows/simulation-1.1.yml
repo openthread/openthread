@@ -406,6 +406,7 @@ jobs:
       CXXFLAGS: -m32
       LDFLAGS: -m32
       COVERAGE: 1
+      GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       NODE_TYPE: ncp-sim
       PYTHONUNBUFFERED: 1
       REFERENCE_DEVICE: 1
@@ -420,7 +421,10 @@ jobs:
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y g++-multilib python3-setuptools python3-wheel lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+        pyspineldir=$(mktemp -d -t pyspinel_XXXXXX)
+        ./script/git-tool clone https://github.com/openthread/pyspinel.git --depth 1 "${pyspineldir}"
+        cd "${pyspineldir}"
+        pip3 install .
     - name: Build
       run: |
         ./bootstrap
@@ -445,6 +449,7 @@ jobs:
     runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
+      GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       NODE_TYPE: ncp-sim
       PYTHONUNBUFFERED: 1
       REFERENCE_DEVICE: 1
@@ -461,7 +466,10 @@ jobs:
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-10 clang++-10 python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
+        pyspineldir=$(mktemp -d -t pyspinel_XXXXXX)
+        ./script/git-tool clone https://github.com/openthread/pyspinel.git --depth 1 "${pyspineldir}"
+        cd "${pyspineldir}"
+        pip3 install .
     - name: Build
       run: |
         ./bootstrap

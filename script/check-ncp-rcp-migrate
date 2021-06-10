@@ -58,7 +58,7 @@ check()
     EXT_PANID="0123456789abcdef"
     NETWORK_NAME="OT_NCP_TO_RCP"
     CHANNEL="20"
-    MASTER_KEY="0123456789abcdef0123456789abcdef"
+    NETWORK_KEY="0123456789abcdef0123456789abcdef"
 
     echo "Step 1. Start NCP platform and form a PAN..."
     RADIO_NCP_CMD="$PWD/output/simulation/bin/ot-cli-ftd"
@@ -77,7 +77,7 @@ send "networkname ${NETWORK_NAME}\r\n"
 expect "Done"
 send "channel ${CHANNEL}\r\n"
 expect "Done"
-send "masterkey ${MASTER_KEY}\r\n"
+send "networkkey ${NETWORK_KEY}\r\n"
 expect "Done"
 send "ifconfig up\r\n"
 expect "Done"
@@ -118,8 +118,8 @@ expect "Done"
 send "channel\r\n"
 expect ${CHANNEL}
 expect "Done"
-send "masterkey\r\n"
-expect ${MASTER_KEY}
+send "networkkey\r\n"
+expect ${NETWORK_KEY}
 expect "Done"
 send "exit\r\n"
 expect eof

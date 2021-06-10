@@ -573,7 +573,7 @@ void Joiner::HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo
 
     datasetInfo.Clear();
 
-    SuccessOrExit(error = Tlv::Find<NetworkMasterKeyTlv>(aMessage, datasetInfo.UpdateMasterKey()));
+    SuccessOrExit(error = Tlv::Find<NetworkKeyTlv>(aMessage, datasetInfo.UpdateNetworkKey()));
 
     datasetInfo.SetChannel(Get<Mac::Mac>().GetPanChannel());
     datasetInfo.SetPanId(Get<Mac::Mac>().GetPanId());

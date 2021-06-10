@@ -50,8 +50,8 @@ SED1 = 5
 # Test Purpose and Description:
 # -----------------------------
 # The purpose of this test case is to confirm the DUT correctly applies
-# DELAY_TIMER_DEFAULT when the master key is changed.
-# The Commissioner first tries to set a master key update to happen too
+# DELAY_TIMER_DEFAULT when the network key is changed.
+# The Commissioner first tries to set a network key update to happen too
 # soon (delay of 60s vs DELAY_TIMER_DEFAULT of 300s); the DUT is expected
 # to override the short value and communicate an appropriately longer delay
 # to the Router.
@@ -74,7 +74,7 @@ SED1 = 5
 # Leader
 
 
-class Cert_9_2_11_MasterKey(thread_cert.TestCase):
+class Cert_9_2_11_NetworkKey(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
     SUPPORT_NCP = False
 
@@ -85,7 +85,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                 'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
-                'master_key': KEY1
+                'network_key': KEY1
             },
             'mode': 'rdn',
             'allowlist': [LEADER]
@@ -96,7 +96,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                 'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
-                'master_key': KEY1
+                'network_key': KEY1
             },
             'mode': 'rdn',
             'allowlist': [COMMISSIONER, ROUTER1]
@@ -107,7 +107,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                 'timestamp': 10,
                 'panid': PANID_INIT,
                 'channel': CHANNEL_INIT,
-                'master_key': KEY1
+                'network_key': KEY1
             },
             'mode': 'rdn',
             'allowlist': [LEADER, ED1, SED1]
@@ -116,7 +116,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             'name': 'ED',
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'masterkey': KEY1,
+            'networkkey': KEY1,
             'mode': 'rn',
             'panid': PANID_INIT,
             'allowlist': [ROUTER1]
@@ -125,7 +125,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             'name': 'SED',
             'channel': CHANNEL_INIT,
             'is_mtd': True,
-            'masterkey': KEY1,
+            'networkkey': KEY1,
             'mode': '-',
             'panid': PANID_INIT,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
@@ -163,15 +163,15 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             pending_timestamp=10,
             active_timestamp=70,
             delay_timer=60000,
-            master_key=KEY2,
+            network_key=KEY2,
         )
         self.simulator.go(310)
 
-        self.assertEqual(self.nodes[COMMISSIONER].get_masterkey(), KEY2)
-        self.assertEqual(self.nodes[LEADER].get_masterkey(), KEY2)
-        self.assertEqual(self.nodes[ROUTER1].get_masterkey(), KEY2)
-        self.assertEqual(self.nodes[ED1].get_masterkey(), KEY2)
-        self.assertEqual(self.nodes[SED1].get_masterkey(), KEY2)
+        self.assertEqual(self.nodes[COMMISSIONER].get_networkkey(), KEY2)
+        self.assertEqual(self.nodes[LEADER].get_networkkey(), KEY2)
+        self.assertEqual(self.nodes[ROUTER1].get_networkkey(), KEY2)
+        self.assertEqual(self.nodes[ED1].get_networkkey(), KEY2)
+        self.assertEqual(self.nodes[SED1].get_networkkey(), KEY2)
 
         ipaddr = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ROUTER1].ping(ipaddr))
@@ -180,15 +180,15 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
             pending_timestamp=20,
             active_timestamp=30,
             delay_timer=500000,
-            master_key=KEY1,
+            network_key=KEY1,
         )
         self.simulator.go(510)
 
-        self.assertEqual(self.nodes[COMMISSIONER].get_masterkey(), KEY1)
-        self.assertEqual(self.nodes[LEADER].get_masterkey(), KEY1)
-        self.assertEqual(self.nodes[ROUTER1].get_masterkey(), KEY1)
-        self.assertEqual(self.nodes[ED1].get_masterkey(), KEY1)
-        self.assertEqual(self.nodes[SED1].get_masterkey(), KEY1)
+        self.assertEqual(self.nodes[COMMISSIONER].get_networkkey(), KEY1)
+        self.assertEqual(self.nodes[LEADER].get_networkkey(), KEY1)
+        self.assertEqual(self.nodes[ROUTER1].get_networkkey(), KEY1)
+        self.assertEqual(self.nodes[ED1].get_networkkey(), KEY1)
+        self.assertEqual(self.nodes[SED1].get_networkkey(), KEY1)
 
         ipaddr = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         self.assertTrue(self.nodes[ROUTER1].ping(ipaddr))
@@ -264,7 +264,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
         #             - Pending Timestamp TLV
         #             - Pending Operational Dataset TLV
         #                 - Delay Timer TLV <greater than 200s>
-        #                 - Network Master Key TLV: New Master Key
+        #                 - Network Key TLV: New Network Key
         #                 - Active Timestamp TLV <70s>
         _dr_pkt = pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(LEADER).\
@@ -286,7 +286,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                    ).\
             must_next()
 
-        # Step 8: Verify all devices now use New Master key.
+        # Step 8: Verify all devices now use New Network key.
         #  checked in test()
 
         # Step 9: Verify new MAC key is generated and used when sending ICMPv6 Echo Reply
@@ -352,7 +352,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
         #             - Pending Operational Dataset TLV
         #                 - Active Timestamp TLV <30s>
         #                 - Delay Timer TLV <greater than 300s>
-        #                 - Network Master Key TLV: New Master Key
+        #                 - Network Key TLV: New Network Key
         pkts.filter_mle_cmd(MLE_DATA_RESPONSE).\
             filter_wpan_src64(LEADER).\
             filter_wpan_dst64(ROUTER).\
@@ -375,7 +375,7 @@ class Cert_9_2_11_MasterKey(thread_cert.TestCase):
                    ).\
             must_next()
 
-        # Step 17: The DUT MUST send an ICMPv6 Echo Reply using the new Master key
+        # Step 17: The DUT MUST send an ICMPv6 Echo Reply using the new Network key
         _pkt = pkts.filter_ping_request().\
             filter_wpan_src64(ROUTER).\
             filter_ipv6_dst(LEADER_MLEID).\

@@ -660,12 +660,12 @@ exit:
     return error;
 }
 
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_MASTER_KEY>(void)
+template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
-    return mEncoder.WriteData(otThreadGetMasterKey(mInstance)->m8, OT_MASTER_KEY_SIZE);
+    return mEncoder.WriteData(otThreadGetNetworkKey(mInstance)->m8, OT_NETWORK_KEY_SIZE);
 }
 
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_MASTER_KEY>(void)
+template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
     const uint8_t *ptr = nullptr;
     uint16_t       len;
@@ -673,9 +673,9 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_MASTER_KEY>(void)
 
     SuccessOrExit(error = mDecoder.ReadData(ptr, len));
 
-    VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_PARSE);
+    VerifyOrExit(len == OT_NETWORK_KEY_SIZE, error = OT_ERROR_PARSE);
 
-    error = otThreadSetMasterKey(mInstance, reinterpret_cast<const otMasterKey *>(ptr));
+    error = otThreadSetNetworkKey(mInstance, reinterpret_cast<const otNetworkKey *>(ptr));
 
 exit:
     return error;
@@ -1267,11 +1267,11 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
-    if (aDataset.mComponents.mIsMasterKeyPresent)
+    if (aDataset.mComponents.mIsNetworkKeyPresent)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
-        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_MASTER_KEY));
-        SuccessOrExit(error = mEncoder.WriteData(aDataset.mMasterKey.m8, OT_MASTER_KEY_SIZE));
+        SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_NETWORK_KEY));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mNetworkKey.m8, OT_NETWORK_KEY_SIZE));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1441,7 +1441,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
             aDataset.mComponents.mIsPendingTimestampPresent = true;
             break;
 
-        case SPINEL_PROP_NET_MASTER_KEY:
+        case SPINEL_PROP_NET_NETWORK_KEY:
 
             if (!aAllowEmptyValues || !mDecoder.IsAllReadInStruct())
             {
@@ -1449,11 +1449,11 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
                 uint16_t       len;
 
                 SuccessOrExit(error = mDecoder.ReadData(key, len));
-                VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mMasterKey.m8, key, len);
+                VerifyOrExit(len == OT_NETWORK_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
+                memcpy(aDataset.mNetworkKey.m8, key, len);
             }
 
-            aDataset.mComponents.mIsMasterKeyPresent = true;
+            aDataset.mComponents.mIsNetworkKeyPresent = true;
             break;
 
         case SPINEL_PROP_NET_NETWORK_NAME:
@@ -4686,7 +4686,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
         {OT_CHANGED_THREAD_EXT_PANID, SPINEL_PROP_NET_XPANID},
         {OT_CHANGED_THREAD_RLOC_ADDED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
         {OT_CHANGED_THREAD_RLOC_REMOVED, SPINEL_PROP_IPV6_ADDRESS_TABLE},
-        {OT_CHANGED_MASTER_KEY, SPINEL_PROP_NET_MASTER_KEY},
+        {OT_CHANGED_NETWORK_KEY, SPINEL_PROP_NET_NETWORK_KEY},
         {OT_CHANGED_PSKC, SPINEL_PROP_NET_PSKC},
         {OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL, SPINEL_PROP_CHANNEL_MANAGER_NEW_CHANNEL},
         {OT_CHANGED_SUPPORTED_CHANNEL_MASK, SPINEL_PROP_PHY_CHAN_SUPPORTED},

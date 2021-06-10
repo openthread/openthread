@@ -993,29 +993,29 @@ class OpenThread_WpanCtl(IThci):
         return globalAddrs
 
     def setNetworkKey(self, key):
-        """set Thread Network master key
+        """set Thread network key
 
         Args:
-            key: Thread Network master key used in secure the MLE/802.15.4 packet
+            key: Thread network key used in secure the MLE/802.15.4 packet
 
         Returns:
-            True: successful to set the Thread Network master key
-            False: fail to set the Thread Network master key
+            True: successful to set the Thread network key
+            False: fail to set the Thread network key
         """
-        masterKey = ''
+        networkKey = ''
         print('%s call setNetworkKey' % self.port)
 
         try:
             if not isinstance(key, str):
-                masterKey = self.__convertLongToHex(key, 32)
-                cmd = self.wpan_cmd_prefix + 'setprop Network:Key %s' % masterKey
-                datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:MasterKey %s' % masterKey
+                networkKey = self.__convertLongToHex(key, 32)
+                cmd = self.wpan_cmd_prefix + 'setprop Network:Key %s' % networkKey
+                datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkKey %s' % networkKey
             else:
-                masterKey = key
-                cmd = self.wpan_cmd_prefix + 'setprop Network:Key %s' % masterKey
-                datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:MasterKey %s' % masterKey
+                networkKey = key
+                cmd = self.wpan_cmd_prefix + 'setprop Network:Key %s' % networkKey
+                datasetCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkKey %s' % networkKey
 
-            self.networkKey = masterKey
+            self.networkKey = networkKey
             self.hasActiveDatasetToCommit = True
             return self.__sendCommand(cmd)[0] != 'Fail' and self.__sendCommand(datasetCmd)[0] != 'Fail'
         except Exception as e:
@@ -1705,7 +1705,7 @@ class OpenThread_WpanCtl(IThci):
             ModuleHelper.WriteIntoDebugLogger('setKeepAliveTimeOut() Error: ' + str(e))
 
     def setKeySequenceCounter(self, iKeySequenceValue):
-        """ set the Key sequence counter corresponding to Thread Network master key
+        """ set the Key sequence counter corresponding to Thread network key
 
         Args:
             iKeySequenceValue: key sequence value
@@ -2347,8 +2347,8 @@ class OpenThread_WpanCtl(IThci):
 
             if xMasterKey is not None:
                 key = self.__convertLongToHex(xMasterKey, 32)
-                setMasterKeyCmd = self.wpan_cmd_prefix + 'setprop Dataset:MasterKey ' + key
-                if self.__sendCommand(setMasterKeyCmd)[0] == 'Fail':
+                setNetworkKeyCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkKey ' + key
+                if self.__sendCommand(setNetworkKeyCmd)[0] == 'Fail':
                     return False
 
             if xPanId is not None:
@@ -2543,8 +2543,8 @@ class OpenThread_WpanCtl(IThci):
 
             if xMasterKey is not None:
                 key = self.__convertLongToHex(xMasterKey, 32)
-                setMasterKeyCmd = self.wpan_cmd_prefix + 'setprop Dataset:MasterKey ' + key
-                if self.__sendCommand(setMasterKeyCmd)[0] == 'Fail':
+                setNetworkKeyCmd = self.wpan_cmd_prefix + 'setprop Dataset:NetworkKey ' + key
+                if self.__sendCommand(setNetworkKeyCmd)[0] == 'Fail':
                     return False
 
             if xPanId is not None:

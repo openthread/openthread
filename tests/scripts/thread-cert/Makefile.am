@@ -121,7 +121,7 @@ EXTRA_DIST                                                         = \
     Cert_9_2_08_PersistentDatasets.py                                \
     Cert_9_2_09_PendingPartition.py                                  \
     Cert_9_2_10_PendingPartition.py                                  \
-    Cert_9_2_11_MasterKey.py                                         \
+    Cert_9_2_11_NetworkKey.py                                        \
     Cert_9_2_12_Announce.py                                          \
     Cert_9_2_13_EnergyScan.py                                        \
     Cert_9_2_14_PanIdQuery.py                                        \
@@ -328,7 +328,7 @@ check_SCRIPTS                                                      = \
     Cert_9_2_08_PersistentDatasets.py                                \
     Cert_9_2_09_PendingPartition.py                                  \
     Cert_9_2_10_PendingPartition.py                                  \
-    Cert_9_2_11_MasterKey.py                                         \
+    Cert_9_2_11_NetworkKey.py                                        \
     Cert_9_2_12_Announce.py                                          \
     Cert_9_2_13_EnergyScan.py                                        \
     Cert_9_2_14_PanIdQuery.py                                        \

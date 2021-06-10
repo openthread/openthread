@@ -1723,7 +1723,7 @@ class TestMleMessageFactory(unittest.TestCase):
             0x27, 0xc2, 0x96, 0xf4, 0x9c, 0x65, 0x82, 0x97, 0xcf, 0x97, 0x35, 0x89, 0xc2
         ])
 
-        factory = config.create_default_mle_message_factory(master_key=config.DEFAULT_MASTER_KEY)
+        factory = config.create_default_mle_message_factory(network_key=config.DEFAULT_NETWORK_KEY)
 
         # WHEN
         actual_mle_message = factory.parse(io.BytesIO(data), message_info)
@@ -1773,7 +1773,7 @@ class TestMleMessageFactory(unittest.TestCase):
             0x94, 0x01, 0x6d, 0x20, 0xdf, 0x30, 0x82, 0xf8, 0xbb, 0x34, 0x47, 0x42, 0x50, 0xe9, 0x41, 0xa7, 0x33, 0xa5
         ])
 
-        factory = config.create_default_mle_message_factory(master_key=config.DEFAULT_MASTER_KEY)
+        factory = config.create_default_mle_message_factory(network_key=config.DEFAULT_NETWORK_KEY)
 
         # WHEN
         actual_mle_message = factory.parse(io.BytesIO(data), message_info)

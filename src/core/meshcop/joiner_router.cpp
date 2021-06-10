@@ -326,7 +326,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    SuccessOrExit(error = Tlv::Append<NetworkMasterKeyTlv>(*message, Get<KeyManager>().GetMasterKey()));
+    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, Get<KeyManager>().GetNetworkKey()));
     SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<Mac::Mac>().GetExtendedPanId()));
 

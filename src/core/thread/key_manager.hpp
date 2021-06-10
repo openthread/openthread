@@ -111,14 +111,14 @@ private:
     enum : uint8_t
     {
         kDefaultFlags                   = 0xff,
-        kObtainMasterKeyMask            = 1 << 7,
+        kObtainNetworkKeyMask           = 1 << 7,
         kNativeCommissioningMask        = 1 << 6,
         kRoutersMask                    = 1 << 5,
         kExternalCommissioningMask      = 1 << 4,
         kBeaconsMask                    = 1 << 3,
         kCommercialCommissioningMask    = 1 << 2,
         kAutonomousEnrollmentMask       = 1 << 1,
-        kMasterKeyProvisioningMask      = 1 << 0,
+        kNetworkKeyProvisioningMask     = 1 << 0,
         kTobleLinkMask                  = 1 << 7,
         kNonCcmRoutersMask              = 1 << 6,
         kReservedMask                   = 0x38,
@@ -129,18 +129,18 @@ private:
 };
 
 /**
- * This class represents a Thread Master Key.
+ * This class represents a Thread Network Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class MasterKey : public otMasterKey, public Equatable<MasterKey>
+class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>
 {
 public:
 #if !OPENTHREAD_RADIO
     /**
-     * This method generates a cryptographically secure random sequence to populate the Thread Master Key.
+     * This method generates a cryptographically secure random sequence to populate the Thread Network Key.
      *
-     * @retval kErrorNone     Successfully generated a random Thread Master Key.
+     * @retval kErrorNone     Successfully generated a random Thread Network Key.
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
@@ -203,23 +203,23 @@ public:
     void Stop(void);
 
     /**
-     * This method returns the Thread Master Key.
+     * This method returns the Thread Network Key.
      *
-     * @returns The Thread Master Key.
+     * @returns The Thread Network Key.
      *
      */
-    const MasterKey &GetMasterKey(void) const { return mMasterKey; }
+    const NetworkKey &GetNetworkKey(void) const { return mNetworkKey; }
 
     /**
-     * This method sets the Thread Master Key.
+     * This method sets the Thread Network Key.
      *
-     * @param[in]  aKey        A Thread Master Key.
+     * @param[in]  aKey        A Thread Network Key.
      *
-     * @retval kErrorNone         Successfully set the Thread Master Key.
+     * @retval kErrorNone         Successfully set the Thread Network Key.
      * @retval kErrorInvalidArgs  The @p aKeyLength value was invalid.
      *
      */
-    Error SetMasterKey(const MasterKey &aKey);
+    Error SetNetworkKey(const NetworkKey &aKey);
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -515,7 +515,7 @@ private:
     static const uint8_t kTrelInfoString[];
 #endif
 
-    MasterKey mMasterKey;
+    NetworkKey mNetworkKey;
 
     uint32_t mKeySequence;
     Mle::Key mMleKey;

@@ -64,14 +64,14 @@ void SecurityPolicy::SetToDefault(void)
 
 void SecurityPolicy::SetToDefaultFlags(void)
 {
-    mObtainMasterKeyEnabled         = true;
+    mObtainNetworkKeyEnabled        = true;
     mNativeCommissioningEnabled     = true;
     mRoutersEnabled                 = true;
     mExternalCommissioningEnabled   = true;
     mBeaconsEnabled                 = true;
     mCommercialCommissioningEnabled = false;
     mAutonomousEnrollmentEnabled    = false;
-    mMasterKeyProvisioningEnabled   = false;
+    mNetworkKeyProvisioningEnabled  = false;
     mTobleLinkEnabled               = true;
     mNonCcmRoutersEnabled           = false;
     mVersionThresholdForRouting     = 0;
@@ -83,14 +83,14 @@ void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
 
     SetToDefaultFlags();
 
-    mObtainMasterKeyEnabled         = aFlags[0] & kObtainMasterKeyMask;
+    mObtainNetworkKeyEnabled        = aFlags[0] & kObtainNetworkKeyMask;
     mNativeCommissioningEnabled     = aFlags[0] & kNativeCommissioningMask;
     mRoutersEnabled                 = aFlags[0] & kRoutersMask;
     mExternalCommissioningEnabled   = aFlags[0] & kExternalCommissioningMask;
     mBeaconsEnabled                 = aFlags[0] & kBeaconsMask;
     mCommercialCommissioningEnabled = (aFlags[0] & kCommercialCommissioningMask) == 0;
     mAutonomousEnrollmentEnabled    = (aFlags[0] & kAutonomousEnrollmentMask) == 0;
-    mMasterKeyProvisioningEnabled   = (aFlags[0] & kMasterKeyProvisioningMask) == 0;
+    mNetworkKeyProvisioningEnabled  = (aFlags[0] & kNetworkKeyProvisioningMask) == 0;
 
     VerifyOrExit(aFlagsLength > sizeof(aFlags[0]));
     mTobleLinkEnabled           = aFlags[1] & kTobleLinkMask;
@@ -107,9 +107,9 @@ void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
 
     memset(aFlags, 0, aFlagsLength);
 
-    if (mObtainMasterKeyEnabled)
+    if (mObtainNetworkKeyEnabled)
     {
-        aFlags[0] |= kObtainMasterKeyMask;
+        aFlags[0] |= kObtainNetworkKeyMask;
     }
 
     if (mNativeCommissioningEnabled)
@@ -142,9 +142,9 @@ void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
         aFlags[0] |= kAutonomousEnrollmentMask;
     }
 
-    if (!mMasterKeyProvisioningEnabled)
+    if (!mNetworkKeyProvisioningEnabled)
     {
-        aFlags[0] |= kMasterKeyProvisioningMask;
+        aFlags[0] |= kNetworkKeyProvisioningMask;
     }
 
     VerifyOrExit(aFlagsLength > sizeof(aFlags[0]));
@@ -179,7 +179,7 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
 {
-    Error error = mMasterKey.GenerateRandom();
+    Error error = mNetworkKey.GenerateRandom();
 
     OT_ASSERT(error == kErrorNone);
     OT_UNUSED_VARIABLE(error);
@@ -207,12 +207,12 @@ void KeyManager::SetPskc(const Pskc &aPskc)
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-Error KeyManager::SetMasterKey(const MasterKey &aKey)
+Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
 {
     Error   error = kErrorNone;
     Router *parent;
 
-    SuccessOrExit(Get<Notifier>().Update(mMasterKey, aKey, kEventMasterKeyChanged));
+    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, aKey, kEventNetworkKeyChanged));
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
     mKeySequence = 0;
     UpdateKeyMaterial();
@@ -253,7 +253,7 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
 
-    hmac.Start(mMasterKey.m8, sizeof(mMasterKey.m8));
+    hmac.Start(mNetworkKey.m8, sizeof(mNetworkKey.m8));
 
     Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
     hmac.Update(keySequenceBytes);
@@ -271,7 +271,7 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), mMasterKey.m8, sizeof(MasterKey));
+    hkdf.Extract(salt, sizeof(salt), mNetworkKey.m8, sizeof(NetworkKey));
     hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.m8, sizeof(Mac::Key));
 }
 #endif

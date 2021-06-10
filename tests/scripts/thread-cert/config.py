@@ -83,7 +83,7 @@ ONLINK_GUA_PREFIX = '2021::/64'
 # Any address starts with 'fd' are considered on-link address.
 ONLINK_PREFIX_REGEX_PATTERN = '^fd'
 
-DEFAULT_MASTER_KEY = bytearray([
+DEFAULT_NETWORK_KEY = bytearray([
     0x00,
     0x11,
     0x22,
@@ -277,15 +277,15 @@ def create_default_mle_tlvs_factories():
     }
 
 
-def create_default_mle_crypto_engine(master_key):
-    return net_crypto.CryptoEngine(crypto_material_creator=net_crypto.MleCryptoMaterialCreator(master_key))
+def create_default_mle_crypto_engine(network_key):
+    return net_crypto.CryptoEngine(crypto_material_creator=net_crypto.MleCryptoMaterialCreator(network_key))
 
 
-def create_default_mle_message_factory(master_key):
+def create_default_mle_message_factory(network_key):
     return mle.MleMessageFactory(
         aux_sec_hdr_factory=net_crypto.AuxiliarySecurityHeaderFactory(),
         mle_command_factory=mle.MleCommandFactory(tlvs_factories=create_default_mle_tlvs_factories()),
-        crypto_engine=create_default_mle_crypto_engine(master_key),
+        crypto_engine=create_default_mle_crypto_engine(network_key),
     )
 
 
@@ -333,7 +333,7 @@ def create_default_mesh_cop_tlvs_factories():
         mesh_cop.TlvType.EXTENDED_PANID: mesh_cop.ExtendedPanidFactory(),
         mesh_cop.TlvType.NETWORK_NAME: mesh_cop.NetworkNameFactory(),
         mesh_cop.TlvType.PSKC: mesh_cop.PSKcFactory(),
-        mesh_cop.TlvType.NETWORK_MASTER_KEY: mesh_cop.NetworkMasterKeyFactory(),
+        mesh_cop.TlvType.NETWORK_KEY: mesh_cop.NetworkKeyFactory(),
         mesh_cop.TlvType.NETWORK_KEY_SEQUENCE_COUNTER: mesh_cop.NetworkKeySequenceCounterFactory(),
         mesh_cop.TlvType.NETWORK_MESH_LOCAL_PREFIX: mesh_cop.NetworkMeshLocalPrefixFactory(),
         mesh_cop.TlvType.STEERING_DATA: mesh_cop.SteeringDataFactory(),
@@ -437,8 +437,8 @@ def create_default_ipv6_hop_by_hop_options_factory():
     return ipv6.HopByHopOptionsFactory(options_factories=create_default_ipv6_hop_by_hop_options_factories())
 
 
-def create_default_based_on_src_dst_ports_udp_payload_factory(master_key):
-    mle_message_factory = create_default_mle_message_factory(master_key)
+def create_default_based_on_src_dst_ports_udp_payload_factory(network_key):
+    mle_message_factory = create_default_mle_message_factory(network_key)
     coap_message_factory = create_default_coap_message_factory()
     dtls_message_factory = create_default_dtls_message_factory()
 
@@ -465,12 +465,12 @@ def create_default_ipv6_icmp_body_factories():
     }
 
 
-def create_default_ipv6_upper_layer_factories(master_key):
+def create_default_ipv6_upper_layer_factories(network_key):
     return {
         ipv6.IPV6_NEXT_HEADER_UDP:
             ipv6.UDPDatagramFactory(
                 udp_header_factory=ipv6.UDPHeaderFactory(),
-                udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(master_key),
+                udp_payload_factory=create_default_based_on_src_dst_ports_udp_payload_factory(network_key),
             ),
         ipv6.IPV6_NEXT_HEADER_ICMP:
             ipv6.ICMPv6Factory(body_factories=create_default_ipv6_icmp_body_factories()),
@@ -491,10 +491,10 @@ def create_default_ipv6_extension_headers_factories():
     }
 
 
-def create_default_ipv6_packet_factory(master_key):
+def create_default_ipv6_packet_factory(network_key):
     return ipv6.IPv6PacketFactory(
         ehf=create_default_ipv6_extension_headers_factories(),
-        ulpf=create_default_ipv6_upper_layer_factories(master_key),
+        ulpf=create_default_ipv6_upper_layer_factories(network_key),
     )
 
 
@@ -514,18 +514,18 @@ def create_default_thread_context_manager():
     return context_manager
 
 
-def create_default_lowpan_parser(context_manager, master_key=DEFAULT_MASTER_KEY):
+def create_default_lowpan_parser(context_manager, network_key=DEFAULT_NETWORK_KEY):
     return lowpan.LowpanParser(
         lowpan_mesh_header_factory=lowpan.LowpanMeshHeaderFactory(),
         lowpan_decompressor=create_default_lowpan_decompressor(context_manager),
         lowpan_fragements_buffers_manager=lowpan.LowpanFragmentsBuffersManager(),
-        ipv6_packet_factory=create_default_ipv6_packet_factory(master_key),
+        ipv6_packet_factory=create_default_ipv6_packet_factory(network_key),
     )
 
 
-def create_default_thread_message_factory(master_key=DEFAULT_MASTER_KEY):
+def create_default_thread_message_factory(network_key=DEFAULT_NETWORK_KEY):
     context_manager = create_default_thread_context_manager()
-    lowpan_parser = create_default_lowpan_parser(context_manager, master_key)
+    lowpan_parser = create_default_lowpan_parser(context_manager, network_key)
 
     return message.MessageFactory(lowpan_parser=lowpan_parser)
 

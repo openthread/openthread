@@ -2217,11 +2217,11 @@ enum
      */
     SPINEL_PROP_NET_XPANID = SPINEL_PROP_NET__BEGIN + 5,
 
-    /// Thread Network Master Key
+    /// Thread Network Key
     /** Format `D` - Read-write
      *
      */
-    SPINEL_PROP_NET_MASTER_KEY = SPINEL_PROP_NET__BEGIN + 6,
+    SPINEL_PROP_NET_NETWORK_KEY = SPINEL_PROP_NET__BEGIN + 6,
 
     /// Thread Network Key Sequence Counter
     /** Format `L` - Read-write
@@ -2675,7 +2675,7 @@ enum
      * Operational Dataset that it has stored locally and the one currently in use by the partition to which it is
      * attached. This property corresponds to the locally stored Dataset on the device.
      *
-     * Operational Dataset consists of a set of supported properties (e.g., channel, master key, network name, PAN id,
+     * Operational Dataset consists of a set of supported properties (e.g., channel, network key, network name, PAN id,
      * etc). Note that not all supported properties may be present (have a value) in a Dataset.
      *
      * The Dataset value is encoded as an array of structs containing pairs of property key (as `i`) followed by the
@@ -2688,7 +2688,7 @@ enum
      *   SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP
      *   SPINEL_PROP_PHY_CHAN
      *   SPINEL_PROP_PHY_CHAN_SUPPORTED (Channel Mask Page 0)
-     *   SPINEL_PROP_NET_MASTER_KEY
+     *   SPINEL_PROP_NET_NETWORK_KEY
      *   SPINEL_PROP_NET_NETWORK_NAME
      *   SPINEL_PROP_NET_XPANID
      *   SPINEL_PROP_MAC_15_4_PANID
@@ -2953,7 +2953,7 @@ enum
      * This property allows host to request NCP to create and return a new Operation Dataset to use when forming a new
      * network.
      *
-     * Operational Dataset consists of a set of supported properties (e.g., channel, master key, network name, PAN id,
+     * Operational Dataset consists of a set of supported properties (e.g., channel, network key, network name, PAN id,
      * etc). Note that not all supported properties may be present (have a value) in a Dataset.
      *
      * The Dataset value is encoded as an array of structs containing pairs of property key (as `i`) followed by the
@@ -2964,7 +2964,7 @@ enum
      *   SPINEL_PROP_DATASET_ACTIVE_TIMESTAMP
      *   SPINEL_PROP_PHY_CHAN
      *   SPINEL_PROP_PHY_CHAN_SUPPORTED (Channel Mask Page 0)
-     *   SPINEL_PROP_NET_MASTER_KEY
+     *   SPINEL_PROP_NET_NETWORK_KEY
      *   SPINEL_PROP_NET_NETWORK_NAME
      *   SPINEL_PROP_NET_XPANID
      *   SPINEL_PROP_MAC_15_4_PANID
