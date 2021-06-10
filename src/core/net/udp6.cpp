@@ -480,7 +480,7 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort));
+    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort) || IsPortInUse(aMessageInfo.mSockPort));
 #endif
 
     for (Receiver *receiver = mReceivers.GetHead(); receiver; receiver = receiver->GetNext())
@@ -528,6 +528,22 @@ void Udp::HandlePayload(Message &aMessage, MessageInfo &aMessageInfo)
 
 exit:
     return;
+}
+
+bool Udp::IsPortInUse(uint16_t aPort) const
+{
+    bool found = false;
+
+    for (const SocketHandle *socket = mSockets.GetHead(); socket != nullptr; socket = socket->GetNext())
+    {
+        if (socket->GetSockName().GetPort() == aPort)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    return found;
 }
 
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const

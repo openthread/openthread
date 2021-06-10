@@ -574,6 +574,18 @@ public:
 #endif
 
     /**
+     * This method returns whether a udp port is being used by OpenThread or any of it's optional
+     * features, e.g. CoAP API.
+     *
+     * @param[in]   aPort       The udp port
+     *
+     * @retval True when port is used by the OpenThread.
+     * @retval False when the port is not used by OpenThread.
+     *
+     */
+    bool IsPortInUse(uint16_t aPort) const;
+
+    /**
      * This method returns whether a udp port belongs to the platform or the stack.
      *
      * @param[in]   aPort       The udp port
