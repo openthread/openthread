@@ -100,13 +100,14 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mOutputContext(aContext)
     , mUserCommands(nullptr)
     , mUserCommandsLength(0)
-    , mCommandIsExecuting(false)
+    , mCommandIsPending(false)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
     , mDataset(*this)
     , mNetworkData(*this)
     , mUdp(*this)
+    , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -135,7 +136,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 
 void Interpreter::OutputResult(otError aError)
 {
-    OT_ASSERT(mCommandIsExecuting);
+    OT_ASSERT(mCommandIsPending);
 
     switch (aError)
     {
@@ -152,7 +153,8 @@ void Interpreter::OutputResult(otError aError)
 
     if (aError != OT_ERROR_PENDING)
     {
-        mCommandIsExecuting = false;
+        mCommandIsPending = false;
+        mTimer.Stop();
         OutputPrompt();
     }
 }
@@ -4666,13 +4668,13 @@ void Interpreter::ProcessLine(char *aBuf)
     OT_ASSERT(aBuf != nullptr);
 
     // Ignore the command if another command is pending.
-    VerifyOrExit(!mCommandIsExecuting, argsLength = 0);
-    mCommandIsExecuting = true;
+    VerifyOrExit(!mCommandIsPending, argsLength = 0);
+    mCommandIsPending = true;
 
     VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aBuf, argsLength, args, kMaxArgs));
-    VerifyOrExit(argsLength >= 1, mCommandIsExecuting = false);
+    VerifyOrExit(argsLength >= 1, mCommandIsPending = false);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     VerifyOrExit((!otDiagIsEnabled(mInstance) || (args[0] == "diag")), {
@@ -4697,7 +4699,7 @@ exit:
     {
         OutputResult(error);
     }
-    else if (!mCommandIsExecuting)
+    else if (!mCommandIsPending)
     {
         OutputPrompt();
     }
@@ -4754,6 +4756,8 @@ otError Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, Arg aArgs[])
     {
         SuccessOrExit(error = otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count,
                                                         &Interpreter::HandleDiagnosticGetResponse, this));
+        SetCommandTimeout(5000);
+        ExitNow(error = OT_ERROR_PENDING);
     }
     else if (aArgs[0] == "reset")
     {
@@ -5048,6 +5052,22 @@ void Interpreter::OutputPrompt(void)
     static const char sPrompt[] = "> ";
 
     OutputFormat("%s", sPrompt);
+}
+
+void Interpreter::HandleTimer(Timer &aTimer)
+{
+    static_cast<Interpreter *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
+}
+
+void Interpreter::HandleTimer(void)
+{
+    OutputResult(kErrorNone);
+}
+
+void Interpreter::SetCommandTimeout(uint32_t aTimeoutMilli)
+{
+    OT_ASSERT(mCommandIsPending);
+    mTimer.Start(aTimeoutMilli);
 }
 
 extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)

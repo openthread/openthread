@@ -730,6 +730,11 @@ private:
     }
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
+    void SetCommandTimeout(uint32_t aTimeoutMilli);
+
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+
     static constexpr Command sCommands[] = {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         {"ba", &Interpreter::ProcessBorderAgent},
@@ -908,14 +913,15 @@ private:
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
-    bool                mCommandIsExecuting;
+    bool                mCommandIsPending;
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif
 
-    Dataset     mDataset;
-    NetworkData mNetworkData;
-    UdpExample  mUdp;
+    Dataset           mDataset;
+    NetworkData       mNetworkData;
+    UdpExample        mUdp;
+    TimerMilliContext mTimer;
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;
