@@ -594,7 +594,7 @@ private:
     void Start(void);
     void Stop(void);
     void SelectPort(void);
-    void HandleNetDataPublisherEntryChange(bool aAdded);
+    void HandleNetDataPublisherEvent(NetworkData::Publisher::Event aEvent);
 
     ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 

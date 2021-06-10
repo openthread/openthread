@@ -118,28 +118,23 @@ exit:
 
 void Publisher::SetState(State aState)
 {
-    State oldState = mState;
+    if (mState != aState)
+    {
+        otLogInfoNetData("Publisher: State: %s -> %s", StateToString(mState), StateToString(aState));
+        mState = aState;
+    }
+}
 
-    VerifyOrExit(mState != aState);
-
-    otLogInfoNetData("Publisher: State: %s -> %s", StateToString(mState), StateToString(aState));
-    mState = aState;
-
-    // Invoke callback to notify the change to the Network Data, when
-    // the entry is added (on transition to new state `kAdded`), or
-    // when it is removed (on transition from state `kAdded`).
-
-    VerifyOrExit((mState == kAdded) || (oldState == kAdded));
-
+void Publisher::Notify(Event aEvent) const
+{
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    Get<Srp::Server>().HandleNetDataPublisherEntryChange(mState == kAdded);
+    Get<Srp::Server>().HandleNetDataPublisherEvent(aEvent);
 #endif
 
-    VerifyOrExit(mCallback != nullptr);
-    mCallback(mState == kAdded, mContext);
-
-exit:
-    return;
+    if (mCallback != nullptr)
+    {
+        mCallback(static_cast<otNetDataPublisherEvent>(aEvent), mContext);
+    }
 }
 
 void Publisher::Process(void)
@@ -373,7 +368,7 @@ void Publisher::HandleTimer(void)
     }
 }
 
-void Publisher::Add(void)
+void Publisher::Add(bool aShouldNotify)
 {
     // Adds the service entry to the network data.
 
@@ -399,11 +394,16 @@ void Publisher::Add(void)
 
     Get<Notifier>().HandleServerDataUpdated();
 
+    if (aShouldNotify)
+    {
+        Notify(kEventEntryAdded);
+    }
+
 exit:
     return;
 }
 
-void Publisher::Remove(State aNextState, bool aRegisterWithLeader)
+void Publisher::Remove(State aNextState, bool aRegisterWithLeader, bool aShouldNotify)
 {
     // Removes the service entry from network data (if it was added).
 
@@ -433,6 +433,11 @@ void Publisher::Remove(State aNextState, bool aRegisterWithLeader)
 
     otLogInfoNetData("Publisher: Removed DNS/SRP service from network data");
 
+    if (aShouldNotify)
+    {
+        Notify(kEventEntryRemoved);
+    }
+
 exit:
     SetState(aNextState);
 }
@@ -445,12 +450,14 @@ void Publisher::HandleNotifierEvents(Events aEvents)
 
         if (mState == kAdded)
         {
-            // If the entry is already added, we need to update it
-            // so we remove it and add it back immediately with
-            // the new mesh-local address.
+            // If the entry is already added, we need to update it so
+            // we remove it and add it back immediately with the new
+            // mesh-local address. In this case since the remove and
+            // add are always together, we do not need to notify the
+            // change (callback will be not invoked).
 
-            Remove(/* aNextState */ kAdding, /* aRegisterWithLeader */ false);
-            Add();
+            Remove(/* aNextState */ kAdding, /* aRegisterWithLeader */ false, /* aShouldNotify */ false);
+            Add(/* aShouldNotify */ false);
         }
     }
 

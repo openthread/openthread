@@ -71,6 +71,16 @@ class Publisher : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * This enumeration represents the events reported from the Publisher callback.
+     *
+     */
+    enum Event : uint8_t
+    {
+        kEventEntryAdded   = OT_NETDATA_PUBLISHER_EVENT_ENTRY_ADDED,   ///< Entry is added to Network Data.
+        kEventEntryRemoved = OT_NETDATA_PUBLISHER_EVENT_ENTRY_REMOVED, ///< Entry is removed from Network Data.
+    };
+
+    /**
      * This type represents the callback function pointer used to notify when a "DNS/SRP Service" entry is added to or
      * removed from the Thread Network Data.
      *
@@ -137,7 +147,7 @@ public:
      * @retval FLASE   The entry is not added to Thread NetworkData or there is no entry to publish.
      *
      */
-    bool IsDnsSrpServiceAdded(void) const { return mState == kAdded; }
+    bool IsDnsSrpServiceAdded(void) const { return (mState == kAdded); }
 
     /**
      * This method sets a callback for notifying when a published "DNS/SRP Service" is actually added to or removed
@@ -194,14 +204,15 @@ private:
 
     void Publish(Type aType, uint16_t aPortOrSeqNumber, const Ip6::Address *aAddress);
     void SetState(State aState);
+    void Notify(Event aEvent) const;
     void Process(void);
     void CountAnycastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
     void CountUnicastEntries(uint8_t &aNumEntries, uint8_t &aNumPreferredEntries) const;
     bool IsPreferred(uint16_t aRloc16) const;
     void UpdateState(uint8_t aNumEntries, uint8_t aNumPreferredEntries, uint8_t aDesiredNumEntries);
     void HandleTimer(void);
-    void Add(void);
-    void Remove(State aNextState, bool aRegisterWithLeader = true);
+    void Add(bool aShouldNotify = true);
+    void Remove(State aNextState, bool aRegisterWithLeader = true, bool aShouldNotify = true);
     void HandleNotifierEvents(Events aEvents);
     void LogWaitInterval(uint32_t aWaitInterval) const;
 

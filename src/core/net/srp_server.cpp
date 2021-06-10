@@ -522,15 +522,17 @@ exit:
     return;
 }
 
-void Server::HandleNetDataPublisherEntryChange(bool aAdded)
+void Server::HandleNetDataPublisherEvent(NetworkData::Publisher::Event aEvent)
 {
-    if (aAdded)
+    switch (aEvent)
     {
+    case NetworkData::Publisher::kEventEntryAdded:
         Start();
-    }
-    else
-    {
+        break;
+
+    case NetworkData::Publisher::kEventEntryRemoved:
         Stop();
+        break;
     }
 }
 

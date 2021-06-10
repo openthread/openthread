@@ -54,6 +54,16 @@ extern "C" {
  */
 
 /**
+ * This enumeration represents the events reported from the Publisher callback.
+ *
+ */
+typedef enum otNetDataPublisherEvent
+{
+    OT_NETDATA_PUBLISHER_EVENT_ENTRY_ADDED   = 0, ///< Published entry is added to the Thread Network Data.
+    OT_NETDATA_PUBLISHER_EVENT_ENTRY_REMOVED = 1, ///< Published entry is removed from the Thread Network Data.
+} otNetDataPublisherEvent;
+
+/**
  * This function pointer type defines the callback used to notify when a "DNS/SRP Service" entry is added to or removed
  * from the Thread Network Data.
  *
@@ -61,11 +71,11 @@ extern "C" {
  * too many similar entries already present in the Network Data) or through an explicit call to unpublish the entry
  * (i.e., a call to `otNetDataUnpublishDnsSrpService()`).
  *
- * @param[in] aAdded     Indicates whether the entry was added (TRUE) or removed (FALSE).
+ * @param[in] aEvent     Indicates the event (whether the entry was added or removed).
  * @param[in] aContext   A pointer to application-specific context.
  *
  */
-typedef void (*otNetDataDnsSrpServicePublisherCallback)(bool aAdded, void *aContext);
+typedef void (*otNetDataDnsSrpServicePublisherCallback)(otNetDataPublisherEvent aEvent, void *aContext);
 
 /**
  * This function requests "DNS/SRP Service Anycast Address" to be published in the Thread Network Data.
