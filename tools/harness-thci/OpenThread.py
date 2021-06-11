@@ -3357,8 +3357,6 @@ class OpenThreadTHCI(object):
     def registerMulticast(self, sAddr='ff04::1234:777a:1', timeout=MLR_TIMEOUT_MIN):
         """subscribe to the given ipv6 address (sAddr) in interface and send MLR.req OTA
 
-        note: workaround agreed before finial decision discussed in the DEV-1819.
-
         Args:
             sAddr   : str : Multicast address to be subscribed and notified OTA.
         """
