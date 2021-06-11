@@ -578,7 +578,7 @@ Error Address::FromString(const char *aString)
             aString++;
             value = (value << 4) + digit;
 
-            VerifyOrExit(value <= NumericLimits<uint16_t>::Max());
+            VerifyOrExit(value <= NumericLimits<uint16_t>::kMax);
         }
 
         VerifyOrExit(aString != start);

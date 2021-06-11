@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for NumericLimits class.
+ *   This file includes definitions for numeric limits.
  */
 
 #ifndef NUMERIC_LIMITS_HPP_
@@ -44,64 +44,58 @@ namespace ot {
  * There are no members if `Type` is not a supported arithmetic type.
  *
  */
-template <typename Type> class NumericLimits
+template <typename Type> struct NumericLimits
 {
 };
 
-template <> class NumericLimits<int8_t>
+// Specialization for different integral types.
+
+template <> struct NumericLimits<int8_t>
 {
-public:
-    static constexpr int8_t Min(void) { return INT8_MIN; }
-    static constexpr int8_t Max(void) { return INT8_MAX; }
+    static constexpr int8_t kMin = INT8_MIN;
+    static constexpr int8_t kMax = INT8_MAX;
 };
 
-template <> class NumericLimits<int16_t>
+template <> struct NumericLimits<int16_t>
 {
-public:
-    static constexpr int16_t Min(void) { return INT16_MIN; }
-    static constexpr int16_t Max(void) { return INT16_MAX; }
+    static constexpr int16_t kMin = INT16_MIN;
+    static constexpr int16_t kMax = INT16_MAX;
 };
 
-template <> class NumericLimits<int32_t>
+template <> struct NumericLimits<int32_t>
 {
-public:
-    static constexpr int32_t Min(void) { return INT32_MIN; }
-    static constexpr int32_t Max(void) { return INT32_MAX; }
+    static constexpr int32_t kMin = INT32_MIN;
+    static constexpr int32_t kMax = INT32_MAX;
 };
 
-template <> class NumericLimits<int64_t>
+template <> struct NumericLimits<int64_t>
 {
-public:
-    static constexpr int64_t Min(void) { return INT64_MIN; }
-    static constexpr int64_t Max(void) { return INT64_MAX; }
+    static constexpr int64_t kMin = INT64_MIN;
+    static constexpr int64_t kMax = INT64_MAX;
 };
 
-template <> class NumericLimits<uint8_t>
+template <> struct NumericLimits<uint8_t>
 {
-public:
-    static constexpr uint8_t Min(void) { return 0; }
-    static constexpr uint8_t Max(void) { return UINT8_MAX; }
+    static constexpr uint8_t kMin = 0;
+    static constexpr uint8_t kMax = UINT8_MAX;
 };
 
-template <> class NumericLimits<uint16_t>
+template <> struct NumericLimits<uint16_t>
 {
-public:
-    static constexpr uint16_t Min(void) { return 0; }
-    static constexpr uint16_t Max(void) { return UINT16_MAX; }
+    static constexpr uint16_t kMin = 0;
+    static constexpr uint16_t kMax = UINT16_MAX;
 };
 
-template <> class NumericLimits<uint32_t>
+template <> struct NumericLimits<uint32_t>
 {
-public:
-    static constexpr uint32_t Min(void) { return 0; }
-    static constexpr uint32_t Max(void) { return UINT32_MAX; }
+    static constexpr uint32_t kMin = 0;
+    static constexpr uint32_t kMax = UINT32_MAX;
 };
 
-template <> class NumericLimits<uint64_t>
+template <> struct NumericLimits<uint64_t>
 {
-public:
-    static constexpr uint64_t Min(void) { return 0; }
-    static constexpr uint64_t Max(void) { return UINT64_MAX; }
+    static constexpr uint64_t kMin = 0;
+    static constexpr uint64_t kMax = UINT64_MAX;
 };
 
 } // namespace ot
