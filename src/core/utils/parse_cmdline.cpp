@@ -37,6 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/numeric_limits.hpp"
+#include "common/string.hpp"
 #include "net/ip6_address.hpp"
 
 namespace ot {
@@ -258,7 +259,7 @@ Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
     char        string[kMaxIp6AddressStringSize];
     const char *prefixLengthStr;
 
-    prefixLengthStr = strchr(aString, '/');
+    prefixLengthStr = StringFind(aString, '/');
     VerifyOrExit(prefixLengthStr != nullptr);
 
     VerifyOrExit(prefixLengthStr - aString < static_cast<int32_t>(sizeof(string)));
