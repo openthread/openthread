@@ -101,11 +101,6 @@ void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, 
     mServiceUpdateHandlerContext = aServiceHandlerContext;
 }
 
-bool Server::IsRunning(void) const
-{
-    return mSocket.IsBound();
-}
-
 void Server::SetEnabled(bool aEnabled)
 {
     VerifyOrExit(mEnabled != aEnabled);
@@ -165,11 +160,6 @@ uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
     return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
 }
 
-void Server::GetLeaseConfig(LeaseConfig &aLeaseConfig) const
-{
-    aLeaseConfig = mLeaseConfig;
-}
-
 Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
 {
     Error error = kErrorNone;
@@ -179,11 +169,6 @@ Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
 
 exit:
     return error;
-}
-
-const char *Server::GetDomain(void) const
-{
-    return mDomain;
 }
 
 Error Server::SetDomain(const char *aDomain)
@@ -495,7 +480,7 @@ void Server::Stop(void)
         RemoveHost(mHosts.GetHead(), /* aRetainName */ false, /* aNotifyServiceHandler */ true);
     }
 
-    // TODO: We should cancel any oustanding service updates, but current
+    // TODO: We should cancel any outstanding service updates, but current
     // OTBR mDNS publisher cannot properly handle it.
     while (!mOutstandingUpdates.IsEmpty())
     {
@@ -660,7 +645,7 @@ Error Server::ProcessUpdateSection(Host &                   aHost,
     error = ProcessHostDescriptionInstruction(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
-    // 2. Enumerate over all RRs to build the Service Description Insutructions.
+    // 2. Enumerate over all RRs to build the Service Description Instructions.
     error = ProcessServiceDescriptionInstructions(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
@@ -1542,16 +1527,6 @@ void Server::Host::SetKey(Dns::Ecdsa256KeyRecord &aKey)
     OT_ASSERT(aKey.IsValid());
 
     mKey = aKey;
-}
-
-void Server::Host::SetLease(uint32_t aLease)
-{
-    mLease = aLease;
-}
-
-void Server::Host::SetKeyLease(uint32_t aKeyLease)
-{
-    mKeyLease = aKeyLease;
 }
 
 TimeMilli Server::Host::GetExpireTime(void) const
