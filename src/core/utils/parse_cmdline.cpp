@@ -122,7 +122,7 @@ template <typename UintType> Error ParseUint(const char *aString, UintType &aUin
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
 
-    VerifyOrExit(value <= NumericLimits<UintType>::Max(), error = kErrorInvalidArgs);
+    VerifyOrExit(value <= NumericLimits<UintType>::kMax, error = kErrorInvalidArgs);
     aUint = static_cast<UintType>(value);
 
 exit:
@@ -190,7 +190,7 @@ template <typename IntType> Error ParseInt(const char *aString, IntType &aInt)
 
     SuccessOrExit(error = ParseAsInt32(aString, value));
 
-    VerifyOrExit((NumericLimits<IntType>::Min() <= value) && (value <= NumericLimits<IntType>::Max()),
+    VerifyOrExit((NumericLimits<IntType>::kMin <= value) && (value <= NumericLimits<IntType>::kMax),
                  error = kErrorInvalidArgs);
     aInt = static_cast<IntType>(value);
 
@@ -225,8 +225,8 @@ Error ParseAsInt32(const char *aString, int32_t &aInt32)
     }
 
     SuccessOrExit(error = ParseAsUint64(aString, value));
-    VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::Min()))
-                                       : static_cast<uint64_t>(NumericLimits<int32_t>::Max())),
+    VerifyOrExit(value <= (isNegavtive ? static_cast<uint64_t>(-static_cast<int64_t>(NumericLimits<int32_t>::kMin))
+                                       : static_cast<uint64_t>(NumericLimits<int32_t>::kMax)),
                  error = kErrorInvalidArgs);
     aInt32 = static_cast<int32_t>(isNegavtive ? -static_cast<int64_t>(value) : static_cast<int64_t>(value));
 

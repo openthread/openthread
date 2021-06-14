@@ -210,7 +210,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
 
     reply.mSenderAddress = aMessageInfo.GetPeerAddr();
     reply.mRoundTripTime =
-        static_cast<uint16_t>(OT_MIN(TimerMilli::GetNow() - TimeMilli(timestamp), NumericLimits<uint16_t>::Max()));
+        static_cast<uint16_t>(OT_MIN(TimerMilli::GetNow() - TimeMilli(timestamp), NumericLimits<uint16_t>::kMax));
     reply.mSize           = aMessage.GetLength() - aMessage.GetOffset();
     reply.mSequenceNumber = aIcmpHeader.GetSequence();
     reply.mHopLimit       = aMessageInfo.GetHopLimit();
