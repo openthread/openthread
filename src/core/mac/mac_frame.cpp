@@ -1061,7 +1061,7 @@ exit:
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 uint16_t Frame::GetMtu(void) const
 {
-    uint16_t mtu;
+    uint16_t mtu = 0;
 
     switch (GetRadioType())
     {
@@ -1076,9 +1076,6 @@ uint16_t Frame::GetMtu(void) const
         mtu = Trel::Link::kMtuSize;
         break;
 #endif
-
-    default:
-        OT_ASSERT(false);
     }
 
     return mtu;
@@ -1086,7 +1083,7 @@ uint16_t Frame::GetMtu(void) const
 
 uint8_t Frame::GetFcsSize(void) const
 {
-    uint8_t fcsSize;
+    uint8_t fcsSize = 0;
 
     switch (GetRadioType())
     {
@@ -1101,9 +1098,6 @@ uint8_t Frame::GetFcsSize(void) const
         fcsSize = Trel::Link::kFcsSize;
         break;
 #endif
-
-    default:
-        OT_ASSERT(false);
     }
 
     return fcsSize;
@@ -1391,22 +1385,22 @@ Frame::InfoString Frame::ToInfoString(void) const
     uint8_t    commandId, type;
     Address    src, dst;
 
-    IgnoreError(string.Append("len:%d, seqnum:%d, type:", mLength, GetSequence()));
+    string.Append("len:%d, seqnum:%d, type:", mLength, GetSequence());
 
     type = GetType();
 
     switch (type)
     {
     case kFcfFrameBeacon:
-        IgnoreError(string.Append("Beacon"));
+        string.Append("Beacon");
         break;
 
     case kFcfFrameData:
-        IgnoreError(string.Append("Data"));
+        string.Append("Data");
         break;
 
     case kFcfFrameAck:
-        IgnoreError(string.Append("Ack"));
+        string.Append("Ack");
         break;
 
     case kFcfFrameMacCmd:
@@ -1418,34 +1412,33 @@ Frame::InfoString Frame::ToInfoString(void) const
         switch (commandId)
         {
         case kMacCmdDataRequest:
-            IgnoreError(string.Append("Cmd(DataReq)"));
+            string.Append("Cmd(DataReq)");
             break;
 
         case kMacCmdBeaconRequest:
-            IgnoreError(string.Append("Cmd(BeaconReq)"));
+            string.Append("Cmd(BeaconReq)");
             break;
 
         default:
-            IgnoreError(string.Append("Cmd(%d)", commandId));
+            string.Append("Cmd(%d)", commandId);
             break;
         }
 
         break;
 
     default:
-        IgnoreError(string.Append("%d", type));
+        string.Append("%d", type);
         break;
     }
 
     IgnoreError(GetSrcAddr(src));
     IgnoreError(GetDstAddr(dst));
 
-    IgnoreError(string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(),
-                              dst.ToString().AsCString(), GetSecurityEnabled() ? "yes" : "no",
-                              GetAckRequest() ? "yes" : "no"));
+    string.Append(", src:%s, dst:%s, sec:%s, ackreq:%s", src.ToString().AsCString(), dst.ToString().AsCString(),
+                  GetSecurityEnabled() ? "yes" : "no", GetAckRequest() ? "yes" : "no");
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
-    IgnoreError(string.Append(", radio:%s", RadioTypeToString(GetRadioType())));
+    string.Append(", radio:%s", RadioTypeToString(GetRadioType()));
 #endif
 
     return string;
@@ -1454,12 +1447,14 @@ Frame::InfoString Frame::ToInfoString(void) const
 BeaconPayload::InfoString BeaconPayload::ToInfoString(void) const
 {
     NetworkName name;
+    InfoString  string;
 
     IgnoreError(name.Set(GetNetworkName()));
 
-    return InfoString("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
-                      mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
-                      IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
+    string.Append("name:%s, xpanid:%s, id:%d, ver:%d, joinable:%s, native:%s", name.GetAsCString(),
+                  mExtendedPanId.ToString().AsCString(), GetProtocolId(), GetProtocolVersion(),
+                  IsJoiningPermitted() ? "yes" : "no", IsNative() ? "yes" : "no");
+    return string;
 }
 
 #endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)

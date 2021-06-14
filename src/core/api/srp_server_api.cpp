@@ -38,7 +38,7 @@
 #include <openthread/srp_server.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
@@ -63,15 +63,18 @@ void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
     instance.Get<Srp::Server>().SetEnabled(aEnabled);
 }
 
-otError otSrpServerSetLeaseRange(otInstance *aInstance,
-                                 uint32_t    aMinLease,
-                                 uint32_t    aMaxLease,
-                                 uint32_t    aMinKeyLease,
-                                 uint32_t    aMaxKeyLease)
+void otSrpServerGetLeaseConfig(otInstance *aInstance, otSrpServerLeaseConfig *aLeaseConfig)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Srp::Server>().SetLeaseRange(aMinLease, aMaxLease, aMinKeyLease, aMaxKeyLease);
+    instance.Get<Srp::Server>().GetLeaseConfig(static_cast<Srp::Server::LeaseConfig &>(*aLeaseConfig));
+}
+
+otError otSrpServerSetLeaseConfig(otInstance *aInstance, const otSrpServerLeaseConfig *aLeaseConfig)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Server>().SetLeaseConfig(static_cast<const Srp::Server::LeaseConfig &>(*aLeaseConfig));
 }
 
 void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstance,
@@ -83,11 +86,11 @@ void otSrpServerSetServiceUpdateHandler(otInstance *                    aInstanc
     instance.Get<Srp::Server>().SetServiceHandler(aServiceHandler, aContext);
 }
 
-void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, const otSrpServerHost *aHost, otError aError)
+void otSrpServerHandleServiceUpdateResult(otInstance *aInstance, otSrpServerServiceUpdateId aId, otError aError)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    instance.Get<Srp::Server>().HandleServiceUpdateResult(static_cast<const Srp::Server::Host *>(aHost), aError);
+    instance.Get<Srp::Server>().HandleServiceUpdateResult(aId, aError);
 }
 
 const otSrpServerHost *otSrpServerGetNextHost(otInstance *aInstance, const otSrpServerHost *aHost)

@@ -47,15 +47,12 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
             'version': '1.2',
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER, SSED_1]
         },
         ROUTER: {
             'version': '1.2',
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER],
         },
         SSED_1: {
@@ -63,7 +60,6 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
             'name': 'SSED_1',
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'allowlist': [LEADER],
         },
     }
@@ -88,15 +84,10 @@ class LowPower_5_3_01_SSEDAttachment(thread_cert.TestCase):
         self.collect_rlocs()
 
         # Verify connectivity by sending an ICMP Echo Request from the Router to SSED_1 mesh-local address via the DUT
-        # Set ping timeout as two CSL periods.
-        timeout = 2 * consts.CSL_DEFAULT_PERIOD_IN_SECOND
-        self.assertTrue(self.nodes[ROUTER].ping(self.nodes[SSED_1].get_ip6_address(ADDRESS_TYPE.RLOC),
-                                                timeout=timeout))
+        self.assertTrue(self.nodes[ROUTER].ping(self.nodes[SSED_1].get_ip6_address(ADDRESS_TYPE.RLOC)))
 
         # Verify fragmented CSL transmission
-        self.assertTrue(self.nodes[ROUTER].ping(self.nodes[SSED_1].get_ip6_address(ADDRESS_TYPE.RLOC),
-                                                size=128,
-                                                timeout=timeout * 2))
+        self.assertTrue(self.nodes[ROUTER].ping(self.nodes[SSED_1].get_ip6_address(ADDRESS_TYPE.RLOC), size=128))
 
         self.simulator.go(5)
 

@@ -146,9 +146,20 @@ extern int
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
+#include "posix/platform/udp.hpp"
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
+
+const char *otSysGetThreadNetifName(void)
+{
+    return gNetifName;
+}
+
+unsigned int otSysGetThreadNetifIndex(void)
+{
+    return gNetifIndex;
+}
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
 #include "posix/platform/ip6_utils.hpp"
@@ -334,7 +345,7 @@ static void UpdateUnicastLinux(const otIp6AddressInfo &aAddressInfo, bool aIsAdd
 
     req.nh.nlmsg_len = NLMSG_ALIGN(req.nh.nlmsg_len) + rta->rta_len;
 
-    if (aAddressInfo.mIsAnycast)
+    if (!aAddressInfo.mPreferred)
     {
         struct ifa_cacheinfo cacheinfo;
 
@@ -392,7 +403,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
 
 #if defined(__APPLE__)
         ifr6.ifra_lifetime.ia6t_expire    = ND6_INFINITE_LIFETIME;
-        ifr6.ifra_lifetime.ia6t_preferred = ND6_INFINITE_LIFETIME;
+        ifr6.ifra_lifetime.ia6t_preferred = (aAddressInfo.mPreferred ? ND6_INFINITE_LIFETIME : 0);
 #endif
 
         rval = ioctl(sIpFd, aIsAdded ? SIOCAIFADDR_IN6 : SIOCDIFADDR_IN6, &ifr6);
@@ -576,8 +587,14 @@ static void processTransmit(otInstance *aInstance)
     rval = read(sTunFd, packet, sizeof(packet));
     VerifyOrExit(rval > 0, error = OT_ERROR_FAILED);
 
-    message = otIp6NewMessage(aInstance, nullptr);
-    VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    {
+        otMessageSettings settings;
+
+        settings.mLinkSecurityEnabled = (otThreadGetDeviceRole(aInstance) != OT_DEVICE_ROLE_DISABLED);
+        settings.mPriority            = OT_MESSAGE_PRIORITY_LOW;
+        message                       = otIp6NewMessage(aInstance, &settings);
+        VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
+    }
 
 #if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
     // BSD tunnel drivers have (for legacy reasons), may have a 4-byte header on them
@@ -1402,9 +1419,9 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 static void platformConfigureNetLink(void)
 {
 #if defined(__linux__)
-    sNetlinkFd = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    sNetlinkFd = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
 #elif defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
-    sNetlinkFd = socket(PF_ROUTE, SOCK_RAW, 0);
+    sNetlinkFd = SocketWithCloseExec(PF_ROUTE, SOCK_RAW, 0, kSocketNonBlock);
 #else
 #error "!! Unknown platform !!"
 #endif
@@ -1459,7 +1476,7 @@ void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpInit(gNetifName);
+    ot::Posix::Udp::Get().Init(aInstance, gNetifName);
 #endif
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
@@ -1561,20 +1578,4 @@ exit:
     return;
 }
 
-otError otPlatGetNetif(otInstance *aInstance, const char **outNetIfName, unsigned int *outNetIfIndex)
-{
-    OT_UNUSED_VARIABLE(aInstance);
-
-    otError error;
-
-    VerifyOrExit(gNetifIndex != 0, error = OT_ERROR_FAILED);
-
-    *outNetIfName  = gNetifName;
-    *outNetIfIndex = gNetifIndex;
-    error          = OT_ERROR_NONE;
-
-exit:
-
-    return error;
-}
 #endif // OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE

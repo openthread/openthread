@@ -39,7 +39,7 @@ import config
 
 THREAD_VERSION = os.getenv('THREAD_VERSION')
 VIRTUAL_TIME = int(os.getenv('VIRTUAL_TIME', '1'))
-MAX_JOBS = multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10
+MAX_JOBS = int(os.getenv('MAX_JOBS', (multiprocessing.cpu_count() * 2 if VIRTUAL_TIME else 10)))
 
 _BACKBONE_TESTS_DIR = 'tests/scripts/thread-cert/backbone'
 
@@ -131,14 +131,14 @@ class PortOffsetPool:
     def __init__(self, size: int):
         self._size = size
         self._pool = queue.Queue(maxsize=size)
-        for port_offset in range(1, size + 1):
+        for port_offset in range(0, size):
             self.release(port_offset)
 
     def allocate(self) -> int:
         return self._pool.get()
 
     def release(self, port_offset: int):
-        assert 1 <= port_offset <= self._size, port_offset
+        assert 0 <= port_offset < self._size, port_offset
         self._pool.put_nowait(port_offset)
 
 

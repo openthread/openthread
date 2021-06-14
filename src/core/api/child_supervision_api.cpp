@@ -32,14 +32,17 @@
  */
 
 #include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+
 #include <openthread/child_supervision.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
-#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
 
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {
@@ -54,6 +57,8 @@ void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval)
 
     instance.Get<Utils::ChildSupervisor>().SetSupervisionInterval(aInterval);
 }
+
+#endif
 
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance)
 {

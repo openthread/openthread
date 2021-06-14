@@ -31,13 +31,13 @@
  *   This file includes the implementation for handling of data polls and indirect frame transmission.
  */
 
-#if OPENTHREAD_FTD
-
 #include "data_poll_handler.hpp"
+
+#if OPENTHREAD_FTD
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
@@ -272,12 +272,17 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
             {
                 uint32_t frameCounter;
                 uint8_t  keyId;
+                Error    error;
 
-                IgnoreError(aFrame.GetFrameCounter(frameCounter));
+                error = aFrame.GetFrameCounter(frameCounter);
+                OT_ASSERT(error == kErrorNone);
                 aChild.SetIndirectFrameCounter(frameCounter);
 
-                IgnoreError(aFrame.GetKeyId(keyId));
+                error = aFrame.GetKeyId(keyId);
+                OT_ASSERT(error == kErrorNone);
                 aChild.SetIndirectKeyId(keyId);
+
+                OT_UNUSED_VARIABLE(error);
             }
 
             ExitNow();

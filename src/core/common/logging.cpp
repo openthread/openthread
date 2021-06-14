@@ -96,16 +96,18 @@ static void Log(otLogLevel  aLogLevel,
             break;
         }
 
-        IgnoreError(logString.Append("%s", levelStr));
+        logString.Append("%s", levelStr);
     }
 #endif // OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 
-    IgnoreError(logString.Append("%s", aRegionPrefix));
-    VerifyOrExit(logString.AppendVarArgs(aFormat, aArgs) != ot::kErrorInvalidArgs);
+    logString.Append("%s", aRegionPrefix);
+    logString.AppendVarArgs(aFormat, aArgs);
     otPlatLog(aLogLevel, aLogRegion, "%s" OPENTHREAD_CONFIG_LOG_SUFFIX, logString.AsCString());
 
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
 exit:
     return;
+#endif
 }
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_CRIT
@@ -232,26 +234,28 @@ enum : uint8_t
 
 static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t *aBytes, const size_t aLength)
 {
-    ot::String<kStringLineLength> string("|");
+    ot::String<kStringLineLength> string;
+
+    string.Append("|");
 
     for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
     {
         if (i < aLength)
         {
-            IgnoreError(string.Append(" %02X", aBytes[i]));
+            string.Append(" %02X", aBytes[i]);
         }
         else
         {
-            IgnoreError(string.Append(" .."));
+            string.Append(" ..");
         }
 
         if (!((i + 1) % 8))
         {
-            IgnoreError(string.Append(" |"));
+            string.Append(" |");
         }
     }
 
-    IgnoreError(string.Append(" "));
+    string.Append(" ");
 
     for (uint8_t i = 0; i < kDumpBytesPerLine; i++)
     {
@@ -267,7 +271,7 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t
             }
         }
 
-        IgnoreError(string.Append("%c", c));
+        string.Append("%c", c);
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());
@@ -285,14 +289,14 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
 
     for (size_t i = 0; i < (kWidth - idLen) / 2 - 5; i++)
     {
-        IgnoreError(string.Append("="));
+        string.Append("=");
     }
 
-    IgnoreError(string.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength)));
+    string.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength));
 
     for (size_t i = 0; i < (kWidth - idLen) / 2 - 4; i++)
     {
-        IgnoreError(string.Append("="));
+        string.Append("=");
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());
@@ -307,7 +311,7 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
 
     for (size_t i = 0; i < kWidth; i++)
     {
-        IgnoreError(string.Append("-"));
+        string.Append("-");
     }
 
     otLogDump(aLogLevel, aLogRegion, "%s", string.AsCString());

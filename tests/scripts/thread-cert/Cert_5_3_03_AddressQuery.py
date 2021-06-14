@@ -67,35 +67,27 @@ class Cert_5_3_3_AddressQuery(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1, DUT_ROUTER2, ROUTER3]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         DUT_ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER3, MED1]
         },
         ROUTER3: {
             'name': 'ROUTER_3',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, DUT_ROUTER2]
         },
         MED1: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'timeout': 3,
             'allowlist': [DUT_ROUTER2]
         },

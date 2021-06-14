@@ -68,21 +68,17 @@ class Cert_5_3_11_AddressQueryTimeoutIntervals(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [DUT_ROUTER1]
         },
         DUT_ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, MED1]
         },
         MED1: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [DUT_ROUTER1]
         },
     }

@@ -39,6 +39,7 @@
 #include <openthread/netdata.h>
 
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -52,6 +53,8 @@ class Interpreter;
 class NetworkData
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -67,7 +70,7 @@ public:
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
     /**
      * This method outputs the prefix config.
@@ -97,20 +100,22 @@ private:
     struct Command
     {
         const char *mName;
-        otError (NetworkData::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (NetworkData::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    otError ProcessRegister(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessRegister(uint8_t aArgsLength, Arg aArgs[]);
 #endif
-    otError ProcessShow(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessSteeringData(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessShow(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessSteeringData(uint8_t aArgsLength, Arg aArgs[]);
 
     otError OutputBinary(void);
     void    OutputPrefixes(void);
     void    OutputRoutes(void);
     void    OutputServices(void);
+    void    OutputIp6Prefix(const otIp6Prefix &aPrefix);
+    void    OutputPreference(signed int aPreference);
 
     static constexpr Command sCommands[] = {
         {"help", &NetworkData::ProcessHelp},

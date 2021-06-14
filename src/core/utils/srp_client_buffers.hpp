@@ -72,7 +72,7 @@ public:
          * Max number of host address entries.
          *
          */
-        kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRSSES,
+        kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES,
 
         /**
          * Size (number of char) of host name string (includes null `\0` termination char).

@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+
 #include <string.h>
 
 #include <openthread/platform/radio.h>
@@ -46,8 +48,6 @@
 
 namespace ot {
 namespace FactoryDiags {
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 class Diags : public InstanceLocator, private NonCopyable
 {
@@ -122,6 +122,11 @@ public:
     void TransmitDone(Error aError);
 
 private:
+    enum : uint8_t
+    {
+        kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
+    };
+
     struct Command
     {
         const char *mName;
@@ -140,6 +145,7 @@ private:
         uint8_t  mLastLqi;
     };
 
+    Error ParseCmd(char *aString, uint8_t &aArgsLength, char *aArgs[]);
     Error ProcessChannel(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessPower(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
     Error ProcessRadio(uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen);
@@ -169,9 +175,9 @@ private:
 #endif
 };
 
-#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
-
 } // namespace FactoryDiags
 } // namespace ot
+
+#endif // #if OPENTHREAD_CONFIG_DIAG_ENABLE
 
 #endif // FACTORY_DIAGS_HPP_

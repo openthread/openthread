@@ -35,8 +35,8 @@ exit:
 /* BEGIN_CASE */
 void gcm_encrypt_and_tag( int cipher_id, data_t * key_str,
                           data_t * src_str, data_t * iv_str,
-                          data_t * add_str, data_t * hex_dst_string,
-                          int tag_len_bits, data_t * hex_tag_string,
+                          data_t * add_str, data_t * dst,
+                          int tag_len_bits, data_t * tag,
                           int init_result )
 {
     unsigned char output[128];
@@ -55,8 +55,10 @@ void gcm_encrypt_and_tag( int cipher_id, data_t * key_str,
     {
         TEST_ASSERT( mbedtls_gcm_crypt_and_tag( &ctx, MBEDTLS_GCM_ENCRYPT, src_str->len, iv_str->x, iv_str->len, add_str->x, add_str->len, src_str->x, output, tag_len, tag_output ) == 0 );
 
-        TEST_ASSERT( hexcmp( output, hex_dst_string->x, src_str->len, hex_dst_string->len ) == 0 );
-        TEST_ASSERT( hexcmp( tag_output, hex_tag_string->x, tag_len, hex_tag_string->len ) == 0 );
+        TEST_ASSERT( mbedtls_test_hexcmp( output, dst->x,
+                                          src_str->len, dst->len ) == 0 );
+        TEST_ASSERT( mbedtls_test_hexcmp( tag_output, tag->x,
+                                          tag_len, tag->len ) == 0 );
     }
 
 exit:
@@ -94,12 +96,183 @@ void gcm_decrypt_and_verify( int cipher_id, data_t * key_str,
         {
             TEST_ASSERT( ret == 0 );
 
-            TEST_ASSERT( hexcmp( output, pt_result->x, src_str->len, pt_result->len ) == 0 );
+            TEST_ASSERT( mbedtls_test_hexcmp( output, pt_result->x,
+                                              src_str->len,
+                                              pt_result->len ) == 0 );
         }
     }
 
 exit:
     mbedtls_gcm_free( &ctx );
+}
+/* END_CASE */
+
+/* BEGIN_CASE depends_on:MBEDTLS_CHECK_PARAMS:!MBEDTLS_PARAM_FAILED_ALT */
+void gcm_invalid_param( )
+{
+    mbedtls_gcm_context ctx;
+    unsigned char valid_buffer[] = { 0x01, 0x02, 0x03, 0x04, 0x05, 0x06 };
+    mbedtls_cipher_id_t valid_cipher = MBEDTLS_CIPHER_ID_AES;
+    int valid_mode = MBEDTLS_GCM_ENCRYPT;
+    int valid_len = sizeof(valid_buffer);
+    int valid_bitlen = 128, invalid_bitlen = 1;
+
+    mbedtls_gcm_init( &ctx );
+
+    /* mbedtls_gcm_init() */
+    TEST_INVALID_PARAM( mbedtls_gcm_init( NULL ) );
+
+    /* mbedtls_gcm_setkey */
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_setkey( NULL, valid_cipher, valid_buffer, valid_bitlen ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_setkey( &ctx, valid_cipher, NULL, valid_bitlen ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_setkey( &ctx, valid_cipher, valid_buffer, invalid_bitlen ) );
+
+    /* mbedtls_gcm_crypt_and_tag() */
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag( NULL, valid_mode, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_buffer,
+                                   valid_len, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag( &ctx, valid_mode, valid_len,
+                                   NULL, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_buffer,
+                                   valid_len, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag( &ctx, valid_mode, valid_len,
+                                   valid_buffer, valid_len,
+                                   NULL, valid_len,
+                                   valid_buffer, valid_buffer,
+                                   valid_len, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag( &ctx, valid_mode, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_len,
+                                   NULL, valid_buffer,
+                                   valid_len, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag( &ctx, valid_mode, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, NULL,
+                                   valid_len, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_crypt_and_tag( &ctx, valid_mode, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_len,
+                                   valid_buffer, valid_buffer,
+                                   valid_len, NULL ) );
+
+    /* mbedtls_gcm_auth_decrypt() */
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_auth_decrypt( NULL, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_buffer) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_auth_decrypt( &ctx, valid_len,
+                                  NULL, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_buffer) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_auth_decrypt( &ctx, valid_len,
+                                  valid_buffer, valid_len,
+                                  NULL, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_buffer) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_auth_decrypt( &ctx, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  NULL, valid_len,
+                                  valid_buffer, valid_buffer) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_auth_decrypt( &ctx, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  NULL, valid_buffer) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_auth_decrypt( &ctx, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, valid_len,
+                                  valid_buffer, NULL) );
+
+    /* mbedtls_gcm_starts() */
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_starts( NULL, valid_mode,
+                            valid_buffer, valid_len,
+                            valid_buffer, valid_len ) );
+
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_starts( &ctx, valid_mode,
+                            NULL, valid_len,
+                            valid_buffer, valid_len ) );
+
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_starts( &ctx, valid_mode,
+                            valid_buffer, valid_len,
+                            NULL, valid_len ) );
+
+    /* mbedtls_gcm_update() */
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_update( NULL, valid_len,
+                            valid_buffer, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_update( &ctx, valid_len,
+                            NULL, valid_buffer ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_update( &ctx, valid_len,
+                            valid_buffer, NULL ) );
+
+    /* mbedtls_gcm_finish() */
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_finish( NULL, valid_buffer, valid_len ) );
+    TEST_INVALID_PARAM_RET(
+        MBEDTLS_ERR_GCM_BAD_INPUT,
+        mbedtls_gcm_finish( &ctx, NULL, valid_len ) );
+
+exit:
+    mbedtls_gcm_free( &ctx );
+}
+/* END_CASE */
+
+/* BEGIN_CASE */
+void gcm_valid_param( )
+{
+    TEST_VALID_PARAM( mbedtls_gcm_free( NULL ) );
+exit:
+    return;
 }
 /* END_CASE */
 

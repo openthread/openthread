@@ -37,6 +37,7 @@
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "radio/trel_link.hpp"
 #include "utils/heap.hpp"
 
 namespace ot {
@@ -51,6 +52,9 @@ OT_DEFINE_ALIGNED_VAR(gInstanceRaw, sizeof(Instance), uint64_t);
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 #if !OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
 Utils::Heap Instance::sHeap;
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+bool Instance::sDnsNameCompressionEnabled = true;
 #endif
 #endif
 
@@ -172,6 +176,10 @@ void Instance::AfterInit(void)
 
     Get<Settings>().Init();
     IgnoreError(Get<Mle::MleRouter>().Restore());
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Get<Trel::Link>().AfterInit();
+#endif
 
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 

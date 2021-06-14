@@ -31,6 +31,9 @@
  *   This file implements MeshCoP Datasets manager to process commands.
  *
  */
+
+#include "meshcop/dataset_manager.hpp"
+
 #if OPENTHREAD_FTD
 
 #include <stdio.h>
@@ -41,12 +44,11 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/timer.hpp"
 #include "meshcop/dataset.hpp"
-#include "meshcop/dataset_manager.hpp"
 #include "meshcop/meshcop.hpp"
 #include "meshcop/meshcop_leader.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -276,14 +278,14 @@ void DatasetManager::SendSetResponse(const Coap::Message &   aRequest,
     Error          error = kErrorNone;
     Coap::Message *message;
 
-    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::TmfAgent>())) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
     SuccessOrExit(error = message->SetPayloadMarker());
 
     SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, aMessageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset set response");
 
@@ -385,9 +387,9 @@ Error ActiveDataset::GenerateLocal(void)
     if (dataset.GetTlv<SecurityPolicyTlv>() == nullptr)
     {
         SecurityPolicyTlv tlv;
+
         tlv.Init();
-        tlv.SetRotationTime(static_cast<uint16_t>(Get<KeyManager>().GetKeyRotation()));
-        tlv.SetFlags(Get<KeyManager>().GetSecurityPolicyFlags());
+        tlv.SetSecurityPolicy(Get<KeyManager>().GetSecurityPolicy());
         IgnoreError(dataset.SetTlv(tlv));
     }
 
@@ -403,12 +405,12 @@ exit:
 void ActiveDataset::StartLeader(void)
 {
     IgnoreError(GenerateLocal());
-    Get<Tmf::TmfAgent>().AddResource(mResourceSet);
+    Get<Tmf::Agent>().AddResource(mResourceSet);
 }
 
 void ActiveDataset::StopLeader(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mResourceSet);
+    Get<Tmf::Agent>().RemoveResource(mResourceSet);
 }
 
 void ActiveDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
@@ -429,12 +431,12 @@ exit:
 void PendingDataset::StartLeader(void)
 {
     StartDelayTimer();
-    Get<Tmf::TmfAgent>().AddResource(mResourceSet);
+    Get<Tmf::Agent>().AddResource(mResourceSet);
 }
 
 void PendingDataset::StopLeader(void)
 {
-    Get<Tmf::TmfAgent>().RemoveResource(mResourceSet);
+    Get<Tmf::Agent>().RemoveResource(mResourceSet);
 }
 
 void PendingDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)

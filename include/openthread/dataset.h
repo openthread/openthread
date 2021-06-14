@@ -75,10 +75,12 @@ typedef struct otMasterKey otMasterKey;
 /**
  * This structure represents a Network Name.
  *
+ * The `otNetworkName` is a null terminated C string (i.e., `m8` char array MUST end with null char `\0`).
+ *
  */
 typedef struct otNetworkName
 {
-    char m8[OT_NETWORK_NAME_MAX_SIZE + 1]; ///< Byte values
+    char m8[OT_NETWORK_NAME_MAX_SIZE + 1]; ///< Byte values. The `+ 1` is for null char.
 } otNetworkName;
 
 #define OT_EXT_PAN_ID_SIZE 8 ///< Size of a Thread PAN ID (bytes)
@@ -131,22 +133,20 @@ typedef struct otPskc otPskc;
  */
 typedef struct otSecurityPolicy
 {
-    uint16_t mRotationTime; ///< The value for thrKeyRotation in units of hours
-    uint8_t  mFlags;        ///< Flags as defined in Thread 1.1 Section 8.10.1.15
-} otSecurityPolicy;
+    uint16_t mRotationTime; ///< The value for thrKeyRotation in units of hours.
 
-/**
- * This enumeration defines the Security Policy TLV flags.
- *
- */
-enum
-{
-    OT_SECURITY_POLICY_OBTAIN_MASTER_KEY     = 1 << 7, ///< Obtaining the Master Key
-    OT_SECURITY_POLICY_NATIVE_COMMISSIONING  = 1 << 6, ///< Native Commissioning
-    OT_SECURITY_POLICY_ROUTERS               = 1 << 5, ///< Routers enabled
-    OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER = 1 << 4, ///< External Commissioner allowed
-    OT_SECURITY_POLICY_BEACONS               = 1 << 3, ///< Beacons enabled
-};
+    bool    mObtainMasterKeyEnabled : 1;         ///< Obtaining the Master Key for out-of-band commissioning is enabled
+    bool    mNativeCommissioningEnabled : 1;     ///< Native Commissioning using PSKc is allowed
+    bool    mRoutersEnabled : 1;                 ///< Thread 1.0/1.1.x Routers are enabled
+    bool    mExternalCommissioningEnabled : 1;   ///< External Commissioner authentication is allowed
+    bool    mBeaconsEnabled : 1;                 ///< Thread 1.0/1.1.x Beacons are enabled
+    bool    mCommercialCommissioningEnabled : 1; ///< Commercial Commissioning is enabled
+    bool    mAutonomousEnrollmentEnabled : 1;    ///< Autonomous Enrollment is enabled
+    bool    mMasterKeyProvisioningEnabled : 1;   ///< Network Master-key Provisioning is enabled
+    bool    mTobleLinkEnabled : 1;               ///< ToBLE link is enabled
+    bool    mNonCcmRoutersEnabled : 1;           ///< Non-CCM Routers enabled
+    uint8_t mVersionThresholdForRouting : 3;     ///< Version-threshold for Routing
+} otSecurityPolicy;
 
 /**
  * This type represents Channel Mask.
@@ -516,6 +516,21 @@ otError otDatasetGeneratePskc(const char *           aPassPhrase,
                               const otNetworkName *  aNetworkName,
                               const otExtendedPanId *aExtPanId,
                               otPskc *               aPskc);
+
+/**
+ * This function sets an `otNetworkName` instance from a given null terminated C string.
+ *
+ * This function also validates that the given @p aNameString follows UTF-8 encoding and its length is not longer than
+ * `OT_NETWORK_NAME_MAX_SIZE`.
+ *
+ * @param[out] aNetworkName        A pointer to the `otNetworkName` to set.
+ * @param[in]  aNameString         A name C string.
+ *
+ * @retval OT_ERROR_NONE           Successfully set @p aNetworkName from @p aNameString.
+ * @retval OT_ERROR_INVALID_ARGS   @p aNameStrng is invalid (too long or does not follow UTF-8 encoding).
+ *
+ */
+otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
 /**
  * @}

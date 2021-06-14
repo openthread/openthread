@@ -235,6 +235,7 @@ public:
      */
     void SetDiscoverParameters(const Mac::ChannelMask &aScanChannels);
 
+#if OPENTHREAD_FTD
     /**
      * This method frees any messages queued for an existing child.
      *
@@ -244,6 +245,7 @@ public:
      *
      */
     void RemoveMessages(Child &aChild, Message::SubType aSubType);
+#endif
 
     /**
      * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.
@@ -335,6 +337,13 @@ private:
         kMessageDrop,            ///< Indicates that the outbound message is being dropped (e.g., dst unknown).
         kMessageReassemblyDrop,  ///< Indicates that the message is being dropped from reassembly list.
         kMessageEvict,           ///< Indicates that the message was evicted.
+    };
+
+    enum AnycastType : uint8_t
+    {
+        kAnycastDhcp6Agent,
+        kAnycastNeighborDiscoveryAgent,
+        kAnycastService,
     };
 
 #if OPENTHREAD_FTD
@@ -438,6 +447,8 @@ private:
     void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
     Error UpdateIp6Route(Message &aMessage);
     Error UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
+    void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
+    Error AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aMeshDest) const;
     Error UpdateMeshRoute(Message &aMessage);
     bool  UpdateReassemblyList(void);
     void  UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
@@ -475,12 +486,10 @@ private:
                                   const Mac::Address &aMeshDest,
                                   Message::Priority & aPriority);
 
-    Error GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest);
-
     bool     CalcIePresent(const Message *aMessage);
     uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
 #if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    void AppendHeaderIe(const Message *aMessage, Mac::Frame &aFrame);
+    void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
 #endif
 
     void PauseMessageTransmissions(void) { mTxPaused = true; }

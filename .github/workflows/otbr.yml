@@ -103,6 +103,9 @@ jobs:
 
   thread-border-router:
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        otbr_mdns: ["mDNSResponder", "avahi"]
     env:
       REFERENCE_DEVICE: 1
       VIRTUAL_TIME: 0
@@ -111,6 +114,7 @@ jobs:
       INTER_OP: 1
       COVERAGE: 1
       MULTIPLY: 1
+      OTBR_MDNS: ${{ matrix.otbr_mdns }}
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
       BORDER_ROUTING: 1
@@ -172,9 +176,14 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         path: coverage/
-    - name: Upload Coverage
+    - name: Combine Coverage
       run: |
-        script/test upload_codecov
+        script/test combine_coverage
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        files: final.info
+        fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage

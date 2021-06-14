@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/thread_netif.hpp"
@@ -325,7 +325,14 @@ Error MlrManager::RegisterMulticastListeners(const otIp6Address *               
     VerifyOrExit(aAddresses != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aAddressNum > 0 && aAddressNum <= kIp6AddressesNumMax, error = kErrorInvalidArgs);
     VerifyOrExit(aContext == nullptr || aCallback != nullptr, error = kErrorInvalidArgs);
+#if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
+#else
+    if (!Get<MeshCoP::Commissioner>().IsActive())
+    {
+        otLogWarnMlr("MLR.req without active commissioner session for test.");
+    }
+#endif
 
     // Only allow one outstanding registration if callback is specified.
     VerifyOrExit(!mRegisterMulticastListenersPending, error = kErrorBusy);
@@ -394,7 +401,7 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
 
     VerifyOrExit(Get<BackboneRouter::Leader>().HasPrimary(), error = kErrorInvalidState);
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     message->InitAsConfirmablePost();
     SuccessOrExit(message->GenerateRandomToken(Coap::Message::kDefaultTokenLength));
@@ -437,10 +444,12 @@ Error MlrManager::SendMulticastListenerRegistrationMessage(const otIp6Address * 
     messageInfo.SetPeerPort(Tmf::kUdpPort);
     messageInfo.SetSockAddr(mle.GetMeshLocal16());
 
-    error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
+    error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aResponseHandler, aResponseContext);
+
+    otLogInfoMlr("Sent MLR.req: addressNum=%d", aAddressNum);
 
 exit:
-    otLogInfoMlr("Send MLR.req: %s, addressNum=%d", ErrorToString(error), aAddressNum);
+    otLogInfoMlr("SendMulticastListenerRegistrationMessage(): %s", ErrorToString(error));
     FreeMessageOnError(message, error);
     return error;
 }
@@ -749,19 +758,19 @@ void MlrManager::LogMlrResponse(Error               aResult,
     OT_UNUSED_VARIABLE(aFailedAddresses);
     OT_UNUSED_VARIABLE(aFailedAddressNum);
 
-#if OPENTHREAD_CONFIG_LOG_BBR
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_MLR == 1)
     if (aResult == kErrorNone && aError == kErrorNone && aStatus == ThreadStatusTlv::MlrStatus::kMlrSuccess)
     {
-        otLogInfoBbr("Receive MLR.rsp OK", ErrorToString(aResult));
+        otLogInfoMlr("Receive MLR.rsp OK");
     }
     else
     {
-        otLogWarnBbr("Receive MLR.rsp: result=%s, error=%s, status=%d, failedAddressNum=%d", ErrorToString(aResult),
+        otLogWarnMlr("Receive MLR.rsp: result=%s, error=%s, status=%d, failedAddressNum=%d", ErrorToString(aResult),
                      ErrorToString(aError), aStatus, aFailedAddressNum);
 
         for (uint8_t i = 0; i < aFailedAddressNum; i++)
         {
-            otLogWarnBbr("MLR failed: %s", aFailedAddresses[i].ToString().AsCString());
+            otLogWarnMlr("MA failed: %s", aFailedAddresses[i].ToString().AsCString());
         }
     }
 #endif

@@ -1,1 +1,0 @@
-../gp712/uart_qorvo.h

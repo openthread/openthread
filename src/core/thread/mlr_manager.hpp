@@ -102,9 +102,8 @@ public:
      * This method updates the Multicast Subscription Table according to the Child information.
      *
      * @param[in]  aChild                       A reference to the child information.
-     * @param[in]  aOldMlrRegisteredAddresses   A pointer to an array of the Child's previously registered Ip6
-     *                                          addresses.
-     * @param[in]  aOldMlrRegisteredAddressNum  The number of previously registered Ip6 addresses.
+     * @param[in]  aOldMlrRegisteredAddresses   Pointer to an array of the Child's previously registered IPv6 addresses.
+     * @param[in]  aOldMlrRegisteredAddressNum  The number of previously registered IPv6 addresses.
      *
      */
     void UpdateProxiedSubscriptions(Child &             aChild,
@@ -119,8 +118,8 @@ public:
      * Note: only available when both `(OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)` and
      * `OPENTHREAD_CONFIG_COMMISSIONER_ENABLE` are enabled)
      *
-     * @param aAddresses   A pointer to Ip6 multicast addresses to register.
-     * @param aAddressNum  The number of Ip6 multicast addresses.
+     * @param aAddresses   A pointer to IPv6 multicast addresses to register.
+     * @param aAddressNum  The number of IPv6 multicast addresses.
      * @param aTimeout     A pointer to the timeout (in seconds), or nullptr to use the default MLR timeout.
      *                     A timeout of 0 seconds removes the Multicast Listener addresses.
      * @param aCallback    A callback function.

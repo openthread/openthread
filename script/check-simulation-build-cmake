@@ -71,9 +71,6 @@ build_toranj()
 {
     reset_source
     top_builddir="$OT_BUILDDIR" ./tests/toranj/build.sh cmake
-
-    reset_source
-    top_builddir="$OT_BUILDDIR" ./tests/toranj/build.sh cmake-posix
 }
 
 main()

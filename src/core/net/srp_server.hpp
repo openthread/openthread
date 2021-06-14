@@ -71,12 +71,23 @@ namespace Srp {
 class Server : public InstanceLocator, private NonCopyable
 {
     friend class ot::Notifier;
+    friend class UpdateMetadata;
+    friend class Service;
+    friend class Host;
 
 public:
     enum : uint16_t
     {
-        kUdpPort = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT, ///< The SRP Server UDP listening port.
+        kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, ///< The reserved min SRP Server UDP listening port.
+        kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, ///< The reserved max SRP Server UDP listening port.
     };
+    static_assert(kUdpPortMin <= kUdpPortMax, "invalid port range");
+
+    /**
+     * The ID of SRP service update transaction.
+     *
+     */
+    typedef otSrpServerServiceUpdateId ServiceUpdateId;
 
     class Host;
     class Service;
@@ -199,7 +210,7 @@ public:
          *
          * @param[in]  aFullName  The full name.
          *
-         * @returns  TRUE if the servce matches the full name, FALSE if doesn't match.
+         * @returns  TRUE if the service matches the full name, FALSE if doesn't match.
          *
          */
         bool Matches(const char *aFullName) const;
@@ -243,6 +254,7 @@ public:
     {
         friend class LinkedListEntry<Host>;
         friend class Server;
+        friend class UpdateMetadata;
 
     public:
         /**
@@ -282,7 +294,7 @@ public:
         const char *GetFullName(void) const { return mFullName; }
 
         /**
-         * This method returns adrersses of the host.
+         * This method returns addresses of the host.
          *
          * @param[out]  aAddressesNum  The number of the addresses.
          *
@@ -393,6 +405,27 @@ public:
     };
 
     /**
+     * This class handles LEASE and KEY-LEASE configurations.
+     *
+     */
+    class LeaseConfig : public otSrpServerLeaseConfig
+    {
+        friend class Server;
+
+    public:
+        /**
+         * This constructor initialize to default LEASE and KEY-LEASE configurations.
+         *
+         */
+        LeaseConfig(void);
+
+    private:
+        bool     IsValid(void) const;
+        uint32_t GrantLease(uint32_t aLease) const;
+        uint32_t GrantKeyLease(uint32_t aKeyLease) const;
+    };
+
+    /**
      * This constructor initializes the SRP server object.
      *
      * @param[in]  aInstance  A reference to the OpenThread instance.
@@ -459,22 +492,27 @@ public:
     void SetEnabled(bool aEnabled);
 
     /**
-     * This method sets LEASE & KEY-LEASE range that is acceptable by the SRP server.
+     * This method returns the LEASE and KEY-LEASE configurations.
+     *
+     * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
+     *
+     */
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const;
+
+    /**
+     * This method sets the LEASE and KEY-LEASE configurations.
      *
      * When a LEASE time is requested from a client, the granted value will be
      * limited in range [aMinLease, aMaxLease]; and a KEY-LEASE will be granted
      * in range [aMinKeyLease, aMaxKeyLease].
      *
-     * @param[in]  aMinLease     The minimum LEASE interval in seconds.
-     * @param[in]  aMaxLease     The maximum LEASE interval in seconds.
-     * @param[in]  aMinKeyLease  The minimum KEY-LEASE interval in seconds.
-     * @param[in]  aMaxKeyLease  The maximum KEY-LEASE interval in seconds.
+     * @param[in]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      * @retval  kErrorNone         Successfully set the LEASE and KEY-LEASE ranges.
      * @retval  kErrorInvalidArgs  The LEASE or KEY-LEASE range is not valid.
      *
      */
-    Error SetLeaseRange(uint32_t aMinLease, uint32_t aMaxLease, uint32_t aMinKeyLease, uint32_t aMaxKeyLease);
+    Error SetLeaseConfig(const LeaseConfig &aLeaseConfig);
 
     /**
      * This method returns the next registered SRP host.
@@ -490,11 +528,11 @@ public:
      * This method receives the service update result from service handler set by
      * SetServiceHandler.
      *
-     * @param[in]  aHost   A pointer to the Host object which contains the SRP service updates.
+     * @param[in]  aId     The ID of the service update transaction.
      * @param[in]  aError  The service update result.
      *
      */
-    void HandleServiceUpdateResult(const Host *aHost, Error aError);
+    void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
 private:
     enum : uint16_t
@@ -511,11 +549,8 @@ private:
         kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT,
     };
 
-    /**
-     * This class includes metadata for processing a SRP update (register, deregister)
-     * and sending DNS response to the client.
-     *
-     */
+    // This class includes metadata for processing a SRP update (register, deregister)
+    // and sending DNS response to the client.
     class UpdateMetadata : public InstanceLocator, public LinkedListEntry<UpdateMetadata>
     {
         friend class LinkedListEntry<UpdateMetadata>;
@@ -528,9 +563,10 @@ private:
         void                     Free(void);
         TimeMilli                GetExpireTime(void) const { return mExpireTime; }
         const Dns::UpdateHeader &GetDnsHeader(void) const { return mDnsHeader; }
+        ServiceUpdateId          GetId(void) const { return mId; }
         Host &                   GetHost(void) { return *mHost; }
         const Ip6::MessageInfo & GetMessageInfo(void) const { return mMessageInfo; }
-        bool                     Matches(const Host *aHost) const { return mHost == aHost; }
+        bool                     Matches(ServiceUpdateId aId) const { return mId == aId; }
 
     private:
         UpdateMetadata(Instance &               aInstance,
@@ -540,18 +576,19 @@ private:
 
         TimeMilli         mExpireTime;
         Dns::UpdateHeader mDnsHeader;
+        ServiceUpdateId   mId;          // The ID of this service update transaction.
         Host *            mHost;        // The host will be updated. The UpdateMetadata has no ownership of this host.
         Ip6::MessageInfo  mMessageInfo; // The message info of the DNS update request.
         UpdateMetadata *  mNext;
     };
 
-    void     Start(void);
-    void     Stop(void);
-    void     HandleNotifierEvents(Events aEvents);
-    Error    PublishServerData(void);
-    void     UnpublishServerData(void);
-    uint32_t GrantLease(uint32_t aLease) const;
-    uint32_t GrantKeyLease(uint32_t aKeyLease) const;
+    void  Start(void);
+    void  Stop(void);
+    void  HandleNotifierEvents(Events aEvents);
+    Error PublishServerData(void);
+    void  UnpublishServerData(void);
+
+    ServiceUpdateId AllocateId(void) { return mServiceUpdateId++; }
 
     void  CommitSrpUpdate(Error                    aError,
                           const Dns::UpdateHeader &aDnsHeader,
@@ -627,10 +664,7 @@ private:
 
     char *mDomain;
 
-    uint32_t mMinLease;    // The minimum lease time in seconds.
-    uint32_t mMaxLease;    // The maximum lease time in seconds.
-    uint32_t mMinKeyLease; // The minimum key-lease time in seconds.
-    uint32_t mMaxKeyLease; // The maximum key-lease time in seconds.
+    LeaseConfig mLeaseConfig;
 
     LinkedList<Host> mHosts;
     TimerMilli       mLeaseTimer;
@@ -638,7 +672,9 @@ private:
     TimerMilli                 mOutstandingUpdatesTimer;
     LinkedList<UpdateMetadata> mOutstandingUpdates;
 
-    bool mEnabled;
+    ServiceUpdateId mServiceUpdateId;
+    bool            mEnabled : 1;
+    bool            mHasRegisteredAnyService : 1;
 };
 
 } // namespace Srp

@@ -93,7 +93,6 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
@@ -105,7 +104,6 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rdn',
             'partition_id': 0xffffffff,
-            'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
@@ -116,7 +114,6 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
@@ -128,7 +125,6 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rdn',
             'network_id_timeout': 70,
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER1]
         },
     }
@@ -208,8 +204,8 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
 
         leader_addr = self.nodes[LEADER].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
         router1_addr = self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
-        self.assertTrue(self.nodes[ROUTER2].ping(leader_addr))
-        self.assertTrue(self.nodes[COMMISSIONER].ping(router1_addr))
+        self.assertTrue(self.nodes[ROUTER2].ping(leader_addr, timeout=10))
+        self.assertTrue(self.nodes[COMMISSIONER].ping(router1_addr, timeout=10))
 
     def verify(self, pv):
         pkts = pv.pkts

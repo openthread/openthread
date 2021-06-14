@@ -81,7 +81,6 @@ class Cert_5_7_03_CoapDiagCommands_Base(thread_cert.TestCase):
         ROUTER1: {
             'mode': 'rdn',
             'allowlist': [LEADER, SED1, MED1, FED1],
-            'router_selection_jitter': 1
         },
         SED1: {
             'name': 'SED',

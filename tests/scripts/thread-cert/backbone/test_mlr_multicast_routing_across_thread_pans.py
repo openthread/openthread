@@ -66,7 +66,6 @@ class TestMlr(thread_cert.TestCase):
             'allowlist': [ROUTER1],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
             'channel': CH1,
         },
@@ -74,7 +73,6 @@ class TestMlr(thread_cert.TestCase):
             'name': 'ROUTER1',
             'allowlist': [PBBR1],
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH1,
         },
         PBBR2: {
@@ -82,7 +80,6 @@ class TestMlr(thread_cert.TestCase):
             'allowlist': [ROUTER2],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
             'bbr_registration_jitter': BBR_REGISTRATION_JITTER,
             'channel': CH2,
         },
@@ -90,7 +87,6 @@ class TestMlr(thread_cert.TestCase):
             'name': 'ROUTER2',
             'allowlist': [PBBR2],
             'version': '1.2',
-            'router_selection_jitter': 1,
             'channel': CH2,
         },
         HOST: {
@@ -152,8 +148,7 @@ class TestMlr(thread_cert.TestCase):
         self.simulator.go(WAIT_REDUNDANCE)
 
         # ping MA2 from R1 could get replied from Host and R2
-        # TODO (DUA): ping reply can not reach ROUTER1 since DUA feature is not complete.
-        self.assertFalse(self.nodes[ROUTER1].ping(MA2))
+        self.assertTrue(self.nodes[ROUTER1].ping(MA2))
         self.simulator.go(WAIT_REDUNDANCE)
 
     def verify(self, pv: PacketVerifier):
@@ -183,25 +178,13 @@ class TestMlr(thread_cert.TestCase):
         ping_ma1 = pkts.filter_eth_src(HOST_ETH).filter_ipv6_src_dst(HOST_BGUA, MA1).filter_ping_request().must_next()
 
         with pkts.save_index():
-            # PBBR1 should forward ping-MA1 to Router1
-            pkts.filter_wpan_src64(PBBR1).filter_AMPLFMA().filter_ping_request(
-                identifier=ping_ma1.icmpv6.echo.identifier).must_next()
-            # Router1 should send ping reply
-            ping_reply_pkts = pkts.filter_ipv6_src_dst(
-                ROUTER1_DUA, HOST_BGUA).filter_ping_reply(identifier=ping_ma1.icmpv6.echo.identifier)
-            ping_reply_pkts.filter_wpan_src64(ROUTER1).must_next()
             # PBBR1 should forward ping reply to the Backbone link
-            ping_reply_pkts.filter_eth_src(PBBR1_ETH).must_next()
+            pkts.filter_eth_src(PBBR1_ETH).filter_ipv6_src_dst(
+                ROUTER1_DUA, HOST_BGUA).filter_ping_reply(identifier=ping_ma1.icmpv6.echo.identifier).must_next()
 
-        # PBBR2 should forward ping-MA1 to Router2
-        pkts.filter_wpan_src64(PBBR2).filter_AMPLFMA().filter_ping_request(
-            identifier=ping_ma1.icmpv6.echo.identifier).must_next()
-        # Router2 should send ping reply
-        ping_reply_pkts = pkts.filter_ipv6_src_dst(
-            ROUTER2_DUA, HOST_BGUA).filter_ping_reply(identifier=ping_ma1.icmpv6.echo.identifier)
-        ping_reply_pkts.filter_wpan_src64(ROUTER2).must_next()
         # PBBR2 should forward ping reply to the Backbone link
-        ping_reply_pkts.filter_eth_src(PBBR2_ETH).must_next()
+        pkts.filter_eth_src(PBBR2_ETH).filter_ipv6_src_dst(
+            ROUTER2_DUA, HOST_BGUA).filter_ping_reply(identifier=ping_ma1.icmpv6.echo.identifier).must_next()
 
         #
         # Verify R1 pings MA2 to Host and R2

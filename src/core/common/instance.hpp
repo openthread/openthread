@@ -283,6 +283,29 @@ public:
     Coap::CoapSecure &GetApplicationCoapSecure(void) { return mApplicationCoapSecure; }
 #endif
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method enables/disables the "DNS name compressions" mode.
+     *
+     * By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed.
+     * This is applicable to OpenThread's DNS and SRP client/server modules.
+     *
+     * This is intended for testing only and available under a `REFERENCE_DEVICE` config.
+     *
+     * @param[in] aEnabled   TRUE to enable the "DNS name compression" mode, FALSE to disable.
+     *
+     */
+    static void SetDnsNameCompressionEnabled(bool aEnabled) { sDnsNameCompressionEnabled = aEnabled; }
+
+    /**
+     * This method indicates whether the "DNS name compression" mode is enabled or not.
+     *
+     * @returns TRUE if the "DNS name compressions" mode is enabled, FALSE otherwise.
+     *
+     */
+    static bool IsDnsNameCompressionEnabled(void) { return sDnsNameCompressionEnabled; }
+#endif
+
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
     /**
@@ -396,6 +419,10 @@ private:
     FactoryDiags::Diags mDiags;
 #endif
     bool mIsInitialized;
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE && (OPENTHREAD_FTD || OPENTHREAD_MTD)
+    static bool sDnsNameCompressionEnabled;
+#endif
 };
 
 // Specializations of the `Get<Type>()` method.
@@ -633,7 +660,7 @@ template <> inline Ip6::Mpl &Instance::Get(void)
     return mIp6.mMpl;
 }
 
-template <> inline Tmf::TmfAgent &Instance::Get(void)
+template <> inline Tmf::Agent &Instance::Get(void)
 {
     return mThreadNetif.mTmfAgent;
 }
@@ -725,6 +752,13 @@ template <> inline Dhcp6::Server &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+template <> inline NeighborDiscovery::Agent &Instance::Get(void)
+{
+    return mThreadNetif.mNeighborDiscoveryAgent;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 template <> inline Utils::Slaac &Instance::Get(void)
 {
@@ -746,15 +780,18 @@ template <> inline Sntp::Client &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
 template <> inline Utils::ChildSupervisor &Instance::Get(void)
 {
     return mThreadNetif.mChildSupervisor;
 }
-
+#endif
 template <> inline Utils::SupervisionListener &Instance::Get(void)
 {
     return mThreadNetif.mSupervisionListener;
 }
+#endif
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 template <> inline Utils::PingSender &Instance::Get(void)

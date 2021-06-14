@@ -47,6 +47,7 @@ set(COMMON_SOURCES
     api/dataset_updater_api.cpp
     api/diags_api.cpp
     api/dns_api.cpp
+    api/dns_server_api.cpp
     api/entropy_api.cpp
     api/error_api.cpp
     api/heap_api.cpp
@@ -152,6 +153,7 @@ set(COMMON_SOURCES
     net/ip6_filter.cpp
     net/ip6_headers.cpp
     net/ip6_mpl.cpp
+    net/nd_agent.cpp
     net/netif.cpp
     net/sntp_client.cpp
     net/socket.cpp
@@ -191,6 +193,8 @@ set(COMMON_SOURCES
     thread/network_data_local.cpp
     thread/network_data_notifier.cpp
     thread/network_data_service.cpp
+    thread/network_data_tlvs.cpp
+    thread/network_data_types.cpp
     thread/network_diagnostic.cpp
     thread/panid_query_server.cpp
     thread/radio_selector.cpp

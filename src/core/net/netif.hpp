@@ -80,12 +80,14 @@ public:
      * This method clears and initializes the unicast address as a preferred, valid, thread-origin address with 64-bit
      * prefix length.
      *
+     * @param[in]   aPreferred  Whether to initialize as a preferred address.
+     *
      */
-    void InitAsThreadOrigin(void);
+    void InitAsThreadOrigin(bool aPreferred = false);
 
     /**
-     * This method clears and initializes the unicast address as a preferred, valid, thread-origin, realm-local scope
-     * (overridden) address with 64-bit prefix length.
+     * This method clears and initializes the unicast address as a valid (but not preferred), thread-origin, realm-local
+     * scope (overridden) address with 64-bit prefix length.
      *
      */
     void InitAsThreadOriginRealmLocalScope(void);
@@ -282,10 +284,10 @@ public:
     public:
         /**
          * This constructor initializes an `ExternalMulticastAddressIterator` instance to start from the first external
-         * multicast address that matches a given Ip6 address type filter.
+         * multicast address that matches a given IPv6 address type filter.
          *
          * @param[in] aNetif   A reference to the Netif instance.
-         * @param[in] aFilter  The Ip6 address type filter.
+         * @param[in] aFilter  The IPv6 address type filter.
          *
          */
         explicit ExternalMulticastAddressIterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny)
@@ -561,7 +563,7 @@ public:
 
     /**
      * This method enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
-     * a given Ip6 address type filter.
+     * a given IPv6 address type filter.
      *
      * This method should be used like follows: to iterate over all external multicast addresses
      *
@@ -573,7 +575,7 @@ public:
      *     for (Ip6::ExternalNetifMulticastAddress &addr :
      * Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal)) { ... }
      *
-     * @param[in] aFilter  The Ip6 address type filter.
+     * @param[in] aFilter  The IPv6 address type filter.
      *
      * @returns An `ExternalMulticastAddressIteratorBuilder` instance.
      *

@@ -28,24 +28,25 @@
 
 set(OT_PLATFORM_LIB "openthread-simulation" PARENT_SCOPE)
 
+add_library(ot-simulation-config INTERFACE)
+
 option(OT_SIMULATION_VIRTUAL_TIME "enable virtual time")
 if(OT_SIMULATION_VIRTUAL_TIME)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SIMULATION_VIRTUAL_TIME=1")
+    target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_VIRTUAL_TIME=1")
 endif()
 
 option(OT_SIMULATION_VIRTUAL_TIME_UART "enable virtual time for UART")
 if(OT_SIMULATION_VIRTUAL_TIME_UART)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1")
+    target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_VIRTUAL_TIME_UART=1")
 endif()
 
 option(OT_SIMULATION_MAX_NETWORK_SIZE "set maximum network size (default: 33)")
 if(OT_SIMULATION_MAX_NETWORK_SIZE)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=${OT_SIMULATION_MAX_NETWORK_SIZE}")
+    target_compile_definitions(ot-simulation-config INTERFACE "OPENTHREAD_SIMULATION_MAX_NETWORK_SIZE=${OT_SIMULATION_MAX_NETWORK_SIZE}")
 endif()
 
 if(NOT OT_CONFIG)
-    set(OT_CONFIG "openthread-core-simulation-config.h")
-    set(OT_CONFIG ${OT_CONFIG} PARENT_SCOPE)
+    set(OT_CONFIG "openthread-core-simulation-config.h" PARENT_SCOPE)
 endif()
 
 list(APPEND OT_PLATFORM_DEFINES
@@ -55,8 +56,6 @@ list(APPEND OT_PLATFORM_DEFINES
     "OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1"
 )
 set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
-
-list(APPEND OT_PLATFORM_DEFINES "OPENTHREAD_PROJECT_CORE_CONFIG_FILE=\"${OT_CONFIG}\"")
 
 add_library(openthread-simulation
     alarm.c
@@ -75,13 +74,6 @@ add_library(openthread-simulation
     $<TARGET_OBJECTS:openthread-platform-utils>
 )
 
-set_target_properties(
-    openthread-simulation
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
-)
-
 find_library(LIBRT rt)
 if(LIBRT)
     target_link_libraries(openthread-simulation PRIVATE ${LIBRT})
@@ -89,11 +81,8 @@ endif()
 
 target_link_libraries(openthread-simulation PRIVATE
     openthread-platform
-    ot-config)
-
-target_compile_definitions(openthread-simulation
-    PUBLIC
-        ${OT_PLATFORM_DEFINES}
+    ot-simulation-config
+    ot-config
 )
 
 target_compile_options(openthread-simulation PRIVATE

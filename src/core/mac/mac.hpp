@@ -721,22 +721,6 @@ public:
     void SetCslPeriod(uint16_t aPeriod);
 
     /**
-     * This method gets the CSL timeout.
-     *
-     * @returns CSL timeout in seconds.
-     *
-     */
-    uint32_t GetCslTimeout(void) const { return mLinks.GetSubMac().GetCslTimeout(); }
-
-    /**
-     * This method sets the CSL timeout.
-     *
-     * @param[in]  aTimeout  The CSL timeout in seconds.
-     *
-     */
-    void SetCslTimeout(uint32_t aTimeout);
-
-    /**
      * This method indicates whether CSL is started at the moment.
      *
      * @retval TURE if CSL is actually running at the moment, FALSE otherwise.
@@ -805,7 +789,6 @@ private:
     void     StartOperation(Operation aOperation);
     void     FinishOperation(void);
     void     PerformNextOperation(void);
-    TxFrame *PrepareDataRequest(void);
     TxFrame *PrepareBeaconRequest(void);
     TxFrame *PrepareBeacon(void);
     bool     ShouldSendBeacon(void) const;
@@ -824,6 +807,7 @@ private:
     Error ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
+    Error SignalNetworkNameChange(Error aError);
 
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;

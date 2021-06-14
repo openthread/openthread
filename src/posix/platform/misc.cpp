@@ -78,7 +78,12 @@ otError otPlatSetMcuPowerState(otInstance *aInstance, otPlatMcuPowerState aState
 
 void otPlatAssertFail(const char *aFilename, int aLineNumber)
 {
+#if OPENTHREAD_CONFIG_LOG_PLATFORM && OPENTHREAD_CONFIG_LOG_LEVEL < OT_LOG_LEVEL_CRIT
+    OT_UNUSED_VARIABLE(aFilename);
+    OT_UNUSED_VARIABLE(aLineNumber);
+#else
     otLogCritPlat("assert failed at %s:%d", aFilename, aLineNumber);
+#endif
     // For debug build, use assert to genreate a core dump
     assert(false);
     exit(1);

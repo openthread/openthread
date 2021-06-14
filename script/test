@@ -263,7 +263,16 @@ do_build_otbr_docker()
     echo "Building OTBR Docker ..."
     local otdir
     local otbrdir
-    local otbr_options="-DOT_DNSSD_SERVER=ON -DOT_DNS_CLIENT=ON -DOT_SRP_CLIENT=ON -DOT_SLAAC=ON -DOT_DUA=ON -DOT_MLR=ON -DOT_COVERAGE=ON -DOTBR_REST=OFF -DOTBR_WEB=OFF -DOTBR_DUA_ROUTING=ON"
+    local otbr_options=(
+        "-DOT_COVERAGE=ON"
+        "-DOT_DNS_CLIENT=ON"
+        "-DOT_DUA=ON"
+        "-DOT_MLR=ON"
+        "-DOT_SLAAC=ON"
+        "-DOT_SRP_CLIENT=ON"
+        "-DOT_TREL=OFF"
+        "-DOTBR_DUA_ROUTING=ON"
+    )
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
@@ -282,7 +291,10 @@ do_build_otbr_docker()
             --build-arg REFERENCE_DEVICE=1 \
             --build-arg OT_BACKBONE_CI=1 \
             --build-arg NAT64=0 \
-            --build-arg OTBR_OPTIONS="${otbr_options}"
+            --build-arg REST_API=0 \
+            --build-arg WEB_GUI=0 \
+            --build-arg MDNS="${OTBR_MDNS:-mDNSResponder}" \
+            --build-arg OTBR_OPTIONS="${otbr_options[*]}"
     )
 
     rm -rf "${otbrdir}"
@@ -421,28 +433,6 @@ EXAMPLES:
     exit "$1"
 }
 
-do_package()
-{
-    local builddir
-    local options=("-DCMAKE_BUILD_TYPE=Release" "-DOT_LOG_LEVEL=INFO" "-DOT_THREAD_VERSION=${THREAD_VERSION}")
-
-    if [[ ${ot_extra_options[*]+x} ]]; then
-        options+=("${ot_extra_options[@]}")
-    fi
-
-    builddir="${OT_BUILDDIR}/openthread-sim"
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build simulation "${options[@]}"
-    ls "${builddir}"/openthread-simulation-*.deb
-
-    builddir="${OT_BUILDDIR}/openthread-host"
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix "${options[@]}"
-    ls "${builddir}"/openthread-standalone-*.deb
-
-    builddir="${OT_BUILDDIR}/openthread-daemon"
-    OT_CMAKE_NINJA_TARGET="package" OT_CMAKE_BUILD_DIR="${builddir}" "${OT_SRCDIR}"/script/cmake-build posix -DOT_DAEMON=ON -DOT_PLATFORM_NETIF=ON -DOT_PLATFORM_UDP=ON "${options[@]}"
-    ls "${builddir}"/openthread-daemon-*.deb
-}
-
 do_prepare_coredump_upload()
 {
     echo "$OT_COREDUMP_DIR/corefile-%e-%p-%t" | sudo tee /proc/sys/kernel/core_pattern
@@ -510,7 +500,7 @@ do_generate_coverage()
     lcov --extract tmp/coverage.info "$PWD/src/core/common/message.cpp" | c++filt
 }
 
-do_upload_codecov()
+do_combine_coverage()
 {
     ls -R coverage/
 
@@ -522,19 +512,6 @@ do_upload_codecov()
         args+=("$i")
     done
     lcov "${args[@]}" -o final.info
-
-    local retry_count=5
-    local fail_count=0
-    until ((fail_count > retry_count)); do
-        bash <(curl -s https://codecov.io/bash) -f final.info -Z && break
-        ((++fail_count))
-        echo >&2 "Upload failed, retrying (${fail_count}/${retry_count})"
-        sleep 1m
-    done
-
-    if ((fail_count > retry_count)); then
-        exit 1
-    fi
 }
 
 envsetup()
@@ -544,14 +521,11 @@ envsetup()
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
         export RADIO_DEVICE="${OT_BUILDDIR}/openthread-simulation-${THREAD_VERSION}/examples/apps/ncp/ot-rcp"
         export OT_CLI_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-cli"
-        export OT_NCP_PATH="${OT_BUILDDIR}/openthread-posix-${THREAD_VERSION}/src/posix/ot-ncp"
 
         if [[ ${THREAD_VERSION} == "1.2" ]]; then
             export RADIO_DEVICE_1_1="${OT_BUILDDIR}/openthread-simulation-1.1/examples/apps/ncp/ot-rcp"
             export OT_CLI_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-cli"
-            export OT_NCP_PATH_1_1="${OT_BUILDDIR}/openthread-posix-1.1/src/posix/ot-ncp"
             export OT_CLI_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-cli"
-            export OT_NCP_PATH_1_2_BBR="${OT_BUILDDIR}/openthread-posix-1.2-bbr/src/posix/ot-ncp"
         fi
     fi
 
@@ -632,7 +606,7 @@ main()
                 print_usage
                 ;;
             package)
-                do_package
+                ./script/package "${ot_extra_options[@]}"
                 ;;
             expect)
                 shift
@@ -648,8 +622,8 @@ main()
                 shift
                 do_generate_coverage "$1"
                 ;;
-            upload_codecov)
-                do_upload_codecov
+            combine_coverage)
+                do_combine_coverage
                 ;;
             *)
                 echo

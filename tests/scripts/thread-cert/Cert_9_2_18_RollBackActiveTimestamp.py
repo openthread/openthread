@@ -63,7 +63,6 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 'master_key': KEY1
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
@@ -76,7 +75,6 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
             },
             'mode': 'rdn',
             'partition_id': 0xffffffff,
-            'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
@@ -88,7 +86,6 @@ class Cert_9_2_18_RollBackActiveTimestamp(thread_cert.TestCase):
                 'master_key': KEY1
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED1, SED1]
         },
         ED1: {

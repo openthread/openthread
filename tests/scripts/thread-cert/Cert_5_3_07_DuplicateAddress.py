@@ -73,42 +73,34 @@ class Cert_5_3_7_DuplicateAddress(thread_cert.TestCase):
         DUT_LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER2, MED2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER, MED1]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [DUT_LEADER, SED1]
         },
         MED1: {
             'name': 'MED_1',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         SED1: {
             'name': 'SED',
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'allowlist': [ROUTER2]
         },
         MED2: {
             'name': 'MED_2',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [DUT_LEADER]
         },
     }

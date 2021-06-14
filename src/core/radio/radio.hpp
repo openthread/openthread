@@ -74,8 +74,8 @@ class Radio : public InstanceLocator, private NonCopyable
 
 public:
     /**
-     * This enumeration defines the IEEE 802.15.4 channel related parameters.
-     *
+     * This enumeration defines the IEEE 802.15.4 channel related parameters. It also
+     * supports proprietary channel parameters defined by platform.
      */
     enum
     {
@@ -97,11 +97,20 @@ public:
         kChannelMin            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
         kChannelMax            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
         kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_0_MASK,
+#elif OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
+        kNumChannelPages       = 1,
+        kSupportedChannels     = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK,
+        kChannelMin            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN,
+        kChannelMax            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX,
+        kSupportedChannelPages = (1U << OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE),
 #endif
     };
 
-    static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT),
-                  "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
+    static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
+                   OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
+                  "OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT "
+                  "or OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT "
+                  "or OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT "
                   "must be set to 1 to specify the radio mode");
 
     /**
@@ -413,18 +422,33 @@ public:
      */
     void UpdateCslSampleTime(uint32_t aCslSampleTime);
 
+    /**
+     * This method schedules a radio reception window at a specific time and duration.
+     *
+     * @param[in]  aChannel   The radio channel on which to receive.
+     * @param[in]  aStart     The receive window start time, in microseconds.
+     * @param[in]  aDuration  The receive window duration, in microseconds.
+     *
+     * @retval kErrorNone    Successfully scheduled receive window.
+     * @retval kErrorFailed  The receive window could not be scheduled.
+     *
+     */
+    Error ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration);
+
     /** This method enables CSL sampling in radio.
      *
      * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
-     * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms
-     * generate enhanced ack, platforms may need to know acks to which address should include CSL IE).
+     * @param[in]  aShortAddr    The short source address of CSL receiver's peer.
+     * @param[in]  aExtAddr      The extended source address of CSL receiver's peer.
+     *
+     * @note Platforms should use CSL peer addresses to include CSL IE when generating enhanced acks.
      *
      * @retval  kErrorNotImplemented Radio driver doesn't support CSL.
      * @retval  kErrorFailed         Other platform specific errors.
      * @retval  kErrorNone           Successfully enabled or disabled CSL.
      *
      */
-    Error EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+    Error EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
 
     /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
@@ -613,7 +637,8 @@ public:
      */
     static bool IsCslChannelValid(uint8_t aCslChannel)
     {
-        return (aCslChannel == 0) || ((kChannelMin <= aCslChannel) && (aCslChannel <= kChannelMax));
+        return ((aCslChannel == 0) ||
+                ((kChannelMin == aCslChannel) || ((kChannelMin < aCslChannel) && (aCslChannel <= kChannelMax))));
     }
 
 private:
@@ -741,9 +766,14 @@ inline void Radio::UpdateCslSampleTime(uint32_t aCslSampleTime)
     otPlatRadioUpdateCslSampleTime(GetInstancePtr(), aCslSampleTime);
 }
 
-inline Error Radio::EnableCsl(uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+inline Error Radio::ReceiveAt(uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
 {
-    return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aExtAddr);
+    return otPlatRadioReceiveAt(GetInstancePtr(), aChannel, aStart, aDuration);
+}
+
+inline Error Radio::EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr)
+{
+    return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aShortAddr, aExtAddr);
 }
 
 inline uint8_t Radio::GetCslAccuracy()
@@ -894,7 +924,12 @@ inline void Radio::UpdateCslSampleTime(uint32_t)
 {
 }
 
-inline Error Radio::EnableCsl(uint32_t, const otExtAddress *)
+inline Error Radio::ReceiveAt(uint8_t, uint32_t, uint32_t)
+{
+    return kErrorNone;
+}
+
+inline Error Radio::EnableCsl(uint32_t, otShortAddress aShortAddr, const otExtAddress *)
 {
     return kErrorNotImplemented;
 }

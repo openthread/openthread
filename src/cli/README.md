@@ -21,6 +21,7 @@ Done
 
 ## OpenThread Command List
 
+- [ba](#ba)
 - [bbr](#bbr)
 - [br](#br)
 - [bufferinfo](#bufferinfo)
@@ -65,6 +66,7 @@ Done
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
 - [masterkey](#masterkey)
+- [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
 - [multiradio](#multiradio)
@@ -79,7 +81,7 @@ Done
 - [parent](#parent)
 - [parentpriority](#parentpriority)
 - [partitionid](#partitionid)
-- [ping](#ping-ipaddr-sizecount-intervalhoplimit)
+- [ping](#ping--i-source-ipaddr-size-count-interval-hoplimit-timeout)
 - [pollperiod](#pollperiod-pollperiod)
 - [preferrouterid](#preferrouterid-routerid)
 - [prefix](#prefix)
@@ -104,6 +106,7 @@ Done
 - [srp](README_SRP.md)
 - [thread](#thread-start)
 - [txpower](#txpower)
+- [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
 - [version](#version)
 
@@ -168,7 +171,7 @@ Done
 
 ### bbr mgmt mlr listener add \<ipaddr\> \[\<timeout\>\]
 
-Add a Multicast Listener with a given Ip6 multicast address and timeout (in seconds).
+Add a Multicast Listener with a given IPv6 multicast address and timeout (in seconds).
 
 Only for testing/reference Backbone Router device.
 
@@ -315,6 +318,30 @@ Set jitter (in seconds) for Backbone Router registration for Thread 1.2 FTD.
 Done
 ```
 
+### ba
+
+Show current Border Agent information.
+
+### ba port
+
+Print border agent service port.
+
+```bash
+> ba port
+49152
+Done
+```
+
+### ba state
+
+Print border agent state.
+
+```bash
+> ba state
+Started
+Done
+```
+
 ### br
 
 Enbale/disable the Border Routing functionality.
@@ -384,6 +411,165 @@ Set the IEEE 802.15.4 Channel value.
 
 ```bash
 > channel 11
+Done
+```
+
+### channel manager
+
+Get channel manager state.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+
+```bash
+channel: 11
+auto: 1
+delay: 120
+interval: 10800
+supported: { 11-26}
+favored: { 11-26}
+Done
+```
+
+### channel manager change \<channel\>
+
+Initiate a channel change with the channel manager.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` is required.
+
+```bash
+> channel manager change 11
+channel manager change 11
+Done
+```
+
+### channel manager select \<skip quality check (boolean)\>
+
+Request a channel selection with the channel manager.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager select 1
+channel manager select 1
+Done
+```
+
+### channel manager auto \<enable (boolean)\>
+
+Enable/disable the auto-channel-selection functionality.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager auto 1
+channel manager auto 1
+Done
+```
+
+### channel manager delay \<delay\>
+
+Set the channel change delay (in seconds).
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager delay 120
+channel manager delay 120
+Done
+```
+
+### channel manager interval \<interval\>
+
+Set the auto-channel-selection interval (in seconds).
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager interval 10800
+channel manager interval 10800
+Done
+```
+
+### channel manager supported \<mask\>
+
+Set the supported channel mask for the auto-channel-selection.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager supported 0x7fffc00
+channel manager supported 0x7fffc00
+Done
+```
+
+### channel manager favored \<mask\>
+
+Set the favored channel mask for the auto-channel-selection.
+
+`OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE` and `OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` are required.
+
+```bash
+> channel manager favored 0x7fffc00
+channel manager favored 0x7fffc00
+Done
+```
+
+### channel monitor
+
+Get current channel monitor state and channel occupancy.
+
+`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+
+```bash
+> channel monitor
+channel monitor
+enabled: 1
+interval: 41000
+threshold: -75
+window: 960
+count: 10552
+occupancies:
+ch 11 (0x0cb7)  4.96% busy
+ch 12 (0x2e2b) 18.03% busy
+ch 13 (0x2f54) 18.48% busy
+ch 14 (0x0fef)  6.22% busy
+ch 15 (0x1536)  8.28% busy
+ch 16 (0x1746)  9.09% busy
+ch 17 (0x0b8b)  4.50% busy
+ch 18 (0x60a7) 37.75% busy
+ch 19 (0x0810)  3.14% busy
+ch 20 (0x0c2a)  4.75% busy
+ch 21 (0x08dc)  3.46% busy
+ch 22 (0x101d)  6.29% busy
+ch 23 (0x0092)  0.22% busy
+ch 24 (0x0028)  0.06% busy
+ch 25 (0x0063)  0.15% busy
+ch 26 (0x058c)  2.16% busy
+
+Done
+```
+
+### channel monitor start
+
+Start the channel monitor.
+
+`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+
+```bash
+> channel monitor start
+channel monitor start
+Done
+```
+
+### channel monitor stop
+
+Stop the channel monitor.
+
+`OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE` is required.
+
+```bash
+> channel monitor stop
+channel monitor stop
 Done
 ```
 
@@ -832,6 +1018,33 @@ Send a service instance resolution DNS query for a given service instance. Servi
 
 The parameters after `service-name` are optional. Any unspecified (or zero) value for these optional parameters is replaced by the value from the current default config (`dns config`).
 
+### dns compression \[enable|disable\]
+
+Enable/Disable the "DNS name compression" mode.
+
+By default DNS name compression is enabled. When disabled, DNS names are appended as full and never compressed. This is applicable to OpenThread's DNS and SRP client/server modules.
+
+This is intended for testing only and available under `REFERENCE_DEVICE` config.
+
+Get the current "DNS name compression" mode.
+
+```
+> dns compression
+Enabled
+```
+
+Set the "DNS name compression" mode.
+
+```
+> dns compression disable
+Done
+>
+>
+> dns compression
+Disabled
+Done
+```
+
 ### domainname
 
 Get the Thread Domain Name for Thread 1.2 device.
@@ -885,8 +1098,8 @@ Print the EID-to-RLOC cache entries.
 
 ```bash
 > eidcache
-fdde:ad00:beef:0:bb1:ebd6:ad10:f33 ac00
-fdde:ad00:beef:0:110a:e041:8399:17cd 6000
+fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d 2000 cache canEvict=1 transTime=0 eid=fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7d
+fd49:caf4:a29f:dc0e:97fc:69dd:3c16:df7f fffe retry canEvict=1 timeout=10 retryDelay=30
 Done
 ```
 
@@ -1109,6 +1322,16 @@ Unsubscribe the Thread interface to the IPv6 multicast address.
 Done
 ```
 
+### ipmaddr llatn
+
+Get the Link-Local All Thread Nodes multicast address.
+
+```
+> ipmaddr llatn
+ff32:40:fdde:ad00:beef:0:0:1
+Done
+```
+
 ### ipmaddr promiscuous
 
 Get multicast promiscuous mode.
@@ -1134,6 +1357,16 @@ Disable multicast promiscuous mode.
 
 ```bash
 > ipmaddr promiscuous disable
+Done
+```
+
+### ipmaddr rlatn
+
+Get the Realm-Local All Thread Nodes multicast address.
+
+```
+> ipmaddr rlatn
+ff33:40:fdde:ad00:beef:0:0:1
 Done
 ```
 
@@ -1394,6 +1627,19 @@ Set the Thread Master Key value.
 Done
 ```
 
+### mliid \<iid\>
+
+Set the Mesh Local IID.
+
+It must be used before Thread stack is enabled.
+
+Only for testing/reference device.
+
+```bash
+> mliid 1122334455667788
+Done
+```
+
 ### mlr reg \<ipaddr\> ... [timeout]
 
 Register Multicast Listeners to Primary Backbone Router, with an optional `timeout` (in seconds).
@@ -1521,12 +1767,12 @@ List all UDP sockets.
 
 ```bash
 > netstat
-|                 Local Address                 |                  Peer Address                 |
-+-----------------------------------------------+-----------------------------------------------+
-| 0:0:0:0:0:0:0:0:49153                         | 0:0:0:0:0:0:0:0:*                             |
-| 0:0:0:0:0:0:0:0:49152                         | 0:0:0:0:0:0:0:0:*                             |
-| 0:0:0:0:0:0:0:0:61631                         | 0:0:0:0:0:0:0:0:*                             |
-| 0:0:0:0:0:0:0:0:19788                         | 0:0:0:0:0:0:0:0:*                             |
+| Local Address                                   | Peer Address                                    |
++-------------------------------------------------+-------------------------------------------------+
+| [0:0:0:0:0:0:0:0]:49153                         | [0:0:0:0:0:0:0:0]:0                             |
+| [0:0:0:0:0:0:0:0]:49152                         | [0:0:0:0:0:0:0:0]:0                             |
+| [0:0:0:0:0:0:0:0]:61631                         | [0:0:0:0:0:0:0:0]:0                             |
+| [0:0:0:0:0:0:0:0]:19788                         | [0:0:0:0:0:0:0:0]:0                             |
 Done
 ```
 
@@ -1696,20 +1942,27 @@ Set the preferred Thread Leader Partition ID.
 Done
 ```
 
-### ping \<ipaddr\> [size][count] [interval][hoplimit]
+### ping \[-I source\] \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
 
 Send an ICMPv6 Echo Request.
 
+- source: The source IPv6 address of the echo request.
 - size: The number of data bytes to be sent.
 - count: The number of ICMPv6 Echo Requests to be sent.
 - interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
 - hoplimit: The hoplimit of ICMPv6 Echo Request to be sent.
+- timeout: Time in seconds to wait for the final ICMPv6 Echo Reply after sending out the request. The value may have fractional form, for example `3.5`.
 
 ```bash
-> ping fdde:ad00:beef:0:558:f56b:d688:799
-16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+> ping fd00:db8:0:0:76b:6a05:3ae9:a61a
+> 16 bytes from fd00:db8:0:0:76b:6a05:3ae9:a61a: icmp_seq=5 hlim=64 time=0ms
+1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
+Done
 
-> ping ff05::1 100 1 1 1
+> ping -I fd00:db8:0:0:76b:6a05:3ae9:a61a ff02::1 100 1 1 1
+> 108 bytes from fd00:db8:0:0:f605:fb4b:d429:d59a: icmp_seq=4 hlim=64 time=7ms
+1 packets transmitted, 1 packets received. Round-trip min/avg/max = 7/7.0/7 ms.
+Done
 ```
 
 ### ping stop
@@ -1793,6 +2046,16 @@ Note: The Domain Prefix flag (`D`) is only available for Thread 1.2.
 Done
 
 > prefix add fd00:7d03:7d03:7d03::/64 prosD med
+Done
+```
+
+### prefix meshlocal
+
+Get the mesh local prefix.
+
+```bash
+> prefix meshlocal
+fdde:ad00:beef:0::/64
 Done
 ```
 

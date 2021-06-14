@@ -36,11 +36,11 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
+
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
-
-#if OPENTHREAD_ENABLE_VENDOR_EXTENSION
 
 namespace ot {
 namespace Ncp {

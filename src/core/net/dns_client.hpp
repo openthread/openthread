@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
 #include <openthread/dns_client.h>
 
 #include "common/clearable.hpp"
@@ -106,6 +108,19 @@ public:
             kFlagNoRecursion      = OT_DNS_FLAG_NO_RECURSION,      ///< Server can not resolve the query recursively.
         };
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        /**
+         * This enumeration type represents the NAT64 mode.
+         *
+         */
+        enum Nat64Mode
+        {
+            kNat64Unspecified = OT_DNS_NAT64_UNSPECIFIED, ///< NAT64 mode is not specified. Use default NAT64 mode.
+            kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation
+            kNat64Disallow    = OT_DNS_NAT64_DISALLOW,    ///< Disallow NAT64 address translation.
+        };
+#endif
+
         /**
          * This is the default constructor for `QueryConfig` object.
          *
@@ -147,6 +162,16 @@ public:
          */
         RecursionFlag GetRecursionFlag(void) const { return static_cast<RecursionFlag>(mRecursionFlag); }
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        /**
+         * This method gets the NAT64 mode.
+         *
+         * @returns The NAT64 mode.
+         *
+         */
+        Nat64Mode GetNat64Mode(void) const { return static_cast<Nat64Mode>(mNat64Mode); }
+#endif
+
     private:
         enum : uint32_t
         {
@@ -168,6 +193,13 @@ public:
             kDefaultRecursionDesired = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG,
         };
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        enum : bool
+        {
+            kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED,
+        };
+#endif
+
         enum InitMode : uint8_t
         {
             kInitFromDefaults,
@@ -182,6 +214,9 @@ public:
         void SetResponseTimeout(uint32_t aResponseTimeout) { mResponseTimeout = aResponseTimeout; }
         void SetMaxTxAttempts(uint8_t aMaxTxAttempts) { mMaxTxAttempts = aMaxTxAttempts; }
         void SetRecursionFlag(RecursionFlag aFlag) { mRecursionFlag = static_cast<otDnsRecursionFlag>(aFlag); }
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        void SetNat64Mode(Nat64Mode aMode) { mNat64Mode = static_cast<otDnsNat64Mode>(aMode); }
+#endif
 
         void SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig);
     };
@@ -198,14 +233,12 @@ public:
      * This class represents a DNS query response.
      *
      */
-    class Response : public Clearable<Response>,
-                     public otDnsAddressResponse
+    class Response : public otDnsAddressResponse,
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-        ,
                      public otDnsBrowseResponse,
-                     public otDnsServiceResponse
+                     public otDnsServiceResponse,
 #endif
-
+                     public Clearable<Response>
     {
         friend class Client;
 
@@ -220,22 +253,34 @@ public:
 
         Error GetName(char *aNameBuffer, uint16_t aNameBufferSize) const;
         void  SelectSection(Section aSection, uint16_t &aOffset, uint16_t &aNumRecord) const;
+        Error CheckForHostNameAlias(Section aSection, Name &aHostName) const;
         Error FindHostAddress(Section       aSection,
                               const Name &  aHostName,
                               uint16_t      aIndex,
                               Ip6::Address &aAddress,
                               uint32_t &    aTtl) const;
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        Error FindARecord(Section aSection, const Name &aHostName, uint16_t aIndex, ARecord &aARecord) const;
+#endif
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
         Error FindServiceInfo(Section aSection, const Name &aName, ServiceInfo &aServiceInfo) const;
 #endif
 
+        Instance *     mInstance;              // The OpenThread instance.
         Query *        mQuery;                 // The associated query.
         const Message *mMessage;               // The response message.
         uint16_t       mAnswerOffset;          // Answer section offset in `mMessage`.
         uint16_t       mAnswerRecordCount;     // Number of records in answer section.
         uint16_t       mAdditionalOffset;      // Additional data section offset in `mMessage`.
         uint16_t       mAdditionalRecordCount; // Number of records in additional data section.
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        // This flag is only used in an IPv6 address query response.
+        // It indicates that the response does not contain any IPv6
+        // addresses but server provided at least one IPv4 address
+        // in the additional data section for NAT64 address synthesis.
+        bool mIp6QueryResponseRequiresNat64;
+#endif
     };
 
     /**
@@ -290,6 +335,11 @@ public:
          *
          */
         Error GetAddress(uint16_t aIndex, Ip6::Address &aAddress, uint32_t &aTtl) const;
+
+    private:
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        Error GetNat64Prefix(Ip6::Prefix &aPrefix) const;
+#endif
     };
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
@@ -529,7 +579,7 @@ public:
      *
      * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
      * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, or `_DEFAULT_RESPONSE_TIMEOUT`
-     * etc. (see `config/dns_clinet.h` for all related config options).
+     * etc. (see `config/dns_client.h` for all related config options).
      *
      */
     void ResetDefaultConfig(void);
@@ -610,7 +660,10 @@ public:
 private:
     enum QueryType : uint8_t
     {
-        kAddressQuery, // Address resolution.
+        kIp6AddressQuery, // IPv6 Address resolution.
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+        kIp4AddressQuery, // IPv4 Address resolution
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
         kBrowseQuery,  // Browse (service instance enumeration).
         kServiceQuery, // Service instance resolution.
@@ -666,11 +719,17 @@ private:
     Error       ParseResponse(Response &aResponse, QueryType &aType, Error &aResponseError);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
+#endif
 
     static const uint8_t   kQuestionCount[];
     static const uint16_t *kQuestionRecordTypes[];
 
-    static const uint16_t kAddressQueryRecordTypes[];
+    static const uint16_t kIp6AddressQueryRecordTypes[];
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    static const uint16_t kIp4AddressQueryRecordTypes[];
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     static const uint16_t kBrowseQueryRecordTypes[];
     static const uint16_t kServiceQueryRecordTypes[];
@@ -684,5 +743,7 @@ private:
 
 } // namespace Dns
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 #endif // DNS_CLIENT_HPP_

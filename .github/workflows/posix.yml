@@ -52,6 +52,7 @@ jobs:
     - uses: actions/checkout@v2
     - name: Bootstrap
       run: |
+        brew update
         brew install ninja
     - name: Run RCP Mode
       run: |
@@ -120,13 +121,13 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: ${{ failure() && env.CRASHED_TUN == '1' }}
       with:
-        name: core-expect-posix
+        name: core-expect-linux
         path: |
           ./ot-core-dump/*
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
-        name: syslog-expect-posix
+        name: syslog-expect-linux
         path: /var/log/syslog
     - name: Generate Coverage
       run: |
@@ -136,7 +137,7 @@ jobs:
         name: cov-expects-linux-2
         path: tmp/coverage.info
 
-  posix-cli:
+  thread-cert:
     runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
@@ -166,59 +167,17 @@ jobs:
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
-        name: posix-cli-thread-cert
+        name: thread-cert
         path: build/posix/tests/scripts/thread-cert
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-cli
+        name: cov-thread-cert
         path: tmp/coverage.info
 
-  posix-ncp:
-    runs-on: ubuntu-20.04
-    env:
-      COVERAGE: 1
-      NODE_TYPE: ncp-sim
-      PYTHONUNBUFFERED: 1
-      READLINE: readline
-      REFERENCE_DEVICE: 1
-      THREAD_VERSION: 1.1
-      VIRTUAL_TIME: 1
-      VIRTUAL_TIME_UART: 1
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y libreadline6-dev python3-setuptools python3-wheel lcov
-        python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
-        sudo python3 -m pip install git+https://github.com/openthread/pyspinel
-    - name: Build
-      run: |
-        ./bootstrap
-        make -f examples/Makefile-simulation
-        make -f src/posix/Makefile-posix
-    - name: Run
-      run: |
-        VERBOSE=1 OT_NCP_PATH="$PWD/output/posix/bin/ot-ncp" RADIO_DEVICE="$PWD/output/simulation/bin/ot-rcp" make -f src/posix/Makefile-posix check
-    - uses: actions/upload-artifact@v2
-      if: ${{ failure() }}
-      with:
-        name: posix-ncp-thread-cert
-        path: build/posix/tests/scripts/thread-cert
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-ncp
-        path: tmp/coverage.info
-
-  posix-ncp-rcp-migrate:
+  ncp-rcp-migrate:
     runs-on: ubuntu-20.04
     env:
       COVERAGE: 1
@@ -242,21 +201,25 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-ncp-rcp-migrate
+        name: cov-ncp-rcp-migrate
         path: tmp/coverage.info
 
-  posix-pty:
+  pty-linux:
+    name: pty-linux OT_DAEMON=${{ matrix.OT_DAEMON }}
     runs-on: ubuntu-20.04
+    strategy:
+      matrix:
+        OT_DAEMON: ['off', 'on']
     env:
       COVERAGE: 1
+      OT_DAEMON: ${{ matrix.OT_DAEMON }}
+      OT_READLINE: 'readline'
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools
+        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools ninja-build
         cd /tmp
         wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
         tar xvf bsd-licensed.tar.gz
@@ -267,7 +230,6 @@ jobs:
         sudo make install
     - name: Build
       run: |
-        ./bootstrap
         script/check-posix-pty build
     - name: Run
       run: |
@@ -277,53 +239,37 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-posix-pty
+        name: cov-pty-linux-${{ matrix.DAEMON }}
         path: tmp/coverage.info
 
-  posix-pty-daemon:
-    runs-on: ubuntu-20.04
+  pty-macos:
+    name: pty-macos OT_DAEMON=${{ matrix.OT_DAEMON }}
+    runs-on: macos-10.15
+    strategy:
+      matrix:
+        OT_DAEMON: ['off', 'on']
     env:
-      COVERAGE: 1
-      DAEMON: 1
+      OT_DAEMON: ${{ matrix.OT_DAEMON }}
+      OT_READLINE: 'off'
     steps:
     - uses: actions/checkout@v2
-      with:
-        submodules: true
     - name: Bootstrap
       run: |
-        sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y socat expect lcov net-tools
-        cd /tmp
-        wget https://github.com/obgm/libcoap/archive/bsd-licensed.tar.gz
-        tar xvf bsd-licensed.tar.gz
-        cd libcoap-bsd-licensed
-        ./autogen.sh
-        ./configure --prefix= --exec-prefix=/usr --with-boost=internal --disable-tests --disable-documentation
-        make -j2
-        sudo make install
+        brew update
+        brew install ninja socat
     - name: Build
       run: |
-        ./bootstrap
         script/check-posix-pty build
     - name: Run
       run: |
         script/check-posix-pty check
-    - name: Generate Coverage
-      run: |
-        ./script/test generate_coverage gcc
-    - uses: actions/upload-artifact@v2
-      with:
-        name: cov-posix-pty-daemon
-        path: tmp/coverage.info
 
   upload-coverage:
     needs:
     - expects-linux
-    - posix-cli
-    - posix-ncp
-    - posix-ncp-rcp-migrate
-    - posix-pty
-    - posix-pty-daemon
+    - ncp-rcp-migrate
+    - pty-linux
+    - thread-cert
     runs-on: ubuntu-20.04
     steps:
     - uses: actions/checkout@v2
@@ -335,9 +281,14 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         path: coverage/
-    - name: Upload Coverage
+    - name: Combine Coverage
       run: |
-        script/test upload_codecov
+        script/test combine_coverage
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        files: final.info
+        fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage

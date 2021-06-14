@@ -319,25 +319,6 @@ public:
      */
     Error Receive(uint8_t aChannel);
 
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    /**
-     * This method lets `SubMac` start CSL sample.
-     *
-     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer. When CslSample is
-     * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
-     * (depending on `mCslState`).
-     *
-     * @param[in]  aPanChannel  The current phy channel used by the device. This param will only take effect when CSL
-     *                          channel hasn't been explicitly specified.
-     *
-     * @retval kErrorNone          Successfully entered CSL operation (sleep or receive according to CSL timer).
-     * @retval kErrorBusy          The radio was transmitting.
-     * @retval kErrorInvalidState  The radio was disabled.
-     *
-     */
-    Error CslSample(uint8_t aPanChannel);
-#endif
-
     /**
      * This method gets the radio transmit frame.
      *
@@ -399,6 +380,23 @@ public:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
+     * This method lets `SubMac` start CSL sample.
+     *
+     * `SubMac` would switch the radio state between `Receive` and `Sleep` according the CSL timer. When CslSample is
+     * started, `mState` will become `kStateCslSample`. But it could be doing `Sleep` or `Receive` at this moment
+     * (depending on `mCslState`).
+     *
+     * @param[in]  aPanChannel  The current phy channel used by the device. This param will only take effect when CSL
+     *                          channel hasn't been explicitly specified.
+     *
+     * @retval kErrorNone          Successfully entered CSL operation (sleep or receive according to CSL timer).
+     * @retval kErrorBusy          The radio was transmitting.
+     * @retval kErrorInvalidState  The radio was disabled.
+     *
+     */
+    Error CslSample(uint8_t aPanChannel);
+
+    /**
      * This method gets the CSL channel.
      *
      * @returns CSL channel.
@@ -444,21 +442,6 @@ public:
      */
     void SetCslPeriod(uint16_t aPeriod);
 
-    /**
-     * This method gets the CSL timeout.
-     *
-     * @returns CSL timeout
-     *
-     */
-    uint32_t GetCslTimeout(void) const { return mCslTimeout; }
-
-    /**
-     * This method sets the CSL timeout.
-     *
-     * @param[in]  aTimeout  The CSL timeout in seconds.
-     *
-     */
-    void SetCslTimeout(uint32_t aTimeout);
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
@@ -589,6 +572,7 @@ private:
     bool RadioSupportsAckTimeout(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ACK_TIMEOUT) != 0); }
     bool RadioSupportsEnergyScan(void) const { return ((mRadioCaps & OT_RADIO_CAPS_ENERGY_SCAN) != 0); }
     bool RadioSupportsTransmitTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_TIMING) != 0); }
+    bool RadioSupportsReceiveTiming(void) const { return ((mRadioCaps & OT_RADIO_CAPS_RECEIVE_TIMING) != 0); }
 
     bool ShouldHandleTransmitSecurity(void) const;
     bool ShouldHandleCsmaBackOff(void) const;
@@ -643,7 +627,6 @@ private:
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint32_t mCslTimeout;     ///< The CSL synchronized timeout in seconds.
     uint16_t mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
     uint8_t  mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
                               ///< equal to the Pan channel of `Mac`.

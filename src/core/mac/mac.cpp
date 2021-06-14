@@ -39,7 +39,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/string.hpp"
@@ -475,75 +475,47 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 
 Error Mac::SetNetworkName(const char *aNameString)
 {
-    // When setting Network Name from a string, we treat it as `NameData`
-    // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
-    // for null char in the data (within its given size) to calculate
-    // the name's length and ensure that the name fits in `kMaxSize`
-    // chars. The `+ 1` ensures that a `aNameString` with length
-    // longer than `kMaxSize` is correctly rejected (returning error
-    // `kErrorInvalidArgs`).
-
-    Error    error;
-    NameData data(aNameString, NetworkName::kMaxSize + 1);
-
-    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
-
-    error = SetNetworkName(data);
-
-exit:
-    return error;
+    return SignalNetworkNameChange(mNetworkName.Set(aNameString));
 }
 
 Error Mac::SetNetworkName(const NameData &aNameData)
 {
-    Error error = mNetworkName.Set(aNameData);
+    return SignalNetworkNameChange(mNetworkName.Set(aNameData));
+}
 
-    if (error == kErrorAlready)
+Error Mac::SignalNetworkNameChange(Error aError)
+{
+    switch (aError)
     {
+    case kErrorNone:
+        Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
+        break;
+
+    case kErrorAlready:
         Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
-        error = kErrorNone;
-        ExitNow();
+        aError = kErrorNone;
+        break;
+
+    default:
+        break;
     }
 
-    SuccessOrExit(error);
-    Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
-
-exit:
-    return error;
+    return aError;
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 Error Mac::SetDomainName(const char *aNameString)
 {
-    // When setting Domain Name from a string, we treat it as `NameData`
-    // with `kMaxSize + 1` chars. `DomainName::Set(data)` will look
-    // for null char in the data (within its given size) to calculate
-    // the name's length and ensure that the name fits in `kMaxSize`
-    // chars. The `+ 1` ensures that a `aNameString` with length
-    // longer than `kMaxSize` is correctly rejected (returning error
-    // `kErrorInvalidArgs`).
+    Error error = mDomainName.Set(aNameString);
 
-    Error    error;
-    NameData data(aNameString, DomainName::kMaxSize + 1);
-
-    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
-
-    error = SetDomainName(data);
-
-exit:
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 
 Error Mac::SetDomainName(const NameData &aNameData)
 {
     Error error = mDomainName.Set(aNameData);
 
-    if (error == kErrorAlready)
-    {
-        error = kErrorNone;
-    }
-
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -897,65 +869,6 @@ void Mac::FinishOperation(void)
     mOperation = kOperationIdle;
 }
 
-TxFrame *Mac::PrepareDataRequest(void)
-{
-    TxFrame *frame = nullptr;
-    Address  src, dst;
-    uint16_t fcf;
-    bool     iePresent = Get<MeshForwarder>().CalcIePresent(nullptr);
-
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    RadioType radio;
-
-    SuccessOrExit(Get<DataPollSender>().GetPollDestinationAddress(dst, radio));
-    frame = &mLinks.GetTxFrames().GetTxFrame(radio);
-#else
-    SuccessOrExit(Get<DataPollSender>().GetPollDestinationAddress(dst));
-    frame = &mLinks.GetTxFrames().GetTxFrame();
-#endif
-
-    fcf = Frame::kFcfFrameMacCmd | Frame::kFcfPanidCompression | Frame::kFcfAckRequest | Frame::kFcfSecurityEnabled;
-
-    if (iePresent)
-    {
-        fcf |= Frame::kFcfIePresent;
-    }
-
-    fcf |= Get<MeshForwarder>().CalcFrameVersion(Get<NeighborTable>().FindNeighbor(dst), iePresent);
-
-    if (dst.IsExtended())
-    {
-        fcf |= Frame::kFcfDstAddrExt | Frame::kFcfSrcAddrExt;
-        src.SetExtended(GetExtAddress());
-    }
-    else
-    {
-        fcf |= Frame::kFcfDstAddrShort | Frame::kFcfSrcAddrShort;
-        src.SetShort(GetShortAddress());
-    }
-
-    frame->InitMacHeader(fcf, Frame::kKeyIdMode1 | Frame::kSecEncMic32);
-
-    if (frame->IsDstPanIdPresent())
-    {
-        frame->SetDstPanId(GetPanId());
-    }
-
-    frame->SetSrcAddr(src);
-    frame->SetDstAddr(dst);
-#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
-    if (iePresent)
-    {
-        Get<MeshForwarder>().AppendHeaderIe(nullptr, *frame);
-    }
-#endif
-
-    IgnoreError(frame->SetCommandId(Frame::kMacCmdDataRequest));
-
-exit:
-    return frame;
-}
-
 TxFrame *Mac::PrepareBeaconRequest(void)
 {
     TxFrame &frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
@@ -990,7 +903,7 @@ TxFrame *Mac::PrepareBeacon(void)
 
     beaconPayload = reinterpret_cast<BeaconPayload *>(beacon->GetPayload());
 
-    if (Get<KeyManager>().IsThreadBeaconEnabled())
+    if (Get<KeyManager>().GetSecurityPolicy().mBeaconsEnabled)
     {
         beaconPayload->Init();
 
@@ -1175,12 +1088,12 @@ void Mac::BeginTransmit(void)
         break;
 
     case kOperationTransmitPoll:
-        frame = PrepareDataRequest();
+        txFrames.SetChannel(mRadioChannel);
+        txFrames.SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
+        txFrames.SetMaxFrameRetries(mMaxFrameRetriesDirect);
+        frame = Get<DataPollSender>().PrepareDataRequest(txFrames);
         VerifyOrExit(frame != nullptr);
-        frame->SetChannel(mRadioChannel);
         frame->SetSequence(mDataSequence++);
-        frame->SetMaxCsmaBackoffs(kMaxCsmaBackoffsDirect);
-        frame->SetMaxFrameRetries(mMaxFrameRetriesDirect);
         break;
 
     case kOperationTransmitDataDirect:
@@ -1632,11 +1545,7 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         FinishOperation();
         Get<MeshForwarder>().HandleSentFrame(aFrame, aError);
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-        if (aError == kErrorNone && Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported() &&
-            aFrame.GetSecurityEnabled() && aAckFrame != nullptr)
-        {
-            Get<DataPollSender>().ProcessFrame(*aAckFrame);
-        }
+        Get<DataPollSender>().ProcessTxDone(aFrame, aAckFrame, aError);
 #endif
         PerformNextOperation();
         break;
@@ -2112,7 +2021,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     }
 #endif
 
-    Get<DataPollSender>().ProcessFrame(*aFrame);
+    Get<DataPollSender>().ProcessRxFrame(*aFrame);
 
     if (neighbor != nullptr)
     {
@@ -2521,28 +2430,16 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 {
     mLinks.GetSubMac().SetCslPeriod(aPeriod);
 
+    Get<DataPollSender>().RecalculatePollPeriod();
+
     if (IsCslEnabled())
     {
-        IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
+        IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), Get<Mle::Mle>().GetParent().GetRloc16(),
+                                           &Get<Mle::Mle>().GetParent().GetExtAddress()));
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
 
     UpdateIdleMode();
-}
-
-void Mac::SetCslTimeout(uint32_t aTimeout)
-{
-    VerifyOrExit(GetCslTimeout() != aTimeout);
-
-    mLinks.GetSubMac().SetCslTimeout(aTimeout);
-
-    if (IsCslEnabled())
-    {
-        Get<Mle::Mle>().ScheduleChildUpdateRequest();
-    }
-
-exit:
-    return;
 }
 
 bool Mac::IsCslEnabled(void) const

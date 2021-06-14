@@ -26,6 +26,7 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
+import ipaddress
 import json
 import logging
 import os
@@ -33,9 +34,10 @@ import subprocess
 import unittest
 
 import otci
+from otci import OTCI
 from otci.errors import CommandError
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 
 TEST_CHANNEL = 22
 TEST_NETWORK_NAME = 'OT CI'
@@ -187,6 +189,8 @@ class TestOTCI(unittest.TestCase):
         leader.set_allowlist([leader.get_extaddr()])
         leader.disable_allowlist()
 
+        self.assertEqual([], leader.backbone_router_get_multicast_listeners())
+
         leader.add_ipmaddr('ff04::1')
         leader.del_ipmaddr('ff04::1')
         leader.add_ipmaddr('ff04::2')
@@ -196,6 +200,8 @@ class TestOTCI(unittest.TestCase):
         self.assertTrue(leader.get_ipaddr_rloc())
         self.assertTrue(leader.get_ipaddr_linklocal())
         self.assertTrue(leader.get_ipaddr_mleid())
+        self.assertTrue(leader.get_ipmaddr_llatn())
+        self.assertTrue(leader.get_ipmaddr_rlatn())
 
         leader.add_ipaddr('2001::1')
         leader.del_ipaddr('2001::1')
@@ -209,12 +215,9 @@ class TestOTCI(unittest.TestCase):
         logging.info('leader bbr config: %r', bbr_config)
         logging.info('leader PBBR: %r', leader.get_primary_backbone_router_info())
 
-        leader.set_backbone_router_config(seqno=bbr_config['seqno'] + 1, delay=10, timeout=301)
-        self.assertEqual({
-            'seqno': bbr_config['seqno'] + 1,
-            'delay': 10,
-            'timeout': 301
-        }, leader.get_backbone_router_config())
+        new_bbr_seqno = (bbr_config['seqno'] + 1) % 256
+        leader.set_backbone_router_config(seqno=new_bbr_seqno, delay=10, timeout=301)
+        self.assertEqual({'seqno': new_bbr_seqno, 'delay': 10, 'timeout': 301}, leader.get_backbone_router_config())
 
         leader.enable_backbone_router()
         leader.wait(3)
@@ -222,6 +225,10 @@ class TestOTCI(unittest.TestCase):
         logging.info('leader bbr state: %r', leader.get_backbone_router_state())
         logging.info('leader bbr config: %r', leader.get_backbone_router_config())
         logging.info('leader PBBR: %r', leader.get_primary_backbone_router_info())
+
+        leader.wait(10)
+        self.assertEqual(1, len(leader.backbone_router_get_multicast_listeners()))
+        self.assertEqual('ff04::2', leader.backbone_router_get_multicast_listeners()[0][0])
 
         logging.info('leader bufferinfo: %r', leader.get_message_buffer_info())
 
@@ -319,6 +326,184 @@ class TestOTCI(unittest.TestCase):
         logging.info('dataset active -x: %r', leader.get_dataset_bytes('active'))
         logging.info('dataset pending -x: %r', leader.get_dataset_bytes('pending'))
 
+        # Test SRP server & client
+        self._test_otci_srp(leader, leader)
+
+        # Test DNS client and server
+        self._test_otci_dns(leader, leader)
+
+        self._test_otci_srp_remove(leader, leader)
+
+    def _test_otci_dns(self, client: OTCI, server: OTCI):
+        dns_cfg = client.dns_get_config()
+        self.assertTrue(dns_cfg['server'])
+        self.assertIn('response_timeout', dns_cfg)
+        self.assertIn('max_tx_attempts', dns_cfg)
+        self.assertIn('recursion_desired', dns_cfg)
+
+        client.dns_set_config(server=(server.get_ipaddr_rloc(), 53),
+                              response_timeout=10000,
+                              max_tx_attempts=4,
+                              recursion_desired=False)
+        self.assertEqual(
+            {
+                'server': (server.get_ipaddr_rloc(), 53),
+                'response_timeout': 10000,
+                'max_tx_attempts': 4,
+                'recursion_desired': False
+            }, client.dns_get_config())
+
+        self.assertTrue(client.dns_get_compression())
+        client.dns_disable_compression()
+        self.assertFalse(client.dns_get_compression())
+        client.dns_enable_compression()
+        self.assertTrue(client.dns_get_compression())
+
+        logging.info('dns browse: %r', client.dns_browse('_ipps._tcp.default.service.arpa.'))
+        logging.info('dns browse: %r', client.dns_browse('_meshcop._udp.default.service.arpa.'))
+        logging.info('dns resolve: %r', client.dns_resolve_service('ins1', '_ipps._tcp.default.service.arpa.'))
+        logging.info('dns resolve: %r', client.dns_resolve('host1.default.service.arpa.'))
+
+    def _test_otci_srp(self, client: OTCI, server: OTCI):
+        self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
+        server.srp_server_set_domain('example1.com')
+        self.assertEqual('example1.com.', server.srp_server_get_domain())
+        server.srp_server_set_domain('example2.com.')
+        self.assertEqual('example2.com.', server.srp_server_get_domain())
+        server.srp_server_set_domain('default.service.arpa.')
+        self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
+
+        default_leases = server.srp_server_get_lease()
+        self.assertEqual(default_leases, (1800, 7200, 86400, 1209600))
+        server.srp_server_set_lease(1801, 7201, 86401, 1209601)
+        leases = server.srp_server_get_lease()
+        self.assertEqual(leases, (1801, 7201, 86401, 1209601))
+
+        self.assertFalse(client.srp_client_get_state())
+        self.assertEqual('Removed', client.srp_client_get_host_state())
+        self.assertEqual(('::', 0), client.srp_client_get_server())
+
+        self.assertFalse(client.srp_client_get_service_key())
+        client.srp_client_enable_service_key()
+        self.assertTrue(client.srp_client_get_service_key())
+        client.srp_client_disable_service_key()
+        self.assertFalse(client.srp_client_get_service_key())
+
+        server.srp_server_disable()
+        client.wait(3)
+        server.srp_server_enable()
+        client.wait(3)
+        self.assertEqual([], server.srp_server_get_hosts())
+
+        self.assertFalse(client.srp_client_get_autostart())
+        client.srp_client_enable_autostart()
+        self.assertTrue(client.srp_client_get_autostart())
+        client.wait(3)
+        self.assertTrue(client.srp_client_get_state())
+        self.assertNotEqual(('::', 0), client.srp_client_get_server())
+
+        self.assertEqual('', client.srp_client_get_host_name())
+        client.srp_client_set_host_name('host1')
+        self.assertEqual('host1', client.srp_client_get_host_name())
+
+        self.assertEqual([], client.srp_client_get_host_addresses())
+        client.srp_client_set_host_addresses('2001::1')
+        self.assertEqual(['2001::1'], client.srp_client_get_host_addresses())
+        client.srp_client_set_host_addresses('2001::1', '2001::2')
+        self.assertEqual(['2001::1', '2001::2'], client.srp_client_get_host_addresses())
+        srp_client_host = client.srp_client_get_host()
+        self.assertEqual('host1', srp_client_host['host'])
+        self.assertEqual('ToAdd', srp_client_host['state'])
+        self.assertEqual(
+            {ipaddress.IPv6Address('2001::1'), ipaddress.IPv6Address('2001::2')}, set(srp_client_host['addresses']))
+
+        self.assertEqual([], client.srp_client_get_services())
+        client.srp_client_add_service('ins1',
+                                      '_ipps._tcp',
+                                      1000,
+                                      1,
+                                      1,
+                                      txt={
+                                          'txt11': 'val11',
+                                          'txt12': b'val12',
+                                          'txt13': True
+                                      })
+        client.srp_client_add_service('ins2',
+                                      '_meshcop._udp',
+                                      2000,
+                                      2,
+                                      2,
+                                      txt={
+                                          'txt21': 'val21',
+                                          'txt22': b'val22',
+                                          'txt23': True
+                                      })
+        self.assertEqual(2, len(client.srp_client_get_services()))
+        self.assertIn(
+            {
+                'instance': 'ins1',
+                'service': '_ipps._tcp',
+                'state': 'ToAdd',
+                'port': 1000,
+                'priority': 1,
+                'weight': 1,
+            }, client.srp_client_get_services())
+        self.assertIn(
+            {
+                'instance': 'ins2',
+                'service': '_meshcop._udp',
+                'state': 'ToAdd',
+                'port': 2000,
+                'priority': 2,
+                'weight': 2,
+            }, client.srp_client_get_services())
+
+        client.wait(3)
+
+        self.assertEqual('Registered', client.srp_client_get_host()['state'])
+
+        srp_server_hosts = server.srp_server_get_hosts()
+        logging.info('srp_server_hosts %r', srp_server_hosts)
+        self.assertEqual(1, len(srp_server_hosts))
+        self.assertEqual('host1.default.service.arpa.', srp_server_hosts[0]['host'])
+        self.assertEqual(False, srp_server_hosts[0]['deleted'])
+        self.assertEqual(
+            {ipaddress.IPv6Address('2001::1'), ipaddress.IPv6Address('2001::2')},
+            set(srp_server_hosts[0]['addresses']))
+
+        srp_server_services = server.srp_server_get_services()
+        logging.info('srp_server_services %r', srp_server_services)
+        self.assertEqual(2, len(srp_server_services))
+        for service in srp_server_services:
+            if service['instance'] == 'ins1._ipps._tcp.default.service.arpa.':
+                self.assertEqual(False, service['deleted'])
+                self.assertEqual(1000, service['port'])
+                self.assertEqual(1, service['priority'])
+                self.assertEqual(1, service['weight'])
+                self.assertEqual('host1.default.service.arpa.', service['host'])
+                self.assertEqual({ipaddress.IPv6Address('2001::1'),
+                                  ipaddress.IPv6Address('2001::2')}, set(service['addresses']))
+                self.assertEqual({'txt11': b'val11', 'txt12': b'val12', 'txt13': True}, service['txt'])
+            elif service['instance'] == 'ins2._meshcop._udp.default.service.arpa.':
+                self.assertEqual(False, service['deleted'])
+                self.assertEqual(2000, service['port'])
+                self.assertEqual(2, service['priority'])
+                self.assertEqual(2, service['weight'])
+                self.assertEqual('host1.default.service.arpa.', service['host'])
+                self.assertEqual({ipaddress.IPv6Address('2001::1'),
+                                  ipaddress.IPv6Address('2001::2')}, set(service['addresses']))
+                self.assertEqual({'txt21': b'val21', 'txt22': b'val22', 'txt23': True}, service['txt'])
+            else:
+                self.fail(service)
+
+    def _test_otci_srp_remove(self, client: OTCI, server: OTCI):
+        client.srp_client_remove_host(remove_key_lease=True)
+        client.wait(3)
+        self.assertEqual([], client.srp_client_get_services())
+        self.assertEqual('Removed', client.srp_client_get_host()['state'])
+        self.assertEqual([], server.srp_server_get_hosts())
+        self.assertEqual([], server.srp_server_get_services())
+
     def _test_otci_example(self, node1, node2):
         node1.dataset_init_buffer()
         node1.dataset_set_buffer(network_name='test',
@@ -402,7 +587,12 @@ class TestOTCI(unittest.TestCase):
         self.assertEqual('router', commissioner.get_state())
 
         for dst_ip in leader.get_ipaddrs():
-            commissioner.ping(dst_ip, size=10, count=1, interval=2, hoplimit=3)
+            statistics = commissioner.ping(dst_ip, size=10, count=10, interval=2, hoplimit=3)
+            self.assertEqual(statistics['transmitted_packets'], 10)
+            self.assertEqual(statistics['received_packets'], 10)
+            self.assertAlmostEqual(statistics['packet_loss'], 0.0, delta=1e-9)
+            rtt = statistics['round_trip_time']
+            self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
             commissioner.wait(1)
 
         self.assertEqual('disabled', commissioner.get_commissioiner_state())
@@ -512,6 +702,12 @@ class TestOTCI(unittest.TestCase):
                          set(router.is_link_established for router in leader.get_router_table().values()))
 
         self.assertFalse(leader.is_singleton())
+
+        statistics = commissioner.ping("ff02::1", size=1, count=10, interval=1, hoplimit=255)
+        self.assertEqual(statistics['transmitted_packets'], 10)
+        self.assertEqual(statistics['received_packets'], 20)
+        rtt = statistics['round_trip_time']
+        self.assertTrue(rtt['min'] - 1e-9 <= rtt['avg'] <= rtt['max'] + 1e-9)
 
         # Shutdown
         leader.thread_stop()

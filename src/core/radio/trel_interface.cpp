@@ -32,14 +32,14 @@
 
 #include "trel_interface.hpp"
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 #include <openthread/platform/trel-udp6.h>
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
 namespace Trel {
@@ -54,7 +54,7 @@ void Interface::Init(void)
 {
     Ip6::Address ip6Address;
 
-    VerifyOrExit(!mInitialized);
+    OT_ASSERT(!mInitialized);
 
     ip6Address.SetToLinkLocalAddress(Get<Mac::Mac>().GetExtAddress());
     otPlatTrelUdp6Init(&GetInstance(), &ip6Address, kUdpPort);
@@ -63,9 +63,6 @@ void Interface::Init(void)
     otPlatTrelUdp6SubscribeMulticastAddress(&GetInstance(), &ip6Address);
 
     mInitialized = true;
-
-exit:
-    return;
 }
 
 void Interface::HandleExtAddressChange(void)

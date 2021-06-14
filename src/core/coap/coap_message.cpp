@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 
 namespace ot {
 namespace Coap {
@@ -114,6 +115,16 @@ bool Message::IsNonConfirmablePostRequest(void) const
 
 void Message::Finish(void)
 {
+    // If the payload marker is set but the message contains no
+    // payload, we remove the payload marker from the message. Note
+    // that the presence of a marker followed by a zero-length payload
+    // will be processed as a message format error on the receiver.
+
+    if (GetHelpData().mPayloadMarkerSet && (GetHelpData().mHeaderLength == GetLength()))
+    {
+        IgnoreError(SetLength(GetLength() - 1));
+    }
+
     WriteBytes(0, &GetHelpData().mHeader, GetOptionStart());
 }
 
@@ -219,7 +230,7 @@ Error Message::AppendUriPathOptions(const char *aUriPath)
     const char *cur   = aUriPath;
     const char *end;
 
-    while ((end = strchr(cur, '/')) != nullptr)
+    while ((end = StringFind(cur, '/')) != nullptr)
     {
         SuccessOrExit(error = AppendOption(kOptionUriPath, static_cast<uint16_t>(end - cur), cur));
         cur = end + 1;
@@ -330,7 +341,8 @@ Error Message::SetPayloadMarker(void)
 
     VerifyOrExit(GetLength() < kMaxHeaderLength, error = kErrorNoBufs);
     SuccessOrExit(error = Append(marker));
-    GetHelpData().mHeaderLength = GetLength();
+    GetHelpData().mPayloadMarkerSet = true;
+    GetHelpData().mHeaderLength     = GetLength();
 
     // Set offset to the start of payload.
     SetOffset(GetHelpData().mHeaderLength);

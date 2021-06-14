@@ -257,14 +257,6 @@
 #define OPENTHREAD_CONFIG_MAC_FILTER_SIZE 80
 
 /**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
-
-/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL
  *
  * The log level (used at compile time).
@@ -348,14 +340,6 @@
 #define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1
 
 /**
- * @def OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT
- *
- * Define to 1 to send an MLE Link Request when MAX_NEIGHBOR_AGE is reached for a neighboring router.
- *
- */
-#define OPENTHREAD_CONFIG_MLE_SEND_LINK_REQUEST_ON_ADV_TIMEOUT 1
-
-/**
  * @def OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE
  *
  * Define as 1 to enable Channel Manager support.
@@ -414,6 +398,14 @@
  *
  */
 #define OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL (0xffff * 10 / 100)
+
+/**
+ * @def OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
+ *
+ * Define as 1 to enable `AnnounceSender` which will periodically send MLE Announce message on all channels.
+ *
+ */
+#define OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE 1
 
 /**
  * @def OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

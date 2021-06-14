@@ -34,15 +34,15 @@
 
 #include "channel_manager.hpp"
 
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "meshcop/dataset_updater.hpp"
 #include "radio/radio.hpp"
-
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 namespace ot {
 namespace Utils {
@@ -57,6 +57,7 @@ ChannelManager::ChannelManager(Instance &aInstance)
     , mTimer(aInstance, ChannelManager::HandleTimer)
     , mAutoSelectInterval(kDefaultAutoSelectInterval)
     , mAutoSelectEnabled(false)
+    , mCcaFailureRateThreshold(kCcaFailureRateThreshold)
 {
 }
 
@@ -231,10 +232,10 @@ exit:
 bool ChannelManager::ShouldAttemptChannelChange(void)
 {
     uint16_t ccaFailureRate = Get<Mac::Mac>().GetCcaFailureRate();
-    bool     shouldAttempt  = (ccaFailureRate >= kCcaFailureRateThreshold);
+    bool     shouldAttempt  = (ccaFailureRate >= mCcaFailureRateThreshold);
 
     otLogInfoUtil("ChannelManager: CCA-err-rate: 0x%04x %s 0x%04x, selecting channel: %s", ccaFailureRate,
-                  shouldAttempt ? ">=" : "<", kCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
+                  shouldAttempt ? ">=" : "<", mCcaFailureRateThreshold, shouldAttempt ? "yes" : "no");
 
     return shouldAttempt;
 }
@@ -346,6 +347,13 @@ void ChannelManager::SetFavoredChannels(uint32_t aChannelMask)
     mFavoredChannelMask.SetMask(aChannelMask & Get<Mac::Mac>().GetSupportedChannelMask().GetMask());
 
     otLogInfoUtil("ChannelManager: Favored channels: %s", mFavoredChannelMask.ToString().AsCString());
+}
+
+void ChannelManager::SetCcaFailureRateThreshold(uint16_t aThreshold)
+{
+    mCcaFailureRateThreshold = aThreshold;
+
+    otLogInfoUtil("ChannelManager: CCA threshold: 0x%04x", mCcaFailureRateThreshold);
 }
 
 } // namespace Utils

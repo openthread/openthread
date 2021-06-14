@@ -262,7 +262,7 @@
  *   the second struct is defined by the PHY layer.  Because of the use of
  *   structures, we know exactly what part comes from that layer.
  *   Additionally, we can add fields to each structure without introducing
- *   backward compatability problems: Data encoded as "Lt(ESU)t(6C)"
+ *   backward compatibility problems: Data encoded as "Lt(ESU)t(6C)"
  *   (Notice the extra "U") will decode just fine as "Lt(ES)t(6C)".
  *   Additionally, if we don't care about the MAC layer and only care
  *   about the network layer, we could parse as "Lt()t(6C)".
@@ -466,6 +466,8 @@ enum
     SPINEL_STATUS_ALREADY                  = 19, ///< The operation is already in progress.
     SPINEL_STATUS_ITEM_NOT_FOUND           = 20, ///< The given item could not be found.
     SPINEL_STATUS_INVALID_COMMAND_FOR_PROP = 21, ///< The given command cannot be performed on this property.
+    SPINEL_STATUS_UNKNOWN_NEIGHBOR         = 22, ///< The neighbor is unknown.
+    SPINEL_STATUS_NOT_CAPABLE              = 23, ///< The target is not capable of handling requested operation.
     SPINEL_STATUS_RESPONSE_TIMEOUT         = 24, ///< No response received from remote node
 
     SPINEL_STATUS_JOIN__BEGIN = 104,
@@ -632,6 +634,11 @@ enum
 
 enum
 {
+    SPINEL_ROUTE_FLAG_NAT64 = (1 << 5),
+};
+
+enum
+{
     SPINEL_THREAD_MODE_FULL_NETWORK_DATA   = (1 << 0),
     SPINEL_THREAD_MODE_FULL_THREAD_DEV     = (1 << 1),
     SPINEL_THREAD_MODE_SECURE_DATA_REQUEST = (1 << 2),
@@ -723,6 +730,43 @@ enum
 {
     SPINEL_RADIO_LINK_IEEE_802_15_4 = 0,
     SPINEL_RADIO_LINK_TREL_UDP6     = 1,
+};
+
+// Statuses that can be received as a result of:
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD
+enum
+{
+    SPINEL_LINK_METRICS_STATUS_SUCCESS                     = 0,
+    SPINEL_LINK_METRICS_STATUS_CANNOT_SUPPORT_NEW_SERIES   = 1,
+    SPINEL_LINK_METRICS_STATUS_SERIESID_ALREADY_REGISTERED = 2,
+    SPINEL_LINK_METRICS_STATUS_SERIESID_NOT_RECOGNIZED     = 3,
+    SPINEL_LINK_METRICS_STATUS_NO_MATCHING_FRAMES_RECEIVED = 4,
+    SPINEL_LINK_METRICS_STATUS_OTHER_ERROR                 = 254
+};
+
+// Metric ids used for:
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD
+enum
+{
+    SPINEL_THREAD_LINK_METRIC_PDU_COUNT   = (1 << 0),
+    SPINEL_THREAD_LINK_METRIC_LQI         = (1 << 1),
+    SPINEL_THREAD_LINK_METRIC_LINK_MARGIN = (1 << 2),
+    SPINEL_THREAD_LINK_METRIC_RSSI        = (1 << 3),
+};
+
+// Frame types used for:
+// @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD
+enum
+{
+    SPINEL_THREAD_FRAME_TYPE_MLE_LINK_PROBE   = (1 << 0),
+    SPINEL_THREAD_FRAME_TYPE_MAC_DATA         = (1 << 1),
+    SPINEL_THREAD_FRAME_TYPE_MAC_DATA_REQUEST = (1 << 2),
+    SPINEL_THREAD_FRAME_TYPE_MAC_ACK          = (1 << 3),
 };
 
 // Parameter ids used for:
@@ -1205,6 +1249,7 @@ enum
     SPINEL_CAP_MULTI_RADIO             = (SPINEL_CAP_OPENTHREAD__BEGIN + 13),
     SPINEL_CAP_SRP_CLIENT              = (SPINEL_CAP_OPENTHREAD__BEGIN + 14),
     SPINEL_CAP_DUA                     = (SPINEL_CAP_OPENTHREAD__BEGIN + 15),
+    SPINEL_CAP_REFERENCE_DEVICE        = (SPINEL_CAP_OPENTHREAD__BEGIN + 16),
     SPINEL_CAP_OPENTHREAD__END         = 640,
 
     SPINEL_CAP_THREAD__BEGIN          = 1024,
@@ -1215,6 +1260,7 @@ enum
     SPINEL_CAP_THREAD_BORDER_ROUTER   = (SPINEL_CAP_THREAD__BEGIN + 4),
     SPINEL_CAP_THREAD_SERVICE         = (SPINEL_CAP_THREAD__BEGIN + 5),
     SPINEL_CAP_THREAD_CSL_RECEIVER    = (SPINEL_CAP_THREAD__BEGIN + 6),
+    SPINEL_CAP_THREAD_LINK_METRICS    = (SPINEL_CAP_THREAD__BEGIN + 7),
     SPINEL_CAP_THREAD_BACKBONE_ROUTER = (SPINEL_CAP_THREAD__BEGIN + 8),
     SPINEL_CAP_THREAD__END            = 1152,
 
@@ -2326,7 +2372,7 @@ enum
      *  `6`: IPv6 Prefix
      *  `C`: Prefix length in bits
      *  `b`: Stable flag
-     *  `C`: TLV flags
+     *  `C`: TLV flags (SPINEL_NET_FLAG_* definition)
      *  `b`: "Is defined locally" flag. Set if this network was locally
      *       defined. Assumed to be true for set, insert and replace. Clear if
      *       the on mesh network was defined by another node.
@@ -2347,7 +2393,7 @@ enum
      *  `6`: Route Prefix
      *  `C`: Prefix length in bits
      *  `b`: Stable flag
-     *  `C`: Route preference flags
+     *  `C`: Route flags (SPINEL_ROUTE_FLAG_* and SPINEL_ROUTE_PREFERNCE_* definitions)
      *  `b`: "Is defined locally" flag. Set if this route info was locally
      *       defined as part of local network data. Assumed to be true for set,
      *       insert and replace. Clear if the route is part of partition's network
@@ -2742,7 +2788,7 @@ enum
     SPINEL_PROP_DATASET_DELAY_TIMER = SPINEL_PROP_THREAD_EXT__BEGIN + 30,
 
     /// Operational Dataset Security Policy
-    /** Format: `SC` - No direct read or write
+    /** Format: `SD` - No direct read or write
      *
      * It can only be included in one of the Dataset related properties below:
      *
@@ -2756,6 +2802,8 @@ enum
      * Content is
      *   `S` : Key Rotation Time (in units of hour)
      *   `C` : Security Policy Flags (as specified in Thread 1.1 Section 8.10.1.15)
+     *   `C` : Optional Security Policy Flags extension (as specified in Thread 1.2 Section 8.10.1.15).
+     *         0xf8 is used if this field is missing.
      *
      */
     SPINEL_PROP_DATASET_SECURITY_POLICY = SPINEL_PROP_THREAD_EXT__BEGIN + 31,
@@ -2962,6 +3010,160 @@ enum
      *
      */
     SPINEL_PROP_THREAD_DOMAIN_NAME = SPINEL_PROP_THREAD_EXT__BEGIN + 44,
+
+    /// Link metrics query
+    /** Format: `6CC` - Write-Only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 destination address
+     * `C` : Series id (0 for Single Probe)
+     * `C` : List of requested metric ids encoded as bit fields in single byte
+     *
+     *   +---------------+----+
+     *   |    Metric     | Id |
+     *   +---------------+----+
+     *   | Received PDUs |  0 |
+     *   | LQI           |  1 |
+     *   | Link margin   |  2 |
+     *   | RSSI          |  3 |
+     *   +---------------+----+
+     *
+     * If the query succeeds, the NCP will send a result to the Host using
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT.
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_QUERY = SPINEL_PROP_THREAD_EXT__BEGIN + 45,
+
+    /// Link metrics query result
+    /** Format: `6Ct(A(t(CD)))` - Unsolicited notifications only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 destination address
+     * `C` : Status
+     * `t(A(t(CD)))` : Array of structs encoded as following:
+     *   `C` : Metric id
+     *   `D` : Metric value
+     *
+     *   +---------------+----+----------------+
+     *   |    Metric     | Id |  Value format  |
+     *   +---------------+----+----------------+
+     *   | Received PDUs |  0 | `L` (uint32_t) |
+     *   | LQI           |  1 | `C` (uint8_t)  |
+     *   | Link margin   |  2 | `C` (uint8_t)  |
+     *   | RSSI          |  3 | `c` (int8_t)   |
+     *   +---------------+----+----------------+
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_QUERY_RESULT = SPINEL_PROP_THREAD_EXT__BEGIN + 46,
+
+    /// Link metrics probe
+    /** Format `6CC` - Write only
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * Send a MLE Link Probe message to the peer.
+     *
+     * `6` : IPv6 destination address
+     * `C` : The Series ID for which this Probe message targets at
+     * `C` : The length of the Probe message, valid range: [0, 64]
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_PROBE = SPINEL_PROP_THREAD_EXT__BEGIN + 47,
+
+    /// Link metrics Enhanced-ACK Based Probing management
+    /** Format: 6Cd - Write only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 destination address
+     * `C` : Indicate whether to register or clear the probing. `0` - clear, `1` - register
+     * `C` : List of requested metric ids encoded as bit fields in single byte
+     *
+     *   +---------------+----+
+     *   |    Metric     | Id |
+     *   +---------------+----+
+     *   | LQI           |  1 |
+     *   | Link margin   |  2 |
+     *   | RSSI          |  3 |
+     *   +---------------+----+
+     *
+     * Result of configuration is reported asynchronously to the Host using the
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE.
+     *
+     * Whenever Enh-ACK IE report is received it is passed to the Host using the
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE property.
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK = SPINEL_PROP_THREAD_EXT__BEGIN + 48,
+
+    /// Link metrics Enhanced-ACK Based Probing IE report
+    /** Format: SEA(t(CD)) - Unsolicited notifications only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `S` : Short address of the Probing Subject
+     * `E` : Extended address of the Probing Subject
+     * `t(A(t(CD)))` : Struct that contains array of structs encoded as following:
+     *   `C` : Metric id
+     *   `D` : Metric value
+     *
+     *   +---------------+----+----------------+
+     *   |    Metric     | Id |  Value format  |
+     *   +---------------+----+----------------+
+     *   | LQI           |  1 | `C` (uint8_t)  |
+     *   | Link margin   |  2 | `C` (uint8_t)  |
+     *   | RSSI          |  3 | `c` (int8_t)   |
+     *   +---------------+----+----------------+
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_ENH_ACK_IE = SPINEL_PROP_THREAD_EXT__BEGIN + 49,
+
+    /// Link metrics Forward Tracking Series management
+    /** Format: 6CCC - Write only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 destination address
+     * `C` : Series id
+     * `C` : Tracked frame types encoded as bit fields in single byte, if equal to zero,
+     *       accounting is stopped and a series is removed
+     * `C` : Requested metric ids encoded as bit fields in single byte
+     *
+     *   +------------------+----+
+     *   |    Frame type    | Id |
+     *   +------------------+----+
+     *   | MLE Link Probe   |  0 |
+     *   | MAC Data         |  1 |
+     *   | MAC Data Request |  2 |
+     *   | MAC ACK          |  3 |
+     *   +------------------+----+
+     *
+     *   +---------------+----+
+     *   |    Metric     | Id |
+     *   +---------------+----+
+     *   | Received PDUs |  0 |
+     *   | LQI           |  1 |
+     *   | Link margin   |  2 |
+     *   | RSSI          |  3 |
+     *   +---------------+----+
+     *
+     * Result of configuration is reported asynchronously to the Host using the
+     * @ref SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE.
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_FORWARD = SPINEL_PROP_THREAD_EXT__BEGIN + 50,
+
+    /// Link metrics management response
+    /** Format: 6C - Unsolicited notifications only
+     *
+     * Required capability: `SPINEL_CAP_THREAD_LINK_METRICS`
+     *
+     * `6` : IPv6 source address
+     * `C` : Received status
+     *
+     */
+    SPINEL_PROP_THREAD_LINK_METRICS_MGMT_RESPONSE = SPINEL_PROP_THREAD_EXT__BEGIN + 51,
 
     /// Multicast Listeners Register Request
     /** Format `t(A(6))A(t(CD))` - Write-only
@@ -3910,7 +4112,9 @@ enum
     /** Format: `A(t(UUSSSd))` - Read/Insert/Remove
      * Required capability: `SPINEL_CAP_SRP_CLIENT`.
      *
-     * This property provide a list/array of services. Data per item is
+     * This property provides a list/array of services.
+     *
+     * Data per item for `SPINEL_CMD_PROP_VALUE_GET` and/or `SPINEL_CMD_PROP_VALUE_INSERT` operation is as follows:
      *
      *   `U` : The service name labels (e.g., "_chip._udp", not the full domain name.
      *   `U` : The service instance name label (not the full name).
@@ -3918,7 +4122,15 @@ enum
      *   `S` : The service priority.
      *   `S` : The service weight.
      *
-     * During remove operation, only service name and service instance name would be used.
+     * For `SPINEL_CMD_PROP_VALUE_REMOVE` command, the following format is used:
+     *
+     *   `U` : The service name labels (e.g., "_chip._udp", not the full domain name.
+     *   `U` : The service instance name label (not the full name).
+     *   `b` : Indicates whether to clear the service entry (optional).
+     *
+     * The last boolean (`b`) field is optional. When included it indicates on `true` to clear the service (clear it
+     * on client immediately with no interaction to server) and on `false` to remove the service (inform server and
+     * wait for the service entry to be removed on server). If it is not included, the value is `false`.
      *
      */
     SPINEL_PROP_SRP_CLIENT_SERVICES = SPINEL_PROP_OPENTHREAD__BEGIN + 23,
@@ -3927,12 +4139,12 @@ enum
     /** Format: `b` : Write only
      * Required capability: `SPINEL_CAP_SRP_CLIENT`.
      *
-     * Writing to this property starts the remove process of the host info and all services.
+     * Writing to this property with starts the remove process of the host info and all services.
      * Please see `otSrpClientRemoveHostAndServices()` for more details.
      *
      * Format is:
      *
-     *    `b` : A boolean indicating whether or not the host key lease should also be removed.
+     *    `b` : A boolean indicating whether or not the host key lease should also be cleared.
      *
      */
     SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_REMOVE = SPINEL_PROP_OPENTHREAD__BEGIN + 24,
@@ -3978,6 +4190,22 @@ enum
      *
      */
     SPINEL_PROP_SRP_CLIENT_EVENT = SPINEL_PROP_OPENTHREAD__BEGIN + 26,
+
+    /// SRP Client Service Key Inclusion Enabled
+    /** Format `b` : Read-Write
+     * Required capability: `SPINEL_CAP_SRP_CLIENT` & `SPINEL_CAP_REFERENCE_DEVICE`.
+     *
+     * This boolean property indicates whether the "service key record inclusion" mode is enabled or not.
+     *
+     * When enabled, SRP client will include KEY record in Service Description Instructions in the SRP update messages
+     * that it sends.
+     *
+     * KEY record is optional in Service Description Instruction (it is required and always included in the Host
+     * Description Instruction). The default behavior of SRP client is to not include it. This function is intended to
+     * override the default behavior for testing only.
+     *
+     */
+    SPINEL_PROP_SRP_CLIENT_SERVICE_KEY_ENABLED = SPINEL_PROP_OPENTHREAD__BEGIN + 27,
 
     SPINEL_PROP_OPENTHREAD__END = 0x2000,
 
@@ -4728,6 +4956,8 @@ SPINEL_API_EXTERN const char *spinel_status_to_cstr(spinel_status_t status);
 SPINEL_API_EXTERN const char *spinel_capability_to_cstr(spinel_capability_t capability);
 
 SPINEL_API_EXTERN const char *spinel_radio_link_to_cstr(uint32_t radio);
+
+SPINEL_API_EXTERN const char *spinel_link_metrics_status_to_cstr(uint8_t status);
 
 // ----------------------------------------------------------------------------
 

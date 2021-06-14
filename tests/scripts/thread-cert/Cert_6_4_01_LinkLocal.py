@@ -63,13 +63,11 @@ class Cert_6_4_1_LinkLocal_Base(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [MTD]
         },
         MTD: {
             'name': 'DUT',
             'is_mtd': True,
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER]
         },

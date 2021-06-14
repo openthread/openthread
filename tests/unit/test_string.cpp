@@ -43,76 +43,64 @@ enum
 
 template <uint16_t kSize> void PrintString(const char *aName, const String<kSize> aString)
 {
-    printf("\t%s = [%d] \"%s\"\n", aName, aString.GetLength(), aString.AsCString());
+    printf("\t%s = [%zu] \"%s\"\n", aName, strlen(aString.AsCString()), aString.AsCString());
 }
 
-void TestString(void)
+void TestStringWriter(void)
 {
-    otError             error;
-    String<kStringSize> str1;
-    String<kStringSize> str2("abc");
-    String<kStringSize> str3("%d", 12);
+    String<kStringSize> str;
+    constexpr char      kLongString[] = "abcdefghijklmnopqratuvwxyzabcdefghijklmnopqratuvwxyz";
 
-    printf("\nTest 1: String constructor\n");
+    printf("\nTest 1: StringWriter constructor\n");
 
-    VerifyOrQuit(str1.GetSize() == kStringSize, "GetSize() failed");
+    VerifyOrQuit(str.GetSize() == kStringSize, "GetSize() failed");
+    VerifyOrQuit(str.GetLength() == 0, "GetLength() failed for empty string");
 
-    VerifyOrQuit(str1.GetLength() == 0, "GetLength() failed for empty string");
-    VerifyOrQuit(str2.GetLength() == 3, "GetLength() failed");
-    VerifyOrQuit(str3.GetLength() == 2, "GetLength() failed");
+    VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
 
-    VerifyOrQuit(strcmp(str1.AsCString(), "") == 0, "String content is incorrect");
-    VerifyOrQuit(strcmp(str2.AsCString(), "abc") == 0, "String content is incorrect");
-    VerifyOrQuit(strcmp(str3.AsCString(), "12") == 0, "String content is incorrect");
-
-    PrintString("str1", str1);
-    PrintString("str2", str2);
-    PrintString("str3", str3);
+    PrintString("str", str);
 
     printf(" -- PASS\n");
 
-    printf("\nTest 2: String::Set() and String::Clear() method\n");
+    printf("\nTest 2: StringWriter::Append() method\n");
 
-    error = str1.Set("Hello");
-    SuccessOrQuit(error, "String::Set() failed unexpectedly");
-    VerifyOrQuit(str1.GetLength() == 5, "GetLength() failed for empty string");
-    VerifyOrQuit(strcmp(str1.AsCString(), "Hello") == 0, "String content is incorrect");
-    PrintString("str1", str1);
+    str.Append("Hi");
+    VerifyOrQuit(str.GetLength() == 2, "GetLength() failed");
+    VerifyOrQuit(strcmp(str.AsCString(), "Hi") == 0, "String content is incorrect");
+    PrintString("str", str);
 
-    str1.Clear();
-    VerifyOrQuit(str1.GetLength() == 0, "GetLength() failed for empty string");
-    VerifyOrQuit(strcmp(str1.AsCString(), "") == 0, "String content is incorrect");
+    str.Append("%s%d", "!", 12);
+    VerifyOrQuit(str.GetLength() == 5, "GetLength() failed");
+    VerifyOrQuit(strcmp(str.AsCString(), "Hi!12") == 0, "String content is incorrect");
+    PrintString("str", str);
 
-    IgnoreError(str1.Set("%d", 12));
-    VerifyOrQuit(str1.GetLength() == 2, "GetLength() failed");
-    VerifyOrQuit(strcmp(str1.AsCString(), "12") == 0, "String content is incorrect");
-    PrintString("str1", str1);
+    str.Append(kLongString);
+    VerifyOrQuit(str.IsTruncated() && str.GetLength() == 5 + sizeof(kLongString) - 1,
+                 "String::Append() did not handle overflow buffer correctly");
+    PrintString("str", str);
 
-    error = str1.Set("abcdefghijklmnopqratuvwxyzabcdefghijklmnopqratuvwxyz");
-    VerifyOrQuit(error == OT_ERROR_NO_BUFS, "String::Set() did not handle overflow buffer correctly");
-    PrintString("str1", str1);
+    printf("\nTest 3: StringWriter::Clear() method\n");
 
-    printf("\nTest 3: String::Append() method\n");
+    str.Clear();
+    str.Append("Hello");
+    VerifyOrQuit(str.GetLength() == 5, "GetLength() failed for empty string");
+    VerifyOrQuit(strcmp(str.AsCString(), "Hello") == 0, "String content is incorrect");
+    PrintString("str", str);
 
-    str2.Clear();
-    VerifyOrQuit(str2.GetLength() == 0, "GetLength() failed for empty string");
-    VerifyOrQuit(strcmp(str2.AsCString(), "") == 0, "String content is incorrect");
+    str.Clear();
+    VerifyOrQuit(str.GetLength() == 0, "GetLength() failed for empty string");
+    VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
 
-    error = str2.Append("Hi");
-    SuccessOrQuit(error, "String::Append() failed unexpectedly");
-    VerifyOrQuit(str2.GetLength() == 2, "GetLength() failed");
-    VerifyOrQuit(strcmp(str2.AsCString(), "Hi") == 0, "String content is incorrect");
-    PrintString("str2", str2);
+    str.Append("%d", 12);
+    VerifyOrQuit(str.GetLength() == 2, "GetLength() failed");
+    VerifyOrQuit(strcmp(str.AsCString(), "12") == 0, "String content is incorrect");
+    PrintString("str", str);
 
-    error = str2.Append("%s%d", "!", 12);
-    SuccessOrQuit(error, "String::Append() failed unexpectedly");
-    VerifyOrQuit(str2.GetLength() == 5, "GetLength() failed");
-    VerifyOrQuit(strcmp(str2.AsCString(), "Hi!12") == 0, "String content is incorrect");
-    PrintString("str2", str2);
-
-    error = str2.Append("abcdefghijklmnopqratuvwxyzabcdefghijklmnopqratuvwxyz");
-    VerifyOrQuit(error == OT_ERROR_NO_BUFS, "String::Append() did not handle overflow buffer correctly");
-    PrintString("str2", str2);
+    str.Clear();
+    str.Append(kLongString);
+    VerifyOrQuit(str.IsTruncated() && str.GetLength() == sizeof(kLongString) - 1,
+                 "String::Clear() + String::Append() did not handle overflow buffer correctly");
+    PrintString("str", str);
 
     printf(" -- PASS\n");
 }
@@ -179,7 +167,7 @@ void TestStringFind(void)
 
 int main(void)
 {
-    ot::TestString();
+    ot::TestStringWriter();
     ot::TestStringLength();
     ot::TestUtf8();
     ot::TestStringFind();

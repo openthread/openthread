@@ -63,7 +63,7 @@ jobs:
         export ASAN_OPTIONS=symbolize=1
         export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
         ./bootstrap
-        make -f examples/Makefile-simulation distcheck
+        VERBOSE=1 make -f examples/Makefile-simulation distcheck
 
   cli-ftd-otns:
     runs-on: ubuntu-20.04
@@ -91,7 +91,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y g++-multilib lcov
+        sudo apt-get --no-install-recommends install -y g++-multilib lcov ninja-build
         ./bootstrap
     - name: Run OTNS Tests
       env:
@@ -126,6 +126,7 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
+      MULTIPLY: 3
     steps:
     - uses: actions/checkout@v2
       with:
@@ -143,10 +144,7 @@ jobs:
         ./script/test get_thread_wireshark
     - name: Run
       run: |
-        for i in {1..10}
-        do
-          ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py
-        done
+        ./script/test cert_suite ./tests/scripts/thread-cert/Cert_*.py ./tests/scripts/thread-cert/test_*.py
     - uses: actions/upload-artifact@v2
       if: ${{ failure() }}
       with:
@@ -202,6 +200,7 @@ jobs:
         path: tmp/coverage.info
 
   cli-mtd:
+    name: cli-mtd MESSAGE_USE_HEAP=${{ matrix.message_use_heap }}
     runs-on: ubuntu-20.04
     strategy:
       matrix:
@@ -321,7 +320,7 @@ jobs:
         name: cov-expects
         path: tmp/coverage.info
 
-  external-commissioner:
+  ot-commissioner:
     runs-on: ubuntu-20.04
     env:
       THREAD_VERSION: 1.1
@@ -361,7 +360,7 @@ jobs:
         ./script/test generate_coverage gcc
     - uses: actions/upload-artifact@v2
       with:
-        name: cov-external-commissioner
+        name: cov-ot-commissioner
         path: tmp/coverage.info
 
   multiple-instance:
@@ -451,8 +450,8 @@ jobs:
       REFERENCE_DEVICE: 1
       THREAD_VERSION: 1.1
       VIRTUAL_TIME: 1
-      CC: clang
-      CXX: clang++
+      CC: clang-10
+      CXX: clang++-10
     steps:
     - uses: actions/checkout@v2
       with:
@@ -460,7 +459,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y python3-setuptools python3-wheel llvm lcov
+        sudo apt-get --no-install-recommends install -y clang-10 clang++-10 python3-setuptools python3-wheel llvm lcov
         python3 -m pip install -r tests/scripts/thread-cert/requirements.txt
         sudo python3 -m pip install git+https://github.com/openthread/pyspinel
     - name: Build
@@ -491,7 +490,7 @@ jobs:
     - cli-mtd
     - cli-time-sync
     - expects
-    - external-commissioner
+    - ot-commissioner
     - multiple-instance
     - ncp-gcc-m32
     - ncp-clang
@@ -506,9 +505,14 @@ jobs:
     - uses: actions/download-artifact@v2
       with:
         path: coverage/
-    - name: Upload Coverage
+    - name: Combine Coverage
       run: |
-        script/test upload_codecov
+        script/test combine_coverage
+    - name: Upload Coverage
+      uses: codecov/codecov-action@v1
+      with:
+        files: final.info
+        fail_ci_if_error: true
 
   delete-coverage-artifacts:
     needs: upload-coverage

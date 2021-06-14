@@ -61,13 +61,10 @@ class Cert_5_3_1_LinkLocal(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface
         },
         DUT_ROUTER1: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1
         },
     }
 

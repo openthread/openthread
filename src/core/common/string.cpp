@@ -32,6 +32,7 @@
  */
 
 #include "string.hpp"
+#include "debug.hpp"
 
 #include <string.h>
 
@@ -65,30 +66,63 @@ const char *StringFind(const char *aString, char aChar)
     return ret;
 }
 
-Error StringBase::Write(char *aBuffer, uint16_t aSize, uint16_t &aLength, const char *aFormat, va_list aArgs)
+bool StringEndsWith(const char *aString, char aChar)
 {
-    Error error = kErrorNone;
-    int   len;
+    size_t len = strlen(aString);
 
-    len = vsnprintf(aBuffer + aLength, aSize - aLength, aFormat, aArgs);
+    return len > 0 && aString[len - 1] == aChar;
+}
 
-    if (len < 0)
+StringWriter::StringWriter(char *aBuffer, uint16_t aSize)
+    : mBuffer(aBuffer)
+    , mLength(0)
+    , mSize(aSize)
+{
+    mBuffer[0] = '\0';
+}
+
+StringWriter &StringWriter::Clear(void)
+{
+    mBuffer[0] = '\0';
+    mLength    = 0;
+    return *this;
+}
+
+StringWriter &StringWriter::Append(const char *aFormat, ...)
+{
+    va_list args;
+    va_start(args, aFormat);
+    AppendVarArgs(aFormat, args);
+    va_end(args);
+
+    return *this;
+}
+
+StringWriter &StringWriter::AppendVarArgs(const char *aFormat, va_list aArgs)
+{
+    int len;
+
+    len = vsnprintf(mBuffer + mLength, (mSize > mLength ? (mSize - mLength) : 0), aFormat, aArgs);
+    OT_ASSERT(len >= 0);
+
+    mLength += static_cast<uint16_t>(len);
+
+    if (IsTruncated())
     {
-        aLength    = 0;
-        aBuffer[0] = 0;
-        error      = kErrorInvalidArgs;
-    }
-    else if (len >= aSize - aLength)
-    {
-        aLength = aSize - 1;
-        error   = kErrorNoBufs;
-    }
-    else
-    {
-        aLength += static_cast<uint16_t>(len);
+        mBuffer[mSize - 1] = '\0';
     }
 
-    return error;
+    return *this;
+}
+
+StringWriter &StringWriter::AppendHexBytes(const uint8_t *aBytes, uint16_t aLength)
+{
+    while (aLength--)
+    {
+        Append("%02x", *aBytes++);
+    }
+
+    return *this;
 }
 
 bool IsValidUtf8String(const char *aString)

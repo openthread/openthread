@@ -56,7 +56,6 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         LEADER: {
@@ -68,7 +67,6 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             },
             'mode': 'rdn',
             'partition_id': 0xffffffff,
-            'router_selection_jitter': 1,
             'allowlist': [COMMISSIONER, ROUTER1]
         },
         ROUTER1: {
@@ -79,7 +77,6 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ROUTER2]
         },
         ROUTER2: {
@@ -90,7 +87,6 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
                 'channel': CHANNEL_INIT
             },
             'mode': 'rdn',
-            'router_selection_jitter': 1,
             'allowlist': [ROUTER1]
         },
     }
@@ -129,6 +125,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
 
         self.nodes[ROUTER2].reset()
         self._setUpRouter2()
+        self.simulator.go(100)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=20,
@@ -137,7 +134,7 @@ class Cert_9_2_15_PendingPartition(thread_cert.TestCase):
             mesh_local='fd00:0db7::',
             panid=PANID_FINAL,
         )
-        self.simulator.go(101)
+        self.simulator.go(100)
 
         self.nodes[ROUTER2].start()
         self.simulator.go(5)

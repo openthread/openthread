@@ -33,15 +33,15 @@
 
 #include "dhcp6_server.hpp"
 
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "thread/mle.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
 
 namespace ot {
 namespace Dhcp6 {
@@ -77,7 +77,7 @@ Error Server::UpdateService(void)
 
         while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
         {
-            if (!config.mDhcp)
+            if (!(config.mDhcp || config.mConfigure))
             {
                 continue;
             }
@@ -94,6 +94,7 @@ Error Server::UpdateService(void)
 
         if (!found)
         {
+            Get<ThreadNetif>().RemoveUnicastAddress(prefixAgent.GetAloc());
             prefixAgent.Clear();
             mPrefixAgentsCount--;
         }
@@ -104,7 +105,7 @@ Error Server::UpdateService(void)
 
     while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, rloc16, config) == kErrorNone)
     {
-        if (!config.mDhcp)
+        if (!(config.mDhcp || config.mConfigure))
         {
             continue;
         }

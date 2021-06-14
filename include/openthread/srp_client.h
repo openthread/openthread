@@ -446,7 +446,7 @@ otError otSrpClientSetHostAddresses(otInstance *aInstance, const otIp6Address *a
 
  * @retval OT_ERROR_NONE          The addition of service started successfully. The `otSrpClientCallback` will be
  *                                called to report the status.
- * @retval OT_ERROR_ALREADY       The same service is already in the list.
+ * @retval OT_ERROR_ALREADY       A service with the same service and instance names is already in the list.
  * @retval OT_ERROR_INVALID_ARGS  The service structure is invalid (e.g., bad service name or `otDnsTxtEntry`).
  *
  */
@@ -472,6 +472,26 @@ otError otSrpClientAddService(otInstance *aInstance, otSrpClientService *aServic
  *
  */
 otError otSrpClientRemoveService(otInstance *aInstance, otSrpClientService *aService);
+
+/**
+ * This function clears a service, immediately removing it from the client service list.
+ *
+ * Unlike `otSrpClientRemoveService()` which sends an update message to the server to remove the service, this function
+ * clears the service from the client's service list without any interaction with the server. On a successful call to
+ * this function, the `otSrpClientCallback` will NOT be called and the @p aService entry can be reclaimed and re-used
+ * by the caller immediately.
+ *
+ * This function can be used along with a subsequent call to `otSrpClientAddService()` (potentially reusing the same @p
+ * aService entry with the same service and instance names) to update some of the parameters in an existing service.
+ *
+ * @param[in] aInstance        A pointer to the OpenThread instance.
+ * @param[in] aService         A pointer to a `otSrpClientService` instance to delete.
+ *
+ * @retval OT_ERROR_NONE       The @p aService is deleted successfully. It can be reclaimed and re-used immediately.
+ * @retval OT_ERROR_NOT_FOUND  The service could not be found in the list.
+ *
+ */
+otError otSrpClientClearService(otInstance *aInstance, otSrpClientService *aService);
 
 /**
  * This function gets the list of services being managed by client.
@@ -507,8 +527,8 @@ otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyL
 /**
  * This function clears all host info and all the services.
  *
- * Unlike `otSrpClientRemoveHostAndServices()` which sends an update message to server to remove/unregister all the
- * info, this function clears all the info immediately without any interaction with server.
+ * Unlike `otSrpClientRemoveHostAndServices()` which sends an update message to the server to remove all the info, this
+ * function clears all the info immediately without any interaction with the server.
  *
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *
@@ -560,6 +580,36 @@ otError otSrpClientSetDomainName(otInstance *aInstance, const char *aName);
  *
  */
 const char *otSrpClientItemStateToString(otSrpClientItemState aItemState);
+
+/**
+ * This function enables/disables "service key record inclusion" mode.
+ *
+ * When enabled, SRP client will include KEY record in Service Description Instructions in the SRP update messages
+ * that it sends.
+ *
+ * This function is available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` configuration is enabled.
+ *
+ * @note KEY record is optional in Service Description Instruction (it is required and always included in the Host
+ * Description Instruction). The default behavior of SRP client is to not include it. This function is intended to
+ * override the default behavior for testing only.
+ *
+ * @param[in] aInstance  A pointer to the OpenThread instance.
+ * @param[in] aEnabled   TRUE to enable, FALSE to disable the "service key record inclusion" mode.
+ *
+ */
+void otSrpClientSetServiceKeyRecordEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
+ * This method indicates whether the "service key record inclusion" mode is enabled or disabled.
+ *
+ * This function is available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` configuration is enabled.
+ *
+ * @param[in] aInstance     A pointer to the OpenThread instance.
+ *
+ * @returns TRUE if "service key record inclusion" mode is enabled, FALSE otherwise.
+ *
+ */
+bool otSrpClientIsServiceKeyRecordEnabled(otInstance *aInstance);
 
 /**
  * @}

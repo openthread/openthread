@@ -48,7 +48,6 @@ class TestIPv6SourceSelection(thread_cert.TestCase):
         ROUTER: {
             'mode': 'rdn',
             'panid': 0xcafe,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
     }

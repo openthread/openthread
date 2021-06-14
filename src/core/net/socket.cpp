@@ -38,7 +38,23 @@ namespace Ip6 {
 
 SockAddr::InfoString SockAddr::ToString(void) const
 {
-    return InfoString("[%s]:%u", GetAddress().ToString().AsCString(), GetPort());
+    InfoString string;
+
+    ToString(string);
+
+    return string;
+}
+
+void SockAddr::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+
+    ToString(writer);
+}
+
+void SockAddr::ToString(StringWriter &aWriter) const
+{
+    aWriter.Append("[%s]:%u", GetAddress().ToString().AsCString(), GetPort());
 }
 
 } // namespace Ip6

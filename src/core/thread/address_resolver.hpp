@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "coap/coap.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -130,28 +132,17 @@ public:
     void Remove(const Ip6::Address &aEid);
 
     /**
-     * This method updates an existing cache entry for the EID.
-     *
-     * @param[in]  aEid               A reference to the EID.
-     * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
-     *
-     * @retval kErrorNone          Successfully updates an existing cache entry.
-     * @retval kErrorNotFound      No cache entry with @p aEid.
-     *
-     */
-    Error UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
-
-    /**
-     * This method adds a snooped cache entry for a given EID.
+     * This method updates an existing entry or adds a snooped cache entry for a given EID.
      *
      * The method is intended to add an entry for snoop optimization (inspection of a received message to create a
      * cache entry mapping an EID to a RLOC).
      *
-     * @param[in]  aEid               A reference to the EID.
-     * @param[in]  aRloc16            The RLOC16 corresponding to @p aEid.
+     * @param[in] aEid             A reference to the EID.
+     * @param[in] aRloc16          The RLOC16 corresponding to @p aEid.
+     * @param[in] aDest            The short MAC address destination of the received snooped message.
      *
      */
-    void AddSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
+    void UpdateSnoopedCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16, Mac::ShortAddress aDest);
 
     /**
      * This method returns the RLOC16 for a given EID, initiates an Address Query if allowed and the mapping is not
@@ -311,6 +302,7 @@ private:
     CacheEntry *FindCacheEntry(const Ip6::Address &aEid, CacheEntryList *&aList, CacheEntry *&aPrevEntry);
     CacheEntry *NewCacheEntry(bool aSnoopedEntry);
     void        RemoveCacheEntry(CacheEntry &aEntry, CacheEntryList &aList, CacheEntry *aPrevEntry, Reason aReason);
+    Error       UpdateCacheEntry(const Ip6::Address &aEid, Mac::ShortAddress aRloc16);
 
     Error SendAddressQuery(const Ip6::Address &aEid);
 
@@ -362,5 +354,7 @@ private:
  */
 
 } // namespace ot
+
+#endif //  OPENTHREAD_FTD
 
 #endif // ADDRESS_RESOLVER_HPP_

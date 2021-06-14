@@ -151,6 +151,7 @@ EXTRA_DIST                                                         = \
     simulator.py                                                     \
     sniffer.py                                                       \
     sniffer_transport.py                                             \
+    test_anycast.py                                                  \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
@@ -168,12 +169,14 @@ EXTRA_DIST                                                         = \
     test_mle.py                                                      \
     test_network_data.py                                             \
     test_network_layer.py                                            \
+    test_ping.py                                                     \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     test_srp_auto_start_mode.py                                      \
+    test_srp_client_save_server_info.py                              \
     test_srp_lease.py                                                \
     test_srp_name_conflicts.py                                       \
     test_srp_register_single_service.py                              \
@@ -206,6 +209,7 @@ check_PROGRAMS                                                     = \
     $(NULL)
 
 check_SCRIPTS                                                      = \
+    test_anycast.py                                                  \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
@@ -223,12 +227,14 @@ check_SCRIPTS                                                      = \
     test_mle.py                                                      \
     test_network_data.py                                             \
     test_network_layer.py                                            \
+    test_ping.py                                                     \
     test_reed_address_solicit_rejected.py                            \
     test_reset.py                                                    \
     test_route_table.py                                              \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     test_srp_auto_start_mode.py                                      \
+    test_srp_client_save_server_info.py                              \
     test_srp_lease.py                                                \
     test_srp_name_conflicts.py                                       \
     test_srp_register_single_service.py                              \

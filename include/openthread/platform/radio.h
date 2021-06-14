@@ -88,7 +88,6 @@ enum
     OT_RADIO_CHANNEL_PAGE_0_MASK = (1U << OT_RADIO_CHANNEL_PAGE_0), ///< 2.4 GHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_PAGE_2      = 2,                               ///< 915 MHz IEEE 802.15.4-2006
     OT_RADIO_CHANNEL_PAGE_2_MASK = (1U << OT_RADIO_CHANNEL_PAGE_2), ///< 915 MHz IEEE 802.15.4-2006
-    OT_RADIO_CHANNEL_PAGE_MAX    = OT_RADIO_CHANNEL_PAGE_2,         ///< Maximum supported channel page value
 };
 
 /**
@@ -127,6 +126,7 @@ enum
     OT_RADIO_CAPS_SLEEP_TO_TX      = 1 << 4, ///< Radio supports direct transition from sleep to TX with CSMA.
     OT_RADIO_CAPS_TRANSMIT_SEC     = 1 << 5, ///< Radio supports tx security.
     OT_RADIO_CAPS_TRANSMIT_TIMING  = 1 << 6, ///< Radio supports tx at specific time.
+    OT_RADIO_CAPS_RECEIVE_TIMING   = 1 << 7, ///< Radio supports rx at specific time.
 };
 
 #define OT_PANID_BROADCAST 0xffff ///< IEEE 802.15.4 Broadcast PAN ID
@@ -230,16 +230,35 @@ typedef struct otRadioFrame
          */
         struct
         {
-            const otMacKey *mAesKey;            ///< The key used for AES-CCM frame security.
-            otRadioIeInfo * mIeInfo;            ///< The pointer to the Header IE(s) related information.
-            uint32_t        mTxDelay;           ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
-            uint32_t        mTxDelayBaseTime;   ///< The base time for the transmission delay.
-            uint8_t         mMaxCsmaBackoffs;   ///< Maximum number of backoffs attempts before declaring CCA failure.
-            uint8_t         mMaxFrameRetries;   ///< Maximum number of retries allowed after a transmission failure.
-            bool            mIsARetx : 1;       ///< True if this frame is a retransmission (ignored by radio driver).
-            bool            mCsmaCaEnabled : 1; ///< Set to true to enable CSMA-CA for this packet, false otherwise.
-            bool            mCslPresent : 1;    ///< Set to true if CSL header IE is present.
-            bool            mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
+            const otMacKey *mAesKey;          ///< The key used for AES-CCM frame security.
+            otRadioIeInfo * mIeInfo;          ///< The pointer to the Header IE(s) related information.
+            uint32_t        mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
+            uint32_t        mTxDelayBaseTime; ///< The base time for the transmission delay.
+            uint8_t         mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
+            uint8_t         mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
+
+            /**
+             * Indicates whether the frame is a retransmission or not.
+             *
+             * If the platform layer does not provide `OT_RADIO_CAPS_TRANSMIT_SEC` capability, it can ignore this flag.
+             *
+             * If the platform provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability, then platform is expected to handle tx
+             * security processing and assignment of frame counter. In this case the following behavior is expected:
+             *
+             * When `mIsARetx` is set, it indicates that OpenThread core has already set the frame counter and key id
+             * (if security is enabled) in the prepared frame. The counter is ensured to match the counter value from
+             * the previous attempts of the same frame. The platform should not assign or change the frame counter (but
+             * may still need to perform security processing depending on `mIsSecurityProcessed` flag).
+             *
+             * If `mIsARetx` is not set, then the frame counter and key id are not set in the frame by OpenThread core
+             * and it is the responsibility of the radio platform to assign them. The platform should update the frame
+             * (assign counter and key id) even if the transmission gets aborted or fails (e.g., channel access error).
+             *
+             */
+            bool mIsARetx : 1;
+            bool mCsmaCaEnabled : 1;       ///< Set to true to enable CSMA-CA for this packet, false otherwise.
+            bool mCslPresent : 1;          ///< Set to true if CSL header IE is present.
+            bool mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.
         } mTxInfo;
 
         /**
@@ -662,6 +681,18 @@ otError otPlatRadioSleep(otInstance *aInstance);
 otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel);
 
 /**
+ * Schedule a radio reception window at a specific time and duration.
+ *
+ * @param[in]  aChannel   The radio channel on which to receive.
+ * @param[in]  aStart     The receive window start time, in microseconds.
+ * @param[in]  aDuration  The receive window duration, in microseconds
+ *
+ * @retval OT_ERROR_NONE    Successfully scheduled receive window.
+ * @retval OT_ERROR_FAILED  The receive window could not be scheduled.
+ */
+otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration);
+
+/**
  * The radio driver calls this method to notify OpenThread of a received frame.
  *
  * @param[in]  aInstance The OpenThread instance structure.
@@ -948,15 +979,20 @@ otError otPlatRadioGetCoexMetrics(otInstance *aInstance, otRadioCoexMetrics *aCo
  *
  * @param[in]  aInstance     The OpenThread instance structure.
  * @param[in]  aCslPeriod    CSL period, 0 for disabling CSL.
- * @param[in]  aExtAddr      The extended source address of CSL receiver's parent device (when the platforms generate
- *                           enhanced ack, platforms may need to know acks to which address should include CSL IE).
+ * @param[in]  aShortAddr    The short source address of CSL receiver's peer.
+ * @param[in]  aExtAddr      The extended source address of CSL receiver's peer.
  *
- * @retval  OT_ERROR_NOT_SUPPORTED  Radio driver doesn't support CSL.
- * @retval  OT_ERROR_FAILED         Other platform specific errors.
- * @retval  OT_ERROR_NONE           Successfully enabled or disabled CSL.
+ * @note Platforms should use CSL peer addresses to include CSL IE when generating enhanced acks.
+ *
+ * @retval  kErrorNotImplemented Radio driver doesn't support CSL.
+ * @retval  kErrorFailed         Other platform specific errors.
+ * @retval  kErrorNone           Successfully enabled or disabled CSL.
  *
  */
-otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr);
+otError otPlatRadioEnableCsl(otInstance *        aInstance,
+                             uint32_t            aCslPeriod,
+                             otShortAddress      aShortAddr,
+                             const otExtAddress *aExtAddr);
 
 /**
  * Update CSL sample time in radio driver.

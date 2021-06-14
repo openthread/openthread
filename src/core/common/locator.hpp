@@ -97,7 +97,7 @@ public:
      * @returns A reference to the `Type` object of the instance.
      *
      */
-    template <typename Type> inline Type &Get(void) const; // Implemented in `locator-getters.hpp`.
+    template <typename Type> inline Type &Get(void) const; // Implemented in `locator_getters.hpp`.
 
 protected:
     /**

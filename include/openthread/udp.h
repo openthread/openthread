@@ -290,6 +290,18 @@ void otUdpForwardReceive(otInstance *        aInstance,
                          uint16_t            aSockPort);
 
 /**
+ * Determines if the given UDP port is exclusively opened by OpenThread API.
+ *
+ * @param[in]  aInstance            A pointer to an OpenThread instance.
+ * @param[in]  port                 UDP port number to verify.
+ *
+ * @retval true    The port is being used exclusively by OpenThread.
+ * @retval false   The port is not used by any of the OpenThread API or is shared (e.g. is Backbone socket).
+ *
+ */
+bool otUdpIsPortInUse(otInstance *aInstance, uint16_t port);
+
+/**
  * @}
  *
  */

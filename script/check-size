@@ -233,19 +233,9 @@ size_nrf52840_version()
 
 size_nrf52840()
 {
+    export OT_SHA_NEW OT_SHA_OLD
 
-    local reporter
-
-    # not on GitHub Actions or not a pull request event
-    if [[ ! ${GITHUB_ACTIONS+x} || ! ${GITHUB_REF-} =~ ^refs/pull/[0-9]+/merge ]]; then
-        reporter=markdown
-    else
-        reporter=./size-report
-        curl -s --retry 5 "${SIZE_REPORT_URL}/bash" >size-report
-        chmod a+x size-report
-        export OT_SHA_NEW OT_SHA_OLD
-    fi
-
+    local reporter="${OT_SIZE_REPORTER:-markdown}"
     "${reporter}" init OpenThread
 
     size_nrf52840_version 1.1

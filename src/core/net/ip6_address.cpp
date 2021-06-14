@@ -118,24 +118,40 @@ uint8_t Prefix::MatchLength(const uint8_t *aPrefixA, const uint8_t *aPrefixB, ui
     return matchedLength;
 }
 
+bool Prefix::IsValidNat64(void) const
+{
+    return (mLength == 32) || (mLength == 40) || (mLength == 48) || (mLength == 56) || (mLength == 64) ||
+           (mLength == 96);
+}
+
 Prefix::InfoString Prefix::ToString(void) const
 {
     InfoString string;
-    uint8_t    sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
 
-    for (uint16_t i = 0; i < sizeInUint16; i++)
-    {
-        IgnoreError(string.Append("%s%x", (i > 0) ? ":" : "", HostSwap16(mPrefix.mFields.m16[i])));
-    }
+    ToString(string);
+
+    return string;
+}
+
+void Prefix::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+
+    ToString(writer);
+}
+
+void Prefix::ToString(StringWriter &aWriter) const
+{
+    uint8_t sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
+
+    static_cast<const Address &>(mPrefix).AppendHexWords(aWriter, sizeInUint16);
 
     if (GetBytesSize() < Address::kSize - 1)
     {
-        IgnoreError(string.Append("::"));
+        aWriter.Append("::");
     }
 
-    IgnoreError(string.Append("/%d", mLength));
-
-    return string;
+    aWriter.Append("/%d", mLength);
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -242,7 +258,7 @@ InterfaceIdentifier::InfoString InterfaceIdentifier::ToString(void) const
 {
     InfoString string;
 
-    IgnoreError(string.AppendHexBytes(mFields.m8, kSize));
+    string.AppendHexBytes(mFields.m8, kSize);
 
     return string;
 }
@@ -453,7 +469,7 @@ bool Address::MatchesFilter(TypeFilter aFilter) const
     return matches;
 }
 
-void Address::SetFromTranslatedIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
+void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address &aIp4Address)
 {
     // The prefix length must be 32, 40, 48, 56, 64, 96. IPv4 bytes are added
     // after the prefix, skipping over the bits 64 to 71 (byte at `kSkipIndex`)
@@ -480,16 +496,14 @@ void Address::SetFromTranslatedIp4Address(const Prefix &aPrefix, const Ip4::Addr
         kSkipIndex = 8,
     };
 
-    uint8_t prefixLen = aPrefix.GetLength();
     uint8_t ip6Index;
 
-    OT_ASSERT((prefixLen == 32) || (prefixLen == 40) || (prefixLen == 48) || (prefixLen == 56) || (prefixLen == 64) ||
-              (prefixLen == 96));
+    OT_ASSERT(aPrefix.IsValidNat64());
 
     Clear();
     SetPrefix(aPrefix);
 
-    ip6Index = prefixLen / CHAR_BIT;
+    ip6Index = aPrefix.GetLength() / CHAR_BIT;
 
     for (uint8_t i = 0; i < Ip4::Address::kSize; i++)
     {
@@ -564,7 +578,7 @@ Error Address::FromString(const char *aString)
             aString++;
             value = (value << 4) + digit;
 
-            VerifyOrExit(value <= NumericLimits<uint16_t>::Max());
+            VerifyOrExit(value <= NumericLimits<uint16_t>::kMax);
         }
 
         VerifyOrExit(aString != start);
@@ -625,9 +639,38 @@ exit:
 
 Address::InfoString Address::ToString(void) const
 {
-    return InfoString("%x:%x:%x:%x:%x:%x:%x:%x", HostSwap16(mFields.m16[0]), HostSwap16(mFields.m16[1]),
-                      HostSwap16(mFields.m16[2]), HostSwap16(mFields.m16[3]), HostSwap16(mFields.m16[4]),
-                      HostSwap16(mFields.m16[5]), HostSwap16(mFields.m16[6]), HostSwap16(mFields.m16[7]));
+    InfoString string;
+
+    ToString(string);
+
+    return string;
+}
+
+void Address::ToString(char *aBuffer, uint16_t aSize) const
+{
+    StringWriter writer(aBuffer, aSize);
+    ToString(writer);
+}
+
+void Address::ToString(StringWriter &aWriter) const
+{
+    AppendHexWords(aWriter, OT_ARRAY_LENGTH(mFields.m16));
+}
+
+void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
+{
+    // Appends the first `aLength` elements in `mFields.m16[]` array
+    // as hex words.
+
+    for (uint8_t index = 0; index < aLength; index++)
+    {
+        if (index > 0)
+        {
+            aWriter.Append(":");
+        }
+
+        aWriter.Append("%x", HostSwap16(mFields.m16[index]));
+    }
 }
 
 const Address &Address::GetLinkLocalAllNodesMulticast(void)

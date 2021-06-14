@@ -144,6 +144,11 @@ typedef struct otExternalRouteConfig
     signed int mPreference : 2;
 
     /**
+     * TRUE, if this is a NAT64 prefix, FALSE, otherwise.
+     */
+    bool mNat64 : 1;
+
+    /**
      * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
      */
     bool mStable : 1;

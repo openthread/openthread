@@ -71,21 +71,17 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER, SED1, MED1]
         },
         ROUTER: {
             'name': 'ROUTER',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         SED1: {
             'name': 'SED',
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [LEADER]
         },
@@ -93,7 +89,6 @@ class Cert_7_1_3_BorderRouterAsLeader(thread_cert.TestCase):
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [LEADER]
         },
     }

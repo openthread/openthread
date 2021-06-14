@@ -117,7 +117,8 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
 /**
  * This method returns the peer x509 certificate base64 encoded.
  *
- * @note This function requires the build-time feature `MBEDTLS_BASE64_C` to be enabled.
+ * @note This function requires the build-time features `MBEDTLS_BASE64_C` and
+ *       `MBEDTLS_SSL_KEEP_PEER_CERTIFICATE` to be enabled.
  *
  * @param[in]   aInstance        A pointer to an OpenThread instance.
  * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
@@ -186,7 +187,7 @@ void otCoapSecureSetCaCertificateChain(otInstance *   aInstance,
  * This method initializes DTLS session with a peer.
  *
  * @param[in]  aInstance               A pointer to an OpenThread instance.
- * @param[in]  aSockAddr               A pointer to the remote sockaddr.
+ * @param[in]  aSockAddr               A pointer to the remote socket address.
  * @param[in]  aHandler                A pointer to a function that will be called when the DTLS connection
  *                                     state changes.
  * @param[in]  aContext                A pointer to arbitrary context information.

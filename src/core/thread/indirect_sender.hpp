@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -236,5 +238,7 @@ private:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // INDIRECT_SENDER_HPP_

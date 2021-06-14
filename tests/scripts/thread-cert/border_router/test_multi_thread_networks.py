@@ -64,14 +64,12 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'is_otbr': True,
             'version': '1.2',
             'channel': CHANNEL1,
-            'router_selection_jitter': 1,
         },
         ROUTER1: {
             'name': 'Router_1',
             'allowlist': [BR1],
             'version': '1.2',
             'channel': CHANNEL1,
-            'router_selection_jitter': 1,
         },
         BR2: {
             'name': 'BR_2',
@@ -79,14 +77,12 @@ class MultiThreadNetworks(thread_cert.TestCase):
             'is_otbr': True,
             'version': '1.2',
             'channel': CHANNEL2,
-            'router_selection_jitter': 1,
         },
         ROUTER2: {
             'name': 'Router_2',
             'allowlist': [BR2],
             'version': '1.2',
             'channel': CHANNEL2,
-            'router_selection_jitter': 1,
         },
     }
 

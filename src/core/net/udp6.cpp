@@ -40,7 +40,7 @@
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "net/checksum.hpp"
 #include "net/ip6.hpp"
 
@@ -371,6 +371,11 @@ exit:
     return error;
 }
 
+bool Udp::IsPortReserved(uint16_t aPort)
+{
+    return aPort == Tmf::kUdpPort || (kSrpServerPortMin <= aPort && aPort <= kSrpServerPortMax);
+}
+
 void Udp::AddSocket(SocketHandle &aSocket)
 {
     SuccessOrExit(mSockets.Add(aSocket));
@@ -407,18 +412,19 @@ exit:
 
 uint16_t Udp::GetEphemeralPort(void)
 {
-    uint16_t rval = mEphemeralPort;
-
-    if (mEphemeralPort < kDynamicPortMax)
+    do
     {
-        mEphemeralPort++;
-    }
-    else
-    {
-        mEphemeralPort = kDynamicPortMin;
-    }
+        if (mEphemeralPort < kDynamicPortMax)
+        {
+            mEphemeralPort++;
+        }
+        else
+        {
+            mEphemeralPort = kDynamicPortMin;
+        }
+    } while (IsPortReserved(mEphemeralPort));
 
-    return rval;
+    return mEphemeralPort;
 }
 
 Message *Udp::NewMessage(uint16_t aReserved, const Message::Settings &aSettings)
@@ -474,7 +480,7 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort));
+    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort) || IsPortInUse(aMessageInfo.mSockPort));
 #endif
 
     for (Receiver *receiver = mReceivers.GetHead(); receiver; receiver = receiver->GetNext())
@@ -524,9 +530,28 @@ exit:
     return;
 }
 
+bool Udp::IsPortInUse(uint16_t aPort) const
+{
+    bool found = false;
+
+    for (const SocketHandle *socket = mSockets.GetHead(); socket != nullptr; socket = socket->GetNext())
+    {
+        if (socket->GetSockName().GetPort() == aPort)
+        {
+            found = true;
+            break;
+        }
+    }
+
+    return found;
+}
+
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
     return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+            && aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort()
+#endif
 #if OPENTHREAD_FTD
             && aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()
 #endif

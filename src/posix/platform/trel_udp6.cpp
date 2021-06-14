@@ -57,6 +57,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/logging.hpp"
+#include "posix/platform/radio_url.hpp"
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
@@ -109,12 +110,12 @@ static const char *BufferToString(const uint8_t *aBuffer, uint16_t aLength)
     char *   cur = &string[0];
     char *   end = &string[sizeof(string) - 1];
 
-    cur += snprintf(cur, end - cur, "[(len:%d) ", aLength);
+    cur += snprintf(cur, (uint16_t)(end - cur), "[(len:%d) ", aLength);
     VerifyOrExit(cur < end);
 
     while (aLength-- && (num < kMaxWrite))
     {
-        cur += snprintf(cur, end - cur, "%02x ", *aBuffer++);
+        cur += snprintf(cur, (uint16_t)(end - cur), "%02x ", *aBuffer++);
         VerifyOrExit(cur < end);
 
         num++;
@@ -122,7 +123,7 @@ static const char *BufferToString(const uint8_t *aBuffer, uint16_t aLength)
 
     if (aLength != 0)
     {
-        cur += snprintf(cur, end - cur, "... ");
+        cur += snprintf(cur, (uint16_t)(end - cur), "... ");
         VerifyOrExit(cur < end);
     }
 
@@ -153,7 +154,7 @@ static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAd
         char             buf[64];
     } request;
 
-    netlinkSocket = socket(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE);
+    netlinkSocket = SocketWithCloseExec(AF_NETLINK, SOCK_DGRAM, NETLINK_ROUTE, kSocketNonBlock);
     VerifyOrDie(netlinkSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     memset(&request, 0, sizeof(request));
@@ -168,7 +169,7 @@ static void UpdateUnicastAddress(const otIp6Address *aUnicastAddress, bool aToAd
     request.ifa.ifa_prefixlen = TREL_UNICAST_ADDRESS_PREFIX_LEN;
     request.ifa.ifa_flags     = IFA_F_NODAD;
     request.ifa.ifa_scope     = TREL_UNICAST_ADDRESS_SCOPE;
-    request.ifa.ifa_index     = sInterfaceIndex;
+    request.ifa.ifa_index     = (unsigned int)(sInterfaceIndex);
 
     rta = reinterpret_cast<struct rtattr *>((reinterpret_cast<char *>(&request)) + NLMSG_ALIGN(request.nh.nlmsg_len));
     rta->rta_type = IFA_LOCAL;
@@ -211,7 +212,7 @@ static void AddUnicastAddress(const otIp6Address *aUnicastAddress)
 
     otLogDebgPlat("[trel] AddUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
-    mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    mgmtFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memcpy(&ifr6.ifr6_addr, aUnicastAddress, sizeof(otIp6Address));
@@ -243,7 +244,7 @@ static void RemoveUnicastAddress(const otIp6Address *aUnicastAddress)
 
     otLogDebgPlat("[trel] RemoveUnicastAddress(%s)", Ip6AddrToString(aUnicastAddress));
 
-    mgmtFd = socket(AF_INET6, SOCK_DGRAM, IPPROTO_IP);
+    mgmtFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(mgmtFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     memcpy(&ifr6.ifr6_addr, aUnicastAddress, sizeof(otIp6Address));
@@ -268,7 +269,7 @@ static void PrepareSocket(void)
 
     otLogDebgPlat("[trel] PrepareSocket()");
 
-    sSocket = socket(AF_INET6, SOCK_DGRAM, 0);
+    sSocket = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, 0, kSocketNonBlock);
     VerifyOrDie(sSocket >= 0, OT_EXIT_ERROR_ERRNO);
 
     // Set the multicast interface index (for tx), disable loop back
@@ -622,15 +623,17 @@ exit:
 //---------------------------------------------------------------------------------------------------------------------
 // platformTrel system
 
-void platformTrelInit(const char *aInterfaceName)
+void platformTrelInit(const char *aTrelUrl)
 {
-    if (aInterfaceName != NULL)
+    if (aTrelUrl != NULL)
     {
-        strncpy(sInterfaceName, aInterfaceName, sizeof(sInterfaceName));
+        ot::Posix::RadioUrl url(aTrelUrl);
+
+        strncpy(sInterfaceName, url.GetPath(), sizeof(sInterfaceName) - 1);
     }
     else
     {
-        strncpy(sInterfaceName, OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME, sizeof(sInterfaceName));
+        strncpy(sInterfaceName, OPENTHREAD_CONFIG_POSIX_APP_TREL_INTERFACE_NAME, sizeof(sInterfaceName) - 1);
     }
 
     sInterfaceName[sizeof(sInterfaceName) - 1] = 0;
@@ -652,6 +655,11 @@ void platformTrelDeinit(void)
     if (sMulticastSocket != -1)
     {
         close(sMulticastSocket);
+    }
+
+    if (!otIp6IsAddressUnspecified(&sInterfaceAddress))
+    {
+        RemoveUnicastAddress(&sInterfaceAddress);
     }
 
     otLogDebgPlat("[trel] platformTrelDeinit()");

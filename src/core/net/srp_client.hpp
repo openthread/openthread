@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include <openthread/srp_client.h>
 
 #include "common/clearable.hpp"
@@ -44,8 +46,6 @@
 #include "net/dns_types.hpp"
 #include "net/ip6.hpp"
 #include "net/udp6.hpp"
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 /**
  * @file
@@ -163,6 +163,7 @@ public:
     class Service : public otSrpClientService, public LinkedListEntry<Service>
     {
         friend class Client;
+        friend class LinkedList<Service>;
 
     public:
         /**
@@ -242,6 +243,7 @@ public:
         void      SetState(ItemState aState);
         TimeMilli GetLeaseRenewTime(void) const { return TimeMilli(mData); }
         void      SetLeaseRenewTime(TimeMilli aTime) { mData = aTime.GetValue(); }
+        bool      Matches(const Service &aOther) const;
     };
 
     /**
@@ -477,7 +479,7 @@ public:
      *
      * @retval kErrorNone          The addition of service started successfully. The `Callback` will be called to
      *                             report the status.
-     * @retval kErrorAlready       The same service is already in the list.
+     * @retval kErrorAlready       A service with the same service and instance names is already in the list.
      * @retval kErrorInvalidArgs   The service structure is invalid (e.g., bad service name or `TxEntry`).
      *
      */
@@ -496,6 +498,22 @@ public:
      */
 
     Error RemoveService(Service &aService);
+
+    /**
+     * This method clears a service, immediately removing it from the client service list.
+     *
+     * Unlike `RemoveService()` which sends an update message to the server to remove the service, this method clears
+     * the service from the client's service list without any interaction with the server. On a successful call
+     * to this method, the `Callback` will NOT be called and the @p aService entry can be reclaimed and re-used by the
+     * caller immediately.
+     *
+     * @param[in] aService     A service to delete from the list.
+     *
+     * @retval kErrorNone      The @p aService is cleared successfully. It can be reclaimed and re-used immediately.
+     * @retval kErrorNotFound  The service could not be found in the list.
+     *
+     */
+    Error ClearService(Service &aService);
 
     /**
      * This method gets the list of services being managed by client.
@@ -528,8 +546,8 @@ public:
     /**
      * This method clears all host info and all the services.
      *
-     * Unlike `RemoveHostAndServices()` which sends an update message to server to remove/unregister all the info, this
-     * method clears all the info immediately without any interaction with server.
+     * Unlike `RemoveHostAndServices()` which sends an update message to the server to remove all the info, this method
+     * clears all the info immediately without any interaction with the server.
      *
      */
     void ClearHostAndServices(void);
@@ -571,6 +589,31 @@ public:
      *
      */
     static const char *ItemStateToString(ItemState aState);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method enables/disables "service key record inclusion" mode.
+     *
+     * When enabled, SRP client will include KEY record in Service Description Instructions in the SRP update messages
+     * that it sends.
+     *
+     * @note KEY record is optional in Service Description Instruction (it is required and always included in the Host
+     * Description Instruction). The default behavior of SRP client is to not include it. This method is added under
+     * `REFERENCE_DEVICE` config and is intended to override the default behavior for testing only.
+     *
+     * @param[in] aEnabled   TRUE to enable, FALSE to disable the "service key record inclusion" mode.
+     *
+     */
+    void SetServiceKeyRecordEnabled(bool aEnabled) { mServiceKeyRecordEnabled = aEnabled; }
+
+    /**
+     * This method indicates whether the "service key record inclusion" mode is enabled or disabled.
+     *
+     * @returns TRUE if "service key record inclusion" mode is enabled, FALSE otherwise.
+     *
+     */
+    bool IsServiceKeyRecordEnabled(void) const { return mServiceKeyRecordEnabled; }
+#endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 private:
     enum : uint8_t
@@ -683,6 +726,11 @@ private:
         kAutoStartDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE,
     };
 
+    enum : uint16_t
+    {
+        kAnycastServerPort = 53, // Port number to use when server is discovered using "network data anycast service".
+    };
+
     // This enumeration type is used by the private `Start()` and
     // `Stop()` methods to indicate whether it is being requested by the
     // user or by the auto-start feature.
@@ -719,13 +767,13 @@ private:
     void         ChangeHostAndServiceStates(const ItemState *aNewStates);
     void         InvokeCallback(Error aError) const;
     void         InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const;
-    void         ClearHostInfoAndServices(void);
     void         HandleHostInfoOrServiceChange(void);
     void         SendUpdate(void);
     Error        PrepareUpdateMessage(Message &aMessage);
     Error        ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair);
     Error        AppendServiceInstructions(Service &aService, Message &aMessage, Info &aInfo);
     Error        AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const;
+    Error        AppendKeyRecord(Message &aMessage, Info &aInfo) const;
     Error        AppendDeleteAllRrsets(Message &aMessage) const;
     Error        AppendHostName(Message &aMessage, Info &aInfo, bool aDoNotCompress = false) const;
     Error        AppendUpdateLeaseOptRecord(Message &aMessage) const;
@@ -766,6 +814,10 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     bool mAutoStartModeEnabled : 1;
     bool mAutoStartDidSelectServer : 1;
+    bool mAutoStartIsUsingAnycastAddress : 1;
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    bool mServiceKeyRecordEnabled : 1;
 #endif
 
     uint16_t mUpdateMessageId;
@@ -784,6 +836,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     AutoStartCallback mAutoStartCallback;
     void *            mAutoStartContext;
+    uint8_t           mServerSequenceNumber;
 #endif
 
     const char *        mDomainName;

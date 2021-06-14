@@ -223,7 +223,7 @@ typedef struct otMessageInfo
                                  ///< Otherwise, specifies the IPv6 Hop Limit.
     bool mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
     bool mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
-    bool mMulticastLoop : 1;     ///< TRUE to allow looping back mutlicast, FALSE otherwise.
+    bool mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
 } otMessageInfo;
 
 /**
@@ -427,7 +427,7 @@ typedef struct otIp6AddressInfo
     const otIp6Address *mAddress;       ///< A pointer to the IPv6 address.
     uint8_t             mPrefixLength;  ///< The prefix length of mAddress if it is a unicast address.
     uint8_t             mScope : 4;     ///< The scope of this address.
-    bool                mIsAnycast : 1; ///< Whether this is an anycast address.
+    bool                mPreferred : 1; ///< Whether this is a preferred address.
 } otIp6AddressInfo;
 
 /**
@@ -492,7 +492,7 @@ void otIp6SetReceiveFilterEnabled(otInstance *aInstance, bool aEnabled);
  * rules.
  * @retval OT_ERROR_NO_BUFS                 Could not allocate necessary message buffers when processing the datagram.
  * @retval OT_ERROR_NO_ROUTE                No route to host.
- * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source addresss is invalid, e.g. an anycast address or a multicast address.
+ * @retval OT_ERROR_INVALID_SOURCE_ADDRESS  Source address is invalid, e.g. an anycast address or a multicast address.
  * @retval OT_ERROR_PARSE                   Encountered a malformed header when processing the message.
  *
  */
@@ -562,7 +562,7 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
- * Convert a human-readable IPv6 address string into a binary representation.
+ * This function converts a human-readable IPv6 address string into a binary representation.
  *
  * @param[in]   aString   A pointer to a NULL-terminated string.
  * @param[out]  aAddress  A pointer to an IPv6 address.
@@ -572,6 +572,58 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
  *
  */
 otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress);
+
+#define OT_IP6_ADDRESS_STRING_SIZE 40 ///< Recommended size for string representation of an IPv6 address.
+
+/**
+ * This function converts a given IPv6 address to a human-readable string.
+ *
+ * The IPv6 address string is formatted as 16 hex values separated by ':' (i.e., "%x:%x:%x:...:%x").
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aAddress  A pointer to an IPv6 address (MUST NOT be NULL).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_ADDRESS_STRING_SIZE`.
+ *
+ */
+void otIp6AddressToString(const otIp6Address *aAddress, char *aBuffer, uint16_t aSize);
+
+#define OT_IP6_SOCK_ADDR_STRING_SIZE 48 ///< Recommended size for string representation of an IPv6 socket address.
+
+/**
+ * This function converts a given IPv6 socket address to a human-readable string.
+ *
+ * The IPv6 socket address string is formatted as "[<address>]:<port>" where `<address> is shown as 16 hex values
+ * separated by ':' and `<port>` is the port number in decimal format (i.e., "[%x:%x:...:%x]:%u")
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aSockAddr A pointer to an IPv6 socket address (MUST NOT be NULL).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_SOCK_ADDR_STRING_SIZE`.
+ *
+ */
+void otIp6SockAddrToString(const otSockAddr *aSockAddr, char *aBuffer, uint16_t aSize);
+
+#define OT_IP6_PREFIX_STRING_SIZE 45 ///< Recommended size for string representation of an IPv6 prefix.
+
+/**
+ * This function converts a given IPv6 prefix to a human-readable string.
+ *
+ * The IPv6 address string is formatted as "%x:%x:%x:...[::]/plen".
+ *
+ * If the resulting string does not fit in @p aBuffer (within its @p aSize characters), the string will be truncated
+ * but the outputted string is always null-terminated.
+ *
+ * @param[in]  aPrefix   A pointer to an IPv6 prefix (MUST NOT be NULL).
+ * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
+ * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_PREFIX_STRING_SIZE`.
+ *
+ */
+void otIp6PrefixToString(const otIp6Prefix *aPrefix, char *aBuffer, uint16_t aSize);
 
 /**
  * This function returns the prefix match length (bits) for two IPv6 addresses.
@@ -674,8 +726,8 @@ void otIp6SetSlaacPrefixFilter(otInstance *aInstance, otIp6SlaacPrefixFilter aFi
  *                       OT_ERROR_RESPONSE_TIMEOUT when failed to receive MLR.rsp,
  *                       OT_ERROR_PARSE when failed to parse MLR.rsp.
  * @param[in]  aMlrStatus         The Multicast Listener Registration status when @p aError is OT_ERROR_NONE.
- * @param[in]  aFailedAddresses   A pointer to the failed Ip6 addresses when @p aError is OT_ERROR_NONE.
- * @param[in]  aFailedAddressNum  The number of failed Ip6 addresses when @p aError is OT_ERROR_NONE.
+ * @param[in]  aFailedAddresses   A pointer to the failed IPv6 addresses when @p aError is OT_ERROR_NONE.
+ * @param[in]  aFailedAddressNum  The number of failed IPv6 addresses when @p aError is OT_ERROR_NONE.
  *
  * @sa otIp6RegisterMulticastListeners
  *
@@ -718,6 +770,20 @@ otError otIp6RegisterMulticastListeners(otInstance *                            
                                         const uint32_t *                        aTimeout,
                                         otIp6RegisterMulticastListenersCallback aCallback,
                                         void *                                  aContext);
+
+/**
+ * This function sets the Mesh Local IID (for test purpose).
+ *
+ * Only available when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[in]   aIid        A pointer to the Mesh Local IID to set.
+ *
+ * @retval  OT_ERROR_NONE           Successfully set the Mesh Local IID.
+ * @retval  OT_ERROR_INVALID_STATE  Thread protocols are enabled.
+ *
+ */
+otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifier *aIid);
 
 /**
  * @}

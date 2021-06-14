@@ -32,13 +32,13 @@
 
 #include "trel_packet.hpp"
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
 namespace Trel {
@@ -83,29 +83,28 @@ Header::InfoString Header::ToString(void) const
     switch (type)
     {
     case kTypeBroadcast:
-        IgnoreError(string.Set("broadcast ch:%d", GetChannel()));
+        string.Append("broadcast ch:%d", GetChannel());
         break;
 
     case kTypeUnicast:
-        IgnoreError(string.Set("unicast ch:%d", GetChannel()));
+        string.Append("unicast ch:%d", GetChannel());
         break;
 
     case kTypeAck:
-        IgnoreError(string.Set("ack"));
+        string.Append("ack");
         break;
     }
 
-    IgnoreError(
-        string.Append(" panid:%04x num:%lu src:%s", GetPanId(), GetPacketNumber(), GetSource().ToString().AsCString()));
+    string.Append(" panid:%04x num:%lu src:%s", GetPanId(), GetPacketNumber(), GetSource().ToString().AsCString());
 
     if ((type == kTypeUnicast) || (type == kTypeAck))
     {
-        IgnoreError(string.Append(" dst:%s", GetDestination().ToString().AsCString()));
+        string.Append(" dst:%s", GetDestination().ToString().AsCString());
     }
 
     if ((type == kTypeUnicast) || (type == kTypeBroadcast))
     {
-        IgnoreError(string.Append(GetAckMode() == kNoAck ? " no-ack" : " ack-req"));
+        string.Append(GetAckMode() == kNoAck ? " no-ack" : " ack-req");
     }
 
     return string;

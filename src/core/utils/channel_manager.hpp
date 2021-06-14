@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
+
 #include <openthread/platform/radio.h>
 
 #include "common/locator.hpp"
@@ -54,8 +56,6 @@ namespace Utils {
  *
  * @{
  */
-
-#if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 /**
  * This class implements the Channel Manager.
@@ -227,6 +227,22 @@ public:
      */
     void SetFavoredChannels(uint32_t aChannelMask);
 
+    /**
+     * This method gets the CCA failure rate threshold
+     *
+     * @returns  The CCA failure rate threshold
+     *
+     */
+    uint16_t GetCcaFailureRateThreshold(void) const { return mCcaFailureRateThreshold; }
+
+    /**
+     * This method sets the CCA failure rate threshold
+     *
+     * @param[in]  aThreshold  A CCA failure rate threshold.
+     *
+     */
+    void SetCcaFailureRateThreshold(uint16_t aThreshold);
+
 private:
     enum
     {
@@ -281,9 +297,8 @@ private:
     TimerMilli       mTimer;
     uint32_t         mAutoSelectInterval;
     bool             mAutoSelectEnabled;
+    uint16_t         mCcaFailureRateThreshold;
 };
-
-#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 /**
  * @}
@@ -292,5 +307,7 @@ private:
 
 } // namespace Utils
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
 
 #endif // CHANNEL_MANAGER_HPP_

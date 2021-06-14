@@ -28,23 +28,16 @@
 
 add_executable(ot-cli
     main.c
-    cli.cpp
-)
-
-set_target_properties(
-    ot-cli
-    PROPERTIES
-        C_STANDARD 99
-        CXX_STANDARD 11
+    cli_readline.cpp
+    cli_stdio.cpp
 )
 
 target_include_directories(ot-cli PRIVATE ${COMMON_INCLUDES})
 
+if (READLINE)
 target_compile_definitions(ot-cli PRIVATE
-    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>
-    OPENTHREAD_POSIX_APP_TYPE=OT_POSIX_APP_TYPE_CLI
-    ${OT_PLATFORM_DEFINES}
-)
+    $<$<BOOL:${READLINE}>:HAVE_LIB$<UPPER_CASE:${OT_READLINE}>=1>)
+endif()
 
 target_compile_options(ot-cli PRIVATE
     ${OT_CFLAGS}
@@ -52,14 +45,15 @@ target_compile_options(ot-cli PRIVATE
 
 target_link_libraries(ot-cli
     openthread-cli-ftd
-    ${OT_PLATFORM_LIB}
+    openthread-posix
     openthread-ftd
-    ${OT_PLATFORM_LIB}
+    openthread-posix
     openthread-cli-ftd
     openthread-hdlc
     openthread-spinel-rcp
     ${OT_MBEDTLS}
     ${READLINE_LINK_LIBRARIES}
+    ot-config
 )
 
 

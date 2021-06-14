@@ -41,7 +41,7 @@ install_packages_pretty_format()
     sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 || echo 'WARNING: could not install clang-format-9 and clang-tidy-9, which is useful if you plan to contribute C/C++ code to the OpenThread project.'
 
     # add yapf for pretty
-    python3 -m pip install yapf==0.29.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
+    python3 -m pip install yapf==0.31.0 || echo 'WARNING: could not install yapf, which is useful if you plan to contribute python code to the OpenThread project.'
 
     # add mdv for local size report
     python3 -m pip install mdv || echo 'WARNING: could not install mdv, which is required to post markdown size report for OpenThread.'
@@ -61,15 +61,16 @@ install_packages_apt()
     echo 'Installing GNU Arm Embedded Toolchain...'
 
     PLATFORM=$(lsb_release -is)
+    ARCH=$(arch)
 
     if [ "$PLATFORM" = "Raspbian" ]; then
         sudo apt-get --no-install-recommends install -y binutils-arm-none-eabi gcc-arm-none-eabi gdb-arm-none-eabi libnewlib-arm-none-eabi libstdc++-arm-none-eabi-newlib
     elif [ "$PLATFORM" = "Ubuntu" ]; then
         sudo apt-get --no-install-recommends install -y ca-certificates wget
         (cd /tmp \
-            && wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
-            && tar xjf gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 -C /opt \
-            && rm gcc-arm-none-eabi-9-2020-q2-update-x86_64-linux.tar.bz2 \
+            && wget -c https://developer.arm.com/-/media/Files/downloads/gnu-rm/9-2020q2/gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
+            && sudo tar xjf gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 -C /opt \
+            && rm gcc-arm-none-eabi-9-2020-q2-update-"$ARCH"-linux.tar.bz2 \
             && sudo ln -s -f /opt/gcc-arm-none-eabi-9-2020-q2-update/bin/* /usr/local/bin/.)
     fi
 

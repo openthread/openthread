@@ -31,11 +31,11 @@
  *   This file implements FTD-specific mesh forwarding of IPv6/6LoWPAN messages.
  */
 
-#if OPENTHREAD_FTD
-
 #include "mesh_forwarder.hpp"
 
-#include "common/locator-getters.hpp"
+#if OPENTHREAD_FTD
+
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/ip6.hpp"
@@ -117,6 +117,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
         break;
     }
 
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
     case Message::kTypeSupervision:
     {
         Child *child = Get<Utils::ChildSupervisor>().GetDestination(aMessage);
@@ -124,6 +125,7 @@ Error MeshForwarder::SendMessage(Message &aMessage)
         mIndirectSender.AddMessageForSleepyChild(aMessage, *child);
         break;
     }
+#endif
 
     default:
         aMessage.SetDirectTransmission();
@@ -402,6 +404,131 @@ exit:
     return error;
 }
 
+void MeshForwarder::EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const
+{
+    const Neighbor *neighbor;
+    uint8_t         curCost = 0x00;
+
+    // Path cost
+    curCost = Get<Mle::MleRouter>().GetCost(aDest);
+
+    if (!Mle::MleRouter::IsActiveRouter(aDest))
+    {
+        // Assume best link between remote child server and its parent.
+        curCost += 1;
+    }
+
+    // Cost if the server is direct neighbor.
+    neighbor = Get<NeighborTable>().FindNeighbor(aDest);
+
+    if (neighbor != nullptr && neighbor->IsStateValid())
+    {
+        uint8_t cost;
+
+        if (!Mle::MleRouter::IsActiveRouter(aDest))
+        {
+            // Cost calculated only from Link Quality In as the parent only maintains
+            // one-direction link info.
+            cost = Mle::MleRouter::LinkQualityToCost(neighbor->GetLinkInfo().GetLinkQuality());
+        }
+        else
+        {
+            cost = Get<Mle::MleRouter>().GetLinkCost(Mle::Mle::RouterIdFromRloc16(aDest));
+        }
+
+        // Choose the minimum cost
+        curCost = OT_MIN(curCost, cost);
+    }
+
+    if ((aBestDest == Mac::kShortAddrInvalid) || (curCost < aBestCost))
+    {
+        aBestDest = aDest;
+        aBestCost = curCost;
+    }
+}
+
+Error MeshForwarder::AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aMeshDest) const
+{
+    NetworkData::Iterator iterator = NetworkData::kIteratorInit;
+    uint8_t               bestCost = Mle::kMaxRouteCost;
+    uint16_t              bestDest = Mac::kShortAddrInvalid;
+    uint8_t               routerId;
+
+    switch (aType)
+    {
+    case kAnycastDhcp6Agent:
+    case kAnycastNeighborDiscoveryAgent:
+    {
+        NetworkData::OnMeshPrefixConfig config;
+        Lowpan::Context                 context;
+
+        SuccessOrExit(Get<NetworkData::Leader>().GetContext(aServiceId, context));
+
+        while (Get<NetworkData::Leader>().GetNextOnMeshPrefix(iterator, config) == kErrorNone)
+        {
+            if (config.GetPrefix() != context.mPrefix)
+            {
+                continue;
+            }
+
+            switch (aType)
+            {
+            case kAnycastDhcp6Agent:
+                if (!(config.mDhcp || config.mConfigure))
+                {
+                    continue;
+                }
+                break;
+            case kAnycastNeighborDiscoveryAgent:
+                if (!config.mNdDns)
+                {
+                    continue;
+                }
+                break;
+            default:
+                OT_ASSERT(false);
+                break;
+            }
+
+            EvaluateRoutingCost(config.mRloc16, bestCost, bestDest);
+        }
+
+        break;
+    }
+    case kAnycastService:
+    {
+        NetworkData::ServiceConfig config;
+
+        while (Get<NetworkData::Leader>().GetNextService(iterator, config) == kErrorNone)
+        {
+            if (config.mServiceId != aServiceId)
+            {
+                continue;
+            }
+
+            EvaluateRoutingCost(config.mServerConfig.mRloc16, bestCost, bestDest);
+        }
+
+        break;
+    }
+    }
+
+    routerId = Mle::Mle::RouterIdFromRloc16(bestDest);
+
+    if (!(Mle::Mle::IsActiveRouter(bestDest) ||
+          Mle::Mle::Rloc16FromRouterId(routerId) == Get<Mle::MleRouter>().GetRloc16()))
+    {
+        // if agent is neither active router nor child of this device
+        // use the parent of the ED Agent as Dest
+        bestDest = Mle::Mle::Rloc16FromRouterId(routerId);
+    }
+
+    aMeshDest = bestDest;
+
+exit:
+    return (bestDest != Mac::kShortAddrInvalid) ? kErrorNone : kErrorNoRoute;
+}
+
 Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage)
 {
     Mle::MleRouter &mle   = Get<Mle::MleRouter>();
@@ -428,28 +555,13 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
         }
         else if (aloc16 <= Mle::kAloc16DhcpAgentEnd)
         {
-            uint16_t agentRloc16;
-            uint8_t  routerId;
-            VerifyOrExit((Get<NetworkData::Leader>().GetRlocByContextId(
-                              static_cast<uint8_t>(aloc16 & Mle::kAloc16DhcpAgentMask), agentRloc16) == kErrorNone),
-                         error = kErrorDrop);
-
-            routerId = Mle::Mle::RouterIdFromRloc16(agentRloc16);
-
-            // if agent is active router or the child of the device
-            if ((Mle::Mle::IsActiveRouter(agentRloc16)) || (Mle::Mle::Rloc16FromRouterId(routerId) == mle.GetRloc16()))
-            {
-                mMeshDest = agentRloc16;
-            }
-            else
-            {
-                // use the parent of the ED Agent as Dest
-                mMeshDest = Mle::Mle::Rloc16FromRouterId(routerId);
-            }
+            uint8_t contextId = static_cast<uint8_t>(aloc16 - Mle::kAloc16DhcpAgentStart + 1);
+            SuccessOrExit(error = AnycastRouteLookup(contextId, kAnycastDhcp6Agent, mMeshDest));
         }
         else if (aloc16 <= Mle::kAloc16ServiceEnd)
         {
-            SuccessOrExit(error = GetDestinationRlocByServiceAloc(aloc16, mMeshDest));
+            uint8_t serviceId = static_cast<uint8_t>(aloc16 - Mle::kAloc16ServiceStart);
+            SuccessOrExit(error = AnycastRouteLookup(serviceId, kAnycastService, mMeshDest));
         }
         else if (aloc16 <= Mle::kAloc16CommissionerEnd)
         {
@@ -463,9 +575,14 @@ Error MeshForwarder::UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage
             mMeshDest = Get<BackboneRouter::Leader>().GetServer16();
         }
 #endif
+        else if ((aloc16 >= Mle::kAloc16NeighborDiscoveryAgentStart) &&
+                 (aloc16 <= Mle::kAloc16NeighborDiscoveryAgentEnd))
+        {
+            uint8_t contextId = static_cast<uint8_t>(aloc16 - Mle::kAloc16NeighborDiscoveryAgentStart + 1);
+            SuccessOrExit(error = AnycastRouteLookup(contextId, kAnycastNeighborDiscoveryAgent, mMeshDest));
+        }
         else
         {
-            // TODO: support for Neighbor Discovery Agent ALOC
             ExitNow(error = kErrorDrop);
         }
     }
@@ -704,22 +821,11 @@ void MeshForwarder::UpdateRoutes(const uint8_t *     aFrame,
     if (!ip6Header.GetSource().GetIid().IsLocator() &&
         Get<NetworkData::Leader>().IsOnMesh(ip6Header.GetSource()) /* only for on mesh address which may require AQ */)
     {
-        if (Get<AddressResolver>().UpdateCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort()) == kErrorNotFound)
-        {
-            // Thread 1.1 Specification 5.5.2.2: FTDs MAY add/update
-            // EID-to-RLOC Map Cache entries by inspecting packets
-            // being received. We exclude frames from an MTD child
-            // source and verify that the destination is the device
-            // itself or an MTD child of the device.
+        // FTDs MAY add/update EID-to-RLOC Map Cache entries by
+        // inspecting packets being received.
 
-            if (Get<Mle::MleRouter>().IsFullThreadDevice() &&
-                !Get<Mle::MleRouter>().IsMinimalChild(aMeshSource.GetShort()) &&
-                (aMeshDest.GetShort() == Get<Mac::Mac>().GetShortAddress() ||
-                 Get<Mle::MleRouter>().IsMinimalChild(aMeshDest.GetShort())))
-            {
-                Get<AddressResolver>().AddSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort());
-            }
-        }
+        Get<AddressResolver>().UpdateSnoopedCacheEntry(ip6Header.GetSource(), aMeshSource.GetShort(),
+                                                       aMeshDest.GetShort());
     }
 
     neighbor = Get<NeighborTable>().FindNeighbor(ip6Header.GetSource());
@@ -879,98 +985,6 @@ exit:
     }
 
     return;
-}
-
-Error MeshForwarder::GetDestinationRlocByServiceAloc(uint16_t aServiceAloc, uint16_t &aMeshDest)
-{
-    Error                          error      = kErrorNone;
-    uint8_t                        serviceId  = Mle::Mle::ServiceIdFromAloc(aServiceAloc);
-    const NetworkData::ServiceTlv *serviceTlv = Get<NetworkData::Leader>().FindServiceById(serviceId);
-
-    if (serviceTlv != nullptr)
-    {
-        const NetworkData::NetworkDataTlv *cur = serviceTlv->GetSubTlvs();
-        const NetworkData::NetworkDataTlv *end = serviceTlv->GetNext();
-        Neighbor *                         neighbor;
-        uint16_t                           server16;
-        uint8_t                            bestCost = Mle::kMaxRouteCost;
-        uint8_t                            curCost  = 0x00;
-        uint16_t                           bestDest = Mac::kShortAddrInvalid;
-
-        while (cur < end)
-        {
-            switch (cur->GetType())
-            {
-            case NetworkData::NetworkDataTlv::kTypeServer:
-                server16 = static_cast<const NetworkData::ServerTlv *>(cur)->GetServer16();
-
-                // Path cost
-                curCost = Get<Mle::MleRouter>().GetCost(server16);
-
-                if (!Mle::MleRouter::IsActiveRouter(server16))
-                {
-                    // Assume best link between remote child server and its parent.
-                    curCost += 1;
-                }
-
-                // Cost if the server is direct neighbor.
-                neighbor = Get<NeighborTable>().FindNeighbor(server16);
-
-                if (neighbor != nullptr && neighbor->IsStateValid())
-                {
-                    uint8_t cost;
-
-                    if (!Mle::MleRouter::IsActiveRouter(server16))
-                    {
-                        // Cost calculated only from Link Quality In as the parent only maintains
-                        // one-direction link info.
-                        cost = Mle::MleRouter::LinkQualityToCost(neighbor->GetLinkInfo().GetLinkQuality());
-                    }
-                    else
-                    {
-                        cost = Get<Mle::MleRouter>().GetLinkCost(Mle::Mle::RouterIdFromRloc16(server16));
-                    }
-
-                    // Choose the minimum cost
-                    if (cost < curCost)
-                    {
-                        curCost = cost;
-                    }
-                }
-
-                if ((bestDest == Mac::kShortAddrInvalid) || (curCost < bestCost))
-                {
-                    bestDest = server16;
-                    bestCost = curCost;
-                }
-
-                break;
-
-            default:
-                break;
-            }
-
-            cur = cur->GetNext();
-        }
-
-        if (bestDest != Mac::kShortAddrInvalid)
-        {
-            aMeshDest = bestDest;
-        }
-        else
-        {
-            // ServiceTLV without ServerTLV? Can't forward packet anywhere.
-            ExitNow(error = kErrorNoRoute);
-        }
-    }
-    else
-    {
-        // Unknown service, can't forward
-        ExitNow(error = kErrorNoRoute);
-    }
-
-exit:
-    return error;
 }
 
 // LCOV_EXCL_START

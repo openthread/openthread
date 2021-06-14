@@ -67,6 +67,20 @@ typedef enum
 } otDnsRecursionFlag;
 
 /**
+ * This enumeration type represents the NAT64 mode in an `otDnsQueryConfig`.
+ *
+ * The NAT64 mode indicates whether to allow or disallow NAT64 address translation during DNS client address resolution.
+ * This mode is only used when `OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE` is enabled.
+ *
+ */
+typedef enum
+{
+    OT_DNS_NAT64_UNSPECIFIED = 0, ///< NAT64 mode is not specified. Use default NAT64 mode.
+    OT_DNS_NAT64_ALLOW       = 1, ///< Allow NAT64 address translation during DNS client address resolution.
+    OT_DNS_NAT64_DISALLOW    = 2, ///< Do not allow NAT64 address translation during DNS client address resolution.
+} otDnsNat64Mode;
+
+/**
  * This structure represents a DNS query configuration.
  *
  * Any of the fields in this structure can be set to zero to indicate that it is not specified. How the unspecified
@@ -79,6 +93,7 @@ typedef struct otDnsQueryConfig
     uint32_t           mResponseTimeout; ///< Wait time (in msec) to rx response. Zero indicates unspecified value.
     uint8_t            mMaxTxAttempts;   ///< Maximum tx attempts before reporting failure. Zero for unspecified value.
     otDnsRecursionFlag mRecursionFlag;   ///< Indicates whether the server can resolve the query recursively or not.
+    otDnsNat64Mode     mNat64Mode;       ///< Allow/Disallow NAT64 address translation during address resolution.
 } otDnsQueryConfig;
 
 /**
@@ -86,7 +101,7 @@ typedef struct otDnsQueryConfig
  *
  * When OpenThread stack starts, the default DNS query config is determined from a set of OT config options such as
  * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_IP6_ADDRESS`, `_DEFAULT_SERVER_PORT`, `_DEFAULT_RESPONSE_TIMEOUT`, etc.
- * (see `config/dns_clinet.h` for all related config options).
+ * (see `config/dns_client.h` for all related config options).
  *
  * @param[in]  aInstance        A pointer to an OpenThread instance.
  *

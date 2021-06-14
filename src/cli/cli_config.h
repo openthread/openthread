@@ -49,7 +49,7 @@
 /**
  * @def OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
  *
- * The maximum size of the CLI line in bytes.
+ * The maximum size of the CLI line in bytes including the null terminator.
  *
  */
 #ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH

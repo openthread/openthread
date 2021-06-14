@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_FTD
+
 #include "common/code_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -294,5 +296,7 @@ private:
  */
 
 } // namespace ot
+
+#endif // OPENTHREAD_FTD
 
 #endif // DATA_POLL_HANDLER_HPP_

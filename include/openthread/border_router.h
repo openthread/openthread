@@ -57,25 +57,20 @@ extern "C" {
  *
  * @note  This method MUST be called before any other otBorderRouting* APIs.
  *
- * @param[in]  aInstance                 A pointer to an OpenThread instance.
- * @param[in]  aInfraIfIndex             The infrastructure interface index.
- * @param[in]  aInfraIfIsRunning         A boolean that indicates whether the infrastructure
- *                                       interface is running.
- * @param[in]  aInfraIfLinkLocalAddress  A pointer to the IPv6 link-local address of the infrastructure
- *                                       interface. NULL if the IPv6 link-local address is missing.
+ * @param[in]  aInstance          A pointer to an OpenThread instance.
+ * @param[in]  aInfraIfIndex      The infrastructure interface index.
+ * @param[in]  aInfraIfIsRunning  A boolean that indicates whether the infrastructure
+ *                                interface is running.
  *
  * @retval  OT_ERROR_NONE           Successfully started the Border Routing Manager on given infrastructure.
  * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager has already been initialized.
- * @retval  OT_ERROR_INVALID_ARGS   The index or the IPv6 link-local address of the infra interface is not valid.
+ * @retval  OT_ERROR_INVALID_ARGS   The index of the infrastructure interface is not valid.
  * @retval  OT_ERROR_FAILED         Internal failure. Usually due to failure in generating random prefixes.
  *
  * @sa otPlatInfraIfStateChanged.
  *
  */
-otError otBorderRoutingInit(otInstance *        aInstance,
-                            uint32_t            aInfraIfIndex,
-                            bool                aInfraIfIsRunning,
-                            const otIp6Address *aInfraIfLinkLocalAddress);
+otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning);
 
 /**
  * This method enables/disables the Border Routing Manager.

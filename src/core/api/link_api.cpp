@@ -36,7 +36,7 @@
 #include <openthread/link.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "mac/mac.hpp"
 #include "radio/radio.hpp"
 
@@ -520,7 +520,7 @@ exit:
 
 uint32_t otLinkCslGetTimeout(otInstance *aInstance)
 {
-    return static_cast<Instance *>(aInstance)->Get<Mac::Mac>().GetCslTimeout();
+    return static_cast<Instance *>(aInstance)->Get<Mle::MleRouter>().GetCslTimeout();
 }
 
 otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
@@ -529,7 +529,7 @@ otError otLinkCslSetTimeout(otInstance *aInstance, uint32_t aTimeout)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(kMaxCslTimeout >= aTimeout, error = kErrorInvalidArgs);
-    instance.Get<Mac::Mac>().SetCslTimeout(aTimeout);
+    instance.Get<Mle::MleRouter>().SetCslTimeout(aTimeout);
 
 exit:
     return error;

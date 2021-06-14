@@ -235,7 +235,6 @@ enum AlocAllocation
     kAloc16Leader                      = 0xfc00,
     kAloc16DhcpAgentStart              = 0xfc01,
     kAloc16DhcpAgentEnd                = 0xfc0f,
-    kAloc16DhcpAgentMask               = 0x000f,
     kAloc16ServiceStart                = 0xfc10,
     kAloc16ServiceEnd                  = 0xfc2f,
     kAloc16CommissionerStart           = 0xfc30,
@@ -297,9 +296,10 @@ static_assert(kTimeSinceLastTransactionMax * 1000 > kTimeSinceLastTransactionMax
  */
 enum class ChildDuaState : uint8_t
 {
-    kAdded,   ///< A new DUA registered by the Child via Address Registration.
-    kChanged, ///< A different DUA registered by the Child via Address Registration.
-    kRemoved, ///< DUA registered by the Child is removed and not in Address Registration.
+    kAdded,     ///< A new DUA registered by the Child via Address Registration.
+    kChanged,   ///< A different DUA registered by the Child via Address Registration.
+    kRemoved,   ///< DUA registered by the Child is removed and not in Address Registration.
+    kUnchanged, ///< The Child registers the same DUA again.
 };
 
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2

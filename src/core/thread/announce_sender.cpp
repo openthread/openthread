@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "meshcop/meshcop.hpp"
@@ -46,34 +46,76 @@
 
 namespace ot {
 
+//---------------------------------------------------------------------------------------------------------------------
+// AnnounceSenderBase
+
 AnnounceSenderBase::AnnounceSenderBase(Instance &aInstance, Timer::Handler aHandler)
     : InstanceLocator(aInstance)
     , mPeriod(0)
     , mJitter(0)
     , mCount(0)
     , mChannel(0)
+    , mStartingChannel(kChannelIteratorFirst)
     , mTimer(aInstance, aHandler)
 {
 }
 
-void AnnounceSenderBase::SendAnnounce(Mac::ChannelMask aChannelMask, uint8_t aCount, uint32_t aPeriod, uint16_t aJitter)
+void AnnounceSenderBase::SendAnnounce(uint8_t aCount)
 {
-    VerifyOrExit(aPeriod != 0);
-    VerifyOrExit(aJitter < aPeriod);
+    if (IsRunning())
+    {
+        mCount += aCount;
+        ExitNow();
+    }
 
-    aChannelMask.Intersect(Get<Mac::Mac>().GetSupportedChannelMask());
-    VerifyOrExit(!aChannelMask.IsEmpty());
+    VerifyOrExit((mPeriod != 0) && !mChannelMask.IsEmpty());
 
+    SelectStartingChannel();
+
+    mCount   = aCount;
+    mChannel = mStartingChannel;
+
+    mTimer.Start(Random::NonCrypto::GetUint32InRange(0, mJitter + 1));
+
+exit:
+    return;
+}
+
+void AnnounceSenderBase::Stop(void)
+{
+    mTimer.Stop();
+    mCount = 0;
+}
+
+void AnnounceSenderBase::SetChannelMask(Mac::ChannelMask aChannelMask)
+{
     mChannelMask = aChannelMask;
-    mCount       = aCount;
-    mPeriod      = aPeriod;
-    mJitter      = aJitter;
-    mChannel     = Mac::ChannelMask::kChannelIteratorFirst;
+    mChannelMask.Intersect(Get<Mac::Mac>().GetSupportedChannelMask());
 
-    mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
+    VerifyOrExit(!mChannelMask.IsEmpty(), Stop());
+    SelectStartingChannel();
 
-    otLogInfoMle("Starting periodic MLE Announcements tx, mask %s, count %u, period %u, jitter %u",
-                 aChannelMask.ToString().AsCString(), aCount, aPeriod, aJitter);
+exit:
+    return;
+}
+
+void AnnounceSenderBase::SetStartingChannel(uint8_t aStartingChannel)
+{
+    mStartingChannel = aStartingChannel;
+    SelectStartingChannel();
+}
+
+void AnnounceSenderBase::SelectStartingChannel(void)
+{
+    // If the starting channel is not set or it is not present
+    // in the channel mask, then start from the first channel
+    // in the mask.
+
+    VerifyOrExit(!mChannelMask.IsEmpty());
+    VerifyOrExit((mStartingChannel == kChannelIteratorFirst) || !mChannelMask.ContainsChannel(mStartingChannel));
+
+    mStartingChannel = kChannelIteratorFirst;
+    IgnoreError(mChannelMask.GetNextChannel(mStartingChannel));
 
 exit:
     return;
@@ -81,25 +123,23 @@ exit:
 
 void AnnounceSenderBase::HandleTimer(void)
 {
-    Error error;
+    Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
 
-    error = mChannelMask.GetNextChannel(mChannel);
+    // Go to the next channel in the mask. If we have reached the end
+    // of the channel mask, we start over from the first channel in
+    // the mask. Once we get back to `mStartingChannel` we have
+    // finished one full cycle and can decrement `mCount`.
 
-    if (error == kErrorNotFound)
+    while (mChannelMask.GetNextChannel(mChannel) != kErrorNone)
     {
-        if (mCount != 0)
-        {
-            mCount--;
-            VerifyOrExit(mCount != 0);
-        }
-
-        mChannel = Mac::ChannelMask::kChannelIteratorFirst;
-        error    = mChannelMask.GetNextChannel(mChannel);
+        mChannel = kChannelIteratorFirst;
     }
 
-    OT_ASSERT(error == kErrorNone);
-
-    Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
+    if ((mChannel == mStartingChannel) && (mCount != 0))
+    {
+        mCount--;
+        VerifyOrExit(mCount != 0);
+    }
 
     mTimer.Start(Random::NonCrypto::AddJitter(mPeriod, mJitter));
 
@@ -107,11 +147,28 @@ exit:
     return;
 }
 
+//---------------------------------------------------------------------------------------------------------------------
+// AnnounceSender
+
 #if OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE
 
 AnnounceSender::AnnounceSender(Instance &aInstance)
     : AnnounceSenderBase(aInstance, AnnounceSender::HandleTimer)
+    , mTrickleTimer(aInstance, AnnounceSender::HandleTrickleTimer)
 {
+    SetJitter(kMaxJitter);
+}
+
+void AnnounceSender::UpdateOnReceivedAnnounce(void)
+{
+    mTrickleTimer.IndicateConsistent();
+}
+
+void AnnounceSender::Stop(void)
+{
+    AnnounceSenderBase::Stop();
+    mTrickleTimer.Stop();
+    otLogInfoMle("[announce-sender] Stopped");
 }
 
 void AnnounceSender::HandleTimer(Timer &aTimer)
@@ -119,25 +176,54 @@ void AnnounceSender::HandleTimer(Timer &aTimer)
     aTimer.Get<AnnounceSender>().AnnounceSenderBase::HandleTimer();
 }
 
-void AnnounceSender::CheckState(void)
+void AnnounceSender::HandleTrickleTimer(TrickleTimer &aTimer)
 {
-    Mle::MleRouter & mle      = Get<Mle::MleRouter>();
-    uint32_t         interval = kRouterTxInterval;
-    uint32_t         period;
-    Mac::ChannelMask channelMask;
+    aTimer.Get<AnnounceSender>().HandleTrickleTimer();
+}
 
-    switch (mle.GetRole())
+void AnnounceSender::HandleTrickleTimer(void)
+{
+    // The trickle timer handler is called when
+    // we do not receive enough Announce messages
+    // within the current interval and therefore
+    // the device itself needs to send Announce.
+    // We then request one more cycle of Announce
+    // message transmissions.
+
+    SendAnnounce(1);
+    otLogInfoMle("[announce-sender] Schedule tx for one cycle");
+}
+
+void AnnounceSender::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadRoleChanged))
     {
-    case Mle::kRoleRouter:
+        HandleRoleChanged();
+    }
+
+    if (aEvents.Contains(kEventActiveDatasetChanged))
+    {
+        HandleActiveDatasetChanged();
+    }
+
+    if (aEvents.Contains(kEventThreadChannelChanged))
+    {
+        HandleThreadChannelChanged();
+    }
+}
+
+void AnnounceSender::HandleRoleChanged(void)
+{
+    switch (Get<Mle::Mle>().GetRole())
+    {
     case Mle::kRoleLeader:
-        interval = kRouterTxInterval;
+    case Mle::kRoleRouter:
         break;
 
     case Mle::kRoleChild:
 #if OPENTHREAD_FTD
-        if (mle.IsRouterEligible() && mle.IsRxOnWhenIdle())
+        if (Get<Mle::MleRouter>().IsRouterEligible() && Get<Mle::Mle>().IsRxOnWhenIdle())
         {
-            interval = kReedTxInterval;
             break;
         }
 #endif
@@ -150,35 +236,44 @@ void AnnounceSender::CheckState(void)
         ExitNow();
     }
 
-    VerifyOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) == kErrorNone, Stop());
+    // Start the trickle timer with same min and max interval as the
+    // desired Announce Tx cycle interval.
 
-    period = interval / channelMask.GetNumberOfChannels();
-
-    if (period < kMinTxPeriod)
-    {
-        period = kMinTxPeriod;
-    }
-
-    VerifyOrExit(!IsRunning() || (period != GetPeriod()) || (GetChannelMask() != channelMask));
-
-    SendAnnounce(channelMask, 0, period, kMaxJitter);
+    mTrickleTimer.Start(TrickleTimer::kModeTrickle, kInterval, kInterval, kRedundancyConstant);
+    otLogInfoMle("[announce-sender] Started");
 
 exit:
     return;
 }
 
-void AnnounceSender::Stop(void)
+void AnnounceSender::HandleActiveDatasetChanged(void)
 {
-    AnnounceSenderBase::Stop();
-    otLogInfoMle("Stopping periodic MLE Announcements tx");
+    Mac::ChannelMask channelMask;
+
+    SuccessOrExit(Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask));
+    VerifyOrExit(!channelMask.IsEmpty());
+
+    VerifyOrExit(channelMask != GetChannelMask());
+
+    SetChannelMask(channelMask);
+    SetPeriod(kTxInterval / channelMask.GetNumberOfChannels());
+    otLogInfoMle("[announce-sender] ChannelMask:%s, period:%u", GetChannelMask().ToString().AsCString(), GetPeriod());
+
+    // When channel mask is changed, we also check and update the PAN
+    // channel. This handles the case where `ThreadChannelChanged` event
+    // may be received and processed before `ActiveDatasetChanged`
+    // event.
+
+    HandleThreadChannelChanged();
+
+exit:
+    return;
 }
 
-void AnnounceSender::HandleNotifierEvents(Events aEvents)
+void AnnounceSender::HandleThreadChannelChanged(void)
 {
-    if (aEvents.Contains(kEventThreadRoleChanged))
-    {
-        CheckState();
-    }
+    SetStartingChannel(Get<Mac::Mac>().GetPanChannel());
+    otLogInfoMle("[announce-sender] StartingChannel:%d", GetStartingChannel());
 }
 
 #endif // OPENTHREAD_CONFIG_ANNOUNCE_SENDER_ENABLE

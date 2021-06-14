@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 namespace ot {
 
@@ -109,7 +109,7 @@ RssAverager::InfoString RssAverager::ToString(void) const
     InfoString string;
 
     VerifyOrExit(mCount != 0);
-    IgnoreError(string.Set("%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]));
+    string.Append("%d.%s", -(mAverage >> kPrecisionBitShift), kDigitsString[mAverage & kPrecisionBitMask]);
 
 exit:
     return string;
@@ -166,8 +166,12 @@ uint8_t LinkQualityInfo::GetLinkMargin(void) const
 
 LinkQualityInfo::InfoString LinkQualityInfo::ToInfoString(void) const
 {
-    return InfoString("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(), GetLastRss(),
-                      GetLinkQuality());
+    InfoString string;
+
+    string.Append("aveRss:%s, lastRss:%d, linkQuality:%d", mRssAverager.ToString().AsCString(), GetLastRss(),
+                  GetLinkQuality());
+
+    return string;
 }
 
 uint8_t LinkQualityInfo::ConvertRssToLinkMargin(int8_t aNoiseFloor, int8_t aRss)

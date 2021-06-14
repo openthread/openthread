@@ -48,6 +48,7 @@
 #include "thread/lowpan.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/network_data_tlvs.hpp"
+#include "thread/network_data_types.hpp"
 
 namespace ot {
 
@@ -102,145 +103,6 @@ enum
 typedef otNetworkDataIterator Iterator;
 
 /**
- * This class represents an On Mesh Prefix (Border Router) configuration.
- *
- */
-class OnMeshPrefixConfig : public otBorderRouterConfig,
-                           public Clearable<OnMeshPrefixConfig>,
-                           public Equatable<OnMeshPrefixConfig>
-{
-    friend class NetworkData;
-
-public:
-    /**
-     * This method gets the prefix.
-     *
-     * @return The prefix.
-     *
-     */
-    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
-
-    /**
-     * This method gets the prefix.
-     *
-     * @return The prefix.
-     *
-     */
-    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
-
-private:
-    void SetFrom(const PrefixTlv &        aPrefixTlv,
-                 const BorderRouterTlv &  aBorderRouterTlv,
-                 const BorderRouterEntry &aBorderRouterEntry);
-};
-
-/**
- * This class represents an External Route configuration.
- *
- */
-class ExternalRouteConfig : public otExternalRouteConfig,
-                            public Clearable<ExternalRouteConfig>,
-                            public Equatable<ExternalRouteConfig>
-{
-    friend class NetworkData;
-
-public:
-    /**
-     * This method gets the prefix.
-     *
-     * @return The prefix.
-     *
-     */
-    const Ip6::Prefix &GetPrefix(void) const { return static_cast<const Ip6::Prefix &>(mPrefix); }
-
-    /**
-     * This method gets the prefix.
-     *
-     * @return The prefix.
-     *
-     */
-    Ip6::Prefix &GetPrefix(void) { return static_cast<Ip6::Prefix &>(mPrefix); }
-
-    /**
-     * This method sets the prefix.
-     *
-     * @param[in]  aPrefix  The prefix to set to.
-     *
-     */
-    void SetPrefix(const Ip6::Prefix &aPrefix) { mPrefix = aPrefix; }
-
-private:
-    void SetFrom(Instance &           aInstance,
-                 const PrefixTlv &    aPrefixTlv,
-                 const HasRouteTlv &  aHasRouteTlv,
-                 const HasRouteEntry &aHasRouteEntry);
-};
-
-/**
- * This type represents a Service configuration.
- *
- */
-class ServiceConfig : public otServiceConfig, public Clearable<ServiceConfig>, public Unequatable<ServiceConfig>
-{
-    friend class NetworkData;
-
-public:
-    /**
-     * This class represents a Server configuration.
-     *
-     */
-    class ServerConfig : public otServerConfig, public Unequatable<ServerConfig>
-    {
-        friend class ServiceConfig;
-
-    public:
-        /**
-         * This method overloads operator `==` to evaluate whether or not two `ServerConfig` instances are equal.
-         *
-         * @param[in]  aOther  The other `ServerConfig` instance to compare with.
-         *
-         * @retval TRUE   If the two `ServerConfig` instances are equal.
-         * @retval FALSE  If the two `ServerConfig` instances are not equal.
-         *
-         */
-        bool operator==(const ServerConfig &aOther) const;
-
-    private:
-        void SetFrom(const ServerTlv &aServerTlv);
-    };
-
-    /**
-     * This method gets the Server configuration.
-     *
-     * @returns The Server configuration.
-     *
-     */
-    const ServerConfig &GetServerConfig(void) const { return static_cast<const ServerConfig &>(mServerConfig); }
-
-    /**
-     * This method gets the Server configuration.
-     *
-     * @returns The Server configuration.
-     *
-     */
-    ServerConfig &GetServerConfig(void) { return static_cast<ServerConfig &>(mServerConfig); }
-
-    /**
-     * This method overloads operator `==` to evaluate whether or not two `ServiceConfig` instances are equal.
-     *
-     * @param[in]  aOther  The other `ServiceConfig` instance to compare with.
-     *
-     * @retval TRUE   If the two `ServiceConfig` instances are equal.
-     * @retval FALSE  If the two `ServiceConfig` instances are not equal.
-     *
-     */
-    bool operator==(const ServiceConfig &aOther) const;
-
-private:
-    void SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv);
-};
-
-/**
  * This class implements Network Data processing.
  *
  */
@@ -277,7 +139,7 @@ public:
      * This method clears the network data.
      *
      */
-    void Clear(void);
+    void Clear(void) { mLength = 0; }
 
     /**
      * This method provides a full or stable copy of the Thread Network Data.
@@ -479,125 +341,6 @@ protected:
     const NetworkDataTlv *GetTlvsEnd(void) const { return reinterpret_cast<const NetworkDataTlv *>(mTlvs + mLength); }
 
     /**
-     * This method returns a pointer to the Border Router TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     *
-     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
-     *
-     */
-    static BorderRouterTlv *FindBorderRouter(PrefixTlv &aPrefix)
-    {
-        return const_cast<BorderRouterTlv *>(FindBorderRouter(const_cast<const PrefixTlv &>(aPrefix)));
-    }
-
-    /**
-     * This method returns a pointer to the Border Router TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     *
-     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
-     *
-     */
-    static const BorderRouterTlv *FindBorderRouter(const PrefixTlv &aPrefix);
-
-    /**
-     * This method returns a pointer to the stable or non-stable Border Router TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable..
-     *
-     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
-     *
-     */
-    static BorderRouterTlv *FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
-    {
-        return const_cast<BorderRouterTlv *>(FindBorderRouter(const_cast<const PrefixTlv &>(aPrefix), aStable));
-    }
-
-    /**
-     * This method returns a pointer to the stable or non-stable Border Router TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable..
-     *
-     * @returns A pointer to the Border Router TLV if one is found or nullptr if no Border Router TLV exists.
-     *
-     */
-    static const BorderRouterTlv *FindBorderRouter(const PrefixTlv &aPrefix, bool aStable);
-
-    /**
-     * This method returns a pointer to the Has Route TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     *
-     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
-     *
-     */
-    static HasRouteTlv *FindHasRoute(PrefixTlv &aPrefix)
-    {
-        return const_cast<HasRouteTlv *>(FindHasRoute(const_cast<const PrefixTlv &>(aPrefix)));
-    }
-
-    /**
-     * This method returns a pointer to the Has Route TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     *
-     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
-     *
-     */
-    static const HasRouteTlv *FindHasRoute(const PrefixTlv &aPrefix);
-
-    /**
-     * This method returns a pointer to the stable or non-stable Has Route TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
-     *
-     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
-     *
-     */
-    static HasRouteTlv *FindHasRoute(PrefixTlv &aPrefix, bool aStable)
-    {
-        return const_cast<HasRouteTlv *>(FindHasRoute(const_cast<const PrefixTlv &>(aPrefix), aStable));
-    }
-
-    /**
-     * This method returns a pointer to the stable or non-stable Has Route TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     * @param[in]  aStable  TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
-     *
-     * @returns A pointer to the Has Route TLV if one is found or nullptr if no Has Route TLV exists.
-     *
-     */
-    static const HasRouteTlv *FindHasRoute(const PrefixTlv &aPrefix, bool aStable);
-
-    /**
-     * This method returns a pointer to the Context TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     *
-     * @returns A pointer to the Context TLV if one is found or nullptr if no Context TLV exists.
-     *
-     */
-    static ContextTlv *FindContext(PrefixTlv &aPrefix)
-    {
-        return const_cast<ContextTlv *>(FindContext(const_cast<const PrefixTlv &>(aPrefix)));
-    }
-
-    /**
-     * This method returns a pointer to the Context TLV within a given Prefix TLV.
-     *
-     * @param[in]  aPrefix  A reference to the Prefix TLV.
-     *
-     * @returns A pointer to the Context TLV if one is found or nullptr if no Context TLV exists.
-     *
-     */
-    static const ContextTlv *FindContext(const PrefixTlv &aPrefix);
-
-    /**
      * This method returns a pointer to a Prefix TLV.
      *
      * @param[in]  aPrefix        A pointer to an IPv6 prefix.
@@ -749,6 +492,31 @@ protected:
                                          uint8_t        aTlvsLength);
 
     /**
+     * This method returns the next pointer to a matching Service TLV.
+     *
+     * This method can be used to iterate over all Service TLVs that start with a given Service Data.
+     *
+     * Unlike `FindService()` method which searches for a Service TLV with an exact match with the given Service Data,
+     * this method performs a relaxed check allowing a matching Service TLV to contain additional bytes after
+     * @p aServiceData, i.e., a Service TLV is considered to match if its Service Data length is larger than or equal
+     * to @p aServiceDataLength and its first @p aServiceDataLength Service Data bytes are equal to @p aServiceData.
+     *
+     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first
+     *                                matching Service TLV), or a pointer to the previous Service TLV returned from
+     *                                this method to iterate to the next matching Service TLV.
+     * @param[in]  aEnterpriseNumber  Enterprise Number.
+     * @param[in]  aServiceData       A pointer to a Service Data to match with Service TLVs.
+     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     *
+     * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
+     *
+     */
+    const ServiceTlv *FindNextMatchingService(const ServiceTlv *aPrevServiceTlv,
+                                              uint32_t          aEnterpriseNumber,
+                                              const uint8_t *   aServiceData,
+                                              uint8_t           aServiceDataLength) const;
+
+    /**
      * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
      * number of bytes.
      *
@@ -822,139 +590,6 @@ protected:
      *
      */
     Error SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext);
-
-    /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
-     * @param[in]  aType   The TLV type to find.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    static NetworkDataTlv *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, NetworkDataTlv::Type aType)
-    {
-        return const_cast<NetworkDataTlv *>(
-            FindTlv(const_cast<const NetworkDataTlv *>(aStart), const_cast<const NetworkDataTlv *>(aEnd), aType));
-    }
-
-    /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
-     * @param[in]  aType   The TLV type to find.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    static const NetworkDataTlv *FindTlv(const NetworkDataTlv *aStart,
-                                         const NetworkDataTlv *aEnd,
-                                         NetworkDataTlv::Type  aType);
-
-    /**
-     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
-     * `TlvType`.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd)
-    {
-        return static_cast<TlvType *>(FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
-    }
-
-    /**
-     * This static template method searches in a given sequence of TLVs to find the first TLV with a give template
-     * `TlvType`.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param[in]  aEnd    A pointer to the end of the sequence of TLVs.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    template <typename TlvType> static const TlvType *FindTlv(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd)
-    {
-        return static_cast<const TlvType *>(FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType)));
-    }
-
-    /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and stable
-     * flag.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
-     * @param[in]  aType   The TLV type to find.
-     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    static NetworkDataTlv *FindTlv(NetworkDataTlv *     aStart,
-                                   NetworkDataTlv *     aEnd,
-                                   NetworkDataTlv::Type aType,
-                                   bool                 aStable)
-    {
-        return const_cast<NetworkDataTlv *>(FindTlv(const_cast<const NetworkDataTlv *>(aStart),
-                                                    const_cast<const NetworkDataTlv *>(aEnd), aType, aStable));
-    }
-
-    /**
-     * This static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and stable
-     * flag.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
-     * @param[in]  aType   The TLV type to find.
-     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    static const NetworkDataTlv *FindTlv(const NetworkDataTlv *aStart,
-                                         const NetworkDataTlv *aEnd,
-                                         NetworkDataTlv::Type  aType,
-                                         bool                  aStable);
-
-    /**
-     * This template static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and
-     * stable flag.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
-     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    template <typename TlvType> static TlvType *FindTlv(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, bool aStable)
-    {
-        return static_cast<TlvType *>(
-            FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType), aStable));
-    }
-
-    /**
-     * This template static method searches in a given sequence of TLVs to find the first TLV with a given TLV Type and
-     * stable flag.
-     *
-     * @param[in]  aStart  A pointer to the start of the sequence of TLVs to search within.
-     * @param [in] aEnd    A pointer to the end of the sequence of TLVs.
-     * @param[in]  aStable TRUE to find a stable TLV, FALSE to find a TLV not marked as stable.
-     *
-     * @returns A pointer to the TLV if found, or nullptr if not found.
-     *
-     */
-    template <typename TlvType>
-    static const TlvType *FindTlv(const NetworkDataTlv *aStart, const NetworkDataTlv *aEnd, bool aStable)
-    {
-        return static_cast<const TlvType *>(
-            FindTlv(aStart, aEnd, static_cast<NetworkDataTlv::Type>(TlvType::kType), aStable));
-    }
 
     uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
@@ -1032,6 +667,13 @@ private:
         ExternalRouteConfig *mExternalRoute;
         ServiceConfig *      mService;
     };
+
+    static const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
+                                         const uint8_t *aServiceData,
+                                         uint8_t        aServiceDataLength,
+                                         bool           aExactServiceDataMatch,
+                                         const uint8_t *aTlvs,
+                                         uint8_t        aTlvsLength);
 
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 

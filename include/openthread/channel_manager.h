@@ -214,6 +214,25 @@ uint32_t otChannelManagerGetFavoredChannels(otInstance *aInstance);
 void otChannelManagerSetFavoredChannels(otInstance *aInstance, uint32_t aChannelMask);
 
 /**
+ * This function gets the CCA failure rate threshold
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ *
+ * @returns  The CCA failure rate threshold. Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ */
+uint16_t otChannelManagerGetCcaFailureRateThreshold(otInstance *aInstance);
+
+/**
+ * This function sets the CCA failure rate threshold
+ *
+ * @param[in]  aInstance     A pointer to an OpenThread instance.
+ * @param[in]  aThreshold    A CCA failure rate threshold. Value 0 maps to 0% and 0xffff maps to 100%.
+ *
+ */
+void otChannelManagerSetCcaFailureRateThreshold(otInstance *aInstance, uint16_t aThreshold);
+
+/**
  * @}
  *
  */

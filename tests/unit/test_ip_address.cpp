@@ -399,13 +399,13 @@ void TestIp4Ip6Translation(void)
 
         SuccessOrQuit(expectedAddress.FromString(testCase.mIp6Address), "Ip6::FromString() failed");
 
-        address.SetFromTranslatedIp4Address(prefix, ip4Address);
+        address.SynthesizeFromIp4Address(prefix, ip4Address);
 
         printf("Prefix: %-26s IPv4Addr: %-12s Ipv6Address: %-36s Expected: %s (%s)\n", prefix.ToString().AsCString(),
                ip4Address.ToString().AsCString(), address.ToString().AsCString(), testCase.mIp6Address,
                expectedAddress.ToString().AsCString());
 
-        VerifyOrQuit(address == expectedAddress, "Ip6::SetFromTranslatedIp4Address() failed");
+        VerifyOrQuit(address == expectedAddress, "Ip6::SynthesizeFromIp4Address() failed");
     }
 }
 

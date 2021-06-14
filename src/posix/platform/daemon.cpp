@@ -26,8 +26,7 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "openthread-posix-config.h"
-#include "platform-posix.h"
+#include "posix/platform/daemon.hpp"
 
 #include <fcntl.h>
 #include <signal.h>
@@ -42,6 +41,7 @@
 
 #include "cli/cli_config.h"
 #include "common/code_utils.hpp"
+#include "posix/platform/platform-posix.h"
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
 
@@ -49,14 +49,28 @@
 static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME) < sizeof(sockaddr_un::sun_path),
               "OpenThread daemon socket name too long!");
 
-static int sListenSocket  = -1;
-static int sDaemonLock    = -1;
-static int sSessionSocket = -1;
+namespace ot {
+namespace Posix {
 
-static int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments)
+namespace {
+
+typedef char(Filename)[sizeof(sockaddr_un::sun_path)];
+
+void GetFilename(Filename &aFilename, const char *aPattern)
 {
-    OT_UNUSED_VARIABLE(aContext);
+    int rval;
 
+    rval = snprintf(aFilename, sizeof(aFilename), aPattern, gNetifName);
+    if (rval < 0 && static_cast<size_t>(rval) >= sizeof(aFilename))
+    {
+        DieNow(OT_EXIT_INVALID_ARGUMENTS);
+    }
+}
+
+} // namespace
+
+int Daemon::OutputFormatV(const char *aFormat, va_list aArguments)
+{
     char buf[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH + 1];
     int  rval;
 
@@ -66,32 +80,32 @@ static int OutputFormatV(void *aContext, const char *aFormat, va_list aArguments
 
     VerifyOrExit(rval >= 0, otLogWarnPlat("Failed to format CLI output: %s", strerror(errno)));
 
-    VerifyOrExit(sSessionSocket != -1, otLogDebgPlat("%s", buf));
+    VerifyOrExit(mSessionSocket != -1);
 
 #if defined(__linux__)
     // Don't die on SIGPIPE
-    rval = send(sSessionSocket, buf, static_cast<size_t>(rval), MSG_NOSIGNAL);
+    rval = send(mSessionSocket, buf, static_cast<size_t>(rval), MSG_NOSIGNAL);
 #else
-    rval = write(sSessionSocket, buf, static_cast<size_t>(rval));
+    rval = static_cast<int>(write(mSessionSocket, buf, static_cast<size_t>(rval)));
 #endif
 
     if (rval < 0)
     {
         otLogWarnPlat("Failed to write CLI output: %s", strerror(errno));
-        close(sSessionSocket);
-        sSessionSocket = -1;
+        close(mSessionSocket);
+        mSessionSocket = -1;
     }
 
 exit:
     return rval;
 }
 
-static void InitializeSessionSocket(void)
+void Daemon::InitializeSessionSocket(void)
 {
     int newSessionSocket;
     int rval;
 
-    VerifyOrExit((newSessionSocket = accept(sListenSocket, nullptr, nullptr)) != -1, rval = -1);
+    VerifyOrExit((newSessionSocket = accept(mListenSocket, nullptr, nullptr)) != -1, rval = -1);
 
     VerifyOrExit((rval = fcntl(newSessionSocket, F_GETFD, 0)) != -1);
 
@@ -112,11 +126,11 @@ static void InitializeSessionSocket(void)
 #endif
 #endif // __linux__
 
-    if (sSessionSocket != -1)
+    if (mSessionSocket != -1)
     {
-        close(sSessionSocket);
+        close(mSessionSocket);
     }
-    sSessionSocket = newSessionSocket;
+    mSessionSocket = newSessionSocket;
 
 exit:
     if (rval == -1)
@@ -133,41 +147,48 @@ exit:
     }
 }
 
-void platformDaemonEnable(otInstance *aInstance)
+void Daemon::Enable(otInstance *aInstance)
 {
     struct sockaddr_un sockname;
     int                ret;
 
     // This allows implementing pseudo reset.
-    VerifyOrExit(sListenSocket == -1);
+    VerifyOrExit(mListenSocket == -1);
 
-    sListenSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
+    mListenSocket = SocketWithCloseExec(AF_UNIX, SOCK_STREAM, 0, kSocketNonBlock);
 
-    if (sListenSocket == -1)
+    if (mListenSocket == -1)
     {
         DieNow(OT_EXIT_FAILURE);
     }
 
-    sDaemonLock = open(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    {
+        static_assert(sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK) == sizeof(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME),
+                      "sock and lock file name pattern should have the same length!");
+        Filename lockfile;
 
-    if (sDaemonLock == -1)
+        GetFilename(lockfile, OPENTHREAD_POSIX_DAEMON_SOCKET_LOCK);
+
+        mDaemonLock = open(lockfile, O_CREAT | O_RDONLY | O_CLOEXEC, 0600);
+    }
+
+    if (mDaemonLock == -1)
     {
         DieNowWithMessage("open", OT_EXIT_ERROR_ERRNO);
     }
 
-    if (flock(sDaemonLock, LOCK_EX | LOCK_NB) == -1)
+    if (flock(mDaemonLock, LOCK_EX | LOCK_NB) == -1)
     {
         DieNowWithMessage("flock", OT_EXIT_ERROR_ERRNO);
     }
 
     memset(&sockname, 0, sizeof(struct sockaddr_un));
 
-    (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-
     sockname.sun_family = AF_UNIX;
-    strncpy(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME, sizeof(sockname.sun_path) - 1);
+    GetFilename(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+    (void)unlink(sockname.sun_path);
 
-    ret = bind(sListenSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
+    ret = bind(mListenSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
 
     if (ret == -1)
     {
@@ -177,100 +198,113 @@ void platformDaemonEnable(otInstance *aInstance)
     //
     // only accept 1 connection.
     //
-    ret = listen(sListenSocket, 1);
+    ret = listen(mListenSocket, 1);
     if (ret == -1)
     {
         DieNowWithMessage("listen", OT_EXIT_ERROR_ERRNO);
     }
 
-    otCliInit(aInstance, OutputFormatV, aInstance);
+    otCliInit(
+        aInstance,
+        [](void *aContext, const char *aFormat, va_list aArguments) -> int {
+            return static_cast<Daemon *>(aContext)->OutputFormatV(aFormat, aArguments);
+        },
+        this);
+
+    Mainloop::Manager::Get().Add(*this);
 
 exit:
     return;
 }
 
-void platformDaemonDisable(void)
+void Daemon::Disable(void)
 {
-    if (sSessionSocket != -1)
+    Mainloop::Manager::Get().Remove(*this);
+
+    if (mSessionSocket != -1)
     {
-        close(sSessionSocket);
-        sSessionSocket = -1;
+        close(mSessionSocket);
+        mSessionSocket = -1;
     }
 
-    if (sListenSocket != -1)
+    if (mListenSocket != -1)
     {
-        close(sListenSocket);
-        sListenSocket = -1;
+        close(mListenSocket);
+        mListenSocket = -1;
     }
 
     if (gPlatResetReason != OT_PLAT_RESET_REASON_SOFTWARE)
     {
-        otLogCritPlat("Removing daemon socket: %s", OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
-        (void)unlink(OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+        Filename sockfile;
+
+        GetFilename(sockfile, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
+        otLogDebgPlat("Removing daemon socket: %s", sockfile);
+        (void)unlink(sockfile);
     }
 
-    if (sDaemonLock != -1)
+    if (mDaemonLock != -1)
     {
-        (void)flock(sDaemonLock, LOCK_UN);
-        close(sDaemonLock);
-        sDaemonLock = -1;
+        (void)flock(mDaemonLock, LOCK_UN);
+        close(mDaemonLock);
+        mDaemonLock = -1;
     }
 }
 
-void platformDaemonUpdate(otSysMainloopContext *aContext)
+void Daemon::Update(otSysMainloopContext &aContext)
 {
-    if (sListenSocket != -1)
+    if (mListenSocket != -1)
     {
-        FD_SET(sListenSocket, &aContext->mReadFdSet);
-        FD_SET(sListenSocket, &aContext->mErrorFdSet);
+        FD_SET(mListenSocket, &aContext.mReadFdSet);
+        FD_SET(mListenSocket, &aContext.mErrorFdSet);
 
-        if (aContext->mMaxFd < sListenSocket)
+        if (aContext.mMaxFd < mListenSocket)
         {
-            aContext->mMaxFd = sListenSocket;
+            aContext.mMaxFd = mListenSocket;
         }
     }
 
-    if (sSessionSocket != -1)
+    if (mSessionSocket != -1)
     {
-        FD_SET(sSessionSocket, &aContext->mReadFdSet);
-        FD_SET(sSessionSocket, &aContext->mErrorFdSet);
+        FD_SET(mSessionSocket, &aContext.mReadFdSet);
+        FD_SET(mSessionSocket, &aContext.mErrorFdSet);
 
-        if (aContext->mMaxFd < sSessionSocket)
+        if (aContext.mMaxFd < mSessionSocket)
         {
-            aContext->mMaxFd = sSessionSocket;
+            aContext.mMaxFd = mSessionSocket;
         }
     }
 
     return;
 }
 
-void platformDaemonProcess(const otSysMainloopContext *aContext)
+void Daemon::Process(const otSysMainloopContext &aContext)
 {
     ssize_t rval;
 
-    VerifyOrExit(sListenSocket != -1);
+    VerifyOrExit(mListenSocket != -1);
 
-    if (FD_ISSET(sListenSocket, &aContext->mErrorFdSet))
+    if (FD_ISSET(mListenSocket, &aContext.mErrorFdSet))
     {
         DieNowWithMessage("daemon socket error", OT_EXIT_FAILURE);
     }
-    else if (FD_ISSET(sListenSocket, &aContext->mReadFdSet))
+    else if (FD_ISSET(mListenSocket, &aContext.mReadFdSet))
     {
         InitializeSessionSocket();
     }
 
-    VerifyOrExit(sSessionSocket != -1);
+    VerifyOrExit(mSessionSocket != -1);
 
-    if (FD_ISSET(sSessionSocket, &aContext->mErrorFdSet))
+    if (FD_ISSET(mSessionSocket, &aContext.mErrorFdSet))
     {
-        close(sSessionSocket);
-        sSessionSocket = -1;
+        close(mSessionSocket);
+        mSessionSocket = -1;
     }
-    else if (FD_ISSET(sSessionSocket, &aContext->mReadFdSet))
+    else if (FD_ISSET(mSessionSocket, &aContext.mReadFdSet))
     {
         uint8_t buffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
 
-        rval = read(sSessionSocket, buffer, sizeof(buffer));
+        // leave 1 byte for the null terminator
+        rval = read(mSessionSocket, buffer, sizeof(buffer) - 1);
 
         if (rval > 0)
         {
@@ -285,8 +319,8 @@ void platformDaemonProcess(const otSysMainloopContext *aContext)
             {
                 otLogWarnPlat("Daemon read: %s", strerror(errno));
             }
-            close(sSessionSocket);
-            sSessionSocket = -1;
+            close(mSessionSocket);
+            mSessionSocket = -1;
         }
     }
 
@@ -294,4 +328,13 @@ exit:
     return;
 }
 
+Daemon &Daemon::Get(void)
+{
+    static Daemon sInstance;
+
+    return sInstance;
+}
+
+} // namespace Posix
+} // namespace ot
 #endif // OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE

@@ -37,7 +37,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/thread_netif.hpp"
@@ -47,127 +47,11 @@
 namespace ot {
 namespace NetworkData {
 
-void OnMeshPrefixConfig::SetFrom(const PrefixTlv &        aPrefixTlv,
-                                 const BorderRouterTlv &  aBorderRouterTlv,
-                                 const BorderRouterEntry &aBorderRouterEntry)
-{
-    Clear();
-
-    aPrefixTlv.CopyPrefixTo(GetPrefix());
-    mPreference   = aBorderRouterEntry.GetPreference();
-    mPreferred    = aBorderRouterEntry.IsPreferred();
-    mSlaac        = aBorderRouterEntry.IsSlaac();
-    mDhcp         = aBorderRouterEntry.IsDhcp();
-    mConfigure    = aBorderRouterEntry.IsConfigure();
-    mDefaultRoute = aBorderRouterEntry.IsDefaultRoute();
-    mOnMesh       = aBorderRouterEntry.IsOnMesh();
-    mStable       = aBorderRouterTlv.IsStable();
-    mRloc16       = aBorderRouterEntry.GetRloc();
-    mNdDns        = aBorderRouterEntry.IsNdDns();
-    mDp           = aBorderRouterEntry.IsDp();
-}
-
-void ExternalRouteConfig::SetFrom(Instance &           aInstance,
-                                  const PrefixTlv &    aPrefixTlv,
-                                  const HasRouteTlv &  aHasRouteTlv,
-                                  const HasRouteEntry &aHasRouteEntry)
-{
-    Clear();
-
-    aPrefixTlv.CopyPrefixTo(GetPrefix());
-    mPreference          = aHasRouteEntry.GetPreference();
-    mStable              = aHasRouteTlv.IsStable();
-    mRloc16              = aHasRouteEntry.GetRloc();
-    mNextHopIsThisDevice = (aHasRouteEntry.GetRloc() == aInstance.Get<Mle::MleRouter>().GetRloc16());
-}
-
-bool ServiceConfig::ServerConfig::operator==(const ServerConfig &aOther) const
-{
-    return (mStable == aOther.mStable) && (mServerDataLength == aOther.mServerDataLength) &&
-           (memcmp(mServerData, aOther.mServerData, mServerDataLength) == 0);
-}
-
-void ServiceConfig::ServerConfig::SetFrom(const ServerTlv &aServerTlv)
-{
-    mStable           = aServerTlv.IsStable();
-    mRloc16           = aServerTlv.GetServer16();
-    mServerDataLength = aServerTlv.GetServerDataLength();
-    memcpy(&mServerData, aServerTlv.GetServerData(), mServerDataLength);
-}
-
-bool ServiceConfig::operator==(const ServiceConfig &aOther) const
-{
-    return (mEnterpriseNumber == aOther.mEnterpriseNumber) && (mServiceDataLength == aOther.mServiceDataLength) &&
-           (memcmp(mServiceData, aOther.mServiceData, mServiceDataLength) == 0) &&
-           (GetServerConfig() == aOther.GetServerConfig());
-}
-
-void ServiceConfig::SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv)
-{
-    Clear();
-
-    mServiceId         = aServiceTlv.GetServiceId();
-    mEnterpriseNumber  = aServiceTlv.GetEnterpriseNumber();
-    mServiceDataLength = aServiceTlv.GetServiceDataLength();
-    memcpy(&mServiceData, aServiceTlv.GetServiceData(), mServiceDataLength);
-    GetServerConfig().SetFrom(aServerTlv);
-}
-
 NetworkData::NetworkData(Instance &aInstance, Type aType)
     : InstanceLocator(aInstance)
     , mType(aType)
 {
     mLength = 0;
-}
-
-void NetworkData::Clear(void)
-{
-    mLength = 0;
-}
-
-const NetworkDataTlv *NetworkData::FindTlv(const NetworkDataTlv *aStart,
-                                           const NetworkDataTlv *aEnd,
-                                           NetworkDataTlv::Type  aType)
-{
-    const NetworkDataTlv *tlv;
-
-    for (tlv = aStart; tlv < aEnd; tlv = tlv->GetNext())
-    {
-        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd, tlv = nullptr);
-
-        if (tlv->GetType() == aType)
-        {
-            ExitNow();
-        }
-    }
-
-    tlv = nullptr;
-
-exit:
-    return tlv;
-}
-
-const NetworkDataTlv *NetworkData::FindTlv(const NetworkDataTlv *aStart,
-                                           const NetworkDataTlv *aEnd,
-                                           NetworkDataTlv::Type  aType,
-                                           bool                  aStable)
-{
-    const NetworkDataTlv *tlv;
-
-    for (tlv = aStart; tlv < aEnd; tlv = tlv->GetNext())
-    {
-        VerifyOrExit((tlv + 1) <= aEnd && tlv->GetNext() <= aEnd, tlv = nullptr);
-
-        if ((tlv->GetType() == aType) && (tlv->IsStable() == aStable))
-        {
-            ExitNow();
-        }
-    }
-
-    tlv = nullptr;
-
-exit:
-    return tlv;
 }
 
 Error NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
@@ -252,7 +136,9 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
     Error               error = kErrorNotFound;
     NetworkDataIterator iterator(aIterator);
 
-    for (const NetworkDataTlv *cur; (cur = iterator.GetTlv(mTlvs)) < GetTlvsEnd(); iterator.AdvanceTlv(mTlvs))
+    for (const NetworkDataTlv *cur;
+         cur = iterator.GetTlv(mTlvs), (cur + 1 <= GetTlvsEnd()) && (cur->GetNext() <= GetTlvsEnd());
+         iterator.AdvanceTlv(mTlvs))
     {
         const NetworkDataTlv *subTlvs = nullptr;
 
@@ -279,7 +165,8 @@ Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfi
             continue;
         }
 
-        for (const NetworkDataTlv *subCur; (subCur = iterator.GetSubTlv(subTlvs)) < cur->GetNext();
+        for (const NetworkDataTlv *subCur; subCur = iterator.GetSubTlv(subTlvs),
+                                           (subCur + 1 <= cur->GetNext()) && (subCur->GetNext() <= cur->GetNext());
              iterator.AdvaceSubTlv(subTlvs))
         {
             if (cur->GetType() == NetworkDataTlv::kTypePrefix)
@@ -570,7 +457,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
             case NetworkDataTlv::kTypeBorderRouter:
             {
                 BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(cur);
-                ContextTlv *     context      = FindContext(aPrefix);
+                ContextTlv *     context      = aPrefix.FindSubTlv<ContextTlv>();
 
                 // Replace p_border_router_16
                 for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
@@ -654,31 +541,6 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
     }
 }
 
-const BorderRouterTlv *NetworkData::FindBorderRouter(const PrefixTlv &aPrefix)
-{
-    return FindTlv<BorderRouterTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext());
-}
-
-const BorderRouterTlv *NetworkData::FindBorderRouter(const PrefixTlv &aPrefix, bool aStable)
-{
-    return FindTlv<BorderRouterTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext(), aStable);
-}
-
-const HasRouteTlv *NetworkData::FindHasRoute(const PrefixTlv &aPrefix)
-{
-    return FindTlv<HasRouteTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext());
-}
-
-const HasRouteTlv *NetworkData::FindHasRoute(const PrefixTlv &aPrefix, bool aStable)
-{
-    return FindTlv<HasRouteTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext(), aStable);
-}
-
-const ContextTlv *NetworkData::FindContext(const PrefixTlv &aPrefix)
-{
-    return FindTlv<ContextTlv>(aPrefix.GetSubTlvs(), aPrefix.GetNext());
-}
-
 const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
 {
     return FindPrefix(aPrefix, aPrefixLength, mTlvs, mLength);
@@ -689,27 +551,17 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
                                          const uint8_t *aTlvs,
                                          uint8_t        aTlvsLength)
 {
-    const NetworkDataTlv *start = reinterpret_cast<const NetworkDataTlv *>(aTlvs);
-    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
-    const PrefixTlv *     prefixTlv;
+    TlvIterator      tlvIterator(aTlvs, aTlvsLength);
+    const PrefixTlv *prefixTlv;
 
-    while (start < end)
+    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
-        prefixTlv = FindTlv<PrefixTlv>(start, end);
-
-        VerifyOrExit(prefixTlv != nullptr);
-
         if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
         {
-            ExitNow();
+            break;
         }
-
-        start = prefixTlv->GetNext();
     }
 
-    prefixTlv = nullptr;
-
-exit:
     return prefixTlv;
 }
 
@@ -726,30 +578,55 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
                                            const uint8_t *aTlvs,
                                            uint8_t        aTlvsLength)
 {
-    const NetworkDataTlv *start = reinterpret_cast<const NetworkDataTlv *>(aTlvs);
-    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
-    const ServiceTlv *    serviceTlv;
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, /* aExactServiceDataMatch */ true, aTlvs,
+                       aTlvsLength);
+}
 
-    while (start < end)
+const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
+                                           const uint8_t *aServiceData,
+                                           uint8_t        aServiceDataLength,
+                                           bool           aExactServiceDataMatch,
+                                           const uint8_t *aTlvs,
+                                           uint8_t        aTlvsLength)
+{
+    TlvIterator       tlvIterator(aTlvs, aTlvsLength);
+    const ServiceTlv *serviceTlv;
+
+    while ((serviceTlv = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
     {
-        serviceTlv = FindTlv<ServiceTlv>(start, end);
-
-        VerifyOrExit(serviceTlv != nullptr);
-
         if ((serviceTlv->GetEnterpriseNumber() == aEnterpriseNumber) &&
-            (serviceTlv->GetServiceDataLength() == aServiceDataLength) &&
+            (serviceTlv->GetServiceDataLength() >= aServiceDataLength) &&
+            (!aExactServiceDataMatch || (serviceTlv->GetServiceDataLength() == aServiceDataLength)) &&
             (memcmp(serviceTlv->GetServiceData(), aServiceData, aServiceDataLength) == 0))
         {
-            ExitNow();
+            break;
         }
-
-        start = serviceTlv->GetNext();
     }
 
-    serviceTlv = nullptr;
-
-exit:
     return serviceTlv;
+}
+
+const ServiceTlv *NetworkData::FindNextMatchingService(const ServiceTlv *aPrevServiceTlv,
+                                                       uint32_t          aEnterpriseNumber,
+                                                       const uint8_t *   aServiceData,
+                                                       uint8_t           aServiceDataLength) const
+{
+    const uint8_t *tlvs;
+    uint8_t        length;
+
+    if (aPrevServiceTlv == nullptr)
+    {
+        tlvs   = mTlvs;
+        length = mLength;
+    }
+    else
+    {
+        tlvs   = reinterpret_cast<const uint8_t *>(aPrevServiceTlv->GetNext());
+        length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
+    }
+
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, /* aExactServiceDataMatch */ false, tlvs,
+                       length);
 }
 
 NetworkDataTlv *NetworkData::AppendTlv(uint16_t aTlvSize)
@@ -806,7 +683,7 @@ Error NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHa
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit((message = Get<Tmf::TmfAgent>().NewMessage()) != nullptr, error = kErrorNoBufs);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
     SuccessOrExit(error = message->SetPayloadMarker());
@@ -828,7 +705,7 @@ Error NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHa
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::TmfAgent>().SendMessage(*message, messageInfo, aHandler, aContext));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     otLogInfoNetData("Sent server data notification");
 

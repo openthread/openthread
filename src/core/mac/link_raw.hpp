@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
 #include <openthread/link_raw.h>
 
 #include "common/locator.hpp"
@@ -45,8 +47,6 @@
 
 namespace ot {
 namespace Mac {
-
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 /**
  * This class defines the raw link-layer object.
@@ -311,9 +311,9 @@ private:
 #endif
 };
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
-
 } // namespace Mac
 } // namespace ot
+
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #endif // LINK_RAW_HPP_

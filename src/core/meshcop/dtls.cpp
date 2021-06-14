@@ -43,7 +43,7 @@
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/timer.hpp"
 #include "crypto/mbedtls.hpp"
@@ -206,6 +206,11 @@ void Dtls::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageI
 
 exit:
     return;
+}
+
+uint16_t Dtls::GetUdpPort(void) const
+{
+    return mSocket.GetSockName().GetPort();
 }
 
 Error Dtls::Bind(uint16_t aPort)
@@ -498,8 +503,7 @@ void Dtls::SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8
 }
 #endif
 
-#ifdef MBEDTLS_BASE64_C
-
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 Error Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize)
 {
     Error error = kErrorNone;
@@ -513,8 +517,8 @@ Error Dtls::GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLeng
 exit:
     return error;
 }
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
-#endif
 #endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
 
 #ifdef MBEDTLS_SSL_SRV_C

@@ -33,12 +33,12 @@
 
 #include "channel_monitor.hpp"
 
+#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+
 #include "common/code_utils.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
-
-#if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 
 namespace ot {
 namespace Utils {
@@ -195,7 +195,7 @@ void ChannelMonitor::LogResults(void)
 
     for (uint16_t channel : mChannelOccupancy)
     {
-        IgnoreError(logString.Append("%02x ", channel >> 8));
+        logString.Append("%02x ", channel >> 8);
     }
 
     otLogInfoUtil("ChannelMonitor: %u [%s]", mSampleCount, logString.AsCString());
@@ -236,4 +236,4 @@ Mac::ChannelMask ChannelMonitor::FindBestChannels(const Mac::ChannelMask &aMask,
 } // namespace Utils
 } // namespace ot
 
-#endif // #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
+#endif // OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE

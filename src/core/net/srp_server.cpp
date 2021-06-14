@@ -36,9 +36,10 @@
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/new.hpp"
+#include "common/random.hpp"
 #include "net/dns_types.hpp"
 #include "thread/network_data_service.hpp"
 #include "thread/thread_netif.hpp"
@@ -80,13 +81,11 @@ Server::Server(Instance &aInstance)
     , mServiceUpdateHandler(nullptr)
     , mServiceUpdateHandlerContext(nullptr)
     , mDomain(nullptr)
-    , mMinLease(kDefaultMinLease)
-    , mMaxLease(kDefaultMaxLease)
-    , mMinKeyLease(kDefaultMinKeyLease)
-    , mMaxKeyLease(kDefaultMaxKeyLease)
     , mLeaseTimer(aInstance, HandleLeaseTimer)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
+    , mServiceUpdateId(Random::NonCrypto::GetUint32())
     , mEnabled(false)
+    , mHasRegisteredAnyService(false)
 {
     IgnoreError(SetDomain(kDefaultDomain));
 }
@@ -126,39 +125,60 @@ exit:
     return;
 }
 
-Error Server::SetLeaseRange(uint32_t aMinLease, uint32_t aMaxLease, uint32_t aMinKeyLease, uint32_t aMaxKeyLease)
+Server::LeaseConfig::LeaseConfig(void)
 {
-    Error error = kErrorNone;
+    mMinLease    = kDefaultMinLease;
+    mMaxLease    = kDefaultMaxLease;
+    mMinKeyLease = kDefaultMinKeyLease;
+    mMaxKeyLease = kDefaultMaxKeyLease;
+}
+
+bool Server::LeaseConfig::IsValid(void) const
+{
+    bool valid = false;
 
     // TODO: Support longer LEASE.
     // We use milliseconds timer for LEASE & KEY-LEASE, this is to avoid overflow.
-    VerifyOrExit(aMaxKeyLease <= Time::MsecToSec(TimerMilli::kMaxDelay), error = kErrorInvalidArgs);
-    VerifyOrExit(aMinLease <= aMaxLease, error = kErrorInvalidArgs);
-    VerifyOrExit(aMinKeyLease <= aMaxKeyLease, error = kErrorInvalidArgs);
-    VerifyOrExit(aMinLease <= aMinKeyLease, error = kErrorInvalidArgs);
-    VerifyOrExit(aMaxLease <= aMaxKeyLease, error = kErrorInvalidArgs);
+    VerifyOrExit(mMaxKeyLease <= Time::MsecToSec(TimerMilli::kMaxDelay));
+    VerifyOrExit(mMinLease <= mMaxLease);
+    VerifyOrExit(mMinKeyLease <= mMaxKeyLease);
+    VerifyOrExit(mMinLease <= mMinKeyLease);
+    VerifyOrExit(mMaxLease <= mMaxKeyLease);
 
-    mMinLease    = aMinLease;
-    mMaxLease    = aMaxLease;
-    mMinKeyLease = aMinKeyLease;
-    mMaxKeyLease = aMaxKeyLease;
+    valid = true;
 
 exit:
-    return error;
+    return valid;
 }
 
-uint32_t Server::GrantLease(uint32_t aLease) const
+uint32_t Server::LeaseConfig::GrantLease(uint32_t aLease) const
 {
     OT_ASSERT(mMinLease <= mMaxLease);
 
     return (aLease == 0) ? 0 : OT_MAX(mMinLease, OT_MIN(mMaxLease, aLease));
 }
 
-uint32_t Server::GrantKeyLease(uint32_t aKeyLease) const
+uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
 {
     OT_ASSERT(mMinKeyLease <= mMaxKeyLease);
 
     return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
+}
+
+void Server::GetLeaseConfig(LeaseConfig &aLeaseConfig) const
+{
+    aLeaseConfig = mLeaseConfig;
+}
+
+Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(aLeaseConfig.IsValid(), error = kErrorInvalidArgs);
+    mLeaseConfig = aLeaseConfig;
+
+exit:
+    return error;
 }
 
 const char *Server::GetDomain(void) const
@@ -234,7 +254,7 @@ void Server::RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandle
 
     if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
     {
-        mServiceUpdateHandler(aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        mServiceUpdateHandler(AllocateId(), aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the host (and its services) regardless of
         // host/service update result. Because removing a host should fail
@@ -292,9 +312,9 @@ exit:
     return hasConflicts;
 }
 
-void Server::HandleServiceUpdateResult(const Host *aHost, Error aError)
+void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
 {
-    UpdateMetadata *update = mOutstandingUpdates.FindMatching(aHost);
+    UpdateMetadata *update = mOutstandingUpdates.FindMatching(aId);
 
     if (update != nullptr)
     {
@@ -338,8 +358,8 @@ void Server::CommitSrpUpdate(Error                    aError,
 
     hostLease       = aHost.GetLease();
     hostKeyLease    = aHost.GetKeyLease();
-    grantedLease    = GrantLease(hostLease);
-    grantedKeyLease = GrantKeyLease(hostKeyLease);
+    grantedLease    = mLeaseConfig.GrantLease(hostLease);
+    grantedKeyLease = mLeaseConfig.GrantKeyLease(hostKeyLease);
 
     aHost.SetLease(grantedLease);
     aHost.SetKeyLease(grantedKeyLease);
@@ -401,6 +421,16 @@ void Server::CommitSrpUpdate(Error                    aError,
     {
         otLogInfoSrp("[server] add new host %s", aHost.GetFullName());
         AddHost(&aHost);
+#if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+        if (!mHasRegisteredAnyService)
+        {
+            Settings::SrpServerInfo info;
+
+            mHasRegisteredAnyService = true;
+            info.SetPort(mSocket.mSockName.mPort);
+            IgnoreError(Get<Settings>().Save(info));
+        }
+#endif
     }
 
     // Re-schedule the lease timer.
@@ -419,13 +449,28 @@ exit:
 
 void Server::Start(void)
 {
-    Error error = kErrorNone;
+    Error    error = kErrorNone;
+    uint16_t port  = kUdpPortMin;
 
     VerifyOrExit(!IsRunning());
 
-    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(kUdpPort, OT_NETIF_THREAD));
+#if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+    {
+        Settings::SrpServerInfo info;
 
+        if (Get<Settings>().Read(info) == kErrorNone)
+        {
+            port = info.GetPort() + 1;
+            if (port < kUdpPortMin || port > kUdpPortMax)
+            {
+                port = kUdpPortMin;
+            }
+        }
+    }
+#endif
+
+    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
     SuccessOrExit(error = PublishServerData());
 
     otLogInfoSrp("[server] start listening on port %hu", mSocket.GetSockName().mPort);
@@ -487,18 +532,17 @@ exit:
 
 Error Server::PublishServerData(void)
 {
-    NetworkData::Service::SrpServer::ServerData serverData;
+    NetworkData::Service::DnsSrpUnicast::ServerData serverData(Get<Mle::Mle>().GetMeshLocal64(),
+                                                               mSocket.GetSockName().GetPort());
 
     OT_ASSERT(mSocket.IsBound());
 
-    serverData.SetPort(mSocket.GetSockName().GetPort());
-
-    return Get<NetworkData::Service::Manager>().Add<NetworkData::Service::SrpServer>(serverData);
+    return Get<NetworkData::Service::Manager>().Add<NetworkData::Service::DnsSrpUnicast>(serverData);
 }
 
 void Server::UnpublishServerData(void)
 {
-    Error error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::SrpServer>();
+    Error error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::DnsSrpUnicast>();
 
     if (error != kErrorNone)
     {
@@ -702,11 +746,10 @@ Error Server::ProcessHostDescriptionInstruction(Host &                   aHost,
             Dns::Ecdsa256KeyRecord key;
 
             VerifyOrExit(record.GetClass() == aZone.GetClass(), error = kErrorFailed);
-            VerifyOrExit(aHost.GetKey() == nullptr, error = kErrorFailed);
-
             SuccessOrExit(error = aMessage.Read(aOffset, key));
             VerifyOrExit(key.IsValid(), error = kErrorParse);
 
+            VerifyOrExit(aHost.GetKey() == nullptr || *aHost.GetKey() == key, error = kErrorSecurity);
             aHost.SetKey(key);
 
             aOffset += record.GetSize();
@@ -1022,7 +1065,7 @@ exit:
         IgnoreError(mOutstandingUpdates.Add(*update));
         mOutstandingUpdatesTimer.StartAt(mOutstandingUpdates.GetTail()->GetExpireTime(), 0);
 
-        mServiceUpdateHandler(aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        mServiceUpdateHandler(update->GetId(), aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
     }
     else
     {
@@ -1206,11 +1249,12 @@ void Server::HandleLeaseTimer(void)
             otLogInfoSrp("[server] LEASE of host %s expired", host->GetFullName());
 
             // If the host expired, delete all resources of this host and its services.
-            RemoveHost(host, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
             while ((service = host->GetNextService(service)) != nullptr)
             {
-                host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
+                // Don't need to notify the service handler as `RemoveHost` at below will do.
+                host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
+            RemoveHost(host, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
 
             earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
         }
@@ -1543,7 +1587,7 @@ exit:
 
 void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler)
 {
-    const Server &server = Get<Server>();
+    Server &server = Get<Server>();
 
     VerifyOrExit(aService != nullptr);
 
@@ -1559,31 +1603,20 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
         otLogInfoSrp("[server] fully remove service '%s'", aService->mFullName);
     }
 
-    IgnoreError(mServices.Remove(*aService));
-
     if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
     {
-        LinkedList<Service> remainingServices = mServices;
-
-        mServices.Clear();
-        IgnoreError(mServices.Add(*aService));
-
-        server.mServiceUpdateHandler(this, kDefaultEventsHandlerTimeout, server.mServiceUpdateHandlerContext);
+        server.mServiceUpdateHandler(server.AllocateId(), this, kDefaultEventsHandlerTimeout,
+                                     server.mServiceUpdateHandlerContext);
         // We don't wait for the reply from the service update handler,
         // but always remove the service regardless of service update result.
         // Because removing a service should fail only when there is system
         // failure of the platform mDNS implementation and in which case the
         // service is not expected to be still registered.
-
-        mServices = remainingServices;
     }
 
-    if (aRetainName)
+    if (!aRetainName)
     {
-        IgnoreError(mServices.Add(*aService));
-    }
-    else
-    {
+        IgnoreError(mServices.Remove(*aService));
         aService->Free();
     }
 
@@ -1691,6 +1724,7 @@ Server::UpdateMetadata::UpdateMetadata(Instance &               aInstance,
     : InstanceLocator(aInstance)
     , mExpireTime(TimerMilli::GetNow() + kDefaultEventsHandlerTimeout)
     , mDnsHeader(aHeader)
+    , mId(Get<Server>().AllocateId())
     , mHost(aHost)
     , mMessageInfo(aMessageInfo)
     , mNext(nullptr)

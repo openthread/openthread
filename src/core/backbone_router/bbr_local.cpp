@@ -37,7 +37,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "thread/mle_types.hpp"
@@ -62,7 +62,7 @@ Local::Local(Instance &aInstance)
 
     // Primary Backbone Router Aloc
     mBackboneRouterPrimaryAloc.InitAsThreadOriginRealmLocalScope();
-    mBackboneRouterPrimaryAloc.GetAddress().GetIid().SetLocator(Mle::kAloc16BackboneRouterPrimary);
+    mBackboneRouterPrimaryAloc.GetAddress().GetIid().SetToLocator(Mle::kAloc16BackboneRouterPrimary);
 
     // All Network Backbone Routers Multicast Address.
     mAllNetworkBackboneRouters.Clear();
@@ -310,8 +310,12 @@ exit:
     return error;
 }
 
-void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
+Error Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
 {
+    Error error = kErrorNone;
+
+    VerifyOrExit(aConfig.IsValid(GetInstance()), error = kErrorInvalidArgs);
+
     if (IsEnabled())
     {
         RemoveDomainPrefixFromNetworkData();
@@ -324,6 +328,9 @@ void Local::SetDomainPrefix(const NetworkData::OnMeshPrefixConfig &aConfig)
     {
         AddDomainPrefixToNetworkData();
     }
+
+exit:
+    return error;
 }
 
 void Local::ApplyMeshLocalPrefix(void)

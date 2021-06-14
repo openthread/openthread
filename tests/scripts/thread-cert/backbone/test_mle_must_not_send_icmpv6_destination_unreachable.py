@@ -53,13 +53,11 @@ class TestMleMustNotSendIcmpv6DestinationUnreachable(thread_cert.TestCase):
             'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
         ROUTER: {
             'name': 'ROUTER',
             'allowlist': [PBBR],
             'version': '1.2',
-            'router_selection_jitter': 1,
         },
     }
 

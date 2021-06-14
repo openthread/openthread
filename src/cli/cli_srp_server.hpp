@@ -39,6 +39,7 @@
 #include <openthread/srp_server.h>
 
 #include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
@@ -54,6 +55,8 @@ class Interpreter;
 class SrpServer
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     /**
      * Constructor
      *
@@ -75,22 +78,22 @@ public:
      * @retval  ...            Failed to execute the CLI command.
      *
      */
-    otError Process(uint8_t aArgsLength, char *aArgs[]);
+    otError Process(uint8_t aArgsLength, Arg aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (SrpServer::*mHandler)(uint8_t aArgsLength, char *aArgs[]);
+        otError (SrpServer::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
     };
 
-    otError ProcessDomain(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessEnable(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessDisable(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessLease(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessHost(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessService(uint8_t aArgsLength, char *aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, char *aArgs[]);
+    otError ProcessDomain(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessEnable(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessDisable(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessLease(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHost(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessService(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
 
     void OutputHostAddresses(const otSrpServerHost *aHost);
 

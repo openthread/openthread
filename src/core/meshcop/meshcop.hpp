@@ -57,11 +57,6 @@ class ThreadNetif;
 
 namespace MeshCoP {
 
-enum
-{
-    kBorderAgentUdpPort = 49191, ///< UDP port of border agent service.
-};
-
 /**
  * This type represents a Joiner PSKd.
  *

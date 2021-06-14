@@ -44,15 +44,11 @@
 using namespace ot;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-otError otBorderRoutingInit(otInstance *        aInstance,
-                            uint32_t            aInfraIfIndex,
-                            bool                aInfraIfIsRunning,
-                            const otIp6Address *aInfraIfLinkLocalAddress)
+otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool aInfraIfIsRunning)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<BorderRouter::RoutingManager>().Init(
-        aInfraIfIndex, aInfraIfIsRunning, static_cast<const Ip6::Address *>(aInfraIfLinkLocalAddress));
+    return instance.Get<BorderRouter::RoutingManager>().Init(aInfraIfIndex, aInfraIfIsRunning);
 }
 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
@@ -74,26 +70,23 @@ otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *a
 
 otError otBorderRouterAddOnMeshPrefix(otInstance *aInstance, const otBorderRouterConfig *aConfig)
 {
-    Error                                  error;
+    Error                                  error    = kErrorNone;
     Instance &                             instance = *static_cast<Instance *>(aInstance);
     const NetworkData::OnMeshPrefixConfig *config   = static_cast<const NetworkData::OnMeshPrefixConfig *>(aConfig);
 
     OT_ASSERT(aConfig != nullptr);
 
-    SuccessOrExit(error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config));
-
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // Only try to configure Domain Prefix after the parameter is validated via above `AddOnMeshPrefix()`.
     if (aConfig->mDp)
     {
-        // Restore local server data
-        IgnoreError(instance.Get<NetworkData::Local>().RemoveOnMeshPrefix(config->GetPrefix()));
-
-        instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
+        error = instance.Get<BackboneRouter::Local>().SetDomainPrefix(*config);
     }
+    else
 #endif
+    {
+        error = instance.Get<NetworkData::Local>().AddOnMeshPrefix(*config);
+    }
 
-exit:
     return error;
 }
 

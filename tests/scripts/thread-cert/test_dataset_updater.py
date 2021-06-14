@@ -46,24 +46,19 @@ class TestDatasetUpdater(thread_cert.TestCase):
         LEADER: {
             'mode': 'rdn',
             'channel': 11,
-            'panid': 0xface,
         },
         ROUTER: {
             'mode': 'rdn',
             'channel': 11,
-            'panid': 0xface,
-            'router_selection_jitter': 1,
         },
         MED: {
             'mode': 'rn',
             'channel': 11,
-            'panid': 0xface,
             'allowlist': [ROUTER],
         },
         SED: {
             'mode': '-',
             'channel': 11,
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER],
         },

@@ -33,14 +33,14 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+
 #include <openthread/jam_detection.h>
 
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
-
-#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 otError otJamDetectionSetRssiThreshold(otInstance *aInstance, int8_t aRssiThreshold)
 {

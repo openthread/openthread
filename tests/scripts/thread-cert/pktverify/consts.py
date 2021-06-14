@@ -52,12 +52,18 @@ MA6 = Ipv6Addr('ff02::1')
 MAe1 = Ipv6Addr('fd0e::1234:777a:1')
 MAe2 = Ipv6Addr('::')
 MAe3 = Ipv6Addr('cafe::e0ff')
+MAS = [[Ipv6Addr(f'ff0e::{j:x}:777a:{i:x}') for j in range(16)] for i in range(16)]
 ALL_MPL_FORWARDERS_MA = Ipv6Addr('ff03::fc')
 
 LINK_LOCAL_PREFIX = Bytes("fe80")
 DEFAULT_MESH_LOCAL_PREFIX = Bytes("fd00:0db8:0000:0000")
 LEADER_ALOC_IID = Bytes("0000:00ff:fe00:fc00")
+PBBR_ALOC_IID = Bytes("0000:00ff:fe00:fc38")
 LEADER_ALOC = Ipv6Addr(DEFAULT_MESH_LOCAL_PREFIX + LEADER_ALOC_IID)
+PBBR_ALOC = Ipv6Addr(DEFAULT_MESH_LOCAL_PREFIX + PBBR_ALOC_IID)
+
+# Minimum value of the MLR Timeout parameter in the BBR Dataset
+MLR_TIMEOUT_MIN = 300
 
 # Max response delay
 MLE_MAX_RESPONSE_DELAY = 1
@@ -303,11 +309,11 @@ REAL_LAYER_NAMES = {
     'mdns',
 }
 
-FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop'}
+FAKE_LAYER_NAMES = {'thread_nwd', 'thread_meshcop', 'ipv6inner'}
 
 VALID_LAYER_NAMES = REAL_LAYER_NAMES | FAKE_LAYER_NAMES
 
-AUTO_SEEK_BACK_MAX_DURATION = 0.01
+AUTO_SEEK_BACK_MAX_DURATION = 0.02
 
 # Wireshark configs
 WIRESHARK_OVERRIDE_PREFS = {

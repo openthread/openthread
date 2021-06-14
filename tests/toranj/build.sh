@@ -74,6 +74,9 @@ while [ $# -ge 2 ]; do
             tests=yes
             shift
             ;;
+        "")
+            shift
+            ;;
         *)
             echo "Error: Unknown option \"$1\""
             display_usage
@@ -95,6 +98,14 @@ configure_options=(
     "--enable-coverage=$coverage"
     "--enable-ftd"
     "--enable-ncp"
+)
+
+posix_configure_options=(
+    "--disable-docs"
+    "--enable-tests=$tests"
+    "--enable-coverage=$coverage"
+    "--enable-ftd"
+    "--enable-cli"
 )
 
 if [ -n "${top_builddir}" ]; then
@@ -199,7 +210,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -215,7 +226,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -231,7 +242,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 
@@ -247,7 +258,7 @@ case ${build_config} in
         ${top_srcdir}/configure \
             CPPFLAGS="$cppflags_config" \
             --with-platform=posix \
-            "${configure_options[@]}" || die
+            "${posix_configure_options[@]}" || die
         make -j 8 || die
         ;;
 

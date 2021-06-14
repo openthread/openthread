@@ -35,7 +35,7 @@
 
 #include "common/crc16.hpp"
 #include "common/debug.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/string.hpp"
 #include "crypto/pbkdf2_cmac.hpp"
@@ -164,24 +164,24 @@ bool JoinerDiscerner::operator==(const JoinerDiscerner &aOther) const
 
 JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
 {
-    InfoString str;
+    InfoString string;
 
     if (mLength <= sizeof(uint16_t) * CHAR_BIT)
     {
-        IgnoreError(str.Set("0x%04x", static_cast<uint16_t>(mValue)));
+        string.Append("0x%04x", static_cast<uint16_t>(mValue));
     }
     else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
     {
-        IgnoreError(str.Set("0x%08x", static_cast<uint32_t>(mValue)));
+        string.Append("0x%08x", static_cast<uint32_t>(mValue));
     }
     else
     {
-        IgnoreError(str.Set("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue)));
+        string.Append("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue));
     }
 
-    IgnoreError(str.Append("/len:%d", mLength));
+    string.Append("/len:%d", mLength);
 
-    return str;
+    return string;
 }
 
 void SteeringData::Init(uint8_t aLength)

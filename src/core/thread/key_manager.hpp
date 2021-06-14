@@ -41,6 +41,7 @@
 #include <openthread/dataset.h>
 
 #include "common/clearable.hpp"
+#include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -60,6 +61,72 @@ namespace ot {
  *
  * @{
  */
+
+/**
+ * This class represents Security Policy Rotation and Flags.
+ *
+ */
+class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>
+{
+public:
+    enum : uint16_t
+    {
+        kMinKeyRotationTime     = 1,   ///< The minimum Key Rotation Time in hours.
+        kDefaultKeyRotationTime = 672, ///< Default Key Rotation Time (in unit of hours).
+    };
+
+    /**
+     * This constructor initializes the object with default Key Rotation Time
+     * and Security Policy Flags.
+     *
+     */
+    SecurityPolicy(void) { SetToDefault(); }
+
+    /**
+     * This method sets the Security Policy to default values.
+     *
+     */
+    void SetToDefault(void);
+
+    /**
+     * This method sets the Security Policy Flags.
+     *
+     * @param[in]  aFlags        The Security Policy Flags.
+     * @param[in]  aFlagsLength  The length of the Security Policy Flags, 1 byte for
+     *                           Thread 1.1 devices, and 2 bytes for Thread 1.2 or higher.
+     *
+     */
+    void SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength);
+
+    /**
+     * This method returns the Security Policy Flags.
+     *
+     * @param[out] aFlags        A pointer to the Security Policy Flags buffer.
+     * @param[in]  aFlagsLength  The length of the Security Policy Flags buffer.
+     *
+     */
+    void GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const;
+
+private:
+    enum : uint8_t
+    {
+        kDefaultFlags                   = 0xff,
+        kObtainMasterKeyMask            = 1 << 7,
+        kNativeCommissioningMask        = 1 << 6,
+        kRoutersMask                    = 1 << 5,
+        kExternalCommissioningMask      = 1 << 4,
+        kBeaconsMask                    = 1 << 3,
+        kCommercialCommissioningMask    = 1 << 2,
+        kAutonomousEnrollmentMask       = 1 << 1,
+        kMasterKeyProvisioningMask      = 1 << 0,
+        kTobleLinkMask                  = 1 << 7,
+        kNonCcmRoutersMask              = 1 << 6,
+        kReservedMask                   = 0x38,
+        kVersionThresholdForRoutingMask = 0x07,
+    };
+
+    void SetToDefaultFlags(void);
+};
 
 /**
  * This class represents a Thread Master Key.
@@ -115,16 +182,6 @@ typedef Mac::Key Kek;
 class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
-    enum : uint16_t
-    {
-        kDefaultKeyRotationTime = 672, ///< Default Key Rotation Time (in unit of hours).
-    };
-
-    enum : uint8_t
-    {
-        kDefaultSecurityPolicyFlags = 0xff, ///< Default Security Policy Flags.
-    };
-
     /**
      * This constructor initializes the object.
      *
@@ -366,29 +423,6 @@ public:
     void IncrementKekFrameCounter(void) { mKekFrameCounter++; }
 
     /**
-     * This method returns the KeyRotation time.
-     *
-     * The KeyRotation time is the time interval after witch security key will be automatically rotated.
-     *
-     * @returns The KeyRotation value in hours.
-     */
-    uint32_t GetKeyRotation(void) const { return mKeyRotationTime; }
-
-    /**
-     * This method sets the KeyRotation time.
-     *
-     * The KeyRotation time is the time interval after witch security key will be automatically rotated.
-     * Its value shall be larger than or equal to kMinKeyRotationTime.
-     *
-     * @param[in]  aKeyRotation  The KeyRotation value in hours.
-     *
-     * @retval  kErrorNone          KeyRotation time updated.
-     * @retval  kErrorInvalidArgs   @p aKeyRotation is out of range.
-     *
-     */
-    Error SetKeyRotation(uint32_t aKeyRotation);
-
-    /**
      * This method returns the KeySwitchGuardTime.
      *
      * The KeySwitchGuardTime is the time interval during which key rotation procedure is prevented.
@@ -409,82 +443,26 @@ public:
     void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) { mKeySwitchGuardTime = aKeySwitchGuardTime; }
 
     /**
-     * This method returns the Security Policy Flags.
+     * This method returns the Security Policy.
      *
-     * The Security Policy Flags specifies network administrator preferences for which
-     * security-related operations are allowed or disallowed.
+     * The Security Policy specifies Key Rotation Time and network administrator preferences
+     * for which security-related operations are allowed or disallowed.
      *
-     * @returns The SecurityPolicy Flags.
+     * @returns The SecurityPolicy.
      *
      */
-    uint8_t GetSecurityPolicyFlags(void) const { return mSecurityPolicyFlags; }
+    const SecurityPolicy &GetSecurityPolicy(void) const { return mSecurityPolicy; }
 
     /**
-     * This method sets the Security Policy Flags.
+     * This method sets the Security Policy.
      *
-     * The Security Policy Flags specifies network administrator preferences for which
-     * security-related operations are allowed or disallowed.
+     * The Security Policy specifies Key Rotation Time and network administrator preferences
+     * for which security-related operations are allowed or disallowed.
      *
-     * @param[in]  aSecurityPolicyFlags  The Security Policy Flags.
-     *
-     */
-    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags);
-
-    /**
-     * This method indicates whether or not obtaining Master key for out-of-band is enabled.
-     *
-     * @retval TRUE   If obtaining Master key for out-of-band is enabled.
-     * @retval FALSE  If obtaining Master key for out-of-band is not enabled.
+     * @param[in]  aSecurityPolicy  The Security Policy.
      *
      */
-    bool IsObtainMasterKeyEnabled(void) const
-    {
-        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_OBTAIN_MASTER_KEY) != 0;
-    }
-
-    /**
-     * This method indicates whether or not Native Commissioning using PSKc is allowed.
-     *
-     * @retval TRUE   If Native Commissioning using PSKc is allowed.
-     * @retval FALSE  If Native Commissioning using PSKc is not allowed.
-     *
-     */
-    bool IsNativeCommissioningAllowed(void) const
-    {
-        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_NATIVE_COMMISSIONING) != 0;
-    }
-
-    /**
-     * This method indicates whether or not Thread 1.1 Routers are enabled.
-     *
-     * @retval TRUE   If Thread 1.1 Routers are enabled.
-     * @retval FALSE  If Thread 1.1 Routers are not enabled.
-     *
-     */
-    bool IsRouterEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_ROUTERS) != 0; }
-
-    /**
-     * This method indicates whether or not external Commissioner authentication is allowed using PSKc.
-     *
-     * @retval TRUE   If the commissioning sessions by an external Commissioner based on the PSKc are allowed
-     *                to be established and that changes to the Commissioner Dataset by on-mesh nodes are allowed.
-     * @retval FALSE  If the commissioning sessions by an external Commissioner based on the PSKc are not allowed
-     *                to be established and that changes to the Commissioner Dataset by on-mesh nodes are not allowed.
-     *
-     */
-    bool IsExternalCommissionerAllowed(void) const
-    {
-        return (mSecurityPolicyFlags & OT_SECURITY_POLICY_EXTERNAL_COMMISSIONER) != 0;
-    }
-
-    /**
-     * This method indicates whether or not Thread Beacons are enabled.
-     *
-     * @retval TRUE   If Thread Beacons are enabled.
-     * @retval FALSE  If Thread Beacons are not enabled.
-     *
-     */
-    bool IsThreadBeaconEnabled(void) const { return (mSecurityPolicyFlags & OT_SECURITY_POLICY_BEACONS) != 0; }
+    void SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy);
 
     /**
      * This method updates the MAC keys and MLE key.
@@ -503,7 +481,6 @@ public:
 private:
     enum
     {
-        kMinKeyRotationTime        = 1,
         kDefaultKeySwitchGuardTime = 624,
         kOneHourIntervalInMsec     = 3600u * 1000u,
     };
@@ -555,7 +532,6 @@ private:
     uint32_t               mStoredMleFrameCounter;
 
     uint32_t   mHoursSinceKeyRotation;
-    uint32_t   mKeyRotationTime;
     uint32_t   mKeySwitchGuardTime;
     bool       mKeySwitchGuardEnabled;
     TimerMilli mKeyRotationTimer;
@@ -566,8 +542,8 @@ private:
     Kek      mKek;
     uint32_t mKekFrameCounter;
 
-    uint8_t mSecurityPolicyFlags;
-    bool    mIsPskcSet : 1;
+    SecurityPolicy mSecurityPolicy;
+    bool           mIsPskcSet : 1;
 };
 
 /**

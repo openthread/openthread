@@ -31,6 +31,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+
 #include <openthread/sntp.h>
 
 #include "common/message.hpp"
@@ -590,5 +592,7 @@ private:
 
 } // namespace Sntp
 } // namespace ot
+
+#endif // OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
 #endif // SNTP_CLIENT_HPP_

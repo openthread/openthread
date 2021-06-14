@@ -33,18 +33,18 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+
 #include <string.h>
 #include <openthread/diag.h>
 #include <openthread/platform/diag.h>
 
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "mac/mac_frame.hpp"
-
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 namespace ot {
 namespace Mac {

@@ -33,7 +33,7 @@
 
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
 
-#include <openthread/dns.h>
+#include <openthread/dnssd_server.h>
 
 #include "common/message.hpp"
 #include "common/non_copyable.hpp"
@@ -60,6 +60,18 @@ class Server : public InstanceLocator, private NonCopyable
 {
 public:
     /**
+     * This enumeration specifies a dns-sd query type.
+     *
+     */
+    enum DnsQueryType : uint8_t
+    {
+        kDnsQueryNone        = OT_DNSSD_QUERY_TYPE_NONE,         ///< Service type unspecified.
+        kDnsQueryBrowse      = OT_DNSSD_QUERY_TYPE_BROWSE,       ///< Service type browse service.
+        kDnsQueryResolve     = OT_DNSSD_QUERY_TYPE_RESOLVE,      ///< Service type resolve service instance.
+        kDnsQueryResolveHost = OT_DNSSD_QUERY_TYPE_RESOLVE_HOST, ///< Service type resolve hostname.
+    };
+
+    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
@@ -82,36 +94,65 @@ public:
      */
     void Stop(void);
 
+    /**
+     * This method sets DNS-SD query callbacks.
+     *
+     * @param[in] aSubscribe    A pointer to the callback function to subscribe a service or service instance.
+     * @param[in] aUnsubscribe  A pointer to the callback function to unsubscribe a service or service instance.
+     * @param[in] aContext      A pointer to the application-specific context.
+     *
+     */
+    void SetQueryCallbacks(otDnssdQuerySubscribeCallback   aSubscribe,
+                           otDnssdQueryUnsubscribeCallback aUnsubscribe,
+                           void *                          aContext);
+
+    /**
+     * This method notifies a discovered service instance.
+     *
+     * @param[in] aServiceFullName  The null-terminated full service name.
+     * @param[in] aInstanceInfo     A reference to the discovered service instance information.
+     *
+     */
+    void HandleDiscoveredServiceInstance(const char *aServiceFullName, const otDnssdServiceInstanceInfo &aInstanceInfo);
+
+    /**
+     * This method notifies a discovered host.
+     *
+     * @param[in] aHostFullName     The null-terminated full host name.
+     * @param[in] aHostInfo         A reference to the discovered host information.
+     *
+     */
+    void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
+
+    /**
+     * This function aquires the next query in the server.
+     *
+     * @param[in] aQuery            The query pointer. Pass nullptr to get the first query.
+     *
+     * @returns  A pointer to the query or nullptr if no more queries.
+     *
+     */
+    const otDnssdQuery *GetNextQuery(const otDnssdQuery *aQuery) const;
+
+    /**
+     * This function aquires the dns-sd query type and name for a specific query.
+     *
+     * @param[in]   aQuery            The query pointer.
+     * @param[out]  aNameOutput       The name output buffer.
+     *
+     * @returns The dns-sd query type.
+     *
+     */
+    static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize]);
+
 private:
-    enum
-    {
-        kPort                = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
-        kProtocolLabelLength = 4,
-    };
-
-    enum : uint8_t
-    {
-        kResolveNone           = 0,
-        kResolveAnswer         = 1u << 0,
-        kResolveAdditionalSrv  = 1u << 1,
-        kResolveAdditionalTxt  = 1u << 2,
-        kResolveAdditionalAaaa = 1u << 3,
-        kResolveAdditionalAll  = kResolveAdditionalSrv | kResolveAdditionalTxt | kResolveAdditionalAaaa,
-    };
-
     class NameCompressInfo : public Clearable<NameCompressInfo>
     {
     public:
-        enum : uint16_t
-        {
-            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
-        };
+        explicit NameCompressInfo(void) = default;
 
         explicit NameCompressInfo(const char *aDomainName)
             : mDomainName(aDomainName)
-            , mServiceName(nullptr)
-            , mInstanceName(nullptr)
-            , mHostName(nullptr)
             , mDomainNameOffset(kUnknownOffset)
             , mServiceNameOffset(kUnknownOffset)
             , mInstanceNameOffset(kUnknownOffset)
@@ -119,86 +160,78 @@ private:
         {
         }
 
+        enum : uint16_t
+        {
+            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
+        };
+
         uint16_t GetDomainNameOffset(void) const { return mDomainNameOffset; }
 
         void SetDomainNameOffset(uint16_t aOffset) { mDomainNameOffset = aOffset; }
 
         const char *GetDomainName(void) const { return mDomainName; }
 
-        uint16_t GetServiceNameOffset(const char *aServiceName) const
+        uint16_t GetServiceNameOffset(const Message &aMessage, const char *aServiceName) const
         {
-            uint16_t offset = mServiceNameOffset;
-
-            if (offset != kUnknownOffset && strcmp(aServiceName, mServiceName) != 0)
-            {
-                offset = kUnknownOffset;
-            }
-
-            return offset;
+            return MatchCompressedName(aMessage, mServiceNameOffset, aServiceName)
+                       ? mServiceNameOffset
+                       : static_cast<uint16_t>(kUnknownOffset);
         };
 
-        void SetServiceNameOffset(uint16_t aOffset, const char *aName)
+        void SetServiceNameOffset(uint16_t aOffset)
         {
-            if (mServiceName == nullptr)
+            if (mServiceNameOffset == kUnknownOffset)
             {
-                mServiceName       = aName;
                 mServiceNameOffset = aOffset;
             }
         }
 
-        const char *GetServiceName() const { return mServiceName; }
-
-        uint16_t GetInstanceNameOffset(const char *aName) const
+        uint16_t GetInstanceNameOffset(const Message &aMessage, const char *aName) const
         {
-            uint16_t offset = mInstanceNameOffset;
-
-            if (offset != kUnknownOffset && strcmp(aName, mInstanceName) != 0)
-            {
-                offset = kUnknownOffset;
-            }
-
-            return offset;
+            return MatchCompressedName(aMessage, mInstanceNameOffset, aName) ? mInstanceNameOffset
+                                                                             : static_cast<uint16_t>(kUnknownOffset);
         }
 
-        void SetInstanceNameOffset(uint16_t aOffset, const char *aName)
+        void SetInstanceNameOffset(uint16_t aOffset)
         {
-            if (mInstanceName == nullptr)
+            if (mInstanceNameOffset == kUnknownOffset)
             {
-                mInstanceName       = aName;
                 mInstanceNameOffset = aOffset;
             }
         }
 
-        uint16_t GetHostNameOffset(const char *aName) const
+        uint16_t GetHostNameOffset(const Message &aMessage, const char *aName) const
         {
-            uint16_t offset = mHostNameOffset;
-
-            if (offset != kUnknownOffset && strcmp(aName, mHostName) != 0)
-            {
-                offset = kUnknownOffset;
-            }
-
-            return offset;
+            return MatchCompressedName(aMessage, mHostNameOffset, aName) ? mHostNameOffset
+                                                                         : static_cast<uint16_t>(kUnknownOffset);
         }
 
-        void SetHostNameOffset(uint16_t aOffset, const char *aName)
+        void SetHostNameOffset(uint16_t aOffset)
         {
-            if (mHostName == nullptr)
+            if (mHostNameOffset == kUnknownOffset)
             {
-                mHostName       = aName;
                 mHostNameOffset = aOffset;
             }
         }
 
     private:
-        const char *const mDomainName;   // The serialized domain name.
-        const char *      mServiceName;  // The serialized service name (only support one service name).
-        const char *      mInstanceName; // The serialized instance name or nullptr (only support one instance name).
-        const char *      mHostName;     // The serialized host name or nullptr (only support one host name).
-        uint16_t          mDomainNameOffset;   // Offset of domain name serialization into the response message.
-        uint16_t          mServiceNameOffset;  // Offset of service name serialization into the response message.
-        uint16_t          mInstanceNameOffset; // Offset of instance name serialization into the response message.
-        uint16_t          mHostNameOffset;     // Offset of host name serialization into the response message.
+        static bool MatchCompressedName(const Message &aMessage, uint16_t aOffset, const char *aName)
+        {
+            return aOffset != kUnknownOffset && Name::CompareName(aMessage, aOffset, aName) == kErrorNone;
+        }
+
+        const char *mDomainName;         // The serialized domain name.
+        uint16_t    mDomainNameOffset;   // Offset of domain name serialization into the response message.
+        uint16_t    mServiceNameOffset;  // Offset of service name serialization into the response message.
+        uint16_t    mInstanceNameOffset; // Offset of instance name serialization into the response message.
+        uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
+    };
+
+    enum
+    {
+        kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
+        kProtocolLabelLength  = 4,
+        kMaxConcurrentQueries = 32,
     };
 
     // This structure represents the splitting information of a full name.
@@ -232,67 +265,142 @@ private:
                                  // instance.
     };
 
-    bool             IsRunning(void) const { return mSocket.IsBound(); }
-    static void      HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
-    void             HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void             ProcessQuery(Message &aMessage, Message &aResponse, const Header &aRequestHeader);
-    Header::Response ResolveQuestion(const char *      aName,
-                                     const Question &  aQuestion,
-                                     Header &          aResponseHeader,
-                                     Message &         aResponseMessage,
-                                     uint8_t           aResolveKind,
-                                     NameCompressInfo &aCompressInfo);
-    static Error     AppendQuestion(const char *      aName,
-                                    const Question &  aQuestion,
-                                    Message &         aMessage,
-                                    NameCompressInfo &aCompressInfo);
-    static Error     AppendPtrRecord(Message &         aMessage,
-                                     const char *      aServiceName,
-                                     const char *      aInstanceName,
-                                     uint32_t          aTtl,
-                                     NameCompressInfo &aCompressInfo);
-    static Error     AppendSrvRecord(Message &         aMessage,
-                                     const char *      aInstanceName,
-                                     const char *      aHostName,
-                                     uint32_t          aTtl,
-                                     uint16_t          aPriority,
-                                     uint16_t          aWeight,
-                                     uint16_t          aPort,
-                                     NameCompressInfo &aCompressInfo);
-    static Error     AppendAaaaRecord(Message &           aMessage,
-                                      const char *        aHostName,
-                                      const Ip6::Address &aAddress,
-                                      uint32_t            aTtl,
-                                      NameCompressInfo &  aCompressInfo);
-    static Error     AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
-    static Error     AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
-    static Error     AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
-    static void      IncResourceRecordCount(Header &aHeader, bool aAdditional);
-    static Error     FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
-    static Error     FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
+    /**
+     * This class contains the compress information for a dns packet.
+     *
+     */
+    class QueryTransaction
+    {
+    public:
+        explicit QueryTransaction(void)
+            : mResponseMessage(nullptr)
+        {
+        }
 
+        void                    Init(const Header &          aResponseHeader,
+                                     Message &               aResponseMessage,
+                                     const NameCompressInfo &aCompressInfo,
+                                     const Ip6::MessageInfo &aMessageInfo);
+        bool                    IsValid(void) const { return mResponseMessage != nullptr; }
+        const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+        const Header &          GetResponseHeader(void) const { return mResponseHeader; }
+        Header &                GetResponseHeader(void) { return mResponseHeader; }
+        const Message &         GetResponseMessage(void) const { return *mResponseMessage; }
+        Message &               GetResponseMessage(void) { return *mResponseMessage; }
+        TimeMilli               GetStartTime(void) const { return mStartTime; }
+        NameCompressInfo &      GetNameCompressInfo(void) { return mCompressInfo; };
+        void                    Finalize(Header::Response aResponseMessage, Ip6::Udp::Socket &aSocket);
+
+        Header           mResponseHeader;
+        Message *        mResponseMessage;
+        NameCompressInfo mCompressInfo;
+        Ip6::MessageInfo mMessageInfo;
+        TimeMilli        mStartTime;
+    };
+
+    enum : uint32_t
+    {
+        kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT,
+    };
+
+    bool        IsRunning(void) const { return mSocket.IsBound(); }
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    void ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage, const Ip6::MessageInfo &aMessageInfo);
+    static Header::Response AddQuestions(const Header &    aRequestHeader,
+                                         const Message &   aRequestMessage,
+                                         Header &          aResponseHeader,
+                                         Message &         aResponseMessage,
+                                         NameCompressInfo &aCompressInfo);
+    static Error            AppendQuestion(const char *      aName,
+                                           const Question &  aQuestion,
+                                           Message &         aMessage,
+                                           NameCompressInfo &aCompressInfo);
+    static Error            AppendPtrRecord(Message &         aMessage,
+                                            const char *      aServiceName,
+                                            const char *      aInstanceName,
+                                            uint32_t          aTtl,
+                                            NameCompressInfo &aCompressInfo);
+    static Error            AppendSrvRecord(Message &         aMessage,
+                                            const char *      aInstanceName,
+                                            const char *      aHostName,
+                                            uint32_t          aTtl,
+                                            uint16_t          aPriority,
+                                            uint16_t          aWeight,
+                                            uint16_t          aPort,
+                                            NameCompressInfo &aCompressInfo);
+    static Error            AppendTxtRecord(Message &         aMessage,
+                                            const char *      aInstanceName,
+                                            const void *      aTxtData,
+                                            uint16_t          aTxtLength,
+                                            uint32_t          aTtl,
+                                            NameCompressInfo &aCompressInfo);
+    static Error            AppendAaaaRecord(Message &           aMessage,
+                                             const char *        aHostName,
+                                             const Ip6::Address &aAddress,
+                                             uint32_t            aTtl,
+                                             NameCompressInfo &  aCompressInfo);
+    static Error            AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
+    static Error            AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
+    static Error            AppendHostName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo);
+    static void             IncResourceRecordCount(Header &aHeader, bool aAdditional);
+    static Error            FindNameComponents(const char *aName, const char *aDomain, NameComponentsOffsetInfo &aInfo);
+    static Error            FindPreviousLabel(const char *aName, uint8_t &aStart, uint8_t &aStop);
+    static void             SendResponse(Header                  aHeader,
+                                         Header::Response        aResponseCode,
+                                         Message &               aMessage,
+                                         const Ip6::MessageInfo &aMessageInfo,
+                                         Ip6::Udp::Socket &      aSocket);
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Header::Response                   ResolveBySrp(Header &                  aResponseHeader,
+                                                    Message &                 aResponseMessage,
+                                                    Server::NameCompressInfo &aCompressInfo);
     Header::Response                   ResolveQuestionBySrp(const char *      aName,
                                                             const Question &  aQuestion,
                                                             Header &          aResponseHeader,
                                                             Message &         aResponseMessage,
-                                                            uint8_t           aResolveKind,
-                                                            NameCompressInfo &aCompressInfo);
+                                                            NameCompressInfo &aCompressInfo,
+                                                            bool              aAdditional);
     const Srp::Server::Host *          GetNextSrpHost(const Srp::Server::Host *aHost);
     static const Srp::Server::Service *GetNextSrpService(const Srp::Server::Host &   aHost,
                                                          const Srp::Server::Service *aService);
-    static Error                       AppendTxtRecord(Message &                   aMessage,
-                                                       const char *                aInstanceName,
-                                                       const Srp::Server::Service &aService,
-                                                       uint32_t                    aTtl,
-                                                       NameCompressInfo &          aCompressInfo);
 #endif
+
+    Error             ResolveByQueryCallbacks(Header &                aResponseHeader,
+                                              Message &               aResponseMessage,
+                                              NameCompressInfo &      aCompressInfo,
+                                              const Ip6::MessageInfo &aMessageInfo);
+    QueryTransaction *NewQuery(const Header &          aResponseHeader,
+                               Message &               aResponseMessage,
+                               const NameCompressInfo &aCompressInfo,
+                               const Ip6::MessageInfo &aMessageInfo);
+    static bool       CanAnswerQuery(const QueryTransaction &          aQuery,
+                                     const char *                      aServiceFullName,
+                                     const otDnssdServiceInstanceInfo &aInstanceInfo);
+    void              AnswerQuery(QueryTransaction &                aQuery,
+                                  const char *                      aServiceFullName,
+                                  const otDnssdServiceInstanceInfo &aInstanceInfo);
+    static bool       CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *aHostFullName);
+    void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
+    void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
+    static DnsQueryType GetQueryTypeAndName(const Header & aHeader,
+                                            const Message &aMessage,
+                                            char (&aName)[Name::kMaxNameSize]);
+    static bool HasQuestion(const Header &aHeader, const Message &aMessage, const char *aName, uint16_t aQuestionType);
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+    void        ResetTimer(void);
 
     static const char kDnssdProtocolUdp[4];
     static const char kDnssdProtocolTcp[4];
     static const char kDefaultDomainName[];
+    Ip6::Udp::Socket  mSocket;
 
-    Ip6::Udp::Socket mSocket;
+    QueryTransaction                mQueryTransactions[kMaxConcurrentQueries];
+    void *                          mQueryCallbackContext;
+    otDnssdQuerySubscribeCallback   mQuerySubscribe;
+    otDnssdQueryUnsubscribeCallback mQueryUnsubscribe;
+    TimerMilli                      mTimer;
 };
 
 } // namespace ServiceDiscovery

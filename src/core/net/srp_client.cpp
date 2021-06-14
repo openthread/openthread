@@ -28,17 +28,17 @@
 
 #include "srp_client.hpp"
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "common/string.hpp"
 #include "thread/network_data_service.hpp"
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
 
 /**
  * @file
@@ -127,6 +127,16 @@ exit:
     return;
 }
 
+bool Client::Service::Matches(const Service &aOther) const
+{
+    // This method indicates whether or not two service entries match,
+    // i.e., have the same service and instance names. This is intended
+    // for use by `LinkedList::FindMatching()` to search within the
+    // `mServices` list.
+
+    return (strcmp(GetName(), aOther.GetName()) == 0) && (strcmp(GetInstanceName(), aOther.GetInstanceName()) == 0);
+}
+
 //---------------------------------------------------------------------
 // Client
 
@@ -140,6 +150,10 @@ Client::Client(Instance &aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     , mAutoStartModeEnabled(kAutoStartDefaultMode)
     , mAutoStartDidSelectServer(false)
+    , mAutoStartIsUsingAnycastAddress(false)
+#endif
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    , mServiceKeyRecordEnabled(false)
 #endif
     , mUpdateMessageId(0)
     , mRetryWaitInterval(kMinRetryWaitInterval)
@@ -152,6 +166,7 @@ Client::Client(Instance &aInstance)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     , mAutoStartCallback(nullptr)
     , mAutoStartContext(nullptr)
+    , mServerSequenceNumber(0)
 #endif
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance, Client::HandleTimer)
@@ -298,7 +313,7 @@ void Client::HandleNotifierEvents(Events aEvents)
     }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    if (aEvents.Contains(kEventThreadNetdataChanged))
+    if (aEvents.ContainsAny(kEventThreadNetdataChanged | kEventThreadMeshLocalAddrChanged))
     {
         ProcessAutoStart();
     }
@@ -383,7 +398,7 @@ Error Client::AddService(Service &aService)
 {
     Error error;
 
-    VerifyOrExit(!mServices.Contains(aService), error = kErrorAlready);
+    VerifyOrExit(mServices.FindMatching(aService) == nullptr, error = kErrorAlready);
 
     SuccessOrExit(error = aService.Init());
     mServices.Push(aService);
@@ -430,6 +445,19 @@ void Client::UpdateServiceStateToRemove(Service &aService)
     {
         aService.SetState(kToRemove);
     }
+}
+
+Error Client::ClearService(Service &aService)
+{
+    Error error;
+
+    SuccessOrExit(error = mServices.Remove(aService));
+    aService.SetNext(nullptr);
+    aService.SetState(kRemoved);
+    UpdateState();
+
+exit:
+    return error;
 }
 
 Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
@@ -527,12 +555,36 @@ exit:
 
 void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
 {
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    ItemState oldHostState = mHostInfo.GetState();
+#endif
+
     mHostInfo.SetState(aNewStates[mHostInfo.GetState()]);
 
     for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
     {
         service->SetState(aNewStates[service->GetState()]);
     }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    if (mAutoStartModeEnabled && mAutoStartDidSelectServer && (oldHostState != kRegistered) &&
+        (mHostInfo.GetState() == kRegistered))
+    {
+        if (mAutoStartIsUsingAnycastAddress)
+        {
+            IgnoreError(Get<Settings>().Delete<Settings::SrpClientInfo>());
+        }
+        else
+        {
+            Settings::SrpClientInfo info;
+
+            info.SetServerAddress(GetServerAddress().GetAddress());
+            info.SetServerPort(GetServerAddress().GetPort());
+
+            IgnoreError(Get<Settings>().Save(info));
+        }
+    }
+#endif
 }
 
 void Client::InvokeCallback(Error aError) const
@@ -706,7 +758,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
 {
     Error error;
 
-    error = Get<Settings>().ReadSrpKey(aKeyPair);
+    error = Get<Settings>().Read<Settings::SrpEcdsaKey>(aKeyPair);
 
     if (error == kErrorNone)
     {
@@ -719,7 +771,7 @@ Error Client::ReadOrGenerateKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair)
     }
 
     SuccessOrExit(error = aKeyPair.Generate());
-    IgnoreError(Get<Settings>().SaveSrpKey(aKeyPair));
+    IgnoreError(Get<Settings>().Save<Settings::SrpEcdsaKey>(aKeyPair));
 
 exit:
     return error;
@@ -810,16 +862,26 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
     UpdateRecordLengthInMessage(rr, offset, aMessage);
     aInfo.mRecordCount++;
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (mServiceKeyRecordEnabled)
+    {
+        // KEY RR is optional in "Service Description Instruction". It
+        // is added here under `REFERENCE_DEVICE` config and is intended
+        // for testing only.
+
+        SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, aMessage));
+        SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+    }
+#endif
+
 exit:
     return error;
 }
 
 Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) const
 {
-    Error                          error = kErrorNone;
-    Dns::ResourceRecord            rr;
-    Dns::KeyRecord                 key;
-    Crypto::Ecdsa::P256::PublicKey publicKey;
+    Error               error = kErrorNone;
+    Dns::ResourceRecord rr;
 
     //----------------------------------
     // Host Description Instruction
@@ -847,6 +909,18 @@ Error Client::AppendHostDescriptionInstruction(Message &aMessage, Info &aInfo) c
     // KEY RR
 
     SuccessOrExit(error = AppendHostName(aMessage, aInfo));
+    SuccessOrExit(error = AppendKeyRecord(aMessage, aInfo));
+
+exit:
+    return error;
+}
+
+Error Client::AppendKeyRecord(Message &aMessage, Info &aInfo) const
+{
+    Error                          error;
+    Dns::KeyRecord                 key;
+    Crypto::Ecdsa::P256::PublicKey publicKey;
+
     key.Init();
     key.SetTtl(mLeaseInterval);
     key.SetFlags(Dns::KeyRecord::kAuthConfidPermitted, Dns::KeyRecord::kOwnerNonZone,
@@ -1163,7 +1237,7 @@ void Client::ProcessResponse(Message &aMessage)
 exit:
     if (error != kErrorNone)
     {
-        otLogInfoSrp("[clinet] Failed to process response %s", ErrorToString(error));
+        otLogInfoSrp("[client] Failed to process response %s", ErrorToString(error));
     }
 }
 
@@ -1475,51 +1549,108 @@ exit:
 
 void Client::ProcessAutoStart(void)
 {
-    uint16_t                                numServers = 0;
-    NetworkData::Service::SrpServer::Info   selectedServer;
-    NetworkData::Service::SrpServer::Info   server;
-    NetworkData::Service::Manager::Iterator iterator;
+    Ip6::SockAddr                             serverSockAddr;
+    bool                                      serverIsAnycast = false;
+    NetworkData::Service::DnsSrpAnycast::Info anycastInfo;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    Settings::SrpClientInfo savedInfo;
+    bool                    hasSavedServerInfo = false;
+#endif
 
     VerifyOrExit(mAutoStartModeEnabled);
 
-    // If the client is not running we check if there is any SRP sever
-    // info in Network Data and select one randomly and then start the
-    // client. If the client is already running with a server that was
-    // selected by the auto-start feature, we verify that the selected
-    // server is still present in the Network Data.
+    serverSockAddr.Clear();
+
+    // If the SRP client is not running and auto start mode is
+    // enabled, we check if we can find any SRP server info in the
+    // Thread Network Data. If it is already running and the server
+    // was chosen by the auto-start feature, then we ensure that the
+    // selected server is still present in the Network Data.
+    //
+    // Two types of "DNS/SRP Service" entries can be present in
+    // Network Data, "DNS/SRP Service Anycast Address" model and
+    // "DNS/SRP Service Unicast" model. The Anycast entries are
+    // preferred over the Unicast entries.
 
     VerifyOrExit(!IsRunning() || mAutoStartDidSelectServer);
 
-    while (Get<NetworkData::Service::Manager>().GetNextSrpServerInfo(iterator, server) == kErrorNone)
+    // Now `IsRunning()` implies `mAutoStartDidSelectServer`.
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    if (!IsRunning())
     {
-        numServers++;
+        hasSavedServerInfo = (Get<Settings>().Read(savedInfo) == kErrorNone);
+    }
+#endif
 
-        // Choose a server randomly (with uniform distribution) from
-        // the list of servers. As we iterate through server entries,
-        // with probability `1/numServers`, we choose to switch the
-        // current selected server with the new entry. This approach
-        // results in a uniform/same probability of selection among
-        // all server entries.
-
-        if ((numServers == 1) || (Random::NonCrypto::GetUint16InRange(0, numServers) == 0))
+    if (Get<NetworkData::Service::Manager>().FindPreferredDnsSrpAnycastInfo(anycastInfo) == kErrorNone)
+    {
+        if (IsRunning() && mAutoStartIsUsingAnycastAddress && (mServerSequenceNumber == anycastInfo.mSequenceNumber) &&
+            (GetServerAddress().GetAddress() == anycastInfo.mAnycastAddress))
         {
-            selectedServer = server;
+            // Client is already using the same anycast address.
+            ExitNow();
         }
 
-        if (IsRunning() && mAutoStartDidSelectServer && (GetServerAddress() == server.mSockAddr))
+        otLogInfoSrp("[client] Found anycast server %d", anycastInfo.mSequenceNumber);
+
+        serverSockAddr.SetAddress(anycastInfo.mAnycastAddress);
+        serverSockAddr.SetPort(kAnycastServerPort);
+        mServerSequenceNumber = anycastInfo.mSequenceNumber;
+        serverIsAnycast       = true;
+    }
+    else
+    {
+        uint16_t                                  numServers = 0;
+        NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
+        NetworkData::Service::Manager::Iterator   iterator;
+
+        while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNone)
         {
-            ExitNow();
+            if (IsRunning() && !mAutoStartIsUsingAnycastAddress && (GetServerAddress() == unicastInfo.mSockAddr))
+            {
+                ExitNow();
+            }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+            if (hasSavedServerInfo && (unicastInfo.mSockAddr.GetAddress() == savedInfo.GetServerAddress()) &&
+                (unicastInfo.mSockAddr.GetPort() == savedInfo.GetServerPort()))
+            {
+                // Stop the search if we see a match for the previously
+                // saved server info in the network data entries.
+
+                serverSockAddr  = unicastInfo.mSockAddr;
+                serverIsAnycast = false;
+                break;
+            }
+#endif
+
+            numServers++;
+
+            // Choose a server randomly (with uniform distribution) from
+            // the list of servers. As we iterate through server entries,
+            // with probability `1/numServers`, we choose to switch the
+            // current selected server with the new entry. This approach
+            // results in a uniform/same probability of selection among
+            // all server entries.
+
+            if ((numServers == 1) || (Random::NonCrypto::GetUint16InRange(0, numServers) == 0))
+            {
+                serverSockAddr  = unicastInfo.mSockAddr;
+                serverIsAnycast = false;
+            }
         }
     }
 
     if (IsRunning())
     {
-        otLogInfoSrp("[client] Server %s is no longer present in net data", GetServerAddress().ToString().AsCString());
         Stop(kRequesterAuto);
     }
 
-    VerifyOrExit(numServers > 0);
-    IgnoreError(Start(selectedServer.mSockAddr, kRequesterAuto));
+    VerifyOrExit(!serverSockAddr.GetAddress().IsUnspecified());
+
+    mAutoStartIsUsingAnycastAddress = serverIsAnycast;
+    IgnoreError(Start(serverSockAddr, kRequesterAuto));
 
 exit:
     return;

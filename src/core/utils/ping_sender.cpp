@@ -36,7 +36,7 @@
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
 
 #include "common/encoding.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/random.hpp"
 
 namespace ot {
@@ -97,7 +97,7 @@ PingSender::PingSender(Instance &aInstance)
 
 Error PingSender::Ping(const Config &aConfig)
 {
-    Error error = kErrorNone;
+    Error error = kErrorPending;
 
     VerifyOrExit(!mTimer.IsRunning(), error = kErrorBusy);
 
@@ -128,6 +128,7 @@ void PingSender::SendPing(void)
     Message *        message = nullptr;
     Ip6::MessageInfo messageInfo;
 
+    messageInfo.SetSockAddr(mConfig.GetSource());
     messageInfo.SetPeerAddr(mConfig.GetDestination());
     messageInfo.mHopLimit          = mConfig.mHopLimit;
     messageInfo.mAllowZeroHopLimit = mConfig.mAllowZeroHopLimit;
@@ -160,7 +161,7 @@ exit:
     {
         mTimer.Start(mConfig.mInterval);
     }
-    else if (!mStatistics.mIsMulticast)
+    else
     {
         mTimer.Start(mConfig.mTimeout);
     }
@@ -200,6 +201,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
     Reply    reply;
     uint32_t timestamp;
 
+    VerifyOrExit(mTimer.IsRunning());
     VerifyOrExit(aIcmpHeader.GetType() == Ip6::Icmp::Header::kTypeEchoReply);
     VerifyOrExit(aIcmpHeader.GetId() == mIdentifier);
 
@@ -208,7 +210,7 @@ void PingSender::HandleIcmpReceive(const Message &          aMessage,
 
     reply.mSenderAddress = aMessageInfo.GetPeerAddr();
     reply.mRoundTripTime =
-        static_cast<uint16_t>(OT_MIN(TimerMilli::GetNow() - TimeMilli(timestamp), NumericLimits<uint16_t>::Max()));
+        static_cast<uint16_t>(OT_MIN(TimerMilli::GetNow() - TimeMilli(timestamp), NumericLimits<uint16_t>::kMax));
     reply.mSize           = aMessage.GetLength() - aMessage.GetOffset();
     reply.mSequenceNumber = aIcmpHeader.GetSequence();
     reply.mHopLimit       = aMessageInfo.GetHopLimit();

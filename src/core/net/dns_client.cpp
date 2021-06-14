@@ -28,15 +28,15 @@
 
 #include "dns_client.hpp"
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "net/udp6.hpp"
 #include "thread/thread_netif.hpp"
-
-#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
 /**
  * @file
@@ -60,6 +60,9 @@ Client::QueryConfig::QueryConfig(InitMode aMode)
     SetResponseTimeout(kDefaultResponseTimeout);
     SetMaxTxAttempts(kDefaultMaxTxAttempts);
     SetRecursionFlag(kDefaultRecursionDesired ? kFlagRecursionDesired : kFlagNoRecursion);
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    SetNat64Mode(kDefaultNat64Allowed ? kNat64Allow : kNat64Disallow);
+#endif
 }
 
 void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig &aDefaultConfig)
@@ -94,6 +97,13 @@ void Client::QueryConfig::SetFrom(const QueryConfig &aConfig, const QueryConfig 
     {
         SetRecursionFlag(aDefaultConfig.GetRecursionFlag());
     }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    if (GetNat64Mode() == kNat64Unspecified)
+    {
+        SetNat64Mode(aDefaultConfig.GetNat64Mode());
+    }
+#endif
 }
 
 //---------------------------------------------------------------------------------------------------------------------
@@ -122,37 +132,57 @@ Error Client::Response::GetName(char *aNameBuffer, uint16_t aNameBufferSize) con
     return Name::ReadName(*mQuery, offset, aNameBuffer, aNameBufferSize);
 }
 
+Error Client::Response::CheckForHostNameAlias(Section aSection, Name &aHostName) const
+{
+    // If the response includes a CNAME record mapping the query host
+    // name to a canonical name, we update `aHostName` to the new alias
+    // name. Otherwise `aHostName` remains as before.
+
+    Error       error;
+    uint16_t    offset;
+    uint16_t    numRecords;
+    CnameRecord cnameRecord;
+
+    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
+
+    SelectSection(aSection, offset, numRecords);
+    error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, /* aIndex */ 0, aHostName, cnameRecord);
+
+    switch (error)
+    {
+    case kErrorNone:
+        // A CNAME record was found. `offset` now points to after the
+        // last read byte within the `mMessage` into the `cnameRecord`
+        // (which is the start of the new canonical name).
+        aHostName.SetFromMessage(*mMessage, offset);
+        error = Name::ParseName(*mMessage, offset);
+        break;
+
+    case kErrorNotFound:
+        error = kErrorNone;
+        break;
+
+    default:
+        break;
+    }
+
+exit:
+    return error;
+}
+
 Error Client::Response::FindHostAddress(Section       aSection,
                                         const Name &  aHostName,
                                         uint16_t      aIndex,
                                         Ip6::Address &aAddress,
                                         uint32_t &    aTtl) const
 {
-    Error       error;
-    uint16_t    offset;
-    uint16_t    numRecords;
-    Name        name = aHostName;
-    CnameRecord cnameRecord;
-    AaaaRecord  aaaaRecord;
+    Error      error;
+    uint16_t   offset;
+    uint16_t   numRecords;
+    Name       name = aHostName;
+    AaaaRecord aaaaRecord;
 
-    VerifyOrExit(mMessage != nullptr, error = kErrorNotFound);
-
-    // If the response includes a CNAME record mapping the query host
-    // name to a canonical name, we then search for AAAA records
-    // matching the canonical name.
-
-    SelectSection(aSection, offset, numRecords);
-    error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, /* aIndex */ 0, aHostName, cnameRecord);
-
-    if (error == kErrorNone)
-    {
-        name.SetFromMessage(*mMessage, offset);
-        SuccessOrExit(error = Name::ParseName(*mMessage, offset));
-    }
-    else
-    {
-        VerifyOrExit(error == kErrorNotFound);
-    }
+    SuccessOrExit(error = CheckForHostNameAlias(aSection, name));
 
     SelectSection(aSection, offset, numRecords);
     SuccessOrExit(error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, aIndex, name, aaaaRecord));
@@ -162,6 +192,26 @@ Error Client::Response::FindHostAddress(Section       aSection,
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+Error Client::Response::FindARecord(Section aSection, const Name &aHostName, uint16_t aIndex, ARecord &aARecord) const
+{
+    Error    error;
+    uint16_t offset;
+    uint16_t numRecords;
+    Name     name = aHostName;
+
+    SuccessOrExit(error = CheckForHostNameAlias(aSection, name));
+
+    SelectSection(aSection, offset, numRecords);
+    error = ResourceRecord::FindRecord(*mMessage, offset, numRecords, aIndex, name, aARecord);
+
+exit:
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
@@ -257,8 +307,59 @@ exit:
 
 Error Client::AddressResponse::GetAddress(uint16_t aIndex, Ip6::Address &aAddress, uint32_t &aTtl) const
 {
-    return FindHostAddress(kAnswerSection, Name(*mQuery, kNameOffsetInQuery), aIndex, aAddress, aTtl);
+    Error error = kErrorNone;
+    Name  name(*mQuery, kNameOffsetInQuery);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+    // If the response is for an IPv4 address query or if it is an
+    // IPv6 address query response with no IPv6 address but with
+    // an IPv4 in its additional section, we read the IPv4 address
+    // and translate it to an IPv6 address.
+
+    QueryInfo info;
+
+    info.ReadFrom(*mQuery);
+
+    if ((info.mQueryType == kIp4AddressQuery) || mIp6QueryResponseRequiresNat64)
+    {
+        Section     section;
+        ARecord     aRecord;
+        Ip6::Prefix nat64Prefix;
+
+        SuccessOrExit(error = GetNat64Prefix(nat64Prefix));
+
+        section = (info.mQueryType == kIp4AddressQuery) ? kAnswerSection : kAdditionalDataSection;
+        SuccessOrExit(error = FindARecord(section, name, aIndex, aRecord));
+
+        aAddress.SynthesizeFromIp4Address(nat64Prefix, aRecord.GetAddress());
+        aTtl = aRecord.GetTtl();
+
+        ExitNow();
+    }
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+    ExitNow(error = FindHostAddress(kAnswerSection, name, aIndex, aAddress, aTtl));
+
+exit:
+    return error;
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+Error Client::AddressResponse::GetNat64Prefix(Ip6::Prefix &aPrefix) const
+{
+    // Use well-known prefix "64:ff9b::/96" (temporary solution).
+    static const uint8_t kWellknownPrefix[] = {0x00, 0x64, 0xff, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+
+    aPrefix.Clear();
+    aPrefix.Set(kWellknownPrefix, 96);
+
+    return kErrorNone;
+}
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
@@ -410,25 +511,34 @@ Error Client::ServiceResponse::GetHostAddress(const char *  aHostName,
 //---------------------------------------------------------------------------------------------------------------------
 // Client
 
-const uint16_t Client::kAddressQueryRecordTypes[] = {ResourceRecord::kTypeAaaa};
+const uint16_t Client::kIp6AddressQueryRecordTypes[] = {ResourceRecord::kTypeAaaa};
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+const uint16_t Client::kIp4AddressQueryRecordTypes[] = {ResourceRecord::kTypeA};
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 const uint16_t Client::kBrowseQueryRecordTypes[]  = {ResourceRecord::kTypePtr};
 const uint16_t Client::kServiceQueryRecordTypes[] = {ResourceRecord::kTypeSrv, ResourceRecord::kTypeTxt};
 #endif
 
 const uint8_t Client::kQuestionCount[] = {
-    /* (0) kAddressQuery -> */ OT_ARRAY_LENGTH(kAddressQueryRecordTypes), // AAAA records
+    /* kIp6AddressQuery -> */ OT_ARRAY_LENGTH(kIp6AddressQueryRecordTypes), // AAAA records
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    /* kIp4AddressQuery -> */ OT_ARRAY_LENGTH(kIp4AddressQueryRecordTypes), // A records
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* (1) kBrowseQuery  -> */ OT_ARRAY_LENGTH(kBrowseQueryRecordTypes),  // PTR records
-    /* (2) kServiceQuery -> */ OT_ARRAY_LENGTH(kServiceQueryRecordTypes), // SRV and TXT records
+    /* kBrowseQuery  -> */ OT_ARRAY_LENGTH(kBrowseQueryRecordTypes),  // PTR records
+    /* kServiceQuery -> */ OT_ARRAY_LENGTH(kServiceQueryRecordTypes), // SRV and TXT records
 #endif
 };
 
 const uint16_t *Client::kQuestionRecordTypes[] = {
-    /* (0) kAddressQuery -> */ kAddressQueryRecordTypes,
+    /* kIp6AddressQuery -> */ kIp6AddressQueryRecordTypes,
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    /* kIp4AddressQuery -> */ kIp4AddressQueryRecordTypes,
+#endif
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
-    /* (1) kBrowseQuery  -> */ kBrowseQueryRecordTypes,
-    /* (2) kServiceQuery -> */ kServiceQueryRecordTypes,
+    /* kBrowseQuery  -> */ kBrowseQueryRecordTypes,
+    /* kServiceQuery -> */ kServiceQueryRecordTypes,
 #endif
 };
 
@@ -438,8 +548,14 @@ Client::Client(Instance &aInstance)
     , mTimer(aInstance, Client::HandleTimer)
     , mDefaultConfig(QueryConfig::kInitFromDefaults)
 {
-    static_assert(kAddressQuery == 0, "kAddressQuery value is not correct");
+    static_assert(kIp6AddressQuery == 0, "kIp6AddressQuery value is not correct");
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    static_assert(kIp4AddressQuery == 1, "kIp4AddressQuery value is not correct");
 #if OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
+    static_assert(kBrowseQuery == 2, "kBrowseQuery value is not correct");
+    static_assert(kServiceQuery == 3, "kServiceQuery value is not correct");
+#endif
+#elif OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
     static_assert(kBrowseQuery == 1, "kBrowseQuery value is not correct");
     static_assert(kServiceQuery == 2, "kServiceQuery value is not correct");
 #endif
@@ -488,7 +604,7 @@ Error Client::ResolveAddress(const char *       aHostName,
     QueryInfo info;
 
     info.Clear();
-    info.mQueryType                 = kAddressQuery;
+    info.mQueryType                 = kIp6AddressQuery;
     info.mCallback.mAddressCallback = aCallback;
 
     return StartQuery(info, aConfig, nullptr, aHostName, aContext);
@@ -694,7 +810,8 @@ void Client::FinalizeQuery(Query &aQuery, Error aError)
     Response  response;
     QueryInfo info;
 
-    response.mQuery = &aQuery;
+    response.mInstance = &Get<Instance>();
+    response.mQuery    = &aQuery;
     info.ReadFrom(aQuery);
 
     FinalizeQuery(response, info.mQueryType, aError);
@@ -709,7 +826,10 @@ void Client::FinalizeQuery(Response &aResponse, QueryType aType, Error aError)
 
     switch (aType)
     {
-    case kAddressQuery:
+    case kIp6AddressQuery:
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+    case kIp4AddressQuery:
+#endif
         if (callback.mAddressCallback != nullptr)
         {
             callback.mAddressCallback(aError, &aResponse, context);
@@ -777,7 +897,8 @@ void Client::ProcessResponse(const Message &aMessage)
     QueryType type;
     Error     responseError;
 
-    response.mMessage = &aMessage;
+    response.mInstance = &Get<Instance>();
+    response.mMessage  = &aMessage;
 
     // We intentionally parse the response in a separate method
     // `ParseResponse()` to free all the stack allocated variables
@@ -798,6 +919,7 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
     uint16_t       offset  = message.GetOffset();
     Header         header;
     QueryInfo      info;
+    Name           queryName;
 
     SuccessOrExit(error = message.Read(offset, header));
     offset += sizeof(Header);
@@ -812,14 +934,15 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
     info.ReadFrom(*aResponse.mQuery);
     aType = info.mQueryType;
 
+    queryName.SetFromMessage(*aResponse.mQuery, kNameOffsetInQuery);
+
     // Check the Question Section
 
     VerifyOrExit(header.GetQuestionCount() == kQuestionCount[aType], error = kErrorParse);
 
     for (uint8_t num = 0; num < kQuestionCount[aType]; num++)
     {
-        // The name is encoded after `Info` struct in `query`.
-        SuccessOrExit(error = Name::CompareName(message, offset, *aResponse.mQuery, kNameOffsetInQuery));
+        SuccessOrExit(error = Name::CompareName(message, offset, queryName));
         offset += sizeof(Question);
     }
 
@@ -837,6 +960,54 @@ Error Client::ParseResponse(Response &aResponse, QueryType &aType, Error &aRespo
     // Check the response code from server
 
     aResponseError = Header::ResponseCodeToError(header.GetResponseCode());
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+    if (aType == kIp6AddressQuery)
+    {
+        Ip6::Address ip6ddress;
+        uint32_t     ttl;
+        ARecord      aRecord;
+
+        // If the response does not contain an answer for the IPv6 address
+        // resolution query and if NAT64 is allowed for this query, we can
+        // perform IPv4 to IPv6 address translation.
+
+        VerifyOrExit(aResponse.FindHostAddress(Response::kAnswerSection, queryName, /* aIndex */ 0, ip6ddress, ttl) !=
+                     kErrorNone);
+        VerifyOrExit(info.mConfig.GetNat64Mode() == QueryConfig::kNat64Allow);
+
+        // First, we check if the response already contains an A record
+        // (IPv4 address) for the query name.
+
+        if (aResponse.FindARecord(Response::kAdditionalDataSection, queryName, /* aIndex */ 0, aRecord) == kErrorNone)
+        {
+            aResponse.mIp6QueryResponseRequiresNat64 = true;
+            aResponseError                           = kErrorNone;
+            ExitNow();
+        }
+
+        // Otherwise, we send a new query for IPv4 address resolution
+        // for the same host name. We reuse the existing `query`
+        // instance and keep all the info but clear `mTransmissionCount`
+        // and `mMessageId` (so that a new random message ID is
+        // selected). The new `info` will be saved in the query in
+        // `SendQuery()`. Note that the current query is still in the
+        // `mQueries` list when `SendQuery()` selects a new random
+        // message ID, so the existing message ID for this query will
+        // not be reused. Since the query is not yet resolved, we
+        // return `kErrorPending`.
+
+        info.mQueryType         = kIp4AddressQuery;
+        info.mMessageId         = 0;
+        info.mTransmissionCount = 0;
+
+        SendQuery(*aResponse.mQuery, info, /* aUpdateTimer */ true);
+
+        error = kErrorPending;
+    }
+
+#endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
 
 exit:
     if (error != kErrorNone)

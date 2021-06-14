@@ -49,35 +49,28 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [ROUTER1, ROUTER2]
         },
         ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, ED, SED]
         },
         ROUTER2: {
             'name': 'ROUTER_2',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER]
         },
         ED: {
             'name': 'MED',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [ROUTER1]
         },
         SED: {
             'name': 'SED',
             'is_mtd': True,
             'mode': '-',
-            'panid': 0xface,
             'timeout': config.DEFAULT_CHILD_TIMEOUT,
             'allowlist': [ROUTER1]
         },
@@ -120,23 +113,23 @@ class Cert_5_6_9_NetworkDataForwarding(thread_cert.TestCase):
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
-        self.assertFalse(self.nodes[SED].ping('2001:2:0:2::1'))
+        self.assertFalse(self.nodes[SED].ping('2001:2:0:2::1', timeout=10))
 
-        self.assertFalse(self.nodes[SED].ping('2007::1'))
+        self.assertFalse(self.nodes[SED].ping('2007::1', timeout=10))
 
         self.nodes[ROUTER2].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'high')
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
-        self.assertFalse(self.nodes[SED].ping('2007::1'))
+        self.assertFalse(self.nodes[SED].ping('2007::1', timeout=10))
 
         self.nodes[ROUTER2].remove_prefix('2001:2:0:1::/64')
         self.nodes[ROUTER2].add_prefix('2001:2:0:1::/64', 'paros', 'med')
         self.nodes[ROUTER2].register_netdata()
         self.simulator.go(15)
 
-        self.assertFalse(self.nodes[SED].ping('2007::1'))
+        self.assertFalse(self.nodes[SED].ping('2007::1', timeout=10))
 
     def verify(self, pv):
         pkts = pv.pkts

@@ -201,10 +201,10 @@ private:
     static void HandleDuaResponse(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo, Error aResult)
     {
         static_cast<DuaManager *>(aContext)->HandleDuaResponse(
-            *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+            static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
     }
 
-    void HandleDuaResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult);
+    void HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
     static void HandleDuaNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
     {
@@ -227,7 +227,7 @@ private:
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     enum DuaState
     {
-        kNotExist,    ///< DUA is not avaiable.
+        kNotExist,    ///< DUA is not available.
         kToRegister,  ///< DUA is to be registered.
         kRegistering, ///< DUA is being registered.
         kRegistered,  ///< DUA is registered.
@@ -257,10 +257,9 @@ private:
     // TODO: (DUA) may re-evaluate the alternative option of distributing the flags into the child table:
     //       - Child class itself have some padding - may save some RAM
     //       - Avoid cross reference between a bit-vector and the child entry
-    ChildMask mChildDuaMask;           ///< Child Mask for child who registers DUA via Child Update Request.
-    ChildMask mChildDuaRegisteredMask; ///< Child Mask for child's DUA that was registered by the parent on behalf.
-    uint16_t  mChildIndexDuaRegistering : 15; ///< Child Index of the DUA being registered.
-    bool      mRegisterCurrentChildIndex : 1; ///< Re-register the child just registered.
+    ChildMask mChildDuaMask;             ///< Child Mask for child who registers DUA via Child Update Request.
+    ChildMask mChildDuaRegisteredMask;   ///< Child Mask for child's DUA that was registered by the parent on behalf.
+    uint16_t  mChildIndexDuaRegistering; ///< Child Index of the DUA being registered.
 #endif
 };
 

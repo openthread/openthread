@@ -36,7 +36,7 @@
 #include "border_router/routing_manager.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 
 namespace ot {
@@ -228,7 +228,7 @@ void Notifier::LogEvents(Events aEvents) const
                 addSpace = false;
             }
 
-            IgnoreError(string.Append("%s%s", addSpace ? " " : "", EventToString(static_cast<Event>(1 << bit))));
+            string.Append("%s%s", addSpace ? " " : "", EventToString(static_cast<Event>(1 << bit)));
             addSpace = true;
 
             flags ^= (1 << bit);

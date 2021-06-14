@@ -67,7 +67,7 @@ ExtAddress::InfoString ExtAddress::ToString(void) const
 {
     InfoString string;
 
-    IgnoreError(string.AppendHexBytes(m8, sizeof(ExtAddress)));
+    string.AppendHexBytes(m8, sizeof(ExtAddress));
 
     return string;
 }
@@ -92,15 +92,29 @@ void ExtAddress::CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder a
 
 Address::InfoString Address::ToString(void) const
 {
-    return (mType == kTypeExtended) ? GetExtended().ToString()
-                                    : (mType == kTypeNone ? InfoString("None") : InfoString("0x%04x", GetShort()));
+    InfoString string;
+
+    if (mType == kTypeExtended)
+    {
+        string.AppendHexBytes(GetExtended().m8, sizeof(ExtAddress));
+    }
+    else if (mType == kTypeNone)
+    {
+        string.Append("None");
+    }
+    else
+    {
+        string.Append("0x%04x", GetShort());
+    }
+
+    return string;
 }
 
 ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 {
     InfoString string;
 
-    IgnoreError(string.AppendHexBytes(m8, sizeof(ExtendedPanId)));
+    string.AppendHexBytes(m8, sizeof(ExtendedPanId));
 
     return string;
 }
@@ -126,6 +140,27 @@ NameData NetworkName::GetAsData(void) const
     uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
 
     return NameData(m8, len);
+}
+
+Error NetworkName::Set(const char *aNameString)
+{
+    // When setting `NetworkName` from a string, we treat it as `NameData`
+    // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
+    // for null char in the data (within its given size) to calculate
+    // the name's length and ensure that the name fits in `kMaxSize`
+    // chars. The `+ 1` ensures that a `aNameString` with length
+    // longer than `kMaxSize` is correctly rejected (returning error
+    // `kErrorInvalidArgs`).
+
+    Error    error;
+    NameData data(aNameString, kMaxSize + 1);
+
+    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
+
+    error = Set(data);
+
+exit:
+    return error;
 }
 
 Error NetworkName::Set(const NameData &aNameData)
@@ -154,32 +189,6 @@ bool NetworkName::operator==(const NetworkName &aOther) const
            (memcmp(data.GetBuffer(), otherData.GetBuffer(), data.GetLength()) == 0);
 }
 
-#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-NameData DomainName::GetAsData(void) const
-{
-    uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
-
-    return NameData(m8, len);
-}
-
-Error DomainName::Set(const NameData &aNameData)
-{
-    Error   error  = kErrorNone;
-    uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
-
-    VerifyOrExit(newLen <= kMaxSize, error = kErrorInvalidArgs);
-
-    // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
-
-    memcpy(m8, aNameData.GetBuffer(), newLen);
-    m8[newLen] = '\0';
-
-exit:
-    return error;
-}
-#endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
-
 #if OPENTHREAD_CONFIG_MULTI_RADIO
 
 const RadioType RadioTypes::kAllRadioTypes[kNumRadioTypes] = {
@@ -203,13 +212,14 @@ void RadioTypes::AddAll(void)
 
 RadioTypes::InfoString RadioTypes::ToString(void) const
 {
-    InfoString string("{");
+    InfoString string;
     bool       addComma = false;
 
+    string.Append("{");
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     if (Contains(kRadioTypeIeee802154))
     {
-        IgnoreError(string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeIeee802154)));
+        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeIeee802154));
         addComma = true;
     }
 #endif
@@ -217,14 +227,14 @@ RadioTypes::InfoString RadioTypes::ToString(void) const
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     if (Contains(kRadioTypeTrel))
     {
-        IgnoreError(string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeTrel)));
+        string.Append("%s%s", addComma ? ", " : " ", RadioTypeToString(kRadioTypeTrel));
         addComma = true;
     }
 #endif
 
     OT_UNUSED_VARIABLE(addComma);
 
-    IgnoreError(string.Append(" }"));
+    string.Append(" }");
 
     return string;
 }

@@ -69,21 +69,16 @@ class Cert_5_2_01_REEDAttach(thread_cert.TestCase):
         LEADER: {
             'name': 'LEADER',
             'mode': 'rdn',
-            'panid': 0xface,
             'allowlist': [DUT_ROUTER1]
         },
         DUT_ROUTER1: {
             'name': 'ROUTER_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'allowlist': [LEADER, REED1]
         },
         REED1: {
             'name': 'REED_1',
             'mode': 'rdn',
-            'panid': 0xface,
-            'router_selection_jitter': 1,
             'router_upgrade_threshold': 1,
             'allowlist': [DUT_ROUTER1, MED1]
         },
@@ -91,7 +86,6 @@ class Cert_5_2_01_REEDAttach(thread_cert.TestCase):
             'name': 'MED_1',
             'is_mtd': True,
             'mode': 'rn',
-            'panid': 0xface,
             'allowlist': [REED1]
         },
     }

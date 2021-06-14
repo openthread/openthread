@@ -33,15 +33,15 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
 #include <openthread/coap_secure.h>
 #include <openthread/ip6.h>
 
 #include "coap/coap_message.hpp"
 #include "coap/coap_secure.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
-
-#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
@@ -93,7 +93,7 @@ void otCoapSecureSetPsk(otInstance *   aInstance,
 }
 #endif // MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
 
-#ifdef MBEDTLS_BASE64_C
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
                                              unsigned char *aPeerCert,
                                              size_t *       aCertLength,
@@ -103,7 +103,7 @@ otError otCoapSecureGetPeerCertificateBase64(otInstance *   aInstance,
 
     return instance.GetApplicationCoapSecure().GetPeerCertificateBase64(aPeerCert, aCertLength, aCertBufferSize);
 }
-#endif // MBEDTLS_BASE64_C
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
 
 void otCoapSecureSetSslAuthMode(otInstance *aInstance, bool aVerifyPeerCertificate)
 {

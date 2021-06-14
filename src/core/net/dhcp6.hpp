@@ -278,17 +278,17 @@ public:
     }
 
     /**
-     * This method returns the client Duid Type.
+     * This method returns the client DUID Type.
      *
-     * @returns The client Duid Type.
+     * @returns The client DUID Type.
      *
      */
     DuidType GetDuidType(void) const { return static_cast<DuidType>(HostSwap16(mDuidType)); }
 
     /**
-     * This method sets the client Duid Type.
+     * This method sets the client DUID Type.
      *
-     * @param[in]  aDuidType  The client Duid Type.
+     * @param[in]  aDuidType  The client DUID Type.
      *
      */
     void SetDuidType(DuidType aDuidType) { mDuidType = HostSwap16(static_cast<uint16_t>(aDuidType)); }
@@ -349,33 +349,33 @@ public:
     }
 
     /**
-     * This method returns the server Duid Type.
+     * This method returns the server DUID Type.
      *
-     * @returns The server Duid Type.
+     * @returns The server DUID Type.
      *
      */
     DuidType GetDuidType(void) const { return static_cast<DuidType>(HostSwap16(mDuidType)); }
 
     /**
-     * This method sets the server Duid Type.
+     * This method sets the server DUID Type.
      *
-     * @param[in]  aDuidType  The server Duid Type.
+     * @param[in]  aDuidType  The server DUID Type.
      *
      */
     void SetDuidType(DuidType aDuidType) { mDuidType = HostSwap16(static_cast<uint16_t>(aDuidType)); }
 
     /**
-     * This method returns the server Duid HardwareType.
+     * This method returns the server DUID HardwareType.
      *
-     * @returns The server Duid HardwareType.
+     * @returns The server DUID HardwareType.
      *
      */
     uint16_t GetDuidHardwareType(void) const { return HostSwap16(mDuidHardwareType); }
 
     /**
-     * This method sets the server Duid HardwareType.
+     * This method sets the server DUID HardwareType.
      *
-     * @param[in]  aDuidHardwareType  The server Duid HardwareType.
+     * @param[in]  aDuidHardwareType  The server DUID HardwareType.
      *
      */
     void SetDuidHardwareType(uint16_t aDuidHardwareType) { mDuidHardwareType = HostSwap16(aDuidHardwareType); }

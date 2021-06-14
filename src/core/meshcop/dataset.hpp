@@ -534,20 +534,9 @@ public:
          * @returns The Security Policy in the Dataset.
          *
          */
-        const otSecurityPolicy &GetSecurityPolicy(void) const { return mSecurityPolicy; }
-
-        /**
-         * This method sets the Security Policy in the Dataset.
-         *
-         * @param[in] aRotationTime  A value for Key Rotation (in units of hours).
-         * @param[in] aFlags         Security policy flags
-         *
-         */
-        void SetSecurityPolicy(uint16_t aRotationTime, uint8_t aFlags)
+        const SecurityPolicy &GetSecurityPolicy(void) const
         {
-            mSecurityPolicy.mRotationTime        = aRotationTime;
-            mSecurityPolicy.mFlags               = aFlags;
-            mComponents.mIsSecurityPolicyPresent = true;
+            return static_cast<const SecurityPolicy &>(mSecurityPolicy);
         }
 
         /**
@@ -556,7 +545,7 @@ public:
          * @param[in] aSecurityPolicy  A Security Policy to set in Dataset.
          *
          */
-        void SetSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
+        void SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
         {
             mSecurityPolicy                      = aSecurityPolicy;
             mComponents.mIsSecurityPolicyPresent = true;

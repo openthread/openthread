@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
 #include "common/timer.hpp"
 #include "mac/mac.hpp"
 #include "meshcop/joiner_router.hpp"
@@ -346,6 +347,21 @@ public:
      *
      */
     void SetMeshLocalPrefix(const MeshLocalPrefix &aMeshLocalPrefix);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method sets the Mesh Local IID.
+     *
+     * Available only when `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE` is enabled.
+     *
+     * @param[in] aMlIid  The Mesh Local IID.
+     *
+     * @retval kErrorNone           Successfully configured Mesh Local IID.
+     * @retval kErrorInvalidState   If the Thread stack is already enabled.
+     *
+     */
+    Error SetMeshLocalIid(const Ip6::InterfaceIdentifier &aMlIid);
+#endif
 
     /**
      * This method applies the Mesh Local Prefix.
@@ -712,6 +728,24 @@ public:
      *
      */
     bool HasRestored(void) const { return mHasRestored; }
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method gets the CSL timeout.
+     *
+     * @returns CSL timeout
+     *
+     */
+    uint32_t GetCslTimeout(void) const { return mCslTimeout; }
+
+    /**
+     * This method sets the CSL timeout.
+     *
+     * @param[in]  aTimeout  The CSL timeout in seconds.
+     *
+     */
+    void SetCslTimeout(uint32_t aTimeout);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 protected:
     /**
@@ -1814,6 +1848,9 @@ private:
 
     Ip6::Udp::Socket mSocket;
     uint32_t         mTimeout;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint32_t mCslTimeout;
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
     uint16_t mPreviousParentRloc;

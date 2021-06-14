@@ -29,25 +29,24 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                              = \
-    samr21                                \
-    $(NULL)
-
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
     cc1352                                \
-    cc2538                                \
-    cc2650                                \
     cc2652                                \
     efr32                                 \
     gp712                                 \
     k32w                                  \
     kw41z                                 \
     nrf528xx                              \
-    simulation                            \
     qpg6095                               \
     qpg6100                               \
     qpg7015m                              \
+    samr21                                \
+    $(NULL)
+
+# Always package (e.g. for 'make dist') these subdirectories.
+
+DIST_SUBDIRS                            = \
+    cc2538                                \
+    simulation                            \
     utils                                 \
     $(NULL)
 
@@ -57,56 +56,12 @@ SUBDIRS                                 = \
     utils                                 \
     $(NULL)
 
-if OPENTHREAD_PLATFORM_CC1352
-SUBDIRS                                += cc1352
-endif
-
 if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
 endif
 
-if OPENTHREAD_PLATFORM_CC2650
-SUBDIRS                                += cc2650
-endif
-
-if OPENTHREAD_PLATFORM_CC2652
-SUBDIRS                                += cc2652
-endif
-
-if OPENTHREAD_PLATFORM_EFR32
-SUBDIRS                                += efr32
-endif
-
-if OPENTHREAD_PLATFORM_GP712
-SUBDIRS                                += gp712
-endif
-
-if OPENTHREAD_PLATFORM_K32W
-SUBDIRS                                += k32w
-endif
-
-if OPENTHREAD_PLATFORM_KW41Z
-SUBDIRS                                += kw41z
-endif
-
-if OPENTHREAD_PLATFORM_NRF528XX
-SUBDIRS                                += nrf528xx
-endif
-
 if OPENTHREAD_PLATFORM_SIMULATION
 SUBDIRS                                += simulation
-endif
-
-if OPENTHREAD_PLATFORM_QPG6095
-SUBDIRS                                += qpg6095
-endif
-
-if OPENTHREAD_PLATFORM_QPG6100
-SUBDIRS                                += qpg6100
-endif
-
-if OPENTHREAD_PLATFORM_QPG7015M
-SUBDIRS                                += qpg7015m
 endif
 
 noinst_HEADERS                          = \

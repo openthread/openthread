@@ -50,11 +50,20 @@ jobs:
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y clang-format-9 clang-tidy-9 shellcheck
-        python3 -m pip install yapf==0.29.0
+        python3 -m pip install yapf==0.31.0
         sudo snap install shfmt
     - name: Check
       run: |
         script/make-pretty check
+
+  markdown-lint-check:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: gaurav-nelson/github-action-markdown-link-check@v1
+      with:
+        use-verbose-mode: 'yes'
+        max-depth: 3
 
   cmake-version:
     runs-on: ubuntu-18.04
@@ -147,8 +156,6 @@ jobs:
         # use the minimal required cmake version
         sudo pip3 install --system -U cmake==3.10.3
         cmake --version | grep 3.10.3
-        # required for jn5189 and k32w061
-        pip install pycryptodome
     - name: Build
       run: |
         export PATH=/tmp/${{ matrix.gcc_extract_dir }}/bin:$PATH
@@ -217,9 +224,9 @@ jobs:
       - name: Bootstrap
         run: |
           sudo dpkg --add-architecture i386
-          sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-          sudo apt-get --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} g++-multilib ninja-build
-          sudo apt-get --no-install-recommends install -y libreadline-dev:i386 libncurses-dev:i386
+          sudo apt-get update
+          sudo apt-get --no-install-recommends install -y clang-${{ matrix.clang_ver }} clang++-${{ matrix.clang_ver }} ninja-build
+          sudo apt-get --no-install-recommends install -y g++-multilib libreadline-dev:i386 libncurses-dev:i386
       - name: Build
         run: |
           script/check-simulation-build
@@ -244,37 +251,31 @@ jobs:
         export PATH=/tmp/bin:$PATH
         script/check-gn-build
 
-  macos-clang:
+  macos:
+    name: macos-${{ matrix.CC }}
+    strategy:
+      matrix:
+        include:
+          - CC: clang
+            CXX: clang++
+          - CC: gcc
+            CXX: g++
     runs-on: macos-10.15
     env:
-      CC: clang
-      CXX: clang++
+      CC: ${{ matrix.CC }}
+      CXX: ${{ matrix.CXX }}
     steps:
     - uses: actions/checkout@v2
       with:
         submodules: true
     - name: Bootstrap
       run: |
-        brew install automake ninja llvm
+        brew update
+        brew install automake m4 ninja
+        [ ${{ matrix.CC }} != clang ] || brew install llvm
     - name: Build
       run: |
-        script/check-posix-build
-        script/check-simulation-build
-
-  macos-gcc:
-    runs-on: macos-10.15
-    env:
-      CC: gcc
-      CXX: g++
-    steps:
-    - uses: actions/checkout@v2
-      with:
-        submodules: true
-    - name: Bootstrap
-      run: |
-        brew install automake ninja
-    - name: Build
-      run: |
+        export PATH=$(brew --prefix m4)/bin:$PATH
         script/check-posix-build
         script/check-simulation-build
 

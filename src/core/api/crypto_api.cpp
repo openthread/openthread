@@ -32,12 +32,13 @@
  */
 
 #include "openthread-core-config.h"
+
 #include <openthread/crypto.h>
 #include <openthread/error.h>
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "crypto/aes_ccm.hpp"
 #include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"

@@ -129,7 +129,7 @@ void otCryptoAesCcm(const uint8_t *aKey,
  * @param[out]    aOutput            An output buffer where ECDSA sign should be stored.
  * @param[inout]  aOutputLength      The length of the @p aOutput buffer.
  * @param[in]     aInputHash         An input hash.
- * @param[in]     aInputHashLength   The length of the @p aClaims buffer.
+ * @param[in]     aInputHashLength   The length of the @p aInputHash buffer.
  * @param[in]     aPrivateKey        A private key in PEM format.
  * @param[in]     aPrivateKeyLength  The length of the @p aPrivateKey buffer.
  *

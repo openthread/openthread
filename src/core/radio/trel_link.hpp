@@ -36,6 +36,8 @@
 
 #include "openthread-core-config.h"
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
 #include "common/tasklet.hpp"
@@ -44,8 +46,6 @@
 #include "mac/mac_types.hpp"
 #include "radio/trel_interface.hpp"
 #include "radio/trel_packet.hpp"
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
 namespace ot {
 
@@ -166,6 +166,7 @@ private:
         kStateTransmit,
     };
 
+    void AfterInit(void);
     void SetState(State aState);
     void BeginTransmit(void);
     void InvokeSendDone(Error aError) { InvokeSendDone(aError, nullptr); }

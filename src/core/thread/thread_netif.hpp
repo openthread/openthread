@@ -82,6 +82,7 @@
 #include "net/dns_client.hpp"
 #include "net/dnssd_server.hpp"
 #include "net/ip6_filter.hpp"
+#include "net/nd_agent.hpp"
 #include "net/netif.hpp"
 #include "net/sntp_client.hpp"
 #include "net/srp_client.hpp"
@@ -192,13 +193,16 @@ public:
     bool IsOnMesh(const Ip6::Address &aAddress) const;
 
 private:
-    Tmf::TmfAgent mTmfAgent;
+    Tmf::Agent mTmfAgent;
 #if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
     Dhcp6::Client mDhcp6Client;
-#endif // OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+#endif
 #if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
     Dhcp6::Server mDhcp6Server;
-#endif // OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+#endif
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+    NeighborDiscovery::Agent mNeighborDiscoveryAgent;
+#endif
 #if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
     Utils::Slaac mSlaac;
 #endif
@@ -284,11 +288,15 @@ private:
     Srp::Server mSrpServer;
 #endif
 
-    Utils::ChildSupervisor     mChildSupervisor;
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
+    Utils::ChildSupervisor mChildSupervisor;
+#endif
     Utils::SupervisionListener mSupervisionListener;
-    AnnounceBeginServer        mAnnounceBegin;
-    PanIdQueryServer           mPanIdQuery;
-    EnergyScanServer           mEnergyScan;
+#endif
+    AnnounceBeginServer mAnnounceBegin;
+    PanIdQueryServer    mPanIdQuery;
+    EnergyScanServer    mEnergyScan;
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     TimeSync mTimeSync;

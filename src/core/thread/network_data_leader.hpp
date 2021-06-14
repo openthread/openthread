@@ -255,18 +255,6 @@ public:
     Error SteeringDataCheckJoiner(const MeshCoP::JoinerDiscerner &aDiscerner) const;
 
     /**
-     * This method gets the Rloc of Dhcp Agent of specified contextId.
-     *
-     * @param[in]  aContextId      A pointer to the Commissioning Data value.
-     * @param[out] aRloc16         The reference of which for output the Rloc16.
-     *
-     * @retval kErrorNone       Successfully get the Rloc of Dhcp Agent.
-     * @retval kErrorNotFound   The specified @p aContextId could not be found.
-     *
-     */
-    Error GetRlocByContextId(uint8_t aContextId, uint16_t &aRloc16) const;
-
-    /**
      * This method gets the Service ID for the specified service.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV

@@ -46,6 +46,14 @@
 #define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-toranj"
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_OUTPUT
+ *
+ * Selects if, and where the LOG output goes to.
+ *
+ */
+#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+
+/**
  * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
  *
  * Define to 1 to enable Border Router support.

@@ -33,16 +33,16 @@
 
 #include "slaac_address.hpp"
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "common/locator-getters.hpp"
+#include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "crypto/sha256.hpp"
 #include "net/ip6_address.hpp"
-
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
 namespace ot {
 namespace Utils {
@@ -326,7 +326,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
 {
     Error error;
 
-    error = Get<Settings>().ReadSlaacIidSecretKey(aKey);
+    error = Get<Settings>().Read<Settings::SlaacIidSecretKey>(aKey);
     VerifyOrExit(error != kErrorNone);
 
     // If there is no previously saved secret key, generate
@@ -339,7 +339,7 @@ void Slaac::GetIidSecretKey(IidSecretKey &aKey) const
         IgnoreError(Random::Crypto::FillBuffer(aKey.m8, sizeof(IidSecretKey)));
     }
 
-    IgnoreError(Get<Settings>().SaveSlaacIidSecretKey(aKey));
+    IgnoreError(Get<Settings>().Save<Settings::SlaacIidSecretKey>(aKey));
 
     otLogInfoUtil("SLAAC: Generated and saved secret key");
 
