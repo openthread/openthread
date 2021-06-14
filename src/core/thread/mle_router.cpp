@@ -1441,7 +1441,7 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
 
         if (nextHop == nullptr || nextHop == neighbor)
         {
-            // route has no next hop or next hop is neighbor (sender)
+            // router has no next hop or next hop is neighbor (sender)
 
             if (cost + mRouterTable.GetLinkCost(*neighbor) < kMaxRouteCost)
             {
@@ -1450,9 +1450,17 @@ void MleRouter::UpdateRoutes(const RouteTlv &aRoute, uint8_t aRouterId)
                     resetAdvInterval = true;
                 }
 
-                router->SetNextHop(aRouterId);
-                router->SetCost(cost);
-                changed = true;
+                if (router->GetNextHop() != aRouterId)
+                {
+                    router->SetNextHop(aRouterId);
+                    changed = true;
+                }
+
+                if (router->GetCost() != cost)
+                {
+                    router->SetCost(cost);
+                    changed = true;
+                }
             }
             else if (nextHop == neighbor)
             {
