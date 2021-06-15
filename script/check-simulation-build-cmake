@@ -42,17 +42,27 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1
 
+    local options=(
+        "-DOT_OTNS=ON"
+        "-DOT_SIMULATION_VIRTUAL_TIME=ON"
+        "-DOT_THREAD_VERSION=1.2"
+        "-DOT_DUA=ON"
+        "-DOT_MLR=ON"
+        "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_CSL_RECEIVER=ON"
+    )
+
     # Build Thread 1.2 with full features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON
+    "$(dirname "$0")"/cmake-build simulation "${options[@]}"
 
     # Build Thread 1.2 Backbone Router without DUA ND Proxying
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF
+    "$(dirname "$0")"/cmake-build simulation -DOT_BACKBONE_ROUTER_DUA_NDPROXYING=OFF "${options[@]}"
 
     # Build Thread 1.2 Backbone Router without Multicast Routing
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF
+    "$(dirname "$0")"/cmake-build simulation -DOT_BACKBONE_ROUTER_MULTICAST_ROUTING=OFF "${options[@]}"
 
     # Build with Vendor Extension
     reset_source
@@ -64,7 +74,29 @@ build_all_features()
 
     # Build Thread 1.2 with full features and OT_ASSERT=OFF
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON -DOT_ASSERT=OFF
+    "$(dirname "$0")"/cmake-build simulation -DOT_ASSERT=OFF "${options[@]}"
+}
+
+build_for_all_log_levels()
+{
+    local options=(
+        "-DOT_OTNS=ON"
+        "-DOT_SIMULATION_VIRTUAL_TIME=ON"
+        "-DOT_THREAD_VERSION=1.2"
+        "-DOT_DUA=ON"
+        "-DOT_MLR=ON"
+        "-DOT_BACKBONE_ROUTER=ON"
+        "-DOT_CSL_RECEIVER=ON"
+    )
+
+    # Build Thread 1.2 with full features and different log levels
+
+    local log_levels=("DEBG" "INFO" "NOTE" "WARN" "CRIT" "NONE")
+
+    for level in "${log_levels[@]}"; do
+        reset_source
+        "$(dirname "$0")"/cmake-build simulation -DOT_LOG_LEVEL="$level" "${options[@]}"
+    done
 }
 
 build_toranj()
@@ -75,6 +107,7 @@ build_toranj()
 
 main()
 {
+    build_for_all_log_levels
     build_all_features
     build_toranj
 }
