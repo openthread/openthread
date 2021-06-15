@@ -81,6 +81,7 @@ public:
         kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, ///< The reserved min SRP Server UDP listening port.
         kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, ///< The reserved max SRP Server UDP listening port.
     };
+
     static_assert(kUdpPortMin <= kUdpPortMax, "invalid port range");
 
     /**
@@ -90,7 +91,6 @@ public:
     typedef otSrpServerServiceUpdateId ServiceUpdateId;
 
     class Host;
-    class Service;
 
     /**
      * This class implements a server-side SRP service.
@@ -174,7 +174,7 @@ public:
         const uint8_t *GetTxtData(void) const { return mTxtData; }
 
         /**
-         * This method returns the TXT recored data length of the service instance.
+         * This method returns the TXT record data length of the service instance.
          *
          * @return The TXT record data length (number of bytes in buffer returned from `GetTxtData()`).
          *
@@ -380,8 +380,8 @@ public:
         explicit Host(Instance &aInstance);
         Error    SetFullName(const char *aFullName);
         void     SetKey(Dns::Ecdsa256KeyRecord &aKey);
-        void     SetLease(uint32_t aLease);
-        void     SetKeyLease(uint32_t aKeyLease);
+        void     SetLease(uint32_t aLease) { mLease = aLease; }
+        void     SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
         Service *GetNextService(Service *aService) { return aService ? aService->GetNext() : mServices.GetHead(); }
         Service *AddService(const char *aFullName);
         void     RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler);
@@ -457,7 +457,7 @@ public:
      * @returns A pointer to the dot-joined domain string.
      *
      */
-    const char *GetDomain(void) const;
+    const char *GetDomain(void) const { return mDomain; }
 
     /**
      * This method sets the domain on the SRP server.
@@ -481,7 +481,7 @@ public:
      * @returns  A boolean that indicates whether the server is running.
      *
      */
-    bool IsRunning(void) const;
+    bool IsRunning(void) const { return mSocket.IsBound(); }
 
     /**
      * This method enables/disables the SRP server.
@@ -497,7 +497,7 @@ public:
      * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      */
-    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const;
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const { aLeaseConfig = mLeaseConfig; }
 
     /**
      * This method sets the LEASE and KEY-LEASE configurations.
