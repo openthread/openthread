@@ -258,6 +258,27 @@ target_link_libraries(ot-test-heap
 
 add_test(NAME ot-test-heap COMMAND ot-test-heap)
 
+add_executable(ot-test-heap-string
+    test_heap_string.cpp
+)
+
+target_include_directories(ot-test-heap-string
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-heap-string
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-heap-string
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-heap-string COMMAND ot-test-heap-string)
+
 add_executable(ot-test-hkdf-sha256
     ${COMMON_SOURCES}
     test_hkdf_sha256.cpp

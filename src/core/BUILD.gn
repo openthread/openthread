@@ -372,6 +372,8 @@ openthread_core_files = [
   "common/error.cpp",
   "common/error.hpp",
   "common/extension.hpp",
+  "common/heap_string.cpp",
+  "common/heap_string.hpp",
   "common/instance.cpp",
   "common/instance.hpp",
   "common/iterator_utils.hpp",
