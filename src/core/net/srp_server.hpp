@@ -50,6 +50,7 @@
 #include <openthread/srp_server.h>
 
 #include "common/clearable.hpp"
+#include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -137,7 +138,7 @@ public:
          * @returns  A pointer to the null-terminated service name string.
          *
          */
-        const char *GetFullName(void) const { return mFullName; }
+        const char *GetFullName(void) const { return mFullName.AsCString(); }
 
         /**
          * This method returns the port of the service instance.
@@ -213,7 +214,7 @@ public:
          * @returns  TRUE if the service matches the full name, FALSE if doesn't match.
          *
          */
-        bool Matches(const char *aFullName) const;
+        bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
 
         /**
          * This method tells whether this service matches a given service name <Service>.<Domain>.
@@ -228,13 +229,13 @@ public:
 
     private:
         explicit Service(void);
-        Error SetFullName(const char *aFullName);
+        Error SetFullName(const char *aFullName) { return mFullName.Set(aFullName); }
         Error SetTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
         Error SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
         Error CopyResourcesFrom(const Service &aService);
         void  ClearResources(void);
 
-        char *           mFullName;
+        HeapString       mFullName;
         uint16_t         mPriority;
         uint16_t         mWeight;
         uint16_t         mPort;
@@ -291,7 +292,7 @@ public:
          * @returns  A pointer to the null-terminated full host name.
          *
          */
-        const char *GetFullName(void) const { return mFullName; }
+        const char *GetFullName(void) const { return mFullName.AsCString(); }
 
         /**
          * This method returns addresses of the host.
@@ -369,7 +370,7 @@ public:
          * @returns  A boolean that indicates whether the host matches the given name.
          *
          */
-        bool Matches(const char *aName) const;
+        bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
 
     private:
         enum : uint8_t
@@ -378,7 +379,7 @@ public:
         };
 
         explicit Host(Instance &aInstance);
-        Error    SetFullName(const char *aFullName);
+        Error    SetFullName(const char *aFullName) { return mFullName.Set(aFullName); }
         void     SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void     SetLease(uint32_t aLease) { mLease = aLease; }
         void     SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
@@ -392,7 +393,7 @@ public:
         const Service *FindService(const char *aFullName) const;
         Error          AddIp6Address(const Ip6::Address &aIp6Address);
 
-        char *       mFullName;
+        HeapString   mFullName;
         Ip6::Address mAddresses[kMaxAddressesNum];
         uint8_t      mAddressesNum;
         Host *       mNext;
@@ -432,7 +433,6 @@ public:
      *
      */
     explicit Server(Instance &aInstance);
-    ~Server(void);
 
     /**
      * This method sets the SRP service events handler.
@@ -457,7 +457,7 @@ public:
      * @returns A pointer to the dot-joined domain string.
      *
      */
-    const char *GetDomain(void) const { return mDomain; }
+    const char *GetDomain(void) const { return mDomain.AsCString(); }
 
     /**
      * This method sets the domain on the SRP server.
@@ -662,7 +662,7 @@ private:
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
     void *                          mServiceUpdateHandlerContext;
 
-    char *mDomain;
+    HeapString mDomain;
 
     LeaseConfig mLeaseConfig;
 
