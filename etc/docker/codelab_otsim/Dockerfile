@@ -16,7 +16,7 @@ RUN apt-get --no-install-recommends install -y git sudo software-properties-comm
 RUN mkdir -p ~/src/openthread && \
     cd ~/src/openthread && \
     git init . && \
-    git fetch https://github.com/openthread/openthread.git ${OT_GIT_REF} && \
+    git fetch https://github.com/${GITHUB_REPOSITORY:-openthread/openthread}.git ${OT_GIT_REF} && \
     git checkout FETCH_HEAD && \
     ./script/bootstrap && \
     ./bootstrap && \
