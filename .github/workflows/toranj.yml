@@ -86,6 +86,7 @@ jobs:
         path: tmp/coverage.info
 
   upload-coverage:
+    if: success() && github.repository == 'openthread/openthread'
     needs:
     - toranj
     runs-on: ubuntu-18.04
