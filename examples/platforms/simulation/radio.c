@@ -1209,9 +1209,9 @@ void otPlatRadioSetMacKey(otInstance *           aInstance,
     otEXPECT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
     sKeyId = aKeyId;
-    memcpy(sPrevKey.mKeyMaterial.mKey.m8, aPrevKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(sCurrKey.mKeyMaterial.mKey.m8, aCurrKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
-    memcpy(sNextKey.mKeyMaterial.mKey.m8, aNextKey->mKeyMaterial.mKey.m8, OT_MAC_KEY_SIZE);
+    memcpy(&sPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
+    memcpy(&sCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
+    memcpy(&sNextKey, aNextKey, sizeof(otMacKeyMaterial));
 
 exit:
     return;

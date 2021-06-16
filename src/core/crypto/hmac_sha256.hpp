@@ -133,10 +133,15 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    void *GetContext(void);
 
-    psa_mac_operation_t mOperation;
-    mbedtls_md_context_t mContext;
+    union HmacContext
+    {
+        psa_mac_operation_t     mOperation;
+        mbedtls_md_context_t    mContext;
+    };
+
+    HmacContext Context;
+    
 };
 
 /**

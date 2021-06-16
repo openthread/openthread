@@ -2520,7 +2520,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
             uint8_t pskcLiteral[OT_PSKC_MAX_SIZE];
             size_t mKeyLen;
 
-            SuccessOrExit(error = otPlatCryptoExportKey(pskc->mKeyMaterial.keyRef,
+            SuccessOrExit(error = otPlatCryptoExportKey(pskc->keyRef,
                                                 pskcLiteral,
                                                 OT_PSKC_MAX_SIZE,
                                                 &mKeyLen)); 
@@ -2528,10 +2528,11 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
             (void)error;
 
             OutputBytes(pskcLiteral);  
+            memset(pskcLiteral, 0, OT_PSKC_MAX_SIZE);
         }
         else
         {
-            OutputBytes(pskc->mKeyMaterial.key);
+            OutputBytes(pskc->key);
         }
         OutputLine("");
     }
@@ -2541,7 +2542,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
 
         if (aArgsLength == 1)
         {
-            SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.mKeyMaterial.key, sizeof(pskc.mKeyMaterial.key)));
+            SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.key, sizeof(pskc.key)));
         }
         else if (aArgs[0] == "-p")
         {
@@ -2576,17 +2577,18 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
             uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
             size_t mKeyLen;
 
-            Error err = otPlatCryptoExportKey(masterKey->mKeyMaterial.keyRef,
+            Error err = otPlatCryptoExportKey(masterKey->keyRef,
                                                 masterKeyLiteral,
                                                 OT_MASTER_KEY_SIZE,
                                                 &mKeyLen); 
 
             (void)err;
             OutputBytes(masterKeyLiteral);  
+            memset(masterKeyLiteral, 0, OT_MASTER_KEY_SIZE);
         }
         else
         {
-            OutputBytes(masterKey->mKeyMaterial.key);
+            OutputBytes(masterKey->key);
         }
         OutputLine("");
     }
@@ -2594,7 +2596,7 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
     {
         otMasterKey key;
 
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.mKeyMaterial.key, sizeof(key.mKeyMaterial.key)));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.key, sizeof(key.key)));
         SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 

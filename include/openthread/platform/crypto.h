@@ -98,28 +98,6 @@ otError otPlatCryptoInit(void);
 otError otPlatCryptoEcbEncrypt(psa_key_id_t aKeyId, const uint8_t *aInput, uint8_t *aOutput);
 
 /**
- * Generate a key for the parameters specified and store it in PSA ITS.
- *
- * @param[out]  aKeyId            Reference to the key to be used for crypto operations.
- * @param[in]   aKeyType          Key Type encoding for the key.
- * @param[in]   aKeyAlgorithm     Key algorithm encoding for the key.
- * @param[in]   aKeyUsage         Key Usage encoding for the key.
- * @param[in]   aKeyPersistence   Key Persistence for this key
- * @param[in]   aKeyLen           Length of the key to be generated.
- *
- * @retval OT_ERROR_NONE          Successfully encrypted  @p aInput.
- * @retval OT_ERROR_FAILED        Failed to encrypt @p aInput.
- * @retval OT_ERROR_INVALID_ARGS  @p aInput or @p aOutput was set to NULL.
- *
- */
-otError otPlatCryptoGenerateKey(psa_key_id_t           *aKeyId,
-                                psa_key_type_t         aKeyType,
-                                psa_algorithm_t        aKeyAlgorithm,
-                                psa_key_usage_t        aKeyUsage,
-                                psa_key_persistence_t  aKeyPersistence,
-                                size_t                 aKeyLen);
-
-/**
  * Import a key into PSA ITS.
  *
  * @param[out]  aKeyId            Reference to the key to be used for crypto operations.
@@ -331,7 +309,7 @@ otError otPlatCryptoAesFree(void *aContext);
 /**
  * Perform HKDF Expand step.
  *
- * @param[in]  mOperationCtx      Operation context for HKDF operation.
+ * @param[in]  aOperationCtx      Operation context for HKDF operation.
  * @param[in]  aInfo              Pointer to the Info sequence.
  * @param[in]  aInfoLength        length of Info sequence.
  * @param[out] aOutputKey         Pointer to the output Key.
@@ -343,7 +321,7 @@ otError otPlatCryptoAesFree(void *aContext);
  * @note This API is available only if platform supports PSA crypto
  *
  */
-otError otPlatCryptoHkdfExpand( psa_key_derivation_operation_t *mOperationCtx,
+otError otPlatCryptoHkdfExpand( void *aOperationCtx,
                                 const uint8_t *aInfo, 
                                 uint16_t aInfoLength, 
                                 uint8_t *aOutputKey, 
@@ -352,10 +330,10 @@ otError otPlatCryptoHkdfExpand( psa_key_derivation_operation_t *mOperationCtx,
 /**
  * Perform HKDF Extract step.
  *
- * @param[in]  mOperationCtx      Operation context for HKDF operation.
+ * @param[in]  aOperationCtx      Operation context for HKDF operation.
  * @param[in]  aSalt              Pointer to the Salt for HKDF.
  * @param[in]  aInfoLength        length of Salt.
- * @param[out] aKey               Reference to the Key to be used.
+ * @param[out] aKey               Ponter to key material to be used.
  *
  * @retval OT_ERROR_NONE          Successfully signed  @p aHash.
  * @retval OT_ERROR_FAILED        Failed to sign @p aHash.
@@ -363,10 +341,10 @@ otError otPlatCryptoHkdfExpand( psa_key_derivation_operation_t *mOperationCtx,
  * @note This API is available only if platform supports PSA crypto
  *
  */
-otError otPlatCryptoHkdfExtract(psa_key_derivation_operation_t *mOperationCtx, 
+otError otPlatCryptoHkdfExtract(void *aOperationCtx, 
                                 const uint8_t *aSalt, 
                                 uint16_t aSaltLength, 
-                                otMacKeyRef aKey);
+                                otCryptoKey *aKey);
 
 /**
  * Initialise the SHA-256 operation.

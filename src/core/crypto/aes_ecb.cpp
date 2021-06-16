@@ -39,46 +39,30 @@ namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-    void *context = GetContext();
+    void *context = (void *)&Context;
     Error err = otPlatCryptoAesInit(context);
     (void)err;
 }
 
 void AesEcb::SetKey(otCryptoKey *aKey)
 {
-    void *context = GetContext();
+    void *context = (void *)&Context;
     Error err = otPlatCryptoAesSetKey(context, aKey);
     (void)err;
 }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
-    void *context = GetContext();
+    void *context = (void *)&Context;
     Error err = otPlatCryptoAesEncrypt(context, aInput, aOutput);
     (void)err;
 }
 
 AesEcb::~AesEcb(void)
 {
-    void *context = GetContext();
+    void *context = (void *)&Context;
     Error err = otPlatCryptoAesFree(context);
     (void)err;
-}
-
-void *AesEcb::GetContext(void)
-{
-    void *context = nullptr;
-
-    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-    {
-        context = (void *)&mKeyRef;
-    }
-    else
-    {
-        context = (void *)&mContext;
-    }
-
-    return context;
 }
 
 } // namespace Crypto

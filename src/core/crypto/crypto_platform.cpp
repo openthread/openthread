@@ -1,5 +1,5 @@
 /*
- *    Copyright (c) 2019, The OpenThread Authors.
+ *    Copyright (c) 2021, The OpenThread Authors.
  *    All rights reserved.
  *
  *    Redistribution and use in source and binary forms, with or without
@@ -27,7 +27,7 @@
 
 /**
  * @file
- *   This file implements the radio platform callbacks into OpenThread and default/weak radio platform APIs.
+ *   This file implements the Crypto platform callbacks into OpenThread and default/weak Crypto platform APIs.
  */
 
 #include <openthread/instance.h>
@@ -36,9 +36,9 @@
 #include <openthread/platform/crypto.h>
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
-#include "radio/radio.hpp"
 
 using namespace ot;
+using namespace Crypto;
 
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of crypto platform APIs
@@ -79,36 +79,6 @@ OT_TOOL_WEAK otError otPlatCryptoDestroyKey(psa_key_id_t aKeyId)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     
-    return kErrorNotImplemented;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoGenerateKey(   psa_key_id_t           *aKeyId,
-                                                psa_key_type_t         aKeyType,
-                                                psa_algorithm_t        aKeyAlgorithm,
-                                                psa_key_usage_t        aKeyUsage,
-                                                psa_key_persistence_t  aKeyPersistence,
-                                                size_t                 aKeyLen)
-{
-    OT_UNUSED_VARIABLE(aKeyId);
-    OT_UNUSED_VARIABLE(aKeyType);
-    OT_UNUSED_VARIABLE(aKeyAlgorithm);
-    OT_UNUSED_VARIABLE(aKeyUsage);
-    OT_UNUSED_VARIABLE(aKeyPersistence);
-    OT_UNUSED_VARIABLE(aKeyLen);
-
-    return kErrorNotImplemented;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoExportPublicKey(   psa_key_id_t   aKeyId,
-                                                    uint8_t        *aOutput,
-                                                    size_t         aOutputSize,
-                                                    size_t         *aOutputLen)
-{
-    OT_UNUSED_VARIABLE(aKeyId);
-    OT_UNUSED_VARIABLE(aOutput);
-    OT_UNUSED_VARIABLE(aOutputSize);
-    OT_UNUSED_VARIABLE(aOutputLen);
-
     return kErrorNotImplemented;
 }
 
@@ -214,32 +184,81 @@ OT_TOOL_WEAK otError otPlatCryptoAesFree(void *aContext)
 
 // HKDF platform implementations
 // As the HKDF does not actually use mbedTLS APIs but uses HMAC module, this feature is not implemented.
-OT_TOOL_WEAK otError otPlatCryptoHkdfExpand( psa_key_derivation_operation_t *mOperationCtx,
+OT_TOOL_WEAK otError otPlatCryptoHkdfExpand( void *aContext,
                                              const uint8_t *aInfo, 
                                              uint16_t aInfoLength, 
                                              uint8_t *aOutputKey, 
                                              uint16_t aOutputKeyLength)
 {
-    OT_UNUSED_VARIABLE(mOperationCtx);
-    OT_UNUSED_VARIABLE(aInfo);
-    OT_UNUSED_VARIABLE(aInfoLength);
-    OT_UNUSED_VARIABLE(aOutputKey);
-    OT_UNUSED_VARIABLE(aOutputKeyLength);
+    HmacSha256       hmac;
+    HmacSha256::Hash hash;
+    uint8_t          iter = 0;
+    uint16_t         copyLength;
+    HmacSha256::Hash *prk = (HmacSha256::Hash *) aContext;
 
-    return kErrorNotImplemented;
+    // The aOutputKey is calculated as follows [RFC5889]:
+    //
+    //   N = ceil( aOutputKeyLength / HashSize)
+    //   T = T(1) | T(2) | T(3) | ... | T(N)
+    //   aOutputKey is first aOutputKeyLength of T
+    //
+    // Where:
+    //   T(0) = empty string (zero length)
+    //   T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
+    //   T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
+    //   T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
+    //   ...
+
+    while (aOutputKeyLength > 0)
+    {
+        otCryptoKey cryptoKey;
+
+        cryptoKey.mKey = prk->GetBytes();
+        cryptoKey.mKeyLength = sizeof(HmacSha256::Hash);
+        cryptoKey.mKeyRef = 0;
+
+        hmac.Start(&cryptoKey);
+
+        if (iter != 0)
+        {
+            hmac.Update(hash);
+        }
+
+        hmac.Update(aInfo, aInfoLength);
+
+        iter++;
+        hmac.Update(iter);
+        hmac.Finish(hash);
+
+        copyLength = (aOutputKeyLength > sizeof(hash)) ? sizeof(hash) : aOutputKeyLength;
+
+        memcpy(aOutputKey, hash.GetBytes(), copyLength);
+        aOutputKey += copyLength;
+        aOutputKeyLength -= copyLength;
+    }
+
+    return kErrorNone;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(   psa_key_derivation_operation_t *mOperationCtx, 
+OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(   void *aContext, 
                                                 const uint8_t *aSalt, 
                                                 uint16_t aSaltLength, 
-                                                otMacKeyRef aKey)
+                                                otCryptoKey *aKey)
 {
-    OT_UNUSED_VARIABLE(mOperationCtx);
-    OT_UNUSED_VARIABLE(aSalt);
-    OT_UNUSED_VARIABLE(aSaltLength);
-    OT_UNUSED_VARIABLE(aKey);
+    HmacSha256 hmac;
+    otCryptoKey cryptoKey;
+    HmacSha256::Hash *prk = (HmacSha256::Hash *) aContext;
 
-    return kErrorNotImplemented;
+    cryptoKey.mKey = aSalt;
+    cryptoKey.mKeyLength = aSaltLength;
+    cryptoKey.mKeyRef = 0;
+
+    // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
+    hmac.Start(&cryptoKey);
+    hmac.Update(aKey->mKey, aKey->mKeyLength);
+    hmac.Finish(*prk);
+
+    return kErrorNone;
 }
 
 // SHA256 platform implementations

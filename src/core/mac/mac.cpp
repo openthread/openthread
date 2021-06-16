@@ -56,9 +56,6 @@
 namespace ot {
 namespace Mac {
 
-const otMacKey Mac::sMode2Key = {
-    {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
-
 const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
@@ -128,6 +125,9 @@ Mac::Mac(Instance &aInstance)
 #endif
 {
     ExtAddress randomExtAddress;
+    const otMacKey sMode2Key = {
+    {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
+
 
     randomExtAddress.GenerateRandom();
 
@@ -148,7 +148,7 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-    memcpy(sMode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
+    memcpy(sMode2KeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
 
     if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
@@ -161,7 +161,7 @@ Mac::Mac(Instance &aInstance)
                                         sMode2Key.m8,
                                         sizeof(sMode2Key.m8));
 
-        sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
+        sMode2KeyMaterial.mKeyRef = aKeyRef;
 
         OT_ASSERT(error == kErrorNone);
     }
@@ -1675,7 +1675,6 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     uint8_t           keyid;
     uint32_t          keySequence = 0;
     const Key *       macKey;
-
     const ExtAddress *extAddress;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);

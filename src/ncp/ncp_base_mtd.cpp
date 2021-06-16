@@ -666,7 +666,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_MASTER_KEY>(void)
 
     //PSA is not supported for NCP and RCP builds.
     VerifyOrExit(otPlatCryptoGetType() != OT_CRYPTO_TYPE_PSA, error = OT_ERROR_NOT_FOUND);
-    mEncoder.WriteData(otThreadGetMasterKey(mInstance)->mKeyMaterial.key, OT_MASTER_KEY_SIZE);
+    mEncoder.WriteData(otThreadGetMasterKey(mInstance)->key, OT_MASTER_KEY_SIZE);
 
 exit:
     return error;    
@@ -1278,7 +1278,7 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_MASTER_KEY));
-        SuccessOrExit(error = mEncoder.WriteData(aDataset.mMasterKey.mKeyMaterial.key, OT_MASTER_KEY_SIZE));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mMasterKey.key, OT_MASTER_KEY_SIZE));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1346,7 +1346,7 @@ otError NcpBase::EncodeOperationalDataset(const otOperationalDataset &aDataset)
     {
         SuccessOrExit(error = mEncoder.OpenStruct());
         SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_PROP_NET_PSKC));
-        SuccessOrExit(error = mEncoder.WriteData(aDataset.mPskc.mKeyMaterial.key, sizeof(spinel_net_pskc_t)));
+        SuccessOrExit(error = mEncoder.WriteData(aDataset.mPskc.key, sizeof(spinel_net_pskc_t)));
         SuccessOrExit(error = mEncoder.CloseStruct());
     }
 
@@ -1457,7 +1457,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
                 SuccessOrExit(error = mDecoder.ReadData(key, len));
                 VerifyOrExit(len == OT_MASTER_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mMasterKey.mKeyMaterial.key, key, len);
+                memcpy(aDataset.mMasterKey.key, key, len);
             }
 
             aDataset.mComponents.mIsMasterKeyPresent = true;
@@ -1552,7 +1552,7 @@ otError NcpBase::DecodeOperationalDataset(otOperationalDataset &aDataset,
 
                 SuccessOrExit(error = mDecoder.ReadData(psk, len));
                 VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-                memcpy(aDataset.mPskc.mKeyMaterial.key, psk, OT_PSKC_MAX_SIZE);
+                memcpy(aDataset.mPskc.key, psk, OT_PSKC_MAX_SIZE);
             }
 
             aDataset.mComponents.mIsPskcPresent = true;

@@ -180,12 +180,8 @@ KeyManager::KeyManager(Instance &aInstance)
     , mIsPskcSet(false)
 {
     SetCryptoType(otPlatCryptoGetType());
-
-    if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
-    { 
-        IgnoreError(otPlatCryptoInit());
-        IgnoreError(StoreMasterKey(false));
-    }
+    IgnoreError(otPlatCryptoInit());
+    IgnoreError(StoreMasterKey(false));
 
     Error error = mMasterKey.GenerateRandom();
 
@@ -221,13 +217,13 @@ Error KeyManager::StorePskc(void)
                                     PSA_ALG_VENDOR_FLAG,
                                     PSA_KEY_USAGE_EXPORT,
                                     PSA_KEY_LIFETIME_PERSISTENT,
-                                    mPskc.mKeyMaterial.key,
+                                    mPskc.key,
                                     OT_PSKC_MAX_SIZE);
 
     OT_ASSERT(error == kErrorNone);
 
     mPskc.Clear();
-    mPskc.mKeyMaterial.keyRef = aKeyRef;
+    mPskc.keyRef = aKeyRef;
 
     return error;
 }
@@ -253,7 +249,6 @@ void KeyManager::SetPskc(const Pskc &aPskc)
 Error KeyManager::StoreMasterKey(bool aOverWriteExisting)
 {
     Error   error = kErrorNone;
-    psa_key_usage_t mKeyUsage = PSA_KEY_USAGE_SIGN_HASH;
     otMacKeyRef aKeyRef;
     
     aKeyRef = kMasterKeyPsaItsOffset;
@@ -271,22 +266,16 @@ Error KeyManager::StoreMasterKey(bool aOverWriteExisting)
 
     CheckAndDestroyStoredKey(aKeyRef);
 
-#if OPENTHREAD_FTD
-    mKeyUsage |= PSA_KEY_USAGE_EXPORT;
-#endif
-
     error = otPlatCryptoImportKey(&aKeyRef,
                                   PSA_KEY_TYPE_HMAC,
                                   PSA_ALG_HMAC(PSA_ALG_SHA_256),
-                                  mKeyUsage,
+                                  PSA_KEY_USAGE_SIGN_HASH|PSA_KEY_USAGE_EXPORT,
                                   PSA_KEY_LIFETIME_PERSISTENT,
-                                  mMasterKey.mKeyMaterial.key,
+                                  mMasterKey.key,
                                   OT_MASTER_KEY_SIZE);
 
-    OT_ASSERT(error == kErrorNone);
-
     mMasterKey.Clear();
-    mMasterKey.mKeyMaterial.keyRef = aKeyRef;
+    mMasterKey.keyRef = aKeyRef;
 
 exit:
     return error;
@@ -353,12 +342,12 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
         aKeyMaterial.mKey    = nullptr;
-        aKeyMaterial.mKeyRef = mMasterKey.mKeyMaterial.keyRef;
+        aKeyMaterial.mKeyRef = mMasterKey.keyRef;
     }
     else
     {
-        aKeyMaterial.mKey       = mMasterKey.mKeyMaterial.key;
-        aKeyMaterial.mKeyLength = sizeof(mMasterKey.mKeyMaterial.key);
+        aKeyMaterial.mKey       = mMasterKey.key;
+        aKeyMaterial.mKeyLength = sizeof(mMasterKey.key);
         aKeyMaterial.mKeyRef    = 0;
     }
 
@@ -380,7 +369,7 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), mMasterKey.mKeyMaterial.key, sizeof(mMasterKey.mKeyMaterial.key));
+    hkdf.Extract(salt, sizeof(salt), mMasterKey.key, sizeof(mMasterKey.key));
     hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.m8, sizeof(Mac::Key));
 }
 #endif
@@ -411,10 +400,10 @@ void KeyManager::UpdateKeyMaterial(void)
 
         OT_ASSERT(error == kErrorNone);
         cur.mKeys.mMacKey.Clear();
-        cur.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
+        cur.mKeys.mMacKey.mKeyRef = aKeyRef;
 
         aKeyRef = 0;
-        CheckAndDestroyStoredKey(mMleKey.mKeyMaterial.mKeyRef);
+        CheckAndDestroyStoredKey(mMleKey.mKeyRef);
 
         error = otPlatCryptoImportKey( &aKeyRef,
                                     PSA_KEY_TYPE_AES,
@@ -426,7 +415,7 @@ void KeyManager::UpdateKeyMaterial(void)
 
     	OT_ASSERT(error == kErrorNone);
         cur.mKeys.mMleKey.Clear();
-        mMleKey.mKeyMaterial.mKeyRef = aKeyRef;
+        mMleKey.mKeyRef = aKeyRef;
     }
     else
     {
@@ -451,7 +440,7 @@ void KeyManager::UpdateKeyMaterial(void)
         OT_ASSERT(error == kErrorNone);
         prev.mKeys.mMacKey.Clear();
         prev.mKeys.mMleKey.Clear();
-        prev.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
+        prev.mKeys.mMacKey.mKeyRef = aKeyRef;
 
         aKeyRef = 0;
         error = otPlatCryptoImportKey(&aKeyRef,
@@ -465,7 +454,7 @@ void KeyManager::UpdateKeyMaterial(void)
         OT_ASSERT(error == kErrorNone);
         next.mKeys.mMacKey.Clear();
         next.mKeys.mMleKey.Clear();
-        next.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
+        next.mKeys.mMacKey.mKeyRef = aKeyRef;
     }
     
     Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
@@ -612,7 +601,7 @@ Error KeyManager::ImportKek(const uint8_t *aKey, uint8_t aKeyLen)
                                 aKeyLen);
 
   mKek.Clear();
-  mKek.mKeyMaterial.mKeyRef = aKeyRef;
+  mKek.mKeyRef = aKeyRef;
 
   return error;
 }
@@ -645,7 +634,7 @@ void KeyManager::SetKek(const uint8_t *aKek)
     }
     else
     {
-        memcpy(mKek.mKeyMaterial.mKey.m8, aKek, sizeof(mKek));
+        memcpy(mKek.mKey.m8, aKek, sizeof(mKek));
     }
 
     mKekFrameCounter = 0;
@@ -659,8 +648,8 @@ Error KeyManager::GetKekLiteral( Kek &aKek )
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
         error = otPlatCryptoExportKey(  mKek.GetKeyRef(),
-                                        aKek.mKeyMaterial.mKey.m8,
-                                        sizeof(aKek.mKeyMaterial.mKey),
+                                        aKek.mKey.m8,
+                                        sizeof(aKek.mKey),
                                         &aKeySize); 
     }
     else
@@ -716,7 +705,7 @@ Error Pskc::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     {
         size_t mKeyLen = 0;
 
-        error = otPlatCryptoExportKey(mKeyMaterial.keyRef,
+        error = otPlatCryptoExportKey(keyRef,
                                       aBuffer,
                                       aBufferSize,
                                       &mKeyLen); 
@@ -725,7 +714,7 @@ Error Pskc::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     }
     else
     {
-        memcpy(aBuffer, mKeyMaterial.key, sizeof(mKeyMaterial.key));
+        memcpy(aBuffer, key, sizeof(key));
     }
 
     return error;
@@ -739,7 +728,7 @@ Error MasterKey::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     {
         size_t mKeyLen = 0;
 
-        error = otPlatCryptoExportKey(mKeyMaterial.keyRef,
+        error = otPlatCryptoExportKey(keyRef,
                                       aBuffer,
                                       aBufferSize,
                                       &mKeyLen); 
@@ -748,7 +737,7 @@ Error MasterKey::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     }
     else
     {
-        memcpy(aBuffer, mKeyMaterial.key, sizeof(mKeyMaterial.key));
+        memcpy(aBuffer, key, sizeof(key));
     }
 
     return error;

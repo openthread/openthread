@@ -65,7 +65,7 @@ struct otMasterKey
     {
         uint8_t     key[OT_MASTER_KEY_SIZE];   ///< Byte values
         uint32_t    keyRef;                    ///< Reference of the key.
-    } mKeyMaterial;
+    } ;
 }OT_TOOL_PACKED_END;
 
 /**
@@ -126,7 +126,7 @@ struct otPskc
     {
         uint8_t     key[OT_PSKC_MAX_SIZE];   ///< Byte values
         uint32_t    keyRef;                    ///< Reference of the key.
-    } mKeyMaterial;
+    } ;
 } OT_TOOL_PACKED_END;
 
 /**

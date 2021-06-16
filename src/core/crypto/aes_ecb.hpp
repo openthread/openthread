@@ -75,7 +75,7 @@ public:
     /**
      * This method sets the key.
      *
-     * @param[in]  aKeyRef     Key Reference for ECB operation
+     * @param[in]  aKey     Key material for ECB operation
      *
      */
     void SetKey(otCryptoKey *aKey);
@@ -90,10 +90,14 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-    void *              GetContext(void);
+    
+    union AesEcbContext
+    {
+        uint32_t            mKeyRef;
+        mbedtls_aes_context mContext;
+    };
 
-    uint32_t            mKeyRef;
-    mbedtls_aes_context mContext;
+    AesEcbContext Context;
 };
 
 /**

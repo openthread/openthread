@@ -85,8 +85,13 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
-    psa_key_derivation_operation_t mOperation;
+    union HkdfContext
+    {
+        HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
+        psa_key_derivation_operation_t mOperation;
+    };
+
+    HkdfContext Context;
 };
 
 /**

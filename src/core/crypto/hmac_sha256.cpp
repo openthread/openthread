@@ -39,35 +39,35 @@ namespace Crypto {
 
 HmacSha256::HmacSha256(void)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoHmacSha256Init(mCtx);
     (void)err;
 }
 
 HmacSha256::~HmacSha256(void)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoHmacSha256UnInit(mCtx);
     (void)err;
 }
 
 void HmacSha256::Start(otCryptoKey *aKey)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoHmacSha256Start(mCtx, aKey);
     (void)err;
 }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    void *mCtx = GetContext();    
+    void *mCtx = (void *)&Context; 
     Error err = otPlatCryptoHmacSha256Update(mCtx, aBuf, aBufLength);
     (void)err;
 }
 
 void HmacSha256::Finish(Hash &aHash)
 {
-    void *mCtx = GetContext();   
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoHmacSha256Finish(mCtx, aHash.m8, aHash.kSize);
     (void)err;
 }
@@ -85,20 +85,5 @@ void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLen
     }
 }
 
-void *HmacSha256::GetContext(void)
-{
-    void *mCtx = nullptr;
-
-    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-    {
-        mCtx = (void *)&mOperation;
-    }
-    else
-    {
-        mCtx = (void *)&mContext;
-    }
-
-    return mCtx;
-}
 } // namespace Crypto
 } // namespace ot

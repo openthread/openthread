@@ -41,28 +41,28 @@ namespace Crypto {
 
 Sha256::Sha256(void)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoSha256Init(mCtx);
     (void)err;
 }
 
 Sha256::~Sha256(void)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoSha256Uninit(mCtx);
     (void)err;
 }
 
 void Sha256::Start(void)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoSha256Start(mCtx);
     (void)err;
 }
 
 void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoSha256Update(mCtx, aBuf, aBufLength);
     (void)err;
 }
@@ -82,25 +82,9 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 
 void Sha256::Finish(Hash &aHash)
 {
-    void *mCtx = GetContext();
+    void *mCtx = (void *)&Context;
     Error err = otPlatCryptoSha256Finish(mCtx, aHash.m8, aHash.kSize);
     (void)err;
-}
-
-void *Sha256::GetContext(void)
-{
-    void *mCtx = nullptr;
-
-    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-    {
-        mCtx = (void *)&mOperation;
-    }
-    else
-    {
-        mCtx = (void *)&mContext;
-    }
-
-    return mCtx;
 }
 } // namespace Crypto
 } // namespace ot

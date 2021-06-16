@@ -151,7 +151,7 @@ public:
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(key, sizeof(key)); }
 #endif
 
     /**
@@ -186,7 +186,7 @@ public:
      * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(key, sizeof(key)); }
 #endif
     /**
      * This method copies the literal PSKc into given buffer.

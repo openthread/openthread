@@ -64,7 +64,7 @@ void AesCcm::SetKey(const Mac::Key &aMacKey)
 
     aCryptoKey.mKey         = aMacKey.GetKey();
     aCryptoKey.mKeyLength   = Mac::Key::kSize;
-    aCryptoKey.mKeyRef      = aMacKey.mKeyMaterial.mKeyRef;
+    aCryptoKey.mKeyRef      = aMacKey.GetKeyRef();
 
     SetKey(&aCryptoKey);
 }

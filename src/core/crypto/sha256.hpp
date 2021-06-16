@@ -148,10 +148,14 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    void *GetContext(void);
 
-    psa_hash_operation_t mOperation;
-    mbedtls_sha256_context mContext;
+    union Sha256Context
+    {
+        psa_hash_operation_t mOperation;
+        mbedtls_sha256_context mContext;
+    };
+
+    Sha256Context Context;
 };
 
 /**

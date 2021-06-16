@@ -569,7 +569,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated
             uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
             keyManager.GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE);
 
-            KeyManagerHasValidKey = (memcmp(masterKeyLiteral, key->GetNetworkMasterKey().mKeyMaterial.key, sizeof(key->GetNetworkMasterKey().mKeyMaterial.key)) == 0);
+            KeyManagerHasValidKey = (memcmp(masterKeyLiteral, key->GetNetworkMasterKey().key, sizeof(key->GetNetworkMasterKey().key)) == 0);
 
             if (aIsMasterKeyUpdated && !KeyManagerHasValidKey)
             {

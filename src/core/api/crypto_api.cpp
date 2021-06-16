@@ -34,7 +34,6 @@
 #include "openthread-core-config.h"
 
 #include <openthread/crypto.h>
-#include <openthread/platform/crypto.h>
 #include <openthread/error.h>
 
 #include "common/code_utils.hpp"

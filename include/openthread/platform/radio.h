@@ -215,11 +215,15 @@ struct otMacKeyMaterial
 {
     union
     {
-        otMacKeyRef     mKeyRef; ///< The IEEE 802.15.4 Short Address.
-        otMacKey        mKey;    ///< The IEEE 802.15.4 Extended Address.
-    } mKeyMaterial;
+        otMacKeyRef     mKeyRef; ///< Reference to the key stored.
+        otMacKey        mKey;    ///< Key stored as literal.
+    } ;
 } OT_TOOL_PACKED_END;
 
+/**
+ * This structure represents a MAC Key reference.
+ *
+ */
 typedef struct otMacKeyMaterial otMacKeyMaterial;
 
 /**
@@ -254,7 +258,7 @@ typedef struct otRadioFrame
          */
         struct
         {
-            const otMacKeyMaterial *  mAesKey;         ///< The key reference used for AES-CCM frame security.
+            const otMacKeyMaterial *  mAesKey;          ///< The key material used for AES-CCM frame security.
             otRadioIeInfo *           mIeInfo;          ///< The pointer to the Header IE(s) related information.
             uint32_t                  mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
             uint32_t                  mTxDelayBaseTime; ///< The base time for the transmission delay.
