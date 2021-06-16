@@ -365,7 +365,7 @@ Error MeshForwarder::UpdateIp6Route(Message &aMessage)
         // with link security disabled, an End Device transmits
         // multicasts, as IEEE 802.15.4 unicasts to its parent.
 
-        if (mle.IsChild() && aMessage.IsLinkSecurityEnabled())
+        if (mle.IsChild() && aMessage.IsLinkSecurityEnabled() && !aMessage.IsSubTypeMle())
         {
             mMacDest.SetShort(mle.GetNextHop(Mac::kShortAddrBroadcast));
         }
