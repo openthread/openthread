@@ -92,7 +92,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsMasterKeyPresent)
     {
         mInterpreter.OutputFormat("Master Key: ");
-        mInterpreter.OutputBytes(aDataset.mMasterKey.mKeyMaterial.m8);
+        mInterpreter.OutputBytes(aDataset.mMasterKey.mKeyMaterial.key);
         mInterpreter.OutputLine("");
     }
 
@@ -110,7 +110,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.OutputFormat("PSKc: ");
-        mInterpreter.OutputBytes(aDataset.mPskc.mKeyMaterial.m8);
+        mInterpreter.OutputBytes(aDataset.mPskc.mKeyMaterial.key);
         mInterpreter.OutputLine("");
     }
 
@@ -391,13 +391,13 @@ otError Dataset::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
     {
         if (sDataset.mComponents.mIsMasterKeyPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mMasterKey.mKeyMaterial.m8);
+            mInterpreter.OutputBytes(sDataset.mMasterKey.mKeyMaterial.key);
             mInterpreter.OutputLine("");
         }
     }
     else
     {
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mMasterKey.mKeyMaterial.m8));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mMasterKey.mKeyMaterial.key, sizeof(sDataset.mMasterKey.mKeyMaterial.key)));
         sDataset.mComponents.mIsMasterKeyPresent = true;
     }
 
@@ -524,7 +524,7 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, Arg aArgs[])
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mComponents.mIsMasterKeyPresent = true;
-            SuccessOrExit(error = aArgs[index].ParseAsHexString(dataset.mMasterKey.mKeyMaterial.m8));
+            SuccessOrExit(error = aArgs[index].ParseAsHexString(dataset.mMasterKey.mKeyMaterial.key, sizeof(dataset.mMasterKey.mKeyMaterial.key)));
         }
         else if (aArgs[index] == "networkname")
         {
@@ -713,13 +713,13 @@ otError Dataset::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
     {
         if (sDataset.mComponents.mIsPskcPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mPskc.mKeyMaterial.m8);
+            mInterpreter.OutputBytes(sDataset.mPskc.mKeyMaterial.key);
             mInterpreter.OutputLine("");
         }
     }
     else if (aArgsLength == 1)
     {
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mPskc.mKeyMaterial.m8));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mPskc.mKeyMaterial.key, sizeof(sDataset.mPskc.mKeyMaterial.key)));
     }
 #if OPENTHREAD_FTD
     else if (aArgsLength == 2 && (aArgs[0] == "-p"))

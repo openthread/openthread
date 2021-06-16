@@ -2629,6 +2629,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     Error           error = kErrorNone;
     Header          header;
     uint32_t        keySequence;
+    const Key *     mleKey;
     uint32_t        frameCounter;
     uint8_t         messageTag[kMleSecurityTagSize];
     uint8_t         nonce[Crypto::AesCcm::kNonceSize];
@@ -2640,7 +2641,6 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     uint8_t         tag[kMleSecurityTagSize];
     uint8_t         command;
     Neighbor *      neighbor;
-    const Key *     mleKey;
 
     otLogDebgMle("Receive UDP message");
 

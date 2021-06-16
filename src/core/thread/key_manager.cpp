@@ -214,20 +214,20 @@ Error KeyManager::StorePskc(void)
     otMacKeyRef aKeyRef = kPskcPsaItsOffset;
     Error error = kErrorNone;
 
-    CheckAndDestroyStoredKey(mPskc.mKeyMaterial.m32);
+    CheckAndDestroyStoredKey(aKeyRef);
 
     error = otPlatCryptoImportKey(  &aKeyRef,
                                     PSA_KEY_TYPE_RAW_DATA,
                                     PSA_ALG_VENDOR_FLAG,
                                     PSA_KEY_USAGE_EXPORT,
                                     PSA_KEY_LIFETIME_PERSISTENT,
-                                    mPskc.mKeyMaterial.m8,
+                                    mPskc.mKeyMaterial.key,
                                     OT_PSKC_MAX_SIZE);
 
     OT_ASSERT(error == kErrorNone);
 
     mPskc.Clear();
-    mPskc.mKeyMaterial.m32 = aKeyRef;
+    mPskc.mKeyMaterial.keyRef = aKeyRef;
 
     return error;
 }
@@ -260,7 +260,7 @@ Error KeyManager::StoreMasterKey(bool aOverWriteExisting)
 
     if (!aOverWriteExisting)
     {
-        psa_key_attributes_t mKeyAttributes;
+        psa_key_attributes_t mKeyAttributes = PSA_KEY_ATTRIBUTES_INIT;
 
         error = otPlatCryptoGetKeyAttributes(aKeyRef, &mKeyAttributes);
         //We will be able to retrieve the key_attributes only if there is 
@@ -280,13 +280,13 @@ Error KeyManager::StoreMasterKey(bool aOverWriteExisting)
                                   PSA_ALG_HMAC(PSA_ALG_SHA_256),
                                   mKeyUsage,
                                   PSA_KEY_LIFETIME_PERSISTENT,
-                                  mMasterKey.mKeyMaterial.m8,
+                                  mMasterKey.mKeyMaterial.key,
                                   OT_MASTER_KEY_SIZE);
 
     OT_ASSERT(error == kErrorNone);
 
     mMasterKey.Clear();
-    mMasterKey.mKeyMaterial.m32 = aKeyRef;
+    mMasterKey.mKeyMaterial.keyRef = aKeyRef;
 
 exit:
     return error;
@@ -353,12 +353,12 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
         aKeyMaterial.mKey    = nullptr;
-        aKeyMaterial.mKeyRef = mMasterKey.mKeyMaterial.m32;
+        aKeyMaterial.mKeyRef = mMasterKey.mKeyMaterial.keyRef;
     }
     else
     {
-        aKeyMaterial.mKey       = mMasterKey.mKeyMaterial.m8;
-        aKeyMaterial.mKeyLength = sizeof(mMasterKey.mKeyMaterial.m8);
+        aKeyMaterial.mKey       = mMasterKey.mKeyMaterial.key;
+        aKeyMaterial.mKeyLength = sizeof(mMasterKey.mKeyMaterial.key);
         aKeyMaterial.mKeyRef    = 0;
     }
 
@@ -380,7 +380,7 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), mMasterKey.m8, sizeof(MasterKey));
+    hkdf.Extract(salt, sizeof(salt), mMasterKey.mKeyMaterial.key, sizeof(mMasterKey.mKeyMaterial.key));
     hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.m8, sizeof(Mac::Key));
 }
 #endif
@@ -399,7 +399,7 @@ void KeyManager::UpdateKeyMaterial(void)
     
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
-        aKeyRef = cur.mKeys.mMacKey.GetKeyRef();
+        aKeyRef = 0;
 
         error = otPlatCryptoImportKey( &aKeyRef,
                                     PSA_KEY_TYPE_AES,
@@ -410,11 +410,11 @@ void KeyManager::UpdateKeyMaterial(void)
                                     cur.mKeys.mMacKey.kSize);
 
         OT_ASSERT(error == kErrorNone);
+        cur.mKeys.mMacKey.Clear();
         cur.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
-        cur.mKeys.mMacKey.mCryptoType = Mac::CryptoType::kUsePsa;
 
-        aKeyRef = mMleKey.GetKeyRef();
-        CheckAndDestroyStoredKey(aKeyRef);
+        aKeyRef = 0;
+        CheckAndDestroyStoredKey(mMleKey.mKeyMaterial.mKeyRef);
 
         error = otPlatCryptoImportKey( &aKeyRef,
                                     PSA_KEY_TYPE_AES,
@@ -425,12 +425,11 @@ void KeyManager::UpdateKeyMaterial(void)
                                     cur.mKeys.mMleKey.kSize);
 
     	OT_ASSERT(error == kErrorNone);
+        cur.mKeys.mMleKey.Clear();
         mMleKey.mKeyMaterial.mKeyRef = aKeyRef;
-        mMleKey.mCryptoType = Mac::CryptoType::kUsePsa;
     }
     else
     {
-        mMleKey.mCryptoType = Mac::CryptoType::kUseMbedTls;
     	mMleKey = cur.mKeys.mMleKey;
     }
 
@@ -440,7 +439,7 @@ void KeyManager::UpdateKeyMaterial(void)
 	
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
-        aKeyRef = prev.mKeys.mMacKey.GetKeyRef();
+        aKeyRef = 0;
         error = otPlatCryptoImportKey(&aKeyRef,
                                     PSA_KEY_TYPE_AES,
                                     PSA_ALG_ECB_NO_PADDING,
@@ -450,9 +449,11 @@ void KeyManager::UpdateKeyMaterial(void)
                                     prev.mKeys.mMacKey.kSize);
 
         OT_ASSERT(error == kErrorNone);
+        prev.mKeys.mMacKey.Clear();
+        prev.mKeys.mMleKey.Clear();
         prev.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
-        prev.mKeys.mMacKey.mCryptoType = Mac::CryptoType::kUsePsa;
 
+        aKeyRef = 0;
         error = otPlatCryptoImportKey(&aKeyRef,
                                     PSA_KEY_TYPE_AES,
                                     PSA_ALG_ECB_NO_PADDING,
@@ -462,21 +463,10 @@ void KeyManager::UpdateKeyMaterial(void)
                                     next.mKeys.mMacKey.kSize);
 
         OT_ASSERT(error == kErrorNone);
+        next.mKeys.mMacKey.Clear();
+        next.mKeys.mMleKey.Clear();
         next.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
-        next.mKeys.mMacKey.mCryptoType = Mac::CryptoType::kUsePsa;
-
-        cur.mKeys.mMacKey.Clear();
-        cur.mKeys.mMleKey.Clear();
-        prev.mKeys.mMacKey.Clear();
-        prev.mKeys.mMacKey.Clear();
-        next.mKeys.mMacKey.Clear();
-        next.mKeys.mMacKey.Clear();
-    } 
-    else
-    {
-        prev.mKeys.mMacKey.mCryptoType = Mac::CryptoType::kUseMbedTls;
-        next.mKeys.mMacKey.mCryptoType = Mac::CryptoType::kUseMbedTls;
-    } 
+    }
     
     Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
                                  cur.mKeys.mMacKey, next.mKeys.mMacKey);
@@ -522,7 +512,6 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 
     ComputeKeys(aKeySequence, hashKeys);
     mTemporaryMleKey = hashKeys.mKeys.mMleKey;
-    mTemporaryMleKey.mCryptoType = Mac::CryptoType::kUseMbedTls;
 
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
@@ -538,7 +527,6 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
         OT_ASSERT(error == kErrorNone);
 
         mTemporaryMleKey.Clear();
-        mTemporaryMleKey.mCryptoType = Mac::CryptoType::kUsePsa;
     }
 
     return mTemporaryMleKey;
@@ -636,13 +624,11 @@ void KeyManager::SetKek(const Kek &aKek)
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
         error = ImportKek(aKek.GetKey(), aKek.kSize);
-        mKek.mCryptoType = Mac::CryptoType::kUsePsa;
         OT_ASSERT(error == kErrorNone);
     }
     else
     {
         mKek = aKek;
-        mKek.mCryptoType = Mac::CryptoType::kUseMbedTls;
     }
 
     mKekFrameCounter = 0;
@@ -665,17 +651,24 @@ void KeyManager::SetKek(const uint8_t *aKek)
     mKekFrameCounter = 0;
 }
 
-const Kek& KeyManager::GetKek(void)
+Error KeyManager::GetKekLiteral( Kek &aKek )
 {
     size_t aKeySize = 0;
+    Error error = kErrorNone;
 
     if(GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
-        Error error = otPlatCryptoExportKey(mKek.GetKeyRef(), mKek.mKeyMaterial.mKey.m8, mKek.kSize, &aKeySize);
-        OT_ASSERT(error == kErrorNone);
+        error = otPlatCryptoExportKey(  mKek.GetKeyRef(),
+                                        aKek.mKeyMaterial.mKey.m8,
+                                        sizeof(aKek.mKeyMaterial.mKey),
+                                        &aKeySize); 
+    }
+    else
+    {
+        aKek = mKek;
     }
 
-    return mKek;
+    return error;
 }
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
@@ -723,7 +716,7 @@ Error Pskc::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     {
         size_t mKeyLen = 0;
 
-        error = otPlatCryptoExportKey(mKeyMaterial.m32,
+        error = otPlatCryptoExportKey(mKeyMaterial.keyRef,
                                       aBuffer,
                                       aBufferSize,
                                       &mKeyLen); 
@@ -732,42 +725,10 @@ Error Pskc::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     }
     else
     {
-        memcpy(aBuffer, mKeyMaterial.m8, sizeof(mKeyMaterial.m8));
+        memcpy(aBuffer, mKeyMaterial.key, sizeof(mKeyMaterial.key));
     }
 
     return error;
-}
-
-Error Pskc::GenerateRandom(void) 
-{ 
-    Error       error   = kErrorNone;
-    otMacKeyRef aKeyRef = KeyManager::kPskcPsaItsOffset;
-    Random::Crypto::FillBuffer(mKeyMaterial.m8, sizeof(mKeyMaterial.m8));
-
-    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-    {
-        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
-
-        error = otPlatCryptoImportKey(&aKeyRef,
-                                      PSA_KEY_TYPE_RAW_DATA,
-                                      PSA_ALG_VENDOR_FLAG,
-                                      PSA_KEY_USAGE_EXPORT,
-                                      PSA_KEY_LIFETIME_PERSISTENT,
-                                      mKeyMaterial.m8,
-                                      OT_PSKC_MAX_SIZE);
-
-        OT_ASSERT(error == kErrorNone);
-
-        Clear();
-        mKeyMaterial.m32 = aKeyRef;
-        mCryptoType = Mac::CryptoType::kUsePsa;
-    }
-    else
-    {
-        mCryptoType = Mac::CryptoType::kUseMbedTls;
-    }
-    
-    return error; 
 }
 
 Error MasterKey::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
@@ -778,7 +739,7 @@ Error MasterKey::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     {
         size_t mKeyLen = 0;
 
-        error = otPlatCryptoExportKey(mKeyMaterial.m32,
+        error = otPlatCryptoExportKey(mKeyMaterial.keyRef,
                                       aBuffer,
                                       aBufferSize,
                                       &mKeyLen); 
@@ -787,48 +748,10 @@ Error MasterKey::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
     }
     else
     {
-        memcpy(aBuffer, mKeyMaterial.m8, sizeof(mKeyMaterial.m8));
+        memcpy(aBuffer, mKeyMaterial.key, sizeof(mKeyMaterial.key));
     }
 
     return error;
-}
-
-Error MasterKey::GenerateRandom(void) 
-{ 
-    Error       error   = kErrorNone;
-    otMacKeyRef aKeyRef = KeyManager::kMasterKeyPsaItsOffset;
-    psa_key_usage_t mKeyUsage = PSA_KEY_USAGE_SIGN_HASH;
-
-#if OPENTHREAD_FTD
-    mKeyUsage |= PSA_KEY_USAGE_EXPORT;
-#endif
-
-    Random::Crypto::FillBuffer(mKeyMaterial.m8, sizeof(mKeyMaterial.m8));
-
-    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-    {
-        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
-
-        error = otPlatCryptoImportKey(&aKeyRef,
-                                      PSA_KEY_TYPE_HMAC,
-                                      PSA_ALG_HMAC(PSA_ALG_SHA_256),
-                                      mKeyUsage,
-                                      PSA_KEY_LIFETIME_PERSISTENT,
-                                      mKeyMaterial.m8,
-                                      OT_MASTER_KEY_SIZE);
-
-        OT_ASSERT(error == kErrorNone);
-
-        Clear();
-        mKeyMaterial.m32 = aKeyRef;
-        mCryptoType = Mac::CryptoType::kUsePsa;
-    }
-    else
-    {
-        mCryptoType = Mac::CryptoType::kUseMbedTls;
-    }
-    
-    return error; 
 }
 
 } // namespace ot

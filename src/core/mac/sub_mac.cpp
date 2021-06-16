@@ -843,23 +843,10 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
-        if(mPrevKey.mCryptoType == kUsePsa)
-        {
-            Error err = otPlatCryptoDestroyKey(mPrevKey.GetKeyRef());
-            (void)err;
-        }
-
-        if(mCurrKey.mCryptoType == kUsePsa)
-        {
-            Error err = otPlatCryptoDestroyKey(mCurrKey.GetKeyRef());
-            (void)err;
-        }
-
-        if(mNextKey.mCryptoType == kUsePsa)
-        {
-            Error err = otPlatCryptoDestroyKey(mNextKey.GetKeyRef());
-            (void)err;
-        }
+        
+        otPlatCryptoDestroyKey(mPrevKey.GetKeyRef());
+        otPlatCryptoDestroyKey(mCurrKey.GetKeyRef());
+        otPlatCryptoDestroyKey(mNextKey.GetKeyRef());
         
         mKeyId   = aKeyId;
         mPrevKey = aPrevKey;

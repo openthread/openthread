@@ -47,7 +47,7 @@ void TestMinimumPassphrase(void)
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
                                             static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
                   "TestMinimumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc.mKeyMaterial.m8, expectedPskc, OT_PSKC_MAX_SIZE) == 0, "TestMinimumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.mKeyMaterial.key, expectedPskc, OT_PSKC_MAX_SIZE) == 0, "TestMinimumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
@@ -78,7 +78,7 @@ void TestMaximumPassphrase(void)
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
                                             static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
                   "TestMaximumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc.mKeyMaterial.m8, expectedPskc, OT_PSKC_MAX_SIZE) == 0, "TestMaximumPassphrase got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
     testFreeInstance(instance);
 }
 
@@ -94,7 +94,7 @@ void TestExampleInSpec(void)
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("Test Network"),
                                             static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
                   "ExampleInSpec failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc.mKeyMaterial.m8, expectedPskc, OT_PSKC_MAX_SIZE) == 0, "TestExampleInSpec got wrong pskc");
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestExampleInSpec got wrong pskc");
     testFreeInstance(instance);
 }
 

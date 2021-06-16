@@ -154,12 +154,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check network master key
     if (Tlv::Find<NetworkMasterKeyTlv>(aMessage, masterKey) == kErrorNone)
     {
-        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-        
+        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];        
         IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
         hasMasterKey = true;
 
-        if (memcmp(masterKey.mKeyMaterial.m8, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
+        if (memcmp(masterKey.mKeyMaterial.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
         {
             doesAffectConnectivity = true;
             doesAffectMasterKey    = true;
@@ -169,11 +168,10 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check active timestamp rollback
     if (type == Tlv::kPendingTimestamp)
     {
-        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-        
+        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];  
         IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
 
-        if(!hasMasterKey || (memcmp(masterKey.mKeyMaterial.m8, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
+        if(!hasMasterKey || (memcmp(masterKey.mKeyMaterial.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
         {
             // no change to master key, active timestamp must be ahead
             const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
@@ -364,7 +362,7 @@ Error ActiveDataset::GenerateLocal(void)
     if (dataset.GetTlv<NetworkMasterKeyTlv>() == nullptr)
     {
         otMasterKey aMasterKey;
-        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.m8, OT_MASTER_KEY_SIZE));
+        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.key, OT_MASTER_KEY_SIZE));
         IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, aMasterKey));
     }
 
@@ -390,7 +388,6 @@ Error ActiveDataset::GenerateLocal(void)
             Pskc pskc;
             SuccessOrExit(error = pskc.GenerateRandom());
         }
-
         IgnoreError(Get<KeyManager>().GetPskc().CopyKey(aPskc, OT_PSKC_MAX_SIZE));
         IgnoreError(dataset.SetTlv(Tlv::kPskc, aPskc));
     }

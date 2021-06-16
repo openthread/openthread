@@ -151,7 +151,7 @@ public:
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    Error GenerateRandom(void);
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
 #endif
 
     /**
@@ -186,7 +186,7 @@ public:
      * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    Error GenerateRandom(void);
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
 #endif
     /**
      * This method copies the literal PSKc into given buffer.
@@ -426,7 +426,15 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const Kek& GetKek(void);
+    const Kek &GetKek(void) const { return mKek; }
+
+    /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to the KEK.
+     *
+     */
+    Error GetKekLiteral( Kek &aKek );
 
     /**
      * This method sets the KEK.

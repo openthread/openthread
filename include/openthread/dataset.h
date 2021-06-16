@@ -58,14 +58,15 @@ extern "C" {
  * This structure represents a Thread Master Key.
  *
  */
+OT_TOOL_PACKED_BEGIN
 struct otMasterKey
 {
     union
     {
-        uint32_t    m32;                    ///< Reference of the key.
-        uint8_t     m8[OT_MASTER_KEY_SIZE]; ///< Byte values
+        uint8_t     key[OT_MASTER_KEY_SIZE];   ///< Byte values
+        uint32_t    keyRef;                    ///< Reference of the key.
     } mKeyMaterial;
-};
+}OT_TOOL_PACKED_END;
 
 /**
  * This structure represents a Thread Master Key.
@@ -118,14 +119,15 @@ typedef otIp6NetworkPrefix otMeshLocalPrefix;
  * This structure represents PSKc.
  *
  */
+OT_TOOL_PACKED_BEGIN
 struct otPskc
 {
     union
     {
-        uint32_t    m32;                    ///< Reference of the key.
-        uint8_t     m8[OT_PSKC_MAX_SIZE];   ///< Byte values
+        uint8_t     key[OT_PSKC_MAX_SIZE];   ///< Byte values
+        uint32_t    keyRef;                    ///< Reference of the key.
     } mKeyMaterial;
-};
+} OT_TOOL_PACKED_END;
 
 /**
  * This structure represents a PSKc.

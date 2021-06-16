@@ -436,12 +436,6 @@ public:
     };
 
     /**
-     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
-     * a reference.
-     */
-    CryptoType mCryptoType;
-
-    /**
      * This method gets a pointer to the buffer containing the key.
      *
      * @returns A pointer to the buffer containing the key.
