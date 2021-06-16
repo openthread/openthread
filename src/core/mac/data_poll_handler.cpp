@@ -272,12 +272,17 @@ void DataPollHandler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, 
             {
                 uint32_t frameCounter;
                 uint8_t  keyId;
+                Error    error;
 
-                IgnoreError(aFrame.GetFrameCounter(frameCounter));
+                error = aFrame.GetFrameCounter(frameCounter);
+                OT_ASSERT(error == kErrorNone);
                 aChild.SetIndirectFrameCounter(frameCounter);
 
-                IgnoreError(aFrame.GetKeyId(keyId));
+                error = aFrame.GetKeyId(keyId);
+                OT_ASSERT(error == kErrorNone);
                 aChild.SetIndirectKeyId(keyId);
+
+                OT_UNUSED_VARIABLE(error);
             }
 
             ExitNow();

@@ -39,6 +39,7 @@
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
 #include "common/random.hpp"
+#include "common/string.hpp"
 
 namespace ot {
 namespace Coap {
@@ -229,7 +230,7 @@ Error Message::AppendUriPathOptions(const char *aUriPath)
     const char *cur   = aUriPath;
     const char *end;
 
-    while ((end = strchr(cur, '/')) != nullptr)
+    while ((end = StringFind(cur, '/')) != nullptr)
     {
         SuccessOrExit(error = AppendOption(kOptionUriPath, static_cast<uint16_t>(end - cur), cur));
         cur = end + 1;

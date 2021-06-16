@@ -28,116 +28,123 @@
 #
 
 import ipaddress
+import logging
 import unittest
 
 import command
 import thread_cert
 
 # Test description:
-#   This test verifies the SRP server and client properly handle SRP host
-#   and service instance lease.
+#   This test verifies when an SRP server reboots, it will listen to a UDP port
+#   that wasn't used in the last time.
 #
 # Topology:
-#     LEADER (SRP server)
-#       |
-#       |
-#     ROUTER (SRP client)
+#
+#   LEADER (SRP client) -- ROUTER (SRP server)
 #
 
-SERVER = 1
-CLIENT = 2
-LEASE = 10  # Seconds
-KEY_LEASE = 20  # Seconds
+CLIENT = 1
+SERVER = 2
+
+REBOOT_TIMES = 25
 
 
-class SrpRegisterSingleService(thread_cert.TestCase):
+class SrpAutoStartMode(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
     SUPPORT_NCP = False
 
     TOPOLOGY = {
-        SERVER: {
-            'name': 'SRP_SERVER',
-            'masterkey': '00112233445566778899aabbccddeeff',
-            'mode': 'rdn',
-        },
         CLIENT: {
             'name': 'SRP_CLIENT',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rdn',
+        },
+        SERVER: {
+            'name': 'SRP_SERVER',
             'mode': 'rdn',
         },
     }
 
     def test(self):
-        server = self.nodes[SERVER]
         client = self.nodes[CLIENT]
+        server = self.nodes[SERVER]
 
         #
-        # 0. Start the server and client devices.
+        # 0. Start the server & client devices.
         #
-
-        server.srp_server_set_enabled(True)
-        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
-        server.start()
-        self.simulator.go(5)
-        self.assertEqual(server.get_state(), 'leader')
-        self.simulator.go(5)
 
         client.srp_server_set_enabled(False)
         client.start()
-        self.simulator.go(10)
-        self.assertEqual(client.get_state(), 'router')
+        self.simulator.go(5)
+        self.assertEqual(client.get_state(), 'leader')
+
+        server.srp_server_set_enabled(True)
+        server.start()
+        self.simulator.go(5)
+        self.assertEqual(server.get_state(), 'router')
 
         #
-        # 1. Register a single service and verify that it works.
+        # 1. Enable auto start mode on client and check that server is used.
         #
 
+        self.assertEqual(client.srp_client_get_state(), 'Disabled')
+        client.srp_client_enable_auto_start_mode()
+        self.assertEqual(client.srp_client_get_auto_start_mode(), 'Enabled')
+        self.simulator.go(2)
+        self.assertEqual(client.srp_client_get_state(), 'Enabled')
+        self.assertTrue(server.has_ipaddr(client.srp_client_get_server_address()))
+
+        #
+        # 2. Reboot the server without any service registered. The server should
+        # listen to the same port after the reboot.
+        #
+        old_port = server.get_srp_server_port()
+        server.srp_server_set_enabled(False)
+        server.reset()
+        server.start()
+        self.simulator.go(5)
+        server.srp_server_set_enabled(True)
+        self.simulator.go(5)
+        self.assertEqual(old_port, server.get_srp_server_port())
+
+        #
+        # 3. Register a service
+        #
         client.srp_client_set_host_name('my-host')
         client.srp_client_set_host_address('2001::1')
-        client.srp_client_start(server.get_addrs()[0], client.get_srp_server_port())
-        client.srp_client_add_service('my-service', '_ipps._tcp', 12345)
-        self.simulator.go(2)
+        client.srp_client_add_service('my-service', '_ipps._tcp', 12345, 0, 0, ['abc', 'def=', 'xyz=XYZ'])
+        self.simulator.go(5)
+        self.check_host_and_service(server, client, '2001::1')
 
-        self.check_host_and_service(server, client)
+        ports = [server.get_srp_server_port()]
 
-        #
-        # 2. Stop the client and wait for the service instance LEASE to expire.
-        #
+        # Reboot the SRP server several times
+        for i in range(REBOOT_TIMES):
+            #
+            # 4. Disable server and check client is stopped/disabled.
+            #
+            old_port = server.get_srp_server_port()
+            server.srp_server_set_enabled(False)
+            server.reset()
+            server.start()
+            self.simulator.go(5)
 
-        client.srp_client_stop()
-        self.simulator.go(LEASE + 1)
+            #
+            # 5. Enable server and check client starts again. Verify that the
+            # server is using a different port, and the service have been
+            # re-registered.
+            #
+            server.srp_server_set_enabled(True)
+            self.simulator.go(5)
+            self.assertEqual(client.srp_client_get_state(), 'Enabled')
+            self.assertEqual(client.srp_client_get_server_address(), server.get_mleid())
+            self.assertNotEqual(old_port, server.get_srp_server_port())
+            self.check_host_and_service(server, client, '2001::1')
+            ports.append(server.get_srp_server_port())
+        logging.info(f'ports = {ports}')
 
-        # The SRP server should remove the host and service but retain their names
-        # since the the KEY LEASE hasn't expired yet.
-        self.assertEqual(server.srp_server_get_host('my-host')['deleted'], 'true')
-        self.assertEqual(server.srp_server_get_service('my-service', '_ipps._tcp')['deleted'], 'true')
-
-        # Start the client again, the same service should be successfully registered.
-        client.srp_client_start(server.get_addrs()[0], client.get_srp_server_port())
-        self.simulator.go(2)
-
-        self.check_host_and_service(server, client)
-
-        #
-        # 3. Stop the client and wait for the KEY LEASE to expire.
-        #    The host and service instance should be fully removed by the SRP server.
-        #
-
-        client.srp_client_stop()
-        self.simulator.go(KEY_LEASE + 1)
-
-        # The host and service are expected to be fully removed.
-        self.assertEqual(len(server.srp_server_get_hosts()), 0)
-        self.assertEqual(len(server.srp_server_get_services()), 0)
-
-        # Start the client again, the same service should be successfully registered.
-        client.srp_client_start(server.get_addrs()[0], client.get_srp_server_port())
-        self.simulator.go(2)
-
-        self.check_host_and_service(server, client)
-
-    def check_host_and_service(self, server, client):
-        """Check that we have properly registered host and service instance.
-        """
+    def check_host_and_service(self, server, client, host_addr):
+        # Check that we have properly registered host and service instance.
+        # Originally used in test_srp_register_single_service.py.
 
         client_services = client.srp_client_get_services()
         print(client_services)
@@ -154,16 +161,11 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         # Verify that the client received a SUCCESS response for the server.
         self.assertEqual(client_service['state'], 'Registered')
 
-        # Wait for a KEY LEASE period to make sure that the client has refreshed
-        # the host and service instance.
-        self.simulator.go(KEY_LEASE + 1)
-
         server_services = server.srp_server_get_services()
-        print(server_services)
         self.assertEqual(len(server_services), 1)
         server_service = server_services[0]
 
-        # Verify that the server accepted the SRP registration and stored
+        # Verify that the server accepted the SRP registration and stores
         # the same service resources.
         self.assertEqual(server_service['deleted'], 'false')
         self.assertEqual(server_service['instance'], client_service['instance'])
@@ -171,6 +173,9 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(int(server_service['port']), int(client_service['port']))
         self.assertEqual(int(server_service['priority']), int(client_service['priority']))
         self.assertEqual(int(server_service['weight']), int(client_service['weight']))
+        # We output value of TXT entry as HEX string.
+        print(server_service['TXT'])
+        self.assertEqual(server_service['TXT'], ['abc', 'def=', 'xyz=58595a'])
         self.assertEqual(server_service['host'], 'my-host')
 
         server_hosts = server.srp_server_get_hosts()
@@ -181,7 +186,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(server_host['deleted'], 'false')
         self.assertEqual(server_host['fullname'], server_service['host_fullname'])
         self.assertEqual(len(server_host['addresses']), 1)
-        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address('2001::1'))
+        self.assertEqual(ipaddress.ip_address(server_host['addresses'][0]), ipaddress.ip_address(host_addr))
 
 
 if __name__ == '__main__':

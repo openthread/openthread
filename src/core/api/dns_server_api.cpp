@@ -73,4 +73,22 @@ void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFu
     instance.Get<Dns::ServiceDiscovery::Server>().HandleDiscoveredHost(aHostFullName, *aHostInfo);
 }
 
+const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Dns::ServiceDiscovery::Server>().GetNextQuery(aQuery);
+}
+
+otDnssdQueryType otDnssdGetQueryTypeAndName(const otDnssdQuery *aQuery, char (*aNameOutput)[OT_DNS_MAX_NAME_SIZE])
+{
+    otDnssdQueryType type = OT_DNSSD_QUERY_TYPE_NONE;
+
+    OT_ASSERT(aQuery != nullptr);
+    OT_ASSERT(aNameOutput != nullptr);
+    type = static_cast<otDnssdQueryType>(Dns::ServiceDiscovery::Server::GetQueryTypeAndName(aQuery, *aNameOutput));
+
+    return type;
+}
+
 #endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE

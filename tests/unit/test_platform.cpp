@@ -607,10 +607,14 @@ uint16_t otPlatTimeGetXtalAccuracy(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+otError otPlatRadioEnableCsl(otInstance *        aInstance,
+                             uint32_t            aCslPeriod,
+                             otShortAddress      aShortAdd,
+                             const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aCslPeriod);
+    OT_UNUSED_VARIABLE(aShortAdd);
     OT_UNUSED_VARIABLE(aExtAddr);
 
     return OT_ERROR_NONE;

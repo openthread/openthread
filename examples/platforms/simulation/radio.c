@@ -1165,9 +1165,13 @@ static uint8_t generateAckIeData(uint8_t *aLinkMetricsIeData, uint8_t aLinkMetri
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError otPlatRadioEnableCsl(otInstance *aInstance, uint32_t aCslPeriod, const otExtAddress *aExtAddr)
+otError otPlatRadioEnableCsl(otInstance *        aInstance,
+                             uint32_t            aCslPeriod,
+                             otShortAddress      aShortAddr,
+                             const otExtAddress *aExtAddr)
 {
     OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aShortAddr);
     OT_UNUSED_VARIABLE(aExtAddr);
 
     otError error = OT_ERROR_NONE;

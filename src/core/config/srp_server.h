@@ -46,13 +46,37 @@
 #endif
 
 /**
- * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN
  *
- * Specifies the SRP Server UDP port, and use 0 for ephemeral port.
+ * Specifies the min port number in the port range reserved for SRP server.
  *
  */
-#ifndef OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
-#define OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT 0
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN
+#define OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN 53535
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX
+ *
+ * Specifies the max port number in the port range reserved for SRP server.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX
+#define OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX 53554
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+ *
+ * Define to 1 to enable SRP server feature to save its own port in non-volatile settings.
+ *
+ * When enabled, the SRP server will save its port in the non-volatile settings. On a server
+ * restart (e.g., due to a device reset) it will restore the port and change to a different one. The info is written to
+ * Settings after the first service has been registered due to receiving an SRP Update.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+#define OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE 1
 #endif
 
 /**

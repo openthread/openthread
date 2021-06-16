@@ -79,8 +79,8 @@ public:
             mSentCount          = 0;
             mReceivedCount      = 0;
             mTotalRoundTripTime = 0;
-            mMinRoundTripTime   = NumericLimits<uint16_t>::Max();
-            mMaxRoundTripTime   = NumericLimits<uint16_t>::Min();
+            mMinRoundTripTime   = NumericLimits<uint16_t>::kMax;
+            mMaxRoundTripTime   = NumericLimits<uint16_t>::kMin;
             mIsMulticast        = false;
         }
     };

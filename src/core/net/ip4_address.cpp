@@ -62,7 +62,7 @@ Error Address::FromString(const char *aString)
             }
 
             value = static_cast<uint16_t>((value * 10) + static_cast<uint8_t>(digitChar - '0'));
-            VerifyOrExit(value <= NumericLimits<uint8_t>::Max());
+            VerifyOrExit(value <= NumericLimits<uint8_t>::kMax);
             hasFirstDigit = true;
         }
 
@@ -88,10 +88,9 @@ exit:
 
 Address::InfoString Address::ToString(void) const
 {
-    InfoString   string;
-    StringWriter writer(string);
+    InfoString string;
 
-    writer.Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
+    string.Append("%d.%d.%d.%d", mBytes[0], mBytes[1], mBytes[2], mBytes[3]);
 
     return string;
 }

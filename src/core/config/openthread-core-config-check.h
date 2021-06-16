@@ -509,4 +509,9 @@
        "Service numbers are defined in `network_data_servcie.hpp` per spec"
 #endif
 
+#ifdef OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT
+#error "OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT was removed. "\
+       "You can make OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX to specify a static UDP port. "
+#endif
+
 #endif // OPENTHREAD_CORE_CONFIG_CHECK_H_

@@ -75,7 +75,7 @@ public:
          * suppression behavior, invoking the handler callback independent of number of "consistent" events).
          *
          */
-        kInfiniteRedundancyConstant = NumericLimits<uint16_t>::Max(),
+        kInfiniteRedundancyConstant = NumericLimits<uint16_t>::kMax,
     };
 
     /**

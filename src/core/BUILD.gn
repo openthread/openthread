@@ -393,6 +393,7 @@ openthread_core_files = [
   "common/random_manager.hpp",
   "common/settings.cpp",
   "common/settings.hpp",
+  "common/settings_driver.hpp",
   "common/string.cpp",
   "common/string.hpp",
   "common/tasklet.cpp",

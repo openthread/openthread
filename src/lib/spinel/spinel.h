@@ -4112,7 +4112,9 @@ enum
     /** Format: `A(t(UUSSSd))` - Read/Insert/Remove
      * Required capability: `SPINEL_CAP_SRP_CLIENT`.
      *
-     * This property provide a list/array of services. Data per item is
+     * This property provides a list/array of services.
+     *
+     * Data per item for `SPINEL_CMD_PROP_VALUE_GET` and/or `SPINEL_CMD_PROP_VALUE_INSERT` operation is as follows:
      *
      *   `U` : The service name labels (e.g., "_chip._udp", not the full domain name.
      *   `U` : The service instance name label (not the full name).
@@ -4120,7 +4122,15 @@ enum
      *   `S` : The service priority.
      *   `S` : The service weight.
      *
-     * During remove operation, only service name and service instance name would be used.
+     * For `SPINEL_CMD_PROP_VALUE_REMOVE` command, the following format is used:
+     *
+     *   `U` : The service name labels (e.g., "_chip._udp", not the full domain name.
+     *   `U` : The service instance name label (not the full name).
+     *   `b` : Indicates whether to clear the service entry (optional).
+     *
+     * The last boolean (`b`) field is optional. When included it indicates on `true` to clear the service (clear it
+     * on client immediately with no interaction to server) and on `false` to remove the service (inform server and
+     * wait for the service entry to be removed on server). If it is not included, the value is `false`.
      *
      */
     SPINEL_PROP_SRP_CLIENT_SERVICES = SPINEL_PROP_OPENTHREAD__BEGIN + 23,
@@ -4129,12 +4139,12 @@ enum
     /** Format: `b` : Write only
      * Required capability: `SPINEL_CAP_SRP_CLIENT`.
      *
-     * Writing to this property starts the remove process of the host info and all services.
+     * Writing to this property with starts the remove process of the host info and all services.
      * Please see `otSrpClientRemoveHostAndServices()` for more details.
      *
      * Format is:
      *
-     *    `b` : A boolean indicating whether or not the host key lease should also be removed.
+     *    `b` : A boolean indicating whether or not the host key lease should also be cleared.
      *
      */
     SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_REMOVE = SPINEL_PROP_OPENTHREAD__BEGIN + 24,

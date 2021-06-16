@@ -807,6 +807,7 @@ private:
     Error ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult);
     void  PerformEnergyScan(void);
     void  ReportEnergyScanResult(int8_t aRssi);
+    Error SignalNetworkNameChange(Error aError);
 
     void LogFrameRxFailure(const RxFrame *aFrame, Error aError) const;
     void LogFrameTxFailure(const TxFrame &aFrame, Error aError, uint8_t aRetryCount, bool aWillRetx) const;

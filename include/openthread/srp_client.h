@@ -474,6 +474,26 @@ otError otSrpClientAddService(otInstance *aInstance, otSrpClientService *aServic
 otError otSrpClientRemoveService(otInstance *aInstance, otSrpClientService *aService);
 
 /**
+ * This function clears a service, immediately removing it from the client service list.
+ *
+ * Unlike `otSrpClientRemoveService()` which sends an update message to the server to remove the service, this function
+ * clears the service from the client's service list without any interaction with the server. On a successful call to
+ * this function, the `otSrpClientCallback` will NOT be called and the @p aService entry can be reclaimed and re-used
+ * by the caller immediately.
+ *
+ * This function can be used along with a subsequent call to `otSrpClientAddService()` (potentially reusing the same @p
+ * aService entry with the same service and instance names) to update some of the parameters in an existing service.
+ *
+ * @param[in] aInstance        A pointer to the OpenThread instance.
+ * @param[in] aService         A pointer to a `otSrpClientService` instance to delete.
+ *
+ * @retval OT_ERROR_NONE       The @p aService is deleted successfully. It can be reclaimed and re-used immediately.
+ * @retval OT_ERROR_NOT_FOUND  The service could not be found in the list.
+ *
+ */
+otError otSrpClientClearService(otInstance *aInstance, otSrpClientService *aService);
+
+/**
  * This function gets the list of services being managed by client.
  *
  * @param[in] aInstance        A pointer to the OpenThread instance.
@@ -507,8 +527,8 @@ otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyL
 /**
  * This function clears all host info and all the services.
  *
- * Unlike `otSrpClientRemoveHostAndServices()` which sends an update message to server to remove/unregister all the
- * info, this function clears all the info immediately without any interaction with server.
+ * Unlike `otSrpClientRemoveHostAndServices()` which sends an update message to the server to remove all the info, this
+ * function clears all the info immediately without any interaction with the server.
  *
  * @param[in] aInstance        A pointer to the OpenThread instance.
  *

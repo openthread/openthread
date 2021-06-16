@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,30 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef OT_POSIX_PLATFORM_UDP_HPP_
+#define OT_POSIX_PLATFORM_UDP_HPP_
 
-/**
- * @file
- *   This file implements of MLE types and constants.
- */
-
-#include "mle_types.hpp"
-
-#include "common/code_utils.hpp"
+#include "core/common/non_copyable.hpp"
+#include "posix/platform/mainloop.hpp"
 
 namespace ot {
-namespace Mle {
+namespace Posix {
 
-void DeviceMode::Get(ModeConfig &aModeConfig) const
+class Udp : public Mainloop::Source, private NonCopyable
 {
-    aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
-    aModeConfig.mDeviceType   = IsFullThreadDevice();
-    aModeConfig.mNetworkData  = IsFullNetworkData();
-}
+public:
+    static Udp &Get(void);
 
-void DeviceMode::Set(const ModeConfig &aModeConfig)
-{
-    mMode = kModeReserved;
-    mMode |= aModeConfig.mRxOnWhenIdle ? kModeRxOnWhenIdle : 0;
-    mMode |= aModeConfig.mDeviceType ? kModeFullThreadDevice : 0;
-    mMode |= aModeConfig.mNetworkData ? kModeFullNetworkData : 0;
-}
+    void Init(otInstance *aInstance, const char *aIfName);
+    void Deinit(void);
+    void Update(otSysMainloopContext &aContext) override;
+    void Process(const otSysMainloopContext &aContext) override;
 
-DeviceMode::InfoString DeviceMode::ToString(void) const
-{
-    InfoString string;
+private:
+    otInstance *mInstance = nullptr;
+};
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
-                  IsFullNetworkData() ? "yes" : "no");
-
-    return string;
-}
-
-void MeshLocalPrefix::SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId)
-{
-    m8[0] = 0xfd;
-    memcpy(&m8[1], aExtendedPanId.m8, 5);
-    m8[6] = 0x00;
-    m8[7] = 0x00;
-}
-
-} // namespace Mle
+} // namespace Posix
 } // namespace ot
+
+#endif // OT_POSIX_PLATFORM_UDP_HPP_

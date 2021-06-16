@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2019, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -25,51 +25,37 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef OT_POSIX_PLATFORM_DAEMON_HPP_
+#define OT_POSIX_PLATFORM_DAEMON_HPP_
 
-/**
- * @file
- *   This file implements of MLE types and constants.
- */
+#include "openthread-posix-config.h"
 
-#include "mle_types.hpp"
-
-#include "common/code_utils.hpp"
+#include "core/common/non_copyable.hpp"
+#include "posix/platform/mainloop.hpp"
 
 namespace ot {
-namespace Mle {
+namespace Posix {
 
-void DeviceMode::Get(ModeConfig &aModeConfig) const
+class Daemon : public Mainloop::Source, private NonCopyable
 {
-    aModeConfig.mRxOnWhenIdle = IsRxOnWhenIdle();
-    aModeConfig.mDeviceType   = IsFullThreadDevice();
-    aModeConfig.mNetworkData  = IsFullNetworkData();
-}
+public:
+    static Daemon &Get(void);
 
-void DeviceMode::Set(const ModeConfig &aModeConfig)
-{
-    mMode = kModeReserved;
-    mMode |= aModeConfig.mRxOnWhenIdle ? kModeRxOnWhenIdle : 0;
-    mMode |= aModeConfig.mDeviceType ? kModeFullThreadDevice : 0;
-    mMode |= aModeConfig.mNetworkData ? kModeFullNetworkData : 0;
-}
+    void Enable(otInstance *aInstance);
+    void Disable(void);
+    void Update(otSysMainloopContext &aContext) override;
+    void Process(const otSysMainloopContext &aContext) override;
 
-DeviceMode::InfoString DeviceMode::ToString(void) const
-{
-    InfoString string;
+private:
+    int  OutputFormatV(const char *aFormat, va_list aArguments);
+    void InitializeSessionSocket(void);
 
-    string.Append("rx-on:%s ftd:%s full-net:%s", IsRxOnWhenIdle() ? "yes" : "no", IsFullThreadDevice() ? "yes" : "no",
-                  IsFullNetworkData() ? "yes" : "no");
+    int mListenSocket  = -1;
+    int mDaemonLock    = -1;
+    int mSessionSocket = -1;
+};
 
-    return string;
-}
-
-void MeshLocalPrefix::SetFromExtendedPanId(const Mac::ExtendedPanId &aExtendedPanId)
-{
-    m8[0] = 0xfd;
-    memcpy(&m8[1], aExtendedPanId.m8, 5);
-    m8[6] = 0x00;
-    m8[7] = 0x00;
-}
-
-} // namespace Mle
+} // namespace Posix
 } // namespace ot
+
+#endif // OT_POSIX_PLATFORM_DAEMON_HPP_

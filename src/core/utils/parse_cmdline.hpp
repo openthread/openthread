@@ -469,6 +469,19 @@ public:
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
     /**
+     * This template method parses the argument as a specified value type.
+     *
+     * @tparam Type               The value type.
+     *
+     * @param[out] aValue         A reference to output the parsed value.
+     *
+     * @retval kErrorNone         The argument was parsed successfully.
+     * @retval kErrorInvalidArgs  The argument does not contain a valid value.
+     *
+     */
+    template <typename Type> otError ParseAs(Type &aValue) const;
+
+    /**
      * This method parses the argument as a hex string into a byte array of fixed expected size.
      *
      * This method returns `kErrorNone` only when the hex string contains exactly @p aSize bytes (after parsing). If
@@ -561,6 +574,63 @@ private:
  *
  */
 otError ParseCmd(char *aCommandString, uint8_t &aArgsLength, Arg aArgs[], uint8_t aArgsLengthMax);
+
+//- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+// Specializations of `Arg::ParseAs<Type>()` method.
+
+template <> inline otError Arg::ParseAs(uint8_t &aValue) const
+{
+    return ParseAsUint8(aValue);
+}
+
+template <> inline otError Arg::ParseAs(uint16_t &aValue) const
+{
+    return ParseAsUint16(aValue);
+}
+
+template <> inline otError Arg::ParseAs(uint32_t &aValue) const
+{
+    return ParseAsUint32(aValue);
+}
+
+template <> inline otError Arg::ParseAs(uint64_t &aValue) const
+{
+    return ParseAsUint64(aValue);
+}
+
+template <> inline otError Arg::ParseAs(bool &aValue) const
+{
+    return ParseAsBool(aValue);
+}
+
+template <> inline otError Arg::ParseAs(int8_t &aValue) const
+{
+    return ParseAsInt8(aValue);
+}
+
+template <> inline otError Arg::ParseAs(int16_t &aValue) const
+{
+    return ParseAsInt16(aValue);
+}
+
+template <> inline otError Arg::ParseAs(int32_t &aValue) const
+{
+    return ParseAsInt32(aValue);
+}
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+
+template <> inline otError Arg::ParseAs(otIp6Address &aValue) const
+{
+    return ParseAsIp6Address(aValue);
+}
+
+template <> inline otError Arg::ParseAs(otIp6Prefix &aValue) const
+{
+    return ParseAsIp6Prefix(aValue);
+}
+
+#endif
 
 /**
  * @}

@@ -258,7 +258,9 @@ bool InfraNetif::IsRunning(void) const
     VerifyOrDie(sock != -1, OT_EXIT_ERROR_ERRNO);
 
     memset(&ifReq, 0, sizeof(ifReq));
-    strncpy(ifReq.ifr_name, mInfraIfName, sizeof(ifReq.ifr_name));
+    static_assert(sizeof(ifReq.ifr_name) >= sizeof(mInfraIfName), "mInfraIfName is not of appropriate size.");
+    strcpy(ifReq.ifr_name, mInfraIfName);
+
     VerifyOrDie(ioctl(sock, SIOCGIFFLAGS, &ifReq) != -1, OT_EXIT_ERROR_ERRNO);
 
     close(sock);
@@ -271,10 +273,10 @@ void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
     ssize_t  rval;
     uint32_t ifIndex = 0;
 
-    VerifyOrExit(aIfName != nullptr);
+    VerifyOrExit(aIfName != nullptr && aIfName[0] != '\0');
 
     VerifyOrDie(strnlen(aIfName, sizeof(mInfraIfName)) <= sizeof(mInfraIfName) - 1, OT_EXIT_INVALID_ARGUMENTS);
-    strncpy(mInfraIfName, aIfName, sizeof(mInfraIfName));
+    strcpy(mInfraIfName, aIfName);
 
     // Initializes the infra interface.
     ifIndex = if_nametoindex(aIfName);

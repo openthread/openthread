@@ -81,7 +81,7 @@ Done
 - [parent](#parent)
 - [parentpriority](#parentpriority)
 - [partitionid](#partitionid)
-- [ping](#ping-ipaddr-sizecount-intervalhoplimit)
+- [ping](#ping--i-source-ipaddr-size-count-interval-hoplimit-timeout)
 - [pollperiod](#pollperiod-pollperiod)
 - [preferrouterid](#preferrouterid-routerid)
 - [prefix](#prefix)
@@ -1767,12 +1767,12 @@ List all UDP sockets.
 
 ```bash
 > netstat
-|                 Local Address                 |                  Peer Address                 |
-+-----------------------------------------------+-----------------------------------------------+
-| 0:0:0:0:0:0:0:0:49153                         | 0:0:0:0:0:0:0:0:*                             |
-| 0:0:0:0:0:0:0:0:49152                         | 0:0:0:0:0:0:0:0:*                             |
-| 0:0:0:0:0:0:0:0:61631                         | 0:0:0:0:0:0:0:0:*                             |
-| 0:0:0:0:0:0:0:0:19788                         | 0:0:0:0:0:0:0:0:*                             |
+| Local Address                                   | Peer Address                                    |
++-------------------------------------------------+-------------------------------------------------+
+| [0:0:0:0:0:0:0:0]:49153                         | [0:0:0:0:0:0:0:0]:0                             |
+| [0:0:0:0:0:0:0:0]:49152                         | [0:0:0:0:0:0:0:0]:0                             |
+| [0:0:0:0:0:0:0:0]:61631                         | [0:0:0:0:0:0:0:0]:0                             |
+| [0:0:0:0:0:0:0:0]:19788                         | [0:0:0:0:0:0:0:0]:0                             |
 Done
 ```
 
@@ -1942,10 +1942,11 @@ Set the preferred Thread Leader Partition ID.
 Done
 ```
 
-### ping \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
+### ping \[-I source\] \<ipaddr\> \[size\] \[count\] \[interval\] \[hoplimit\] \[timeout\]
 
 Send an ICMPv6 Echo Request.
 
+- source: The source IPv6 address of the echo request.
 - size: The number of data bytes to be sent.
 - count: The number of ICMPv6 Echo Requests to be sent.
 - interval: The interval between two consecutive ICMPv6 Echo Requests in seconds. The value may have fractional form, for example `0.5`.
@@ -1953,10 +1954,15 @@ Send an ICMPv6 Echo Request.
 - timeout: Time in seconds to wait for the final ICMPv6 Echo Reply after sending out the request. The value may have fractional form, for example `3.5`.
 
 ```bash
-> ping fdde:ad00:beef:0:558:f56b:d688:799
-16 bytes from fdde:ad00:beef:0:558:f56b:d688:799: icmp_seq=1 hlim=64 time=28ms
+> ping fd00:db8:0:0:76b:6a05:3ae9:a61a
+> 16 bytes from fd00:db8:0:0:76b:6a05:3ae9:a61a: icmp_seq=5 hlim=64 time=0ms
+1 packets transmitted, 1 packets received. Packet loss = 0.0%. Round-trip min/avg/max = 0/0.0/0 ms.
+Done
 
-> ping ff05::1 100 1 1 1
+> ping -I fd00:db8:0:0:76b:6a05:3ae9:a61a ff02::1 100 1 1 1
+> 108 bytes from fd00:db8:0:0:f605:fb4b:d429:d59a: icmp_seq=4 hlim=64 time=7ms
+1 packets transmitted, 1 packets received. Round-trip min/avg/max = 7/7.0/7 ms.
+Done
 ```
 
 ### ping stop

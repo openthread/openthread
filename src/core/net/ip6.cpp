@@ -49,6 +49,7 @@
 #include "net/ip6_filter.hpp"
 #include "net/netif.hpp"
 #include "net/udp6.hpp"
+#include "openthread/ip6.h"
 #include "thread/mle.hpp"
 
 using IcmpType = ot::Ip6::Icmp::Header::Type;
@@ -946,19 +947,13 @@ Error Ip6::HandlePayload(Message &          aMessage,
                          Message::Ownership aMessageOwnership)
 {
     Error    error   = kErrorNone;
-    Message *message = nullptr;
+    Message *message = (aMessageOwnership == Message::kTakeCustody) ? &aMessage : nullptr;
 
     VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
 
-    switch (aMessageOwnership)
+    if (aMessageOwnership == Message::kCopyToUse)
     {
-    case Message::kTakeCustody:
-        message = &aMessage;
-        break;
-
-    case Message::kCopyToUse:
         VerifyOrExit((message = aMessage.Clone()) != nullptr, error = kErrorNoBufs);
-        break;
     }
 
     switch (aIpProto)
@@ -1035,8 +1030,9 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
             Udp::Header udp;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
-            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()), error = kErrorNoRoute);
-
+            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()) &&
+                             !Get<Udp>().IsPortInUse(udp.GetDestinationPort()),
+                         error = kErrorNoRoute);
             break;
         }
 

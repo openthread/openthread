@@ -359,32 +359,6 @@ void virtualTimeSendSleepEvent(const struct timeval *aTimeout);
  */
 void virtualTimeRadioSpinelProcess(otInstance *aInstance, const struct VirtualTimeEvent *aEvent);
 
-/**
- * This function initializes platform UDP driver.
- *
- * @param[in]   aIfName   The name of Thread's platform network interface.
- *
- */
-void platformUdpInit(const char *aIfName);
-
-/**
- * This function performs platform UDP driver processing.
- *
- * @param[in]   aInstance   The OpenThread instance structure.
- * @param[in]   aReadFdSet  A pointer to the read file descriptors.
- *
- */
-void platformUdpProcess(otInstance *aInstance, const fd_set *aReadSet);
-
-/**
- * This function updates the file descriptor sets with file descriptors used by the platform UDP driver.
- *
- * @param[in]     aInstance    The OpenThread instance structure.
- * @param[inout]  aReadFdSet   A pointer to the read file descriptors.
- * @param[inout]  aMaxFd       A pointer to the max file descriptor.
- */
-void platformUdpUpdateFdSet(otInstance *aInstance, fd_set *aReadFdSet, int *aMaxFd);
-
 enum SocketBlockOption
 {
     kSocketBlock,
@@ -490,36 +464,6 @@ extern unsigned int gBackboneNetifIndex;
  *
  */
 bool platformInfraIfIsRunning(void);
-
-/**
- * This function enables daemon.
- *
- * @param[in]       aInstance   The OpenThread instance structure.
- *
- */
-void platformDaemonEnable(otInstance *aInstance);
-
-/**
- * This function disables daemon.
- *
- */
-void platformDaemonDisable(void);
-
-/**
- * This function updates the file descriptor sets with file descriptors used by daemon.
- *
- * @param[inout]    aMainloop   A pointer to the mainloop context.
- *
- */
-void platformDaemonUpdate(otSysMainloopContext *aContext);
-
-/**
- * This function performs daemon processing.
- *
- * @param[in]   aMainloop   A pointer to the mainloop context.
- *
- */
-void platformDaemonProcess(const otSysMainloopContext *aContext);
 
 #ifdef __cplusplus
 }

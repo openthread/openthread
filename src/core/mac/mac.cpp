@@ -493,75 +493,47 @@ void Mac::SetSupportedChannelMask(const ChannelMask &aMask)
 
 Error Mac::SetNetworkName(const char *aNameString)
 {
-    // When setting Network Name from a string, we treat it as `NameData`
-    // with `kMaxSize + 1` chars. `NetworkName::Set(data)` will look
-    // for null char in the data (within its given size) to calculate
-    // the name's length and ensure that the name fits in `kMaxSize`
-    // chars. The `+ 1` ensures that a `aNameString` with length
-    // longer than `kMaxSize` is correctly rejected (returning error
-    // `kErrorInvalidArgs`).
-
-    Error    error;
-    NameData data(aNameString, NetworkName::kMaxSize + 1);
-
-    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
-
-    error = SetNetworkName(data);
-
-exit:
-    return error;
+    return SignalNetworkNameChange(mNetworkName.Set(aNameString));
 }
 
 Error Mac::SetNetworkName(const NameData &aNameData)
 {
-    Error error = mNetworkName.Set(aNameData);
+    return SignalNetworkNameChange(mNetworkName.Set(aNameData));
+}
 
-    if (error == kErrorAlready)
+Error Mac::SignalNetworkNameChange(Error aError)
+{
+    switch (aError)
     {
+    case kErrorNone:
+        Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
+        break;
+
+    case kErrorAlready:
         Get<Notifier>().SignalIfFirst(kEventThreadNetworkNameChanged);
-        error = kErrorNone;
-        ExitNow();
+        aError = kErrorNone;
+        break;
+
+    default:
+        break;
     }
 
-    SuccessOrExit(error);
-    Get<Notifier>().Signal(kEventThreadNetworkNameChanged);
-
-exit:
-    return error;
+    return aError;
 }
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 Error Mac::SetDomainName(const char *aNameString)
 {
-    // When setting Domain Name from a string, we treat it as `NameData`
-    // with `kMaxSize + 1` chars. `DomainName::Set(data)` will look
-    // for null char in the data (within its given size) to calculate
-    // the name's length and ensure that the name fits in `kMaxSize`
-    // chars. The `+ 1` ensures that a `aNameString` with length
-    // longer than `kMaxSize` is correctly rejected (returning error
-    // `kErrorInvalidArgs`).
+    Error error = mDomainName.Set(aNameString);
 
-    Error    error;
-    NameData data(aNameString, DomainName::kMaxSize + 1);
-
-    VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
-
-    error = SetDomainName(data);
-
-exit:
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 
 Error Mac::SetDomainName(const NameData &aNameData)
 {
     Error error = mDomainName.Set(aNameData);
 
-    if (error == kErrorAlready)
-    {
-        error = kErrorNone;
-    }
-
-    return error;
+    return (error == kErrorAlready) ? kErrorNone : error;
 }
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -2482,7 +2454,8 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
     if (IsCslEnabled())
     {
-        IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), &Get<Mle::Mle>().GetParent().GetExtAddress()));
+        IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), Get<Mle::Mle>().GetParent().GetRloc16(),
+                                           &Get<Mle::Mle>().GetParent().GetExtAddress()));
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
 

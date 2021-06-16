@@ -260,40 +260,13 @@ exit:
 
 otError SrpClient::ProcessLeaseInterval(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t interval;
-
-    if (aArgsLength == 0)
-    {
-        mInterpreter.OutputLine("%u", otSrpClientGetLeaseInterval(mInterpreter.mInstance));
-        ExitNow();
-    }
-
-    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = aArgs[0].ParseAsUint32(interval));
-    otSrpClientSetLeaseInterval(mInterpreter.mInstance, interval);
-
-exit:
-    return error;
+    return mInterpreter.ProcessGetSet(aArgsLength, aArgs, otSrpClientGetLeaseInterval, otSrpClientSetLeaseInterval);
 }
 
 otError SrpClient::ProcessKeyLeaseInterval(uint8_t aArgsLength, Arg aArgs[])
 {
-    otError  error = OT_ERROR_NONE;
-    uint32_t interval;
-
-    if (aArgsLength == 0)
-    {
-        mInterpreter.OutputLine("%u", otSrpClientGetKeyLeaseInterval(mInterpreter.mInstance));
-        ExitNow();
-    }
-
-    VerifyOrExit(aArgsLength == 1, error = OT_ERROR_INVALID_ARGS);
-    SuccessOrExit(error = aArgs[0].ParseAsUint32(interval));
-    otSrpClientSetKeyLeaseInterval(mInterpreter.mInstance, interval);
-
-exit:
-    return error;
+    return mInterpreter.ProcessGetSet(aArgsLength, aArgs, otSrpClientGetKeyLeaseInterval,
+                                      otSrpClientSetKeyLeaseInterval);
 }
 
 otError SrpClient::ProcessServer(uint8_t aArgsLength, Arg aArgs[])
@@ -303,9 +276,10 @@ otError SrpClient::ProcessServer(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
-        mInterpreter.OutputFormat("[");
-        mInterpreter.OutputIp6Address(serverSockAddr->mAddress);
-        mInterpreter.OutputLine("]:%u", serverSockAddr->mPort);
+        char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
+
+        otIp6SockAddrToString(serverSockAddr, string, sizeof(string));
+        mInterpreter.OutputLine(string);
         ExitNow();
     }
 
@@ -332,6 +306,7 @@ exit:
 otError SrpClient::ProcessService(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
+    bool    isRemove;
 
     if (aArgsLength == 0)
     {
@@ -343,9 +318,9 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, Arg aArgs[])
     {
         error = ProcessServiceAdd(aArgsLength, aArgs);
     }
-    else if (aArgs[0] == "remove")
+    else if ((isRemove = (aArgs[0] == "remove")) || (aArgs[0] == "clear"))
     {
-        // `remove` <instance-name> <service-name>
+        // `remove`|`clear` <instance-name> <service-name>
 
         const otSrpClientService *service;
 
@@ -361,7 +336,18 @@ otError SrpClient::ProcessService(uint8_t aArgsLength, Arg aArgs[])
 
         VerifyOrExit(service != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        error = otSrpClientRemoveService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service));
+        if (isRemove)
+        {
+            error = otSrpClientRemoveService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service));
+        }
+        else
+        {
+            SuccessOrExit(
+                error = otSrpClientClearService(mInterpreter.mInstance, const_cast<otSrpClientService *>(service)));
+
+            otSrpClientBuffersFreeService(mInterpreter.mInstance, reinterpret_cast<otSrpClientBuffersServiceEntry *>(
+                                                                      const_cast<otSrpClientService *>(service)));
+        }
     }
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     else if (aArgs[0] == "key")
@@ -574,11 +560,9 @@ void SrpClient::HandleCallback(otError                    aError,
     for (const otSrpClientService *service = aRemovedServices; service != nullptr; service = next)
     {
         next = service->mNext;
-        otSrpClientBuffersServiceEntry *entry;
 
-        entry = reinterpret_cast<otSrpClientBuffersServiceEntry *>(const_cast<otSrpClientService *>(service));
-
-        otSrpClientBuffersFreeService(mInterpreter.mInstance, entry);
+        otSrpClientBuffersFreeService(mInterpreter.mInstance, reinterpret_cast<otSrpClientBuffersServiceEntry *>(
+                                                                  const_cast<otSrpClientService *>(service)));
     }
 }
 

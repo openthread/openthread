@@ -574,6 +574,18 @@ public:
 #endif
 
     /**
+     * This method returns whether a udp port is being used by OpenThread or any of it's optional
+     * features, e.g. CoAP API.
+     *
+     * @param[in]   aPort       The udp port
+     *
+     * @retval True when port is used by the OpenThread.
+     * @retval False when the port is not used by OpenThread.
+     *
+     */
+    bool IsPortInUse(uint16_t aPort) const;
+
+    /**
      * This method returns whether a udp port belongs to the platform or the stack.
      *
      * @param[in]   aPort       The udp port
@@ -589,7 +601,13 @@ private:
     {
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
+        kSrpServerPortMin =
+            OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, // The min port in the port range reserved for SRP server.
+        kSrpServerPortMax =
+            OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, // The max port in the port range reserved for SRP server.
     };
+
+    static bool IsPortReserved(uint16_t aPort);
 
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);

@@ -47,9 +47,11 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
+#include "posix/platform/daemon.hpp"
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/radio_url.hpp"
+#include "posix/platform/udp.hpp"
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
@@ -138,7 +140,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifInit(instance, aPlatformConfig->mInterfaceName);
 #elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpInit(aPlatformConfig->mInterfaceName);
+    ot::Posix::Udp::Init(instance, aPlatformConfig->mInterfaceName);
 #else
     gNetifName[0] = '\0';
 #endif
@@ -148,7 +150,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonEnable(instance);
+    ot::Posix::Daemon::Get().Enable(instance);
 #endif
     return instance;
 }
@@ -156,12 +158,15 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 void otSysDeinit(void)
 {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonDisable();
+    ot::Posix::Daemon::Get().Disable();
 #endif
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
 #endif
     platformRadioDeinit();
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    ot::Posix::Udp::Get().Deinit();
+#endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifDeinit();
 #endif
@@ -212,9 +217,6 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
     ot::Posix::Mainloop::Manager::Get().Update(*aMainloop);
 
     platformAlarmUpdateTimeout(&aMainloop->mTimeout);
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpUpdateFdSet(aInstance, &aMainloop->mReadFdSet, &aMainloop->mMaxFd);
-#endif
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet,
                              &aMainloop->mMaxFd);
@@ -227,10 +229,6 @@ void otSysMainloopUpdate(otInstance *aInstance, otSysMainloopContext *aMainloop)
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     platformTrelUpdateFdSet(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mMaxFd, &aMainloop->mTimeout);
-#endif
-
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonUpdate(aMainloop);
 #endif
 
     if (otTaskletsArePending(aInstance))
@@ -298,12 +296,6 @@ void otSysMainloopProcess(otInstance *aInstance, const otSysMainloopContext *aMa
     platformAlarmProcess(aInstance);
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     platformNetifProcess(&aMainloop->mReadFdSet, &aMainloop->mWriteFdSet, &aMainloop->mErrorFdSet);
-#endif
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    platformUdpProcess(aInstance, &aMainloop->mReadFdSet);
-#endif
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    platformDaemonProcess(aMainloop);
 #endif
 }
 

@@ -16,70 +16,143 @@ The figure below shows the architecture of OpenThread running in transceiver mod
          POSIX                                          Chip
 ```
 
-## Build
+## Build POSIX CLI
 
 ```sh
-# build core for POSIX
-make -f src/posix/Makefile-posix
-# build transceiver, where xxxx is the platform name, such as cc2538, nrf52840 and so on
-make -f examples/Makefile-xxxx
+./script/cmake-build posix
 ```
 
-## Test
+If built successfully, the binary should be found at: `build/posix/src/posix/ot-cli`.
+
+## Transceivers on different platforms
+
+### Simulation
+
+OpenThread provides an implemenation on the simulation platform which enables running a simulated transceiver on the host.
+
+#### Build
+
+```sh
+# Only build RCP so that it goes faster
+./script/cmake-build simulation -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
+```
+
+#### Run
 
 **NOTE** Assuming the build system is 64bit Linux, you can use the normal OpenThread CLI as described in the [command line document](../../src/cli/README.md). You can also perform radio diagnostics using the command [diag](../../src/core/diags/README.md).
 
-### With Simulation
-
 ```sh
-make -f examples/Makefile-simulation
-./output/posix/bin/ot-cli 'spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
+./build/posix/src/posix/ot-cli 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 ```
 
-### With Real Device
+### Nordic Semiconductor nRF52840
 
-#### nRF52840
+The nRF example platform driver can be found in the [ot-nrf528xx](https://github.com/openthread/ot-nrf528xx) repo.
 
-- USB=0
+#### Build
+
+To build and program the device with RCP application, complete the following steps:
+
+1. Clone the OpenThread nRF528xx platform repository into the current directory:
+
+   ```sh
+   git clone --recursive https://github.com/openthread/ot-nrf528xx.git
+   ```
+
+2. Enter the `ot-nrf528xx` directory:
+
+   ```sh
+   cd ot-nrf528xx
+   ```
+
+3. Install the OpenThread dependencies:
+
+   ```sh
+   ./script/bootstrap
+   ```
+
+4. Build the RCP example for the hardware platform and the transport of your choice:
+
+   a. nRF52840 Dongle (USB transport)
+
+   ```sh
+   rm -rf build
+   script/build nrf52840 USB_trans -DOT_BOOTLOADER=USB -DOT_THREAD_VERSION=1.2
+   ```
+
+   b. For nRF52840 Development Kit
+
+   ```sh
+   rm -rf build
+   script/build nrf52840 UART_trans -DOT_THREAD_VERSION=1.2
+   ```
+
+   This creates an RCP image at `build/bin/ot-rcp`.
+
+5. Depending on the hardware platform, complete the following steps to program the device:
+
+   a. nRF52840 Dongle (USB transport)
+
+   ```sh
+   # Install nRF Util:
+   python3 -m pip install -U nrfutil
+
+   # Generate the RCP firmware package:
+   nrfutil pkg generate --hw-version 52 --sd-req=0x00 \
+       --application build/bin/ot-rcp.hex --application-version 1 build/bin/ot-rcp.zip
+   ```
+
+   Connect the nRF52840 Dongle to the USB port and press the **RESET** button on the dongle to put it into the DFU mode. The LED on the dongle starts blinking red.
+
+   ```sh
+   # Install the RCP firmware package onto the dongle
+   nrfutil dfu usb-serial -pkg build/bin/ot-rcp.zip -p /dev/ttyACM0
+   ```
+
+   b. nRF52840 Development Kit
+
+   ```sh
+   # Program the image using the nrfjprog utility.
+   nrfjprog -f nrf52 --chiperase --program build/bin/ot-rcp.hex --reset
+   ```
+
+   Disable the Mass Storage feature on the device, so that it does not interfere with the core RCP functionalities:
+
+   ```sh
+   JLinkExe -device NRF52840_XXAA -if SWD -speed 4000 -autoconnect 1
+   J-Link>MSDDisable
+   Probe configured successfully.
+   J-Link>exit
+   ```
+
+   Power-cycle the device to apply the changes.
+
+#### Run
 
 ```sh
-make -f examples/Makefile-nrf52840
-arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
-nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
-nrfjprog -f nrf52 --pinresetenable
-nrfjprog -f nrf52 --reset
-
-# Disable MSD
-expect <<EOF
-spawn JLinkExe
-expect "J-Link>"
-send "msddisable\n"
-expect "Probe configured successfully."
-exit
-EOF
-
-./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 ```
 
-- USB=1
+### CC2538
 
-```sh
-# without USB=1 may result in failure for serial port issue
-make -f examples/Makefile-nrf52840 USB=1
-arm-none-eabi-objcopy -O ihex output/nrf52840/bin/ot-rcp ot-rcp.hex
-nrfjprog -f nrf52 --chiperase --reset --program ot-rcp.hex
-# plug the CDC serial USB port
-./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+#### Build
+
+```
+./script/cmake-build cc2538 -DOT_APP_CLI=OFF -DOT_APP_NCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
 ```
 
-#### CC2538
+#### Flash
 
 ```sh
-make -f examples/Makefile-cc2538
-arm-none-eabi-objcopy -O binary output/cc2538/bin/ot-rcp ot-rcp.bin
+arm-none-eabi-objcopy -O ihex build/cc2538/examples/apps/ncp/ot-rcp ot-rcp.bin
 # see https://github.com/JelmerT/cc2538-bsl
 python cc2538-bsl/cc2538-bsl.py -b 460800 -e -w -v -p /dev/ttyUSB0 ot-rcp.bin
-./output/posix/bin/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
+```
+
+#### Run
+
+```sh
+./build/posix/src/posix/ot-cli 'spinel+hdlc+uart:///dev/ttyUSB0?uart-baudrate=115200'
 ```
 
 ## Daemon Mode
@@ -88,11 +161,11 @@ OpenThread Posix Daemon mode uses a unix socket as input and output, so that Ope
 
 ```
 # build daemon mode core stack for POSIX
-make -f src/posix/Makefile-posix DAEMON=1
+./script/cmake-build posix -DOT_DAEMON=ON
 # Daemon with simulation
-./output/posix/bin/ot-daemon 'spinel+hdlc+forkpty://output/simulation/bin/ot-rcp?forkpty-arg=1'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+forkpty://build/simulation/examples/apps/ncp/ot-rcp?forkpty-arg=1'
 # Daemon with real device
-./output/posix/bin/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
+./build/posix/src/posix/ot-daemon 'spinel+hdlc+uart:///dev/ttyACM0?uart-baudrate=115200'
 # Built-in controller
-./output/posix/bin/ot-ctl
+./build/posix/src/posix/ot-ctl
 ```

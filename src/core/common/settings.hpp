@@ -43,6 +43,7 @@
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/settings_driver.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6_address.hpp"
 #include "utils/flash.hpp"
@@ -59,109 +60,7 @@ namespace MeshCoP {
 class Dataset;
 }
 
-class SettingsDriver : public InstanceLocator, private NonCopyable
-{
-public:
-    /**
-     * Constructor.
-     */
-    explicit SettingsDriver(Instance &aInstance);
-
-    /**
-     * This method initializes the settings storage driver.
-     *
-     */
-    void Init(void);
-
-    /**
-     * This method deinitializes the settings driver.
-     *
-     */
-    void Deinit(void);
-
-    /**
-     * This method sets the critical keys that should be stored in a secure area.
-     *
-     * @param[in]  aKeys        A pointer to an array containing the list of critical keys.
-     * @param[in]  aKeysLength  The number of entries in the @p aKeys array.
-     *
-     */
-    void SetCriticalKeys(const uint16_t *aKeys, uint16_t aKeysLength);
-
-    /**
-     * This method adds a value to @p aKey.
-     *
-     * @param[in]  aKey          The key associated with the value.
-     * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
-     *                           MUST NOT be nullptr if @p aValueLength is non-zero.
-     * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
-     *
-     * @retval kErrorNone     The value was added.
-     * @retval kErrorNoBufs   Not enough space to store the value.
-     *
-     */
-    Error Add(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
-
-    /**
-     * This method removes a value from @p aKey.
-     *
-     * @param[in] aKey    The key associated with the value.
-     * @param[in] aIndex  The index of the value to be removed.
-     *                    If set to -1, all values for @p aKey will be removed.
-     *
-     * @retval kErrorNone       The given key and index was found and removed successfully.
-     * @retval kErrorNotFound   The given key or index was not found.
-     *
-     */
-    Error Delete(uint16_t aKey, int aIndex);
-
-    /**
-     * This method fetches the value identified by @p aKey.
-     *
-     * @param[in]     aKey          The key associated with the requested value.
-     * @param[in]     aIndex        The index of the specific item to get.
-     * @param[out]    aValue        A pointer to where the value of the setting should be written.
-     *                              May be nullptr if just testing for the presence or length of a key.
-     * @param[inout]  aValueLength  A pointer to the length of the value.
-     *                              When called, this should point to an integer containing the maximum bytes that
-     *                              can be written to @p aValue.
-     *                              At return, the actual length of the setting is written.
-     *                              May be nullptr if performing a presence check.
-     *
-     * @retval kErrorNone        The value was fetched successfully.
-     * @retval kErrorNotFound    The key was not found.
-     *
-     */
-    Error Get(uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength) const;
-
-    /**
-     * This method sets or replaces the value identified by @p aKey.
-     *
-     * If there was more than one value previously associated with @p aKey, then they are all deleted and replaced with
-     * this single entry.
-     *
-     * @param[in]  aKey          The key associated with the value.
-     * @param[in]  aValue        A pointer to where the new value of the setting should be read from.
-     *                           MUST NOT be nullptr if @p aValueLength is non-zero.
-     * @param[in]  aValueLength  The length of the data pointed to by @p aValue. May be zero.
-     *
-     * @retval kErrorNone     The value was changed.
-     * @retval kErrorNoBufs   Not enough space to store the value.
-     *
-     */
-    Error Set(uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength);
-
-    /**
-     * This method removes all values.
-     *
-     */
-    void Wipe(void);
-
-#if OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
-private:
-    Flash mFlash;
-#endif
-};
+class Settings;
 
 /**
  * This class defines the base class used by `Settings` and `Settings::ChildInfoIterator`.
@@ -171,6 +70,20 @@ private:
  */
 class SettingsBase : public InstanceLocator
 {
+protected:
+    enum Action : uint8_t
+    {
+        kActionRead,
+        kActionSave,
+        kActionResave,
+        kActionDelete,
+#if OPENTHREAD_FTD
+        kActionAdd,
+        kActionRemove,
+        kActionDeleteAll,
+#endif
+    };
+
 public:
     /**
      * Rules for updating existing value structures.
@@ -195,13 +108,40 @@ public:
      */
 
     /**
+     * This enumeration defines the keys of settings.
+     *
+     */
+    enum Key : uint16_t
+    {
+        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
+        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
+        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
+        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
+        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
+        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
+        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
+        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
+        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
+        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
+        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+        kKeySrpClientInfo     = OT_SETTINGS_KEY_SRP_CLIENT_INFO,
+        kKeySrpServerInfo     = OT_SETTINGS_KEY_SRP_SERVER_INFO,
+    };
+
+    static constexpr Key kLastKey = kKeySrpServerInfo; ///< The last (numerically) enumerator value in `Key`.
+
+    /**
      * This structure represents the device's own network information for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class NetworkInfo : public Equatable<NetworkInfo>, private Clearable<NetworkInfo>
+    class NetworkInfo : private Clearable<NetworkInfo>
     {
+        friend class Settings;
+
     public:
+        static constexpr Key kKey = kKeyNetworkInfo; ///< The associated key.
+
         /**
          * This method initializes the `NetworkInfo` object.
          *
@@ -382,6 +322,8 @@ public:
         void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
 
     private:
+        void Log(Action aAction) const;
+
         uint8_t                  mRole;                ///< Current Thread role.
         uint8_t                  mDeviceMode;          ///< Device mode setting.
         uint16_t                 mRloc16;              ///< RLOC16
@@ -399,9 +341,13 @@ public:
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class ParentInfo : public Equatable<ParentInfo>, private Clearable<ParentInfo>
+    class ParentInfo : private Clearable<ParentInfo>
     {
+        friend class Settings;
+
     public:
+        static constexpr Key kKey = kKeyParentInfo; ///< The associated key.
+
         /**
          * This method initializes the `ParentInfo` object.
          *
@@ -445,10 +391,13 @@ public:
         void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
 
     private:
+        void Log(Action aAction) const;
+
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_FTD
     /**
      * This structure represents the child information for settings storage.
      *
@@ -456,7 +405,11 @@ public:
     OT_TOOL_PACKED_BEGIN
     class ChildInfo
     {
+        friend class Settings;
+
     public:
+        static constexpr Key kKey = kKeyChildInfo; ///< The associated key.
+
         /**
          * This method clears the struct object (setting all the fields to zero).
          *
@@ -548,21 +501,46 @@ public:
         void SetVersion(uint16_t aVersion) { mVersion = Encoding::LittleEndian::HostSwap16(aVersion); }
 
     private:
+        void Log(Action aAction) const;
+
         Mac::ExtAddress mExtAddress; ///< Extended Address
         uint32_t        mTimeout;    ///< Timeout
         uint16_t        mRloc16;     ///< RLOC16
         uint8_t         mMode;       ///< The MLE device mode
         uint16_t        mVersion;    ///< Version
     } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_FTD
 
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+    /**
+     * This class defines constants and types for SLAAC IID Secret key settings.
+     *
+     */
+    class SlaacIidSecretKey
+    {
+    public:
+        static constexpr Key kKey = kKeySlaacIidSecretKey; ///< The associated key.
+
+        typedef Utils::Slaac::IidSecretKey ValueType; ///< The associated value type.
+
+    private:
+        SlaacIidSecretKey(void) = default;
+    };
+#endif
+
+#if OPENTHREAD_CONFIG_DUA_ENABLE
     /**
      * This structure represents the duplicate address detection information for settings storage.
      *
      */
     OT_TOOL_PACKED_BEGIN
-    class DadInfo : public Equatable<DadInfo>, private Clearable<DadInfo>
+    class DadInfo : private Clearable<DadInfo>
     {
+        friend class Settings;
+
     public:
+        static constexpr Key kKey = kKeyDadInfo; ///< The associated key.
+
         /**
          * This method initializes the `DadInfo` object.
          *
@@ -586,27 +564,161 @@ public:
         void SetDadCounter(uint8_t aDadCounter) { mDadCounter = aDadCounter; }
 
     private:
+        void Log(Action aAction) const;
+
         uint8_t mDadCounter; ///< Dad Counter used to resolve address conflict in Thread 1.2 DUA feature.
     } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     /**
-     * This enumeration defines the keys of settings.
+     * This class defines constants and types for OMR prefix settings.
      *
      */
-    enum Key
+    class OmrPrefix
     {
-        kKeyActiveDataset     = OT_SETTINGS_KEY_ACTIVE_DATASET,
-        kKeyPendingDataset    = OT_SETTINGS_KEY_PENDING_DATASET,
-        kKeyNetworkInfo       = OT_SETTINGS_KEY_NETWORK_INFO,
-        kKeyParentInfo        = OT_SETTINGS_KEY_PARENT_INFO,
-        kKeyChildInfo         = OT_SETTINGS_KEY_CHILD_INFO,
-        kKeyReserved          = OT_SETTINGS_KEY_RESERVED,
-        kKeySlaacIidSecretKey = OT_SETTINGS_KEY_SLAAC_IID_SECRET_KEY,
-        kKeyDadInfo           = OT_SETTINGS_KEY_DAD_INFO,
-        kKeyOmrPrefix         = OT_SETTINGS_KEY_OMR_PREFIX,
-        kKeyOnLinkPrefix      = OT_SETTINGS_KEY_ON_LINK_PREFIX,
-        kKeySrpEcdsaKey       = OT_SETTINGS_KEY_SRP_ECDSA_KEY,
+    public:
+        static constexpr Key kKey = kKeyOmrPrefix; ///< The associated key.
+
+        typedef Ip6::Prefix ValueType; ///< The associated value type.
+
+    private:
+        OmrPrefix(void) = default;
     };
+
+    /**
+     * This class defines constants and types for on-link prefix settings.
+     *
+     */
+    class OnLinkPrefix
+    {
+    public:
+        static constexpr Key kKey = kKeyOnLinkPrefix; ///< The associated key.
+
+        typedef Ip6::Prefix ValueType; ///< The associated value type.
+
+    private:
+        OnLinkPrefix(void) = default;
+    };
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    /**
+     * This class defines constants and types for SRP ECDSA key settings.
+     *
+     */
+    class SrpEcdsaKey
+    {
+    public:
+        static constexpr Key kKey = kKeySrpEcdsaKey; ///< The associated key.
+
+        typedef Crypto::Ecdsa::P256::KeyPair ValueType; ///< The associated value type.
+
+    private:
+        SrpEcdsaKey(void) = default;
+    };
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+    /**
+     * This structure represents the SRP client info (selected server address).
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class SrpClientInfo : private Clearable<SrpClientInfo>
+    {
+        friend class Settings;
+
+    public:
+        static constexpr Key kKey = kKeySrpClientInfo; ///< The associated key.
+
+        /**
+         * This method initializes the `SrpClientInfo` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method returns the server IPv6 address.
+         *
+         * @returns The server IPv6 address.
+         *
+         */
+        const Ip6::Address &GetServerAddress(void) const { return mServerAddress; }
+
+        /**
+         * This method sets the server IPv6 address.
+         *
+         * @param[in] aAddress  The server IPv6 address.
+         *
+         */
+        void SetServerAddress(const Ip6::Address &aAddress) { mServerAddress = aAddress; }
+
+        /**
+         * This method returns the server port number.
+         *
+         * @returns The server port number.
+         *
+         */
+        uint16_t GetServerPort(void) const { return Encoding::LittleEndian::HostSwap16(mServerPort); }
+
+        /**
+         * This method sets the server port number.
+         *
+         * @param[in] aPort  The server port number.
+         *
+         */
+        void SetServerPort(uint16_t aPort) { mServerPort = Encoding::LittleEndian::HostSwap16(aPort); }
+
+    private:
+        void Log(Action aAction) const;
+
+        Ip6::Address mServerAddress;
+        uint16_t     mServerPort; // (in little-endian encoding)
+    } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
+    /**
+     * This structure represents the SRP server info.
+     *
+     */
+    OT_TOOL_PACKED_BEGIN
+    class SrpServerInfo : private Clearable<SrpServerInfo>
+    {
+        friend class Settings;
+
+    public:
+        static constexpr Key kKey = kKeySrpServerInfo; ///< The associated key.
+
+        /**
+         * This method initializes the `SrpServerInfo` object.
+         *
+         */
+        void Init(void) { Clear(); }
+
+        /**
+         * This method returns the server port number.
+         *
+         * @returns The server port number.
+         *
+         */
+        uint16_t GetPort(void) const { return Encoding::LittleEndian::HostSwap16(mPort); }
+
+        /**
+         * This method sets the server port number.
+         *
+         * @param[in] aPort  The server port number.
+         *
+         */
+        void SetPort(uint16_t aPort) { mPort = Encoding::LittleEndian::HostSwap16(aPort); }
+
+    private:
+        void Log(Action aAction) const;
+
+        uint16_t mPort; // (in little-endian encoding)
+    } OT_TOOL_PACKED_END;
+#endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE && OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
 
 protected:
     explicit SettingsBase(Instance &aInstance)
@@ -614,32 +726,15 @@ protected:
     {
     }
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogNetworkInfo(const char *aAction, const NetworkInfo &aNetworkInfo) const;
-    void LogParentInfo(const char *aAction, const ParentInfo &aParentInfo) const;
-    void LogChildInfo(const char *aAction, const ChildInfo &aChildInfo) const;
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    void LogDadInfo(const char *aAction, const DadInfo &aDadInfo) const;
-#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    void LogPrefix(const char *aAction, const char *aPrefixName, const Ip6::Prefix &aOmrPrefix) const;
+    static void LogPrefix(Action aAction, Key aKey, const Ip6::Prefix &aPrefix);
 #endif
-#else // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogNetworkInfo(const char *, const NetworkInfo &) const {}
-    void LogParentInfo(const char *, const ParentInfo &) const {}
-    void LogChildInfo(const char *, const ChildInfo &) const {}
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-    void LogDadInfo(const char *, const DadInfo &) const {}
-#endif
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    void LogPrefix(const char *, const char *, const Ip6::Prefix &) const {}
-#endif
-#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN) && (OPENTHREAD_CONFIG_LOG_UTIL != 0)
-    void LogFailure(Error aError, const char *aAction, bool aIsDelete) const;
-#else
-    void LogFailure(Error, const char *, bool) const {}
+#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+    static const char *KeyToString(Key aKey);
+#endif
+#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+    static const char *ActionToString(Action aAction);
 #endif
 };
 
@@ -722,113 +817,124 @@ public:
     Error DeleteOperationalDataset(bool aIsActive);
 
     /**
-     * This method saves Network Info.
+     * This template method reads a specified settings entry.
      *
-     * @param[in]   aNetworkInfo          A reference to a `NetworkInfo` structure to be saved.
+     * The template type `EntryType` specifies the entry's value data structure. It must provide the following:
      *
-     * @retval kErrorNone             Successfully saved Network Info in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *  - It must provide a constant `EntryType::kKey` to specify the associated entry settings key.
+     *  - It must provide method `Init()` to initialize the `aEntry` object.
      *
-     */
-    Error SaveNetworkInfo(const NetworkInfo &aNetworkInfo);
-
-    /**
-     * This method reads Network Info.
+     * This version of `Read<EntryType>` is intended for use with entries that define a data structure which represents
+     * the entry's value, e.g., `NetworkInfo`, `ParentInfo`, `DadInfo`, etc.
      *
-     * @param[out]   aNetworkInfo         A reference to a `NetworkInfo` structure to output the read content.
+     * @tparam EntryType              The settings entry type.
      *
-     * @retval kErrorNone             Successfully read the Network Info.
+     * @param[out] aEntry             A reference to a entry data structure to output the read content.
+     *
+     * @retval kErrorNone             Successfully read the entry.
      * @retval kErrorNotFound         No corresponding value in the setting store.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error ReadNetworkInfo(NetworkInfo &aNetworkInfo) const;
-
-    /**
-     * This method deletes Network Info from settings.
-     *
-     * @retval kErrorNone            Successfully deleted the value.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
-     */
-    Error DeleteNetworkInfo(void);
-
-    /**
-     * This method saves Parent Info.
-     *
-     * @param[in]   aParentInfo           A reference to a `ParentInfo` structure to be saved.
-     *
-     * @retval kErrorNone             Successfully saved Parent Info in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error SaveParentInfo(const ParentInfo &aParentInfo);
-
-    /**
-     * This method reads Parent Info.
-     *
-     * @param[out]   aParentInfo         A reference to a `ParentInfo` structure to output the read content.
-     *
-     * @retval kErrorNone             Successfully read the Parent Info.
-     * @retval kErrorNotFound         No corresponding value in the setting store.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error ReadParentInfo(ParentInfo &aParentInfo) const;
-
-    /**
-     * This method deletes Parent Info from settings.
-     *
-     * @retval kErrorNone            Successfully deleted the value.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
-     */
-    Error DeleteParentInfo(void);
-
-#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-
-    /**
-     * This method saves the SLAAC IID secret key.
-     *
-     * @param[in]   aKey                  The SLAAC IID secret key.
-     *
-     * @retval kErrorNone             Successfully saved the value.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error SaveSlaacIidSecretKey(const Utils::Slaac::IidSecretKey &aKey)
+    template <typename EntryType> Error Read(EntryType &aEntry) const
     {
-        return Save(kKeySlaacIidSecretKey, &aKey, sizeof(Utils::Slaac::IidSecretKey));
+        aEntry.Init();
+
+        return ReadEntry(EntryType::kKey, &aEntry, sizeof(EntryType));
     }
 
     /**
-     * This method reads the SLAAC IID secret key.
+     * This template method reads a specified settings entry.
      *
-     * @param[out]   aKey          A reference to a SLAAC IID secret key to output the read value.
+     * The template type `EntryType` provides information about the entry's value type. It must provide the following:
+     *
+     *  - It must provide a constant `EntryType::kKey` to specify the associated entry settings key.
+     *  - It must provide a nested type `EntryType::ValueType` to specify the associated entry value type.
+     *
+     * This version of `Read<EntryType>` is intended for use with entries that have a simple entry value type (which can
+     * be represented by an existing type), e.g., `OmrPrefx` (using `Ip6::Prefix` as the value type).
+     *
+     * @tparam EntryType              The settings entry type.
+     *
+     * @param[out] aValue             A reference to a value type object to output the read content.
      *
      * @retval kErrorNone             Successfully read the value.
      * @retval kErrorNotFound         No corresponding value in the setting store.
      * @retval kErrorNotImplemented   The platform does not implement settings functionality.
      *
      */
-    Error ReadSlaacIidSecretKey(Utils::Slaac::IidSecretKey &aKey)
+    template <typename EntryType> Error Read(typename EntryType::ValueType &aValue) const
     {
-        uint16_t length = sizeof(aKey);
-
-        return Read(kKeySlaacIidSecretKey, &aKey, length);
+        return ReadEntry(EntryType::kKey, &aValue, sizeof(typename EntryType::ValueType));
     }
 
     /**
-     * This method deletes the SLAAC IID secret key value from settings.
+     * This template method saves a specified settings entry.
+     *
+     * The template type `EntryType` specifies the entry's value data structure. It must provide the following:
+     *
+     *  - It must provide a constant `EntryType::kKey` to specify the associated entry settings key.
+     *
+     * This version of `Save<EntryType>` is intended for use with entries that define a data structure which represents
+     * the entry's value, e.g., `NetworkInfo`, `ParentInfo`, `DadInfo`, etc.
+     *
+     * @tparam EntryType              The settings entry type.
+     *
+     * @param[in] aEntry              The entry value to be saved.
+     *
+     * @retval kErrorNone             Successfully saved Network Info in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *
+     */
+    template <typename EntryType> Error Save(const EntryType &aEntry)
+    {
+        EntryType prev;
+
+        return SaveEntry(EntryType::kKey, &aEntry, &prev, sizeof(EntryType));
+    }
+
+    /**
+     * This template method saves a specified settings entry.
+     *
+     * The template type `EntryType` provides information about the entry's value type. It must provide the following:
+     *
+     *  - It must provide a constant `EntryType::kKey` to specify the associated entry settings key.
+     *  - It must provide a nested type `EntryType::ValueType` to specify the associated entry value type.
+     *
+     * This version of `Save<EntryType>` is intended for use with entries that have a simple entry value type (which can
+     * be represented by an existing type), e.g., `OmrPrefx` (using `Ip6::Prefix` as the value type).
+     *
+     * @tparam EntryType              The settings entry type.
+     *
+     * @param[in] aEntry              The entry value to be saved.
+     *
+     * @retval kErrorNone             Successfully saved Network Info in settings.
+     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
+     *
+     */
+    template <typename EntryType> Error Save(const typename EntryType::ValueType &aValue)
+    {
+        typename EntryType::ValueType prev;
+
+        return SaveEntry(EntryType::kKey, &aValue, &prev, sizeof(typename EntryType::ValueType));
+    }
+
+    /**
+     * This template method deletes a specified setting entry.
+     *
+     * The template type `EntryType` provides information about the entry's key.
+     *
+     *  - It must provide a constant `EntryType::kKey` to specify the associated entry settings key.
+     *
+     * @tparam EntryType             The settings entry type.
      *
      * @retval kErrorNone            Successfully deleted the value.
      * @retval kErrorNotImplemented  The platform does not implement settings functionality.
      *
      */
-    Error DeleteSlaacIidSecretKey(void) { return Delete(kKeySlaacIidSecretKey); }
+    template <typename EntryType> Error Delete(void) { return DeleteEntry(EntryType::kKey); }
 
-#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
-
+#if OPENTHREAD_FTD
     /**
      * This method adds a Child Info entry to settings.
      *
@@ -975,126 +1081,10 @@ public:
         uint16_t  mIndex;
         bool      mIsDone;
     };
-
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-
-    /**
-     * This method saves duplicate address detection information.
-     *
-     * @param[in]   aDadInfo           A reference to a `DadInfo` structure to be saved.
-     *
-     * @retval kErrorNone             Successfully saved duplicate address detection information in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error SaveDadInfo(const DadInfo &aDadInfo);
-
-    /**
-     * This method reads duplicate address detection information.
-     *
-     * @param[out]   aDadInfo         A reference to a `DadInfo` structure to output the read content.
-     *
-     * @retval kErrorNone             Successfully read the duplicate address detection information.
-     * @retval kErrorNotFound         No corresponding value in the setting store.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error ReadDadInfo(DadInfo &aDadInfo) const;
-
-    /**
-     * This method deletes duplicate address detection information from settings.
-     *
-     * @retval kErrorNone            Successfully deleted the value.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
-     */
-    Error DeleteDadInfo(void);
-
-#endif // OPENTHREAD_CONFIG_DUA_ENABLE
-
-#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    /**
-     * This method saves OMR prefix.
-     *
-     * @param[in]  aOmrPrefix  An OMR prefix to be saved.
-     *
-     * @retval kErrorNone             Successfully saved the OMR prefix in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error SaveOmrPrefix(const Ip6::Prefix &aOmrPrefix);
-
-    /**
-     * This method reads OMR prefix.
-     *
-     * @param[out]  aOmrPrefix  A reference to a `Ip6::Prefix` structure to output the OMR prefix.
-     *
-     * @retval kErrorNone            Successfully read the OMR prefix.
-     * @retval kErrorNotFound        No corresponding value in the setting store.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
-     */
-    Error ReadOmrPrefix(Ip6::Prefix &aOmrPrefix) const;
-
-    /**
-     * This method saves on-link prefix.
-     *
-     * @param[in]  aOnLinkPrefix  An on-link prefix to be saved.
-     *
-     * @retval kErrorNone             Successfully saved the on-link prefix in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error SaveOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
-
-    /**
-     * This method reads on-link prefix.
-     *
-     * @param[out]  aOnLinkPrefix  A reference to a `Ip6::Prefix` structure to output the on-link prefix.
-     *
-     * @retval kErrorNone            Successfully read the on-link prefix.
-     * @retval kErrorNotFound        No corresponding value in the setting store.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
-     */
-    Error ReadOnLinkPrefix(Ip6::Prefix &aOnLinkPrefix) const;
-#endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-
-#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
-    /**
-     * This method saves SRP client ECDSA key pair.
-     *
-     * @param[in]   aKeyPair              A reference to an SRP ECDSA key-pair to save.
-     *
-     * @retval kErrorNone             Successfully saved key-pair information in settings.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error SaveSrpKey(const Crypto::Ecdsa::P256::KeyPair &aKeyPair);
-
-    /**
-     * This method reads SRP client ECDSA key pair.
-     *
-     * @param[out]   aKeyPair             A reference to a ECDA `KeyPair` to output the read content.
-     *
-     * @retval kErrorNone             Successfully read key-pair information.
-     * @retval kErrorNotFound         No corresponding value in the setting store.
-     * @retval kErrorNotImplemented   The platform does not implement settings functionality.
-     *
-     */
-    Error ReadSrpKey(Crypto::Ecdsa::P256::KeyPair &aKeyPair) const;
-
-    /**
-     * This method deletes SRP client ECDSA key pair from settings.
-     *
-     * @retval kErrorNone            Successfully deleted the value.
-     * @retval kErrorNotImplemented  The platform does not implement settings functionality.
-     *
-     */
-    Error DeleteSrpKey(void);
-#endif // OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#endif // OPENTHREAD_FTD
 
 private:
+#if OPENTHREAD_FTD
     class ChildInfoIteratorBuilder : public InstanceLocator
     {
     public:
@@ -1106,11 +1096,15 @@ private:
         ChildInfoIterator begin(void) { return ChildInfoIterator(GetInstance()); }
         ChildInfoIterator end(void) { return ChildInfoIterator(GetInstance(), ChildInfoIterator::kEndIterator); }
     };
+#endif
 
-    Error Read(Key aKey, void *aBuffer, uint16_t &aSize) const;
-    Error Save(Key aKey, const void *aValue, uint16_t aSize);
-    Error Add(Key aKey, const void *aValue, uint16_t aSize);
-    Error Delete(Key aKey);
+    Error ReadEntry(Key aKey, void *aValue, uint16_t aMaxLength) const;
+    Error SaveEntry(Key aKey, const void *aValue, void *aPrev, uint16_t aLength);
+    Error DeleteEntry(Key aKey);
+
+    static void Log(Action aAction, Error aError, Key aKey, const void *aValue = nullptr);
+
+    static const uint16_t kCriticalKeys[];
 };
 
 } // namespace ot

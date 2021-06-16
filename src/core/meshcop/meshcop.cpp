@@ -164,25 +164,24 @@ bool JoinerDiscerner::operator==(const JoinerDiscerner &aOther) const
 
 JoinerDiscerner::InfoString JoinerDiscerner::ToString(void) const
 {
-    InfoString   str;
-    StringWriter writer(str);
+    InfoString string;
 
     if (mLength <= sizeof(uint16_t) * CHAR_BIT)
     {
-        writer.Append("0x%04x", static_cast<uint16_t>(mValue));
+        string.Append("0x%04x", static_cast<uint16_t>(mValue));
     }
     else if (mLength <= sizeof(uint32_t) * CHAR_BIT)
     {
-        writer.Append("0x%08x", static_cast<uint32_t>(mValue));
+        string.Append("0x%08x", static_cast<uint32_t>(mValue));
     }
     else
     {
-        writer.Append("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue));
+        string.Append("0x%x-%08x", static_cast<uint32_t>(mValue >> 32), static_cast<uint32_t>(mValue));
     }
 
-    writer.Append("/len:%d", mLength);
+    string.Append("/len:%d", mLength);
 
-    return str;
+    return string;
 }
 
 void SteeringData::Init(uint8_t aLength)
