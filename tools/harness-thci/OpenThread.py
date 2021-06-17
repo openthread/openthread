@@ -43,9 +43,6 @@ from abc import abstractmethod
 import serial
 from Queue import Queue
 
-import commissioner
-from commissioner_impl import OTCommissioner
-
 TESTHARNESS_1_1 = '1.1'
 TESTHARNESS_1_2 = '1.2'
 
@@ -73,6 +70,9 @@ from GRLLibs.UtilityModules.enums import (
 if TESTHARNESS_VERSION == TESTHARNESS_1_2:
     from GRLLibs.UtilityModules.enums import (
         DevCapb,)
+
+    import commissioner
+    from commissioner_impl import OTCommissioner
 
 from IThci import IThci
 
