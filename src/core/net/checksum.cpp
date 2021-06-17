@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/message.hpp"
 #include "net/icmp6.hpp"
+#include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
@@ -133,6 +134,10 @@ void Checksum::UpdateMessageChecksum(Message &           aMessage,
 
     switch (aIpProto)
     {
+    case Ip6::kProtoTcp:
+        headerOffset = Ip6::Tcp::Header::kChecksumFieldOffset;
+        break;
+
     case Ip6::kProtoUdp:
         headerOffset = Ip6::Udp::Header::kChecksumFieldOffset;
         break;

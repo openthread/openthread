@@ -645,6 +645,13 @@ template <> inline NetworkData::Service::Manager &Instance::Get(void)
     return mThreadNetif.mNetworkDataServiceManager;
 }
 
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+template <> inline Ip6::Tcp &Instance::Get(void)
+{
+    return mIp6.mTcp;
+}
+#endif // OPENTHREAD_CONFIG_TCP_ENABLE
+
 template <> inline Ip6::Udp &Instance::Get(void)
 {
     return mIp6.mUdp;
