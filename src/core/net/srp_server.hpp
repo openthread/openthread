@@ -230,9 +230,8 @@ public:
     private:
         explicit Service(void);
         Error SetFullName(const char *aFullName) { return mFullName.Set(aFullName); }
-        Error SetTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
         Error SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
-        Error CopyResourcesFrom(const Service &aService);
+        void  TakeResourcesFrom(Service &aService);
         void  ClearResources(void);
 
         HeapString       mFullName;
