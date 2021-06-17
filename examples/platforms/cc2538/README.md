@@ -93,10 +93,10 @@ extpanid
 ipaddr
 keysequence
 leaderweight
-masterkey
 mode
 netdata register
 networkidtimeout
+networkkey
 networkname
 panid
 ping

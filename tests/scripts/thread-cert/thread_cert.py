@@ -168,7 +168,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
             if node.is_host:
                 continue
 
-            self.nodes[i].set_masterkey(binascii.hexlify(config.DEFAULT_MASTER_KEY).decode())
+            self.nodes[i].set_networkkey(binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode())
             self.nodes[i].set_panid(params['panid'])
             self.nodes[i].set_mode(params['mode'])
 
@@ -176,8 +176,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_preferred_partition_id(params['partition_id'])
             if 'channel' in params:
                 self.nodes[i].set_channel(params['channel'])
-            if 'masterkey' in params:
-                self.nodes[i].set_masterkey(params['masterkey'])
+            if 'networkkey' in params:
+                self.nodes[i].set_networkkey(params['networkkey'])
             if 'network_name' in params:
                 self.nodes[i].set_network_name(params['network_name'])
 
@@ -197,13 +197,13 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 self.nodes[i].set_timeout(params['timeout'])
 
             if 'active_dataset' in params:
-                if 'master_key' not in params['active_dataset']:
-                    params['active_dataset']['master_key'] = binascii.hexlify(config.DEFAULT_MASTER_KEY).decode()
+                if 'network_key' not in params['active_dataset']:
+                    params['active_dataset']['network_key'] = binascii.hexlify(config.DEFAULT_NETWORK_KEY).decode()
                 self.nodes[i].set_active_dataset(params['active_dataset']['timestamp'],
                                                  panid=params['active_dataset'].get('panid'),
                                                  channel=params['active_dataset'].get('channel'),
                                                  channel_mask=params['active_dataset'].get('channel_mask'),
-                                                 master_key=params['active_dataset'].get('master_key'),
+                                                 network_key=params['active_dataset'].get('network_key'),
                                                  security_policy=params['active_dataset'].get('security_policy'))
 
             if 'pending_dataset' in params:

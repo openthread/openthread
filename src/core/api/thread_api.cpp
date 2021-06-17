@@ -112,14 +112,14 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
     return instance.Get<Mle::MleRouter>().SetDeviceMode(Mle::DeviceMode(aConfig));
 }
 
-const otMasterKey *otThreadGetMasterKey(otInstance *aInstance)
+const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetMasterKey();
+    return &instance.Get<KeyManager>().GetNetworkKey();
 }
 
-otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
+otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
     Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -128,7 +128,7 @@ otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey)
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = instance.Get<KeyManager>().SetMasterKey(*static_cast<const MasterKey *>(aKey));
+    error = instance.Get<KeyManager>().SetNetworkKey(*static_cast<const NetworkKey *>(aKey));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 

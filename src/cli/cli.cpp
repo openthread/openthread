@@ -2546,27 +2546,6 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        OutputBytes(otThreadGetMasterKey(mInstance)->m8);
-        OutputLine("");
-    }
-    else
-    {
-        otMasterKey key;
-
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.m8));
-        SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
-    }
-
-exit:
-    return error;
-}
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError Interpreter::ProcessMlIid(uint8_t aArgsLength, Arg aArgs[])
 {
@@ -2981,6 +2960,27 @@ otError Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, Arg aArgs[])
     return ProcessGetSet(aArgsLength, aArgs, otThreadGetNetworkIdTimeout, otThreadSetNetworkIdTimeout);
 }
 #endif
+
+otError Interpreter::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        OutputBytes(otThreadGetNetworkKey(mInstance)->m8);
+        OutputLine("");
+    }
+    else
+    {
+        otNetworkKey key;
+
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.m8));
+        SuccessOrExit(error = otThreadSetNetworkKey(mInstance, &key));
+    }
+
+exit:
+    return error;
+}
 
 otError Interpreter::ProcessNetworkName(uint8_t aArgsLength, Arg aArgs[])
 {

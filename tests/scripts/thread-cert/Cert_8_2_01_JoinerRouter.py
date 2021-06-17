@@ -44,17 +44,17 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'networkkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         JOINER_ROUTER: {
             'name': 'JOINER_ROUTER',
-            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
         },
         JOINER: {
             'name': 'JOINER',
-            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
         },
     }
@@ -75,8 +75,8 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
         self.nodes[JOINER_ROUTER].joiner_start('PSKD01')
         self.simulator.go(10)
         self.assertEqual(
-            self.nodes[JOINER_ROUTER].get_masterkey(),
-            self.nodes[COMMISSIONER].get_masterkey(),
+            self.nodes[JOINER_ROUTER].get_networkkey(),
+            self.nodes[COMMISSIONER].get_networkkey(),
         )
 
         self.nodes[JOINER_ROUTER].thread_start()
@@ -93,8 +93,8 @@ class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
         self.nodes[JOINER].joiner_start('PSKD02')
         self.simulator.go(10)
         self.assertEqual(
-            self.nodes[JOINER].get_masterkey(),
-            self.nodes[COMMISSIONER].get_masterkey(),
+            self.nodes[JOINER].get_networkkey(),
+            self.nodes[COMMISSIONER].get_networkkey(),
         )
 
         self.nodes[JOINER].thread_start()

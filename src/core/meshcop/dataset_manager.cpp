@@ -140,7 +140,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
     Error            error = kErrorNone;
     const Timestamp *timestamp;
     int              compare;
-    bool             isMasterkeyUpdated = false;
+    bool             isNetworkkeyUpdated = false;
 
     timestamp = aDataset.GetTimestamp();
 
@@ -151,13 +151,13 @@ Error DatasetManager::Save(const Dataset &aDataset)
 
         if (IsActiveDataset())
         {
-            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), &isMasterkeyUpdated));
+            SuccessOrExit(error = aDataset.ApplyConfiguration(GetInstance(), &isNetworkkeyUpdated));
         }
     }
 
     compare = mLocal.Compare(timestamp);
 
-    if (isMasterkeyUpdated || compare > 0)
+    if (isNetworkkeyUpdated || compare > 0)
     {
         IgnoreError(mLocal.Save(aDataset));
 
@@ -416,8 +416,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
     {
         for (const Tlv *cur = dataset.GetTlvsStart(); cur < dataset.GetTlvsEnd(); cur = cur->GetNext())
         {
-            if (cur->GetType() != Tlv::kNetworkMasterKey ||
-                Get<KeyManager>().GetSecurityPolicy().mObtainMasterKeyEnabled)
+            if (cur->GetType() != Tlv::kNetworkKey || Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
             {
                 SuccessOrExit(error = cur->AppendTo(*message));
             }
@@ -429,8 +428,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
         {
             const Tlv *tlv;
 
-            if (aTlvs[index] == Tlv::kNetworkMasterKey &&
-                !Get<KeyManager>().GetSecurityPolicy().mObtainMasterKeyEnabled)
+            if (aTlvs[index] == Tlv::kNetworkKey && !Get<KeyManager>().GetSecurityPolicy().mObtainNetworkKeyEnabled)
             {
                 continue;
             }
@@ -544,9 +542,9 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
         datasetTlvs[length++] = Tlv::kPendingTimestamp;
     }
 
-    if (aDatasetComponents.IsMasterKeyPresent())
+    if (aDatasetComponents.IsNetworkKeyPresent())
     {
-        datasetTlvs[length++] = Tlv::kNetworkMasterKey;
+        datasetTlvs[length++] = Tlv::kNetworkKey;
     }
 
     if (aDatasetComponents.IsNetworkNamePresent())
@@ -663,7 +661,7 @@ bool ActiveDataset::IsCommissioned(void) const
 
     SuccessOrExit(Read(datasetInfo));
 
-    isValid = (datasetInfo.IsMasterKeyPresent() && datasetInfo.IsNetworkNamePresent() &&
+    isValid = (datasetInfo.IsNetworkKeyPresent() && datasetInfo.IsNetworkNamePresent() &&
                datasetInfo.IsExtendedPanIdPresent() && datasetInfo.IsPanIdPresent() && datasetInfo.IsChannelPresent());
 
 exit:

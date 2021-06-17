@@ -24,7 +24,7 @@ node2 = otci.connect_cli_serial("/dev/ttyACM0"))
 
 # Start node1 to become Leader
 node1.dataset_init_buffer()
-node1.dataset_set_buffer(network_name='test', master_key='00112233445566778899aabbccddeeff', panid=0xface, channel=11)
+node1.dataset_set_buffer(network_name='test', network_key='00112233445566778899aabbccddeeff', panid=0xface, channel=11)
 node1.dataset_commit_buffer('active')
 
 node1.ifconfig_up()

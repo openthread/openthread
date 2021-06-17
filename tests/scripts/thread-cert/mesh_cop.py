@@ -44,7 +44,7 @@ class TlvType(IntEnum):
     EXTENDED_PANID = 2
     NETWORK_NAME = 3
     PSKC = 4
-    NETWORK_MASTER_KEY = 5
+    NETWORK_KEY = 5
     NETWORK_KEY_SEQUENCE_COUNTER = 6
     NETWORK_MESH_LOCAL_PREFIX = 7
     STEERING_DATA = 8
@@ -213,13 +213,13 @@ class PSKcFactory(object):
         raise NotImplementedError("TODO: Not implemented yet")
 
 
-# NetworkMasterKey TLV (5)
-class NetworkMasterKey(object):
+# NetworkKey TLV (5)
+class NetworkKey(object):
     # TODO: Not implemented yet
     pass
 
 
-class NetworkMasterKeyFactory(object):
+class NetworkKeyFactory(object):
     # TODO: Not implemented yet
 
     def parse(self, data, message_info):

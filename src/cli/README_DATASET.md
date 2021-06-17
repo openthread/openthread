@@ -40,7 +40,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
    Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
    Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
-   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
    PSKc: c23a76e98f1a6483639b1ac1271e2e27
@@ -66,7 +66,7 @@ The Pending Operational Dataset is used to communicate changes to the Active Ope
 
 ### Attach to Existing Network
 
-Only the Master Key is required for a device to attach to a Thread network.
+Only the Network Key is required for a device to attach to a Thread network.
 
 While not required, specifying the channel avoids the need to search across multiple channels, improving both latency and efficiency of the attach process.
 
@@ -75,7 +75,7 @@ After the device successfully attaches to a Thread network, the device will retr
 1. Create a partial Active Operational Dataset.
 
    ```bash
-   > dataset masterkey dfd34f0f05cad978ec4e32b0413038ff
+   > dataset networkkey dfd34f0f05cad978ec4e32b0413038ff
    Done
    > dataset commit active
    Done
@@ -99,7 +99,7 @@ After the device successfully attaches to a Thread network, the device will retr
    Channel Mask: 0x07fff800
    Ext PAN ID: d63e8e3e495ebbc3
    Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
-   Master Key: dfd34f0f05cad978ec4e32b0413038ff
+   Network Key: dfd34f0f05cad978ec4e32b0413038ff
    Network Name: OpenThread-8f28
    PAN ID: 0x8f28
    PSKc: c23a76e98f1a6483639b1ac1271e2e27
@@ -119,10 +119,10 @@ After the device successfully attaches to a Thread network, the device will retr
 - [delay](#delay)
 - [extpanid](#extpanid)
 - [init](#init)
-- [masterkey](#masterkey)
 - [meshlocalprefix](#meshlocalprefix)
 - [mgmtgetcommand](#mgmtgetcommand)
 - [mgmtsetcommand](#mgmtsetcommand)
+- [networkkey](#networkkey)
 - [networkname](#networkname)
 - [panid](#panid)
 - [pending](#pending)
@@ -150,10 +150,10 @@ commit
 delay
 extpanid
 init
-masterkey
 meshlocalprefix
 mgmtgetcommand
 mgmtsetcommand
+networkkey
 networkname
 panid
 pending
@@ -176,7 +176,7 @@ Channel: 13
 Channel Mask: 0x07fff800
 Ext PAN ID: d63e8e3e495ebbc3
 Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
-Master Key: dfd34f0f05cad978ec4e32b0413038ff
+Network Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
 PSKc: c23a76e98f1a6483639b1ac1271e2e27
@@ -322,25 +322,6 @@ Initialize operational dataset buffer.
 Done
 ```
 
-### masterkey
-
-Usage: `dataset masterkey [key]`
-
-Get master key
-
-```bash
-> dataset masterkey
-00112233445566778899aabbccddeeff
-Done
-```
-
-Set master key.
-
-```bash
-> dataset masterkey 00112233445566778899aabbccddeeff
-Done
-```
-
 ### meshlocalprefix
 
 Usage: `dataset meshlocalprefix [prefix]`
@@ -379,6 +360,25 @@ Send MGMT_ACTIVE_SET or MGMT_PENDING_SET.
 
 ```bash
 > dataset mgmtsetcommand active activetimestamp 123 securitypolicy 1 onrcb
+Done
+```
+
+### networkkey
+
+Usage: `dataset networkkey [key]`
+
+Get network key
+
+```bash
+> dataset networkkey
+00112233445566778899aabbccddeeff
+Done
+```
+
+Set network key.
+
+```bash
+> dataset networkkey 00112233445566778899aabbccddeeff
 Done
 ```
 
@@ -437,7 +437,7 @@ Channel Mask: 0x07fff800
 Delay: 58706
 Ext PAN ID: d63e8e3e495ebbc3
 Mesh Local Prefix: fd3d:b50b:f96d:722d::/64
-Master Key: dfd34f0f05cad978ec4e32b0413038ff
+Network Key: dfd34f0f05cad978ec4e32b0413038ff
 Network Name: OpenThread-8f28
 PAN ID: 0x8f28
 PSKc: c23a76e98f1a6483639b1ac1271e2e27
@@ -509,14 +509,14 @@ Done
 
 Set security policy.
 
-- o: Obtaining the Master Key for out-of-band commissioning is enabled.
+- o: Obtaining the Network Key for out-of-band commissioning is enabled.
 - n: Native Commissioning using PSKc is allowed.
 - r: Thread 1.x Routers are enabled.
 - c: External Commissioner authentication is allowed using PSKc.
 - b: Thread 1.x Beacons are enabled.
 - C: Thread 1.2 Commercial Commissioning is enabled.
 - e: Thread 1.2 Autonomous Enrollment is enabled.
-- p: Thread 1.2 Network Master Key Provisioning is enabled.
+- p: Thread 1.2 Network Key Provisioning is enabled.
 - R: Non-CCM routers are allowed in Thread 1.2 CCM networks.
 
 ```bash

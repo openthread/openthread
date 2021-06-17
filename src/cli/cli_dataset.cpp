@@ -89,10 +89,10 @@ otError Dataset::Print(otOperationalDataset &aDataset)
         mInterpreter.OutputLine("");
     }
 
-    if (aDataset.mComponents.mIsMasterKeyPresent)
+    if (aDataset.mComponents.mIsNetworkKeyPresent)
     {
-        mInterpreter.OutputFormat("Master Key: ");
-        mInterpreter.OutputBytes(aDataset.mMasterKey.m8);
+        mInterpreter.OutputFormat("Network Key: ");
+        mInterpreter.OutputBytes(aDataset.mNetworkKey.m8);
         mInterpreter.OutputLine("");
     }
 
@@ -383,28 +383,6 @@ exit:
     return error;
 }
 
-otError Dataset::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        if (sDataset.mComponents.mIsMasterKeyPresent)
-        {
-            mInterpreter.OutputBytes(sDataset.mMasterKey.m8);
-            mInterpreter.OutputLine("");
-        }
-    }
-    else
-    {
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mMasterKey.m8));
-        sDataset.mComponents.mIsMasterKeyPresent = true;
-    }
-
-exit:
-    return error;
-}
-
 otError Dataset::ProcessMeshLocalPrefix(uint8_t aArgsLength, Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -426,6 +404,28 @@ otError Dataset::ProcessMeshLocalPrefix(uint8_t aArgsLength, Arg aArgs[])
 
         memcpy(sDataset.mMeshLocalPrefix.m8, prefix.mFields.m8, sizeof(sDataset.mMeshLocalPrefix.m8));
         sDataset.mComponents.mIsMeshLocalPrefixPresent = true;
+    }
+
+exit:
+    return error;
+}
+
+otError Dataset::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        if (sDataset.mComponents.mIsNetworkKeyPresent)
+        {
+            mInterpreter.OutputBytes(sDataset.mNetworkKey.m8);
+            mInterpreter.OutputLine("");
+        }
+    }
+    else
+    {
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mNetworkKey.m8));
+        sDataset.mComponents.mIsNetworkKeyPresent = true;
     }
 
 exit:
@@ -520,11 +520,11 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, Arg aArgs[])
             dataset.mComponents.mIsPendingTimestampPresent = true;
             SuccessOrExit(error = aArgs[index].ParseAsUint64(dataset.mPendingTimestamp));
         }
-        else if (aArgs[index] == "masterkey")
+        else if (aArgs[index] == "networkkey")
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
-            dataset.mComponents.mIsMasterKeyPresent = true;
-            SuccessOrExit(error = aArgs[index].ParseAsHexString(dataset.mMasterKey.m8));
+            dataset.mComponents.mIsNetworkKeyPresent = true;
+            SuccessOrExit(error = aArgs[index].ParseAsHexString(dataset.mNetworkKey.m8));
         }
         else if (aArgs[index] == "networkname")
         {
@@ -633,9 +633,9 @@ otError Dataset::ProcessMgmtGetCommand(uint8_t aArgsLength, Arg aArgs[])
         {
             datasetComponents.mIsPendingTimestampPresent = true;
         }
-        else if (aArgs[index] == "masterkey")
+        else if (aArgs[index] == "networkkey")
         {
-            datasetComponents.mIsMasterKeyPresent = true;
+            datasetComponents.mIsNetworkKeyPresent = true;
         }
         else if (aArgs[index] == "networkname")
         {
@@ -750,7 +750,7 @@ void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
 {
     mInterpreter.OutputFormat("%d ", aSecurityPolicy.mRotationTime);
 
-    if (aSecurityPolicy.mObtainMasterKeyEnabled)
+    if (aSecurityPolicy.mObtainNetworkKeyEnabled)
     {
         mInterpreter.OutputFormat("o");
     }
@@ -785,7 +785,7 @@ void Dataset::OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy)
         mInterpreter.OutputFormat("e");
     }
 
-    if (aSecurityPolicy.mMasterKeyProvisioningEnabled)
+    if (aSecurityPolicy.mNetworkKeyProvisioningEnabled)
     {
         mInterpreter.OutputFormat("p");
     }
@@ -811,7 +811,7 @@ otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t 
         switch (*flag)
         {
         case 'o':
-            policy.mObtainMasterKeyEnabled = true;
+            policy.mObtainNetworkKeyEnabled = true;
             break;
 
         case 'n':
@@ -839,7 +839,7 @@ otError Dataset::ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, uint8_t 
             break;
 
         case 'p':
-            policy.mMasterKeyProvisioningEnabled = true;
+            policy.mNetworkKeyProvisioningEnabled = true;
             break;
 
         case 'R':

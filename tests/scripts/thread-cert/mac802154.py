@@ -346,7 +346,7 @@ class MacFrame:
             else:
                 message_info.source_mac_address = src_address.mac_address
 
-            sec_obj = CryptoEngine(MacCryptoMaterialCreator(config.DEFAULT_MASTER_KEY))
+            sec_obj = CryptoEngine(MacCryptoMaterialCreator(config.DEFAULT_NETWORK_KEY))
             self.payload = MacPayload(bytearray(open_payload) + sec_obj.decrypt(private_payload, mic, message_info))
 
         else:

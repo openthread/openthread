@@ -21,7 +21,7 @@ Channel: 22
 Channel Mask: 0x07fff800
 Ext PAN ID: 8d6ed7a05a28fb3b
 Mesh Local Prefix: fded:5114:8263:1fe1::/64
-Master Key: 7fcbae4153cc2955c28440c15d4d4219
+Network Key: 7fcbae4153cc2955c28440c15d4d4219
 Network Name: OpenThread-f7af
 PAN ID: 0xf7af
 PSKc: b658e40f174e3a11be149b302ef07a0f
@@ -57,7 +57,7 @@ Start the SRP Client node:
 Join the Thread Network and register a `_ipps._tcp` service:
 
 ```bash
-> dataset masterkey 7fcbae4153cc2955c28440c15d4d4219
+> dataset networkkey 7fcbae4153cc2955c28440c15d4d4219
 Done
 > dataset commit active
 Done
