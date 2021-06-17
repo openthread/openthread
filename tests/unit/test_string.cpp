@@ -145,7 +145,8 @@ void TestUtf8(void)
 void TestStringFind(void)
 {
     char emptyString[1] = {'\0'};
-    char testString[]   = "foo.bar\\.";
+    char testString[]   = "foo.bar.bar\\.";
+    char testString2[]  = "abcabcabcdabc";
 
     printf("\nTest 6: StringFind() function\n");
 
@@ -153,12 +154,52 @@ void TestStringFind(void)
     VerifyOrQuit(StringFind(testString, 'o') == &testString[1], "StringFind() failed");
     VerifyOrQuit(StringFind(testString, '.') == &testString[3], "StringFind() failed");
     VerifyOrQuit(StringFind(testString, 'r') == &testString[6], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, '\\') == &testString[7], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, '\\') == &testString[11], "StringFind() failed");
     VerifyOrQuit(StringFind(testString, 'x') == nullptr, "StringFind() failed");
     VerifyOrQuit(StringFind(testString, ',') == nullptr, "StringFind() failed");
 
     VerifyOrQuit(StringFind(emptyString, 'f') == nullptr, "StringFind() failed");
     VerifyOrQuit(StringFind(emptyString, '.') == nullptr, "StringFind() failed");
+
+    VerifyOrQuit(StringFind(testString, "foo") == &testString[0], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "oo") == &testString[1], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "bar") == &testString[4], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "bar\\") == &testString[8], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "\\.") == &testString[11], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, testString) == testString, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "fooo") == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "far") == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "bar\\..") == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "") == &testString[0], "StringFind() failed");
+
+    VerifyOrQuit(StringFind(emptyString, "foo") == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(emptyString, "bar") == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(emptyString, "") == &emptyString[0], "StringFind() failed");
+
+    // Verify when sub-string has repeated patterns
+    VerifyOrQuit(StringFind(testString2, "abcabc") == &testString2[0], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString2, "abcabcd") == &testString2[3], "StringFind() failed");
+
+    printf(" -- PASS\n");
+}
+
+void TestStringEndsWith(void)
+{
+    printf("\nTest 7: StringEndsWith() function\n");
+
+    VerifyOrQuit(StringEndsWith("foobar", 'r'), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("foobar", 'a'), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("foobar", '\0'), "StringEndsWith() failed");
+    VerifyOrQuit(StringEndsWith("a", 'a'), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("a", 'b'), "StringEndsWith() failed");
+
+    VerifyOrQuit(StringEndsWith("foobar", "bar"), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("foobar", "ba"), "StringEndsWith() failed");
+    VerifyOrQuit(StringEndsWith("foobar", "foobar"), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("foobar", "foobarr"), "StringEndsWith() failed");
+
+    VerifyOrQuit(!StringEndsWith("", 'a'), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("", "foo"), "StringEndsWith() failed");
 
     printf(" -- PASS\n");
 }
@@ -171,6 +212,7 @@ int main(void)
     ot::TestStringLength();
     ot::TestUtf8();
     ot::TestStringFind();
+    ot::TestStringEndsWith();
     printf("\nAll tests passed.\n");
     return 0;
 }

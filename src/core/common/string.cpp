@@ -66,11 +66,39 @@ const char *StringFind(const char *aString, char aChar)
     return ret;
 }
 
+const char *StringFind(const char *aString, const char *aSubString)
+{
+    const char *ret    = nullptr;
+    size_t      len    = strlen(aString);
+    size_t      subLen = strlen(aSubString);
+
+    VerifyOrExit(subLen <= len);
+
+    for (size_t index = 0; index <= static_cast<size_t>(len - subLen); index++)
+    {
+        if (memcmp(&aString[index], aSubString, subLen) == 0)
+        {
+            ExitNow(ret = &aString[index]);
+        }
+    }
+
+exit:
+    return ret;
+}
+
 bool StringEndsWith(const char *aString, char aChar)
 {
     size_t len = strlen(aString);
 
     return len > 0 && aString[len - 1] == aChar;
+}
+
+bool StringEndsWith(const char *aString, const char *aSubString)
+{
+    size_t len    = strlen(aString);
+    size_t subLen = strlen(aSubString);
+
+    return (subLen > 0) && (len >= subLen) && (memcmp(aSubString, &aString[len - subLen], subLen) == 0);
 }
 
 StringWriter::StringWriter(char *aBuffer, uint16_t aSize)
