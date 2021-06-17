@@ -30,12 +30,16 @@
  *   This file implements the Crypto platform callbacks into OpenThread and default/weak Crypto platform APIs.
  */
 
+#include <mbedtls/aes.h>
+#include <mbedtls/md.h>
+
 #include <openthread/instance.h>
 #include <openthread/platform/time.h>
 
 #include <openthread/platform/crypto.h>
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "crypto/hmac_sha256.hpp"
 
 using namespace ot;
 using namespace Crypto;
