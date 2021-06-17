@@ -133,15 +133,13 @@ public:
     void Finish(Hash &aHash);
 
 private:
-
     union HmacContext
     {
-        psa_mac_operation_t     mOperation;
-        mbedtls_md_context_t    mContext;
+        psa_mac_operation_t  mOperation;
+        mbedtls_md_context_t mContext;
     };
 
     HmacContext Context;
-    
 };
 
 /**

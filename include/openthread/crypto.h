@@ -79,17 +79,12 @@ typedef struct otCryptoSha256Hash otCryptoSha256Hash;
  * This function performs HMAC computation.
  *
  * @param[in]     aKey           A pointer to the key material.
- * @param[in]     aKeyLength     The key length in bytes.
  * @param[in]     aBuf           A pointer to the input buffer.
  * @param[in]     aBufLength     The length of @p aBuf in bytes.
  * @param[out]    aHash          A pointer to a `otCryptoSha256Hash` structure to output the hash value.
  *
  */
-void otCryptoHmacSha256(otCryptoKey *       aKey,
-                        uint16_t            aKeyLength,
-                        const uint8_t *     aBuf,
-                        uint16_t            aBufLength,
-                        otCryptoSha256Hash *aHash);
+void otCryptoHmacSha256(otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash);
 
 /**
  * This method performs AES CCM computation.
@@ -111,18 +106,18 @@ void otCryptoHmacSha256(otCryptoKey *       aKey,
  * @param[out]    aTag           A pointer to the tag.
  *
  */
-void otCryptoAesCcm(otCryptoKey   *aKey,
-                    uint16_t       aKeyLength,
-                    uint8_t        aTagLength,
-                    const void *   aNonce,
-                    uint8_t        aNonceLength,
-                    const void *   aHeader,
-                    uint32_t       aHeaderLength,
-                    void *         aPlainText,
-                    void *         aCipherText,
-                    uint32_t       aLength,
-                    bool           aEncrypt,
-                    void *         aTag);
+void otCryptoAesCcm(otCryptoKey *aKey,
+                    uint16_t     aKeyLength,
+                    uint8_t      aTagLength,
+                    const void * aNonce,
+                    uint8_t      aNonceLength,
+                    const void * aHeader,
+                    uint32_t     aHeaderLength,
+                    void *       aPlainText,
+                    void *       aCipherText,
+                    uint32_t     aLength,
+                    bool         aEncrypt,
+                    void *       aTag);
 
 /**
  * This method creates ECDSA sign.

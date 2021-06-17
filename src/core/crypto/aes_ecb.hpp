@@ -35,8 +35,8 @@
 #define AES_ECB_HPP_
 
 #include "openthread-core-config.h"
-#include <openthread/platform/crypto.h>
 #include <mbedtls/aes.h>
+#include <openthread/platform/crypto.h>
 
 namespace ot {
 namespace Crypto {
@@ -90,7 +90,6 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-    
     union AesEcbContext
     {
         uint32_t            mKeyRef;

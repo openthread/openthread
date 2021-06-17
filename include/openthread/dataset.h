@@ -63,10 +63,10 @@ struct otMasterKey
 {
     union
     {
-        uint8_t     key[OT_MASTER_KEY_SIZE];   ///< Byte values
-        uint32_t    keyRef;                    ///< Reference of the key.
-    } ;
-}OT_TOOL_PACKED_END;
+        uint8_t  key[OT_MASTER_KEY_SIZE]; ///< Byte values
+        uint32_t keyRef;                  ///< Reference of the key.
+    } mKeyMaterial;
+} OT_TOOL_PACKED_END;
 
 /**
  * This structure represents a Thread Master Key.
@@ -124,9 +124,9 @@ struct otPskc
 {
     union
     {
-        uint8_t     key[OT_PSKC_MAX_SIZE];   ///< Byte values
-        uint32_t    keyRef;                    ///< Reference of the key.
-    } ;
+        uint8_t  key[OT_PSKC_MAX_SIZE]; ///< Byte values
+        uint32_t keyRef;                ///< Reference of the key.
+    } mKeyMaterial;
 } OT_TOOL_PACKED_END;
 
 /**

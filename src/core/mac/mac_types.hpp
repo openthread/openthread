@@ -418,9 +418,9 @@ private:
 
 typedef enum CryptoType
 {
-    kUseMbedTls     = 0,   
-    kUsePsa         = 1,   
-}CryptoType;
+    kUseMbedTls = 0,
+    kUsePsa     = 1,
+} CryptoType;
 
 /**
  * This class represents a MAC key.
@@ -441,7 +441,7 @@ public:
      * @returns A pointer to the buffer containing the key.
      *
      */
-    const uint8_t *GetKey(void) const { return mKey.m8; }
+    const uint8_t *GetKey(void) const { return mKeyMaterial.mKey.m8; }
 
     /**
      * This method gets the reference to the stored key.
@@ -449,7 +449,7 @@ public:
      * @returns A key reference.
      *
      */
-    otMacKeyRef GetKeyRef(void) const { return mKeyRef; }
+    otMacKeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
 
 } OT_TOOL_PACKED_END;
 

@@ -825,7 +825,6 @@ private:
 #endif
     static const char *OperationToString(Operation aOperation);
 
-    static const otMacKey        sMode2Key;
     static const otExtAddress    sMode2ExtAddress;
     static const otExtendedPanId sExtendedPanidInit;
     static const char            sNetworkNameInit[];

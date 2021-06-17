@@ -502,11 +502,11 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    otError        error = OT_ERROR_NONE;
+    otError error = OT_ERROR_NONE;
 
-    //PSA is not supported for NCP and RCP builds.
+    // PSA is not supported for NCP and RCP builds.
     VerifyOrExit(otPlatCryptoGetType() != OT_CRYPTO_TYPE_PSA, error = OT_ERROR_NOT_FOUND);
-    mEncoder.WriteData(otThreadGetPskc(mInstance)->key, sizeof(spinel_net_pskc_t));
+    SuccessOrExit(error = mEncoder.WriteData(otThreadGetPskc(mInstance)->mKeyMaterial.key, sizeof(spinel_net_pskc_t)));
 
 exit:
     return error;
@@ -1033,7 +1033,7 @@ otError NcpBase::HandlePropertySet_SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSK
 
     SuccessOrExit(
         error = mEncoder.BeginFrame(aHeader, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_MESHCOP_COMMISSIONER_GENERATE_PSKC));
-    SuccessOrExit(error = mEncoder.WriteData(pskc.key, sizeof(pskc)));
+    SuccessOrExit(error = mEncoder.WriteData(pskc.mKeyMaterial.key, sizeof(pskc)));
     SuccessOrExit(error = mEncoder.EndFrame());
 
 exit:

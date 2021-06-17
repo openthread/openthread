@@ -2515,24 +2515,20 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
     {
         const otPskc *pskc = otThreadGetPskc(mInstance);
 
-        if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+        if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
         {
             uint8_t pskcLiteral[OT_PSKC_MAX_SIZE];
-            size_t mKeyLen;
+            size_t  mKeyLen;
 
-            SuccessOrExit(error = otPlatCryptoExportKey(pskc->keyRef,
-                                                pskcLiteral,
-                                                OT_PSKC_MAX_SIZE,
-                                                &mKeyLen)); 
+            SuccessOrExit(
+                error = otPlatCryptoExportKey(pskc->mKeyMaterial.keyRef, pskcLiteral, OT_PSKC_MAX_SIZE, &mKeyLen));
 
-            (void)error;
-
-            OutputBytes(pskcLiteral);  
+            OutputBytes(pskcLiteral);
             memset(pskcLiteral, 0, OT_PSKC_MAX_SIZE);
         }
         else
         {
-            OutputBytes(pskc->key);
+            OutputBytes(pskc->mKeyMaterial.key);
         }
         OutputLine("");
     }
@@ -2542,7 +2538,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
 
         if (aArgsLength == 1)
         {
-            SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.key, sizeof(pskc.key)));
+            SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.mKeyMaterial.key, sizeof(pskc.mKeyMaterial.key)));
         }
         else if (aArgs[0] == "-p")
         {
@@ -2572,23 +2568,19 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
     {
         const otMasterKey *masterKey = otThreadGetMasterKey(mInstance);
 
-        if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+        if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
         {
             uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-            size_t mKeyLen;
+            size_t  mKeyLen;
 
-            Error err = otPlatCryptoExportKey(masterKey->keyRef,
-                                                masterKeyLiteral,
-                                                OT_MASTER_KEY_SIZE,
-                                                &mKeyLen); 
-
-            (void)err;
-            OutputBytes(masterKeyLiteral);  
+            SuccessOrExit(error = otPlatCryptoExportKey(masterKey->mKeyMaterial.keyRef, masterKeyLiteral,
+                                                        OT_MASTER_KEY_SIZE, &mKeyLen));
+            OutputBytes(masterKeyLiteral);
             memset(masterKeyLiteral, 0, OT_MASTER_KEY_SIZE);
         }
         else
         {
-            OutputBytes(masterKey->key);
+            OutputBytes(masterKey->mKeyMaterial.key);
         }
         OutputLine("");
     }
@@ -2596,7 +2588,7 @@ otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
     {
         otMasterKey key;
 
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.key, sizeof(key.key)));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.mKeyMaterial.key, sizeof(key.mKeyMaterial.key)));
         SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
     }
 

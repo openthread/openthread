@@ -124,10 +124,9 @@ Mac::Mac(Instance &aInstance)
     , mTxError(kErrorNone)
 #endif
 {
-    ExtAddress randomExtAddress;
+    ExtAddress     randomExtAddress;
     const otMacKey sMode2Key = {
-    {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
-
+        {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
 
     randomExtAddress.GenerateRandom();
 
@@ -148,20 +147,16 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-    memcpy(sMode2KeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
+    memcpy(sMode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
 
-    if(otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+    if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
     {
         otMacKeyRef aKeyRef = 0;
-        Error error = otPlatCryptoImportKey(&aKeyRef,
-                                        PSA_KEY_TYPE_AES,
-                                        PSA_ALG_ECB_NO_PADDING,
-                                        (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT),
-                                        PSA_KEY_LIFETIME_VOLATILE,
-                                        sMode2Key.m8,
-                                        sizeof(sMode2Key.m8));
+        Error       error   = otPlatCryptoImportKey(&aKeyRef, PSA_KEY_TYPE_AES, PSA_ALG_ECB_NO_PADDING,
+                                            (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT), PSA_KEY_LIFETIME_VOLATILE,
+                                            sMode2Key.m8, sizeof(sMode2Key.m8));
 
-        sMode2KeyMaterial.mKeyRef = aKeyRef;
+        sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
 
         OT_ASSERT(error == kErrorNone);
     }
@@ -1859,15 +1854,15 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 
     if (ackKeyId == (keyManager.GetCurrentKeySequence() & 0x7f))
     {
-        macKey    = &mLinks.GetSubMac().GetCurrentMacKey();
+        macKey = &mLinks.GetSubMac().GetCurrentMacKey();
     }
     else if (ackKeyId == ((keyManager.GetCurrentKeySequence() - 1) & 0x7f))
     {
-        macKey    = &mLinks.GetSubMac().GetPreviousMacKey();
+        macKey = &mLinks.GetSubMac().GetPreviousMacKey();
     }
     else if (ackKeyId == ((keyManager.GetCurrentKeySequence() + 1) & 0x7f))
     {
-        macKey    = &mLinks.GetSubMac().GetNextMacKey();
+        macKey = &mLinks.GetSubMac().GetNextMacKey();
     }
     else
     {

@@ -56,7 +56,6 @@ namespace Crypto {
 class HkdfSha256
 {
 public:
-
     /**
      * This method performs the HKDF Extract step.
      *
@@ -87,7 +86,7 @@ public:
 private:
     union HkdfContext
     {
-        HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
+        HmacSha256::Hash               mPrk; // Pseudo-Random Key (derived from Extract step).
         psa_key_derivation_operation_t mOperation;
     };
 

@@ -154,11 +154,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check network master key
     if (Tlv::Find<NetworkMasterKeyTlv>(aMessage, masterKey) == kErrorNone)
     {
-        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];        
+        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
         IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
         hasMasterKey = true;
 
-        if (memcmp(masterKey.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
+        if (memcmp(masterKey.mKeyMaterial.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
         {
             doesAffectConnectivity = true;
             doesAffectMasterKey    = true;
@@ -168,10 +168,10 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check active timestamp rollback
     if (type == Tlv::kPendingTimestamp)
     {
-        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];  
+        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
         IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
 
-        if(!hasMasterKey || (memcmp(masterKey.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
+        if (!hasMasterKey || (memcmp(masterKey.mKeyMaterial.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
         {
             // no change to master key, active timestamp must be ahead
             const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
@@ -362,7 +362,7 @@ Error ActiveDataset::GenerateLocal(void)
     if (dataset.GetTlv<NetworkMasterKeyTlv>() == nullptr)
     {
         otMasterKey aMasterKey;
-        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.key, OT_MASTER_KEY_SIZE));
+        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.key, OT_MASTER_KEY_SIZE));
         IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, aMasterKey));
     }
 
@@ -381,7 +381,7 @@ Error ActiveDataset::GenerateLocal(void)
     if (dataset.GetTlv<PskcTlv>() == nullptr)
     {
         uint8_t aPskc[OT_PSKC_MAX_SIZE];
- 
+
         if (!Get<KeyManager>().IsPskcSet())
         {
             // PSKc has not yet been configured, generate new PSKc at random

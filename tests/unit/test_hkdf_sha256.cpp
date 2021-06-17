@@ -138,8 +138,8 @@ void TestHkdfSha256(void)
         DumpBuffer("\nExpected Output Key", test->mOutKey, test->mOutKeyLength);
 
         memset(outKey, kFillByte, sizeof(outKey));
-        memset(&testInputKey, 0x00, sizeof(testInputKey))
-        memcpy(testInputKey.mKey, test->mInKey, test->mInKeyLength);
+        memset(&testInputKey, 0x00, sizeof(testInputKey));
+        memcpy(&testInputKey.mKey, test->mInKey, test->mInKeyLength);
 
         hkdf.Extract(test->mSalt, test->mSaltLength, &testInputKey);
         hkdf.Expand(test->mInfo, test->mInfoLength, outKey, test->mOutKeyLength);

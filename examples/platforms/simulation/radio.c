@@ -150,11 +150,11 @@ otRadioCaps gRadioCaps =
     OT_RADIO_CAPS_NONE;
 #endif
 
-static uint32_t                 sMacFrameCounter;
-static uint8_t                  sKeyId;
-static struct otMacKeyMaterial  sPrevKey;
-static struct otMacKeyMaterial  sCurrKey;
-static struct otMacKeyMaterial  sNextKey;
+static uint32_t                sMacFrameCounter;
+static uint8_t                 sKeyId;
+static struct otMacKeyMaterial sPrevKey;
+static struct otMacKeyMaterial sCurrKey;
+static struct otMacKeyMaterial sNextKey;
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -607,7 +607,7 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     struct otMacKeyMaterial *key = NULL;
-    uint8_t          keyId;
+    uint8_t                  keyId;
 
     otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
              !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);
@@ -1196,9 +1196,9 @@ uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-void otPlatRadioSetMacKey(otInstance *           aInstance,
-                          uint8_t                aKeyIdMode,
-                          uint8_t                aKeyId,
+void otPlatRadioSetMacKey(otInstance *            aInstance,
+                          uint8_t                 aKeyIdMode,
+                          uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
                           const otMacKeyMaterial *aNextKey)

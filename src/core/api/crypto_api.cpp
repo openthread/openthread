@@ -45,10 +45,7 @@
 
 using namespace ot::Crypto;
 
-void otCryptoHmacSha256(otCryptoKey *       aKey,
-                        const uint8_t *     aBuf,
-                        uint16_t            aBufLength,
-                        otCryptoSha256Hash *aHash)
+void otCryptoHmacSha256(otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash)
 {
     HmacSha256 hmac;
 
@@ -59,17 +56,17 @@ void otCryptoHmacSha256(otCryptoKey *       aKey,
     hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
 }
 
-void otCryptoAesCcm(otCryptoKey *  aKey,
-                    uint8_t        aTagLength,
-                    const void *   aNonce,
-                    uint8_t        aNonceLength,
-                    const void *   aHeader,
-                    uint32_t       aHeaderLength,
-                    void *         aPlainText,
-                    void *         aCipherText,
-                    uint32_t       aLength,
-                    bool           aEncrypt,
-                    void *         aTag)
+void otCryptoAesCcm(otCryptoKey *aKey,
+                    uint8_t      aTagLength,
+                    const void * aNonce,
+                    uint8_t      aNonceLength,
+                    const void * aHeader,
+                    uint32_t     aHeaderLength,
+                    void *       aPlainText,
+                    void *       aCipherText,
+                    uint32_t     aLength,
+                    bool         aEncrypt,
+                    void *       aTag)
 {
     AesCcm aesCcm;
     OT_ASSERT((aKey != nullptr) && (aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) &&

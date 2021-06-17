@@ -38,10 +38,10 @@
 
 #include <stdint.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/error.hpp"
 #include "crypto/aes_ecb.hpp"
 #include "mac/mac_types.hpp"
-#include <openthread/platform/crypto.h>
 
 namespace ot {
 namespace Crypto {

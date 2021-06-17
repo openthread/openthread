@@ -43,13 +43,13 @@ using namespace Crypto;
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of crypto platform APIs
 
-OT_TOOL_WEAK otError otPlatCryptoImportKey( psa_key_id_t             *aKeyId,
-                                            psa_key_type_t           aKeyType,
-                                            psa_algorithm_t          aKeyAlgorithm,
-                                            psa_key_usage_t          aKeyUsage,
-                                            psa_key_persistence_t    aKeyPersistence,
-                                            const uint8_t            *aKey,
-                                            size_t                   aKeyLen)
+OT_TOOL_WEAK otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
+                                           psa_key_type_t        aKeyType,
+                                           psa_algorithm_t       aKeyAlgorithm,
+                                           psa_key_usage_t       aKeyUsage,
+                                           psa_key_persistence_t aKeyPersistence,
+                                           const uint8_t *       aKey,
+                                           size_t                aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aKeyType);
@@ -62,10 +62,7 @@ OT_TOOL_WEAK otError otPlatCryptoImportKey( psa_key_id_t             *aKeyId,
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoExportKey( psa_key_id_t aKeyId,
-                                            uint8_t      *aBuffer,
-                                            uint8_t      aBufferLen,
-                                            size_t       *aKeyLen)
+OT_TOOL_WEAK otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, uint8_t aBufferLen, size_t *aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aBuffer);
@@ -78,7 +75,7 @@ OT_TOOL_WEAK otError otPlatCryptoExportKey( psa_key_id_t aKeyId,
 OT_TOOL_WEAK otError otPlatCryptoDestroyKey(psa_key_id_t aKeyId)
 {
     OT_UNUSED_VARIABLE(aKeyId);
-    
+
     return kErrorNotImplemented;
 }
 
@@ -87,8 +84,7 @@ OT_TOOL_WEAK otError otPlatCryptoInit(void)
     return kErrorNone;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(  psa_key_id_t          aKeyId,
-                                                    psa_key_attributes_t  *aKeyAttributes)
+OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(psa_key_id_t aKeyId, psa_key_attributes_t *aKeyAttributes)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aKeyAttributes);
@@ -105,27 +101,27 @@ OT_TOOL_WEAK otCryptoType otPlatCryptoGetType(void)
 
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(void *aContext)
 {
-    const mbedtls_md_info_t *mdInfo = nullptr;
-    mbedtls_md_context_t *mContext = (mbedtls_md_context_t *)aContext;
+    const mbedtls_md_info_t *mdInfo   = nullptr;
+    mbedtls_md_context_t *   mContext = static_cast<mbedtls_md_context_t *>(aContext);
 
     mbedtls_md_init(mContext);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
     mbedtls_md_setup(mContext, mdInfo, 1);
 
-    return kErrorNone;    
+    return kErrorNone;
 }
 
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256UnInit(void *aContext)
 {
-    mbedtls_md_context_t *mContext = (mbedtls_md_context_t *)aContext;
+    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
     mbedtls_md_free(mContext);
 
-    return kErrorNone;    
+    return kErrorNone;
 }
 
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Start(void *aContext, otCryptoKey *aKey)
 {
-    mbedtls_md_context_t *mContext = (mbedtls_md_context_t *)aContext;
+    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
     mbedtls_md_hmac_starts(mContext, aKey->mKey, aKey->mKeyLength);
 
     return kErrorNone;
@@ -133,7 +129,7 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Start(void *aContext, otCryptoKey *aK
 
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Update(void *aContext, const void *aBuf, uint16_t aBufLength)
 {
-    mbedtls_md_context_t *mContext = (mbedtls_md_context_t *)aContext;
+    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
     mbedtls_md_hmac_update(mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
 
     return kErrorNone;
@@ -141,7 +137,7 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Update(void *aContext, const void *aB
 
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Finish(void *aContext, uint8_t *aBuf, size_t aBufLength)
 {
-    mbedtls_md_context_t *mContext = (mbedtls_md_context_t *)aContext;
+    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
     mbedtls_md_hmac_finish(mContext, aBuf);
 
     OT_UNUSED_VARIABLE(aBufLength);
@@ -152,7 +148,7 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Finish(void *aContext, uint8_t *aBuf,
 // AES  Implementation
 OT_TOOL_WEAK otError otPlatCryptoAesInit(void *aContext)
 {
-    mbedtls_aes_context *mContext = (mbedtls_aes_context *)aContext;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
     mbedtls_aes_init(mContext);
 
     return kErrorNone;
@@ -160,7 +156,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesInit(void *aContext)
 
 OT_TOOL_WEAK otError otPlatCryptoAesSetKey(void *aContext, otCryptoKey *aKey)
 {
-    mbedtls_aes_context *mContext = (mbedtls_aes_context *)aContext;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
     mbedtls_aes_setkey_enc(mContext, aKey->mKey, aKey->mKeyLength);
 
     return kErrorNone;
@@ -168,7 +164,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesSetKey(void *aContext, otCryptoKey *aKey)
 
 OT_TOOL_WEAK otError otPlatCryptoAesEncrypt(void *aContext, const uint8_t *aInput, uint8_t *aOutput)
 {
-    mbedtls_aes_context *mContext = (mbedtls_aes_context *)aContext;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
     mbedtls_aes_crypt_ecb(mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
 
     return kErrorNone;
@@ -176,7 +172,7 @@ OT_TOOL_WEAK otError otPlatCryptoAesEncrypt(void *aContext, const uint8_t *aInpu
 
 OT_TOOL_WEAK otError otPlatCryptoAesFree(void *aContext)
 {
-    mbedtls_aes_context *mContext = (mbedtls_aes_context *)aContext;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
     mbedtls_aes_free(mContext);
 
     return kErrorNone;
@@ -184,17 +180,17 @@ OT_TOOL_WEAK otError otPlatCryptoAesFree(void *aContext)
 
 // HKDF platform implementations
 // As the HKDF does not actually use mbedTLS APIs but uses HMAC module, this feature is not implemented.
-OT_TOOL_WEAK otError otPlatCryptoHkdfExpand( void *aContext,
-                                             const uint8_t *aInfo, 
-                                             uint16_t aInfoLength, 
-                                             uint8_t *aOutputKey, 
-                                             uint16_t aOutputKeyLength)
+OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(void *         aContext,
+                                            const uint8_t *aInfo,
+                                            uint16_t       aInfoLength,
+                                            uint8_t *      aOutputKey,
+                                            uint16_t       aOutputKeyLength)
 {
-    HmacSha256       hmac;
-    HmacSha256::Hash hash;
-    uint8_t          iter = 0;
-    uint16_t         copyLength;
-    HmacSha256::Hash *prk = (HmacSha256::Hash *) aContext;
+    HmacSha256        hmac;
+    HmacSha256::Hash  hash;
+    uint8_t           iter = 0;
+    uint16_t          copyLength;
+    HmacSha256::Hash *prk = static_cast<HmacSha256::Hash *>(aContext);
 
     // The aOutputKey is calculated as follows [RFC5889]:
     //
@@ -213,9 +209,9 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand( void *aContext,
     {
         otCryptoKey cryptoKey;
 
-        cryptoKey.mKey = prk->GetBytes();
+        cryptoKey.mKey       = prk->GetBytes();
         cryptoKey.mKeyLength = sizeof(HmacSha256::Hash);
-        cryptoKey.mKeyRef = 0;
+        cryptoKey.mKeyRef    = 0;
 
         hmac.Start(&cryptoKey);
 
@@ -240,18 +236,18 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand( void *aContext,
     return kErrorNone;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(   void *aContext, 
-                                                const uint8_t *aSalt, 
-                                                uint16_t aSaltLength, 
-                                                otCryptoKey *aKey)
+OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *         aContext,
+                                             const uint8_t *aSalt,
+                                             uint16_t       aSaltLength,
+                                             otCryptoKey *  aKey)
 {
-    HmacSha256 hmac;
-    otCryptoKey cryptoKey;
-    HmacSha256::Hash *prk = (HmacSha256::Hash *) aContext;
+    HmacSha256        hmac;
+    otCryptoKey       cryptoKey;
+    HmacSha256::Hash *prk = static_cast<HmacSha256::Hash *>(aContext);
 
-    cryptoKey.mKey = aSalt;
+    cryptoKey.mKey       = aSalt;
     cryptoKey.mKeyLength = aSaltLength;
-    cryptoKey.mKeyRef = 0;
+    cryptoKey.mKeyRef    = 0;
 
     // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
     hmac.Start(&cryptoKey);
@@ -264,7 +260,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(   void *aContext,
 // SHA256 platform implementations
 OT_TOOL_WEAK otError otPlatCryptoSha256Init(void *aOperationCtx)
 {
-    mbedtls_sha256_context *mContext = (mbedtls_sha256_context *)aOperationCtx;
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
     mbedtls_sha256_init(mContext);
 
     return kErrorNone;
@@ -272,7 +268,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Init(void *aOperationCtx)
 
 OT_TOOL_WEAK otError otPlatCryptoSha256Uninit(void *aOperationCtx)
 {
-    mbedtls_sha256_context *mContext = (mbedtls_sha256_context *)aOperationCtx;
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
     mbedtls_sha256_free(mContext);
 
     return kErrorNone;
@@ -280,7 +276,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Uninit(void *aOperationCtx)
 
 OT_TOOL_WEAK otError otPlatCryptoSha256Start(void *aOperationCtx)
 {
-    mbedtls_sha256_context *mContext = (mbedtls_sha256_context *)aOperationCtx;
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
     mbedtls_sha256_starts_ret(mContext, 0);
 
     return kErrorNone;
@@ -288,7 +284,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Start(void *aOperationCtx)
 
 OT_TOOL_WEAK otError otPlatCryptoSha256Update(void *aOperationCtx, const void *aBuf, uint16_t aBufLength)
 {
-    mbedtls_sha256_context *mContext = (mbedtls_sha256_context *)aOperationCtx;
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
     mbedtls_sha256_update_ret(mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
 
     return kErrorNone;
@@ -296,7 +292,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Update(void *aOperationCtx, const void *a
 
 OT_TOOL_WEAK otError otPlatCryptoSha256Finish(void *aOperationCtx, uint8_t *aHash, uint16_t aHashSize)
 {
-    mbedtls_sha256_context *mContext = (mbedtls_sha256_context *)aOperationCtx;
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
     mbedtls_sha256_finish_ret(mContext, aHash);
 
     OT_UNUSED_VARIABLE(aHashSize);

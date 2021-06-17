@@ -33,8 +33,8 @@
 
 #include "sha256.hpp"
 
-#include "common/message.hpp"
 #include "common/error.hpp"
+#include "common/message.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -42,28 +42,28 @@ namespace Crypto {
 Sha256::Sha256(void)
 {
     void *mCtx = (void *)&Context;
-    Error err = otPlatCryptoSha256Init(mCtx);
+    Error err  = otPlatCryptoSha256Init(mCtx);
     (void)err;
 }
 
 Sha256::~Sha256(void)
 {
     void *mCtx = (void *)&Context;
-    Error err = otPlatCryptoSha256Uninit(mCtx);
+    Error err  = otPlatCryptoSha256Uninit(mCtx);
     (void)err;
 }
 
 void Sha256::Start(void)
 {
     void *mCtx = (void *)&Context;
-    Error err = otPlatCryptoSha256Start(mCtx);
+    Error err  = otPlatCryptoSha256Start(mCtx);
     (void)err;
 }
 
 void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
     void *mCtx = (void *)&Context;
-    Error err = otPlatCryptoSha256Update(mCtx, aBuf, aBufLength);
+    Error err  = otPlatCryptoSha256Update(mCtx, aBuf, aBufLength);
     (void)err;
 }
 
@@ -83,7 +83,7 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 void Sha256::Finish(Hash &aHash)
 {
     void *mCtx = (void *)&Context;
-    Error err = otPlatCryptoSha256Finish(mCtx, aHash.m8, aHash.kSize);
+    Error err  = otPlatCryptoSha256Finish(mCtx, aHash.m8, aHash.kSize);
     (void)err;
 }
 } // namespace Crypto

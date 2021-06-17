@@ -38,12 +38,12 @@
 
 #include <openthread/link.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
 #include "radio/radio.hpp"
-#include <openthread/platform/crypto.h>
 
 namespace ot {
 

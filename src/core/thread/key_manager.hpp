@@ -40,6 +40,7 @@
 
 #include <openthread/dataset.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -50,7 +51,6 @@
 #include "crypto/hmac_sha256.hpp"
 #include "mac/mac_types.hpp"
 #include "thread/mle_types.hpp"
-#include <openthread/platform/crypto.h>
 
 namespace ot {
 
@@ -151,7 +151,7 @@ public:
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(key, sizeof(key)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
 #endif
 
     /**
@@ -161,7 +161,7 @@ public:
      * @retval kErrorFailed   Failed to copy Thread Master Key.
      *
      */
-    Error CopyKey (uint8_t *aBuffer, uint16_t aBufferSize) const;
+    Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
 
 } OT_TOOL_PACKED_END;
 
@@ -186,7 +186,7 @@ public:
      * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(key, sizeof(key)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
 #endif
     /**
      * This method copies the literal PSKc into given buffer.
@@ -195,7 +195,7 @@ public:
      * @retval kErrorFailed   Failed to copy PSKc.
      *
      */
-    Error CopyKey (uint8_t *aBuffer, uint16_t aBufferSize) const;
+    Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -214,10 +214,10 @@ class KeyManager : public InstanceLocator, private NonCopyable
 public:
     enum
     {
-        kMasterKeyPsaItsOffset     = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
-        kPskcPsaItsOffset          = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2
+        kMasterKeyPsaItsOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
+        kPskcPsaItsOffset      = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2
     };
-    
+
     /**
      * This constructor initializes the object.
      *
@@ -434,7 +434,7 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    Error GetKekLiteral( Kek &aKek );
+    Error GetKekLiteral(Kek &aKek);
 
     /**
      * This method sets the KEK.
@@ -522,9 +522,9 @@ public:
      */
     void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
 
-    otCryptoType GetCryptoType(void) {return mCryptoType;}
+    otCryptoType GetCryptoType(void) { return mCryptoType; }
 
-    void SetCryptoType(otCryptoType aCryptoType) {mCryptoType = aCryptoType;}
+    void SetCryptoType(otCryptoType aCryptoType) { mCryptoType = aCryptoType; }
 
 private:
     enum
@@ -596,7 +596,7 @@ private:
 
     otCryptoType   mCryptoType;
     SecurityPolicy mSecurityPolicy;
-    bool           mIsPskcSet : 1; 
+    bool           mIsPskcSet : 1;
 };
 
 /**

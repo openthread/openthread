@@ -42,10 +42,10 @@
 
 #include <openthread/crypto.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
-#include <openthread/platform/crypto.h>
 
 namespace ot {
 
@@ -148,10 +148,9 @@ public:
     void Finish(Hash &aHash);
 
 private:
-
     union Sha256Context
     {
-        psa_hash_operation_t mOperation;
+        psa_hash_operation_t   mOperation;
         mbedtls_sha256_context mContext;
     };
 

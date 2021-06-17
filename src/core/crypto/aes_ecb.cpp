@@ -40,28 +40,28 @@ namespace Crypto {
 AesEcb::AesEcb(void)
 {
     void *context = (void *)&Context;
-    Error err = otPlatCryptoAesInit(context);
+    Error err     = otPlatCryptoAesInit(context);
     (void)err;
 }
 
 void AesEcb::SetKey(otCryptoKey *aKey)
 {
     void *context = (void *)&Context;
-    Error err = otPlatCryptoAesSetKey(context, aKey);
+    Error err     = otPlatCryptoAesSetKey(context, aKey);
     (void)err;
 }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
     void *context = (void *)&Context;
-    Error err = otPlatCryptoAesEncrypt(context, aInput, aOutput);
+    Error err     = otPlatCryptoAesEncrypt(context, aInput, aOutput);
     (void)err;
 }
 
 AesEcb::~AesEcb(void)
 {
     void *context = (void *)&Context;
-    Error err = otPlatCryptoAesFree(context);
+    Error err     = otPlatCryptoAesFree(context);
     (void)err;
 }
 

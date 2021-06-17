@@ -215,9 +215,9 @@ struct otMacKeyMaterial
 {
     union
     {
-        otMacKeyRef     mKeyRef; ///< Reference to the key stored.
-        otMacKey        mKey;    ///< Key stored as literal.
-    } ;
+        otMacKeyRef mKeyRef; ///< Reference to the key stored.
+        otMacKey    mKey;    ///< Key stored as literal.
+    } mKeyMaterial;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -258,12 +258,12 @@ typedef struct otRadioFrame
          */
         struct
         {
-            const otMacKeyMaterial *  mAesKey;          ///< The key material used for AES-CCM frame security.
-            otRadioIeInfo *           mIeInfo;          ///< The pointer to the Header IE(s) related information.
-            uint32_t                  mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
-            uint32_t                  mTxDelayBaseTime; ///< The base time for the transmission delay.
-            uint8_t                   mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
-            uint8_t                   mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
+            const otMacKeyMaterial *mAesKey;  ///< The key material used for AES-CCM frame security.
+            otRadioIeInfo *         mIeInfo;  ///< The pointer to the Header IE(s) related information.
+            uint32_t                mTxDelay; ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
+            uint32_t                mTxDelayBaseTime; ///< The base time for the transmission delay.
+            uint8_t mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
+            uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
              * Indicates whether the frame is a retransmission or not.

@@ -321,7 +321,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     const Tlv *    tlv;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
-    IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(mMasterKey.key, OT_MASTER_KEY_SIZE));
+    IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(mMasterKey.mKeyMaterial.key, OT_MASTER_KEY_SIZE));
 
     message->InitAsConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kJoinerEntrust));
