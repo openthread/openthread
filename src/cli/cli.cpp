@@ -4521,12 +4521,9 @@ otError Interpreter::ProcessDiag(Arg aArgs[])
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
 
     // all diagnostics related features are processed within diagnostics module
-    output[0]                  = '\0';
-    output[sizeof(output) - 1] = '\0';
-
     Arg::CopyArgsToStringArray(aArgs, args);
 
-    error = otDiagProcessCmd(mInstance, Arg::GetArgsLength(aArgs), args, output, sizeof(output) - 1);
+    error = otDiagProcessCmd(mInstance, Arg::GetArgsLength(aArgs), args, output, sizeof(output));
 
     OutputFormat("%s", output);
 
