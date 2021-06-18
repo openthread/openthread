@@ -1497,7 +1497,6 @@ class OTCI(object):
 
         netdata['prefixes'] = self.__parse_prefixes(prefixes_output)
 
-        print(prefixes_output, output)
         routes_output = []
         while True:
             line = output.pop(0)
@@ -1559,7 +1558,6 @@ class OTCI(object):
         routes = []
         for line in output:
             line = line.split()
-            print(line)
             if line[1] == 's':
                 prefix, _, prf, rloc16 = line
                 stable = True
