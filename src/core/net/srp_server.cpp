@@ -80,7 +80,6 @@ Server::Server(Instance &aInstance)
     , mSocket(aInstance)
     , mServiceUpdateHandler(nullptr)
     , mServiceUpdateHandlerContext(nullptr)
-    , mDomain(nullptr)
     , mLeaseTimer(aInstance, HandleLeaseTimer)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
@@ -90,20 +89,10 @@ Server::Server(Instance &aInstance)
     IgnoreError(SetDomain(kDefaultDomain));
 }
 
-Server::~Server(void)
-{
-    Instance::HeapFree(mDomain);
-}
-
 void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, void *aServiceHandlerContext)
 {
     mServiceUpdateHandler        = aServiceHandler;
     mServiceUpdateHandlerContext = aServiceHandlerContext;
-}
-
-bool Server::IsRunning(void) const
-{
-    return mSocket.IsBound();
 }
 
 void Server::SetEnabled(bool aEnabled)
@@ -165,11 +154,6 @@ uint32_t Server::LeaseConfig::GrantKeyLease(uint32_t aKeyLease) const
     return (aKeyLease == 0) ? 0 : OT_MAX(mMinKeyLease, OT_MIN(mMaxKeyLease, aKeyLease));
 }
 
-void Server::GetLeaseConfig(LeaseConfig &aLeaseConfig) const
-{
-    aLeaseConfig = mLeaseConfig;
-}
-
 Error Server::SetLeaseConfig(const LeaseConfig &aLeaseConfig)
 {
     Error error = kErrorNone;
@@ -181,43 +165,36 @@ exit:
     return error;
 }
 
-const char *Server::GetDomain(void) const
-{
-    return mDomain;
-}
-
 Error Server::SetDomain(const char *aDomain)
 {
-    Error  error             = kErrorNone;
-    char * buf               = nullptr;
-    size_t appendTrailingDot = 0;
-    size_t length            = strlen(aDomain);
+    Error    error = kErrorNone;
+    uint16_t length;
 
     VerifyOrExit(!mEnabled, error = kErrorInvalidState);
 
-    VerifyOrExit(length > 0 && length < Dns::Name::kMaxNameSize, error = kErrorInvalidArgs);
-    if (aDomain[length - 1] != '.')
+    length = StringLength(aDomain, Dns::Name::kMaxNameSize);
+    VerifyOrExit((length > 0) && (length < Dns::Name::kMaxNameSize), error = kErrorInvalidArgs);
+
+    if (aDomain[length - 1] == '.')
     {
-        appendTrailingDot = 1;
+        error = mDomain.Set(aDomain);
     }
-
-    buf = static_cast<char *>(Instance::HeapCAlloc(1, length + appendTrailingDot + 1));
-    VerifyOrExit(buf != nullptr, error = kErrorNoBufs);
-
-    strcpy(buf, aDomain);
-    if (appendTrailingDot)
+    else
     {
+        // Need to append dot at the end
+
+        char buf[Dns::Name::kMaxNameSize];
+
+        VerifyOrExit(length < Dns::Name::kMaxNameSize - 1, error = kErrorInvalidArgs);
+
+        memcpy(buf, aDomain, length);
         buf[length]     = '.';
         buf[length + 1] = '\0';
+
+        error = mDomain.Set(buf);
     }
-    Instance::HeapFree(mDomain);
-    mDomain = buf;
 
 exit:
-    if (error != kErrorNone)
-    {
-        Instance::HeapFree(buf);
-    }
     return error;
 }
 
@@ -243,13 +220,13 @@ void Server::RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandle
 
     if (aRetainName)
     {
-        otLogInfoSrp("[server] remove host '%s' (but retain its name)", aHost->mFullName);
+        otLogInfoSrp("[server] remove host '%s' (but retain its name)", aHost->GetFullName());
     }
     else
     {
         aHost->mKeyLease = 0;
         IgnoreError(mHosts.Remove(*aHost));
-        otLogInfoSrp("[server] fully remove host '%s'", aHost->mFullName);
+        otLogInfoSrp("[server] fully remove host '%s'", aHost->GetFullName());
     }
 
     if (aNotifyServiceHandler && mServiceUpdateHandler != nullptr)
@@ -301,7 +278,7 @@ bool Server::HasNameConflictsWith(Host &aHost) const
     // Check not only services of this host but all hosts.
     while ((service = aHost.GetNextService(service)) != nullptr)
     {
-        const Service *existingService = FindService(service->mFullName);
+        const Service *existingService = FindService(service->GetFullName());
         if (existingService != nullptr && *service->GetHost().GetKey() != *existingService->GetHost().GetKey())
         {
             ExitNow(hasConflicts = true);
@@ -398,7 +375,7 @@ void Server::CommitSrpUpdate(Error                    aError,
         existingHost->CopyResourcesFrom(aHost);
         while ((service = aHost.GetNextService(service)) != nullptr)
         {
-            Service *existingService = existingHost->FindService(service->mFullName);
+            Service *existingService = existingHost->FindService(service->GetFullName());
 
             if (service->mIsDeleted)
             {
@@ -406,12 +383,12 @@ void Server::CommitSrpUpdate(Error                    aError,
             }
             else
             {
-                Service *newService = existingHost->AddService(service->mFullName);
+                Service *newService = existingHost->AddService(service->GetFullName());
 
                 VerifyOrExit(newService != nullptr, aError = kErrorNoBufs);
                 SuccessOrExit(aError = newService->CopyResourcesFrom(*service));
                 otLogInfoSrp("[server] %s service %s", (existingService != nullptr) ? "update existing" : "add new",
-                             service->mFullName);
+                             service->GetFullName());
             }
         }
 
@@ -495,7 +472,7 @@ void Server::Stop(void)
         RemoveHost(mHosts.GetHead(), /* aRetainName */ false, /* aNotifyServiceHandler */ true);
     }
 
-    // TODO: We should cancel any oustanding service updates, but current
+    // TODO: We should cancel any outstanding service updates, but current
     // OTBR mDNS publisher cannot properly handle it.
     while (!mOutstandingUpdates.IsEmpty())
     {
@@ -660,7 +637,7 @@ Error Server::ProcessUpdateSection(Host &                   aHost,
     error = ProcessHostDescriptionInstruction(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
-    // 2. Enumerate over all RRs to build the Service Description Insutructions.
+    // 2. Enumerate over all RRs to build the Service Description Instructions.
     error = ProcessServiceDescriptionInstructions(aHost, aMessage, aDnsHeader, aZone, aOffset);
     SuccessOrExit(error);
 
@@ -1045,7 +1022,7 @@ void Server::HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, cons
             {
                 if (!existingService->mIsDeleted)
                 {
-                    Service *service = aHost->AddService(existingService->mFullName);
+                    Service *service = aHost->AddService(existingService->GetFullName());
                     VerifyOrExit(service != nullptr, error = kErrorNoBufs);
                     service->mIsDeleted = true;
                 }
@@ -1231,7 +1208,7 @@ void Server::HandleLeaseTimer(void)
 
                 if (service->GetKeyExpireTime() <= now)
                 {
-                    otLogInfoSrp("[server] KEY LEASE of service %s expired", service->mFullName);
+                    otLogInfoSrp("[server] KEY LEASE of service %s expired", service->GetFullName());
                     host->RemoveService(service, /* aRetainName */ false, /* aNotifyServiceHandler */ true);
                 }
                 else
@@ -1279,7 +1256,7 @@ void Server::HandleLeaseTimer(void)
                 }
                 else if (service->GetExpireTime() <= now)
                 {
-                    otLogInfoSrp("[server] LEASE of service %s expired", service->mFullName);
+                    otLogInfoSrp("[server] LEASE of service %s expired", service->GetFullName());
 
                     // The service is expired, delete it.
                     host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
@@ -1347,14 +1324,13 @@ exit:
 
 void Server::Service::Free(void)
 {
-    Instance::HeapFree(mFullName);
+    mFullName.Free();
     Instance::HeapFree(mTxtData);
     Instance::HeapFree(this);
 }
 
 Server::Service::Service(void)
-    : mFullName(nullptr)
-    , mPriority(0)
+    : mPriority(0)
     , mWeight(0)
     , mPort(0)
     , mTxtLength(0)
@@ -1363,23 +1339,6 @@ Server::Service::Service(void)
     , mNext(nullptr)
     , mTimeLastUpdate(TimerMilli::GetNow())
 {
-}
-
-Error Server::Service::SetFullName(const char *aFullName)
-{
-    OT_ASSERT(aFullName != nullptr);
-
-    Error error    = kErrorNone;
-    char *nameCopy = static_cast<char *>(Instance::HeapCAlloc(1, strlen(aFullName) + 1));
-
-    VerifyOrExit(nameCopy != nullptr, error = kErrorNoBufs);
-    strcpy(nameCopy, aFullName);
-
-    Instance::HeapFree(mFullName);
-    mFullName = nameCopy;
-
-exit:
-    return error;
 }
 
 TimeMilli Server::Service::GetExpireTime(void) const
@@ -1465,23 +1424,18 @@ exit:
     return error;
 }
 
-bool Server::Service::Matches(const char *aFullName) const
-{
-    return (mFullName != nullptr) && (strcmp(mFullName, aFullName) == 0);
-}
-
 bool Server::Service::MatchesServiceName(const char *aServiceName) const
 {
-    uint8_t i = static_cast<uint8_t>(strlen(mFullName));
+    uint8_t i = static_cast<uint8_t>(strlen(GetFullName()));
     uint8_t j = static_cast<uint8_t>(strlen(aServiceName));
 
-    while (i > 0 && j > 0 && mFullName[i - 1] == aServiceName[j - 1])
+    while (i > 0 && j > 0 && GetFullName()[i - 1] == aServiceName[j - 1])
     {
         i--;
         j--;
     }
 
-    return j == 0 && i > 0 && mFullName[i - 1] == '.';
+    return j == 0 && i > 0 && GetFullName()[i - 1] == '.';
 }
 
 Server::Host *Server::Host::New(Instance &aInstance)
@@ -1501,13 +1455,12 @@ exit:
 void Server::Host::Free(void)
 {
     FreeAllServices();
-    Instance::HeapFree(mFullName);
+    mFullName.Free();
     Instance::HeapFree(this);
 }
 
 Server::Host::Host(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mFullName(nullptr)
     , mAddressesNum(0)
     , mNext(nullptr)
     , mLease(0)
@@ -1517,41 +1470,11 @@ Server::Host::Host(Instance &aInstance)
     mKey.Clear();
 }
 
-Error Server::Host::SetFullName(const char *aFullName)
-{
-    OT_ASSERT(aFullName != nullptr);
-
-    Error error    = kErrorNone;
-    char *nameCopy = static_cast<char *>(Instance::HeapCAlloc(1, strlen(aFullName) + 1));
-
-    VerifyOrExit(nameCopy != nullptr, error = kErrorNoBufs);
-    strcpy(nameCopy, aFullName);
-
-    if (mFullName != nullptr)
-    {
-        Instance::HeapFree(mFullName);
-    }
-    mFullName = nameCopy;
-
-exit:
-    return error;
-}
-
 void Server::Host::SetKey(Dns::Ecdsa256KeyRecord &aKey)
 {
     OT_ASSERT(aKey.IsValid());
 
     mKey = aKey;
-}
-
-void Server::Host::SetLease(uint32_t aLease)
-{
-    mLease = aLease;
-}
-
-void Server::Host::SetKeyLease(uint32_t aKeyLease)
-{
-    mKeyLease = aKeyLease;
 }
 
 TimeMilli Server::Host::GetExpireTime(void) const
@@ -1596,11 +1519,11 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
     if (aRetainName)
     {
         aService->ClearResources();
-        otLogInfoSrp("[server] remove service '%s' (but retain its name)", aService->mFullName);
+        otLogInfoSrp("[server] remove service '%s' (but retain its name)", aService->GetFullName());
     }
     else
     {
-        otLogInfoSrp("[server] fully remove service '%s'", aService->mFullName);
+        otLogInfoSrp("[server] fully remove service '%s'", aService->GetFullName());
     }
 
     if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
@@ -1688,11 +1611,6 @@ Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)
 
 exit:
     return error;
-}
-
-bool Server::Host::Matches(const char *aName) const
-{
-    return mFullName != nullptr && strcmp(mFullName, aName) == 0;
 }
 
 Server::UpdateMetadata *Server::UpdateMetadata::New(Instance &               aInstance,

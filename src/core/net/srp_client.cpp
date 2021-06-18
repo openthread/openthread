@@ -594,7 +594,6 @@ void Client::InvokeCallback(Error aError) const
 
 void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const
 {
-    VerifyOrExit(GetState() != kStateStopped);
     VerifyOrExit(mCallback != nullptr);
     mCallback(aError, &aHostInfo, mServices.GetHead(), aRemovedServices, mCallbackContext);
 

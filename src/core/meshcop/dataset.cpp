@@ -73,7 +73,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     mPanId           = Mac::GenerateRandomPanId();
     static_cast<SecurityPolicy &>(mSecurityPolicy).SetToDefault();
 
-    SuccessOrExit(error = static_cast<MasterKey &>(mMasterKey).GenerateRandom());
+    SuccessOrExit(error = static_cast<NetworkKey &>(mNetworkKey).GenerateRandom());
     SuccessOrExit(error = static_cast<Pskc &>(mPskc).GenerateRandom());
     SuccessOrExit(error = Random::Crypto::FillBuffer(mExtendedPanId.m8, sizeof(mExtendedPanId.m8)));
     SuccessOrExit(error = static_cast<Ip6::NetworkPrefix &>(mMeshLocalPrefix).GenerateRandomUla());
@@ -81,7 +81,7 @@ Error Dataset::Info::GenerateRandom(Instance &aInstance)
     snprintf(mNetworkName.m8, sizeof(mNetworkName), "OpenThread-%04x", mPanId);
 
     mComponents.mIsActiveTimestampPresent = true;
-    mComponents.mIsMasterKeyPresent       = true;
+    mComponents.mIsNetworkKeyPresent      = true;
     mComponents.mIsNetworkNamePresent     = true;
     mComponents.mIsExtendedPanIdPresent   = true;
     mComponents.mIsMeshLocalPrefixPresent = true;
@@ -99,9 +99,9 @@ bool Dataset::Info::IsSubsetOf(const Info &aOther) const
 {
     bool isSubset = false;
 
-    if (IsMasterKeyPresent())
+    if (IsNetworkKeyPresent())
     {
-        VerifyOrExit(aOther.IsMasterKeyPresent() && GetMasterKey() == aOther.GetMasterKey());
+        VerifyOrExit(aOther.IsNetworkKeyPresent() && GetNetworkKey() == aOther.GetNetworkKey());
     }
 
     if (IsNetworkNamePresent())
@@ -223,8 +223,8 @@ void Dataset::ConvertTo(Info &aDatasetInfo) const
             aDatasetInfo.SetMeshLocalPrefix(static_cast<const MeshLocalPrefixTlv *>(cur)->GetMeshLocalPrefix());
             break;
 
-        case Tlv::kNetworkMasterKey:
-            aDatasetInfo.SetMasterKey(static_cast<const NetworkMasterKeyTlv *>(cur)->GetNetworkMasterKey());
+        case Tlv::kNetworkKey:
+            aDatasetInfo.SetNetworkKey(static_cast<const NetworkKeyTlv *>(cur)->GetNetworkKey());
             break;
 
         case Tlv::kNetworkName:
@@ -336,9 +336,9 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
         IgnoreError(SetTlv(Tlv::kMeshLocalPrefix, aDatasetInfo.GetMeshLocalPrefix()));
     }
 
-    if (aDatasetInfo.IsMasterKeyPresent())
+    if (aDatasetInfo.IsNetworkKeyPresent())
     {
-        IgnoreError(SetTlv(Tlv::kNetworkMasterKey, aDatasetInfo.GetMasterKey()));
+        IgnoreError(SetTlv(Tlv::kNetworkKey, aDatasetInfo.GetNetworkKey()));
     }
 
     if (aDatasetInfo.IsNetworkNamePresent())
@@ -517,7 +517,7 @@ void Dataset::RemoveTlv(Tlv *aTlv)
     mLength -= length;
 }
 
-Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated) const
+Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated) const
 {
     Mac::Mac &  mac        = aInstance.Get<Mac::Mac>();
     KeyManager &keyManager = aInstance.Get<KeyManager>();
@@ -525,9 +525,9 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated
 
     VerifyOrExit(IsValid(), error = kErrorParse);
 
-    if (aIsMasterKeyUpdated)
+    if (aIsNetworkKeyUpdated)
     {
-        *aIsMasterKeyUpdated = false;
+        *aIsNetworkKeyUpdated = false;
     }
 
     for (const Tlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
@@ -562,22 +562,22 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated
             IgnoreError(mac.SetNetworkName(static_cast<const NetworkNameTlv *>(cur)->GetNetworkName()));
             break;
 
-        case Tlv::kNetworkMasterKey:
+        case Tlv::kNetworkKey:
         {
-            const NetworkMasterKeyTlv *key                   = static_cast<const NetworkMasterKeyTlv *>(cur);
+            const NetworkKeyTlv *key                   = static_cast<const NetworkKeyTlv *>(cur);
             bool                       KeyManagerHasValidKey = false;
-            uint8_t                    masterKeyLiteral[OT_MASTER_KEY_SIZE];
-            IgnoreError(keyManager.GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
+            uint8_t                    networkKeyLiteral[OT_NETWORK_KEY_SIZE];
+            IgnoreError(keyManager.GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
 
-            KeyManagerHasValidKey = (memcmp(masterKeyLiteral, key->GetNetworkMasterKey().mKeyMaterial.key,
-                                            sizeof(key->GetNetworkMasterKey().mKeyMaterial.key)) == 0);
+            KeyManagerHasValidKey = (memcmp(networkKeyLiteral, key->GetNetworkKey().mKeyMaterial.key,
+                                            sizeof(key->GetNetworkKey().mKeyMaterial.key)) == 0);
 
-            if (aIsMasterKeyUpdated && !KeyManagerHasValidKey)
+            if (aIsNetworkKeyUpdated && !KeyManagerHasValidKey)
             {
-                *aIsMasterKeyUpdated = true;
+                *aIsNetworkKeyUpdated = true;
             }
 
-            IgnoreError(keyManager.SetMasterKey(key->GetNetworkMasterKey()));
+            IgnoreError(keyManager.SetNetworkKey(key->GetNetworkKey()));
             break;
         }
 

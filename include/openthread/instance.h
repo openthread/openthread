@@ -53,7 +53,7 @@ extern "C" {
  * @note This number versions both OpenThread platform and user APIs.
  *
  */
-#define OPENTHREAD_API_VERSION (124)
+#define OPENTHREAD_API_VERSION (126)
 
 /**
  * @addtogroup api-instance
@@ -150,7 +150,7 @@ enum
     OT_CHANGED_THREAD_PANID                 = 1 << 15, ///< Thread network PAN Id changed
     OT_CHANGED_THREAD_NETWORK_NAME          = 1 << 16, ///< Thread network name changed
     OT_CHANGED_THREAD_EXT_PANID             = 1 << 17, ///< Thread network extended PAN ID changed
-    OT_CHANGED_MASTER_KEY                   = 1 << 18, ///< Master key changed
+    OT_CHANGED_NETWORK_KEY                  = 1 << 18, ///< Network key changed
     OT_CHANGED_PSKC                         = 1 << 19, ///< PSKc changed
     OT_CHANGED_SECURITY_POLICY              = 1 << 20, ///< Security Policy changed
     OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL  = 1 << 21, ///< Channel Manager new pending Thread channel changed

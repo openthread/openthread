@@ -35,10 +35,11 @@
 #include "common/instance.hpp"
 #include "utils/parse_cmdline.hpp"
 
-#include "test_util.h"
+#include "test_util.hpp"
 
 using ot::Utils::CmdLineParser::ParseAsBool;
 using ot::Utils::CmdLineParser::ParseAsHexString;
+using ot::Utils::CmdLineParser::ParseAsHexStringSegment;
 using ot::Utils::CmdLineParser::ParseAsInt16;
 using ot::Utils::CmdLineParser::ParseAsInt32;
 using ot::Utils::CmdLineParser::ParseAsInt8;
@@ -242,12 +243,17 @@ void TestParsingInts(void)
 
 void TestParsingHexStrings(void)
 {
-    const char    kHexString[]   = "DeadBeefCafeBabe";
-    const uint8_t kParsedArray[] = {0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe, 0xba, 0xbe};
+    const char    kEvenHexString[]   = "DeadBeefCafeBabe";
+    const uint8_t kEvenParsedArray[] = {0xde, 0xad, 0xbe, 0xef, 0xca, 0xfe, 0xba, 0xbe};
 
-    uint8_t  buffer[sizeof(kParsedArray)];
-    uint8_t  buf3[3];
-    uint16_t len;
+    const char    kOddHexString[]   = "abcdef9876543";
+    const uint8_t kOddParsedArray[] = {0xa, 0xbc, 0xde, 0xf9, 0x87, 0x65, 0x43};
+
+    uint8_t        buffer[sizeof(kEvenParsedArray)];
+    uint8_t        buf3[3];
+    uint16_t       len;
+    const char *   string;
+    const uint8_t *bufPtr;
 
     // Verify `ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)`
 
@@ -272,37 +278,78 @@ void TestParsingHexStrings(void)
     VerifyOrQuit(ParseAsHexString("1122334", buf3) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
     VerifyOrQuit(ParseAsHexString("11223344", buf3) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
     SuccessOrQuit(ParseAsHexString("abbade", buf3), "ParseAsHexString() failed");
+
     VerifyOrQuit(buf3[0] == 0xab && buf3[1] == 0xba && buf3[2] == 0xde, "ParseAsHexString() parsed incorrectly");
+    SuccessOrQuit(ParseAsHexString("012345", buf3), "ParseAsHexString() failed");
+    VerifyOrQuit(buf3[0] == 0x01 && buf3[1] == 0x23 && buf3[2] == 0x45, "ParseAsHexString() parsed incorrectly");
+    SuccessOrQuit(ParseAsHexString("12345", buf3), "ParseAsHexString() failed with odd length");
+    VerifyOrQuit(buf3[0] == 0x01 && buf3[1] == 0x23 && buf3[2] == 0x45, "ParseAsHexString() parsed incorrectly");
 
-    SuccessOrQuit(ParseAsHexString(kHexString, buffer), "ParseAsHexString failed");
-    VerifyOrQuit(memcmp(buffer, kParsedArray, sizeof(buffer)) == 0, "ParseAsHexString() parsed incorrectly");
+    SuccessOrQuit(ParseAsHexString(kEvenHexString, buffer), "ParseAsHexString failed");
+    VerifyOrQuit(memcmp(buffer, kEvenParsedArray, sizeof(buffer)) == 0, "ParseAsHexString() parsed incorrectly");
 
-    // Verify truncation
+    // Verify `ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)`
 
+    printf("----------------------------------------------------------\n");
     len = sizeof(buffer);
 
-    SuccessOrQuit(ParseAsHexString(kHexString, len, buffer), "ParseAsHexString failed");
-    VerifyOrQuit(len == sizeof(kParsedArray), "ParseAsHexString() parsed incorrectly");
-    VerifyOrQuit(memcmp(buffer, kParsedArray, len) == 0, "ParseAsHexString() parsed incorrectly");
+    SuccessOrQuit(ParseAsHexString(kEvenHexString, len, buffer), "ParseAsHexString() failed");
+    VerifyOrQuit(len == sizeof(kEvenParsedArray), "ParseAsHexString() parsed incorrectly");
+    VerifyOrQuit(memcmp(buffer, kEvenParsedArray, len) == 0, "ParseAsHexString() parsed incorrectly");
+    DumpBuffer(kEvenHexString, buffer, len);
 
-    SuccessOrQuit(ParseAsHexString(kHexString + 1, len, buffer), "ParseAsHexString failed");
-    VerifyOrQuit(len == sizeof(kParsedArray), "ParseAsHexString() parsed incorrectly");
-    VerifyOrQuit(memcmp(buffer + 1, kParsedArray + 1, len - 1) == 0, "ParseAsHexString() parsed incorrectly");
-    VerifyOrQuit(buffer[0] == 0xe, "ParseAsHexString() parsed incorrectly");
+    SuccessOrQuit(ParseAsHexString(kOddHexString, len, buffer), "ParseAsHexString() failed");
+    VerifyOrQuit(len == sizeof(kOddParsedArray), "ParseAsHexString() parsed incorrectly");
+    VerifyOrQuit(memcmp(buffer, kOddParsedArray, len) == 0, "ParseAsHexString() parsed incorrectly");
+    DumpBuffer(kOddHexString, buffer, len);
 
-    SuccessOrQuit(ParseAsHexString(kHexString + 2, len, buffer), "ParseAsHexString failed");
-    VerifyOrQuit(len == sizeof(kParsedArray) - 1, "ParseAsHexString() parsed incorrectly");
-    VerifyOrQuit(memcmp(buffer, kParsedArray + 1, len) == 0, "ParseAsHexString() parsed incorrectly");
+    // Verify `ParseAsHexStringSegement()`
 
-    len = sizeof(buffer) - 1;
-    VerifyOrQuit(ParseAsHexString(kHexString, len, buffer, ot::Utils::CmdLineParser::kDisallowTruncate) !=
-                     OT_ERROR_NONE,
-                 "ParseAsHexString passed with bad input");
-    len = sizeof(buffer) - 1;
-    SuccessOrQuit(ParseAsHexString(kHexString, len, buffer, ot::Utils::CmdLineParser::kAllowTruncate),
-                  "ParseAsHexString failed");
-    VerifyOrQuit(len == sizeof(buffer) - 1, "ParseAsHexString() parsed incorrectly");
-    VerifyOrQuit(memcmp(buffer, kParsedArray, len) == 0, "ParseAsHexString() parsed incorrectly");
+    printf("----------------------------------------------------------\n");
+
+    for (uint8_t testIter = 0; testIter <= 1; testIter++)
+    {
+        for (uint8_t segmentLen = 1; segmentLen <= sizeof(buffer); segmentLen++)
+        {
+            if (testIter == 0)
+            {
+                string = kEvenHexString;
+                bufPtr = kEvenParsedArray;
+            }
+            else
+            {
+                string = kOddHexString;
+                bufPtr = kOddParsedArray;
+            }
+
+            len = segmentLen;
+
+            printf("\"%s\" segLen:%d -> ", string, segmentLen);
+
+            while (true)
+            {
+                otError error = ParseAsHexStringSegment(string, len, buffer);
+
+                printf("%d (\"%s\") ", len, string);
+
+                if (error == OT_ERROR_NONE)
+                {
+                    VerifyOrQuit(len <= segmentLen, "ParseAsHexStringSegment() parsed incorrectly");
+                    VerifyOrQuit(memcmp(buffer, bufPtr, len) == 0, "ParseAsHexStringSegment() parsed incorrectly");
+                    VerifyOrQuit(*string == '\0',
+                                 "ParseAsHexStringSegment() failed to update string pointer correctly");
+                    break;
+                }
+
+                VerifyOrQuit(error == OT_ERROR_PENDING, "ParseAsHexStringSegment() failed");
+                VerifyOrQuit(len == segmentLen, "ParseAsHexStringSegment() parsed incorrectly");
+                VerifyOrQuit(memcmp(buffer, bufPtr, len) == 0, "ParseAsHexStringSegment() parsed incorrectly");
+                bufPtr += len;
+            }
+
+            printf("\n");
+        }
+    }
 }
 
 int main(void)

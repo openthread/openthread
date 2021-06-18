@@ -62,8 +62,8 @@ bool Tlv::IsValid(const Tlv &aTlv)
         rval = static_cast<const NetworkNameTlv &>(aTlv).IsValid();
         break;
 
-    case Tlv::kNetworkMasterKey:
-        rval = static_cast<const NetworkMasterKeyTlv &>(aTlv).IsValid();
+    case Tlv::kNetworkKey:
+        rval = static_cast<const NetworkKeyTlv &>(aTlv).IsValid();
         break;
 
     case Tlv::kPskc:

@@ -2560,42 +2560,6 @@ exit:
 }
 #endif // OPENTHREAD_FTD
 
-otError Interpreter::ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[])
-{
-    otError error = OT_ERROR_NONE;
-
-    if (aArgsLength == 0)
-    {
-        const otMasterKey *masterKey = otThreadGetMasterKey(mInstance);
-
-        if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-        {
-            uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-            size_t  mKeyLen;
-
-            SuccessOrExit(error = otPlatCryptoExportKey(masterKey->mKeyMaterial.keyRef, masterKeyLiteral,
-                                                        OT_MASTER_KEY_SIZE, &mKeyLen));
-            OutputBytes(masterKeyLiteral);
-            memset(masterKeyLiteral, 0, OT_MASTER_KEY_SIZE);
-        }
-        else
-        {
-            OutputBytes(masterKey->mKeyMaterial.key);
-        }
-        OutputLine("");
-    }
-    else
-    {
-        otMasterKey key;
-
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.mKeyMaterial.key, sizeof(key.mKeyMaterial.key)));
-        SuccessOrExit(error = otThreadSetMasterKey(mInstance, &key));
-    }
-
-exit:
-    return error;
-}
-
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 otError Interpreter::ProcessMlIid(uint8_t aArgsLength, Arg aArgs[])
 {
@@ -3010,6 +2974,42 @@ otError Interpreter::ProcessNetworkIdTimeout(uint8_t aArgsLength, Arg aArgs[])
     return ProcessGetSet(aArgsLength, aArgs, otThreadGetNetworkIdTimeout, otThreadSetNetworkIdTimeout);
 }
 #endif
+
+otError Interpreter::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgsLength == 0)
+    {
+        const otNetworkKey *networkKey = otThreadGetNetworkKey(mInstance);
+
+        if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+        {
+            uint8_t networkKeyLiteral[OT_NETWORK_KEY_SIZE];
+            size_t  mKeyLen;
+
+            SuccessOrExit(error = otPlatCryptoExportKey(networkKey->mKeyMaterial.keyRef, networkKeyLiteral,
+                                                        OT_NETWORK_KEY_SIZE, &mKeyLen));
+            OutputBytes(networkKeyLiteral);
+            memset(networkKeyLiteral, 0, OT_NETWORK_KEY_SIZE);
+        }
+        else
+        {
+            OutputBytes(networkKey->mKeyMaterial.key);
+        }
+        OutputLine("");
+    }
+    else
+    {
+        otNetworkKey key;
+
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.mKeyMaterial.key, sizeof(key.mKeyMaterial.key)));
+        SuccessOrExit(error = otThreadSetNetworkKey(mInstance, &key));
+    }
+
+exit:
+    return error;
+}
 
 otError Interpreter::ProcessNetworkName(uint8_t aArgsLength, Arg aArgs[])
 {

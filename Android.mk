@@ -218,6 +218,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/coap/coap_secure.cpp                                   \
     src/core/common/crc16.cpp                                       \
     src/core/common/error.cpp                                       \
+    src/core/common/heap_string.cpp                                 \
     src/core/common/instance.cpp                                    \
     src/core/common/logging.cpp                                     \
     src/core/common/message.cpp                                     \

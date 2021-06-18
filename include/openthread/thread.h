@@ -378,35 +378,35 @@ otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance);
 otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 
 /**
- * Get the thrMasterKey.
+ * Get the thrNetworkKey.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
- * @returns A pointer to a buffer containing the thrMasterKey.
+ * @returns A pointer to a buffer containing the thrNetworkKey.
  *
- * @sa otThreadSetMasterKey
+ * @sa otThreadSetNetworkKey
  *
  */
-const otMasterKey *otThreadGetMasterKey(otInstance *aInstance);
+const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
 
 /**
- * Set the thrMasterKey.
+ * Set the thrNetworkKey.
  *
  * This function succeeds only when Thread protocols are disabled.  A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aKey        A pointer to a buffer containing the thrMasterKey.
+ * @param[in]  aKey        A pointer to a buffer containing the thrNetworkKey.
  *
- * @retval OT_ERROR_NONE            Successfully set the thrMasterKey.
+ * @retval OT_ERROR_NONE            Successfully set the thrNetworkKey.
  * @retval OT_ERROR_INVALID_ARGS    If aKeyLength is larger than 16.
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
  *
- * @sa otThreadGetMasterKey
+ * @sa otThreadGetNetworkKey
  *
  */
-otError otThreadSetMasterKey(otInstance *aInstance, const otMasterKey *aKey);
+otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);
 
 /**
  * This function returns a pointer to the Thread Routing Locator (RLOC) address.

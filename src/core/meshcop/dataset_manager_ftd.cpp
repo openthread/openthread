@@ -76,8 +76,8 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     Tlv::Type       type;
     bool            isUpdateFromCommissioner = false;
     bool            doesAffectConnectivity   = false;
-    bool            doesAffectMasterKey      = false;
-    bool            hasMasterKey             = false;
+    bool            doesAffectNetworkKey     = false;
+    bool            hasNetworkKey            = false;
     StateTlv::State state                    = StateTlv::kReject;
     Dataset         dataset(GetType());
 
@@ -86,7 +86,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     ChannelTlv           channel;
     uint16_t             sessionId;
     Mle::MeshLocalPrefix meshLocalPrefix;
-    MasterKey            masterKey;
+    NetworkKey           networkKey;
     uint16_t             panId;
 
     activeTimestamp.SetLength(0);
@@ -151,27 +151,27 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         doesAffectConnectivity = true;
     }
 
-    // check network master key
-    if (Tlv::Find<NetworkMasterKeyTlv>(aMessage, masterKey) == kErrorNone)
+    // check network key
+    if (Tlv::Find<NetworkKeyTlv>(aMessage, networkKey) == kErrorNone)
     {
-        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
-        hasMasterKey = true;
+        uint8_t networkKeyLiteral[OT_NETWORK_KEY_SIZE];
+        IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
+        hasNetworkKey = true;
 
-        if (memcmp(masterKey.mKeyMaterial.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0)
+        if (memcmp(networkKey.mKeyMaterial.key, networkKeyLiteral, OT_NETWORK_KEY_SIZE) != 0)
         {
             doesAffectConnectivity = true;
-            doesAffectMasterKey    = true;
+            doesAffectNetworkKey   = true;
         }
     }
 
     // check active timestamp rollback
     if (type == Tlv::kPendingTimestamp)
     {
-        uint8_t masterKeyLiteral[OT_MASTER_KEY_SIZE];
-        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(masterKeyLiteral, OT_MASTER_KEY_SIZE));
+        uint8_t networkKeyLiteral[OT_NETWORK_KEY_SIZE];
+        IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
 
-        if (!hasMasterKey || (memcmp(masterKey.mKeyMaterial.key, masterKeyLiteral, OT_MASTER_KEY_SIZE) != 0))
+        if (!hasNetworkKey || (memcmp(networkKey.mKeyMaterial.key, networkKeyLiteral, OT_NETWORK_KEY_SIZE) != 0))
         {
             // no change to master key, active timestamp must be ahead
             const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
@@ -223,7 +223,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
             {
                 DelayTimerTlv &delayTimerTlv = static_cast<DelayTimerTlv &>(static_cast<Tlv &>(datasetTlv));
 
-                if (doesAffectMasterKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
+                if (doesAffectNetworkKey && delayTimerTlv.GetDelayTimer() < DelayTimerTlv::kDelayTimerDefault)
                 {
                     delayTimerTlv.SetDelayTimer(DelayTimerTlv::kDelayTimerDefault);
                 }
@@ -359,11 +359,11 @@ Error ActiveDataset::GenerateLocal(void)
         IgnoreError(dataset.SetTlv(Tlv::kMeshLocalPrefix, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     }
 
-    if (dataset.GetTlv<NetworkMasterKeyTlv>() == nullptr)
+    if (dataset.GetTlv<NetworkKeyTlv>() == nullptr)
     {
-        otMasterKey aMasterKey;
-        IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(aMasterKey.mKeyMaterial.key, OT_MASTER_KEY_SIZE));
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkMasterKey, aMasterKey));
+        otNetworkKey networkKey;
+        IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKey.mKeyMaterial.key, OT_NETWORK_KEY_SIZE));
+        IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, networkKey));
     }
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)

@@ -91,6 +91,7 @@ set(COMMON_SOURCES
     coap/coap_secure.cpp
     common/crc16.cpp
     common/error.cpp
+    common/heap_string.cpp
     common/instance.cpp
     common/logging.cpp
     common/message.cpp

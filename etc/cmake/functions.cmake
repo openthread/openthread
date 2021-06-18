@@ -41,3 +41,13 @@ function(ot_get_platforms arg_platforms)
     list(SORT result)
     set(${arg_platforms} "${result}" PARENT_SCOPE)
 endfunction()
+
+function(ot_git_version git_version)
+    execute_process(
+        COMMAND git describe --dirty --always
+        WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+        OUTPUT_VARIABLE GIT_REV OUTPUT_STRIP_TRAILING_WHITESPACE
+        ERROR_QUIET
+    )
+    set(${git_version} "${GIT_REV}" PARENT_SCOPE)
+endfunction()

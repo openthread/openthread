@@ -128,7 +128,7 @@ proc switch_node {id} {
 proc setup_leader {} {
     send "dataset init new\n"
     expect_line "Done"
-    send "dataset masterkey 00112233445566778899aabbccddeeff\n"
+    send "dataset networkkey 00112233445566778899aabbccddeeff\n"
     expect_line "Done"
     send "dataset commit active\n"
     expect_line "Done"
@@ -195,7 +195,7 @@ proc setup_default_network {} {
     expect_line "Done"
     send "panid 0xface\n"
     expect_line "Done"
-    send "masterkey 00112233445566778899aabbccddeeff\n"
+    send "networkkey 00112233445566778899aabbccddeeff\n"
     expect_line "Done"
 }
 

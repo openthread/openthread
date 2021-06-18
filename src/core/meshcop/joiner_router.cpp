@@ -315,20 +315,20 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Error          error;
     Coap::Message *message = nullptr;
     Dataset        dataset(Dataset::kActive);
-    MasterKey      mMasterKey;
+    NetworkKey     networkKey;
 
     NetworkNameTlv networkName;
     const Tlv *    tlv;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
-    IgnoreError(Get<KeyManager>().GetMasterKey().CopyKey(mMasterKey.mKeyMaterial.key, OT_MASTER_KEY_SIZE));
+    IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKey.mKeyMaterial.key, OT_NETWORK_KEY_SIZE));
 
     message->InitAsConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kJoinerEntrust));
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    SuccessOrExit(error = Tlv::Append<NetworkMasterKeyTlv>(*message, mMasterKey));
+    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, networkKey));
     SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<Mac::Mac>().GetExtendedPanId()));
 

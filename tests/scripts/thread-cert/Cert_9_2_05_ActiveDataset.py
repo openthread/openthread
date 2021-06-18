@@ -30,7 +30,7 @@
 import unittest
 
 import thread_cert
-from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, NETWORK_DATA_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ACTIVE_OPERATION_DATASET_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
+from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, NETWORK_DATA_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, ACTIVE_TIMESTAMP_TLV, ACTIVE_OPERATION_DATASET_TLV, NM_CHANNEL_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_NETWORK_KEY_TLV, NM_NETWORK_NAME_TLV, NM_PAN_ID_TLV, NM_PSKC_TLV, NM_SECURITY_POLICY_TLV
 from pktverify.packet_verifier import PacketVerifier
 
 ROUTER = 1
@@ -60,14 +60,14 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         ROUTER: {
             'name': 'ROUTER',
             'channel': 11,
-            'master_key': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
             'allowlist': [LEADER]
         },
         LEADER: {
             'name': 'LEADER',
             'channel': 11,
-            'master_key': '00112233445566778899aabbccddeeff',
+            'network_key': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
             'allowlist': [ROUTER]
         },
@@ -96,7 +96,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db80000000001',
             mesh_local='fd00:0db8::',
             network_name='TEST_1',
-            master_key='00112233445566778899aabbccddeeff',
+            network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=11,
             binary='0410d2aa9cd8dff7919122d77d37ec3c1b5f0c030e10e0',
@@ -113,7 +113,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db80000000002',
             mesh_local='fd00:0db8::',
             network_name='TEST_2',
-            master_key='00112233445566778899aabbccddeeff',
+            network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=11,
             binary='041017d672be32b0c24a2f8385f2fbaf1d970c030e10f0',
@@ -130,7 +130,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db80000000003',
             mesh_local='fd00:0db8::',
             network_name='TEST_3',
-            master_key='00112233445566778899aabbccddeeff',
+            network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=11,
             binary='041008f4e9531e8efa8e852d5f4fb951b13e0c030e10f88202aa55',
@@ -146,7 +146,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
             extended_panid='000db80000000003',
             mesh_local='fd00:0db8::',
             network_name='TEST_3',
-            master_key='00112233445566778899aabbccddeeff',
+            network_key='00112233445566778899aabbccddeeff',
             panid=0xface,
             channel=63,
             binary='041008f4e9531e8efa8e852d5f4fb951b13e0c030e10f8',
@@ -215,7 +215,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         #                 - Channel Mask TLV [new value set in Step 2]
         #                 - Extended PAN ID TLV [new value set in Step 2]
         #                 - Network Mesh-Local Prefix TLV
-        #                 - Network Master Key TLV
+        #                 - Network Key TLV
         #                 - Network Name TLV [new value set in Step 2]
         #                 - PAN ID TLV
         #                 - PSKc TLV [new value set in Step 2]
@@ -236,7 +236,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                               NM_CHANNEL_MASK_TLV,
                               NM_EXTENDED_PAN_ID_TLV,
                               NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
-                              NM_NETWORK_MASTER_KEY_TLV,
+                              NM_NETWORK_KEY_TLV,
                               NM_NETWORK_NAME_TLV,
                               NM_PAN_ID_TLV,
                               NM_PSKC_TLV,
@@ -308,7 +308,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
         #                  - Channel Mask TLV [new value set in Step 9]
         #                  - Extended PAN ID TLV [new value set in Step 9]
         #                  - Network Mesh-Local Prefix TLV
-        #                  - Network Master Key TLV
+        #                  - Network Key TLV
         #                  - Network Name TLV [new value set in Step 9]
         #                  - PAN ID TLV
         #                  - PSKc TLV [new value set in Step 9]
@@ -329,7 +329,7 @@ class Cert_9_2_05_ActiveDataset(thread_cert.TestCase):
                               NM_CHANNEL_MASK_TLV,
                               NM_EXTENDED_PAN_ID_TLV,
                               NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
-                              NM_NETWORK_MASTER_KEY_TLV,
+                              NM_NETWORK_KEY_TLV,
                               NM_NETWORK_NAME_TLV,
                               NM_PAN_ID_TLV,
                               NM_PSKC_TLV,

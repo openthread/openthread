@@ -100,12 +100,12 @@ public:
         bool IsPendingTimestampPresent(void) const { return mIsPendingTimestampPresent; }
 
         /**
-         * This method indicates whether or not the Network Master Key is present in the Dataset.
+         * This method indicates whether or not the Network Key is present in the Dataset.
          *
-         * @returns TRUE if Network Master Key is present, FALSE otherwise.
+         * @returns TRUE if Network Key is present, FALSE otherwise.
          *
          */
-        bool IsMasterKeyPresent(void) const { return mIsMasterKeyPresent; }
+        bool IsNetworkKeyPresent(void) const { return mIsNetworkKeyPresent; }
 
         /**
          * This method indicates whether or not the Network Name is present in the Dataset.
@@ -250,46 +250,46 @@ public:
         }
 
         /**
-         * This method indicates whether or not the Network Master Key is present in the Dataset.
+         * This method indicates whether or not the Network Key is present in the Dataset.
          *
-         * @returns TRUE if Network Master Key is present, FALSE otherwise.
+         * @returns TRUE if Network Key is present, FALSE otherwise.
          *
          */
-        bool IsMasterKeyPresent(void) const { return mComponents.mIsMasterKeyPresent; }
+        bool IsNetworkKeyPresent(void) const { return mComponents.mIsNetworkKeyPresent; }
 
         /**
-         * This method gets the Network Master Key in the Dataset.
+         * This method gets the Network Key in the Dataset.
          *
-         * This method MUST be used when Network Master Key component is present in the Dataset, otherwise its behavior
+         * This method MUST be used when Network Key component is present in the Dataset, otherwise its behavior
          * is undefined.
          *
-         * @returns The Network Master Key in the Dataset.
+         * @returns The Network Key in the Dataset.
          *
          */
-        const MasterKey &GetMasterKey(void) const { return static_cast<const MasterKey &>(mMasterKey); }
+        const NetworkKey &GetNetworkKey(void) const { return static_cast<const NetworkKey &>(mNetworkKey); }
 
         /**
-         * This method sets the Network Master Key in the Dataset.
+         * This method sets the Network Key in the Dataset.
          *
-         * @param[in] aMasterKey  A Master Key.
+         * @param[in] aNetworkKey  A Network Key.
          *
          */
-        void SetMasterKey(const MasterKey &aMasterKey)
+        void SetNetworkKey(const NetworkKey &aNetworkKey)
         {
-            mMasterKey                      = aMasterKey;
-            mComponents.mIsMasterKeyPresent = true;
+            mNetworkKey                      = aNetworkKey;
+            mComponents.mIsNetworkKeyPresent = true;
         }
 
         /**
-         * This method returns a reference to the Network Master Key in the Dataset to be updated by caller.
+         * This method returns a reference to the Network Key in the Dataset to be updated by caller.
          *
-         * @returns A reference to the Network Master Key in the Dataset.
+         * @returns A reference to the Network Key in the Dataset.
          *
          */
-        MasterKey &UpdateMasterKey(void)
+        NetworkKey &UpdateNetworkKey(void)
         {
-            mComponents.mIsMasterKeyPresent = true;
-            return static_cast<MasterKey &>(mMasterKey);
+            mComponents.mIsNetworkKeyPresent = true;
+            return static_cast<NetworkKey &>(mNetworkKey);
         }
 
         /**
@@ -585,7 +585,7 @@ public:
         /**
          * This method populates the Dataset with random fields.
          *
-         * The Master Key, PSKc, Mesh Local Prefix, PAN ID, and Extended PAN ID are generated randomly (crypto-secure)
+         * The Network Key, PSKc, Mesh Local Prefix, PAN ID, and Extended PAN ID are generated randomly (crypto-secure)
          * with Network Name set to "OpenThread-%04x" with PAN ID appended as hex. The Channel is chosen randomly from
          * radio's preferred channel mask, Channel Mask is set from radio's supported mask, and Security Policy Flags
          * from current `KeyManager` value.
@@ -856,14 +856,14 @@ public:
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
      *
-     * @param[in]  aInstance           A reference to the OpenThread instance.
-     * @param[out] aIsMasterKeyUpdated A pointer to where to place whether master key was updated.
+     * @param[in]  aInstance            A reference to the OpenThread instance.
+     * @param[out] aIsNetworkKeyUpdated A pointer to where to place whether network key was updated.
      *
      * @retval kErrorNone   Successfully applied configuration.
      * @retval kErrorParse  The dataset has at least one TLV with invalid format.
      *
      */
-    Error ApplyConfiguration(Instance &aInstance, bool *aIsMasterKeyUpdated = nullptr) const;
+    Error ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdated = nullptr) const;
 
     /**
      * This method converts a Pending Dataset to an Active Dataset.

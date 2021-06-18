@@ -65,7 +65,6 @@ Done
 - [log](#log-filename-filename)
 - [mac](#mac-retries-direct)
 - [macfilter](#macfilter)
-- [masterkey](#masterkey)
 - [mliid](#mliid-iid)
 - [mlr](#mlr-reg-ipaddr--timeout)
 - [mode](#mode)
@@ -75,6 +74,7 @@ Done
 - [netstat](#netstat)
 - [networkdiagnostic](#networkdiagnostic-get-addr-type-)
 - [networkidtimeout](#networkidtimeout)
+- [networkkey](#networkkey)
 - [networkname](#networkname)
 - [networktime](#networktime)
 - [panid](#panid)
@@ -1608,25 +1608,6 @@ Set the log level.
 Done
 ```
 
-### masterkey
-
-Get the Thread Master Key value.
-
-```bash
-> masterkey
-00112233445566778899aabbccddeeff
-Done
-```
-
-### masterkey \<key\>
-
-Set the Thread Master Key value.
-
-```bash
-> masterkey 00112233445566778899aabbccddeeff
-Done
-```
-
 ### mliid \<iid\>
 
 Set the Mesh Local IID.
@@ -1831,6 +1812,25 @@ Set the NETWORK_ID_TIMEOUT parameter used in the Router role.
 
 ```bash
 > networkidtimeout 120
+Done
+```
+
+### networkkey
+
+Get the Thread Network Key value.
+
+```bash
+> networkkey
+00112233445566778899aabbccddeeff
+Done
+```
+
+### networkkey \<key\>
+
+Set the Thread Network Key value.
+
+```bash
+> networkkey 00112233445566778899aabbccddeeff
 Done
 ```
 

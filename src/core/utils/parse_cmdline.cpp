@@ -275,67 +275,88 @@ exit:
 }
 #endif // #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
-Error ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)
+enum HexStringParseMode
 {
-    Error    error;
-    uint16_t readSize = aSize;
+    kModeExtactSize,   // Parse hex string expecting an exact size (number of bytes when parsed).
+    kModeUpToSize,     // Parse hex string expecting less than or equal a given size.
+    kModeAllowPartial, // Allow parsing of partial segments.
+};
 
-    SuccessOrExit(error = ParseAsHexString(aString, readSize, aBuffer, kDisallowTruncate));
-    VerifyOrExit(readSize == aSize, error = kErrorInvalidArgs);
+static Error ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuffer, HexStringParseMode aMode)
+{
+    Error  error        = kErrorNone;
+    size_t stringLength = strlen(aString);
+    size_t expectedSize = (stringLength + 1) / 2;
+    size_t parsedSize   = 0;
+    bool   skipFirstDigit;
+
+    switch (aMode)
+    {
+    case kModeExtactSize:
+        VerifyOrExit(expectedSize == aSize, error = kErrorInvalidArgs);
+        break;
+    case kModeUpToSize:
+        VerifyOrExit(expectedSize <= aSize, error = kErrorInvalidArgs);
+        break;
+    case kModeAllowPartial:
+        break;
+    }
+
+    // If number of chars in hex string is odd, we skip parsing
+    // the first digit.
+
+    skipFirstDigit = ((stringLength & 1) != 0);
+
+    while (parsedSize < expectedSize)
+    {
+        uint8_t digit;
+
+        if ((aMode == kModeAllowPartial) && (parsedSize == aSize))
+        {
+            // If partial parse mode is allowed, stop once we read the
+            // requested size.
+            ExitNow(error = kErrorPending);
+        }
+
+        if (skipFirstDigit)
+        {
+            *aBuffer       = 0;
+            skipFirstDigit = false;
+        }
+        else
+        {
+            SuccessOrExit(error = ParseHexDigit(*aString, digit));
+            aString++;
+            *aBuffer = static_cast<uint8_t>(digit << 4);
+        }
+
+        SuccessOrExit(error = ParseHexDigit(*aString, digit));
+        aString++;
+        *aBuffer |= digit;
+
+        aBuffer++;
+        parsedSize++;
+    }
+
+    aSize = static_cast<uint16_t>(parsedSize);
 
 exit:
     return error;
 }
 
-Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer, HexStringParseMode aMode)
+Error ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)
 {
-    Error       error     = kErrorNone;
-    uint8_t     byte      = 0;
-    uint16_t    readBytes = 0;
-    const char *hex       = aString;
-    size_t      hexLength = strlen(aString);
-    uint8_t     numChars;
+    return ParseHexString(aString, aSize, aBuffer, kModeExtactSize);
+}
 
-    if (aMode == kDisallowTruncate)
-    {
-        VerifyOrExit((hexLength + 1) / 2 <= aSize, error = kErrorInvalidArgs);
-    }
+Error ParseAsHexString(const char *aString, uint16_t &aSize, uint8_t *aBuffer)
+{
+    return ParseHexString(aString, aSize, aBuffer, kModeUpToSize);
+}
 
-    // Handle the case where number of chars in hex string is odd.
-    numChars = hexLength & 1;
-
-    while (*hex != '\0')
-    {
-        uint8_t digit;
-
-        SuccessOrExit(error = ParseHexDigit(*hex, digit));
-        byte |= digit;
-
-        hex++;
-        numChars++;
-
-        if (numChars >= 2)
-        {
-            numChars   = 0;
-            *aBuffer++ = byte;
-            byte       = 0;
-            readBytes++;
-
-            if (readBytes == aSize)
-            {
-                ExitNow();
-            }
-        }
-        else
-        {
-            byte <<= 4;
-        }
-    }
-
-    aSize = readBytes;
-
-exit:
-    return error;
+Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aBuffer)
+{
+    return ParseHexString(aString, aSize, aBuffer, kModeAllowPartial);
 }
 
 void Arg::CopyArgsToStringArray(Arg aArgs[], uint8_t aArgsLength, char *aStrings[])
