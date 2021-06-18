@@ -366,7 +366,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     }
     else if (existingHost != nullptr)
     {
-        const Service *service = nullptr;
+        Service *service = nullptr;
 
         // Merge current updates into existing host.
 
@@ -386,9 +386,9 @@ void Server::CommitSrpUpdate(Error                    aError,
                 Service *newService = existingHost->AddService(service->GetFullName());
 
                 VerifyOrExit(newService != nullptr, aError = kErrorNoBufs);
-                SuccessOrExit(aError = newService->CopyResourcesFrom(*service));
+                newService->TakeResourcesFrom(*service);
                 otLogInfoSrp("[server] %s service %s", (existingService != nullptr) ? "update existing" : "add new",
-                             service->GetFullName());
+                             newService->GetFullName());
             }
         }
 
@@ -1354,27 +1354,6 @@ TimeMilli Server::Service::GetKeyExpireTime(void) const
     return mTimeLastUpdate + Time::SecToMsec(GetHost().GetKeyLease());
 }
 
-Error Server::Service::SetTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength)
-{
-    Error    error = kErrorNone;
-    uint8_t *txtData;
-
-    txtData = static_cast<uint8_t *>(Instance::HeapCAlloc(1, aTxtDataLength));
-    VerifyOrExit(txtData != nullptr, error = kErrorNoBufs);
-
-    memcpy(txtData, aTxtData, aTxtDataLength);
-
-    Instance::HeapFree(mTxtData);
-    mTxtData   = txtData;
-    mTxtLength = aTxtDataLength;
-
-    // If a TXT RR is associated to this service, the service will retain.
-    mIsDeleted = false;
-
-exit:
-    return error;
-}
-
 Error Server::Service::SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error    error = kErrorNone;
@@ -1408,20 +1387,22 @@ void Server::Service::ClearResources(void)
     mTxtLength = 0;
 }
 
-Error Server::Service::CopyResourcesFrom(const Service &aService)
+void Server::Service::TakeResourcesFrom(Service &aService)
 {
-    Error error;
+    // Take ownership and move the heap allocated `mTxtData` buffer
+    // from `aService`.
+    Instance::HeapFree(mTxtData);
+    mTxtData            = aService.mTxtData;
+    mTxtLength          = aService.mTxtLength;
+    aService.mTxtData   = nullptr;
+    aService.mTxtLength = 0;
 
-    SuccessOrExit(error = SetTxtData(aService.mTxtData, aService.mTxtLength));
     mPriority = aService.mPriority;
     mWeight   = aService.mWeight;
     mPort     = aService.mPort;
 
     mIsDeleted      = false;
     mTimeLastUpdate = TimerMilli::GetNow();
-
-exit:
-    return error;
 }
 
 bool Server::Service::MatchesServiceName(const char *aServiceName) const
