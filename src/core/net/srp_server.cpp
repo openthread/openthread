@@ -47,7 +47,8 @@
 namespace ot {
 namespace Srp {
 
-static const char kDefaultDomain[] = "default.service.arpa.";
+static const char kDefaultDomain[]       = "default.service.arpa.";
+static const char kServiceSubTypeLabel[] = "._sub.";
 
 static Dns::UpdateHeader::Response ErrorToDnsResponseCode(Error aError)
 {
@@ -74,6 +75,9 @@ static Dns::UpdateHeader::Response ErrorToDnsResponseCode(Error aError)
 
     return responseCode;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// Server
 
 Server::Server(Instance &aInstance)
     : InstanceLocator(aInstance)
@@ -248,40 +252,29 @@ exit:
     return;
 }
 
-const Server::Service *Server::FindService(const char *aFullName) const
-{
-    const Service *service = nullptr;
-
-    for (const Host *host = mHosts.GetHead(); host != nullptr; host = host->GetNext())
-    {
-        service = host->FindService(aFullName);
-        if (service != nullptr)
-        {
-            break;
-        }
-    }
-
-    return service;
-}
-
 bool Server::HasNameConflictsWith(Host &aHost) const
 {
-    bool           hasConflicts = false;
-    const Service *service      = nullptr;
-    const Host *   existingHost = mHosts.FindMatching(aHost.GetFullName());
+    bool        hasConflicts = false;
+    const Host *existingHost = mHosts.FindMatching(aHost.GetFullName());
 
     if (existingHost != nullptr && *aHost.GetKey() != *existingHost->GetKey())
     {
         ExitNow(hasConflicts = true);
     }
 
-    // Check not only services of this host but all hosts.
-    while ((service = aHost.GetNextService(service)) != nullptr)
+    for (const Service::Description *desc = aHost.mServiceDescriptions.GetHead(); desc != nullptr;
+         desc                             = desc->GetNext())
     {
-        const Service *existingService = FindService(service->GetFullName());
-        if (existingService != nullptr && *service->GetHost().GetKey() != *existingService->GetHost().GetKey())
+        // Check on all hosts for a matching service description with
+        // the same instance name and if found, verify that it has the
+        // same key.
+
+        for (const Host *host = mHosts.GetHead(); host != nullptr; host = host->GetNext())
         {
-            ExitNow(hasConflicts = true);
+            if (host->FindServiceDescription(desc->GetInstanceName()) != nullptr)
+            {
+                VerifyOrExit(*aHost.GetKey() == *host->GetKey(), hasConflicts = true);
+            }
         }
     }
 
@@ -353,11 +346,10 @@ void Server::CommitSrpUpdate(Error                    aError,
         }
         else if (existingHost != nullptr)
         {
-            Service *service = nullptr;
-
             existingHost->SetKeyLease(aHost.GetKeyLease());
             RemoveHost(existingHost, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
-            while ((service = existingHost->GetNextService(service)) != nullptr)
+
+            for (Service *service = existingHost->mServices.GetHead(); service != nullptr; service = service->GetNext())
             {
                 existingHost->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
@@ -365,37 +357,21 @@ void Server::CommitSrpUpdate(Error                    aError,
     }
     else if (existingHost != nullptr)
     {
-        Service *service = nullptr;
-
-        // Merge current updates into existing host.
-
-        otLogInfoSrp("[server] update host %s", existingHost->GetFullName());
-
-        existingHost->CopyResourcesFrom(aHost);
-        while ((service = aHost.GetNextService(service)) != nullptr)
-        {
-            Service *existingService = existingHost->FindService(service->GetFullName());
-
-            if (service->mIsDeleted)
-            {
-                existingHost->RemoveService(existingService, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
-            }
-            else
-            {
-                Service *newService = existingHost->AddService(service->GetFullName());
-
-                VerifyOrExit(newService != nullptr, aError = kErrorNoBufs);
-                newService->TakeResourcesFrom(*service);
-                otLogInfoSrp("[server] %s service %s", (existingService != nullptr) ? "update existing" : "add new",
-                             newService->GetFullName());
-            }
-        }
+        SuccessOrExit(aError = existingHost->MergeServicesAndResourcesFrom(aHost));
     }
     else
     {
         otLogInfoSrp("[server] add new host %s", aHost.GetFullName());
+
+        for (Service *service = aHost.GetServices(); service != nullptr; service = service->GetNext())
+        {
+            service->mIsCommitted = true;
+            service->Log(Service::kAddNew);
+        }
+
         AddHost(aHost);
         shouldFreeHost = false;
+
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         if (!mHasRegisteredAnyService)
         {
@@ -583,7 +559,7 @@ void Server::HandleDnsUpdate(Message &                aMessage,
     // Parse lease time and validate signature.
     SuccessOrExit(error = ProcessAdditionalSection(host, aMessage, aDnsHeader, aOffset));
 
-    HandleUpdate(aDnsHeader, host, aMessageInfo);
+    HandleUpdate(aDnsHeader, *host, aMessageInfo);
 
 exit:
     if (error != kErrorNone)
@@ -592,6 +568,7 @@ exit:
         {
             host->Free();
         }
+
         SendResponse(aDnsHeader, ErrorToDnsResponseCode(error), aMessageInfo);
     }
 }
@@ -662,64 +639,43 @@ Error Server::ProcessHostDescriptionInstruction(Host &                   aHost,
 
     OT_ASSERT(aHost.GetFullName() == nullptr);
 
-    for (uint16_t i = 0; i < aDnsHeader.GetUpdateRecordCount(); ++i)
+    for (uint16_t numRecords = aDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
         char                name[Dns::Name::kMaxNameSize];
         Dns::ResourceRecord record;
 
         SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
-        // TODO: return `Dns::kResponseNotZone` for names not in the zone.
-        VerifyOrExit(Dns::Name::IsSubDomainOf(name, GetDomain()), error = kErrorSecurity);
+
         SuccessOrExit(error = aMessage.Read(aOffset, record));
 
         if (record.GetClass() == Dns::ResourceRecord::kClassAny)
         {
-            Service *service;
-
             // Delete All RRsets from a name.
             VerifyOrExit(IsValidDeleteAllRecord(record), error = kErrorFailed);
 
-            service = aHost.FindService(name);
-            if (service == nullptr)
-            {
-                // A "Delete All RRsets from a name" RR can only apply to a Service or Host Description.
+            // A "Delete All RRsets from a name" RR can only apply to a Service or Host Description.
 
-                if (aHost.GetFullName())
-                {
-                    VerifyOrExit(aHost.Matches(name), error = kErrorFailed);
-                }
-                else
-                {
-                    SuccessOrExit(error = aHost.SetFullName(name));
-                }
+            if (aHost.FindServiceDescription(name) == nullptr)
+            {
+                // If host name is already set to a different name, `SetFullName()`
+                // will return `kErrorFailed`.
+                SuccessOrExit(error = aHost.SetFullName(name));
                 aHost.ClearResources();
             }
-
-            aOffset += record.GetSize();
-            continue;
         }
-
-        if (record.GetType() == Dns::ResourceRecord::kTypeAaaa)
+        else if (record.GetType() == Dns::ResourceRecord::kTypeAaaa)
         {
             Dns::AaaaRecord aaaaRecord;
 
             VerifyOrExit(record.GetClass() == aZone.GetClass(), error = kErrorFailed);
-            if (aHost.GetFullName() == nullptr)
-            {
-                SuccessOrExit(error = aHost.SetFullName(name));
-            }
-            else
-            {
-                VerifyOrExit(aHost.Matches(name), error = kErrorFailed);
-            }
+
+            SuccessOrExit(error = aHost.SetFullName(name));
 
             SuccessOrExit(error = aMessage.Read(aOffset, aaaaRecord));
             VerifyOrExit(aaaaRecord.IsValid(), error = kErrorParse);
 
             // Tolerate kErrorDrop for AAAA Resources.
             VerifyOrExit(aHost.AddIp6Address(aaaaRecord.GetAddress()) != kErrorNoBufs, error = kErrorNoBufs);
-
-            aOffset += aaaaRecord.GetSize();
         }
         else if (record.GetType() == Dns::ResourceRecord::kTypeKey)
         {
@@ -732,13 +688,9 @@ Error Server::ProcessHostDescriptionInstruction(Host &                   aHost,
 
             VerifyOrExit(aHost.GetKey() == nullptr || *aHost.GetKey() == key, error = kErrorSecurity);
             aHost.SetKey(key);
+        }
 
-            aOffset += record.GetSize();
-        }
-        else
-        {
-            aOffset += record.GetSize();
-        }
+        aOffset += record.GetSize();
     }
 
     // Verify that we have a complete Host Description Instruction.
@@ -766,42 +718,61 @@ Error Server::ProcessServiceDiscoveryInstructions(Host &                   aHost
 {
     Error error = kErrorNone;
 
-    for (uint16_t i = 0; i < aDnsHeader.GetUpdateRecordCount(); ++i)
+    for (uint16_t numRecords = aDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
-        char                name[Dns::Name::kMaxNameSize];
-        Dns::ResourceRecord record;
-        char                serviceName[Dns::Name::kMaxNameSize];
-        Service *           service;
+        char           serviceName[Dns::Name::kMaxNameSize];
+        char           instanceName[Dns::Name::kMaxNameSize];
+        Dns::PtrRecord ptrRecord;
+        const char *   subServiceName;
+        Service *      service;
+        bool           isSubType;
 
-        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
-        VerifyOrExit(Dns::Name::IsSubDomainOf(name, GetDomain()), error = kErrorSecurity);
-        SuccessOrExit(error = aMessage.Read(aOffset, record));
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, serviceName, sizeof(serviceName)));
+        VerifyOrExit(Dns::Name::IsSubDomainOf(serviceName, GetDomain()), error = kErrorSecurity);
 
-        aOffset += sizeof(record);
+        error = Dns::ResourceRecord::ReadRecord(aMessage, aOffset, ptrRecord);
 
-        if (record.GetType() == Dns::ResourceRecord::kTypePtr)
+        if (error == kErrorNotFound)
         {
-            SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, serviceName, sizeof(serviceName)));
-            VerifyOrExit(Dns::Name::IsSubDomainOf(name, GetDomain()), error = kErrorSecurity);
-        }
-        else
-        {
-            aOffset += record.GetLength();
+            // `ReadRecord()` updates `aOffset` to skip over a
+            // non-matching record.
+            error = kErrorNone;
             continue;
         }
 
-        VerifyOrExit(record.GetClass() == Dns::ResourceRecord::kClassNone || record.GetClass() == aZone.GetClass(),
+        SuccessOrExit(error);
+
+        SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, instanceName, sizeof(instanceName)));
+
+        VerifyOrExit(ptrRecord.GetClass() == Dns::ResourceRecord::kClassNone ||
+                         ptrRecord.GetClass() == aZone.GetClass(),
                      error = kErrorFailed);
 
-        // TODO: check if the RR name and the full service name matches.
+        // Check if the `serviceName` is a subtype with the name
+        // format: "<sub-label>._sub.<service-labels>.<domain>."
 
-        service = aHost.FindService(serviceName);
-        VerifyOrExit(service == nullptr, error = kErrorFailed);
-        service = aHost.AddService(serviceName);
+        subServiceName = StringFind(serviceName, kServiceSubTypeLabel);
+        isSubType      = (subServiceName != nullptr);
+
+        if (isSubType)
+        {
+            // Skip over the "._sub." label to get to the base
+            // service name.
+            subServiceName += sizeof(kServiceSubTypeLabel) - 1;
+        }
+
+        // Verify that instance name and service name are related.
+
+        VerifyOrExit(StringEndsWith(instanceName, isSubType ? subServiceName : serviceName), error = kErrorFailed);
+
+        // Ensure the same service does not exist already.
+        VerifyOrExit(aHost.FindService(serviceName, instanceName) == nullptr, error = kErrorFailed);
+
+        service = aHost.AddNewService(serviceName, instanceName, isSubType);
         VerifyOrExit(service != nullptr, error = kErrorNoBufs);
 
         // This RR is a "Delete an RR from an RRset" update when the CLASS is NONE.
-        service->mIsDeleted = (record.GetClass() == Dns::ResourceRecord::kClassNone);
+        service->mIsDeleted = (ptrRecord.GetClass() == Dns::ResourceRecord::kClassNone);
     }
 
 exit:
@@ -814,26 +785,29 @@ Error Server::ProcessServiceDescriptionInstructions(Host &                   aHo
                                                     const Dns::Zone &        aZone,
                                                     uint16_t &               aOffset) const
 {
-    Service *service;
-    Error    error = kErrorNone;
+    Service::Description *desc;
+    Error                 error = kErrorNone;
+    TimeMilli             now   = TimerMilli::GetNow();
 
-    for (uint16_t i = 0; i < aDnsHeader.GetUpdateRecordCount(); ++i)
+    for (uint16_t numRecords = aDnsHeader.GetUpdateRecordCount(); numRecords > 0; numRecords--)
     {
         char                name[Dns::Name::kMaxNameSize];
         Dns::ResourceRecord record;
 
         SuccessOrExit(error = Dns::Name::ReadName(aMessage, aOffset, name, sizeof(name)));
-        VerifyOrExit(Dns::Name::IsSubDomainOf(name, GetDomain()), error = kErrorSecurity);
         SuccessOrExit(error = aMessage.Read(aOffset, record));
 
         if (record.GetClass() == Dns::ResourceRecord::kClassAny)
         {
             // Delete All RRsets from a name.
             VerifyOrExit(IsValidDeleteAllRecord(record), error = kErrorFailed);
-            service = aHost.FindService(name);
-            if (service != nullptr)
+
+            desc = aHost.FindServiceDescription(name);
+
+            if (desc != nullptr)
             {
-                service->ClearResources();
+                desc->ClearResources();
+                desc->mTimeLastUpdate = now;
             }
 
             aOffset += record.GetSize();
@@ -854,24 +828,25 @@ Error Server::ProcessServiceDescriptionInstructions(Host &                   aHo
             VerifyOrExit(Dns::Name::IsSubDomainOf(name, GetDomain()), error = kErrorSecurity);
             VerifyOrExit(aHost.Matches(hostName), error = kErrorFailed);
 
-            service = aHost.FindService(name);
-            VerifyOrExit(service != nullptr && !service->mIsDeleted, error = kErrorFailed);
+            desc = aHost.FindServiceDescription(name);
+            VerifyOrExit(desc != nullptr, error = kErrorFailed);
 
-            // Make sure that this is the first SRV RR for this service.
-            VerifyOrExit(service->mPort == 0, error = kErrorFailed);
-            service->mPriority = srvRecord.GetPriority();
-            service->mWeight   = srvRecord.GetWeight();
-            service->mPort     = srvRecord.GetPort();
+            // Make sure that this is the first SRV RR for this service description
+            VerifyOrExit(desc->mPort == 0, error = kErrorFailed);
+            desc->mPriority       = srvRecord.GetPriority();
+            desc->mWeight         = srvRecord.GetWeight();
+            desc->mPort           = srvRecord.GetPort();
+            desc->mTimeLastUpdate = now;
         }
         else if (record.GetType() == Dns::ResourceRecord::kTypeTxt)
         {
             VerifyOrExit(record.GetClass() == aZone.GetClass(), error = kErrorFailed);
 
-            service = aHost.FindService(name);
-            VerifyOrExit(service != nullptr && !service->mIsDeleted, error = kErrorFailed);
+            desc = aHost.FindServiceDescription(name);
+            VerifyOrExit(desc != nullptr, error = kErrorFailed);
 
             aOffset += sizeof(record);
-            SuccessOrExit(error = service->SetTxtDataFromMessage(aMessage, aOffset, record.GetLength()));
+            SuccessOrExit(error = desc->SetTxtDataFromMessage(aMessage, aOffset, record.GetLength()));
             aOffset += record.GetLength();
         }
         else
@@ -880,11 +855,19 @@ Error Server::ProcessServiceDescriptionInstructions(Host &                   aHo
         }
     }
 
-    service = nullptr;
-    while ((service = aHost.GetNextService(service)) != nullptr)
+    // Verify that all service descriptions on `aHost` are updated. Note
+    // that `mTimeLastUpdate` on a new `Service::Description` is set to
+    // `GetNow().GetDistantPast()`.
+
+    for (desc = aHost.mServiceDescriptions.GetHead(); desc != nullptr; desc = desc->GetNext())
     {
-        VerifyOrExit(service->mIsDeleted || (service->mTxtData != nullptr && service->mPort != 0),
-                     error = kErrorFailed);
+        VerifyOrExit(desc->mTimeLastUpdate == now, error = kErrorFailed);
+
+        // Check that either both `mPort` and `mTxtData` are set
+        // (i.e., we saw both SRV and TXT record) or both are default
+        // (cleared) value (i.e., we saw neither of them).
+
+        VerifyOrExit((desc->mPort == 0) == (desc->mTxtData == nullptr), error = kErrorFailed);
     }
 
 exit:
@@ -1006,51 +989,59 @@ exit:
     return error;
 }
 
-void Server::HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, const Ip6::MessageInfo &aMessageInfo)
+void Server::HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host &aHost, const Ip6::MessageInfo &aMessageInfo)
 {
     Error error = kErrorNone;
+    Host *existingHost;
 
-    if (aHost->GetLease() == 0)
+    // Check whether the SRP update wants to remove `aHost`.
+
+    VerifyOrExit(aHost.GetLease() == 0);
+
+    aHost.ClearResources();
+
+    existingHost = mHosts.FindMatching(aHost.GetFullName());
+    VerifyOrExit(existingHost != nullptr);
+
+    // The client may not include all services it has registered before
+    // when removing a host. We copy and append any missing services to
+    // `aHost` from the `existingHost` and mark them as deleted.
+
+    for (Service *service = existingHost->mServices.GetHead(); service != nullptr; service = service->GetNext())
     {
-        Host *existingHost = mHosts.FindMatching(aHost->GetFullName());
-
-        aHost->ClearResources();
-
-        // The client may not include all services it has registered and we should append
-        // those services for current SRP update.
-        if (existingHost != nullptr)
+        if (service->mIsDeleted)
         {
-            Service *existingService = nullptr;
+            continue;
+        }
 
-            while ((existingService = existingHost->GetNextService(existingService)) != nullptr)
-            {
-                if (!existingService->mIsDeleted)
-                {
-                    Service *service = aHost->AddService(existingService->GetFullName());
-                    VerifyOrExit(service != nullptr, error = kErrorNoBufs);
-                    service->mIsDeleted = true;
-                }
-            }
+        if (aHost.FindService(service->GetServiceName(), service->GetInstanceName()) == nullptr)
+        {
+            Service *newService =
+                aHost.AddNewService(service->GetServiceName(), service->GetInstanceName(), service->IsSubType());
+
+            VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
+            newService->mDescription.mTimeLastUpdate = TimerMilli::GetNow();
+            newService->mIsDeleted                   = true;
         }
     }
 
 exit:
     if (error != kErrorNone)
     {
-        CommitSrpUpdate(error, aDnsHeader, *aHost, aMessageInfo);
+        CommitSrpUpdate(error, aDnsHeader, aHost, aMessageInfo);
     }
     else if (mServiceUpdateHandler != nullptr)
     {
-        UpdateMetadata *update = UpdateMetadata::New(GetInstance(), aDnsHeader, aHost, aMessageInfo);
+        UpdateMetadata *update = UpdateMetadata::New(GetInstance(), aDnsHeader, &aHost, aMessageInfo);
 
         IgnoreError(mOutstandingUpdates.Add(*update));
         mOutstandingUpdatesTimer.StartAt(mOutstandingUpdates.GetTail()->GetExpireTime(), 0);
 
-        mServiceUpdateHandler(update->GetId(), aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
+        mServiceUpdateHandler(update->GetId(), &aHost, kDefaultEventsHandlerTimeout, mServiceUpdateHandlerContext);
     }
     else
     {
-        CommitSrpUpdate(kErrorNone, aDnsHeader, *aHost, aMessageInfo);
+        CommitSrpUpdate(kErrorNone, aDnsHeader, aHost, aMessageInfo);
     }
 }
 
@@ -1181,11 +1172,11 @@ void Server::HandleLeaseTimer(void)
 {
     TimeMilli now                = TimerMilli::GetNow();
     TimeMilli earliestExpireTime = now.GetDistantFuture();
-    Host *    host               = mHosts.GetHead();
+    Host *    nextHost;
 
-    while (host != nullptr)
+    for (Host *host = mHosts.GetHead(); host != nullptr; host = nextHost)
     {
-        Host *nextHost = host->GetNext();
+        nextHost = host->GetNext();
 
         if (host->GetKeyExpireTime() <= now)
         {
@@ -1198,43 +1189,39 @@ void Server::HandleLeaseTimer(void)
         {
             // The host has been deleted, but the hostname & service instance names retain.
 
-            Service *service;
+            Service *next;
 
             earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
 
             // Check if any service instance name expired.
-            service = host->GetNextService(nullptr);
-            while (service != nullptr)
+            for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
             {
-                OT_ASSERT(service->mIsDeleted);
+                next = service->GetNext();
 
-                Service *nextService = service->GetNext();
+                OT_ASSERT(service->mIsDeleted);
 
                 if (service->GetKeyExpireTime() <= now)
                 {
-                    otLogInfoSrp("[server] KEY LEASE of service %s expired", service->GetFullName());
+                    service->Log(Service::kKeyLeaseExpired);
                     host->RemoveService(service, /* aRetainName */ false, /* aNotifyServiceHandler */ true);
                 }
                 else
                 {
                     earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
                 }
-
-                service = nextService;
             }
         }
         else if (host->GetExpireTime() <= now)
         {
-            Service *service = nullptr;
-
             otLogInfoSrp("[server] LEASE of host %s expired", host->GetFullName());
 
             // If the host expired, delete all resources of this host and its services.
-            while ((service = host->GetNextService(service)) != nullptr)
+            for (Service *service = host->mServices.GetHead(); service != nullptr; service = service->GetNext())
             {
                 // Don't need to notify the service handler as `RemoveHost` at below will do.
                 host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
+
             RemoveHost(host, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
 
             earliestExpireTime = OT_MIN(earliestExpireTime, host->GetKeyExpireTime());
@@ -1243,15 +1230,15 @@ void Server::HandleLeaseTimer(void)
         {
             // The host doesn't expire, check if any service expired or is explicitly removed.
 
-            OT_ASSERT(!host->IsDeleted());
+            Service *next;
 
-            Service *service = host->GetNextService(nullptr);
+            OT_ASSERT(!host->IsDeleted());
 
             earliestExpireTime = OT_MIN(earliestExpireTime, host->GetExpireTime());
 
-            while (service != nullptr)
+            for (Service *service = host->mServices.GetHead(); service != nullptr; service = next)
             {
-                Service *nextService = service->GetNext();
+                next = service->GetNext();
 
                 if (service->mIsDeleted)
                 {
@@ -1260,7 +1247,7 @@ void Server::HandleLeaseTimer(void)
                 }
                 else if (service->GetExpireTime() <= now)
                 {
-                    otLogInfoSrp("[server] LEASE of service %s expired", service->GetFullName());
+                    service->Log(Service::kLeaseExpired);
 
                     // The service is expired, delete it.
                     host->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ true);
@@ -1270,12 +1257,8 @@ void Server::HandleLeaseTimer(void)
                 {
                     earliestExpireTime = OT_MIN(earliestExpireTime, service->GetExpireTime());
                 }
-
-                service = nextService;
             }
         }
-
-        host = nextHost;
     }
 
     if (earliestExpireTime != now.GetDistantFuture())
@@ -1307,7 +1290,10 @@ void Server::HandleOutstandingUpdatesTimer(void)
     }
 }
 
-Server::Service *Server::Service::New(const char *aFullName)
+//---------------------------------------------------------------------------------------------------------------------
+// Server::Service
+
+Server::Service *Server::Service::New(const char *aServiceName, Description &aDescription, bool aIsSubType)
 {
     void *   buf;
     Service *service = nullptr;
@@ -1315,8 +1301,9 @@ Server::Service *Server::Service::New(const char *aFullName)
     buf = Instance::HeapCAlloc(1, sizeof(Service));
     VerifyOrExit(buf != nullptr);
 
-    service = new (buf) Service();
-    if (service->SetFullName(aFullName) != kErrorNone)
+    service = new (buf) Service(aDescription, aIsSubType);
+
+    if (service->mServiceName.Set(aServiceName) != kErrorNone)
     {
         service->Free();
         service = nullptr;
@@ -1328,21 +1315,47 @@ exit:
 
 void Server::Service::Free(void)
 {
-    mFullName.Free();
-    Instance::HeapFree(mTxtData);
     Instance::HeapFree(this);
 }
 
-Server::Service::Service(void)
-    : mPriority(0)
-    , mWeight(0)
-    , mPort(0)
-    , mTxtLength(0)
-    , mTxtData(nullptr)
-    , mHost(nullptr)
+Server::Service::Service(Description &aDescription, bool aIsSubType)
+    : mDescription(aDescription)
     , mNext(nullptr)
     , mTimeLastUpdate(TimerMilli::GetNow())
+    , mIsDeleted(false)
+    , mIsSubType(aIsSubType)
+    , mIsCommitted(false)
 {
+}
+
+Error Server::Service::GetServiceSubTypeLabel(char *aLabel, uint8_t aMaxSize) const
+{
+    Error       error       = kErrorNone;
+    const char *serviceName = GetServiceName();
+    const char *subServiceName;
+    uint8_t     labelLength;
+
+    memset(aLabel, 0, aMaxSize);
+
+    VerifyOrExit(IsSubType(), error = kErrorInvalidArgs);
+
+    subServiceName = StringFind(serviceName, kServiceSubTypeLabel);
+    OT_ASSERT(subServiceName != nullptr);
+
+    if (subServiceName - serviceName < aMaxSize)
+    {
+        labelLength = static_cast<uint8_t>(subServiceName - serviceName);
+    }
+    else
+    {
+        labelLength = aMaxSize - 1;
+        error       = kErrorNoBufs;
+    }
+
+    memcpy(aLabel, serviceName, labelLength);
+
+exit:
+    return error;
 }
 
 TimeMilli Server::Service::GetExpireTime(void) const
@@ -1358,21 +1371,154 @@ TimeMilli Server::Service::GetKeyExpireTime(void) const
     return mTimeLastUpdate + Time::SecToMsec(GetHost().GetKeyLease());
 }
 
-Error Server::Service::SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+bool Server::Service::MatchesFlags(Flags aFlags) const
+{
+    bool matches = false;
+
+    if (IsSubType())
+    {
+        VerifyOrExit(aFlags & kFlagSubType);
+    }
+    else
+    {
+        VerifyOrExit(aFlags & kFlagBaseType);
+    }
+
+    if (IsDeleted())
+    {
+        VerifyOrExit(aFlags & kFlagDeleted);
+    }
+    else
+    {
+        VerifyOrExit(aFlags & kFlagActive);
+    }
+
+    matches = true;
+
+exit:
+    return matches;
+}
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_SRP
+void Server::Service::Log(Action aAction) const
+{
+    static const char *const kActionStrings[] = {
+        "add new",                   // (0) kAddNew
+        "update existing",           // (1) kUpdateExisting
+        "remove but retain name of", // (2) kRemoveButRetainName
+        "full remove",               // (3) kFullyRemove
+        "LEASE expired for ",        // (4) kLeaseExpired
+        "KEY LEASE expired for",     // (5) kKeyLeaseExpired
+    };
+
+    char subLabel[Dns::Name::kMaxLabelSize];
+
+    static_assert(0 == kAddNew, "kAddNew value is incorrect");
+    static_assert(1 == kUpdateExisting, "kUpdateExisting value is incorrect");
+    static_assert(2 == kRemoveButRetainName, "kRemoveButRetainName value is incorrect");
+    static_assert(3 == kFullyRemove, "kFullyRemove value is incorrect");
+    static_assert(4 == kLeaseExpired, "kLeaseExpired value is incorrect");
+    static_assert(5 == kKeyLeaseExpired, "kKeyLeaseExpired value is incorrect");
+
+    // We only log if the `Service` is marked as committed. This
+    // ensures that temporary `Service` entries associated with a
+    // newly received SRP update message are not logged (e.g., when
+    // associated `Host` is being freed).
+
+    if (mIsCommitted)
+    {
+        IgnoreError(GetServiceSubTypeLabel(subLabel, sizeof(subLabel)));
+
+        otLogInfoSrp("[server] %s service '%s'%s%s", kActionStrings[aAction], GetInstanceName(),
+                     IsSubType() ? " subtype:" : "", subLabel);
+    }
+}
+#else
+void Server::Service::Log(Action) const
+{
+}
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && OPENTHREAD_CONFIG_LOG_SRP
+
+//---------------------------------------------------------------------------------------------------------------------
+// Server::Service::Description
+
+Server::Service::Description *Server::Service::Description::New(const char *aInstanceName, Host &aHost)
+{
+    void *       buf;
+    Description *desc = nullptr;
+
+    buf = Instance::HeapCAlloc(1, sizeof(Description));
+    VerifyOrExit(buf != nullptr);
+
+    desc = new (buf) Description(aHost);
+
+    if (desc->mInstanceName.Set(aInstanceName) != kErrorNone)
+    {
+        desc->Free();
+        desc = nullptr;
+    }
+
+exit:
+    return desc;
+}
+
+void Server::Service::Description::Free(void)
+{
+    mInstanceName.Free();
+    Instance::HeapFree(this);
+}
+
+Server::Service::Description::Description(Host &aHost)
+    : mNext(nullptr)
+    , mHost(aHost)
+    , mPriority(0)
+    , mWeight(0)
+    , mPort(0)
+    , mTxtLength(0)
+    , mTxtData(nullptr)
+    , mTimeLastUpdate(TimerMilli::GetNow().GetDistantPast())
+{
+}
+
+void Server::Service::Description::ClearResources(void)
+{
+    mPort = 0;
+    Instance::HeapFree(mTxtData);
+    mTxtData   = nullptr;
+    mTxtLength = 0;
+}
+
+void Server::Service::Description::TakeResourcesFrom(Description &aDescription)
+{
+    // Take ownership and move the heap allocated `mTxtData` buffer
+    // from `aDescription
+    Instance::HeapFree(mTxtData);
+    mTxtData                = aDescription.mTxtData;
+    mTxtLength              = aDescription.mTxtLength;
+    aDescription.mTxtData   = nullptr;
+    aDescription.mTxtLength = 0;
+
+    mPriority = aDescription.mPriority;
+    mWeight   = aDescription.mWeight;
+    mPort     = aDescription.mPort;
+
+    mTimeLastUpdate = TimerMilli::GetNow();
+}
+
+Error Server::Service::Description::SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 {
     Error    error = kErrorNone;
     uint8_t *txtData;
 
     txtData = static_cast<uint8_t *>(Instance::HeapCAlloc(1, aLength));
     VerifyOrExit(txtData != nullptr, error = kErrorNoBufs);
+
     VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = kErrorParse);
     VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength), error = kErrorParse);
 
     Instance::HeapFree(mTxtData);
     mTxtData   = txtData;
     mTxtLength = aLength;
-
-    mIsDeleted = false;
 
 exit:
     if (error != kErrorNone)
@@ -1383,45 +1529,8 @@ exit:
     return error;
 }
 
-void Server::Service::ClearResources(void)
-{
-    mPort = 0;
-    Instance::HeapFree(mTxtData);
-    mTxtData   = nullptr;
-    mTxtLength = 0;
-}
-
-void Server::Service::TakeResourcesFrom(Service &aService)
-{
-    // Take ownership and move the heap allocated `mTxtData` buffer
-    // from `aService`.
-    Instance::HeapFree(mTxtData);
-    mTxtData            = aService.mTxtData;
-    mTxtLength          = aService.mTxtLength;
-    aService.mTxtData   = nullptr;
-    aService.mTxtLength = 0;
-
-    mPriority = aService.mPriority;
-    mWeight   = aService.mWeight;
-    mPort     = aService.mPort;
-
-    mIsDeleted      = false;
-    mTimeLastUpdate = TimerMilli::GetNow();
-}
-
-bool Server::Service::MatchesServiceName(const char *aServiceName) const
-{
-    uint8_t i = static_cast<uint8_t>(strlen(GetFullName()));
-    uint8_t j = static_cast<uint8_t>(strlen(aServiceName));
-
-    while (i > 0 && j > 0 && GetFullName()[i - 1] == aServiceName[j - 1])
-    {
-        i--;
-        j--;
-    }
-
-    return j == 0 && i > 0 && GetFullName()[i - 1] == '.';
-}
+//---------------------------------------------------------------------------------------------------------------------
+// Server::Host
 
 Server::Host *Server::Host::New(Instance &aInstance)
 {
@@ -1455,6 +1564,26 @@ Server::Host::Host(Instance &aInstance)
     mKey.Clear();
 }
 
+Error Server::Host::SetFullName(const char *aFullName)
+{
+    // `mFullName` becomes immutable after it is set, so if it is
+    // already set, we only accept a `aFullName` that matches the
+    // current name.
+
+    Error error;
+
+    if (mFullName.IsNull())
+    {
+        error = mFullName.Set(aFullName);
+    }
+    else
+    {
+        error = Matches(aFullName) ? kErrorNone : kErrorFailed;
+    }
+
+    return error;
+}
+
 void Server::Host::SetKey(Dns::Ecdsa256KeyRecord &aKey)
 {
     OT_ASSERT(aKey.IsValid());
@@ -1474,20 +1603,54 @@ TimeMilli Server::Host::GetKeyExpireTime(void) const
     return mTimeLastUpdate + Time::SecToMsec(mKeyLease);
 }
 
-// Add a new service entry to the host, do nothing if there is already
-// such services with the same name.
-Server::Service *Server::Host::AddService(const char *aFullName)
+const Server::Service *Server::Host::FindNextService(const Service *aPrevService,
+                                                     Service::Flags aFlags,
+                                                     const char *   aServiceName,
+                                                     const char *   aInstanceName) const
 {
-    Service *service = FindService(aFullName);
+    const Service *service = (aPrevService == nullptr) ? GetServices() : aPrevService->GetNext();
 
-    VerifyOrExit(service == nullptr);
-
-    service = Service::New(aFullName);
-    if (service != nullptr)
+    for (; service != nullptr; service = service->GetNext())
     {
-        IgnoreError(mServices.Add(*service));
-        service->mHost = this;
+        if (!service->MatchesFlags(aFlags))
+        {
+            continue;
+        }
+
+        if ((aServiceName != nullptr) && !service->MatchesServiceName(aServiceName))
+        {
+            continue;
+        }
+
+        if ((aInstanceName != nullptr) && !service->MatchesInstanceName(aInstanceName))
+        {
+            continue;
+        }
+
+        break;
     }
+
+    return service;
+}
+
+Server::Service *Server::Host::AddNewService(const char *aServiceName, const char *aInstanceName, bool aIsSubType)
+{
+    Service *             service = nullptr;
+    Service::Description *desc;
+
+    desc = FindServiceDescription(aInstanceName);
+
+    if (desc == nullptr)
+    {
+        desc = Service::Description::New(aInstanceName, *this);
+        VerifyOrExit(desc != nullptr);
+        mServiceDescriptions.Push(*desc);
+    }
+
+    service = Service::New(aServiceName, *desc, aIsSubType);
+    VerifyOrExit(service != nullptr);
+
+    mServices.Push(*service);
 
 exit:
     return service;
@@ -1501,15 +1664,7 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
 
     aService->mIsDeleted = true;
 
-    if (aRetainName)
-    {
-        aService->ClearResources();
-        otLogInfoSrp("[server] remove service '%s' (but retain its name)", aService->GetFullName());
-    }
-    else
-    {
-        otLogInfoSrp("[server] fully remove service '%s'", aService->GetFullName());
-    }
+    aService->Log(aRetainName ? Service::kRemoveButRetainName : Service::kFullyRemove);
 
     if (aNotifyServiceHandler && server.mServiceUpdateHandler != nullptr)
     {
@@ -1526,6 +1681,7 @@ void Server::Host::RemoveService(Service *aService, bool aRetainName, bool aNoti
     {
         IgnoreError(mServices.Remove(*aService));
         aService->Free();
+        FreeUnusedServiceDescriptions();
     }
 
 exit:
@@ -1540,30 +1696,104 @@ void Server::Host::FreeAllServices(void)
     }
 }
 
+void Server::Host::FreeUnusedServiceDescriptions(void)
+{
+    Service::Description *desc;
+    Service::Description *prev;
+    Service::Description *next;
+
+    for (prev = nullptr, desc = mServiceDescriptions.GetHead(); desc != nullptr; desc = next)
+    {
+        next = desc->GetNext();
+
+        if (FindNextService(/* aPrevService */ nullptr, kFlagsAnyService, /* aServiceName */ nullptr,
+                            desc->GetInstanceName()) == nullptr)
+        {
+            mServiceDescriptions.PopAfter(prev);
+            desc->Free();
+
+            // When the `desc` is removed from the list
+            // we keep the `prev` pointer same as before.
+        }
+        else
+        {
+            prev = desc;
+        }
+    }
+}
+
 void Server::Host::ClearResources(void)
 {
     mAddressesNum = 0;
 }
 
-void Server::Host::CopyResourcesFrom(const Host &aHost)
+Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
 {
+    // This method merges services, service descriptions, and other
+    // resources from another `aHost` into current host. It can
+    // possibly take ownership of some items from `aHost`.
+
+    Error error = kErrorNone;
+
+    otLogInfoSrp("[server] update host %s", GetFullName());
+
     memcpy(mAddresses, aHost.mAddresses, aHost.mAddressesNum * sizeof(mAddresses[0]));
-    mAddressesNum = aHost.mAddressesNum;
-    mKey          = aHost.mKey;
-    mLease        = aHost.mLease;
-    mKeyLease     = aHost.mKeyLease;
-
+    mAddressesNum   = aHost.mAddressesNum;
+    mKey            = aHost.mKey;
+    mLease          = aHost.mLease;
+    mKeyLease       = aHost.mKeyLease;
     mTimeLastUpdate = TimerMilli::GetNow();
+
+    for (Service *service = aHost.mServices.GetHead(); service != nullptr; service = service->GetNext())
+    {
+        Service *existingService = FindService(service->GetServiceName(), service->GetInstanceName());
+        Service *newService;
+
+        if (service->mIsDeleted)
+        {
+            // `RemoveService()` does nothing if `exitsingService` is `nullptr`.
+            RemoveService(existingService, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
+            continue;
+        }
+
+        // Add/Merge `service` into the existing service or a allocate a new one
+
+        newService = (existingService != nullptr)
+                         ? existingService
+                         : AddNewService(service->GetServiceName(), service->GetInstanceName(), service->IsSubType());
+
+        VerifyOrExit(newService != nullptr, error = kErrorNoBufs);
+
+        newService->mIsDeleted      = false;
+        newService->mIsCommitted    = true;
+        newService->mTimeLastUpdate = TimerMilli::GetNow();
+        newService->mDescription.TakeResourcesFrom(service->mDescription);
+
+        newService->Log((existingService != nullptr) ? Service::kUpdateExisting : Service::kAddNew);
+    }
+
+exit:
+    return error;
 }
 
-Server::Service *Server::Host::FindService(const char *aFullName)
+const Server::Service::Description *Server::Host::FindServiceDescription(const char *aInstanceName) const
 {
-    return mServices.FindMatching(aFullName);
+    return mServiceDescriptions.FindMatching(aInstanceName);
 }
 
-const Server::Service *Server::Host::FindService(const char *aFullName) const
+Server::Service::Description *Server::Host::FindServiceDescription(const char *aInstanceName)
 {
-    return const_cast<Host *>(this)->FindService(aFullName);
+    return const_cast<Service::Description *>(const_cast<const Host *>(this)->FindServiceDescription(aInstanceName));
+}
+
+const Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName) const
+{
+    return FindNextService(/* aPrevService */ nullptr, kFlagsAnyService, aServiceName, aInstanceName);
+}
+
+Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName)
+{
+    return const_cast<Service *>(const_cast<const Host *>(this)->FindService(aServiceName, aInstanceName));
 }
 
 Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)
@@ -1597,6 +1827,9 @@ Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)
 exit:
     return error;
 }
+
+//---------------------------------------------------------------------------------------------------------------------
+// Server::UpdateMetadata
 
 Server::UpdateMetadata *Server::UpdateMetadata::New(Instance &               aInstance,
                                                     const Dns::UpdateHeader &aHeader,

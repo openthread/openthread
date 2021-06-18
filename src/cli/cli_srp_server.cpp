@@ -191,28 +191,50 @@ void SrpServer::OutputHostAddresses(const otSrpServerHost *aHost)
 
 otError SrpServer::ProcessService(Arg aArgs[])
 {
+    static constexpr char *kAnyServiceName  = nullptr;
+    static constexpr char *kAnyInstanceName = nullptr;
+
     otError                error = OT_ERROR_NONE;
-    const otSrpServerHost *host;
+    const otSrpServerHost *host  = nullptr;
 
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    host = nullptr;
     while ((host = otSrpServerGetNextHost(mInterpreter.mInstance, host)) != nullptr)
     {
         const otSrpServerService *service = nullptr;
 
-        while ((service = otSrpServerHostGetNextService(host, service)) != nullptr)
+        while ((service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_BASE_TYPE_SERVICE_ONLY,
+                                                         kAnyServiceName, kAnyInstanceName)) != nullptr)
         {
-            bool           isDeleted = otSrpServerServiceIsDeleted(service);
-            const uint8_t *txtData;
-            uint16_t       txtDataLength;
+            bool                      isDeleted    = otSrpServerServiceIsDeleted(service);
+            const char *              instanceName = otSrpServerServiceGetInstanceName(service);
+            const otSrpServerService *subService   = nullptr;
+            const uint8_t *           txtData;
+            uint16_t                  txtDataLength;
+            bool                      hasSubType = false;
 
-            mInterpreter.OutputLine("%s", otSrpServerServiceGetFullName(service));
+            mInterpreter.OutputLine("%s", instanceName);
             mInterpreter.OutputLine(Interpreter::kIndentSize, "deleted: %s", isDeleted ? "true" : "false");
+
             if (isDeleted)
             {
                 continue;
             }
+
+            mInterpreter.OutputFormat(Interpreter::kIndentSize, "subtypes: ");
+
+            while ((subService = otSrpServerHostFindNextService(
+                        host, subService, (OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE | OT_SRP_SERVER_SERVICE_FLAG_ACTIVE),
+                        kAnyServiceName, instanceName)) != nullptr)
+            {
+                char subLabel[OT_DNS_MAX_LABEL_SIZE];
+
+                IgnoreError(otSrpServerServiceGetServiceSubTypeLabel(subService, subLabel, sizeof(subLabel)));
+                mInterpreter.OutputFormat("%s%s", hasSubType ? "," : "", subLabel);
+                hasSubType = true;
+            }
+
+            mInterpreter.OutputLine(hasSubType ? "" : "(null)");
 
             mInterpreter.OutputLine(Interpreter::kIndentSize, "port: %hu", otSrpServerServiceGetPort(service));
             mInterpreter.OutputLine(Interpreter::kIndentSize, "priority: %hu", otSrpServerServiceGetPriority(service));
