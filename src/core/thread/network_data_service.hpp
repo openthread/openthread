@@ -613,6 +613,13 @@ private:
                        bool        aServerStable,
                        uint8_t &   aServiceId) const;
     Error IterateToNextServer(Iterator &aIterator) const;
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    bool IsBackboneRouterPreferredTo(const ServerTlv &                 aServerTlv,
+                                     const BackboneRouter::ServerData &aServerData,
+                                     const ServerTlv &                 aOtherServerTlv,
+                                     const BackboneRouter::ServerData &aOtherServerData) const;
+#endif
 };
 
 } // namespace Service
