@@ -46,6 +46,7 @@
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
 #include <openthread/link.h>
+#include <openthread/ping_sender.h>
 #include <openthread/sntp.h>
 #include <openthread/thread.h>
 #include <openthread/thread_ftd.h>
@@ -89,6 +90,7 @@ namespace Cli {
  */
 class Interpreter
 {
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     friend class Coap;
     friend class CoapSecure;
     friend class Commissioner;
@@ -98,6 +100,7 @@ class Interpreter
     friend class SrpClient;
     friend class SrpServer;
     friend class UdpExample;
+#endif
 
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -403,8 +406,17 @@ private:
 #endif
     static otError ParseJoinerDiscerner(Arg &aArg, otJoinerDiscerner &aDiscerner);
 
-    otError ProcessUserCommands(Arg aArgs[]);
+    // Process methods on FTD/MTD/RCP
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    otError ProcessDiag(Arg aArgs[]);
+#endif
     otError ProcessHelp(Arg aArgs[]);
+    otError ProcessReset(Arg aArgs[]);
+    otError ProcessUserCommands(Arg aArgs[]);
+    otError ProcessVersion(Arg aArgs[]);
+
+    // Process methods only on FTD/MTD
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     otError ProcessCcaThreshold(Arg aArgs[]);
     otError ProcessBufferInfo(Arg aArgs[]);
     otError ProcessChannel(Arg aArgs[]);
@@ -461,9 +473,6 @@ private:
     otError ProcessCsl(Arg aArgs[]);
 #if OPENTHREAD_FTD
     otError ProcessDelayTimerMin(Arg aArgs[]);
-#endif
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    otError ProcessDiag(Arg aArgs[]);
 #endif
     otError ProcessDiscover(Arg aArgs[]);
     otError ProcessDns(Arg aArgs[]);
@@ -583,7 +592,6 @@ private:
 #if OPENTHREAD_FTD
     otError ProcessReleaseRouterId(Arg aArgs[]);
 #endif
-    otError ProcessReset(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     otError ProcessRoute(Arg aArgs[]);
     otError ProcessRouteAdd(Arg aArgs[]);
@@ -612,7 +620,6 @@ private:
     otError ProcessTxPower(Arg aArgs[]);
     otError ProcessUdp(Arg aArgs[]);
     otError ProcessUnsecurePort(Arg aArgs[]);
-    otError ProcessVersion(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     otError ProcessMacFilter(Arg aArgs[]);
     void    PrintMacFilter(void);
@@ -634,7 +641,7 @@ private:
     static void HandleEnergyScanResult(otEnergyScanResult *aResult, void *aContext);
     static void HandleLinkPcapReceive(const otRadioFrame *aFrame, bool aIsTx, void *aContext);
 
-#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+#if OPENTHREAD_FTD || (OPENTHREAD_MTD && OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE)
     void HandleDiagnosticGetResponse(otError aError, const otMessage *aMessage, const Ip6::MessageInfo *aMessageInfo);
     static void HandleDiagnosticGetResponse(otError              aError,
                                             otMessage *          aMessage,
@@ -712,8 +719,12 @@ private:
         static_cast<Interpreter *>(aContext)->HandleDiscoveryRequest(*aInfo);
     }
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 
+    // Commands supported by radio:
+    // [diag, help, reset, version]
     static constexpr Command sCommands[] = {
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         {"ba", &Interpreter::ProcessBorderAgent},
 #endif
@@ -758,9 +769,11 @@ private:
 #if OPENTHREAD_FTD
         {"delaytimermin", &Interpreter::ProcessDelayTimerMin},
 #endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
         {"diag", &Interpreter::ProcessDiag},
 #endif
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
         {"discover", &Interpreter::ProcessDiscover},
         {"dns", &Interpreter::ProcessDns},
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
@@ -780,7 +793,9 @@ private:
         {"fake", &Interpreter::ProcessFake},
 #endif
         {"fem", &Interpreter::ProcessFem},
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         {"help", &Interpreter::ProcessHelp},
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
         {"ifconfig", &Interpreter::ProcessIfconfig},
         {"ipaddr", &Interpreter::ProcessIpAddr},
         {"ipmaddr", &Interpreter::ProcessIpMulticastAddr},
@@ -852,7 +867,9 @@ private:
 #if OPENTHREAD_FTD
         {"releaserouterid", &Interpreter::ProcessReleaseRouterId},
 #endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         {"reset", &Interpreter::ProcessReset},
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
         {"rloc16", &Interpreter::ProcessRloc16},
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
         {"route", &Interpreter::ProcessRoute},
@@ -880,6 +897,7 @@ private:
         {"txpower", &Interpreter::ProcessTxPower},
         {"udp", &Interpreter::ProcessUdp},
         {"unsecureport", &Interpreter::ProcessUnsecurePort},
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
         {"version", &Interpreter::ProcessVersion},
     };
 
@@ -891,6 +909,8 @@ private:
     const otCliCommand *mUserCommands;
     uint8_t             mUserCommandsLength;
     void *              mUserCommandsContext;
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
 #endif
@@ -922,6 +942,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     SrpServer mSrpServer;
 #endif
+#endif // OPENTHREAD_FTD || OPENTHREAD_MTD
 };
 
 // Specializations of `FormatStringFor<ValueType>()`

@@ -66,7 +66,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
 namespace ot {
 namespace FactoryDiags {
 
-#if OPENTHREAD_RADIO
+#if !DIAG_NATIVE_CMDS
 
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel},
@@ -142,7 +142,7 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     otPlatDiagAlarmCallback(aInstance);
 }
 
-#else // OPENTHREAD_RADIO
+#else // DIAG_NATIVE_CMDS
 
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel}, {"power", &Diags::ProcessPower}, {"radio", &Diags::ProcessRadio},
@@ -291,7 +291,9 @@ Error Diags::ProcessStart(uint8_t aArgsLength, char *aArgs[], char *aOutput, siz
 
     Error error = kErrorNone;
 
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
     VerifyOrExit(!Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
+#endif
 
     otPlatDiagChannelSet(mChannel);
     otPlatDiagTxPowerSet(mTxPower);
@@ -500,7 +502,7 @@ exit:
     return;
 }
 
-#endif // OPENTHREAD_RADIO
+#endif // DIAG_NATIVE_CMDS
 
 void Diags::AppendErrorResult(Error aError, char *aOutput, size_t aOutputMaxLen)
 {
