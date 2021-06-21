@@ -2380,8 +2380,8 @@ def connect_ncp_sim(executable: str, nodeid: int, simulator: Optional[Simulator]
     return OTCI(cmd_handler)
 
 
-def connect_otbr_ssh(host: str, port: int = 22, username='pi', password='raspberry'):
-    cmd_handler = OtbrSshCommandRunner(host, port, username, password)
+def connect_otbr_ssh(host: str, port: int = 22, username='pi', password='raspberry', sudo=True):
+    cmd_handler = OtbrSshCommandRunner(host, port, username, password, sudo=sudo)
     return OTCI(cmd_handler)
 
 
