@@ -983,7 +983,7 @@ template <> inline Mac::LinkRaw &Instance::Get(void)
     return mLinkRaw;
 }
 
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
 template <> inline Mac::SubMac &Instance::Get(void)
 {
     return mLinkRaw.mSubMac;

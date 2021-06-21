@@ -48,6 +48,7 @@ DEBUG                     ?= 0
 DHCP6_CLIENT              ?= 0
 DHCP6_SERVER              ?= 0
 DIAGNOSTIC                ?= 0
+DIAG_NATIVE_RCP           ?= 0
 DISABLE_DOC               ?= 0
 DISABLE_TOOLS             ?= 0
 DNS_CLIENT                ?= 0
@@ -183,6 +184,10 @@ endif
 
 ifeq ($(DIAGNOSTIC),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DIAG_ENABLE=1
+endif
+
+ifeq ($(DIAG_NATIVE_RCP),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP=1
 endif
 
 ifeq ($(DISABLE_DOC),1)

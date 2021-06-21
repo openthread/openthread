@@ -61,7 +61,7 @@ void Radio::Callbacks::HandleEnergyScanDone(int8_t aMaxRssi)
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError)
 {
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP
     // Pass it to notify OpenThread `Diags` module on host side.
     HandleReceiveDone(aFrame, aError);
 #else
@@ -71,7 +71,7 @@ void Radio::Callbacks::HandleDiagsReceiveDone(Mac::RxFrame *aFrame, Error aError
 
 void Radio::Callbacks::HandleDiagsTransmitDone(Mac::TxFrame &aFrame, Error aError)
 {
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP
     // Pass it to notify OpenThread `Diags` module on host side.
     HandleTransmitDone(aFrame, nullptr, aError);
 #else

@@ -174,6 +174,11 @@ if(OT_DIAGNOSTIC)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DIAG_ENABLE=1")
 endif()
 
+option(OT_APP_RCP_CLI "enable native diag commands on rcp" OFF)
+if (OT_APP_RCP_CLI)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP=1")
+endif()
+
 option(OT_DNS_CLIENT "enable DNS client support")
 if(OT_DNS_CLIENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE=1")
