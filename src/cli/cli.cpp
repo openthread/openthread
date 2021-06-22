@@ -68,7 +68,7 @@
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 #include <openthread/backbone_router_ftd.h>
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 #include <openthread/link_metrics.h>
 #endif
 #endif
@@ -2167,7 +2167,7 @@ otError Interpreter::ProcessLeaderWeight(uint8_t aArgsLength, Arg aArgs[])
 }
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Interpreter::HandleLinkMetricsReport(const otIp6Address *       aAddress,
                                           const otLinkMetricsValues *aMetricsValues,
                                           uint8_t                    aStatus,
@@ -2504,7 +2504,7 @@ otError Interpreter::ProcessLinkMetricsProbe(uint8_t aArgsLength, Arg aArgs[])
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])

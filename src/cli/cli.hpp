@@ -521,7 +521,7 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessMlIid(uint8_t aArgsLength, Arg aArgs[]);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     otError ProcessLinkMetrics(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessLinkMetricsQuery(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessLinkMetricsMgmt(uint8_t aArgsLength, Arg aArgs[]);
@@ -695,7 +695,7 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues);
 
     static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
@@ -721,7 +721,7 @@ private:
                                           const otLinkMetricsValues *aMetricsValues);
 
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
@@ -811,7 +811,7 @@ private:
 #if OPENTHREAD_FTD
         {"leaderweight", &Interpreter::ProcessLeaderWeight},
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
         {"linkmetrics", &Interpreter::ProcessLinkMetrics},
 #endif
         {"log", &Interpreter::ProcessLog},

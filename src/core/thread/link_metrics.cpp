@@ -33,7 +33,7 @@
 
 #include "link_metrics.hpp"
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
@@ -139,6 +139,7 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error LinkMetrics::SendMgmtRequestForwardTrackingSeries(const Ip6::Address &            aDestination,
                                                         uint8_t                         aSeriesId,
                                                         const otLinkMetricsSeriesFlags &aSeriesFlags,
@@ -243,7 +244,9 @@ exit:
     otLogDebgMle("SendLinkProbe, error:%s, Series ID:%u", ErrorToString(error), aSeriesId);
     return error;
 }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 Error LinkMetrics::AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor)
 {
     Error               error = kErrorNone;
@@ -409,6 +412,7 @@ Error LinkMetrics::HandleLinkMetricsManagementRequest(const Message &    aMessag
 exit:
     return error;
 }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 Error LinkMetrics::HandleLinkMetricsManagementResponse(const Message &aMessage, const Ip6::Address &aAddress)
 {
@@ -712,6 +716,7 @@ exit:
     return status;
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 LinkMetrics::LinkMetricsStatus LinkMetrics::ConfigureEnhAckProbing(LinkMetricsEnhAckFlags aEnhAckFlags,
                                                                    const otLinkMetrics &  aLinkMetrics,
                                                                    Neighbor &             aNeighbor)
@@ -747,6 +752,7 @@ LinkMetrics::LinkMetricsStatus LinkMetrics::ConfigureEnhAckProbing(LinkMetricsEn
 exit:
     return status;
 }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 Neighbor *LinkMetrics::GetNeighborFromLinkLocalAddr(const Ip6::Address &aDestination)
 {
@@ -880,4 +886,4 @@ exit:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

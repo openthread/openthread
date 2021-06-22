@@ -211,7 +211,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 otError NcpBase::DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount)
 {
     otError error   = OT_ERROR_NONE;
@@ -3136,7 +3136,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_QUERY>(void)
 {
     otError             error = OT_ERROR_NONE;
@@ -3233,7 +3233,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_LINK_METRICS_M
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_THREAD_MODE>(void)
 {
@@ -4337,7 +4337,7 @@ void NcpBase::HandleJoinerCallback(otError aError)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void NcpBase::HandleLinkMetricsReport_Jump(const otIp6Address *       aSource,
                                            const otLinkMetricsValues *aMetricsValues,
                                            uint8_t                    aStatus,

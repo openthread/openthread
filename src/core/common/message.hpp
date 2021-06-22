@@ -167,7 +167,7 @@ struct MessageMetadata
     uint16_t    mLength;      ///< Number of bytes within the message.
     uint16_t    mOffset;      ///< A byte offset within the message.
     RssAverager mRssAverager; ///< The averager maintaining the received signal strength (RSS) average.
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     LqiAverager mLqiAverager; ///< The averager maintaining the Link quality indicator (LQI) average.
 #endif
 
@@ -1108,7 +1108,7 @@ public:
      */
     const RssAverager &GetRssAverager(void) const { return GetMetadata().mRssAverager; }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * This method updates the average LQI (Link Quality Indicator) associated with the message.
      *

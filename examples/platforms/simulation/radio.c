@@ -378,7 +378,7 @@ void platformRadioInit(void)
         sChannelMaxTransmitPower[i] = OT_RADIO_POWER_INVALID;
     }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     otLinkMetricsInit(SIM_RECEIVE_SENSITIVITY);
 #endif
 }
@@ -871,7 +871,7 @@ void radioSendAck(void)
         uint8_t  linkMetricsDataLen = 0;
         uint8_t *dataPtr            = NULL;
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         uint8_t      linkMetricsData[OT_ENH_PROBING_IE_DATA_MAX_SIZE];
         otMacAddress macAddress;
 
@@ -935,7 +935,7 @@ void radioProcessFrame(otInstance *aInstance)
     otEXPECT_ACTION(otMacFrameDoesAddrMatch(&sReceiveFrame, sPanid, sShortAddress, &sExtAddress),
                     error = OT_ERROR_ABORT);
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     otEXPECT_ACTION(otMacFrameGetSrcAddr(&sReceiveFrame, &macAddress) == OT_ERROR_NONE, error = OT_ERROR_PARSE);
 #endif
 
@@ -1153,7 +1153,7 @@ static uint8_t generateAckIeData(uint8_t *aLinkMetricsIeData, uint8_t aLinkMetri
     }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     if (aLinkMetricsIeData != NULL && aLinkMetricsIeDataLen > 0)
     {
         offset += otMacFrameGenerateEnhAckProbingIe(sAckIeData, aLinkMetricsIeData, aLinkMetricsIeDataLen);
@@ -1237,7 +1237,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
                                           otLinkMetrics        aLinkMetrics,
                                           const otShortAddress aShortAddress,

@@ -199,6 +199,7 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
 
 /**
  * This function sends an MLE Link Metrics Management Request to configure/clear an Enhanced-ACK Based Probing.
+ * This functionality requires OT_LINK_METRICS_INITIATOR feature enabled.
  *
  * @param[in] aInstance          A pointer to an OpenThread instance.
  * @param[in] aDestination       A pointer to the destination address.
