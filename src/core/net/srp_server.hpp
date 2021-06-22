@@ -637,7 +637,7 @@ private:
     const Service *FindService(const char *aFullName) const;
 
     void        HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, const Ip6::MessageInfo &aMessageInfo);
-    void        AddHost(Host *aHost);
+    void        AddHost(Host &aHost);
     void        RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandler);
     bool        HasNameConflictsWith(Host &aHost) const;
     void        SendResponse(const Dns::UpdateHeader &   aHeader,

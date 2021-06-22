@@ -205,10 +205,10 @@ const Server::Host *Server::GetNextHost(const Server::Host *aHost)
 
 // This method adds a SRP service host and takes ownership of it.
 // The caller MUST make sure that there is no existing host with the same hostname.
-void Server::AddHost(Host *aHost)
+void Server::AddHost(Host &aHost)
 {
-    OT_ASSERT(mHosts.FindMatching(aHost->GetFullName()) == nullptr);
-    IgnoreError(mHosts.Add(*aHost));
+    OT_ASSERT(mHosts.FindMatching(aHost.GetFullName()) == nullptr);
+    IgnoreError(mHosts.Add(aHost));
 }
 
 void Server::RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandler)
@@ -330,6 +330,7 @@ void Server::CommitSrpUpdate(Error                    aError,
     uint32_t hostKeyLease;
     uint32_t grantedLease;
     uint32_t grantedKeyLease;
+    bool     shouldFreeHost = true;
 
     SuccessOrExit(aError);
 
@@ -361,8 +362,6 @@ void Server::CommitSrpUpdate(Error                    aError,
                 existingHost->RemoveService(service, /* aRetainName */ true, /* aNotifyServiceHandler */ false);
             }
         }
-
-        aHost.Free();
     }
     else if (existingHost != nullptr)
     {
@@ -391,13 +390,12 @@ void Server::CommitSrpUpdate(Error                    aError,
                              newService->GetFullName());
             }
         }
-
-        aHost.Free();
     }
     else
     {
         otLogInfoSrp("[server] add new host %s", aHost.GetFullName());
-        AddHost(&aHost);
+        AddHost(aHost);
+        shouldFreeHost = false;
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
         if (!mHasRegisteredAnyService)
         {
@@ -421,6 +419,11 @@ exit:
     else
     {
         SendResponse(aDnsHeader, ErrorToDnsResponseCode(aError), aMessageInfo);
+    }
+
+    if (shouldFreeHost)
+    {
+        aHost.Free();
     }
 }
 
