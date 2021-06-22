@@ -96,7 +96,7 @@ private:
         mbedtls_aes_context mContext;
     };
 
-    AesEcbContext Context;
+    AesEcbContext mContext;
 };
 
 /**

@@ -33,6 +33,7 @@
 
 #include "hkdf_sha256.hpp"
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/error.hpp"
 
 #include <string.h>
@@ -42,16 +43,16 @@ namespace Crypto {
 
 void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey *aKey)
 {
-    void *ctx = (void *)&Context;
-    Error err = otPlatCryptoHkdfExtract(ctx, aSalt, aSaltLength, aKey);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHkdfExtract(context, aSalt, aSaltLength, aKey);
+    OT_ASSERT(err == kErrorNone);
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    void *ctx = (void *)&Context;
-    Error err = otPlatCryptoHkdfExpand(ctx, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHkdfExpand(context, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+    OT_ASSERT(err == kErrorNone);
 }
 
 } // namespace Crypto

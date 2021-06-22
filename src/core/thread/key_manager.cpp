@@ -181,12 +181,8 @@ KeyManager::KeyManager(Instance &aInstance)
 {
     SetCryptoType(otPlatCryptoGetType());
     IgnoreError(otPlatCryptoInit());
+    IgnoreError(mNetworkKey.GenerateRandom());
     IgnoreError(StoreNetworkKey(false));
-
-    Error error = mNetworkKey.GenerateRandom();
-
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
 
     mMacFrameCounters.Reset();
     mPskc.Clear();
@@ -256,7 +252,7 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
         // We will be able to retrieve the key_attributes only if there is
         // already a network key stored in ITS. If stored, and we are not
         // overwriting the existing key, return without doing anything.
-        SuccessOrExit(error != OT_ERROR_NONE);
+        SuccessOrExit(error == OT_ERROR_NONE);
     }
 
     CheckAndDestroyStoredKey(aKeyRef);
@@ -265,10 +261,11 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
                                   PSA_KEY_USAGE_SIGN_HASH | PSA_KEY_USAGE_EXPORT, PSA_KEY_LIFETIME_PERSISTENT,
                                   mNetworkKey.mKeyMaterial.key, OT_NETWORK_KEY_SIZE);
 
+exit:
     mNetworkKey.Clear();
     mNetworkKey.mKeyMaterial.keyRef = aKeyRef;
+    mNetworkKey.mCryptoType         = Mac::CryptoType::kUsePsa;
 
-exit:
     return error;
 }
 
@@ -283,7 +280,6 @@ Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
     if (GetCryptoType() == OT_CRYPTO_TYPE_PSA)
     {
         IgnoreError(StoreNetworkKey(true));
-        mNetworkKey.mCryptoType = Mac::CryptoType::kUsePsa;
     }
     else
     {

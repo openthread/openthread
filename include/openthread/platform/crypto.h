@@ -137,7 +137,7 @@ otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was NULL
  *
  */
-otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, uint8_t aBufferLen, size_t *aKeyLen);
+otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, uint16_t aBufferLen, size_t *aKeyLen);
 
 /**
  * Destroy a key stored in PSA ITS.

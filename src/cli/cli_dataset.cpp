@@ -424,7 +424,8 @@ otError Dataset::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
     }
     else
     {
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mNetworkKey.mKeyMaterial.key, sizeof(sDataset.mNetworkKey.mKeyMaterial.key)));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mNetworkKey.mKeyMaterial.key,
+                                                        sizeof(sDataset.mNetworkKey.mKeyMaterial.key)));
         sDataset.mComponents.mIsNetworkKeyPresent = true;
     }
 

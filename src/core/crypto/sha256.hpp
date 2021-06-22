@@ -154,7 +154,7 @@ private:
         mbedtls_sha256_context mContext;
     };
 
-    Sha256Context Context;
+    Sha256Context mContext;
 };
 
 /**

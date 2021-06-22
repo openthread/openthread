@@ -32,6 +32,7 @@
  */
 
 #include "hmac_sha256.hpp"
+#include "common/debug.hpp"
 #include "common/message.hpp"
 
 namespace ot {
@@ -39,37 +40,37 @@ namespace Crypto {
 
 HmacSha256::HmacSha256(void)
 {
-    void *mCtx = (void *)&Context;
-    Error err  = otPlatCryptoHmacSha256Init(mCtx);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHmacSha256Init(context);
+    OT_ASSERT(err == kErrorNone);
 }
 
 HmacSha256::~HmacSha256(void)
 {
-    void *mCtx = (void *)&Context;
-    Error err  = otPlatCryptoHmacSha256UnInit(mCtx);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHmacSha256UnInit(context);
+    OT_ASSERT(err == kErrorNone);
 }
 
 void HmacSha256::Start(otCryptoKey *aKey)
 {
-    void *mCtx = (void *)&Context;
-    Error err  = otPlatCryptoHmacSha256Start(mCtx, aKey);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHmacSha256Start(context, aKey);
+    OT_ASSERT(err == kErrorNone);
 }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    void *mCtx = (void *)&Context;
-    Error err  = otPlatCryptoHmacSha256Update(mCtx, aBuf, aBufLength);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHmacSha256Update(context, aBuf, aBufLength);
+    OT_ASSERT(err == kErrorNone);
 }
 
 void HmacSha256::Finish(Hash &aHash)
 {
-    void *mCtx = (void *)&Context;
-    Error err  = otPlatCryptoHmacSha256Finish(mCtx, aHash.m8, aHash.kSize);
-    (void)err;
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoHmacSha256Finish(context, aHash.m8, aHash.kSize);
+    OT_ASSERT(err == kErrorNone);
 }
 
 void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)

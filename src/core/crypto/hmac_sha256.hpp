@@ -139,7 +139,7 @@ private:
         mbedtls_md_context_t mContext;
     };
 
-    HmacContext Context;
+    HmacContext mContext;
 };
 
 /**

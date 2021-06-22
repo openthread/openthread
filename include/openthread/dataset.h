@@ -64,7 +64,7 @@ struct otNetworkKey
     union
     {
         uint8_t  key[OT_NETWORK_KEY_SIZE]; ///< Byte values
-        uint32_t keyRef;                  ///< Reference of the key.
+        uint32_t keyRef;                   ///< Reference of the key.
     } mKeyMaterial;
 } OT_TOOL_PACKED_END;
 

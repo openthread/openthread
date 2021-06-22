@@ -90,7 +90,7 @@ private:
         psa_key_derivation_operation_t mOperation;
     };
 
-    HkdfContext Context;
+    HkdfContext mContext;
 };
 
 /**

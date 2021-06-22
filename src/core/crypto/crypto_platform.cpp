@@ -39,6 +39,7 @@
 #include <openthread/platform/crypto.h>
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
+#include "common/message.hpp"
 #include "crypto/hmac_sha256.hpp"
 
 using namespace ot;

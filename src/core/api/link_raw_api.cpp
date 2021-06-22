@@ -228,9 +228,9 @@ otError otLinkRawSetMacKey(otInstance *    aInstance,
                            const otMacKey *aCurrKey,
                            const otMacKey *aNextKey)
 {
-    otMacKeyMaterial *aPrevKeyMaterial = (otMacKeyMaterial *)aPrevKey;
-    otMacKeyMaterial *aCurrKeyMaterial = (otMacKeyMaterial *)aCurrKey;
-    otMacKeyMaterial *aNextKeyMaterial = (otMacKeyMaterial *)aNextKey;
+    const otMacKeyMaterial *aPrevKeyMaterial = reinterpret_cast<const otMacKeyMaterial *>(aPrevKey);
+    const otMacKeyMaterial *aCurrKeyMaterial = reinterpret_cast<const otMacKeyMaterial *>(aCurrKey);
+    const otMacKeyMaterial *aNextKeyMaterial = reinterpret_cast<const otMacKeyMaterial *>(aNextKey);
 
     return static_cast<Instance *>(aInstance)->Get<Mac::LinkRaw>().SetMacKey(
         aKeyIdMode, aKeyId, *static_cast<const Mac::Key *>(aPrevKeyMaterial),

@@ -32,6 +32,7 @@
  */
 
 #include "aes_ecb.hpp"
+#include "common/debug.hpp"
 #include "common/error.hpp"
 
 namespace ot {
@@ -39,30 +40,30 @@ namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-    void *context = (void *)&Context;
+    void *context = static_cast<void *>(&mContext);
     Error err     = otPlatCryptoAesInit(context);
-    (void)err;
+    OT_ASSERT(err == kErrorNone);
 }
 
 void AesEcb::SetKey(otCryptoKey *aKey)
 {
-    void *context = (void *)&Context;
+    void *context = static_cast<void *>(&mContext);
     Error err     = otPlatCryptoAesSetKey(context, aKey);
-    (void)err;
+    OT_ASSERT(err == kErrorNone);
 }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
-    void *context = (void *)&Context;
+    void *context = static_cast<void *>(&mContext);
     Error err     = otPlatCryptoAesEncrypt(context, aInput, aOutput);
-    (void)err;
+    OT_ASSERT(err == kErrorNone);
 }
 
 AesEcb::~AesEcb(void)
 {
-    void *context = (void *)&Context;
+    void *context = static_cast<void *>(&mContext);
     Error err     = otPlatCryptoAesFree(context);
-    (void)err;
+    OT_ASSERT(err == kErrorNone);
 }
 
 } // namespace Crypto

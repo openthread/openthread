@@ -565,8 +565,8 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         case Tlv::kNetworkKey:
         {
             const NetworkKeyTlv *key                   = static_cast<const NetworkKeyTlv *>(cur);
-            bool                       KeyManagerHasValidKey = false;
-            uint8_t                    networkKeyLiteral[OT_NETWORK_KEY_SIZE];
+            bool                 KeyManagerHasValidKey = false;
+            uint8_t              networkKeyLiteral[OT_NETWORK_KEY_SIZE];
             IgnoreError(keyManager.GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
 
             KeyManagerHasValidKey = (memcmp(networkKeyLiteral, key->GetNetworkKey().mKeyMaterial.key,
