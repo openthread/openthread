@@ -229,9 +229,14 @@ if(OT_LINK_RAW)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_LINK_RAW_ENABLE=1")
 endif()
 
-option(OT_LINK_METRICS "enable link metrics")
-if (OT_LINK_METRICS)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE=1")
+option(OT_LINK_METRICS_INITIATOR "enable link metrics initiator")
+if (OT_LINK_METRICS_INITIATOR)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE=1")
+endif()
+
+option(OT_LINK_METRICS_SUBJECT "enable link metrics subject")
+if (OT_LINK_METRICS_SUBJECT)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE=1")
 endif()
 
 option(OT_LOG_LEVEL_DYNAMIC "enable dynamic log level control")

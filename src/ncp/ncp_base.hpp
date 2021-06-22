@@ -337,7 +337,7 @@ protected:
     void        HandleJoinerCallback(otError aError);
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     static void HandleLinkMetricsReport_Jump(const otIp6Address *       aSource,
                                              const otLinkMetricsValues *aMetricsValues,
                                              uint8_t                    aStatus,
@@ -388,7 +388,7 @@ protected:
     otError EncodeChildInfo(const otChildInfo &aChildInfo);
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     otError DecodeLinkMetrics(otLinkMetrics *aMetrics, bool aAllowPduCount);
 
     otError EncodeLinkMetricsValues(const otLinkMetricsValues *aMetricsValues);

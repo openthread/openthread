@@ -598,7 +598,7 @@ public:
      */
     uint32_t GetPreferredChannelMask(void);
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * This method enables/disables or updates Enhanced-ACK Based Probing in radio for a specific Initiator.
      *
@@ -626,7 +626,7 @@ public:
     {
         return otPlatRadioConfigureEnhAckProbing(GetInstancePtr(), aLinkMetrics, aShortAddress, &aExtAddress);
     }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
     /**
      * This method checks if a given channel is valid as a CSL channel.

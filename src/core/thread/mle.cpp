@@ -2493,7 +2493,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus)
 {
     Error    error = kErrorNone;
@@ -2517,7 +2517,9 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
 exit:
     return error;
 }
+#endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t *aBuf, uint8_t aLength)
 {
     Error    error = kErrorNone;
@@ -2538,7 +2540,7 @@ Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, ui
 exit:
     return error;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif
 
 Error Mle::SendMessage(Message &aMessage, const Ip6::Address &aDestination)
 {
@@ -2866,15 +2868,19 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
 #endif
 #endif // OPENTHREAD_FTD
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     case kCommandLinkMetricsManagementRequest:
         HandleLinkMetricsManagementRequest(aMessage, aMessageInfo, neighbor);
         break;
+#endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     case kCommandLinkMetricsManagementResponse:
         HandleLinkMetricsManagementResponse(aMessage, aMessageInfo, neighbor);
         break;
+#endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     case kCommandLinkProbe:
         HandleLinkProbe(aMessage, aMessageInfo, neighbor);
         break;
@@ -2995,7 +3001,7 @@ exit:
 void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, const Neighbor *aNeighbor)
 {
     Error error;
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     uint16_t metricsReportValueOffset;
     uint16_t length;
 #endif
@@ -3004,7 +3010,7 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
 
     VerifyOrExit(aNeighbor && aNeighbor->IsStateValid(), error = kErrorSecurity);
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == kErrorNone)
     {
         Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportValueOffset, length,
@@ -3864,7 +3870,7 @@ exit:
     LogProcessError(kTypeAnnounce, error);
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
                                              const Ip6::MessageInfo &aMessageInfo,
                                              Neighbor *              aNeighbor)
@@ -3883,6 +3889,9 @@ exit:
     LogProcessError(kTypeLinkMetricsManagementRequest, error);
 }
 
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 void Mle::HandleLinkMetricsManagementResponse(const Message &         aMessage,
                                               const Ip6::MessageInfo &aMessageInfo,
                                               Neighbor *              aNeighbor)
@@ -3898,7 +3907,9 @@ void Mle::HandleLinkMetricsManagementResponse(const Message &         aMessage,
 exit:
     LogProcessError(kTypeLinkMetricsManagementResponse, error);
 }
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Neighbor *aNeighbor)
 {
     Error   error = kErrorNone;
@@ -3913,7 +3924,7 @@ void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMess
 exit:
     LogProcessError(kTypeLinkProbe, error);
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 void Mle::ProcessAnnounce(void)
 {
@@ -4213,7 +4224,7 @@ const char *Mle::MessageTypeToString(MessageType aType)
         "Time Sync", // (28) kTypeTimeSync
 #endif
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         "Link Metrics Management Request",  // (29) kTypeLinkMetricsManagementRequest
         "Link Metrics Management Response", // (30) kTypeLinkMetricsManagementResponse
         "Link Probe",                       // (31) kTypeLinkProbe
@@ -4251,20 +4262,20 @@ const char *Mle::MessageTypeToString(MessageType aType)
     static_assert(kTypeParentRequest == 27, "kTypeParentRequest value is incorrect");
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     static_assert(kTypeTimeSync == 28, "kTypeTimeSync value is incorrect");
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     static_assert(kTypeLinkMetricsManagementRequest == 29, "kTypeLinkMetricsManagementRequest value is incorrect)");
     static_assert(kTypeLinkMetricsManagementResponse == 30, "kTypeLinkMetricsManagementResponse value is incorrect)");
     static_assert(kTypeLinkProbe == 31, "kTypeLinkProbe value is incorrect)");
 #endif
 #else // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     static_assert(kTypeLinkMetricsManagementRequest == 28, "kTypeLinkMetricsManagementRequest value is incorrect)");
     static_assert(kTypeLinkMetricsManagementResponse == 29, "kTypeLinkMetricsManagementResponse value is incorrect)");
     static_assert(kTypeLinkProbe == 30, "kTypeLinkProbe value is incorrect)");
 #endif
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 #else  // OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     static_assert(kTypeLinkMetricsManagementRequest == 16, "kTypeLinkMetricsManagementRequest value is incorrect)");
     static_assert(kTypeLinkMetricsManagementResponse == 17, "kTypeLinkMetricsManagementResponse value is incorrect)");
     static_assert(kTypeLinkProbe == 18, "kTypeLinkProbe value is incorrect)");
@@ -4397,7 +4408,7 @@ const char *Mle::ReattachStateToString(ReattachState aState)
 
 // LCOV_EXCL_STOP
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, const uint8_t *aSubTlvs, uint8_t aLength)
 {
     Error    error = kErrorNone;
