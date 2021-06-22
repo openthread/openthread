@@ -79,7 +79,7 @@ public:
         kExtendedPanId           = OT_MESHCOP_TLV_EXTPANID,                 ///< Extended PAN ID TLV
         kNetworkName             = OT_MESHCOP_TLV_NETWORKNAME,              ///< Network Name TLV
         kPskc                    = OT_MESHCOP_TLV_PSKC,                     ///< PSKc TLV
-        kNetworkMasterKey        = OT_MESHCOP_TLV_MASTERKEY,                ///< Network Master Key TLV
+        kNetworkKey              = OT_MESHCOP_TLV_NETWORKKEY,               ///< Network Network Key TLV
         kNetworkKeySequence      = OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE,     ///< Network Key Sequence TLV
         kMeshLocalPrefix         = OT_MESHCOP_TLV_MESHLOCALPREFIX,          ///< Mesh Local Prefix TLV
         kSteeringData            = OT_MESHCOP_TLV_STEERING_DATA,            ///< Steering Data TLV
@@ -581,11 +581,11 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Network Master Key TLV generation and parsing.
+ * This class implements Network Network Key TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkMasterKeyTlv : public Tlv, public SimpleTlvInfo<Tlv::kNetworkMasterKey, MasterKey>
+class NetworkKeyTlv : public Tlv, public SimpleTlvInfo<Tlv::kNetworkKey, NetworkKey>
 {
 public:
     /**
@@ -594,7 +594,7 @@ public:
      */
     void Init(void)
     {
-        SetType(kNetworkMasterKey);
+        SetType(kNetworkKey);
         SetLength(sizeof(*this) - sizeof(Tlv));
     }
 
@@ -608,23 +608,23 @@ public:
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Network Master Key value.
+     * This method returns the Network Network Key value.
      *
-     * @returns The Network Master Key value.
+     * @returns The Network Network Key value.
      *
      */
-    const MasterKey &GetNetworkMasterKey(void) const { return mNetworkMasterKey; }
+    const NetworkKey &GetNetworkKey(void) const { return mNetworkKey; }
 
     /**
-     * This method sets the Network Master Key value.
+     * This method sets the Network Network Key value.
      *
-     * @param[in]  aMasterKey  The Network Master Key.
+     * @param[in]  aNetworkKey  The Network Network Key.
      *
      */
-    void SetNetworkMasterKey(const MasterKey &aMasterKey) { mNetworkMasterKey = aMasterKey; }
+    void SetNetworkKey(const NetworkKey &aNetworkKey) { mNetworkKey = aNetworkKey; }
 
 private:
-    MasterKey mNetworkMasterKey;
+    NetworkKey mNetworkKey;
 } OT_TOOL_PACKED_END;
 
 /**

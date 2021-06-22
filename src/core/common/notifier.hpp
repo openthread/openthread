@@ -83,7 +83,7 @@ enum Event : uint32_t
     kEventThreadPanIdChanged               = OT_CHANGED_THREAD_PANID,                 ///< Network PAN ID changed
     kEventThreadNetworkNameChanged         = OT_CHANGED_THREAD_NETWORK_NAME,          ///< Network name changed
     kEventThreadExtPanIdChanged            = OT_CHANGED_THREAD_EXT_PANID,             ///< Extended PAN ID changed
-    kEventMasterKeyChanged                 = OT_CHANGED_MASTER_KEY,                   ///< Master Key changed
+    kEventNetworkKeyChanged                = OT_CHANGED_NETWORK_KEY,                  ///< Network Key changed
     kEventPskcChanged                      = OT_CHANGED_PSKC,                         ///< PSKc changed
     kEventSecurityPolicyChanged            = OT_CHANGED_SECURITY_POLICY,              ///< Security Policy changed
     kEventChannelManagerNewChannelChanged  = OT_CHANGED_CHANNEL_MANAGER_NEW_CHANNEL,  ///< New Channel (channel-manager)

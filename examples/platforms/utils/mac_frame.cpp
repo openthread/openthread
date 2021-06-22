@@ -237,7 +237,7 @@ uint8_t otMacFrameGenerateCslIeTemplate(uint8_t *aDest)
 }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 uint8_t otMacFrameGenerateEnhAckProbingIe(uint8_t *aDest, const uint8_t *aIeData, uint8_t aIeDataLength)
 {
     uint8_t len = sizeof(Mac::VendorIeHeader) + aIeDataLength;
@@ -267,4 +267,4 @@ void otMacFrameSetEnhAckProbingIe(otRadioFrame *aFrame, const uint8_t *aData, ui
 
     reinterpret_cast<Mac::Frame *>(aFrame)->SetEnhAckProbingIe(aData, aDataLen);
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

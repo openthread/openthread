@@ -50,6 +50,7 @@
 #include <openthread/srp_server.h>
 
 #include "common/clearable.hpp"
+#include "common/heap_string.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -81,6 +82,7 @@ public:
         kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, ///< The reserved min SRP Server UDP listening port.
         kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, ///< The reserved max SRP Server UDP listening port.
     };
+
     static_assert(kUdpPortMin <= kUdpPortMax, "invalid port range");
 
     /**
@@ -90,7 +92,6 @@ public:
     typedef otSrpServerServiceUpdateId ServiceUpdateId;
 
     class Host;
-    class Service;
 
     /**
      * This class implements a server-side SRP service.
@@ -137,7 +138,7 @@ public:
          * @returns  A pointer to the null-terminated service name string.
          *
          */
-        const char *GetFullName(void) const { return mFullName; }
+        const char *GetFullName(void) const { return mFullName.AsCString(); }
 
         /**
          * This method returns the port of the service instance.
@@ -174,7 +175,7 @@ public:
         const uint8_t *GetTxtData(void) const { return mTxtData; }
 
         /**
-         * This method returns the TXT recored data length of the service instance.
+         * This method returns the TXT record data length of the service instance.
          *
          * @return The TXT record data length (number of bytes in buffer returned from `GetTxtData()`).
          *
@@ -213,7 +214,7 @@ public:
          * @returns  TRUE if the service matches the full name, FALSE if doesn't match.
          *
          */
-        bool Matches(const char *aFullName) const;
+        bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
 
         /**
          * This method tells whether this service matches a given service name <Service>.<Domain>.
@@ -228,13 +229,12 @@ public:
 
     private:
         explicit Service(void);
-        Error SetFullName(const char *aFullName);
-        Error SetTxtData(const uint8_t *aTxtData, uint16_t aTxtDataLength);
+        Error SetFullName(const char *aFullName) { return mFullName.Set(aFullName); }
         Error SetTxtDataFromMessage(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
-        Error CopyResourcesFrom(const Service &aService);
+        void  TakeResourcesFrom(Service &aService);
         void  ClearResources(void);
 
-        char *           mFullName;
+        HeapString       mFullName;
         uint16_t         mPriority;
         uint16_t         mWeight;
         uint16_t         mPort;
@@ -291,7 +291,7 @@ public:
          * @returns  A pointer to the null-terminated full host name.
          *
          */
-        const char *GetFullName(void) const { return mFullName; }
+        const char *GetFullName(void) const { return mFullName.AsCString(); }
 
         /**
          * This method returns addresses of the host.
@@ -369,7 +369,7 @@ public:
          * @returns  A boolean that indicates whether the host matches the given name.
          *
          */
-        bool Matches(const char *aName) const;
+        bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
 
     private:
         enum : uint8_t
@@ -378,10 +378,10 @@ public:
         };
 
         explicit Host(Instance &aInstance);
-        Error    SetFullName(const char *aFullName);
+        Error    SetFullName(const char *aFullName) { return mFullName.Set(aFullName); }
         void     SetKey(Dns::Ecdsa256KeyRecord &aKey);
-        void     SetLease(uint32_t aLease);
-        void     SetKeyLease(uint32_t aKeyLease);
+        void     SetLease(uint32_t aLease) { mLease = aLease; }
+        void     SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
         Service *GetNextService(Service *aService) { return aService ? aService->GetNext() : mServices.GetHead(); }
         Service *AddService(const char *aFullName);
         void     RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler);
@@ -392,7 +392,7 @@ public:
         const Service *FindService(const char *aFullName) const;
         Error          AddIp6Address(const Ip6::Address &aIp6Address);
 
-        char *       mFullName;
+        HeapString   mFullName;
         Ip6::Address mAddresses[kMaxAddressesNum];
         uint8_t      mAddressesNum;
         Host *       mNext;
@@ -432,7 +432,6 @@ public:
      *
      */
     explicit Server(Instance &aInstance);
-    ~Server(void);
 
     /**
      * This method sets the SRP service events handler.
@@ -457,7 +456,7 @@ public:
      * @returns A pointer to the dot-joined domain string.
      *
      */
-    const char *GetDomain(void) const;
+    const char *GetDomain(void) const { return mDomain.AsCString(); }
 
     /**
      * This method sets the domain on the SRP server.
@@ -481,7 +480,7 @@ public:
      * @returns  A boolean that indicates whether the server is running.
      *
      */
-    bool IsRunning(void) const;
+    bool IsRunning(void) const { return mSocket.IsBound(); }
 
     /**
      * This method enables/disables the SRP server.
@@ -497,7 +496,7 @@ public:
      * @param[out]  aLeaseConfig  A reference to the `LeaseConfig` instance.
      *
      */
-    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const;
+    void GetLeaseConfig(LeaseConfig &aLeaseConfig) const { aLeaseConfig = mLeaseConfig; }
 
     /**
      * This method sets the LEASE and KEY-LEASE configurations.
@@ -638,7 +637,7 @@ private:
     const Service *FindService(const char *aFullName) const;
 
     void        HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host *aHost, const Ip6::MessageInfo &aMessageInfo);
-    void        AddHost(Host *aHost);
+    void        AddHost(Host &aHost);
     void        RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandler);
     bool        HasNameConflictsWith(Host &aHost) const;
     void        SendResponse(const Dns::UpdateHeader &   aHeader,
@@ -662,7 +661,7 @@ private:
     otSrpServerServiceUpdateHandler mServiceUpdateHandler;
     void *                          mServiceUpdateHandlerContext;
 
-    char *mDomain;
+    HeapString mDomain;
 
     LeaseConfig mLeaseConfig;
 

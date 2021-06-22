@@ -1340,7 +1340,7 @@ void Mac::RecordFrameTransmitStatus(const TxFrame &aFrame,
     if ((aError == kErrorNone) && ackRequested && (aAckFrame != nullptr) && (neighbor != nullptr))
     {
         neighbor->GetLinkInfo().AddRss(aAckFrame->GetRssi());
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aAckFrame->GetType(), aAckFrame->GetLqi(),
                                        aAckFrame->GetRssi());
         ProcessEnhAckProbing(*aAckFrame, *neighbor);
@@ -2026,7 +2026,7 @@ void Mac::HandleReceivedFrame(RxFrame *aFrame, Error aError)
     if (neighbor != nullptr)
     {
         neighbor->GetLinkInfo().AddRss(aFrame->GetRssi());
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
         neighbor->AggregateLinkMetrics(/* aSeriesId */ 0, aFrame->GetType(), aFrame->GetLqi(), aFrame->GetRssi());
 #endif
 
@@ -2478,7 +2478,7 @@ exit:
 }
 #endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 {
     enum
@@ -2501,7 +2501,7 @@ void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 exit:
     return;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 } // namespace Mac
 } // namespace ot

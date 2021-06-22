@@ -31,7 +31,7 @@ import unittest
 
 from mesh_cop import TlvType
 import thread_cert
-from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, LEADER_ALOC, NM_COMMISSIONER_SESSION_ID_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_SECURITY_POLICY_TLV, NM_NETWORK_MASTER_KEY_TLV, MLE_DISCOVERY_RESPONSE
+from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_SET_URI, MGMT_ACTIVE_GET_URI, LEADER_ALOC, NM_COMMISSIONER_SESSION_ID_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_SECURITY_POLICY_TLV, NM_NETWORK_KEY_TLV, MLE_DISCOVERY_RESPONSE
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.layer_fields import nullField
 from pktverify.bytes import Bytes
@@ -76,7 +76,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
             'active_dataset': {
                 'timestamp': 1,
                 'channel': 19,
-                'master_key': '00112233445566778899aabbccddeeff',
+                'network_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrcb']
             },
             'mode': 'rdn',
@@ -86,7 +86,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
             'active_dataset': {
                 'timestamp': 1,
                 'channel': 19,
-                'master_key': '00112233445566778899aabbccddeeff',
+                'network_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrcb']
             },
             'mode': 'rdn',
@@ -102,7 +102,7 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
             'active_dataset': {
                 'timestamp': 1,
                 'channel': 19,
-                'master_key': '00112233445566778899aabbccddeeff',
+                'network_key': '00112233445566778899aabbccddeeff',
                 'security_policy': [3600, 'onrcb']
             },
             'mode': 'rdn',
@@ -138,8 +138,8 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         self.simulator.go(5)
 
         # Step 7
-        # Get MasterKey
-        self.nodes[COMMISSIONER_1].send_mgmt_active_get(leader_rloc, [TlvType.NETWORK_MASTER_KEY])
+        # Get NetworkKey
+        self.nodes[COMMISSIONER_1].send_mgmt_active_get(leader_rloc, [TlvType.NETWORK_KEY])
         self.simulator.go(5)
 
         # Step 9
@@ -257,18 +257,18 @@ class Cert_5_8_04_SecurityPolicyTLV(thread_cert.TestCase):
         #         CoAP Request URI
         #             coap://[<L>]:MM/c/ag
         #         CoAP Payload
-        #             Network Master Key TLV
+        #             Network Key TLV
         pkts.filter_wpan_src64(COMMISSIONER_1).\
             filter_ipv6_2dsts(LEADER_RLOC, LEADER_ALOC).\
             filter_coap_request(MGMT_ACTIVE_GET_URI).\
-            filter(lambda p: NM_NETWORK_MASTER_KEY_TLV in p.thread_meshcop.tlv.type).\
+            filter(lambda p: NM_NETWORK_KEY_TLV in p.thread_meshcop.tlv.type).\
             must_next()
 
         # Step 8: Leader MUST send MGMT_ACTIVE_GET.rsp to the Commissioner_1
         #         CoAP Response Code
         #             2.04 Changed
         #         CoAP Payload
-        #             Network Master Key TLV MUST NOT be included
+        #             Network Key TLV MUST NOT be included
         pkts.filter_wpan_src64(LEADER).\
             filter_ipv6_dst(COMMISSIONER_1_RLOC).\
             filter_coap_ack(MGMT_ACTIVE_GET_URI).\

@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #include <openthread/link_metrics.h>
 
@@ -74,6 +74,7 @@ otError otLinkMetricsConfigForwardTrackingSeries(otInstance *                   
         static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aSeriesFlags, aLinkMetricsFlags);
 }
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 otError otLinkMetricsConfigEnhAckProbing(otInstance *                               aInstance,
                                          const otIp6Address *                       aDestination,
                                          const otLinkMetricsEnhAckFlags             aEnhAckFlags,
@@ -104,5 +105,6 @@ otError otLinkMetricsSendLinkProbe(otInstance *        aInstance,
     return static_cast<Instance *>(aInstance)->Get<LinkMetrics>().SendLinkProbe(
         static_cast<const Ip6::Address &>(*aDestination), aSeriesId, aLength);
 }
+#endif
 
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

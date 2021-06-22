@@ -266,7 +266,7 @@ const char *Notifier::EventToString(Event aEvent) const
         "PanId",             // kEventThreadPanIdChanged               (1 << 15)
         "NetName",           // kEventThreadNetworkNameChanged         (1 << 16)
         "ExtPanId",          // kEventThreadExtPanIdChanged            (1 << 17)
-        "MstrKey",           // kEventMasterKeyChanged                 (1 << 18)
+        "NetworkKey",        // kEventNetworkKeyChanged                (1 << 18)
         "PSKc",              // kEventPskcChanged                      (1 << 19)
         "SecPolicy",         // kEventSecurityPolicyChanged            (1 << 20)
         "CMNewChan",         // kEventChannelManagerNewChannelChanged  (1 << 21)

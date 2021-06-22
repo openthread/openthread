@@ -79,6 +79,17 @@ uint16_t StringLength(const char *aString, uint16_t aMaxLength);
 const char *StringFind(const char *aString, char aChar);
 
 /**
+ * This function finds the first occurrence of a given sub-string in a null-terminated string.
+ *
+ * @param[in] aString     A pointer to the string.
+ * @param[in] aSubString  A sub-string to search for.
+ *
+ * @returns The pointer to first occurrence of the @p aSubString in @p aString, or nullptr if cannot be found.
+ *
+ */
+const char *StringFind(const char *aString, const char *aSubString);
+
+/**
  * This function checks whether a null-terminated string ends with a given character.
  *
  * @param[in] aString  A pointer to the string.
@@ -89,6 +100,18 @@ const char *StringFind(const char *aString, char aChar);
  *
  */
 bool StringEndsWith(const char *aString, char aChar);
+
+/**
+ * This function checks whether a null-terminated string ends with a given sub-string.
+ *
+ * @param[in] aString      A pointer to the string.
+ * @param[in] aSubString   A sun-string to check against.
+ *
+ * @retval TRUE   If @p aString ends with sub-string @p aSubString.
+ * @retval FALSE  If @p aString does not end with sub-string @p aSubString.
+ *
+ */
+bool StringEndsWith(const char *aString, const char *aSubString);
 
 /**
  * This class implements writing to a string buffer.

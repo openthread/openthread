@@ -975,7 +975,7 @@ exit:
     return header;
 }
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 {
     uint8_t        index        = FindHeaderIeIndex();
@@ -1007,7 +1007,7 @@ const uint8_t *Frame::GetThreadIe(uint8_t aSubType) const
 exit:
     return header;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
 
@@ -1027,7 +1027,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
 {
     uint8_t *cur = GetThreadIe(ThreadIe::kEnhAckProbingIe);
@@ -1036,7 +1036,7 @@ void Frame::SetEnhAckProbingIe(const uint8_t *aValue, uint8_t aLen)
 
     memcpy(cur + sizeof(HeaderIe) + sizeof(VendorIeHeader), aValue, aLen);
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 const TimeIe *Frame::GetTimeIe(void) const

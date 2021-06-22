@@ -43,8 +43,6 @@
 #include "net/srp_server.hpp"
 #include "net/udp6.hpp"
 
-using ot::Encoding::BigEndian::HostSwap16;
-
 namespace ot {
 namespace Dns {
 namespace ServiceDiscovery {

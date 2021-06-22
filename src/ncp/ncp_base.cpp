@@ -1934,7 +1934,7 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_CAPS>(void)
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_SRP_CLIENT));
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     SuccessOrExit(error = mEncoder.WriteUintPacked(SPINEL_CAP_THREAD_LINK_METRICS));
 #endif
 

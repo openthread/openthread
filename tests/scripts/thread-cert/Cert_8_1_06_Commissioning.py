@@ -64,11 +64,11 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
     TOPOLOGY = {
         COMMISSIONER: {
             'name': 'COMMISSIONER',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'networkkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         JOINER: {
-            'masterkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
             'mode': 'rdn',
         },
     }
@@ -88,8 +88,8 @@ class Cert_8_1_06_Commissioning(thread_cert.TestCase):
         self.simulator.go(10)
         self.simulator.read_cert_messages_in_commissioning_log([COMMISSIONER, JOINER])
         self.assertEqual(
-            self.nodes[JOINER].get_masterkey(),
-            self.nodes[COMMISSIONER].get_masterkey(),
+            self.nodes[JOINER].get_networkkey(),
+            self.nodes[COMMISSIONER].get_networkkey(),
         )
         joiner_messages = self.simulator.get_messages_sent_by(JOINER)
         commissioner_messages = self.simulator.get_messages_sent_by(COMMISSIONER)

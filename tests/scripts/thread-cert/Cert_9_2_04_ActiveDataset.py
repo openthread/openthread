@@ -46,7 +46,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             'name': 'COMMISSIONER',
             'active_dataset': {
                 'timestamp': 10,
-                'master_key': '00112233445566778899aabbccddeeff'
+                'network_key': '00112233445566778899aabbccddeeff'
             },
             'mode': 'rdn',
             'allowlist': [LEADER]
@@ -55,7 +55,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             'name': 'LEADER',
             'active_dataset': {
                 'timestamp': 10,
-                'master_key': '00112233445566778899aabbccddeeff'
+                'network_key': '00112233445566778899aabbccddeeff'
             },
             'mode': 'rdn',
             'allowlist': [COMMISSIONER]
@@ -113,12 +113,12 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
         self.assertEqual(self.nodes[LEADER].get_network_name(), 'GRL')
 
         # Step 10
-        # Attempt to set Network Master Key TLV
+        # Attempt to set Network Key TLV
         self.nodes[COMMISSIONER].send_mgmt_active_set(
             active_timestamp=104,
             channel_mask=0x7fff800,
             extended_panid='000db70000000000',
-            master_key='ffeeddccbbaa99887766554433221100',
+            network_key='ffeeddccbbaa99887766554433221100',
             mesh_local='fd00:0db7::',
             network_name='GRL',
         )
@@ -131,7 +131,7 @@ class Cert_9_2_04_ActiveDataset(thread_cert.TestCase):
             active_timestamp=105,
             channel_mask=0x7fff800,
             extended_panid='000db70000000000',
-            master_key='00112233445566778899aabbccddeeff',
+            network_key='00112233445566778899aabbccddeeff',
             mesh_local='fd00:0db7::',
             network_name='UL',
             panid=0xafce,

@@ -107,7 +107,7 @@ void SettingsBase::SrpServerInfo::Log(Action aAction) const
 
 #endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 const char *SettingsBase::ActionToString(Action aAction)
 {
     static const char *const kActionStrings[] = {
@@ -134,9 +134,9 @@ const char *SettingsBase::ActionToString(Action aAction)
 
     return kActionStrings[aAction];
 }
-#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
+#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
 
-#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#if OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
 const char *SettingsBase::KeyToString(Key aKey)
 {
     static const char *const kKeyStrings[] = {
@@ -176,7 +176,7 @@ const char *SettingsBase::KeyToString(Key aKey)
 
     return kKeyStrings[aKey];
 }
-#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO)
+#endif // OPENTHREAD_CONFIG_LOG_UTIL && (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_WARN)
 
 // LCOV_EXCL_STOP
 

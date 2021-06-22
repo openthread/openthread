@@ -518,11 +518,10 @@ private:
     otError ProcessPartitionId(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessLeaderWeight(uint8_t aArgsLength, Arg aArgs[]);
 #endif
-    otError ProcessMasterKey(uint8_t aArgsLength, Arg aArgs[]);
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessMlIid(uint8_t aArgsLength, Arg aArgs[]);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     otError ProcessLinkMetrics(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessLinkMetricsQuery(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessLinkMetricsMgmt(uint8_t aArgsLength, Arg aArgs[]);
@@ -570,6 +569,7 @@ private:
 #if OPENTHREAD_FTD
     otError ProcessNetworkIdTimeout(uint8_t aArgsLength, Arg aArgs[]);
 #endif
+    otError ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[]);
     otError ProcessNetworkName(uint8_t aArgsLength, Arg aArgs[]);
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     otError ProcessNetworkTime(uint8_t aArgsLength, Arg aArgs[]);
@@ -695,7 +695,7 @@ private:
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     void HandleSntpResponse(uint64_t aTime, otError aResult);
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     void PrintLinkMetricsValue(const otLinkMetricsValues *aMetricsValues);
 
     static void HandleLinkMetricsReport(const otIp6Address *       aAddress,
@@ -721,7 +721,7 @@ private:
                                           const otLinkMetricsValues *aMetricsValues);
 
     const char *LinkMetricsStatusToStr(uint8_t aStatus);
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
     static void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo *aInfo, void *aContext)
     {
@@ -811,7 +811,7 @@ private:
 #if OPENTHREAD_FTD
         {"leaderweight", &Interpreter::ProcessLeaderWeight},
 #endif
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
         {"linkmetrics", &Interpreter::ProcessLinkMetrics},
 #endif
         {"log", &Interpreter::ProcessLog},
@@ -819,7 +819,6 @@ private:
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
         {"macfilter", &Interpreter::ProcessMacFilter},
 #endif
-        {"masterkey", &Interpreter::ProcessMasterKey},
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
         {"mliid", &Interpreter::ProcessMlIid},
 #endif
@@ -839,6 +838,7 @@ private:
 #if OPENTHREAD_FTD
         {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
 #endif
+        {"networkkey", &Interpreter::ProcessNetworkKey},
         {"networkname", &Interpreter::ProcessNetworkName},
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
         {"networktime", &Interpreter::ProcessNetworkTime},

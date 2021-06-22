@@ -50,25 +50,25 @@ extern "C" {
  *
  */
 
-#define OT_MASTER_KEY_SIZE 16 ///< Size of the Thread Master Key (bytes)
+#define OT_NETWORK_KEY_SIZE 16 ///< Size of the Thread Network Key (bytes)
 
 /**
- * @struct otMasterKey
+ * @struct otNetworkKey
  *
- * This structure represents a Thread Master Key.
+ * This structure represents a Thread Network Key.
  *
  */
 OT_TOOL_PACKED_BEGIN
-struct otMasterKey
+struct otNetworkKey
 {
-    uint8_t m8[OT_MASTER_KEY_SIZE]; ///< Byte values
+    uint8_t m8[OT_NETWORK_KEY_SIZE]; ///< Byte values
 } OT_TOOL_PACKED_END;
 
 /**
- * This structure represents a Thread Master Key.
+ * This structure represents a Thread Network Key.
  *
  */
-typedef struct otMasterKey otMasterKey;
+typedef struct otNetworkKey otNetworkKey;
 
 #define OT_NETWORK_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Network Name field (bytes)
 
@@ -135,14 +135,14 @@ typedef struct otSecurityPolicy
 {
     uint16_t mRotationTime; ///< The value for thrKeyRotation in units of hours.
 
-    bool    mObtainMasterKeyEnabled : 1;         ///< Obtaining the Master Key for out-of-band commissioning is enabled
+    bool    mObtainNetworkKeyEnabled : 1;        ///< Obtaining the Network Key for out-of-band commissioning is enabled
     bool    mNativeCommissioningEnabled : 1;     ///< Native Commissioning using PSKc is allowed
     bool    mRoutersEnabled : 1;                 ///< Thread 1.0/1.1.x Routers are enabled
     bool    mExternalCommissioningEnabled : 1;   ///< External Commissioner authentication is allowed
     bool    mBeaconsEnabled : 1;                 ///< Thread 1.0/1.1.x Beacons are enabled
     bool    mCommercialCommissioningEnabled : 1; ///< Commercial Commissioning is enabled
     bool    mAutonomousEnrollmentEnabled : 1;    ///< Autonomous Enrollment is enabled
-    bool    mMasterKeyProvisioningEnabled : 1;   ///< Network Master-key Provisioning is enabled
+    bool    mNetworkKeyProvisioningEnabled : 1;  ///< Network Key Provisioning is enabled
     bool    mTobleLinkEnabled : 1;               ///< ToBLE link is enabled
     bool    mNonCcmRoutersEnabled : 1;           ///< Non-CCM Routers enabled
     uint8_t mVersionThresholdForRouting : 3;     ///< Version-threshold for Routing
@@ -189,7 +189,7 @@ typedef struct otOperationalDatasetComponents
 {
     bool mIsActiveTimestampPresent : 1;  ///< TRUE if Active Timestamp is present, FALSE otherwise.
     bool mIsPendingTimestampPresent : 1; ///< TRUE if Pending Timestamp is present, FALSE otherwise.
-    bool mIsMasterKeyPresent : 1;        ///< TRUE if Network Master Key is present, FALSE otherwise.
+    bool mIsNetworkKeyPresent : 1;       ///< TRUE if Network Key is present, FALSE otherwise.
     bool mIsNetworkNamePresent : 1;      ///< TRUE if Network Name is present, FALSE otherwise.
     bool mIsExtendedPanIdPresent : 1;    ///< TRUE if Extended PAN ID is present, FALSE otherwise.
     bool mIsMeshLocalPrefixPresent : 1;  ///< TRUE if Mesh Local Prefix is present, FALSE otherwise.
@@ -211,7 +211,7 @@ typedef struct otOperationalDataset
 {
     uint64_t                       mActiveTimestamp;  ///< Active Timestamp
     uint64_t                       mPendingTimestamp; ///< Pending Timestamp
-    otMasterKey                    mMasterKey;        ///< Network Master Key
+    otNetworkKey                   mNetworkKey;       ///< Network Key
     otNetworkName                  mNetworkName;      ///< Network Name
     otExtendedPanId                mExtendedPanId;    ///< Extended PAN ID
     otMeshLocalPrefix              mMeshLocalPrefix;  ///< Mesh Local Prefix
@@ -253,7 +253,7 @@ typedef enum otMeshcopTlvType
     OT_MESHCOP_TLV_EXTPANID                 = 2,   ///< meshcop Extended Pan Id TLV
     OT_MESHCOP_TLV_NETWORKNAME              = 3,   ///< meshcop Network Name TLV
     OT_MESHCOP_TLV_PSKC                     = 4,   ///< meshcop PSKc TLV
-    OT_MESHCOP_TLV_MASTERKEY                = 5,   ///< meshcop Network Master Key TLV
+    OT_MESHCOP_TLV_NETWORKKEY               = 5,   ///< meshcop Network Key TLV
     OT_MESHCOP_TLV_NETWORK_KEY_SEQUENCE     = 6,   ///< meshcop Network Key Sequence TLV
     OT_MESHCOP_TLV_MESHLOCALPREFIX          = 7,   ///< meshcop Mesh Local Prefix TLV
     OT_MESHCOP_TLV_STEERING_DATA            = 8,   ///< meshcop Steering Data TLV
@@ -330,7 +330,7 @@ otError otDatasetGetActiveTlvs(otInstance *aInstance, otOperationalDatasetTlvs *
  * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
  *
  * If Thread is enabled on a device that has a partially complete Active Dataset, the device will attempt to attach to
- * an existing Thread network using any existing information in the dataset. Only the Thread Master Key is needed to
+ * an existing Thread network using any existing information in the dataset. Only the Thread Network Key is needed to
  * attach to a network.
  *
  * If channel is not included in the dataset, the device will send MLE Announce messages across different channels to
@@ -356,7 +356,7 @@ otError otDatasetSetActive(otInstance *aInstance, const otOperationalDataset *aD
  * If the dataset does not include an Active Timestamp, the dataset is only partially complete.
  *
  * If Thread is enabled on a device that has a partially complete Active Dataset, the device will attempt to attach to
- * an existing Thread network using any existing information in the dataset. Only the Thread Master Key is needed to
+ * an existing Thread network using any existing information in the dataset. Only the Thread Network Key is needed to
  * attach to a network.
  *
  * If channel is not included in the dataset, the device will send MLE Announce messages across different channels to

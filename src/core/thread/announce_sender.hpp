@@ -217,7 +217,7 @@ public:
      * @param[in]  aInstance   A reference to the OpenThread instance.
      *
      */
-    AnnounceSender(Instance &aInstance);
+    explicit AnnounceSender(Instance &aInstance);
 
     /**
      * This method notifies the `AnnounceSender` that a MLE Announcement message was received with a current timestamp

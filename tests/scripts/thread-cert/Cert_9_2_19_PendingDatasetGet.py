@@ -31,7 +31,7 @@ import unittest
 
 import mesh_cop
 import thread_cert
-from pktverify.consts import MGMT_PENDING_GET_URI, MGMT_PENDING_SET_URI, NM_CHANNEL_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_SECURITY_POLICY_TLV, NM_PENDING_TIMESTAMP_TLV, NM_DELAY_TIMER_TLV, LEADER_ALOC
+from pktverify.consts import MGMT_PENDING_GET_URI, MGMT_PENDING_SET_URI, NM_CHANNEL_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_KEY_TLV, NM_SECURITY_POLICY_TLV, NM_PENDING_TIMESTAMP_TLV, NM_DELAY_TIMER_TLV, LEADER_ALOC
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -206,7 +206,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
         #             Delay Timer TLV
         #             Extended PAN ID TLV
         #             Network Mesh-Local Prefix TLV
-        #             Network Master Key TLV
+        #             Network Key TLV
         #             Network Name TLV
         #             PAN ID TLV
         #             Pending Timestamp TLV
@@ -221,7 +221,7 @@ class Cert_9_2_19_PendingDatasetGet(thread_cert.TestCase):
                               NM_DELAY_TIMER_TLV,
                               NM_EXTENDED_PAN_ID_TLV,
                               NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
-                              NM_NETWORK_MASTER_KEY_TLV,
+                              NM_NETWORK_KEY_TLV,
                               NM_NETWORK_NAME_TLV,
                               NM_PAN_ID_TLV,
                               NM_PENDING_TIMESTAMP_TLV,

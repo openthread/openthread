@@ -703,7 +703,7 @@ void Message::SetLinkInfo(const ThreadLinkInfo &aLinkInfo)
     SetLinkSecurityEnabled(aLinkInfo.mLinkSecurity);
     SetPanId(aLinkInfo.mPanId);
     AddRss(aLinkInfo.mRss);
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     AddLqi(aLinkInfo.mLqi);
 #endif
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

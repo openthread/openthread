@@ -35,6 +35,7 @@
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
+#include "common/numeric_limits.hpp"
 #include "common/random.hpp"
 #include "common/settings.hpp"
 #include "common/string.hpp"
@@ -167,6 +168,9 @@ Client::Client(Instance &aInstance)
     , mAutoStartCallback(nullptr)
     , mAutoStartContext(nullptr)
     , mServerSequenceNumber(0)
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    , mTimoutFailureCount(0)
+#endif
 #endif
     , mDomainName(kDefaultDomainName)
     , mTimer(aInstance, Client::HandleTimer)
@@ -215,7 +219,7 @@ exit:
     return error;
 }
 
-void Client::Stop(Requester aRequester)
+void Client::Stop(Requester aRequester, StopMode aMode)
 {
     // Change the state of host info and services so that they are
     // added/removed again once the client is started back. In the
@@ -247,14 +251,28 @@ void Client::Stop(Requester aRequester)
     ChangeHostAndServiceStates(kNewStateOnStop);
 
     IgnoreError(mSocket.Close());
+
     mShouldRemoveKeyLease = false;
     mTxFailureRetryCount  = 0;
-    ResetRetryWaitInterval();
+
+    if (aMode == kResetRetryInterval)
+    {
+        ResetRetryWaitInterval();
+    }
+
     SetState(kStateStopped);
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
-    VerifyOrExit((aRequester == kRequesterAuto) && (mAutoStartCallback != nullptr));
-    mAutoStartCallback(nullptr, mAutoStartContext);
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    mTimoutFailureCount = 0;
+#endif
+
+    mAutoStartDidSelectServer = false;
+
+    if ((aRequester == kRequesterAuto) && (mAutoStartCallback != nullptr))
+    {
+        mAutoStartCallback(nullptr, mAutoStartContext);
+    }
 #endif
 
 exit:
@@ -594,7 +612,6 @@ void Client::InvokeCallback(Error aError) const
 
 void Client::InvokeCallback(Error aError, const HostInfo &aHostInfo, const Service *aRemovedServices) const
 {
-    VerifyOrExit(GetState() != kStateStopped);
     VerifyOrExit(mCallback != nullptr);
     mCallback(aError, &aHostInfo, mServices.GetHead(), aRemovedServices, mCallbackContext);
 
@@ -1138,6 +1155,10 @@ void Client::ProcessResponse(Message &aMessage)
 
     otLogInfoSrp("[client] Received response");
 
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    mTimoutFailureCount = 0;
+#endif
+
     error = Dns::Header::ResponseCodeToError(header.GetResponseCode());
 
     if (error != kErrorNone)
@@ -1160,6 +1181,27 @@ void Client::ProcessResponse(Message &aMessage)
         GrowRetryWaitInterval();
         SetState(kStateToRetry);
         InvokeCallback(error);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+        if ((error == kErrorDuplicated) || (error == kErrorSecurity))
+        {
+            // If the server rejects the update with specific errors
+            // (indicating duplicate name and/or security error), we
+            // try to switch the server (we check if another can be
+            // found in the Network Data).
+            //
+            // Note that this is done after invoking the callback and
+            // notifying the user of the error from server. This works
+            // correctly even if user makes changes from callback
+            // (e.g., calls SRP client APIs like `Stop` or disables
+            // auto-start), since we have a guard check at the top of
+            // `SelectNextServer()` to verify that client is still
+            // running and auto-start is enabled and selected the
+            // server.
+
+            SelectNextServer();
+        }
+#endif
         ExitNow(error = kErrorNone);
     }
 
@@ -1524,6 +1566,24 @@ void Client::HandleTimer(void)
         GrowRetryWaitInterval();
         SetState(kStateToUpdate);
         InvokeCallback(kErrorResponseTimeout);
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+
+        // After certain number of back-to-back timeout failures, we try
+        // to switch the server. This is again done after invoking the
+        // callback. It works correctly due to the guard check at the
+        // top of `SelectNextServer()`.
+
+        if (mTimoutFailureCount < NumericLimits<uint8_t>::kMax)
+        {
+            mTimoutFailureCount++;
+        }
+
+        if (mTimoutFailureCount >= kMaxTimeoutFailuresToSwitchServer)
+        {
+            SelectNextServer();
+        }
+#endif
         break;
 
     case kStateUpdated:
@@ -1644,7 +1704,7 @@ void Client::ProcessAutoStart(void)
 
     if (IsRunning())
     {
-        Stop(kRequesterAuto);
+        Stop(kRequesterAuto, kResetRetryInterval);
     }
 
     VerifyOrExit(!serverSockAddr.GetAddress().IsUnspecified());
@@ -1655,6 +1715,101 @@ void Client::ProcessAutoStart(void)
 exit:
     return;
 }
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+void Client::SelectNextServer(void)
+{
+    // This method tries to find the next server info entry in the
+    // Network Data after the current one selected. If found, it
+    // restarts the client with the new server (keeping the retry wait
+    // interval as before).
+
+    Ip6::SockAddr serverSockAddr;
+    bool          selectNext = false;
+
+    serverSockAddr.Clear();
+
+    // Ensure that client is running, auto-start is enabled and
+    // auto-start selected the server and that host info is not yet
+    // registered (indicating that no service has yet been registered
+    // either).
+
+    VerifyOrExit(IsRunning() && mAutoStartModeEnabled && mAutoStartDidSelectServer);
+    VerifyOrExit((mHostInfo.GetState() == kAdding) || (mHostInfo.GetState() == kToAdd));
+
+    // We go through all entries to find the one matching the currently
+    // selected one, then set `selectNext` to `true` so to select the
+    // next one.
+
+    do
+    {
+        NetworkData::Service::DnsSrpAnycast::Info anycastInfo;
+        NetworkData::Service::DnsSrpUnicast::Info unicastInfo;
+        NetworkData::Service::Manager::Iterator   iterator;
+
+        while (Get<NetworkData::Service::Manager>().GetNextDnsSrpAnycastInfo(iterator, anycastInfo) == kErrorNone)
+        {
+            if (selectNext)
+            {
+                serverSockAddr.SetAddress(anycastInfo.mAnycastAddress);
+                serverSockAddr.SetPort(kAnycastServerPort);
+                mServerSequenceNumber           = anycastInfo.mSequenceNumber;
+                mAutoStartIsUsingAnycastAddress = true;
+                ExitNow();
+            }
+
+            if (mAutoStartIsUsingAnycastAddress && (GetServerAddress().GetAddress() == anycastInfo.mAnycastAddress) &&
+                (GetServerAddress().GetPort() == kAnycastServerPort))
+            {
+                selectNext = true;
+            }
+        }
+
+        iterator.Reset();
+
+        while (Get<NetworkData::Service::Manager>().GetNextDnsSrpUnicastInfo(iterator, unicastInfo) == kErrorNone)
+        {
+            if (selectNext)
+            {
+                serverSockAddr                  = unicastInfo.mSockAddr;
+                mAutoStartIsUsingAnycastAddress = false;
+                ExitNow();
+            }
+
+            if (GetServerAddress() == unicastInfo.mSockAddr)
+            {
+                selectNext = true;
+            }
+        }
+
+        // We loop back to handle the case where the current entry
+        // is the last one.
+
+    } while (selectNext);
+
+    // If we reach here it indicates we could not find the entry
+    // associated with currently selected server in the list. This
+    // situation is rather unlikely but can still happen if Network
+    // Data happens to be changed and the entry removed but
+    // the "changed" event from `Notifier` may have not yet been
+    // processed (note that events are emitted from their own
+    // tasklet). In such a case we keep `serverSockAddr` as empty.
+
+exit:
+    if (!serverSockAddr.GetAddress().IsUnspecified() && (GetServerAddress() != serverSockAddr))
+    {
+        // We specifically update `mHostInfo` to `kToAdd` state. This
+        // ensures that `Stop()` will keep it as kToAdd` and we detect
+        // that the host info has not been registered yet and allow the
+        // `SelectNextServer()` to happen again if the timeouts/failures
+        // continue to happen with the new server.
+
+        mHostInfo.SetState(kToAdd);
+        Stop(kRequesterAuto, kKeepRetryInterval);
+        IgnoreError(Start(serverSockAddr, kRequesterAuto));
+    }
+}
+#endif // OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
 
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 

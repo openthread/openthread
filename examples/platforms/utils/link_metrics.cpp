@@ -35,7 +35,7 @@
 #include "common/pool.hpp"
 #include "thread/link_quality.hpp"
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 using namespace ot;
 
@@ -260,4 +260,4 @@ uint8_t otLinkMetricsEnhAckGetDataLen(const otMacAddress *aMacAddress)
 exit:
     return len;
 }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

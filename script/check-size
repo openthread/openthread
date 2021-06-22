@@ -155,7 +155,8 @@ size_nrf52840_version()
             "-DOT_DUA=ON"
             "-DOT_MLR=ON"
             "-DOT_CSL_RECEIVER=ON"
-            "-DOT_LINK_METRICS=ON"
+            "-DOT_LINK_METRICS_INITIATOR=ON"
+            "-DOT_LINK_METRICS_SUBJECT=ON"
         )
     fi
 

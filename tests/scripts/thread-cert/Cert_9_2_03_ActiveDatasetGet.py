@@ -31,7 +31,7 @@ import unittest
 
 import mesh_cop
 import thread_cert
-from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_GET_URI, NM_CHANNEL_TLV, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_SCAN_DURATION, NM_ENERGY_LIST_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_MASTER_KEY_TLV, NM_SECURITY_POLICY_TLV, LEADER_ALOC
+from pktverify.consts import MLE_DATA_RESPONSE, MGMT_ACTIVE_GET_URI, NM_CHANNEL_TLV, NM_COMMISSIONER_ID_TLV, NM_COMMISSIONER_SESSION_ID_TLV, NM_STEERING_DATA_TLV, NM_BORDER_AGENT_LOCATOR_TLV, NM_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_NETWORK_MESH_LOCAL_PREFIX_TLV, NM_PSKC_TLV, NM_SCAN_DURATION, NM_ENERGY_LIST_TLV, NM_ACTIVE_TIMESTAMP_TLV, NM_CHANNEL_MASK_TLV, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_KEY_TLV, NM_SECURITY_POLICY_TLV, LEADER_ALOC
 from pktverify.packet_verifier import PacketVerifier
 from pktverify.null_field import nullField
 
@@ -143,7 +143,7 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
         #             Channel Mask TLV
         #             Extended PAN ID TLV
         #             Network Mesh-Local Prefix TLV
-        #             Network Master Key TLV
+        #             Network Key TLV
         #             Network Name TLV
         #             PAN ID TLV
         #             PSKc TLV
@@ -156,7 +156,7 @@ class Cert_9_2_03_ActiveDatasetGet(thread_cert.TestCase):
                               NM_CHANNEL_MASK_TLV,
                               NM_EXTENDED_PAN_ID_TLV,
                               NM_NETWORK_MESH_LOCAL_PREFIX_TLV,
-                              NM_NETWORK_MASTER_KEY_TLV,
+                              NM_NETWORK_KEY_TLV,
                               NM_NETWORK_NAME_TLV,
                               NM_PAN_ID_TLV,
                               NM_PSKC_TLV,

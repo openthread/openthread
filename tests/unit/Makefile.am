@@ -115,6 +115,7 @@ check_PROGRAMS                                                     += \
     ot-test-ecdsa                                                     \
     ot-test-flash                                                     \
     ot-test-heap                                                      \
+    ot-test-heap-string                                               \
     ot-test-hkdf-sha256                                               \
     ot-test-hmac-sha256                                               \
     ot-test-ip-address                                                \
@@ -205,6 +206,9 @@ ot_test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
 
 ot_test_heap_LDADD              = $(COMMON_LDADD)
 ot_test_heap_SOURCES            = $(COMMON_SOURCES) test_heap.cpp
+
+ot_test_heap_string_LDADD       = $(COMMON_LDADD)
+ot_test_heap_string_SOURCES     = $(COMMON_SOURCES) test_heap_string.cpp
 
 ot_test_hkdf_sha256_LDADD       = $(COMMON_LDADD)
 ot_test_hkdf_sha256_SOURCES     = $(COMMON_SOURCES) test_hkdf_sha256.cpp

@@ -55,12 +55,12 @@ class SrpRegisterSingleService(thread_cert.TestCase):
     TOPOLOGY = {
         SERVER: {
             'name': 'SRP_SERVER',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'networkkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
         CLIENT: {
             'name': 'SRP_CLIENT',
-            'masterkey': '00112233445566778899aabbccddeeff',
+            'networkkey': '00112233445566778899aabbccddeeff',
             'mode': 'rdn',
         },
     }

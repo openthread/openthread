@@ -126,6 +126,7 @@ class Cert_9_2_16_ActivePendingPartition(thread_cert.TestCase):
 
         self.nodes[ROUTER2].reset()
         self._setUpRouter2()
+        self.simulator.go(100)
 
         self.nodes[COMMISSIONER].send_mgmt_pending_set(
             pending_timestamp=20,

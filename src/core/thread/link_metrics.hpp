@@ -36,10 +36,11 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION < OT_THREAD_VERSION_1_2)
-#error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE."
+#error \
+    "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE and OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE."
 #endif
 
 #include <openthread/link.h>
@@ -226,6 +227,7 @@ public:
                                                const otLinkMetricsSeriesFlags &aSeriesFlags,
                                                const otLinkMetrics *           aLinkMetricsFlags);
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     /**
      * This method sends an MLE Link Metrics Management Request to configure/clear a Enhanced-ACK Based Probing.
      *
@@ -259,7 +261,9 @@ public:
      *
      */
     Error SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, uint8_t aLength);
+#endif
 
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * This method appends a Link Metrics Report to a message according to the Link Metrics query.
      *
@@ -273,7 +277,7 @@ public:
      *
      */
     Error AppendLinkMetricsReport(Message &aMessage, const Message &aRequestMessage, Neighbor &aNeighbor);
-
+#endif
     /**
      * This method handles the received Link Metrics Management Request contained in @p aMessage and return a status.
      *
@@ -346,7 +350,6 @@ public:
 
     void SetLinkMetricsEnhAckProbingCallback(otLinkMetricsEnhAckProbingIeReportCallback aCallback,
                                              void *                                     aCallbackContext);
-
     void ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLen, const Neighbor &aNeighbor);
 
 private:
@@ -413,6 +416,6 @@ private:
 
 } // namespace ot
 
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
 #endif // LINK_METRICS_HPP

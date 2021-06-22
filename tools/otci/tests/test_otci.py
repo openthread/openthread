@@ -42,7 +42,7 @@ logging.basicConfig(level=logging.DEBUG)
 TEST_CHANNEL = 22
 TEST_NETWORK_NAME = 'OT CI'
 TEST_PANID = 0xeeee
-TEST_MASTERKEY = 'ffeeddccbbaa99887766554433221100'
+TEST_NETWORKKEY = 'ffeeddccbbaa99887766554433221100'
 
 REAL_DEVICE = int(os.getenv('REAL_DEVICE', '0'))
 
@@ -130,7 +130,7 @@ class TestOTCI(unittest.TestCase):
 
         logging.info('leader eui64 = %r', leader.get_eui64())
         logging.info('leader extpanid = %r', leader.get_extpanid())
-        logging.info('leader masterkey = %r', leader.get_master_key())
+        logging.info('leader networkkey = %r', leader.get_network_key())
 
         extaddr = leader.get_extaddr()
         self.assertEqual(16, len(extaddr))
@@ -141,8 +141,8 @@ class TestOTCI(unittest.TestCase):
 
         leader.set_network_name(TEST_NETWORK_NAME)
 
-        leader.set_master_key(TEST_MASTERKEY)
-        self.assertEqual(TEST_MASTERKEY, leader.get_master_key())
+        leader.set_network_key(TEST_NETWORKKEY)
+        self.assertEqual(TEST_NETWORKKEY, leader.get_network_key())
 
         leader.set_panid(TEST_PANID)
         self.assertEqual(TEST_PANID, leader.get_panid())
@@ -507,7 +507,7 @@ class TestOTCI(unittest.TestCase):
     def _test_otci_example(self, node1, node2):
         node1.dataset_init_buffer()
         node1.dataset_set_buffer(network_name='test',
-                                 master_key='00112233445566778899aabbccddeeff',
+                                 network_key='00112233445566778899aabbccddeeff',
                                  panid=0xface,
                                  channel=11)
         node1.dataset_commit_buffer('active')
@@ -540,7 +540,7 @@ class TestOTCI(unittest.TestCase):
 
         logging.info('leader eui64 = %r', leader.get_eui64())
         logging.info('leader extpanid = %r', leader.get_extpanid())
-        logging.info('leader masterkey = %r', leader.get_master_key())
+        logging.info('leader networkkey = %r', leader.get_network_key())
 
         extaddr = leader.get_extaddr()
         self.assertEqual(16, len(extaddr))
@@ -551,8 +551,8 @@ class TestOTCI(unittest.TestCase):
 
         leader.set_network_name(TEST_NETWORK_NAME)
 
-        leader.set_master_key(TEST_MASTERKEY)
-        self.assertEqual(TEST_MASTERKEY, leader.get_master_key())
+        leader.set_network_key(TEST_NETWORKKEY)
+        self.assertEqual(TEST_NETWORKKEY, leader.get_network_key())
 
         leader.set_panid(TEST_PANID)
         self.assertEqual(TEST_PANID, leader.get_panid())
@@ -579,7 +579,7 @@ class TestOTCI(unittest.TestCase):
         commissioner.set_panid(TEST_PANID)
         commissioner.set_network_name(TEST_NETWORK_NAME)
         commissioner.set_router_selection_jitter(1)
-        commissioner.set_master_key(TEST_MASTERKEY)
+        commissioner.set_network_key(TEST_NETWORKKEY)
         commissioner.thread_start()
 
         commissioner.wait(5)

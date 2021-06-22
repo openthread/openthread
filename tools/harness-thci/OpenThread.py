@@ -43,9 +43,6 @@ from abc import abstractmethod
 import serial
 from Queue import Queue
 
-import commissioner
-from commissioner_impl import OTCommissioner
-
 TESTHARNESS_1_1 = '1.1'
 TESTHARNESS_1_2 = '1.2'
 
@@ -73,6 +70,9 @@ from GRLLibs.UtilityModules.enums import (
 if TESTHARNESS_VERSION == TESTHARNESS_1_2:
     from GRLLibs.UtilityModules.enums import (
         DevCapb,)
+
+    import commissioner
+    from commissioner_impl import OTCommissioner
 
 from IThci import IThci
 
@@ -995,29 +995,29 @@ class OpenThreadTHCI(object):
 
     @API
     def setNetworkKey(self, key):
-        """set Thread Network master key
+        """set Thread network key
 
         Args:
-            key: Thread Network master key used in secure the MLE/802.15.4 packet
+            key: Thread network key used in secure the MLE/802.15.4 packet
 
         Returns:
-            True: successful to set the Thread Network master key
-            False: fail to set the Thread Network master key
+            True: successful to set the Thread network key
+            False: fail to set the Thread network key
         """
-        masterKey = ''
+        networkKey = ''
         print('%s call setNetworkKey' % self)
         print(key)
         try:
             if not isinstance(key, str):
-                masterKey = self.__convertLongToHex(key, 32)
-                cmd = 'masterkey %s' % masterKey
-                datasetCmd = 'dataset masterkey %s' % masterKey
+                networkKey = self.__convertLongToHex(key, 32)
+                cmd = 'networkkey %s' % networkKey
+                datasetCmd = 'dataset networkkey %s' % networkKey
             else:
-                masterKey = key
-                cmd = 'masterkey %s' % masterKey
-                datasetCmd = 'dataset masterkey %s' % masterKey
+                networkKey = key
+                cmd = 'networkkey %s' % networkKey
+                datasetCmd = 'dataset networkkey %s' % networkKey
 
-            self.networkKey = masterKey
+            self.networkKey = networkKey
             self.hasActiveDatasetToCommit = True
             return self.__executeCommand(cmd)[-1] == 'Done' and self.__executeCommand(datasetCmd)[-1] == 'Done'
         except Exception as e:
@@ -1811,7 +1811,7 @@ class OpenThreadTHCI(object):
 
     @API
     def setKeySequenceCounter(self, iKeySequenceValue):
-        """ set the Key sequence counter corresponding to Thread Network master key
+        """ set the Key sequence counter corresponding to Thread network key
 
         Args:
             iKeySequenceValue: key sequence value
@@ -2656,7 +2656,7 @@ class OpenThreadTHCI(object):
                 cmd += str(sMeshLocalPrefix)
 
             if xMasterKey is not None:
-                cmd += ' masterkey '
+                cmd += ' networkkey '
                 key = self.__convertLongToHex(xMasterKey, 32)
 
                 cmd += key
@@ -2833,7 +2833,7 @@ class OpenThreadTHCI(object):
                 cmd += str(xPanId)
 
             if xMasterKey is not None:
-                cmd += ' masterkey '
+                cmd += ' networkkey '
                 key = self.__convertLongToHex(xMasterKey, 32)
 
                 cmd += key

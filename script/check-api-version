@@ -42,7 +42,7 @@ main()
 {
     mkdir -p tmp
 
-    echo "The master branch must be ${OT_SHA_OLD}"
+    echo "The main branch must be ${OT_SHA_OLD}"
 
     git fetch --depth 1 origin "${OT_SHA_OLD}"
 

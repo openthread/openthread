@@ -664,7 +664,7 @@ public:
     void SetTimeSyncEnabled(bool aEnabled) { mTimeSyncEnabled = aEnabled; }
 #endif
 
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     /**
      * This method aggregates the Link Metrics data into all the series that is running for this neighbor.
      *
@@ -744,7 +744,7 @@ public:
         return (mEnhAckProbingMetrics.mLqi != 0) || (mEnhAckProbingMetrics.mLinkMargin != 0) ||
                (mEnhAckProbingMetrics.mRssi != 0);
     }
-#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 
     /**
      * This method converts a given `State` to a human-readable string.
@@ -800,7 +800,7 @@ private:
 #endif
     uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
-#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_ENABLE
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     LinkedList<LinkMetricsSeriesInfo> mLinkMetricsSeriesInfoList; ///< A list of Link Metrics Forward Tracking Series
                                                                   ///< that is being tracked for this neighbor. Note
                                                                   ///< that this device is the Subject and this
