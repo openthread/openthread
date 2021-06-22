@@ -71,6 +71,33 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+ *
+ * Define to 1 to enable SRP client to switch server on failure (when auto-start feature is used).
+ *
+ * This config is only used when `OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE` is enabled.
+ *
+ * When enabled, the client will try to select the next server from entries in Thread Network Data when the current
+ * server rejects an SRP update or there is no response (timeout waiting for response from server).
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+#define OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER
+ *
+ * Specifies number of timeout failures to trigger a switch of server.
+ *
+ * This is applicable only when `OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE` is used.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER
+#define OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER 3
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_CLIENT_DOMAIN_NAME_API_ENABLE
  *
  * Define to 1 for the SRP client implementation to provide APIs that get/set the domain name.

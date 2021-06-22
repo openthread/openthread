@@ -399,6 +399,16 @@ public:
         {
         }
 
+        /**
+         * This method resets the iterator to start from beginning.
+         *
+         */
+        void Reset(void)
+        {
+            mServiceTlv   = nullptr;
+            mServerSubTlv = nullptr;
+        }
+
     private:
         const ServiceTlv *mServiceTlv;
         const ServerTlv * mServerSubTlv;

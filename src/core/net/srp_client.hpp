@@ -290,7 +290,7 @@ public:
      * also disables the auto-start mode.
      *
      */
-    void Stop(void) { Stop(kRequesterUser); }
+    void Stop(void) { Stop(kRequesterUser, kResetRetryInterval); }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     /**
@@ -619,6 +619,10 @@ private:
     enum : uint8_t
     {
         kFastPollsAfterUpdateTx = 11, // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
+
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+        kMaxTimeoutFailuresToSwitchServer = OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER,
+#endif
     };
 
     enum : uint16_t
@@ -742,6 +746,14 @@ private:
 #endif
     };
 
+    // This enumeration is used as an input to private `Stop()` to
+    // indicate whether to reset the retry interval or keep it as is.
+    enum StopMode : uint8_t
+    {
+        kResetRetryInterval,
+        kKeepRetryInterval,
+    };
+
     struct Info : public Clearable<Info>
     {
         enum : uint16_t
@@ -756,7 +768,7 @@ private:
     };
 
     Error        Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester);
-    void         Stop(Requester aRequester);
+    void         Stop(Requester aRequester, StopMode aMode);
     void         Resume(void);
     void         Pause(void);
     void         HandleNotifierEvents(Events aEvents);
@@ -795,6 +807,9 @@ private:
     void         HandleTimer(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void ProcessAutoStart(void);
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    void SelectNextServer(void);
+#endif
 #endif
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_SRP == 1)
@@ -837,6 +852,9 @@ private:
     AutoStartCallback mAutoStartCallback;
     void *            mAutoStartContext;
     uint8_t           mServerSequenceNumber;
+#if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
+    uint8_t mTimoutFailureCount;
+#endif
 #endif
 
     const char *        mDomainName;
