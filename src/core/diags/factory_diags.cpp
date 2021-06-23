@@ -244,6 +244,7 @@ Error Diags::ProcessRepeat(uint8_t aArgsLength, char *aArgs[], char *aOutput, si
 
         SuccessOrExit(error = ParseLong(aArgs[1], value));
         VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
+        VerifyOrExit(value >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
         mTxLen = static_cast<uint8_t>(value);
 
         mRepeatActive = true;
@@ -271,6 +272,7 @@ Error Diags::ProcessSend(uint8_t aArgsLength, char *aArgs[], char *aOutput, size
 
     SuccessOrExit(error = ParseLong(aArgs[1], value));
     VerifyOrExit(value <= OT_RADIO_FRAME_MAX_SIZE, error = kErrorInvalidArgs);
+    VerifyOrExit(value >= OT_RADIO_FRAME_MIN_SIZE, error = kErrorInvalidArgs);
     mTxLen = static_cast<uint8_t>(value);
 
     snprintf(aOutput, aOutputMaxLen, "sending %#x packet(s), length %#x\r\nstatus 0x%02x\r\n",
