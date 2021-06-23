@@ -80,6 +80,8 @@ class OTCI(object):
                     success = True
                     break
 
+                duration -= 1
+
             if not success:
                 raise ExpectLineTimeoutError(expect_line)
 
