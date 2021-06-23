@@ -36,7 +36,7 @@ from .otci import \
     connect_ncp_sim, \
     connect_cmd_handler, \
     connect_otbr_ssh
-from .types import Rloc16, ChildId
+from .types import Rloc16, ChildId, NetifIdentifier
 
 _connectors = [
     'connect_cli_sim',
@@ -46,4 +46,5 @@ _connectors = [
     'connect_cmd_handler',
 ]
 
-__all__ = ['OTCI', 'errors', 'Rloc16', 'ChildId', 'THREAD_VERSION_1_1', 'THREAD_VERSION_1_2'] + _connectors
+__all__ = ['OTCI', 'errors', 'Rloc16', 'ChildId', 'NetifIdentifer', 'THREAD_VERSION_1_1', 'THREAD_VERSION_1_2'
+          ] + _connectors

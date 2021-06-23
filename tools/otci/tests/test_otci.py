@@ -36,6 +36,7 @@ import unittest
 import otci
 from otci import OTCI
 from otci.errors import CommandError
+from otci import NetifIdentifier
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -303,13 +304,14 @@ class TestOTCI(unittest.TestCase):
         leader.wait(1)
         leader.coap_stop()
 
-        leader.udp_open()
-        leader.udp_bind("::", 1234)
-        leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
-        leader.udp_send(leader.get_ipaddr_rloc(), 1234, random_bytes=3)
-        leader.udp_send(leader.get_ipaddr_rloc(), 1234, hex='112233')
-        leader.wait(1)
-        leader.udp_close()
+        for netif in (NetifIdentifier.THERAD, NetifIdentifier.UNSPECIFIED, NetifIdentifier.BACKBONE):
+            leader.udp_open()
+            leader.udp_bind("::", 1234, netif=netif)
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, random_bytes=3)
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, hex='112233')
+            leader.wait(1)
+            leader.udp_close()
 
         logging.info('dataset: %r', leader.get_dataset())
         logging.info('dataset active: %r', leader.get_dataset('active'))

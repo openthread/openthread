@@ -39,7 +39,7 @@ On node 1, you should see a print out similar to below:
 ## Command List
 
 - [help](#help)
-- [bind](#bind-ip-port)
+- [bind](#bind-netif-ip-port)
 - [close](#close)
 - [connect](#connect-ip-port)
 - [linksecurity](#linksecurity)
@@ -63,15 +63,23 @@ send
 Done
 ```
 
-### bind \<ip\> \<port\>
+### bind [netif] \<ip\> \<port\>
 
 Assigns a name (i.e. IPv6 address and port) to the example socket.
 
+- netif: the network interface to bind to.
+  - not specified: Thread network interface.
+  - `-u`: unspecified network interface.
+  - `-b`: Backbone network interface.
 - ip: the IPv6 address or the unspecified IPv6 address (`::`).
 - port: the UDP port
 
 ```bash
 > udp bind :: 1234
+Done
+> udp bind -u :: 1234
+Done
+> udp bind -b :: 1234
 Done
 ```
 

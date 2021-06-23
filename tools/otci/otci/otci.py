@@ -37,7 +37,7 @@ from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshComma
 from .connectors import Simulator
 from .errors import UnexpectedCommandOutput, ExpectLineTimeoutError, CommandError, InvalidArgumentsError
 from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix, \
-    RouterTableEntry
+    RouterTableEntry, NetifIdentifier
 from .utils import match_line, constant_property
 
 
@@ -2121,13 +2121,19 @@ class OTCI(object):
         """Opens the example socket."""
         self.execute_command('udp close')
 
-    def udp_bind(self, ip: str, port: int):
+    def udp_bind(self, ip: str, port: int, netif: NetifIdentifier = NetifIdentifier.THERAD):
         """Assigns a name (i.e. IPv6 address and port) to the example socket.
 
         :param ip: the IPv6 address or the unspecified IPv6 address (::).
         :param port: the UDP port
         """
-        self.execute_command(f'udp bind {ip} {port}')
+        bindarg = ''
+        if netif == NetifIdentifier.UNSPECIFIED:
+            bindarg += ' -u'
+        elif netif == NetifIdentifier.BACKBONE:
+            bindarg += ' -b'
+
+        self.execute_command(f'udp bind{bindarg} {ip} {port}')
 
     def udp_connect(self, ip: str, port: int):
         """Specifies the peer with which the socket is to be associated.
