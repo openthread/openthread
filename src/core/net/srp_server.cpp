@@ -487,6 +487,7 @@ void Server::Stop(void)
 
     otLogInfoSrp("[server] stop listening on %hu", mSocket.GetSockName().mPort);
     IgnoreError(mSocket.Close());
+    mHasRegisteredAnyService = false;
 
 exit:
     return;
