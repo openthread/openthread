@@ -362,7 +362,6 @@ class OpenThreadTHCI(object):
     def intialize(self, params):
         """initialize the serial port with baudrate, timeout parameters"""
         self.port = params.get('SerialPort', '')
-        assert isinstance(self.port, unicode), unicode
         self.log('%s intialize: %r', self.__class__.__name__, params)
         # params example: {'EUI': 1616240311388864514L, 'SerialBaudRate': None, 'TelnetIP': '192.168.8.181', 'SerialPort': None, 'Param7': None, 'Param6': None, 'Param5': 'ip', 'TelnetPort': '22', 'Param9': None, 'Param8': None}
 
