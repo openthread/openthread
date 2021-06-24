@@ -70,12 +70,12 @@ void VerifyEntry(EntryPool &aPool, const Entry &aEntry, bool aInitWithInstance)
     uint16_t         index;
     const EntryPool &constPool = const_cast<const EntryPool &>(aPool);
 
-    VerifyOrQuit(aPool.IsPoolEntry(aEntry), "Pool::IsPoolEntry() failed");
+    VerifyOrQuit(aPool.IsPoolEntry(aEntry));
     VerifyOrQuit(!aPool.IsPoolEntry(sNonPoolEntry), "Pool::IsPoolEntry() succeeded for non-pool entry");
 
     index = aPool.GetIndexOf(aEntry);
-    VerifyOrQuit(&aPool.GetEntryAt(index) == &aEntry, "Pool::GetEntryAt() failed");
-    VerifyOrQuit(&constPool.GetEntryAt(index) == &aEntry, "Pool::GetEntryAt() failed");
+    VerifyOrQuit(&aPool.GetEntryAt(index) == &aEntry);
+    VerifyOrQuit(&constPool.GetEntryAt(index) == &aEntry);
 
     VerifyOrQuit(aEntry.IsInitializedWithInstance() == aInitWithInstance, "Pool did not correctly Init() entry");
 }
@@ -84,7 +84,7 @@ void TestPool(EntryPool &aPool, bool aInitWithInstance)
 {
     Entry *entries[kPoolSize];
 
-    VerifyOrQuit(aPool.GetSize() == kPoolSize, "Pool::GetSize() failed");
+    VerifyOrQuit(aPool.GetSize() == kPoolSize);
 
     for (Entry *&entry : entries)
     {

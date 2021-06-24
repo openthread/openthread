@@ -80,7 +80,7 @@ void TestNetworkDataIterator(void)
     ExternalRouteConfig config;
 
     instance = testInitInstance();
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr);
 
     {
         const uint8_t kNetworkData[] = {
@@ -124,10 +124,9 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed");
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, config));
             PrintExternalRouteConfig(config);
-            VerifyOrQuit(CompareExternalRouteConfig(config, route) == true,
-                         "external route config does not match expectation");
+            VerifyOrQuit(CompareExternalRouteConfig(config, route));
         }
     }
 
@@ -211,10 +210,9 @@ void TestNetworkDataIterator(void)
 
         for (const auto &route : routes)
         {
-            SuccessOrQuit(netData.GetNextExternalRoute(iter, config), "GetNextExternalRoute() failed");
+            SuccessOrQuit(netData.GetNextExternalRoute(iter, config));
             PrintExternalRouteConfig(config);
-            VerifyOrQuit(CompareExternalRouteConfig(config, route) == true,
-                         "external route config does not match expectation");
+            VerifyOrQuit(CompareExternalRouteConfig(config, route));
         }
     }
 
@@ -257,40 +255,40 @@ public:
 
         const ServiceTlv *tlv;
 
-        SuccessOrQuit(AddService(kServiceData1), "AddService() failed");
-        SuccessOrQuit(AddService(kServiceData2), "AddService() failed");
-        SuccessOrQuit(AddService(kServiceData3), "AddService() failed");
-        SuccessOrQuit(AddService(kServiceData4), "AddService() failed");
-        SuccessOrQuit(AddService(kServiceData5), "AddService() failed");
+        SuccessOrQuit(AddService(kServiceData1));
+        SuccessOrQuit(AddService(kServiceData2));
+        SuccessOrQuit(AddService(kServiceData3));
+        SuccessOrQuit(AddService(kServiceData4));
+        SuccessOrQuit(AddService(kServiceData5));
 
         DumpBuffer("netdata", mTlvs, mLength);
 
         // Iterate through all entries that start with { 0x02 } (kServiceData1)
         tlv = nullptr;
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData1), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData1));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
         VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
 
         // Iterate through all entries that start with { 0xab } (kServiceData2)
         tlv = nullptr;
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData2), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData2));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData3), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData3));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
         VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
 
         // Iterate through all entries that start with kServiceData5
         tlv = nullptr;
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData4));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
-        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5), "FindNextMatchingService() failed");
+        SuccessOrQuit(ValidateServiceData(tlv, kServiceData5));
         tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
         VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
     }
@@ -304,7 +302,7 @@ void TestNetworkDataFindNextService(void)
     printf("\nTestNetworkDataFindNextService()\n");
 
     instance = testInitInstance();
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr);
 
     {
         TestNetworkData netData(*instance);
@@ -332,7 +330,7 @@ void TestNetworkDataDsnSrpServices(void)
     printf("\nTestNetworkDataDsnSrpServices()\n");
 
     instance = testInitInstance();
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr);
 
     {
         struct AnycastEntry
@@ -342,7 +340,7 @@ void TestNetworkDataDsnSrpServices(void)
 
             bool Matches(Service::DnsSrpAnycast::Info aInfo) const
             {
-                VerifyOrQuit(aInfo.mAnycastAddress.GetIid().IsAnycastServiceLocator(), "Anycast address is invalid");
+                VerifyOrQuit(aInfo.mAnycastAddress.GetIid().IsAnycastServiceLocator());
 
                 return (aInfo.mAnycastAddress.GetIid().GetLocator() == mAloc16) &&
                        (aInfo.mSequenceNumber == mSequenceNumber);
@@ -358,7 +356,7 @@ void TestNetworkDataDsnSrpServices(void)
             {
                 Ip6::SockAddr sockAddr;
 
-                SuccessOrQuit(sockAddr.GetAddress().FromString(mAddress), "Ip6::Address::FromString() failed");
+                SuccessOrQuit(sockAddr.GetAddress().FromString(mAddress));
                 sockAddr.SetPort(mPort);
 
                 return (aInfo.mSockAddr == sockAddr);
@@ -405,7 +403,7 @@ void TestNetworkDataDsnSrpServices(void)
 
         for (const AnycastEntry &entry : kAnycastEntries)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo), "GetNextDnsSrpAnycastInfo() failed");
+            SuccessOrQuit(manager.GetNextDnsSrpAnycastInfo(iterator, anycastInfo));
 
             printf("\nanycastInfo { %s, seq:%d }", anycastInfo.mAnycastAddress.ToString().AsCString(),
                    anycastInfo.mSequenceNumber);
@@ -418,7 +416,7 @@ void TestNetworkDataDsnSrpServices(void)
 
         // Find the preferred "DNS/SRP Anycast Service" entries in Network Data
 
-        SuccessOrQuit(manager.FindPreferredDnsSrpAnycastInfo(anycastInfo), "FindPreferredDnsSrpAnycastInfo() failed");
+        SuccessOrQuit(manager.FindPreferredDnsSrpAnycastInfo(anycastInfo));
 
         printf("\n\nPreferred anycastInfo { %s, seq:%d }", anycastInfo.mAnycastAddress.ToString().AsCString(),
                anycastInfo.mSequenceNumber);
@@ -433,7 +431,7 @@ void TestNetworkDataDsnSrpServices(void)
 
         for (const UnicastEntry &entry : kUnicastEntries)
         {
-            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo), "GetNextDnsSrpUnicastInfo() failed");
+            SuccessOrQuit(manager.GetNextDnsSrpUnicastInfo(iterator, unicastInfo));
             printf("\nunicastInfo %s", unicastInfo.mSockAddr.ToString().AsCString());
 
             VerifyOrQuit(entry.Matches(unicastInfo), "GetNextDnsSrpUnicastInfo() returned incorrect info");

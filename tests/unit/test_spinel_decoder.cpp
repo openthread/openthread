@@ -120,69 +120,69 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    VerifyOrQuit(decoder.GetFrame() == &buffer[0], "GetFrame() failed.");
-    VerifyOrQuit(decoder.GetLength() == frameLen, "GetLength() failed.");
+    VerifyOrQuit(decoder.GetFrame() == &buffer[0]);
+    VerifyOrQuit(decoder.GetLength() == frameLen);
 
-    VerifyOrQuit(decoder.GetReadLength() == 0, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == frameLen, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == false, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() == 0);
+    VerifyOrQuit(decoder.GetRemainingLength() == frameLen);
+    VerifyOrQuit(decoder.IsAllRead() == false);
 
-    SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
-    SuccessOrQuit(decoder.ReadBool(b_2), "ReadBool() failed.");
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.ReadInt8(i8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
-    SuccessOrQuit(decoder.ReadInt16(i16), "ReadInt16() failed.");
-    SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
-    SuccessOrQuit(decoder.ReadInt32(i32), "ReadUint32() failed.");
-    SuccessOrQuit(decoder.ReadUint64(u64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadInt64(i64), "ReadUint64() failed.");
+    SuccessOrQuit(decoder.ReadBool(b_1));
+    SuccessOrQuit(decoder.ReadBool(b_2));
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    SuccessOrQuit(decoder.ReadInt8(i8));
+    SuccessOrQuit(decoder.ReadUint16(u16));
+    SuccessOrQuit(decoder.ReadInt16(i16));
+    SuccessOrQuit(decoder.ReadUint32(u32));
+    SuccessOrQuit(decoder.ReadInt32(i32));
+    SuccessOrQuit(decoder.ReadUint64(u64));
+    SuccessOrQuit(decoder.ReadInt64(i64));
 
     // Check the state
-    VerifyOrQuit(decoder.GetReadLength() != 0, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == frameLen - decoder.GetReadLength(), "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == false, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() != 0);
+    VerifyOrQuit(decoder.GetRemainingLength() == frameLen - decoder.GetReadLength());
+    VerifyOrQuit(decoder.IsAllRead() == false);
 
-    SuccessOrQuit(decoder.ReadUintPacked(u_1), "ReadUintPacked() failed.");
+    SuccessOrQuit(decoder.ReadUintPacked(u_1));
 
-    SuccessOrQuit(decoder.ReadUintPacked(u_2), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_3), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_4), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
-    SuccessOrQuit(decoder.ReadEui48(eui48), "ReadEui48() failed.");
-    SuccessOrQuit(decoder.ReadEui64(eui64), "ReadEui64() failed.");
-    SuccessOrQuit(decoder.ReadUtf8(utf_1), "ReadUtf8() failed.");
-    SuccessOrQuit(decoder.ReadUtf8(utf_2), "ReadUtf8() failed.");
-    SuccessOrQuit(decoder.ReadDataWithLen(dataPtr_1, dataLen_1), "ReadDataWithLen() failed.");
-    SuccessOrQuit(decoder.ReadData(dataPtr_2, dataLen_2), "ReadData() failed.");
+    SuccessOrQuit(decoder.ReadUintPacked(u_2));
+    SuccessOrQuit(decoder.ReadUintPacked(u_3));
+    SuccessOrQuit(decoder.ReadUintPacked(u_4));
+    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
+    SuccessOrQuit(decoder.ReadEui48(eui48));
+    SuccessOrQuit(decoder.ReadEui64(eui64));
+    SuccessOrQuit(decoder.ReadUtf8(utf_1));
+    SuccessOrQuit(decoder.ReadUtf8(utf_2));
+    SuccessOrQuit(decoder.ReadDataWithLen(dataPtr_1, dataLen_1));
+    SuccessOrQuit(decoder.ReadData(dataPtr_2, dataLen_2));
 
-    VerifyOrQuit(decoder.GetReadLength() == frameLen, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == 0, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == true, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() == frameLen);
+    VerifyOrQuit(decoder.GetRemainingLength() == 0);
+    VerifyOrQuit(decoder.IsAllRead() == true);
 
-    VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
-    VerifyOrQuit(b_2 == kBool_2, "ReadBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(i8 == kInt8, "ReadUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "ReadUint16() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "ReadInt16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "ReadInt32() parse failed.");
-    VerifyOrQuit(u64 == kUint64, "ReadUint64() parse failed.");
-    VerifyOrQuit(i64 == kInt64, "ReadInt64() parse failed.");
-    VerifyOrQuit(u_1 == kUint_1, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_2 == kUint_2, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_4 == kUint_4, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "ReadEui48() parse failed.");
-    VerifyOrQuit(memcmp(eui64, &kEui64, sizeof(spinel_eui64_t)) == 0, "ReadEui64() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "ReadUtf8() parse failed.");
-    VerifyOrQuit(memcmp(utf_2, kString_2, sizeof(kString_2)) == 0, "ReadUtf8() parse failed.");
-    VerifyOrQuit(dataLen_1 == sizeof(kData), "ReadData() parse failed.");
-    VerifyOrQuit(memcmp(dataPtr_1, &kData, sizeof(kData)) == 0, "ReadData() parse failed.");
-    VerifyOrQuit(dataLen_2 == sizeof(kData), "ReadData() parse failed.");
-    VerifyOrQuit(memcmp(dataPtr_2, &kData, sizeof(kData)) == 0, "ReadData() parse failed.");
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(b_2 == kBool_2);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i8 == kInt8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(i16 == kInt16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(u64 == kUint64);
+    VerifyOrQuit(i64 == kInt64);
+    VerifyOrQuit(u_1 == kUint_1);
+    VerifyOrQuit(u_2 == kUint_2);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(u_4 == kUint_4);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
+    VerifyOrQuit(memcmp(eui64, &kEui64, sizeof(spinel_eui64_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
+    VerifyOrQuit(memcmp(utf_2, kString_2, sizeof(kString_2)) == 0);
+    VerifyOrQuit(dataLen_1 == sizeof(kData));
+    VerifyOrQuit(memcmp(dataPtr_1, &kData, sizeof(kData)) == 0);
+    VerifyOrQuit(dataLen_2 == sizeof(kData));
+    VerifyOrQuit(memcmp(dataPtr_2, &kData, sizeof(kData)) == 0);
 
     printf(" -- PASS\n");
 
@@ -190,104 +190,104 @@ void TestDecoder(void)
     printf("\nTest 2: Test Reset(), SavePosition(), ResetToSaved()");
 
     // `ResetToSaved()` should fail if there is no saved position
-    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail");
+    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE);
 
     decoder.Reset();
 
-    VerifyOrQuit(decoder.GetFrame() == &buffer[0], "GetFrame() failed.");
-    VerifyOrQuit(decoder.GetLength() == frameLen, "GetLength() failed.");
-    VerifyOrQuit(decoder.GetReadLength() == 0, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == frameLen, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == false, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetFrame() == &buffer[0]);
+    VerifyOrQuit(decoder.GetLength() == frameLen);
+    VerifyOrQuit(decoder.GetReadLength() == 0);
+    VerifyOrQuit(decoder.GetRemainingLength() == frameLen);
+    VerifyOrQuit(decoder.IsAllRead() == false);
 
-    SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
-    SuccessOrQuit(decoder.ReadBool(b_2), "ReadBool() failed.");
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.ReadInt8(i8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
-    SuccessOrQuit(decoder.ReadInt16(i16), "ReadInt16() failed.");
-    SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
-    SuccessOrQuit(decoder.ReadInt32(i32), "ReadUint32() failed.");
+    SuccessOrQuit(decoder.ReadBool(b_1));
+    SuccessOrQuit(decoder.ReadBool(b_2));
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    SuccessOrQuit(decoder.ReadInt8(i8));
+    SuccessOrQuit(decoder.ReadUint16(u16));
+    SuccessOrQuit(decoder.ReadInt16(i16));
+    SuccessOrQuit(decoder.ReadUint32(u32));
+    SuccessOrQuit(decoder.ReadInt32(i32));
 
     // `ResetToSaved()` should fail if there is no saved position
-    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail");
+    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE);
 
     // Save position
     decoder.SavePosition();
 
-    SuccessOrQuit(decoder.ReadUint64(u64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadInt64(i64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_1), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_2), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_3), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_4), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+    SuccessOrQuit(decoder.ReadUint64(u64));
+    SuccessOrQuit(decoder.ReadInt64(i64));
+    SuccessOrQuit(decoder.ReadUintPacked(u_1));
+    SuccessOrQuit(decoder.ReadUintPacked(u_2));
+    SuccessOrQuit(decoder.ReadUintPacked(u_3));
+    SuccessOrQuit(decoder.ReadUintPacked(u_4));
+    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
 
-    VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
-    VerifyOrQuit(b_2 == kBool_2, "ReadBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(i8 == kInt8, "ReadUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "ReadUint16() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "ReadInt16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "ReadUint32() parse failed.");
-    VerifyOrQuit(u64 == kUint64, "ReadUint64() parse failed.");
-    VerifyOrQuit(i64 == kInt64, "ReadInt64() parse failed.");
-    VerifyOrQuit(u_1 == kUint_1, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_2 == kUint_2, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_4 == kUint_4, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(b_2 == kBool_2);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i8 == kInt8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(i16 == kInt16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(u64 == kUint64);
+    VerifyOrQuit(i64 == kInt64);
+    VerifyOrQuit(u_1 == kUint_1);
+    VerifyOrQuit(u_2 == kUint_2);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(u_4 == kUint_4);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
 
-    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed");
+    SuccessOrQuit(decoder.ResetToSaved());
 
-    SuccessOrQuit(decoder.ReadUint64(u64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadInt64(i64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_1), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_2), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_3), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_4), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+    SuccessOrQuit(decoder.ReadUint64(u64));
+    SuccessOrQuit(decoder.ReadInt64(i64));
+    SuccessOrQuit(decoder.ReadUintPacked(u_1));
+    SuccessOrQuit(decoder.ReadUintPacked(u_2));
+    SuccessOrQuit(decoder.ReadUintPacked(u_3));
+    SuccessOrQuit(decoder.ReadUintPacked(u_4));
+    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
 
-    VerifyOrQuit(u64 == kUint64, "ReadUint64() parse failed.");
-    VerifyOrQuit(i64 == kInt64, "ReadInt64() parse failed.");
-    VerifyOrQuit(u_1 == kUint_1, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_2 == kUint_2, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_4 == kUint_4, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
+    VerifyOrQuit(u64 == kUint64);
+    VerifyOrQuit(i64 == kInt64);
+    VerifyOrQuit(u_1 == kUint_1);
+    VerifyOrQuit(u_2 == kUint_2);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(u_4 == kUint_4);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
 
     // Go back to save position again.
-    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed");
+    SuccessOrQuit(decoder.ResetToSaved());
 
-    SuccessOrQuit(decoder.ReadUint64(u64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadInt64(i64), "ReadUint64() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_1), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_2), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_3), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadUintPacked(u_4), "ReadUintPacked() failed.");
-    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+    SuccessOrQuit(decoder.ReadUint64(u64));
+    SuccessOrQuit(decoder.ReadInt64(i64));
+    SuccessOrQuit(decoder.ReadUintPacked(u_1));
+    SuccessOrQuit(decoder.ReadUintPacked(u_2));
+    SuccessOrQuit(decoder.ReadUintPacked(u_3));
+    SuccessOrQuit(decoder.ReadUintPacked(u_4));
+    SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
 
-    VerifyOrQuit(u64 == kUint64, "ReadUint64() parse failed.");
-    VerifyOrQuit(i64 == kInt64, "ReadInt64() parse failed.");
-    VerifyOrQuit(u_1 == kUint_1, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_2 == kUint_2, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(u_4 == kUint_4, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
+    VerifyOrQuit(u64 == kUint64);
+    VerifyOrQuit(i64 == kInt64);
+    VerifyOrQuit(u_1 == kUint_1);
+    VerifyOrQuit(u_2 == kUint_2);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(u_4 == kUint_4);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
 
     // Ensure saved position is cleared when decoder is reset or re-initialized.
 
     decoder.Reset();
 
     // `ResetToSaved()` should fail if there is no saved position
-    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail");
+    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE);
 
     decoder.SavePosition();
-    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed");
+    SuccessOrQuit(decoder.ResetToSaved());
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
-    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail");
+    VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE);
 
     printf(" -- PASS\n");
 
@@ -306,22 +306,22 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
-        SuccessOrQuit(decoder.ReadEui48(eui48), "ReadEui48() failed.");
-        SuccessOrQuit(decoder.ReadUintPacked(u_3), "ReadUintPacked() failed.");
+        SuccessOrQuit(decoder.ReadUint32(u32));
+        SuccessOrQuit(decoder.ReadEui48(eui48));
+        SuccessOrQuit(decoder.ReadUintPacked(u_3));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadInt16(i16), "ReadInt16() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == true, "IsAllRead() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadInt16(i16));
+    VerifyOrQuit(decoder.IsAllRead() == true);
 
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "ReadInt16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "ReadEui48() parse failed.");
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i16 == kInt16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
 
     printf(" -- PASS\n");
 
@@ -332,17 +332,17 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
+        SuccessOrQuit(decoder.ReadUint32(u32));
         // Skip the remaining fields in the struct
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadInt16(i16), "ReadInt16() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadInt16(i16));
 
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "ReadInt16() parse failed.");
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i16 == kInt16);
 
     printf(" -- PASS\n");
 
@@ -353,54 +353,54 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    VerifyOrQuit(decoder.GetFrame() == &buffer[0], "GetFrame() failed.");
-    VerifyOrQuit(decoder.GetLength() == frameLen, "GetLength() failed.");
+    VerifyOrQuit(decoder.GetFrame() == &buffer[0]);
+    VerifyOrQuit(decoder.GetLength() == frameLen);
 
-    VerifyOrQuit(decoder.GetReadLength() == 0, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == frameLen, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == false, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() == 0);
+    VerifyOrQuit(decoder.GetRemainingLength() == frameLen);
+    VerifyOrQuit(decoder.IsAllRead() == false);
 
     // When not in an struct,  `etRemainingLengthInStruct()` should consider the whole frame.
-    VerifyOrQuit(decoder.GetRemainingLengthInStruct() == frameLen, "GetRemLengthInStruct() failed.");
-    VerifyOrQuit(decoder.IsAllReadInStruct() == false, "IsAllReadInStruct() failed.");
+    VerifyOrQuit(decoder.GetRemainingLengthInStruct() == frameLen);
+    VerifyOrQuit(decoder.IsAllReadInStruct() == false);
 
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        VerifyOrQuit(decoder.IsAllReadInStruct() == false, "IsAllReadInStruct() failed.");
+        VerifyOrQuit(decoder.IsAllReadInStruct() == false);
 
-        SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
-        SuccessOrQuit(decoder.ReadEui48(eui48), "ReadEui48() failed.");
-        SuccessOrQuit(decoder.ReadUintPacked(u_3), "ReadUintPacked() failed.");
+        SuccessOrQuit(decoder.ReadUint32(u32));
+        SuccessOrQuit(decoder.ReadEui48(eui48));
+        SuccessOrQuit(decoder.ReadUintPacked(u_3));
 
-        VerifyOrQuit(decoder.IsAllReadInStruct() == true, "IsAllReadInStruct() failed.");
-        VerifyOrQuit(decoder.GetRemainingLengthInStruct() == 0, "GetRemLengthInStruct() failed.");
+        VerifyOrQuit(decoder.IsAllReadInStruct() == true);
+        VerifyOrQuit(decoder.GetRemainingLengthInStruct() == 0);
 
         // Try reading beyond end of the struct and ensure it fails.
-        VerifyOrQuit(decoder.ReadUint8(u8) == OT_ERROR_PARSE, "ReadUint8() did not fail.");
+        VerifyOrQuit(decoder.ReadUint8(u8) == OT_ERROR_PARSE);
 
         // `ReadData()` at end of struct should still succeed but return zero as the data length.
-        SuccessOrQuit(decoder.ReadData(dataPtr_1, dataLen_1), "ReadData() failed.");
-        VerifyOrQuit(dataLen_1 == 0, "ReadData() parse value failed.");
+        SuccessOrQuit(decoder.ReadData(dataPtr_1, dataLen_1));
+        VerifyOrQuit(dataLen_1 == 0);
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
 
-    VerifyOrQuit(decoder.IsAllReadInStruct() == false, "IsAllReadInStruct() failed.");
-    SuccessOrQuit(decoder.ReadInt16(i16), "ReadInt16() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == true, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.IsAllReadInStruct() == false);
+    SuccessOrQuit(decoder.ReadInt16(i16));
+    VerifyOrQuit(decoder.IsAllRead() == true);
 
-    VerifyOrQuit(decoder.GetRemainingLengthInStruct() == 0, "GetRemLengthInStruct() failed.");
-    VerifyOrQuit(decoder.IsAllReadInStruct() == true, "IsAllReadInStruct() failed.");
+    VerifyOrQuit(decoder.GetRemainingLengthInStruct() == 0);
+    VerifyOrQuit(decoder.IsAllReadInStruct() == true);
 
     // `ReadData()` at end of frame should still succeed but return zero as the data length.
-    SuccessOrQuit(decoder.ReadData(dataPtr_1, dataLen_1), "ReadData() failed.");
-    VerifyOrQuit(dataLen_1 == 0, "ReadData() parse value failed.");
+    SuccessOrQuit(decoder.ReadData(dataPtr_1, dataLen_1));
+    VerifyOrQuit(dataLen_1 == 0);
 
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "ReadInt16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "ReadUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "ReadEui48() parse failed.");
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i16 == kInt16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
 
     printf(" -- PASS\n");
 
@@ -418,39 +418,39 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-        SuccessOrQuit(decoder.ReadUtf8(utf_1), "ReadUtf8() failed.");
-        SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(decoder.ReadUint8(u8));
+        SuccessOrQuit(decoder.ReadUtf8(utf_1));
+        SuccessOrQuit(decoder.OpenStruct());
         {
-            SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
-            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+            SuccessOrQuit(decoder.ReadBool(b_1));
+            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
         }
-        SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-        SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
+        SuccessOrQuit(decoder.CloseStruct());
+        SuccessOrQuit(decoder.ReadUint16(u16));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadEui48(eui48), "ReadEui48() failed.");
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadEui48(eui48));
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
+        SuccessOrQuit(decoder.ReadUint32(u32));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadInt32(i32), "WriteUint32() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadInt32(i32));
 
-    VerifyOrQuit(decoder.GetReadLength() == frameLen, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == 0, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == true, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() == frameLen);
+    VerifyOrQuit(decoder.GetRemainingLength() == 0);
+    VerifyOrQuit(decoder.IsAllRead() == true);
 
-    VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "ReadUint16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "ReadUint32() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "ReadEui48() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "ReadUtf8() parse failed.");
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
 
     printf(" -- PASS\n");
 
@@ -461,58 +461,58 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
+        SuccessOrQuit(decoder.ReadUint8(u8));
 
         decoder.SavePosition();
 
-        SuccessOrQuit(decoder.ReadUtf8(utf_1), "ReadUtf8() failed.");
-        SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(decoder.ReadUtf8(utf_1));
+        SuccessOrQuit(decoder.OpenStruct());
         {
-            SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
+            SuccessOrQuit(decoder.ReadBool(b_1));
         }
 
         // Verify the read content so far.
 
-        VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-        VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
-        VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "ReadUtf8() parse failed.");
+        VerifyOrQuit(u8 == kUint8);
+        VerifyOrQuit(b_1 == kBool_1);
+        VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
 
         // Do not close the inner struct and jump to previously saved position and re-read the content.
 
-        SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed.");
+        SuccessOrQuit(decoder.ResetToSaved());
 
-        SuccessOrQuit(decoder.ReadUtf8(utf_1), "ReadUtf8() failed.");
-        SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(decoder.ReadUtf8(utf_1));
+        SuccessOrQuit(decoder.OpenStruct());
         {
-            SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
-            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+            SuccessOrQuit(decoder.ReadBool(b_1));
+            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
         }
-        SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-        SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
+        SuccessOrQuit(decoder.CloseStruct());
+        SuccessOrQuit(decoder.ReadUint16(u16));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadEui48(eui48), "ReadEui48() failed.");
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadEui48(eui48));
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
+        SuccessOrQuit(decoder.ReadUint32(u32));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadInt32(i32), "WriteUint32() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadInt32(i32));
 
-    VerifyOrQuit(decoder.GetReadLength() == frameLen, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == 0, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == true, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() == frameLen);
+    VerifyOrQuit(decoder.GetRemainingLength() == 0);
+    VerifyOrQuit(decoder.IsAllRead() == true);
 
-    VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "ReadUint16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "ReadUint32() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "ReadEui48() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "ReadUtf8() parse failed.");
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
 
     printf(" -- PASS\n");
 
@@ -523,52 +523,52 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-        SuccessOrQuit(decoder.ReadUtf8(utf_1), "ReadUtf8() failed.");
-        SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(decoder.ReadUint8(u8));
+        SuccessOrQuit(decoder.ReadUtf8(utf_1));
+        SuccessOrQuit(decoder.OpenStruct());
         {
             // Save position at start of the struct
             decoder.SavePosition();
-            SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
+            SuccessOrQuit(decoder.ReadBool(b_1));
 
             // Verify the read content so far.
 
-            VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-            VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "ReadUtf8() parse failed.");
-            VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
+            VerifyOrQuit(u8 == kUint8);
+            VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
+            VerifyOrQuit(b_1 == kBool_1);
 
             // Do not close the struct and jump to the previously saved position and re-read the content.
 
-            SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed.");
-            SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
-            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+            SuccessOrQuit(decoder.ResetToSaved());
+            SuccessOrQuit(decoder.ReadBool(b_1));
+            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
         }
-        SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-        SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
+        SuccessOrQuit(decoder.CloseStruct());
+        SuccessOrQuit(decoder.ReadUint16(u16));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadEui48(eui48), "ReadEui48() failed.");
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadEui48(eui48));
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint32(u32), "ReadUint32() failed.");
+        SuccessOrQuit(decoder.ReadUint32(u32));
     }
-    SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(decoder.ReadInt32(i32), "WriteUint32() failed.");
+    SuccessOrQuit(decoder.CloseStruct());
+    SuccessOrQuit(decoder.ReadInt32(i32));
 
-    VerifyOrQuit(decoder.GetReadLength() == frameLen, "GetReadLength() failed.");
-    VerifyOrQuit(decoder.GetRemainingLength() == 0, "GetRemainingLength() failed.");
-    VerifyOrQuit(decoder.IsAllRead() == true, "IsAllRead() failed.");
+    VerifyOrQuit(decoder.GetReadLength() == frameLen);
+    VerifyOrQuit(decoder.GetRemainingLength() == 0);
+    VerifyOrQuit(decoder.IsAllRead() == true);
 
-    VerifyOrQuit(b_1 == kBool_1, "ReadBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "ReadUint16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "ReadUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "ReadUint32() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "ReadIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "ReadEui48() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "ReadUtf8() parse failed.");
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
 
     printf(" -- PASS\n");
 
@@ -579,23 +579,23 @@ void TestDecoder(void)
 
     decoder.Init(buffer, static_cast<uint16_t>(frameLen));
 
-    SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(decoder.OpenStruct());
     {
-        SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-        SuccessOrQuit(decoder.ReadUtf8(utf_1), "ReadUtf8() failed.");
-        SuccessOrQuit(decoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(decoder.ReadUint8(u8));
+        SuccessOrQuit(decoder.ReadUtf8(utf_1));
+        SuccessOrQuit(decoder.OpenStruct());
         {
-            SuccessOrQuit(decoder.ReadBool(b_1), "ReadBool() failed.");
+            SuccessOrQuit(decoder.ReadBool(b_1));
 
             decoder.SavePosition();
 
-            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr), "ReadIp6Addr() failed.");
+            SuccessOrQuit(decoder.ReadIp6Address(ip6Addr));
         }
-        SuccessOrQuit(decoder.CloseStruct(), "CloseStruct() failed.");
-        SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
+        SuccessOrQuit(decoder.CloseStruct());
+        SuccessOrQuit(decoder.ReadUint16(u16));
 
         // `ResetToSaved()` should fail since the enclosing struct for the saved position is closed.
-        VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE, "ResetToSaved() did not fail.");
+        VerifyOrQuit(decoder.ResetToSaved() == OT_ERROR_INVALID_STATE);
     }
 
     printf(" -- PASS\n");
@@ -614,26 +614,26 @@ void TestDecoder(void)
 
     decoder.SavePosition();
 
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    VerifyOrQuit(u8 == kUint8);
 
     // `OpenStruct()` should fail, since it expects a length 10 but there are not enough
     // bytes in the frame.
-    VerifyOrQuit(decoder.OpenStruct() == OT_ERROR_PARSE, "OpenStruct() did not fail.");
+    VerifyOrQuit(decoder.OpenStruct() == OT_ERROR_PARSE);
 
-    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed.");
+    SuccessOrQuit(decoder.ResetToSaved());
 
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    VerifyOrQuit(u8 == kUint8, "ReadUint8() parse failed.");
-    VerifyOrQuit(decoder.ReadDataWithLen(dataPtr_1, dataLen_1) == OT_ERROR_PARSE, "ReadDataWithLen() did not fail.");
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(decoder.ReadDataWithLen(dataPtr_1, dataLen_1) == OT_ERROR_PARSE);
 
-    SuccessOrQuit(decoder.ResetToSaved(), "ResetToSaved() failed.");
-    SuccessOrQuit(decoder.ReadUint8(u8), "ReadUint8() failed.");
-    SuccessOrQuit(decoder.ReadUint16(u16), "ReadUint16() failed.");
-    SuccessOrQuit(decoder.ReadBool(b_1), "ReadUint16() failed.");
+    SuccessOrQuit(decoder.ResetToSaved());
+    SuccessOrQuit(decoder.ReadUint8(u8));
+    SuccessOrQuit(decoder.ReadUint16(u16));
+    SuccessOrQuit(decoder.ReadBool(b_1));
 
     // Try reading beyond end of frame.
-    VerifyOrQuit(decoder.ReadUint8(u8) == OT_ERROR_PARSE, "ReadUint8() did not fail");
+    VerifyOrQuit(decoder.ReadUint8(u8) == OT_ERROR_PARSE);
 
     printf(" -- PASS\n");
 }

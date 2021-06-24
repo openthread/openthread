@@ -123,7 +123,7 @@ void TestHkdfSha256(void)
 
     otInstance *instance = testInitInstance();
 
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
+    VerifyOrQuit(instance != nullptr);
 
     for (const TestVector *test = &kTestVectors[0]; test < OT_ARRAY_END(kTestVectors); test++)
     {

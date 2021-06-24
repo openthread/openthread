@@ -52,7 +52,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
     for (uint8_t index = 0; index < aAddressListLength; index++)
     {
-        VerifyOrQuit(aChild.HasIp6Address(aAddressList[index]), "HasIp6Address() failed");
+        VerifyOrQuit(aChild.HasIp6Address(aAddressList[index]));
     }
 
     memset(addressObserved, 0, sizeof(addressObserved));
@@ -82,7 +82,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
         if (sInstance->Get<Mle::MleRouter>().IsMeshLocalAddress(aAddressList[index]))
         {
-            SuccessOrQuit(aChild.GetMeshLocalIp6Address(address), "Child::GetMeshLocalIp6Address() failed\n");
+            SuccessOrQuit(aChild.GetMeshLocalIp6Address(address));
             VerifyOrQuit(address == aAddressList[index], "GetMeshLocalIp6Address() did not return expected address");
             hasMeshLocal = true;
         }
@@ -120,7 +120,7 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
                 break;
             }
 
-            VerifyOrQuit(address.MatchesFilter(filter), "Address::MatchesFilter() failed");
+            VerifyOrQuit(address.MatchesFilter(filter));
 
             for (uint8_t index = 0; index < aAddressListLength; index++)
             {
@@ -151,13 +151,13 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
 
         for (const Ip6::Address &address : aChild.IterateIp6Addresses())
         {
-            VerifyOrQuit(iter1 == iter2, "AddressIterator:operator== failed");
-            VerifyOrQuit(!iter1.IsDone(), "AddressIterator::IsDone() failed");
-            VerifyOrQuit(*iter1.GetAddress() == address, "AddressIterator::GetAddress() failed");
-            VerifyOrQuit(*iter1.GetAddress() == *iter2.GetAddress(), "AddressIterator::GetAddress() failed");
+            VerifyOrQuit(iter1 == iter2);
+            VerifyOrQuit(!iter1.IsDone());
+            VerifyOrQuit(*iter1.GetAddress() == address);
+            VerifyOrQuit(*iter1.GetAddress() == *iter2.GetAddress());
 
             iterIndex = iter1.GetAsIndex();
-            VerifyOrQuit(iter2.GetAsIndex() == iterIndex, "AddressIterator: GetAsIndex() failed");
+            VerifyOrQuit(iter2.GetAsIndex() == iterIndex);
 
             {
                 Child::AddressIterator iter3(aChild, iterIndex);
@@ -168,16 +168,16 @@ void VerifyChildIp6Addresses(const Child &aChild, uint8_t aAddressListLength, co
             }
 
             iter1++;
-            VerifyOrQuit(iter1 != iter2, "AddressIterator:operator!= failed");
+            VerifyOrQuit(iter1 != iter2);
             iter2++;
         }
 
-        VerifyOrQuit(iter1.IsDone(), "AddressIterator::IsDone() failed");
-        VerifyOrQuit(iter2.IsDone(), "AddressIterator::IsDone() failed");
-        VerifyOrQuit(iter1 == iter2, "AddressIterator:operator== failed");
+        VerifyOrQuit(iter1.IsDone());
+        VerifyOrQuit(iter2.IsDone());
+        VerifyOrQuit(iter1 == iter2);
 
         iterIndex = iter1.GetAsIndex();
-        VerifyOrQuit(iter2.GetAsIndex() == iterIndex, "AddressIterator: GetAsIndex() failed");
+        VerifyOrQuit(iter2.GetAsIndex() == iterIndex);
 
         {
             Child::AddressIterator iter3(aChild, iterIndex);
@@ -203,7 +203,7 @@ void TestChildIp6Address(void)
     meshLocalIid.SetBytes(meshLocalIidArray);
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != nullptr, "Null instance");
+    VerifyOrQuit(sInstance != nullptr);
 
     child.Init(*sInstance);
 
@@ -222,7 +222,7 @@ void TestChildIp6Address(void)
     for (const char *ip6Address : ip6Addresses)
     {
         VerifyOrQuit(numAddresses < kMaxChildIp6Addresses, "Too many IPv6 addresses in the unit test");
-        SuccessOrQuit(addresses[numAddresses++].FromString(ip6Address), "could not convert IPv6 address from string");
+        SuccessOrQuit(addresses[numAddresses++].FromString(ip6Address));
     }
 
     printf(" -- PASS\n");
@@ -238,7 +238,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+        SuccessOrQuit(child.AddIp6Address(addresses[index]));
         VerifyChildIp6Addresses(child, 1, &addresses[index]);
 
         child.ClearIp6Addresses();
@@ -252,7 +252,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+        SuccessOrQuit(child.AddIp6Address(addresses[index]));
         VerifyChildIp6Addresses(child, index + 1, addresses);
     }
 
@@ -275,7 +275,7 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.RemoveIp6Address(addresses[index]), "RemoveIp6Address() failed");
+        SuccessOrQuit(child.RemoveIp6Address(addresses[index]));
         VerifyChildIp6Addresses(child, numAddresses - 1 - index, &addresses[index + 1]);
 
         VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == kErrorNotFound,
@@ -290,12 +290,12 @@ void TestChildIp6Address(void)
 
     for (uint8_t index = 0; index < numAddresses; index++)
     {
-        SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+        SuccessOrQuit(child.AddIp6Address(addresses[index]));
     }
 
     for (uint8_t index = numAddresses - 1; index > 0; index--)
     {
-        SuccessOrQuit(child.RemoveIp6Address(addresses[index]), "RemoveIp6Address() failed");
+        SuccessOrQuit(child.RemoveIp6Address(addresses[index]));
         VerifyChildIp6Addresses(child, index, &addresses[0]);
 
         VerifyOrQuit(child.RemoveIp6Address(addresses[index]) == kErrorNotFound,
@@ -313,10 +313,10 @@ void TestChildIp6Address(void)
 
         for (uint8_t index = 0; index < numAddresses; index++)
         {
-            SuccessOrQuit(child.AddIp6Address(addresses[index]), "AddIp6Address() failed");
+            SuccessOrQuit(child.AddIp6Address(addresses[index]));
         }
 
-        SuccessOrQuit(child.RemoveIp6Address(addresses[indexToRemove]), "RemoveIp6Address() failed");
+        SuccessOrQuit(child.RemoveIp6Address(addresses[indexToRemove]));
 
         VerifyOrQuit(child.RemoveIp6Address(addresses[indexToRemove]) == kErrorNotFound,
                      "RemoveIp6Address() did not fail when removing an address not on the list");

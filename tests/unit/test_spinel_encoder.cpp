@@ -117,31 +117,31 @@ void TestEncoder(void)
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 1: Encoding of simple types");
 
-    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow), "BeginFrame() failed.");
-    SuccessOrQuit(encoder.WriteBool(kBool_1), "WriteBool() failed.");
-    SuccessOrQuit(encoder.WriteBool(kBool_2), "WriteBool() failed.");
-    SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
-    SuccessOrQuit(encoder.WriteInt8(kInt8), "WriteUint8() failed.");
-    SuccessOrQuit(encoder.WriteUint16(kUint16), "WriteUint16() failed.");
-    SuccessOrQuit(encoder.WriteInt16(kInt16), "WriteInt16() failed.");
-    SuccessOrQuit(encoder.WriteUint32(kUint32), "WriteUint32() failed.");
-    SuccessOrQuit(encoder.WriteInt32(kInt32), "WriteUint32() failed.");
-    SuccessOrQuit(encoder.WriteUint64(kUint64), "WriteUint64() failed.");
-    SuccessOrQuit(encoder.WriteInt64(kInt64), "WriteUint64() failed.");
-    SuccessOrQuit(encoder.WriteUintPacked(kUint_1), "WriteUintPacked() failed.");
-    SuccessOrQuit(encoder.WriteUintPacked(kUint_2), "WriteUintPacked() failed.");
-    SuccessOrQuit(encoder.WriteUintPacked(kUint_3), "WriteUintPacked() failed.");
-    SuccessOrQuit(encoder.WriteUintPacked(kUint_4), "WriteUintPacked() failed.");
-    SuccessOrQuit(encoder.WriteIp6Address(kIp6Addr), "WriteIp6Addr() failed.");
-    SuccessOrQuit(encoder.WriteEui48(kEui48), "WriteEui48() failed.");
-    SuccessOrQuit(encoder.WriteEui64(kEui64), "WriteEui64() failed.");
-    SuccessOrQuit(encoder.WriteUtf8(kString_1), "WriteUtf8() failed.");
-    SuccessOrQuit(encoder.WriteUtf8(kString_2), "WriteUtf8() failed.");
-    SuccessOrQuit(encoder.WriteData((const uint8_t *)kData, sizeof(kData)), "WriteData() failed.");
-    SuccessOrQuit(encoder.EndFrame(), "EndFrame() failed.");
+    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow));
+    SuccessOrQuit(encoder.WriteBool(kBool_1));
+    SuccessOrQuit(encoder.WriteBool(kBool_2));
+    SuccessOrQuit(encoder.WriteUint8(kUint8));
+    SuccessOrQuit(encoder.WriteInt8(kInt8));
+    SuccessOrQuit(encoder.WriteUint16(kUint16));
+    SuccessOrQuit(encoder.WriteInt16(kInt16));
+    SuccessOrQuit(encoder.WriteUint32(kUint32));
+    SuccessOrQuit(encoder.WriteInt32(kInt32));
+    SuccessOrQuit(encoder.WriteUint64(kUint64));
+    SuccessOrQuit(encoder.WriteInt64(kInt64));
+    SuccessOrQuit(encoder.WriteUintPacked(kUint_1));
+    SuccessOrQuit(encoder.WriteUintPacked(kUint_2));
+    SuccessOrQuit(encoder.WriteUintPacked(kUint_3));
+    SuccessOrQuit(encoder.WriteUintPacked(kUint_4));
+    SuccessOrQuit(encoder.WriteIp6Address(kIp6Addr));
+    SuccessOrQuit(encoder.WriteEui48(kEui48));
+    SuccessOrQuit(encoder.WriteEui64(kEui64));
+    SuccessOrQuit(encoder.WriteUtf8(kString_1));
+    SuccessOrQuit(encoder.WriteUtf8(kString_2));
+    SuccessOrQuit(encoder.WriteData((const uint8_t *)kData, sizeof(kData)));
+    SuccessOrQuit(encoder.EndFrame());
 
     DumpBuffer("Buffer", buffer, 256);
-    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen), "ReadFrame() failed.");
+    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
     DumpBuffer("Frame", frame, frameLen);
 
     parsedLen = spinel_datatype_unpack(
@@ -155,48 +155,48 @@ void TestEncoder(void)
         &b_1, &b_2, &u8, &i8, &u16, &i16, &u32, &i32, &u64, &i64, &u_1, &u_2, &u_3, &u_4, &ip6Addr, &eui48, &eui64,
         &utf_1, &utf_2, &dataPtr, &dataLen);
 
-    VerifyOrQuit(parsedLen == frameLen, "spinel parse failed");
-    VerifyOrQuit(b_1 == kBool_1, "WriteBool() parse failed.");
-    VerifyOrQuit(b_2 == kBool_2, "WriteBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "WriteUint8() parse failed.");
-    VerifyOrQuit(i8 == kInt8, "WriteUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "WriteUint16() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "WriteInt16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "WriteUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "WriteUint32() parse failed.");
-    VerifyOrQuit(u64 == kUint64, "WriteUint64() parse failed.");
-    VerifyOrQuit(i64 == kInt64, "WriteUint64() parse failed.");
-    VerifyOrQuit(u_1 == kUint_1, "WriteUintPacked() parse failed.");
-    VerifyOrQuit(u_2 == kUint_2, "WriteUintPacked() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "WriteUintPacked() parse failed.");
-    VerifyOrQuit(u_4 == kUint_4, "WriteUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "WriteIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "WriteEui48() parse failed.");
-    VerifyOrQuit(memcmp(eui64, &kEui64, sizeof(spinel_eui64_t)) == 0, "WriteEui64() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "WriteUtf8() parse failed.");
-    VerifyOrQuit(memcmp(utf_2, kString_2, sizeof(kString_2)) == 0, "WriteUtf8() parse failed.");
-    VerifyOrQuit(dataLen == sizeof(kData), "WriteData() parse failed.");
-    VerifyOrQuit(memcmp(dataPtr, &kData, sizeof(kData)) == 0, "WriteData() parse failed.");
+    VerifyOrQuit(parsedLen == frameLen);
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(b_2 == kBool_2);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i8 == kInt8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(i16 == kInt16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(u64 == kUint64);
+    VerifyOrQuit(i64 == kInt64);
+    VerifyOrQuit(u_1 == kUint_1);
+    VerifyOrQuit(u_2 == kUint_2);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(u_4 == kUint_4);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
+    VerifyOrQuit(memcmp(eui64, &kEui64, sizeof(spinel_eui64_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
+    VerifyOrQuit(memcmp(utf_2, kString_2, sizeof(kString_2)) == 0);
+    VerifyOrQuit(dataLen == sizeof(kData));
+    VerifyOrQuit(memcmp(dataPtr, &kData, sizeof(kData)) == 0);
 
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 2: Test a single simple struct.");
 
-    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow), "BeginFrame() failed.");
-    SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
-    SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow));
+    SuccessOrQuit(encoder.WriteUint8(kUint8));
+    SuccessOrQuit(encoder.OpenStruct());
     {
-        SuccessOrQuit(encoder.WriteUint32(kUint32), "WriteUint32() failed.");
-        SuccessOrQuit(encoder.WriteEui48(kEui48), "WriteEui48() failed.");
-        SuccessOrQuit(encoder.WriteUintPacked(kUint_3), "WriteUintPacked() failed.");
+        SuccessOrQuit(encoder.WriteUint32(kUint32));
+        SuccessOrQuit(encoder.WriteEui48(kEui48));
+        SuccessOrQuit(encoder.WriteUintPacked(kUint_3));
     }
-    SuccessOrQuit(encoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(encoder.WriteInt16(kInt16), "WriteInt16() failed.");
-    SuccessOrQuit(encoder.EndFrame(), "EndFrame() failed.");
+    SuccessOrQuit(encoder.CloseStruct());
+    SuccessOrQuit(encoder.WriteInt16(kInt16));
+    SuccessOrQuit(encoder.EndFrame());
 
     DumpBuffer("Buffer", buffer, 256);
-    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen), "ReadFrame() failed.");
+    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
     DumpBuffer("Frame", frame, frameLen);
 
     parsedLen = spinel_datatype_unpack(
@@ -207,12 +207,12 @@ void TestEncoder(void)
          ),
         &u8, &u32, &eui48, &u_3, &i16);
 
-    VerifyOrQuit(parsedLen == frameLen, "spinel parse failed");
-    VerifyOrQuit(u8 == kUint8, "WriteUint8() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "WriteInt16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "WriteUint32() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "WriteUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "WriteEui48() parse failed.");
+    VerifyOrQuit(parsedLen == frameLen);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i16 == kInt16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
 
     // Parse the struct as a "data with len".
     parsedLen = spinel_datatype_unpack(frame, (spinel_size_t)frameLen,
@@ -221,41 +221,41 @@ void TestEncoder(void)
                                         ),
                                        &u8, &dataPtr, &dataLen, &i16);
 
-    VerifyOrQuit(parsedLen == frameLen, "spinel parse failed");
-    VerifyOrQuit(u8 == kUint8, "WriteUint8() parse failed.");
-    VerifyOrQuit(i16 == kInt16, "WriteInt16() parse failed.");
+    VerifyOrQuit(parsedLen == frameLen);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(i16 == kInt16);
 
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 3: Test multiple structs and struct within struct.");
 
-    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow), "BeginFrame() failed.");
-    SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow));
+    SuccessOrQuit(encoder.OpenStruct());
     {
-        SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
-        SuccessOrQuit(encoder.WriteUtf8(kString_1), "WriteUtf8() failed.");
-        SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(encoder.WriteUint8(kUint8));
+        SuccessOrQuit(encoder.WriteUtf8(kString_1));
+        SuccessOrQuit(encoder.OpenStruct());
         {
-            SuccessOrQuit(encoder.WriteBool(kBool_1), "WriteBool() failed.");
-            SuccessOrQuit(encoder.WriteIp6Address(kIp6Addr), "WriteIp6Addr() failed.");
+            SuccessOrQuit(encoder.WriteBool(kBool_1));
+            SuccessOrQuit(encoder.WriteIp6Address(kIp6Addr));
         }
-        SuccessOrQuit(encoder.CloseStruct(), "CloseStruct() failed.");
-        SuccessOrQuit(encoder.WriteUint16(kUint16), "WriteUint16() failed.");
+        SuccessOrQuit(encoder.CloseStruct());
+        SuccessOrQuit(encoder.WriteUint16(kUint16));
     }
-    SuccessOrQuit(encoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(encoder.WriteEui48(kEui48), "WriteEui48() failed.");
-    SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(encoder.CloseStruct());
+    SuccessOrQuit(encoder.WriteEui48(kEui48));
+    SuccessOrQuit(encoder.OpenStruct());
     {
-        SuccessOrQuit(encoder.WriteUint32(kUint32), "WriteUint32() failed.");
+        SuccessOrQuit(encoder.WriteUint32(kUint32));
     }
-    SuccessOrQuit(encoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(encoder.WriteInt32(kInt32), "WriteUint32() failed.");
-    SuccessOrQuit(encoder.EndFrame(), "EndFrame() failed.");
+    SuccessOrQuit(encoder.CloseStruct());
+    SuccessOrQuit(encoder.WriteInt32(kInt32));
+    SuccessOrQuit(encoder.EndFrame());
 
     DumpBuffer("Buffer", buffer, 256 + 100);
 
-    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen), "ReadFrame() failed.");
+    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
 
     parsedLen = spinel_datatype_unpack(
         frame, (spinel_size_t)frameLen,
@@ -264,36 +264,36 @@ void TestEncoder(void)
              SPINEL_DATATYPE_EUI48_S SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_UINT32_S) SPINEL_DATATYPE_INT32_S),
         &u8, &utf_1, &b_1, &ip6Addr, &u16, &eui48, &u32, &i32);
 
-    VerifyOrQuit(parsedLen == frameLen, "spinel parse failed");
-    VerifyOrQuit(b_1 == kBool_1, "WriteBool() parse failed.");
-    VerifyOrQuit(u8 == kUint8, "WriteUint8() parse failed.");
-    VerifyOrQuit(u16 == kUint16, "WriteUint16() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "WriteUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "WriteUint32() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "WriteIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "WriteEui48() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "WriteUtf8() parse failed.");
+    VerifyOrQuit(parsedLen == frameLen);
+    VerifyOrQuit(b_1 == kBool_1);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(u16 == kUint16);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
 
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 4: Test unclosed struct.");
 
-    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow), "BeginFrame() failed.");
-    SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
-    SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow));
+    SuccessOrQuit(encoder.WriteUint8(kUint8));
+    SuccessOrQuit(encoder.OpenStruct());
     {
-        SuccessOrQuit(encoder.WriteUint32(kUint32), "WriteUint32() failed.");
-        SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(encoder.WriteUint32(kUint32));
+        SuccessOrQuit(encoder.OpenStruct());
         {
-            SuccessOrQuit(encoder.WriteEui48(kEui48), "WriteEui48() failed.");
-            SuccessOrQuit(encoder.WriteUintPacked(kUint_3), "WriteUintPacked() failed.");
+            SuccessOrQuit(encoder.WriteEui48(kEui48));
+            SuccessOrQuit(encoder.WriteUintPacked(kUint_3));
             // Do not close the structs expecting `EndFrame()` to close them.
         }
     }
-    SuccessOrQuit(encoder.EndFrame(), "EndFrame() failed.");
+    SuccessOrQuit(encoder.EndFrame());
 
-    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen), "ReadFrame() failed.");
+    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
 
     parsedLen = spinel_datatype_unpack(
         frame, (spinel_size_t)frameLen,
@@ -301,43 +301,43 @@ void TestEncoder(void)
             SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_STRUCT_S(SPINEL_DATATYPE_EUI48_S SPINEL_DATATYPE_UINT_PACKED_S))),
         &u8, &u32, &eui48, &u_3);
 
-    VerifyOrQuit(parsedLen == frameLen, "spinel parse failed");
-    VerifyOrQuit(u8 == kUint8, "WriteUint8() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "WriteUint32() parse failed.");
-    VerifyOrQuit(u_3 == kUint_3, "WriteUintPacked() parse failed.");
-    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0, "WriteEui48() parse failed.");
+    VerifyOrQuit(parsedLen == frameLen);
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(u_3 == kUint_3);
+    VerifyOrQuit(memcmp(eui48, &kEui48, sizeof(spinel_eui48_t)) == 0);
 
     printf(" -- PASS\n");
 
     printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
     printf("\nTest 5: Test saving position and reseting back to a saved position");
 
-    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow), "BeginFrame() failed.");
-    SuccessOrQuit(encoder.WriteUint8(kUint8), "WriteUint8() failed.");
-    SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+    SuccessOrQuit(encoder.BeginFrame(Spinel::Buffer::kPriorityLow));
+    SuccessOrQuit(encoder.WriteUint8(kUint8));
+    SuccessOrQuit(encoder.OpenStruct());
     {
-        SuccessOrQuit(encoder.WriteUint32(kUint32), "WriteUint32() failed.");
+        SuccessOrQuit(encoder.WriteUint32(kUint32));
 
         // Save position in middle a first open struct.
-        SuccessOrQuit(encoder.SavePosition(), "SavePosition failed.");
-        SuccessOrQuit(encoder.OpenStruct(), "OpenStruct() failed.");
+        SuccessOrQuit(encoder.SavePosition());
+        SuccessOrQuit(encoder.OpenStruct());
         {
-            SuccessOrQuit(encoder.WriteEui48(kEui48), "WriteEui48() failed.");
-            SuccessOrQuit(encoder.WriteUintPacked(kUint_3), "WriteUintPacked() failed.");
+            SuccessOrQuit(encoder.WriteEui48(kEui48));
+            SuccessOrQuit(encoder.WriteUintPacked(kUint_3));
         }
 
         // Reset to saved position in middle of the second open struct which should be discarded.
 
-        SuccessOrQuit(encoder.ResetToSaved(), "ResetToSaved() failed.");
+        SuccessOrQuit(encoder.ResetToSaved());
 
-        SuccessOrQuit(encoder.WriteIp6Address(kIp6Addr), "WriteIp6Addr() failed.");
-        SuccessOrQuit(encoder.WriteEui64(kEui64), "WriteEui64() failed.");
+        SuccessOrQuit(encoder.WriteIp6Address(kIp6Addr));
+        SuccessOrQuit(encoder.WriteEui64(kEui64));
     }
-    SuccessOrQuit(encoder.CloseStruct(), "CloseStruct() failed.");
-    SuccessOrQuit(encoder.WriteUtf8(kString_1), "WriteUtf8() failed.");
-    SuccessOrQuit(encoder.EndFrame(), "EndFrame() failed.");
+    SuccessOrQuit(encoder.CloseStruct());
+    SuccessOrQuit(encoder.WriteUtf8(kString_1));
+    SuccessOrQuit(encoder.EndFrame());
 
-    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen), "ReadFrame() failed.");
+    SuccessOrQuit(ReadFrame(ncpBuffer, frame, frameLen));
 
     parsedLen = spinel_datatype_unpack(
         frame, (spinel_size_t)frameLen,
@@ -345,14 +345,14 @@ void TestEncoder(void)
             SPINEL_DATATYPE_UINT32_S SPINEL_DATATYPE_IPv6ADDR_S SPINEL_DATATYPE_EUI64_S) SPINEL_DATATYPE_UTF8_S),
         &u8, &u32, &ip6Addr, &eui64, &utf_1);
 
-    VerifyOrQuit(parsedLen == frameLen, "spinel parse failed");
+    VerifyOrQuit(parsedLen == frameLen);
 
-    VerifyOrQuit(u8 == kUint8, "WriteUint8() parse failed.");
-    VerifyOrQuit(u32 == kUint32, "WriteUint32() parse failed.");
-    VerifyOrQuit(i32 == kInt32, "WriteUint32() parse failed.");
-    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0, "WriteIp6Address() parse failed.");
-    VerifyOrQuit(memcmp(eui64, &kEui64, sizeof(spinel_eui64_t)) == 0, "WriteEui64() parse failed.");
-    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0, "WriteUtf8() parse failed.");
+    VerifyOrQuit(u8 == kUint8);
+    VerifyOrQuit(u32 == kUint32);
+    VerifyOrQuit(i32 == kInt32);
+    VerifyOrQuit(memcmp(ip6Addr, &kIp6Addr, sizeof(spinel_ipv6addr_t)) == 0);
+    VerifyOrQuit(memcmp(eui64, &kEui64, sizeof(spinel_eui64_t)) == 0);
+    VerifyOrQuit(memcmp(utf_1, kString_1, sizeof(kString_1)) == 0);
 
     printf(" -- PASS\n");
 }

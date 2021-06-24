@@ -53,7 +53,7 @@ void test_packed1(void)
 
     static_assert(sizeof(packed_t) == 7, "packed_t should be packed to 7 bytes");
 
-    VerifyOrQuit(sizeof(packed_t) == 7, "Toolchain::OT_TOOL_PACKED failed 1");
+    VerifyOrQuit(sizeof(packed_t) == 7, "OT_TOOL_PACKED failed 1");
 }
 
 void test_packed2(void)
@@ -67,7 +67,7 @@ void test_packed2(void)
 
     static_assert(sizeof(packed_t) == 4, "packed_t should be packed to 4 bytes");
 
-    VerifyOrQuit(sizeof(packed_t) == 4, "Toolchain::OT_TOOL_PACKED failed 2");
+    VerifyOrQuit(sizeof(packed_t) == 4, "OT_TOOL_PACKED failed 2");
 }
 
 void test_packed_union(void)
@@ -90,7 +90,7 @@ void test_packed_union(void)
 
     static_assert(sizeof(packed_t) == 5, "packed_t should be packed to 5 bytes");
 
-    VerifyOrQuit(sizeof(packed_t) == 5, "Toolchain::OT_TOOL_PACKED failed 3");
+    VerifyOrQuit(sizeof(packed_t) == 5, "OT_TOOL_PACKED failed 3");
 }
 
 void test_packed_enum(void)
@@ -99,7 +99,7 @@ void test_packed_enum(void)
     neighbor.SetState(ot::Neighbor::kStateValid);
 
     // Make sure that when we read the 3 bit field it is read as unsigned, so it return '4'
-    VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "Toolchain::OT_TOOL_PACKED failed 4");
+    VerifyOrQuit(neighbor.GetState() == ot::Neighbor::kStateValid, "OT_TOOL_PACKED failed 4");
 }
 
 void test_addr_sizes(void)
@@ -111,7 +111,7 @@ void test_addr_sizes(void)
 
 void test_addr_bitfield(void)
 {
-    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "Toolchain::test_addr_size_cpp");
+    VerifyOrQuit(CreateNetif_c().mScopeOverrideValid == true, "test_addr_size_cpp");
 }
 
 void test_packed_alignment(void)
@@ -129,7 +129,7 @@ void test_packed_alignment(void)
     const uint8_t *packedStructBytes = reinterpret_cast<const uint8_t *>(&packedStruct);
     uint8_t        buffer[sizeof(PackedStruct) * 2 + 1];
 
-    VerifyOrQuit(sizeof(PackedStruct) == 7, "Toolchain::OT_TOOL_PACKED failed");
+    VerifyOrQuit(sizeof(PackedStruct) == 7, "OT_TOOL_PACKED failed");
 
     packedStruct.mUint32 = 0x12345678;
     packedStruct.mByte   = 0xfe;
@@ -145,22 +145,21 @@ void test_packed_alignment(void)
 
         for (uint16_t i = 0; i < start; i++)
         {
-            VerifyOrQuit(buffer[i] == 0, "Toolchain::OT_TOOL_PACKED alignment failed - pre-size write");
+            VerifyOrQuit(buffer[i] == 0, "OT_TOOL_PACKED alignment failed - pre-size write");
         }
 
-        VerifyOrQuit(memcmp(ptr, packedStructBytes, sizeof(PackedStruct)) == 0,
-                     "Toolchain::OT_TOOL_PACKED alignment failed");
+        VerifyOrQuit(memcmp(ptr, packedStructBytes, sizeof(PackedStruct)) == 0, "OT_TOOL_PACKED alignment failed");
 
         for (uint16_t i = start + sizeof(packedStruct); i < sizeof(buffer); i++)
         {
-            VerifyOrQuit(buffer[i] == 0, "Toolchain::OT_TOOL_PACKED alignment failed - post-size write");
+            VerifyOrQuit(buffer[i] == 0, "OT_TOOL_PACKED alignment failed - post-size write");
         }
 
         memset(&packedStructCopy, 0, sizeof(PackedStruct));
         packedStructCopy = *reinterpret_cast<PackedStruct *>(ptr);
 
         VerifyOrQuit(memcmp(&packedStructCopy, &packedStruct, sizeof(PackedStruct)) == 0,
-                     "Toolchain::OT_TOOL_PACKED failed - read error");
+                     "OT_TOOL_PACKED failed - read error");
     }
 }
 

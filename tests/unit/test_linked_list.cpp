@@ -79,17 +79,17 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
         argEntry = va_arg(args, Entry *);
         VerifyOrQuit(argEntry != nullptr, "List contains more entries than expected");
         VerifyOrQuit(argEntry == entry, "List does not contain the same entry");
-        VerifyOrQuit(aList->Contains(*argEntry), "List::Contains() failed");
-        VerifyOrQuit(aList->ContainsMatching(argEntry->GetName()), "List::ContainsMatching() failed");
-        VerifyOrQuit(aList->ContainsMatching(argEntry->GetId()), "List::ContainsMatching() failed");
+        VerifyOrQuit(aList->Contains(*argEntry));
+        VerifyOrQuit(aList->ContainsMatching(argEntry->GetName()));
+        VerifyOrQuit(aList->ContainsMatching(argEntry->GetId()));
 
-        SuccessOrQuit(aList->Find(*argEntry, prev), "List::Find() failed");
+        SuccessOrQuit(aList->Find(*argEntry, prev));
         VerifyOrQuit(prev == argPrev, "List::Find() returned prev entry is incorrect");
 
-        VerifyOrQuit(aList->FindMatching(argEntry->GetName(), prev) == argEntry, "List::FindMatching() failed");
+        VerifyOrQuit(aList->FindMatching(argEntry->GetName(), prev) == argEntry);
         VerifyOrQuit(prev == argPrev, "List::FindMatching() returned prev entry is incorrect");
 
-        VerifyOrQuit(aList->FindMatching(argEntry->GetId(), prev) == argEntry, "List::FindMatching() failed");
+        VerifyOrQuit(aList->FindMatching(argEntry->GetId(), prev) == argEntry);
         VerifyOrQuit(prev == argPrev, "List::FindMatching() returned prev entry is incorrect");
 
         argPrev = argEntry;
@@ -98,15 +98,13 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
     argEntry = va_arg(args, Entry *);
     VerifyOrQuit(argEntry == nullptr, "List contains less entries than expected");
 
-    VerifyOrQuit(aList->GetTail() == argPrev, "List::GetTail() failed");
+    VerifyOrQuit(aList->GetTail() == argPrev);
 
-    VerifyOrQuit(!aList->ContainsMatching("none"), "List::ContainsMatching() succeeded for a missing entry");
-    VerifyOrQuit(!aList->ContainsMatching(unusedId), "List::ContainsMatching() succeeded for a missing entry");
+    VerifyOrQuit(!aList->ContainsMatching("none"), "succeeded for a missing entry");
+    VerifyOrQuit(!aList->ContainsMatching(unusedId), "succeeded for a missing entry");
 
-    VerifyOrQuit(aList->FindMatching("none", prev) == nullptr,
-                 "LinkedList::FindMatching() succeeded for a missing entry");
-    VerifyOrQuit(aList->FindMatching(unusedId, prev) == nullptr,
-                 "LinkedList::FindMatching() succeeded for a missing entry");
+    VerifyOrQuit(aList->FindMatching("none", prev) == nullptr, "succeeded for a missing entry");
+    VerifyOrQuit(aList->FindMatching(unusedId, prev) == nullptr, "succeeded for a missing entry");
 }
 
 void TestLinkedList(void)
@@ -115,81 +113,81 @@ void TestLinkedList(void)
     Entry *               prev;
     ot::LinkedList<Entry> list;
 
-    VerifyOrQuit(list.IsEmpty(), "LinkedList::IsEmpty() failed after init");
-    VerifyOrQuit(list.GetHead() == nullptr, "LinkedList::GetHead() failed after init");
-    VerifyOrQuit(list.Pop() == nullptr, "LinkedList::Pop() failed when empty");
-    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.IsEmpty(), "failed after init");
+    VerifyOrQuit(list.GetHead() == nullptr, "failed after init");
+    VerifyOrQuit(list.Pop() == nullptr, "failed when empty");
+    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "succeeded when empty");
 
     VerifyLinkedListContent(&list, nullptr);
 
     list.Push(a);
-    VerifyOrQuit(!list.IsEmpty(), "LinkedList::IsEmpty() failed");
+    VerifyOrQuit(!list.IsEmpty());
     VerifyLinkedListContent(&list, &a, nullptr);
-    VerifyOrQuit(list.Find(b, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.Find(b, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
 
-    SuccessOrQuit(list.Add(b), "LinkedList::Add() failed");
+    SuccessOrQuit(list.Add(b));
     VerifyLinkedListContent(&list, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(c, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.Find(c, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
 
     list.Push(c);
     VerifyLinkedListContent(&list, &c, &b, &a, nullptr);
 
-    SuccessOrQuit(list.Add(d), "LinkedList::Add() failed");
+    SuccessOrQuit(list.Add(d));
     VerifyLinkedListContent(&list, &d, &c, &b, &a, nullptr);
 
-    SuccessOrQuit(list.Add(e), "LinkedList::Add() failed");
+    SuccessOrQuit(list.Add(e));
     VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
 
-    VerifyOrQuit(list.Add(a) == ot::kErrorAlready, "LinkedList::Add() did not detect duplicate");
-    VerifyOrQuit(list.Add(b) == ot::kErrorAlready, "LinkedList::Add() did not detect duplicate");
-    VerifyOrQuit(list.Add(d) == ot::kErrorAlready, "LinkedList::Add() did not detect duplicate");
-    VerifyOrQuit(list.Add(e) == ot::kErrorAlready, "LinkedList::Add() did not detect duplicate");
+    VerifyOrQuit(list.Add(a) == ot::kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(b) == ot::kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(d) == ot::kErrorAlready, "did not detect duplicate");
+    VerifyOrQuit(list.Add(e) == ot::kErrorAlready, "did not detect duplicate");
 
-    VerifyOrQuit(list.Pop() == &e, "LinkedList::Pop() failed");
+    VerifyOrQuit(list.Pop() == &e);
     VerifyLinkedListContent(&list, &d, &c, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(e, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.Find(e, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
 
-    VerifyOrQuit(list.FindMatching(d.GetName(), prev) == &d, "List::FindMatching() failed");
-    VerifyOrQuit(prev == nullptr, "List::FindMatching() failed");
-    VerifyOrQuit(list.FindMatching(c.GetId(), prev) == &c, "List::FindMatching() failed");
-    VerifyOrQuit(prev == &d, "List::FindMatching() failed");
-    VerifyOrQuit(list.FindMatching(b.GetName(), prev) == &b, "List::FindMatching() failed");
-    VerifyOrQuit(prev == &c, "List::FindMatching() failed");
-    VerifyOrQuit(list.FindMatching(a.GetId(), prev) == &a, "List::FindMatching() failed");
-    VerifyOrQuit(prev == &b, "List::FindMatching() failed");
-    VerifyOrQuit(list.FindMatching(e.GetId(), prev) == nullptr, "List::FindMatching() succeeded for a missing entry");
-    VerifyOrQuit(list.FindMatching(e.GetName(), prev) == nullptr, "List::FindMatching() succeeded for a missing entry");
+    VerifyOrQuit(list.FindMatching(d.GetName(), prev) == &d);
+    VerifyOrQuit(prev == nullptr);
+    VerifyOrQuit(list.FindMatching(c.GetId(), prev) == &c);
+    VerifyOrQuit(prev == &d);
+    VerifyOrQuit(list.FindMatching(b.GetName(), prev) == &b);
+    VerifyOrQuit(prev == &c);
+    VerifyOrQuit(list.FindMatching(a.GetId(), prev) == &a);
+    VerifyOrQuit(prev == &b);
+    VerifyOrQuit(list.FindMatching(e.GetId(), prev) == nullptr, "succeeded for a missing entry");
+    VerifyOrQuit(list.FindMatching(e.GetName(), prev) == nullptr, "succeeded for a missing entry");
 
     list.SetHead(&e);
     VerifyLinkedListContent(&list, &e, &d, &c, &b, &a, nullptr);
 
-    SuccessOrQuit(list.Remove(c), "LinkedList::Remove() failed");
+    SuccessOrQuit(list.Remove(c));
     VerifyLinkedListContent(&list, &e, &d, &b, &a, nullptr);
 
-    VerifyOrQuit(list.Remove(c) == ot::kErrorNotFound, "LinkedList::Remove() failed");
+    VerifyOrQuit(list.Remove(c) == ot::kErrorNotFound);
     VerifyLinkedListContent(&list, &e, &d, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(c, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.Find(c, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
 
-    SuccessOrQuit(list.Remove(e), "LinkedList::Remove() failed");
+    SuccessOrQuit(list.Remove(e));
     VerifyLinkedListContent(&list, &d, &b, &a, nullptr);
-    VerifyOrQuit(list.Find(e, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.Find(e, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
 
-    SuccessOrQuit(list.Remove(a), "LinkedList::Remove() failed");
+    SuccessOrQuit(list.Remove(a));
     VerifyLinkedListContent(&list, &d, &b, nullptr);
-    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
+    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
 
     list.Push(a);
     list.Push(c);
     list.Push(e);
     VerifyLinkedListContent(&list, &e, &c, &a, &d, &b, nullptr);
 
-    VerifyOrQuit(list.PopAfter(&a) == &d, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(&a) == &d);
     VerifyLinkedListContent(&list, &e, &c, &a, &b, nullptr);
 
-    VerifyOrQuit(list.PopAfter(&b) == nullptr, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(&b) == nullptr);
     VerifyLinkedListContent(&list, &e, &c, &a, &b, nullptr);
 
-    VerifyOrQuit(list.PopAfter(&e) == &c, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(&e) == &c);
     VerifyLinkedListContent(&list, &e, &a, &b, nullptr);
 
     list.PushAfter(c, b);
@@ -198,38 +196,37 @@ void TestLinkedList(void)
     list.PushAfter(d, a);
     VerifyLinkedListContent(&list, &e, &a, &d, &b, &c, nullptr);
 
-    VerifyOrQuit(list.PopAfter(nullptr) == &e, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(nullptr) == &e);
     VerifyLinkedListContent(&list, &a, &d, &b, &c, nullptr);
 
-    VerifyOrQuit(list.PopAfter(nullptr) == &a, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.PopAfter(nullptr) == &a);
     VerifyLinkedListContent(&list, &d, &b, &c, nullptr);
 
     list.Push(e);
     list.Push(a);
     VerifyLinkedListContent(&list, &a, &e, &d, &b, &c, nullptr);
 
-    VerifyOrQuit(list.RemoveMatching(a.GetName()) == &a, "LinkedList::RemoveMatching() failed");
+    VerifyOrQuit(list.RemoveMatching(a.GetName()) == &a);
     VerifyLinkedListContent(&list, &e, &d, &b, &c, nullptr);
 
-    VerifyOrQuit(list.RemoveMatching(c.GetId()) == &c, "LinkedList::RemoveMatching() failed");
+    VerifyOrQuit(list.RemoveMatching(c.GetId()) == &c);
     VerifyLinkedListContent(&list, &e, &d, &b, nullptr);
 
-    VerifyOrQuit(list.RemoveMatching(c.GetId()) == nullptr, "LinkedList::RemoveMatching() succeeded for missing entry");
-    VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr,
-                 "LinkedList::RemoveMatching() succeeded for missing entry");
+    VerifyOrQuit(list.RemoveMatching(c.GetId()) == nullptr, "succeeded for missing entry");
+    VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr, "succeeded for missing entry");
 
-    VerifyOrQuit(list.RemoveMatching(d.GetId()) == &d, "LinkedList::RemoveMatching() failed");
+    VerifyOrQuit(list.RemoveMatching(d.GetId()) == &d);
     VerifyLinkedListContent(&list, &e, &b, nullptr);
 
     list.Clear();
-    VerifyOrQuit(list.IsEmpty(), "LinkedList::IsEmpty() failed after Clear()");
-    VerifyOrQuit(list.PopAfter(nullptr) == nullptr, "LinkedList::PopAfter() failed");
+    VerifyOrQuit(list.IsEmpty(), "failed after Clear()");
+    VerifyOrQuit(list.PopAfter(nullptr) == nullptr);
     VerifyLinkedListContent(&list, nullptr);
-    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "LinkedList::Find() succeeded for a missing entry");
-    VerifyOrQuit(list.FindMatching(b.GetName(), prev) == nullptr, "LinkedList::FindMatching() succeeded when empty");
-    VerifyOrQuit(list.FindMatching(c.GetId(), prev) == nullptr, "LinkedList::FindMatching() succeeded when empty");
-    VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr, "LinkedList::RemoveMatching() succeeded when empty");
-    VerifyOrQuit(list.Remove(a) == ot::kErrorNotFound, "LinkedList::Remove() succeeded when empty");
+    VerifyOrQuit(list.Find(a, prev) == ot::kErrorNotFound, "succeeded for a missing entry");
+    VerifyOrQuit(list.FindMatching(b.GetName(), prev) == nullptr, "succeeded when empty");
+    VerifyOrQuit(list.FindMatching(c.GetId(), prev) == nullptr, "succeeded when empty");
+    VerifyOrQuit(list.RemoveMatching(a.GetName()) == nullptr, "succeeded when empty");
+    VerifyOrQuit(list.Remove(a) == ot::kErrorNotFound, "succeeded when empty");
 }
 
 int main(void)

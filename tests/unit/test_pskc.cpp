@@ -45,9 +45,8 @@ void TestMinimumPassphrase(void)
     const char            passphrase[]   = "123456";
     otInstance *          instance       = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
-                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
-                  "TestMinimumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMinimumPassphrase got wrong pskc");
+                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc));
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0);
     testFreeInstance(instance);
 }
 
@@ -76,9 +75,8 @@ void TestMaximumPassphrase(void)
 
     otInstance *instance = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("OpenThread"),
-                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
-                  "TestMaximumPassphrase failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestMaximumPassphrase got wrong pskc");
+                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc));
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0);
     testFreeInstance(instance);
 }
 
@@ -92,9 +90,8 @@ void TestExampleInSpec(void)
 
     otInstance *instance = testInitInstance();
     SuccessOrQuit(ot::MeshCoP::GeneratePskc(passphrase, *reinterpret_cast<const ot::Mac::NetworkName *>("Test Network"),
-                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc),
-                  "ExampleInSpec failed to generate PSKc");
-    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0, "TestExampleInSpec got wrong pskc");
+                                            static_cast<const ot::Mac::ExtendedPanId &>(xpanid), pskc));
+    VerifyOrQuit(memcmp(pskc.m8, expectedPskc, sizeof(pskc)) == 0);
     testFreeInstance(instance);
 }
 

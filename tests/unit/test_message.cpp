@@ -56,20 +56,20 @@ void TestMessage(void)
     memset(zeroBuffer, 0, sizeof(zeroBuffer));
 
     instance = static_cast<Instance *>(testInitInstance());
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
 
     Random::NonCrypto::FillBuffer(writeBuffer, kMaxSize);
 
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
-    SuccessOrQuit(message->SetLength(kMaxSize), "Message::SetLength failed");
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    SuccessOrQuit(message->SetLength(kMaxSize));
     message->WriteBytes(0, writeBuffer, kMaxSize);
-    SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
-    VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
-    VerifyOrQuit(message->CompareBytes(0, readBuffer, kMaxSize), "Message::CompareBytes failed");
-    VerifyOrQuit(message->Compare(0, readBuffer), "Message::Compare failed");
-    VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
+    SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
+    VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0);
+    VerifyOrQuit(message->CompareBytes(0, readBuffer, kMaxSize));
+    VerifyOrQuit(message->Compare(0, readBuffer));
+    VerifyOrQuit(message->GetLength() == kMaxSize);
 
     for (uint16_t offset = 0; offset < kMaxSize; offset++)
     {
@@ -82,16 +82,16 @@ void TestMessage(void)
 
             message->WriteBytes(offset, &writeBuffer[offset], length);
 
-            SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
-            VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0, "Message compare failed");
-            VerifyOrQuit(message->Compare(0, writeBuffer), "Message::Compare() failed");
+            SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
+            VerifyOrQuit(memcmp(writeBuffer, readBuffer, kMaxSize) == 0);
+            VerifyOrQuit(message->Compare(0, writeBuffer));
 
             memset(readBuffer, 0, sizeof(readBuffer));
-            SuccessOrQuit(message->Read(offset, readBuffer, length), "Message::Read failed");
-            VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], length) == 0, "Message compare failed");
-            VerifyOrQuit(memcmp(&readBuffer[length], zeroBuffer, kMaxSize - length) == 0, "Message read after length");
+            SuccessOrQuit(message->Read(offset, readBuffer, length));
+            VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], length) == 0);
+            VerifyOrQuit(memcmp(&readBuffer[length], zeroBuffer, kMaxSize - length) == 0, "read after length");
 
-            VerifyOrQuit(message->CompareBytes(offset, &writeBuffer[offset], length), "Message::CompareBytes() failed");
+            VerifyOrQuit(message->CompareBytes(offset, &writeBuffer[offset], length));
 
             if (length == 0)
             {
@@ -102,11 +102,11 @@ void TestMessage(void)
             // `CompareBytes()` correctly fails.
 
             writeBuffer[offset]++;
-            VerifyOrQuit(!message->CompareBytes(offset, &writeBuffer[offset], length), "CompareBytes() failed");
+            VerifyOrQuit(!message->CompareBytes(offset, &writeBuffer[offset], length));
             writeBuffer[offset]--;
 
             writeBuffer[offset + length - 1]++;
-            VerifyOrQuit(!message->CompareBytes(offset, &writeBuffer[offset], length), "CompareBytes() failed");
+            VerifyOrQuit(!message->CompareBytes(offset, &writeBuffer[offset], length));
             writeBuffer[offset + length - 1]--;
         }
 
@@ -120,21 +120,21 @@ void TestMessage(void)
             readLength = message->ReadBytes(offset, readBuffer, length);
 
             VerifyOrQuit(readLength < length, "Message::ReadBytes() returned longer length");
-            VerifyOrQuit(readLength == kMaxSize - offset, "Message::Read failed");
-            VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], readLength) == 0, "Message compare failed");
+            VerifyOrQuit(readLength == kMaxSize - offset);
+            VerifyOrQuit(memcmp(readBuffer, &writeBuffer[offset], readLength) == 0);
             VerifyOrQuit(memcmp(&readBuffer[readLength], zeroBuffer, kMaxSize - readLength) == 0, "read after length");
 
-            VerifyOrQuit(!message->CompareBytes(offset, readBuffer, length), "Message::CompareBytes failed");
-            VerifyOrQuit(message->CompareBytes(offset, readBuffer, readLength), "Message::CompareBytes failed");
+            VerifyOrQuit(!message->CompareBytes(offset, readBuffer, length));
+            VerifyOrQuit(message->CompareBytes(offset, readBuffer, readLength));
         }
     }
 
-    VerifyOrQuit(message->GetLength() == kMaxSize, "Message::GetLength failed");
+    VerifyOrQuit(message->GetLength() == kMaxSize);
 
     // Test `Message::CopyTo()` behavior.
 
-    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
-    SuccessOrQuit(message2->SetLength(kMaxSize), "Message::SetLength failed");
+    VerifyOrQuit((message2 = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
+    SuccessOrQuit(message2->SetLength(kMaxSize));
 
     for (uint16_t srcOffset = 0; srcOffset < kMaxSize; srcOffset += kOffsetStep)
     {
@@ -157,19 +157,16 @@ void TestMessage(void)
                     VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
                 }
 
-                SuccessOrQuit(message2->Read(0, readBuffer, kMaxSize), "Message::Read failed");
+                SuccessOrQuit(message2->Read(0, readBuffer, kMaxSize));
 
                 VerifyOrQuit(memcmp(&readBuffer[0], zeroBuffer, dstOffset) == 0, "read before length");
-                VerifyOrQuit(memcmp(&readBuffer[dstOffset], &writeBuffer[srcOffset], bytesCopied) == 0,
-                             "Compare failed");
+                VerifyOrQuit(memcmp(&readBuffer[dstOffset], &writeBuffer[srcOffset], bytesCopied) == 0);
                 VerifyOrQuit(
                     memcmp(&readBuffer[dstOffset + bytesCopied], zeroBuffer, kMaxSize - bytesCopied - dstOffset) == 0,
                     "read after length");
 
-                VerifyOrQuit(message->CompareBytes(srcOffset, *message2, dstOffset, bytesCopied),
-                             "Message::CompareBytes with two messages failed");
-                VerifyOrQuit(message2->CompareBytes(dstOffset, *message, srcOffset, bytesCopied),
-                             "Message::CompareBytes with two messages failed");
+                VerifyOrQuit(message->CompareBytes(srcOffset, *message2, dstOffset, bytesCopied));
+                VerifyOrQuit(message2->CompareBytes(dstOffset, *message, srcOffset, bytesCopied));
             }
         }
     }
@@ -185,7 +182,7 @@ void TestMessage(void)
         bytesCopied = message->CopyTo(srcOffset, 0, kMaxSize, *message);
         VerifyOrQuit(bytesCopied == kMaxSize - srcOffset, "CopyTo() failed");
 
-        SuccessOrQuit(message->Read(0, readBuffer, kMaxSize), "Message::Read failed");
+        SuccessOrQuit(message->Read(0, readBuffer, kMaxSize));
 
         VerifyOrQuit(memcmp(&readBuffer[0], &writeBuffer[srcOffset], bytesCopied) == 0,
                      "CopyTo() changed before srcOffset");
@@ -204,17 +201,15 @@ void TestMessage(void)
             for (uint16_t length = 0; length <= kMaxSize - srcOffset; length += kLengthStep)
             {
                 IgnoreError(message2->SetLength(0));
-                SuccessOrQuit(message2->AppendBytes(zeroBuffer, dstOffset), "AppendBytes() failed");
+                SuccessOrQuit(message2->AppendBytes(zeroBuffer, dstOffset));
 
-                SuccessOrQuit(message2->AppendBytesFromMessage(*message, srcOffset, length),
-                              "AppendBytesFromMessage() failed");
+                SuccessOrQuit(message2->AppendBytesFromMessage(*message, srcOffset, length));
 
-                VerifyOrQuit(message2->CompareBytes(dstOffset, *message, srcOffset, length),
-                             "CompareBytes failed after AppendBytesFromMessage()");
+                VerifyOrQuit(message2->CompareBytes(dstOffset, *message, srcOffset, length));
             }
 
-            VerifyOrQuit(message2->AppendBytesFromMessage(*message, srcOffset, kMaxSize - srcOffset + 1) == kErrorParse,
-                         "AppendBytesFromMessage() did not fail with invalid length");
+            VerifyOrQuit(message2->AppendBytesFromMessage(*message, srcOffset, kMaxSize - srcOffset + 1) ==
+                         kErrorParse);
         }
     }
 
@@ -229,11 +224,9 @@ void TestMessage(void)
             // Reset the `message` to its original size.
             IgnoreError(message->SetLength(size));
 
-            SuccessOrQuit(message->AppendBytesFromMessage(*message, srcOffset, length),
-                          "AppendBytesFromMessage() failed");
+            SuccessOrQuit(message->AppendBytesFromMessage(*message, srcOffset, length));
 
-            VerifyOrQuit(message->CompareBytes(size, *message, srcOffset, length),
-                         "CompareBytes failed after AppendBytesFromMessage()");
+            VerifyOrQuit(message->CompareBytes(size, *message, srcOffset, length));
         }
     }
 

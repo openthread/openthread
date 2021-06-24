@@ -57,8 +57,8 @@ void TestFlash(void)
 
     // No records in settings
 
-    VerifyOrQuit(flash.Delete(0, 0) == kErrorNotFound, "Delete() failed");
-    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == kErrorNotFound, "Get() failed");
+    VerifyOrQuit(flash.Delete(0, 0) == kErrorNotFound);
+    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == kErrorNotFound);
 
     // Multiple records with different keys
 
@@ -66,27 +66,27 @@ void TestFlash(void)
     {
         uint16_t length = key;
 
-        SuccessOrQuit(flash.Add(key, writeBuffer, length), "Add() failed");
+        SuccessOrQuit(flash.Add(key, writeBuffer, length));
     }
 
     for (uint16_t key = 0; key < 16; key++)
     {
         uint16_t length = key;
 
-        SuccessOrQuit(flash.Get(key, 0, readBuffer, &length), "Get() failed");
+        SuccessOrQuit(flash.Get(key, 0, readBuffer, &length));
         VerifyOrQuit(length == key, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
 
     for (uint16_t key = 0; key < 16; key++)
     {
-        SuccessOrQuit(flash.Delete(key, 0), "Delete() failed");
+        SuccessOrQuit(flash.Delete(key, 0));
     }
 
     for (uint16_t key = 0; key < 16; key++)
     {
-        VerifyOrQuit(flash.Delete(key, 0) == kErrorNotFound, "Delete() failed");
-        VerifyOrQuit(flash.Get(key, 0, nullptr, nullptr) == kErrorNotFound, "Get() failed");
+        VerifyOrQuit(flash.Delete(key, 0) == kErrorNotFound);
+        VerifyOrQuit(flash.Get(key, 0, nullptr, nullptr) == kErrorNotFound);
     }
 
     // Multiple records with the same key
@@ -95,25 +95,25 @@ void TestFlash(void)
     {
         uint16_t length = index;
 
-        SuccessOrQuit(flash.Add(0, writeBuffer, length), "Add() failed");
+        SuccessOrQuit(flash.Add(0, writeBuffer, length));
     }
 
     for (uint16_t index = 0; index < 16; index++)
     {
         uint16_t length = index;
 
-        SuccessOrQuit(flash.Get(0, index, readBuffer, &length), "Get() failed");
+        SuccessOrQuit(flash.Get(0, index, readBuffer, &length));
         VerifyOrQuit(length == index, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
 
     for (uint16_t index = 0; index < 16; index++)
     {
-        SuccessOrQuit(flash.Delete(0, 0), "Delete() failed");
+        SuccessOrQuit(flash.Delete(0, 0));
     }
 
-    VerifyOrQuit(flash.Delete(0, 0) == kErrorNotFound, "Delete() failed");
-    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == kErrorNotFound, "Get() failed");
+    VerifyOrQuit(flash.Delete(0, 0) == kErrorNotFound);
+    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == kErrorNotFound);
 
     // Multiple records with the same key
 
@@ -123,11 +123,11 @@ void TestFlash(void)
 
         if ((index % 4) == 0)
         {
-            SuccessOrQuit(flash.Set(0, writeBuffer, length), "Add() failed");
+            SuccessOrQuit(flash.Set(0, writeBuffer, length));
         }
         else
         {
-            SuccessOrQuit(flash.Add(0, writeBuffer, length), "Add() failed");
+            SuccessOrQuit(flash.Add(0, writeBuffer, length));
         }
     }
 
@@ -135,18 +135,18 @@ void TestFlash(void)
     {
         uint16_t length = index + 12;
 
-        SuccessOrQuit(flash.Get(0, index, readBuffer, &length), "Get() failed");
+        SuccessOrQuit(flash.Get(0, index, readBuffer, &length));
         VerifyOrQuit(length == (index + 12), "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
 
     for (uint16_t index = 0; index < 4; index++)
     {
-        SuccessOrQuit(flash.Delete(0, 0), "Delete() failed");
+        SuccessOrQuit(flash.Delete(0, 0));
     }
 
-    VerifyOrQuit(flash.Delete(0, 0) == kErrorNotFound, "Delete() failed");
-    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == kErrorNotFound, "Get() failed");
+    VerifyOrQuit(flash.Delete(0, 0) == kErrorNotFound);
+    VerifyOrQuit(flash.Get(0, 0, nullptr, nullptr) == kErrorNotFound);
 
     // Wipe()
 
@@ -154,15 +154,15 @@ void TestFlash(void)
     {
         uint16_t length = key;
 
-        SuccessOrQuit(flash.Add(key, writeBuffer, length), "Add() failed");
+        SuccessOrQuit(flash.Add(key, writeBuffer, length));
     }
 
     flash.Wipe();
 
     for (uint16_t key = 0; key < 16; key++)
     {
-        VerifyOrQuit(flash.Delete(key, 0) == kErrorNotFound, "Delete() failed");
-        VerifyOrQuit(flash.Get(key, 0, nullptr, nullptr) == kErrorNotFound, "Get() failed");
+        VerifyOrQuit(flash.Delete(key, 0) == kErrorNotFound);
+        VerifyOrQuit(flash.Get(key, 0, nullptr, nullptr) == kErrorNotFound);
     }
 
     // Test swap
@@ -172,14 +172,14 @@ void TestFlash(void)
         uint16_t key    = index & 0xf;
         uint16_t length = index & 0xf;
 
-        SuccessOrQuit(flash.Set(key, writeBuffer, length), "Set() failed");
+        SuccessOrQuit(flash.Set(key, writeBuffer, length));
     }
 
     for (uint16_t key = 0; key < 16; key++)
     {
         uint16_t length = key;
 
-        SuccessOrQuit(flash.Get(key, 0, readBuffer, &length), "Get() failed");
+        SuccessOrQuit(flash.Get(key, 0, readBuffer, &length));
         VerifyOrQuit(length == key, "Get() did not return expected length");
         VerifyOrQuit(memcmp(readBuffer, writeBuffer, length) == 0, "Get() did not return expected value");
     }
