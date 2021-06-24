@@ -119,11 +119,7 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig 
         serverData = reinterpret_cast<const BackboneRouter::ServerData *>(iterator.mServerSubTlv->GetServerData());
 
         if (rvalServerTlv == nullptr ||
-            (iterator.mServerSubTlv->GetServer16() ==
-             Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId())) ||
-            serverData->GetSequenceNumber() > rvalServerData->GetSequenceNumber() ||
-            (serverData->GetSequenceNumber() == rvalServerData->GetSequenceNumber() &&
-             iterator.mServerSubTlv->GetServer16() > rvalServerTlv->GetServer16()))
+            IsBackboneRouterPreferredTo(*iterator.mServerSubTlv, *serverData, *rvalServerTlv, *rvalServerData))
         {
             rvalServerTlv  = iterator.mServerSubTlv;
             rvalServerData = serverData;
@@ -139,6 +135,24 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig 
 
 exit:
     return;
+}
+
+bool Manager::IsBackboneRouterPreferredTo(const ServerTlv &                 aServerTlv,
+                                          const BackboneRouter::ServerData &aServerData,
+                                          const ServerTlv &                 aOtherServerTlv,
+                                          const BackboneRouter::ServerData &aOtherServerData) const
+{
+    bool     isPreferred;
+    uint16_t leaderRloc16 = Mle::Mle::Rloc16FromRouterId(Get<Mle::MleRouter>().GetLeaderId());
+
+    VerifyOrExit(aServerTlv.GetServer16() != leaderRloc16, isPreferred = true);
+    VerifyOrExit(aOtherServerTlv.GetServer16() != leaderRloc16, isPreferred = false);
+
+    isPreferred = aServerData.GetSequenceNumber() > aOtherServerData.GetSequenceNumber() ||
+                  (aServerData.GetSequenceNumber() == aOtherServerData.GetSequenceNumber() &&
+                   aServerTlv.GetServer16() > aOtherServerTlv.GetServer16());
+exit:
+    return isPreferred;
 }
 
 #endif // (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
