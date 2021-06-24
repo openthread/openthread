@@ -109,7 +109,13 @@ otError UdpExample::ProcessOpen(uint8_t aArgsLength, Arg aArgs[])
     OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
-    return otUdpOpen(mInterpreter.mInstance, &mSocket, HandleUdpReceive, this);
+    otError error;
+
+    VerifyOrExit(!otUdpIsOpen(mInterpreter.mInstance, &mSocket), error = OT_ERROR_ALREADY);
+    error = otUdpOpen(mInterpreter.mInstance, &mSocket, HandleUdpReceive, this);
+
+exit:
+    return error;
 }
 
 otError UdpExample::ProcessSend(uint8_t aArgsLength, Arg aArgs[])

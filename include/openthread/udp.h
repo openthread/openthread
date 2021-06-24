@@ -161,6 +161,17 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext);
 
 /**
+ * Check if a UDP socket is open.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aSocket    A pointer to a UDP socket structure.
+ *
+ * @returns Whether the UDP socket is open.
+ *
+ */
+bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket);
+
+/**
  * Close a UDP/IPv6 socket.
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
