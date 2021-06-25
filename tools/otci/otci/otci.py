@@ -29,7 +29,6 @@
 import ipaddress
 import logging
 import re
-import time
 from collections import Counter
 from typing import List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
 
@@ -105,7 +104,6 @@ class OTCI(object):
                 self.__logger and self.__logger.info('%s', line)
 
         if cmd in ('reset', 'factoryreset'):
-            self.__wait_reset()
             return output
 
         if output[-1] == 'Done':
@@ -2334,12 +2332,6 @@ class OTCI(object):
         for char in escapable_chars:
             s = s.replace(char, '\\%s' % char)
         return s
-
-    def __wait_reset(self):
-        # reset would restart the otbr-agent executable. It's risky to send commands after reset too quickly because
-        # it might cause ot-ctl to quit abnormally.
-        # So we sleep for a while after reset.
-        time.sleep(3)
 
     def __txt_to_hex(self, txt: Dict[str, Union[str, bytes, bool]]) -> str:
         txt_bin = b''

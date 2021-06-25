@@ -95,7 +95,10 @@ class OtCliCommandRunner(OTCommandHandler):
     def execute_command(self, cmd, timeout=10) -> List[str]:
         self.__otcli.writeline(cmd)
 
-        if cmd in {'reset', 'factoryreset'}:
+        if cmd in ('reset', 'factoryreset'):
+            self.wait(3)
+            self.__otcli.writeline('extaddr')
+            self.wait(1)
             return []
 
         if self.__expect_command_echoback:
@@ -210,6 +213,10 @@ class OtbrSshCommandRunner(OTCommandHandler):
             raise CommandError(cmd, [err])
 
         output = [l.rstrip('\r\n') for l in cmd_out.readlines()]
+
+        if cmd in ('reset', 'factoryreset'):
+            self.wait(3)
+
         return output
 
     def close(self):
