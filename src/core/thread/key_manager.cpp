@@ -428,6 +428,7 @@ void KeyManager::UpdateKeyMaterial(void)
         next.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
     }
 
+    OT_UNUSED_VARIABLE(error);
     Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
                                  cur.mKeys.mMacKey, next.mKeys.mMacKey);
 #endif
@@ -481,6 +482,7 @@ const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
                                             (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT), PSA_KEY_LIFETIME_VOLATILE,
                                             hashKeys.mKeys.mMleKey.GetKey(), hashKeys.mKeys.mMleKey.kSize);
         OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
 
         mTemporaryMleKey.Clear();
     }
@@ -577,6 +579,7 @@ void KeyManager::SetKek(const Kek &aKek)
     {
         error = ImportKek(aKek.GetKey(), aKek.kSize);
         OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
     }
     else
     {
@@ -594,6 +597,7 @@ void KeyManager::SetKek(const uint8_t *aKek)
     {
         error = ImportKek(aKek, 16);
         OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
     }
     else
     {
