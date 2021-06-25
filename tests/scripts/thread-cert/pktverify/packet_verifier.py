@@ -329,7 +329,7 @@ class PacketVerifier(object):
         bq1 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
         bq1_index = pkts.index
 
-        assert bq1.sniff_timestamp - dr.sniff_timestamp <= 1.0, bq1.sniff_timestamp - dr.sniff_timestamp
+        assert bq1.sniff_timestamp - dr.sniff_timestamp <= 1.01, bq1.sniff_timestamp - dr.sniff_timestamp
 
         # PBBR should send /b/bq for Router1's DUA (2nd time)
         bq2 = pkts.filter_backbone_query(dua, eth_src=pbbr_eth, port=BB).must_next()
