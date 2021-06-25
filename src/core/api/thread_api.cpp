@@ -119,6 +119,13 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
     return &instance.Get<KeyManager>().GetNetworkKey();
 }
 
+otError otThreadCopyNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<KeyManager>().GetNetworkKey().CopyKey(aNetworkKey->mKeyMaterial.key, OT_NETWORK_KEY_SIZE);
+}
+
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
     Error     error    = kErrorNone;

@@ -44,15 +44,17 @@ namespace Crypto {
 void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey *aKey)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoHkdfExtract(context, aSalt, aSaltLength, aKey);
+    Error err     = otPlatCryptoHkdfExtract(context, sizeof(mContext), aSalt, aSaltLength, aKey);
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoHkdfExpand(context, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+    Error err     = otPlatCryptoHkdfExpand(context, sizeof(mContext), aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 } // namespace Crypto

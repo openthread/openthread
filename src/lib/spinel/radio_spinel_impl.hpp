@@ -622,7 +622,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
 
             SuccessOrExit(error = decoder.ReadData(key, len));
             VerifyOrExit(len == OT_NETWORK_KEY_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mNetworkKey.m8, key, len);
+            memcpy(opDataset.mNetworkKey.mKeyMaterial.key, key, len);
             opDataset.mComponents.mIsNetworkKeyPresent = true;
             break;
         }
@@ -696,7 +696,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
 
             SuccessOrExit(error = decoder.ReadData(psk, len));
             VerifyOrExit(len == OT_PSKC_MAX_SIZE, error = OT_ERROR_INVALID_ARGS);
-            memcpy(opDataset.mPskc.m8, psk, OT_PSKC_MAX_SIZE);
+            memcpy(opDataset.mPskc.mKeyMaterial.key, psk, OT_PSKC_MAX_SIZE);
             opDataset.mComponents.mIsPskcPresent = true;
             break;
         }

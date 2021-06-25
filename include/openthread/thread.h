@@ -390,6 +390,18 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
 
 /**
+ * Copy the thrNetworkKey into passed buffer
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aNetworkKey A pointer to thrNetworkKey buffer.
+ *
+ * @retval OT_ERROR_NONE    Successfully copied the thrNetworkKey.
+ * @retval OT_ERROR_FAILED  Copying the thrNetworkKey failed.
+ *
+ */
+otError otThreadCopyNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey);
+
+/**
  * Set the thrNetworkKey.
  *
  * This function succeeds only when Thread protocols are disabled.  A successful

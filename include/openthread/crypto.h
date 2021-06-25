@@ -90,7 +90,6 @@ void otCryptoHmacSha256(otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLen
  * This method performs AES CCM computation.
  *
  * @param[in]     aKey           A pointer to the key material.
- * @param[in]     aKeyLength     Length of the key in bytes.
  * @param[in]     aTagLength     Length of tag in bytes.
  * @param[in]     aNonce         A pointer to the nonce.
  * @param[in]     aNonceLength   Length of nonce in bytes.
@@ -107,7 +106,6 @@ void otCryptoHmacSha256(otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLen
  *
  */
 void otCryptoAesCcm(otCryptoKey *aKey,
-                    uint16_t     aKeyLength,
                     uint8_t      aTagLength,
                     const void * aNonce,
                     uint8_t      aNonceLength,

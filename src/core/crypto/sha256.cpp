@@ -43,29 +43,33 @@ namespace Crypto {
 Sha256::Sha256(void)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Init(context);
+    Error err     = otPlatCryptoSha256Init(context, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 Sha256::~Sha256(void)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Uninit(context);
+    Error err     = otPlatCryptoSha256Uninit(context, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 void Sha256::Start(void)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Start(context);
+    Error err     = otPlatCryptoSha256Start(context, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 void Sha256::Update(const void *aBuf, uint16_t aBufLength)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Update(context, aBuf, aBufLength);
+    Error err     = otPlatCryptoSha256Update(context, sizeof(mContext), aBuf, aBufLength);
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
@@ -84,8 +88,9 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 void Sha256::Finish(Hash &aHash)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Finish(context, aHash.m8, aHash.kSize);
+    Error err     = otPlatCryptoSha256Finish(context, sizeof(mContext), aHash.m8, aHash.kSize);
     OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 } // namespace Crypto
 } // namespace ot

@@ -48,6 +48,11 @@ using namespace Crypto;
 //---------------------------------------------------------------------------------------------------------------------
 // Default/weak implementation of crypto platform APIs
 
+OT_TOOL_WEAK otError otPlatCryptoInit(void)
+{
+    return OT_ERROR_NONE;
+}
+
 OT_TOOL_WEAK otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
                                            psa_key_type_t        aKeyType,
                                            psa_algorithm_t       aKeyAlgorithm,
@@ -64,29 +69,24 @@ OT_TOOL_WEAK otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
     OT_UNUSED_VARIABLE(aKey);
     OT_UNUSED_VARIABLE(aKeyLen);
 
-    return kErrorNotImplemented;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, uint8_t aBufferLen, size_t *aKeyLen)
+OT_TOOL_WEAK otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aBufferLen);
     OT_UNUSED_VARIABLE(aKeyLen);
 
-    return kErrorNotImplemented;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 OT_TOOL_WEAK otError otPlatCryptoDestroyKey(psa_key_id_t aKeyId)
 {
     OT_UNUSED_VARIABLE(aKeyId);
 
-    return kErrorNotImplemented;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoInit(void)
-{
-    return kErrorNone;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(psa_key_id_t aKeyId, psa_key_attributes_t *aKeyAttributes)
@@ -94,7 +94,7 @@ OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(psa_key_id_t aKeyId, psa_key_a
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aKeyAttributes);
 
-    return kErrorNotImplemented;
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
 OT_TOOL_WEAK otCryptoType otPlatCryptoGetType(void)
@@ -102,100 +102,202 @@ OT_TOOL_WEAK otCryptoType otPlatCryptoGetType(void)
     return OT_CRYPTO_TYPE_MBEDTLS;
 }
 
-// HMAC implementations
-
-OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(void *aContext)
+// AES  Implementation
+OT_TOOL_WEAK otError otPlatCryptoAesInit(void *aContext, size_t aContextSize)
 {
+    otError              error    = OT_ERROR_NONE;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    mbedtls_aes_init(mContext);
+
+exit:
+    return error;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, otCryptoKey *aKey)
+{
+    otError              error    = OT_ERROR_NONE;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_aes_setkey_enc(mContext, aKey->mKey, aKey->mKeyLength) != 0), error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoAesEncrypt(void *         aContext,
+                                            size_t         aContextSize,
+                                            const uint8_t *aInput,
+                                            uint8_t *      aOutput)
+{
+    otError              error    = OT_ERROR_NONE;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_aes_crypt_ecb(mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput) != 0), error = OT_ERROR_FAILED);
+
+exit:
+    return error;
+}
+
+OT_TOOL_WEAK otError otPlatCryptoAesFree(void *aContext, size_t aContextSize)
+{
+    otError              error    = OT_ERROR_NONE;
+    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    mbedtls_aes_free(mContext);
+
+exit:
+    return error;
+}
+
+// HMAC implementations
+OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(void *aContext, size_t aContextSize)
+{
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     const mbedtls_md_info_t *mdInfo   = nullptr;
     mbedtls_md_context_t *   mContext = static_cast<mbedtls_md_context_t *>(aContext);
 
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
     mbedtls_md_init(mContext);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
-    mbedtls_md_setup(mContext, mdInfo, 1);
+    VerifyOrExit((mbedtls_md_setup(mContext, mdInfo, 1) != 0), error = OT_ERROR_FAILED);
 
-    return kErrorNone;
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHmacSha256UnInit(void *aContext)
+OT_TOOL_WEAK otError otPlatCryptoHmacSha256UnInit(void *aContext, size_t aContextSize)
 {
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
     mbedtls_md_free(mContext);
+#else
 
-    return kErrorNone;
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHmacSha256Start(void *aContext, otCryptoKey *aKey)
+OT_TOOL_WEAK otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContextSize, otCryptoKey *aKey)
 {
-    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
-    mbedtls_md_hmac_starts(mContext, aKey->mKey, aKey->mKeyLength);
+    otError error = OT_ERROR_NONE;
 
-    return kErrorNone;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_md_hmac_starts(mContext, aKey->mKey, aKey->mKeyLength) != 0), error = OT_ERROR_FAILED);
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+    OT_UNUSED_VARIABLE(aKey);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHmacSha256Update(void *aContext, const void *aBuf, uint16_t aBufLength)
+OT_TOOL_WEAK otError otPlatCryptoHmacSha256Update(void *      aContext,
+                                                  size_t      aContextSize,
+                                                  const void *aBuf,
+                                                  uint16_t    aBufLength)
 {
-    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
-    mbedtls_md_hmac_update(mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+    otError error = OT_ERROR_NONE;
 
-    return kErrorNone;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_md_hmac_update(mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength) != 0),
+                 error = OT_ERROR_FAILED);
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHmacSha256Finish(void *aContext, uint8_t *aBuf, size_t aBufLength)
+OT_TOOL_WEAK otError otPlatCryptoHmacSha256Finish(void *aContext, size_t aContextSize, uint8_t *aBuf, size_t aBufLength)
 {
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     mbedtls_md_context_t *mContext = static_cast<mbedtls_md_context_t *>(aContext);
-    mbedtls_md_hmac_finish(mContext, aBuf);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_md_hmac_finish(mContext, aBuf) != 0), error = OT_ERROR_FAILED);
 
     OT_UNUSED_VARIABLE(aBufLength);
 
-    return kErrorNone;
-}
+#else
 
-// AES  Implementation
-OT_TOOL_WEAK otError otPlatCryptoAesInit(void *aContext)
-{
-    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
-    mbedtls_aes_init(mContext);
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
 
-    return kErrorNone;
-}
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
 
-OT_TOOL_WEAK otError otPlatCryptoAesSetKey(void *aContext, otCryptoKey *aKey)
-{
-    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
-    mbedtls_aes_setkey_enc(mContext, aKey->mKey, aKey->mKeyLength);
-
-    return kErrorNone;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoAesEncrypt(void *aContext, const uint8_t *aInput, uint8_t *aOutput)
-{
-    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
-    mbedtls_aes_crypt_ecb(mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
-
-    return kErrorNone;
-}
-
-OT_TOOL_WEAK otError otPlatCryptoAesFree(void *aContext)
-{
-    mbedtls_aes_context *mContext = static_cast<mbedtls_aes_context *>(aContext);
-    mbedtls_aes_free(mContext);
-
-    return kErrorNone;
+exit:
+    return error;
 }
 
 // HKDF platform implementations
 // As the HKDF does not actually use mbedTLS APIs but uses HMAC module, this feature is not implemented.
 OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(void *         aContext,
+                                            size_t         aContextSize,
                                             const uint8_t *aInfo,
                                             uint16_t       aInfoLength,
                                             uint8_t *      aOutputKey,
                                             uint16_t       aOutputKeyLength)
 {
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     HmacSha256        hmac;
     HmacSha256::Hash  hash;
     uint8_t           iter = 0;
     uint16_t          copyLength;
     HmacSha256::Hash *prk = static_cast<HmacSha256::Hash *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
 
     // The aOutputKey is calculated as follows [RFC5889]:
     //
@@ -238,17 +340,37 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(void *         aContext,
         aOutputKeyLength -= copyLength;
     }
 
-    return kErrorNone;
+    error = OT_ERROR_NONE;
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+    OT_UNUSED_VARIABLE(aInfo);
+    OT_UNUSED_VARIABLE(aInfoLength);
+    OT_UNUSED_VARIABLE(aOutputKey);
+    OT_UNUSED_VARIABLE(aOutputKeyLength);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
 OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *         aContext,
+                                             size_t         aContextSize,
                                              const uint8_t *aSalt,
                                              uint16_t       aSaltLength,
                                              otCryptoKey *  aKey)
 {
+    otError error = OT_ERROR_FAILED;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
     HmacSha256        hmac;
     otCryptoKey       cryptoKey;
     HmacSha256::Hash *prk = static_cast<HmacSha256::Hash *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
 
     cryptoKey.mKey       = aSalt;
     cryptoKey.mKeyLength = aSaltLength;
@@ -259,48 +381,134 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *         aContext,
     hmac.Update(aKey->mKey, aKey->mKeyLength);
     hmac.Finish(*prk);
 
-    return kErrorNone;
+    error = OT_ERROR_NONE;
+
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+    OT_UNUSED_VARIABLE(aSalt);
+    OT_UNUSED_VARIABLE(aSaltLength);
+    OT_UNUSED_VARIABLE(aKey);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
 // SHA256 platform implementations
-OT_TOOL_WEAK otError otPlatCryptoSha256Init(void *aOperationCtx)
+OT_TOOL_WEAK otError otPlatCryptoSha256Init(void *aContext, size_t aContextSize)
 {
-    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
     mbedtls_sha256_init(mContext);
+#else
 
-    return kErrorNone;
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoSha256Uninit(void *aOperationCtx)
+OT_TOOL_WEAK otError otPlatCryptoSha256Uninit(void *aContext, size_t aContextSize)
 {
-    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
     mbedtls_sha256_free(mContext);
+#else
 
-    return kErrorNone;
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoSha256Start(void *aOperationCtx)
+OT_TOOL_WEAK otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize)
 {
-    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
-    mbedtls_sha256_starts_ret(mContext, 0);
+    otError error = OT_ERROR_NONE;
 
-    return kErrorNone;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_sha256_starts_ret(mContext, 0) != 0), error = OT_ERROR_FAILED);
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoSha256Update(void *aOperationCtx, const void *aBuf, uint16_t aBufLength)
+OT_TOOL_WEAK otError otPlatCryptoSha256Update(void *      aContext,
+                                              size_t      aContextSize,
+                                              const void *aBuf,
+                                              uint16_t    aBufLength)
 {
-    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
-    mbedtls_sha256_update_ret(mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+    otError error = OT_ERROR_NONE;
 
-    return kErrorNone;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_sha256_update_ret(mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength) != 0),
+                 error = OT_ERROR_FAILED);
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aContextSize);
+    OT_UNUSED_VARIABLE(aBuf);
+    OT_UNUSED_VARIABLE(aBufLength);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoSha256Finish(void *aOperationCtx, uint8_t *aHash, uint16_t aHashSize)
+OT_TOOL_WEAK otError otPlatCryptoSha256Finish(void *aContext, size_t aContextSize, uint8_t *aHash, uint16_t aHashSize)
 {
-    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aOperationCtx);
-    mbedtls_sha256_finish_ret(mContext, aHash);
+    otError error = OT_ERROR_NONE;
 
     OT_UNUSED_VARIABLE(aHashSize);
 
-    return kErrorNone;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    mbedtls_sha256_context *mContext = static_cast<mbedtls_sha256_context *>(aContext);
+
+    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = OT_ERROR_FAILED);
+    VerifyOrExit((mbedtls_sha256_finish_ret(mContext, aHash) != 0), error = OT_ERROR_FAILED);
+#else
+
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aHash);
+    OT_UNUSED_VARIABLE(aContextSize);
+
+    ExitNow(error = OT_ERROR_NOT_IMPLEMENTED);
+#endif
+
+exit:
+    return error;
 }

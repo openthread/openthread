@@ -350,6 +350,13 @@ const otPskc *otThreadGetPskc(otInstance *aInstance)
     return &instance.Get<KeyManager>().GetPskc();
 }
 
+otError otThreadCopyPskc(otInstance *aInstance, otPskc *aPskc)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<KeyManager>().GetPskc().CopyKey(aPskc->mKeyMaterial.key, OT_PSKC_MAX_SIZE);
+}
+
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 {
     Error     error    = kErrorNone;

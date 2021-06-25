@@ -2513,23 +2513,9 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
-        const otPskc *pskc = otThreadGetPskc(mInstance);
-
-        if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-        {
-            uint8_t pskcLiteral[OT_PSKC_MAX_SIZE];
-            size_t  mKeyLen;
-
-            SuccessOrExit(
-                error = otPlatCryptoExportKey(pskc->mKeyMaterial.keyRef, pskcLiteral, OT_PSKC_MAX_SIZE, &mKeyLen));
-
-            OutputBytes(pskcLiteral);
-            memset(pskcLiteral, 0, OT_PSKC_MAX_SIZE);
-        }
-        else
-        {
-            OutputBytes(pskc->mKeyMaterial.key);
-        }
+        otPskc pskc;
+        IgnoreError(otThreadCopyPskc(mInstance, &pskc));
+        OutputBytes(pskc.mKeyMaterial.key);
         OutputLine("");
     }
     else
@@ -2981,22 +2967,11 @@ otError Interpreter::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
-        const otNetworkKey *networkKey = otThreadGetNetworkKey(mInstance);
+        otNetworkKey networkKey;
 
-        if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
-        {
-            uint8_t networkKeyLiteral[OT_NETWORK_KEY_SIZE];
-            size_t  mKeyLen;
+        IgnoreError(otThreadCopyNetworkKey(mInstance, &networkKey));
 
-            SuccessOrExit(error = otPlatCryptoExportKey(networkKey->mKeyMaterial.keyRef, networkKeyLiteral,
-                                                        OT_NETWORK_KEY_SIZE, &mKeyLen));
-            OutputBytes(networkKeyLiteral);
-            memset(networkKeyLiteral, 0, OT_NETWORK_KEY_SIZE);
-        }
-        else
-        {
-            OutputBytes(networkKey->mKeyMaterial.key);
-        }
+        OutputBytes(networkKey.mKeyMaterial.key);
         OutputLine("");
     }
     else

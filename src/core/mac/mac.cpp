@@ -159,6 +159,7 @@ Mac::Mac(Instance &aInstance)
         sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
 
         OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
     }
 }
 
