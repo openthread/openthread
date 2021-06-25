@@ -342,7 +342,6 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(void *         aContext,
 
     error = OT_ERROR_NONE;
 #else
-
     OT_UNUSED_VARIABLE(aContext);
     OT_UNUSED_VARIABLE(aContextSize);
     OT_UNUSED_VARIABLE(aInfo);
