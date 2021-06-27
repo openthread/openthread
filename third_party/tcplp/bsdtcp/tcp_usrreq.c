@@ -142,20 +142,43 @@ tcp6_connect(struct tcpcb *tp, struct sockaddr_in6 *nam)
 	int sb_max = cbuf_free_space(&tp->recvbuf); // same as sendbuf
 //	INP_WLOCK_ASSERT(inp);
 //	INP_HASH_WLOCK(&V_tcbinfo);
-	if (/*inp->inp_lport == 0*/tp->lport == 0) {
-		/*error = in6_pcbbind(inp, (struct sockaddr *)0, td->td_ucred);
-		if (error)
-			goto out;*/
-		error = EINVAL; // The port must be bound
-		goto out;
-	}
-	if (IN6_IS_ADDR_UNSPECIFIED(&tp->laddr)) {
-		const struct in6_addr* source = tcplp_sys_get_source_ipv6_address(tp->instance, &nam->sin6_addr); // choose address dynamically
-		if (source == NULL) {
+
+	/*
+	 * For autobind, the original BSD code assigned the port first (with logic
+	 * that also looked at the address) and then the address.
+	 * Here, we just use the tcplp_sys_autobind function to do all of that
+	 * work.
+	 */
+	bool autobind_addr = IN6_IS_ADDR_UNSPECIFIED(&tp->laddr);
+	bool autobind_port = (tp->lport == 0);
+	if (autobind_addr || autobind_port) {
+		otSockAddr foreign;
+		otSockAddr local;
+
+		memcpy(&foreign.mAddress, &nam->sin6_addr, sizeof(foreign.mAddress));
+		foreign.mPort = ntohs(nam->sin6_port);
+
+		if (!autobind_addr) {
+			memcpy(&local.mAddress, &tp->laddr, sizeof(local.mAddress));
+		}
+
+		if (!autobind_port) {
+			local.mPort = ntohs(tp->lport);
+		}
+
+		if (!tcplp_sys_autobind(tp->instance, &foreign, &local, autobind_addr, autobind_port)) {
+			// Autobind failed
 			error = EINVAL;
 			goto out;
 		}
-		memcpy(&tp->laddr, source, sizeof(tp->laddr));
+
+		if (autobind_addr) {
+			memcpy(&tp->laddr, &local.mAddress, sizeof(tp->laddr));
+		}
+
+		if (autobind_port) {
+			tp->lport = htons(local.mPort);
+		}
 	}
 	error = in6_pcbconnect(/*inp*/tp, nam/*, td->td_ucred*/);
 	if (error != 0)

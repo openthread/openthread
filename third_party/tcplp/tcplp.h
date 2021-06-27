@@ -87,7 +87,7 @@ bool tcplp_sys_accepted_connection(struct tcpcb_listen* tpl, struct tcpcb* accep
 void tcplp_sys_connection_lost(struct tcpcb* tcb, uint8_t errnum);
 void tcplp_sys_on_state_change(struct tcpcb* tcb, int newstate);
 void tcplp_sys_log(const char* format, ...);
-const void* tcplp_sys_get_source_ipv6_address(otInstance* instance, const struct in6_addr* peer);
+bool tcplp_sys_autobind(otInstance *aInstance, const otSockAddr *aPeer, otSockAddr *aToBind, bool aBindAddress, bool aBindPort);
 
 extern uint32_t tcplp_totalRexmitCnt;
 extern uint32_t tcplp_timeoutRexmitCnt;

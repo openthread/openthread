@@ -495,6 +495,55 @@ bool Tcp::CanBind(const SockAddr &aSockName)
     return true;
 }
 
+bool Tcp::AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, bool aBindPort)
+{
+    if (aBindAddress)
+    {
+        MessageInfo peerInfo;
+        peerInfo.Clear();
+        peerInfo.SetPeerAddr(aPeer.GetAddress());
+        const NetifUnicastAddress *netifAddress =
+            InstanceLocator::GetInstance().Get<Ip6>().SelectSourceAddress(peerInfo);
+        if (netifAddress == nullptr)
+        {
+            return false;
+        }
+        aToBind.GetAddress() = netifAddress->GetAddress();
+    }
+    if (aBindPort)
+    {
+        /*
+         * TODO: Use a less naive algorithm to allocate ephemeral ports. For
+         * example, see RFC 6056.
+         */
+
+        for (uint16_t i = 0; i != kDynamicPortMax - kDynamicPortMin + 1; i++)
+        {
+            aToBind.SetPort(mEphemeralPort);
+
+            if (mEphemeralPort == kDynamicPortMax)
+            {
+                mEphemeralPort = kDynamicPortMin;
+            }
+            else
+            {
+                mEphemeralPort++;
+            }
+
+            if (CanBind(aToBind))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+    else
+    {
+        return CanBind(aToBind);
+    }
+}
+
 void Tcp::HandleDelackTimer(Timer &aTimer)
 {
     TimerMilli &timer    = *static_cast<TimerMilli *>(&aTimer);
@@ -684,19 +733,15 @@ void tcplp_sys_log(const char *aFormat, ...)
     otLogDebgTcp(buffer);
 }
 
-const void *tcplp_sys_get_source_ipv6_address(otInstance *aInstance, const struct in6_addr *aPeer)
+bool tcplp_sys_autobind(otInstance *      aInstance,
+                        const otSockAddr *aPeer,
+                        otSockAddr *      aToBind,
+                        bool              aBindAddress,
+                        bool              aBindPort)
 {
-    Instance &  instance = *static_cast<Instance *>(aInstance);
-    MessageInfo peerInfo;
-    peerInfo.Clear();
-    peerInfo.SetPeerAddr(*reinterpret_cast<const Address *>(aPeer));
-    const NetifUnicastAddress *netifAddress = instance.Get<Ip6::Ip6>().SelectSourceAddress(peerInfo);
-    if (netifAddress == nullptr)
-    {
-        return nullptr;
-    }
-    const Address &address = netifAddress->GetAddress();
-    return &address;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+    return instance.Get<Ip6::Tcp>().AutoBind(*static_cast<const SockAddr *>(aPeer), *static_cast<SockAddr *>(aToBind),
+                                             aBindAddress, aBindPort);
 }
 
 uint16_t tcplp_sys_hostswap16(uint16_t aHostPort)
