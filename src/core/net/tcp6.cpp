@@ -389,7 +389,10 @@ Error Tcp::ProcessReceivedSegment(ot::Ip6::Header &aIp6Header, Message &aMessage
         int nextAction = tcp_input(ip6Header, tcpHeader, &aMessage, &endpoint->mTcb, nullptr, &sig);
         if (nextAction != RELOOKUP_REQUIRED)
         {
-            ProcessSignals(*endpoint, priorHead, sig);
+            if (endpoint->mTcb.t_state != TCP6S_CLOSED)
+            {
+                ProcessSignals(*endpoint, priorHead, sig);
+            }
             ExitNow();
         }
         /* If the matching socket was in the TIME-WAIT state, then we try passive sockets. */
@@ -431,6 +434,10 @@ void Tcp::ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct
         aEndpoint.mReceiveAvailableCallback(&aEndpoint, cbuf_used_space(&aEndpoint.mTcb.recvbuf),
                                             aEndpoint.mTcb.reass_fin_index != -1,
                                             cbuf_free_space(&aEndpoint.mTcb.recvbuf));
+    }
+    if (aEndpoint.mTcb.t_state == TCP6S_TIME_WAIT && aEndpoint.mDisconnectedCallback != nullptr)
+    {
+        aEndpoint.mDisconnectedCallback(&aEndpoint, OT_TCP_DISCONNECTED_REASON_TIME_WAIT);
     }
 }
 
@@ -656,14 +663,6 @@ void tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum)
 
 void tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState)
 {
-    if (aNewState == TCP6S_TIME_WAIT)
-    {
-        Tcp::Endpoint &endpoint = Tcp::Endpoint::FromTcb(*aTcb);
-        if (endpoint.mDisconnectedCallback != nullptr)
-        {
-            endpoint.mDisconnectedCallback(&endpoint, OT_TCP_DISCONNECTED_REASON_TIME_WAIT);
-        }
-    }
     if (aNewState == TCP6S_CLOSED)
     {
         /* Re-initialize the TCB. */
