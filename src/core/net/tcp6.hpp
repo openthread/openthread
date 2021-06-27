@@ -584,6 +584,21 @@ public:
      */
     Error ProcessReceivedSegment(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
 
+    /**
+     * Automatically selects a local address and/or port for communication with the specified peer.
+     *
+     * @param[in] aPeer         The peer's address and port.
+     * @param[in,out] aToBind   The SockAddr into which to store the selected address and/or port.
+     * @param[in] aBindAddress  If true, the local address is selected; if not, the current address in @p aToBind is
+     * treated as a given.
+     * @param[in] aBindPort     If true, the local port is selected; if not, the current port in @p aToBind is treated
+     * as a given.
+     *
+     * @returns  True if successful, false otherwise.
+     *
+     */
+    bool AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, bool aBindPort);
+
 private:
     enum
     {
@@ -600,6 +615,8 @@ private:
     static void HandleRexmtPersistTimer(Timer &aTimer);
     static void HandleKeepTimer(Timer &aTimer);
     static void Handle2MslTimer(Timer &aTimer);
+
+    uint16_t GetFreeEphemeralPort(void);
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;
