@@ -106,6 +106,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mDataset(*this)
     , mNetworkData(*this)
     , mUdp(*this)
+#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
+    , mTcp(*this)
+#endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -4083,6 +4086,13 @@ otError Interpreter::ProcessTxPower(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
+otError Interpreter::ProcessTcp(Arg aArgs[])
+{
+    return mTcp.Process(aArgs);
+}
+#endif
 
 otError Interpreter::ProcessUdp(Arg aArgs[])
 {
