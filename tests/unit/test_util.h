@@ -32,6 +32,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "common/arg_macros.hpp"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -41,17 +43,18 @@ extern "C" {
  * given error messages and exits the program.
  *
  * @param[in]  aStatus     A scalar error status to be evaluated against zero (0).
- * @param[in]  aMessage    A message (text string) to print on failure.
+ * @param[in]  aMessage    An optional message (constant C string) to print on failure.
  *
  */
-#define SuccessOrQuit(aStatus, aMessage)                                                \
-    do                                                                                  \
-    {                                                                                   \
-        if ((aStatus) != 0)                                                             \
-        {                                                                               \
-            fprintf(stderr, "\nFAILED %s:%d - %s\n", __FUNCTION__, __LINE__, aMessage); \
-            exit(-1);                                                                   \
-        }                                                                               \
+#define SuccessOrQuit(...)                                                                                      \
+    do                                                                                                          \
+    {                                                                                                           \
+        if ((OT_FIRST_ARG(__VA_ARGS__)) != 0)                                                                   \
+        {                                                                                                       \
+            fprintf(stderr, "\nFAILED %s:%d - SuccessOrQuit(%s)" OT_SECOND_ARG(__VA_ARGS__) "\n", __FUNCTION__, \
+                    __LINE__, _Stringize(OT_FIRST_ARG(__VA_ARGS__)));                                           \
+            exit(-1);                                                                                           \
+        }                                                                                                       \
     } while (false)
 
 /**
@@ -59,18 +62,23 @@ extern "C" {
  * program.
  *
  * @param[in]  aCondition  A Boolean expression to be evaluated.
- * @param[in]  aMessage    A message (text string) to print on failure.
+ * @param[in]  aMessage    An optional message (constant C string) to print on failure.
  *
  */
-#define VerifyOrQuit(aCondition, aMessage)                                              \
-    do                                                                                  \
-    {                                                                                   \
-        if (!(aCondition))                                                              \
-        {                                                                               \
-            fprintf(stderr, "\nFAILED %s:%d - %s\n", __FUNCTION__, __LINE__, aMessage); \
-            exit(-1);                                                                   \
-        }                                                                               \
+#define VerifyOrQuit(...)                                                                                       \
+    do                                                                                                          \
+    {                                                                                                           \
+        if (!(OT_FIRST_ARG(__VA_ARGS__)))                                                                       \
+        {                                                                                                       \
+            fprintf(stderr, "\nFAILED %s:%d - VerifyOrQuit(%s) " OT_SECOND_ARG(__VA_ARGS__) "\n", __FUNCTION__, \
+                    __LINE__, _Stringize(OT_FIRST_ARG(__VA_ARGS__)));                                           \
+            exit(-1);                                                                                           \
+        }                                                                                                       \
     } while (false)
+
+// Private macros to convert `aArg` to string
+#define _Stringize(aArg) _Stringize2(aArg)
+#define _Stringize2(aArg) #aArg
 
 #ifdef __cplusplus
 }

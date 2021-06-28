@@ -107,7 +107,7 @@ uint16_t CalculateChecksum(const Ip6::Address &aSource,
     data.mPseudoHeader.mProtocol      = Encoding::BigEndian::HostSwap32(aIpProto);
     data.mPseudoHeader.mPayloadLength = Encoding::BigEndian::HostSwap32(payloadLength);
 
-    SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength), "Message::Read() failed");
+    SuccessOrQuit(aMessage.Read(aMessage.GetOffset(), data.mPayload, payloadLength));
 
     return CalculateChecksum(&data, sizeof(PseudoHeader) + payloadLength);
 }
@@ -122,7 +122,7 @@ void CorruptMessage(Message &aMessage)
 
     byteOffset = Random::NonCrypto::GetUint16InRange(0, aMessage.GetLength());
 
-    SuccessOrQuit(aMessage.Read(byteOffset, byte), "Read failed");
+    SuccessOrQuit(aMessage.Read(byteOffset, byte));
 
     bitOffset = Random::NonCrypto::GetUint8InRange(0, CHAR_BIT);
 
@@ -144,7 +144,7 @@ void TestUdpMessageChecksum(void)
 
     Instance *instance = static_cast<Instance *>(testInitInstance());
 
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance\n");
+    VerifyOrQuit(instance != nullptr);
 
     for (uint16_t size = kMinSize; size <= kMaxSize; size++)
     {
@@ -153,7 +153,7 @@ void TestUdpMessageChecksum(void)
         Ip6::MessageInfo messageInfo;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
-        SuccessOrQuit(message->SetLength(size), "Message::SetLength() failed");
+        SuccessOrQuit(message->SetLength(size));
 
         // Write UDP header with a random payload.
 
@@ -170,28 +170,26 @@ void TestUdpMessageChecksum(void)
             message->WriteBytes(sizeof(udpHeader), &buffer[0], payloadSize);
         }
 
-        SuccessOrQuit(messageInfo.GetSockAddr().FromString(kSourceAddress), "FromString() failed");
-        SuccessOrQuit(messageInfo.GetPeerAddr().FromString(kDestAddress), "FromString() failed");
+        SuccessOrQuit(messageInfo.GetSockAddr().FromString(kSourceAddress));
+        SuccessOrQuit(messageInfo.GetPeerAddr().FromString(kDestAddress));
 
         // Verify that the `Checksum::UpdateMessageChecksum` correctly
         // updates the checksum field in the UDP header on the message.
 
         Checksum::UpdateMessageChecksum(*message, messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(), Ip6::kProtoUdp);
 
-        SuccessOrQuit(message->Read(message->GetOffset(), udpHeader), "Message::Read() failed");
-        VerifyOrQuit(udpHeader.GetChecksum() != 0, "Failed to update checksum");
+        SuccessOrQuit(message->Read(message->GetOffset(), udpHeader));
+        VerifyOrQuit(udpHeader.GetChecksum() != 0);
 
         // Verify that the calculated UDP checksum is valid.
 
-        VerifyOrQuit(
-            CalculateChecksum(messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(), Ip6::kProtoUdp, *message) == 0xffff,
-            "UDP checksum does not match expected value");
+        VerifyOrQuit(CalculateChecksum(messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(), Ip6::kProtoUdp,
+                                       *message) == 0xffff);
 
         // Verify that `Checksum::VerifyMessageChecksum()` accepts the
         // message and its calculated checksum.
 
-        SuccessOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoUdp),
-                      "Checksum::VerifyMessageChecksum() failed");
+        SuccessOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoUdp));
 
         // Corrupt the message and verify that checksum is no longer accepted.
 
@@ -226,7 +224,7 @@ void TestIcmp6MessageChecksum(void)
         Ip6::MessageInfo  messageInfo;
 
         VerifyOrQuit(message != nullptr, "Ip6::NewMesssage() failed");
-        SuccessOrQuit(message->SetLength(size), "Message::SetLength() failed");
+        SuccessOrQuit(message->SetLength(size));
 
         // Write ICMP6 header with a random payload.
 
@@ -243,8 +241,8 @@ void TestIcmp6MessageChecksum(void)
             message->WriteBytes(sizeof(icmp6Header), &buffer[0], payloadSize);
         }
 
-        SuccessOrQuit(messageInfo.GetSockAddr().FromString(kSourceAddress), "FromString() failed");
-        SuccessOrQuit(messageInfo.GetPeerAddr().FromString(kDestAddress), "FromString() failed");
+        SuccessOrQuit(messageInfo.GetSockAddr().FromString(kSourceAddress));
+        SuccessOrQuit(messageInfo.GetPeerAddr().FromString(kDestAddress));
 
         // Verify that the `Checksum::UpdateMessageChecksum` correctly
         // updates the checksum field in the ICMP6 header on the message.
@@ -252,20 +250,18 @@ void TestIcmp6MessageChecksum(void)
         Checksum::UpdateMessageChecksum(*message, messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(),
                                         Ip6::kProtoIcmp6);
 
-        SuccessOrQuit(message->Read(message->GetOffset(), icmp6Header), "Message::Read() failed");
+        SuccessOrQuit(message->Read(message->GetOffset(), icmp6Header));
         VerifyOrQuit(icmp6Header.GetChecksum() != 0, "Failed to update checksum");
 
         // Verify that the calculated ICMP6 checksum is valid.
 
         VerifyOrQuit(CalculateChecksum(messageInfo.GetSockAddr(), messageInfo.GetPeerAddr(), Ip6::kProtoIcmp6,
-                                       *message) == 0xffff,
-                     "UDP checksum does not match expected value");
+                                       *message) == 0xffff);
 
         // Verify that `Checksum::VerifyMessageChecksum()` accepts the
         // message and its calculated checksum.
 
-        SuccessOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoIcmp6),
-                      "Checksum::VerifyMessageChecksum() failed");
+        SuccessOrQuit(Checksum::VerifyMessageChecksum(*message, messageInfo, Ip6::kProtoIcmp6));
 
         // Corrupt the message and verify that checksum is no longer accepted.
 
@@ -292,9 +288,8 @@ public:
         VerifyOrQuit(checksum.GetValue() == 0, "Incorrect initial checksum value");
 
         checksum.AddData(kTestVector, sizeof(kTestVector));
-        VerifyOrQuit(checksum.GetValue() == kTestVectorChecksum, "Checksum::AddData() failed");
-        VerifyOrQuit(checksum.GetValue() == CalculateChecksum(kTestVector, sizeof(kTestVector)),
-                     "Checksum::AddData() failed");
+        VerifyOrQuit(checksum.GetValue() == kTestVectorChecksum);
+        VerifyOrQuit(checksum.GetValue() == CalculateChecksum(kTestVector, sizeof(kTestVector)), );
     }
 };
 

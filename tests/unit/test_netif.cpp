@@ -62,7 +62,7 @@ void VerifyMulticastAddressList(const Ip6::Netif &aNetif, Ip6::Address aAddresse
 
     for (uint8_t i = 0; i < aLength; i++)
     {
-        VerifyOrQuit(aNetif.IsMulticastSubscribed(aAddresses[i]), "IsMulticastSubscribed() failed");
+        VerifyOrQuit(aNetif.IsMulticastSubscribed(aAddresses[i]));
     }
 
     for (const Ip6::NetifMulticastAddress *addr = aNetif.GetMulticastAddresses(); addr; addr = addr->GetNext())
@@ -148,7 +148,7 @@ void TestNetifMulticastAddresses(void)
     VerifyMulticastAddressList(netif, &addresses[5], 1);
 
     IgnoreError(address.FromString(kTestAddress2));
-    SuccessOrQuit(netif.SubscribeExternalMulticast(address), "SubscribeExternalMulticast() failed");
+    SuccessOrQuit(netif.SubscribeExternalMulticast(address));
     VerifyMulticastAddressList(netif, &addresses[5], 2);
 
     netif.SubscribeAllNodesMulticast();
@@ -164,7 +164,7 @@ void TestNetifMulticastAddresses(void)
     VerifyMulticastAddressList(netif, &addresses[0], 7);
 
     IgnoreError(address.FromString(kTestAddress3));
-    SuccessOrQuit(netif.SubscribeExternalMulticast(address), "SubscribeExternalMulticast() failed");
+    SuccessOrQuit(netif.SubscribeExternalMulticast(address));
     VerifyMulticastAddressList(netif, &addresses[0], 8);
 
     IgnoreError(address.FromString(kTestAddress1)); // same as netifAddress (internal)

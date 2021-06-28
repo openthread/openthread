@@ -71,11 +71,11 @@ void VerifyRawRssValue(int8_t aAverage, uint16_t aRawValue)
     if (aAverage != OT_RADIO_RSSI_INVALID)
     {
         VerifyOrQuit(aAverage == -static_cast<int16_t>((aRawValue + (kRawAverageMultiple / 2)) >> kRawAverageBitShift),
-                     "TestLinkQualityInfo failed - Raw value does not match the average.");
+                     "Raw value does not match the average.");
     }
     else
     {
-        VerifyOrQuit(aRawValue == 0, "TestLinkQualityInfo failed - Raw value does not match the average.");
+        VerifyOrQuit(aRawValue == 0, "Raw value does not match the average.");
     }
 }
 
@@ -92,7 +92,7 @@ void TestLinkQualityData(RssTestData aRssData)
     size_t          i;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != nullptr, "Null instance");
+    VerifyOrQuit(sInstance != nullptr);
     linkInfo.Init(*sInstance);
 
     printf("- - - - - - - - - - - - - - - - - -\n");
@@ -106,17 +106,16 @@ void TestLinkQualityData(RssTestData aRssData)
         min = MIN_RSS(rss, min);
         max = MAX_RSS(rss, max);
         linkInfo.AddRss(rss);
-        VerifyOrQuit(linkInfo.GetLastRss() == rss, "TestLinkQualityInfo failed - GetLastRss() is incorrect");
+        VerifyOrQuit(linkInfo.GetLastRss() == rss);
         ave = linkInfo.GetAverageRss();
-        VerifyOrQuit(ave >= min, "TestLinkQualityInfo failed - GetAverageRss() is smaller than min value.");
-        VerifyOrQuit(ave <= max, "TestLinkQualityInfo failed - GetAverageRss() is larger than min value");
+        VerifyOrQuit(ave >= min, "GetAverageRss() is smaller than min value.");
+        VerifyOrQuit(ave <= max, "GetAverageRss() is larger than min value");
         VerifyRawRssValue(linkInfo.GetAverageRss(), linkInfo.GetAverageRssRaw());
         printf("%02u) AddRss(%4d): ", static_cast<unsigned int>(i), rss);
         PrintOutcome(linkInfo);
     }
 
-    VerifyOrQuit(linkInfo.GetLinkQuality() == aRssData.mExpectedLinkQuality,
-                 "TestLinkQualityInfo failed - GetLinkQuality() is incorrect");
+    VerifyOrQuit(linkInfo.GetLinkQuality() == aRssData.mExpectedLinkQuality);
 }
 
 // Check and verify the raw average RSS value to match the value from GetAverage().
@@ -128,11 +127,11 @@ void VerifyRawRssValue(RssAverager &aRssAverager)
     if (average != OT_RADIO_RSSI_INVALID)
     {
         VerifyOrQuit(average == -static_cast<int16_t>((rawValue + (kRawAverageMultiple / 2)) >> kRawAverageBitShift),
-                     "TestLinkQualityInfo failed - Raw value does not match the average.");
+                     "Raw value does not match the average.");
     }
     else
     {
-        VerifyOrQuit(rawValue == 0, "TestLinkQualityInfo failed - Raw value does not match the average.");
+        VerifyOrQuit(rawValue == 0, "Raw value does not match the average.");
     }
 }
 
@@ -165,8 +164,7 @@ void TestRssAveraging(void)
     rssAverager.Clear();
 
     printf("\nAfter Clear: ");
-    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID,
-                 "TestLinkQualityInfo failed - Initial value from GetAverage() is incorrect.");
+    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID, "Initial value from GetAverage() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -175,7 +173,7 @@ void TestRssAveraging(void)
     rss = -70;
     printf("AddRss(%d): ", rss);
     IgnoreError(rssAverager.Add(rss));
-    VerifyOrQuit(rssAverager.GetAverage() == rss, "TestLinkQualityInfo - GetAverage() failed after a single AddRss().");
+    VerifyOrQuit(rssAverager.GetAverage() == rss, "GetAverage() failed after a single AddRss().");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -184,8 +182,7 @@ void TestRssAveraging(void)
 
     printf("Clear(): ");
     rssAverager.Clear();
-    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID,
-                 "TestLinkQualityInfo failed - GetAverage() after Clear() is incorrect.");
+    VerifyOrQuit(rssAverager.GetAverage() == OT_RADIO_RSSI_INVALID, "GetAverage() after Clear() is incorrect.");
     VerifyRawRssValue(rssAverager);
     PrintOutcome(rssAverager);
 
@@ -203,8 +200,7 @@ void TestRssAveraging(void)
         for (i = 0; i < kNumRssAdds; i++)
         {
             IgnoreError(rssAverager.Add(rss));
-            VerifyOrQuit(rssAverager.GetAverage() == rss,
-                         "TestLinkQualityInfo failed - GetAverage() returned incorrect value.");
+            VerifyOrQuit(rssAverager.GetAverage() == rss, "GetAverage() returned incorrect value.");
             VerifyRawRssValue(rssAverager);
         }
 
@@ -232,8 +228,7 @@ void TestRssAveraging(void)
             IgnoreError(rssAverager.Add(rss));
             IgnoreError(rssAverager.Add(rss2));
             printf("AddRss(%4d), AddRss(%4d): ", rss, rss2);
-            VerifyOrQuit(rssAverager.GetAverage() == ((rss + rss2) >> 1),
-                         "TestLinkQualityInfo failed - GetAverage() returned incorrect value.");
+            VerifyOrQuit(rssAverager.GetAverage() == ((rss + rss2) >> 1), "GetAverage() returned incorrect value.");
             VerifyRawRssValue(rssAverager);
             PrintOutcome(rssAverager);
         }
@@ -266,10 +261,8 @@ void TestRssAveraging(void)
             IgnoreError(rssAverager.Add(rss2));
             printf("AddRss(%4d) %d times, AddRss(%4d): ", rss, kNumRssAdds, rss2);
             ave = rssAverager.GetAverage();
-            VerifyOrQuit(ave >= MIN_RSS(rss, rss2),
-                         "TestLinkQualityInfo failed - GetAverage() returned incorrect value.");
-            VerifyOrQuit(ave <= MAX_RSS(rss, rss2),
-                         "TestLinkQualityInfo failed - GetAverage() returned incorrect value.");
+            VerifyOrQuit(ave >= MIN_RSS(rss, rss2), "GetAverage() returned incorrect value.");
+            VerifyOrQuit(ave <= MAX_RSS(rss, rss2), "GetAverage() returned incorrect value.");
             VerifyRawRssValue(rssAverager);
             PrintOutcome(rssAverager);
         }
@@ -299,13 +292,11 @@ void TestRssAveraging(void)
                 IgnoreError(rssAverager.Add(rss));
                 IgnoreError(rssAverager.Add(rss2));
                 ave = rssAverager.GetAverage();
-                VerifyOrQuit(ave >= MIN_RSS(rss, rss2),
-                             "TestLinkQualityInfo failed - GetAverage() is smaller than min value.");
-                VerifyOrQuit(ave <= MAX_RSS(rss, rss2),
-                             "TestLinkQualityInfo failed - GetAverage() is larger than min value.");
+                VerifyOrQuit(ave >= MIN_RSS(rss, rss2), "GetAverage() is smaller than min value.");
+                VerifyOrQuit(ave <= MAX_RSS(rss, rss2), "GetAverage() is larger than min value.");
                 diff = ave;
                 diff -= (rss + rss2) >> 1;
-                VerifyOrQuit(ABS(diff) <= kRssAverageMaxDiff, "TestLinkQualityInfo failed - GetAverage() is incorrect");
+                VerifyOrQuit(ABS(diff) <= kRssAverageMaxDiff, "GetAverage() is incorrect");
                 VerifyRawRssValue(rssAverager);
             }
 

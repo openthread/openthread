@@ -80,10 +80,8 @@ void TestLookupTable(void)
     constexpr Entry kDuplicateEntryTable[] = {Entry("duplicate"), Entry("duplicate")};
 
     static_assert(ot::Utils::LookupTable::IsSorted(kTable), "LookupTable::IsSorted() failed");
-    static_assert(!ot::Utils::LookupTable::IsSorted(kUnsortedTable),
-                  "LookupTable::IsSorted() failed for unsorted table");
-    static_assert(!ot::Utils::LookupTable::IsSorted(kDuplicateEntryTable),
-                  "LookupTable::IsSorted() failed for table with duplicate entries");
+    static_assert(!ot::Utils::LookupTable::IsSorted(kUnsortedTable), "failed for unsorted table");
+    static_assert(!ot::Utils::LookupTable::IsSorted(kDuplicateEntryTable), "failed for table with duplicate entries");
 
     for (const TableEntry &tableEntry : kTable)
     {
@@ -100,8 +98,7 @@ void TestLookupTable(void)
         VerifyOrQuit(entry == nullptr, "LookupTable::Find() failed with non-matching name");
     }
 
-    VerifyOrQuit(ot::Utils::LookupTable::Find("dragon age", kTable) == nullptr,
-                 "LookupTable::Find() failed with non exiting mathc");
+    VerifyOrQuit(ot::Utils::LookupTable::Find("dragon age", kTable) == nullptr, "failed with non-exiting match");
 }
 
 int main(void)

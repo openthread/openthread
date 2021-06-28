@@ -56,19 +56,19 @@ void VerifyString(const char *aName, const HeapString &aString, const char *aExp
 
     if (aExpectedString == nullptr)
     {
-        VerifyOrQuit(aString.IsNull(), "IsNull() is incorrect");
-        VerifyOrQuit(aString.AsCString() == nullptr, "AsCString() is incorrect");
-        VerifyOrQuit(aString != "something", "operator!=() failed");
+        VerifyOrQuit(aString.IsNull());
+        VerifyOrQuit(aString.AsCString() == nullptr);
+        VerifyOrQuit(aString != "something");
     }
     else
     {
-        VerifyOrQuit(!aString.IsNull(), "IsNull() is incorrect");
-        VerifyOrQuit(aString.AsCString() != nullptr, "AsCString() is incorrect");
+        VerifyOrQuit(!aString.IsNull());
+        VerifyOrQuit(aString.AsCString() != nullptr);
         VerifyOrQuit(strcmp(aString.AsCString(), aExpectedString) == 0, "String content is incorrect");
-        VerifyOrQuit(aString != nullptr, "operator!=() failed");
+        VerifyOrQuit(aString != nullptr);
     }
 
-    VerifyOrQuit(aString == aExpectedString, "operator==() failed");
+    VerifyOrQuit(aString == aExpectedString);
 }
 
 // Function returning a `HeapString` by value.
@@ -76,7 +76,7 @@ HeapString GetName(void)
 {
     HeapString name;
 
-    SuccessOrQuit(name.Set("name"), "Set() failed");
+    SuccessOrQuit(name.Set("name"));
 
     return name;
 }
@@ -93,28 +93,28 @@ void TestHeapString(void)
 
     printf("------------------------------------------------------------------------------------\n");
     printf("Set(const char *aCstring)\n\n");
-    SuccessOrQuit(str1.Set("hello"), "Set() failed");
+    SuccessOrQuit(str1.Set("hello"));
     VerifyString("str1", str1, "hello");
     oldBuffer = str1.AsCString();
 
-    SuccessOrQuit(str1.Set("0123456789"), "Set() failed");
+    SuccessOrQuit(str1.Set("0123456789"));
     VerifyString("str1", str1, "0123456789");
     printf("\tDid reuse its old buffer: %s\n", str1.AsCString() == oldBuffer ? "yes" : "no");
     oldBuffer = str1.AsCString();
 
-    SuccessOrQuit(str1.Set("9876543210"), "Set() failed");
+    SuccessOrQuit(str1.Set("9876543210"));
     VerifyString("str1", str1, "9876543210");
     printf("\tDid reuse its old buffer (same length): %s\n", str1.AsCString() == oldBuffer ? "yes" : "no");
 
     printf("------------------------------------------------------------------------------------\n");
     printf("Set(const HeapString &)\n\n");
-    SuccessOrQuit(str2.Set(str1), "Set() failed");
+    SuccessOrQuit(str2.Set(str1));
     VerifyString("str2", str2, str1.AsCString());
 
-    SuccessOrQuit(str1.Set(nullptr), "Set() failed");
+    SuccessOrQuit(str1.Set(nullptr));
     VerifyString("str1", str1, nullptr);
 
-    SuccessOrQuit(str2.Set(str1), "Set() failed");
+    SuccessOrQuit(str2.Set(str1));
     VerifyString("str2", str2, nullptr);
 
     printf("------------------------------------------------------------------------------------\n");
@@ -122,7 +122,7 @@ void TestHeapString(void)
     str1.Free();
     VerifyString("str1", str1, nullptr);
 
-    SuccessOrQuit(str1.Set("hello again"), "Set() failed");
+    SuccessOrQuit(str1.Set("hello again"));
     VerifyString("str1", str1, "hello again");
 
     str1.Free();
@@ -130,7 +130,7 @@ void TestHeapString(void)
 
     printf("------------------------------------------------------------------------------------\n");
     printf("Set() move semantics\n\n");
-    SuccessOrQuit(str1.Set("old name"), "Set() failed");
+    SuccessOrQuit(str1.Set("old name"));
     PrintString("str1", str1);
     SuccessOrQuit(str1.Set(GetName()), "Set() with move semantics failed");
     VerifyString("str1", str1, "name");

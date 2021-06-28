@@ -53,22 +53,22 @@ void TestSteeringData(void)
     steeringData.SetToPermitAllJoiners();
 
     DumpBuffer("After SetToPermitAllJoiners()", steeringData.GetData(), steeringData.GetLength());
-    VerifyOrQuit(steeringData.GetLength() == 1, "GetLength is incorrect after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.PermitsAllJoiners(), "PermitsAllJoiners() failed after SetToPermitAllJoiners()");
-    VerifyOrQuit(!steeringData.IsEmpty(), "IsEmpty() failed after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.Contains(joinerId1), "Contains(joinerId1) failed after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.Contains(joinerId2), "Contains(joinerId2) failed after SetToPermitAllJoiners()");
-    VerifyOrQuit(steeringData.Contains(indexes), "Contains(indexes) failed after SetToPermitAllJoiners()");
+    VerifyOrQuit(steeringData.GetLength() == 1, "after SetToPermitAllJoiners()");
+    VerifyOrQuit(steeringData.PermitsAllJoiners(), "after SetToPermitAllJoiners()");
+    VerifyOrQuit(!steeringData.IsEmpty(), "after SetToPermitAllJoiners()");
+    VerifyOrQuit(steeringData.Contains(joinerId1), "after SetToPermitAllJoiners()");
+    VerifyOrQuit(steeringData.Contains(joinerId2), "after SetToPermitAllJoiners()");
+    VerifyOrQuit(steeringData.Contains(indexes), "after SetToPermitAllJoiners()");
 
     steeringData.Clear();
 
     DumpBuffer("After Clear()", steeringData.GetData(), steeringData.GetLength());
-    VerifyOrQuit(steeringData.GetLength() == 1, "GetLength is incorrect after Clear()");
-    VerifyOrQuit(!steeringData.PermitsAllJoiners(), "PermitsAllJoiners() failed after Clear()");
-    VerifyOrQuit(steeringData.IsEmpty(), "IsEmpty() failed after Clear()");
-    VerifyOrQuit(!steeringData.Contains(joinerId1), "Contains(joinerId1) failed after Clear()");
-    VerifyOrQuit(!steeringData.Contains(joinerId2), "Contains(joinerId2) failed after Clear()");
-    VerifyOrQuit(!steeringData.Contains(indexes), "Contains(indexes) failed after Clear()");
+    VerifyOrQuit(steeringData.GetLength() == 1, "after Clear()");
+    VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after Clear()");
+    VerifyOrQuit(steeringData.IsEmpty(), "after Clear()");
+    VerifyOrQuit(!steeringData.Contains(joinerId1), "after Clear()");
+    VerifyOrQuit(!steeringData.Contains(joinerId2), "after Clear()");
+    VerifyOrQuit(!steeringData.Contains(indexes), "after Clear()");
 
     for (uint8_t len = 1; len <= MeshCoP::SteeringData::kMaxLength; len++)
     {
@@ -76,38 +76,38 @@ void TestSteeringData(void)
 
         steeringData.Init(len);
 
-        VerifyOrQuit(steeringData.GetLength() == len, "GetLength is incorrect after Init()");
+        VerifyOrQuit(steeringData.GetLength() == len, "after Init()");
         VerifyOrQuit(steeringData.IsEmpty(), "IsEmpy() failed after Init()");
-        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "PermitsAllJoiners() failed after Init()");
-        VerifyOrQuit(!steeringData.Contains(joinerId1), "Contains(joinerId1) failed after Init()");
-        VerifyOrQuit(!steeringData.Contains(joinerId2), "Contains(joinerId2) failed after Init()");
-        VerifyOrQuit(!steeringData.Contains(indexes), "Contains(indexes) failed after Init()");
+        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after Init()");
+        VerifyOrQuit(!steeringData.Contains(joinerId1), "after Init()");
+        VerifyOrQuit(!steeringData.Contains(joinerId2), "after Init()");
+        VerifyOrQuit(!steeringData.Contains(indexes), "after Init()");
 
         steeringData.UpdateBloomFilter(joinerId1);
         DumpBuffer("After UpdateBloomFilter(joinerId1)", steeringData.GetData(), steeringData.GetLength());
-        VerifyOrQuit(steeringData.GetLength() == len, "GetLength is incorrect after UpdateBloomFilter()");
+        VerifyOrQuit(steeringData.GetLength() == len, "after UpdateBloomFilter()");
         VerifyOrQuit(!steeringData.IsEmpty(), "IsEmpy() failed after UpdateBloomFilter()");
-        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "PermitsAllJoiners() failed after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(joinerId1), "Contains(joinerId1) failed after UpdateBloomFilter");
+        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after UpdateBloomFilter");
+        VerifyOrQuit(steeringData.Contains(joinerId1), "after UpdateBloomFilter");
 
         steeringData.UpdateBloomFilter(joinerId2);
         DumpBuffer("After UpdateBloomFilter(joinerId2)", steeringData.GetData(), steeringData.GetLength());
-        VerifyOrQuit(steeringData.GetLength() == len, "GetLength is incorrect after UpdateBloomFilter()");
+        VerifyOrQuit(steeringData.GetLength() == len, "after UpdateBloomFilter()");
         VerifyOrQuit(!steeringData.IsEmpty(), "IsEmpy() failed after UpdateBloomFilter()");
-        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "PermitsAllJoiners() failed after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(joinerId1), "Contains(joinerId1) failed after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(joinerId2), "Contains(joinerId2) failed after UpdateBloomFilter");
-        VerifyOrQuit(steeringData.Contains(indexes), "Contains(joinerId2) failed after UpdateBloomFilter");
+        VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after UpdateBloomFilter");
+        VerifyOrQuit(steeringData.Contains(joinerId1), "after UpdateBloomFilter");
+        VerifyOrQuit(steeringData.Contains(joinerId2), "after UpdateBloomFilter");
+        VerifyOrQuit(steeringData.Contains(indexes), "after UpdateBloomFilter");
     }
 
     steeringData.Init(0);
 
-    VerifyOrQuit(steeringData.GetLength() == 0, "GetLength is incorrect after Init()");
+    VerifyOrQuit(steeringData.GetLength() == 0, "after Init()");
     VerifyOrQuit(steeringData.IsEmpty(), "IsEmpy() failed after Init()");
-    VerifyOrQuit(!steeringData.PermitsAllJoiners(), "PermitsAllJoiners() failed after Init()");
-    VerifyOrQuit(!steeringData.Contains(joinerId1), "Contains(joinerId1) failed after Init()");
-    VerifyOrQuit(!steeringData.Contains(joinerId2), "Contains(joinerId2) failed after Init()");
-    VerifyOrQuit(!steeringData.Contains(indexes), "Contains(indexes) failed after Init()");
+    VerifyOrQuit(!steeringData.PermitsAllJoiners(), "after Init()");
+    VerifyOrQuit(!steeringData.Contains(joinerId1), "after Init()");
+    VerifyOrQuit(!steeringData.Contains(joinerId2), "after Init()");
+    VerifyOrQuit(!steeringData.Contains(indexes), "after Init()");
 }
 
 } // namespace ot

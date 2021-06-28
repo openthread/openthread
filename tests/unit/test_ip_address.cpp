@@ -301,15 +301,15 @@ void TestIp6Prefix(void)
 
             printf("Prefix %s\n", prefix.ToString().AsCString());
 
-            VerifyOrQuit(prefix.GetLength() == prefixLength, "Prefix::GetLength() failed");
-            VerifyOrQuit(prefix.IsValid(), "Prefix::IsValid() failed");
-            VerifyOrQuit(prefix.IsEqual(prefixBytes, prefixLength), "Prefix::IsEqual() failed");
+            VerifyOrQuit(prefix.GetLength() == prefixLength);
+            VerifyOrQuit(prefix.IsValid());
+            VerifyOrQuit(prefix.IsEqual(prefixBytes, prefixLength));
 
-            VerifyOrQuit(address1.MatchesPrefix(prefix), "Address::MatchesPrefix() failed");
-            VerifyOrQuit(!address2.MatchesPrefix(prefix), "Address::MatchedPrefix() failed");
+            VerifyOrQuit(address1.MatchesPrefix(prefix));
+            VerifyOrQuit(!address2.MatchesPrefix(prefix));
 
-            VerifyOrQuit(prefix == prefix, "Prefix::operator==() failed");
-            VerifyOrQuit(!(prefix < prefix), "Prefix::operator<() failed");
+            VerifyOrQuit(prefix == prefix);
+            VerifyOrQuit(!(prefix < prefix));
 
             for (uint8_t subPrefixLength = 1; subPrefixLength <= prefixLength; subPrefixLength++)
             {
@@ -317,21 +317,19 @@ void TestIp6Prefix(void)
 
                 subPrefix.Set(prefixBytes, subPrefixLength);
 
-                VerifyOrQuit(prefix.ContainsPrefix(subPrefix), "Prefix::ContainsPrefix() failed");
+                VerifyOrQuit(prefix.ContainsPrefix(subPrefix));
 
                 if (prefixLength == subPrefixLength)
                 {
-                    VerifyOrQuit(prefix == subPrefix, "Prefix::operator==() failed");
-                    VerifyOrQuit(prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()),
-                                 "Prefix::IsEqual() failed");
-                    VerifyOrQuit(!(subPrefix < prefix), "Prefix::operator<() failed");
+                    VerifyOrQuit(prefix == subPrefix);
+                    VerifyOrQuit(prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()));
+                    VerifyOrQuit(!(subPrefix < prefix));
                 }
                 else
                 {
-                    VerifyOrQuit(prefix != subPrefix, "Prefix::operator!= failed");
-                    VerifyOrQuit(!prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()),
-                                 "Prefix::IsEqual() failed");
-                    VerifyOrQuit(subPrefix < prefix, "Prefix::operator<() failed");
+                    VerifyOrQuit(prefix != subPrefix);
+                    VerifyOrQuit(!prefix.IsEqual(subPrefix.GetBytes(), subPrefix.GetLength()));
+                    VerifyOrQuit(subPrefix < prefix);
                 }
             }
 
@@ -343,17 +341,17 @@ void TestIp6Prefix(void)
                 bool            isPrefixSmaller;
 
                 prefix2 = prefix;
-                VerifyOrQuit(prefix == prefix2, "Prefix::operator==() failed");
+                VerifyOrQuit(prefix == prefix2);
 
                 // Flip the `bitNumber` bit between `prefix` and `prefix2`
 
                 prefix2.mPrefix.mFields.m8[index] ^= mask;
-                VerifyOrQuit(prefix != prefix2, "Prefix::operator==() failed");
+                VerifyOrQuit(prefix != prefix2);
 
                 isPrefixSmaller = ((prefix.GetBytes()[index] & mask) == 0);
 
-                VerifyOrQuit((prefix < prefix2) == isPrefixSmaller, "Prefix::operator<() failed");
-                VerifyOrQuit((prefix2 < prefix) == !isPrefixSmaller, "Prefix::operator<() failed");
+                VerifyOrQuit((prefix < prefix2) == isPrefixSmaller);
+                VerifyOrQuit((prefix2 < prefix) == !isPrefixSmaller);
             }
         }
     }
@@ -394,10 +392,10 @@ void TestIp4Ip6Translation(void)
         ot::Ip6::Address address;
         ot::Ip6::Address expectedAddress;
 
-        SuccessOrQuit(address.FromString(testCase.mPrefix), "Ip6::FromString() failed");
+        SuccessOrQuit(address.FromString(testCase.mPrefix));
         prefix.Set(address.GetBytes(), testCase.mLength);
 
-        SuccessOrQuit(expectedAddress.FromString(testCase.mIp6Address), "Ip6::FromString() failed");
+        SuccessOrQuit(expectedAddress.FromString(testCase.mIp6Address));
 
         address.SynthesizeFromIp4Address(prefix, ip4Address);
 
@@ -441,15 +439,15 @@ void TestIp6Header(void)
     header.SetSource(source);
     header.SetDestination(destination);
 
-    VerifyOrQuit(header.IsValid(), "Header::IsValid() failed");
-    VerifyOrQuit(header.IsVersion6(), "Header::Init() failed");
+    VerifyOrQuit(header.IsValid());
+    VerifyOrQuit(header.IsVersion6());
 
-    VerifyOrQuit(header.GetDscp() == ot::Ip6::kDscpCs7, "Get/SetDscp() failed");
-    VerifyOrQuit(header.GetPayloadLength() == kPayloadLength, "Get/SetPayloadLength() failed");
-    VerifyOrQuit(header.GetNextHeader() == ot::Ip6::kProtoUdp, "Get/SetNextHeader() failed");
-    VerifyOrQuit(header.GetHopLimit() == kHopLimit, "Get/SetHopLimit() failed");
-    VerifyOrQuit(header.GetSource() == source, "Get/SetSource() failed");
-    VerifyOrQuit(header.GetDestination() == destination, "Get/SetSource() failed");
+    VerifyOrQuit(header.GetDscp() == ot::Ip6::kDscpCs7);
+    VerifyOrQuit(header.GetPayloadLength() == kPayloadLength);
+    VerifyOrQuit(header.GetNextHeader() == ot::Ip6::kProtoUdp);
+    VerifyOrQuit(header.GetHopLimit() == kHopLimit);
+    VerifyOrQuit(header.GetSource() == source);
+    VerifyOrQuit(header.GetDestination() == destination);
 
     // Verify the offsets to different fields.
 
