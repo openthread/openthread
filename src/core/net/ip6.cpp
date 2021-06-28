@@ -72,6 +72,9 @@ Ip6::Ip6(Instance &aInstance)
     , mIcmp(aInstance)
     , mUdp(aInstance)
     , mMpl(aInstance)
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    , mTcp(aInstance)
+#endif
 {
 }
 
@@ -958,6 +961,15 @@ Error Ip6::HandlePayload(Message &          aMessage,
 
     switch (aIpProto)
     {
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    case kProtoTcp:
+        error = mTcp.ProcessReceivedSegment(*message, aMessageInfo);
+        if (error == kErrorDrop)
+        {
+            otLogNoteIp6("Error TCP Checksum");
+        }
+        break;
+#endif
     case kProtoUdp:
         error = mUdp.HandleMessage(*message, aMessageInfo);
         if (error == kErrorDrop)

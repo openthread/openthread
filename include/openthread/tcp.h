@@ -199,8 +199,10 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  */
 typedef struct otTcpEndpoint
 {
-    struct otTcpEndpoint *mNext;                     ///< A pointer to the next TCP endpoint (internal use only)
-    void *                mContext;                  ///< A pointer to application-specific context
+    struct otTcpEndpoint *mNext;     ///< A pointer to the next TCP endpoint (internal use only)
+    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP endpoint
+    void *                mContext;  ///< A pointer to application-specific context
+
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
     otTcpSendReady        mSendReadyCallback;        ///< "Send ready" callback function
@@ -215,15 +217,17 @@ typedef struct otTcpEndpoint
  */
 typedef struct otTcpEndpointInitializeArgs
 {
+    void *mContext; ///< Pointer to application-specific context
+
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
     otTcpBytesAcked       mBytesAckedCallback;       ///< "Bytes acked" callback
     otTcpSendReady        mSendReadyCallback;        ///< "Send ready" callback function
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
-    void *                mContext;                  ///< Pointer to application-specific context
-    void *                mReceiveBuffer;     ///< Pointer to memory provided to the system for the TCP receive buffer
-    size_t                mReceiveBufferSize; ///< Size of memory provided to the system for the TCP receive buffer
+
+    void * mReceiveBuffer;     ///< Pointer to memory provided to the system for the TCP receive buffer
+    size_t mReceiveBufferSize; ///< Size of memory provided to the system for the TCP receive buffer
 } otTcpEndpointInitializeArgs;
 
 /**
@@ -274,7 +278,7 @@ void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint);
  *
  * @returns  The local host and port of @p aEndpoint.
  */
-const otSockAddr *otTcpGetLocalAddress(otTcpEndpoint *aEndpoint);
+const otSockAddr *otTcpGetLocalAddress(const otTcpEndpoint *aEndpoint);
 
 /**
  * Obtains a pointer to a TCP endpoint's peer's host and port.
@@ -286,7 +290,7 @@ const otSockAddr *otTcpGetLocalAddress(otTcpEndpoint *aEndpoint);
  *
  * @returns  The host and port of the connection peer of @p aEndpoint.
  */
-const otSockAddr *otTcpGetPeerAddress(otTcpEndpoint *aEndpoint);
+const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint);
 
 /**
  * Binds the TCP endpoint to an IP address and port.
@@ -388,7 +392,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
  * @retval OT_ERROR_NONE    Successfully completed the operation.
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
  */
-otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
+otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
 
 /**
  * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -546,10 +550,12 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
  */
 typedef struct otTcpListener
 {
-    struct otTcpListener *mNext;                ///< A pointer to the next TCP listener (internal use only)
-    void *                mContext;             ///< A pointer to application-specific context
-    otTcpAcceptReady      mAcceptReadyCallback; ///< "Accept ready" callback function
-    otTcpAcceptDone       mAcceptDoneCallback;  ///< "Accept done" callback function
+    struct otTcpListener *mNext;     ///< A pointer to the next TCP listener (internal use only)
+    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP listener
+    void *                mContext;  ///< A pointer to application-specific context
+
+    otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
+    otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
 
     /* Other implementation-defined fields go here. */
 } otTcpListener;
@@ -559,9 +565,10 @@ typedef struct otTcpListener
  */
 typedef struct otTcpListenerInitializeArgs
 {
+    void *mContext; ///< Pointer to application-specific context
+
     otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
-    void *           mContext;             ///< Pointer to application-specific context
 } otTcpListenerInitializeArgs;
 
 /**
