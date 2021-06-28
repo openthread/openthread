@@ -650,7 +650,7 @@ template <> inline Ip6::Tcp &Instance::Get(void)
 {
     return mIp6.mTcp;
 }
-#endif // OPENTHREAD_CONFIG_TCP_ENABLE
+#endif
 
 template <> inline Ip6::Udp &Instance::Get(void)
 {
