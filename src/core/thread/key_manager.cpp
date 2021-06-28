@@ -182,7 +182,11 @@ KeyManager::KeyManager(Instance &aInstance)
     SetCryptoType(otPlatCryptoGetType());
     IgnoreError(otPlatCryptoInit());
     IgnoreError(mNetworkKey.GenerateRandom());
-    IgnoreError(StoreNetworkKey(false));
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_PSA)
+    {
+        IgnoreError(StoreNetworkKey(false));
+    }
 
     mMacFrameCounters.Reset();
     mPskc.Clear();
