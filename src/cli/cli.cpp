@@ -130,6 +130,16 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 }
 
+int Interpreter::Output(const char *aBuf, uint16_t aBufLength)
+{
+    int written = 0;
+    for (uint16_t i = 0; i != aBufLength; i++)
+    {
+        written += OutputFormat("%c", aBuf[i]);
+    }
+    return written;
+}
+
 void Interpreter::OutputResult(otError aError)
 {
     switch (aError)

@@ -151,6 +151,19 @@ public:
     void ProcessLine(char *aBuf);
 
     /**
+     * This method delivers raw characters to the client.
+     *
+     * @param[in]  aBuf        A pointer to a buffer.
+     * @param[in]  aBufLength  Number of bytes in the buffer.
+     *
+     * @returns The number of bytes placed in the output queue.
+     *
+     * @retval  -1  Driver is broken.
+     *
+     */
+    int Output(const char *aBuf, uint16_t aBufLength);
+
+    /**
      * This method writes a number of bytes to the CLI console as a hex string.
      *
      * @param[in]  aBytes   A pointer to data which should be printed.
