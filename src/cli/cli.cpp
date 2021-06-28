@@ -100,12 +100,14 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mOutputContext(aContext)
     , mUserCommands(nullptr)
     , mUserCommandsLength(0)
+    , mCommandIsPending(false)
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
 #endif
     , mDataset(*this)
     , mNetworkData(*this)
     , mUdp(*this)
+    , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -128,10 +130,14 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
+
+    OutputPrompt();
 }
 
 void Interpreter::OutputResult(otError aError)
 {
+    OT_ASSERT(mCommandIsPending);
+
     switch (aError)
     {
     case OT_ERROR_NONE:
@@ -143,6 +149,13 @@ void Interpreter::OutputResult(otError aError)
 
     default:
         OutputLine("Error %d: %s", aError, otThreadErrorToString(aError));
+    }
+
+    if (aError != OT_ERROR_PENDING)
+    {
+        mCommandIsPending = false;
+        mTimer.Stop();
+        OutputPrompt();
     }
 }
 
@@ -3137,13 +3150,18 @@ void Interpreter::HandlePingStatistics(const otPingSenderStatistics *aStatistics
     }
 
     OutputLine("");
-    OutputResult(OT_ERROR_NONE);
+
+    if (!mPingIsAsync)
+    {
+        OutputResult(OT_ERROR_NONE);
+    }
 }
 
 otError Interpreter::ProcessPing(uint8_t aArgsLength, Arg aArgs[])
 {
     otError            error = OT_ERROR_NONE;
     otPingSenderConfig config;
+    bool               async = false;
 
     VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
@@ -3151,6 +3169,11 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, Arg aArgs[])
     {
         otPingSenderStop(mInstance);
         ExitNow();
+    }
+    else if (aArgs[0] == "async")
+    {
+        async = true;
+        aArgs++, aArgsLength--;
     }
 
     memset(&config, 0, sizeof(config));
@@ -3221,7 +3244,14 @@ otError Interpreter::ProcessPing(uint8_t aArgsLength, Arg aArgs[])
     config.mStatisticsCallback = Interpreter::HandlePingStatistics;
     config.mCallbackContext    = this;
 
-    error = otPingSenderPing(mInstance, &config);
+    SuccessOrExit(error = otPingSenderPing(mInstance, &config));
+
+    mPingIsAsync = async;
+
+    if (!async)
+    {
+        error = kErrorPending;
+    }
 
 exit:
     return error;
@@ -4637,10 +4667,14 @@ void Interpreter::ProcessLine(char *aBuf)
 
     OT_ASSERT(aBuf != nullptr);
 
+    // Ignore the command if another command is pending.
+    VerifyOrExit(!mCommandIsPending, argsLength = 0);
+    mCommandIsPending = true;
+
     VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
 
     SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aBuf, argsLength, args, kMaxArgs));
-    VerifyOrExit(argsLength >= 1);
+    VerifyOrExit(argsLength >= 1, mCommandIsPending = false);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     VerifyOrExit((!otDiagIsEnabled(mInstance) || (args[0] == "diag")), {
@@ -4664,6 +4698,10 @@ exit:
     if (error != OT_ERROR_NONE || argsLength > 0)
     {
         OutputResult(error);
+    }
+    else if (!mCommandIsPending)
+    {
+        OutputPrompt();
     }
 }
 
@@ -4718,6 +4756,7 @@ otError Interpreter::ProcessNetworkDiagnostic(uint8_t aArgsLength, Arg aArgs[])
     {
         SuccessOrExit(error = otThreadSendDiagnosticGet(mInstance, &address, tlvTypes, count,
                                                         &Interpreter::HandleDiagnosticGetResponse, this));
+        SetCommandTimeout(5000);
         ExitNow(error = OT_ERROR_PENDING);
     }
     else if (aArgs[0] == "reset")
@@ -4849,13 +4888,8 @@ void Interpreter::HandleDiagnosticGetResponse(otError                 aError,
         }
     }
 
-    if (aError == OT_ERROR_NOT_FOUND)
-    {
-        aError = OT_ERROR_NONE;
-    }
-
 exit:
-    OutputResult(aError);
+    return;
 }
 
 void Interpreter::OutputMode(uint8_t aIndentSize, const otLinkModeConfig &aMode)
@@ -5011,6 +5045,29 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
     Instance *instance = static_cast<Instance *>(aInstance);
 
     Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
+}
+
+void Interpreter::OutputPrompt(void)
+{
+    static const char sPrompt[] = "> ";
+
+    OutputFormat("%s", sPrompt);
+}
+
+void Interpreter::HandleTimer(Timer &aTimer)
+{
+    static_cast<Interpreter *>(static_cast<TimerMilliContext &>(aTimer).GetContext())->HandleTimer();
+}
+
+void Interpreter::HandleTimer(void)
+{
+    OutputResult(kErrorNone);
+}
+
+void Interpreter::SetCommandTimeout(uint32_t aTimeoutMilli)
+{
+    OT_ASSERT(mCommandIsPending);
+    mTimer.Start(aTimeoutMilli);
 }
 
 extern "C" void otCliInit(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
