@@ -59,6 +59,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE
+ *
+ * The number of bytes to transfer for the TCP benchmark in the CLI.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE
+#define OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE (72 << 10)
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE
  *
  * The size of memory used for the TCP receive buffer, in bytes.

@@ -39,6 +39,7 @@
 #include <openthread/tcp.h>
 
 #include "cli/cli_config.h"
+#include "common/time.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -67,7 +68,7 @@ public:
     /**
      * This mehtod interprets a list of CLI arguments.
      *
-     * @param[in]  aArgs  An array of command line arguments.
+     * @param[in]  aArgs   An array of command line arguments.
      *
      */
     otError Process(Arg aArgs[]);
@@ -85,6 +86,7 @@ private:
     otError ProcessBind(Arg aArgs[]);
     otError ProcessConnect(Arg aArgs[]);
     otError ProcessSend(Arg aArgs[]);
+    otError ProcessBenchmark(Arg aArgs[]);
     otError ProcessSendEnd(Arg aArgs[]);
     otError ProcessAbort(Arg aArgs[]);
     otError ProcessListen(Arg aArgs[]);
@@ -117,11 +119,17 @@ private:
     void HandleTcpAcceptDone(otTcpListener *aListener, otTcpEndpoint *aEndpoint, const otSockAddr *aPeer);
 
     static constexpr Command sCommands[] = {
-        {"abort", &TcpExample::ProcessAbort},     {"bind", &TcpExample::ProcessBind},
-        {"connect", &TcpExample::ProcessConnect}, {"deinit", &TcpExample::ProcessDeinit},
-        {"help", &TcpExample::ProcessHelp},       {"init", &TcpExample::ProcessInit},
-        {"listen", &TcpExample::ProcessListen},   {"send", &TcpExample::ProcessSend},
-        {"sendend", &TcpExample::ProcessSendEnd}, {"stoplistening", &TcpExample::ProcessStopListening},
+        {"abort", &TcpExample::ProcessAbort},
+        {"benchmark", &TcpExample::ProcessBenchmark},
+        {"bind", &TcpExample::ProcessBind},
+        {"connect", &TcpExample::ProcessConnect},
+        {"deinit", &TcpExample::ProcessDeinit},
+        {"help", &TcpExample::ProcessHelp},
+        {"init", &TcpExample::ProcessInit},
+        {"listen", &TcpExample::ProcessListen},
+        {"send", &TcpExample::ProcessSend},
+        {"sendend", &TcpExample::ProcessSendEnd},
+        {"stoplistening", &TcpExample::ProcessStopListening},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
@@ -139,6 +147,11 @@ private:
     otLinkedBuffer mSendLink;
     uint8_t        mSendBuffer[OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH];
     uint8_t        mReceiveBuffer[OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE];
+
+    otLinkedBuffer mBenchmarkLinks[(sizeof(mReceiveBuffer) + sizeof(mSendBuffer) - 1) / sizeof(mSendBuffer)];
+    uint32_t       mBenchmarkBytesTotal;
+    uint32_t       mBenchmarkLinksLeft;
+    TimeMilli      mBenchmarkStart;
 };
 
 } // namespace Cli
