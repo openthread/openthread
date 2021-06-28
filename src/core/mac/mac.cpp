@@ -56,9 +56,6 @@
 namespace ot {
 namespace Mac {
 
-const otMacKey Mac::sMode2Key = {
-    {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
-
 const otExtAddress Mac::sMode2ExtAddress = {
     {0x35, 0x06, 0xfe, 0xb8, 0x23, 0xd4, 0x87, 0x12},
 };
@@ -127,7 +124,9 @@ Mac::Mac(Instance &aInstance)
     , mTxError(kErrorNone)
 #endif
 {
-    ExtAddress randomExtAddress;
+    ExtAddress     randomExtAddress;
+    const otMacKey sMode2Key = {
+        {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
 
     randomExtAddress.GenerateRandom();
 
@@ -147,6 +146,21 @@ Mac::Mac(Instance &aInstance)
     SetPanId(mPanId);
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
+
+    memcpy(sMode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
+
+    if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_PSA)
+    {
+        otMacKeyRef aKeyRef = 0;
+        Error       error   = otPlatCryptoImportKey(&aKeyRef, PSA_KEY_TYPE_AES, PSA_ALG_ECB_NO_PADDING,
+                                            (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT), PSA_KEY_LIFETIME_VOLATILE,
+                                            sMode2Key.m8, sizeof(sMode2Key.m8));
+
+        sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
+
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+    }
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -1021,7 +1035,8 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-        aFrame.SetAesKey(static_cast<const Key &>(sMode2Key));
+        aFrame.SetAesKey(static_cast<const Key &>(sMode2KeyMaterial));
+
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
@@ -1732,7 +1747,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = static_cast<const Key *>(&sMode2Key);
+        macKey     = static_cast<const Key *>(&sMode2KeyMaterial);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
 
@@ -1740,7 +1755,6 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         ExitNow();
         OT_UNREACHABLE_CODE(break);
     }
-
     SuccessOrExit(aFrame.ProcessReceiveAesCcm(*extAddress, *macKey));
 
     if ((keyIdMode == Frame::kKeyIdMode1) && aNeighbor->IsStateValid())
@@ -1862,6 +1876,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     }
 
     error = aAckFrame.ProcessReceiveAesCcm(srcAddr.GetExtended(), *macKey);
+
     SuccessOrExit(error);
 
     if (neighbor->IsStateValid())

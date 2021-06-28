@@ -2513,9 +2513,9 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
-        const otPskc *pskc = otThreadGetPskc(mInstance);
-
-        OutputBytes(pskc->m8);
+        otPskc pskc;
+        IgnoreError(otThreadCopyPskc(mInstance, &pskc));
+        OutputBytes(pskc.mKeyMaterial.key);
         OutputLine("");
     }
     else
@@ -2524,7 +2524,7 @@ otError Interpreter::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
 
         if (aArgsLength == 1)
         {
-            SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.m8));
+            SuccessOrExit(error = aArgs[0].ParseAsHexString(pskc.mKeyMaterial.key, sizeof(pskc.mKeyMaterial.key)));
         }
         else if (aArgs[0] == "-p")
         {
@@ -2967,14 +2967,18 @@ otError Interpreter::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
-        OutputBytes(otThreadGetNetworkKey(mInstance)->m8);
+        otNetworkKey networkKey;
+
+        IgnoreError(otThreadCopyNetworkKey(mInstance, &networkKey));
+
+        OutputBytes(networkKey.mKeyMaterial.key);
         OutputLine("");
     }
     else
     {
         otNetworkKey key;
 
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.m8));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(key.mKeyMaterial.key, sizeof(key.mKeyMaterial.key)));
         SuccessOrExit(error = otThreadSetNetworkKey(mInstance, &key));
     }
 

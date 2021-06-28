@@ -843,6 +843,11 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
+
+        IgnoreError(otPlatCryptoDestroyKey(mPrevKey.GetKeyRef()));
+        IgnoreError(otPlatCryptoDestroyKey(mCurrKey.GetKeyRef()));
+        IgnoreError(otPlatCryptoDestroyKey(mNextKey.GetKeyRef()));
+
         mKeyId   = aKeyId;
         mPrevKey = aPrevKey;
         mCurrKey = aCurrKey;

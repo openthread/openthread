@@ -38,6 +38,7 @@
 
 #include <openthread/link.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -457,7 +458,7 @@ public:
     void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
 
     /**
-     * This method returns a reference to the current MAC key.
+     * This method returns the current MAC key.
      *
      * @returns A reference to the current MAC key.
      *

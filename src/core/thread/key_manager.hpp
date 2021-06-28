@@ -40,6 +40,7 @@
 
 #include <openthread/dataset.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -133,9 +134,15 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>
+class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>, public Clearable<NetworkKey>
 {
 public:
+    /**
+     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
+     * a reference.
+     */
+    Mac::CryptoType mCryptoType;
+
 #if !OPENTHREAD_RADIO
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread Network Key.
@@ -144,8 +151,18 @@ public:
      * @retval kErrorFailed   Failed to generate random sequence.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
 #endif
+
+    /**
+     * This method copies the literal Thread Network Key into given buffer.
+     *
+     * @retval kErrorNone     Successfully copied the Thread Network Key.
+     * @retval kErrorFailed   Failed to copy Thread Network Key.
+     *
+     */
+    Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
+
 } OT_TOOL_PACKED_END;
 
 /**
@@ -156,6 +173,12 @@ OT_TOOL_PACKED_BEGIN
 class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
 {
 public:
+    /**
+     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
+     * a reference.
+     */
+    Mac::CryptoType mCryptoType;
+
 #if !OPENTHREAD_RADIO
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
@@ -163,9 +186,16 @@ public:
      * @retval kErrorNone  Successfully generated a random Thread PSKc.
      *
      */
-    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(mKeyMaterial.key, sizeof(mKeyMaterial.key)); }
 #endif
-
+    /**
+     * This method copies the literal PSKc into given buffer.
+     *
+     * @retval kErrorNone     Successfully copied the PSKc.
+     * @retval kErrorFailed   Failed to copy PSKc.
+     *
+     */
+    Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -182,6 +212,12 @@ typedef Mac::Key Kek;
 class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
+    enum
+    {
+        kNetworkKeyPsaItsOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
+        kPskcPsaItsOffset       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2
+    };
+
     /**
      * This constructor initializes the object.
      *
@@ -393,6 +429,14 @@ public:
     const Kek &GetKek(void) const { return mKek; }
 
     /**
+     * This method returns the KEK.
+     *
+     * @returns A pointer to the KEK.
+     *
+     */
+    Error GetKekLiteral(Kek &aKek);
+
+    /**
      * This method sets the KEK.
      *
      * @param[in]  aKek  A KEK.
@@ -478,6 +522,10 @@ public:
      */
     void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
 
+    otCryptoType GetCryptoType(void) { return mCryptoType; }
+
+    void SetCryptoType(otCryptoType aCryptoType) { mCryptoType = aCryptoType; }
+
 private:
     enum
     {
@@ -507,6 +555,10 @@ private:
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
+    Error       StoreNetworkKey(bool aOverWriteExisting);
+    Error       StorePskc(void);
+    Error       ImportKek(const uint8_t *aKey, uint8_t aKeyLen);
+    void        CheckAndDestroyStoredKey(otMacKeyRef aKeyRef);
 
     static const uint8_t kThreadString[];
 
@@ -542,6 +594,7 @@ private:
     Kek      mKek;
     uint32_t mKekFrameCounter;
 
+    otCryptoType   mCryptoType;
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
 };

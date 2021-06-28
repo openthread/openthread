@@ -42,6 +42,7 @@
 
 #include <openthread/crypto.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
@@ -147,7 +148,13 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    mbedtls_sha256_context mContext;
+    union Sha256Context
+    {
+        psa_hash_operation_t   mOperation;
+        mbedtls_sha256_context mContext;
+    };
+
+    Sha256Context mContext;
 };
 
 /**

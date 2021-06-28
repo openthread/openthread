@@ -38,6 +38,7 @@
 
 #include <openthread/platform/radio.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "mac/mac_frame.hpp"

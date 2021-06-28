@@ -61,7 +61,11 @@ extern "C" {
 OT_TOOL_PACKED_BEGIN
 struct otNetworkKey
 {
-    uint8_t m8[OT_NETWORK_KEY_SIZE]; ///< Byte values
+    union
+    {
+        uint8_t  key[OT_NETWORK_KEY_SIZE]; ///< Byte values
+        uint32_t keyRef;                   ///< Reference of the key.
+    } mKeyMaterial;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -118,7 +122,11 @@ typedef otIp6NetworkPrefix otMeshLocalPrefix;
 OT_TOOL_PACKED_BEGIN
 struct otPskc
 {
-    uint8_t m8[OT_PSKC_MAX_SIZE]; ///< Byte values
+    union
+    {
+        uint8_t  key[OT_PSKC_MAX_SIZE]; ///< Byte values
+        uint32_t keyRef;                ///< Reference of the key.
+    } mKeyMaterial;
 } OT_TOOL_PACKED_END;
 
 /**

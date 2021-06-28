@@ -42,14 +42,31 @@
 namespace ot {
 namespace Crypto {
 
+void AesCcm::SetKey(otCryptoKey *aKey)
+{
+    mEcb.SetKey(aKey);
+}
+
 void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
-    mEcb.SetKey(aKey, CHAR_BIT * aKeyLength);
+    otCryptoKey aCryptoKey;
+
+    aCryptoKey.mKey       = aKey;
+    aCryptoKey.mKeyLength = aKeyLength;
+    aCryptoKey.mKeyRef    = 0;
+
+    mEcb.SetKey(&aCryptoKey);
 }
 
 void AesCcm::SetKey(const Mac::Key &aMacKey)
 {
-    SetKey(aMacKey.GetKey(), Mac::Key::kSize);
+    otCryptoKey aCryptoKey;
+
+    aCryptoKey.mKey       = aMacKey.GetKey();
+    aCryptoKey.mKeyLength = Mac::Key::kSize;
+    aCryptoKey.mKeyRef    = aMacKey.GetKeyRef();
+
+    SetKey(&aCryptoKey);
 }
 
 void AesCcm::Init(uint32_t    aHeaderLength,

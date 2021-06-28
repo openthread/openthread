@@ -200,6 +200,34 @@ struct otMacKey
 typedef struct otMacKey otMacKey;
 
 /**
+ * This enum represents a MAC Key Ref used by PSA.
+ *
+ */
+typedef uint32_t otMacKeyRef;
+
+/**
+ * @struct otMacKeyMaterial
+ *
+ * This structure represents a MAC Key.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+struct otMacKeyMaterial
+{
+    union
+    {
+        otMacKeyRef mKeyRef; ///< Reference to the key stored.
+        otMacKey    mKey;    ///< Key stored as literal.
+    } mKeyMaterial;
+} OT_TOOL_PACKED_END;
+
+/**
+ * This structure represents a MAC Key reference.
+ *
+ */
+typedef struct otMacKeyMaterial otMacKeyMaterial;
+
+/**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
@@ -231,12 +259,12 @@ typedef struct otRadioFrame
          */
         struct
         {
-            const otMacKey *mAesKey;          ///< The key used for AES-CCM frame security.
-            otRadioIeInfo * mIeInfo;          ///< The pointer to the Header IE(s) related information.
-            uint32_t        mTxDelay;         ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
-            uint32_t        mTxDelayBaseTime; ///< The base time for the transmission delay.
-            uint8_t         mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
-            uint8_t         mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
+            const otMacKeyMaterial *mAesKey;  ///< The key material used for AES-CCM frame security.
+            otRadioIeInfo *         mIeInfo;  ///< The pointer to the Header IE(s) related information.
+            uint32_t                mTxDelay; ///< The delay time for this transmission (based on `mTxDelayBaseTime`).
+            uint32_t                mTxDelayBaseTime; ///< The base time for the transmission delay.
+            uint8_t mMaxCsmaBackoffs; ///< Maximum number of backoffs attempts before declaring CCA failure.
+            uint8_t mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
              * Indicates whether the frame is a retransmission or not.
@@ -557,12 +585,12 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * @param[in]   aNextKey     A pointer to the next MAC key.
  *
  */
-void otPlatRadioSetMacKey(otInstance *    aInstance,
-                          uint8_t         aKeyIdMode,
-                          uint8_t         aKeyId,
-                          const otMacKey *aPrevKey,
-                          const otMacKey *aCurrKey,
-                          const otMacKey *aNextKey);
+void otPlatRadioSetMacKey(otInstance *            aInstance,
+                          uint8_t                 aKeyIdMode,
+                          uint8_t                 aKeyId,
+                          const otMacKeyMaterial *aPrevKey,
+                          const otMacKeyMaterial *aCurrKey,
+                          const otMacKeyMaterial *aNextKey);
 
 /**
  * This method sets the current MAC frame counter value.

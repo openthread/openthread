@@ -565,6 +565,18 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
 const otPskc *otThreadGetPskc(otInstance *aInstance);
 
 /**
+ * Copy the Thread PSKc into passed buffer
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aPskc       A pointer to pskc buffer.
+ *
+ * @retval OT_ERROR_NONE    Successfully copied the Thread PSKc.
+ * @retval OT_ERROR_FAILED  Copying the Pskc failed.
+ *
+ */
+otError otThreadCopyPskc(otInstance *aInstance, otPskc *aPskc);
+
+/**
  * Set the Thread PSKc
  *
  * This function will only succeed when Thread protocols are disabled.  A successful

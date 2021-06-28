@@ -92,7 +92,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsNetworkKeyPresent)
     {
         mInterpreter.OutputFormat("Network Key: ");
-        mInterpreter.OutputBytes(aDataset.mNetworkKey.m8);
+        mInterpreter.OutputBytes(aDataset.mNetworkKey.mKeyMaterial.key);
         mInterpreter.OutputLine("");
     }
 
@@ -110,7 +110,7 @@ otError Dataset::Print(otOperationalDataset &aDataset)
     if (aDataset.mComponents.mIsPskcPresent)
     {
         mInterpreter.OutputFormat("PSKc: ");
-        mInterpreter.OutputBytes(aDataset.mPskc.m8);
+        mInterpreter.OutputBytes(aDataset.mPskc.mKeyMaterial.key);
         mInterpreter.OutputLine("");
     }
 
@@ -418,13 +418,14 @@ otError Dataset::ProcessNetworkKey(uint8_t aArgsLength, Arg aArgs[])
     {
         if (sDataset.mComponents.mIsNetworkKeyPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mNetworkKey.m8);
+            mInterpreter.OutputBytes(sDataset.mNetworkKey.mKeyMaterial.key);
             mInterpreter.OutputLine("");
         }
     }
     else
     {
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mNetworkKey.m8));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mNetworkKey.mKeyMaterial.key,
+                                                        sizeof(sDataset.mNetworkKey.mKeyMaterial.key)));
         sDataset.mComponents.mIsNetworkKeyPresent = true;
     }
 
@@ -524,7 +525,8 @@ otError Dataset::ProcessMgmtSetCommand(uint8_t aArgsLength, Arg aArgs[])
         {
             VerifyOrExit(++index < aArgsLength, error = OT_ERROR_INVALID_ARGS);
             dataset.mComponents.mIsNetworkKeyPresent = true;
-            SuccessOrExit(error = aArgs[index].ParseAsHexString(dataset.mNetworkKey.m8));
+            SuccessOrExit(error = aArgs[index].ParseAsHexString(dataset.mNetworkKey.mKeyMaterial.key,
+                                                                sizeof(dataset.mNetworkKey.mKeyMaterial.key)));
         }
         else if (aArgs[index] == "networkname")
         {
@@ -711,15 +713,18 @@ otError Dataset::ProcessPskc(uint8_t aArgsLength, Arg aArgs[])
 
     if (aArgsLength == 0)
     {
+        // sDataset holds the key as a literal string, we dont
+        // need to export it from PSA ITS.
         if (sDataset.mComponents.mIsPskcPresent)
         {
-            mInterpreter.OutputBytes(sDataset.mPskc.m8);
+            mInterpreter.OutputBytes(sDataset.mPskc.mKeyMaterial.key);
             mInterpreter.OutputLine("");
         }
     }
     else if (aArgsLength == 1)
     {
-        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mPskc.m8));
+        SuccessOrExit(error = aArgs[0].ParseAsHexString(sDataset.mPskc.mKeyMaterial.key,
+                                                        sizeof(sDataset.mPskc.mKeyMaterial.key)));
     }
 #if OPENTHREAD_FTD
     else if (aArgsLength == 2 && (aArgs[0] == "-p"))
