@@ -1240,10 +1240,10 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
             };
 
             static const IpCounterName kCounterNames[] = {
-                {&otIpCounters::mTxSuccess, "IPv6 packets successfully transmitted"},
-                {&otIpCounters::mRxSuccess, "IPv6 packets successfully received"},
-                {&otIpCounters::mTxFailure, "IPv6 packets failed to transmit"},
-                {&otIpCounters::mRxFailure, "IPv6 packets failed to receive"},
+                {&otIpCounters::mTxSuccess, "TxSuccess"},
+                {&otIpCounters::mTxFailure, "TxFailed"},
+                {&otIpCounters::mRxSuccess, "RxSuccess"},
+                {&otIpCounters::mRxFailure, "RxFailed"},
             };
 
             const otIpCounters *ipCounters = otThreadGetIp6Counters(mInstance);
