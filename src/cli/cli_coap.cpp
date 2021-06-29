@@ -145,18 +145,16 @@ void Coap::PrintPayload(otMessage *aMessage) const
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-otError Coap::ProcessCancel(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessCancel(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     return CancelResourceSubscription();
 }
 #endif
 
-otError Coap::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessHelp(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     for (const Command &command : sCommands)
@@ -167,11 +165,11 @@ otError Coap::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
     return OT_ERROR_NONE;
 }
 
-otError Coap::ProcessResource(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessResource(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
 
-    if (aArgsLength > 0)
+    if (!aArgs[0].IsEmpty())
     {
         VerifyOrExit(aArgs[0].GetLength() < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
 
@@ -183,7 +181,7 @@ otError Coap::ProcessResource(uint8_t aArgsLength, Arg aArgs[])
         mResource.mReceiveHook  = &Coap::BlockwiseReceiveHook;
         mResource.mTransmitHook = &Coap::BlockwiseTransmitHook;
 
-        if (aArgsLength > 1)
+        if (!aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[1].ParseAsUint32(mBlockCount));
         }
@@ -206,7 +204,7 @@ exit:
     return error;
 }
 
-otError Coap::ProcessSet(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessSet(Arg aArgs[])
 {
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
     otMessage *   notificationMessage = nullptr;
@@ -214,7 +212,7 @@ otError Coap::ProcessSet(uint8_t aArgsLength, Arg aArgs[])
 #endif
     otError error = OT_ERROR_NONE;
 
-    if (aArgsLength > 0)
+    if (!aArgs[0].IsEmpty())
     {
         VerifyOrExit(aArgs[0].GetLength() < sizeof(mResourceContent), error = OT_ERROR_INVALID_ARGS);
         strncpy(mResourceContent, aArgs[0].GetCString(), sizeof(mResourceContent));
@@ -268,17 +266,15 @@ exit:
     return error;
 }
 
-otError Coap::ProcessStart(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessStart(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     return otCoapStart(mInterpreter.mInstance, OT_DEFAULT_COAP_PORT);
 }
 
-otError Coap::ProcessStop(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessStop(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
@@ -290,13 +286,11 @@ otError Coap::ProcessStop(uint8_t aArgsLength, Arg aArgs[])
     return otCoapStop(mInterpreter.mInstance);
 }
 
-otError Coap::ProcessParameters(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessParameters(Arg aArgs[])
 {
     otError             error = OT_ERROR_NONE;
     bool *              defaultTxParameters;
     otCoapTxParameters *txParameters;
-
-    VerifyOrExit(aArgsLength > 0, error = OT_ERROR_INVALID_ARGS);
 
     if (aArgs[0] == "request")
     {
@@ -313,7 +307,7 @@ otError Coap::ProcessParameters(uint8_t aArgsLength, Arg aArgs[])
         ExitNow(error = OT_ERROR_INVALID_ARGS);
     }
 
-    if (aArgsLength > 1)
+    if (!aArgs[1].IsEmpty())
     {
         if (aArgs[1] == "default")
         {
@@ -321,8 +315,6 @@ otError Coap::ProcessParameters(uint8_t aArgsLength, Arg aArgs[])
         }
         else
         {
-            VerifyOrExit(aArgsLength >= 5, error = OT_ERROR_INVALID_ARGS);
-
             SuccessOrExit(error = aArgs[1].ParseAsUint32(txParameters->mAckTimeout));
             SuccessOrExit(error = aArgs[2].ParseAsUint8(txParameters->mAckRandomFactorNumerator));
             SuccessOrExit(error = aArgs[3].ParseAsUint8(txParameters->mAckRandomFactorDenominator));
@@ -352,37 +344,37 @@ exit:
     return error;
 }
 
-otError Coap::ProcessGet(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessGet(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_GET);
+    return ProcessRequest(aArgs, OT_COAP_CODE_GET);
 }
 
-otError Coap::ProcessPost(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessPost(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_POST);
+    return ProcessRequest(aArgs, OT_COAP_CODE_POST);
 }
 
-otError Coap::ProcessPut(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessPut(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_PUT);
+    return ProcessRequest(aArgs, OT_COAP_CODE_PUT);
 }
 
-otError Coap::ProcessDelete(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessDelete(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_DELETE);
+    return ProcessRequest(aArgs, OT_COAP_CODE_DELETE);
 }
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-otError Coap::ProcessObserve(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::ProcessObserve(Arg aArgs[])
 {
-    return ProcessRequest(aArgsLength, aArgs, OT_COAP_CODE_GET, /* aCoapObserve */ true);
+    return ProcessRequest(aArgs, OT_COAP_CODE_GET, /* aCoapObserve */ true);
 }
 #endif
 
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
-otError Coap::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode, bool aCoapObserve)
+otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode, bool aCoapObserve)
 #else
-otError Coap::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapCode)
+otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
 #endif
 {
     otError       error   = OT_ERROR_NONE;
@@ -407,15 +399,14 @@ otError Coap::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapC
     }
 #endif
 
-    VerifyOrExit(aArgsLength > 1, error = OT_ERROR_INVALID_ARGS);
-
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(coapDestinationIp));
 
+    VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
     VerifyOrExit(aArgs[1].GetLength() < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
     strncpy(coapUri, aArgs[1].GetCString(), sizeof(coapUri) - 1);
 
     // CoAP-Type
-    if (aArgsLength > 2)
+    if (!aArgs[2].IsEmpty())
     {
         if (aArgs[2] == "con")
         {
@@ -504,7 +495,7 @@ otError Coap::ProcessRequest(uint8_t aArgsLength, Arg aArgs[], otCoapCode aCoapC
     }
 #endif
 
-    if (aArgsLength > 3)
+    if (!aArgs[3].IsEmpty())
     {
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
         if (coapBlock)
@@ -585,17 +576,21 @@ exit:
     return error;
 }
 
-otError Coap::Process(uint8_t aArgsLength, Arg aArgs[])
+otError Coap::Process(Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_ARGS;
     const Command *command;
 
-    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
+    if (aArgs[0].IsEmpty())
+    {
+        IgnoreError(ProcessHelp(aArgs));
+        ExitNow();
+    }
 
     command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr, error = OT_ERROR_INVALID_COMMAND);
 
-    error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
+    error = (this->*command->mHandler)(aArgs + 1);
 
 exit:
     return error;

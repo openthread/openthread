@@ -180,10 +180,7 @@ otError ParseAsBool(const char *aString, bool &aBool);
  * @retval kErrorInvalidArgs  The string does not contain valid IPv6 address.
  *
  */
-inline otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
-{
-    return otIp6AddressFromString(aString, &aAddress);
-}
+otError ParseAsIp6Address(const char *aString, otIp6Address &aAddress);
 
 /**
  * This function parses a string as an IPv6 prefix.
@@ -295,17 +292,32 @@ class Arg
 {
 public:
     /**
-     * This method returns the length (number of characters) in the argument C string.
-     *
-     * @returns The argument string length.
+     * This method clears the argument.
      *
      */
-    uint16_t GetLength(void) const { return static_cast<uint16_t>(strlen(mString)); }
+    void Clear(void) { mString = nullptr; }
+
+    /**
+     * This method indicates whether or not the argument is empty (i.e., reached the end of argument list).
+     *
+     * @retval TRUE   The argument is empty.
+     * @retval FALSE  The argument is not empty.
+     *
+     */
+    bool IsEmpty(void) const { return (mString == nullptr); }
+
+    /**
+     * This method returns the length (number of characters) in the argument C string.
+     *
+     * @returns The argument string length if argument is not empty, zero otherwise.
+     *
+     */
+    uint16_t GetLength(void) const;
 
     /**
      * This method gets the argument as a C string.
      *
-     * @returns A pointer to the argument as a C string.
+     * @returns A pointer to the argument as a C string, or `nullptr` if argument is empty.
      *
      */
     const char *GetCString(void) const { return mString; }
@@ -313,7 +325,7 @@ public:
     /**
      * This method gets the argument as C string.
      *
-     * @returns A pointer to the argument as a C string.
+     * @returns A pointer to the argument as a C string, or `nullptr` if argument is empty.
      *
      */
     char *GetCString(void) { return mString; }
@@ -329,21 +341,24 @@ public:
     /**
      * This method overload the operator `==` to evaluate whether the argument is equal to a given C string.
      *
-     * @param[in] aString    The C string to compare with.
+     * If the argument is empty (`IsEmpty()` is `true`) then comparing it using operator `==` with any C string will
+     * return false.
      *
-     * @retval TRUE   If the argument is equal to @p aString.
-     * @retval FALSE  If the argument is not equal to @p aString.
+     * @param[in] aString    The C string to compare with (MUST not be `nullptr`).
+     *
+     * @retval TRUE   If the argument is not empty and is equal to @p aString.
+     * @retval FALSE  If the argument is not equal to @p aString, or if the argument is empty.
      *
      */
-    bool operator==(const char *aString) const { return (strcmp(mString, aString) == 0); }
+    bool operator==(const char *aString) const;
 
     /**
      * This method overload the operator `!=` to evaluate whether the argument is unequal to a given C string.
      *
-     * @param[in] aString    The C string to compare with.
+     * @param[in] aString    The C string to compare with (MUST not be `nullptr`).
      *
-     * @retval TRUE   If the argument is not equal to @p aString.
-     * @retval FALSE  If the argument is equal to @p aString.
+     * @retval TRUE   If the argument is not equal to @p aString, or if the argument is empty.
+     * @retval FALSE  If the argument is not empty and equal to @p aString.
      *
      */
     bool operator!=(const char *aString) const { return !(*this == aString); }
@@ -356,7 +371,7 @@ public:
      * @param[out] aUint8    A reference to an `uint8_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsUint8(uint8_t &aUint8) const { return CmdLineParser::ParseAsUint8(mString, aUint8); }
@@ -369,7 +384,7 @@ public:
      * @param[out] aUint16   A reference to an `uint16_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsUint16(uint16_t &aUint16) const { return CmdLineParser::ParseAsUint16(mString, aUint16); }
@@ -382,7 +397,7 @@ public:
      * @param[out] aUint32   A reference to an `uint32_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsUint32(uint32_t &aUint32) const { return CmdLineParser::ParseAsUint32(mString, aUint32); }
@@ -395,7 +410,7 @@ public:
      * @param[out] aUint64   A reference to an `uint64_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsUint64(uint64_t &aUint64) const { return CmdLineParser::ParseAsUint64(mString, aUint64); }
@@ -409,7 +424,7 @@ public:
      * @param[out] aInt8     A reference to an `int8_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsInt8(int8_t &aInt8) const { return CmdLineParser::ParseAsInt8(mString, aInt8); }
@@ -423,7 +438,7 @@ public:
      * @param[out] aInt16    A reference to an `int16_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsInt16(int16_t &aInt16) const { return CmdLineParser::ParseAsInt16(mString, aInt16); }
@@ -437,7 +452,7 @@ public:
      * @param[out] aInt32    A reference to an `int32_t` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number (e.g., value out of range).
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number (e.g., value out of range).
      *
      */
     otError ParseAsInt32(int32_t &aInt32) const { return CmdLineParser::ParseAsInt32(mString, aInt32); }
@@ -450,7 +465,7 @@ public:
      * @param[out] aBool     A reference to a `bool` variable to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid number.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid number.
      *
      */
     otError ParseAsBool(bool &aBool) const { return CmdLineParser::ParseAsBool(mString, aBool); }
@@ -462,7 +477,7 @@ public:
      * @param[out] aAddress  A reference to an `otIp6Address` to output the parsed IPv6 address.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid IPv6 address.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid IPv6 address.
      *
      */
     otError ParseAsIp6Address(otIp6Address &aAddress) const
@@ -478,7 +493,7 @@ public:
      * @param[out] aPrefix   A reference to an `otIp6Prefix` to output the parsed IPv6 prefix.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain a valid IPv6 prefix.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain a valid IPv6 prefix.
      *
      */
     otError ParseAsIp6Prefix(otIp6Prefix &aPrefix) const { return CmdLineParser::ParseAsIp6Prefix(mString, aPrefix); }
@@ -493,7 +508,7 @@ public:
      * @param[out] aValue         A reference to output the parsed value.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain a valid value.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain a valid value.
      *
      */
     template <typename Type> otError ParseAs(Type &aValue) const;
@@ -509,7 +524,7 @@ public:
      * @param[in]  aSize     The expected size of byte sequence (number of bytes after parsing).
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid hex bytes and/or not @p aSize bytes.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid hex bytes and/or not @p aSize bytes.
      *
      */
     otError ParseAsHexString(uint8_t *aBuffer, uint16_t aSize) const
@@ -529,7 +544,7 @@ public:
      * @param[out] aBuffer   A reference to a byte array to output the parsed byte sequence.
      *
      * @retval kErrorNone         The argument was parsed successfully.
-     * @retval kErrorInvalidArgs  The argument does not contain valid hex bytes and/or not @p aSize bytes.
+     * @retval kErrorInvalidArgs  The argument is empty or does not contain valid hex bytes and/or not @p aSize bytes.
      *
      */
     template <uint16_t kBufferSize> otError ParseAsHexString(uint8_t (&aBuffer)[kBufferSize])
@@ -561,13 +576,22 @@ public:
      * @note this method only copies the string pointer value (i.e., `GetString()` pointer) from `aArgs` array to the
      * @p aStrings array (the content of strings are not copied).
      *
-     * @param[in] aArgs         A pointer to an `Arg` array.
-     * @param[in] aArgsLength   Number of entries in the @p aArgs array.
+     * @param[in]  aArgs        An `Arg` array.
      * @param[out] aStrings     An `char *` array to populate with the argument string pointers. The @p aString array
-     *                          MUST contain at least @p aArgsLength entries.
+     *                          MUST contain at least same number of entries as in @p aArgs array.
      *
      */
-    static void CopyArgsToStringArray(Arg aArgs[], uint8_t aArgsLength, char *aStrings[]);
+    static void CopyArgsToStringArray(Arg aArgs[], char *aStrings[]);
+
+    /**
+     * This static method returns the length of argument array, i.e. number of consecutive non-empty arguments.
+     *
+     * @param[in] aArgs  An `Arg` array.
+     *
+     * @returns  Number of non-empty arguments in the array.
+     *
+     */
+    static uint8_t GetArgsLength(Arg aArgs[]);
 
 private:
     char *mString;
@@ -576,17 +600,31 @@ private:
 /**
  * This function parses a given command line string and breaks it into an argument list.
  *
- * Note: this method may change the input @p aCommandString, it will put a '\0' by the end of each argument,
- *       and @p aArgs will point to the arguments in the input @p aCommandString. Backslash ('\') can be used
- *       to escape separators (' ', '\t', '\r', '\n') and the backslash itself.
+ * This function may change the input @p aCommandString, it will put a '\0' by the end of each argument, and @p aArgs
+ * will point to the arguments in the input @p aCommandString. Backslash ('\') can be used to escape separators
+ * (' ', '\t', '\r', '\n') and the backslash itself.
+ *
+ * As the arguments are parsed, the @p aArgs array entries are populated. Any remaining @p aArgs entries in the array
+ * will be cleared and marked as empty. So the number of arguments can be determined by going through @p aArgs array
+ * entries till we get to an empty `Arg` (i.e., `Arg::IsEmpty()` returns `true).
+ *
+ * This function ensures that the last entry in @p aArgs array is always used to indicate the end (always  marked as
+ * empty), so the @p aArgs array should have one more entry than the desired max number of arguments.
  *
  * @param[in]   aCommandString  A null-terminated input string.
- * @param[out]  aArgsLength     The argument counter of the command line.
- * @param[out]  aArgs           The argument vector of the command line.
- * @param[in]   aArgsLengthMax  The maximum argument counter.
+ * @param[out]  aArgs           The argument array.
+ * @param[in]   aArgsMaxLength  The max length of @p aArgs array.
+ *
+ * @retval OT_ERROR_NONE          The command line parsed successfully and @p aArgs array is populated.
+ * @retval OT_ERROR_INVALID_ARGS  Too many arguments in @p aCommandString and could not fit in @p aArgs array.
  *
  */
-otError ParseCmd(char *aCommandString, uint8_t &aArgsLength, Arg aArgs[], uint8_t aArgsLengthMax);
+otError ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength);
+
+template <uint8_t kLength> inline otError ParseCmd(char *aCommandString, Arg (&aArgs)[kLength])
+{
+    return ParseCmd(aCommandString, aArgs, kLength);
+}
 
 //- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 // Specializations of `Arg::ParseAs<Type>()` method.
