@@ -380,11 +380,15 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 /**
  * Get the thrNetworkKey.
  *
+ * This function will return an union of key reference and literal key. These feilds
+ * will be populated based on the Crypto module being used. For PSA Crypto, a reference
+ * to the thrNetworkKey is returned and not the literal key.
+ *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
  * @returns A pointer to a buffer containing the thrNetworkKey.
  *
- * @sa otThreadSetNetworkKey
+ * @sa otThreadSetNetworkKey otThreadCopyNetworkKey
  *
  */
 const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
@@ -392,12 +396,16 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
 /**
  * Copy the thrNetworkKey into passed buffer
  *
+ * This function copies the thrNetworkKey as a literal into the output buffer and works
+ * irrespective of the Crypto module used.
+ *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aNetworkKey A pointer to thrNetworkKey buffer.
  *
  * @retval OT_ERROR_NONE    Successfully copied the thrNetworkKey.
  * @retval OT_ERROR_FAILED  Copying the thrNetworkKey failed.
  *
+ * @sa otThreadSetNetworkKey otThreadCopyNetworkKey
  */
 otError otThreadCopyNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey);
 
@@ -408,6 +416,8 @@ otError otThreadCopyNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey)
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
+ * The function expects the user to pass the thrNetworkKey as a hex literal.
+ *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKey        A pointer to a buffer containing the thrNetworkKey.
  *
@@ -415,7 +425,7 @@ otError otThreadCopyNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey)
  * @retval OT_ERROR_INVALID_ARGS    If aKeyLength is larger than 16.
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
  *
- * @sa otThreadGetNetworkKey
+ * @sa otThreadGetNetworkKey otThreadCopyNetworkKey
  *
  */
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);

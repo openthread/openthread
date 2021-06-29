@@ -555,11 +555,14 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
 /**
  * Get the Thread PSKc
  *
+ * This function will return an union of key reference and literal key. These feilds will be populated based on the
+ * Crypto module being used. For PSA Crypto, a reference to the PSKc is returned and not the literal key.
+ *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
  * @returns A pointer to Thread PSKc
  *
- * @sa otThreadSetPskc
+ * @sa otThreadSetPskc otThreadCopyPskc
  *
  */
 const otPskc *otThreadGetPskc(otInstance *aInstance);
@@ -567,12 +570,15 @@ const otPskc *otThreadGetPskc(otInstance *aInstance);
 /**
  * Copy the Thread PSKc into passed buffer
  *
+ * This function copies the PSKc as a literal into the output buffer and works irrespective of the Crypto module used.
+ *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aPskc       A pointer to pskc buffer.
  *
  * @retval OT_ERROR_NONE    Successfully copied the Thread PSKc.
  * @retval OT_ERROR_FAILED  Copying the Pskc failed.
  *
+ * @sa otThreadSetPskc otThreadCopyPskc
  */
 otError otThreadCopyPskc(otInstance *aInstance, otPskc *aPskc);
 
@@ -582,6 +588,8 @@ otError otThreadCopyPskc(otInstance *aInstance, otPskc *aPskc);
  * This function will only succeed when Thread protocols are disabled.  A successful
  * call to this function will also invalidate the Active and Pending Operational Datasets in
  * non-volatile memory.
+ *
+ * The function expects the user to pass the PSKc as a hex literal.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aPskc       A pointer to the new Thread PSKc.

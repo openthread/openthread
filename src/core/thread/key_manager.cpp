@@ -356,12 +356,25 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
 {
     Crypto::HkdfSha256 hkdf;
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
+    otCryptoKey        aKeyMaterial;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_PSA)
+    {
+        aKeyMaterial.mKey    = nullptr;
+        aKeyMaterial.mKeyRef = mNetworkKey.mKeyMaterial.keyRef;
+    }
+    else
+    {
+        aKeyMaterial.mKey       = mNetworkKey.mKeyMaterial.key;
+        aKeyMaterial.mKeyLength = sizeof(mNetworkKey.mKeyMaterial.key);
+        aKeyMaterial.mKeyRef    = 0;
+    }
 
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), mNetworkKey.mKeyMaterial.key, sizeof(mNetworkKey.mKeyMaterial.key));
-    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.m8, sizeof(Mac::Key));
+    hkdf.Extract(salt, sizeof(salt), &aKeyMaterial);
+    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.mKeyMaterial.mKey.m8, sizeof(Mac::Key));
 }
 #endif
 
@@ -432,14 +445,25 @@ void KeyManager::UpdateKeyMaterial(void)
         next.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
     }
 
-    OT_UNUSED_VARIABLE(error);
     Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
                                  cur.mKeys.mMacKey, next.mKeys.mMacKey);
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     ComputeTrelKey(mKeySequence, mTrelKey);
+
+    aKeyRef = 0;
+    error   = otPlatCryptoImportKey(&aKeyRef, PSA_KEY_TYPE_AES, PSA_ALG_ECB_NO_PADDING,
+                                  (PSA_KEY_USAGE_ENCRYPT | PSA_KEY_USAGE_DECRYPT), PSA_KEY_LIFETIME_VOLATILE,
+                                  mTrelKey.GetKey(), mTrelKey.kSize);
+
+    mTrelKey.Clear();
+    mTrelKey.mKeyMaterial.mKeyRef = aKeyRef;
+
+    OT_ASSERT(error == kErrorNone);
 #endif
+
+    OT_UNUSED_VARIABLE(error);
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
