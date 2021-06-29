@@ -772,6 +772,7 @@ Get the supported counter names.
 > counters
 mac
 mle
+ip
 Done
 ```
 
@@ -824,6 +825,12 @@ Partition Id Changes: 1
 Better Partition Attach Attempts: 0
 Parent Changes: 0
 Done
+> counters ip
+IPv6 packets successfully transmitted: 15
+IPv6 packets successfully received: 10
+IPv6 packets failed to transmit: 1
+IPv6 packets failed to receive: 0
+Done
 ```
 
 ### counters \<countername\> reset
@@ -834,6 +841,8 @@ Reset the counter value.
 > counters mac reset
 Done
 > counters mle reset
+Done
+> counters ip reset
 Done
 ```
 
