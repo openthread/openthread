@@ -87,7 +87,6 @@ Mac::Mac(Instance &aInstance)
 #endif
 #endif
     , mPendingTransmitPoll(false)
-    , mPendingTransmitOobFrame(false)
     , mPendingWaitingForData(false)
     , mShouldTxPollBeforeData(false)
     , mRxOnWhenIdle(false)
@@ -120,7 +119,6 @@ Mac::Mac(Instance &aInstance)
     , mLinks(aInstance)
     , mOperationTask(aInstance, Mac::HandleOperationTask)
     , mTimer(aInstance, Mac::HandleTimer)
-    , mOobFrame(nullptr)
     , mKeyIdMode2FrameCounter(0)
     , mCcaSampleCount(0)
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -216,7 +214,6 @@ bool Mac::IsInTransmitState(void) const
 #endif
     case kOperationTransmitBeacon:
     case kOperationTransmitPoll:
-    case kOperationTransmitOutOfBandFrame:
         retval = true;
         break;
 
@@ -571,22 +568,6 @@ exit:
 #endif
 #endif // OPENTHREAD_FTD
 
-Error Mac::RequestOutOfBandFrameTransmission(otRadioFrame *aOobFrame)
-{
-    Error error = kErrorNone;
-
-    VerifyOrExit(aOobFrame != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
-    VerifyOrExit(!mPendingTransmitOobFrame && (mOperation != kOperationTransmitOutOfBandFrame), error = kErrorAlready);
-
-    mOobFrame = static_cast<TxFrame *>(aOobFrame);
-
-    StartOperation(kOperationTransmitOutOfBandFrame);
-
-exit:
-    return error;
-}
-
 Error Mac::RequestDataPollTransmission(void)
 {
     Error error = kErrorNone;
@@ -715,10 +696,6 @@ void Mac::StartOperation(Operation aOperation)
     case kOperationWaitingForData:
         mPendingWaitingForData = true;
         break;
-
-    case kOperationTransmitOutOfBandFrame:
-        mPendingTransmitOobFrame = true;
-        break;
     }
 
     if (mOperation == kOperationIdle)
@@ -739,7 +716,6 @@ void Mac::PerformNextOperation(void)
     if (!IsEnabled())
     {
         mPendingWaitingForData     = false;
-        mPendingTransmitOobFrame   = false;
         mPendingActiveScan         = false;
         mPendingEnergyScan         = false;
         mPendingTransmitBeacon     = false;
@@ -774,11 +750,6 @@ void Mac::PerformNextOperation(void)
         mOperation              = kOperationTransmitDataCsl;
     }
 #endif
-    else if (mPendingTransmitOobFrame)
-    {
-        mPendingTransmitOobFrame = false;
-        mOperation               = kOperationTransmitOutOfBandFrame;
-    }
     else if (mPendingActiveScan)
     {
         mPendingActiveScan = false;
@@ -849,7 +820,6 @@ void Mac::PerformNextOperation(void)
 #endif
 #endif
     case kOperationTransmitPoll:
-    case kOperationTransmitOutOfBandFrame:
         BeginTransmit();
         break;
 
@@ -1140,12 +1110,6 @@ void Mac::BeginTransmit(void)
 
 #endif
 #endif // OPENTHREAD_FTD
-
-    case kOperationTransmitOutOfBandFrame:
-        frame = &txFrames.GetBroadcastTxFrame();
-        frame->CopyFrom(*mOobFrame);
-        frame->SetIsSecurityProcessed(true);
-        break;
 
     default:
         OT_ASSERT(false);
@@ -1582,13 +1546,6 @@ void Mac::HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError)
         PerformNextOperation();
         break;
 #endif
-
-    case kOperationTransmitOutOfBandFrame:
-        // count Oob frames
-        mCounters.mTxOther++;
-        FinishOperation();
-        PerformNextOperation();
-        break;
 
     default:
         OT_ASSERT(false);
@@ -2293,11 +2250,10 @@ const char *Mac::OperationToString(Operation aOperation)
         "TransmitDataDirect", // (4) kOperationTransmitDataDirect
         "TransmitPoll",       // (5) kOperationTransmitPoll
         "WaitingForData",     // (6) kOperationWaitingForData
-        "TransmitOobFrame",   // (7) kOperationTransmitOutOfBandFrame
 #if OPENTHREAD_FTD
-        "TransmitDataIndirect", // (8) kOperationTransmitDataIndirect
+        "TransmitDataIndirect", // (7) kOperationTransmitDataIndirect
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        "TransmitDataCsl", // (9) kOperationTransmitDataCsl
+        "TransmitDataCsl", // (8) kOperationTransmitDataCsl
 #endif
 #endif
     };
@@ -2309,11 +2265,10 @@ const char *Mac::OperationToString(Operation aOperation)
     static_assert(kOperationTransmitDataDirect == 4, "kOperationTransmitDataDirect value is incorrect");
     static_assert(kOperationTransmitPoll == 5, "kOperationTransmitPoll value is incorrect");
     static_assert(kOperationWaitingForData == 6, "kOperationWaitingForData value is incorrect");
-    static_assert(kOperationTransmitOutOfBandFrame == 7, "kOperationTransmitOutOfBandFrame value is incorrect");
 #if OPENTHREAD_FTD
-    static_assert(kOperationTransmitDataIndirect == 8, "kOperationTransmitDataIndirect value is incorrect");
+    static_assert(kOperationTransmitDataIndirect == 7, "kOperationTransmitDataIndirect value is incorrect");
 #if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-    static_assert(kOperationTransmitDataCsl == 9, "TransmitDataCsl value is incorrect");
+    static_assert(kOperationTransmitDataCsl == 8, "TransmitDataCsl value is incorrect");
 #endif
 #endif
 
