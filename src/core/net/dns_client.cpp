@@ -441,21 +441,15 @@ Error Client::BrowseResponse::FindPtrRecord(const char *aInstanceLabel, Name &aI
         SuccessOrExit(error);
 
         // It is a PTR record. Check the first label to match the
-        // instance label and the rest of the name to match the service
-        // name from `mQuery`.
+        // instance label.
 
         labelOffset = offset;
         error       = Name::CompareLabel(*mMessage, labelOffset, aInstanceLabel);
 
         if (error == kErrorNone)
         {
-            error = Name::CompareName(*mMessage, labelOffset, serviceName);
-
-            if (error == kErrorNone)
-            {
-                aInstanceName.SetFromMessage(*mMessage, offset);
-                ExitNow();
-            }
+            aInstanceName.SetFromMessage(*mMessage, offset);
+            ExitNow();
         }
 
         VerifyOrExit(error == kErrorNotFound);
