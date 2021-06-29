@@ -502,11 +502,13 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
+    otCryptoType aKeyType;
 
     // PSA is not supported for NCP and RCP builds.
-    VerifyOrExit(otPlatCryptoGetType() != OT_CRYPTO_TYPE_PSA, error = OT_ERROR_NOT_FOUND);
-    SuccessOrExit(error = mEncoder.WriteData(otThreadGetPskc(mInstance)->mKeyMaterial.key, sizeof(spinel_net_pskc_t)));
+    VerifyOrExit(otPlatCryptoGetType() == OT_CRYPTO_TYPE_USE_KEY_REFS, error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(
+        error = mEncoder.WriteData(otThreadGetPskc(mInstance, &aKeyType)->mKeyMaterial.key, sizeof(spinel_net_pskc_t)));
 
 exit:
     return error;

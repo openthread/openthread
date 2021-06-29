@@ -38,6 +38,7 @@
 #include <openthread/dataset.h>
 #include <openthread/link.h>
 #include <openthread/message.h>
+#include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -385,13 +386,14 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
  * to the thrNetworkKey is returned and not the literal key.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aKeyType    A output pointer to store the key type
  *
  * @returns A pointer to a buffer containing the thrNetworkKey.
  *
  * @sa otThreadSetNetworkKey otThreadCopyNetworkKey
  *
  */
-const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
+const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance, otCryptoType *aKeyType);
 
 /**
  * Copy the thrNetworkKey into passed buffer
@@ -402,8 +404,9 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  * @param[out]  aNetworkKey A pointer to thrNetworkKey buffer.
  *
- * @retval OT_ERROR_NONE    Successfully copied the thrNetworkKey.
- * @retval OT_ERROR_FAILED  Copying the thrNetworkKey failed.
+ * @retval OT_ERROR_NONE            Successfully copied the thrNetworkKey.
+ * @retval OT_ERROR_NOT_SUPPORTED   Operation was not supported due to key export restrictions.
+ * @retval OT_ERROR_FAILED          Copying the thrNetworkKey failed.
  *
  * @sa otThreadSetNetworkKey otThreadCopyNetworkKey
  */

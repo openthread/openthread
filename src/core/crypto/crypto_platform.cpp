@@ -53,13 +53,13 @@ OT_TOOL_WEAK otError otPlatCryptoInit(void)
     return OT_ERROR_NONE;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
-                                           psa_key_type_t        aKeyType,
-                                           psa_algorithm_t       aKeyAlgorithm,
-                                           psa_key_usage_t       aKeyUsage,
-                                           psa_key_persistence_t aKeyPersistence,
-                                           const uint8_t *       aKey,
-                                           size_t                aKeyLen)
+OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
+                                           otCryptoKeyType      aKeyType,
+                                           otCryptoKeyAlgorithm aKeyAlgorithm,
+                                           int                  aKeyUsage,
+                                           otCryptoKeyStorage   aKeyPersistence,
+                                           const uint8_t *      aKey,
+                                           size_t               aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aKeyType);
@@ -72,7 +72,7 @@ OT_TOOL_WEAK otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
+OT_TOOL_WEAK otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aBuffer);
@@ -82,14 +82,14 @@ OT_TOOL_WEAK otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoDestroyKey(psa_key_id_t aKeyId)
+OT_TOOL_WEAK otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyId)
 {
     OT_UNUSED_VARIABLE(aKeyId);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(psa_key_id_t aKeyId, psa_key_attributes_t *aKeyAttributes)
+OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyId, otCryptoKeyAttributes *aKeyAttributes)
 {
     OT_UNUSED_VARIABLE(aKeyId);
     OT_UNUSED_VARIABLE(aKeyAttributes);
@@ -99,7 +99,7 @@ OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(psa_key_id_t aKeyId, psa_key_a
 
 OT_TOOL_WEAK otCryptoType otPlatCryptoGetType(void)
 {
-    return OT_CRYPTO_TYPE_MBEDTLS;
+    return OT_CRYPTO_TYPE_USE_LITERAL_KEYS;
 }
 
 // AES  Implementation

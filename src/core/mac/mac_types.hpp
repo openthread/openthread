@@ -418,8 +418,8 @@ private:
 
 typedef enum CryptoType
 {
-    kUseMbedTls = 0,
-    kUsePsa     = 1,
+    kUseKeyLiterals = 0,
+    kUseKeyRefs     = 1,
 } CryptoType;
 
 /**

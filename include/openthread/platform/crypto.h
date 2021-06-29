@@ -62,14 +62,75 @@ extern "C" {
  */
 
 /**
+ * This is the default definition of OT_PLAT_CRYPTO_KEY_ATTRIBUTES_TYPE.
+ *
+ */
+
+#ifndef OT_PLAT_CRYPTO_KEY_ATTRIBUTES_TYPE
+#define OT_PLAT_CRYPTO_KEY_ATTRIBUTES_TYPE uint8_t
+#endif
+
+typedef OT_PLAT_CRYPTO_KEY_ATTRIBUTES_TYPE otCryptoKeyAttributes;
+
+/**
  * This enumeration defines the crypto to use.
  *
  */
 typedef enum
 {
-    OT_CRYPTO_TYPE_MBEDTLS, ///< Use mbedTLS.
-    OT_CRYPTO_TYPE_PSA,     ///< Use ARM PSA.
+    OT_CRYPTO_TYPE_USE_LITERAL_KEYS = 0, ///< Use Literal Keys.
+    OT_CRYPTO_TYPE_USE_KEY_REFS     = 1, ///< Use Key References.
 } otCryptoType;
+
+/**
+ * This enumeration defines the key types.
+ *
+ */
+typedef enum
+{
+    OT_CRYPTO_KEY_TYPE_RAW,  ///< Key Type: Raw Data.
+    OT_CRYPTO_KEY_TYPE_AES,  ///< Key Type: AES.
+    OT_CRYPTO_KEY_TYPE_HMAC, ///< Key Type: HMAC.
+} otCryptoKeyType;
+
+/**
+ * This enumeration defines the key algorithms.
+ *
+ */
+typedef enum
+{
+    OT_CRYPTO_KEY_ALG_VENDOR,       ///< Key Algorithm: Vendor Defined.
+    OT_CRYPTO_KEY_ALG_AES_ECB,      ///< Key Algorithm: AES ECB.
+    OT_CRYPTO_KEY_ALG_HMAC_SHA_256, ///< Key Algorithm: HMAC SHA-256.
+} otCryptoKeyAlgorithm;
+
+/**
+ * This enumeration defines the key usage types.
+ *
+ */
+typedef enum
+{
+    OT_CRYPTO_KEY_USG_EXPORT    = 1, ///< Key Usage: Key can be exported.
+    OT_CRYPTO_KEY_USG_ENCRYPT   = 2, ///< Key Usage: Vendor Defined.
+    OT_CRYPTO_KEY_USG_DECRYPT   = 4, ///< Key Usage: AES ECB.
+    OT_CRYPTO_KEY_USG_SIGN_HASH = 8, ///< Key Usage: HMAC SHA-256.
+} otCryptoKeyUsage;
+
+/**
+ * This enumeration defines the key storage types.
+ *
+ */
+typedef enum
+{
+    OT_CRYPTO_KEY_STORAGE_VOLATILE,   ///< Key Persistence: Key is volatile.
+    OT_CRYPTO_KEY_STORAGE_PERSISTENT, ///< Key Persistence: Key is persistent.
+} otCryptoKeyStorage;
+
+/**
+ * This datatype represents the key reference.
+ *
+ */
+typedef uint32_t otCryptoKeyRef;
 
 /**
  * @struct otCryptoKey
@@ -118,13 +179,13 @@ otError otPlatCryptoInit(void);
  * @retval OT_ERROR_INVALID_ARGS  @p aInput or @p aOutput was set to NULL.
  *
  */
-otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
-                              psa_key_type_t        aKeyType,
-                              psa_algorithm_t       aKeyAlgorithm,
-                              psa_key_usage_t       aKeyUsage,
-                              psa_key_persistence_t aKeyPersistence,
-                              const uint8_t *       aKey,
-                              size_t                aKeyLen);
+otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
+                              otCryptoKeyType      aKeyType,
+                              otCryptoKeyAlgorithm aKeyAlgorithm,
+                              int                  aKeyUsage,
+                              otCryptoKeyStorage   aKeyPersistence,
+                              const uint8_t *      aKey,
+                              size_t               aKeyLen);
 
 /**
  * Export a key stored in PSA ITS.
@@ -139,7 +200,7 @@ otError otPlatCryptoImportKey(psa_key_id_t *        aKeyId,
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was NULL
  *
  */
-otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen);
+otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen);
 
 /**
  * Destroy a key stored in PSA ITS.
@@ -150,7 +211,7 @@ otError otPlatCryptoExportKey(psa_key_id_t aKeyId, uint8_t *aBuffer, size_t aBuf
  * @retval OT_ERROR_FAILED        Failed to encrypt @p aInput.
  *
  */
-otError otPlatCryptoDestroyKey(psa_key_id_t aKeyId);
+otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyId);
 
 /**
  * Get Attributes for a key stored in PSA ITS.
@@ -162,7 +223,7 @@ otError otPlatCryptoDestroyKey(psa_key_id_t aKeyId);
  * @retval OT_ERROR_FAILED        Failed to sign @p aHash.
  *
  */
-otError otPlatCryptoGetKeyAttributes(psa_key_id_t aKeyId, psa_key_attributes_t *aKeyAttributes);
+otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyId, otCryptoKeyAttributes *aKeyAttributes);
 
 /**
  * Get the Crypto type supported by the platform.

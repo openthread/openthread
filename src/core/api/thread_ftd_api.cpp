@@ -343,10 +343,10 @@ void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddr
 }
 #endif
 
-const otPskc *otThreadGetPskc(otInstance *aInstance)
+const otPskc *otThreadGetPskc(otInstance *aInstance, otCryptoType *aKeyType)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-
+    *aKeyType          = static_cast<otCryptoType>(instance.Get<KeyManager>().GetPskc().mCryptoType);
     return &instance.Get<KeyManager>().GetPskc();
 }
 

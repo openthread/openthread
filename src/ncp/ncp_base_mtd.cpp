@@ -662,11 +662,13 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError      error = OT_ERROR_NONE;
+    otCryptoType aKeyType;
 
     // PSA is not supported for NCP and RCP builds.
-    VerifyOrExit(otPlatCryptoGetType() != OT_CRYPTO_TYPE_PSA, error = OT_ERROR_NOT_FOUND);
-    SuccessOrExit(error = mEncoder.WriteData(otThreadGetNetworkKey(mInstance)->mKeyMaterial.key, OT_NETWORK_KEY_SIZE));
+    VerifyOrExit(otPlatCryptoGetType() == OT_CRYPTO_TYPE_USE_KEY_REFS, error = OT_ERROR_NOT_FOUND);
+    SuccessOrExit(
+        error = mEncoder.WriteData(otThreadGetNetworkKey(mInstance, &aKeyType)->mKeyMaterial.key, OT_NETWORK_KEY_SIZE));
 
 exit:
     return error;

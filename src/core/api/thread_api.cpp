@@ -112,10 +112,10 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
     return instance.Get<Mle::MleRouter>().SetDeviceMode(Mle::DeviceMode(aConfig));
 }
 
-const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
+const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance, otCryptoType *aKeyType)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
-
+    *aKeyType          = static_cast<otCryptoType>(instance.Get<KeyManager>().GetNetworkKey().mCryptoType);
     return &instance.Get<KeyManager>().GetNetworkKey();
 }
 

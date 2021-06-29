@@ -38,6 +38,7 @@
 #include <openthread/link.h>
 #include <openthread/message.h>
 #include <openthread/thread.h>
+#include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -559,13 +560,14 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
  * Crypto module being used. For PSA Crypto, a reference to the PSKc is returned and not the literal key.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
+ * @param[out]  aKeyType    A output pointer to store the key type
  *
  * @returns A pointer to Thread PSKc
  *
  * @sa otThreadSetPskc otThreadCopyPskc
  *
  */
-const otPskc *otThreadGetPskc(otInstance *aInstance);
+const otPskc *otThreadGetPskc(otInstance *aInstance, otCryptoType *aKeyType);
 
 /**
  * Copy the Thread PSKc into passed buffer
