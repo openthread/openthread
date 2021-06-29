@@ -1119,6 +1119,7 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
     {
         OutputLine("mac");
         OutputLine("mle");
+        OutputLine("ip");
     }
     else if (aArgs[0] == "mac")
     {
@@ -1222,6 +1223,39 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
         else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otThreadResetMleCounters(mInstance);
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+    }
+    else if(aArgs[0]=="ip")
+    {
+        if (aArgsLength == 1)
+        {
+            struct IpCounterName
+            {
+                const uint32_t otIpCounters::*mValuePtr;
+                const char *                   mName;
+            };
+
+            static const IpCounterName kCounterNames[] = {
+                {&otIpCounters::mTxSuccess, "IPv6 packets successfully transmitted"},
+                {&otIpCounters::mRxSuccess, "IPv6 packets successfully received"},
+                {&otIpCounters::mTxFailure, "IPv6 packets failed to transmit"},
+                {&otIpCounters::mRxFailure, "IPv6 packets failed to receive"},
+            };
+
+            const otIpCounters *ipCounters = otThreadGetIp6Counters(mInstance);
+
+            for (const IpCounterName &counter : kCounterNames)
+            {
+                OutputLine("%s: %d", counter.mName, ipCounters->*counter.mValuePtr);
+            }
+        }
+        else if ((aArgsLength == 2) && (aArgs[1] == "reset"))
+        {
+            otThreadResetIp6Counters(mInstance);
         }
         else
         {
