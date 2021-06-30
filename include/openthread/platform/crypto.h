@@ -37,15 +37,9 @@
 
 #include <stdint.h>
 
-#include "openthread-core-config.h"
-
-#include <mbedtls/aes.h>
-#include <mbedtls/md.h>
-#include <psa/crypto_types.h>
 #include <openthread/error.h>
 #include <openthread/platform/radio.h>
 #include "psa/crypto.h"
-#include "psa/crypto_values.h"
 
 #ifdef __cplusplus
 extern "C" {
