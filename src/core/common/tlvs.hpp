@@ -213,7 +213,7 @@ public:
     /**
      * This static method reads a simple TLV with a single integral value in a message at a given offset.
      *
-     * @tparam      UintTlvType     The simple TLV type to read (must be a sub-class of `SimpleTlvInfo`).
+     * @tparam      UintTlvType     The simple TLV type to read (must be a sub-class of `UintTlvInfo`).
      *
      * @param[in]   aMessage        The message to read from.
      * @param[in]   aOffset         The offset into the message pointing to the start of the TLV.
@@ -308,7 +308,6 @@ public:
      * @tparam       TlvType     The TLV type to find.
      *
      * @param[in]    aMessage    A reference to the message.
-     * @param[in]    aType       The TLV type to search for.
      * @param[out]   aValue      A buffer to output the value (must contain at least @p aLength bytes).
      * @param[in]    aLength     The expected (minimum) length of the TLV value.
      *
@@ -438,25 +437,7 @@ protected:
     };
 
 private:
-    /**
-     * This private static method searches within a given message for TLV type and outputs the TLV offset, size and
-     * whether it is an Extended TLV.
-     *
-     * A nullptr pointer can be used for output parameters @p aOffset, @p aSize, or @p aIsExtendedTlv if the parameter
-     * is not required.
-     *
-     * @param[in]   aMessage       A reference to the message to search within.
-     * @param[in]   aType          The TLV type to search for.
-     * @param[out]  aOffset        A pointer to a variable to output the offset to the start of the TLV.
-     * @param[out]  aSize          A pointer to a variable to output the size (total number of bytes) of the TLV.
-     * @param[out]  aIsExtendedTlv A pointer to a boolean variable to output whether the found TLV is extended or not.
-     *
-     * @retval kErrorNone       Successfully found the TLV.
-     * @retval kErrorNotFound   Could not find the TLV with Type @p aType.
-     *
-     */
     static Error Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv);
-
     static Error FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength);
     static Error AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength);
     template <typename UintType> static Error ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue);
@@ -512,7 +493,7 @@ public:
  * This class defines constants and types for a simple TLV with an unsigned int value type.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<UintTlvType>()`, and
- * the related `Tlv::FindTlv()` and `Tlv::ReadTlv()`.
+ * the related `Tlv::Find<UintTlvType>()` and `Tlv::Read<UintTlvType>()`.
  *
  * @tparam kTlvTypeValue   The TLV Type value.
  * @tparam UintType        The TLV Value's type (must be an unsigned int, i.e. uint8_t, uint16_t, or uint32_t).
@@ -532,7 +513,7 @@ public:
  * This class defines constants and types for a simple TLV with a single value.
  *
  * This class and its sub-classes are intended to be used as the template type in `Tlv::Append<SimpleTlvType>()`,
- * and the related `Tlv::FindTlv()` and `Tlv::ReadTlv()`.
+ * and the related `Tlv::Find<SimpleTlvType>()` and `Tlv::Read<SimpleTlvType>()`.
  *
  * @tparam kTlvTypeValue   The TLV Type value.
  * @tparam TlvValueType    The TLV Value's type (must not be an integral type).

@@ -110,6 +110,15 @@ exit:
 
 Error Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv)
 {
+    // This static method searches within a `aMessage` for a TLV type
+    // `aType` and outputs the TLV offset, size, and whether or not it
+    // is an Extended TLV.
+    //
+    // A `nullptr` pointer can be used for output parameters `aOffset`,
+    // `aSize`, or `aIsExtendedTlv` if the parameter is not required.
+    //
+    // Returns `kErrorNone` when found, otherwise `kErrorNotFound`.
+
     Error    error        = kErrorNotFound;
     uint16_t offset       = aMessage.GetOffset();
     uint16_t remainingLen = aMessage.GetLength();
