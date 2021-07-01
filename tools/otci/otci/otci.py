@@ -75,7 +75,7 @@ class OTCI(object):
 
             while duration > 0:
                 output = self.__otcmd.wait(1)
-                if match_line(expect_line, output):
+                if any(match_line(line, expect_line) for line in output):
                     success = True
                     break
 
