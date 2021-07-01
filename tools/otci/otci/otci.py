@@ -364,12 +364,13 @@ class OTCI(object):
 
     def get_network_key(self) -> str:
         """Get the network network key."""
-        return self.__parse_network_key(self.execute_command('networkkey'))
+        return self.__parse_network_key(self.execute_command(self.__detect_networkkey_cmd()))
 
     def set_network_key(self, networkkey: str):
         """Set the network network key."""
         self.__validate_network_key(networkkey)
-        self.execute_command(f'networkkey {networkkey}')
+        cmd = self.__detect_networkkey_cmd()
+        self.execute_command(f'{cmd} {networkkey}')
 
     def get_key_sequence_counter(self) -> int:
         """Get the Thread Key Sequence Counter."""
@@ -1672,7 +1673,7 @@ class OTCI(object):
                 dataset['extpanid'] = val
             elif key == 'Mesh Local Prefix':
                 dataset['mesh_local_prefix'] = val
-            elif key == 'Network Key':
+            elif key in ('Network Key', 'Master Key'):
                 dataset['networkkey'] = val
             elif key == 'Network Name':
                 dataset['network_name'] = val
@@ -1726,7 +1727,8 @@ class OTCI(object):
             self.execute_command(f'dataset meshlocalprefix {mesh_local_prefix}')
 
         if network_key is not None:
-            self.execute_command(f'dataset networkkey {network_key}')
+            nwk_cmd = self.__detect_networkkey_cmd()
+            self.execute_command(f'dataset {nwk_cmd} {network_key}')
 
         if network_name is not None:
             self.execute_command(f'dataset networkname {self.__escape_escapable(network_name)}')
@@ -1798,6 +1800,9 @@ class OTCI(object):
             return 'allowlist'
         else:
             return '\x77\x68\x69\x74\x65\x6c\x69\x73\x74'
+
+    def __detect_networkkey_cmd(self) -> str:
+        return 'networkkey' if self.api_version >= 126 else 'masterkey'
 
     #
     # Unicast Addresses management
