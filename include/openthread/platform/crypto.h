@@ -267,7 +267,7 @@ otError otPlatCryptoHmacSha256UnInit(void *aContext, size_t aContextSize);
  * @retval OT_ERROR_NONE          Successfully signed  @p aHash.
  * @retval OT_ERROR_FAILED        Failed to sign @p aHash.
  *
- * @note Incase PSA is supported pointer to psa_mac_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
