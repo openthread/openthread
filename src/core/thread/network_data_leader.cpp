@@ -267,7 +267,7 @@ Error LeaderBase::ExternalRouteLookup(uint8_t             aDomainId,
             continue;
         }
 
-        if (prefixLength <= bestMatchLength)
+        if ((bestRouteEntry != nullptr) && (prefixLength <= bestMatchLength))
         {
             continue;
         }
