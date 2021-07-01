@@ -468,13 +468,6 @@ bool otLinkIsInTransmitState(otInstance *aInstance)
     return instance.Get<Mac::Mac>().IsInTransmitState();
 }
 
-otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame)
-{
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Mac::Mac>().RequestOutOfBandFrameTransmission(aOobFrame);
-}
-
 uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
