@@ -302,11 +302,16 @@ enum HexStringParseMode
 
 static Error ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuffer, HexStringParseMode aMode)
 {
-    Error  error        = kErrorNone;
-    size_t stringLength = strlen(aString);
-    size_t expectedSize = (stringLength + 1) / 2;
-    size_t parsedSize   = 0;
+    Error  error      = kErrorNone;
+    size_t parsedSize = 0;
+    size_t stringLength;
+    size_t expectedSize;
     bool   skipFirstDigit;
+
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
+
+    stringLength = strlen(aString);
+    expectedSize = (stringLength + 1) / 2;
 
     switch (aMode)
     {
