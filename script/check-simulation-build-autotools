@@ -94,32 +94,39 @@ build_all_features()
         "-DOPENTHREAD_CONFIG_MLR_ENABLE=1"
     )
 
+    # Build Thread 1.1 with full features and no log
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
     reset_source
-    make -f examples/Makefile-simulation
+    make -f examples/Makefile-simulation THREAD_VERSION=1.1
 
+    # Build Thread 1.1 with full features and full logs
     export CPPFLAGS="${options[*]}"
     reset_source
-    make -f examples/Makefile-simulation FULL_LOGS=1
+    make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
+    # Build Thread 1.1 with full features and full logs (Logs defined as macros)
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY=1"
-    make -f examples/Makefile-simulation FULL_LOGS=1
+    make -f examples/Makefile-simulation THREAD_VERSION=1.1 FULL_LOGS=1
 
+    # Build Thread 1.2 with full features and logs
     export CPPFLAGS="${options[*]} ${options_1_2[*]} -DOPENTHREAD_CONFIG_LOG_LEVEL=OT_LOG_LEVEL_NONE"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.2
 
+    # Build Thread 1.2 with full features and full logs
     export CPPFLAGS="${options[*]} ${options_1_2[*]}"
     reset_source
     make -f examples/Makefile-simulation THREAD_VERSION=1.2 FULL_LOGS=1
 
+    # Build Thread 1.1 with ASSERT disabled
     export CPPFLAGS="${options[*]} -DOPENTHREAD_CONFIG_ASSERT_ENABLE=0"
     reset_source
-    make -f examples/Makefile-simulation
+    make -f examples/Makefile-simulation THREAD_VERSION=1.1
 
+    # Build Thread 1.1 OTNS
     export CPPFLAGS="${options[*]}"
     reset_source
-    make -f examples/Makefile-simulation OTNS=1
+    make -f examples/Makefile-simulation THREAD_VERSION=1.1 OTNS=1
 }
 
 build_nest_common()
