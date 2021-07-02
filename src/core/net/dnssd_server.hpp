@@ -60,7 +60,7 @@ class Server : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This enumeration specifies a dns-sd query type.
+     * This enumeration specifies a DNS-SD query type.
      *
      */
     enum DnsQueryType : uint8_t
@@ -125,7 +125,7 @@ public:
     void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
 
     /**
-     * This function aquires the next query in the server.
+     * This method acquires the next query in the server.
      *
      * @param[in] aQuery            The query pointer. Pass nullptr to get the first query.
      *
@@ -135,12 +135,12 @@ public:
     const otDnssdQuery *GetNextQuery(const otDnssdQuery *aQuery) const;
 
     /**
-     * This function aquires the dns-sd query type and name for a specific query.
+     * This method acquires the DNS-SD query type and name for a specific query.
      *
      * @param[in]   aQuery            The query pointer.
      * @param[out]  aNameOutput       The name output buffer.
      *
-     * @returns The dns-sd query type.
+     * @returns The DNS-SD query type.
      *
      */
     static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize]);
