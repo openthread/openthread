@@ -92,6 +92,7 @@ class TlvType(IntEnum):
     THREAD_DISCOVERY = 26
     CSL_CHANNEL = 80
     CSL_SYNCHRONIZED_TIMEOUT = 85
+    CSL_CLOCK_ACCURACY = 86
     LINK_METRICS_QUERY = 87
     LINK_METRICS_MANAGEMENT = 88
     LINK_METRICS_REPORT = 89
@@ -1090,6 +1091,19 @@ class CslSynchronizedTimeoutFactory:
 
     def parse(self, data, message_info):
         return CslSynchronizedTimeout()
+
+
+class CslClockAccuracy:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("CslClockAccuracy is not implemented yet.")
+
+
+class CslClockAccuracyFactory:
+
+    def parse(self, data, message_info):
+        return CslClockAccuracy()
 
 
 class TimeRequest:

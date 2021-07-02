@@ -1937,6 +1937,12 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
         SuccessOrExit(error = AppendTimeParameter(*message));
     }
 #endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (!aChild->IsRxOnWhenIdle())
+    {
+        SuccessOrExit(error = AppendCslClockAccuracy(*message));
+    }
+#endif
 
     aChild->GenerateChallenge();
 
