@@ -106,6 +106,9 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mDataset(*this)
     , mNetworkData(*this)
     , mUdp(*this)
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    , mTcp(*this)
+#endif
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -128,6 +131,16 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(mInstance, &Interpreter::HandleDiscoveryRequest, this);
 #endif
+}
+
+int Interpreter::Output(const char *aBuf, uint16_t aBufLength)
+{
+    int written = 0;
+    for (uint16_t i = 0; i != aBufLength; i++)
+    {
+        written += OutputFormat("%c", aBuf[i]);
+    }
+    return written;
 }
 
 void Interpreter::OutputResult(otError aError)
@@ -4049,6 +4062,13 @@ otError Interpreter::ProcessTxPower(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+otError Interpreter::ProcessTcp(Arg aArgs[])
+{
+    return mTcp.Process(aArgs);
+}
+#endif
 
 otError Interpreter::ProcessUdp(Arg aArgs[])
 {

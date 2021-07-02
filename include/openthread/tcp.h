@@ -38,6 +38,8 @@
 
 #include <openthread/ip6.h>
 
+#include "../third_party/tcplp/tcplp.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -197,11 +199,10 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  * should only interact with it via the TCP API functions whose signatures are
  * provided in this file.
  */
-typedef struct otTcpEndpoint
+struct otTcpEndpoint
 {
-    struct otTcpEndpoint *mNext;     ///< A pointer to the next TCP endpoint (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP endpoint
-    void *                mContext;  ///< A pointer to application-specific context
+    struct otTcpEndpoint *mNext;    ///< A pointer to the next TCP endpoint (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
@@ -209,8 +210,17 @@ typedef struct otTcpEndpoint
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
-    /* Other implementation-defined fields go here. */
-} otTcpEndpoint;
+    otLinkedBuffer mReceiveLinks[2];
+    otSockAddr     mSockAddr;
+
+    union
+    {
+        void *  mAlign;
+        uint8_t mSize[4 * sizeof(void *)];
+    } mTimers[4];
+
+    struct tcpcb mTcb;
+};
 
 /**
  * This structure contains arguments to the otTcpEndpointInitialize() function.
@@ -229,6 +239,29 @@ typedef struct otTcpEndpointInitializeArgs
     void * mReceiveBuffer;     ///< Pointer to memory provided to the system for the TCP receive buffer
     size_t mReceiveBufferSize; ///< Size of memory provided to the system for the TCP receive buffer
 } otTcpEndpointInitializeArgs;
+
+/**
+ * @def OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS
+ *
+ * Recommended buffer size for TCP connections that traverse about 3 wireless
+ * hops or fewer.
+ *
+ * On platforms where memory is particularly constrained and in situations
+ * where high bandwidth is not necessary, it may be desirable to manually
+ * select a smaller buffer size.
+ */
+#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2599
+
+/**
+ * @def OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS
+ *
+ * Recommended buffer size for TCP connections that traverse many wireless
+ * hops.
+ *
+ * If the TCP connection traverses a very large number of hops (more than 6 or
+ * so), then it may be advisable to select a large buffer size manually.
+ */
+#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4158
 
 /**
  * Initializes a TCP endpoint.
@@ -392,7 +425,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
  * @retval OT_ERROR_NONE    Successfully completed the operation.
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
  */
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
 
 /**
  * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -548,17 +581,16 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
  * should only interact with it via the TCP API functions whose signatures are
  * provided in this file.
  */
-typedef struct otTcpListener
+struct otTcpListener
 {
-    struct otTcpListener *mNext;     ///< A pointer to the next TCP listener (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP listener
-    void *                mContext;  ///< A pointer to application-specific context
+    struct otTcpListener *mNext;    ///< A pointer to the next TCP listener (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
 
-    /* Other implementation-defined fields go here. */
-} otTcpListener;
+    struct tcpcb_listen mTcbListen;
+};
 
 /**
  * This structure contains arguments to the otTcpListenerInitialize() function.

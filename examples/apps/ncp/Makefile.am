@@ -40,6 +40,7 @@ CPPFLAGS_COMMON                                                       += \
     $(NULL)
 
 LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/tcplp/libtcplp.a                         \
     $(NULL)
 
 LDFLAGS_COMMON                                                        += \

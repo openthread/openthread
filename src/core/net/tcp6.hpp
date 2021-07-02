@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for UDP/IPv6 sockets.
+ *   This file includes definitions for TCP/IPv6 sockets.
  */
 
 #ifndef TCP6_HPP_
@@ -44,11 +44,10 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/timer.hpp"
 
 namespace ot {
 namespace Ip6 {
-
-class Udp;
 
 /**
  * @addtogroup core-tcp
@@ -224,7 +223,7 @@ public:
          * @retval kErrorNone    Successfully completed the operation.
          * @retval kErrorFailed  Failed to complete the operation.
          */
-        Error ReceiveByReference(const otLinkedBuffer *&aBuffer) const;
+        Error ReceiveByReference(const otLinkedBuffer *&aBuffer);
 
         /**
          * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -311,6 +310,62 @@ public:
          * @retval kErrorFailed  Failed to deinitialize the TCP endpoint.
          */
         Error Deinitialize(void);
+
+        /**
+         * Converts a reference to a struct tcpcb to a reference to its
+         * enclosing Endpoint.
+         */
+        static Endpoint &FromTcb(struct tcpcb &aTcb)
+        {
+            uint8_t *ptr = reinterpret_cast<uint8_t *>(&aTcb);
+            ptr -= offsetof(Endpoint, mTcb);
+            return *reinterpret_cast<Endpoint *>(ptr);
+        }
+
+    private:
+        friend void ::tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerId, uint32_t aDelay);
+        friend void ::tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerId);
+        friend void ::tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
+        friend void ::tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState);
+
+        enum : uint8_t
+        {
+            kNumTimers = 4,
+        };
+
+        static_assert(sizeof(mTimers[0]) >= sizeof(TimerMilli), "mTimers entries are too small");
+        static_assert(OT_ARRAY_LENGTH(mTimers) == kNumTimers, "mTimers has an incorrect array length");
+
+        TimerMilli &GetTimer(std::size_t aIndex) { return *reinterpret_cast<TimerMilli *>(&mTimers[aIndex].mSize[0]); }
+
+        static Endpoint &FromTimer(TimerMilli &aTimer, std::size_t aIndex)
+        {
+            uint8_t *ptr = reinterpret_cast<uint8_t *>(&aTimer);
+            ptr -= offsetof(Endpoint, mTimers[aIndex].mSize[0]);
+            return *reinterpret_cast<Endpoint *>(ptr);
+        }
+
+        TimerMilli &     GetDelackTimer() { return GetTimer(0); }
+        static Endpoint &FromDelackTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 0); }
+
+        TimerMilli &     GetRexmtPersistTimer() { return GetTimer(1); }
+        static Endpoint &FromRexmtPersistTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 1); }
+
+        TimerMilli &     GetKeepTimer() { return GetTimer(2); }
+        static Endpoint &FromKeepTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 2); }
+
+        TimerMilli &     Get2MslTimer() { return GetTimer(3); }
+        static Endpoint &From2MslTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 3); }
+
+        Address &GetLocalIp6Address() { return *reinterpret_cast<Address *>(&mTcb.laddr); }
+
+        const Address &GetLocalIp6Address() const { return *reinterpret_cast<const Address *>(&mTcb.laddr); }
+
+        Address &GetForeignIp6Address() { return *reinterpret_cast<Address *>(&mTcb.faddr); }
+
+        const Address &GetForeignIp6Address() const { return *reinterpret_cast<const Address *>(&mTcb.faddr); }
+
+        bool Matches(const MessageInfo &aMessageInfo) const;
     };
 
     /**
@@ -400,6 +455,24 @@ public:
          * @retval kErrorFailed  Failed to deinitialize the TCP listener.
          */
         Error Deinitialize(void);
+
+        /**
+         * Converts a reference to a struct tcpcb_listen to a reference to its
+         * enclosing Listener.
+         */
+        static Listener &FromTcbListen(struct tcpcb_listen &aTcbListen)
+        {
+            uint8_t *ptr = reinterpret_cast<uint8_t *>(&aTcbListen);
+            ptr -= offsetof(Listener, mTcbListen);
+            return *reinterpret_cast<Listener *>(ptr);
+        }
+
+    private:
+        Address &GetLocalIp6Address() { return *reinterpret_cast<Address *>(&mTcbListen.laddr); }
+
+        const Address &GetLocalIp6Address() const { return *reinterpret_cast<const Address *>(&mTcbListen.laddr); }
+
+        bool Matches(const MessageInfo &aMessageInfo) const;
     };
 
     /**
@@ -509,7 +582,45 @@ public:
      * @retval kErrorDrop  Dropped the TCP segment due to an invalid checksum.
      *
      */
-    Error ProcessReceivedSegment(Message &aMessage, MessageInfo &aMessageInfo);
+    Error ProcessReceivedSegment(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
+
+    /**
+     * Automatically selects a local address and/or port for communication with the specified peer.
+     *
+     * @param[in] aPeer         The peer's address and port.
+     * @param[in,out] aToBind   The SockAddr into which to store the selected address and/or port.
+     * @param[in] aBindAddress  If true, the local address is selected; if not, the current address in @p aToBind is
+     * treated as a given.
+     * @param[in] aBindPort     If true, the local port is selected; if not, the current port in @p aToBind is treated
+     * as a given.
+     *
+     * @returns  True if successful, false otherwise.
+     *
+     */
+    bool AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, bool aBindPort);
+
+private:
+    enum
+    {
+        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
+    };
+
+    static void ProcessSignals(Endpoint &aEndpoint, otLinkedBuffer *aPriorHead, struct signals &aSignals);
+
+    static Error BsdErrorToOtError(int aBsdError);
+    bool         CanBind(const SockAddr &aSockName);
+
+    static void HandleDelackTimer(Timer &aTimer);
+    static void HandleRexmtPersistTimer(Timer &aTimer);
+    static void HandleKeepTimer(Timer &aTimer);
+    static void Handle2MslTimer(Timer &aTimer);
+
+    uint16_t GetFreeEphemeralPort(void);
+
+    LinkedList<Endpoint> mEndpoints;
+    LinkedList<Listener> mListeners;
+    uint16_t             mEphemeralPort;
 };
 
 } // namespace Ip6
