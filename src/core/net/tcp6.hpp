@@ -223,7 +223,7 @@ public:
          * @retval kErrorNone    Successfully completed the operation.
          * @retval kErrorFailed  Failed to complete the operation.
          */
-        Error ReceiveByReference(const otLinkedBuffer *&aBuffer) const;
+        Error ReceiveByReference(const otLinkedBuffer *&aBuffer);
 
         /**
          * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -311,7 +311,23 @@ public:
          */
         Error Deinitialize(void);
 
+        /**
+         * Converts a reference to a struct tcpcb to a reference to its
+         * enclosing Endpoint.
+         */
+        static Endpoint &FromTcb(struct tcpcb &aTcb)
+        {
+            uint8_t *ptr = reinterpret_cast<uint8_t *>(&aTcb);
+            ptr -= offsetof(Endpoint, mTcb);
+            return *reinterpret_cast<Endpoint *>(ptr);
+        }
+
     private:
+        friend void ::tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerId, uint32_t aDelay);
+        friend void ::tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerId);
+        friend void ::tcplp_sys_connection_lost(struct tcpcb *aTcb, uint8_t aErrNum);
+        friend void ::tcplp_sys_on_state_change(struct tcpcb *aTcb, int aNewState);
+
         enum : uint8_t
         {
             kNumTimers = 4,
@@ -340,6 +356,16 @@ public:
 
         TimerMilli &     Get2MslTimer() { return GetTimer(3); }
         static Endpoint &From2MslTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 3); }
+
+        Address &GetLocalIp6Address() { return *reinterpret_cast<Address *>(&mTcb.laddr); }
+
+        const Address &GetLocalIp6Address() const { return *reinterpret_cast<const Address *>(&mTcb.laddr); }
+
+        Address &GetForeignIp6Address() { return *reinterpret_cast<Address *>(&mTcb.faddr); }
+
+        const Address &GetForeignIp6Address() const { return *reinterpret_cast<const Address *>(&mTcb.faddr); }
+
+        bool Matches(const MessageInfo &aMessageInfo) const;
     };
 
     /**
@@ -429,6 +455,24 @@ public:
          * @retval kErrorFailed  Failed to deinitialize the TCP listener.
          */
         Error Deinitialize(void);
+
+        /**
+         * Converts a reference to a struct tcpcb_listen to a reference to its
+         * enclosing Listener.
+         */
+        static Listener &FromTcbListen(struct tcpcb_listen &aTcbListen)
+        {
+            uint8_t *ptr = reinterpret_cast<uint8_t *>(&aTcbListen);
+            ptr -= offsetof(Listener, mTcbListen);
+            return *reinterpret_cast<Listener *>(ptr);
+        }
+
+    private:
+        Address &GetLocalIp6Address() { return *reinterpret_cast<Address *>(&mTcbListen.laddr); }
+
+        const Address &GetLocalIp6Address() const { return *reinterpret_cast<const Address *>(&mTcbListen.laddr); }
+
+        bool Matches(const MessageInfo &aMessageInfo) const;
     };
 
     /**
@@ -538,7 +582,7 @@ public:
      * @retval kErrorDrop  Dropped the TCP segment due to an invalid checksum.
      *
      */
-    Error ProcessReceivedSegment(Message &aMessage, MessageInfo &aMessageInfo);
+    Error ProcessReceivedSegment(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
 
 private:
     enum
@@ -546,6 +590,11 @@ private:
         kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
         kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
     };
+
+    static void ProcessSignals(Endpoint &aSocket, uint8_t aSignals);
+
+    static Error BsdErrorToOtError(int aBsdError);
+    bool         CanBind(const SockAddr &aSockName);
 
     static void HandleDelackTimer(Timer &aTimer);
     static void HandleRexmtPersistTimer(Timer &aTimer);

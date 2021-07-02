@@ -358,7 +358,8 @@ private:
     Error InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo);
     Error RemoveMplOption(Message &aMessage);
     Error HandleOptions(Message &aMessage, Header &aHeader, bool aIsOutbound, bool &aReceive);
-    Error HandlePayload(Message &          aMessage,
+    Error HandlePayload(Header &           aIp6Header,
+                        Message &          aMessage,
                         MessageInfo &      aMessageInfo,
                         uint8_t            aIpProto,
                         Message::Ownership aMessageOwnership);

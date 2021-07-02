@@ -62,13 +62,13 @@ extern "C" {
  * otLinkedBuffer structures.
  *
  */
-typedef struct otLinkedBuffer
+struct otLinkedBuffer
 {
     struct otLinkedBuffer
         *          mNext; ///< Pointer to the next linked buffer in this chain, or NULL if this is the end of the chain
     const uint8_t *mData; ///< Pointer to data referenced by this linked buffer
     uint16_t       mLength; ///< Length of this linked buffer
-} otLinkedBuffer;
+};
 
 struct otTcpEndpoint;
 typedef struct otTcpEndpoint otTcpEndpoint;
@@ -201,15 +201,17 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  */
 struct otTcpEndpoint
 {
-    struct otTcpEndpoint *mNext;     ///< A pointer to the next TCP endpoint (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP endpoint
-    void *                mContext;  ///< A pointer to application-specific context
+    struct otTcpEndpoint *mNext;    ///< A pointer to the next TCP endpoint (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpEstablished      mEstablishedCallback;      ///< "Established" callback function
     otTcpSendDone         mSendDoneCallback;         ///< "Send done" callback function
     otTcpSendReady        mSendReadyCallback;        ///< "Send ready" callback function
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
+
+    otLinkedBuffer mReceiveLinks[2];
+    otSockAddr     mSockAddr;
 
     union
     {
@@ -423,7 +425,7 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
  * @retval OT_ERROR_NONE    Successfully completed the operation.
  * @retval OT_ERROR_FAILED  Failed to complete the operation.
  */
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer);
 
 /**
  * Reorganizes the receive buffer to be entirely contiguous in memory.
@@ -581,9 +583,8 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
  */
 struct otTcpListener
 {
-    struct otTcpListener *mNext;     ///< A pointer to the next TCP listener (internal use only)
-    otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP listener
-    void *                mContext;  ///< A pointer to application-specific context
+    struct otTcpListener *mNext;    ///< A pointer to the next TCP listener (internal use only)
+    void *                mContext; ///< A pointer to application-specific context
 
     otTcpAcceptReady mAcceptReadyCallback; ///< "Accept ready" callback function
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
