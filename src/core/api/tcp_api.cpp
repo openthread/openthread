@@ -105,9 +105,9 @@ otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_
     return endpoint.SendByExtension(aNumBytes, aFlags);
 }
 
-otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
+otError otTcpReceiveByReference(otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
 {
-    const Ip6::Tcp::Endpoint &endpoint = *static_cast<const Ip6::Tcp::Endpoint *>(aEndpoint);
+    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
 
     return endpoint.ReceiveByReference(*aBuffer);
 }
