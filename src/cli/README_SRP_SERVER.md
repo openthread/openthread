@@ -124,6 +124,7 @@ Print information of all registered services.
 > srp server service
 srp-api-test-1._ipps._tcp.default.service.arpa.
     deleted: false
+    subtypes: (null)
     port: 49152
     priority: 0
     weight: 0
@@ -132,6 +133,7 @@ srp-api-test-1._ipps._tcp.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
 srp-api-test-0._ipps._tcp.default.service.arpa.
     deleted: false
+    subtypes: _sub1,_sub2
     port: 49152
     priority: 0
     weight: 0

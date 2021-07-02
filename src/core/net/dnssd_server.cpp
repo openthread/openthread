@@ -657,9 +657,9 @@ Header::Response Server::ResolveQuestionBySrp(const char *      aName,
             while ((service = GetNextSrpService(*host, service)) != nullptr)
             {
                 uint32_t    instanceTtl         = TimeMilli::MsecToSec(service->GetExpireTime() - TimerMilli::GetNow());
-                const char *instanceName        = service->GetFullName();
+                const char *instanceName        = service->GetInstanceName();
                 bool        serviceNameMatched  = service->MatchesServiceName(aName);
-                bool        instanceNameMatched = service->Matches(aName);
+                bool        instanceNameMatched = service->MatchesInstanceName(aName);
                 bool        ptrQueryMatched     = qtype == ResourceRecord::kTypePtr && serviceNameMatched;
                 bool        srvQueryMatched     = qtype == ResourceRecord::kTypeSrv && instanceNameMatched;
                 bool        txtQueryMatched     = qtype == ResourceRecord::kTypeTxt && instanceNameMatched;
@@ -738,14 +738,7 @@ const Srp::Server::Host *Server::GetNextSrpHost(const Srp::Server::Host *aHost)
 const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host &   aHost,
                                                       const Srp::Server::Service *aService)
 {
-    const Srp::Server::Service *service = aHost.GetNextService(aService);
-
-    while (service != nullptr && service->IsDeleted())
-    {
-        service = aHost.GetNextService(service);
-    }
-
-    return service;
+    return aHost.FindNextService(aService, Srp::Server::kFlagsAnyTypeActiveService);
 }
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 

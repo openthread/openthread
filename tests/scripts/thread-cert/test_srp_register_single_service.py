@@ -195,6 +195,7 @@ class SrpRegisterSingleService(thread_cert.TestCase):
         self.assertEqual(server_service['deleted'], 'false')
         self.assertEqual(server_service['instance'], client_service['instance'])
         self.assertEqual(server_service['name'], client_service['name'])
+        self.assertEqual(server_service['subtypes'], '(null)')
         self.assertEqual(int(server_service['port']), int(client_service['port']))
         self.assertEqual(int(server_service['priority']), int(client_service['priority']))
         self.assertEqual(int(server_service['weight']), int(client_service['weight']))
