@@ -305,9 +305,8 @@ void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
 
 void Server::HandleServiceUpdateResult(UpdateMetadata *aUpdate, Error aError)
 {
-    CommitSrpUpdate(aError, aUpdate->GetDnsHeader(), aUpdate->GetHost(), aUpdate->GetMessageInfo());
-
     IgnoreError(mOutstandingUpdates.Remove(*aUpdate));
+    CommitSrpUpdate(aError, aUpdate->GetDnsHeader(), aUpdate->GetHost(), aUpdate->GetMessageInfo());
     aUpdate->Free();
 
     if (mOutstandingUpdates.IsEmpty())
