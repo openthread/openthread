@@ -225,8 +225,17 @@ Error Client::Start(const Ip6::SockAddr &aServerSockAddr, Requester aRequester)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     mAutoStartDidSelectServer = (aRequester == kRequesterAuto);
 
-    VerifyOrExit((aRequester == kRequesterAuto) && (mAutoStartCallback != nullptr));
-    mAutoStartCallback(&aServerSockAddr, mAutoStartContext);
+    if (mAutoStartDidSelectServer)
+    {
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE && OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+        Get<Dns::Client>().UpdateDefaultConfigAddress();
+#endif
+
+        if (mAutoStartCallback != nullptr)
+        {
+            mAutoStartCallback(&aServerSockAddr, mAutoStartContext);
+        }
+    }
 #endif
 
 exit:

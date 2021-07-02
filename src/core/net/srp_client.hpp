@@ -364,6 +364,14 @@ public:
      *
      */
     bool IsAutoStartModeEnabled(void) const { return mAutoStartModeEnabled; }
+
+    /**
+     * This method indicates whether or not the current SRP server's address is selected by auto-start.
+     *
+     * @returns TRUE if the SRP server's address is selected by auto-start, FALSE otherwise.
+     *
+     */
+    bool IsServerSelectedByAutoStart(void) const { return mAutoStartDidSelectServer; }
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
 
     /**

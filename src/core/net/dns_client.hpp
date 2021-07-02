@@ -48,6 +48,18 @@
  *   This file includes definitions for the DNS client.
  */
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+
+#if !OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#error "DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE requires OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE"
+#endif
+
+#if !OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+#error "DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE requires OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE"
+#endif
+
+#endif
+
 /**
  * This struct represents an opaque (and empty) type for a response to an address resolution DNS query.
  *
@@ -77,6 +89,11 @@ struct otDnsServiceResponse
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 namespace ot {
+
+namespace Srp {
+class Client;
+}
+
 namespace Dns {
 
 /**
@@ -85,6 +102,8 @@ namespace Dns {
  */
 class Client : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Srp::Client;
+
     typedef Message Query; // `Message` is used to save `Query` related info.
 
 public:
@@ -722,6 +741,9 @@ private:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
 #endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    void UpdateDefaultConfigAddress(void);
+#endif
 
     static const uint8_t   kQuestionCount[];
     static const uint16_t *kQuestionRecordTypes[];
@@ -739,6 +761,9 @@ private:
     QueryList        mQueries;
     TimerMilli       mTimer;
     QueryConfig      mDefaultConfig;
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    bool mUserDidSetDefaultAddress;
+#endif
 };
 
 } // namespace Dns
