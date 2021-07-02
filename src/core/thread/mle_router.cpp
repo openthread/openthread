@@ -154,6 +154,16 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     VerifyOrExit(!IsRouter(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
 
+#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+    VerifyOrExit(Get<KeyManager>().GetSecurityPolicy().mRoutersEnabled, error = kErrorNotCapable);
+#else
+    if (Get<KeyManager>().GetSecurityPolicy().mCommercialCommissioningEnabled)
+    {
+        VerifyOrExit(Get<KeyManager>().GetSecurityPolicy().mNonCcmRoutersEnabled, error = kErrorNotCapable);
+    }
+    VerifyOrExit(Get<KeyManager>().GetSecurityPolicy().mVersionThresholdForRouting < 1, error = kErrorNotCapable);
+#endif
+
     otLogInfoMle("Attempt to become router");
 
     Get<MeshForwarder>().SetRxOnWhenIdle(true);
