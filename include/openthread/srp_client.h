@@ -92,6 +92,7 @@ typedef struct otSrpClientService
 {
     const char *         mName;          ///< The service name labels (e.g., "_chip._udp", not the full domain name).
     const char *         mInstanceName;  ///< The service instance name label (not the full name).
+    const char *const *  mSubTypeLabels; ///< Array of service sub-type labels (must end with `NULL` or can be `NULL`).
     const otDnsTxtEntry *mTxtEntries;    ///< Array of TXT entries (number of entries is given by `mNumTxtEntries`).
     uint16_t             mPort;          ///< The service port number.
     uint16_t             mPriority;      ///< The service priority.

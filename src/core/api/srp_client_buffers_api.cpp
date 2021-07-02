@@ -94,4 +94,9 @@ uint8_t *otSrpClientBuffersGetServiceEntryTxtBuffer(otSrpClientBuffersServiceEnt
     return static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aEntry)->GetTxtBuffer(*aSize);
 }
 
+const char **otSrpClientBuffersGetSubTypeLabelsArray(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aArrayLength)
+{
+    return static_cast<Utils::SrpClientBuffers::ServiceEntry *>(aEntry)->GetSubTypeLabelsArray(*aArrayLength);
+}
+
 #endif // OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
