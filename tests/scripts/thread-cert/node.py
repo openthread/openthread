@@ -1010,6 +1010,10 @@ class NodeImpl:
         self.send_command(f'srp client service remove {instance_name} {service_name}')
         self._expect_done()
 
+    def srp_client_clear_service(self, instance_name, service_name):
+        self.send_command(f'srp client service clear {instance_name} {service_name}')
+        self._expect_done()
+
     def srp_client_get_services(self):
         cmd = 'srp client service'
         self.send_command(cmd)
