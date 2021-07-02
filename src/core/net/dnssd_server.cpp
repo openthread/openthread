@@ -49,6 +49,7 @@ namespace ServiceDiscovery {
 
 const char Server::kDnssdProtocolUdp[4] = {'_', 'u', 'd', 'p'};
 const char Server::kDnssdProtocolTcp[4] = {'_', 't', 'c', 'p'};
+const char Server::kDnssdSubTypeLabel[] = "._sub.";
 const char Server::kDefaultDomainName[] = "default.service.arpa.";
 
 Server::Server(Instance &aInstance)
@@ -370,8 +371,26 @@ exit:
 
 Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    Error    error;
-    uint16_t serviceCompressOffset = aCompressInfo.GetServiceNameOffset(aMessage, aName);
+    Error       error;
+    uint16_t    serviceCompressOffset = aCompressInfo.GetServiceNameOffset(aMessage, aName);
+    const char *serviceName;
+
+    // Check whether `aName` is a sub-type service name.
+    serviceName = StringFind(aName, kDnssdSubTypeLabel);
+
+    if (serviceName != nullptr)
+    {
+        uint8_t subTypeLabelLength = static_cast<uint8_t>(serviceName - aName) + sizeof(kDnssdSubTypeLabel) - 1;
+
+        SuccessOrExit(error = Name::AppendMultipleLabels(aName, subTypeLabelLength, aMessage));
+
+        // Skip over the "._sub." label to get to the root service name.
+        serviceName += sizeof(kDnssdSubTypeLabel) - 1;
+    }
+    else
+    {
+        serviceName = aName;
+    }
 
     if (serviceCompressOffset != NameCompressInfo::kUnknownOffset)
     {
@@ -379,7 +398,7 @@ Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompre
     }
     else
     {
-        uint8_t  domainStart          = static_cast<uint8_t>(StringLength(aName, Name::kMaxNameSize - 1) -
+        uint8_t  domainStart          = static_cast<uint8_t>(StringLength(serviceName, Name::kMaxNameSize - 1) -
                                                    StringLength(aCompressInfo.GetDomainName(), Name::kMaxNameSize - 1));
         uint16_t domainCompressOffset = aCompressInfo.GetDomainNameOffset();
 
@@ -389,11 +408,11 @@ Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompre
         if (domainCompressOffset == NameCompressInfo::kUnknownOffset)
         {
             aCompressInfo.SetDomainNameOffset(serviceCompressOffset + domainStart);
-            error = Name::AppendName(aName, aMessage);
+            error = Name::AppendName(serviceName, aMessage);
         }
         else
         {
-            SuccessOrExit(error = Name::AppendMultipleLabels(aName, domainStart, aMessage));
+            SuccessOrExit(error = Name::AppendMultipleLabels(serviceName, domainStart, aMessage));
             error = Name::AppendPointerLabel(domainCompressOffset, aMessage);
         }
     }
@@ -547,10 +566,22 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
 
     aInfo.mServiceOffset = labelBegin;
 
-    // Treat everything before <Service> as <Instance> label
+    // Check for service subtype
     error = FindPreviousLabel(aName, labelBegin, labelEnd);
     VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
+    // Note that `kDnssdSubTypeLabel` is "._sub.". Here we get the
+    // label only so we want to compare it with "_sub".
+    if ((labelEnd == labelBegin + kSubTypeLabelLength) &&
+        (memcmp(&aName[labelBegin], kDnssdSubTypeLabel + 1, kSubTypeLabelLength) == 0))
+    {
+        SuccessOrExit(error = FindPreviousLabel(aName, labelBegin, labelEnd));
+        VerifyOrExit(labelBegin == 0, error = kErrorInvalidArgs);
+        aInfo.mSubTypeOffset = labelBegin;
+        ExitNow();
+    }
+
+    // Treat everything before <Service> as <Instance> label
     aInfo.mInstanceOffset = 0;
 
 exit:
