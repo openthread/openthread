@@ -71,7 +71,7 @@ SubMac::SubMac(Instance &aInstance)
     , mCslChannel(0)
     , mIsCslChannelSpecified(false)
     , mCslLastSync(0)
-    , mCslParentDrift(kCslWorstCrystalPpm)
+    , mCslParentAccuracy(kCslWorstCrystalPpm)
     , mCslParentUncert(kCslWorstUncertainty)
     , mCslState(kCslIdle)
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
@@ -1070,7 +1070,7 @@ void SubMac::GetCslWindowEdges(uint32_t &ahead, uint32_t &after)
         elapsed = curTime - mCslLastSync.GetValue();
     }
 
-    semiWindow = static_cast<uint32_t>(elapsed * (Get<Radio>().GetCslAccuracy() + mCslParentDrift) / 1000000);
+    semiWindow = static_cast<uint32_t>(elapsed * (Get<Radio>().GetCslAccuracy() + mCslParentAccuracy) / 1000000);
     semiWindow += mCslParentUncert * kUsPerUncertUnit;
 
     ahead = (semiWindow + kCslReceiveTimeAhead > semiPeriod) ? semiPeriod : semiWindow + kCslReceiveTimeAhead;

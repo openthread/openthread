@@ -104,6 +104,7 @@ public:
         kDiscovery             = 26, ///< Thread Discovery TLV
         kCslChannel            = 80, ///< CSL Channel TLV
         kCslTimeout            = 85, ///< CSL Timeout TLV
+        kCslClockAccuracy      = 86, ///< CSL Clock Accuracy TLV
         kLinkMetricsQuery      = 87, ///< Link Metrics Query TLV
         kLinkMetricsManagement = 88, ///< Link Metrics Management TLV
         kLinkMetricsReport     = 89, ///< Link Metrics Report TLV
@@ -1332,6 +1333,63 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+/**
+ * This class implements CSL Clock Accuracy TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslClockAccuracyTlv : public Tlv, public TlvInfo<Tlv::kCslClockAccuracy>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslClockAccuracy);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method returns the CSL Clock Accuracy value.
+     *
+     * @returns The CSL Clock Accuracy value.
+     *
+     */
+    uint8_t GetCslClockAccuracy(void) { return mCslClockAccuracy; }
+
+    /**
+     * This method sets the CSL Clock Accuracy value.
+     *
+     * @param[in]  aCslClockAccuracy  The CSL Clock Accuracy value.
+     *
+     */
+    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
+
+    /**
+     * This method returns the Clock Accuracy value.
+     *
+     * @returns The Clock Accuracy value.
+     *
+     */
+    uint8_t GetCslUncertainty(void) { return mCslUncertainty; }
+
+    /**
+     * This method sets the CSL Uncertainty value.
+     *
+     * @param[in]  aCslUncertainty  The CSL Uncertainty value.
+     *
+     */
+    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
+
+private:
+    uint8_t mCslClockAccuracy;
+    uint8_t mCslUncertainty;
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**
  * @}
  *
