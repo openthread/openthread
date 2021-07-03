@@ -90,15 +90,15 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 enum
 {
-    kProtoHopOpts  = 0,  ///< IPv6 Hop-by-Hop Option
-    kProtoTcp      = 6,  ///< Transmission Control Protocol
-    kProtoUdp      = 17, ///< User Datagram
-    kProtoIp6      = 41, ///< IPv6 encapsulation
-    kProtoRouting  = 43, ///< Routing Header for IPv6
-    kProtoFragment = 44, ///< Fragment Header for IPv6
-    kProtoIcmp6    = 58, ///< ICMP for IPv6
-    kProtoNone     = 59, ///< No Next Header for IPv6
-    kProtoDstOpts  = 60, ///< Destination Options for IPv6
+    kProtoHopOpts  = OT_IP6_PROTO_HOP_OPTS, ///< IPv6 Hop-by-Hop Option
+    kProtoTcp      = OT_IP6_PROTO_TCP,      ///< Transmission Control Protocol
+    kProtoUdp      = OT_IP6_PROTO_UDP,      ///< User Datagram
+    kProtoIp6      = OT_IP6_PROTO_IP6,      ///< IPv6 encapsulation
+    kProtoRouting  = OT_IP6_PROTO_ROUTING,  ///< Routing Header for IPv6
+    kProtoFragment = OT_IP6_PROTO_FRAGMENT, ///< Fragment Header for IPv6
+    kProtoIcmp6    = OT_IP6_PROTO_ICMP6,    ///< ICMP for IPv6
+    kProtoNone     = OT_IP6_PROTO_NONE,     ///< No Next Header for IPv6
+    kProtoDstOpts  = OT_IP6_PROTO_DST_OPTS, ///< Destination Options for IPv6
 };
 
 /**

@@ -336,6 +336,11 @@ otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
     return static_cast<otDeviceRole>(instance.Get<Mle::MleRouter>().GetRole());
 }
 
+const char *otThreadDeviceRoleToString(otDeviceRole aRole)
+{
+    return Mle::Mle::RoleToString(static_cast<Mle::DeviceRole>(aRole));
+}
+
 otError otThreadGetLeaderData(otInstance *aInstance, otLeaderData *aLeaderData)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

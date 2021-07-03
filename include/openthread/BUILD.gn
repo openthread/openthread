@@ -79,6 +79,7 @@ source_set("openthread") {
     "entropy.h",
     "error.h",
     "heap.h",
+    "history_tracker.h",
     "icmp6.h",
     "instance.h",
     "ip6.h",

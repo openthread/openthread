@@ -62,6 +62,7 @@ jobs:
         export ASAN_SYMBOLIZER_PATH=`which llvm-symbolizer`
         export ASAN_OPTIONS=symbolize=1
         export DISTCHECK_CONFIGURE_FLAGS= CPPFLAGS=-DOPENTHREAD_SIMULATION_VIRTUAL_TIME=1
+        export DISTCHECK_BUILD=1
         ./bootstrap
         VERBOSE=1 make -f examples/Makefile-simulation distcheck
 
