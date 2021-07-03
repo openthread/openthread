@@ -298,9 +298,11 @@ public:
     const PriorityQueue &GetSendQueue(void) const { return mSendQueue; }
 
     /**
-     * This static method converts an `IpProto` enumeration to a string.
+     * This static method converts an IP protocol number to a string.
      *
-     * @returns The string representation of an IP protocol enumeration.
+     * @param[in] aIpPorto  An IP protocol number.
+     *
+     * @returns The string representation of @p aIpProto.
      *
      */
     static const char *IpProtoToString(uint8_t aIpProto);

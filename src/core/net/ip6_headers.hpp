@@ -86,15 +86,15 @@ using ot::Encoding::BigEndian::HostSwap32;
  */
 
 // Internet Protocol Numbers
-static constexpr uint8_t kProtoHopOpts  = 0;  ///< IPv6 Hop-by-Hop Option
-static constexpr uint8_t kProtoTcp      = 6;  ///< Transmission Control Protocol
-static constexpr uint8_t kProtoUdp      = 17; ///< User Datagram
-static constexpr uint8_t kProtoIp6      = 41; ///< IPv6 encapsulation
-static constexpr uint8_t kProtoRouting  = 43; ///< Routing Header for IPv6
-static constexpr uint8_t kProtoFragment = 44; ///< Fragment Header for IPv6
-static constexpr uint8_t kProtoIcmp6    = 58; ///< ICMP for IPv6
-static constexpr uint8_t kProtoNone     = 59; ///< No Next Header for IPv6
-static constexpr uint8_t kProtoDstOpts  = 60; ///< Destination Options for IPv6
+static constexpr uint8_t kProtoHopOpts  = OT_IP6_PROTO_HOP_OPTS; ///< IPv6 Hop-by-Hop Option
+static constexpr uint8_t kProtoTcp      = OT_IP6_PROTO_TCP;      ///< Transmission Control Protocol
+static constexpr uint8_t kProtoUdp      = OT_IP6_PROTO_UDP;      ///< User Datagram
+static constexpr uint8_t kProtoIp6      = OT_IP6_PROTO_IP6;      ///< IPv6 encapsulation
+static constexpr uint8_t kProtoRouting  = OT_IP6_PROTO_ROUTING;  ///< Routing Header for IPv6
+static constexpr uint8_t kProtoFragment = OT_IP6_PROTO_FRAGMENT; ///< Fragment Header for IPv6
+static constexpr uint8_t kProtoIcmp6    = OT_IP6_PROTO_ICMP6;    ///< ICMP for IPv6
+static constexpr uint8_t kProtoNone     = OT_IP6_PROTO_NONE;     ///< No Next Header for IPv6
+static constexpr uint8_t kProtoDstOpts  = OT_IP6_PROTO_DST_OPTS; ///< Destination Options for IPv6
 
 /**
  * Class Selectors

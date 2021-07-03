@@ -748,6 +748,10 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     VerifyOrExit(mDeviceMode != aDeviceMode);
     mDeviceMode = aDeviceMode;
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordNetworkInfo();
+#endif
+
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitDeviceMode(mDeviceMode);
 #endif
@@ -4406,11 +4410,11 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
 const char *Mle::RoleToString(DeviceRole aRole)
 {
     static const char *const kRoleStrings[] = {
-        "Disabled", // (0) kRoleDisabled
-        "Detached", // (1) kRoleDetached
-        "Child",    // (2) kRoleChild
-        "Router",   // (3) kRoleRouter
-        "Leader",   // (4) kRoleLeader
+        "disabled", // (0) kRoleDisabled
+        "detached", // (1) kRoleDetached
+        "child",    // (2) kRoleChild
+        "router",   // (3) kRoleRouter
+        "leader",   // (4) kRoleLeader
     };
 
     static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
@@ -4419,7 +4423,7 @@ const char *Mle::RoleToString(DeviceRole aRole)
     static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
     static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
 
-    return kRoleStrings[aRole];
+    return (aRole <= OT_ARRAY_LENGTH(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }
 
 // LCOV_EXCL_START

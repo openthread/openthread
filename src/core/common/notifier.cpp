@@ -177,6 +177,9 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().HandleNotifierEvents(events);
+#endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Get<Extension::ExtensionBase>().HandleNotifierEvents(events);
 #endif

@@ -55,6 +55,7 @@ DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
 ECDSA                     ?= 0
 EXTERNAL_HEAP             ?= 0
+HISTORY_TRACKER           ?= 0
 IP6_FRAGM                 ?= 0
 JAM_DETECTION             ?= 0
 JOINER                    ?= 0
@@ -209,6 +210,10 @@ endif
 
 ifeq ($(EXTERNAL_HEAP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1
+endif
+
+ifeq ($(HISTORY_TRACKER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE=1
 endif
 
 ifeq ($(IP6_FRAGM),1)

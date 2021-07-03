@@ -162,6 +162,7 @@ EXTRA_DIST                                                         = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_history_tracker.py                                          \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \
@@ -228,6 +229,7 @@ check_SCRIPTS                                                      = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_history_tracker.py                                          \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \
