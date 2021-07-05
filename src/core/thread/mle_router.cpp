@@ -111,7 +111,24 @@ void MleRouter::HandlePartitionChange(void)
 
 bool MleRouter::IsRouterEligible(void) const
 {
-    return mRouterEligible && IsFullThreadDevice();
+    bool                 rval      = true;
+    const SecurityPolicy secPolicy = Get<KeyManager>().GetSecurityPolicy();
+
+    VerifyOrExit(mRouterEligible && IsFullThreadDevice(), rval = false);
+
+#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
+    VerifyOrExit(secPolicy.mRoutersEnabled, rval = false);
+#else
+    if (secPolicy.mCommercialCommissioningEnabled)
+    {
+        VerifyOrExit(secPolicy.mNonCcmRoutersEnabled, rval = false);
+    }
+    VerifyOrExit(secPolicy.mVersionThresholdForRouting + kVersionThresholdOffsetVersion <= kThreadVersion,
+                 rval = false);
+#endif
+
+exit:
+    return rval;
 }
 
 Error MleRouter::SetRouterEligible(bool aEligible)
@@ -153,16 +170,6 @@ Error MleRouter::BecomeRouter(ThreadStatusTlv::Status aStatus)
     VerifyOrExit(!IsDisabled(), error = kErrorInvalidState);
     VerifyOrExit(!IsRouter(), error = kErrorNone);
     VerifyOrExit(IsRouterEligible(), error = kErrorNotCapable);
-
-#if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
-    VerifyOrExit(Get<KeyManager>().GetSecurityPolicy().mRoutersEnabled, error = kErrorNotCapable);
-#else
-    if (Get<KeyManager>().GetSecurityPolicy().mCommercialCommissioningEnabled)
-    {
-        VerifyOrExit(Get<KeyManager>().GetSecurityPolicy().mNonCcmRoutersEnabled, error = kErrorNotCapable);
-    }
-    VerifyOrExit(Get<KeyManager>().GetSecurityPolicy().mVersionThresholdForRouting < 1, error = kErrorNotCapable);
-#endif
 
     otLogInfoMle("Attempt to become router");
 
