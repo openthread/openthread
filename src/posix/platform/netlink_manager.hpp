@@ -25,65 +25,28 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
-
-#include "openthread-posix-config.h"
-#include "platform-posix.h"
-
-#include <arpa/inet.h>
+#ifndef OT_POSIX_PLATFORM_NETLINK_MANAGER_HPP_
+#define OT_POSIX_PLATFORM_NETLINK_MANAGER_HPP_
 
 namespace ot {
 namespace Posix {
-namespace Ip6Utils {
 
-/**
- * This utility class converts binary IPv6 address to text format.
- *
- */
-class Ip6AddressString
+class NetlinkManager
 {
 public:
-    /**
-     * The constructor of this converter.
-     *
-     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
-     *
-     */
-    explicit Ip6AddressString(const void *aAddress)
-    {
-        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
-    }
+    static NetlinkManager &Get(void);
 
-    /**
-     * This method returns the string as a null-terminated C string.
-     *
-     * @returns The null-terminated C string.
-     *
-     */
-    const char *AsCString(void) const { return mBuffer; }
+    static int CreateNetlinkSocket(void);
+
+    int  GetFd(void) { return mFd; }
+    void Init(void);
+    void Deinit(void);
 
 private:
-    char mBuffer[INET6_ADDRSTRLEN];
+    int mFd = -1;
 };
 
-/**
- * This function converts netmask to prefix length.
- *
- * @param[in]   aNetmask    A reference to the netmask.
- *
- * @returns The prefix length.
- *
- */
-uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 &aNetmask);
-
-/**
- * This function constructs a netmask for a given prefix length.
- *
- * @param[out]  aNetmask        A reference to the netmask.
- * @param[in]   aPrefixLength   The prefix length.
- *
- */
-void InitNetmaskWithPrefixLength(struct in6_addr &aNetmask, uint8_t aPrefixLength);
-
-} // namespace Ip6Utils
 } // namespace Posix
 } // namespace ot
+
+#endif // OT_POSIX_PLATFORM_NETLINK_MANAGER_HPP_

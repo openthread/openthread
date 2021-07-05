@@ -25,65 +25,59 @@
  *  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  *  POSSIBILITY OF SUCH DAMAGE.
  */
+#ifndef OT_POSIX_PLATFORM_NETIF_MANAGER_HPP_
+#define OT_POSIX_PLATFORM_NETIF_MANAGER_HPP_
 
-#include "openthread-posix-config.h"
-#include "platform-posix.h"
-
-#include <arpa/inet.h>
+#include <openthread/ip6.h>
 
 namespace ot {
 namespace Posix {
-namespace Ip6Utils {
 
-/**
- * This utility class converts binary IPv6 address to text format.
- *
- */
-class Ip6AddressString
+class NetifManager
 {
 public:
-    /**
-     * The constructor of this converter.
-     *
-     * @param[in]   aAddress    A pointer to a buffer holding an IPv6 address.
-     *
-     */
-    explicit Ip6AddressString(const void *aAddress)
+    static NetifManager &Get(void);
+
+    int GetFd(void) { return mFd; }
+
+    void Init(void);
+    void Deinit(void);
+
+    void Destroy(const char *aNetifName);
+    bool IsUp(const char *aNetifName);
+    bool IsRunning(const char *aNetifName);
+    void SetMtu(const char *aNetifName, int aMtu);
+    void UpdateLink(const char *aNetifName, bool aUp);
+
+    void AddUnicast(unsigned int aNetifIndex, const otIp6AddressInfo &aAddressInfo)
     {
-        VerifyOrDie(inet_ntop(AF_INET6, aAddress, mBuffer, sizeof(mBuffer)) != nullptr, OT_EXIT_ERROR_ERRNO);
+        return UpdateUnicast(aNetifIndex, aAddressInfo, true);
+    }
+    void RemoveUnicast(unsigned int aNetifIndex, const otIp6AddressInfo &aAddressInfo)
+    {
+        return UpdateUnicast(aNetifIndex, aAddressInfo, false);
+    }
+    void AddMulticast(unsigned int aNetifIndex, const otIp6Address &aAddress)
+    {
+        return UpdateMulticast(aNetifIndex, aAddress, true);
+    }
+    void RemoveMulticast(unsigned int aNetifIndex, const otIp6Address &aAddress)
+    {
+        return UpdateMulticast(aNetifIndex, aAddress, false);
     }
 
-    /**
-     * This method returns the string as a null-terminated C string.
-     *
-     * @returns The null-terminated C string.
-     *
-     */
-    const char *AsCString(void) const { return mBuffer; }
+    bool HasAddress(unsigned int aInfraIfIndex, const otIp6Address &aAddress);
+
+    void UpdateUnicast(unsigned int aNetifIndex, const otIp6AddressInfo &aAddressInfo, bool aIsAdded);
+    void UpdateMulticast(unsigned int aNetifIndex, const otIp6Address &aAddress, bool aIsAdded);
 
 private:
-    char mBuffer[INET6_ADDRSTRLEN];
+    int mFd = -1;
+
+    int GetFlags(const char *aNetifName);
 };
 
-/**
- * This function converts netmask to prefix length.
- *
- * @param[in]   aNetmask    A reference to the netmask.
- *
- * @returns The prefix length.
- *
- */
-uint8_t NetmaskToPrefixLength(const struct sockaddr_in6 &aNetmask);
-
-/**
- * This function constructs a netmask for a given prefix length.
- *
- * @param[out]  aNetmask        A reference to the netmask.
- * @param[in]   aPrefixLength   The prefix length.
- *
- */
-void InitNetmaskWithPrefixLength(struct in6_addr &aNetmask, uint8_t aPrefixLength);
-
-} // namespace Ip6Utils
 } // namespace Posix
 } // namespace ot
+
+#endif // OT_POSIX_PLATFORM_NETIF_MANAGER_HPP_
