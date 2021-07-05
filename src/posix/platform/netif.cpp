@@ -187,11 +187,11 @@ using namespace ot::Posix::Ip6Utils;
 #endif // OPENTHREAD_TUN_DEVICE
 
 #if defined(__linux__)
-#define kDefaultExternalRoutePriority 512
-static uint32_t      sNetlinkSequence        = 0; ///< Netlink message sequence.
-static const uint8_t kMaxExternalRoutesNum   = 8;
-static uint8_t       sAddedExternalRoutesNum = 0;
-static otIp6Prefix   sAddedExternalRoutes[kMaxExternalRoutesNum];
+static const uint32_t kDefaultExternalRoutePriority = 512;
+static const uint8_t  kMaxExternalRoutesNum         = 8;
+static uint32_t       sNetlinkSequence              = 0; ///< Netlink message sequence.
+static uint8_t        sAddedExternalRoutesNum       = 0;
+static otIp6Prefix    sAddedExternalRoutes[kMaxExternalRoutesNum];
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -531,12 +531,12 @@ exit:
     return error;
 }
 
-int AddRtAttr32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
+otError AddRtAttr32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
 {
     return AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
 }
 
-static void AddExternalRoute(const otIp6Prefix &aPrefix)
+static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 {
     struct
     {
@@ -547,9 +547,10 @@ static void AddExternalRoute(const otIp6Prefix &aPrefix)
     unsigned char data[sizeof(in6_addr)];
     char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
     unsigned int  ifIdx = otSysGetThreadNetifIndex();
+    otError       error = OT_ERROR_NONE;
 
-    VerifyOrExit(sNetlinkFd >= 0);
-    VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum);
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum, error = OT_ERROR_NO_BUFS);
 
     req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
 
@@ -570,16 +571,16 @@ static void AddExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    SuccessOrExit(AddRtAttr(&req.header, sizeof(req), RTA_DST, data, 16 /* IP6 address size in bytes */));
-    SuccessOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_PRIORITY, kDefaultExternalRoutePriority));
-    SuccessOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx));
+    VerifyOrExit(AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)) == OT_ERROR_NONE,
+                 error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_PRIORITY, kDefaultExternalRoutePriority) == OT_ERROR_NONE,
+                 error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx) == OT_ERROR_NONE, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0);
-
-    sAddedExternalRoutes[sAddedExternalRoutesNum++] = aPrefix;
+    VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
 
 exit:
-    return;
+    return error;
 }
 
 static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
@@ -595,7 +596,7 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
     unsigned int  ifIdx = otSysGetThreadNetifIndex();
     otError       error = OT_ERROR_NONE;
 
-    VerifyOrExit(sNetlinkFd >= 0);
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_BUSY);
 
     req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_NONREC;
 
@@ -616,39 +617,62 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    SuccessOrExit(AddRtAttr(&req.header, sizeof(req), RTA_DST, data, 16 /* IP6 address size in bytes */));
-    SuccessOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx));
+    VerifyOrExit(AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)) == OT_ERROR_NONE,
+                 error = OT_ERROR_NO_BUFS);
+    VerifyOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx) == OT_ERROR_NONE, error = OT_ERROR_NO_BUFS);
 
-    VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0);
+    VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
 
 exit:
     return error;
 }
 
-static void UpdateExternalRoutes(otInstance *aInstance)
+bool HasExternalRouteInNetData(otInstance *aInstance, const otIp6Prefix &aExternalRoute)
 {
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otExternalRouteConfig config;
+    bool                  found = false;
+    while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
+    {
+        if (otIp6IsAddressEqual(&config.mPrefix.mPrefix, &aExternalRoute.mPrefix) &&
+            config.mPrefix.mLength == aExternalRoute.mLength)
+        {
+            found = true;
+            break;
+        }
+    }
+    return found;
+}
+
+bool HasAddedExternalRoute(const otIp6Prefix &aExternalRoute)
+{
+    bool found = false;
     for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
     {
-        otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otExternalRouteConfig config;
-        bool                  found = false;
-        while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
+        if (otIp6IsAddressEqual(&sAddedExternalRoutes[i].mPrefix, &aExternalRoute.mPrefix) &&
+            sAddedExternalRoutes[i].mLength == aExternalRoute.mLength)
         {
-            if (otIp6IsAddressEqual(&config.mPrefix.mPrefix, &sAddedExternalRoutes[i].mPrefix) &&
-                config.mPrefix.mLength == sAddedExternalRoutes[i].mLength)
-            {
-                found = true;
-                break;
-            }
+            found = true;
+            break;
         }
-        if (!found)
+    }
+    return found;
+}
+
+static void UpdateExternalRoutes(otInstance *aInstance)
+{
+    otError error;
+    for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
+    {
+        if (!HasExternalRouteInNetData(aInstance, sAddedExternalRoutes[i]))
         {
-            if (DeleteExternalRoute(sAddedExternalRoutes[i]) == OT_ERROR_NONE)
+            if ((error = DeleteExternalRoute(sAddedExternalRoutes[i])) != OT_ERROR_NONE)
             {
-                otIp6Prefix &x = sAddedExternalRoutes[i], &y = sAddedExternalRoutes[sAddedExternalRoutesNum - 1];
-                otIp6Prefix  tmp = x;
-                x                = y;
-                y                = tmp;
+                otLogWarnPlat("failed to delete an external route in kernel: %s", otThreadErrorToString(error));
+            }
+            else
+            {
+                sAddedExternalRoutes[i] = sAddedExternalRoutes[sAddedExternalRoutesNum - 1];
                 --sAddedExternalRoutesNum;
                 --i;
             }
@@ -662,21 +686,18 @@ static void UpdateExternalRoutes(otInstance *aInstance)
         {
             if (config.mRloc16 != otThreadGetRloc16(aInstance))
             {
-                bool found = false;
-                VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum);
-                for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
+                VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum,
+                             otLogWarnPlat("no buffer to add more external routes in kernel"));
+                if (!HasAddedExternalRoute(config.mPrefix))
                 {
-                    if (otIp6IsAddressEqual(&sAddedExternalRoutes[i].mPrefix, &config.mPrefix.mPrefix) &&
-                        sAddedExternalRoutes[i].mLength == config.mPrefix.mLength)
+                    if ((error = AddExternalRoute(config.mPrefix)) != OT_ERROR_NONE)
                     {
-                        found = true;
-                        break;
+                        otLogWarnPlat("failed to add an external route in kernel: %s", otThreadErrorToString(error));
                     }
-                }
-                if (!found)
-                {
-                    AddExternalRoute(config.mPrefix);
-                    sAddedExternalRoutes[sAddedExternalRoutesNum] = config.mPrefix;
+                    else
+                    {
+                        sAddedExternalRoutes[sAddedExternalRoutesNum++] = config.mPrefix;
+                    }
                 }
             }
         }
