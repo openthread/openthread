@@ -123,8 +123,11 @@ bool MleRouter::IsRouterEligible(void) const
     {
         VerifyOrExit(secPolicy.mNonCcmRoutersEnabled, rval = false);
     }
-    VerifyOrExit(secPolicy.mVersionThresholdForRouting + kVersionThresholdOffsetVersion <= kThreadVersion,
-                 rval = false);
+    if (!secPolicy.mRoutersEnabled)
+    {
+        VerifyOrExit(secPolicy.mVersionThresholdForRouting + kVersionThresholdOffsetVersion <= kThreadVersion,
+                     rval = false);
+    }
 #endif
 
 exit:
