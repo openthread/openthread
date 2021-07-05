@@ -187,11 +187,14 @@ using namespace ot::Posix::Ip6Utils;
 #endif // OPENTHREAD_TUN_DEVICE
 
 #if defined(__linux__)
-static const uint32_t kDefaultExternalRoutePriority = 512;
-static const uint8_t  kMaxExternalRoutesNum         = 8;
-static uint32_t       sNetlinkSequence              = 0; ///< Netlink message sequence.
-static uint8_t        sAddedExternalRoutesNum       = 0;
+static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
+
+#if OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
+static const uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
+static const uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
+static uint8_t        sAddedExternalRoutesNum = 0;
 static otIp6Prefix    sAddedExternalRoutes[kMaxExternalRoutesNum];
+#endif // OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
 #endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
@@ -510,14 +513,14 @@ exit:
     }
 }
 
-#if defined(__linux__)
+#if defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
 otError AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
 {
     uint8_t        len = RTA_LENGTH(aLen);
     struct rtattr *rta;
     otError        error = OT_ERROR_NONE;
 
-    VerifyOrExit(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen, error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen, error = OT_ERROR_NO_BUFS);
 
     rta           = (struct rtattr *)((char *)(aHeader) + NLMSG_ALIGN((aHeader)->nlmsg_len));
     rta->rta_type = aType;
@@ -549,7 +552,8 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
     unsigned int  ifIdx = otSysGetThreadNetifIndex();
     otError       error = OT_ERROR_NONE;
 
-    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(ifIdx > 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum, error = OT_ERROR_NO_BUFS);
 
     req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_CREATE | NLM_F_EXCL;
@@ -571,11 +575,9 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    VerifyOrExit(AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)) == OT_ERROR_NONE,
-                 error = OT_ERROR_NO_BUFS);
-    VerifyOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_PRIORITY, kDefaultExternalRoutePriority) == OT_ERROR_NONE,
-                 error = OT_ERROR_NO_BUFS);
-    VerifyOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx) == OT_ERROR_NONE, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)));
+    SuccessOrExit(error = AddRtAttr32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority));
+    SuccessOrExit(error = AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx));
 
     VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
 
@@ -596,7 +598,8 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
     unsigned int  ifIdx = otSysGetThreadNetifIndex();
     otError       error = OT_ERROR_NONE;
 
-    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_BUSY);
+    VerifyOrExit(ifIdx > 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
 
     req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_NONREC;
 
@@ -617,9 +620,8 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    VerifyOrExit(AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)) == OT_ERROR_NONE,
-                 error = OT_ERROR_NO_BUFS);
-    VerifyOrExit(AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx) == OT_ERROR_NONE, error = OT_ERROR_NO_BUFS);
+    SuccessOrExit(error = AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)));
+    SuccessOrExit(error = AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx));
 
     VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
 
@@ -632,6 +634,7 @@ bool HasExternalRouteInNetData(otInstance *aInstance, const otIp6Prefix &aExtern
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
     bool                  found = false;
+
     while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
         if (otIp6IsAddressEqual(&config.mPrefix.mPrefix, &aExternalRoute.mPrefix) &&
@@ -647,6 +650,7 @@ bool HasExternalRouteInNetData(otInstance *aInstance, const otIp6Prefix &aExtern
 bool HasAddedExternalRoute(const otIp6Prefix &aExternalRoute)
 {
     bool found = false;
+
     for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
     {
         if (otIp6IsAddressEqual(&sAddedExternalRoutes[i].mPrefix, &aExternalRoute.mPrefix) &&
@@ -705,7 +709,7 @@ static void UpdateExternalRoutes(otInstance *aInstance)
 exit:
     return;
 }
-#endif
+#endif // defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
 
 static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
@@ -725,12 +729,12 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     {
         UpdateLink(aInstance);
     }
-#if defined(__linux__)
+#if defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
         UpdateExternalRoutes(aInstance);
     }
-#endif
+#endif // defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
 }
 
 static void processReceive(otMessage *aMessage, void *aContext)
