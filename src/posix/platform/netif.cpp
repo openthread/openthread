@@ -631,10 +631,6 @@ exit:
     }
 }
 
-#define kAddAddress true
-#define kRemoveAddress false
-#define kUnicastAddress true
-#define kMulticastAddress false
 static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6, otError error)
 {
     char addressString[INET6_ADDRSTRLEN + 1];
@@ -664,6 +660,9 @@ static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6,
 
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
+    constexpr bool kAddAddress    = true;
+    constexpr bool kRemoveAddress = false;
+
     struct ifaddrmsg *  ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
     size_t              rtaLength;
     otError             error = OT_ERROR_NONE;
@@ -817,6 +816,11 @@ exit:
 
 static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 {
+    constexpr bool kAddAddress       = true;
+    constexpr bool kRemoveAddress    = false;
+    constexpr bool kUnicastAddress   = true;
+    constexpr bool kMulticastAddress = false;
+
     otError            error;
     struct ifa_msghdr *ifam;
 #ifdef RTM_NEWMADDR
