@@ -76,6 +76,9 @@ class OTCommandHandler:
         """
         pass
 
+    def shell(self, cmd: str, timeout: float) -> List[str]:
+        raise NotImplementedError("shell command is not supported on %s" % self.__class__.__name__)
+
 
 class OtCliCommandRunner(OTCommandHandler):
     __PATTERN_COMMAND_DONE_OR_ERROR = re.compile(
@@ -224,16 +227,11 @@ class OtbrSshCommandRunner(OTCommandHandler):
         return f'{self.__host}:{self.__port}'
 
     def execute_command(self, cmd: str, timeout: float) -> List[str]:
-        sh_cmd = f'ot-ctl -- {cmd}'
+        sh_cmd = f'ot-ctl {cmd}'
         if self.__sudo:
             sh_cmd = 'sudo ' + sh_cmd
 
-        cmd_in, cmd_out, cmd_err = self.__ssh.exec_command(sh_cmd, timeout=int(timeout), bufsize=1024)
-        err = cmd_err.read().decode('utf-8')
-        if err:
-            raise CommandError(cmd, [err])
-
-        output = [l.rstrip('\r\n') for l in cmd_out.readlines()]
+        output = self.shell(sh_cmd, timeout=timeout)
 
         if self.__line_read_callback is not None:
             for line in output:
@@ -241,6 +239,16 @@ class OtbrSshCommandRunner(OTCommandHandler):
 
         if cmd in ('reset', 'factoryreset'):
             self.wait(3)
+
+        return output
+
+    def shell(self, cmd: str, timeout: float) -> List[str]:
+        cmd_in, cmd_out, cmd_err = self.__ssh.exec_command(cmd, timeout=int(timeout), bufsize=1024)
+        errput = [l.rstrip('\r\n') for l in cmd_err.readlines()]
+        output = [l.rstrip('\r\n') for l in cmd_out.readlines()]
+
+        if errput:
+            raise CommandError(cmd, errput)
 
         return output
 
