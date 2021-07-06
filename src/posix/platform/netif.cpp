@@ -665,45 +665,43 @@ bool HasAddedExternalRoute(const otIp6Prefix &aExternalRoute)
 
 static void UpdateExternalRoutes(otInstance *aInstance)
 {
-    otError error;
+    otError               error;
+    otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
+    otExternalRouteConfig config;
+
     for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
     {
-        if (!HasExternalRouteInNetData(aInstance, sAddedExternalRoutes[i]))
+        if (HasExternalRouteInNetData(aInstance, sAddedExternalRoutes[i]))
         {
-            if ((error = DeleteExternalRoute(sAddedExternalRoutes[i])) != OT_ERROR_NONE)
-            {
-                otLogWarnPlat("failed to delete an external route in kernel: %s", otThreadErrorToString(error));
-            }
-            else
-            {
-                sAddedExternalRoutes[i] = sAddedExternalRoutes[sAddedExternalRoutesNum - 1];
-                --sAddedExternalRoutesNum;
-                --i;
-            }
+            continue;
+        }
+        if ((error = DeleteExternalRoute(sAddedExternalRoutes[i])) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("failed to delete an external route in kernel: %s", otThreadErrorToString(error));
+        }
+        else
+        {
+            sAddedExternalRoutes[i] = sAddedExternalRoutes[sAddedExternalRoutesNum - 1];
+            --sAddedExternalRoutesNum;
+            --i;
         }
     }
 
+    while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otExternalRouteConfig config;
-        while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
+        if (config.mRloc16 == otThreadGetRloc16(aInstance) || HasAddedExternalRoute(config.mPrefix))
         {
-            if (config.mRloc16 != otThreadGetRloc16(aInstance))
-            {
-                VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum,
-                             otLogWarnPlat("no buffer to add more external routes in kernel"));
-                if (!HasAddedExternalRoute(config.mPrefix))
-                {
-                    if ((error = AddExternalRoute(config.mPrefix)) != OT_ERROR_NONE)
-                    {
-                        otLogWarnPlat("failed to add an external route in kernel: %s", otThreadErrorToString(error));
-                    }
-                    else
-                    {
-                        sAddedExternalRoutes[sAddedExternalRoutesNum++] = config.mPrefix;
-                    }
-                }
-            }
+            continue;
+        }
+        VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum,
+                     otLogWarnPlat("no buffer to add more external routes in kernel"));
+        if ((error = AddExternalRoute(config.mPrefix)) != OT_ERROR_NONE)
+        {
+            otLogWarnPlat("failed to add an external route in kernel: %s", otThreadErrorToString(error));
+        }
+        else
+        {
+            sAddedExternalRoutes[sAddedExternalRoutesNum++] = config.mPrefix;
         }
     }
 exit:
