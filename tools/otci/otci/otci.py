@@ -363,11 +363,11 @@ class OTCI(object):
         return self.__parse_str(self.execute_command('networkname'))
 
     def get_network_key(self) -> str:
-        """Get the network network key."""
+        """Get the network key."""
         return self.__parse_network_key(self.execute_command(self.__detect_networkkey_cmd()))
 
     def set_network_key(self, networkkey: str):
-        """Set the network network key."""
+        """Set the network key."""
         self.__validate_network_key(networkkey)
         cmd = self.__detect_networkkey_cmd()
         self.execute_command(f'{cmd} {networkkey}')
