@@ -97,6 +97,7 @@ otIp6Address *otSrpClientBuffersGetHostAddressesArray(otInstance *aInstance, uin
  *    `otSrpClientBuffersGetServiceEntryServiceNameString()`.
  *  - `mService.mInstanceName` will point to an allocated string buffer which can be retrieved using the function
  *    `otSrpClientBuffersGetServiceEntryInstanceNameString()`.
+ *  - `mService.mSubTypeLabels` points to an array that is returned from `otSrpClientBuffersGetSubTypeLabelsArray()`.
  *  - `mService.mTxtEntries` will point to `mTxtEntry`.
  *  - `mService.mNumTxtEntries` will be set to one.
  *  - Other `mService` fields (port, priority, weight) are set to zero.
@@ -104,6 +105,7 @@ otIp6Address *otSrpClientBuffersGetHostAddressesArray(otInstance *aInstance, uin
  *  - `mTxtEntry.mValue` will point to an allocated buffer which can be retrieved using the function
  *    `otSrpClientBuffersGetServiceEntryTxtBuffer()`.
  *  - `mTxtEntry.mValueLength` is set to zero.
+ *  - All related data/string buffers and arrays are cleared to all zero.
  *
  * @param[in] aInstance   A pointer to the OpenThread instance.
  *
@@ -166,6 +168,17 @@ char *otSrpClientBuffersGetServiceEntryInstanceNameString(otSrpClientBuffersServ
  *
  */
 uint8_t *otSrpClientBuffersGetServiceEntryTxtBuffer(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aSize);
+
+/**
+ * This function gets the array for service subtype labels from the service entry.
+ *
+ * @param[in]  aEntry          A pointer to a previously allocated service entry (MUST NOT be NULL).
+ * @param[out] aArrayLength    A pointer to a variable to return the array length (MUST NOT be NULL).
+ *
+ * @returns A pointer to the array.
+ *
+ */
+const char **otSrpClientBuffersGetSubTypeLabelsArray(otSrpClientBuffersServiceEntry *aEntry, uint16_t *aArrayLength);
 
 /**
  * @}

@@ -192,6 +192,28 @@ public:
         const char *GetInstanceName(void) const { return mInstanceName; }
 
         /**
+         * This method indicates whether or not the service has any subtypes.
+         *
+         * @retval TRUE   The service has at least one subtype.
+         * @retval FALSE  The service does not have any subtype.
+         *
+         */
+        bool HasSubType(void) const { return (mSubTypeLabels != nullptr); }
+
+        /**
+         * This method gets the subtype label at a given index.
+         *
+         * This method MUST be used only after `HasSubType()` indicates that service has a subtype.
+         *
+         * @param[in] aIndex  The index into list of subtype labels.
+         *
+         * @returns A pointer to subtype label at @p aIndex, or `nullptr` if there is no label (@p aIndex is after the
+         *          end of the subtype list).
+         *
+         */
+        const char *GetSubTypeLabelAt(uint16_t aIndex) const { return mSubTypeLabels[aIndex]; }
+
+        /**
          * This method gets the service port number.
          *
          * @returns The service port number.

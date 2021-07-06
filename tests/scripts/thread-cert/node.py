@@ -890,8 +890,8 @@ class NodeImpl:
                 service_list.append(service)
                 continue
 
-            # 'port', 'priority', 'weight'
-            for i in range(0, 3):
+            # 'subtypes', port', 'priority', 'weight'
+            for i in range(0, 4):
                 key_value = lines.pop(0).strip().split(':')
                 service[key_value[0].strip()] = key_value[1].strip()
 
@@ -1044,7 +1044,7 @@ class NodeImpl:
            Note that value of 'port', 'priority' and 'weight' are represented
            as strings but not integers.
         """
-        key_values = [word.strip().split(':') for word in line.split(',')]
+        key_values = [word.strip().split(':') for word in line.split(', ')]
         keys = [key_value[0] for key_value in key_values]
         values = [key_value[1].strip('"') for key_value in key_values]
         return dict(zip(keys, values))

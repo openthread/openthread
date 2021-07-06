@@ -116,10 +116,24 @@ void Client::Service::SetState(ItemState aState)
 
     if (aState == kToAdd)
     {
+        constexpr uint16_t kSubTypeLabelStringSize = 80;
+
+        String<kSubTypeLabelStringSize> string;
+
         // Log more details only when entering `kToAdd` state.
 
-        otLogInfoSrp("[client] port:%d weight:%d prio:%d txts:%d", GetPort(), GetWeight(), GetPriority(),
-                     GetNumTxtEntries());
+        if (HasSubType())
+        {
+            const char *label;
+
+            for (uint16_t index = 0; (label = GetSubTypeLabelAt(index)) != nullptr; index++)
+            {
+                string.Append("%s\"%s\"", (index != 0) ? ", " : "", label);
+            }
+        }
+
+        otLogInfoSrp("[client] subtypes:[%s] port:%d weight:%d prio:%d txts:%d", string.AsCString(), GetPort(),
+                     GetWeight(), GetPriority(), GetNumTxtEntries());
     }
 
     mState = static_cast<otSrpClientItemState>(aState);
@@ -842,6 +856,38 @@ Error Client::AppendServiceInstructions(Service &aService, Message &aMessage, In
 
     UpdateRecordLengthInMessage(rr, offset, aMessage);
     aInfo.mRecordCount++;
+
+    if (aService.HasSubType())
+    {
+        const char *subTypeLabel;
+        uint16_t    subServiceNameOffset = 0;
+
+        for (uint16_t index = 0; (subTypeLabel = aService.GetSubTypeLabelAt(index)) != nullptr; ++index)
+        {
+            // subtype label + "_sub" label + (pointer to) service name.
+
+            SuccessOrExit(error = Dns::Name::AppendLabel(subTypeLabel, aMessage));
+
+            if (index == 0)
+            {
+                subServiceNameOffset = aMessage.GetLength();
+                SuccessOrExit(error = Dns::Name::AppendLabel("_sub", aMessage));
+                SuccessOrExit(error = Dns::Name::AppendPointerLabel(serviceNameOffset, aMessage));
+            }
+            else
+            {
+                SuccessOrExit(error = Dns::Name::AppendPointerLabel(subServiceNameOffset, aMessage));
+            }
+
+            // `rr` is already initialized as PTR (add or remove).
+            offset = aMessage.GetLength();
+            SuccessOrExit(error = aMessage.Append(rr));
+
+            SuccessOrExit(error = Dns::Name::AppendPointerLabel(instanceNameOffset, aMessage));
+            UpdateRecordLengthInMessage(rr, offset, aMessage);
+            aInfo.mRecordCount++;
+        }
+    }
 
     //----------------------------------
     // Service Description Instruction

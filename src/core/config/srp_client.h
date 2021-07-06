@@ -316,7 +316,19 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_NAME_SIZE
-#define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_NAME_SIZE 64
+#define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_NAME_SIZE 96
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_MAX_SUB_TYPES
+ *
+ * Specifies the maximum number of service subtype labels (array length) in the SRP client buffers and service pool.
+ *
+ * This config is applicable only when `OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_MAX_SUB_TYPES
+#define OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_MAX_SUB_TYPES 6
 #endif
 
 /**

@@ -231,6 +231,7 @@ private:
     {
         kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
         kProtocolLabelLength  = 4,
+        kSubTypeLabelLength   = 4,
         kMaxConcurrentQueries = 32,
     };
 
@@ -246,6 +247,7 @@ private:
             : mDomainOffset(kNotPresent)
             , mProtocolOffset(kNotPresent)
             , mServiceOffset(kNotPresent)
+            , mSubTypeOffset(kNotPresent)
             , mInstanceOffset(kNotPresent)
         {
         }
@@ -261,6 +263,7 @@ private:
                                  // the name is not a service or instance.
         uint8_t mServiceOffset;  // The offset to the beginning of <Service> or `kNotPresent` if the name is not a
                                  // service or instance.
+        uint8_t mSubTypeOffset;  // The offset to the beginning of sub-type label or `kNotPresent` is not a sub-type.
         uint8_t mInstanceOffset; // The offset to the beginning of <Instance> or `kNotPresent` if the name is not a
                                  // instance.
     };
@@ -393,6 +396,7 @@ private:
 
     static const char kDnssdProtocolUdp[4];
     static const char kDnssdProtocolTcp[4];
+    static const char kDnssdSubTypeLabel[];
     static const char kDefaultDomainName[];
     Ip6::Udp::Socket  mSocket;
 
