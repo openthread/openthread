@@ -732,7 +732,7 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     {
         UpdateExternalRoutes(aInstance);
     }
-#endif // defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
+#endif
 }
 
 static void processReceive(otMessage *aMessage, void *aContext)
