@@ -190,10 +190,10 @@ using namespace ot::Posix::Ip6Utils;
 static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
 
 #if OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
-static const uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
-static const uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
-static uint8_t        sAddedExternalRoutesNum = 0;
-static otIp6Prefix    sAddedExternalRoutes[kMaxExternalRoutesNum];
+static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
+static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
+static uint8_t            sAddedExternalRoutesNum = 0;
+static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 #endif // OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
 #endif
 
