@@ -78,6 +78,7 @@ exit:
     {
         IgnoreError(mSocket.Close());
     }
+
     return error;
 }
 
@@ -91,6 +92,7 @@ void Server::Stop(void)
             FinalizeQuery(query, Header::kResponseServerFailure);
         }
     }
+
     mTimer.Stop();
 
     IgnoreError(mSocket.Close());
@@ -217,13 +219,14 @@ Header::Response Server::AddQuestions(const Header &    aRequestHeader,
     for (uint16_t i = 0; i < aRequestHeader.GetQuestionCount(); i++)
     {
         NameComponentsOffsetInfo nameComponentsOffsetInfo;
+        uint16_t                 qtype;
 
         VerifyOrExit(kErrorNone == Name::ReadName(aRequestMessage, readOffset, name, sizeof(name)),
                      response = Header::kResponseFormatError);
         VerifyOrExit(kErrorNone == aRequestMessage.Read(readOffset, question), response = Header::kResponseFormatError);
         readOffset += sizeof(question);
 
-        uint16_t qtype = question.GetType();
+        qtype = question.GetType();
 
         VerifyOrExit(qtype == ResourceRecord::kTypePtr || qtype == ResourceRecord::kTypeSrv ||
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
@@ -423,8 +426,7 @@ exit:
 
 Error Server::AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    Error error;
-
+    Error    error;
     uint16_t instanceCompressOffset = aCompressInfo.GetInstanceNameOffset(aMessage, aName);
 
     if (instanceCompressOffset != NameCompressInfo::kUnknownOffset)
@@ -817,11 +819,11 @@ Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHead
     }
 
 exit:
-
     if (newQuery != nullptr)
     {
         ResetTimer();
     }
+
     return newQuery;
 }
 
@@ -986,22 +988,24 @@ void Server::HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostIn
 
 const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
 {
-    const QueryTransaction *now   = &mQueryTransactions[0];
+    const QueryTransaction *cur   = &mQueryTransactions[0];
     const QueryTransaction *found = nullptr;
     const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
 
     if (aQuery != nullptr)
     {
-        now = query + 1;
+        cur = query + 1;
     }
-    for (; now < &mQueryTransactions[OT_ARRAY_LENGTH(mQueryTransactions)]; now++)
+
+    for (; cur < OT_ARRAY_END(mQueryTransactions); cur++)
     {
-        if (now->IsValid())
+        if (cur->IsValid())
         {
-            found = now;
+            found = cur;
             break;
         }
     }
+
     return static_cast<const otDnssdQuery *>(found);
 }
 
