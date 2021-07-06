@@ -188,14 +188,18 @@ using namespace ot::Posix::Ip6Utils;
 
 #if defined(__linux__)
 static uint32_t sNetlinkSequence = 0; ///< Netlink message sequence.
+#endif
 
-#if OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#if defined(__linux__)
 static constexpr uint32_t kExternalRoutePriority  = OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY;
 static constexpr uint8_t  kMaxExternalRoutesNum   = OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM;
 static uint8_t            sAddedExternalRoutesNum = 0;
 static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
+#else
+#error "OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE only works on Linux platform"
+#endif // defined(__linux__)
 #endif // OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
-#endif
 
 #if defined(RTM_NEWMADDR) || defined(__NetBSD__)
 // on some BSDs (mac OS, FreeBSD), we get RTM_NEWMADDR/RTM_DELMADDR messages, so we don't need to monitor using MLD
@@ -513,7 +517,7 @@ exit:
     }
 }
 
-#if defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
 otError AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
 {
     uint8_t        len = RTA_LENGTH(aLen);
@@ -541,11 +545,12 @@ otError AddRtAttr32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, u
 
 static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 {
+    constexpr unsigned int kBufSize = 128;
     struct
     {
         struct nlmsghdr header;
         struct rtmsg    msg;
-        char            buf[128];
+        char            buf[kBufSize];
     } req{};
     unsigned char data[sizeof(in6_addr)];
     char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
@@ -587,11 +592,12 @@ exit:
 
 static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
 {
+    constexpr unsigned int kBufSize = 512;
     struct
     {
         struct nlmsghdr header;
         struct rtmsg    msg;
-        char            buf[512];
+        char            buf[kBufSize];
     } req{};
     unsigned char data[sizeof(in6_addr)];
     char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
@@ -637,8 +643,7 @@ bool HasExternalRouteInNetData(otInstance *aInstance, const otIp6Prefix &aExtern
 
     while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        if (otIp6IsAddressEqual(&config.mPrefix.mPrefix, &aExternalRoute.mPrefix) &&
-            config.mPrefix.mLength == aExternalRoute.mLength)
+        if (otIp6IsPrefixEqual(&config.mPrefix, &aExternalRoute))
         {
             found = true;
             break;
@@ -653,8 +658,7 @@ bool HasAddedExternalRoute(const otIp6Prefix &aExternalRoute)
 
     for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
     {
-        if (otIp6IsAddressEqual(&sAddedExternalRoutes[i].mPrefix, &aExternalRoute.mPrefix) &&
-            sAddedExternalRoutes[i].mLength == aExternalRoute.mLength)
+        if (otIp6IsPrefixEqual(&sAddedExternalRoutes[i], &aExternalRoute))
         {
             found = true;
             break;
@@ -668,6 +672,7 @@ static void UpdateExternalRoutes(otInstance *aInstance)
     otError               error;
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
+    char                  prefixString[OT_IP6_PREFIX_STRING_SIZE];
 
     for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
     {
@@ -677,7 +682,9 @@ static void UpdateExternalRoutes(otInstance *aInstance)
         }
         if ((error = DeleteExternalRoute(sAddedExternalRoutes[i])) != OT_ERROR_NONE)
         {
-            otLogWarnPlat("failed to delete an external route in kernel: %s", otThreadErrorToString(error));
+            otIp6PrefixToString(&sAddedExternalRoutes[i], prefixString, sizeof(prefixString));
+            otLogWarnPlat("failed to delete an external route %s in kernel: %s", prefixString,
+                          otThreadErrorToString(error));
         }
         else
         {
@@ -697,7 +704,9 @@ static void UpdateExternalRoutes(otInstance *aInstance)
                      otLogWarnPlat("no buffer to add more external routes in kernel"));
         if ((error = AddExternalRoute(config.mPrefix)) != OT_ERROR_NONE)
         {
-            otLogWarnPlat("failed to add an external route in kernel: %s", otThreadErrorToString(error));
+            otIp6PrefixToString(&config.mPrefix, prefixString, sizeof(prefixString));
+            otLogWarnPlat("failed to add an external route %s in kernel: %s", prefixString,
+                          otThreadErrorToString(error));
         }
         else
         {
@@ -707,7 +716,7 @@ static void UpdateExternalRoutes(otInstance *aInstance)
 exit:
     return;
 }
-#endif // defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
+#endif // OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
 
 static void processAddressChange(const otIp6AddressInfo *aAddressInfo, bool aIsAdded, void *aContext)
 {
@@ -727,7 +736,7 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     {
         UpdateLink(aInstance);
     }
-#if defined(__linux__) && OPENTHREAD_POSIX_CONFIG_UPDATE_EXTERNAL_ROUTE_ENABLE
+#if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
         UpdateExternalRoutes(aInstance);
