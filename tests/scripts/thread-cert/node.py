@@ -1512,6 +1512,10 @@ class NodeImpl:
                 return addr
         return None
 
+    def get_mleid_iid(self):
+        ml_eid = ipaddress.IPv6Address(self.get_mleid())
+        return ml_eid.packed[8:].hex()
+
     def get_eidcaches(self):
         eidcaches = []
         self.send_command('eidcache')
