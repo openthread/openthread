@@ -53,6 +53,7 @@
 #include "net/ip6_mpl.hpp"
 #include "net/netif.hpp"
 #include "net/socket.hpp"
+#include "net/tcp6.hpp"
 #include "net/udp6.hpp"
 
 namespace ot {
@@ -375,6 +376,10 @@ private:
     Icmp mIcmp;
     Udp  mUdp;
     Mpl  mMpl;
+
+#if OPENTHREAD_CONFIG_TCP_ENABLE
+    Tcp mTcp;
+#endif
 
 #if OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE
     MessageQueue mReassemblyList;

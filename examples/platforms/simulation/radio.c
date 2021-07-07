@@ -39,7 +39,6 @@
 #include <openthread/platform/radio.h>
 #include <openthread/platform/time.h>
 
-#include "common/code_utils.hpp"
 #include "utils/code_utils.h"
 #include "utils/link_metrics.h"
 #include "utils/mac_frame.h"
@@ -1230,7 +1229,7 @@ otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aCh
 
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aChannel >= kMinChannel && aChannel <= kMaxChannel, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aChannel >= kMinChannel && aChannel <= kMaxChannel, error = OT_ERROR_INVALID_ARGS);
     sChannelMaxTransmitPower[aChannel - kMinChannel] = aMaxPower;
 
 exit:
@@ -1262,7 +1261,7 @@ otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
     OT_UNUSED_VARIABLE(aInstance);
     otError error = OT_ERROR_NONE;
 
-    VerifyOrExit(aRegionCode != NULL, error = OT_ERROR_INVALID_ARGS);
+    otEXPECT_ACTION(aRegionCode != NULL, error = OT_ERROR_INVALID_ARGS);
 
     *aRegionCode = sRegionCode;
 exit:

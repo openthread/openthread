@@ -49,6 +49,7 @@ namespace ServiceDiscovery {
 
 const char Server::kDnssdProtocolUdp[4] = {'_', 'u', 'd', 'p'};
 const char Server::kDnssdProtocolTcp[4] = {'_', 't', 'c', 'p'};
+const char Server::kDnssdSubTypeLabel[] = "._sub.";
 const char Server::kDefaultDomainName[] = "default.service.arpa.";
 
 Server::Server(Instance &aInstance)
@@ -77,6 +78,7 @@ exit:
     {
         IgnoreError(mSocket.Close());
     }
+
     return error;
 }
 
@@ -90,6 +92,7 @@ void Server::Stop(void)
             FinalizeQuery(query, Header::kResponseServerFailure);
         }
     }
+
     mTimer.Stop();
 
     IgnoreError(mSocket.Close());
@@ -216,13 +219,14 @@ Header::Response Server::AddQuestions(const Header &    aRequestHeader,
     for (uint16_t i = 0; i < aRequestHeader.GetQuestionCount(); i++)
     {
         NameComponentsOffsetInfo nameComponentsOffsetInfo;
+        uint16_t                 qtype;
 
         VerifyOrExit(kErrorNone == Name::ReadName(aRequestMessage, readOffset, name, sizeof(name)),
                      response = Header::kResponseFormatError);
         VerifyOrExit(kErrorNone == aRequestMessage.Read(readOffset, question), response = Header::kResponseFormatError);
         readOffset += sizeof(question);
 
-        uint16_t qtype = question.GetType();
+        qtype = question.GetType();
 
         VerifyOrExit(qtype == ResourceRecord::kTypePtr || qtype == ResourceRecord::kTypeSrv ||
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
@@ -370,8 +374,26 @@ exit:
 
 Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    Error    error;
-    uint16_t serviceCompressOffset = aCompressInfo.GetServiceNameOffset(aMessage, aName);
+    Error       error;
+    uint16_t    serviceCompressOffset = aCompressInfo.GetServiceNameOffset(aMessage, aName);
+    const char *serviceName;
+
+    // Check whether `aName` is a sub-type service name.
+    serviceName = StringFind(aName, kDnssdSubTypeLabel);
+
+    if (serviceName != nullptr)
+    {
+        uint8_t subTypeLabelLength = static_cast<uint8_t>(serviceName - aName) + sizeof(kDnssdSubTypeLabel) - 1;
+
+        SuccessOrExit(error = Name::AppendMultipleLabels(aName, subTypeLabelLength, aMessage));
+
+        // Skip over the "._sub." label to get to the root service name.
+        serviceName += sizeof(kDnssdSubTypeLabel) - 1;
+    }
+    else
+    {
+        serviceName = aName;
+    }
 
     if (serviceCompressOffset != NameCompressInfo::kUnknownOffset)
     {
@@ -379,7 +401,7 @@ Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompre
     }
     else
     {
-        uint8_t  domainStart          = static_cast<uint8_t>(StringLength(aName, Name::kMaxNameSize - 1) -
+        uint8_t  domainStart          = static_cast<uint8_t>(StringLength(serviceName, Name::kMaxNameSize - 1) -
                                                    StringLength(aCompressInfo.GetDomainName(), Name::kMaxNameSize - 1));
         uint16_t domainCompressOffset = aCompressInfo.GetDomainNameOffset();
 
@@ -389,11 +411,11 @@ Error Server::AppendServiceName(Message &aMessage, const char *aName, NameCompre
         if (domainCompressOffset == NameCompressInfo::kUnknownOffset)
         {
             aCompressInfo.SetDomainNameOffset(serviceCompressOffset + domainStart);
-            error = Name::AppendName(aName, aMessage);
+            error = Name::AppendName(serviceName, aMessage);
         }
         else
         {
-            SuccessOrExit(error = Name::AppendMultipleLabels(aName, domainStart, aMessage));
+            SuccessOrExit(error = Name::AppendMultipleLabels(serviceName, domainStart, aMessage));
             error = Name::AppendPointerLabel(domainCompressOffset, aMessage);
         }
     }
@@ -404,8 +426,7 @@ exit:
 
 Error Server::AppendInstanceName(Message &aMessage, const char *aName, NameCompressInfo &aCompressInfo)
 {
-    Error error;
-
+    Error    error;
     uint16_t instanceCompressOffset = aCompressInfo.GetInstanceNameOffset(aMessage, aName);
 
     if (instanceCompressOffset != NameCompressInfo::kUnknownOffset)
@@ -547,10 +568,22 @@ Error Server::FindNameComponents(const char *aName, const char *aDomain, NameCom
 
     aInfo.mServiceOffset = labelBegin;
 
-    // Treat everything before <Service> as <Instance> label
+    // Check for service subtype
     error = FindPreviousLabel(aName, labelBegin, labelEnd);
     VerifyOrExit(error == kErrorNone, error = (error == kErrorNotFound ? kErrorNone : error));
 
+    // Note that `kDnssdSubTypeLabel` is "._sub.". Here we get the
+    // label only so we want to compare it with "_sub".
+    if ((labelEnd == labelBegin + kSubTypeLabelLength) &&
+        (memcmp(&aName[labelBegin], kDnssdSubTypeLabel + 1, kSubTypeLabelLength) == 0))
+    {
+        SuccessOrExit(error = FindPreviousLabel(aName, labelBegin, labelEnd));
+        VerifyOrExit(labelBegin == 0, error = kErrorInvalidArgs);
+        aInfo.mSubTypeOffset = labelBegin;
+        ExitNow();
+    }
+
+    // Treat everything before <Service> as <Instance> label
     aInfo.mInstanceOffset = 0;
 
 exit:
@@ -657,9 +690,9 @@ Header::Response Server::ResolveQuestionBySrp(const char *      aName,
             while ((service = GetNextSrpService(*host, service)) != nullptr)
             {
                 uint32_t    instanceTtl         = TimeMilli::MsecToSec(service->GetExpireTime() - TimerMilli::GetNow());
-                const char *instanceName        = service->GetFullName();
+                const char *instanceName        = service->GetInstanceName();
                 bool        serviceNameMatched  = service->MatchesServiceName(aName);
-                bool        instanceNameMatched = service->Matches(aName);
+                bool        instanceNameMatched = service->MatchesInstanceName(aName);
                 bool        ptrQueryMatched     = qtype == ResourceRecord::kTypePtr && serviceNameMatched;
                 bool        srvQueryMatched     = qtype == ResourceRecord::kTypeSrv && instanceNameMatched;
                 bool        txtQueryMatched     = qtype == ResourceRecord::kTypeTxt && instanceNameMatched;
@@ -738,14 +771,7 @@ const Srp::Server::Host *Server::GetNextSrpHost(const Srp::Server::Host *aHost)
 const Srp::Server::Service *Server::GetNextSrpService(const Srp::Server::Host &   aHost,
                                                       const Srp::Server::Service *aService)
 {
-    const Srp::Server::Service *service = aHost.GetNextService(aService);
-
-    while (service != nullptr && service->IsDeleted())
-    {
-        service = aHost.GetNextService(service);
-    }
-
-    return service;
+    return aHost.FindNextService(aService, Srp::Server::kFlagsAnyTypeActiveService);
 }
 #endif // OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
@@ -793,11 +819,11 @@ Server::QueryTransaction *Server::NewQuery(const Header &          aResponseHead
     }
 
 exit:
-
     if (newQuery != nullptr)
     {
         ResetTimer();
     }
+
     return newQuery;
 }
 
@@ -962,22 +988,24 @@ void Server::HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostIn
 
 const otDnssdQuery *Server::GetNextQuery(const otDnssdQuery *aQuery) const
 {
-    const QueryTransaction *now   = &mQueryTransactions[0];
+    const QueryTransaction *cur   = &mQueryTransactions[0];
     const QueryTransaction *found = nullptr;
     const QueryTransaction *query = static_cast<const QueryTransaction *>(aQuery);
 
     if (aQuery != nullptr)
     {
-        now = query + 1;
+        cur = query + 1;
     }
-    for (; now < &mQueryTransactions[OT_ARRAY_LENGTH(mQueryTransactions)]; now++)
+
+    for (; cur < OT_ARRAY_END(mQueryTransactions); cur++)
     {
-        if (now->IsValid())
+        if (cur->IsValid())
         {
-            found = now;
+            found = cur;
             break;
         }
     }
+
     return static_cast<const otDnssdQuery *>(found);
 }
 

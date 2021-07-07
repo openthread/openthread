@@ -90,10 +90,10 @@ void TestSha256(void)
     uint16_t     offsets[OT_ARRAY_LENGTH(kTestCases)];
     uint8_t      index;
 
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
+    VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
 
     for (const TestCase &testCase : kTestCases)
     {
@@ -104,7 +104,7 @@ void TestSha256(void)
         sha256.Update(testCase.mData, static_cast<uint16_t>(strlen(testCase.mData)));
         sha256.Finish(hash);
 
-        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash), "HMAC-SHA-256 failed");
+        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash));
     }
 
     // Append all test case `mData` in the message.
@@ -113,11 +113,10 @@ void TestSha256(void)
 
     for (const TestCase &testCase : kTestCases)
     {
-        SuccessOrQuit(message->Append("Hello"), "Message::Append() failed");
+        SuccessOrQuit(message->Append("Hello"));
         offsets[index++] = message->GetLength();
-        SuccessOrQuit(message->AppendBytes(testCase.mData, static_cast<uint16_t>(strlen(testCase.mData))),
-                      "Message::AppendBytes() failed");
-        SuccessOrQuit(message->Append("There!"), "Message::Append() failed");
+        SuccessOrQuit(message->AppendBytes(testCase.mData, static_cast<uint16_t>(strlen(testCase.mData))));
+        SuccessOrQuit(message->Append("There!"));
     }
 
     index = 0;
@@ -131,7 +130,7 @@ void TestSha256(void)
         sha256.Update(*message, offsets[index++], static_cast<uint16_t>(strlen(testCase.mData)));
         sha256.Finish(hash);
 
-        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash), "HMAC-SHA-256 failed");
+        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash));
     }
 
     testFreeInstance(instance);
@@ -235,10 +234,10 @@ void TestHmacSha256(void)
 
     printf("TestHmacSha256\n");
 
-    VerifyOrQuit(instance != nullptr, "Null OpenThread instance");
+    VerifyOrQuit(instance != nullptr);
 
     messagePool = &instance->Get<MessagePool>();
-    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr, "Message::New failed");
+    VerifyOrQuit((message = messagePool->New(Message::kTypeIp6, 0)) != nullptr);
 
     for (const TestCase &testCase : kTestCases)
     {
@@ -249,7 +248,7 @@ void TestHmacSha256(void)
         hmac.Update(testCase.mData, testCase.mDataLength);
         hmac.Finish(hash);
 
-        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash), "HMAC-SHA-256 failed");
+        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash));
     }
 
     // Append all test case `mData` in the message.
@@ -258,10 +257,10 @@ void TestHmacSha256(void)
 
     for (const TestCase &testCase : kTestCases)
     {
-        SuccessOrQuit(message->Append("Hello"), "Message::Append() failed");
+        SuccessOrQuit(message->Append("Hello"));
         offsets[index++] = message->GetLength();
-        SuccessOrQuit(message->AppendBytes(testCase.mData, testCase.mDataLength), "Message::AppendBytes() failed");
-        SuccessOrQuit(message->Append("There"), "Message::Append() failed");
+        SuccessOrQuit(message->AppendBytes(testCase.mData, testCase.mDataLength));
+        SuccessOrQuit(message->Append("There"));
     }
 
     index = 0;
@@ -275,7 +274,7 @@ void TestHmacSha256(void)
         hmac.Update(*message, offsets[index++], testCase.mDataLength);
         hmac.Finish(hash);
 
-        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash), "HMAC-SHA-256 failed");
+        VerifyOrQuit(hash == static_cast<const Crypto::HmacSha256::Hash &>(testCase.mHash));
     }
 
     message->Free();

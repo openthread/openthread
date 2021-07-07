@@ -35,7 +35,7 @@ import command
 import thread_cert
 
 # Test description:
-#   This test verifies when an SRP server reboots, it will listen to a UDP port
+#   This test verifies when an SRP server restarts, it will listen to a UDP port
 #   that wasn't used in the last time.
 #
 # Topology:
@@ -49,7 +49,7 @@ SERVER = 2
 REBOOT_TIMES = 25
 
 
-class SrpAutoStartMode(thread_cert.TestCase):
+class SrpServerRebootPort(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
     SUPPORT_NCP = False
 
@@ -99,8 +99,6 @@ class SrpAutoStartMode(thread_cert.TestCase):
         #
         old_port = server.get_srp_server_port()
         server.srp_server_set_enabled(False)
-        server.reset()
-        server.start()
         self.simulator.go(5)
         server.srp_server_set_enabled(True)
         self.simulator.go(5)
@@ -124,8 +122,6 @@ class SrpAutoStartMode(thread_cert.TestCase):
             #
             old_port = server.get_srp_server_port()
             server.srp_server_set_enabled(False)
-            server.reset()
-            server.start()
             self.simulator.go(5)
 
             #
@@ -170,6 +166,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         self.assertEqual(server_service['deleted'], 'false')
         self.assertEqual(server_service['instance'], client_service['instance'])
         self.assertEqual(server_service['name'], client_service['name'])
+        self.assertEqual(server_service['subtypes'], '(null)')
         self.assertEqual(int(server_service['port']), int(client_service['port']))
         self.assertEqual(int(server_service['priority']), int(client_service['priority']))
         self.assertEqual(int(server_service['weight']), int(client_service['weight']))

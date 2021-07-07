@@ -29,7 +29,6 @@
 import ipaddress
 import logging
 import re
-import time
 from collections import Counter
 from typing import List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
 
@@ -76,9 +75,11 @@ class OTCI(object):
 
             while duration > 0:
                 output = self.__otcmd.wait(1)
-                if match_line(expect_line, output):
+                if any(match_line(line, expect_line) for line in output):
                     success = True
                     break
+
+                duration -= 1
 
             if not success:
                 raise ExpectLineTimeoutError(expect_line)
@@ -105,7 +106,6 @@ class OTCI(object):
                 self.__logger and self.__logger.info('%s', line)
 
         if cmd in ('reset', 'factoryreset'):
-            self.__wait_reset()
             return output
 
         if output[-1] == 'Done':
@@ -363,13 +363,14 @@ class OTCI(object):
         return self.__parse_str(self.execute_command('networkname'))
 
     def get_network_key(self) -> str:
-        """Get the network network key."""
-        return self.__parse_network_key(self.execute_command('networkkey'))
+        """Get the network key."""
+        return self.__parse_network_key(self.execute_command(self.__detect_networkkey_cmd()))
 
     def set_network_key(self, networkkey: str):
-        """Set the network network key."""
+        """Set the network key."""
         self.__validate_network_key(networkkey)
-        self.execute_command(f'networkkey {networkkey}')
+        cmd = self.__detect_networkkey_cmd()
+        self.execute_command(f'{cmd} {networkkey}')
 
     def get_key_sequence_counter(self) -> int:
         """Get the Thread Key Sequence Counter."""
@@ -918,6 +919,8 @@ class OTCI(object):
 
                     v = v[1:-1]
                     info['addresses'] = list(map(Ip6Addr, v.split(', ')))
+                elif k == 'subtypes':
+                    info[k] = list() if v == '(null)' else list(v.split(','))
                 elif k in ('port', 'weight', 'priority'):
                     info[k] = int(v)
                 elif k in ('host',):
@@ -1672,7 +1675,7 @@ class OTCI(object):
                 dataset['extpanid'] = val
             elif key == 'Mesh Local Prefix':
                 dataset['mesh_local_prefix'] = val
-            elif key == 'Network Key':
+            elif key in ('Network Key', 'Master Key'):
                 dataset['networkkey'] = val
             elif key == 'Network Name':
                 dataset['network_name'] = val
@@ -1726,7 +1729,8 @@ class OTCI(object):
             self.execute_command(f'dataset meshlocalprefix {mesh_local_prefix}')
 
         if network_key is not None:
-            self.execute_command(f'dataset networkkey {network_key}')
+            nwk_cmd = self.__detect_networkkey_cmd()
+            self.execute_command(f'dataset {nwk_cmd} {network_key}')
 
         if network_name is not None:
             self.execute_command(f'dataset networkname {self.__escape_escapable(network_name)}')
@@ -1798,6 +1802,9 @@ class OTCI(object):
             return 'allowlist'
         else:
             return '\x77\x68\x69\x74\x65\x6c\x69\x73\x74'
+
+    def __detect_networkkey_cmd(self) -> str:
+        return 'networkkey' if self.api_version >= 126 else 'masterkey'
 
     #
     # Unicast Addresses management
@@ -2334,12 +2341,6 @@ class OTCI(object):
         for char in escapable_chars:
             s = s.replace(char, '\\%s' % char)
         return s
-
-    def __wait_reset(self):
-        # reset would restart the otbr-agent executable. It's risky to send commands after reset too quickly because
-        # it might cause ot-ctl to quit abnormally.
-        # So we sleep for a while after reset.
-        time.sleep(3)
 
     def __txt_to_hex(self, txt: Dict[str, Union[str, bytes, bool]]) -> str:
         txt_bin = b''

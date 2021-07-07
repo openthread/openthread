@@ -71,29 +71,28 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  aArgsLength  The number of elements in @p aArgs.
      * @param[in]  aArgs        A pointer to an array of command line arguments.
      *
      * @retval  OT_ERROR_NONE  Successfully executed the CLI command.
      * @retval  ...            Failed to execute the CLI command.
      *
      */
-    otError Process(uint8_t aArgsLength, Arg aArgs[]);
+    otError Process(Arg aArgs[]);
 
 private:
     struct Command
     {
         const char *mName;
-        otError (SrpServer::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
+        otError (SrpServer::*mHandler)(Arg aArgs[]);
     };
 
-    otError ProcessDomain(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessEnable(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessDisable(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessLease(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessHost(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessService(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessDomain(Arg aArgs[]);
+    otError ProcessEnable(Arg aArgs[]);
+    otError ProcessDisable(Arg aArgs[]);
+    otError ProcessLease(Arg aArgs[]);
+    otError ProcessHost(Arg aArgs[]);
+    otError ProcessService(Arg aArgs[]);
+    otError ProcessHelp(Arg aArgs[]);
 
     void OutputHostAddresses(const otSrpServerHost *aHost);
 

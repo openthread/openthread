@@ -84,36 +84,36 @@ void TestMacros(void)
 {
     // Verify `OT_FIRST_ARG()` macro.
 
-    VerifyOrQuit(OT_FIRST_ARG(1) == 1, "OT_FIRST_ARG() failed");
-    VerifyOrQuit(OT_FIRST_ARG(1, 2, 3) == 1, "OT_FIRST_ARG() failed");
-    VerifyOrQuit(OT_FIRST_ARG(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12) == 1, "OT_FIRST_ARG() failed");
+    VerifyOrQuit(OT_FIRST_ARG(1) == 1);
+    VerifyOrQuit(OT_FIRST_ARG(1, 2, 3) == 1);
+    VerifyOrQuit(OT_FIRST_ARG(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12) == 1);
 
     // Verify `OT_REST_ARGS()` macro.
 
-    VerifyOrQuit(NumberOfArgs(OT_REST_ARGS(1)) == 0, "OT_REST_ARGS() failed for empty");
+    VerifyOrQuit(NumberOfArgs(OT_REST_ARGS(1)) == 0);
 
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1)) == 1, "OT_REST_ARGS() failed");
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2)) == 2, "OT_REST_ARGS() failed");
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3)) == 3, "OT_REST_ARGS() failed");
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4)) == 4, "OT_REST_ARGS() failed");
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4, 5)) == 5, "OT_REST_ARGS() failed");
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4, 5, 6)) == 6, "OT_REST_ARGS() failed");
-    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4, 5, 6, 7)) == 7, "OT_REST_ARGS() failed");
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1)) == 1);
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2)) == 2);
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3)) == 3);
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4)) == 4);
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4, 5)) == 5);
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4, 5, 6)) == 6);
+    VerifyOrQuit(NumberOfArgs(0 OT_REST_ARGS(1, 2, 3, 4, 5, 6, 7)) == 7);
 
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1)) == 100, "OT_REST_ARGS() failed");
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2)) == 102, "OT_REST_ARGS() failed");
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3)) == 105, "OT_REST_ARGS() failed");
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4)) == 109, "OT_REST_ARGS() failed");
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4, 5)) == 114, "OT_REST_ARGS() failed");
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4, 5, 6)) == 120, "OT_REST_ARGS() failed");
-    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4, 5, 6, 7)) == 127, "OT_REST_ARGS() failed");
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1)) == 100);
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2)) == 102);
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3)) == 105);
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4)) == 109);
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4, 5)) == 114);
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4, 5, 6)) == 120);
+    VerifyOrQuit(Sum(100 OT_REST_ARGS(1, 2, 3, 4, 5, 6, 7)) == 127);
 
     // Verify `OT_SECOND_ARG()` macro.
 
-    VerifyOrQuit(NumberOfArgs(OT_SECOND_ARG(1)) == 0, "OT_SECOND_ARG() failed");
-    VerifyOrQuit(NumberOfArgs(OT_SECOND_ARG(1, 2)) == 1, "OT_SECOND_ARG() failed");
+    VerifyOrQuit(NumberOfArgs(OT_SECOND_ARG(1)) == 0);
+    VerifyOrQuit(NumberOfArgs(OT_SECOND_ARG(1, 2)) == 1);
 
-    VerifyOrQuit(OT_SECOND_ARG(1, 2) == 2, "OT_SECOND_ARG() failed");
+    VerifyOrQuit(OT_SECOND_ARG(1, 2) == 2);
 }
 
 void TestVerifyOrExitSuccessNoAction(void)

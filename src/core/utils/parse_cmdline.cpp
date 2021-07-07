@@ -85,12 +85,11 @@ exit:
     return error;
 }
 
-Error ParseCmd(char *aCommandString, uint8_t &aArgsLength, Arg *aArgs, uint8_t aArgsLengthMax)
+Error ParseCmd(char *aCommandString, Arg aArgs[], uint8_t aArgsMaxLength)
 {
-    Error error = kErrorNone;
-    char *cmd;
-
-    aArgsLength = 0;
+    Error   error = kErrorNone;
+    uint8_t index = 0;
+    char *  cmd;
 
     for (cmd = aCommandString; *cmd; cmd++)
     {
@@ -104,15 +103,23 @@ Error ParseCmd(char *aCommandString, uint8_t &aArgsLength, Arg *aArgs, uint8_t a
             *cmd = '\0';
         }
 
-        if ((*cmd != '\0') && ((aArgsLength == 0) || (*(cmd - 1) == '\0')))
+        if ((*cmd != '\0') && ((index == 0) || (*(cmd - 1) == '\0')))
         {
-            VerifyOrExit(aArgsLength < aArgsLengthMax, error = kErrorInvalidArgs);
+            if (index == aArgsMaxLength - 1)
+            {
+                error = kErrorInvalidArgs;
+                break;
+            }
 
-            aArgs[aArgsLength++].SetCString(cmd);
+            aArgs[index++].SetCString(cmd);
         }
     }
 
-exit:
+    while (index < aArgsMaxLength)
+    {
+        aArgs[index++].Clear();
+    }
+
     return error;
 }
 
@@ -157,6 +164,8 @@ Error ParseAsUint64(const char *aString, uint64_t &aUint64)
         kMaxHexBeforeOveflow = (0xffffffffffffffffULL / 16),
         kMaxDecBeforeOverlow = (0xffffffffffffffffULL / 10),
     };
+
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
 
     if (cur[0] == '0' && (cur[1] == 'x' || cur[1] == 'X'))
     {
@@ -215,6 +224,8 @@ Error ParseAsInt32(const char *aString, int32_t &aInt32)
     uint64_t value;
     bool     isNegavtive = false;
 
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
+
     if (*aString == '-')
     {
         aString++;
@@ -248,6 +259,11 @@ exit:
 }
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 
+Error ParseAsIp6Address(const char *aString, otIp6Address &aAddress)
+{
+    return (aString != nullptr) ? otIp6AddressFromString(aString, &aAddress) : kErrorInvalidArgs;
+}
+
 Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
 {
     enum : uint8_t
@@ -258,6 +274,8 @@ Error ParseAsIp6Prefix(const char *aString, otIp6Prefix &aPrefix)
     Error       error = kErrorInvalidArgs;
     char        string[kMaxIp6AddressStringSize];
     const char *prefixLengthStr;
+
+    VerifyOrExit(aString != nullptr);
 
     prefixLengthStr = StringFind(aString, '/');
     VerifyOrExit(prefixLengthStr != nullptr);
@@ -284,11 +302,16 @@ enum HexStringParseMode
 
 static Error ParseHexString(const char *&aString, uint16_t &aSize, uint8_t *aBuffer, HexStringParseMode aMode)
 {
-    Error  error        = kErrorNone;
-    size_t stringLength = strlen(aString);
-    size_t expectedSize = (stringLength + 1) / 2;
-    size_t parsedSize   = 0;
+    Error  error      = kErrorNone;
+    size_t parsedSize = 0;
+    size_t stringLength;
+    size_t expectedSize;
     bool   skipFirstDigit;
+
+    VerifyOrExit(aString != nullptr, error = kErrorInvalidArgs);
+
+    stringLength = strlen(aString);
+    expectedSize = (stringLength + 1) / 2;
 
     switch (aMode)
     {
@@ -359,12 +382,37 @@ Error ParseAsHexStringSegment(const char *&aString, uint16_t &aSize, uint8_t *aB
     return ParseHexString(aString, aSize, aBuffer, kModeAllowPartial);
 }
 
-void Arg::CopyArgsToStringArray(Arg aArgs[], uint8_t aArgsLength, char *aStrings[])
+//---------------------------------------------------------------------------------------------------------------------
+// Arg class
+
+uint16_t Arg::GetLength(void) const
 {
-    for (uint8_t i = 0; i < aArgsLength; i++)
+    return IsEmpty() ? 0 : static_cast<uint16_t>(strlen(mString));
+}
+
+bool Arg::operator==(const char *aString) const
+{
+    return !IsEmpty() && (strcmp(mString, aString) == 0);
+}
+
+void Arg::CopyArgsToStringArray(Arg aArgs[], char *aStrings[])
+{
+    for (uint8_t i = 0; !aArgs[i].IsEmpty(); i++)
     {
         aStrings[i] = aArgs[i].GetCString();
     }
+}
+
+uint8_t Arg::GetArgsLength(Arg aArgs[])
+{
+    uint8_t length = 0;
+
+    while (!aArgs[length].IsEmpty())
+    {
+        length++;
+    }
+
+    return length;
 }
 
 } // namespace CmdLineParser

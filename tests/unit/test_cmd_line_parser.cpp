@@ -258,15 +258,15 @@ void TestParsingHexStrings(void)
     // Verify `ParseAsHexString(const char *aString, uint8_t *aBuffer, uint16_t aSize)`
 
     buffer[0] = 0xff;
-    SuccessOrQuit(ParseAsHexString("0", buffer, 1), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString("0", buffer, 1));
     VerifyOrQuit(buffer[0] == 0, "ParseAsHexString() parsed incorrectly");
 
     buffer[0] = 0;
-    SuccessOrQuit(ParseAsHexString("7e", buffer, 1), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString("7e", buffer, 1));
     VerifyOrQuit(buffer[0] == 0x7e, "ParseAsHexString() parsed incorrectly");
 
     VerifyOrQuit(ParseAsHexString("123", buffer, 1) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
-    SuccessOrQuit(ParseAsHexString("123", buffer, 2), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString("123", buffer, 2));
     VerifyOrQuit(buffer[0] == 1 && buffer[1] == 0x23, "ParseAsHexString() parsed incorrectly");
 
     VerifyOrQuit(ParseAsHexString("123x", buffer, 2) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
@@ -277,10 +277,10 @@ void TestParsingHexStrings(void)
     VerifyOrQuit(ParseAsHexString("1122", buf3) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
     VerifyOrQuit(ParseAsHexString("1122334", buf3) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
     VerifyOrQuit(ParseAsHexString("11223344", buf3) != OT_ERROR_NONE, "ParseAsHexString() passed with bad input");
-    SuccessOrQuit(ParseAsHexString("abbade", buf3), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString("abbade", buf3));
 
     VerifyOrQuit(buf3[0] == 0xab && buf3[1] == 0xba && buf3[2] == 0xde, "ParseAsHexString() parsed incorrectly");
-    SuccessOrQuit(ParseAsHexString("012345", buf3), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString("012345", buf3));
     VerifyOrQuit(buf3[0] == 0x01 && buf3[1] == 0x23 && buf3[2] == 0x45, "ParseAsHexString() parsed incorrectly");
     SuccessOrQuit(ParseAsHexString("12345", buf3), "ParseAsHexString() failed with odd length");
     VerifyOrQuit(buf3[0] == 0x01 && buf3[1] == 0x23 && buf3[2] == 0x45, "ParseAsHexString() parsed incorrectly");
@@ -293,12 +293,12 @@ void TestParsingHexStrings(void)
     printf("----------------------------------------------------------\n");
     len = sizeof(buffer);
 
-    SuccessOrQuit(ParseAsHexString(kEvenHexString, len, buffer), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString(kEvenHexString, len, buffer));
     VerifyOrQuit(len == sizeof(kEvenParsedArray), "ParseAsHexString() parsed incorrectly");
     VerifyOrQuit(memcmp(buffer, kEvenParsedArray, len) == 0, "ParseAsHexString() parsed incorrectly");
     DumpBuffer(kEvenHexString, buffer, len);
 
-    SuccessOrQuit(ParseAsHexString(kOddHexString, len, buffer), "ParseAsHexString() failed");
+    SuccessOrQuit(ParseAsHexString(kOddHexString, len, buffer));
     VerifyOrQuit(len == sizeof(kOddParsedArray), "ParseAsHexString() parsed incorrectly");
     VerifyOrQuit(memcmp(buffer, kOddParsedArray, len) == 0, "ParseAsHexString() parsed incorrectly");
     DumpBuffer(kOddHexString, buffer, len);

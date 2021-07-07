@@ -55,21 +55,21 @@ void VerifyMessageQueueContent(ot::MessageQueue &aMessageQueue, int aExpectedLen
     if (aExpectedLength == 0)
     {
         message = aMessageQueue.GetHead();
-        VerifyOrQuit(message == nullptr, "MessageQueue is not empty when expected len is zero.");
+        VerifyOrQuit(message == nullptr, "not empty when expected len is zero.");
     }
     else
     {
         for (message = aMessageQueue.GetHead(); message != nullptr; message = message->GetNext())
         {
-            VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected");
+            VerifyOrQuit(aExpectedLength != 0, "contains more entries than expected");
 
             msgArg = va_arg(args, ot::Message *);
-            VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.");
+            VerifyOrQuit(msgArg == message, "content does not match what is expected.");
 
             aExpectedLength--;
         }
 
-        VerifyOrQuit(aExpectedLength == 0, "MessageQueue contains less entries than expected");
+        VerifyOrQuit(aExpectedLength == 0, "less entries than expected");
     }
 
     va_end(args);
@@ -82,14 +82,14 @@ void TestMessageQueue(void)
     uint16_t         msgCount, bufferCount;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != nullptr, "Null instance");
+    VerifyOrQuit(sInstance != nullptr);
 
     sMessagePool = &sInstance->Get<ot::MessagePool>();
 
     for (ot::Message *&msg : messages)
     {
         msg = sMessagePool->New(ot::Message::kTypeIp6, 0);
-        VerifyOrQuit(msg != nullptr, "Message::New failed");
+        VerifyOrQuit(msg != nullptr, "Message::New() failed");
     }
 
     VerifyMessageQueueContent(messageQueue, 0);
@@ -189,22 +189,22 @@ void VerifyMessageQueueContentUsingOtApi(otMessageQueue *aQueue, int aExpectedLe
     if (aExpectedLength == 0)
     {
         message = otMessageQueueGetHead(aQueue);
-        VerifyOrQuit(message == nullptr, "MessageQueue is not empty when expected len is zero.");
+        VerifyOrQuit(message == nullptr, "not empty when expected len is zero.");
     }
     else
     {
         for (message = otMessageQueueGetHead(aQueue); message != nullptr;
              message = otMessageQueueGetNext(aQueue, message))
         {
-            VerifyOrQuit(aExpectedLength != 0, "MessageQueue contains more entries than expected");
+            VerifyOrQuit(aExpectedLength != 0, "more entries than expected");
 
             msgArg = va_arg(args, otMessage *);
-            VerifyOrQuit(msgArg == message, "MessageQueue content does not match what is expected.");
+            VerifyOrQuit(msgArg == message, "does not match what is expected.");
 
             aExpectedLength--;
         }
 
-        VerifyOrQuit(aExpectedLength == 0, "MessageQueue contains less entries than expected");
+        VerifyOrQuit(aExpectedLength == 0, "less entries than expected");
     }
 
     va_end(args);
@@ -218,7 +218,7 @@ void TestMessageQueueOtApis(void)
     otMessageQueue queue, queue2;
 
     sInstance = testInitInstance();
-    VerifyOrQuit(sInstance != nullptr, "Null instance");
+    VerifyOrQuit(sInstance != nullptr);
 
     for (otMessage *&msg : messages)
     {

@@ -66,11 +66,10 @@ public:
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  aArgsLength  The number of elements in @p aArgs.
      * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    otError Process(uint8_t aArgsLength, Arg aArgs[]);
+    otError Process(Arg aArgs[]);
 
     /**
      * This method outputs the prefix config.
@@ -100,15 +99,15 @@ private:
     struct Command
     {
         const char *mName;
-        otError (NetworkData::*mHandler)(uint8_t aArgsLength, Arg aArgs[]);
+        otError (NetworkData::*mHandler)(Arg aArgs[]);
     };
 
-    otError ProcessHelp(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessHelp(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    otError ProcessRegister(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessRegister(Arg aArgs[]);
 #endif
-    otError ProcessShow(uint8_t aArgsLength, Arg aArgs[]);
-    otError ProcessSteeringData(uint8_t aArgsLength, Arg aArgs[]);
+    otError ProcessShow(Arg aArgs[]);
+    otError ProcessSteeringData(Arg aArgs[]);
 
     otError OutputBinary(void);
     void    OutputPrefixes(void);

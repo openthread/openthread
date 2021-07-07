@@ -507,22 +507,6 @@ otError otLinkSendDataRequest(otInstance *aInstance);
 bool otLinkIsInTransmitState(otInstance *aInstance);
 
 /**
- * This function enqueues an IEEE 802.15.4 out of band Frame for transmission.
- *
- * An Out of Band frame is one that was generated outside of OpenThread.
- *
- * @param[in] aInstance  A pointer to an OpenThread instance.
- * @param[in] aOobFrame  A pointer to the frame to transmit.
- *
- * @retval OT_ERROR_NONE           Successfully scheduled the frame transmission.
- * @retval OT_ERROR_ALREADY        MAC layer is busy sending a previously requested frame.
- * @retval OT_ERROR_INVALID_STATE  The MAC layer is not enabled.
- * @retval OT_ERROR_INVALID_ARGS   The argument @p aOobFrame is NULL.
- *
- */
-otError otLinkOutOfBandTransmitRequest(otInstance *aInstance, otRadioFrame *aOobFrame);
-
-/**
  * Get the IEEE 802.15.4 channel.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.

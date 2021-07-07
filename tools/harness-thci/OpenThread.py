@@ -362,7 +362,6 @@ class OpenThreadTHCI(object):
     def intialize(self, params):
         """initialize the serial port with baudrate, timeout parameters"""
         self.port = params.get('SerialPort', '')
-        assert isinstance(self.port, unicode), unicode
         self.log('%s intialize: %r', self.__class__.__name__, params)
         # params example: {'EUI': 1616240311388864514L, 'SerialBaudRate': None, 'TelnetIP': '192.168.8.181', 'SerialPort': None, 'Param7': None, 'Param6': None, 'Param5': 'ip', 'TelnetPort': '22', 'Param9': None, 'Param8': None}
 
@@ -1205,6 +1204,10 @@ class OpenThreadTHCI(object):
                 print('join as sleepy end device')
                 mode = '-'
                 self.__setPollPeriod(self.__sedPollPeriod)
+            elif eRoleId == Thread_Device_Role.SSED:
+                print('join as SSED')
+                mode = '-'
+                self.setCSLperiod(self.cslPeriod)
             elif eRoleId == Thread_Device_Role.EndDevice:
                 print('join as end device')
                 mode = 'rn'
@@ -1455,6 +1458,7 @@ class OpenThreadTHCI(object):
         self.activetimestamp = ModuleHelper.Default_ActiveTimestamp
         # self.sedPollingRate = ModuleHelper.Default_Harness_SED_Polling_Rate
         self.__sedPollPeriod = 3 * 1000  # in milliseconds
+        self.cslPeriod = 500  # in milliseconds
         self.deviceRole = None
         self.provisioningUrl = ''
         self.hasActiveDatasetToCommit = False

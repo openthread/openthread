@@ -60,7 +60,7 @@ class Server : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This enumeration specifies a dns-sd query type.
+     * This enumeration specifies a DNS-SD query type.
      *
      */
     enum DnsQueryType : uint8_t
@@ -125,7 +125,7 @@ public:
     void HandleDiscoveredHost(const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
 
     /**
-     * This function aquires the next query in the server.
+     * This method acquires the next query in the server.
      *
      * @param[in] aQuery            The query pointer. Pass nullptr to get the first query.
      *
@@ -135,12 +135,12 @@ public:
     const otDnssdQuery *GetNextQuery(const otDnssdQuery *aQuery) const;
 
     /**
-     * This function aquires the dns-sd query type and name for a specific query.
+     * This method acquires the DNS-SD query type and name for a specific query.
      *
      * @param[in]   aQuery            The query pointer.
      * @param[out]  aNameOutput       The name output buffer.
      *
-     * @returns The dns-sd query type.
+     * @returns The DNS-SD query type.
      *
      */
     static DnsQueryType GetQueryTypeAndName(const otDnssdQuery *aQuery, char (&aName)[Name::kMaxNameSize]);
@@ -231,6 +231,7 @@ private:
     {
         kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
         kProtocolLabelLength  = 4,
+        kSubTypeLabelLength   = 4,
         kMaxConcurrentQueries = 32,
     };
 
@@ -246,6 +247,7 @@ private:
             : mDomainOffset(kNotPresent)
             , mProtocolOffset(kNotPresent)
             , mServiceOffset(kNotPresent)
+            , mSubTypeOffset(kNotPresent)
             , mInstanceOffset(kNotPresent)
         {
         }
@@ -261,6 +263,7 @@ private:
                                  // the name is not a service or instance.
         uint8_t mServiceOffset;  // The offset to the beginning of <Service> or `kNotPresent` if the name is not a
                                  // service or instance.
+        uint8_t mSubTypeOffset;  // The offset to the beginning of sub-type label or `kNotPresent` is not a sub-type.
         uint8_t mInstanceOffset; // The offset to the beginning of <Instance> or `kNotPresent` if the name is not a
                                  // instance.
     };
@@ -393,6 +396,7 @@ private:
 
     static const char kDnssdProtocolUdp[4];
     static const char kDnssdProtocolTcp[4];
+    static const char kDnssdSubTypeLabel[];
     static const char kDefaultDomainName[];
     Ip6::Udp::Socket  mSocket;
 

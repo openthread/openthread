@@ -53,10 +53,10 @@ void TestStringWriter(void)
 
     printf("\nTest 1: StringWriter constructor\n");
 
-    VerifyOrQuit(str.GetSize() == kStringSize, "GetSize() failed");
-    VerifyOrQuit(str.GetLength() == 0, "GetLength() failed for empty string");
+    VerifyOrQuit(str.GetSize() == kStringSize);
+    VerifyOrQuit(str.GetLength() == 0, "failed for empty string");
 
-    VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
+    VerifyOrQuit(strcmp(str.AsCString(), "") == 0);
 
     PrintString("str", str);
 
@@ -65,13 +65,13 @@ void TestStringWriter(void)
     printf("\nTest 2: StringWriter::Append() method\n");
 
     str.Append("Hi");
-    VerifyOrQuit(str.GetLength() == 2, "GetLength() failed");
-    VerifyOrQuit(strcmp(str.AsCString(), "Hi") == 0, "String content is incorrect");
+    VerifyOrQuit(str.GetLength() == 2);
+    VerifyOrQuit(strcmp(str.AsCString(), "Hi") == 0);
     PrintString("str", str);
 
     str.Append("%s%d", "!", 12);
-    VerifyOrQuit(str.GetLength() == 5, "GetLength() failed");
-    VerifyOrQuit(strcmp(str.AsCString(), "Hi!12") == 0, "String content is incorrect");
+    VerifyOrQuit(str.GetLength() == 5);
+    VerifyOrQuit(strcmp(str.AsCString(), "Hi!12") == 0);
     PrintString("str", str);
 
     str.Append(kLongString);
@@ -83,17 +83,17 @@ void TestStringWriter(void)
 
     str.Clear();
     str.Append("Hello");
-    VerifyOrQuit(str.GetLength() == 5, "GetLength() failed for empty string");
-    VerifyOrQuit(strcmp(str.AsCString(), "Hello") == 0, "String content is incorrect");
+    VerifyOrQuit(str.GetLength() == 5);
+    VerifyOrQuit(strcmp(str.AsCString(), "Hello") == 0);
     PrintString("str", str);
 
     str.Clear();
-    VerifyOrQuit(str.GetLength() == 0, "GetLength() failed for empty string");
-    VerifyOrQuit(strcmp(str.AsCString(), "") == 0, "String content is incorrect");
+    VerifyOrQuit(str.GetLength() == 0, "failed after Clear()");
+    VerifyOrQuit(strcmp(str.AsCString(), "") == 0);
 
     str.Append("%d", 12);
-    VerifyOrQuit(str.GetLength() == 2, "GetLength() failed");
-    VerifyOrQuit(strcmp(str.AsCString(), "12") == 0, "String content is incorrect");
+    VerifyOrQuit(str.GetLength() == 2);
+    VerifyOrQuit(strcmp(str.AsCString(), "12") == 0);
     PrintString("str", str);
 
     str.Clear();
@@ -112,17 +112,17 @@ void TestStringLength(void)
 
     printf("\nTest 4: String::StringLength() method\n");
 
-    VerifyOrQuit(StringLength(string_a, 0) == 0, "StringLength() 0len 0 fails");
-    VerifyOrQuit(StringLength(string_a, 1) == 0, "StringLength() 0len 1 fails");
-    VerifyOrQuit(StringLength(string_a, 2) == 0, "StringLength() 0len 2 fails");
+    VerifyOrQuit(StringLength(string_a, 0) == 0);
+    VerifyOrQuit(StringLength(string_a, 1) == 0);
+    VerifyOrQuit(StringLength(string_a, 2) == 0);
 
-    VerifyOrQuit(StringLength(string_b, 0) == 0, "StringLength() 3len 0 fails");
-    VerifyOrQuit(StringLength(string_b, 1) == 1, "StringLength() 3len 1 fails");
-    VerifyOrQuit(StringLength(string_b, 2) == 2, "StringLength() 3len 2 fails");
-    VerifyOrQuit(StringLength(string_b, 3) == 3, "StringLength() 3len 3 fails");
-    VerifyOrQuit(StringLength(string_b, 4) == 3, "StringLength() 3len 4 fails");
-    VerifyOrQuit(StringLength(string_b, 5) == 3, "StringLength() 3len 5 fails");
-    VerifyOrQuit(StringLength(string_b, 6) == 3, "StringLength() 3len 6 fails");
+    VerifyOrQuit(StringLength(string_b, 0) == 0);
+    VerifyOrQuit(StringLength(string_b, 1) == 1);
+    VerifyOrQuit(StringLength(string_b, 2) == 2);
+    VerifyOrQuit(StringLength(string_b, 3) == 3);
+    VerifyOrQuit(StringLength(string_b, 4) == 3);
+    VerifyOrQuit(StringLength(string_b, 5) == 3);
+    VerifyOrQuit(StringLength(string_b, 6) == 3);
 
     printf(" -- PASS\n");
 }
@@ -131,13 +131,13 @@ void TestUtf8(void)
 {
     printf("\nTest 5: IsValidUtf8String() function\n");
 
-    VerifyOrQuit(IsValidUtf8String("An ASCII string"), "IsValidUtf8String() ASCII string fails");
-    VerifyOrQuit(IsValidUtf8String(u8"Строка UTF-8"), "IsValidUtf8String() UTF-8 string fails");
-    VerifyOrQuit(!IsValidUtf8String("\xbf"), "IsValidUtf8String() illegal string fails");
-    VerifyOrQuit(!IsValidUtf8String("\xdf"), "IsValidUtf8String() illegal string fails");
-    VerifyOrQuit(!IsValidUtf8String("\xef\x80"), "IsValidUtf8String() illegal string fails");
-    VerifyOrQuit(!IsValidUtf8String("\xf7\x80\x80"), "IsValidUtf8String() illegal string fails");
-    VerifyOrQuit(!IsValidUtf8String("\xff"), "IsValidUtf8String() illegal string fails");
+    VerifyOrQuit(IsValidUtf8String("An ASCII string"));
+    VerifyOrQuit(IsValidUtf8String(u8"Строка UTF-8"));
+    VerifyOrQuit(!IsValidUtf8String("\xbf"));
+    VerifyOrQuit(!IsValidUtf8String("\xdf"));
+    VerifyOrQuit(!IsValidUtf8String("\xef\x80"));
+    VerifyOrQuit(!IsValidUtf8String("\xf7\x80\x80"));
+    VerifyOrQuit(!IsValidUtf8String("\xff"));
 
     printf(" -- PASS\n");
 }
@@ -150,35 +150,35 @@ void TestStringFind(void)
 
     printf("\nTest 6: StringFind() function\n");
 
-    VerifyOrQuit(StringFind(testString, 'f') == testString, "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, 'o') == &testString[1], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, '.') == &testString[3], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, 'r') == &testString[6], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, '\\') == &testString[11], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, 'x') == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, ',') == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, 'f') == testString);
+    VerifyOrQuit(StringFind(testString, 'o') == &testString[1]);
+    VerifyOrQuit(StringFind(testString, '.') == &testString[3]);
+    VerifyOrQuit(StringFind(testString, 'r') == &testString[6]);
+    VerifyOrQuit(StringFind(testString, '\\') == &testString[11]);
+    VerifyOrQuit(StringFind(testString, 'x') == nullptr);
+    VerifyOrQuit(StringFind(testString, ',') == nullptr);
 
-    VerifyOrQuit(StringFind(emptyString, 'f') == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(emptyString, '.') == nullptr, "StringFind() failed");
+    VerifyOrQuit(StringFind(emptyString, 'f') == nullptr);
+    VerifyOrQuit(StringFind(emptyString, '.') == nullptr);
 
-    VerifyOrQuit(StringFind(testString, "foo") == &testString[0], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "oo") == &testString[1], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "bar") == &testString[4], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "bar\\") == &testString[8], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "\\.") == &testString[11], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, testString) == testString, "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "fooo") == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "far") == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "bar\\..") == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(testString, "") == &testString[0], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString, "foo") == &testString[0]);
+    VerifyOrQuit(StringFind(testString, "oo") == &testString[1]);
+    VerifyOrQuit(StringFind(testString, "bar") == &testString[4]);
+    VerifyOrQuit(StringFind(testString, "bar\\") == &testString[8]);
+    VerifyOrQuit(StringFind(testString, "\\.") == &testString[11]);
+    VerifyOrQuit(StringFind(testString, testString) == testString);
+    VerifyOrQuit(StringFind(testString, "fooo") == nullptr);
+    VerifyOrQuit(StringFind(testString, "far") == nullptr);
+    VerifyOrQuit(StringFind(testString, "bar\\..") == nullptr);
+    VerifyOrQuit(StringFind(testString, "") == &testString[0]);
 
-    VerifyOrQuit(StringFind(emptyString, "foo") == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(emptyString, "bar") == nullptr, "StringFind() failed");
-    VerifyOrQuit(StringFind(emptyString, "") == &emptyString[0], "StringFind() failed");
+    VerifyOrQuit(StringFind(emptyString, "foo") == nullptr);
+    VerifyOrQuit(StringFind(emptyString, "bar") == nullptr);
+    VerifyOrQuit(StringFind(emptyString, "") == &emptyString[0]);
 
     // Verify when sub-string has repeated patterns
-    VerifyOrQuit(StringFind(testString2, "abcabc") == &testString2[0], "StringFind() failed");
-    VerifyOrQuit(StringFind(testString2, "abcabcd") == &testString2[3], "StringFind() failed");
+    VerifyOrQuit(StringFind(testString2, "abcabc") == &testString2[0]);
+    VerifyOrQuit(StringFind(testString2, "abcabcd") == &testString2[3]);
 
     printf(" -- PASS\n");
 }
@@ -187,19 +187,19 @@ void TestStringEndsWith(void)
 {
     printf("\nTest 7: StringEndsWith() function\n");
 
-    VerifyOrQuit(StringEndsWith("foobar", 'r'), "StringEndsWith() failed");
-    VerifyOrQuit(!StringEndsWith("foobar", 'a'), "StringEndsWith() failed");
-    VerifyOrQuit(!StringEndsWith("foobar", '\0'), "StringEndsWith() failed");
-    VerifyOrQuit(StringEndsWith("a", 'a'), "StringEndsWith() failed");
-    VerifyOrQuit(!StringEndsWith("a", 'b'), "StringEndsWith() failed");
+    VerifyOrQuit(StringEndsWith("foobar", 'r'));
+    VerifyOrQuit(!StringEndsWith("foobar", 'a'));
+    VerifyOrQuit(!StringEndsWith("foobar", '\0'));
+    VerifyOrQuit(StringEndsWith("a", 'a'));
+    VerifyOrQuit(!StringEndsWith("a", 'b'));
 
-    VerifyOrQuit(StringEndsWith("foobar", "bar"), "StringEndsWith() failed");
-    VerifyOrQuit(!StringEndsWith("foobar", "ba"), "StringEndsWith() failed");
-    VerifyOrQuit(StringEndsWith("foobar", "foobar"), "StringEndsWith() failed");
-    VerifyOrQuit(!StringEndsWith("foobar", "foobarr"), "StringEndsWith() failed");
+    VerifyOrQuit(StringEndsWith("foobar", "bar"));
+    VerifyOrQuit(!StringEndsWith("foobar", "ba"));
+    VerifyOrQuit(StringEndsWith("foobar", "foobar"));
+    VerifyOrQuit(!StringEndsWith("foobar", "foobarr"));
 
-    VerifyOrQuit(!StringEndsWith("", 'a'), "StringEndsWith() failed");
-    VerifyOrQuit(!StringEndsWith("", "foo"), "StringEndsWith() failed");
+    VerifyOrQuit(!StringEndsWith("", 'a'));
+    VerifyOrQuit(!StringEndsWith("", "foo"));
 
     printf(" -- PASS\n");
 }

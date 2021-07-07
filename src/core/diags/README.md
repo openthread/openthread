@@ -77,6 +77,8 @@ status 0x00
 
 Transmit a fixed number of packets with fixed length.
 
+Length parameter has to be in range [3, 127].
+
 ```bash
 > diag send 20 100
 sending 0x14 packet(s), length 0x64
@@ -86,6 +88,8 @@ status 0x00
 ### diag repeat \<delay\> \<length\>
 
 Transmit packets repeatedly with a fixed interval.
+
+Length parameter has to be in range [3, 127].
 
 ```bash
 > diag repeat 100 100

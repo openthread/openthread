@@ -203,9 +203,8 @@ void NetworkData::OutputService(const otServiceConfig &aConfig)
     mInterpreter.OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
 }
 
-otError NetworkData::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
+otError NetworkData::ProcessHelp(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     for (const Command &command : sCommands)
@@ -217,9 +216,8 @@ otError NetworkData::ProcessHelp(uint8_t aArgsLength, Arg aArgs[])
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-otError NetworkData::ProcessRegister(uint8_t aArgsLength, Arg aArgs[])
+otError NetworkData::ProcessRegister(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgsLength);
     OT_UNUSED_VARIABLE(aArgs);
 
     otError error = OT_ERROR_NONE;
@@ -235,26 +233,23 @@ exit:
 }
 #endif
 
-otError NetworkData::ProcessSteeringData(uint8_t aArgsLength, Arg aArgs[])
+otError NetworkData::ProcessSteeringData(Arg aArgs[])
 {
-    otError           error = OT_ERROR_INVALID_ARGS;
+    otError           error;
     otExtAddress      addr;
     otJoinerDiscerner discerner;
 
-    VerifyOrExit((aArgsLength > 1) && (aArgs[0] == "check"));
-
-    discerner.mLength = 0;
+    VerifyOrExit(aArgs[0] == "check", error = OT_ERROR_INVALID_ARGS);
 
     error = Interpreter::ParseJoinerDiscerner(aArgs[1], discerner);
 
     if (error == OT_ERROR_NOT_FOUND)
     {
-        SuccessOrExit(error = aArgs[1].ParseAsHexString(addr.m8));
+        discerner.mLength = 0;
+        error             = aArgs[1].ParseAsHexString(addr.m8);
     }
-    else if (error != OT_ERROR_NONE)
-    {
-        ExitNow();
-    }
+
+    SuccessOrExit(error);
 
     if (discerner.mLength)
     {
@@ -323,11 +318,11 @@ exit:
     return error;
 }
 
-otError NetworkData::ProcessShow(uint8_t aArgsLength, Arg aArgs[])
+otError NetworkData::ProcessShow(Arg aArgs[])
 {
-    otError error;
+    otError error = OT_ERROR_INVALID_ARGS;
 
-    if (aArgsLength == 0)
+    if (aArgs[0].IsEmpty())
     {
         OutputPrefixes();
         OutputRoutes();
@@ -338,25 +333,25 @@ otError NetworkData::ProcessShow(uint8_t aArgsLength, Arg aArgs[])
     {
         error = OutputBinary();
     }
-    else
-    {
-        error = OT_ERROR_INVALID_ARGS;
-    }
 
     return error;
 }
 
-otError NetworkData::Process(uint8_t aArgsLength, Arg aArgs[])
+otError NetworkData::Process(Arg aArgs[])
 {
     otError        error = OT_ERROR_INVALID_COMMAND;
     const Command *command;
 
-    VerifyOrExit(aArgsLength != 0, IgnoreError(ProcessHelp(0, nullptr)));
+    if (aArgs[0].IsEmpty())
+    {
+        IgnoreError(ProcessHelp(aArgs));
+        ExitNow();
+    }
 
     command = Utils::LookupTable::Find(aArgs[0].GetCString(), sCommands);
     VerifyOrExit(command != nullptr);
 
-    error = (this->*command->mHandler)(aArgsLength - 1, aArgs + 1);
+    error = (this->*command->mHandler)(aArgs + 1);
 
 exit:
     return error;

@@ -56,6 +56,13 @@ otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCal
     return instance.Get<Ip6::Udp>().Open(*static_cast<Ip6::Udp::SocketHandle *>(aSocket), aCallback, aContext);
 }
 
+bool otUdpIsOpen(otInstance *aInstance, const otUdpSocket *aSocket)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Ip6::Udp>().IsOpen(*static_cast<const Ip6::Udp::SocketHandle *>(aSocket));
+}
+
 otError otUdpClose(otInstance *aInstance, otUdpSocket *aSocket)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

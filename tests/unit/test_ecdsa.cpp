@@ -92,7 +92,7 @@ void TestEcdsaVector(void)
 
     DumpBuffer("KeyPair", keyPair.GetDerBytes(), keyPair.GetDerLength());
 
-    SuccessOrQuit(keyPair.GetPublicKey(publicKey), "KeyPair::GetPublicKey() failed");
+    SuccessOrQuit(keyPair.GetPublicKey(publicKey));
     DumpBuffer("PublicKey", publicKey.GetBytes(), Ecdsa::P256::PublicKey::kSize);
 
     VerifyOrQuit(sizeof(kPublicKey) == Ecdsa::P256::PublicKey::kSize, "Example public key is invalid");
@@ -107,20 +107,19 @@ void TestEcdsaVector(void)
     DumpBuffer("Hash", hash.GetBytes(), sizeof(hash));
 
     printf("\nSign the message ----------------------------------------------------------\n");
-    SuccessOrQuit(keyPair.Sign(hash, signature), "KeyPair::Sign() failed");
+    SuccessOrQuit(keyPair.Sign(hash, signature));
     DumpBuffer("Signature", signature.GetBytes(), sizeof(signature));
 
     printf("\nCheck signature against expected sequence----------------------------------\n");
     DumpBuffer("Expected signature", kExpectedSignature, sizeof(kExpectedSignature));
 
-    VerifyOrQuit(sizeof(kExpectedSignature) == sizeof(signature), "Signature length does not match expected size");
-    VerifyOrQuit(memcmp(signature.GetBytes(), kExpectedSignature, sizeof(kExpectedSignature)) == 0,
-                 "Signature does not match expected value");
+    VerifyOrQuit(sizeof(kExpectedSignature) == sizeof(signature));
+    VerifyOrQuit(memcmp(signature.GetBytes(), kExpectedSignature, sizeof(kExpectedSignature)) == 0);
 
     printf("Signature matches expected sequence.\n");
 
     printf("\nVerify the signature ------------------------------------------------------\n");
-    SuccessOrQuit(publicKey.Verify(hash, signature), "PublicKey::Verify() failed");
+    SuccessOrQuit(publicKey.Verify(hash, signature));
     printf("\nSignature was verified successfully.\n\n");
 
     testFreeInstance(instance);
@@ -144,11 +143,11 @@ void TestEdsaKeyGenerationSignAndVerify(void)
     printf("Test ECDA key generation, signing and verification\n");
 
     printf("\nGenerating key-pair -------------------------------------------------------\n");
-    SuccessOrQuit(keyPair.Generate(), "KeyPair::Generate() failed");
+    SuccessOrQuit(keyPair.Generate());
 
     DumpBuffer("KeyPair", keyPair.GetDerBytes(), keyPair.GetDerLength());
 
-    SuccessOrQuit(keyPair.GetPublicKey(publicKey), "KeyPair::GetPublicKey() failed");
+    SuccessOrQuit(keyPair.GetPublicKey(publicKey));
     DumpBuffer("PublicKey", publicKey.GetBytes(), Ecdsa::P256::PublicKey::kSize);
 
     printf("\nHash the message ----------------------------------------------------------\n");
@@ -159,11 +158,11 @@ void TestEdsaKeyGenerationSignAndVerify(void)
     DumpBuffer("Hash", hash.GetBytes(), sizeof(hash));
 
     printf("\nSign the message ----------------------------------------------------------\n");
-    SuccessOrQuit(keyPair.Sign(hash, signature), "KeyPair::Sign() failed");
+    SuccessOrQuit(keyPair.Sign(hash, signature));
     DumpBuffer("Signature", signature.GetBytes(), sizeof(signature));
 
     printf("\nVerify the signature ------------------------------------------------------\n");
-    SuccessOrQuit(publicKey.Verify(hash, signature), "PublicKey::Verify() failed");
+    SuccessOrQuit(publicKey.Verify(hash, signature));
     printf("\nSignature was verified successfully.");
 
     sha256.Start();
