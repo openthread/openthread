@@ -474,7 +474,7 @@ void DuaManager::PerformNextRegistration(void)
         const Ip6::Address *duaPtr = nullptr;
         Child *             child  = nullptr;
 
-        if (!mChildDuaMask.Get(mChildIndexDuaRegistering))
+        if (!mChildDuaMask.Get(mChildIndexDuaRegistering) || mChildDuaRegisteredMask.Get(mChildIndexDuaRegistering))
         {
             for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
             {
