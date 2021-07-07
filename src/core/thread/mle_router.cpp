@@ -2930,6 +2930,11 @@ Error MleRouter::SendDiscoveryResponse(const Ip6::Address &aDestination, const M
         discoveryResponse.SetNativeCommissioner(false);
     }
 
+    if (Get<KeyManager>().GetSecurityPolicy().mCommercialCommissioningEnabled)
+    {
+        discoveryResponse.SetCommercialCommissioningMode(true);
+    }
+
     SuccessOrExit(error = discoveryResponse.AppendTo(*message));
 
     // Extended PAN ID TLV
