@@ -660,9 +660,6 @@ static void logAddrEvent(bool isAdd, bool isUnicast, struct sockaddr_in6 &addr6,
 
 static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetlinkMessage)
 {
-    constexpr bool kAddAddress    = true;
-    constexpr bool kRemoveAddress = false;
-
     struct ifaddrmsg *  ifaddr = reinterpret_cast<struct ifaddrmsg *>(NLMSG_DATA(aNetlinkMessage));
     size_t              rtaLength;
     otError             error = OT_ERROR_NONE;
@@ -710,7 +707,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     error = otIp6SubscribeMulticastAddress(aInstance, &addr);
                 }
 
-                logAddrEvent(kAddAddress, !addr.IsMulticast(), addr6, error);
+                logAddrEvent(/* isAdd */ true, !addr.IsMulticast(), addr6, error);
                 if (error == OT_ERROR_ALREADY)
                 {
                     error = OT_ERROR_NONE;
@@ -729,7 +726,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct nlmsghdr *aNetli
                     error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
                 }
 
-                logAddrEvent(kRemoveAddress, !addr.IsMulticast(), addr6, error);
+                logAddrEvent(/* isAdd */ false, !addr.IsMulticast(), addr6, error);
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
@@ -816,11 +813,6 @@ exit:
 
 static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 {
-    constexpr bool kAddAddress       = true;
-    constexpr bool kRemoveAddress    = false;
-    constexpr bool kUnicastAddress   = true;
-    constexpr bool kMulticastAddress = false;
-
     otError            error;
     struct ifa_msghdr *ifam;
 #ifdef RTM_NEWMADDR
@@ -918,7 +910,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
 
                 if (subscribed)
                 {
-                    logAddrEvent(kAddAddress, kUnicastAddress, addr6, OT_ERROR_ALREADY);
+                    logAddrEvent(/* isAdd */ true, /* isUnicast */ true, addr6, OT_ERROR_ALREADY);
                     error = OT_ERROR_NONE;
                 }
                 else
@@ -968,7 +960,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                     else
                     {
                         error = otIp6AddUnicastAddress(aInstance, &netAddr);
-                        logAddrEvent(kAddAddress, kUnicastAddress, addr6, error);
+                        logAddrEvent(/* isAdd */ true, /* isUnicast */ true, addr6, error);
                         if (error == OT_ERROR_ALREADY)
                         {
                             error = OT_ERROR_NONE;
@@ -983,7 +975,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
                 netAddr.mAddress = addr;
 
                 error = otIp6SubscribeMulticastAddress(aInstance, &addr);
-                logAddrEvent(kAddAddress, kMulticastAddress, addr6, error);
+                logAddrEvent(/* isAdd */ true, /* isUnicast */ false, addr6, error);
                 if (error == OT_ERROR_ALREADY)
                 {
                     error = OT_ERROR_NONE;
@@ -1000,7 +992,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             if (!addr.IsMulticast())
             {
                 error = otIp6RemoveUnicastAddress(aInstance, &addr);
-                logAddrEvent(kRemoveAddress, kUnicastAddress, addr6, error);
+                logAddrEvent(/* isAdd */ false, /* isUnicast */ true, addr6, error);
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
@@ -1009,7 +1001,7 @@ static void processNetifAddrEvent(otInstance *aInstance, struct rt_msghdr *rtm)
             else
             {
                 error = otIp6UnsubscribeMulticastAddress(aInstance, &addr);
-                logAddrEvent(kRemoveAddress, kMulticastAddress, addr6, error);
+                logAddrEvent(/* isAdd */ false, /* isUnicast */ false, addr6, error);
                 if (error == OT_ERROR_NOT_FOUND)
                 {
                     error = OT_ERROR_NONE;
