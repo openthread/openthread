@@ -2258,9 +2258,9 @@ public:
     bool IsCommercialCommissioningMode(void) const { return (mFlags & kCCMMask) != 0; }
 
     /**
-     * This method sets the Native Commissioner flag.
+     * This method sets the Commercial Commissioning Mode flag.
      *
-     * @param[in]  aNativeCommissioner  TRUE if set, FALSE otherwise.
+     * @param[in]  aCCM  TRUE if set, FALSE otherwise.
      *
      */
     void SetCommercialCommissioningMode(bool aCCM)
