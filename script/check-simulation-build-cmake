@@ -40,7 +40,7 @@ build_all_features()
 {
     # Build Thread 1.1 with full features
     reset_source
-    "$(dirname "$0")"/cmake-build simulation
+    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1
 
     # Build Thread 1.2 with full features
     reset_source
@@ -56,7 +56,7 @@ build_all_features()
 
     # Build with Vendor Extension
     reset_source
-    "$(dirname "$0")"/cmake-build simulation -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
+    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1 -DOT_VENDOR_EXTENSION=../../src/core/common/extension_example.cpp
 
     # Build Thread 1.2 with no additional features
     reset_source
