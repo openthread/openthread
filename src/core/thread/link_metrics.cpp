@@ -724,7 +724,7 @@ LinkMetrics::LinkMetricsStatus LinkMetrics::ConfigureEnhAckProbing(LinkMetricsEn
     LinkMetricsStatus status = kLinkMetricsStatusSuccess;
     Error             error  = kErrorNone;
 
-    VerifyOrExit(!aLinkMetrics.mReserved, status = kLinkMetricsStatusCannotSupportNewSeries);
+    VerifyOrExit(!aLinkMetrics.mReserved, status = kLinkMetricsStatusOtherError);
 
     if (aEnhAckFlags == kEnhAckRegister)
     {

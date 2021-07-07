@@ -375,11 +375,11 @@ class LowPower_7_1_01(thread_cert.TestCase):
         # Step 19 - Leader automatically responds to the invalid query from SSED_1 with a failure
         # The DUT MUST send Link Metrics Management Response to SSED_1containing the following:
         # - MLE Link Metrics Management TLV
-        # -- Link Metrics Status Sub-TLV = 1 (Failure)
+        # -- Link Metrics Status Sub-TLV = 254 (Failure)
         pkts.filter_wpan_src64(LEADER) \
             .filter_wpan_dst64(SSED_1) \
             .filter_mle_cmd(consts.MLE_LINK_METRICS_MANAGEMENT_RESPONSE) \
-            .filter(lambda p: p.mle.tlv.link_status_sub_tlv == consts.LINK_METRICS_ENH_ACK_PROBING_REGISTER) \
+            .filter(lambda p: p.mle.tlv.link_status_sub_tlv == consts.LINK_METRICS_STATUS_OTHER_ERROR) \
             .must_next()
 
 
