@@ -518,13 +518,12 @@ exit:
 }
 
 #if OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
-otError AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
+void AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, const void *aData, uint8_t aLen)
 {
     uint8_t        len = RTA_LENGTH(aLen);
     struct rtattr *rta;
-    otError        error = OT_ERROR_NONE;
 
-    VerifyOrExit(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen, error = OT_ERROR_NO_BUFS);
+    assert(NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len) <= aMaxLen);
 
     rta           = (struct rtattr *)((char *)(aHeader) + NLMSG_ALIGN((aHeader)->nlmsg_len));
     rta->rta_type = aType;
@@ -534,13 +533,11 @@ otError AddRtAttr(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, con
         memcpy(RTA_DATA(rta), aData, aLen);
     }
     aHeader->nlmsg_len = NLMSG_ALIGN(aHeader->nlmsg_len) + RTA_ALIGN(len);
-exit:
-    return error;
 }
 
-otError AddRtAttr32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
+void AddRtAttr32(struct nlmsghdr *aHeader, uint32_t aMaxLen, uint8_t aType, uint32_t aData)
 {
-    return AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
+    AddRtAttr(aHeader, aMaxLen, aType, &aData, sizeof(aData));
 }
 
 static otError AddExternalRoute(const otIp6Prefix &aPrefix)
@@ -580,9 +577,9 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    SuccessOrExit(error = AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)));
-    SuccessOrExit(error = AddRtAttr32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority));
-    SuccessOrExit(error = AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx));
+    AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority);
+    AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx);
 
     VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
 
@@ -626,8 +623,8 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    SuccessOrExit(error = AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data)));
-    SuccessOrExit(error = AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx));
+    AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr32(&req.header, sizeof(req), RTA_OIF, ifIdx);
 
     VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
 
