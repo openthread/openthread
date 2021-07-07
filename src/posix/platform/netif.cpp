@@ -582,8 +582,11 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, ifIdx);
 
-    VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
-
+    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    {
+        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 exit:
     return error;
 }
@@ -627,7 +630,11 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
     AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, ifIdx);
 
-    VerifyOrExit(send(sNetlinkFd, &req, sizeof(req), 0) > 0, error = OT_ERROR_FAILED);
+    if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
+    {
+        VerifyOrExit(errno == EAGAIN || errno == EINTR || errno == EWOULDBLOCK, error = OT_ERROR_BUSY);
+        DieNow(OT_EXIT_ERROR_ERRNO);
+    }
 
 exit:
     return error;
@@ -654,7 +661,7 @@ bool HasAddedExternalRoute(const otIp6Prefix &aExternalRoute)
 {
     bool found = false;
 
-    for (int i = 0; i < static_cast<int>(sAddedExternalRoutesNum); ++i)
+    for (uint8_t i = 0; i < sAddedExternalRoutesNum; ++i)
     {
         if (otIp6IsPrefixEqual(&sAddedExternalRoutes[i], &aExternalRoute))
         {
