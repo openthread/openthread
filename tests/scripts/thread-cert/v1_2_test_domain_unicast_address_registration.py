@@ -33,6 +33,7 @@ import command
 import config
 import ipaddress
 import mle
+import network_layer
 import thread_cert
 
 BBR_1 = 1  # Collapsed with Leader Role
@@ -164,13 +165,16 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         '''
         return ''.join(ipaddress.ip_address(address).exploded.split(':')[4:])
 
-    def __check_dua_registration_tmf(self, node, occurences=1):
+    def __check_dua_registration_tmf(self, node, occurences=1, ml_eid=None):
 
         messages = self.simulator.get_messages_sent_by(node)
         for i in range(occurences):
             msg = messages.next_coap_message('0.02', '/n/dr', False)
             assert msg, 'Expected {}, but {}th not found\n node: {}(extaddr: {})'.format(
                 occurences, i + 1, node, self.nodes[node].get_addr64())
+            if ml_eid:
+                ml_eid_tlv = msg.get_coap_message_tlv(network_layer.MlEid)
+                self.assertEqual(ml_eid, ml_eid_tlv.ml_eid.hex())
 
     def test(self):
         # starting context id
@@ -215,7 +219,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
 
         WAIT_TIME = WAIT_ATTACH + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
-        self.__check_dua_registration_tmf(ROUTER_1_2)
+        self.__check_dua_registration_tmf(ROUTER_1_2, 1, self.nodes[ROUTER_1_2].get_mleid_iid())
 
         #  b) Remove DUA_IID_MANUAL1, one DUA.req should happen for the new generated DUA via SLAAC.
 
@@ -224,7 +228,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         self.nodes[ROUTER_1_2].clear_dua_iid()
         WAIT_TIME = WAIT_ATTACH + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
-        self.__check_dua_registration_tmf(ROUTER_1_2)
+        self.__check_dua_registration_tmf(ROUTER_1_2, 1, self.nodes[ROUTER_1_2].get_mleid_iid())
 
         #c) Configure BBR_1 to respond with the fatal error ST_DUA_INVALID, update BBR_1 with
         #   BBR_REREGISTRATION_DELAY, ROUTER_1_2 should re-register its DUA within BBR_REREGISTRATION_DELAY.
@@ -239,7 +243,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         WAIT_TIME = BBR_REREGISTRATION_DELAY + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
 
-        self.__check_dua_registration_tmf(ROUTER_1_2, 1)
+        self.__check_dua_registration_tmf(ROUTER_1_2, 1, self.nodes[ROUTER_1_2].get_mleid_iid())
         dua = self.nodes[ROUTER_1_2].get_addr(config.DOMAIN_PREFIX)
         assert not dua, 'Error: Unexpected DUA ({}) found'.format(dua)
 
@@ -250,7 +254,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         WAIT_TIME = BBR_REREGISTRATION_DELAY + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
 
-        self.__check_dua_registration_tmf(ROUTER_1_2, 1)
+        self.__check_dua_registration_tmf(ROUTER_1_2, 1, self.nodes[ROUTER_1_2].get_mleid_iid())
         dua = self.nodes[ROUTER_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua, 'Error: Expected DUA ({}) not found'.format(dua)
 
@@ -268,7 +272,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         WAIT_TIME = BBR_REREGISTRATION_DELAY * 2 + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
 
-        self.__check_dua_registration_tmf(ROUTER_1_2, 2)
+        self.__check_dua_registration_tmf(ROUTER_1_2, 2, self.nodes[ROUTER_1_2].get_mleid_iid())
 
         dua2 = self.nodes[ROUTER_1_2].get_addr(config.DOMAIN_PREFIX)
         assert dua2, 'Error: Expected DUA ({}) not found'.format(dua2)
@@ -291,7 +295,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
 
             self.simulator.go(WAIT_TIME)
 
-            self.__check_dua_registration_tmf(ROUTER_1_2, 2)
+            self.__check_dua_registration_tmf(ROUTER_1_2, 2, self.nodes[ROUTER_1_2].get_mleid_iid())
 
         # Bring up Router_1_1
         self.nodes[ROUTER_1_1].set_router_selection_jitter(ROUTER_SELECTION_JITTER)
@@ -326,7 +330,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
             self.assertEqual(self.nodes[node].get_state(), 'child')
             WAIT_TIME = PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE
             self.simulator.go(WAIT_TIME)
-            self.__check_dua_registration_tmf(node)
+            self.__check_dua_registration_tmf(node, 1, self.nodes[node].get_mleid_iid())
 
         # 5) MED_1_2_2, SED_1_2_2, MTDs should should register their DUA to their parent
         #    by Child Update Request, and the parent would send DUA.req for them on behalf.
@@ -342,7 +346,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
             WAIT_TIME = PARENT_AGGREGATE_DELAY + WAIT_REDUNDANCE
             print("waiting {}".format(WAIT_TIME))
             self.simulator.go(WAIT_TIME)
-            self.__check_dua_registration_tmf(ROUTER_1_2, 1)
+            self.__check_dua_registration_tmf(ROUTER_1_2, 1, self.nodes[node].get_mleid_iid())
 
         # 6) Increase seqno on BBR_1, within  BBR_REREGISTRATION_DELAY, there should be one DUA.req from
         #    per [FED_1_2_1, MED_1_2_1, SED_1_2_1, FED_1_2_2], and 3 DUA.req from ROUTER_1_2 among which
@@ -357,7 +361,7 @@ class TestDomainUnicastAddressRegistration(thread_cert.TestCase):
         WAIT_TIME = BBR_REREGISTRATION_DELAY + WAIT_REDUNDANCE
         self.simulator.go(WAIT_TIME)
         for node in [FED_1_2_1, MED_1_2_1, SED_1_2_1, FED_1_2_2]:
-            self.__check_dua_registration_tmf(node)
+            self.__check_dua_registration_tmf(node, 1, self.nodes[node].get_mleid_iid())
 
         self.__check_dua_registration_tmf(ROUTER_1_2, 3)
 
