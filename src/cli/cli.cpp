@@ -1229,9 +1229,9 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
-    else if(aArgs[0]=="ip")
+    else if(aArgs[0] == "ip")
     {
-        if (aArgsLength == 1)
+        if (aArgs[1].IsEmpty())
         {
             struct IpCounterName
             {
@@ -1253,7 +1253,7 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
                 OutputLine("%s: %d", counter.mName, ipCounters->*counter.mValuePtr);
             }
         }
-        else if ((aArgsLength == 2) && (aArgs[1] == "reset"))
+        else if ((aArgs[1] == "reset") && aArgs[2].IsEmpty())
         {
             otThreadResetIp6Counters(mInstance);
         }
