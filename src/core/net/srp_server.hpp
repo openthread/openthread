@@ -287,6 +287,8 @@ public:
             uint16_t     mPort;
             uint16_t     mTxtLength;
             uint8_t *    mTxtData;
+            uint32_t     mLease;    // The LEASE time in seconds.
+            uint32_t     mKeyLease; // The KEY-LEASE time in seconds.
             TimeMilli    mTimeLastUpdate;
         };
 
