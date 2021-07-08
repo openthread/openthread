@@ -648,7 +648,7 @@ bool HasExternalRouteInNetData(otInstance *aInstance, const otIp6Prefix &aExtern
 
     while (otNetDataGetNextRoute(aInstance, &iterator, &config) == OT_ERROR_NONE)
     {
-        if (otIp6IsPrefixEqual(&config.mPrefix, &aExternalRoute))
+        if (otIp6ArePrefixesEqual(&config.mPrefix, &aExternalRoute))
         {
             found = true;
             break;
@@ -663,7 +663,7 @@ bool HasAddedExternalRoute(const otIp6Prefix &aExternalRoute)
 
     for (uint8_t i = 0; i < sAddedExternalRoutesNum; ++i)
     {
-        if (otIp6IsPrefixEqual(&sAddedExternalRoutes[i], &aExternalRoute))
+        if (otIp6ArePrefixesEqual(&sAddedExternalRoutes[i], &aExternalRoute))
         {
             found = true;
             break;

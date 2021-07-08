@@ -571,7 +571,7 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
  * @retval FALSE  The two IPv6 prefixes are not the same.
  *
  */
-bool otIp6IsPrefixEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond);
+bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond);
 
 /**
  * This function converts a human-readable IPv6 address string into a binary representation.
