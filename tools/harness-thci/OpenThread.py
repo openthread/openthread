@@ -1214,8 +1214,9 @@ class OpenThreadTHCI(object):
             elif eRoleId == Thread_Device_Role.REED:
                 print('join as REED')
                 mode = 'rdn'
-                # set ROUTER_UPGRADE_THRESHOLD
-                self.__setRouterUpgradeThreshold(0)
+                if self.AutoDUTEnable is False:
+                    # set ROUTER_UPGRADE_THRESHOLD
+                    self.__setRouterUpgradeThreshold(0)
             elif eRoleId == Thread_Device_Role.EndDevice_FED:
                 print('join as FED')
                 mode = 'rdn'
