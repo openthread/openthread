@@ -155,6 +155,38 @@
 #define OPENTHREAD_POSIX_CONFIG_SECURE_SETTINGS_ENABLE 0
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+ *
+ * Define as 1 to add external routes to POSIX kernel when external routes are changed in netdata.
+ *
+ */
+#ifdef __linux__
+#ifndef OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_INSTALL_EXTERNAL_ROUTES_ENABLE 1
+#endif
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
+ *
+ * This macro defines the priority of external routes added to kernel.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY
+#define OPENTHREAD_POSIX_CONFIG_EXTERNAL_ROUTE_PRIORITY 512
+#endif
+
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM
+ *
+ * This macro defines the max number of external routes that can be added to kernel.
+ *
+ */
+#ifndef OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM
+#define OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM 8
+#endif
+
 #ifdef __APPLE__
 
 /**

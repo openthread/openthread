@@ -227,6 +227,11 @@ bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond
     return *static_cast<const Ip6::Address *>(aFirst) == *static_cast<const Ip6::Address *>(aSecond);
 }
 
+bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond)
+{
+    return *static_cast<const Ip6::Prefix *>(aFirst) == *static_cast<const Ip6::Prefix *>(aSecond);
+}
+
 otError otIp6AddressFromString(const char *aString, otIp6Address *aAddress)
 {
     return static_cast<Ip6::Address *>(aAddress)->FromString(aString);
