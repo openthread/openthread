@@ -1229,14 +1229,14 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
             ExitNow(error = OT_ERROR_INVALID_ARGS);
         }
     }
-    else if(aArgs[0] == "ip")
+    else if (aArgs[0] == "ip")
     {
         if (aArgs[1].IsEmpty())
         {
             struct IpCounterName
             {
                 const uint32_t otIpCounters::*mValuePtr;
-                const char *                   mName;
+                const char *                  mName;
             };
 
             static const IpCounterName kCounterNames[] = {
