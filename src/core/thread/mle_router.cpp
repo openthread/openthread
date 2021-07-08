@@ -45,6 +45,7 @@
 #include "mac/mac_types.hpp"
 #include "meshcop/meshcop.hpp"
 #include "net/icmp6.hpp"
+#include "thread/key_manager.hpp"
 #include "thread/thread_netif.hpp"
 #include "thread/thread_tlvs.hpp"
 #include "thread/time_sync_service.hpp"
@@ -111,8 +112,8 @@ void MleRouter::HandlePartitionChange(void)
 
 bool MleRouter::IsRouterEligible(void) const
 {
-    bool                 rval      = true;
-    const SecurityPolicy secPolicy = Get<KeyManager>().GetSecurityPolicy();
+    bool                  rval      = true;
+    const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
 
     VerifyOrExit(mRouterEligible && IsFullThreadDevice(), rval = false);
 
@@ -125,7 +126,8 @@ bool MleRouter::IsRouterEligible(void) const
     }
     if (!secPolicy.mRoutersEnabled)
     {
-        VerifyOrExit(secPolicy.mVersionThresholdForRouting + kVersionThresholdOffsetVersion <= kThreadVersion,
+        VerifyOrExit(secPolicy.mVersionThresholdForRouting + SecurityPolicy::kVersionThresholdOffsetVersion <=
+                         kThreadVersion,
                      rval = false);
     }
 #endif

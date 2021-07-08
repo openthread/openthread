@@ -302,16 +302,6 @@ enum class ChildDuaState : uint8_t
     kUnchanged, ///< The Child registers the same DUA again.
 };
 
-/**
- * Security Policy
- *
- */
-enum
-{
-    kVersionThresholdOffsetVersion = 3, ///< Offset between the Thread Version and the
-                                        ///< Version-thresold valid for Routing.
-};
-
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
 /**
