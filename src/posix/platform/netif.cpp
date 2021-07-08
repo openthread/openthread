@@ -552,10 +552,10 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
     } req{};
     unsigned char data[sizeof(in6_addr)];
     char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
-    unsigned int  ifIdx = otSysGetThreadNetifIndex();
-    otError       error = OT_ERROR_NONE;
+    unsigned int  netifIdx = otSysGetThreadNetifIndex();
+    otError       error    = OT_ERROR_NONE;
 
-    VerifyOrExit(ifIdx > 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sAddedExternalRoutesNum < kMaxExternalRoutesNum, error = OT_ERROR_NO_BUFS);
 
@@ -580,7 +580,7 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
     inet_pton(AF_INET6, addrBuf, data);
     AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority);
-    AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, ifIdx);
+    AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
     {
@@ -602,10 +602,10 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
     } req{};
     unsigned char data[sizeof(in6_addr)];
     char          addrBuf[OT_IP6_ADDRESS_STRING_SIZE];
-    unsigned int  ifIdx = otSysGetThreadNetifIndex();
-    otError       error = OT_ERROR_NONE;
+    unsigned int  netifIdx = otSysGetThreadNetifIndex();
+    otError       error    = OT_ERROR_NONE;
 
-    VerifyOrExit(ifIdx > 0, error = OT_ERROR_INVALID_STATE);
+    VerifyOrExit(netifIdx > 0, error = OT_ERROR_INVALID_STATE);
     VerifyOrExit(sNetlinkFd >= 0, error = OT_ERROR_INVALID_STATE);
 
     req.header.nlmsg_flags = NLM_F_REQUEST | NLM_F_ACK | NLM_F_NONREC;
@@ -628,7 +628,7 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
     AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
-    AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, ifIdx);
+    AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
     {
