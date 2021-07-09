@@ -69,6 +69,12 @@ namespace ot {
 class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>
 {
 public:
+    enum : uint8_t
+    {
+        kVersionThresholdOffsetVersion = 3, ///< Offset between the Thread Version and the
+                                            ///< Version-thresold valid for Routing.
+    };
+
     enum : uint16_t
     {
         kMinKeyRotationTime     = 1,   ///< The minimum Key Rotation Time in hours.
