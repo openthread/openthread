@@ -197,7 +197,7 @@ typedef void (*otTcpDisconnected)(otTcpEndpoint *aEndpoint, otTcpDisconnectedRea
  * should only interact with it via the TCP API functions whose signatures are
  * provided in this file.
  */
-typedef struct otTcpEndpoint
+struct otTcpEndpoint
 {
     struct otTcpEndpoint *mNext;     ///< A pointer to the next TCP endpoint (internal use only)
     otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP endpoint
@@ -210,7 +210,7 @@ typedef struct otTcpEndpoint
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
     /* Other implementation-defined fields go here. */
-} otTcpEndpoint;
+};
 
 /**
  * This structure contains arguments to the otTcpEndpointInitialize() function.
@@ -231,12 +231,35 @@ typedef struct otTcpEndpointInitializeArgs
 } otTcpEndpointInitializeArgs;
 
 /**
+ * @def OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS
+ *
+ * Recommended buffer size for TCP connections that traverse about 3 wireless
+ * hops or fewer.
+ *
+ * On platforms where memory is particularly constrained and in situations
+ * where high bandwidth is not necessary, it may be desirable to manually
+ * select a smaller buffer size.
+ */
+#define OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS 2599
+
+/**
+ * @def OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS
+ *
+ * Recommended buffer size for TCP connections that traverse many wireless
+ * hops.
+ *
+ * If the TCP connection traverses a very large number of hops (more than 6 or
+ * so), then it may be advisable to select a large buffer size manually.
+ */
+#define OT_TCP_RECEIVE_BUFFER_SIZE_MANY_HOPS 4158
+
+/**
  * Initializes a TCP endpoint.
  *
  * Calling this function causes OpenThread to keep track of the TCP endpoint
  * and store and retrieve TCP data inside the @p aEndpoint. The application
  * should refrain from directly accessing or modifying the fields in
- * @p aEndpoint. If the application needs to reclaimthe memory backing
+ * @p aEndpoint. If the application needs to reclaim the memory backing
  * @p aEndpoint, it should call otTcpEndpointDeinitialize().
  *
  * @param[in]  aInstance  A pointer to an OpenThread instance.
@@ -548,7 +571,7 @@ typedef void (*otTcpAcceptDone)(otTcpListener *aListener, otTcpEndpoint *aEndpoi
  * should only interact with it via the TCP API functions whose signatures are
  * provided in this file.
  */
-typedef struct otTcpListener
+struct otTcpListener
 {
     struct otTcpListener *mNext;     ///< A pointer to the next TCP listener (internal use only)
     otInstance *          mInstance; ///< A pointer to the OpenThread instance associated with this TCP listener
@@ -558,7 +581,7 @@ typedef struct otTcpListener
     otTcpAcceptDone  mAcceptDoneCallback;  ///< "Accept done" callback function
 
     /* Other implementation-defined fields go here. */
-} otTcpListener;
+};
 
 /**
  * This structure contains arguments to the otTcpListenerInitialize() function.
