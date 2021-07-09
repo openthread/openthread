@@ -78,6 +78,9 @@ if (openthread_enable_core_config_args) {
     # Enable assertions.
     openthread_config_assert_enable = true
 
+    # Enable anycast locator functionality
+    openthread_config_anycast_locator_enable = false
+
     # Enable backbone router functionality
     openthread_config_backbone_router_enable = false
 

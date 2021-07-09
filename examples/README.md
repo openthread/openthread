@@ -6,6 +6,7 @@ This page lists the available common switches with description. Unless stated ot
 
 | Makefile switch | CMake switch | Description |
 | --- | --- | --- |
+| ANYCAST_LOCATOR | OT_ANYCAST_LOCATOR | Enables anycast locator functionality. |
 | BACKBONE_ROUTER | OT_BACKBONE_ROUTER | Enables Backbone Router functionality for Thread 1.2. |
 | BIG_ENDIAN | OT_BIG_ENDIAN | Allows the host platform to use big-endian byte order. |
 | BORDER_AGENT | OT_BORDER_AGENT | Enables support for border agent. In most cases, enable this switch if you are building On-mesh Commissioner or Border Router with External Commissioning support. |

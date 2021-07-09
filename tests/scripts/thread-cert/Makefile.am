@@ -152,6 +152,7 @@ EXTRA_DIST                                                         = \
     sniffer.py                                                       \
     sniffer_transport.py                                             \
     test_anycast.py                                                  \
+    test_anycast_locator.py                                          \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \
@@ -211,6 +212,7 @@ check_PROGRAMS                                                     = \
 
 check_SCRIPTS                                                      = \
     test_anycast.py                                                  \
+    test_anycast_locator.py                                          \
     test_coap.py                                                     \
     test_coap_observe.py                                             \
     test_coaps.py                                                    \

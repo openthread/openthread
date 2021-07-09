@@ -173,6 +173,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+ *
+ * Define to 1 to enable TMF anycast locator functionality.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+#define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
  *
  * Define to 1 for Thread 1.2 FTD device to register DUA of its MTD children registered

@@ -2450,6 +2450,52 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
 
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+
+otError Interpreter::ProcessLocate(Arg aArgs[])
+{
+    otError      error = OT_ERROR_INVALID_ARGS;
+    otIp6Address anycastAddress;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine(otThreadIsAnycastLocateInProgress(mInstance) ? "In Progress" : "Idle");
+        ExitNow(error = OT_ERROR_NONE);
+    }
+
+    SuccessOrExit(error = aArgs[0].ParseAsIp6Address(anycastAddress));
+    SuccessOrExit(error = otThreadLocateAnycastDestination(mInstance, &anycastAddress, HandleLocateResult, this));
+
+    error = OT_ERROR_PENDING;
+
+exit:
+    return error;
+}
+
+void Interpreter::HandleLocateResult(void *              aContext,
+                                     otError             aError,
+                                     const otIp6Address *aMeshLocalAddress,
+                                     uint16_t            aRloc16)
+{
+    static_cast<Interpreter *>(aContext)->HandleLocateResult(aError, aMeshLocalAddress, aRloc16);
+}
+
+void Interpreter::HandleLocateResult(otError aError, const otIp6Address *aMeshLocalAddress, uint16_t aRloc16)
+{
+    OutputFormat("Locate result ");
+
+    if (aError == OT_ERROR_NONE)
+    {
+        OutputIp6Address(*aMeshLocalAddress);
+        OutputFormat(" RLOC16: 0x%04x", aRloc16);
+    }
+
+    OutputLine("");
+    OutputResult(aError);
+}
+
+#endif //  OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+
 #if OPENTHREAD_FTD
 otError Interpreter::ProcessPskc(Arg aArgs[])
 {

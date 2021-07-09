@@ -35,6 +35,7 @@ DEBUG                          ?= 0
 
 # Enable most features by default to cover most code
 
+ANYCAST_LOCATOR                ?= 1
 BORDER_AGENT                   ?= 1
 BORDER_ROUTER                  ?= 1
 COAP                           ?= 1
