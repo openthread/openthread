@@ -1117,9 +1117,9 @@ otError Interpreter::ProcessCounters(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
+        OutputLine("ip");
         OutputLine("mac");
         OutputLine("mle");
-        OutputLine("ip");
     }
     else if (aArgs[0] == "mac")
     {

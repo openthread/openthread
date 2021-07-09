@@ -770,9 +770,9 @@ Get the supported counter names.
 
 ```bash
 > counters
+ip
 mac
 mle
-ip
 Done
 ```
 
