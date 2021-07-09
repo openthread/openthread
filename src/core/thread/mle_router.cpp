@@ -112,25 +112,26 @@ void MleRouter::HandlePartitionChange(void)
 
 bool MleRouter::IsRouterEligible(void) const
 {
-    bool                  rval      = true;
+    bool                  rval      = false;
     const SecurityPolicy &secPolicy = Get<KeyManager>().GetSecurityPolicy();
 
-    VerifyOrExit(mRouterEligible && IsFullThreadDevice(), rval = false);
+    VerifyOrExit(mRouterEligible && IsFullThreadDevice());
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION == OT_THREAD_VERSION_1_1
-    VerifyOrExit(secPolicy.mRoutersEnabled, rval = false);
+    VerifyOrExit(secPolicy.mRoutersEnabled);
 #else
     if (secPolicy.mCommercialCommissioningEnabled)
     {
-        VerifyOrExit(secPolicy.mNonCcmRoutersEnabled, rval = false);
+        VerifyOrExit(secPolicy.mNonCcmRoutersEnabled);
     }
     if (!secPolicy.mRoutersEnabled)
     {
         VerifyOrExit(secPolicy.mVersionThresholdForRouting + SecurityPolicy::kVersionThresholdOffsetVersion <=
-                         kThreadVersion,
-                     rval = false);
+                     kThreadVersion);
     }
 #endif
+
+    rval = true;
 
 exit:
     return rval;
