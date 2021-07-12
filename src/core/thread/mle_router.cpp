@@ -1101,14 +1101,14 @@ int MleRouter::ComparePartitions(bool              aSingletonA,
 {
     int rval = 0;
 
-    if (aSingletonA != aSingletonB)
-    {
-        ExitNow(rval = aSingletonB ? 1 : -1);
-    }
-
     if (aLeaderDataA.GetWeighting() != aLeaderDataB.GetWeighting())
     {
         ExitNow(rval = aLeaderDataA.GetWeighting() > aLeaderDataB.GetWeighting() ? 1 : -1);
+    }
+
+    if (aSingletonA != aSingletonB)
+    {
+        ExitNow(rval = aSingletonB ? 1 : -1);
     }
 
     if (aLeaderDataA.GetPartitionId() != aLeaderDataB.GetPartitionId())
