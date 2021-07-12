@@ -468,6 +468,13 @@ bool otLinkIsInTransmitState(otInstance *aInstance)
     return instance.Get<Mac::Mac>().IsInTransmitState();
 }
 
+bool otLinkIsRxStatePolling(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Mac::Mac>().IsRxStatePolling();
+}
+
 uint16_t otLinkGetCcaFailureRate(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

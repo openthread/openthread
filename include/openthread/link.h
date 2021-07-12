@@ -507,6 +507,18 @@ otError otLinkSendDataRequest(otInstance *aInstance);
 bool otLinkIsInTransmitState(otInstance *aInstance);
 
 /**
+ * This function indicates whether or not an IEEE 802.15.4 MAC is currently waiting for data.
+ *
+ * MAC module is in the receive state during a polling procedure pending external frame transmission.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ *
+ * @returns true if an IEEE 802.15.4 MAC is in the polling receive state, false otherwise.
+ *
+ */
+bool otLinkIsRxStatePolling(otInstance *aInstance);
+
+/**
  * Get the IEEE 802.15.4 channel.
  *
  * @param[in] aInstance A pointer to an OpenThread instance.
