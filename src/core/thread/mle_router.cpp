@@ -4337,9 +4337,9 @@ Error MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 {
     Error error = kErrorNotFound;
 
-    VerifyOrExit(IsRouterOrLeader(), error = kErrorInvalidState);
-
     aTimeout = 0;
+
+    VerifyOrExit(IsRouterOrLeader(), error = kErrorInvalidState);
 
     for (Child &child : Get<ChildTable>().Iterate(Child::kInStateValid))
     {
