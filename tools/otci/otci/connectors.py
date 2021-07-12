@@ -30,6 +30,7 @@ import logging
 import subprocess
 import time
 from abc import abstractmethod
+from typing import Union, List
 
 
 class OtCliHandler:
@@ -75,13 +76,13 @@ class Simulator:
 class OtCliPopen(OtCliHandler):
     """Connector for OT CLI process (a Popen instance)."""
 
-    def __init__(self, proc: subprocess.Popen, nodeid: int, simulator: Simulator):
+    def __init__(self, proc: subprocess.Popen, id: Union[int, str], simulator: Simulator):
         self.__otcli_proc = proc
-        self.__nodeid = nodeid
+        self.__id = str(id)
         self.__simulator = simulator
 
     def __repr__(self):
-        return 'OTCli<%d>' % self.__nodeid
+        return 'OTCli<%s>' % self.__id
 
     def readline(self) -> str:
         return self.__otcli_proc.stdout.readline().rstrip('\r\n')
@@ -107,16 +108,16 @@ class OtCliPopen(OtCliHandler):
 class OtCliSim(OtCliPopen):
     """Connector for OT CLI Simulation instances."""
 
-    def __init__(self, executable: str, nodeid: int, simulator: Simulator):
+    def __init__(self, executable: str, id: int, simulator: Simulator):
         logging.info('%s: executable=%s', self.__class__.__name__, executable)
 
-        proc = subprocess.Popen(args=[executable, str(nodeid)],
+        proc = subprocess.Popen(args=[executable, str(id)],
                                 executable=executable,
                                 stdin=subprocess.PIPE,
                                 stdout=subprocess.PIPE,
                                 encoding='utf-8',
                                 bufsize=1024)
-        super().__init__(proc, nodeid, simulator)
+        super().__init__(proc, id, simulator)
 
 
 class OtNcpSim(OtCliHandler):
@@ -159,3 +160,20 @@ class OtCliSerial(OtCliHandler):
 
     def close(self):
         self.__serial.close()
+
+
+class OtCliPosix(OtCliPopen):
+    """Connector for OT CLI Posix (i.e. POSIX ot-cli program)"""
+
+    def __init__(self, executable: str, radio_url: str, args: List[str] = None, sudo=False):
+        logging.info('%s: executable=%s, radio_url=%s', self.__class__.__name__, executable, radio_url)
+        args = [executable, radio_url] + (args or [])
+        if sudo:
+            args = ['sudo'] + args
+        logging.info('%s', ' '.join(args))
+        proc = subprocess.Popen(args=args,
+                                stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE,
+                                encoding='utf-8',
+                                bufsize=1024, shell=True)
+        super().__init__(proc, radio_url, simulator=None)
