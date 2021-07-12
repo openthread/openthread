@@ -430,7 +430,7 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
 #if OPENTHREAD_FTD
         case NetworkDiagnosticTlv::kMaxChildTimeout:
         {
-            uint32_t maxTimeout = 0;
+            uint32_t maxTimeout;
 
             if (Get<Mle::MleRouter>().GetMaxChildTimeout(maxTimeout) == kErrorNone)
             {
