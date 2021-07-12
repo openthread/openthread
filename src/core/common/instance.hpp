@@ -333,10 +333,10 @@ private:
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
 
-    Tasklet::Scheduler  mTaskletScheduler;
-    TimerMilliScheduler mTimerMilliScheduler;
+    Tasklet::Scheduler    mTaskletScheduler;
+    TimerMilli::Scheduler mTimerMilliScheduler;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    TimerMicroScheduler mTimerMicroScheduler;
+    TimerMicro::Scheduler mTimerMicroScheduler;
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -950,13 +950,13 @@ template <> inline Tasklet::Scheduler &Instance::Get(void)
     return mTaskletScheduler;
 }
 
-template <> inline TimerMilliScheduler &Instance::Get(void)
+template <> inline TimerMilli::Scheduler &Instance::Get(void)
 {
     return mTimerMilliScheduler;
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <> inline TimerMicroScheduler &Instance::Get(void)
+template <> inline TimerMicro::Scheduler &Instance::Get(void)
 {
     return mTimerMicroScheduler;
 }
