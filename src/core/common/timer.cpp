@@ -107,6 +107,11 @@ void TimerMilli::Stop(void)
     Get<Scheduler>().Remove(*this);
 }
 
+void TimerMilli::RemoveAll(Instance &aInstance)
+{
+    aInstance.Get<Scheduler>().RemoveAll();
+}
+
 void Timer::Scheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 {
     Timer *prev = nullptr;
@@ -193,6 +198,18 @@ exit:
     return;
 }
 
+void Timer::Scheduler::RemoveAll(const AlarmApi &aAlarmApi)
+{
+    Timer *timer;
+
+    while ((timer = mTimerList.Pop()) != nullptr)
+    {
+        timer->SetNext(timer);
+    }
+
+    SetAlarm(aAlarmApi);
+}
+
 extern "C" void otPlatAlarmMilliFired(otInstance *aInstance)
 {
     Instance *instance = static_cast<Instance *>(aInstance);
@@ -231,6 +248,11 @@ void TimerMicro::FireAt(TimeMicro aFireTime)
 void TimerMicro::Stop(void)
 {
     Get<Scheduler>().Remove(*this);
+}
+
+void TimerMicro::RemoveAll(Instance &aInstance)
+{
+    aInstance.Get<Scheduler>().RemoveAll();
 }
 
 extern "C" void otPlatAlarmMicroFired(otInstance *aInstance)
