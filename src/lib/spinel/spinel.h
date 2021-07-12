@@ -709,6 +709,7 @@ enum
     SPINEL_NCP_LOG_REGION_OT_BR       = 20,
     SPINEL_NCP_LOG_REGION_OT_SRP      = 21,
     SPINEL_NCP_LOG_REGION_OT_DNS      = 22,
+    SPINEL_NCP_LOG_REGION_OT_TCP      = 23,
 };
 
 enum

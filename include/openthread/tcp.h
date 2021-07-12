@@ -209,6 +209,12 @@ typedef struct otTcpEndpoint
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
+    union
+    {
+        void *  mAlign;
+        uint8_t mSize[4 * sizeof(void *)];
+    } mTimers[4];
+
     /* Other implementation-defined fields go here. */
 } otTcpEndpoint;
 

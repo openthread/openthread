@@ -452,7 +452,14 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
     Header   header;
     uint16_t payloadLength = aMessage.GetLength();
 
-    header.Init();
+    if ((aMessageInfo.mVersionClassFlow >> 28) == 0x6)
+    {
+        header.Init(aMessageInfo.mVersionClassFlow);
+    }
+    else
+    {
+        header.Init();
+    }
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
