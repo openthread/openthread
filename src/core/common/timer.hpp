@@ -136,6 +136,7 @@ protected:
 
         void Add(Timer &aTimer, const AlarmApi &aAlarmApi);
         void Remove(Timer &aTimer, const AlarmApi &aAlarmApi);
+        void RemoveAll(const AlarmApi &aAlarmApi);
         void ProcessTimers(const AlarmApi &aAlarmApi);
         void SetAlarm(const AlarmApi &aAlarmApi);
 
@@ -183,6 +184,7 @@ public:
     private:
         void Add(TimerMilli &aTimer) { Timer::Scheduler::Add(aTimer, sAlarmMilliApi); }
         void Remove(TimerMilli &aTimer) { Timer::Scheduler::Remove(aTimer, sAlarmMilliApi); }
+        void RemoveAll(void) { Timer::Scheduler::RemoveAll(sAlarmMilliApi); }
         void ProcessTimers(void) { Timer::Scheduler::ProcessTimers(sAlarmMilliApi); }
 
         static const AlarmApi sAlarmMilliApi;
@@ -247,6 +249,9 @@ public:
      *
      */
     static TimeMilli GetNow(void) { return TimeMilli(otPlatAlarmMilliGetNow()); }
+
+protected:
+    static void RemoveAll(Instance &aInstance);
 };
 
 /**
@@ -322,6 +327,7 @@ public:
     private:
         void Add(TimerMicro &aTimer) { Timer::Scheduler::Add(aTimer, sAlarmMicroApi); }
         void Remove(TimerMicro &aTimer) { Timer::Scheduler::Remove(aTimer, sAlarmMicroApi); }
+        void RemoveAll(void) { Timer::Scheduler::RemoveAll(sAlarmMicroApi); }
         void ProcessTimers(void) { Timer::Scheduler::ProcessTimers(sAlarmMicroApi); }
 
         static const AlarmApi sAlarmMicroApi;
@@ -377,6 +383,9 @@ public:
      *
      */
     static TimeMicro GetNow(void) { return Time(otPlatAlarmMicroGetNow()); }
+
+protected:
+    static void RemoveAll(Instance &aInstance);
 };
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 
