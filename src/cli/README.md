@@ -770,6 +770,7 @@ Get the supported counter names.
 
 ```bash
 > counters
+ip
 mac
 mle
 Done
@@ -824,6 +825,12 @@ Partition Id Changes: 1
 Better Partition Attach Attempts: 0
 Parent Changes: 0
 Done
+> counters ip
+TxSuccess: 10
+TxFailed: 0
+RxSuccess: 5
+RxFailed: 0
+Done
 ```
 
 ### counters \<countername\> reset
@@ -834,6 +841,8 @@ Reset the counter value.
 > counters mac reset
 Done
 > counters mle reset
+Done
+> counters ip reset
 Done
 ```
 
