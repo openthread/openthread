@@ -26,7 +26,7 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-if(OT_PLATFORM STREQUAL "simulation")
+if(OT_BUILD_TESTING)
     if(OT_FTD)
         add_subdirectory(unit)
     endif()

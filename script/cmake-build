@@ -68,6 +68,7 @@ readonly OT_PLATFORMS=(cc2538 simulation posix)
 readonly OT_POSIX_SIM_COMMON_OPTIONS=(
     "-DOT_BORDER_AGENT=ON"
     "-DOT_BORDER_ROUTER=ON"
+    "-DOT_BUILD_TESTING=ON"
     "-DOT_COAP=ON"
     "-DOT_COAP_BLOCK=ON"
     "-DOT_COAP_OBSERVE=ON"

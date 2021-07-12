@@ -34,6 +34,8 @@ option(OT_FTD "enable FTD" ON)
 option(OT_MTD "enable MTD" ON)
 option(OT_RCP "enable RCP" ON)
 
+option(OT_BUILD_TESTING "enable build tests")
+
 option(OT_ASSERT "enable assert function OT_ASSERT()" ON)
 if(OT_ASSERT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_ASSERT_ENABLE=1")
