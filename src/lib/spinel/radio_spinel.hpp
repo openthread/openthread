@@ -856,6 +856,12 @@ private:
      */
     otError Remove(spinel_prop_key_t aKey, const char *aFormat, ...);
 
+    /**
+     * This method logs a property operated by get/set method.
+     *
+     */
+    void LogSpinelProperty(spinel_prop_key_t aKey, const char *aFormat, bool aGet, va_list aArgs);
+
     spinel_tid_t GetNextTid(void);
     void         FreeTid(spinel_tid_t tid) { mCmdTidsInUse &= ~(1 << tid); }
 
@@ -1007,6 +1013,11 @@ private:
     int64_t  mRadioTimeOffset;      ///< Time difference with estimated RCP time minus host time.
 
     MaxPowerTable mMaxPowerTable;
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_DEBG)
+    static constexpr uint16_t kPropLogBufferSize = 256;
+    char                      mPropLogBuffer[kPropLogBufferSize];
+#endif
 };
 
 } // namespace Spinel
