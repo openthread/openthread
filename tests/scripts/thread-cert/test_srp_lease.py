@@ -135,6 +135,44 @@ class SrpRegisterSingleService(thread_cert.TestCase):
 
         self.check_host_and_service(server, client)
 
+        #
+        # 4. Clear the first service, shorten the lease time and register a second service.
+        #    Verify that the lease time of the first service is not affected by new SRP
+        #    registrations.
+        #
+
+        client.srp_client_clear_service('my-service', '_ipps._tcp')
+        server.srp_server_set_lease_range(50 * LEASE, 50 * LEASE, 50 * KEY_LEASE, 50 * KEY_LEASE)
+        client.srp_client_add_service('my-service2', '_ipps._tcp', 12345)
+
+        # Wait for the first service to expire.
+        self.simulator.go(LEASE + 2)
+        self.assertEqual(server.srp_server_get_service('my-service', '_ipps._tcp')['deleted'], 'true')
+
+        # Wait for the first service to be fully removed.
+        self.simulator.go(KEY_LEASE - LEASE + 2)
+        self.assertEqual(len(server.srp_server_get_services()), 1)
+        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+
+        #
+        # 5. Clear the second service, lengthen the lease time and register a third service.
+        #    Verify that the lease time of the second service is not affected by new SRP
+        #    registrations.
+        #
+
+        client.srp_client_clear_service('my-service2', '_ipps._tcp')
+        server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
+        client.srp_client_add_service('my-service3', '_ipps._tcp', 12345)
+
+        # The second service has lease time of 50 * LEASE and should not expire.
+        self.simulator.go(LEASE + 2)
+        self.assertEqual(server.srp_server_get_service('my-service2', '_ipps._tcp')['deleted'], 'false')
+
+        # The second service has key-lease time of 50 * KEY_LEASE and should not expire.
+        self.simulator.go(KEY_LEASE - LEASE + 2)
+        self.assertEqual(len(server.srp_server_get_services()), 2)
+        self.assertEqual(len(server.srp_server_get_hosts()), 1)
+
     def check_host_and_service(self, server, client):
         """Check that we have properly registered host and service instance.
         """

@@ -1010,6 +1010,10 @@ class NodeImpl:
         self.send_command(f'srp client service remove {instance_name} {service_name}')
         self._expect_done()
 
+    def srp_client_clear_service(self, instance_name, service_name):
+        self.send_command(f'srp client service clear {instance_name} {service_name}')
+        self._expect_done()
+
     def srp_client_get_services(self):
         cmd = 'srp client service'
         self.send_command(cmd)
@@ -1511,6 +1515,10 @@ class NodeImpl:
             if (segs[4] == '0' and segs[5] == 'ff' and segs[6] == 'fe00' and segs[7] == 'fc00'):
                 return addr
         return None
+
+    def get_mleid_iid(self):
+        ml_eid = ipaddress.IPv6Address(self.get_mleid())
+        return ml_eid.packed[8:].hex()
 
     def get_eidcaches(self):
         eidcaches = []

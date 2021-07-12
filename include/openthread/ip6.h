@@ -562,6 +562,18 @@ const uint16_t *otIp6GetUnsecurePorts(otInstance *aInstance, uint8_t *aNumEntrie
 bool otIp6IsAddressEqual(const otIp6Address *aFirst, const otIp6Address *aSecond);
 
 /**
+ * Test if two IPv6 prefixes are the same.
+ *
+ * @param[in]  aFirst   A pointer to the first IPv6 prefix to compare.
+ * @param[in]  aSecond  A pointer to the second IPv6 prefix to compare.
+ *
+ * @retval TRUE   The two IPv6 prefixes are the same.
+ * @retval FALSE  The two IPv6 prefixes are not the same.
+ *
+ */
+bool otIp6ArePrefixesEqual(const otIp6Prefix *aFirst, const otIp6Prefix *aSecond);
+
+/**
  * This function converts a human-readable IPv6 address string into a binary representation.
  *
  * @param[in]   aString   A pointer to a NULL-terminated string.

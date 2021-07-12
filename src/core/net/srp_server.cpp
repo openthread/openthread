@@ -333,6 +333,11 @@ void Server::CommitSrpUpdate(Error                    aError,
 
     aHost.SetLease(grantedLease);
     aHost.SetKeyLease(grantedKeyLease);
+    for (Service::Description *desc = aHost.mServiceDescriptions.GetHead(); desc != nullptr; desc = desc->GetNext())
+    {
+        desc->mLease    = grantedLease;
+        desc->mKeyLease = grantedKeyLease;
+    }
 
     existingHost = mHosts.FindMatching(aHost.GetFullName());
 
@@ -1239,7 +1244,12 @@ void Server::HandleLeaseTimer(void)
             {
                 next = service->GetNext();
 
-                if (service->mIsDeleted)
+                if (service->GetKeyExpireTime() <= now)
+                {
+                    service->Log(Service::kKeyLeaseExpired);
+                    host->RemoveService(service, /* aRetainName */ false, /* aNotifyServiceHandler */ true);
+                }
+                else if (service->mIsDeleted)
                 {
                     // The service has been deleted but the name retains.
                     earliestExpireTime = OT_MIN(earliestExpireTime, service->GetKeyExpireTime());
@@ -1262,6 +1272,7 @@ void Server::HandleLeaseTimer(void)
 
     if (earliestExpireTime != now.GetDistantFuture())
     {
+        OT_ASSERT(earliestExpireTime >= now);
         if (!mLeaseTimer.IsRunning() || earliestExpireTime <= mLeaseTimer.GetFireTime())
         {
             otLogInfoSrp("[server] lease timer is scheduled for %u seconds", Time::MsecToSec(earliestExpireTime - now));
@@ -1362,12 +1373,12 @@ TimeMilli Server::Service::GetExpireTime(void) const
     OT_ASSERT(!mIsDeleted);
     OT_ASSERT(!GetHost().IsDeleted());
 
-    return mTimeLastUpdate + Time::SecToMsec(GetHost().GetLease());
+    return mTimeLastUpdate + Time::SecToMsec(mDescription.mLease);
 }
 
 TimeMilli Server::Service::GetKeyExpireTime(void) const
 {
-    return mTimeLastUpdate + Time::SecToMsec(GetHost().GetKeyLease());
+    return mTimeLastUpdate + Time::SecToMsec(mDescription.mKeyLease);
 }
 
 bool Server::Service::MatchesFlags(Flags aFlags) const
@@ -1475,6 +1486,8 @@ Server::Service::Description::Description(Host &aHost)
     , mPort(0)
     , mTxtLength(0)
     , mTxtData(nullptr)
+    , mLease(0)
+    , mKeyLease(0)
     , mTimeLastUpdate(TimerMilli::GetNow().GetDistantPast())
 {
 }
@@ -1501,6 +1514,8 @@ void Server::Service::Description::TakeResourcesFrom(Description &aDescription)
     mWeight   = aDescription.mWeight;
     mPort     = aDescription.mPort;
 
+    mLease          = aDescription.mLease;
+    mKeyLease       = aDescription.mKeyLease;
     mTimeLastUpdate = TimerMilli::GetNow();
 }
 

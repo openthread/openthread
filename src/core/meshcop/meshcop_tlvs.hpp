@@ -2248,6 +2248,33 @@ public:
         }
     }
 
+    /**
+     * This method indicates whether or not the Commercial Commissioning Mode flag is set.
+     *
+     * @retval TRUE   If the Commercial Commissioning Mode flag is set.
+     * @retval FALSE  If the Commercial Commissioning Mode flag is not set.
+     *
+     */
+    bool IsCommercialCommissioningMode(void) const { return (mFlags & kCCMMask) != 0; }
+
+    /**
+     * This method sets the Commercial Commissioning Mode flag.
+     *
+     * @param[in]  aCCM  TRUE if set, FALSE otherwise.
+     *
+     */
+    void SetCommercialCommissioningMode(bool aCCM)
+    {
+        if (aCCM)
+        {
+            mFlags |= kCCMMask;
+        }
+        else
+        {
+            mFlags &= ~kCCMMask;
+        }
+    }
+
 private:
     enum
     {
@@ -2255,6 +2282,8 @@ private:
         kVersionMask   = 0xf << kVersionOffset,
         kNativeOffset  = 3,
         kNativeMask    = 1 << kNativeOffset,
+        kCCMOffset     = 2,
+        kCCMMask       = 1 << kCCMOffset,
     };
     uint8_t mFlags;
     uint8_t mReserved;
