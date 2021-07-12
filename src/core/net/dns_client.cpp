@@ -350,13 +350,29 @@ exit:
 
 Error Client::AddressResponse::GetNat64Prefix(Ip6::Prefix &aPrefix) const
 {
-    // Use well-known prefix "64:ff9b::/96" (temporary solution).
-    static const uint8_t kWellknownPrefix[] = {0x00, 0x64, 0xff, 0x9b, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+    Error                            error      = kErrorNotFound;
+    NetworkData::Iterator            iterator   = NetworkData::kIteratorInit;
+    signed int                       preference = OT_ROUTE_PREFERENCE_LOW;
+    NetworkData::ExternalRouteConfig config;
 
     aPrefix.Clear();
-    aPrefix.Set(kWellknownPrefix, 96);
 
-    return kErrorNone;
+    while (mInstance->Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        {
+            continue;
+        }
+
+        if ((aPrefix.GetLength() == 0) || (config.mPreference > preference))
+        {
+            aPrefix    = config.GetPrefix();
+            preference = config.mPreference;
+            error      = kErrorNone;
+        }
+    }
+
+    return error;
 }
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
