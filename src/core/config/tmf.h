@@ -99,11 +99,11 @@
  *
  * Maximum retry delay for address query (in seconds).
  *
- * Default: 28800 seconds (480 minutes or 8 hours)
+ * Default: 120 seconds
  *
  */
 #ifndef OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY
-#define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY 28800
+#define OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY 120
 #endif
 
 /**
