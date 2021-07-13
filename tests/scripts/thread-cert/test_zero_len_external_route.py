@@ -33,7 +33,7 @@ import thread_cert
 
 # Test description:
 #
-#   This test verifies the behavior of network when a zero length external router prefix "::/0" is added.
+#   This test verifies the behavior of the network when a zero length external route prefix "::/0" is added.
 #
 # Topology:
 #
