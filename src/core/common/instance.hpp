@@ -333,7 +333,7 @@ private:
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
 
-    TaskletScheduler    mTaskletScheduler;
+    Tasklet::Scheduler  mTaskletScheduler;
     TimerMilliScheduler mTimerMilliScheduler;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicroScheduler mTimerMicroScheduler;
@@ -945,7 +945,7 @@ template <> inline Mac::SubMac &Instance::Get(void)
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-template <> inline TaskletScheduler &Instance::Get(void)
+template <> inline Tasklet::Scheduler &Instance::Get(void)
 {
     return mTaskletScheduler;
 }

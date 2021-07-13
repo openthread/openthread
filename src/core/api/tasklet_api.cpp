@@ -47,7 +47,7 @@ void otTaskletsProcess(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    instance.Get<TaskletScheduler>().ProcessQueuedTasklets();
+    instance.Get<Tasklet::Scheduler>().ProcessQueuedTasklets();
 
 exit:
     return;
@@ -59,7 +59,7 @@ bool otTaskletsArePending(otInstance *aInstance)
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     VerifyOrExit(otInstanceIsInitialized(aInstance));
-    retval = instance.Get<TaskletScheduler>().AreTaskletsPending();
+    retval = instance.Get<Tasklet::Scheduler>().AreTaskletsPending();
 
 exit:
     return retval;
