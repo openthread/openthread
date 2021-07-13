@@ -167,8 +167,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
     }
     else if (compare < 0)
     {
-        VerifyOrExit(!Get<Mle::MleRouter>().IsLeader(), error = kErrorInvalidState);
-        SendSet();
+        mTimer.Start(kSendSetDelay);
     }
 
     SignalDatasetChange();
@@ -279,7 +278,7 @@ void DatasetManager::SendSet(void)
     Dataset          dataset(GetType());
 
     VerifyOrExit(!mCoapPending, error = kErrorBusy);
-    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
     VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, error = kErrorInvalidState);
 
     if (IsActiveDataset())
@@ -323,7 +322,7 @@ exit:
         break;
 
     case kErrorNoBufs:
-        mTimer.Start(kDelayNoBufs);
+        mTimer.Start(kSendSetDelay);
         OT_FALL_THROUGH;
 
     default:
@@ -348,7 +347,7 @@ void DatasetManager::HandleCoapResponse(void *               aContext,
 void DatasetManager::HandleCoapResponse(void)
 {
     mCoapPending = false;
-    SendSet();
+    mTimer.Start(kSendSetDelay);
 }
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const

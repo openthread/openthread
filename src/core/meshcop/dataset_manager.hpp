@@ -363,7 +363,7 @@ private:
     enum
     {
         kMaxDatasetTlvs = 16,   // Maximum number of TLVs in a Dataset.
-        kDelayNoBufs    = 1000, // Milliseconds
+        kSendSetDelay   = 5000, // Milliseconds
     };
 
     bool       mCoapPending : 1;
