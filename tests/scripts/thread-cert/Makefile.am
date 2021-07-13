@@ -160,6 +160,7 @@ EXTRA_DIST                                                         = \
     test_crypto.py                                                   \
     test_dataset_updater.py                                          \
     test_diag.py                                                     \
+    test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
@@ -219,6 +220,7 @@ check_SCRIPTS                                                      = \
     test_crypto.py                                                   \
     test_dataset_updater.py                                          \
     test_diag.py                                                     \
+    test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \

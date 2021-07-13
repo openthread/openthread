@@ -2487,6 +2487,32 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def dns_get_config(self):
+        """
+        Returns the DNS config as a list of property dictionary (string key and string value).
+
+        Example output:
+        {
+            'Server': '[fd00:0:0:0:0:0:0:1]:1234'
+            'ResponseTimeout': '5000 ms'
+            'MaxTxAttempts': '2'
+            'RecursionDesired': 'no'
+        }
+        """
+        cmd = f'dns config'
+        self.send_command(cmd)
+        output = self._expect_command_output(cmd)
+        config = {}
+        for line in output:
+            k, v = line.split(': ')
+            config[k] = v
+        return config
+
+    def dns_set_config(self, config):
+        cmd = f'dns config {config}'
+        self.send_command(cmd)
+        self._expect_done()
+
     def dns_resolve(self, hostname, server=None, port=53):
         cmd = f'dns resolve {hostname}'
         if server is not None:

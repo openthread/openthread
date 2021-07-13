@@ -557,6 +557,9 @@ Client::Client(Instance &aInstance)
     , mSocket(aInstance)
     , mTimer(aInstance, Client::HandleTimer)
     , mDefaultConfig(QueryConfig::kInitFromDefaults)
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    , mUserDidSetDefaultAddress(false)
+#endif
 {
     static_assert(kIp6AddressQuery == 0, "kIp6AddressQuery value is not correct");
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
@@ -599,12 +602,35 @@ void Client::SetDefaultConfig(const QueryConfig &aQueryConfig)
     QueryConfig startingDefault(QueryConfig::kInitFromDefaults);
 
     mDefaultConfig.SetFrom(aQueryConfig, startingDefault);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    mUserDidSetDefaultAddress = !aQueryConfig.GetServerSockAddr().GetAddress().IsUnspecified();
+    UpdateDefaultConfigAddress();
+#endif
 }
 
 void Client::ResetDefaultConfig(void)
 {
     mDefaultConfig = QueryConfig(QueryConfig::kInitFromDefaults);
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    mUserDidSetDefaultAddress = false;
+    UpdateDefaultConfigAddress();
+#endif
 }
+
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+void Client::UpdateDefaultConfigAddress(void)
+{
+    const Ip6::Address &srpServerAddr = Get<Srp::Client>().GetServerAddress().GetAddress();
+
+    if (!mUserDidSetDefaultAddress && Get<Srp::Client>().IsServerSelectedByAutoStart() &&
+        !srpServerAddr.IsUnspecified())
+    {
+        mDefaultConfig.GetServerSockAddr().SetAddress(srpServerAddr);
+    }
+}
+#endif
 
 Error Client::ResolveAddress(const char *       aHostName,
                              AddressCallback    aCallback,
