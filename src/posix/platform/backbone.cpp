@@ -69,6 +69,13 @@ exit:
     return;
 }
 
+void platformBackboneDeinit()
+{
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
+    sMulticastRoutingManager.Deinit();
+#endif
+}
+
 void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)
 {
     OT_UNUSED_VARIABLE(aInstance);

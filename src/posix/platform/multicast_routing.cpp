@@ -60,6 +60,12 @@ void MulticastRoutingManager::Init(otInstance *aInstance)
     Mainloop::Manager::Get().Add(*this);
 }
 
+void MulticastRoutingManager::Deinit()
+{
+    Mainloop::Manager::Get().Remove(*this);
+    otBackboneRouterSetMulticastListenerCallback(mInstance, nullptr, nullptr);
+}
+
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void *                                 aContext,
                                                                    otBackboneRouterMulticastListenerEvent aEvent,
                                                                    const otIp6Address *                   aAddress)
