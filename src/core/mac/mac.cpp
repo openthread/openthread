@@ -228,6 +228,11 @@ bool Mac::IsInTransmitState(void) const
     return retval;
 }
 
+bool Mac::IsRxStatePolling(void) const
+{
+    return (mOperation == kOperationWaitingForData);
+}
+
 Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveScanResult &aResult)
 {
     Error                error = kErrorNone;
