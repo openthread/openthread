@@ -189,6 +189,9 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().HandleNotifierEvents(events);
+#endif
 
     for (ExternalCallback &callback : mExternalCallbacks)
     {

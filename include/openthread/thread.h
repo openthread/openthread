@@ -710,6 +710,16 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance);
 
 /**
+ * Convert the device role to human-readable string.
+ *
+ * @param[in] aRole   The device role to convert.
+ *
+ * @returns A string representing @p aRole.
+ *
+ */
+const char *otThreadDeviceRoleToString(otDeviceRole aRole);
+
+/**
  * This function get the Thread Leader Data.
  *
  * @param[in]   aInstance    A pointer to an OpenThread instance.

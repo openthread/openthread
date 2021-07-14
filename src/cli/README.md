@@ -52,6 +52,7 @@ Done
 - [factoryreset](#factoryreset)
 - [fake](#fake)
 - [fem](#fem)
+- [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)

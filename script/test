@@ -58,6 +58,7 @@ build_simulation()
         "-DOT_MESSAGE_USE_HEAP=ON"
         "-DOT_THREAD_VERSION=${version}"
         "-DBUILD_TESTING=ON"
+        "-DOT_HISTORY_TRACKER=ON"
         "-DOT_REFERENCE_DEVICE=ON"
         "-DOT_SRP_SERVER=ON"
         "-DOT_SRP_CLIENT=ON"

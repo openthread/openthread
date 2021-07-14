@@ -52,6 +52,7 @@ DIAGNOSTIC                     ?= 1
 DNS_CLIENT                     ?= 1
 DNSSD_SERVER                   ?= 1
 ECDSA                          ?= 1
+HISTORY_TRACKER                ?= 1
 IP6_FRAGM                      ?= 1
 JAM_DETECTION                  ?= 1
 JOINER                         ?= 1
