@@ -63,9 +63,46 @@ class TaskletScheduler;
  */
 class Tasklet : public InstanceLocator
 {
-    friend class TaskletScheduler;
-
 public:
+    /**
+     * This class implements the tasklet scheduler.
+     *
+     */
+    class Scheduler : private NonCopyable
+    {
+        friend class Tasklet;
+
+    public:
+        /**
+         * This constructor initializes the object.
+         *
+         */
+        Scheduler(void)
+            : mTail(nullptr)
+        {
+        }
+
+        /**
+         * This method indicates whether or not there are tasklets pending.
+         *
+         * @retval TRUE   If there are tasklets pending.
+         * @retval FALSE  If there are no tasklets pending.
+         *
+         */
+        bool AreTaskletsPending(void) const { return mTail != nullptr; }
+
+        /**
+         * This method processes all tasklets queued when this is called.
+         *
+         */
+        void ProcessQueuedTasklets(void);
+
+    private:
+        void PostTasklet(Tasklet &aTasklet);
+
+        Tasklet *mTail; // A circular singly linked-list
+    };
+
     /**
      * This function reference is called when the tasklet is run.
      *
@@ -81,7 +118,12 @@ public:
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
      *
      */
-    Tasklet(Instance &aInstance, Handler aHandler);
+    Tasklet(Instance &aInstance, Handler aHandler)
+        : InstanceLocator(aInstance)
+        , mHandler(aHandler)
+        , mNext(nullptr)
+    {
+    }
 
     /**
      * This method puts the tasklet on the tasklet scheduler run queue.
@@ -143,42 +185,6 @@ public:
 
 private:
     void *mContext;
-};
-
-/**
- * This class implements the tasklet scheduler.
- *
- */
-class TaskletScheduler : private NonCopyable
-{
-    friend class Tasklet;
-
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    TaskletScheduler(void);
-
-    /**
-     * This method indicates whether or not there are tasklets pending.
-     *
-     * @retval TRUE   If there are tasklets pending.
-     * @retval FALSE  If there are no tasklets pending.
-     *
-     */
-    bool AreTaskletsPending(void) const { return mTail != nullptr; }
-
-    /**
-     * This method processes all tasklets queued when this is called.
-     *
-     */
-    void ProcessQueuedTasklets(void);
-
-private:
-    void PostTasklet(Tasklet &aTasklet);
-
-    Tasklet *mTail; // A circular singly linked-list
 };
 
 /**
