@@ -66,6 +66,12 @@ public:
     explicit LinkRaw(Instance &aInstance);
 
     /**
+     * This method initializes the states of the raw link-layer.
+     *
+     */
+    void Init(void);
+
+    /**
      * This method returns true if the raw link-layer is enabled.
      *
      * @returns true if enabled, false otherwise.

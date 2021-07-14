@@ -51,17 +51,27 @@ namespace Mac {
 
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
-    , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
-    , mPanId(kPanIdBroadcast)
-    , mReceiveDoneCallback(nullptr)
-    , mTransmitDoneCallback(nullptr)
-    , mEnergyScanDoneCallback(nullptr)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mSubMac(aInstance.Get<SubMac>())
 #endif
 {
+    Init();
+}
+
+void LinkRaw::Init(void)
+{
+    mEnergyScanDoneCallback = nullptr;
+    mTransmitDoneCallback   = nullptr;
+    mReceiveDoneCallback    = nullptr;
+
+    mReceiveChannel      = OPENTHREAD_CONFIG_DEFAULT_CHANNEL;
+    mPanId               = kPanIdBroadcast;
+    mReceiveDoneCallback = nullptr;
+#if OPENTHREAD_RADIO
+    mSubMac.Init();
+#endif
 }
 
 Error LinkRaw::SetReceiveDone(otLinkRawReceiveDone aCallback)
