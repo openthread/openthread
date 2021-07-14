@@ -54,6 +54,9 @@ extern "C" {
 /**
  * This function processes a factory diagnostics command line.
  *
+ * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
+ * output buffer.
+ *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aArgsLength     The number of elements in @p aArgs.
  * @param[in]   aArgs           An array of arguments.
@@ -73,6 +76,9 @@ otError otDiagProcessCmd(otInstance *aInstance,
 
 /**
  * This function processes a factory diagnostics command line.
+ *
+ * The output of this function (the content written to @p aOutput) MUST terminate with `\0` and the `\0` is within the
+ * output buffer.
  *
  * @param[in]   aInstance       A pointer to an OpenThread instance.
  * @param[in]   aString         A NULL-terminated input string.
