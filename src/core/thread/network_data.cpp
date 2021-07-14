@@ -565,39 +565,27 @@ const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
     return prefixTlv;
 }
 
-const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
-                                           const uint8_t *aServiceData,
-                                           uint8_t        aServiceDataLength) const
+const ServiceTlv *NetworkData::FindService(uint32_t         aEnterpriseNumber,
+                                           const uint8_t *  aServiceData,
+                                           uint8_t          aServiceDataLength,
+                                           ServiceMatchMode aServiceMatchMode) const
 {
-    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, mTlvs, mLength);
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode, mTlvs, mLength);
 }
 
-const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
-                                           const uint8_t *aServiceData,
-                                           uint8_t        aServiceDataLength,
-                                           const uint8_t *aTlvs,
-                                           uint8_t        aTlvsLength)
-{
-    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, /* aExactServiceDataMatch */ true, aTlvs,
-                       aTlvsLength);
-}
-
-const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
-                                           const uint8_t *aServiceData,
-                                           uint8_t        aServiceDataLength,
-                                           bool           aExactServiceDataMatch,
-                                           const uint8_t *aTlvs,
-                                           uint8_t        aTlvsLength)
+const ServiceTlv *NetworkData::FindService(uint32_t         aEnterpriseNumber,
+                                           const uint8_t *  aServiceData,
+                                           uint8_t          aServiceDataLength,
+                                           ServiceMatchMode aServiceMatchMode,
+                                           const uint8_t *  aTlvs,
+                                           uint8_t          aTlvsLength)
 {
     TlvIterator       tlvIterator(aTlvs, aTlvsLength);
     const ServiceTlv *serviceTlv;
 
     while ((serviceTlv = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
     {
-        if ((serviceTlv->GetEnterpriseNumber() == aEnterpriseNumber) &&
-            (serviceTlv->GetServiceDataLength() >= aServiceDataLength) &&
-            (!aExactServiceDataMatch || (serviceTlv->GetServiceDataLength() == aServiceDataLength)) &&
-            (memcmp(serviceTlv->GetServiceData(), aServiceData, aServiceDataLength) == 0))
+        if (MatchService(*serviceTlv, aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode))
         {
             break;
         }
@@ -606,10 +594,11 @@ const ServiceTlv *NetworkData::FindService(uint32_t       aEnterpriseNumber,
     return serviceTlv;
 }
 
-const ServiceTlv *NetworkData::FindNextMatchingService(const ServiceTlv *aPrevServiceTlv,
-                                                       uint32_t          aEnterpriseNumber,
-                                                       const uint8_t *   aServiceData,
-                                                       uint8_t           aServiceDataLength) const
+const ServiceTlv *NetworkData::FindNextService(const ServiceTlv *aPrevServiceTlv,
+                                               uint32_t          aEnterpriseNumber,
+                                               const uint8_t *   aServiceData,
+                                               uint8_t           aServiceDataLength,
+                                               ServiceMatchMode  aServiceMatchMode) const
 {
     const uint8_t *tlvs;
     uint8_t        length;
@@ -625,8 +614,35 @@ const ServiceTlv *NetworkData::FindNextMatchingService(const ServiceTlv *aPrevSe
         length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
     }
 
-    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, /* aExactServiceDataMatch */ false, tlvs,
-                       length);
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode, tlvs, length);
+}
+
+bool NetworkData::MatchService(const ServiceTlv &aServiceTlv,
+                               uint32_t          aEnterpriseNumber,
+                               const uint8_t *   aServiceData,
+                               uint8_t           aServiceDataLength,
+                               ServiceMatchMode  aServiceMatchMode)
+{
+    bool match = false;
+
+    VerifyOrExit(aServiceTlv.GetEnterpriseNumber() == aEnterpriseNumber &&
+                 aServiceTlv.GetServiceDataLength() >= aServiceDataLength);
+
+    switch (aServiceMatchMode)
+    {
+    case kServiceExactMatch:
+        VerifyOrExit(aServiceTlv.GetServiceDataLength() == aServiceDataLength);
+        OT_FALL_THROUGH;
+
+    case kServicePrefixMatch:
+        VerifyOrExit(memcmp(aServiceTlv.GetServiceData(), aServiceData, aServiceDataLength) == 0);
+        break;
+    }
+
+    match = true;
+
+exit:
+    return match;
 }
 
 NetworkDataTlv *NetworkData::AppendTlv(uint16_t aTlvSize)

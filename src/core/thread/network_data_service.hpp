@@ -72,7 +72,8 @@ public:
      * The service data contains only the service number (THREAD_SERVICE_DATA_BBR) as a single byte.
      *
      */
-    static const uint8_t kServiceData = 0x01;
+    static const uint8_t     kServiceData        = 0x01;
+    static constexpr uint8_t kServiceDataMinSize = 1;
 
     /**
      * This class implements the generation and parsing of "Backbone Router Service" server data.

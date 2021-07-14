@@ -265,32 +265,42 @@ public:
 
         // Iterate through all entries that start with { 0x02 } (kServiceData1)
         tlv = nullptr;
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData1));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData4));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData5));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1));
-        VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData1, sizeof(kServiceData1),
+                              kServicePrefixMatch);
+        VerifyOrQuit(tlv == nullptr, "FindNextService() returned extra TLV");
 
         // Iterate through all entries that start with { 0xab } (kServiceData2)
         tlv = nullptr;
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData2));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData3));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2));
-        VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData2, sizeof(kServiceData2),
+                              kServicePrefixMatch);
+        VerifyOrQuit(tlv == nullptr, "FindNextService() returned extra TLV");
 
         // Iterate through all entries that start with kServiceData5
         tlv = nullptr;
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData4));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5),
+                              kServicePrefixMatch);
         SuccessOrQuit(ValidateServiceData(tlv, kServiceData5));
-        tlv = FindNextMatchingService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5));
-        VerifyOrQuit(tlv == nullptr, "FindNextMatchingService() returned extra TLV");
+        tlv = FindNextService(tlv, ServiceTlv::kThreadEnterpriseNumber, kServiceData5, sizeof(kServiceData5),
+                              kServicePrefixMatch);
+        VerifyOrQuit(tlv == nullptr, "FindNextService() returned extra TLV");
     }
 };
 

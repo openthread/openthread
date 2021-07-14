@@ -236,7 +236,8 @@ Error Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceDa
     Error       error = kErrorNone;
     ServiceTlv *tlv;
 
-    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength)) != nullptr,
+    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, kServiceExactMatch)) !=
+                     nullptr,
                  error = kErrorNotFound);
     RemoveTlv(tlv);
 
