@@ -136,6 +136,7 @@ size_nrf52840_version()
         "-DOT_MAC_FILTER=ON"
         "-DOT_MESSAGE_USE_HEAP=ON"
         "-DOT_MTD_NETDIAG=ON"
+        "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_PING_SENDER=ON"
         "-DOT_SERVICE=ON"
         "-DOT_SLAAC=ON"

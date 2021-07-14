@@ -48,6 +48,7 @@ This page lists the available common switches with description. Unless stated ot
 | MLR | OT_MLR | Enables Multicast Listener Registration feature for Thread 1.2. |
 | MTD_NETDIAG | OT_MTD_NETDIAG | Enables the TMF network diagnostics on MTDs. |
 | MULTIPLE_INSTANCE | OT_MULTIPLE_INSTANCE | Enables multiple OpenThread instances. |
+| NETDATA_PUBLISHER | OT_NETDATA_PUBLISHER | Enables support for Thread Network Data publisher. |
 | PING_SENDER | OT_PING_SENDER | Enables support for ping sender. |
 | OTNS | OT_OTNS | Enables support for [OpenThread Network Simulator](https://github.com/openthread/ot-ns). Enable this switch if you are building OpenThread for OpenThread Network Simulator. |
 | PLATFORM_UDP | OT_PLATFORM_UDP | Enables platform UDP support. |

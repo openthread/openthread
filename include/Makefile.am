@@ -71,6 +71,7 @@ openthread_headers                      = \
     openthread/multi_radio.h              \
     openthread/ncp.h                      \
     openthread/netdata.h                  \
+    openthread/netdata_publisher.h        \
     openthread/netdiag.h                  \
     openthread/network_time.h             \
     openthread/ping_sender.h              \

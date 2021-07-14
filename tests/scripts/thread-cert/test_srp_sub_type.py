@@ -79,6 +79,7 @@ class SrpSubType(thread_cert.TestCase):
 
         server.srp_server_set_enabled(True)
         client.srp_client_enable_auto_start_mode()
+        self.simulator.go(5)
 
         # Register a single service with 3 subtypes and verify that it worked.
 
