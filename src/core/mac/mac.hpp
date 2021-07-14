@@ -713,6 +713,44 @@ public:
      */
     bool IsCslEnabled(void) const;
 
+    /**
+     * This method returns CSL parent clock accuracy, in ± ppm.
+     *
+     * @retval CSL parent clock accuracy, in ± ppm.
+     *
+     */
+    uint8_t GetCslParentClockAccuracy(void) const { return mLinks.GetSubMac().GetCslParentClockAccuracy(); }
+
+    /**
+     * This method sets CSL parent clock accuracy, in ± ppm.
+     *
+     * @param[in] aCslParentAccuracy CSL parent clock accuracy, in ± ppm.
+     *
+     */
+    void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy)
+    {
+        mLinks.GetSubMac().SetCslParentClockAccuracy(aCslParentAccuracy);
+    }
+
+    /**
+     * This method returns CSL parent uncertanity, in ±10 us units.
+     *
+     * @retval CSL parent uncertanity, in ±10 us units.
+     *
+     */
+    uint8_t GetCslParentUncertanity(void) const { return mLinks.GetSubMac().GetCslParentUncertanity(); }
+
+    /**
+     * This method returns CSL parent uncertanity, in ±10 us units.
+     *
+     * @param[in] aCslParentUncert  CSL parent uncertanity, in ±10 us units.
+     *
+     */
+    void SetCslParentUncertanity(uint8_t aCslParentUncert)
+    {
+        mLinks.GetSubMac().SetCslParentUncertanity(aCslParentUncert);
+    }
+
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 private:

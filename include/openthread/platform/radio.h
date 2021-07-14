@@ -1019,6 +1019,16 @@ void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTi
 uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance);
 
 /**
+ * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+ *
+ * @param[in]   aInstance    A pointer to an OpenThread instance.
+ *
+ * @returns The current CSL Clock Uncertainty in units of 10 us.
+ *
+ */
+uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance);
+
+/**
  * Set the max transmit power for a specific channel.
  *
  * @param[in]  aInstance    The OpenThread instance structure.

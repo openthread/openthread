@@ -54,6 +54,15 @@ enum
 #endif
 };
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+enum : uint8_t
+{
+    kCslWorstCrystalPpm  = 255, ///< Worst possible crystal accuracy, in units of ± ppm.
+    kCslWorstUncertainty = 255, ///< Worst possible scheduling uncertainty, in units of 10 us.
+    kUsPerUncertUnit     = 10,  ///< Number of microseconds by uncertainty unit.
+};
+#endif
+
 /**
  * @addtogroup core-radio
  *
@@ -449,7 +458,9 @@ public:
      *
      */
     Error EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
      *
@@ -459,7 +470,17 @@ public:
      *
      */
     uint8_t GetCslAccuracy(void);
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+    /**
+     * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+     *
+     * @param[in]   aInstance    A pointer to an OpenThread instance.
+     *
+     * @returns The current CSL Clock Uncertainty in units of 10 us.
+     *
+     */
+    uint8_t GetCslClockUncertainty(void);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     /**
      * This method gets the radio transmit frame buffer.
@@ -775,10 +796,17 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, co
 {
     return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aShortAddr, aExtAddr);
 }
+#endif
 
-inline uint8_t Radio::GetCslAccuracy()
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+inline uint8_t Radio::GetCslAccuracy(void)
 {
     return otPlatRadioGetCslAccuracy(GetInstancePtr());
+}
+
+inline uint8_t Radio::GetCslClockUncertainty(void)
+{
+    return otPlatRadioGetCslClockUncertainty(GetInstancePtr());
 }
 #endif
 
@@ -933,8 +961,15 @@ inline Error Radio::EnableCsl(uint32_t, otShortAddress aShortAddr, const otExtAd
 {
     return kErrorNotImplemented;
 }
+#endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 inline uint8_t Radio::GetCslAccuracy(void)
+{
+    return UINT8_MAX;
+}
+
+inline uint8_t Radio::GetCslClockUncertainty(void)
 {
     return UINT8_MAX;
 }
