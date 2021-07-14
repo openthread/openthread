@@ -177,6 +177,10 @@ void otSysDeinit(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     ot::Posix::InfraNetif::Get().Deinit();
 #endif
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneDeinit();
+#endif
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

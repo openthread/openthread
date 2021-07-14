@@ -437,6 +437,12 @@ extern unsigned int gNetifIndex;
 void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
 
 /**
+ * This function shuts down the platform Backbone network.
+ *
+ */
+void platformBackboneDeinit(void);
+
+/**
  * This function performs notifies state changes to platform Backbone network.
  *
  * @param[in]   aInstance       A pointer to the OpenThread instance.

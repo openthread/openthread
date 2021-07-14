@@ -75,6 +75,12 @@ public:
     void Init(otInstance *aInstance);
 
     /**
+     * This method shuts down the Multicast Routing manager.
+     *
+     */
+    void Deinit();
+
+    /**
      * This method updates the fd_set and timeout for mainloop.
      *
      * @param[inout]    aContext    A reference to the mainloop context.
