@@ -75,4 +75,18 @@
 #define OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE 256
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP
+ *
+ * Define to 1 to support native diag commands on RCP.
+ *
+ * This option is used when RCP is used standalone (using `ot-cli-radio`, without a posix daemon). In this case, users
+ * directly control the rcp through CLI. When this option is enabled, users can directly use native diag commands
+ * (`send`, `transmit`, `receive`...) on RCP.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP
+#define OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP 0
+#endif
+
 #endif // CONFIG_DIAG_H_

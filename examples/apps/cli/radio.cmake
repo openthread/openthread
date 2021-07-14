@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,32 +26,22 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-set(COMMON_INCLUDES
-    ${PROJECT_SOURCE_DIR}/src
-    ${PROJECT_SOURCE_DIR}/src/core
+add_executable(ot-cli-radio
+    cli_uart.cpp
+    main.c
 )
 
-set(COMMON_SOURCES
-    cli.cpp
-    cli_coap.cpp
-    cli_coap_secure.cpp
-    cli_commissioner.cpp
-    cli_dataset.cpp
-    cli_joiner.cpp
-    cli_network_data.cpp
-    cli_srp_client.cpp
-    cli_srp_server.cpp
-    cli_udp.cpp
+target_include_directories(ot-cli-radio PRIVATE ${COMMON_INCLUDES})
+
+target_link_libraries(ot-cli-radio PRIVATE
+    openthread-cli-radio
+    ${OT_PLATFORM_LIB}
+    openthread-radio
+    ${OT_PLATFORM_LIB}
+    openthread-cli-radio
+    ${OT_MBEDTLS}
+    ot-config
 )
 
-if(OT_FTD)
-    include(ftd.cmake)
-endif()
-
-if(OT_MTD)
-    include(mtd.cmake)
-endif()
-
-if(OT_RCP)
-    include(radio.cmake)
-endif()
+install(TARGETS ot-cli-radio
+    DESTINATION bin)
