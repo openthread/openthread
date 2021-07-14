@@ -74,6 +74,10 @@ void platformBackboneDeinit()
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.Deinit();
 #endif
+
+    gBackboneNetifIndex = 0;
+
+    memset(gBackboneNetifName, 0, sizeof(gBackboneNetifName));
 }
 
 void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags)

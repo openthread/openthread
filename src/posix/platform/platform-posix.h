@@ -440,7 +440,7 @@ void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
  * This function shuts down the platform Backbone network.
  *
  */
-void platformBackboneDeinit();
+void platformBackboneDeinit(void);
 
 /**
  * This function performs notifies state changes to platform Backbone network.
