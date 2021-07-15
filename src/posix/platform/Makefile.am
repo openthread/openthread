@@ -50,6 +50,7 @@ libopenthread_posix_a_SOURCES             = \
     entropy.cpp                             \
     hdlc_interface.cpp                      \
     infra_if.cpp                            \
+    ingress_filtering.cpp                   \
     logging.cpp                             \
     mainloop.cpp                            \
     memory.cpp                              \
@@ -63,6 +64,7 @@ libopenthread_posix_a_SOURCES             = \
     system.cpp                              \
     trel_udp6.cpp                           \
     udp.cpp                                 \
+    utils.cpp                               \
     virtual_time.cpp                        \
     $(NULL)
 

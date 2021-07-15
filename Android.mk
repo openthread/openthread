@@ -359,6 +359,7 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/entropy.cpp                                  \
     src/posix/platform/hdlc_interface.cpp                           \
     src/posix/platform/infra_if.cpp                                 \
+    src/posix/platform/ingress_filtering.cpp                        \
     src/posix/platform/logging.cpp                                  \
     src/posix/platform/mainloop.cpp                                 \
     src/posix/platform/memory.cpp                                   \
@@ -371,6 +372,7 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/spi_interface.cpp                            \
     src/posix/platform/system.cpp                                   \
     src/posix/platform/udp.cpp                                      \
+    src/posix/platform/utils.cpp                                    \
     third_party/mbedtls/repo/library/aes.c                          \
     third_party/mbedtls/repo/library/aesni.c                        \
     third_party/mbedtls/repo/library/arc4.c                         \

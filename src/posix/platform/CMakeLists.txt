@@ -83,6 +83,7 @@ add_library(openthread-posix
     entropy.cpp
     hdlc_interface.cpp
     infra_if.cpp
+    ingress_filtering.cpp
     logging.cpp
     mainloop.cpp
     memory.cpp
@@ -96,6 +97,7 @@ add_library(openthread-posix
     system.cpp
     trel_udp6.cpp
     udp.cpp
+    utils.cpp
     virtual_time.cpp
 )
 
