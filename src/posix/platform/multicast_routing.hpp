@@ -74,10 +74,6 @@ public:
      */
     void Init(otInstance *aInstance);
 
-    /**
-     * This method shuts down the Multicast Routing manager.
-     *
-     */
     void Deinit(void);
 
     /**

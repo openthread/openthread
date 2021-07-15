@@ -436,10 +436,6 @@ extern unsigned int gNetifIndex;
  */
 void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
 
-/**
- * This function shuts down the platform Backbone network.
- *
- */
 void platformBackboneDeinit(void);
 
 /**
