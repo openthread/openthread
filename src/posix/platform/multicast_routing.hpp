@@ -48,17 +48,9 @@
 namespace ot {
 namespace Posix {
 
-/**
- * This class implements Multicast Routing management.
- *
- */
 class MulticastRoutingManager : public Mainloop::Source, private NonCopyable
 {
 public:
-    /**
-     * This constructor initializes a Multicast Routing manager instance.
-     *
-     */
     explicit MulticastRoutingManager()
 
         : mLastExpireTime(0)
@@ -66,37 +58,10 @@ public:
     {
     }
 
-    /**
-     * This method initializes the Multicast Routing manager.
-     *
-     * @param[in]  aInstance  A pointer to an OpenThread instance.
-     *
-     */
     void Init(otInstance *aInstance);
-
-    /**
-     * This method updates the fd_set and timeout for mainloop.
-     *
-     * @param[inout]    aContext    A reference to the mainloop context.
-     *
-     */
+    void Deinit(void);
     void Update(otSysMainloopContext &aContext) override;
-
-    /**
-     * This method performs Multicast Routing processing.
-     *
-     * @param[in]   aContext    A reference to the mainloop context.
-     *
-     */
     void Process(const otSysMainloopContext &aContext) override;
-
-    /**
-     * This method handles Thread state changes.
-     *
-     * @param[in] aInstance  A pointer to an OpenThread instance.
-     * @param[in] aFlags     Flags that denote the state change events.
-     *
-     */
     void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
 
 private:
