@@ -60,7 +60,7 @@ void MulticastRoutingManager::Init(otInstance *aInstance)
     Mainloop::Manager::Get().Add(*this);
 }
 
-void MulticastRoutingManager::Deinit()
+void MulticastRoutingManager::Deinit(void)
 {
     Mainloop::Manager::Get().Remove(*this);
     otBackboneRouterSetMulticastListenerCallback(mInstance, nullptr, nullptr);

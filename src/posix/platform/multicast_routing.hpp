@@ -78,7 +78,7 @@ public:
      * This method shuts down the Multicast Routing manager.
      *
      */
-    void Deinit();
+    void Deinit(void);
 
     /**
      * This method updates the fd_set and timeout for mainloop.

@@ -69,7 +69,7 @@ exit:
     return;
 }
 
-void platformBackboneDeinit()
+void platformBackboneDeinit(void)
 {
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     sMulticastRoutingManager.Deinit();
