@@ -46,6 +46,21 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDDRESS_MODE
+ *
+ * Specifies the default address mode used by the SRP server.
+ *
+ * The address mode specifies how address and port number are determined by the SRP server and how this info is
+ * published in the Thread Network Data.
+ *
+ * The value of this configuration should be from `otSrpServerAddressMode` enumeration.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDDRESS_MODE
+#define OPENTHREAD_CONFIG_SRP_SERVER_DEFAULT_ADDDRESS_MODE OT_SRP_SREVER_ADDRESS_MODE_UNICAST
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN
  *
  * Specifies the min port number in the port range reserved for SRP server.

@@ -63,6 +63,34 @@ otSrpServerState otSrpServerGetState(otInstance *aInstance)
     return static_cast<otSrpServerState>(instance.Get<Srp::Server>().GetState());
 }
 
+otSrpServerAddressMode otSrpServerGetAddressMode(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return static_cast<otSrpServerAddressMode>(instance.Get<Srp::Server>().GetAddressMode());
+}
+
+otError otSrpServerSetAddressMode(otInstance *aInstance, otSrpServerAddressMode aMode)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Server>().SetAddressMode(static_cast<Srp::Server::AddressMode>(aMode));
+}
+
+uint8_t otSrpServerGetAnycastModeSequenceNumber(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Server>().GetAnycastModeSequenceNumber();
+}
+
+otError otSrpServerSetAnycastModeSequenceNumber(otInstance *aInstance, uint8_t aSequenceNumber)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Srp::Server>().SetAnycastModeSequenceNumber(aSequenceNumber);
+}
+
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
