@@ -314,11 +314,11 @@ public:
      * on the radio link.
      *
      * @param[in] aNeighbor  The neighbor for which the deferred ack status is being reported.
-     * @param[in] aTxError   The deferred ack error status: `kErrorNone` to indicate a deferred ack was received,
+     * @param[in] aError     The deferred ack error status: `kErrorNone` to indicate a deferred ack was received,
      *                       `kErrorNoAck` to indicate an ack timeout.
      *
      */
-    void HandleDeferredAck(Neighbor &aNeighbor, Error aTxError);
+    void HandleDeferredAck(Neighbor &aNeighbor, Error aError);
 #endif
 
 private:
