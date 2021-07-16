@@ -85,10 +85,7 @@ public:
         kModeDenylist  = OT_MAC_FILTER_ADDRESS_MODE_DENYLIST,  ///< Enable denylist address filter mode.
     };
 
-    enum : int8_t
-    {
-        kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED, ///< Value to indicate no fixed RSS is set.
-    };
+    static constexpr int8_t kFixedRssDisabled = OT_MAC_FILTER_FIXED_RSS_DISABLED; ///< Value when no fixed RSS is set.
 
     /**
      * This constructor initializes the filter.
@@ -192,7 +189,7 @@ public:
     void ClearDefaultRssIn(void) { mDefaultRssIn = kFixedRssDisabled; }
 
     /**
-     * This method clears all the received signal strength settings (inlcuding the default RSS-In).
+     * This method clears all the received signal strength settings (including the default RSS-In).
      *
      */
     void ClearAllRssIn(void);
@@ -225,10 +222,7 @@ public:
     Error Apply(const ExtAddress &aExtAddress, int8_t &aRss);
 
 private:
-    enum
-    {
-        kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE, // The maximum number of filter entries.
-    };
+    static constexpr uint16_t kMaxEntries = OPENTHREAD_CONFIG_MAC_FILTER_SIZE;
 
     struct FilterEntry
     {

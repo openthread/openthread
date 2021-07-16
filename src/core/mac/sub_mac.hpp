@@ -92,10 +92,7 @@ class SubMac : public InstanceLocator, private NonCopyable
     friend class Radio::Callbacks;
 
 public:
-    enum
-    {
-        kInvalidRssiValue = 127, ///< Invalid Received Signal Strength Indicator (RSSI) value.
-    };
+    static constexpr int8_t kInvalidRssiValue = 127; ///< Invalid Received Signal Strength Indicator (RSSI) value.
 
     /**
      * This class defines the callbacks notifying `SubMac` user of changes and events.
@@ -535,55 +532,51 @@ private:
     void        GetCslWindowEdges(uint32_t &ahead, uint32_t &after);
 #endif
 
-    enum
-    {
-        kMinBE             = 3,   ///< macMinBE (IEEE 802.15.4-2006).
-        kMaxBE             = 5,   ///< macMaxBE (IEEE 802.15.4-2006).
-        kUnitBackoffPeriod = 20,  ///< Number of symbols (IEEE 802.15.4-2006).
-        kMinBackoff        = 1,   ///< Minimum backoff (milliseconds).
-        kAckTimeout        = 16,  ///< Timeout for waiting on an ACK (milliseconds).
-        kCcaSampleInterval = 128, ///< CCA sample interval, 128 usec.
+    static constexpr uint8_t  kMinBE             = 3;   // macMinBE (IEEE 802.15.4-2006).
+    static constexpr uint8_t  kMaxBE             = 5;   // macMaxBE (IEEE 802.15.4-2006).
+    static constexpr uint32_t kUnitBackoffPeriod = 20;  // Number of symbols (IEEE 802.15.4-2006).
+    static constexpr uint32_t kAckTimeout        = 16;  // Timeout for waiting on an ACK (in msec).
+    static constexpr uint32_t kCcaSampleInterval = 128; // CCA sample interval, 128 usec.
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-        kEnergyScanRssiSampleInterval = 128, ///< RSSI sample interval during energy scan, 128 usec
+    static constexpr uint32_t kEnergyScanRssiSampleInterval = 128; // RSSI sample interval for energy scan, 128 usec
 #else
-        kEnergyScanRssiSampleInterval = 1, ///< RSSI sample interval during energy scan, 1 ms
+    static constexpr uint32_t kEnergyScanRssiSampleInterval = 1; // RSSI sample interval during energy scan, 1 msec
 #endif
-    };
 
     enum State : uint8_t
     {
-        kStateDisabled,    ///< Radio is disabled.
-        kStateSleep,       ///< Radio is in sleep.
-        kStateReceive,     ///< Radio in in receive.
-        kStateCsmaBackoff, ///< CSMA backoff before transmission.
-        kStateTransmit,    ///< Radio is transmitting.
-        kStateEnergyScan,  ///< Energy scan.
+        kStateDisabled,    // Radio is disabled.
+        kStateSleep,       // Radio is in sleep.
+        kStateReceive,     // Radio in in receive.
+        kStateCsmaBackoff, // CSMA backoff before transmission.
+        kStateTransmit,    // Radio is transmitting.
+        kStateEnergyScan,  // Energy scan.
 #if !OPENTHREAD_MTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
-        kStateCslTransmit, ///< CSL transmission.
+        kStateCslTransmit, // CSL transmission.
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        kStateCslSample, ///< CSL receive.
+        kStateCslSample, // CSL receive.
 #endif
     };
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    enum : uint32_t{
-        kMinCslWindow = OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON, ///< CSL receive window for the longest possible
-                                                              ///< frame and ack duration.
-        kCslReceiveTimeAhead =
-            OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD, ///< CSL receivers would wake up `kCslReceiveTimeAhead` earlier
-                                                      ///< than expected sample window. The time is in unit of
-                                                      ///< microseconds.
-    };
-    /**
-     * CSL state, always updated by `mCslTimer`.
-     *
-     */
+    // CSL receive window for the longest possible frame and
+    // ack duration.
+    static constexpr uint32_t kMinCslWindow = OPENTHREAD_CONFIG_CSL_MIN_RECEIVE_ON;
+
+    // CSL receivers would wake up `kCslReceiveTimeAhead` earlier
+    // than expected sample window. The value is in usec.
+    static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
+
+    static constexpr uint8_t kCslWorstCrystalPpm  = 255; // Worst possible crystal accuracy, in units of ± ppm.
+    static constexpr uint8_t kCslWorstUncertainty = 255; // Worst possible scheduling uncertainty, in units of 100 us.
+    static constexpr uint8_t kUsPerUncertUnit     = 100; // Number of microseconds by uncertainty unit.
+
     enum CslState : uint8_t{
-        kCslIdle = 0, ///< CSL receiver is not started.
-        kCslSample,   ///< Sampling CSL channel.
-        kCslSleep,    ///< Radio in sleep.
+        kCslIdle,   // CSL receiver is not started.
+        kCslSample, // Sampling CSL channel.
+        kCslSleep,  // Radio in sleep.
     };
 #endif
 
@@ -648,25 +641,20 @@ private:
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
     TimerMicro mTimer;
 #else
-    TimerMilli mTimer;
+    TimerMilli                mTimer;
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint16_t mCslPeriod;      ///< The CSL sample period, in units of 10 symbols (160 microseconds).
-    uint8_t  mCslChannel : 7; ///< The actually CSL sample channel. If `mIsCslChannelSpecified` is 0, this should be
-                              ///< equal to the Pan channel of `Mac`.
-    uint8_t mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by
-                                        ///< the user.
-
-    TimeMicro mCslSampleTime;     ///< The CSL sample time of the current period.
-    TimeMicro mCslLastSync;       ///< The timestamp of the last successful CSL syncronization.
-    uint8_t   mCslParentAccuracy; ///< Drift of timer used for scheduling CSL transmission by the parent, in ± ppm.
-    uint8_t   mCslParentUncert; ///< Uncertainty of the scheduling CSL of transmission by the parent, in ±10 us units.
-
-    CslState mCslState;
-
+    uint16_t   mCslPeriod;                 // The CSL sample period, in units of 10 symbols (160 microseconds).
+    uint8_t    mCslChannel : 7;            // The CSL sample channel (only when `mIsCslChannelSpecified` is `true`).
+    uint8_t    mIsCslChannelSpecified : 1; // Whether the CSL channel was explicitly set
+    TimeMicro  mCslSampleTime;             // The CSL sample time of the current period.
+    TimeMicro  mCslLastSync;               // The timestamp of the last successful CSL synchronization.
+    uint8_t    mCslParentAccuracy;         // Drift of timer used for scheduling CSL tx by the parent, in ± ppm.
+    uint8_t    mCslParentUncert;           // Uncertainty of the scheduling CSL of tx by the parent, in ±10 us units.
+    CslState   mCslState;
     TimerMicro mCslTimer;
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
 };
 
 /**

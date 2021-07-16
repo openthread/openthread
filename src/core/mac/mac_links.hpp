@@ -289,10 +289,7 @@ class Links : public InstanceLocator
     friend class ot::Instance;
 
 public:
-    enum
-    {
-        kInvalidRssiValue = SubMac::kInvalidRssiValue, ///< Invalid Received Signal Strength Indicator (RSSI) value.
-    };
+    static const int8_t kInvalidRssiValue = SubMac::kInvalidRssiValue; ///< Invalid RSSI value.
 
     /**
      * This constructor initializes the `Links` object.
@@ -662,10 +659,7 @@ public:
 #endif
 
 private:
-    enum
-    {
-        kDefaultNoiseFloor = -100,
-    };
+    static constexpr int8_t kDefaultNoiseFloor = -100;
 
     SubMac mSubMac;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

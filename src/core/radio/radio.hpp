@@ -47,9 +47,13 @@ namespace ot {
 enum
 {
     kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS, ///< The microseconds per 10 symbols.
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    kMinCslPeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 /
-                    kUsPerTenSymbols, ///< Minimum CSL period supported in units of 10 symbols.
+    /**
+     * Minimum CSL period supported in units of 10 symbols.
+     *
+     */
+    kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 / kUsPerTenSymbols,
     kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
 #endif
 };
