@@ -114,7 +114,7 @@ public:
      * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    RadioSelector(Instance &aInstance);
+    explicit RadioSelector(Instance &aInstance);
 
     /**
      * This method updates the neighbor info (for multi radio support) on a received frame event.
@@ -173,13 +173,13 @@ public:
      * The `aTxFrames` will also be updated to indicate which radio links are to be used.
      *
      * @param[inout] aMessage   The message to send.
-     * @param[in]    aDest      The MAC destination address.
+     * @param[in]    aMacDest   The MAC destination address.
      * @param[inout] aTxFrames  The set of TxFrames for all radio links.
      *
      * @returns  A reference to `mTxFrame` to use when preparing the frame for tx.
      *
      */
-    Mac::TxFrame &SelectRadio(Message &aMessage, const Mac::Address &aDest, Mac::TxFrames &aTxFrames);
+    Mac::TxFrame &SelectRadio(Message &aMessage, const Mac::Address &aMacDest, Mac::TxFrames &aTxFrames);
 
 private:
     enum

@@ -116,14 +116,14 @@ void Packet::Init(uint8_t *aBuffer, uint16_t aLength)
     mLength = aLength;
 }
 
-void Packet::Init(Header::Type aType, uint8_t *mPayload, uint16_t mPayloadLength)
+void Packet::Init(Header::Type aType, uint8_t *aPayload, uint16_t aPayloadLength)
 {
     uint16_t headerSize = Header::GetSize(aType);
 
     // The payload buffer should reserve enough bytes for
     // header (depending on type) before the payload.
 
-    Init(mPayload - headerSize, mPayloadLength + headerSize);
+    Init(aPayload - headerSize, aPayloadLength + headerSize);
     GetHeader().Init(aType);
 }
 

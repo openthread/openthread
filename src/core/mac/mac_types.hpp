@@ -671,7 +671,7 @@ public:
      * @param[in] aMask   A bit-mask representing the radio types (the first bit corresponds to radio type 0, and so on)
      *
      */
-    RadioTypes(uint8_t aMask)
+    explicit RadioTypes(uint8_t aMask)
         : mBitMask(aMask)
     {
     }

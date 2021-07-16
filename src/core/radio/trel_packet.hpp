@@ -284,7 +284,6 @@ public:
      * @param[in] aPayloadLength The length (number of bytes) in the payload only (not including the header).
      *
      */
-
     void Init(Header::Type aType, uint8_t *aPayload, uint16_t aPayloadLength);
 
     /**

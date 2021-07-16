@@ -51,9 +51,6 @@ TxFrames::TxFrames(Instance &aInstance)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     , mTxFrameTrel(aInstance.Get<Trel::Link>().GetTransmitFrame())
 #endif
-#if OPENTHREAD_CONFIG_MULTI_RADIO
-    , mSelectedRadioTypes()
-#endif
 {
 }
 
