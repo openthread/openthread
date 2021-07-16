@@ -27,6 +27,7 @@
  */
 
 #include "dns_client.hpp"
+#include "openthread/dns.h"
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
@@ -350,27 +351,11 @@ exit:
 
 Error Client::AddressResponse::GetNat64Prefix(Ip6::Prefix &aPrefix) const
 {
-    Error                            error      = kErrorNotFound;
-    NetworkData::Iterator            iterator   = NetworkData::kIteratorInit;
-    signed int                       preference = OT_ROUTE_PREFERENCE_LOW;
-    NetworkData::ExternalRouteConfig config;
+    otIp6Prefix prefix;
+    Error       error = otDnsGetNat64Prefix(mInstance, &prefix);
 
     aPrefix.Clear();
-
-    while (mInstance->Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
-    {
-        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
-        {
-            continue;
-        }
-
-        if ((aPrefix.GetLength() == 0) || (config.mPreference > preference))
-        {
-            aPrefix    = config.GetPrefix();
-            preference = config.mPreference;
-            error      = kErrorNone;
-        }
-    }
+    aPrefix.Set(prefix.mPrefix.mFields.m8, prefix.mLength);
 
     return error;
 }

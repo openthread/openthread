@@ -39,6 +39,7 @@
 #include "common/locator_getters.hpp"
 #include "net/dns_client.hpp"
 #include "net/dns_types.hpp"
+#include "openthread/instance.h"
 
 using namespace ot;
 
@@ -221,3 +222,35 @@ otError otDnsServiceResponseGetHostAddress(const otDnsServiceResponse *aResponse
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE || OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
+
+otError otDnsGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    Error                            error      = kErrorNotFound;
+    NetworkData::Iterator            iterator   = NetworkData::kIteratorInit;
+    signed int                       preference = OT_ROUTE_PREFERENCE_LOW;
+    NetworkData::ExternalRouteConfig config;
+    Instance &                       instance = *static_cast<Instance *>(aInstance);
+
+    memset(aPrefix, 0, sizeof(otIp6Prefix));
+
+    while (instance.Get<NetworkData::Leader>().GetNextExternalRoute(iterator, config) == kErrorNone)
+    {
+        if (!config.mNat64 || !config.GetPrefix().IsValidNat64())
+        {
+            continue;
+        }
+
+        if ((aPrefix->mLength == 0) || (config.mPreference > preference))
+        {
+            *aPrefix   = config.mPrefix;
+            preference = config.mPreference;
+            error      = kErrorNone;
+        }
+    }
+
+    return error;
+}
+
+#endif // OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE || OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE

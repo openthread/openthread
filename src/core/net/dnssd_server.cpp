@@ -126,6 +126,7 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     NameCompressInfo compressInfo(kDefaultDomainName);
     Header::Response response                = Header::kResponseSuccess;
     bool             resolveByQueryCallbacks = false;
+    bool             resolveRecursive        = false;
 
     responseMessage = mSocket.NewMessage(0);
     VerifyOrExit(responseMessage != nullptr, error = kErrorNoBufs);
@@ -144,12 +145,33 @@ void Server::ProcessQuery(const Header &aRequestHeader, Message &aRequestMessage
     VerifyOrExit(!aRequestHeader.IsTruncationFlagSet(), response = Header::kResponseFormatError);
     VerifyOrExit(aRequestHeader.GetQuestionCount() > 0, response = Header::kResponseFormatError);
 
+    {
+        char     name[Name::kMaxNameSize];
+        uint16_t readOffset = sizeof(Header);
+
+        for (uint16_t i = 0; i < aRequestHeader.GetQuestionCount(); i++)
+        {
+            VerifyOrExit(kErrorNone == Name::ReadName(aRequestMessage, readOffset, name, sizeof(name)),
+                         response = Header::kResponseFormatError);
+            if (StringFind(name, kDefaultDomainName) == nullptr)
+            {
+                resolveRecursive = true;
+            }
+        }
+    }
+    if (resolveRecursive)
+    {
+        compressInfo = NameCompressInfo(nullptr);
+    }
     response = AddQuestions(aRequestHeader, aRequestMessage, responseHeader, *responseMessage, compressInfo);
     VerifyOrExit(response == Header::kResponseSuccess);
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     // Answer the questions
-    response = ResolveBySrp(responseHeader, *responseMessage, compressInfo);
+    if (!resolveRecursive)
+    {
+        response = ResolveBySrp(responseHeader, *responseMessage, compressInfo);
+    }
 #endif
 
     // Resolve the question using query callbacks if SRP server failed to resolve the questions.
@@ -232,29 +254,39 @@ Header::Response Server::AddQuestions(const Header &    aRequestHeader,
                          qtype == ResourceRecord::kTypeTxt || qtype == ResourceRecord::kTypeAaaa,
                      response = Header::kResponseNotImplemented);
 
-        VerifyOrExit(kErrorNone == FindNameComponents(name, aCompressInfo.GetDomainName(), nameComponentsOffsetInfo),
-                     response = Header::kResponseNameError);
-
-        switch (question.GetType())
+        if (aCompressInfo.IsRecursiveQuery())
         {
-        case ResourceRecord::kTypePtr:
-            VerifyOrExit(nameComponentsOffsetInfo.IsServiceName(), response = Header::kResponseNameError);
-            break;
-        case ResourceRecord::kTypeSrv:
-            VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
-            break;
-        case ResourceRecord::kTypeTxt:
-            VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
-            break;
-        case ResourceRecord::kTypeAaaa:
-            VerifyOrExit(nameComponentsOffsetInfo.IsHostName(), response = Header::kResponseNameError);
-            break;
-        default:
-            ExitNow(response = Header::kResponseNotImplemented);
+            VerifyOrExit(question.GetType() == ResourceRecord::kTypeAaaa, response = Header::kResponseNotImplemented);
+            VerifyOrExit(AppendQuestion(name, question, aResponseMessage, aCompressInfo) == kErrorNone,
+                         response = Header::kResponseServerFailure);
         }
+        else
+        {
+            VerifyOrExit(kErrorNone ==
+                             FindNameComponents(name, aCompressInfo.GetDomainName(), nameComponentsOffsetInfo),
+                         response = Header::kResponseNameError);
 
-        VerifyOrExit(AppendQuestion(name, question, aResponseMessage, aCompressInfo) == kErrorNone,
-                     response = Header::kResponseServerFailure);
+            switch (question.GetType())
+            {
+            case ResourceRecord::kTypePtr:
+                VerifyOrExit(nameComponentsOffsetInfo.IsServiceName(), response = Header::kResponseNameError);
+                break;
+            case ResourceRecord::kTypeSrv:
+                VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
+                break;
+            case ResourceRecord::kTypeTxt:
+                VerifyOrExit(nameComponentsOffsetInfo.IsServiceInstanceName(), response = Header::kResponseNameError);
+                break;
+            case ResourceRecord::kTypeAaaa:
+                VerifyOrExit(nameComponentsOffsetInfo.IsHostName(), response = Header::kResponseNameError);
+                break;
+            default:
+                ExitNow(response = Header::kResponseNotImplemented);
+            }
+
+            VerifyOrExit(AppendQuestion(name, question, aResponseMessage, aCompressInfo) == kErrorNone,
+                         response = Header::kResponseServerFailure);
+        }
     }
 
     aResponseHeader.SetQuestionCount(aRequestHeader.GetQuestionCount());
@@ -496,6 +528,12 @@ Error Server::AppendHostName(Message &aMessage, const char *aName, NameCompressI
     if (hostCompressOffset != NameCompressInfo::kUnknownOffset)
     {
         error = Name::AppendPointerLabel(hostCompressOffset, aMessage);
+    }
+    else if (aCompressInfo.IsRecursiveQuery())
+    {
+        hostCompressOffset = aMessage.GetLength();
+        aCompressInfo.SetHostNameOffset(hostCompressOffset);
+        SuccessOrExit(error = Name::AppendName(aName, aMessage));
     }
     else
     {

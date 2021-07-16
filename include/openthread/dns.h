@@ -39,6 +39,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/ip6.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -166,6 +167,19 @@ void otDnsSetNameCompressionEnabled(bool aEnabled);
  *
  */
 bool otDnsIsNameCompressionEnabled(void);
+
+/**
+ * This function gets the NAT64 prefix.
+ *
+ * The resolved addresses for IPv4 hosts will begin with this prefix.
+ *
+ * @param[in]  aInstance    The OpenThread instance.
+ * @param[out] aPrefix      The NAT64 prefix.
+ *
+ * @retval OT_ERROR_NONE        The address is successfully fetched.
+ * @retval OT_ERROR_NOT_FOUND   There is no NAT64 prefix in the network.
+ */
+otError otDnsGetNat64Prefix(otInstance *aInstance, otIp6Prefix *aPrefix);
 
 /**
  * @}

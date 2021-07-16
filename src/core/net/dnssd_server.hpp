@@ -214,6 +214,8 @@ private:
             }
         }
 
+        bool IsRecursiveQuery() { return mDomainName == nullptr; }
+
     private:
         static bool MatchCompressedName(const Message &aMessage, uint16_t aOffset, const char *aName)
         {
