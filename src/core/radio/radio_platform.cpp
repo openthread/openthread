@@ -115,6 +115,18 @@ exit:
     return;
 }
 
+bool otPlatRadioIsRxStatePolling(otInstance *aInstance)
+{
+    Instance *instance = static_cast<Instance *>(aInstance);
+    bool ret = false;
+
+    if (instance->IsInitialized())
+    {
+        ret = instance->Get<Mac::Mac>().IsRxStatePolling();
+    }
+    return (ret);
+}
+
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
 extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, Error aError)
 {

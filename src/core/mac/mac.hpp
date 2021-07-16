@@ -551,6 +551,13 @@ public:
     bool IsInTransmitState(void) const;
 
     /**
+     * This method returns if the MAC layer is in polling receive state.
+     *
+     * The MAC layer is in the receive state during a polling procedure pending external frame transmission.
+     */
+    bool IsRxStatePolling(void) const;
+
+    /**
      * This method registers a callback to provide received raw IEEE 802.15.4 frames.
      *
      * @param[in]  aPcapCallback     A pointer to a function that is called when receiving an IEEE 802.15.4 link frame

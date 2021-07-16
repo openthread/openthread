@@ -833,6 +833,16 @@ otError otPlatRadioEnergyScan(otInstance *aInstance, uint8_t aScanChannel, uint1
 extern void otPlatRadioEnergyScanDone(otInstance *aInstance, int8_t aEnergyScanMaxRssi);
 
 /**
+ * This function indicates whether or not an IEEE 802.15.4 MAC is currently waiting for data.
+ * MAC module is in the receive state during a polling procedure pending external frame transmission.
+ *
+ * @param[in] aInstance A pointer to an OpenThread instance.
+ * @returns true if an IEEE 802.15.4 MAC is in the polling receive state, false otherwise.
+ *
+ */
+extern bool otPlatRadioIsRxStatePolling(otInstance *aInstance);
+
+/**
  * Enable/Disable source address match feature.
  *
  * The source address match feature controls how the radio layer decides the "frame pending" bit for acks sent in
