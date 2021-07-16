@@ -1853,7 +1853,7 @@ Server::UpdateMetadata *Server::UpdateMetadata::New(Instance &               aIn
     void *          buf;
     UpdateMetadata *update = nullptr;
 
-    buf = aInstance.HeapCAlloc(1, sizeof(UpdateMetadata));
+    buf = Instance::HeapCAlloc(1, sizeof(UpdateMetadata));
     VerifyOrExit(buf != nullptr);
 
     update = new (buf) UpdateMetadata(aInstance, aHeader, aHost, aMessageInfo);
