@@ -59,6 +59,7 @@
 #endif
 
 /**
+<<<<<<< HEAD
  * @def OPENTHREAD_CONFIG_CLI_TCP_ENABLE
  *
  * Indicates whether TCP should be enabled in the CLI tool.
@@ -85,6 +86,32 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE
 #define OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+ *
+ * Define as 1 for CLI to emit its command input string and the resulting output to the logs.
+ *
+ * By default this is enabled on any POSIX based platform (`OPENTHREAD_POSIX`) and only when CLI itself is not being
+ * used for logging.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE \
+    (OPENTHREAD_POSIX && (OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_APP))
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE
+ *
+ * The log string buffer size (in bytes).
+ *
+ * This is only used when `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE` is enabled.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE
+#define OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
 #endif
 
 #endif // CONFIG_CLI_H_

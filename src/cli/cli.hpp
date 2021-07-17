@@ -87,6 +87,9 @@ namespace ot {
  */
 namespace Cli {
 
+extern "C" void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
+extern "C" void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
+
 /**
  * This class implements the CLI interpreter.
  *
@@ -103,6 +106,8 @@ class Interpreter
     friend class SrpServer;
     friend class TcpExample;
     friend class UdpExample;
+    friend void otCliPlatLogv(otLogLevel, otLogRegion, const char *, va_list);
+    friend void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
 
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -721,6 +726,11 @@ private:
     }
     void HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aInfo);
 
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    bool IsLogging(void) const { return mIsLogging; }
+    void SetIsLogging(bool aIsLogging) { mIsLogging = aIsLogging; }
+#endif
+
     static constexpr Command sCommands[] = {
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
         {"ba", &Interpreter::ProcessBorderAgent},
@@ -936,6 +946,12 @@ private:
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     SrpServer mSrpServer;
+#endif
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    char     mOutputString[OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE];
+    uint16_t mOutputLength;
+    bool     mIsLogging;
 #endif
 };
 
