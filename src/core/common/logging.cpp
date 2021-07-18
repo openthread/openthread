@@ -226,11 +226,8 @@ exit:
 }
 #endif
 
-enum : uint8_t
-{
-    kStringLineLength = 80,
-    kDumpBytesPerLine = 16,
-};
+static constexpr uint8_t kStringLineLength = 80;
+static constexpr uint8_t kDumpBytesPerLine = 16;
 
 static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t *aBytes, const size_t aLength)
 {
@@ -279,10 +276,7 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
 {
-    enum : uint8_t
-    {
-        kWidth = 72,
-    };
+    constexpr uint8_t kWidth = 72;
 
     size_t                        idLen = strlen(aId);
     ot::String<kStringLineLength> string;

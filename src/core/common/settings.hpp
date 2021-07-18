@@ -1062,7 +1062,7 @@ public:
         }
 
     private:
-        enum IteratorType
+        enum IteratorType : uint8_t
         {
             kEndIterator,
         };

@@ -47,7 +47,7 @@ namespace ot {
 class Crc16
 {
 public:
-    enum Polynomial
+    enum Polynomial : uint16_t
     {
         kCcitt = 0x1021, ///< CRC16_CCITT
         kAnsi  = 0x8005, ///< CRC16-ANSI
