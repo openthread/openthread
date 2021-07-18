@@ -68,15 +68,12 @@ public:
         kModePlainTimer, ///< Operate as a plain periodic timer with random interval selected within min/max intervals.
     };
 
-    enum : uint16_t
-    {
-        /**
-         * Special value for redundancy constant (aka `k`) to indicate infinity (when used, it disables trickle timer's
-         * suppression behavior, invoking the handler callback independent of number of "consistent" events).
-         *
-         */
-        kInfiniteRedundancyConstant = NumericLimits<uint16_t>::kMax,
-    };
+    /**
+     * Special value for redundancy constant (aka `k`) to indicate infinity (when used, it disables trickle timer's
+     * suppression behavior, invoking the handler callback independent of number of "consistent" events).
+     *
+     */
+    static constexpr uint16_t kInfiniteRedundancyConstant = NumericLimits<uint16_t>::kMax;
 
     /**
      * This function pointer is called when the timer expires (i.e., transmission should happen).

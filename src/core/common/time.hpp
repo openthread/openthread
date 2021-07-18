@@ -249,10 +249,7 @@ public:
     static uint32_t MsecToSec(uint32_t aMilliseconds) { return aMilliseconds / 1000u; }
 
 private:
-    enum
-    {
-        kDistantFuture = (1UL << 31),
-    };
+    static constexpr uint32_t kDistantFuture = (1UL << 31);
 
     uint32_t mValue;
 };
