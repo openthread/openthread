@@ -73,10 +73,7 @@ public:
     class Hash : public otCryptoSha256Hash, public Clearable<Hash>, public Equatable<Hash>
     {
     public:
-        enum : uint8_t
-        {
-            kSize = OT_CRYPTO_SHA256_HASH_SIZE, ///< SHA-256 hash size (bytes)
-        };
+        static const uint8_t kSize = OT_CRYPTO_SHA256_HASH_SIZE; ///< SHA-256 hash size (bytes)
 
         /**
          * This method returns a pointer to a byte array containing the hash value.

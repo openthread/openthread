@@ -55,10 +55,7 @@ namespace Crypto {
 class AesEcb
 {
 public:
-    enum
-    {
-        kBlockSize = 16, ///< AES-128 block size (bytes).
-    };
+    static constexpr uint8_t kBlockSize = 16; ///< AES-128 block size (bytes).
 
     /**
      * Constructor to initialize the mbedtls_aes_context.

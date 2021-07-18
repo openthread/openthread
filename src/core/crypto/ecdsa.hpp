@@ -64,15 +64,13 @@ namespace Ecdsa {
 class P256
 {
 public:
-    enum : uint16_t
-    {
-        kFieldBitLength = 256, ///< Prime field bit length used by the P-256 curve.
-    };
+    static constexpr uint16_t kFieldBitLength = 256; ///< Prime field bit length used by the P-256 curve.
 
-    enum : uint8_t
-    {
-        kMpiSize = kFieldBitLength / 8, ///< Max bytes in binary representation of an MPI (multi-precision int).
-    };
+    /**
+     * Max bytes in binary representation of an MPI (multi-precision int).
+     *
+     */
+    static constexpr uint8_t kMpiSize = kFieldBitLength / 8;
 
     class PublicKey;
     class KeyPair;
@@ -91,10 +89,7 @@ public:
         friend class PublicKey;
 
     public:
-        enum : uint8_t
-        {
-            kSize = 2 * kMpiSize, ///< Size of the signature in bytes (two times the curve MPI size).
-        };
+        static constexpr uint8_t kSize = 2 * kMpiSize; ///< Signature size in bytes (two times the curve MPI size).
 
         /**
          * This method returns the signature as a byte array.
@@ -128,10 +123,11 @@ public:
     class KeyPair
     {
     public:
-        enum : uint8_t
-        {
-            kMaxDerSize = 125, ///< Max buffer size (in bytes) for representing the key-pair in DER format.
-        };
+        /**
+         * Max buffer size (in bytes) for representing the key-pair in DER format.
+         *
+         */
+        static constexpr uint8_t kMaxDerSize = 125;
 
         /**
          * This constructor initializes a `KeyPair` as empty (no key).
@@ -237,10 +233,7 @@ public:
         friend class KeyPair;
 
     public:
-        enum
-        {
-            kSize = kMpiSize * 2, ///< Size of the public key in bytes.
-        };
+        static constexpr uint8_t kSize = kMpiSize * 2; ///< Size of the public key in bytes.
 
         /**
          * This method gets the pointer to the buffer containing the public key (as an uncompressed curve point).
