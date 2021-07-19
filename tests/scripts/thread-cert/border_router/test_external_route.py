@@ -53,7 +53,7 @@ HOST = 5
 ROUTE1 = '2402:1234:1234:1234::/64'
 
 
-class MultiBorderRouters(thread_cert.TestCase):
+class ExternalRoutes(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
