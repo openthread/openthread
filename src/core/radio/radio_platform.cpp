@@ -36,6 +36,7 @@
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "radio/radio.hpp"
+#include "mac/mac.hpp"
 
 using namespace ot;
 
