@@ -765,9 +765,7 @@ void RoutingManager::SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
         if (error == kErrorNone)
         {
             otLogInfoBr("Sent Router Advertisement on interface %u", mInfraIfIndex);
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-            otDumpCertBr("[BR-CERT] direction=send | type=RA |", buffer, bufferLength);
-#endif
+            otDumpDebgBr("[BR-CERT] direction=send | type=RA |", buffer, bufferLength);
         }
         else
         {
@@ -984,9 +982,7 @@ void RoutingManager::HandleRouterAdvertisement(const Ip6::Address &aSrcAddress,
 
     otLogInfoBr("Received Router Advertisement from %s on interface %u", aSrcAddress.ToString().AsCString(),
                 mInfraIfIndex);
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-    otDumpCertBr("[BR-CERT] direction=recv | type=RA |", aBuffer, aBufferLength);
-#endif
+    otDumpDebgBr("[BR-CERT] direction=recv | type=RA |", aBuffer, aBufferLength);
 
     routerAdvMessage = reinterpret_cast<const RouterAdvMessage *>(aBuffer);
     optionsBegin     = aBuffer + sizeof(RouterAdvMessage);
