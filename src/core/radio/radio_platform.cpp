@@ -117,14 +117,9 @@ exit:
 
 bool otPlatRadioIsRxStatePolling(otInstance *aInstance)
 {
-    Instance *instance = static_cast<Instance *>(aInstance);
-    bool ret = false;
+    Instance &instance = *static_cast<Instance *>(aInstance);
 
-    if (instance->IsInitialized())
-    {
-        ret = instance->Get<Mac::Mac>().IsRxStatePolling();
-    }
-    return (ret);
+    return instance.Get<Mac::Mac>().IsRxStatePolling();
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
