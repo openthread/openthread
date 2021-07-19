@@ -77,7 +77,7 @@ Error DatasetLocal::Restore(Dataset &aDataset)
     SuccessOrExit(error);
 
     mSaved    = true;
-    timestamp = aDataset.GetTimestamp();
+    timestamp = aDataset.GetTimestamp(mType);
 
     if (timestamp != nullptr)
     {
@@ -128,7 +128,7 @@ exit:
 
 Error DatasetLocal::Read(Dataset::Info &aDatasetInfo) const
 {
-    Dataset dataset(mType);
+    Dataset dataset;
     Error   error;
 
     aDatasetInfo.Clear();
@@ -142,7 +142,7 @@ exit:
 
 Error DatasetLocal::Read(otOperationalDatasetTlvs &aDataset) const
 {
-    Dataset dataset(mType);
+    Dataset dataset;
     Error   error;
 
     memset(&aDataset, 0, sizeof(aDataset));
@@ -157,7 +157,7 @@ exit:
 Error DatasetLocal::Save(const Dataset::Info &aDatasetInfo)
 {
     Error   error;
-    Dataset dataset(mType);
+    Dataset dataset;
 
     SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
     SuccessOrExit(error = Save(dataset));
@@ -168,7 +168,7 @@ exit:
 
 Error DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
 {
-    Dataset dataset(mType);
+    Dataset dataset;
 
     dataset.SetFrom(aDataset);
 
@@ -194,7 +194,7 @@ Error DatasetLocal::Save(const Dataset &aDataset)
         otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
     }
 
-    timestamp = aDataset.GetTimestamp();
+    timestamp = aDataset.GetTimestamp(mType);
 
     if (timestamp != nullptr)
     {

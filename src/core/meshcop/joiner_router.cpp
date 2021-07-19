@@ -314,7 +314,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
 {
     Error          error;
     Coap::Message *message = nullptr;
-    Dataset        dataset(Dataset::kActive);
+    Dataset        dataset;
 
     NetworkNameTlv networkName;
     const Tlv *    tlv;

@@ -61,11 +61,11 @@ namespace MeshCoP {
 
 Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 {
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     IgnoreError(Read(dataset));
 
-    return dataset.AppendMleDatasetTlv(aMessage);
+    return dataset.AppendMleDatasetTlv(GetType(), aMessage);
 }
 
 Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -79,7 +79,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     bool            doesAffectNetworkKey     = false;
     bool            hasNetworkKey            = false;
     StateTlv::State state                    = StateTlv::kReject;
-    Dataset         dataset(GetType());
+    Dataset         dataset;
 
     ActiveTimestampTlv   activeTimestamp;
     PendingTimestampTlv  pendingTimestamp;
@@ -309,7 +309,7 @@ exit:
 Error ActiveDataset::GenerateLocal(void)
 {
     Error   error = kErrorNone;
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
     VerifyOrExit(!mLocal.IsTimestampPresent(), error = kErrorAlready);
@@ -457,7 +457,7 @@ exit:
 void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Message &aMessage)
 {
     uint16_t offset = aMessage.GetOffset();
-    Dataset  dataset(GetType());
+    Dataset  dataset;
 
     VerifyOrExit(Get<Mle::MleRouter>().IsAttached());
 
@@ -474,7 +474,7 @@ void PendingDataset::ApplyActiveDataset(const Timestamp &aTimestamp, Coap::Messa
     IgnoreError(dataset.SetTlv(Tlv::kDelayTimer, Get<Leader>().GetDelayTimerMinimal()));
 
     // add pending timestamp tlv
-    dataset.SetTimestamp(aTimestamp);
+    dataset.SetTimestamp(Dataset::kPending, aTimestamp);
     IgnoreError(DatasetManager::Save(dataset));
 
     // reset delay timer

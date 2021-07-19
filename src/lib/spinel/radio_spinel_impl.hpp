@@ -601,7 +601,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
     Spinel::Decoder      decoder;
-    MeshCoP::Dataset     dataset(isActive ? MeshCoP::Dataset::kActive : MeshCoP::Dataset::kPending);
+    MeshCoP::Dataset     dataset;
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));
     decoder.Init(aBuffer, aLength);
