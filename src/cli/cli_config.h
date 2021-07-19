@@ -37,6 +37,8 @@
 
 #include "openthread-core-config.h"
 
+#include <openthread/tcp.h>
+
 #ifndef OPENTHREAD_POSIX
 #if defined(__ANDROID__) || defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__NetBSD__) || \
     defined(__unix__)
@@ -54,6 +56,35 @@
  */
 #ifndef OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH
 #define OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH 384
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TCP_ENABLE
+ *
+ * Indicates whether TCP should be enabled in the CLI tool.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TCP_ENABLE
+#define OPENTHREAD_CONFIG_CLI_TCP_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE
+ *
+ * The number of bytes to transfer for the TCP benchmark in the CLI.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE
+#define OPENTHREAD_CONFIG_CLI_TCP_DEFAULT_BENCHMARK_SIZE (72 << 10)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE
+ *
+ * The size of memory used for the TCP receive buffer, in bytes.
+ */
+#ifndef OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE
+#define OPENTHREAD_CONFIG_CLI_TCP_RECEIVE_BUFFER_SIZE OT_TCP_RECEIVE_BUFFER_SIZE_FEW_HOPS
 #endif
 
 #endif // CONFIG_CLI_H_
