@@ -81,7 +81,7 @@ int DatasetManager::Compare(const Timestamp &aTimestamp) const
 Error DatasetManager::Restore(void)
 {
     Error            error;
-    Dataset          dataset(GetType());
+    Dataset          dataset;
     const Timestamp *timestamp;
 
     mTimer.Stop();
@@ -90,7 +90,7 @@ Error DatasetManager::Restore(void)
 
     SuccessOrExit(error = mLocal.Restore(dataset));
 
-    timestamp = dataset.GetTimestamp();
+    timestamp = dataset.GetTimestamp(GetType());
 
     if (timestamp != nullptr)
     {
@@ -112,7 +112,7 @@ exit:
 Error DatasetManager::ApplyConfiguration(void) const
 {
     Error   error;
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     SuccessOrExit(error = Read(dataset));
     SuccessOrExit(error = dataset.ApplyConfiguration(GetInstance()));
@@ -142,7 +142,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
     int              compare;
     bool             isNetworkkeyUpdated = false;
 
-    timestamp = aDataset.GetTimestamp();
+    timestamp = aDataset.GetTimestamp(GetType());
 
     if (timestamp != nullptr)
     {
@@ -249,7 +249,7 @@ Error DatasetManager::GetChannelMask(Mac::ChannelMask &aChannelMask) const
     Error                          error;
     const MeshCoP::ChannelMaskTlv *channelMaskTlv;
     uint32_t                       mask;
-    Dataset                        dataset(GetType());
+    Dataset                        dataset;
 
     SuccessOrExit(error = Read(dataset));
 
@@ -275,7 +275,7 @@ void DatasetManager::SendSet(void)
     Error            error;
     Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
-    Dataset          dataset(GetType());
+    Dataset          dataset;
 
     VerifyOrExit(!mCoapPending, error = kErrorBusy);
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
@@ -283,7 +283,7 @@ void DatasetManager::SendSet(void)
 
     if (IsActiveDataset())
     {
-        Dataset pendingDataset(Dataset::kPending);
+        Dataset pendingDataset;
         IgnoreError(Get<PendingDataset>().Read(pendingDataset));
 
         const ActiveTimestampTlv *tlv                    = pendingDataset.GetTlv<ActiveTimestampTlv>();
@@ -402,7 +402,7 @@ void DatasetManager::SendGetResponse(const Coap::Message &   aRequest,
 {
     Error          error = kErrorNone;
     Coap::Message *message;
-    Dataset        dataset(GetType());
+    Dataset        dataset;
 
     IgnoreError(Read(dataset));
 
@@ -451,7 +451,7 @@ exit:
 Error DatasetManager::AppendDatasetToMessage(const Dataset::Info &aDatasetInfo, Message &aMessage) const
 {
     Error   error;
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     SuccessOrExit(error = dataset.SetFrom(aDatasetInfo));
     error = aMessage.AppendBytes(dataset.GetBytes(), dataset.GetSize());
@@ -670,10 +670,10 @@ exit:
 Error ActiveDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     Error   error = kErrorNone;
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     SuccessOrExit(error = dataset.Set(aMessage, aOffset, aLength));
-    dataset.SetTimestamp(aTimestamp);
+    dataset.SetTimestamp(Dataset::kActive, aTimestamp);
     IgnoreError(DatasetManager::Save(dataset));
 
 exit:
@@ -715,7 +715,7 @@ void PendingDataset::Clear(void)
 
 void PendingDataset::ClearNetwork(void)
 {
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     mTimestamp.Init();
     mTimestampValid = false;
@@ -758,10 +758,10 @@ exit:
 Error PendingDataset::Save(const Timestamp &aTimestamp, const Message &aMessage, uint16_t aOffset, uint8_t aLength)
 {
     Error   error = kErrorNone;
-    Dataset dataset(GetType());
+    Dataset dataset;
 
     SuccessOrExit(error = dataset.Set(aMessage, aOffset, aLength));
-    dataset.SetTimestamp(aTimestamp);
+    dataset.SetTimestamp(Dataset::kPending, aTimestamp);
     IgnoreError(DatasetManager::Save(dataset));
     StartDelayTimer();
 
@@ -772,7 +772,7 @@ exit:
 void PendingDataset::StartDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
-    Dataset        dataset(GetType());
+    Dataset        dataset;
 
     IgnoreError(Read(dataset));
 
@@ -801,7 +801,7 @@ void PendingDataset::HandleDelayTimer(Timer &aTimer)
 void PendingDataset::HandleDelayTimer(void)
 {
     DelayTimerTlv *delayTimer;
-    Dataset        dataset(GetType());
+    Dataset        dataset;
 
     IgnoreError(Read(dataset));
 

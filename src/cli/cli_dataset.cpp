@@ -876,7 +876,7 @@ otError Dataset::ProcessSet(Arg aArgs[])
     }
 
     {
-        MeshCoP::Dataset       dataset(datasetType);
+        MeshCoP::Dataset       dataset;
         MeshCoP::Dataset::Info datasetInfo;
         uint16_t               tlvsLength = MeshCoP::Dataset::kMaxSize;
 

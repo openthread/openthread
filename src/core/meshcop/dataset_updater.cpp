@@ -105,7 +105,7 @@ void DatasetUpdater::HandleTimer(void)
 
 void DatasetUpdater::PreparePendingDataset(void)
 {
-    Dataset                dataset(Dataset::kPending);
+    Dataset                dataset;
     MeshCoP::Dataset::Info requestedDataset;
     Error                  error;
 
@@ -145,7 +145,7 @@ void DatasetUpdater::PreparePendingDataset(void)
         }
 
         timestamp.AdvanceRandomTicks();
-        dataset.SetTimestamp(timestamp);
+        dataset.SetTimestamp(Dataset::kPending, timestamp);
     }
 
     {
