@@ -163,7 +163,6 @@ int CreateNetLinkSocket(void)
     memset(&addr, 0, sizeof(addr));
     addr.nl_family = AF_NETLINK;
     addr.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-    addr.nl_pid    = getpid();
 
     rval = bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
