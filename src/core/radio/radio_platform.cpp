@@ -34,9 +34,9 @@
 #include <openthread/platform/time.h>
 
 #include "common/code_utils.hpp"
+#include "mac/mac.hpp"
 #include "common/instance.hpp"
 #include "radio/radio.hpp"
-#include "mac/mac.hpp"
 
 using namespace ot;
 
