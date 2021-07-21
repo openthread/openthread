@@ -578,7 +578,7 @@ static otError AddExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, data, sizeof(data));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_PRIORITY, kExternalRoutePriority);
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
@@ -627,7 +627,7 @@ static otError DeleteExternalRoute(const otIp6Prefix &aPrefix)
 
     otIp6AddressToString(&aPrefix.mPrefix, addrBuf, OT_IP6_ADDRESS_STRING_SIZE);
     inet_pton(AF_INET6, addrBuf, data);
-    AddRtAttr(&req.header, sizeof(req), RTA_DST, data, sizeof(data));
+    AddRtAttr(reinterpret_cast<nlmsghdr *>(&req), sizeof(req), RTA_DST, data, sizeof(data));
     AddRtAttrUint32(&req.header, sizeof(req), RTA_OIF, netifIdx);
 
     if (send(sNetlinkFd, &req, sizeof(req), 0) < 0)
