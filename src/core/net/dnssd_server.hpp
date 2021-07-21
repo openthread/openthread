@@ -71,6 +71,8 @@ public:
         kDnsQueryResolveHost = OT_DNSSD_QUERY_TYPE_RESOLVE_HOST, ///< Service type resolve hostname.
     };
 
+    static constexpr uint16_t kPort = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT; ///< The DNS-SD server port.
+
     /**
      * This constructor initializes the object.
      *
@@ -224,7 +226,7 @@ private:
         uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
     };
 
-    static constexpr uint16_t kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT;
+    static constexpr bool     kBindUnspecifiedNetif = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
     static constexpr uint8_t  kProtocolLabelLength  = 4;
     static constexpr uint8_t  kSubTypeLabelLength   = 4;
     static constexpr uint16_t kMaxConcurrentQueries = 32;
