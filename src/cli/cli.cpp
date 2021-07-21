@@ -82,6 +82,7 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 
+#include "common/logging.hpp"
 #include "common/new.hpp"
 #include "common/string.hpp"
 #include "mac/channel_mask.hpp"
@@ -126,6 +127,10 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #endif
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
     , mSrpServer(*this)
+#endif
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    , mOutputLength(0)
+    , mIsLogging(false)
 #endif
 {
 #if OPENTHREAD_FTD
@@ -4551,6 +4556,10 @@ void Interpreter::ProcessLine(char *aBuf)
 
     VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
 
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    otLogNoteCli("Input: %s", aBuf);
+#endif
+
     error = Utils::CmdLineParser::ParseCmd(aBuf, args);
 
     if (error != OT_ERROR_NONE)
@@ -4918,7 +4927,98 @@ void Interpreter::OutputSpaces(uint8_t aCount)
 
 int Interpreter::OutputFormatV(const char *aFormat, va_list aArguments)
 {
-    return mOutputCallback(mOutputContext, aFormat, aArguments);
+    int rval;
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    va_list args;
+    int     charsWritten;
+    bool    truncated = false;
+
+    va_copy(args, aArguments);
+#endif
+
+    rval = mOutputCallback(mOutputContext, aFormat, aArguments);
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    VerifyOrExit(!IsLogging());
+
+    charsWritten = vsnprintf(&mOutputString[mOutputLength], sizeof(mOutputString) - mOutputLength, aFormat, args);
+
+    VerifyOrExit(charsWritten >= 0, mOutputLength = 0);
+
+    if (static_cast<uint32_t>(charsWritten) >= sizeof(mOutputString) - mOutputLength)
+    {
+        truncated     = true;
+        mOutputLength = sizeof(mOutputString) - 1;
+    }
+    else
+    {
+        mOutputLength += charsWritten;
+    }
+
+    while (true)
+    {
+        char *lineEnd = strchr(mOutputString, '\r');
+
+        if (lineEnd == nullptr)
+        {
+            break;
+        }
+
+        *lineEnd = '\0';
+
+        if (lineEnd > mOutputString)
+        {
+            otLogNoteCli("Output: %s", mOutputString);
+        }
+
+        lineEnd++;
+
+        while ((*lineEnd == '\n') || (*lineEnd == '\r'))
+        {
+            lineEnd++;
+        }
+
+        // Example of the pointers and lengths.
+        //
+        // - mOutputString = "hi\r\nmore"
+        // - mOutputLength = 8
+        // - lineEnd       = &mOutputString[4]
+        //
+        //
+        //   0    1    2    3    4    5    6    7    8    9
+        // +----+----+----+----+----+----+----+----+----+---
+        // | h  | i  | \r | \n | m  | o  | r  | e  | \0 |
+        // +----+----+----+----+----+----+----+----+----+---
+        //                       ^                   ^
+        //                       |                   |
+        //                    lineEnd    mOutputString[mOutputLength]
+        //
+        //
+        // New length is `&mOutputString[8] - &mOutputString[4] -> 4`.
+        //
+        // We move (newLen + 1 = 5) chars from `lineEnd` to start of
+        // `mOutputString` which will include the `\0` char.
+        //
+        // If `lineEnd` and `mOutputString[mOutputLength]` are the same
+        // the code works correctly as well  (new length set to zero and
+        // the `\0` is copied).
+
+        mOutputLength = static_cast<uint16_t>(&mOutputString[mOutputLength] - lineEnd);
+        memmove(mOutputString, lineEnd, mOutputLength + 1);
+    }
+
+    if (truncated)
+    {
+        otLogNoteCli("Output: %s ...", mOutputString);
+        mOutputLength = 0;
+    }
+
+exit:
+    va_end(args);
+
+#endif // OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+
+    return rval;
 }
 
 void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallback, void *aContext)
@@ -4968,8 +5068,20 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
 
     VerifyOrExit(Interpreter::IsInitialized());
 
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    // CLI output can be used for logging. The `IsLogging` flag is
+    // used to indicate whether it is being used for a CLI command
+    // output or for logging.
+    Interpreter::GetInterpreter().SetIsLogging(true);
+#endif
+
     Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
     Interpreter::GetInterpreter().OutputLine("");
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    Interpreter::GetInterpreter().SetIsLogging(false);
+#endif
+
 exit:
     return;
 }
@@ -4980,7 +5092,16 @@ extern "C" void otCliPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, c
     OT_UNUSED_VARIABLE(aLogRegion);
 
     VerifyOrExit(Interpreter::IsInitialized());
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    Interpreter::GetInterpreter().SetIsLogging(true);
+#endif
+
     Interpreter::GetInterpreter().OutputLine(aLogLine);
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    Interpreter::GetInterpreter().SetIsLogging(false);
+#endif
 
 exit:
     return;
