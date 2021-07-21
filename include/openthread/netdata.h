@@ -48,7 +48,7 @@ extern "C" {
  *
  */
 
-#define OT_NETWORK_DATA_ITERATOR_INIT 0 ///< Initializer for otNetworkDataIterator.
+#define OT_NETWORK_DATA_ITERATOR_INIT 0 ///< Value to initialize `otNetworkDataIterator`.
 
 typedef uint32_t otNetworkDataIterator; ///< Used to iterate through Network Data information.
 
@@ -57,67 +57,18 @@ typedef uint32_t otNetworkDataIterator; ///< Used to iterate through Network Dat
  */
 typedef struct otBorderRouterConfig
 {
-    /**
-     * The IPv6 prefix.
-     */
-    otIp6Prefix mPrefix;
-
-    /**
-     * A 2-bit signed integer indicating router preference as defined in RFC 4191.
-     */
-    signed int mPreference : 2;
-
-    /**
-     * TRUE, if @p mPrefix is preferred.  FALSE, otherwise.
-     */
-    bool mPreferred : 1;
-
-    /**
-     * TRUE, if @p mPrefix should be used for address autoconfiguration.  FALSE, otherwise.
-     */
-    bool mSlaac : 1;
-
-    /**
-     * TRUE, if this border router is a DHCPv6 Agent that supplies IPv6 address configuration.  FALSE, otherwise.
-     */
-    bool mDhcp : 1;
-
-    /**
-     * TRUE, if this border router is a DHCPv6 Agent that supplies other configuration data.  FALSE, otherwise.
-     */
-    bool mConfigure : 1;
-
-    /**
-     * TRUE, if this border router is a default route for @p mPrefix.  FALSE, otherwise.
-     */
-    bool mDefaultRoute : 1;
-
-    /**
-     * TRUE, if this prefix is considered on-mesh.  FALSE, otherwise.
-     */
-    bool mOnMesh : 1;
-
-    /**
-     * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
-     */
-    bool mStable : 1;
-
-    /**
-     * TRUE, if this border router is able to supply DNS infomration obtained via ND.  FALSE, otherwise.
-     */
-    bool mNdDns : 1;
-
-    /**
-     * TRUE, if this prefix is a Thread Domain Prefix.  FALSE, otherwise.
-     *
-     * Note: Domain Prefix is introduced since Thread 1.2.
-     */
-    bool mDp : 1;
-
-    /**
-     * The Border Agent Rloc.
-     */
-    uint16_t mRloc16;
+    otIp6Prefix mPrefix;           ///< The IPv6 prefix.
+    signed int  mPreference : 2;   ///< A 2-bit signed int preference (`OT_ROUTE_PREFERENCE_*` values).
+    bool        mPreferred : 1;    ///< Whether prefix is preferred.
+    bool        mSlaac : 1;        ///< Whether prefix can be used for address auto-configuration (SLAAC).
+    bool        mDhcp : 1;         ///< Whether border router is DHCPv6 Agent.
+    bool        mConfigure : 1;    ///< Whether DHCPv6 Agent supplying other config data.
+    bool        mDefaultRoute : 1; ///< Whether border router is a default router for prefix.
+    bool        mOnMesh : 1;       ///< Whether this prefix is considered on-mesh.
+    bool        mStable : 1;       ///< Whether this configuration is considered Stable Network Data.
+    bool        mNdDns : 1;        ///< Whether this border router can supply DNS information via ND.
+    bool        mDp : 1;           ///< Whether prefix is a Thread Domain Prefix (added since Thread 1.2).
+    uint16_t    mRloc16;           ///< The border router's RLOC16 (value ignored on config add).
 } otBorderRouterConfig;
 
 /**
@@ -126,45 +77,16 @@ typedef struct otBorderRouterConfig
  */
 typedef struct otExternalRouteConfig
 {
-    /**
-     * The prefix for the off-mesh route.
-     */
-    otIp6Prefix mPrefix;
-
-    /**
-     * The Rloc associated with the external route entry.
-     *
-     * This value is ignored when adding an external route. For any added route, the device's Rloc is used.
-     */
-    uint16_t mRloc16;
-
-    /**
-     * A 2-bit signed integer indicating router preference as defined in RFC 4191.
-     */
-    signed int mPreference : 2;
-
-    /**
-     * TRUE, if this is a NAT64 prefix, FALSE, otherwise.
-     */
-    bool mNat64 : 1;
-
-    /**
-     * TRUE, if this configuration is considered Stable Network Data.  FALSE, otherwise.
-     */
-    bool mStable : 1;
-
-    /**
-     * TRUE if the external route entry's next hop is this device itself (i.e., the route was added earlier by this
-     * device). FALSE otherwise.
-     *
-     * This value is ignored when adding an external route. For any added route the next hop is this device.
-     */
-    bool mNextHopIsThisDevice : 1;
-
+    otIp6Prefix mPrefix;                  ///< The IPv6 prefix.
+    uint16_t    mRloc16;                  ///< The border router's RLOC16 (value ignored on config add).
+    signed int  mPreference : 2;          ///< A 2-bit signed int preference (`OT_ROUTE_PREFERENCE_*` values).
+    bool        mNat64 : 1;               ///< Whether this is a NAT64 prefix.
+    bool        mStable : 1;              ///< Whether this configuration is considered Stable Network Data.
+    bool        mNextHopIsThisDevice : 1; ///< Whether the next hop is this device (value ignored on config add).
 } otExternalRouteConfig;
 
 /**
- * Defines valid values for member mPreference in otExternalRouteConfig and otBorderRouterConfig.
+ * Defines valid values for `mPreference` in `otExternalRouteConfig` and `otBorderRouterConfig`.
  *
  */
 typedef enum otRoutePreference
@@ -174,9 +96,8 @@ typedef enum otRoutePreference
     OT_ROUTE_PREFERENCE_HIGH = 1,  ///< High route preference.
 } otRoutePreference;
 
-#define OT_SERVICE_DATA_MAX_SIZE 252 ///< Maximum size of Service Data in bytes.
-#define OT_SERVER_DATA_MAX_SIZE \
-    248 ///< Maximum size of Server Data in bytes. This is theoretical limit, practical one is much lower.
+#define OT_SERVICE_DATA_MAX_SIZE 252 ///< Max size of Service Data in bytes.
+#define OT_SERVER_DATA_MAX_SIZE 248  ///< Max size of Server Data in bytes. Theoretical limit, practically much lower.
 
 /**
  * This structure represents a Server configuration.
@@ -184,8 +105,8 @@ typedef enum otRoutePreference
  */
 typedef struct otServerConfig
 {
-    bool     mStable : 1;       ///< TRUE, if this configuration is considered Stable Network Data. FALSE, otherwise.
-    uint8_t  mServerDataLength; ///< Length of server data.
+    bool     mStable : 1;                          ///< Whether this config is considered Stable Network Data.
+    uint8_t  mServerDataLength;                    ///< Length of server data.
     uint8_t  mServerData[OT_SERVER_DATA_MAX_SIZE]; ///< Server data bytes.
     uint16_t mRloc16;                              ///< The Server RLOC16.
 } otServerConfig;
@@ -196,9 +117,9 @@ typedef struct otServerConfig
  */
 typedef struct otServiceConfig
 {
-    uint8_t        mServiceId;         ///< Used to return Service ID when iterating over the partition's Network Data.
-    uint32_t       mEnterpriseNumber;  ///< IANA Enterprise Number.
-    uint8_t        mServiceDataLength; ///< Length of service data.
+    uint8_t        mServiceId;                             ///< Service ID (when iterating over the  Network Data).
+    uint32_t       mEnterpriseNumber;                      ///< IANA Enterprise Number.
+    uint8_t        mServiceDataLength;                     ///< Length of service data.
     uint8_t        mServiceData[OT_SERVICE_DATA_MAX_SIZE]; ///< Service data bytes.
     otServerConfig mServerConfig;                          ///< The Server configuration.
 } otServiceConfig;
