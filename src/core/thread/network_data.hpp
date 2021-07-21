@@ -457,7 +457,7 @@ protected:
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode. @sa ServiceDataMatchMode
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
@@ -473,7 +473,7 @@ protected:
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode. @sa ServiceDataMatchMode
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
@@ -498,7 +498,7 @@ protected:
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode. @sa ServiceDataMatchMode
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
@@ -523,7 +523,7 @@ protected:
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data to match with Service TLVs.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
-     * @param[in]  aServiceMatchMode  The Service Data match mode. @sa ServiceDataMatchMode
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
      *
