@@ -2512,7 +2512,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus)
+Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus)
 {
     Error    error = kErrorNone;
     Message *message;
@@ -2523,7 +2523,7 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementResponse));
 
     tlv.SetType(Tlv::kLinkMetricsManagement);
-    statusSubTlv.SetType(kLinkMetricsStatus);
+    statusSubTlv.SetType(LinkMetrics::SubTlv::kStatus);
     statusSubTlv.SetLength(sizeof(aStatus));
     tlv.SetLength(statusSubTlv.GetSize());
 
@@ -3031,8 +3031,8 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == kErrorNone)
     {
-        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportValueOffset, length,
-                                                   aMessageInfo.GetPeerAddr());
+        Get<LinkMetrics::LinkMetrics>().HandleReport(aMessage, metricsReportValueOffset, length,
+                                                     aMessageInfo.GetPeerAddr());
     }
 #endif
 
@@ -3942,14 +3942,14 @@ void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
                                              const Ip6::MessageInfo &aMessageInfo,
                                              Neighbor *              aNeighbor)
 {
-    Error                          error = kErrorNone;
-    LinkMetrics::LinkMetricsStatus status;
+    Error               error = kErrorNone;
+    LinkMetrics::Status status;
 
     Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor != nullptr, error = kErrorInvalidState);
 
-    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkMetricsManagementRequest(aMessage, *aNeighbor, status));
+    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleManagementRequest(aMessage, *aNeighbor, status));
     error = SendLinkMetricsManagementResponse(aMessageInfo.GetPeerAddr(), status);
 
 exit:
@@ -3969,7 +3969,7 @@ void Mle::HandleLinkMetricsManagementResponse(const Message &         aMessage,
 
     VerifyOrExit(aNeighbor != nullptr, error = kErrorInvalidState);
 
-    error = Get<LinkMetrics>().HandleLinkMetricsManagementResponse(aMessage, aMessageInfo.GetPeerAddr());
+    error = Get<LinkMetrics::LinkMetrics>().HandleManagementResponse(aMessage, aMessageInfo.GetPeerAddr());
 
 exit:
     LogProcessError(kTypeLinkMetricsManagementResponse, error);
@@ -3984,8 +3984,8 @@ void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMess
 
     Log(kMessageReceive, kTypeLinkProbe, aMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
-    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetricsSeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
+    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
+    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetrics::SeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
                                     aMessage.GetAverageRss());
 
 exit:

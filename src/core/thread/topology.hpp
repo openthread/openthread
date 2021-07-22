@@ -681,32 +681,32 @@ public:
     void AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss);
 
     /**
-     * This method adds a new LinkMetricsSeriesInfo to the neighbor's list.
+     * This method adds a new LinkMetrics::SeriesInfo to the neighbor's list.
      *
-     * @param[in]    A reference to the new LinkMetricsSeriesInfo.
+     * @param[in]    A reference to the new SeriesInfo.
      *
      */
-    void AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo);
+    void AddForwardTrackingSeriesInfo(LinkMetrics::SeriesInfo &aSeriesInfo);
 
     /**
-     * This method finds a specific LinkMetricsSeriesInfo by Series ID.
+     * This method finds a specific LinkMetrics::SeriesInfo by Series ID.
      *
      * @param[in] aSeriesId    A reference to the Series ID.
      *
-     * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
+     * @returns The pointer to the LinkMetrics::SeriesInfo. `nullptr` if not found.
      *
      */
-    LinkMetricsSeriesInfo *GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
+    LinkMetrics::SeriesInfo *GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
-     * This method removes a specific LinkMetricsSeriesInfo by Series ID.
+     * This method removes a specific LinkMetrics::SeriesInfo by Series ID.
      *
      * @param[in] aSeriesId    A reference to the Series ID to remove.
      *
-     * @returns The pointer to the LinkMetricsSeriesInfo. `nullptr` if not found.
+     * @returns The pointer to the LinkMetrics::SeriesInfo. `nullptr` if not found.
      *
      */
-    LinkMetricsSeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
+    LinkMetrics::SeriesInfo *RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId);
 
     /**
      * This method removes all the Series and return the data structures to the Pool.
@@ -720,7 +720,7 @@ public:
      * @returns Enh-ACK Probing metrics configured.
      *
      */
-    const otLinkMetrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
+    const LinkMetrics::Metrics &GetEnhAckProbingMetrics(void) const { return mEnhAckProbingMetrics; }
 
     /**
      * This method sets the Enh-ACK Probing metrics (this `Neighbor` object is the Probing Subject).
@@ -728,7 +728,7 @@ public:
      * @param[in]  aEnhAckProbingMetrics  The metrics value to set.
      *
      */
-    void SetEnhAckProbingMetrics(const otLinkMetrics &aEnhAckProbingMetrics)
+    void SetEnhAckProbingMetrics(const LinkMetrics::Metrics &aEnhAckProbingMetrics)
     {
         mEnhAckProbingMetrics = aEnhAckProbingMetrics;
     }
@@ -802,13 +802,15 @@ private:
     uint8_t         mVersion;  ///< The MLE version
     LinkQualityInfo mLinkInfo; ///< Link quality info (contains average RSS, link margin and link quality)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    LinkedList<LinkMetricsSeriesInfo> mLinkMetricsSeriesInfoList; ///< A list of Link Metrics Forward Tracking Series
-                                                                  ///< that is being tracked for this neighbor. Note
-                                                                  ///< that this device is the Subject and this
-                                                                  ///< this neighbor is the Initiator.
-    otLinkMetrics mEnhAckProbingMetrics; ///< Metrics configured for Enh-ACK Based Probing at the Probing Subject
-                                         ///< (this neighbor). Note that this device is the Initiator and this neighbor
-                                         ///< is the Subject.
+    // A list of Link Metrics Forward Tracking Series that is being
+    // tracked for this neighbor. Note that this device is the
+    // Subject and this neighbor is the Initiator.
+    LinkedList<LinkMetrics::SeriesInfo> mLinkMetricsSeriesInfoList;
+
+    // Metrics configured for Enh-ACK Based Probing at the Probing
+    // Subject (this neighbor). Note that this device is the Initiator
+    // and this neighbor is the Subject.
+    LinkMetrics::Metrics mEnhAckProbingMetrics;
 #endif
 };
 
