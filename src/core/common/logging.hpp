@@ -2326,6 +2326,74 @@ void otLogOtns(const char *aFormat, ...);
 #endif
 
 /**
+ * @def otDumpCritBr
+ *
+ * This function generates a memory dump with log level critical and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnBr
+ *
+ * This function generates a memory dump with log level warning and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteBr
+ *
+ * This function generates a memory dump with log level note and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoBr
+ *
+ * This function generates a memory dump with log level info and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgBr
+ *
+ * This function generates a memory dump with log level debug and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BR
+#define otDumpCritBr(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpWarnBr(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpNoteBr(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpInfoBr(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpDebgBr(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#else
+#define otDumpCritBr(aId, aBuf, aLength)
+#define otDumpWarnBr(aId, aBuf, aLength)
+#define otDumpNoteBr(aId, aBuf, aLength)
+#define otDumpInfoBr(aId, aBuf, aLength)
+#define otDumpDebgBr(aId, aBuf, aLength)
+#endif
+
+/**
  * @def otDumpCritDns
  *
  * This function generates a memory dump with log level critical and region DNS.
@@ -2475,22 +2543,6 @@ void otLogOtns(const char *aFormat, ...);
 #define otDumpCertMeshCoP(aId, aBuf, aLength) otDump(OT_LOG_LEVEL_NONE, OT_LOG_REGION_MESH_COP, aId, aBuf, aLength)
 #else
 #define otDumpCertMeshCoP(aId, aBuf, aLength)
-#endif
-
-/**
- * @def otDumpCertBr
- *
- * This function generates a memory dump with log level none for the BR certification test.
- *
- * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf         A pointer to the buffer.
- * @param[in]  aLength      Number of bytes to print.
- *
- */
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-#define otDumpCertBr(aId, aBuf, aLength) otDump(OT_LOG_LEVEL_NONE, OT_LOG_REGION_BR, aId, aBuf, aLength)
-#else
-#define otDumpCertBr(aId, aBuf, aLength)
 #endif
 
 /**
