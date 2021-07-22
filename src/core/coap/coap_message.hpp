@@ -134,7 +134,7 @@ enum Code : uint8_t
  * CoAP Option Numbers.
  *
  */
-enum : uint16_t
+enum OptionNumber : uint16_t
 {
     kOptionIfMatch       = OT_COAP_OPTION_IF_MATCH,       ///< If-Match
     kOptionUriHost       = OT_COAP_OPTION_URI_HOST,       ///< Uri-Host
@@ -166,12 +166,9 @@ class Message : public ot::Message
     friend class Option;
 
 public:
-    enum : uint8_t
-    {
-        kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH, ///< Default token length
-        kMaxReceivedUriPath = 32,                           ///< Maximum supported URI path on received messages.
-        kMaxTokenLength     = OT_COAP_MAX_TOKEN_LENGTH,     ///< Maximum token length.
-    };
+    static constexpr uint8_t kDefaultTokenLength = OT_COAP_DEFAULT_TOKEN_LENGTH; ///< Default token length.
+    static constexpr uint8_t kMaxReceivedUriPath = 32;                           ///< Max URI path length on rx msgs.
+    static constexpr uint8_t kMaxTokenLength     = OT_COAP_MAX_TOKEN_LENGTH;     ///< Maximum token length.
 
     typedef ot::Coap::Type Type; ///< CoAP Type.
     typedef ot::Coap::Code Code; ///< CoAP Code.
@@ -180,16 +177,13 @@ public:
      * CoAP Block1/Block2 Types
      *
      */
-    enum BlockType
+    enum BlockType : uint8_t
     {
         kBlockType1 = 1,
         kBlockType2 = 2,
     };
 
-    enum
-    {
-        kBlockSzxBase = 4,
-    };
+    static constexpr uint8_t kBlockSzxBase = 4;
 
     /**
      * This method initializes the CoAP header.
@@ -860,79 +854,67 @@ public:
     const Message *GetNextCoapMessage(void) const { return static_cast<const Message *>(GetNext()); }
 
 private:
-    enum : uint8_t
-    {
-        /*
-         * Header field first byte (RFC 7252).
-         *
-         *    7 6 5 4 3 2 1 0
-         *   +-+-+-+-+-+-+-+-+
-         *   |Ver| T |  TKL  |  (Version, Type and Token Length).
-         *   +-+-+-+-+-+-+-+-+
-         */
-        kVersionOffset     = 6,
-        kVersionMask       = 0x3 << kVersionOffset,
-        kVersion1          = 1,
-        kTypeOffset        = 4,
-        kTypeMask          = 0x3 << kTypeOffset,
-        kTokenLengthOffset = 0,
-        kTokenLengthMask   = 0xf << kTokenLengthOffset,
+    /*
+     * Header field first byte (RFC 7252).
+     *
+     *    7 6 5 4 3 2 1 0
+     *   +-+-+-+-+-+-+-+-+
+     *   |Ver| T |  TKL  |  (Version, Type and Token Length).
+     *   +-+-+-+-+-+-+-+-+
+     */
+    static constexpr uint8_t kVersionOffset     = 6;
+    static constexpr uint8_t kVersionMask       = 0x3 << kVersionOffset;
+    static constexpr uint8_t kVersion1          = 1;
+    static constexpr uint8_t kTypeOffset        = 4;
+    static constexpr uint8_t kTypeMask          = 0x3 << kTypeOffset;
+    static constexpr uint8_t kTokenLengthOffset = 0;
+    static constexpr uint8_t kTokenLengthMask   = 0xf << kTokenLengthOffset;
 
-        /*
-         *
-         * Option Format (RFC 7252).
-         *
-         *      7   6   5   4   3   2   1   0
-         *    +---------------+---------------+
-         *    |  Option Delta | Option Length |   1 byte
-         *    +---------------+---------------+
-         *    /         Option Delta          /   0-2 bytes
-         *    \          (extended)           \
-         *    +-------------------------------+
-         *    /         Option Length         /   0-2 bytes
-         *    \          (extended)           \
-         *    +-------------------------------+
-         *    /         Option Value          /   0 or more bytes
-         *    +-------------------------------+
-         *
-         */
+    /*
+     *
+     * Option Format (RFC 7252).
+     *
+     *      7   6   5   4   3   2   1   0
+     *    +---------------+---------------+
+     *    |  Option Delta | Option Length |   1 byte
+     *    +---------------+---------------+
+     *    /         Option Delta          /   0-2 bytes
+     *    \          (extended)           \
+     *    +-------------------------------+
+     *    /         Option Length         /   0-2 bytes
+     *    \          (extended)           \
+     *    +-------------------------------+
+     *    /         Option Value          /   0 or more bytes
+     *    +-------------------------------+
+     *
+     */
 
-        kOptionDeltaOffset  = 4,
-        kOptionDeltaMask    = 0xf << kOptionDeltaOffset,
-        kOptionLengthOffset = 0,
-        kOptionLengthMask   = 0xf << kOptionLengthOffset,
+    static constexpr uint8_t kOptionDeltaOffset  = 4;
+    static constexpr uint8_t kOptionDeltaMask    = 0xf << kOptionDeltaOffset;
+    static constexpr uint8_t kOptionLengthOffset = 0;
+    static constexpr uint8_t kOptionLengthMask   = 0xf << kOptionLengthOffset;
 
-        kMaxOptionHeaderSize = 5,
+    static constexpr uint8_t kMaxOptionHeaderSize = 5;
 
-        kOption1ByteExtension = 13, // Indicates a one-byte extension.
-        kOption2ByteExtension = 14, // Indicates a two-byte extension.
+    static constexpr uint8_t kOption1ByteExtension = 13; // Indicates a one-byte extension.
+    static constexpr uint8_t kOption2ByteExtension = 14; // Indicates a two-byte extension.
 
-        kPayloadMarker = 0xff,
+    static constexpr uint8_t kPayloadMarker = 0xff;
 
-        kHelpDataAlignment = sizeof(uint16_t), ///< Alignment of help data.
-    };
+    static constexpr uint8_t kHelpDataAlignment = sizeof(uint16_t); // Alignment of help data.
 
-    enum : uint16_t
-    {
-        kMinHeaderLength = 4,
-        kMaxHeaderLength = 512,
+    static constexpr uint16_t kMinHeaderLength = 4;
+    static constexpr uint16_t kMaxHeaderLength = 512;
 
-        kOption1ByteExtensionOffset = 13,  ///< Delta/Length offset as specified (RFC 7252).
-        kOption2ByteExtensionOffset = 269, ///< Delta/Length offset as specified (RFC 7252).
-    };
+    static constexpr uint16_t kOption1ByteExtensionOffset = 13;  // Delta/Length offset as specified (RFC 7252).
+    static constexpr uint16_t kOption2ByteExtensionOffset = 269; // Delta/Length offset as specified (RFC 7252).
 
-    enum
-    {
-        kBlockSzxOffset = 0,
-        kBlockMOffset   = 3,
-        kBlockNumOffset = 4,
-    };
+    static constexpr uint8_t kBlockSzxOffset = 0;
+    static constexpr uint8_t kBlockMOffset   = 3;
+    static constexpr uint8_t kBlockNumOffset = 4;
 
-    enum : uint32_t
-    {
-        kObserveMask = 0xffffff,
-        kBlockNumMax = 0xffff,
-    };
+    static constexpr uint32_t kObserveMask = 0xffffff;
+    static constexpr uint32_t kBlockNumMax = 0xffff;
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     struct BlockWiseData
@@ -1190,11 +1172,11 @@ public:
         uint16_t GetPayloadMessageOffset(void) const { return mNextOptionOffset; }
 
     private:
-        enum : uint16_t
-        {
-            kIteratorDoneLength         = 0xffff, // `mOption.mLength` value to indicate iterator is done.
-            kNextOptionOffsetParseError = 0,      // Special `mNextOptionOffset` value to indicate a parse error.
-        };
+        // `mOption.mLength` value to indicate iterator is done.
+        static constexpr uint16_t kIteratorDoneLength = 0xffff;
+
+        // Special `mNextOptionOffset` value to indicate a parse error.
+        static constexpr uint16_t kNextOptionOffsetParseError = 0;
 
         void MarkAsDone(void) { mOption.mLength = kIteratorDoneLength; }
         void MarkAsParseErrored(void) { MarkAsDone(), mNextOptionOffset = kNextOptionOffsetParseError; }
