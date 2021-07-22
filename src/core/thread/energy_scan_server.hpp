@@ -63,11 +63,8 @@ public:
     explicit EnergyScanServer(Instance &aInstance);
 
 private:
-    enum
-    {
-        kScanDelay   = 1000, ///< SCAN_DELAY (milliseconds)
-        kReportDelay = 500,  ///< Delay before sending a report (milliseconds)
-    };
+    static constexpr uint32_t kScanDelay   = 1000; ///< SCAN_DELAY (milliseconds)
+    static constexpr uint32_t kReportDelay = 500;  ///< Delay before sending a report (milliseconds)
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

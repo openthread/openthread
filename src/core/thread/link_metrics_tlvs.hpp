@@ -669,13 +669,9 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxTypeIdFlagsEnhAck = 3,
-
-        kEnhAckFlagsOffset = 0,
-        kTypeIdFlagsOffset = sizeof(TypeIdFlags),
-    };
+    static constexpr uint8_t  kMaxTypeIdFlagsEnhAck = 3;
+    static constexpr uint8_t  kEnhAckFlagsOffset    = 0;
+    static constexpr uint16_t kTypeIdFlagsOffset    = sizeof(TypeIdFlags);
 
     uint8_t mSubTlvs[sizeof(EnhAckFlags) + sizeof(TypeIdFlags) * kMaxTypeIdFlagsEnhAck];
 } OT_TOOL_PACKED_END;

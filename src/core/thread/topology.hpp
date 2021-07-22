@@ -78,7 +78,7 @@ public:
      * Neighbor link states.
      *
      */
-    enum State
+    enum State : uint8_t
     {
         kStateInvalid,            ///< Neighbor link is invalid
         kStateRestored,           ///< Neighbor is restored from non-volatile memory
@@ -96,7 +96,7 @@ public:
      * Each filter definition accepts a subset of `State` values.
      *
      */
-    enum StateFilter
+    enum StateFilter : uint8_t
     {
         kInStateValid,                     ///< Accept neighbor only in `kStateValid`.
         kInStateValidOrRestoring,          ///< Accept neighbor with `IsStateValidOrRestoring()` being `true`.
@@ -831,10 +831,7 @@ class Child : public Neighbor,
     class AddressIteratorBuilder;
 
 public:
-    enum
-    {
-        kMaxRequestTlvs = 5,
-    };
+    static constexpr uint8_t kMaxRequestTlvs = 5;
 
     /**
      * This class represents diagnostic information for a Thread Child.
@@ -977,10 +974,7 @@ public:
             kEndIterator,
         };
 
-        enum : uint16_t
-        {
-            kMaxIndex = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD,
-        };
+        static constexpr uint16_t kMaxIndex = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD;
 
         AddressIterator(const Child &aChild, IteratorType)
             : mChild(aChild)
@@ -1265,10 +1259,7 @@ private:
 #error OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD should be at least set to 2.
 #endif
 
-    enum
-    {
-        kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1,
-    };
+    static constexpr uint16_t kNumIp6Addresses = OPENTHREAD_CONFIG_MLE_IP_ADDRS_PER_CHILD - 1;
 
     typedef BitVector<kNumIp6Addresses> ChildIp6AddressMask;
 

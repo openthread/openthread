@@ -91,16 +91,13 @@ class Manager;
  *
  */
 
-enum
-{
-    kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT, ///< Initializer for `Iterator` type.
-};
-
 /**
  * This type represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
  *
  */
 typedef otNetworkDataIterator Iterator;
+
+constexpr Iterator kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT; ///< Initializer for `Iterator` type.
 
 /**
  * This class implements Network Data processing.
@@ -111,16 +108,13 @@ class NetworkData : public InstanceLocator
     friend class Service::Manager;
 
 public:
-    enum
-    {
-        kMaxSize = 254, ///< Maximum size of Thread Network Data in bytes.
-    };
+    static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
 
     /**
      * This enumeration specifies the type of Network Data (local or leader).
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTypeLocal,  ///< Local Network Data.
         kTypeLeader, ///< Leader Network Data.
@@ -651,12 +645,9 @@ private:
         void MarkEntryAsNotNew(void) { SetEntryIndex(1); }
 
     private:
-        enum
-        {
-            kTlvPosition    = 0,
-            kSubTlvPosition = 1,
-            kEntryPosition  = 2,
-        };
+        static constexpr uint8_t kTlvPosition    = 0;
+        static constexpr uint8_t kSubTlvPosition = 1;
+        static constexpr uint8_t kEntryPosition  = 2;
 
         uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
         uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }

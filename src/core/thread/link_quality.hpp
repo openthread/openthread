@@ -63,10 +63,7 @@ namespace ot {
 class SuccessRateTracker : public Clearable<SuccessRateTracker>
 {
 public:
-    enum
-    {
-        kMaxRateValue = 0xffff, ///< Indicates value corresponding to maximum (failure/success) rate of 100%.
-    };
+    static constexpr uint16_t kMaxRateValue = 0xffff; ///< Value corresponding to max (failure/success) rate of 100%.
 
     /**
      * This method adds a sample (success or failure) to `SuccessRateTracker`.
@@ -94,10 +91,7 @@ public:
     uint16_t GetSuccessRate(void) const { return kMaxRateValue - mFailureRate; }
 
 private:
-    enum
-    {
-        kDefaultWeight = 64,
-    };
+    static constexpr uint16_t kDefaultWeight = 64;
 
     uint16_t mFailureRate;
 };
@@ -111,10 +105,7 @@ private:
 class RssAverager : public Clearable<RssAverager>
 {
 public:
-    enum
-    {
-        kStringSize = 10, ///< Max chars needed for a string representation of average (@sa ToString()).
-    };
+    static constexpr uint16_t kStringSize = 10; ///< Max string size for average (@sa ToString()).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -184,15 +175,10 @@ private:
      * precision factor of -8.
      *
      */
-
-    enum
-    {
-        kPrecisionBitShift = 3, // Precision multiple for RSS average (1 << PrecisionBitShift).
-        kPrecision         = (1 << kPrecisionBitShift),
-        kPrecisionBitMask  = (kPrecision - 1),
-
-        kCoeffBitShift = 3, // Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
-    };
+    static constexpr uint8_t kPrecisionBitShift = 3; // Precision multiple for RSS average (1 << PrecisionBitShift).
+    static constexpr uint8_t kPrecision         = (1 << kPrecisionBitShift);
+    static constexpr uint8_t kPrecisionBitMask  = (kPrecision - 1);
+    static constexpr uint8_t kCoeffBitShift     = 3; // Coeff for exp weighted filter (1 << kCoeffBitShift).
 
     // Member variables fit into two bytes.
 
@@ -234,13 +220,10 @@ public:
     uint8_t GetCount(void) const { return mCount; }
 
 private:
-    enum
-    {
-        kCoeffBitShift = 3, ///< Coefficient used for exponentially weighted filter (1 << kCoeffBitShift).
-    };
+    static constexpr uint8_t kCoeffBitShift = 3; // Coeff used for exp weighted filter (1 << kCoeffBitShift).
 
-    uint8_t mAverage; ///< The average link quality indicator value.
-    uint8_t mCount;   ///< Number of LQI values added to averager so far.
+    uint8_t mAverage; // The average link quality indicator value.
+    uint8_t mCount;   // Number of LQI values added to averager so far.
 };
 
 /**
@@ -251,10 +234,7 @@ private:
 class LinkQualityInfo : public InstanceLocatorInit
 {
 public:
-    enum
-    {
-        kInfoStringSize = 50, ///< Max chars needed for the info string representation (@sa ToInfoString())
-    };
+    static constexpr uint16_t kInfoStringSize = 50; ///< `InfoString` size (@sa ToInfoString()).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToInfoString()`.
@@ -425,44 +405,35 @@ public:
     static uint8_t ConvertRssToLinkQuality(int8_t aNoiseFloor, int8_t aRss);
 
     /**
-     * This method converts a link quality value to a typical received signal strength value .
-     * @note only for test
+     * This method converts a link quality value to a typical received signal strength value.
+     *
+     * @note only for test.
      *
      * @param[in]  aNoiseFloor   The noise floor value (in dBm).
      * @param[in]  aLinkQuality  The link quality value in [0, 3].
      *
-     * @returns The typical platform rssi.
+     * @returns The typical platform RSSI.
      *
      */
     static int8_t ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLinkQuality);
 
 private:
-    enum
-    {
-        // Constants for obtaining link quality from link margin:
+    // Constants for obtaining link quality from link margin:
 
-        kThreshold3          = 20, ///< Link margin threshold for quality 3 link.
-        kThreshold2          = 10, ///< Link margin threshold for quality 2 link.
-        kThreshold1          = 2,  ///< Link margin threshold for quality 1 link.
-        kHysteresisThreshold = 2,  ///< Link margin hysteresis threshold.
+    static constexpr uint8_t kThreshold3          = 20; // Link margin threshold for quality 3 link.
+    static constexpr uint8_t kThreshold2          = 10; // Link margin threshold for quality 2 link.
+    static constexpr uint8_t kThreshold1          = 2;  // Link margin threshold for quality 1 link.
+    static constexpr uint8_t kHysteresisThreshold = 2;  // Link margin hysteresis threshold.
 
-        // constants for test:
+    static constexpr int8_t kLinkQuality3LinkMargin = 50; // link margin for Link Quality 3 (21 - 255)
+    static constexpr int8_t kLinkQuality2LinkMargin = 15; // link margin for Link Quality 3 (21 - 255)
+    static constexpr int8_t kLinkQuality1LinkMargin = 5;  // link margin for Link Quality 3 (21 - 255)
+    static constexpr int8_t kLinkQuality0LinkMargin = 0;  // link margin for Link Quality 3 (21 - 255)
 
-        kLinkQuality3LinkMargin = 50, ///< link margin for Link Quality 3 (21 - 255)
-        kLinkQuality2LinkMargin = 15, ///< link margin for Link Quality 3 (21 - 255)
-        kLinkQuality1LinkMargin = 5,  ///< link margin for Link Quality 3 (21 - 255)
-        kLinkQuality0LinkMargin = 0,  ///< link margin for Link Quality 3 (21 - 255)
-
-        kNoLinkQuality = 0xff, // Used to indicate that there is no previous/last link quality.
-    };
+    static constexpr uint8_t kNoLinkQuality = 0xff; // Indicate that there is no previous/last link quality.
 
     void SetLinkQuality(uint8_t aLinkQuality) { mLinkQuality = aLinkQuality; }
 
-    /* Static private method to calculate the link quality from a given link margin while taking into account the last
-     * link quality value and adding the hysteresis value to the thresholds. If there is no previous value for link
-     * quality, the constant kNoLinkQuality should be passed as the second argument.
-     *
-     */
     static uint8_t CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality);
 
     RssAverager mRssAverager;

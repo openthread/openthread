@@ -304,10 +304,7 @@ public:
     bool HasSleepyChildWithAddress(const Ip6::Address &aIp6Address) const;
 
 private:
-    enum
-    {
-        kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
-    };
+    static constexpr uint16_t kMaxChildren = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
 
     class IteratorBuilder : public InstanceLocator
     {

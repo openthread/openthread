@@ -54,14 +54,11 @@ namespace ot {
 class AnnounceSenderBase : public InstanceLocator, private NonCopyable
 {
 protected:
-    enum : uint8_t
-    {
-        /**
-         * This constant defines the special channel value to start from the first channel in the channel mask.
-         *
-         */
-        kChannelIteratorFirst = Mac::ChannelMask::kChannelIteratorFirst,
-    };
+    /**
+     * This constant defines the special channel value to start from the first channel in the channel mask.
+     *
+     */
+    static constexpr uint8_t kChannelIteratorFirst = Mac::ChannelMask::kChannelIteratorFirst;
 
     /**
      * This constructor initializes the object.
@@ -227,37 +224,31 @@ public:
     void UpdateOnReceivedAnnounce(void);
 
 private:
-    enum : uint32_t
-    {
-        // Specifies the time interval (in milliseconds) between
-        // `AnnounceSender` transmit cycles. With in a cycle, device
-        // sends MLE Announcements on all channels from Active
-        // Dataset's channel mask.
-        kInterval = OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL,
+    // Specifies the time interval (in milliseconds) between
+    // `AnnounceSender` transmit cycles. Within a cycle, device
+    // sends MLE Announcements on all channels from Active
+    // Dataset's channel mask.
+    static constexpr uint32_t kInterval = OPENTHREAD_CONFIG_ANNOUNCE_SENDER_INTERVAL;
 
-        // Specifies the sub-interval (in millisecond) within a cycle
-        // to send MLE announcement messages. We use half of the cycle
-        // interval length for transmission. This ensures that the
-        // transmissions are finished before device needs to make a
-        // decision about the next cycle. This time is divided by the
-        // number of channels to determine the time between two
-        // successive Announce tx (on different channels).
-        kTxInterval = (kInterval / 2 + 1),
-    };
+    // Specifies the sub-interval (in millisecond) within a cycle
+    // to send MLE announcement messages. We use half of the cycle
+    // interval length for transmission. This ensures that the
+    // transmissions are finished before device needs to make a
+    // decision about the next cycle. This time is divided by the
+    // number of channels to determine the time between two
+    // successive Announce tx (on different channels).
+    static constexpr uint32_t kTxInterval = (kInterval / 2 + 1);
 
-    enum : uint16_t
-    {
-        // Specifies the number of MLE Announcement messages that the
-        // device must receive within a cycle interval to skip sending the
-        // Announcement itself. This is used as `mTrickleTimer` redundancy
-        // constant in `AnnounceSender`.
-        kRedundancyConstant = OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT,
+    // Specifies the number of MLE Announcement messages that the
+    // device must receive within a cycle interval to skip sending the
+    // Announcement itself. This is used as `mTrickleTimer` redundancy
+    // constant in `AnnounceSender`.
+    static constexpr uint16_t kRedundancyConstant = OPENTHREAD_CONFIG_ANNOUNCE_SENDER_REDUNDANCY_CONSTANT;
 
-        // Jitter interval (in milliseconds) applied to the period
-        // between any two successive MLE Announcement transmissions
-        // (possibly) on different channels.
-        kMaxJitter = OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL,
-    };
+    // Jitter interval (in milliseconds) applied to the period
+    // between any two successive MLE Announcement transmissions
+    // (possibly) on different channels.
+    static constexpr uint16_t kMaxJitter = OPENTHREAD_CONFIG_ANNOUNCE_SENDER_JITTER_INTERVAL;
 
     void        Stop(void);
     static void HandleTimer(Timer &aTimer);

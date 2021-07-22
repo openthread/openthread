@@ -66,16 +66,13 @@ namespace NetworkDiagnostic {
 class NetworkDiagnostic : public InstanceLocator, private NonCopyable
 {
 public:
-    enum
-    {
-        kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT, ///< Initializer value for Iterator.
-    };
-
     /**
      * This type represents an iterator used to iterate through Network Diagnostic TLVs from `GetNextDiagTlv()`.
      *
      */
     typedef otNetworkDiagIterator Iterator;
+
+    static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
 
     /**
      * This constructor initializes the object.

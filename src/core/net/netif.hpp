@@ -256,7 +256,7 @@ private:
     }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    MlrState mMlrState : 2;
+    MlrState mMlrState;
 #endif
 };
 
