@@ -120,14 +120,11 @@ public:
     static const TxParameters &GetDefault(void) { return static_cast<const TxParameters &>(kDefaultTxParameters); }
 
 private:
-    enum
-    {
-        kDefaultAckTimeout                 = 2000, // in millisecond
-        kDefaultAckRandomFactorNumerator   = 3,
-        kDefaultAckRandomFactorDenominator = 2,
-        kDefaultMaxRetransmit              = 4,
-        kDefaultMaxLatency                 = 100000, // in millisecond
-    };
+    static constexpr uint32_t kDefaultAckTimeout                 = 2000; // in msec
+    static constexpr uint8_t  kDefaultAckRandomFactorNumerator   = 3;
+    static constexpr uint8_t  kDefaultAckRandomFactorDenominator = 2;
+    static constexpr uint8_t  kDefaultMaxRetransmit              = 4;
+    static constexpr uint32_t kDefaultMaxLatency                 = 100000; // in msec
 
     uint32_t CalculateInitialRetransmissionTimeout(void) const;
     uint32_t CalculateExchangeLifetime(void) const;
@@ -330,10 +327,7 @@ public:
     const MessageQueue &GetResponses(void) const { return mQueue; }
 
 private:
-    enum
-    {
-        kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES,
-    };
+    static constexpr uint16_t kMaxCachedResponses = OPENTHREAD_CONFIG_COAP_SERVER_MAX_CACHED_RESPONSES;
 
     struct ResponseMetadata
     {
@@ -365,9 +359,7 @@ class CoapBase : public InstanceLocator, private NonCopyable
 
 public:
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum {
-        kMaxBlockLength = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH,
-    };
+    static constexpr uint16_t kMaxBlockLength = OPENTHREAD_CONFIG_COAP_MAX_BLOCK_LENGTH;
 #endif
 
     /**
