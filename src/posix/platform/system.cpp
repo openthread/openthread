@@ -38,6 +38,7 @@
 #include <assert.h>
 
 #include <openthread-core-config.h>
+#include <openthread/border_agent.h>
 #include <openthread/border_router.h>
 #include <openthread/heap.h>
 #include <openthread/tasklet.h>
@@ -151,6 +152,10 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     ot::Posix::Daemon::Get().Enable(instance);
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    otBorderAgentStart(instance);
 #endif
     return instance;
 }
