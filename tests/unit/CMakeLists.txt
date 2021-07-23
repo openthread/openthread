@@ -88,6 +88,25 @@ target_link_libraries(ot-test-aes
 
 add_test(NAME ot-test-aes COMMAND ot-test-aes)
 
+add_executable(ot-test-array
+    test_array.cpp
+)
+
+target_include_directories(ot-test-array
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-array
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-array
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
 add_executable(ot-test-child
     test_child.cpp
 )
