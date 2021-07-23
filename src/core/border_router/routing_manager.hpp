@@ -51,6 +51,7 @@
 #include <openthread/platform/infra_if.h>
 
 #include "border_router/router_advertisement.hpp"
+#include "common/array.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
@@ -207,6 +208,9 @@ private:
         static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
     };
 
+    typedef Array<Ip6::Prefix, kMaxOmrPrefixNum>           OmrPrefixArray;
+    typedef Array<ExternalPrefix, kMaxDiscoveredPrefixNum> ExternalPrefixArray;
+
     void  EvaluateState(void);
     void  Start(void);
     void  Stop(void);
@@ -218,18 +222,16 @@ private:
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
-    void    EvaluateRoutingPolicy(void);
-    void    StartRoutingPolicyEvaluationDelay(void);
-    uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum);
-    Error   PublishLocalOmrPrefix(void);
-    void    UnpublishLocalOmrPrefix(void);
-    Error   AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
-    void    RemoveExternalRoute(const Ip6::Prefix &aPrefix);
-    void    StartRouterSolicitationDelay(void);
-    Error   SendRouterSolicitation(void);
-    void    SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
-                                    uint8_t            aNewOmrPrefixNum,
-                                    const Ip6::Prefix *aNewOnLinkPrefix);
+    void  EvaluateRoutingPolicy(void);
+    void  StartRoutingPolicyEvaluationDelay(void);
+    void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
+    Error PublishLocalOmrPrefix(void);
+    void  UnpublishLocalOmrPrefix(void);
+    Error AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
+    void  RemoveExternalRoute(const Ip6::Prefix &aPrefix);
+    void  StartRouterSolicitationDelay(void);
+    Error SendRouterSolicitation(void);
+    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);
 
     static void HandleRouterAdvertisementTimer(Timer &aTimer);
     void        HandleRouterAdvertisementTimer(void);
@@ -260,7 +262,6 @@ private:
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
-    static bool ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
 
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;
@@ -287,8 +288,7 @@ private:
     // the smallest OMR prefix sorted by method IsPrefixSmallerThan. If
     // manually configured OMR prefixes exist, they will also be
     // advertised on infra link.
-    Ip6::Prefix mAdvertisedOmrPrefixes[kMaxOmrPrefixNum];
-    uint8_t     mAdvertisedOmrPrefixNum;
+    OmrPrefixArray mAdvertisedOmrPrefixes;
 
     // The on-link prefix loaded from local persistent storage or
     // randomly generated if non is found in persistent storage.
@@ -301,8 +301,7 @@ private:
     // prefixes consist of on-link prefix(es) and OMR prefixes
     // advertised by BRs in another Thread Network which is connected to
     // the same infra link.
-    ExternalPrefix mDiscoveredPrefixes[kMaxDiscoveredPrefixNum];
-    uint8_t        mDiscoveredPrefixNum;
+    ExternalPrefixArray mDiscoveredPrefixes;
 
     // The RA header and parameters for the infra interface.
     // This value is initialized with `RouterAdvMessage::SetToDefault`
