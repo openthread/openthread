@@ -2807,11 +2807,9 @@ class LinuxHost():
 
         # When hostname is unspecified, extract hostname from browse result
         if host_name is None:
-            for line in self.bash(f'cat /tmp/{name}',
-                                  encoding='unicode_escape'):
+            for line in self.bash(f'cat /tmp/{name}', encoding='unicode_escape'):
                 elements = line.split()
-                if len(elements) >= 6 and elements[
-                    0] == f'{instance}.{name}' and elements[1] == 'SRV':
+                if len(elements) >= 6 and elements[0] == f'{instance}.{name}' and elements[1] == 'SRV':
                     host_name = elements[5].split('.')[0]
                     break
 
@@ -2823,8 +2821,7 @@ class LinuxHost():
         addresses = []
         service = {}
 
-        logging.debug(
-            self.bash(f'cat /tmp/{host_name}', encoding='unicode_escape'))
+        logging.debug(self.bash(f'cat /tmp/{host_name}', encoding='unicode_escape'))
         logging.debug(self.bash(f'cat /tmp/{name}', encoding='unicode_escape'))
 
         # example output in the host file:
@@ -2836,8 +2833,7 @@ class LinuxHost():
             fullname = f'{host_name}.local.'
             if fullname not in elements:
                 continue
-            addresses.append(
-                elements[elements.index(fullname) + 1].split('%')[0])
+            addresses.append(elements[elements.index(fullname) + 1].split('%')[0])
 
         logging.debug(f'addresses of {host_name}: {addresses}')
 

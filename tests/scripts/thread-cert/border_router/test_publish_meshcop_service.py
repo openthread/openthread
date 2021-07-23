@@ -102,8 +102,7 @@ class PublishMeshCopService(thread_cert.TestCase):
 
     def check_meshcop_service(self):
         node = self.nodes[BR]
-        data = self.nodes[HOST].discover_mdns_service(node.get_network_name(),
-                                                      '_meshcop._udp', None)
+        data = self.nodes[HOST].discover_mdns_service(node.get_network_name(), '_meshcop._udp', None)
         sb_data = data["txt"]["sb"].encode("raw_unicode_escape")
         state_bitmap = int.from_bytes(sb_data, byteorder='big')
         logging.info(bin(state_bitmap))
