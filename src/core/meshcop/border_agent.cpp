@@ -305,15 +305,6 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled());
 #endif
 
-    if (Get<Mle::MleRouter>().IsAttached())
-    {
-        Start();
-    }
-    else
-    {
-        Stop();
-    }
-
 exit:
     return;
 }
