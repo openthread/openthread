@@ -32,7 +32,7 @@ import re
 import threading
 import time
 from abc import abstractmethod
-from typing import Union, List, Pattern
+from typing import Any, Callable, Optional, Union, List, Pattern
 
 from .connectors import OtCliHandler
 from .errors import ExpectLineTimeoutError, CommandError
@@ -66,6 +66,16 @@ class OTCommandHandler:
         """
         pass
 
+    @abstractmethod
+    def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
+        """Method set_line_read_callback should register a callback that will be called for every line
+        output by the OT CLI.
+
+        This is useful for handling asynchronous command output while still being able to execute
+        other commands.
+        """
+        pass
+
 
 class OtCliCommandRunner(OTCommandHandler):
     __PATTERN_COMMAND_DONE_OR_ERROR = re.compile(
@@ -88,6 +98,8 @@ class OtCliCommandRunner(OTCommandHandler):
         self.__otcli_reader = threading.Thread(target=self.__otcli_read_routine)
         self.__otcli_reader.setDaemon(True)
         self.__otcli_reader.start()
+
+        self.__line_read_callback = None
 
     def __repr__(self):
         return repr(self.__otcli)
@@ -126,6 +138,9 @@ class OtCliCommandRunner(OTCommandHandler):
     def close(self):
         self.__should_close.set()
         self.__otcli.close()
+
+    def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
+        self.__line_read_callback = callback
 
     #
     # Private methods
@@ -169,6 +184,9 @@ class OtCliCommandRunner(OTCommandHandler):
             if line.startswith('> '):
                 line = line[2:]
 
+            if self.__line_read_callback is not None:
+                self.__line_read_callback(line)
+
             logging.debug('%s: %s', self.__otcli, line)
 
             if not OtCliCommandRunner.__PATTERN_LOG_LINE.match(line):
@@ -199,6 +217,8 @@ class OtbrSshCommandRunner(OTCommandHandler):
             else:
                 raise
 
+        self.__line_read_callback = None
+
     def __repr__(self):
         return f'{self.__host}:{self.__port}'
 
@@ -214,6 +234,10 @@ class OtbrSshCommandRunner(OTCommandHandler):
 
         output = [l.rstrip('\r\n') for l in cmd_out.readlines()]
 
+        if self.__line_read_callback is not None:
+            for line in output:
+                self.__line_read_callback(line)
+
         if cmd in ('reset', 'factoryreset'):
             self.wait(3)
 
@@ -225,3 +249,7 @@ class OtbrSshCommandRunner(OTCommandHandler):
     def wait(self, duration: float) -> List[str]:
         time.sleep(duration)
         return []
+
+    def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
+        self.__line_read_callback = callback
+
