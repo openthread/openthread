@@ -47,6 +47,7 @@
 #include "common/timer.hpp"
 #include "mac/mac_types.hpp"
 #include "net/ip6.hpp"
+#include "radio/radio.hpp"
 #include "radio/trel_link.hpp"
 #include "thread/csl_tx_scheduler.hpp"
 #include "thread/indirect_sender.hpp"
@@ -1341,7 +1342,14 @@ public:
      * @param[in] aInstance  A reference to OpenThread instance.
      *
      */
-    void Init(Instance &aInstance) { Neighbor::Init(aInstance); }
+    void Init(Instance &aInstance)
+    {
+        Neighbor::Init(aInstance);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+        SetCslClockAccuracy(kCslWorstCrystalPpm);
+        SetCslClockUncertianity(kCslWorstUncertainty);
+#endif
+    }
 
     /**
      * This method clears the router entry.
@@ -1397,6 +1405,40 @@ public:
      */
     void SetCost(uint8_t aCost) { mCost = aCost; }
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    /**
+     * This method get the CSL clock accuracy of this router.
+     *
+     * @returns The CSL clock accuracy of this router.
+     *
+     */
+    uint8_t GetCslClockAccuracy(void) const { return mCslClockAccuracy; }
+
+    /**
+     * This method sets the CSL clock accuracy of this router.
+     *
+     * @param[in]  aCost  The CSL clock accuracy of this router.
+     *
+     */
+    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
+
+    /**
+     * This method get the CSL clock uncertianity of this router.
+     *
+     * @returns The CSL clock uncertianity of this router.
+     *
+     */
+    uint8_t GetCslClockUncertianity(void) const { return mCslClockUncertianity; }
+
+    /**
+     * This method sets the CSL clock uncertianity of this router.
+     *
+     * @param[in]  aCost  The CSL clock uncertianity of this router.
+     *
+     */
+    void SetCslClockUncertianity(uint8_t aCslClockUncertianity) { mCslClockUncertianity = aCslClockUncertianity; }
+#endif
+
 private:
     uint8_t mNextHop;            ///< The next hop towards this router
     uint8_t mLinkQualityOut : 2; ///< The link quality out for this router
@@ -1405,6 +1447,10 @@ private:
     uint8_t mCost; ///< The cost to this router via neighbor router
 #else
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    uint8_t mCslClockAccuracy;     ///< Crystal accuracy, in units of ± ppm.
+    uint8_t mCslClockUncertianity; ///< Scheduling uncertainty, in units of 10 us.
 #endif
 };
 

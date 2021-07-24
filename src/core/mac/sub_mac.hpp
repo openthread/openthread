@@ -442,6 +442,38 @@ public:
      */
     void SetCslPeriod(uint16_t aPeriod);
 
+    /**
+     * This method returns CSL parent clock accuracy, in ± ppm.
+     *
+     * @retval CSL parent clock accuracy.
+     *
+     */
+    uint8_t GetCslParentClockAccuracy(void) const { return mCslParentAccuracy; }
+
+    /**
+     * This method sets CSL parent clock accuracy, in ± ppm.
+     *
+     * @param[in] aCslParentAccuracy CSL parent clock accuracy, in ± ppm.
+     *
+     */
+    void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy) { mCslParentAccuracy = aCslParentAccuracy; }
+
+    /**
+     * This method sets CSL parent uncertanity, in ±10 us units.
+     *
+     * @retval CSL parent uncertanity, in ±10 us units.
+     *
+     */
+    uint8_t GetCslParentUncertanity(void) const { return mCslParentUncert; }
+
+    /**
+     * This method returns CSL parent uncertanity, in ±10 us units.
+     *
+     * @param[in] aCslParentUncert  CSL parent uncertanity, in ±10 us units.
+     *
+     */
+    void SetCslParentUncertanity(uint8_t aCslParentUncert) { mCslParentUncert = aCslParentUncert; }
+
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
     /**
@@ -544,13 +576,6 @@ private:
                                                       ///< than expected sample window. The time is in unit of
                                                       ///< microseconds.
     };
-
-    enum : uint8_t{
-        kCslWorstCrystalPpm  = 255, ///< Worst possible crystal accuracy, in units of ± ppm.
-        kCslWorstUncertainty = 255, ///< Worst possible scheduling uncertainty, in units of 100 us.
-        kUsPerUncertUnit     = 100, ///< Number of microseconds by uncertainty unit.
-    };
-
     /**
      * CSL state, always updated by `mCslTimer`.
      *
@@ -633,10 +658,10 @@ private:
     uint8_t mIsCslChannelSpecified : 1; ///< Indicates whether or not the CSL channel was explicitly specified by
                                         ///< the user.
 
-    TimeMicro mCslSampleTime;   ///< The CSL sample time of the current period.
-    TimeMicro mCslLastSync;     ///< The timestamp of the last successful CSL syncronization.
-    uint8_t   mCslParentDrift;  ///< Drift of timer used for scheduling CSL transmission by the parent, in ± ppm.
-    uint8_t   mCslParentUncert; ///< Uncertainty of the scheduling CSL of transmission by the parent, in ±100 us units.
+    TimeMicro mCslSampleTime;     ///< The CSL sample time of the current period.
+    TimeMicro mCslLastSync;       ///< The timestamp of the last successful CSL syncronization.
+    uint8_t   mCslParentAccuracy; ///< Drift of timer used for scheduling CSL transmission by the parent, in ± ppm.
+    uint8_t   mCslParentUncert; ///< Uncertainty of the scheduling CSL of transmission by the parent, in ±10 us units.
 
     CslState mCslState;
 

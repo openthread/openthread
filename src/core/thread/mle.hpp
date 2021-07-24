@@ -745,6 +745,17 @@ public:
      *
      */
     void SetCslTimeout(uint32_t aTimeout);
+
+    /**
+     * This method calculates CSL metric of parent.
+     *
+     * @param[in] aCslClockAccuracy The CSL Clock Accuracy.
+     * @param[in] aCslUncertainty The CSL Uncertainty.
+     *
+     * @returns CSL metric.
+     */
+    uint64_t CalcParentCslMetric(uint8_t aCslClockAccuracy, uint8_t aCslUncertainty);
+
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 protected:
@@ -1299,6 +1310,18 @@ protected:
     Error AppendCslTimeout(Message &aMessage);
 #endif // (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE) || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    /**
+     * This method appends a CSL Clock Accuracy TLV to a message.
+     *
+     * @param[in]  aMessage  A reference to the message.
+     *
+     * @retval kErrorNone     Successfully appended the CSL Accuracy TLV.
+     * @retval kErrorNoBufs   Insufficient buffers available to append the CSL Accuracy TLV.
+     */
+    Error AppendCslClockAccuracy(Message &aMessage);
+#endif
+
     /**
      * This method appends a Active Timestamp TLV to a message.
      *
@@ -1794,7 +1817,9 @@ private:
                         uint8_t                aLinkQuality,
                         uint8_t                aLinkMargin,
                         const ConnectivityTlv &aConnectivityTlv,
-                        uint8_t                aVersion);
+                        uint8_t                aVersion,
+                        uint8_t                aCslClockAccuracy,
+                        uint8_t                aCslUncertainty);
     bool IsNetworkDataNewer(const LeaderData &aLeaderData);
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
