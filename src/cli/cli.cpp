@@ -619,7 +619,7 @@ otError Interpreter::ProcessDua(Arg aArgs[])
 
             if (iid != nullptr)
             {
-                OutputBytes(iid->mFields.m8, sizeof(otIp6InterfaceIdentifier));
+                OutputBytes(iid->mFields.m8);
                 OutputLine("");
             }
         }
@@ -1724,7 +1724,7 @@ otError Interpreter::ProcessEui64(Arg aArgs[])
     VerifyOrExit(aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
     otLinkGetFactoryAssignedIeeeEui64(mInstance, &extAddress);
-    OutputBytes(extAddress.m8, OT_EXT_ADDRESS_SIZE);
+    OutputExtAddress(extAddress);
     OutputLine("");
 
 exit:
@@ -1737,8 +1737,7 @@ otError Interpreter::ProcessExtAddress(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        const uint8_t *extAddress = reinterpret_cast<const uint8_t *>(otLinkGetExtendedAddress(mInstance));
-        OutputBytes(extAddress, OT_EXT_ADDRESS_SIZE);
+        OutputExtAddress(*otLinkGetExtendedAddress(mInstance));
         OutputLine("");
     }
     else
@@ -1797,8 +1796,7 @@ otError Interpreter::ProcessExtPanId(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        const uint8_t *extPanId = reinterpret_cast<const uint8_t *>(otThreadGetExtendedPanId(mInstance));
-        OutputBytes(extPanId, OT_EXT_PAN_ID_SIZE);
+        OutputBytes(otThreadGetExtendedPanId(mInstance)->m8);
         OutputLine("");
     }
     else
