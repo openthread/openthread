@@ -38,19 +38,38 @@
 
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
+#include "common/numeric_limits.hpp"
+#include "common/type_traits.hpp"
 
 namespace ot {
 
 /**
  * This template class represents an array of elements with a fixed max size.
  *
- * @tparam Type        The array item type.
+ * @tparam Type        The array element type.
  * @tparam kMaxSize    Specifies the max array size (maximum number of elements in the array).
+ * @tparam SizeType    The type to be used for array size, length, and index. If not specified, a default `uint` type
+ *                     is determined based on `kMaxSize`, i.e., if `kMaxSize <= 255` then `uint8_t` will be used,
+ *                     otherwise `uint16_t` will be used.
  *
  */
-template <class Type, uint16_t kMaxSize> class Array
+template <typename Type,
+          uint16_t kMaxSize,
+          typename SizeType =
+              typename TypeTraits::Conditional<kMaxSize <= NumericLimits<uint8_t>::kMax, uint8_t, uint16_t>::Type>
+class Array
 {
+    static_assert(kMaxSize != 0, "Array `kMaxSize` cannot be zero");
+
 public:
+    /**
+     * This type represents the length or index in array.
+     *
+     * It is typically either `uint8_t` or `uint16_t` (determined based on the maximum array size (`kMaxSize`)).
+     *
+     */
+    typedef SizeType IndexType;
+
     /**
      * This constructor initializes the array as empty.
      *
@@ -93,7 +112,7 @@ public:
      * @retval FALSE when array is not full.
      *
      */
-    bool IsFull(void) const { return (mLength == kMaxSize); }
+    bool IsFull(void) const { return (mLength == GetMaxSize()); }
 
     /**
      * This method returns the maximum array size (max number of elements).
@@ -101,7 +120,7 @@ public:
      * @returns The maximum array size (max number of elements that can be added to the array).
      *
      */
-    uint16_t GetMaxSize(void) const { return kMaxSize; }
+    IndexType GetMaxSize(void) const { return static_cast<IndexType>(kMaxSize); }
 
     /**
      * This method returns the current length of array (number of elements).
@@ -109,7 +128,7 @@ public:
      * @returns The current array length.
      *
      */
-    uint16_t GetLength(void) const { return mLength; }
+    IndexType GetLength(void) const { return mLength; }
 
     /**
      * This method overloads the `[]` operator to get the element at a given index.
@@ -121,7 +140,7 @@ public:
      * @returns A reference to the element in array at @p aIndex.
      *
      */
-    Type &operator[](uint16_t aIndex) { return mElements[aIndex]; }
+    Type &operator[](IndexType aIndex) { return mElements[aIndex]; }
 
     /**
      * This method overloads the `[]` operator to get the element at a given index.
@@ -133,7 +152,7 @@ public:
      * @returns A reference to the element in array at @p aIndex.
      *
      */
-    const Type &operator[](uint16_t aIndex) const { return mElements[aIndex]; }
+    const Type &operator[](IndexType aIndex) const { return mElements[aIndex]; }
 
     /**
      * This method gets a pointer to the element at a given index.
@@ -145,7 +164,7 @@ public:
      * @returns A pointer to element in array at @p aIndex or `nullptr` if @p aIndex is not valid.
      *
      */
-    Type *At(uint16_t aIndex) { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
+    Type *At(IndexType aIndex) { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
 
     /**
      * This method gets a pointer to the element at a given index.
@@ -157,7 +176,7 @@ public:
      * @returns A pointer to element in array at @p aIndex or `nullptr` if @p aIndex is not valid.
      *
      */
-    const Type *At(uint16_t aIndex) const { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
+    const Type *At(IndexType aIndex) const { return (aIndex < mLength) ? &mElements[aIndex] : nullptr; }
 
     /**
      * This method gets a pointer to the element at the front of the array (first element).
@@ -233,7 +252,7 @@ public:
      * @returns The index of @p aElement in the array.
      *
      */
-    uint16_t IndexOf(const Type &aElement) const { return static_cast<uint16_t>(&aElement - &mElements[0]); }
+    IndexType IndexOf(const Type &aElement) const { return static_cast<IndexType>(&aElement - &mElements[0]); }
 
     /**
      * This method finds the first match of a given entry in the array.
@@ -317,8 +336,8 @@ public:
     const Type *end(void) const { return &mElements[mLength]; }
 
 private:
-    Type     mElements[kMaxSize];
-    uint16_t mLength;
+    Type      mElements[kMaxSize];
+    IndexType mLength;
 };
 
 } // namespace ot

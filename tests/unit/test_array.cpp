@@ -36,6 +36,7 @@
 #include "common/array.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/type_traits.hpp"
 
 #include "test_util.h"
 
@@ -47,7 +48,7 @@ void TestArray(void)
     constexpr uint16_t kStartValue = 100;
 
     Array<uint16_t, kMaxSize> array;
-    uint16_t                  index;
+    uint8_t                   index;
     uint16_t                  seed;
 
     // All methods after constructor
@@ -62,7 +63,7 @@ void TestArray(void)
 
     seed = kStartValue;
 
-    for (uint16_t len = 1; len <= kMaxSize; len++)
+    for (uint8_t len = 1; len <= kMaxSize; len++)
     {
         for (uint8_t iter = 0; iter < 2; iter++)
         {
@@ -146,7 +147,7 @@ void TestArray(void)
     VerifyOrQuit(array.PushBack(0) == kErrorNoBufs);
     VerifyOrQuit(array.PushBack() == nullptr);
 
-    for (uint16_t len = kMaxSize; len >= 1; len--)
+    for (uint8_t len = kMaxSize; len >= 1; len--)
     {
         uint16_t *entry;
 
@@ -244,12 +245,25 @@ void TestArrayCopy(void)
     }
 }
 
+void TestArrayIndexType(void)
+{
+    typedef Array<uint16_t, 255>           Array1;
+    typedef Array<uint16_t, 256>           Array2;
+    typedef Array<uint16_t, 100, uint16_t> Array3;
+
+    static_assert(TypeTraits::IsSame<Array1::IndexType, uint8_t>::kValue, "Array1::IndexType is incorrect");
+    static_assert(TypeTraits::IsSame<Array2::IndexType, uint16_t>::kValue, "Array2::IndexType is incorrect");
+    static_assert(TypeTraits::IsSame<Array3::IndexType, uint16_t>::kValue, "Array3::IndexType is incorrect");
+}
+
 } // namespace ot
 
 int main(void)
 {
     ot::TestArray();
     ot::TestArrayCopy();
+    ot::TestArrayIndexType();
+
     printf("All tests passed\n");
     return 0;
 }
