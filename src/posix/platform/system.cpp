@@ -154,7 +154,7 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
     ot::Posix::Daemon::Get().Enable(instance);
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     otBorderAgentStart(instance);
 #endif
     return instance;
