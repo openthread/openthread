@@ -54,8 +54,6 @@
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/udp.hpp"
 
-static otInstance *sInstance = nullptr;
-
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
 {
@@ -159,13 +157,14 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     otBorderAgentStart(instance);
 #endif
-    return sInstance = instance;
+    return instance;
 }
 
-void otSysDeinit(void)
+void otSysDeinit(otInstance *aInstance)
 {
+    OT_UNUSED_VARIABLE(aInstance);
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    otBorderAgentStop(sInstance);
+    otBorderAgentStop(aInstance);
 #endif
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
     ot::Posix::Daemon::Get().Disable();
