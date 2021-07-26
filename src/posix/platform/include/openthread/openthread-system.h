@@ -99,10 +99,8 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when deinitialization of OpenThread's drivers is most appropriate.
  *
- * @param[in]   aInstance   The OpenThread instance structure.
- *
  */
-void otSysDeinit(otInstance *aInstance);
+void otSysDeinit(void);
 
 /**
  * This structure represents a context for a select() based mainloop.

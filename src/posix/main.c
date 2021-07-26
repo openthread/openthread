@@ -287,13 +287,6 @@ static void ParseArg(int aArgCount, char *aArgVector[], PosixConfig *aConfig)
     }
 }
 
-static otInstance *sInstance = NULL;
-
-static void SysDeinit()
-{
-    otSysDeinit(sInstance);
-}
-
 static otInstance *InitInstance(PosixConfig *aConfig)
 {
     otInstance *instance = NULL;
@@ -302,10 +295,10 @@ static otInstance *InitInstance(PosixConfig *aConfig)
     syslog(LOG_INFO, "Thread version: %hu", otThreadGetVersion());
     IgnoreError(otLoggingSetLevel(aConfig->mLogLevel));
 
-    sInstance = instance = otSysInit(&aConfig->mPlatformConfig);
+    instance = otSysInit(&aConfig->mPlatformConfig);
     syslog(LOG_INFO, "Thread interface: %s", otSysGetThreadNetifName());
 
-    atexit(SysDeinit);
+    atexit(otSysDeinit);
 
     if (aConfig->mPrintRadioVersion)
     {
@@ -334,7 +327,7 @@ void otPlatReset(otInstance *aInstance)
     gPlatResetReason = OT_PLAT_RESET_REASON_SOFTWARE;
 
     otInstanceFinalize(aInstance);
-    otSysDeinit(aInstance);
+    otSysDeinit();
 
     longjmp(gResetJump, 1);
     assert(false);
