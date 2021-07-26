@@ -42,13 +42,19 @@
 #include "common/new.hpp"
 #include "radio/radio.hpp"
 
+#if !defined(OPENTHREAD_BUILD_DATETIME)
 #ifdef __ANDROID__
 #ifdef OPENTHREAD_ENABLE_ANDROID_NDK
 #include <sys/system_properties.h>
 #else
 #include <cutils/properties.h>
 #endif
+#else // __ANDROID__
+#if defined(__DATE__)
+#define OPENTHREAD_BUILD_DATETIME "; " __DATE__ " " __TIME__
 #endif
+#endif // __ANDROID__
+#endif // !defined(OPENTHREAD_BUILD_DATETIME)
 
 using namespace ot;
 
@@ -142,7 +148,7 @@ const char *otGetVersionString(void)
      * image will be undefined and may change.
      */
 
-#ifdef __ANDROID__
+#if !defined(OPENTHREAD_BUILD_DATETIME) && defined(__ANDROID__)
 
 #ifdef OPENTHREAD_ENABLE_ANDROID_NDK
     static char sVersion[100 + PROP_VALUE_MAX];
@@ -166,11 +172,11 @@ const char *otGetVersionString(void)
     static
 #endif
     const char sVersion[] = PACKAGE_NAME "/" PACKAGE_VERSION "; " OPENTHREAD_CONFIG_PLATFORM_INFO
-#if defined(__DATE__)
-                                         "; " __DATE__ " " __TIME__
+#ifdef OPENTHREAD_BUILD_DATETIME
+        OPENTHREAD_BUILD_DATETIME
 #endif
 #ifdef PLATFORM_VERSION_ATTR_SUFFIX
-                                             PLATFORM_VERSION_ATTR_SUFFIX
+            PLATFORM_VERSION_ATTR_SUFFIX
 #endif
         ; // Trailing semicolon to end statement.
 
