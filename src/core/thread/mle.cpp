@@ -3302,7 +3302,7 @@ bool Mle::IsBetterParent(uint16_t               aRloc16,
     {
         cslMetric = CalcParentCslMetric(aCslClockAccuracy, aCslUncertainty);
         candidateCslMetric =
-            CalcParentCslMetric(mParentCandidate.GetCslClockAccuracy(), mParentCandidate.GetCslClockUncertianity());
+            CalcParentCslMetric(mParentCandidate.GetCslClockAccuracy(), mParentCandidate.GetCslClockUncertainty());
         if (candidateCslMetric != cslMetric)
         {
             ExitNow(rval = (cslMetric < candidateCslMetric));
@@ -3508,7 +3508,7 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     mParentCandidate.SetKeySequence(aKeySequence);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
     mParentCandidate.SetCslClockAccuracy(clockAccuracy.GetCslClockAccuracy());
-    mParentCandidate.SetCslClockUncertianity(clockAccuracy.GetCslUncertainty());
+    mParentCandidate.SetCslClockUncertainty(clockAccuracy.GetCslUncertainty());
 #endif
 
     mParentPriority         = connectivity.GetParentPriority();
@@ -3639,7 +3639,7 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     mParentCandidate.Clear();
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    Get<Mac::Mac>().SetCslParentUncertanity(mParent.GetCslClockUncertianity());
+    Get<Mac::Mac>().SetCslParentUncertainty(mParent.GetCslClockUncertainty());
     Get<Mac::Mac>().SetCslParentClockAccuracy(mParent.GetCslClockAccuracy());
 #endif
 
