@@ -63,4 +63,11 @@ void otBorderAgentStart(otInstance *aInstance)
     instance.Get<MeshCoP::BorderAgent>().Start();
 }
 
+void otBorderAgentStop(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<MeshCoP::BorderAgent>().Stop();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
