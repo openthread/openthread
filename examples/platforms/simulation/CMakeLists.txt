@@ -62,6 +62,7 @@ add_library(openthread-simulation
     diag.c
     entropy.c
     flash.c
+    infra_if.c
     logging.c
     misc.c
     radio.c
