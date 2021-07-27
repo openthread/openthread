@@ -184,6 +184,7 @@ SOURCES_COMMON                                  = \
     common/trickle_timer.cpp                      \
     crypto/aes_ccm.cpp                            \
     crypto/aes_ecb.cpp                            \
+    crypto/crypto_platform.cpp                    \
     crypto/ecdsa.cpp                              \
     crypto/hkdf_sha256.cpp                        \
     crypto/hmac_sha256.cpp                        \
@@ -321,6 +322,7 @@ libopenthread_radio_a_SOURCES              = \
     common/timer.cpp                         \
     crypto/aes_ccm.cpp                       \
     crypto/aes_ecb.cpp                       \
+    crypto/crypto_platform.cpp               \
     diags/factory_diags.cpp                  \
     mac/link_raw.cpp                         \
     mac/mac_frame.cpp                        \

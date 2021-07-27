@@ -390,6 +390,20 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
 
 /**
+ * Get the Key Refence for Thread Network Key.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE` to be enabled.
+ *
+ * @param[in]   aInstance   A pointer to an OpenThread instance.
+ *
+ * @returns Reference to the Thread Network Key stored in memory.
+ *
+ * @sa otThreadSetNetworkKeyRef
+ *
+ */
+otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance);
+
+/**
  * Set the Thread Network Key.
  *
  * This function succeeds only when Thread protocols are disabled.  A successful
@@ -407,6 +421,27 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
  *
  */
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);
+
+/**
+ * Set the Thread Network Key as a reference.
+ *
+ * This function succeeds only when Thread protocols are disabled.  A successful
+ * call to this function invalidates the Active and Pending Operational Datasets in
+ * non-volatile memory.
+ *
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE` to be enabled.
+ *
+ * @param[in]  aInstance   A pointer to an OpenThread instance.
+ * @param[in]  aKeyRef     Reference to the Thread Network Key.
+ *
+ * @retval OT_ERROR_NONE            Successfully set the Thread Network Key.
+ * @retval OT_ERROR_INVALID_ARGS    If aKeyRef is 0.
+ * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
+ *
+ * @sa otThreadGetNetworkKeyRef
+ *
+ */
+otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef);
 
 /**
  * This function returns a pointer to the Thread Routing Locator (RLOC) address.

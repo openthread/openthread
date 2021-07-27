@@ -416,12 +416,18 @@ private:
     Type mType; ///< The address type (Short, Extended, or none).
 };
 
+typedef enum CryptoType
+{
+    kUseKeyLiterals = 0,
+    kUseKeyRefs     = 1,
+} CryptoType;
+
 /**
  * This class represents a MAC key.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Key : public otMacKey, public Equatable<Key>, public Clearable<Key>
+class Key : public otMacKeyMaterial, public Equatable<Key>, public Clearable<Key>
 {
 public:
     enum
@@ -435,7 +441,15 @@ public:
      * @returns A pointer to the buffer containing the key.
      *
      */
-    const uint8_t *GetKey(void) const { return m8; }
+    const uint8_t *GetKey(void) const { return mKeyMaterial.mKey.m8; }
+
+    /**
+     * This method gets the reference to the stored key.
+     *
+     * @returns A key reference.
+     *
+     */
+    otMacKeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
 
 } OT_TOOL_PACKED_END;
 

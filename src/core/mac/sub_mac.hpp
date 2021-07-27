@@ -38,6 +38,7 @@
 
 #include <openthread/link.h>
 
+#include <openthread/platform/crypto.h>
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"

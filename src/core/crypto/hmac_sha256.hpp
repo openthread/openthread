@@ -39,8 +39,11 @@
 #include <stdint.h>
 
 #include <mbedtls/md.h>
+#include <psa/crypto.h>
 
 #include "crypto/sha256.hpp"
+
+#include <openthread/platform/crypto.h>
 
 namespace ot {
 
@@ -87,7 +90,7 @@ public:
      * @param[in]  aKeyLength  The key length in bytes.
      *
      */
-    void Start(const uint8_t *aKey, uint16_t aKeyLength);
+    void Start(otCryptoKey *aKey);
 
     /**
      * This method inputs bytes into the HMAC computation.
@@ -131,7 +134,13 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    mbedtls_md_context_t mContext;
+    union HmacContext
+    {
+        psa_mac_operation_t  mOperation;
+        mbedtls_md_context_t mContext;
+    };
+
+    HmacContext mContext;
 };
 
 /**

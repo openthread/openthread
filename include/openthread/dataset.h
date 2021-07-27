@@ -70,6 +70,12 @@ struct otNetworkKey
  */
 typedef struct otNetworkKey otNetworkKey;
 
+/**
+ * This datatype represents KeyRef to NetworkKey.
+ *
+ */
+typedef uint32_t otNetworkKeyRef; ///< Reference to Key
+
 #define OT_NETWORK_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Network Name field (bytes)
 
 /**
@@ -126,6 +132,12 @@ struct otPskc
  *
  */
 typedef struct otPskc otPskc;
+
+/**
+ * This datatype represents KeyRef to PSKc.
+ *
+ */
+typedef uint32_t otPskcRef; ///< Reference to Key
 
 /**
  * This structure represent Security Policy.

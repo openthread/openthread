@@ -563,9 +563,15 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 
         case Tlv::kNetworkKey:
         {
-            const NetworkKeyTlv *key = static_cast<const NetworkKeyTlv *>(cur);
+            const NetworkKeyTlv *key                   = static_cast<const NetworkKeyTlv *>(cur);
+            bool                 KeyManagerHasValidKey = false;
+            uint8_t              networkKeyLiteral[OT_NETWORK_KEY_SIZE];
+            IgnoreError(keyManager.GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
 
-            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != keyManager.GetNetworkKey()))
+            KeyManagerHasValidKey =
+                (memcmp(networkKeyLiteral, key->GetNetworkKey().m8, sizeof(key->GetNetworkKey().m8)) == 0);
+
+            if (aIsNetworkKeyUpdated && !KeyManagerHasValidKey)
             {
                 *aIsNetworkKeyUpdated = true;
             }

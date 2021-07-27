@@ -32,28 +32,42 @@
  */
 
 #include "aes_ecb.hpp"
+#include "common/debug.hpp"
+#include "common/error.hpp"
 
 namespace ot {
 namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-    mbedtls_aes_init(&mContext);
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoAesInit(context, sizeof(mContext));
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
-void AesEcb::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
+void AesEcb::SetKey(otCryptoKey *aKey)
 {
-    mbedtls_aes_setkey_enc(&mContext, aKey, aKeyLength);
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoAesSetKey(context, sizeof(mContext), aKey);
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
-    mbedtls_aes_crypt_ecb(&mContext, MBEDTLS_AES_ENCRYPT, aInput, aOutput);
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoAesEncrypt(context, sizeof(mContext), aInput, aOutput);
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 AesEcb::~AesEcb(void)
 {
-    mbedtls_aes_free(&mContext);
+    void *context = static_cast<void *>(&mContext);
+    Error err     = otPlatCryptoAesFree(context, sizeof(mContext));
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 } // namespace Crypto

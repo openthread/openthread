@@ -36,7 +36,7 @@
 #define HKDF_SHA256_HPP_
 
 #include "openthread-core-config.h"
-
+#include <psa/crypto.h>
 #include "crypto/hmac_sha256.hpp"
 
 namespace ot {
@@ -67,7 +67,7 @@ public:
      * @param[in] aInputKeyLength   The input key length (in bytes).
      *
      */
-    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8_t *aInputKey, uint16_t aInputKeyLength);
+    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey *aKey);
 
     /**
      * This method performs the HKDF Expand step.
@@ -84,7 +84,13 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    HmacSha256::Hash mPrk; // Pseudo-Random Key (derived from Extract step).
+    union HkdfContext
+    {
+        HmacSha256::Hash               mPrk; // Pseudo-Random Key (derived from Extract step).
+        psa_key_derivation_operation_t mOperation;
+    };
+
+    HkdfContext mContext;
 };
 
 /**

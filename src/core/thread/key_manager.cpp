@@ -179,10 +179,14 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
 {
-    Error error = mNetworkKey.GenerateRandom();
+    SetCryptoType(otPlatCryptoGetType());
+    IgnoreError(otPlatCryptoInit());
+    IgnoreError(mNetworkKey.GenerateRandom());
 
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        IgnoreError(StoreNetworkKey(false));
+    }
 
     mMacFrameCounters.Reset();
     mPskc.Clear();
@@ -200,22 +204,93 @@ void KeyManager::Stop(void)
 }
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
+
+Error KeyManager::StorePskc(void)
+{
+    otMacKeyRef aKeyRef = kPskcPsaItsOffset;
+    Error       error   = kErrorNone;
+
+    CheckAndDestroyStoredKey(aKeyRef);
+
+    error = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_RAW, OT_CRYPTO_KEY_ALG_VENDOR, OT_CRYPTO_KEY_USG_EXPORT,
+                                  OT_CRYPTO_KEY_STORAGE_PERSISTENT, mPskc.m8, OT_PSKC_MAX_SIZE);
+
+    OT_ASSERT(error == kErrorNone);
+
+    mPskc.Clear();
+    mPskc.mKeyRef     = aKeyRef;
+    mPskc.mCryptoType = Mac::CryptoType::kUseKeyRefs;
+
+    return error;
+}
+
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
     IgnoreError(Get<Notifier>().Update(mPskc, aPskc, kEventPskcChanged));
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        mPskc.mCryptoType = Mac::CryptoType::kUseKeyRefs;
+        IgnoreError(StorePskc());
+    }
+    else
+    {
+        mPskc.mCryptoType = Mac::CryptoType::kUseKeyLiterals;
+    }
+
+    mIsPskcSet = true;
+}
+void KeyManager::SetPskcRef(otPskcRef aKeyRef)
+{
+    otPskc PskcLiteral;
+
+    mPskc.mKeyRef = aKeyRef;
+
+    // This is needed because the dataset manager still operates using literal keys.
+    IgnoreError(mPskc.CopyKey(PskcLiteral.m8, sizeof(PskcLiteral.m8)));
+
+    IgnoreError(Get<Notifier>().Update(mPskc, *static_cast<const Pskc *>(&PskcLiteral), kEventPskcChanged));
+
+    mPskc.Clear();
     mIsPskcSet = true;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
+Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
 {
-    Error   error = kErrorNone;
-    Router *parent;
+    Error       error = kErrorNone;
+    otMacKeyRef aKeyRef;
 
-    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, aKey, kEventNetworkKeyChanged));
-    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
-    mKeySequence = 0;
-    UpdateKeyMaterial();
+    aKeyRef = kNetworkKeyPsaItsOffset;
+
+    if (!aOverWriteExisting)
+    {
+        otCryptoKeyAttributes mKeyAttributes;
+
+        error = otPlatCryptoGetKeyAttributes(aKeyRef, &mKeyAttributes);
+        // We will be able to retrieve the key_attributes only if there is
+        // already a network key stored in ITS. If stored, and we are not
+        // overwriting the existing key, return without doing anything.
+        SuccessOrExit(error == OT_ERROR_NONE);
+    }
+
+    CheckAndDestroyStoredKey(aKeyRef);
+
+    error = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_HMAC, OT_CRYPTO_KEY_ALG_HMAC_SHA_256,
+                                  OT_CRYPTO_KEY_USG_SIGN_HASH | OT_CRYPTO_KEY_USG_EXPORT,
+                                  OT_CRYPTO_KEY_STORAGE_PERSISTENT, mNetworkKey.m8, OT_NETWORK_KEY_SIZE);
+
+exit:
+    mNetworkKey.Clear();
+    mNetworkKey.mKeyRef     = aKeyRef;
+    mNetworkKey.mCryptoType = Mac::CryptoType::kUseKeyRefs;
+
+    return error;
+}
+
+void KeyManager::ResetFrameCounters(void)
+{
+    Router *parent;
 
     // reset parent frame counters
     parent = &Get<Mle::MleRouter>().GetParent();
@@ -243,6 +318,51 @@ Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
         child.SetMleFrameCounter(0);
     }
 #endif
+}
+
+Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
+{
+    Error error = kErrorNone;
+
+    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, aKey, kEventNetworkKeyChanged));
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        IgnoreError(StoreNetworkKey(true));
+    }
+    else
+    {
+        mNetworkKey.mCryptoType = Mac::CryptoType::kUseKeyLiterals;
+    }
+
+    mKeySequence = 0;
+    UpdateKeyMaterial();
+    ResetFrameCounters();
+
+exit:
+    return error;
+}
+
+Error KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
+{
+    Error        error = kErrorNone;
+    otNetworkKey networkKeyLiteral;
+
+    mNetworkKey.mKeyRef = aKeyRef;
+    // This is needed because the dataset manager still operates using literal keys.
+    SuccessOrExit(mNetworkKey.CopyKey(networkKeyLiteral.m8, sizeof(networkKeyLiteral.m8)));
+    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, *static_cast<const NetworkKey *>(&networkKeyLiteral),
+                                         kEventNetworkKeyChanged));
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
+
+    mKeySequence = 0;
+    UpdateKeyMaterial();
+    ResetFrameCounters();
+
+    mNetworkKey.Clear();
+    mNetworkKey.mCryptoType = Mac::CryptoType::kUseKeyRefs;
+    memset(&networkKeyLiteral, 0, sizeof(networkKeyLiteral));
 
 exit:
     return error;
@@ -252,8 +372,21 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 {
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
+    otCryptoKey        aKeyMaterial;
 
-    hmac.Start(mNetworkKey.m8, sizeof(mNetworkKey.m8));
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        aKeyMaterial.mKey    = nullptr;
+        aKeyMaterial.mKeyRef = mNetworkKey.mKeyRef;
+    }
+    else
+    {
+        aKeyMaterial.mKey       = mNetworkKey.m8;
+        aKeyMaterial.mKeyLength = sizeof(mNetworkKey.m8);
+        aKeyMaterial.mKeyRef    = 0;
+    }
+
+    hmac.Start(&aKeyMaterial);
 
     Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
     hmac.Update(keySequenceBytes);
@@ -267,29 +400,98 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
 {
     Crypto::HkdfSha256 hkdf;
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
+    otCryptoKey        aKeyMaterial;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        aKeyMaterial.mKey    = nullptr;
+        aKeyMaterial.mKeyRef = mNetworkKey.mKeyRef;
+    }
+    else
+    {
+        aKeyMaterial.mKey       = mNetworkKey.m8;
+        aKeyMaterial.mKeyLength = sizeof(mNetworkKey.m8);
+        aKeyMaterial.mKeyRef    = 0;
+    }
 
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), mNetworkKey.m8, sizeof(NetworkKey));
-    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.m8, sizeof(Mac::Key));
+    hkdf.Extract(salt, sizeof(salt), &aKeyMaterial);
+    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.mKeyMaterial.mKey.m8, sizeof(Mac::Key));
 }
 #endif
 
 void KeyManager::UpdateKeyMaterial(void)
 {
     HashKeys cur;
+    Error    error;
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     HashKeys prev;
     HashKeys next;
 #endif
+    otMacKeyRef aKeyRef;
 
     ComputeKeys(mKeySequence, cur);
-    mMleKey = cur.mKeys.mMleKey;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        aKeyRef = 0;
+
+        error =
+            otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                  (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                  OT_CRYPTO_KEY_STORAGE_VOLATILE, cur.mKeys.mMacKey.GetKey(), cur.mKeys.mMacKey.kSize);
+
+        OT_ASSERT(error == kErrorNone);
+        cur.mKeys.mMacKey.Clear();
+        cur.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
+
+        aKeyRef = 0;
+        CheckAndDestroyStoredKey(mMleKey.mKeyMaterial.mKeyRef);
+
+        error =
+            otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                  (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                  OT_CRYPTO_KEY_STORAGE_VOLATILE, cur.mKeys.mMleKey.GetKey(), cur.mKeys.mMleKey.kSize);
+
+        OT_ASSERT(error == kErrorNone);
+        cur.mKeys.mMleKey.Clear();
+        mMleKey.mKeyMaterial.mKeyRef = aKeyRef;
+    }
+    else
+    {
+        mMleKey = cur.mKeys.mMleKey;
+    }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     ComputeKeys(mKeySequence - 1, prev);
     ComputeKeys(mKeySequence + 1, next);
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        aKeyRef = 0;
+        error   = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                      (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                      OT_CRYPTO_KEY_STORAGE_VOLATILE, prev.mKeys.mMacKey.GetKey(),
+                                      prev.mKeys.mMacKey.kSize);
+
+        OT_ASSERT(error == kErrorNone);
+        prev.mKeys.mMacKey.Clear();
+        prev.mKeys.mMleKey.Clear();
+        prev.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
+
+        aKeyRef = 0;
+        error   = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                      (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                      OT_CRYPTO_KEY_STORAGE_VOLATILE, next.mKeys.mMacKey.GetKey(),
+                                      next.mKeys.mMacKey.kSize);
+
+        OT_ASSERT(error == kErrorNone);
+        next.mKeys.mMacKey.Clear();
+        next.mKeys.mMleKey.Clear();
+        next.mKeys.mMacKey.mKeyMaterial.mKeyRef = aKeyRef;
+    }
 
     Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
                                  cur.mKeys.mMacKey, next.mKeys.mMacKey);
@@ -297,7 +499,19 @@ void KeyManager::UpdateKeyMaterial(void)
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     ComputeTrelKey(mKeySequence, mTrelKey);
+
+    aKeyRef = 0;
+    error   = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                  (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                  OT_CRYPTO_KEY_STORAGE_VOLATILE, mTrelKey.GetKey(), mTrelKey.kSize);
+
+    mTrelKey.Clear();
+    mTrelKey.mKeyMaterial.mKeyRef = aKeyRef;
+
+    OT_ASSERT(error == kErrorNone);
 #endif
+
+    OT_UNUSED_VARIABLE(error);
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
@@ -330,10 +544,25 @@ exit:
 
 const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
-    HashKeys hashKeys;
+    HashKeys    hashKeys;
+    otMacKeyRef aKeyRef = mTemporaryMleKey.GetKeyRef();
 
     ComputeKeys(aKeySequence, hashKeys);
     mTemporaryMleKey = hashKeys.mKeys.mMleKey;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        CheckAndDestroyStoredKey(aKeyRef);
+
+        Error error = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                            (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                            OT_CRYPTO_KEY_STORAGE_VOLATILE, hashKeys.mKeys.mMleKey.GetKey(),
+                                            hashKeys.mKeys.mMleKey.kSize);
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+
+        mTemporaryMleKey.Clear();
+    }
 
     return mTemporaryMleKey;
 }
@@ -394,16 +623,83 @@ void KeyManager::IncrementMleFrameCounter(void)
     }
 }
 
+void KeyManager::CheckAndDestroyStoredKey(otMacKeyRef aKeyRef)
+{
+    if (aKeyRef != 0)
+    {
+        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
+    }
+}
+
+Error KeyManager::ImportKek(const uint8_t *aKey, uint8_t aKeyLen)
+{
+    Error       error     = kErrorNone;
+    int         mKeyUsage = (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT | OT_CRYPTO_KEY_USG_EXPORT);
+    otMacKeyRef aKeyRef   = mKek.GetKeyRef();
+
+    CheckAndDestroyStoredKey(aKeyRef);
+
+    error = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB, mKeyUsage,
+                                  OT_CRYPTO_KEY_STORAGE_VOLATILE, aKey, aKeyLen);
+
+    mKek.Clear();
+    mKek.mKeyMaterial.mKeyRef = aKeyRef;
+
+    return error;
+}
+
 void KeyManager::SetKek(const Kek &aKek)
 {
-    mKek             = aKek;
+    Error error = kErrorNone;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        error = ImportKek(aKek.GetKey(), aKek.kSize);
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+    }
+    else
+    {
+        mKek = aKek;
+    }
+
     mKekFrameCounter = 0;
 }
 
 void KeyManager::SetKek(const uint8_t *aKek)
 {
-    memcpy(mKek.m8, aKek, sizeof(mKek));
+    Error error;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        error = ImportKek(aKek, 16);
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+    }
+    else
+    {
+        memcpy(mKek.mKeyMaterial.mKey.m8, aKek, sizeof(mKek));
+    }
+
     mKekFrameCounter = 0;
+}
+
+Error KeyManager::GetKekLiteral(Kek &aKek)
+{
+    size_t aKeySize = 0;
+    Error  error    = kErrorNone;
+
+    if (GetCryptoType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
+    {
+        error = otPlatCryptoExportKey(mKek.GetKeyRef(), aKek.mKeyMaterial.mKey.m8, sizeof(aKek.mKeyMaterial.mKey),
+                                      &aKeySize);
+    }
+    else
+    {
+        aKek = mKek;
+    }
+
+    return error;
 }
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
@@ -441,6 +737,46 @@ void KeyManager::HandleKeyRotationTimer(void)
     {
         SetCurrentKeySequence(mKeySequence + 1);
     }
+}
+
+Error Pskc::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
+{
+    Error error = kErrorNone;
+
+    if (mCryptoType == Mac::CryptoType::kUseKeyRefs)
+    {
+        size_t mKeyLen = 0;
+
+        error = otPlatCryptoExportKey(mKeyRef, aBuffer, aBufferSize, &mKeyLen);
+
+        OT_ASSERT(error == kErrorNone);
+    }
+    else
+    {
+        memcpy(aBuffer, m8, sizeof(m8));
+    }
+
+    return error;
+}
+
+Error NetworkKey::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
+{
+    Error error = kErrorNone;
+
+    if (mCryptoType == Mac::CryptoType::kUseKeyRefs)
+    {
+        size_t mKeyLen = 0;
+
+        error = otPlatCryptoExportKey(mKeyRef, aBuffer, aBufferSize, &mKeyLen);
+
+        OT_ASSERT(error == kErrorNone);
+    }
+    else
+    {
+        memcpy(aBuffer, m8, sizeof(m8));
+    }
+
+    return error;
 }
 
 } // namespace ot

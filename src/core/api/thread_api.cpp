@@ -119,6 +119,15 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
     return &instance.Get<KeyManager>().GetNetworkKey();
 }
 
+#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<KeyManager>().GetNetworkKey().mKeyRef;
+}
+#endif
+
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
     Error     error    = kErrorNone;
@@ -129,12 +138,32 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     error = instance.Get<KeyManager>().SetNetworkKey(*static_cast<const NetworkKey *>(aKey));
+
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    OT_ASSERT(aKeyRef != 0);
+
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+
+    error = instance.Get<KeyManager>().SetNetworkKeyRef(aKeyRef);
+    instance.Get<MeshCoP::ActiveDataset>().Clear();
+    instance.Get<MeshCoP::PendingDataset>().Clear();
+
+exit:
+    return error;
+}
+#endif
 
 const otIp6Address *otThreadGetRloc(otInstance *aInstance)
 {
