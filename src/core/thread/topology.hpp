@@ -1347,7 +1347,7 @@ public:
         Neighbor::Init(aInstance);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         SetCslClockAccuracy(kCslWorstCrystalPpm);
-        SetCslClockUncertianity(kCslWorstUncertainty);
+        SetCslClockUncertainty(kCslWorstUncertainty);
 #endif
     }
 
@@ -1423,20 +1423,20 @@ public:
     void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
 
     /**
-     * This method get the CSL clock uncertianity of this router.
+     * This method get the CSL clock uncertainty of this router.
      *
-     * @returns The CSL clock uncertianity of this router.
+     * @returns The CSL clock uncertainty of this router.
      *
      */
-    uint8_t GetCslClockUncertianity(void) const { return mCslClockUncertianity; }
+    uint8_t GetCslClockUncertainty(void) const { return mCslClockUncertainty; }
 
     /**
-     * This method sets the CSL clock uncertianity of this router.
+     * This method sets the CSL clock uncertainty of this router.
      *
-     * @param[in]  aCost  The CSL clock uncertianity of this router.
+     * @param[in]  aCost  The CSL clock uncertainty of this router.
      *
      */
-    void SetCslClockUncertianity(uint8_t aCslClockUncertianity) { mCslClockUncertianity = aCslClockUncertianity; }
+    void SetCslClockUncertainty(uint8_t aCslClockUncertainty) { mCslClockUncertainty = aCslClockUncertainty; }
 #endif
 
 private:
@@ -1449,8 +1449,8 @@ private:
     uint8_t mCost : 4;     ///< The cost to this router via neighbor router
 #endif
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    uint8_t mCslClockAccuracy;     ///< Crystal accuracy, in units of ± ppm.
-    uint8_t mCslClockUncertianity; ///< Scheduling uncertainty, in units of 10 us.
+    uint8_t mCslClockAccuracy;    ///< Crystal accuracy, in units of ± ppm.
+    uint8_t mCslClockUncertainty; ///< Scheduling uncertainty, in units of 10 us.
 #endif
 };
 

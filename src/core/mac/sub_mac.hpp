@@ -459,20 +459,20 @@ public:
     void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy) { mCslParentAccuracy = aCslParentAccuracy; }
 
     /**
-     * This method sets CSL parent uncertanity, in ±10 us units.
+     * This method sets CSL parent uncertainty, in ±10 us units.
      *
-     * @retval CSL parent uncertanity, in ±10 us units.
+     * @retval CSL parent uncertainty, in ±10 us units.
      *
      */
-    uint8_t GetCslParentUncertanity(void) const { return mCslParentUncert; }
+    uint8_t GetCslParentUncertainty(void) const { return mCslParentUncert; }
 
     /**
-     * This method returns CSL parent uncertanity, in ±10 us units.
+     * This method returns CSL parent uncertainty, in ±10 us units.
      *
-     * @param[in] aCslParentUncert  CSL parent uncertanity, in ±10 us units.
+     * @param[in] aCslParentUncert  CSL parent uncertainty, in ±10 us units.
      *
      */
-    void SetCslParentUncertanity(uint8_t aCslParentUncert) { mCslParentUncert = aCslParentUncert; }
+    void SetCslParentUncertainty(uint8_t aCslParentUncert) { mCslParentUncert = aCslParentUncert; }
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
