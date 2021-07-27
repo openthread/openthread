@@ -1514,6 +1514,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::EnergyScan(uint8_t aScan
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S, aScanDuration));
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S, SPINEL_SCAN_STATE_ENERGY));
 
+    mChannel = aScanChannel;
+
 exit:
     return error;
 }
@@ -1923,6 +1925,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
         // Waiting for `TransmitDone` event.
         mState        = kStateTransmitting;
         mTxRadioEndUs = otPlatTimeGet() + TX_WAIT_US;
+        mChannel      = mTransmitFrame->mChannel;
     }
 
 exit:
