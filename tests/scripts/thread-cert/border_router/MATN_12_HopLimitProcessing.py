@@ -151,6 +151,7 @@ class MATN_12_HopLimitProcessing(thread_cert.TestCase):
         self.collect_rloc16s()
         self.collect_rlocs()
         self.collect_extra_vars()
+        self.simulator.go(5)
 
     def verify(self, pv: pktverify.packet_verifier.PacketVerifier):
         pkts = pv.pkts
