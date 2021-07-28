@@ -32,7 +32,7 @@
  *   This file includes the platform abstraction for PSA Crypto operations.
  */
 
-#ifndef OPENTHREAD_PLATFORM_PSA_H_
+#ifndef OPENTHREAD_PLATFORM_CRYPTO_H_
 #define OPENTHREAD_PLATFORM_PSA_H_
 
 #include <stdint.h>
