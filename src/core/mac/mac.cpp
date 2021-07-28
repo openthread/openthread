@@ -151,7 +151,7 @@ Mac::Mac(Instance &aInstance)
     {
         otMacKeyRef aKeyRef = 0;
         Error       error   = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
-                                            (OT_CRYPTO_KEY_USG_ENCRYPT | OT_CRYPTO_KEY_USG_DECRYPT),
+                                            (OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
                                             OT_CRYPTO_KEY_STORAGE_VOLATILE, sMode2Key.m8, sizeof(sMode2Key.m8));
 
         sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
