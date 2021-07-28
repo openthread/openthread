@@ -143,7 +143,7 @@ struct otCryptoKey
 /**
  * @struct struct otCryptoKeyAttributes
  *
- * This structure represents the Key key Attributes structure.
+ * This structure represents the Key Attributes structure.
  *
  */
 
