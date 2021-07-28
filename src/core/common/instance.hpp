@@ -899,7 +899,7 @@ template <> inline DuaManager &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-template <> inline LinkMetrics &Instance::Get(void)
+template <> inline LinkMetrics::LinkMetrics &Instance::Get(void)
 {
     return mThreadNetif.mLinkMetrics;
 }

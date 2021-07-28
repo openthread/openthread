@@ -302,7 +302,7 @@ private:
     TimeSync mTimeSync;
 #endif
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    LinkMetrics mLinkMetrics;
+    LinkMetrics::LinkMetrics mLinkMetrics;
 #endif
 };
 
