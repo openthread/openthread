@@ -68,16 +68,13 @@ class DataPollHandler : public InstanceLocator, private NonCopyable
     friend class Mac::Mac;
 
 public:
-    enum
-    {
-        kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
-    };
+    static constexpr uint8_t kMaxPollTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
      * This enumeration defines frame change request types used as input to `RequestFrameChange()`.
      *
      */
-    enum FrameChange
+    enum FrameChange : uint8_t
     {
         kPurgeFrame,   ///< Indicates that previous frame should be purged. Any ongoing indirect tx should be aborted.
         kReplaceFrame, ///< Indicates that previous frame needs to be replaced with a new higher priority one.

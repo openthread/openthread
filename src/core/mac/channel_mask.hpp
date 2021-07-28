@@ -65,11 +65,13 @@ namespace Mac {
 class ChannelMask : public Unequatable<ChannelMask>
 {
 public:
-    enum
-    {
-        kChannelIteratorFirst = 0xff, ///< Value to pass in `GetNextChannel()` to get the first channel in the mask.
-        kInfoStringSize       = 45,   ///< Recommended buffer size to use with `ToString()`.
-    };
+    /**
+     * This constant specifies the value to pass in `GetNextChannel()` to get the first channel in the mask.
+     *
+     */
+    static constexpr uint8_t kChannelIteratorFirst = 0xff;
+
+    static constexpr uint16_t kInfoStringSize = 45; ///< Recommended buffer size to use with `ToString()`.
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.

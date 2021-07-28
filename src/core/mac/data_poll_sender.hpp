@@ -63,12 +63,9 @@ namespace ot {
 class DataPollSender : public InstanceLocator, private NonCopyable
 {
 public:
-    enum
-    {
-        kDefaultFastPolls  = 8,  ///< Default number of fast poll transmissions (@sa StartFastPolls).
-        kMaxFastPolls      = 15, ///< Maximum number of fast poll transmissions allowed.
-        kMaxFastPollsUsers = 63, ///< Maximum number of the users of fast poll transmissions allowed.
-    };
+    static constexpr uint8_t kDefaultFastPolls  = 8;  ///< Default number of fast poll tx (@sa StartFastPolls).
+    static constexpr uint8_t kMaxFastPolls      = 15; ///< Maximum number of fast poll tx allowed.
+    static constexpr uint8_t kMaxFastPollsUsers = 63; ///< Maximum number of the users of fast poll tx allowed.
 
     /**
      * This constructor initializes the data poll sender object.
@@ -259,17 +256,11 @@ public:
     Mac::TxFrame *PrepareDataRequest(Mac::TxFrames &aTxFrames);
 
 private:
-    enum
-    {
-        kQuickPollsAfterTimeout = 5, ///< Maximum number of quick data poll tx in case of back-to-back poll timeouts.
-        kMaxPollRetxAttempts = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< Maximum number of retransmit attempts
-                                                                             ///< of data poll (mac data request).
-        kMaxCslPollRetxAttempts =
-            OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< Maximum number of retransmit attempts of data
-                                                                    ///< poll with CSL IE (mac data request).
-    };
+    static constexpr uint8_t kQuickPollsAfterTimeout = 5; // Quick data poll tx in case of back-to-back poll timeouts.
+    static constexpr uint8_t kMaxPollRetxAttempts    = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS;
+    static constexpr uint8_t kMaxCslPollRetxAttempts = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
 
-    enum PollPeriodSelector
+    enum PollPeriodSelector : uint8_t
     {
         kUsePreviousPollPeriod,
         kRecalculatePollPeriod,
