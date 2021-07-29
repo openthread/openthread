@@ -83,22 +83,6 @@ otBorderAgentState otBorderAgentGetState(otInstance *aInstance);
 uint16_t otBorderAgentGetUdpPort(otInstance *aInstance);
 
 /**
- * This function starts Thread Border Agent service.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- */
-void otBorderAgentStart(otInstance *aInstance);
-
-/**
- * This function stops Thread Border Agent service.
- *
- * @param[in]  aInstance  A pointer to an OpenThread instance.
- *
- */
-void otBorderAgentStop(otInstance *aInstance);
-
-/**
  * @}
  *
  */
