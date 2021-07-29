@@ -222,7 +222,6 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
     def _verify_discovery_proxy_meshcop(self, server_addr, network_name, digger):
         dp_service_name = '_meshcop._udp.default.service.arpa.'
-        network_name = server.get_network_name()
         dp_hostname = lambda x: x.endswith('.default.service.arpa.')
 
         def check_border_agent_port(port):

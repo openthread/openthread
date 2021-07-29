@@ -55,13 +55,13 @@ class PublishMeshCopService(thread_cert.TestCase):
 
     TOPOLOGY = {
         BR: {
-            'name': 'BR_1',
+            'name': 'BR',
             'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
         },
         ROUTER: {
-            'name': 'Router_1',
+            'name': 'Router',
             'allowlist': [BR],
             'version': '1.2',
         },
@@ -72,12 +72,12 @@ class PublishMeshCopService(thread_cert.TestCase):
     }
 
     def test(self):
-        # TODO: verify the behavior when thread is disabled
         host = self.nodes[HOST]
-        host.bash('service otbr-agent stop')
         br = self.nodes[BR]
         client = self.nodes[ROUTER]
 
+        # TODO: verify the behavior when thread is disabled
+        host.bash('service otbr-agent stop')
         host.start(start_radvd=False)
         self.simulator.go(5)
 
@@ -89,33 +89,29 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', client.get_state())
 
-        self.check_meshcop_service()
+        self.check_meshcop_service(br, host)
 
         br.disable_backbone_router()
-        self.check_meshcop_service()
+        self.check_meshcop_service(br, host)
 
-    def check_meshcop_service(self):
-        node = self.nodes[BR]
-        instanceName = r'OpenThread_BorderRouter'
-
-        data = self.nodes[HOST].discover_mdns_service(instanceName, '_meshcop._udp', None)
-
+    def check_meshcop_service(self, br, host):
+        instance_name = r'OpenThread_BorderRouter'
+        data = host.discover_mdns_service(instance_name, '_meshcop._udp', None)
         sb_data = data['txt']['sb'].encode('raw_unicode_escape')
         state_bitmap = int.from_bytes(sb_data, byteorder='big')
         logging.info(bin(state_bitmap))
         self.assertEqual((state_bitmap & 7), 1)  # connection mode = PskC
-        if node.get_state() == 'disabled':
+        if br.get_state() == 'disabled':
             self.assertEqual((state_bitmap >> 3 & 3), 0)  # Thread is disabled
-        elif node.get_state() == 'detached':
+        elif br.get_state() == 'detached':
             self.assertEqual((state_bitmap >> 3 & 3), 1)  # Thread is detached
         else:
             self.assertEqual((state_bitmap >> 3 & 3), 2)  # Thread is attached
         self.assertEqual((state_bitmap >> 5 & 3), 1)  # high availability
         self.assertEqual((state_bitmap >> 7 & 1),
-                         node.get_backbone_router_state() != 'Disabled')  # BBR is enabled or not
-        self.assertEqual((state_bitmap >> 8 & 1),
-                         node.get_backbone_router_state() == 'Primary')  # BBR is primary or not
-        self.assertEqual(data['txt']['nn'], node.get_network_name())
+                         br.get_backbone_router_state() != 'Disabled')  # BBR is enabled or not
+        self.assertEqual((state_bitmap >> 8 & 1), br.get_backbone_router_state() == 'Primary')  # BBR is primary or not
+        self.assertEqual(data['txt']['nn'], br.get_network_name())
         self.assertEqual(data['txt']['rv'], '1')
         self.assertIn(data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0'])
 
