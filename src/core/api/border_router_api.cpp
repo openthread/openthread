@@ -57,6 +57,21 @@ otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled)
 
     return instance.Get<BorderRouter::RoutingManager>().SetEnabled(aEnabled);
 }
+
+otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BorderRouter::RoutingManager>().GetOmrPrefix(static_cast<Ip6::Prefix &>(*aPrefix));
+}
+
+otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<BorderRouter::RoutingManager>().GetOnLinkPrefix(static_cast<Ip6::Prefix &>(*aPrefix));
+}
+
 #endif
 
 otError otBorderRouterGetNetData(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)

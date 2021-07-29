@@ -63,7 +63,7 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
     char  flagsString[kMaxFlagStringSize];
     char *flagsPtr = &flagsString[0];
 
-    OutputIp6Prefix(aConfig.mPrefix);
+    mInterpreter.OutputIp6Prefix(aConfig.mPrefix);
 
     if (aConfig.mPreferred)
     {
@@ -135,7 +135,7 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     char  flagsString[kMaxFlagStringSize];
     char *flagsPtr = &flagsString[0];
 
-    OutputIp6Prefix(aConfig.mPrefix);
+    mInterpreter.OutputIp6Prefix(aConfig.mPrefix);
 
     if (aConfig.mStable)
     {
@@ -157,15 +157,6 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     OutputPreference(aConfig.mPreference);
 
     mInterpreter.OutputLine(" %04x", aConfig.mRloc16);
-}
-
-void NetworkData::OutputIp6Prefix(const otIp6Prefix &aPrefix)
-{
-    char string[OT_IP6_PREFIX_STRING_SIZE];
-
-    otIp6PrefixToString(&aPrefix, string, sizeof(string));
-
-    mInterpreter.OutputFormat("%s", string);
 }
 
 void NetworkData::OutputPreference(signed int aPreference)

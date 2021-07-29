@@ -356,6 +356,26 @@ Done
 Done
 ```
 
+### br omrprefix
+
+Get the randomly generated off-mesh-routable prefix of the Border Router.
+
+```bash
+> br omrprefix
+fdfc:1ff5:1512:5622::/64
+Done
+```
+
+### br onlinkprefix
+
+Get the randomly generated on-link prefix of the Border Router.
+
+```bash
+> br onlinkprefix
+fd41:2650:a6f5:0::/64
+Done
+```
+
 ### bufferinfo
 
 Show the current message buffer information.

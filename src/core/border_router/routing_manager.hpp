@@ -110,6 +110,35 @@ public:
     Error SetEnabled(bool aEnabled);
 
     /**
+     * This method returns the off-mesh-routable (OMR) prefix.
+     *
+     * The randomly generated 64-bit prefix will be published
+     * in the Thread network if there isn't already a OMR prefix.
+     *
+     * @param[in]  aPrefix  A reference to where the prefix will be output to.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the OMR prefix.
+     *
+     */
+    Error GetOmrPrefix(Ip6::Prefix &aPrefix);
+
+    /**
+     * This method returns the on-link prefix for the adjacent  infrastructure link.
+     *
+     * The randomly generated 64-bit prefix will be advertised
+     * on the infrastructure link if there isn't already a usable
+     * on-link prefix being advertised on the link.
+     *
+     * @param[in]  aPrefix  A reference to where the prefix will be output to.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the on-link prefix.
+     *
+     */
+    Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
+
+    /**
      * This method receives an ICMPv6 message on the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.

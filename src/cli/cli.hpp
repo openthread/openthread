@@ -555,6 +555,7 @@ private:
     otError ProcessNetworkDataRoute(void);
     otError ProcessNetworkDataService(void);
     void    OutputPrefix(const otMeshLocalPrefix &aPrefix);
+    void    OutputIp6Prefix(const otIp6Prefix &aPrefix);
 
     otError ProcessNetstat(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

@@ -116,6 +116,28 @@ exit:
     return error;
 }
 
+Error RoutingManager::GetOmrPrefix(Ip6::Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix = mLocalOmrPrefix;
+
+exit:
+    return error;
+}
+
+Error RoutingManager::GetOnLinkPrefix(Ip6::Prefix &aPrefix)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(IsInitialized(), error = kErrorInvalidState);
+    aPrefix = mLocalOnLinkPrefix;
+
+exit:
+    return error;
+}
+
 Error RoutingManager::LoadOrGenerateRandomOmrPrefix(void)
 {
     Error error = kErrorNone;
