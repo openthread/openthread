@@ -306,6 +306,75 @@ public:
     bool Contains(const Type &aEntry) const { return Find(aEntry) != nullptr; }
 
     /**
+     * This template method finds the first element in the array matching a given indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     * @returns A pointer to the matched array element, or nullptr if a match could not be found.
+     *
+     */
+    template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
+    {
+        return const_cast<Type *>(const_cast<const Array *>(this)->FindMatching(aIndicator));
+    }
+
+    /**
+     * This template method finds the first element in the array matching a given indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     * @returns A pointer to the matched array element, or nullptr if a match could not be found.
+     *
+     */
+    template <typename Indicator> const Type *FindMatching(const Indicator &aIndicator) const
+    {
+        const Type *matched = nullptr;
+
+        for (const Type &element : *this)
+        {
+            if (element.Matches(aIndicator))
+            {
+                matched = &element;
+                break;
+            }
+        }
+
+        return matched;
+    }
+
+    /**
+     * This template method indicates whether or not the array contains an element matching a given indicator.
+     *
+     * The template type `Indicator` specifies the type of @p aIndicator object which is used to match against elements
+     * in the array. To check that an element matches the given indicator, the `Matches()` method is invoked on each
+     * `Type` element in the array. The `Matches()` method should be provided by `Type` class accordingly:
+     *
+     *     bool Type::Matches(const Indicator &aIndicator) const
+     *
+     * @param[in]  aIndicator  An indicator to match with elements in the array.
+     *
+     * @retval TRUE   The array contains a matching element with @p aIndicator.
+     * @retval FALSE  The array does not contain a matching element with @p aIndicator.
+     *
+     */
+    template <typename Indicator> bool ContainsMatching(const Indicator &aIndicator) const
+    {
+        return FindMatching(aIndicator) != nullptr;
+    }
+
+    /**
      * This method overloads assignment `=` operator to copy elements from another array into the array.
      *
      * The method uses assignment `=` operator on `Type` to copy each element from @p aOtherArray into the elements of
