@@ -370,8 +370,30 @@ otError Interpreter::ProcessBorderRouting(Arg aArgs[])
     otError error = OT_ERROR_NONE;
     bool    enable;
 
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
-    error = otBorderRoutingSetEnabled(mInstance, enable);
+    if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        SuccessOrExit(error = otBorderRoutingSetEnabled(mInstance, enable));
+    }
+    else if (aArgs[0] == "omrprefix")
+    {
+        otIp6Prefix omrPrefix;
+
+        SuccessOrExit(error = otBorderRoutingGetOmrPrefix(mInstance, &omrPrefix));
+        OutputIp6Prefix(omrPrefix);
+        OutputLine("");
+    }
+    else if (aArgs[0] == "onlinkprefix")
+    {
+        otIp6Prefix onLinkPrefix;
+
+        SuccessOrExit(error = otBorderRoutingGetOnLinkPrefix(mInstance, &onLinkPrefix));
+        OutputIp6Prefix(onLinkPrefix);
+        OutputLine("");
+    }
+    else
+    {
+        ExitNow(error = OT_ERROR_INVALID_COMMAND);
+    }
 
 exit:
     return error;
@@ -4641,6 +4663,15 @@ void Interpreter::OutputPrefix(const otMeshLocalPrefix &aPrefix)
 {
     OutputFormat("%x:%x:%x:%x::/64", (aPrefix.m8[0] << 8) | aPrefix.m8[1], (aPrefix.m8[2] << 8) | aPrefix.m8[3],
                  (aPrefix.m8[4] << 8) | aPrefix.m8[5], (aPrefix.m8[6] << 8) | aPrefix.m8[7]);
+}
+
+void Interpreter::OutputIp6Prefix(const otIp6Prefix &aPrefix)
+{
+    char string[OT_IP6_PREFIX_STRING_SIZE];
+
+    otIp6PrefixToString(&aPrefix, string, sizeof(string));
+
+    OutputFormat("%s", string);
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
