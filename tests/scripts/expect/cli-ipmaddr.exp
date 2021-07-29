@@ -51,8 +51,8 @@ expect_line "Done"
 
 switch_node 2
 send "ping ff0e::1\n"
-expect_line "Done"
 expect "16 bytes from $addr: icmp_seq=1"
+expect_line "Done"
 
 switch_node 1
 send "ipmaddr del ff0e::1\n"

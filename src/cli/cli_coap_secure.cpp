@@ -240,18 +240,17 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     uint16_t   payloadLength = 0;
 
     // Default parameters
-    char       coapUri[kMaxUriLength] = "test";
-    otCoapType coapType               = OT_COAP_TYPE_NON_CONFIRMABLE;
+    char       coapUri[kMaxUriLength];
+    otCoapType coapType = OT_COAP_TYPE_NON_CONFIRMABLE;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     bool           coapBlock     = false;
     otCoapBlockSzx coapBlockSize = OT_COAP_OPTION_BLOCK_SZX_16;
     BlockType      coapBlockType = (aCoapCode == OT_COAP_CODE_GET) ? kBlockType2 : kBlockType1;
 #endif
 
-    if (!aArgs[0].IsEmpty())
-    {
-        strncpy(coapUri, aArgs[0].GetCString(), sizeof(coapUri) - 1);
-    }
+    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+    strncpy(coapUri, aArgs[0].GetCString(), sizeof(coapUri) - 1);
 
     if (!aArgs[1].IsEmpty())
     {

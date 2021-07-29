@@ -44,7 +44,7 @@ expect -re {Network Key: [0-9a-f]{32}}
 expect -re {Network Name: [^\r\n]+}
 expect -re {PAN ID: 0x[0-9a-f]{4}}
 expect -re {PSKc: [0-9a-f]{32}}
-expect -re {Security Policy: \d+, o?n?r?c?b?}
+expect -re {Security Policy: \d+ o?n?r?c?b?}
 send "dataset pending\n"
 expect "Error 23: NotFound"
 send "dataset init active\n"
@@ -135,7 +135,7 @@ expect "Network Key: aabbccddeeff00112233445566778899"
 expect "Network Name: OT-network"
 expect "PAN ID: 0xface"
 expect "PSKc: 00112233445566778899aabbccddeeff"
-expect "Security Policy: 678, onrcb"
+expect "Security Policy: 678 onrcb"
 expect_line "Done"
 
 sleep 30
@@ -157,7 +157,7 @@ expect "Network Key: aabbccddeeff00112233445566778899"
 expect "Network Name: OT-network"
 expect "PAN ID: 0xface"
 expect "PSKc: 00112233445566778899aabbccddeeff"
-expect "Security Policy: 678, onrcb"
+expect "Security Policy: 678 onrcb"
 expect_line "Done"
 send "dataset clear\n"
 expect_line "Done"
@@ -177,7 +177,7 @@ expect "Network Key: aabbccddeeff00112233445566778899"
 expect "Network Name: OT-network"
 expect "PAN ID: 0xface"
 expect "PSKc: 00112233445566778899aabbccddeeff"
-expect "Security Policy: 678, onrcb"
+expect "Security Policy: 678 onrcb"
 expect_line "Done"
 send "dataset init pending\n"
 expect "Error 23: NotFound"
