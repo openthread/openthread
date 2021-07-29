@@ -87,58 +87,63 @@ class MultiThreadNetworks(thread_cert.TestCase):
     }
 
     def test(self):
-        self.nodes[BR1].start()
-        self.simulator.go(5)
-        self.assertEqual('leader', self.nodes[BR1].get_state())
+        br1 = self.nodes[BR1]
+        router1 = self.nodes[ROUTER1]
+        br2 = self.nodes[BR2]
+        router2 = self.nodes[ROUTER2]
 
-        self.nodes[ROUTER1].start()
+        br1.start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[ROUTER1].get_state())
+        self.assertEqual('leader', br1.get_state())
 
-        self.nodes[BR2].start()
+        router1.start()
         self.simulator.go(5)
-        self.assertEqual('leader', self.nodes[BR2].get_state())
+        self.assertEqual('router', router1.get_state())
 
-        self.nodes[ROUTER2].start()
+        br2.start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[ROUTER2].get_state())
+        self.assertEqual('leader', br2.get_state())
+
+        router2.start()
+        self.simulator.go(5)
+        self.assertEqual('router', router2.get_state())
 
         self.collect_ipaddrs()
 
-        logging.info("BR1     addrs: %r", self.nodes[BR1].get_addrs())
-        logging.info("ROUTER1 addrs: %r", self.nodes[ROUTER1].get_addrs())
-        logging.info("BR2     addrs: %r", self.nodes[BR2].get_addrs())
-        logging.info("ROUTER2 addrs: %r", self.nodes[ROUTER2].get_addrs())
+        logging.info("BR1     addrs: %r", br1.get_addrs())
+        logging.info("ROUTER1 addrs: %r", router1.get_addrs())
+        logging.info("BR2     addrs: %r", br2.get_addrs())
+        logging.info("ROUTER2 addrs: %r", router2.get_addrs())
 
-        self.assertTrue(len(self.nodes[BR1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER1].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[BR2].get_prefixes()) == 1)
-        self.assertTrue(len(self.nodes[ROUTER2].get_prefixes()) == 1)
+        self.assertTrue(len(br1.get_prefixes()) == 1)
+        self.assertTrue(len(router1.get_prefixes()) == 1)
+        self.assertTrue(len(br2.get_prefixes()) == 1)
+        self.assertTrue(len(router2.get_prefixes()) == 1)
 
-        br1_omr_prefix = self.nodes[BR1].get_prefixes()[0]
-        br2_omr_prefix = self.nodes[BR2].get_prefixes()[0]
+        br1_omr_prefix = br1.get_prefixes()[0]
+        br2_omr_prefix = br2.get_prefixes()[0]
 
         self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
 
         # Each BR should independently register an external route for the on-link prefix
         # and OMR prefix in another Thread Network.
-        self.assertTrue(len(self.nodes[BR1].get_routes()) == 2)
-        self.assertTrue(len(self.nodes[ROUTER1].get_routes()) == 2)
-        self.assertTrue(len(self.nodes[BR2].get_routes()) == 2)
-        self.assertTrue(len(self.nodes[ROUTER2].get_routes()) == 2)
+        self.assertTrue(len(br1.get_routes()) == 2)
+        self.assertTrue(len(router1.get_routes()) == 2)
+        self.assertTrue(len(br2.get_routes()) == 2)
+        self.assertTrue(len(router2.get_routes()) == 2)
 
-        br1_external_routes = self.nodes[BR1].get_routes()
-        br2_external_routes = self.nodes[BR2].get_routes()
+        br1_external_routes = br1.get_routes()
+        br2_external_routes = br2.get_routes()
 
         br1_external_routes.sort()
         br2_external_routes.sort()
         self.assertNotEqual(br1_external_routes, br2_external_routes)
 
-        self.assertTrue(len(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        self.assertTrue(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        self.assertTrue(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
 
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[ROUTER2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
-        self.assertTrue(self.nodes[ROUTER2].ping(self.nodes[ROUTER1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
+        self.assertTrue(router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
 
 
 if __name__ == '__main__':
