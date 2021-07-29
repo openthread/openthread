@@ -94,9 +94,22 @@ otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
                                       void *                      aContext);
 
 /**
- * See otDatasetUpdaterRequestUpdate.
+ * This function requests an update to Operational Dataset.
  *
- * @param aDatasetTlvs A pointer to the Dataset TLVs containing the fields to change.
+ * @p aDataset should contain the fields to be updated and their new value. It must not contain Active or Pending
+ * Timestamp fields. The Delay field is optional, if not provided a default value (1000 ms) would be used.
+ *
+ * @param[in]  aInstance               A pointer to an OpenThread instance.
+ * @param[in]  aDatasetTlvs            A pointer to the Dataset TLVs containing the fields to change.
+ * @param[in]  aCallback               A callback to indicate when Dataset update request finishes.
+ * @param[in]  aContext                An arbitrary context passed to callback.
+ *
+ * @retval OT_ERROR_NONE           Dataset update started successfully (@p aCallback will be invoked on completion).
+ * @retval OT_ERROR_INVALID_STATE  Device is disabled (MLE is disabled).
+ * @retval OT_ERROR_INVALID_ARGS   The @p aDataset is not valid (contains Active or Pending Timestamp).
+ * @retval OT_ERROR_BUSY           Cannot start update, a previous one is ongoing.
+ * @retval OT_ERROR_NO_BUFS        Could not allocated buffer to save Dataset.
+ *
  */
 otError otDatasetUpdaterRequestUpdateTlvs(otInstance *                    aInstance,
                                           const otOperationalDatasetTlvs *aDatasetTlvs,
