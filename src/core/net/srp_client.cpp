@@ -726,10 +726,7 @@ exit:
 
 Error Client::PrepareUpdateMessage(Message &aMessage)
 {
-    enum : uint16_t
-    {
-        kHeaderOffset = 0,
-    };
+    constexpr uint16_t kHeaderOffset = 0;
 
     Error             error = kErrorNone;
     Dns::UpdateHeader header;
@@ -1909,11 +1906,7 @@ const char *Client::StateToString(State aState)
 
 void Client::LogRetryWaitInterval(void) const
 {
-    enum : uint16_t
-    {
-        kLogInMsecLimit = 5000, // Max interval (in msec) to log the value in msec unit
-        kMsecInSec      = 1000,
-    };
+    constexpr uint16_t kLogInMsecLimit = 5000; // Max interval (in msec) to log the value in msec unit
 
     uint32_t interval = GetRetryWaitInterval();
 

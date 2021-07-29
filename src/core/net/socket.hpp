@@ -237,10 +237,7 @@ public:
 class SockAddr : public otSockAddr, public Clearable<SockAddr>, public Unequatable<SockAddr>
 {
 public:
-    enum : uint16_t
-    {
-        kInfoStringSize = OT_IP6_SOCK_ADDR_STRING_SIZE, ///< Max chars for the info string (`ToString()`).
-    };
+    static constexpr uint16_t kInfoStringSize = OT_IP6_SOCK_ADDR_STRING_SIZE; ///< Info string size (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.

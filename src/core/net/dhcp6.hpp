@@ -59,18 +59,10 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
-/**
- * DHCPv6 constant
- *
- */
-enum
-{
-
-    kDhcpClientPort       = 546,
-    kDhcpServerPort       = 547,
-    kHardwareTypeEui64    = 27,
-    kHardwareTypeEthernet = 1,
-};
+constexpr uint16_t kDhcpClientPort       = 546;
+constexpr uint16_t kDhcpServerPort       = 547;
+constexpr uint16_t kHardwareTypeEui64    = 27;
+constexpr uint16_t kHardwareTypeEthernet = 1;
 
 /**
  * DHCPv6 Message Types
@@ -104,10 +96,7 @@ OT_TOOL_PACKED_BEGIN
 class TransactionId : public Equatable<TransactionId>, public Clearable<TransactionId>
 {
 public:
-    enum : uint16_t
-    {
-        kSize = 3, // Transaction Id size (in bytes).
-    };
+    static constexpr uint16_t kSize = 3; ///< Transaction Id size (in bytes).
 
     /**
      * This method generates a cryptographically secure random sequence to populate the transaction identifier.
@@ -413,11 +402,8 @@ OT_TOOL_PACKED_BEGIN
 class IaNa : public Option
 {
 public:
-    enum : uint32_t
-    {
-        kDefaultT1 = 0xffffffffU, ///< Default T1 value.
-        kDefaultT2 = 0xffffffffU, ///< Default T2 value.
-    };
+    static constexpr uint32_t kDefaultT1 = 0xffffffffU; ///< Default T1 value.
+    static constexpr uint32_t kDefaultT2 = 0xffffffffU; ///< Default T2 value.
 
     /**
      * This method initializes the DHCPv6 Option.
@@ -491,11 +477,8 @@ OT_TOOL_PACKED_BEGIN
 class IaAddress : public Option
 {
 public:
-    enum : uint32_t
-    {
-        kDefaultPreferredLifetime = 0xffffffffU, ///< Default preferred lifetime.
-        kDefaultValidLiftetime    = 0xffffffffU, ///< Default valid lifetime.
-    };
+    static constexpr uint32_t kDefaultPreferredLifetime = 0xffffffffU; ///< Default preferred lifetime.
+    static constexpr uint32_t kDefaultValidLiftetime    = 0xffffffffU; ///< Default valid lifetime.
 
     /**
      * This method initializes the DHCPv6 Option.

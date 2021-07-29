@@ -77,11 +77,8 @@ class Server : public InstanceLocator, private NonCopyable
     friend class Host;
 
 public:
-    enum : uint16_t
-    {
-        kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, ///< The reserved min SRP Server UDP listening port.
-        kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, ///< The reserved max SRP Server UDP listening port.
-    };
+    static constexpr uint16_t kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN; ///< The reserved min port.
+    static constexpr uint16_t kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX; ///< The reserved max port.
 
     static_assert(kUdpPortMin <= kUdpPortMax, "invalid port range");
 
@@ -111,13 +108,29 @@ public:
          */
         typedef otSrpServerServiceFlags Flags;
 
-        enum
-        {
-            kFlagBaseType = OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE, ///< Include base services (not a sub-type).
-            kFlagSubType  = OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE,  ///< Include sub-type services.
-            kFlagActive   = OT_SRP_SERVER_SERVICE_FLAG_ACTIVE,    ///< Include active (not deleted) services.
-            kFlagDeleted  = OT_SRP_SERVER_SERVICE_FLAG_DELETED,   ///< Include deleted services.
-        };
+        /**
+         * This `Flags` constant indicates to include base services (not a sub-type).
+         *
+         */
+        static constexpr Flags kFlagBaseType = OT_SRP_SERVER_SERVICE_FLAG_BASE_TYPE;
+
+        /**
+         * This `Flags` constant indicates to include sub-type services.
+         *
+         */
+        static constexpr Flags kFlagSubType = OT_SRP_SERVER_SERVICE_FLAG_SUB_TYPE;
+
+        /**
+         * This `Flags` constant indicates to include active (not deleted) services.
+         *
+         */
+        static constexpr Flags kFlagActive = OT_SRP_SERVER_SERVICE_FLAG_ACTIVE;
+
+        /**
+         * This `Flags` constant indicates to include deleted services.
+         *
+         */
+        static constexpr Flags kFlagDeleted = OT_SRP_SERVER_SERVICE_FLAG_DELETED;
 
         /**
          * This method tells if the SRP service has been deleted.
@@ -438,10 +451,7 @@ public:
         bool Matches(const char *aFullName) const { return (mFullName == aFullName); }
 
     private:
-        enum : uint8_t
-        {
-            kMaxAddressesNum = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM,
-        };
+        static constexpr uint16_t kMaxAddressesNum = OPENTHREAD_CONFIG_SRP_SERVER_MAX_ADDRESSES_NUM;
 
         static Host *New(Instance &aInstance);
 
@@ -637,19 +647,13 @@ public:
     void HandleServiceUpdateResult(ServiceUpdateId aId, Error aError);
 
 private:
-    enum : uint16_t
-    {
-        kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header), // Max UDP payload size
-    };
+    static constexpr uint16_t kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
-    enum : uint32_t
-    {
-        kDefaultMinLease             = 60u * 30,        // Default minimum lease time, 30 min (in seconds).
-        kDefaultMaxLease             = 3600u * 2,       // Default maximum lease time, 2 hours (in seconds).
-        kDefaultMinKeyLease          = 3600u * 24,      // Default minimum key-lease time, 1 day (in seconds).
-        kDefaultMaxKeyLease          = 3600u * 24 * 14, // Default maximum key-lease time, 14 days (in seconds).
-        kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT,
-    };
+    static constexpr uint32_t kDefaultMinLease             = 60u * 30;        // 30 min (in seconds).
+    static constexpr uint32_t kDefaultMaxLease             = 3600u * 2;       // 2 hours (in seconds).
+    static constexpr uint32_t kDefaultMinKeyLease          = 3600u * 24;      // 1 day (in seconds).
+    static constexpr uint32_t kDefaultMaxKeyLease          = 3600u * 24 * 14; // 14 days (in seconds).
+    static constexpr uint32_t kDefaultEventsHandlerTimeout = OPENTHREAD_CONFIG_SRP_SERVER_SERVICE_UPDATE_TIMEOUT;
 
     // This class includes metadata for processing a SRP update (register, deregister)
     // and sending DNS response to the client.

@@ -180,10 +180,7 @@ private:
         Ip6::Prefix              mPrefix;
     };
 
-    enum : uint16_t
-    {
-        kNumPrefixes = OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES,
-    };
+    static constexpr uint16_t kNumPrefixes = OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES;
 
     void Start(void);
     void Stop(void);

@@ -108,20 +108,17 @@ class Ip6 : public InstanceLocator, private NonCopyable
     friend class Mpl;
 
 public:
-    enum : uint16_t
-    {
-        /**
-         * The max datagram length (in bytes) of an IPv6 message.
-         *
-         */
-        kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH,
+    /**
+     * The max datagram length (in bytes) of an IPv6 message.
+     *
+     */
+    static constexpr uint16_t kMaxDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_DATAGRAM_LENGTH;
 
-        /**
-         * The max datagram length (in bytes) of an unfragmented IPv6 message.
-         *
-         */
-        kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM,
-    };
+    /**
+     * The max datagram length (in bytes) of an unfragmented IPv6 message.
+     *
+     */
+    static constexpr uint16_t kMaxAssembledDatagramLength = OPENTHREAD_CONFIG_IP6_MAX_ASSEMBLED_DATAGRAM;
 
     /**
      * This constructor initializes the object.
@@ -309,21 +306,12 @@ public:
     static const char *IpProtoToString(uint8_t aIpProto);
 
 private:
-    enum : uint8_t
-    {
-        kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT,
-        kIp6ReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT,
-    };
+    static constexpr uint8_t kDefaultHopLimit      = OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT;
+    static constexpr uint8_t kIp6ReassemblyTimeout = OPENTHREAD_CONFIG_IP6_REASSEMBLY_TIMEOUT;
 
-    enum : uint16_t
-    {
-        kMinimalMtu = 1280,
-    };
+    static constexpr uint16_t kMinimalMtu = 1280;
 
-    enum : uint32_t
-    {
-        kStateUpdatePeriod = 1000,
-    };
+    static constexpr uint32_t kStateUpdatePeriod = 1000;
 
     static void HandleSendQueue(Tasklet &aTasklet);
     void        HandleSendQueue(void);
