@@ -96,7 +96,7 @@ otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
 /**
  * This function requests an update to Operational Dataset.
  *
- * @p aDataset should contain the fields to be updated and their new value. It must not contain Active or Pending
+ * @p aDatasetTlvs should contain dataset fields as encoded TLVs. It must not contain Active or Pending
  * Timestamp fields. The Delay field is optional, if not provided a default value (1000 ms) would be used.
  *
  * @param[in]  aInstance               A pointer to an OpenThread instance.
