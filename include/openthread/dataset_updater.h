@@ -94,6 +94,16 @@ otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
                                       void *                      aContext);
 
 /**
+ * See otDatasetUpdaterRequestUpdate.
+ *
+ * @param aDatasetTlvs A pointer to the Dataset TLVs containing the fields to change.
+ */
+otError otDatasetUpdaterRequestUpdateTlvs(otInstance *                    aInstance,
+                                          const otOperationalDatasetTlvs *aDatasetTlvs,
+                                          otDatasetUpdaterCallback        aCallback,
+                                          void *                          aContext);
+
+/**
  * This function cancels an ongoing (if any) Operational Dataset update request.
  *
  * @param[in]  aInstance         A pointer to an OpenThread instance.

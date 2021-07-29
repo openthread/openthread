@@ -912,7 +912,22 @@ otError Dataset::ProcessUpdater(Arg aArgs[])
     }
     else if (aArgs[0] == "start")
     {
-        error = otDatasetUpdaterRequestUpdate(mInterpreter.mInstance, &sDataset, &Dataset::HandleDatasetUpdater, this);
+        if (aArgs[1] == "tlvs")
+        {
+            MeshCoP::Dataset         dataset;
+            otOperationalDatasetTlvs datasetTlvs;
+
+            SuccessOrExit(error = dataset.SetFrom(*static_cast<MeshCoP::Dataset::Info *>(&sDataset)));
+            dataset.ConvertTo(datasetTlvs);
+
+            error = otDatasetUpdaterRequestUpdateTlvs(mInterpreter.mInstance, &datasetTlvs,
+                                                      &Dataset::HandleDatasetUpdater, this);
+        }
+        else
+        {
+            error =
+                otDatasetUpdaterRequestUpdate(mInterpreter.mInstance, &sDataset, &Dataset::HandleDatasetUpdater, this);
+        }
     }
     else if (aArgs[0] == "cancel")
     {
@@ -923,6 +938,7 @@ otError Dataset::ProcessUpdater(Arg aArgs[])
         error = OT_ERROR_INVALID_ARGS;
     }
 
+exit:
     return error;
 }
 

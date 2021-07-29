@@ -54,6 +54,21 @@ otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
                                                                  aCallback, aContext);
 }
 
+otError otDatasetUpdaterRequestUpdateTlvs(otInstance *                    aInstance,
+                                          const otOperationalDatasetTlvs *aDatasetTlvs,
+                                          otDatasetUpdaterCallback        aCallback,
+                                          void *                          aContext)
+{
+    Instance &             instance = *static_cast<Instance *>(aInstance);
+    MeshCoP::Dataset::Info datasetInfo;
+    MeshCoP::Dataset       dataset;
+
+    dataset.SetFrom(*aDatasetTlvs);
+    dataset.ConvertTo(datasetInfo);
+
+    return instance.Get<MeshCoP::DatasetUpdater>().RequestUpdate(datasetInfo, aCallback, aContext);
+}
+
 void otDatasetUpdaterCancelUpdate(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
