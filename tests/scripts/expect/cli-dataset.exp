@@ -137,6 +137,32 @@ expect "PAN ID: 0xface"
 expect "PSKc: 00112233445566778899aabbccddeeff"
 expect "Security Policy: 678 onrcb"
 expect_line "Done"
+send "dataset pending -x\n"
+expect "dataset pending -x"
+set dataset_tlvs [expect_line {([0-9a-f]+)}]
+expect_line "Done"
+send "dataset clear\n"
+expect_line "Done"
+send "dataset init tlvs $dataset_tlvs\n"
+expect_line "Done"
+send "dataset\n"
+expect "Pending Timestamp: 100"
+expect "Active Timestamp: 100"
+if {$channel == 11} {
+    expect "Channel: 18"
+} else {
+    expect "Channel: 11"
+}
+expect "Channel Mask: 0x03fff800"
+expect -re {Delay: \d+}
+expect "Ext PAN ID: aabbccddeeff0011"
+expect "Mesh Local Prefix: fdde:4860:0:0::/64"
+expect "Network Key: aabbccddeeff00112233445566778899"
+expect "Network Name: OT-network"
+expect "PAN ID: 0xface"
+expect "PSKc: 00112233445566778899aabbccddeeff"
+expect "Security Policy: 678 onrcb"
+expect_line "Done"
 
 sleep 30
 
@@ -266,6 +292,8 @@ expect_line "Done"
 send "dataset securitypolicy 678 something_invalid\n"
 expect "Error 7: InvalidArgs"
 send "dataset set something_invalid 00\n"
+expect "Error 7: InvalidArgs"
+send "dataset init tlvs something_invalid\n"
 expect "Error 7: InvalidArgs"
 
 dispose_all
