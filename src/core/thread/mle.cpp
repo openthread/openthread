@@ -1780,7 +1780,7 @@ void Mle::HandleAttachTimer(void)
             SetAttachState(kAttachStateAnnounce);
             IgnoreError(SendParentRequest(kParentRequestTypeRoutersAndReeds));
             mAnnounceChannel = Mac::ChannelMask::kChannelIteratorFirst;
-            delay            = mAnnounceDelay;
+            delay = kParentRequestReedTimeout;
             break;
         }
 
