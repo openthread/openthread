@@ -28,6 +28,7 @@
 #
 import logging
 import unittest
+from ipaddress import IPv6Network
 
 import config
 import thread_cert
@@ -108,6 +109,8 @@ class MultiBorderRouters(thread_cert.TestCase):
         self.simulator.go(5)
         self.assertEqual('router', router1.get_state())
 
+        self.simulator.go(5)
+
         br2.start()
         self.simulator.go(5)
         self.assertEqual('router', br2.get_state())
@@ -129,27 +132,29 @@ class MultiBorderRouters(thread_cert.TestCase):
         logging.info("ROUTER2 addrs: %r", router2.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertTrue(len(br1.get_prefixes()) == 1)
-        self.assertTrue(len(router1.get_prefixes()) == 1)
-        self.assertTrue(len(br2.get_prefixes()) == 1)
-        self.assertTrue(len(router2.get_prefixes()) == 1)
+        self.assertEqual(len(br1.get_prefixes()), 1)
+        self.assertEqual(len(router1.get_prefixes()), 1)
+        self.assertEqual(len(br2.get_prefixes()), 1)
+        self.assertEqual(len(router2.get_prefixes()), 1)
 
-        br1_omr_prefix = br1.get_prefixes()[0]
+        br1_omr_prefix = br1.get_omr_prefix()
+        self.assertEqual(br1_omr_prefix, br1.get_prefixes()[0].split(' ')[0])
 
         # Each BR should independently register an external route for the on-link prefix.
-        self.assertTrue(len(br1.get_routes()) == 2)
-        self.assertTrue(len(router1.get_routes()) == 2)
-        self.assertTrue(len(br2.get_routes()) == 2)
-        self.assertTrue(len(router2.get_routes()) == 2)
+        self.assertEqual(len(br1.get_routes()), 2)
+        self.assertEqual(len(router1.get_routes()), 2)
+        self.assertEqual(len(br2.get_routes()), 2)
+        self.assertEqual(len(router2.get_routes()), 2)
 
-        external_route = br1.get_routes()[0]
-        br1_on_link_prefix = external_route.split(' ')[0]
+        br1_on_link_prefix = br1.get_on_link_prefix()
+        self.assertEqual(br1_on_link_prefix, br1.get_routes()[0].split(' ')[0])
+        self.assertEqual(br1_on_link_prefix, br1.get_routes()[1].split(' ')[0])
 
-        self.assertTrue(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(br2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(host.get_matched_ula_addresses(br1_on_link_prefix)) == 1)
+        self.assertEqual(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(br2.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(host.get_matched_ula_addresses(br1_on_link_prefix)), 1)
 
         # Router1 and Router2 can ping each other inside the Thread network.
         self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
@@ -176,31 +181,35 @@ class MultiBorderRouters(thread_cert.TestCase):
         logging.info("ROUTER2 addrs: %r", router2.get_addrs())
         logging.info("HOST    addrs: %r", host.get_addrs())
 
-        self.assertGreaterEqual(len(host.get_addrs()), 2)
+        self.assertGreaterEqual(len(host.get_addrs()), 3)
 
-        self.assertTrue(len(br1.get_prefixes()) == 1)
-        self.assertTrue(len(router1.get_prefixes()) == 1)
-        self.assertTrue(len(br2.get_prefixes()) == 1)
-        self.assertTrue(len(router2.get_prefixes()) == 1)
+        self.assertEqual(len(br1.get_prefixes()), 1)
+        self.assertEqual(len(router1.get_prefixes()), 1)
+        self.assertEqual(len(br2.get_prefixes()), 1)
+        self.assertEqual(len(router2.get_prefixes()), 1)
 
-        br2_omr_prefix = br1.get_prefixes()[0]
-        self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
+        br2_omr_prefix = br2.get_omr_prefix()
+        self.assertEqual(br2_omr_prefix, br2.get_prefixes()[0].split(' ')[0])
 
-        # Only BR2 will register external route for the on-link prefix.
-        self.assertTrue(len(br1.get_routes()) == 1)
-        self.assertTrue(len(router1.get_routes()) == 1)
-        self.assertTrue(len(br2.get_routes()) == 1)
-        self.assertTrue(len(router2.get_routes()) == 1)
+        # Only BR2 will keep the route for BR1's on-link prefix
+        # and add route for on-link prefix of its own.
+        self.assertEqual(len(br1.get_routes()), 2)
+        self.assertEqual(len(router1.get_routes()), 2)
+        self.assertEqual(len(br2.get_routes()), 2)
+        self.assertEqual(len(router2.get_routes()), 2)
 
-        br2_external_route = br2.get_routes()[0]
-        br2_on_link_prefix = br2_external_route.split(' ')[0]
+        br2_external_routes = [route.split(' ')[0] for route in br2.get_routes()]
 
-        self.assertTrue(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(br2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
-        self.assertTrue(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)) == 1)
+        br2_on_link_prefix = br2.get_on_link_prefix()
+        self.assertEqual(set(map(IPv6Network, br2_external_routes)),
+                         set(map(IPv6Network, [br1_on_link_prefix, br2_on_link_prefix])))
 
-        self.assertTrue(len(host.get_matched_ula_addresses(br2_on_link_prefix)) == 1)
+        self.assertEqual(len(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(br2.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+        self.assertEqual(len(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+
+        self.assertEqual(len(host.get_matched_ula_addresses(br2_on_link_prefix)), 1)
 
         # Router1 and Router2 can ping each other inside the Thread network.
         self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))

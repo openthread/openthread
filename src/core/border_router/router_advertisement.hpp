@@ -238,6 +238,14 @@ public:
     void SetPreferredLifetime(uint32_t aPreferredLifetime) { mPreferredLifetime = HostSwap32(aPreferredLifetime); }
 
     /**
+     * THis method returns the preferred lifetime of the prefix in seconds.
+     *
+     * @returns  The preferred lifetime in seconds.
+     *
+     */
+    uint32_t GetPreferredLifetime(void) const { return HostSwap32(mPreferredLifetime); }
+
+    /**
      * This method sets the prefix.
      *
      * @param[in]  aPrefix  The prefix contained in this option.
@@ -261,7 +269,8 @@ public:
      */
     bool IsValid(void) const
     {
-        return (GetSize() == sizeof(*this)) && (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT);
+        return (GetSize() == sizeof(*this)) && (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT) &&
+               (GetPreferredLifetime() <= GetValidLifetime());
     }
 
 private:

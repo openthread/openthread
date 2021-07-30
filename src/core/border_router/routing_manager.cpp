@@ -63,6 +63,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mInfraIfIsRunning(false)
     , mInfraIfIndex(0)
     , mAdvertisedOnLinkPrefix(nullptr)
+    , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
     , mTimeRouterAdvMessageLastUpdate(TimerMilli::GetNow())
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
     , mDiscoveredPrefixStaleTimer(aInstance, HandleDiscoveredPrefixStaleTimer)
@@ -224,17 +225,20 @@ void RoutingManager::Stop(void)
     if (mAdvertisedOnLinkPrefix != nullptr)
     {
         RemoveExternalRoute(*mAdvertisedOnLinkPrefix);
-    }
 
-    InvalidateAllDiscoveredPrefixes();
+        // Start deprecating the local on-link prefix to send a PIO
+        // with zero preferred lifetime in `SendRouterAdvertisement`.
+        DeprecateOnLinkPrefix();
+    }
 
     // Use empty OMR & on-link prefixes to invalidate possible advertised prefixes.
     SendRouterAdvertisement(OmrPrefixArray(), nullptr);
 
     mAdvertisedOmrPrefixes.Clear();
-
     mAdvertisedOnLinkPrefix = nullptr;
+    mOnLinkPrefixDeprecateTimer.Stop();
 
+    InvalidateAllDiscoveredPrefixes();
     mDiscoveredPrefixes.Clear();
     mDiscoveredPrefixInvalidTimer.Stop();
     mDiscoveredPrefixStaleTimer.Stop();
@@ -499,7 +503,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
     {
-        if (!prefix.mIsOnLinkPrefix)
+        if (!prefix.mIsOnLinkPrefix || prefix.IsDeprecated())
         {
             continue;
         }
@@ -521,6 +525,8 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
         {
             newOnLinkPrefix = &mLocalOnLinkPrefix;
         }
+
+        mOnLinkPrefixDeprecateTimer.Stop();
     }
     // When an application-specific on-link prefix is received and it is bigger than the
     // advertised prefix, we will not remove the advertised prefix. In this case, there
@@ -536,19 +542,32 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
         {
             otLogInfoBr("EvaluateOnLinkPrefix: There is already smaller on-link prefix %s on interface %u",
                         smallestOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
-
-            // TODO: we remove the advertised on-link prefix by setting zero valid lifetime for PIO,
-            // But SLAAC addresses configured by PIO prefix will not be removed immediately (
-            // https://tools.ietf.org/html/rfc4862#section-5.5.3). This leads to a situation that
-            // a WiFi device keeps using the old SLAAC address but a Thread device cannot reach to
-            // it. One solution is to delay removing external route until the SLAAC addresses are
-            // actually expired/deprecated.
-            RemoveExternalRoute(*mAdvertisedOnLinkPrefix);
+            DeprecateOnLinkPrefix();
         }
     }
 
 exit:
     return newOnLinkPrefix;
+}
+
+void RoutingManager::HandleOnLinkPrefixDeprecateTimer(Timer &aTimer)
+{
+    aTimer.Get<RoutingManager>().HandleOnLinkPrefixDeprecateTimer();
+}
+
+void RoutingManager::HandleOnLinkPrefixDeprecateTimer(void)
+{
+    otLogInfoBr("Local on-link prefix %s expired", mLocalOnLinkPrefix.ToString().AsCString());
+    RemoveExternalRoute(mLocalOnLinkPrefix);
+}
+
+void RoutingManager::DeprecateOnLinkPrefix(void)
+{
+    OT_ASSERT(mAdvertisedOnLinkPrefix != nullptr);
+
+    otLogInfoBr("Deprecate local on-link prefix %s", mAdvertisedOnLinkPrefix->ToString().AsCString());
+    mOnLinkPrefixDeprecateTimer.StartAt(mTimeAdvertisedOnLinkPrefix,
+                                        TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime));
 }
 
 // This method evaluate the routing policy depends on prefix and route
@@ -662,6 +681,8 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
 
     if (aNewOnLinkPrefix != nullptr)
     {
+        OT_ASSERT(aNewOnLinkPrefix == &mLocalOnLinkPrefix);
+
         RouterAdv::PrefixInfoOption pio;
 
         pio.SetOnLink(true);
@@ -680,27 +701,29 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
                         aNewOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
         }
 
-        otLogInfoBr("Send on-link prefix %s in PIO (valid lifetime = %u seconds)",
-                    aNewOnLinkPrefix->ToString().AsCString(), kDefaultOnLinkPrefixLifetime);
+        otLogInfoBr("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
+                    aNewOnLinkPrefix->ToString().AsCString(), pio.GetPreferredLifetime(), pio.GetValidLifetime());
+
+        mTimeAdvertisedOnLinkPrefix = TimerMilli::GetNow();
     }
-    else if (mAdvertisedOnLinkPrefix != nullptr)
+    else if (mOnLinkPrefixDeprecateTimer.IsRunning())
     {
         RouterAdv::PrefixInfoOption pio;
 
         pio.SetOnLink(true);
         pio.SetAutoAddrConfig(true);
+        pio.SetValidLifetime(TimeMilli::MsecToSec(mOnLinkPrefixDeprecateTimer.GetFireTime() - TimerMilli::GetNow()));
 
-        // Set zero valid lifetime to immediately invalidate the advertised on-link prefix.
-        pio.SetValidLifetime(0);
+        // Set zero preferred lifetime to immediately deprecate the advertised on-link prefix.
         pio.SetPreferredLifetime(0);
-        pio.SetPrefix(*mAdvertisedOnLinkPrefix);
+        pio.SetPrefix(mLocalOnLinkPrefix);
 
         OT_ASSERT(bufferLength + pio.GetSize() <= sizeof(buffer));
         memcpy(buffer + bufferLength, &pio, pio.GetSize());
         bufferLength += pio.GetSize();
 
-        otLogInfoBr("Stop advertising on-link prefix %s on interface %u",
-                    mAdvertisedOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
+        otLogInfoBr("Send on-link prefix %s in PIO (preferred lifetime = %u seconds, valid lifetime = %u seconds)",
+                    mLocalOnLinkPrefix.ToString().AsCString(), pio.GetPreferredLifetime(), pio.GetValidLifetime());
     }
 
     // Invalidate the advertised OMR prefixes if they are no longer in the new OMR prefix array.
@@ -852,12 +875,19 @@ void RoutingManager::HandleRouterSolicitTimer(void)
     }
     else
     {
-        // Invalidate all prefixes that are not refreshed during Router Solicitation.
-        for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
+        // Invalidate/deprecate all OMR/on-link prefixes that are not refreshed during Router Solicitation.
+        for (ExternalPrefix &prefix : mDiscoveredPrefixes)
         {
             if (prefix.mTimeLastUpdate <= mTimeRouterSolicitStart)
             {
-                InvalidateDiscoveredPrefixes(&prefix.mPrefix, prefix.mIsOnLinkPrefix);
+                if (prefix.mIsOnLinkPrefix)
+                {
+                    prefix.mPreferredLifetime = 0;
+                }
+                else
+                {
+                    InvalidateDiscoveredPrefixes(&prefix.mPrefix, prefix.mIsOnLinkPrefix);
+                }
             }
         }
 
@@ -1022,8 +1052,11 @@ exit:
 
 bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig)
 {
-    Ip6::Prefix prefix         = aPio.GetPrefix();
-    bool        needReevaluate = false;
+    Ip6::Prefix     prefix         = aPio.GetPrefix();
+    bool            needReevaluate = false;
+    TimeMilli       staleTime;
+    ExternalPrefix  onLinkPrefix;
+    ExternalPrefix *existingPrefix = nullptr;
 
     if (!IsValidOnLinkPrefix(aPio, aManagedAddrConfig))
     {
@@ -1036,14 +1069,76 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption 
     otLogInfoBr("Discovered on-link prefix (%s, %u seconds) from interface %u", prefix.ToString().AsCString(),
                 aPio.GetValidLifetime(), mInfraIfIndex);
 
-    if (aPio.GetValidLifetime() == 0)
+    onLinkPrefix.mIsOnLinkPrefix    = true;
+    onLinkPrefix.mPrefix            = prefix;
+    onLinkPrefix.mValidLifetime     = aPio.GetValidLifetime();
+    onLinkPrefix.mPreferredLifetime = aPio.GetPreferredLifetime();
+    onLinkPrefix.mTimeLastUpdate    = TimerMilli::GetNow();
+
+    staleTime = TimerMilli::GetNow();
+
+    for (ExternalPrefix &externalPrefix : mDiscoveredPrefixes)
     {
-        needReevaluate = InvalidateDiscoveredPrefixes(&prefix, /* aIsOnLinkPrefix */ true) > 0;
+        if (externalPrefix == onLinkPrefix)
+        {
+            existingPrefix = &externalPrefix;
+        }
+
+        staleTime = OT_MAX(staleTime, externalPrefix.GetStaleTime());
+    }
+
+    if (existingPrefix == nullptr)
+    {
+        if (onLinkPrefix.mValidLifetime == 0)
+        {
+            ExitNow();
+        }
+
+        if (!mDiscoveredPrefixes.IsFull())
+        {
+            SuccessOrExit(AddExternalRoute(prefix, OT_ROUTE_PREFERENCE_MED));
+            existingPrefix  = mDiscoveredPrefixes.PushBack();
+            *existingPrefix = onLinkPrefix;
+            needReevaluate  = true;
+        }
+        else
+        {
+            otLogWarnBr("Discovered too many prefixes, ignore new on-link prefix %s", prefix.ToString().AsCString());
+            ExitNow();
+        }
     }
     else
     {
-        needReevaluate = AddDiscoveredPrefix(prefix, /* aIsOnLinkPrefix */ true, aPio.GetValidLifetime());
+        constexpr uint32_t kTwoHoursInSeconds = 2 * 3600;
+
+        // Per RFC 4862 section 5.5.3.e:
+        // 1.  If the received Valid Lifetime is greater than 2 hours or
+        //     greater than RemainingLifetime, set the valid lifetime of the
+        //     corresponding address to the advertised Valid Lifetime.
+        // 2.  If RemainingLifetime is less than or equal to 2 hours, ignore
+        //     the Prefix Information option with regards to the valid
+        //     lifetime, unless ...
+        // 3.  Otherwise, reset the valid lifetime of the corresponding
+        //     address to 2 hours.
+
+        if (onLinkPrefix.mValidLifetime > kTwoHoursInSeconds ||
+            onLinkPrefix.GetExpireTime() > existingPrefix->GetExpireTime())
+        {
+            existingPrefix->mValidLifetime = onLinkPrefix.mValidLifetime;
+        }
+        else if (existingPrefix->GetExpireTime() > TimerMilli::GetNow() + TimeMilli::SecToMsec(kTwoHoursInSeconds))
+        {
+            existingPrefix->mValidLifetime = kTwoHoursInSeconds;
+        }
+
+        existingPrefix->mPreferredLifetime = onLinkPrefix.mPreferredLifetime;
+        existingPrefix->mTimeLastUpdate    = onLinkPrefix.mTimeLastUpdate;
+        needReevaluate                     = (existingPrefix->mPreferredLifetime == 0);
     }
+
+    mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(existingPrefix->GetExpireTime());
+    staleTime = OT_MAX(staleTime, existingPrefix->GetStaleTime());
+    mDiscoveredPrefixStaleTimer.FireAtIfEarlier(staleTime);
 
 exit:
     return needReevaluate;
@@ -1051,8 +1146,10 @@ exit:
 
 bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &aRio)
 {
-    Ip6::Prefix prefix         = aRio.GetPrefix();
-    bool        needReevaluate = false;
+    Ip6::Prefix     prefix         = aRio.GetPrefix();
+    bool            needReevaluate = false;
+    ExternalPrefix  omrPrefix;
+    ExternalPrefix *existingPrefix = nullptr;
 
     if (!IsValidOmrPrefix(prefix))
     {
@@ -1078,13 +1175,50 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &
 
     if (aRio.GetRouteLifetime() == 0)
     {
-        needReevaluate = (InvalidateDiscoveredPrefixes(&prefix, /* aIsOnLinkPrefix */ false) > 0);
+        needReevaluate = InvalidateDiscoveredPrefixes(&prefix, /* aIsOnLinkPrefix */ false);
+        ExitNow();
     }
-    else
+
+    omrPrefix.mIsOnLinkPrefix  = false;
+    omrPrefix.mPrefix          = prefix;
+    omrPrefix.mValidLifetime   = aRio.GetRouteLifetime();
+    omrPrefix.mRoutePreference = aRio.GetPreference();
+    omrPrefix.mTimeLastUpdate  = TimerMilli::GetNow();
+
+    for (ExternalPrefix &externalPrefix : mDiscoveredPrefixes)
     {
-        needReevaluate =
-            AddDiscoveredPrefix(prefix, /* aIsOnLinkPrefix */ false, aRio.GetRouteLifetime(), aRio.GetPreference());
+        if (externalPrefix == omrPrefix)
+        {
+            existingPrefix = &externalPrefix;
+        }
+
+        mDiscoveredPrefixStaleTimer.FireAtIfEarlier(externalPrefix.GetStaleTime());
     }
+
+    if (existingPrefix == nullptr)
+    {
+        if (omrPrefix.mValidLifetime == 0)
+        {
+            ExitNow();
+        }
+
+        if (!mDiscoveredPrefixes.IsFull())
+        {
+            SuccessOrExit(AddExternalRoute(prefix, omrPrefix.mRoutePreference));
+            existingPrefix = mDiscoveredPrefixes.PushBack();
+            needReevaluate = true;
+        }
+        else
+        {
+            otLogWarnBr("Discovered too many prefixes, ignore new prefix %s", prefix.ToString().AsCString());
+            ExitNow();
+        }
+    }
+
+    *existingPrefix = omrPrefix;
+
+    mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(existingPrefix->GetExpireTime());
+    mDiscoveredPrefixStaleTimer.FireAtIfEarlier(existingPrefix->GetStaleTime());
 
 exit:
     return needReevaluate;
@@ -1142,77 +1276,6 @@ void RoutingManager::InvalidateAllDiscoveredPrefixes(void)
     InvalidateDiscoveredPrefixes();
 
     OT_ASSERT(mDiscoveredPrefixes.IsEmpty());
-}
-
-static void UpdateStaleTime(TimeMilli &aonLinkPrefixStaleTime,
-                            TimeMilli &aomrPrefixStaleTime,
-                            bool       aIsOnLink,
-                            TimeMilli  aPrefixStaleTime)
-{
-    if (aIsOnLink)
-    {
-        aonLinkPrefixStaleTime = OT_MAX(aonLinkPrefixStaleTime, aPrefixStaleTime);
-    }
-    else
-    {
-        aomrPrefixStaleTime = OT_MIN(aomrPrefixStaleTime, aPrefixStaleTime);
-    }
-}
-
-// Adds a discovered prefix on infra link. If the same prefix already exists,
-// only the lifetime will be updated. Returns a boolean which indicates whether
-// a new prefix is added.
-bool RoutingManager::AddDiscoveredPrefix(const Ip6::Prefix &aPrefix,
-                                         bool               aIsOnLinkPrefix,
-                                         uint32_t           aLifetime,
-                                         otRoutePreference  aRoutePreference)
-{
-    OT_ASSERT(aIsOnLinkPrefix ? IsValidOmrPrefix(aPrefix) : IsValidOnLinkPrefix(aPrefix));
-    OT_ASSERT(aLifetime > 0);
-
-    bool            addedNewPrefix        = false;
-    ExternalPrefix *discoveredPrefix      = nullptr;
-    TimeMilli       now                   = TimerMilli::GetNow();
-    TimeMilli       onLinkPrefixStaleTime = now;
-    TimeMilli       omrPrefixStaleTime    = now.GetDistantFuture();
-
-    for (ExternalPrefix &prefix : mDiscoveredPrefixes)
-    {
-        if (aPrefix == prefix.mPrefix && aIsOnLinkPrefix == prefix.mIsOnLinkPrefix)
-        {
-            discoveredPrefix = &prefix;
-        }
-
-        UpdateStaleTime(onLinkPrefixStaleTime, omrPrefixStaleTime, prefix.mIsOnLinkPrefix, prefix.GetStaleTime());
-    }
-
-    if (discoveredPrefix == nullptr)
-    {
-        if (!mDiscoveredPrefixes.IsFull())
-        {
-            SuccessOrExit(AddExternalRoute(aPrefix, aRoutePreference));
-            discoveredPrefix = mDiscoveredPrefixes.PushBack();
-            addedNewPrefix   = true;
-        }
-        else
-        {
-            otLogWarnBr("Discovered too many prefixes, ignore new prefix %s", aPrefix.ToString().AsCString());
-            ExitNow();
-        }
-    }
-
-    discoveredPrefix->mPrefix         = aPrefix;
-    discoveredPrefix->mIsOnLinkPrefix = aIsOnLinkPrefix;
-    discoveredPrefix->mValidLifetime  = aLifetime;
-    discoveredPrefix->mTimeLastUpdate = now;
-    mDiscoveredPrefixInvalidTimer.FireAtIfEarlier(discoveredPrefix->GetExpireTime());
-    UpdateStaleTime(onLinkPrefixStaleTime, omrPrefixStaleTime, discoveredPrefix->mIsOnLinkPrefix,
-                    discoveredPrefix->GetStaleTime());
-
-    mDiscoveredPrefixStaleTimer.FireAtIfEarlier(OT_MIN(onLinkPrefixStaleTime, omrPrefixStaleTime));
-
-exit:
-    return addedNewPrefix;
 }
 
 bool RoutingManager::NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const

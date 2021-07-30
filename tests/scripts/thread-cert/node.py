@@ -38,6 +38,7 @@ import sys
 import time
 import traceback
 import unittest
+from ipaddress import IPv6Address, IPv6Network
 from typing import Union, Dict, Optional, List
 
 import pexpect
@@ -1149,7 +1150,7 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def multicast_listener_list(self) -> Dict[ipaddress.IPv6Address, int]:
+    def multicast_listener_list(self) -> Dict[IPv6Address, int]:
         cmd = 'bbr mgmt mlr listener'
         self.send_command(cmd)
 
@@ -1157,7 +1158,7 @@ class NodeImpl:
         for line in self._expect_results("\S+ \d+"):
             line = line.split()
             assert len(line) == 2, line
-            ip = ipaddress.IPv6Address(line[0])
+            ip = IPv6Address(line[0])
             timeout = int(line[1])
             assert ip not in table
 
@@ -1170,9 +1171,9 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def multicast_listener_add(self, ip: Union[ipaddress.IPv6Address, str], timeout: int = 0):
-        if not isinstance(ip, ipaddress.IPv6Address):
-            ip = ipaddress.IPv6Address(ip)
+    def multicast_listener_add(self, ip: Union[IPv6Address, str], timeout: int = 0):
+        if not isinstance(ip, IPv6Address):
+            ip = IPv6Address(ip)
 
         cmd = f'bbr mgmt mlr listener add {ip.compressed} {timeout}'
         self.send_command(cmd)
@@ -1183,7 +1184,7 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def register_multicast_listener(self, *ipaddrs: Union[ipaddress.IPv6Address, str], timeout=None):
+    def register_multicast_listener(self, *ipaddrs: Union[IPv6Address, str], timeout=None):
         assert len(ipaddrs) > 0, ipaddrs
 
         ipaddrs = map(str, ipaddrs)
@@ -1198,7 +1199,7 @@ class NodeImpl:
         status = int(m.group(1))
         failed_num = int(m.group(2))
         assert failed_num == len(lines) - 1
-        failed_ips = list(map(ipaddress.IPv6Address, lines[1:]))
+        failed_ips = list(map(IPv6Address, lines[1:]))
         print(f"register_multicast_listener {ipaddrs} => status: {status}, failed ips: {failed_ips}")
         return status, failed_ips
 
@@ -1516,7 +1517,7 @@ class NodeImpl:
         return None
 
     def get_mleid_iid(self):
-        ml_eid = ipaddress.IPv6Address(self.get_mleid())
+        ml_eid = IPv6Address(self.get_mleid())
         return ml_eid.packed[8:].hex()
 
     def get_eidcaches(self):
@@ -1606,6 +1607,22 @@ class NodeImpl:
 
         return None
 
+    def get_ip6_address_by_prefix(self, prefix: Union[str, IPv6Network]) -> List[IPv6Address]:
+        """Get addresses matched with given prefix.
+
+        Args:
+            prefix: the prefix to match against.
+                    Can be either a string or ipaddress.IPv6Network.
+
+        Returns:
+            The IPv6 address list.
+        """
+        if isinstance(prefix, str):
+            prefix = IPv6Network(prefix)
+        addrs = map(IPv6Address, self.get_addrs())
+
+        return [addr for addr in addrs if addr in prefix]
+
     def get_ip6_address(self, address_type):
         """Get specific type of IPv6 address configured on thread device.
 
@@ -1660,6 +1677,16 @@ class NodeImpl:
     def disable_br(self):
         self.send_command('br disable')
         self._expect_done()
+
+    def get_omr_prefix(self):
+        cmd = 'br omrprefix'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
+
+    def get_on_link_prefix(self):
+        cmd = 'br onlinkprefix'
+        self.send_command(cmd)
+        return self._expect_command_output(cmd)[0]
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
@@ -2936,6 +2963,8 @@ interface eth0
         AdvOnLink on;
         AdvAutonomous %s;
         AdvRouterAddr off;
+        AdvPreferredLifetime 40;
+        AdvValidLifetime 60;
     };
 };
 EOF
@@ -3009,7 +3038,7 @@ class HostNode(LinuxHost, OtbrDocker):
 
         addrs = []
         for addr in self.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA):
-            if ipaddress.IPv6Address(addr) in ipaddress.IPv6Network(prefix):
+            if IPv6Address(addr) in IPv6Network(prefix):
                 addrs.append(addr)
 
         return addrs
