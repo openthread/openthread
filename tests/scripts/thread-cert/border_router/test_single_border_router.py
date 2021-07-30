@@ -318,12 +318,11 @@ class SingleBorderRouter(thread_cert.TestCase):
         br.start_radvd_service(prefix=config.ONLINK_GUA_PREFIX, slaac=True)
         self.simulator.go(5)
 
-        self.assertEqual(len(br.get_routes()), 1)
-        self.assertTrue(br.get_routes()[0].startswith(config.ONLINK_GUA_PREFIX.split('::/')[0]))
-        self.assertEqual(len(router.get_routes()), 1)
-        self.assertTrue(router.get_routes()[0].startswith(config.ONLINK_GUA_PREFIX.split('::/')[0]))
+        self.assertEqual(len(br.get_routes()), 2)
+        self.assertEqual(len(router.get_routes()), 2)
 
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_GUA)[0]))
+        self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))
         self.assertTrue(host.ping(router.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
 

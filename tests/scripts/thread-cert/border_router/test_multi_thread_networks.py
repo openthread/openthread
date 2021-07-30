@@ -120,8 +120,8 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.assertTrue(len(br2.get_prefixes()) == 1)
         self.assertTrue(len(router2.get_prefixes()) == 1)
 
-        br1_omr_prefix = br1.get_prefixes()[0]
-        br2_omr_prefix = br2.get_prefixes()[0]
+        br1_omr_prefix = br1.get_omr_prefix()
+        br2_omr_prefix = br2.get_omr_prefix()
 
         self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
 
