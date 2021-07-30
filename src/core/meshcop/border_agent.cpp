@@ -305,7 +305,6 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     VerifyOrExit(Get<MeshCoP::Commissioner>().IsDisabled());
 #endif
 
-#if !OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
     if (Get<Mle::MleRouter>().IsAttached())
     {
         Start();
@@ -314,7 +313,6 @@ void BorderAgent::HandleNotifierEvents(Events aEvents)
     {
         Stop();
     }
-#endif
 
 exit:
     return;

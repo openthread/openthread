@@ -56,4 +56,18 @@ uint16_t otBorderAgentGetUdpPort(otInstance *aInstance)
     return instance.Get<MeshCoP::BorderAgent>().GetUdpPort();
 }
 
+void otBorderAgentStart(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<MeshCoP::BorderAgent>().Start();
+}
+
+void otBorderAgentStop(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<MeshCoP::BorderAgent>().Stop();
+}
+
 #endif // OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE

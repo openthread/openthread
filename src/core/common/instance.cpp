@@ -37,7 +37,6 @@
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
-#include "meshcop/border_agent.hpp"
 #include "radio/trel_link.hpp"
 #include "utils/heap.hpp"
 
@@ -182,9 +181,6 @@ void Instance::AfterInit(void)
     Get<Trel::Link>().AfterInit();
 #endif
 
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    Get<MeshCoP::BorderAgent>().Start();
-#endif
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
@@ -199,15 +195,12 @@ void Instance::Finalize(void)
     mIsInitialized = false;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE && OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    Get<MeshCoP::BorderAgent>().Stop();
-#endif
     IgnoreError(otThreadSetEnabled(this, false));
     IgnoreError(otIp6SetEnabled(this, false));
     IgnoreError(otLinkSetEnabled(this, false));
 
     Get<Settings>().Deinit();
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif
 
     IgnoreError(Get<Mac::SubMac>().Disable());
 
