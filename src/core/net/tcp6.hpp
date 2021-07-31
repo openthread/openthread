@@ -410,10 +410,7 @@ public:
     class Header
     {
     public:
-        enum : uint8_t
-        {
-            kChecksumFieldOffset = 16, ///< The byte offset of the Checksum field in the TCP header.
-        };
+        static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
 
         /**
          * This method returns the TCP Source Port.

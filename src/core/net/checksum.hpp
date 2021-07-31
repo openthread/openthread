@@ -101,10 +101,7 @@ private:
                        uint8_t             aIpProto,
                        const Message &     aMessage);
 
-    enum : uint16_t
-    {
-        kValidRxChecksum = 0xffff,
-    };
+    static constexpr uint16_t kValidRxChecksum = 0xffff;
 
     uint16_t mValue;
     bool     mAtOddIndex;

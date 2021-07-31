@@ -52,11 +52,8 @@ OT_TOOL_PACKED_BEGIN
 class Address : public Equatable<Address>, public Clearable<Address>
 {
 public:
-    enum : uint8_t
-    {
-        kSize              = 4,  ///< Size of an IPv4 Address (in bytes).
-        kAddressStringSize = 17, ///< String size used by `ToString()`.
-    };
+    static constexpr uint16_t kSize              = 4;  ///< Size of an IPv4 Address (in bytes).
+    static constexpr uint16_t kAddressStringSize = 17; ///< String size used by `ToString()`.
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
