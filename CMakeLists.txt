@@ -101,7 +101,6 @@ if(OT_PACKAGE_VERSION STREQUAL "")
     ot_git_version(OT_PACKAGE_VERSION)
     message(STATUS "Setting default package version: ${OT_PACKAGE_VERSION}")
 endif()
-target_compile_definitions(ot-config INTERFACE "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\"")
 message(STATUS "Package Version: ${OT_PACKAGE_VERSION}")
 
 set(OT_THREAD_VERSION "1.2" CACHE STRING "Thread version chosen by the user at configure time")
