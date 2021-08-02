@@ -31,7 +31,7 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 EXTRA_DIST                                    = \
     bsdtcp                                      \
     lib                                         \
-	tcplp.h                                     \
+    tcplp.h                                     \
     $(NULL)
 
 lib_LIBRARIES                                 = \
@@ -49,10 +49,6 @@ override CFLAGS                              := $(CFLAGS) -Wno-unused-parameter
 # Do not enable -Waddress-of-packed-member for TCPlp
 override CFLAGS                              := $(filter-out -Waddress-of-packed-member,$(CFLAGS))
 override CFLAGS                              := $(CFLAGS) -Wno-address-of-packed-member
-
-# Do not enable -Wold-style-declaration for TCPlp
-override CFLAGS                              := $(filter-out -Wold-style-declaration,$(CFLAGS))
-override CFLAGS                              := $(CFLAGS) -Wno-old-style-declaration
 
 # Do not enable -pedantic-errors for TCPlp
 override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
@@ -80,6 +76,6 @@ libtcplp_a_SOURCES                            = \
     lib/bitmap.c                                \
     lib/cbuf.c                                  \
     lib/lbuf.c                                  \
-	$(NULL)
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

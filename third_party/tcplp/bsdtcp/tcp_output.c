@@ -52,7 +52,7 @@
 // From ip_compat.h
 #define	bcopy(a,b,c)	memmove(b,a,c)
 
-static void inline
+static inline void
 cc_after_idle(struct tcpcb *tp)
 {
 //	INP_WLOCK_ASSERT(tp->t_inpcb);

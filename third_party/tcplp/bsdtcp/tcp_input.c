@@ -111,7 +111,7 @@ static void	 tcp_newreno_partial_ack(struct tcpcb *, struct tcphdr *);
 /*
  * CC wrapper hook functions
  */
-static void inline
+static inline void
 cc_ack_received(struct tcpcb *tp, struct tcphdr *th, uint16_t type)
 {
 //	INP_WLOCK_ASSERT(tp->t_inpcb);
@@ -143,7 +143,7 @@ cc_ack_received(struct tcpcb *tp, struct tcphdr *th, uint16_t type)
 	}
 }
 
-static void inline
+static inline void
 cc_conn_init(struct tcpcb *tp)
 {
 	struct hc_metrics_lite metrics;
@@ -217,7 +217,7 @@ cc_conn_init(struct tcpcb *tp)
     // printf("TCP CC_INIT %u %d %d\n", (unsigned int) get_micros(), (int) tp->snd_cwnd, (int) tp->snd_ssthresh);
 }
 
-void inline
+inline void
 cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type)
 {
 //	INP_WLOCK_ASSERT(tp->t_inpcb);
@@ -277,7 +277,7 @@ cc_cong_signal(struct tcpcb *tp, struct tcphdr *th, uint32_t type)
 	}
 }
 
-static void inline
+static inline void
 cc_post_recovery(struct tcpcb *tp, struct tcphdr *th)
 {
 //	INP_WLOCK_ASSERT(tp->t_inpcb);
@@ -309,7 +309,7 @@ cc_post_recovery(struct tcpcb *tp, struct tcphdr *th)
 	    (tlen <= tp->t_maxopd) &&					\
 	    (V_tcp_delack_enabled || (tp->t_flags & TF_NEEDSYN)))
 
-static void inline
+static inline void
 cc_ecnpkt_handler(struct tcpcb *tp, struct tcphdr *th, uint8_t iptos)
 {
 //	INP_WLOCK_ASSERT(tp->t_inpcb);
