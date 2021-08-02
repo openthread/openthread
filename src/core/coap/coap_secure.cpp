@@ -84,9 +84,11 @@ exit:
 
 void CoapSecure::Stop(void)
 {
+    ot::Message *message;
+
     mDtls.Close();
 
-    for (ot::Message *message = mTransmitQueue.GetHead(); message != nullptr; message = message->GetNext())
+    while ((message = mTransmitQueue.GetHead()) != nullptr)
     {
         mTransmitQueue.Dequeue(*message);
         message->Free();
