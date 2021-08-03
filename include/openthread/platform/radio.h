@@ -233,8 +233,8 @@ typedef struct otMacKeyMaterial otMacKeyMaterial;
  */
 typedef enum
 {
-    OT_KEY_TYPE_LITERAL_KEY         = 0,  ///< Use Literal Keys.
-    OT_KEY_TYPE_KEY_REF             = 1,  ///< Use Reference to Key.
+    OT_KEY_TYPE_LITERAL_KEY = 0, ///< Use Literal Keys.
+    OT_KEY_TYPE_KEY_REF     = 1, ///< Use Reference to Key.
 } otRadioKeyType;
 
 /**

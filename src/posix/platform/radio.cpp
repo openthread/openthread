@@ -571,10 +571,10 @@ void otPlatRadioSetMacKey(otInstance *            aInstance,
                           const otMacKeyMaterial *aNextKey,
                           otRadioKeyType          aKeyType)
 {
-    if(aKeyType == OT_KEY_TYPE_LITERAL_KEY)
+    if (aKeyType == OT_KEY_TYPE_LITERAL_KEY)
     {
-        SuccessOrDie(sRadioSpinel.SetMacKey(aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey, aCurrKey->mKeyMaterial.mKey,
-                                            aNextKey->mKeyMaterial.mKey));
+        SuccessOrDie(sRadioSpinel.SetMacKey(aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey,
+                                            aCurrKey->mKeyMaterial.mKey, aNextKey->mKeyMaterial.mKey));
     }
 
     OT_UNUSED_VARIABLE(aInstance);

@@ -1202,7 +1202,7 @@ void otPlatRadioSetMacKey(otInstance *            aInstance,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
                           const otMacKeyMaterial *aNextKey,
-                          otRadioKeyType          aKeyType )
+                          otRadioKeyType          aKeyType)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIdMode);
