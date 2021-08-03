@@ -460,11 +460,20 @@ exit:
     return error;
 }
 
-Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo, const uint8_t *aTlvs, uint8_t aLength)
+Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,
+                                     const uint8_t *      aTlvs,
+                                     uint8_t              aLength,
+                                     otMgmtSetCallback    aCallback,
+                                     void *               aContext)
 {
-    Error            error = kErrorNone;
-    Coap::Message *  message;
+    Error            error   = kErrorNone;
+    Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
+
+    OT_ASSERT(aCallback != nullptr);
+    VerifyOrExit(mMgmtSetCallback == nullptr, error = kErrorBusy);
+    mMgmtSetCallback        = aCallback;
+    mMgmtSetCallbackContext = aContext;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
@@ -508,12 +517,17 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo, const ui
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleSetResponse, this));
 
     otLogInfoMeshCoP("sent dataset set request to leader");
 
 exit:
     FreeMessageOnError(message, error);
+    if (error != kErrorNone)
+    {
+        mMgmtSetCallback        = nullptr;
+        mMgmtSetCallbackContext = nullptr;
+    }
     return error;
 }
 
@@ -636,6 +650,48 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 exit:
     FreeMessageOnError(message, error);
     return error;
+}
+
+void DatasetManager::HandleSetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult)
+{
+    Error    error;
+    StateTlv stateTlv;
+
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    SuccessOrExit(error = aResult);
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, stateTlv));
+
+    switch (stateTlv.GetState())
+    {
+    case StateTlv::kReject:
+        error = kErrorRejected;
+        break;
+    case StateTlv::kPending:
+        error = kErrorPending;
+        break;
+    case StateTlv::kAccept:
+        error = kErrorNone;
+        break;
+    default:
+        error = kErrorParse;
+        break;
+    }
+
+exit:
+    OT_ASSERT(mMgmtSetCallback != nullptr);
+    mMgmtSetCallback(error, mMgmtSetCallbackContext);
+    mMgmtSetCallback        = nullptr;
+    mMgmtSetCallbackContext = nullptr;
+}
+
+void DatasetManager::HandleSetResponse(void *               aContext,
+                                       otMessage *          aMessage,
+                                       const otMessageInfo *aMessageInfo,
+                                       otError              aResult)
+{
+    static_cast<DatasetManager *>(aContext)->HandleSetResponse(
+        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
 ActiveDataset::ActiveDataset(Instance &aInstance)

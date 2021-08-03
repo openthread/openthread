@@ -565,15 +565,22 @@ otError Dataset::ProcessMgmtSetCommand(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength);
+        error =
+            otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, HandleMgmtSetResponse, this);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength);
+        error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, HandleMgmtSetResponse,
+                                            this);
     }
     else
     {
         error = OT_ERROR_INVALID_ARGS;
+    }
+
+    if (error == OT_ERROR_NONE)
+    {
+        error = OT_ERROR_PENDING;
     }
 
 exit:
@@ -938,5 +945,15 @@ void Dataset::HandleDatasetUpdater(otError aError)
 
 #endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
 
+void Dataset::HandleMgmtSetResponse(otError aError, void *aContext)
+{
+    static_cast<Dataset *>(aContext)->HandleMgmtSetResponse(aError);
+}
+
+void Dataset::HandleMgmtSetResponse(otError aError)
+{
+    mInterpreter.OutputLine("MGMT_SET response: %s", otThreadErrorToString(aError));
+    mInterpreter.OutputResult(OT_ERROR_NONE);
+}
 } // namespace Cli
 } // namespace ot

@@ -107,6 +107,9 @@ private:
     void        HandleDatasetUpdater(otError aError);
 #endif
 
+    static void HandleMgmtSetResponse(otError aError, void *aContext);
+    void        HandleMgmtSetResponse(otError aError);
+
     void    OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
     otError ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs);
 

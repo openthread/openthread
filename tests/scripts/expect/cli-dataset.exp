@@ -30,6 +30,28 @@
 source "tests/scripts/expect/_common.exp"
 source "tests/scripts/expect/_multinode.exp"
 
+spawn_node 1
+setup_leader
+
+send "dataset mgmtsetcommand active -x 0e080000000000020000000300001435060004001fffe00208ceb37634effc839c0708fddf8f06ce6bb8950510cb320497d719cb084fd9c15944c8ddf2030f4f70656e5468726561642d3061373901020a790410bc50d35226f1234133c8d920349318680c0402a0fff8\n"
+expect_line "MGMT_SET response: OK"
+expect_line "Done"
+send "dataset mgmtsetcommand active -x 0e080000000000010000000300001735060004001fffe00208ec3a85618e059c6b0708fdec67a21563b2d005109eb9a7f9b98843dcf61b31dd3f351a2d030f4f70656e5468726561642d33363435010236450410d00118850b1deaa88543e433d0e6bd560c0402a0fff8\n"
+expect_line "MGMT_SET response: Rejected"
+expect_line "Done"
+send "dataset clear\n"
+expect_line "Done"
+send "dataset commit pending\n"
+expect_line "Done"
+send "dataset mgmtsetcommand pending -x 0e08000000000001000033080000000000010000000300000f35060004001fffe0020838449297552e8e2f0708fdd2019ad672c036051025d7f0672e93592fbabcc9c298c73c7c030f4f70656e5468726561642d3162303701021b07041062a74c68566b1672459e3a499038124a0c0402a0fff8\n"
+expect_line "MGMT_SET response: OK"
+expect_line "Done"
+send "dataset mgmtsetcommand pending -x 0e08000000000001000033080000000000010000000300000f35060004001fffe0020838449297552e8e2f0708fdd2019ad672c036051025d7f0672e93592fbabcc9c298c73c7c030f4f70656e5468726561642d3162303701021b07041062a74c68566b1672459e3a499038124a0c0402a0fff8\n"
+expect_line "MGMT_SET response: Rejected"
+expect_line "Done"
+
+dispose_all
+
 setup_two_nodes
 
 switch_node 1

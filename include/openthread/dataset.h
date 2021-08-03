@@ -291,6 +291,14 @@ typedef enum otMeshcopTlvType
 } otMeshcopTlvType;
 
 /**
+ * This function pointer is called when a response to a MGMT_SET request is received or on the request timeout.
+ *
+ * @param[in]  aResult   A result of the operation.
+ * @param[in]  aContext  A pointer to application-specific context.
+ */
+typedef void (*otMgmtSetCallback)(otError aResult, void *aContext);
+
+/**
  * This function indicates whether a valid network is present in the Active Operational Dataset or not.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -460,7 +468,9 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
 otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
                                    const otOperationalDataset *aDataset,
                                    const uint8_t *             aTlvs,
-                                   uint8_t                     aLength);
+                                   uint8_t                     aLength,
+                                   otMgmtSetCallback           aCallback,
+                                   void *                      aContext);
 
 /**
  * This function sends MGMT_PENDING_GET.
@@ -496,7 +506,9 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     const otOperationalDataset *aDataset,
                                     const uint8_t *             aTlvs,
-                                    uint8_t                     aLength);
+                                    uint8_t                     aLength,
+                                    otMgmtSetCallback           aCallback,
+                                    void *                      aContext);
 
 /**
  * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.

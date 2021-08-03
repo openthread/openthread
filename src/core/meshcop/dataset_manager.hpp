@@ -154,7 +154,11 @@ public:
      * @retval kErrorNoBufs  Insufficient buffer space to send.
      *
      */
-    Error SendSetRequest(const Dataset::Info &aDatasetInfo, const uint8_t *aTlvs, uint8_t aLength);
+    Error SendSetRequest(const Dataset::Info &aDatasetInfo,
+                         const uint8_t *      aTlvs,
+                         uint8_t              aLength,
+                         otMgmtSetCallback    aCallback,
+                         void *               aContext);
 
     /**
      * This method sends a MGMT_GET request.
@@ -360,6 +364,12 @@ private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif
 
+    static void HandleSetResponse(void *               aContext,
+                                  otMessage *          aMessage,
+                                  const otMessageInfo *aMessageInfo,
+                                  otError              aResult);
+    void        HandleSetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult);
+
     enum
     {
         kMaxDatasetTlvs = 16,   // Maximum number of TLVs in a Dataset.
@@ -368,6 +378,9 @@ private:
 
     bool       mCoapPending : 1;
     TimerMilli mTimer;
+
+    otMgmtSetCallback mMgmtSetCallback        = nullptr;
+    void *            mMgmtSetCallbackContext = nullptr;
 };
 
 class ActiveDataset : public DatasetManager, private NonCopyable
