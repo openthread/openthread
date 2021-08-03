@@ -2529,7 +2529,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 otError Interpreter::ProcessPskcRef(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;
@@ -2980,7 +2980,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 otError Interpreter::ProcessNetworkKeyRef(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;

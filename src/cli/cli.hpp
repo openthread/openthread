@@ -564,7 +564,7 @@ private:
     otError ProcessNetworkIdTimeout(Arg aArgs[]);
 #endif
     otError ProcessNetworkKey(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     otError ProcessNetworkKeyRef(Arg aArgs[]);
 #endif
     otError ProcessNetworkName(Arg aArgs[]);
@@ -590,7 +590,7 @@ private:
 #if OPENTHREAD_FTD
     otError ProcessPreferRouterId(Arg aArgs[]);
     otError ProcessPskc(Arg aArgs[]);
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     otError ProcessPskcRef(Arg aArgs[]);
 #endif
 #endif
@@ -847,7 +847,7 @@ private:
         {"networkidtimeout", &Interpreter::ProcessNetworkIdTimeout},
 #endif
         {"networkkey", &Interpreter::ProcessNetworkKey},
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
         {"networkkeyref", &Interpreter::ProcessNetworkKeyRef},
 #endif
         {"networkname", &Interpreter::ProcessNetworkName},
@@ -873,7 +873,7 @@ private:
         {"promiscuous", &Interpreter::ProcessPromiscuous},
 #if OPENTHREAD_FTD
         {"pskc", &Interpreter::ProcessPskc},
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
         {"pskcref", &Interpreter::ProcessPskcRef},
 #endif
 #endif

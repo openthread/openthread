@@ -228,6 +228,16 @@ struct otMacKeyMaterial
 typedef struct otMacKeyMaterial otMacKeyMaterial;
 
 /**
+ * This enumeration defines constants about key types.
+ *
+ */
+typedef enum
+{
+    OT_KEY_TYPE_LITERAL_KEY         = 0,  ///< Use Literal Keys.
+    OT_KEY_TYPE_KEY_REF             = 1,  ///< Use Reference to Key.
+} otRadioKeyType;
+
+/**
  * This structure represents the IEEE 802.15.4 Header IE (Information Element) related information of a radio frame.
  */
 typedef struct otRadioIeInfo
@@ -583,6 +593,7 @@ void otPlatRadioSetPromiscuous(otInstance *aInstance, bool aEnable);
  * @param[in]   aPrevKey     A pointer to the previous MAC key.
  * @param[in]   aCurrKey     A pointer to the current MAC key.
  * @param[in]   aNextKey     A pointer to the next MAC key.
+ * @param[in]   aKeyType     Key Type used.
  *
  */
 void otPlatRadioSetMacKey(otInstance *            aInstance,
@@ -590,7 +601,8 @@ void otPlatRadioSetMacKey(otInstance *            aInstance,
                           uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
-                          const otMacKeyMaterial *aNextKey);
+                          const otMacKeyMaterial *aNextKey,
+                          otRadioKeyType          aKeyType);
 
 /**
  * This method sets the current MAC frame counter value.

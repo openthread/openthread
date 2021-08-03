@@ -719,7 +719,15 @@ inline void Radio::SetMacKey(uint8_t         aKeyIdMode,
                              const Mac::Key &aCurrKey,
                              const Mac::Key &aNextKey)
 {
-    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey);
+    otRadioKeyType aKeyType;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    aKeyType = OT_KEY_TYPE_KEY_REF;
+#else
+    aKeyType = OT_KEY_TYPE_LITERAL_KEY;
+#endif
+
+    otPlatRadioSetMacKey(GetInstancePtr(), aKeyIdMode, aKeyId, &aPrevKey, &aCurrKey, &aNextKey, aKeyType);
 }
 
 inline Error Radio::GetTransmitPower(int8_t &aPower)

@@ -119,7 +119,7 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
     return &instance.Get<KeyManager>().GetNetworkKey();
 }
 
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -146,7 +146,7 @@ exit:
     return error;
 }
 
-#if OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
 {
     Error     error    = kErrorNone;

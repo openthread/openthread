@@ -392,7 +392,7 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
 /**
  * Get the Key Refence for Thread Network Key.
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE` to be enabled.
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
@@ -429,7 +429,7 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey);
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
- * This function requires the build-time feature `OPENTHREAD_CONFIG_KEY_REFERENCES_ENABLE` to be enabled.
+ * This function requires the build-time feature `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` to be enabled.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aKeyRef     Reference to the Thread Network Key.

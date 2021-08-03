@@ -179,7 +179,12 @@ KeyManager::KeyManager(Instance &aInstance)
     , mKekFrameCounter(0)
     , mIsPskcSet(false)
 {
-    SetCryptoType(otPlatCryptoGetType());
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE    
+    SetCryptoType(OT_CRYPTO_TYPE_USE_KEY_REFS);
+#else
+    SetCryptoType(OT_CRYPTO_TYPE_USE_LITERAL_KEYS);
+#endif
+
     IgnoreError(otPlatCryptoInit());
     IgnoreError(mNetworkKey.GenerateRandom());
 

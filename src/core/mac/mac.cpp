@@ -147,18 +147,17 @@ Mac::Mac(Instance &aInstance)
 
     memcpy(sMode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
 
-    if (otPlatCryptoGetType() == OT_CRYPTO_TYPE_USE_KEY_REFS)
-    {
-        otMacKeyRef aKeyRef = 0;
-        Error       error   = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
-                                            (OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
-                                            OT_CRYPTO_KEY_STORAGE_VOLATILE, sMode2Key.m8, sizeof(sMode2Key.m8));
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    otMacKeyRef aKeyRef = 0;
+    Error       error   = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                        (OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
+                                        OT_CRYPTO_KEY_STORAGE_VOLATILE, sMode2Key.m8, sizeof(sMode2Key.m8));
 
-        sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
+    sMode2KeyMaterial.mKeyMaterial.mKeyRef = aKeyRef;
 
-        OT_ASSERT(error == kErrorNone);
-        OT_UNUSED_VARIABLE(error);
-    }
+    OT_ASSERT(error == kErrorNone);
+    OT_UNUSED_VARIABLE(error);
+#endif
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)

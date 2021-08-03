@@ -154,6 +154,7 @@ static uint8_t                 sKeyId;
 static struct otMacKeyMaterial sPrevKey;
 static struct otMacKeyMaterial sCurrKey;
 static struct otMacKeyMaterial sNextKey;
+static otRadioKeyType          sKeyType;
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -1200,14 +1201,16 @@ void otPlatRadioSetMacKey(otInstance *            aInstance,
                           uint8_t                 aKeyId,
                           const otMacKeyMaterial *aPrevKey,
                           const otMacKeyMaterial *aCurrKey,
-                          const otMacKeyMaterial *aNextKey)
+                          const otMacKeyMaterial *aNextKey,
+                          otRadioKeyType          aKeyType )
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aKeyIdMode);
 
     otEXPECT(aPrevKey != NULL && aCurrKey != NULL && aNextKey != NULL);
 
-    sKeyId = aKeyId;
+    sKeyId   = aKeyId;
+    sKeyType = aKeyType;
     memcpy(&sPrevKey, aPrevKey, sizeof(otMacKeyMaterial));
     memcpy(&sCurrKey, aCurrKey, sizeof(otMacKeyMaterial));
     memcpy(&sNextKey, aNextKey, sizeof(otMacKeyMaterial));

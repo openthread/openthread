@@ -154,7 +154,7 @@ struct otCryptoKeyAttributes
 
 /**
  *
- * This structure represents the Key key Attributes structure.
+ * This structure represents the Key Attributes structure.
  *
  */
 
@@ -179,18 +179,18 @@ otError otPlatCryptoInit(void);
 /**
  * Import a key into PSA ITS.
  *
- * @param[out]  aKeyId            Reference to the key to be used for crypto operations.
- * @param[in]   aKeyType          Key Type encoding for the key.
- * @param[in]   aKeyAlgorithm     Key algorithm encoding for the key.
- * @param[in]   aKeyUsage         Key Usage encoding for the key.
- * @param[in]   aKeyPersistence   Key Persistence for this key
- * @param[in]   aKey              Actual key to be imported.
- * @param[in]   aKeyLen           Length of the key to be imported.
+ * @param[inout] aKeyId            Reference to the key to be used for crypto operations.
+ * @param[in]    aKeyType          Key Type encoding for the key.
+ * @param[in]    aKeyAlgorithm     Key algorithm encoding for the key.
+ * @param[in]    aKeyUsage         Key Usage encoding for the key.
+ * @param[in]    aKeyPersistence   Key Persistence for this key
+ * @param[in]    aKey              Actual key to be imported.
+ * @param[in]    aKeyLen           Length of the key to be imported.
  *
  * @retval OT_ERROR_NONE          Successfully imported the key  @p aInput.
  * @retval OT_ERROR_FAILED        Failed to import the key @p aInput.
  * @retval OT_ERROR_INVALID_ARGS  @p aKey was set to NULL.
- *
+ * 
  * @note This API is available only if platform supports PSA crypto
  *
  */
@@ -213,9 +213,9 @@ otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
  * @retval OT_ERROR_NONE          Successfully exported  @p aKeyId.
  * @retval OT_ERROR_FAILED        Failed to export @p aInput.
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was NULL
- *
+ * 
  * @note This API is available only if platform supports PSA crypto
- *
+ * 
  */
 otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen);
 
@@ -228,7 +228,7 @@ otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuffer, size_t aB
  * @retval OT_ERROR_FAILED        Failed to destroy the key.
  *
  * @note This API is available only if platform supports PSA crypto
- *
+ * 
  */
 otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyId);
 
@@ -384,7 +384,7 @@ otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, otCryptoKey *
  * @retval OT_ERROR_NONE          Successfully encrypted @p aInput.
  * @retval OT_ERROR_FAILED        Failed to encrypt @p aInput.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aKey or @p aOutput were NULL
- *
+ * 
  * @note Incase PSA is supported pointer to psa_key_id will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
@@ -400,7 +400,7 @@ otError otPlatCryptoAesEncrypt(void *aContext, size_t aContextSize, const uint8_
  * @retval OT_ERROR_NONE          Successfully freed AES context.
  * @retval OT_ERROR_FAILED        Failed to free AES context.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
- *
+ * 
  * @note Incase PSA is supported pointer to psa_key_id will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
@@ -499,7 +499,7 @@ otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize);
  * @param[in]  aContextSize       Context size SHA-256 operation.
  * @param[in]  aBuf               A pointer to the input buffer.
  * @param[in]  aBufLength         The length of @p aBuf in bytes.
- *
+ * 
  * @retval OT_ERROR_NONE          Successfully updated SHA-256 with new input operation.
  * @retval OT_ERROR_FAILED        Failed to update SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
