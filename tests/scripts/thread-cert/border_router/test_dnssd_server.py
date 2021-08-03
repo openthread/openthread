@@ -222,13 +222,16 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
     def _verify_discovery_proxy_meshcop(self, server_addr, network_name, digger):
         dp_service_name = '_meshcop._udp.default.service.arpa.'
-        dp_instance_name = f'{network_name}._meshcop._udp.default.service.arpa.'
         dp_hostname = lambda x: x.endswith('.default.service.arpa.')
 
         def check_border_agent_port(port):
             return 0 < port <= 65535
 
         dig_result = digger.dns_dig(server_addr, dp_service_name, 'PTR')
+        for answer in dig_result['ANSWER']:
+            if len(answer) >= 2 and answer[-2] == 'PTR':
+                dp_instance_name = answer[-1]
+                break
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
