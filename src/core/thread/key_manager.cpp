@@ -246,19 +246,18 @@ void KeyManager::SetPskc(const Pskc &aPskc)
 
     mIsPskcSet = true;
 }
+
 void KeyManager::SetPskcRef(otPskcRef aKeyRef)
 {
-    otPskc PskcLiteral;
+    VerifyOrExit(aKeyRef != mPskc.mKeyRef, Get<Notifier>().SignalIfFirst(kEventPskcChanged));
 
     mPskc.mKeyRef = aKeyRef;
+    Get<Notifier>().Signal(kEventPskcChanged);
 
-    // This is needed because the dataset manager still operates using literal keys.
-    IgnoreError(mPskc.CopyKey(PskcLiteral.m8, sizeof(PskcLiteral.m8)));
-
-    IgnoreError(Get<Notifier>().Update(mPskc, *static_cast<const Pskc *>(&PskcLiteral), kEventPskcChanged));
-
-    mPskc.Clear();
     mIsPskcSet = true;
+
+exit:
+    return;
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
@@ -355,23 +354,20 @@ exit:
 
 Error KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
 {
-    Error        error = kErrorNone;
-    otNetworkKey networkKeyLiteral;
+    Error error = kErrorNone;
+
+    VerifyOrExit(aKeyRef != mNetworkKey.mKeyRef, Get<Notifier>().SignalIfFirst(kEventNetworkKeyChanged));
 
     mNetworkKey.mKeyRef = aKeyRef;
-    // This is needed because the dataset manager still operates using literal keys.
-    SuccessOrExit(mNetworkKey.CopyKey(networkKeyLiteral.m8, sizeof(networkKeyLiteral.m8)));
-    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, *static_cast<const NetworkKey *>(&networkKeyLiteral),
-                                         kEventNetworkKeyChanged));
+
+    Get<Notifier>().Signal(kEventNetworkKeyChanged);
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
 
     mKeySequence = 0;
     UpdateKeyMaterial();
     ResetFrameCounters();
 
-    mNetworkKey.Clear();
     mNetworkKey.mCryptoType = Mac::CryptoType::kUseKeyRefs;
-    memset(&networkKeyLiteral, 0, sizeof(networkKeyLiteral));
 
 exit:
     return error;
