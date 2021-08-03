@@ -579,7 +579,7 @@ Error Client::Start(void)
     Error error;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind());
+    SuccessOrExit(error = mSocket.Bind(0, OT_NETIF_UNSPECIFIED));
 
 exit:
     return error;

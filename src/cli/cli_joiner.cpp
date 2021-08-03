@@ -69,6 +69,7 @@ otError Joiner::ProcessDiscerner(Arg aArgs[])
         }
         else
         {
+            VerifyOrExit(aArgs[1].IsEmpty());
             SuccessOrExit(Interpreter::ParseJoinerDiscerner(aArgs[0], discerner));
             error = otJoinerSetDiscerner(mInterpreter.mInstance, &discerner);
         }

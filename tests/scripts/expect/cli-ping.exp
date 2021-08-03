@@ -41,7 +41,7 @@ send "ping ::1 1 2 0.12345 1\n"
 expect_line "Done"
 send "ping stop\n"
 expect_line "Done"
-send "ping ::1 1 2 1 1 1\n"
+send "ping ::1 1 2 1 1 1 1\n"
 expect "Error 7: InvalidArgs"
 
 dispose_all
