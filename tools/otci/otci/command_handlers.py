@@ -92,14 +92,13 @@ class OtCliCommandRunner(OTCommandHandler):
         self.__otcli: OtCliHandler = otcli
         self.__is_spinel_cli = is_spinel_cli
         self.__expect_command_echoback = not self.__is_spinel_cli
+        self.__line_read_callback = None
 
         self.__pending_lines = queue.Queue()
         self.__should_close = threading.Event()
         self.__otcli_reader = threading.Thread(target=self.__otcli_read_routine)
         self.__otcli_reader.setDaemon(True)
         self.__otcli_reader.start()
-
-        self.__line_read_callback = None
 
     def __repr__(self):
         return repr(self.__otcli)
@@ -204,6 +203,8 @@ class OtbrSshCommandRunner(OTCommandHandler):
         self.__ssh = paramiko.SSHClient()
         self.__ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
 
+        self.__line_read_callback = None
+
         try:
             self.__ssh.connect(host,
                                port=port,
@@ -216,8 +217,6 @@ class OtbrSshCommandRunner(OTCommandHandler):
                 self.__ssh.get_transport().auth_none(username)
             else:
                 raise
-
-        self.__line_read_callback = None
 
     def __repr__(self):
         return f'{self.__host}:{self.__port}'
