@@ -145,9 +145,9 @@ extern int
 #include <openthread/platform/misc.h>
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/logging.hpp"
 #include "net/ip6_address.hpp"
-#include "posix/platform/udp.hpp"
 
 unsigned int gNetifIndex = 0;
 char         gNetifName[IFNAMSIZ];
@@ -228,10 +228,9 @@ static otIp6Prefix        sAddedExternalRoutes[kMaxExternalRoutesNum];
 static otError destroyTunnel(void);
 #endif
 
-static otInstance *sInstance  = nullptr;
-static int         sTunFd     = -1; ///< Used to exchange IPv6 packets.
-static int         sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
-static int         sNetlinkFd = -1; ///< Used to receive netlink events.
+static int sTunFd     = -1; ///< Used to exchange IPv6 packets.
+static int sIpFd      = -1; ///< Used to manage IPv6 stack on Thread interface.
+static int sNetlinkFd = -1; ///< Used to receive netlink events.
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 static int sMLDMonitorFd = -1; ///< Used to receive MLD events.
 #endif
@@ -392,7 +391,7 @@ static void UpdateUnicast(otInstance *aInstance, const otIp6AddressInfo &aAddres
 {
     OT_UNUSED_VARIABLE(aInstance);
 
-    assert(sInstance == aInstance);
+    assert(gInstance == aInstance);
     assert(sIpFd >= 0);
 
 #if defined(__linux__)
@@ -442,7 +441,7 @@ static void UpdateMulticast(otInstance *aInstance, const otIp6Address &aAddress,
     otError          error = OT_ERROR_NONE;
     int              err;
 
-    assert(sInstance == aInstance);
+    assert(gInstance == aInstance);
 
     VerifyOrExit(sIpFd >= 0);
     memcpy(&mreq.ipv6mr_multiaddr, &aAddress, sizeof(mreq.ipv6mr_multiaddr));
@@ -487,7 +486,7 @@ static void UpdateLink(otInstance *aInstance)
     bool         ifState = false;
     bool         otState = false;
 
-    assert(sInstance == aInstance);
+    assert(gInstance == aInstance);
 
     VerifyOrExit(sIpFd >= 0);
     memset(&ifr, 0, sizeof(ifr));
@@ -763,7 +762,7 @@ static void processReceive(otMessage *aMessage, void *aContext)
     offset += 4;
 #endif
 
-    assert(sInstance == aContext);
+    assert(gInstance == aContext);
     assert(length <= kMaxIp6Size);
 
     VerifyOrExit(sTunFd > 0);
@@ -802,7 +801,7 @@ static void processTransmit(otInstance *aInstance)
     otError    error  = OT_ERROR_NONE;
     size_t     offset = 0;
 
-    assert(sInstance == aInstance);
+    assert(gInstance == aInstance);
 
     rval = read(sTunFd, packet, sizeof(packet));
     VerifyOrExit(rval > 0, error = OT_ERROR_FAILED);
@@ -1335,41 +1334,6 @@ exit:
     return;
 }
 
-void platformNetifDeinit(void)
-{
-    if (sTunFd != -1)
-    {
-        close(sTunFd);
-        sTunFd = -1;
-
-#if defined(__NetBSD__) || defined(__FreeBSD__)
-        destroyTunnel();
-#endif
-    }
-
-    if (sIpFd != -1)
-    {
-        close(sIpFd);
-        sIpFd = -1;
-    }
-
-    if (sNetlinkFd != -1)
-    {
-        close(sNetlinkFd);
-        sNetlinkFd = -1;
-    }
-
-#if OPENTHREAD_POSIX_USE_MLD_MONITOR
-    if (sMLDMonitorFd != -1)
-    {
-        close(sMLDMonitorFd);
-        sMLDMonitorFd = -1;
-    }
-#endif
-
-    gNetifIndex = 0;
-}
-
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
 static void mldListenerInit(void)
 {
@@ -1491,14 +1455,9 @@ exit:
 
 #if defined(__linux__)
 // set up the tun device
-static void platformConfigureTunDevice(otInstance *aInstance,
-                                       const char *aInterfaceName,
-                                       char *      deviceName,
-                                       size_t      deviceNameLen)
+static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceName, size_t deviceNameLen)
 {
     struct ifreq ifr;
-
-    (void)aInstance;
 
     sTunFd = open(OPENTHREAD_POSIX_TUN_DEVICE, O_RDWR | O_CLOEXEC | O_NONBLOCK);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -1528,17 +1487,12 @@ static void platformConfigureTunDevice(otInstance *aInstance,
 #endif
 
 #if defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_UTUN)
-static void platformConfigureTunDevice(otInstance *aInstance,
-                                       const char *aInterfaceName,
-                                       char *      deviceName,
-                                       size_t      deviceNameLen)
+static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceName, size_t deviceNameLen)
 {
     (void)aInterfaceName;
     int                 err = 0;
     struct sockaddr_ctl addr;
     struct ctl_info     info;
-
-    (void)aInstance;
 
     sTunFd = SocketWithCloseExec(PF_SYSTEM, SOCK_DGRAM, SYSPROTO_CONTROL, kSocketNonBlock);
     VerifyOrDie(sTunFd >= 0, OT_EXIT_ERROR_ERRNO);
@@ -1585,10 +1539,7 @@ exit:
 #if defined(__NetBSD__) ||                                                                             \
     (defined(__APPLE__) && (OPENTHREAD_POSIX_CONFIG_MACOS_TUN_OPTION == OT_POSIX_CONFIG_MACOS_TUN)) || \
     defined(__FreeBSD__)
-static void platformConfigureTunDevice(otInstance *aInstance,
-                                       const char *aInterfaceName,
-                                       char *      deviceName,
-                                       size_t      deviceNameLen)
+static void platformConfigureTunDevice(const char *aInterfaceName, char *deviceName, size_t deviceNameLen)
 {
     int         flags = IFF_BROADCAST | IFF_MULTICAST;
     int         err;
@@ -1596,7 +1547,6 @@ static void platformConfigureTunDevice(otInstance *aInstance,
     const char *path;
 
     (void)aInterfaceName;
-    (void)aInstance;
 
     path = OPENTHREAD_POSIX_TUN_DEVICE;
 
@@ -1668,33 +1618,72 @@ static void platformConfigureNetLink(void)
 #endif // defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__)
 }
 
-void platformNetifInit(otInstance *aInstance, const char *aInterfaceName)
+void platformNetifInit(const char *aInterfaceName)
 {
     sIpFd = SocketWithCloseExec(AF_INET6, SOCK_DGRAM, IPPROTO_IP, kSocketNonBlock);
     VerifyOrDie(sIpFd >= 0, OT_EXIT_ERROR_ERRNO);
 
     platformConfigureNetLink();
-    platformConfigureTunDevice(aInstance, aInterfaceName, gNetifName, sizeof(gNetifName));
+    platformConfigureTunDevice(aInterfaceName, gNetifName, sizeof(gNetifName));
 
     gNetifIndex = if_nametoindex(gNetifName);
     VerifyOrDie(gNetifIndex > 0, OT_EXIT_FAILURE);
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    ot::Posix::Udp::Get().Init(aInstance, gNetifName);
-#endif
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     mldListenerInit();
 #endif
+}
 
-    otIp6SetReceiveFilterEnabled(aInstance, true);
-    otIcmp6SetEchoMode(aInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
-    otIp6SetReceiveCallback(aInstance, processReceive, aInstance);
-    otIp6SetAddressCallback(aInstance, processAddressChange, aInstance);
+void platformNetifSetUp(void)
+{
+    OT_ASSERT(gInstance != nullptr);
+
+    otIp6SetReceiveFilterEnabled(gInstance, true);
+    otIcmp6SetEchoMode(gInstance, OT_ICMP6_ECHO_HANDLER_DISABLED);
+    otIp6SetReceiveCallback(gInstance, processReceive, gInstance);
+    otIp6SetAddressCallback(gInstance, processAddressChange, gInstance);
 #if OPENTHREAD_POSIX_MULTICAST_PROMISCUOUS_REQUIRED
     otIp6SetMulticastPromiscuousEnabled(aInstance, true);
 #endif
+}
 
-    sInstance = aInstance;
+void platformNetifTearDown(void)
+{
+}
+
+void platformNetifDeinit(void)
+{
+    if (sTunFd != -1)
+    {
+        close(sTunFd);
+        sTunFd = -1;
+
+#if defined(__NetBSD__) || defined(__FreeBSD__)
+        destroyTunnel();
+#endif
+    }
+
+    if (sIpFd != -1)
+    {
+        close(sIpFd);
+        sIpFd = -1;
+    }
+
+    if (sNetlinkFd != -1)
+    {
+        close(sNetlinkFd);
+        sNetlinkFd = -1;
+    }
+
+#if OPENTHREAD_POSIX_USE_MLD_MONITOR
+    if (sMLDMonitorFd != -1)
+    {
+        close(sMLDMonitorFd);
+        sMLDMonitorFd = -1;
+    }
+#endif
+
+    gNetifIndex = 0;
 }
 
 void platformNetifUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, fd_set *aErrorFdSet, int *aMaxFd)
@@ -1763,18 +1752,18 @@ void platformNetifProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, c
 
     if (FD_ISSET(sTunFd, aReadFdSet))
     {
-        processTransmit(sInstance);
+        processTransmit(gInstance);
     }
 
     if (FD_ISSET(sNetlinkFd, aReadFdSet))
     {
-        processNetlinkEvent(sInstance);
+        processNetlinkEvent(gInstance);
     }
 
 #if OPENTHREAD_POSIX_USE_MLD_MONITOR
     if (FD_ISSET(sMLDMonitorFd, aReadFdSet))
     {
-        processMLDEvent(sInstance);
+        processMLDEvent(gInstance);
     }
 #endif
 

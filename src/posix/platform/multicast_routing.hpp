@@ -58,8 +58,8 @@ public:
     {
     }
 
-    void Init(otInstance *aInstance);
-    void Deinit(void);
+    void SetUp(void);
+    void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
     void HandleStateChange(otInstance *aInstance, otChangedFlags aFlags);
@@ -134,7 +134,6 @@ private:
     MulticastForwardingCache mMulticastForwardingCacheTable[kMulitcastForwardingCacheTableSize];
     uint64_t                 mLastExpireTime;
     int                      mMulticastRouterSock;
-    otInstance *             mInstance;
 };
 
 } // namespace Posix

@@ -39,13 +39,12 @@ class Udp : public Mainloop::Source, private NonCopyable
 public:
     static Udp &Get(void);
 
-    void Init(otInstance *aInstance, const char *aIfName);
+    void Init(const char *aIfName);
+    void SetUp(void);
+    void TearDown(void);
     void Deinit(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
-
-private:
-    otInstance *mInstance = nullptr;
 };
 
 } // namespace Posix
