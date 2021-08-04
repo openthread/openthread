@@ -351,12 +351,9 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
     {
         CallMgmtSetCallback(aMessage, aError);
     }
-    else
-    {
-        mTimer.Start(kSendSetDelay);
-    }
 
     mMgmtPending = false;
+    mTimer.Start(kSendSetDelay);
 }
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
