@@ -345,11 +345,11 @@ protected:
     bool         mTimestampValid : 1;
 
 private:
-    static void HandleCoapResponse(void *               aContext,
-                                   otMessage *          aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   Error                aError);
-    void        HandleCoapResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aError);
+    static void HandleMgmtSetResponse(void *               aContext,
+                                      otMessage *          aMessage,
+                                      const otMessageInfo *aMessageInfo,
+                                      Error                aError);
+    void        HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aError);
 
     bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
     bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }

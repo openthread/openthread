@@ -1672,8 +1672,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_ACTIV
     uint8_t              extraTlvsLength;
 
     SuccessOrExit(error = DecodeOperationalDataset(dataset, &extraTlvs, &extraTlvsLength));
-    error = otDatasetSendMgmtActiveSet(
-        mInstance, &dataset, extraTlvs, extraTlvsLength, [](otError, void *) {}, nullptr);
+    error = otDatasetSendMgmtActiveSet(mInstance, &dataset, extraTlvs, extraTlvsLength, nullptr, nullptr);
 
 exit:
     return error;
@@ -1687,8 +1686,7 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_THREAD_MGMT_SET_PENDI
     uint8_t              extraTlvsLength;
 
     SuccessOrExit(error = DecodeOperationalDataset(dataset, &extraTlvs, &extraTlvsLength));
-    error = otDatasetSendMgmtPendingSet(
-        mInstance, &dataset, extraTlvs, extraTlvsLength, [](otError, void *) {}, nullptr);
+    error = otDatasetSendMgmtPendingSet(mInstance, &dataset, extraTlvs, extraTlvsLength, nullptr, nullptr);
 
 exit:
     return error;

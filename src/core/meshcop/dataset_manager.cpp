@@ -308,8 +308,8 @@ void DatasetManager::SendSet(void)
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
-    SuccessOrExit(error =
-                      Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DatasetManager::HandleCoapResponse, this));
+    SuccessOrExit(
+        error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, &DatasetManager::HandleMgmtSetResponse, this));
 
     otLogInfoMeshCoP("Sent %s set to leader", Dataset::TypeToString(GetType()));
 
@@ -332,26 +332,31 @@ exit:
     }
 }
 
-void DatasetManager::HandleCoapResponse(void *               aContext,
-                                        otMessage *          aMessage,
-                                        const otMessageInfo *aMessageInfo,
-                                        Error                aError)
+void DatasetManager::HandleMgmtSetResponse(void *               aContext,
+                                           otMessage *          aMessage,
+                                           const otMessageInfo *aMessageInfo,
+                                           Error                aError)
 {
-    static_cast<DatasetManager *>(aContext)->HandleCoapResponse(
+    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(
         *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aError);
 }
 
-void DatasetManager::HandleCoapResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aError)
+void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aError)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
+
+    otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(aError));
 
     if (mMgmtSetCallback != nullptr)
     {
         CallMgmtSetCallback(aMessage, aError);
     }
+    else
+    {
+        mTimer.Start(kSendSetDelay);
+    }
 
     mMgmtPending = false;
-    mTimer.Start(kSendSetDelay);
 }
 
 void DatasetManager::HandleGet(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -519,7 +524,7 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &    aDatasetInfo,
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleCoapResponse, this));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleMgmtSetResponse, this));
     mMgmtSetCallback        = aCallback;
     mMgmtSetCallbackContext = aContext;
     mMgmtPending            = true;
@@ -674,7 +679,6 @@ void DatasetManager::CallMgmtSetCallback(Coap::Message &aMessage, Error aResult)
     }
 
 exit:
-    otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(error));
     mMgmtSetCallback(error, mMgmtSetCallbackContext);
     mMgmtSetCallback        = nullptr;
     mMgmtSetCallbackContext = nullptr;
