@@ -467,6 +467,8 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
+ * @param[in]  aCallback  A pointer to a function that is called on response reception or timeout.
+ * @param[in]  aContext   A pointer to application-specific context for @p aCallback.
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
@@ -505,6 +507,8 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
+ * @param[in]  aCallback  A pointer to a function that is called on response reception or timeout.
+ * @param[in]  aContext   A pointer to application-specific context for @p aCallback.
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
