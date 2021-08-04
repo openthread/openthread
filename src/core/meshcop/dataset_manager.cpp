@@ -345,11 +345,33 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(aError));
+    Error    error;
+    StateTlv stateTlv;
+
+    SuccessOrExit(error = aError);
+    VerifyOrExit(Tlv::FindTlv(aMessage, stateTlv) == kErrorNone, error = kErrorFailed);
+
+    switch (stateTlv.GetState())
+    {
+    case StateTlv::kReject:
+        error = kErrorRejected;
+        break;
+    case StateTlv::kAccept:
+        error = kErrorNone;
+        break;
+    default:
+        error = kErrorFailed;
+        break;
+    }
+
+exit:
+    otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(error));
 
     if (mMgmtSetCallback != nullptr)
     {
-        CallMgmtSetCallback(aMessage, aError);
+        mMgmtSetCallback(error, mMgmtSetCallbackContext);
+        mMgmtSetCallback        = nullptr;
+        mMgmtSetCallbackContext = nullptr;
     }
 
     mMgmtPending = false;
@@ -652,33 +674,6 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 exit:
     FreeMessageOnError(message, error);
     return error;
-}
-
-void DatasetManager::CallMgmtSetCallback(Coap::Message &aMessage, Error aResult)
-{
-    Error    error;
-    StateTlv stateTlv;
-
-    SuccessOrExit(error = aResult);
-    VerifyOrExit(Tlv::FindTlv(aMessage, stateTlv) == kErrorNone, error = kErrorFailed);
-
-    switch (stateTlv.GetState())
-    {
-    case StateTlv::kReject:
-        error = kErrorRejected;
-        break;
-    case StateTlv::kAccept:
-        error = kErrorNone;
-        break;
-    default:
-        error = kErrorFailed;
-        break;
-    }
-
-exit:
-    mMgmtSetCallback(error, mMgmtSetCallbackContext);
-    mMgmtSetCallback        = nullptr;
-    mMgmtSetCallbackContext = nullptr;
 }
 
 ActiveDataset::ActiveDataset(Instance &aInstance)

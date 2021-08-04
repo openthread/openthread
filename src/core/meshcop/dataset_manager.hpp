@@ -366,8 +366,6 @@ private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif
 
-    void CallMgmtSetCallback(Coap::Message &aMessage, Error aResult);
-
     enum
     {
         kMaxDatasetTlvs = 16,   // Maximum number of TLVs in a Dataset.
