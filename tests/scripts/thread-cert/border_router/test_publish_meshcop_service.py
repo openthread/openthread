@@ -92,6 +92,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.check_meshcop_service(br, host)
 
         br.disable_backbone_router()
+        self.simulator.go(5)
         self.check_meshcop_service(br, host)
 
     def check_meshcop_service(self, br, host):
