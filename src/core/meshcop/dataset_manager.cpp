@@ -656,7 +656,7 @@ void DatasetManager::HandleSetResponse(Coap::Message &aMessage, const Ip6::Messa
     OT_UNUSED_VARIABLE(aMessageInfo);
 
     SuccessOrExit(error = aResult);
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, stateTlv));
+    SuccessOrExit(error = Tlv::FindTlv(aMessage, stateTlv), error = kErrorFailed);
 
     switch (stateTlv.GetState())
     {
@@ -667,7 +667,7 @@ void DatasetManager::HandleSetResponse(Coap::Message &aMessage, const Ip6::Messa
         error = kErrorNone;
         break;
     default:
-        error = kErrorParse;
+        error = kErrorFailed;
         break;
     }
 
