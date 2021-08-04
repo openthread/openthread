@@ -154,6 +154,7 @@ public:
      *
      * @retval kErrorNone    Successfully send the meshcop dataset command.
      * @retval kErrorNoBufs  Insufficient buffer space to send.
+     * @retval kErrorBusy    A previous request is ongoing.
      *
      */
     Error SendSetRequest(const Dataset::Info &    aDatasetInfo,
@@ -375,8 +376,8 @@ private:
     bool       mMgmtPending : 1;
     TimerMilli mTimer;
 
-    otDatasetMgmtSetCallback mMgmtSetCallback        = nullptr;
-    void *                   mMgmtSetCallbackContext = nullptr;
+    otDatasetMgmtSetCallback mMgmtSetCallback;
+    void *                   mMgmtSetCallbackContext;
 };
 
 class ActiveDataset : public DatasetManager, private NonCopyable

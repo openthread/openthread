@@ -56,6 +56,8 @@ DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::
     , mTimestampValid(false)
     , mMgmtPending(false)
     , mTimer(aInstance, aTimerHandler)
+    , mMgmtSetCallback(nullptr)
+    , mMgmtSetCallbackContext(nullptr)
 {
     mTimestamp.Init();
 }

@@ -472,6 +472,7 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ * @retval OT_ERROR_BUSY          A previous request is ongoing.
  *
  */
 otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
@@ -512,6 +513,7 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ * @retval OT_ERROR_BUSY          A previous request is ongoing.
  *
  */
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
