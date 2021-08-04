@@ -667,9 +667,6 @@ void DatasetManager::HandleSetResponse(Coap::Message &aMessage, const Ip6::Messa
     case StateTlv::kReject:
         error = kErrorRejected;
         break;
-    case StateTlv::kPending:
-        error = kErrorPending;
-        break;
     case StateTlv::kAccept:
         error = kErrorNone;
         break;
