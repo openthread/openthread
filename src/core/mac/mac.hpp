@@ -703,6 +703,14 @@ public:
     bool IsCslEnabled(void) const;
 
     /**
+     * This method indicates whether Link is capable of starting CSL.
+     *
+     * @retval TURE if Link is capable of starting CSL, FALSE otherwise.
+     *
+     */
+    bool IsCslCapable(void) const;
+
+    /**
      * This method returns CSL parent clock accuracy, in ± ppm.
      *
      * @retval CSL parent clock accuracy, in ± ppm.
@@ -739,7 +747,6 @@ public:
     {
         mLinks.GetSubMac().SetCslParentUncertainty(aCslParentUncert);
     }
-
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 private:
