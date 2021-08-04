@@ -565,13 +565,11 @@ otError Dataset::ProcessMgmtSetCommand(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveSet(
-            mInterpreter.mInstance, &dataset, tlvs, tlvsLength, [](otError, void *) {}, nullptr);
+        error = otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, nullptr, nullptr);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingSet(
-            mInterpreter.mInstance, &dataset, tlvs, tlvsLength, [](otError, void *) {}, nullptr);
+        error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, nullptr, nullptr);
     }
     else
     {

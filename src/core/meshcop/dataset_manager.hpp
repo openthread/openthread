@@ -149,16 +149,18 @@ public:
      * @param[in]  aDatasetInfo  The Operational Dataset.
      * @param[in]  aTlvs         Any additional raw TLVs to include.
      * @param[in]  aLength       Number of bytes in @p aTlvs.
+     * @param[in]  aCallback     A pointer to a function that is called on response reception or timeout.
+     * @param[in]  aContext      A pointer to application-specific context for @p aCallback.
      *
      * @retval kErrorNone    Successfully send the meshcop dataset command.
      * @retval kErrorNoBufs  Insufficient buffer space to send.
      *
      */
-    Error SendSetRequest(const Dataset::Info &aDatasetInfo,
-                         const uint8_t *      aTlvs,
-                         uint8_t              aLength,
-                         otMgmtSetCallback    aCallback,
-                         void *               aContext);
+    Error SendSetRequest(const Dataset::Info &    aDatasetInfo,
+                         const uint8_t *          aTlvs,
+                         uint8_t                  aLength,
+                         otDatasetMgmtSetCallback aCallback,
+                         void *                   aContext);
 
     /**
      * This method sends a MGMT_GET request.
@@ -347,7 +349,7 @@ private:
                                    otMessage *          aMessage,
                                    const otMessageInfo *aMessageInfo,
                                    Error                aError);
-    void        HandleCoapResponse(void);
+    void        HandleCoapResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult);
 
     bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
     bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
@@ -364,11 +366,7 @@ private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif
 
-    static void HandleSetResponse(void *               aContext,
-                                  otMessage *          aMessage,
-                                  const otMessageInfo *aMessageInfo,
-                                  otError              aResult);
-    void        HandleSetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aResult);
+    void CallMgmtSetCallback(Coap::Message &aMessage, Error aResult);
 
     enum
     {
@@ -376,11 +374,11 @@ private:
         kSendSetDelay   = 5000, // Milliseconds
     };
 
-    bool       mCoapPending : 1;
+    bool       mMgmtPending : 1;
     TimerMilli mTimer;
 
-    otMgmtSetCallback mMgmtSetCallback        = nullptr;
-    void *            mMgmtSetCallbackContext = nullptr;
+    otDatasetMgmtSetCallback mMgmtSetCallback        = nullptr;
+    void *                   mMgmtSetCallbackContext = nullptr;
 };
 
 class ActiveDataset : public DatasetManager, private NonCopyable

@@ -137,7 +137,7 @@ otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
                                    const otOperationalDataset *aDataset,
                                    const uint8_t *             aTlvs,
                                    uint8_t                     aLength,
-                                   otMgmtSetCallback           aCallback,
+                                   otDatasetMgmtSetCallback    aCallback,
                                    void *                      aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
@@ -162,7 +162,7 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     const otOperationalDataset *aDataset,
                                     const uint8_t *             aTlvs,
                                     uint8_t                     aLength,
-                                    otMgmtSetCallback           aCallback,
+                                    otDatasetMgmtSetCallback    aCallback,
                                     void *                      aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);

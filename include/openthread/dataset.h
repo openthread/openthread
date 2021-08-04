@@ -296,12 +296,14 @@ typedef enum otMeshcopTlvType
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
  *
- * @retval  OT_ERROR_NONE      The request was accepted by the leader.
- * @retval  OT_ERROR_REJECTED  The request was rejected by the leader.
- * @retval  OT_ERROR_FAILED    An invalid response was received.
+ * @retval  OT_ERROR_NONE              The request was accepted by the leader.
+ * @retval  OT_ERROR_REJECTED          The request was rejected by the leader.
+ * @retval  OT_ERROR_FAILED            An invalid response was received.
+ * @retval  OT_ERROR_ABORT             The CoAP transaction was reset by peer.
+ * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
  *
  */
-typedef void (*otMgmtSetCallback)(otError aResult, void *aContext);
+typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
 
 /**
  * This function indicates whether a valid network is present in the Active Operational Dataset or not.
@@ -474,7 +476,7 @@ otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
                                    const otOperationalDataset *aDataset,
                                    const uint8_t *             aTlvs,
                                    uint8_t                     aLength,
-                                   otMgmtSetCallback           aCallback,
+                                   otDatasetMgmtSetCallback    aCallback,
                                    void *                      aContext);
 
 /**
@@ -512,7 +514,7 @@ otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     const otOperationalDataset *aDataset,
                                     const uint8_t *             aTlvs,
                                     uint8_t                     aLength,
-                                    otMgmtSetCallback           aCallback,
+                                    otDatasetMgmtSetCallback    aCallback,
                                     void *                      aContext);
 
 /**
