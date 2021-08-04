@@ -295,6 +295,7 @@ typedef enum otMeshcopTlvType
  *
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
+ *
  */
 typedef void (*otMgmtSetCallback)(otError aResult, void *aContext);
 

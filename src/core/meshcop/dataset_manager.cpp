@@ -472,8 +472,6 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,
 
     OT_ASSERT(aCallback != nullptr);
     VerifyOrExit(mMgmtSetCallback == nullptr, error = kErrorBusy);
-    mMgmtSetCallback        = aCallback;
-    mMgmtSetCallbackContext = aContext;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
@@ -517,17 +515,15 @@ Error DatasetManager::SendSetRequest(const Dataset::Info &aDatasetInfo,
     messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
     messageInfo.SetPeerPort(Tmf::kUdpPort);
+
     SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, HandleSetResponse, this));
+    mMgmtSetCallback        = aCallback;
+    mMgmtSetCallbackContext = aContext;
 
     otLogInfoMeshCoP("sent dataset set request to leader");
 
 exit:
     FreeMessageOnError(message, error);
-    if (error != kErrorNone)
-    {
-        mMgmtSetCallback        = nullptr;
-        mMgmtSetCallbackContext = nullptr;
-    }
     return error;
 }
 
