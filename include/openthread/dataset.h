@@ -296,6 +296,10 @@ typedef enum otMeshcopTlvType
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
  *
+ * @retval  OT_ERROR_NONE      The request was accepted by the leader.
+ * @retval  OT_ERROR_REJECTED  The request was rejected by the leader.
+ * @retval  OT_ERROR_FAILED    An invalid response was received.
+ *
  */
 typedef void (*otMgmtSetCallback)(otError aResult, void *aContext);
 
