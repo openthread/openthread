@@ -1689,7 +1689,7 @@ void Mle::HandleAttachTimer(void)
     bool     shouldAnnounce = true;
 
     if (mAttachState == kAttachStateParentRequestRouter || mAttachState == kAttachStateParentRequestReed ||
-        mAttachState == kAttachStateAnnounce)
+        (mAttachState == kAttachStateAnnounce && !HasMoreChannelsToAnnouce()))
     {
         uint8_t linkQuality;
 
@@ -1777,6 +1777,14 @@ void Mle::HandleAttachTimer(void)
 
         if (shouldAnnounce)
         {
+            // We send an extra "Parent Request" as we switch to
+            // `kAttachStateAnnounce` and start sending Announce on
+            // all channels. This gives an additional chance to find
+            // a parent during this phase. Note that we can stay in
+            // `kAttachStateAnnounce` for multiple iterations, each
+            // time sending an Announce on a different channel
+            // (with `mAnnounceDelay` wait between them).
+
             SetAttachState(kAttachStateAnnounce);
             IgnoreError(SendParentRequest(kParentRequestTypeRoutersAndReeds));
             mAnnounceChannel = Mac::ChannelMask::kChannelIteratorFirst;
@@ -1787,13 +1795,11 @@ void Mle::HandleAttachTimer(void)
         OT_FALL_THROUGH;
 
     case kAttachStateAnnounce:
-        if (shouldAnnounce)
+        if (shouldAnnounce && (GetNextAnnouceChannel(mAnnounceChannel) == kErrorNone))
         {
-            if (SendOrphanAnnounce() == kErrorNone)
-            {
-                delay = mAnnounceDelay;
-                break;
-            }
+            SendAnnounce(mAnnounceChannel, /* aOrphanAnnounce */ true);
+            delay = mAnnounceDelay;
+            break;
         }
 
         OT_FALL_THROUGH;
@@ -2493,9 +2499,12 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-Error Mle::SendOrphanAnnounce(void)
+Error Mle::GetNextAnnouceChannel(uint8_t &aChannel) const
 {
-    Error            error;
+    // This method gets the next channel to send announce on after
+    // `aChannel`. Returns `kErrorNotFound` if no more channel in the
+    // channel mask after `aChannel`.
+
     Mac::ChannelMask channelMask;
 
     if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != kErrorNone)
@@ -2503,12 +2512,14 @@ Error Mle::SendOrphanAnnounce(void)
         channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
     }
 
-    SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
+    return channelMask.GetNextChannel(aChannel);
+}
 
-    SendAnnounce(mAnnounceChannel, true);
+bool Mle::HasMoreChannelsToAnnouce(void) const
+{
+    uint8_t channel = mAnnounceChannel;
 
-exit:
-    return error;
+    return GetNextAnnouceChannel(channel) == kErrorNone;
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
