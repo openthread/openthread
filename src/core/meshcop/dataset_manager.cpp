@@ -378,8 +378,8 @@ exit:
 
     if (mMgmtSetCallback != nullptr)
     {
-        auto callback = mMgmtSetCallback;
-        auto context  = mMgmtSetCallbackContext;
+        otDatasetMgmtSetCallback callback = mMgmtSetCallback;
+        void *                   context  = mMgmtSetCallbackContext;
 
         mMgmtSetCallback        = nullptr;
         mMgmtSetCallbackContext = nullptr;
