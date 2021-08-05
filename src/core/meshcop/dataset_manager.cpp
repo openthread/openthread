@@ -371,9 +371,13 @@ exit:
 
     if (mMgmtSetCallback != nullptr)
     {
-        mMgmtSetCallback(error, mMgmtSetCallbackContext);
+        auto callback = mMgmtSetCallback;
+        auto context = mMgmtSetCallbackContext;
+        
         mMgmtSetCallback        = nullptr;
         mMgmtSetCallbackContext = nullptr;
+        
+        callback(error, context);
     }
 
     mMgmtPending = false;
