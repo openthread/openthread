@@ -369,18 +369,19 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
 exit:
     otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(error));
 
+    mMgmtPending = false;
+
     if (mMgmtSetCallback != nullptr)
     {
         auto callback = mMgmtSetCallback;
-        auto context = mMgmtSetCallbackContext;
-        
+        auto context  = mMgmtSetCallbackContext;
+
         mMgmtSetCallback        = nullptr;
         mMgmtSetCallbackContext = nullptr;
-        
+
         callback(error, context);
     }
 
-    mMgmtPending = false;
     mTimer.Start(kSendSetDelay);
 }
 
