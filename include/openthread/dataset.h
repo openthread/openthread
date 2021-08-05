@@ -296,11 +296,9 @@ typedef enum otMeshcopTlvType
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
  *
- * @retval  OT_ERROR_NONE              The request was accepted by the leader.
- * @retval  OT_ERROR_REJECTED          The request was rejected by the leader.
- * @retval  OT_ERROR_FAILED            An invalid response was received.
- * @retval  OT_ERROR_ABORT             The CoAP transaction was reset by peer.
- * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
+ * @retval  OT_ERROR_NONE      The request was accepted by the leader.
+ * @retval  OT_ERROR_REJECTED  The request was rejected by the leader.
+ * @retval  OT_ERROR_FAILED    An unexpected error occured.
  *
  */
 typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
