@@ -369,14 +369,9 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
 exit:
     otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(error));
 
-    switch (error)
+    if (error != kErrorNone && error != kErrorRejected)
     {
-    case kErrorNone:
-    case kErrorRejected:
-        break;
-    default:
         error = kErrorFailed;
-        break;
     }
 
     mMgmtPending = false;
