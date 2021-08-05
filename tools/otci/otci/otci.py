@@ -30,7 +30,7 @@ import ipaddress
 import logging
 import re
 from collections import Counter
-from typing import List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
+from typing import Callable, List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
 
 from . import connectors
 from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshCommandRunner
@@ -117,6 +117,10 @@ class OTCI(object):
     def set_logger(self, logger: logging.Logger):
         """Set the logger for the OTCI instance, or None to disable logging."""
         self.__logger = logger
+
+    def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
+        """Set the callback that will be called for each line output by the CLI."""
+        self.__otcmd.set_line_read_callback(callback)
 
     #
     # Constant properties
