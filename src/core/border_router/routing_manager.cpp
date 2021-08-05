@@ -62,7 +62,7 @@ RoutingManager::RoutingManager(Instance &aInstance)
     , mIsEnabled(false)
     , mInfraIfIsRunning(false)
     , mInfraIfIndex(0)
-    , mAdvertisedOnLinkPrefix(nullptr)
+    , mIsAdvertisingLocalOnLinkPrefix(false)
     , mOnLinkPrefixDeprecateTimer(aInstance, HandleOnLinkPrefixDeprecateTimer)
     , mTimeRouterAdvMessageLastUpdate(TimerMilli::GetNow())
     , mDiscoveredPrefixInvalidTimer(aInstance, HandleDiscoveredPrefixInvalidTimer)
@@ -222,9 +222,9 @@ void RoutingManager::Stop(void)
 
     UnpublishLocalOmrPrefix();
 
-    if (mAdvertisedOnLinkPrefix != nullptr)
+    if (mIsAdvertisingLocalOnLinkPrefix)
     {
-        RemoveExternalRoute(*mAdvertisedOnLinkPrefix);
+        RemoveExternalRoute(mLocalOnLinkPrefix);
 
         // Start deprecating the local on-link prefix to send a PIO
         // with zero preferred lifetime in `SendRouterAdvertisement`.
@@ -235,7 +235,7 @@ void RoutingManager::Stop(void)
     SendRouterAdvertisement(OmrPrefixArray(), nullptr);
 
     mAdvertisedOmrPrefixes.Clear();
-    mAdvertisedOnLinkPrefix = nullptr;
+    mIsAdvertisingLocalOnLinkPrefix = false;
     mOnLinkPrefixDeprecateTimer.Stop();
 
     InvalidateAllDiscoveredPrefixes();
@@ -499,7 +499,8 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     const Ip6::Prefix *smallestOnLinkPrefix = nullptr;
 
     // We don't evaluate on-link prefix if we are doing Router Solicitation.
-    VerifyOrExit(!mRouterSolicitTimer.IsRunning(), newOnLinkPrefix = mAdvertisedOnLinkPrefix);
+    VerifyOrExit(!mRouterSolicitTimer.IsRunning(),
+                 newOnLinkPrefix = (mIsAdvertisingLocalOnLinkPrefix ? &mLocalOnLinkPrefix : nullptr));
 
     for (const ExternalPrefix &prefix : mDiscoveredPrefixes)
     {
@@ -517,11 +518,8 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     // We start advertising our local on-link prefix if there is no existing one.
     if (smallestOnLinkPrefix == nullptr)
     {
-        if (mAdvertisedOnLinkPrefix != nullptr)
-        {
-            newOnLinkPrefix = mAdvertisedOnLinkPrefix;
-        }
-        else if (AddExternalRoute(mLocalOnLinkPrefix, OT_ROUTE_PREFERENCE_MED) == kErrorNone)
+        if (mIsAdvertisingLocalOnLinkPrefix ||
+            (AddExternalRoute(mLocalOnLinkPrefix, OT_ROUTE_PREFERENCE_MED) == kErrorNone))
         {
             newOnLinkPrefix = &mLocalOnLinkPrefix;
         }
@@ -532,11 +530,11 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     // advertised prefix, we will not remove the advertised prefix. In this case, there
     // will be two on-link prefixes on the infra link. But all BRs will still converge to
     // the same smallest on-link prefix and the application-specific prefix is not used.
-    else if (mAdvertisedOnLinkPrefix != nullptr)
+    else if (mIsAdvertisingLocalOnLinkPrefix)
     {
-        if (*mAdvertisedOnLinkPrefix < *smallestOnLinkPrefix)
+        if (mLocalOnLinkPrefix < *smallestOnLinkPrefix)
         {
-            newOnLinkPrefix = mAdvertisedOnLinkPrefix;
+            newOnLinkPrefix = &mLocalOnLinkPrefix;
         }
         else
         {
@@ -563,9 +561,9 @@ void RoutingManager::HandleOnLinkPrefixDeprecateTimer(void)
 
 void RoutingManager::DeprecateOnLinkPrefix(void)
 {
-    OT_ASSERT(mAdvertisedOnLinkPrefix != nullptr);
+    OT_ASSERT(mIsAdvertisingLocalOnLinkPrefix);
 
-    otLogInfoBr("Deprecate local on-link prefix %s", mAdvertisedOnLinkPrefix->ToString().AsCString());
+    otLogInfoBr("Deprecate local on-link prefix %s", mLocalOnLinkPrefix.ToString().AsCString());
     mOnLinkPrefixDeprecateTimer.StartAt(mTimeAdvertisedOnLinkPrefix,
                                         TimeMilli::SecToMsec(kDefaultOnLinkPrefixLifetime));
 }
@@ -615,8 +613,8 @@ void RoutingManager::EvaluateRoutingPolicy(void)
     }
 
     // 3. Update advertised on-link & OMR prefixes information.
-    mAdvertisedOnLinkPrefix = newOnLinkPrefix;
-    mAdvertisedOmrPrefixes  = newOmrPrefixes;
+    mIsAdvertisingLocalOnLinkPrefix = (newOnLinkPrefix == &mLocalOnLinkPrefix);
+    mAdvertisedOmrPrefixes          = newOmrPrefixes;
 }
 
 void RoutingManager::StartRoutingPolicyEvaluationDelay(void)
@@ -695,7 +693,7 @@ void RoutingManager::SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefix
         memcpy(buffer + bufferLength, &pio, pio.GetSize());
         bufferLength += pio.GetSize();
 
-        if (mAdvertisedOnLinkPrefix == nullptr)
+        if (!mIsAdvertisingLocalOnLinkPrefix)
         {
             otLogInfoBr("Start advertising new on-link prefix %s on interface %u",
                         aNewOnLinkPrefix->ToString().AsCString(), mInfraIfIndex);
@@ -1064,7 +1062,7 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption 
         ExitNow();
     }
 
-    VerifyOrExit(mAdvertisedOnLinkPrefix == nullptr || prefix != *mAdvertisedOnLinkPrefix);
+    VerifyOrExit(!mIsAdvertisingLocalOnLinkPrefix || prefix != mLocalOnLinkPrefix);
 
     otLogInfoBr("Discovered on-link prefix (%s, %u seconds) from interface %u", prefix.ToString().AsCString(),
                 aPio.GetValidLifetime(), mInfraIfIndex);
@@ -1256,7 +1254,7 @@ bool RoutingManager::InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix, bo
 
     mDiscoveredPrefixes = remainingPrefixes;
 
-    if (remainingOnLinkPrefixNum == 0 && mAdvertisedOnLinkPrefix == nullptr)
+    if (remainingOnLinkPrefixNum == 0 && !mIsAdvertisingLocalOnLinkPrefix)
     {
         // There are no valid on-link prefixes on infra link now, start Router Solicitation
         // To discover more on-link prefixes or timeout to advertise my local on-link prefix.

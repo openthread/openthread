@@ -346,8 +346,7 @@ private:
     // randomly generated if non is found in persistent storage.
     Ip6::Prefix mLocalOnLinkPrefix;
 
-    // Could only be nullptr or a pointer to mLocalOnLinkPrefix.
-    const Ip6::Prefix *mAdvertisedOnLinkPrefix;
+    bool mIsAdvertisingLocalOnLinkPrefix;
 
     // The last time when the on-link prefix is advertised with
     // non-zero preferred lifetime.
