@@ -291,7 +291,7 @@ typedef enum otMeshcopTlvType
 } otMeshcopTlvType;
 
 /**
- * This function pointer is called when a response to a MGMT_SET request is received or on timed out.
+ * This function pointer is called when a response to a MGMT_SET request is received or times out.
  *
  * @param[in]  aResult   A result of the operation.
  * @param[in]  aContext  A pointer to application-specific context.
