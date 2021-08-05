@@ -351,7 +351,7 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
     StateTlv stateTlv;
 
     SuccessOrExit(error = aError);
-    VerifyOrExit(Tlv::FindTlv(aMessage, stateTlv) == kErrorNone, error = kErrorFailed);
+    VerifyOrExit(Tlv::FindTlv(aMessage, stateTlv) == kErrorNone, error = kErrorParse);
 
     switch (stateTlv.GetState())
     {
@@ -362,12 +362,22 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
         error = kErrorNone;
         break;
     default:
-        error = kErrorFailed;
+        error = kErrorParse;
         break;
     }
 
 exit:
     otLogInfoMeshCoP("MGMT_SET finished: %s", ErrorToString(error));
+
+    switch (error)
+    {
+    case kErrorNone:
+    case kErrorRejected:
+        break;
+    default:
+        error = kErrorFailed;
+        break;
+    }
 
     mMgmtPending = false;
 
