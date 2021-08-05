@@ -95,8 +95,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.simulator.go(5)
         self.check_meshcop_service(br, host)
 
-    def check_meshcop_service(self, br, host):
-        instance_name = r'OpenThread'
+    def check_meshcop_service(self, br, host, instance_name='OpenThread_BorderRouter'):
         data = host.discover_mdns_service(instance_name, '_meshcop._udp', None)
         sb_data = data['txt']['sb'].encode('raw_unicode_escape')
         state_bitmap = int.from_bytes(sb_data, byteorder='big')
