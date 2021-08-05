@@ -132,8 +132,8 @@ public:
      * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
      *                             or False if not.
      *
-     * @retval kErrorNone     Successfully started the protocol operation.
-     * @retval kErrorAlready  The protocol operation was already started.
+     * @retval kErrorNone           Successfully started the protocol operation.
+     * @retval kErrorInvalidState   IPv6 interface is down or device is in raw-link mode.
      *
      */
     Error Start(bool aAnnounceAttach);
