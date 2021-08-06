@@ -322,21 +322,18 @@ public:
 #endif
 
 private:
-    enum : uint8_t
-    {
-        kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT, // Reassembly timeout (in seconds).
-        kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE, // Max. MTU allowed when generating a Mesh Header frame.
-        kMeshHeaderFrameFcsSize = sizeof(uint16_t),        // Frame FCS size for Mesh Header frame.
-    };
+    static constexpr uint8_t kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT; // in seconds.
+    static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
+    static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
 
-    enum MessageAction : uint8_t ///< Defines the action parameter in `LogMessageInfo()` method.
+    enum MessageAction : uint8_t
     {
-        kMessageReceive,         ///< Indicates that the message was received.
-        kMessageTransmit,        ///< Indicates that the message was sent.
-        kMessagePrepareIndirect, ///< Indicates that the message is being prepared for indirect tx.
-        kMessageDrop,            ///< Indicates that the outbound message is being dropped (e.g., dst unknown).
-        kMessageReassemblyDrop,  ///< Indicates that the message is being dropped from reassembly list.
-        kMessageEvict,           ///< Indicates that the message was evicted.
+        kMessageReceive,         // Indicates that the message was received.
+        kMessageTransmit,        // Indicates that the message was sent.
+        kMessagePrepareIndirect, // Indicates that the message is being prepared for indirect tx.
+        kMessageDrop,            // Indicates that the outbound message is being dropped (e.g., dst unknown).
+        kMessageReassemblyDrop,  // Indicates that the message is being dropped from reassembly list.
+        kMessageEvict,           // Indicates that the message was evicted.
     };
 
     enum AnycastType : uint8_t
@@ -377,10 +374,7 @@ private:
         bool   UpdateOnTimeTick(void);
 
     private:
-        enum : uint16_t
-        {
-            kNumEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES,
-        };
+        static constexpr uint16_t kNumEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
 
         Entry mEntries[kNumEntries];
     };

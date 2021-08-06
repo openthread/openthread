@@ -52,10 +52,7 @@ namespace Service {
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
-enum : uint32_t
-{
-    kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber, ///< Thread enterprise number.
-};
+const uint32_t kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber; ///< Thread enterprise number.
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -160,10 +157,7 @@ public:
 class DnsSrpAnycast
 {
 public:
-    enum : uint8_t
-    {
-        kServiceNumber = 0x5c, ///< The service number of a `DnsSrpAnycast` entry.
-    };
+    static constexpr uint8_t kServiceNumber = 0x5c; ///< The service number of a `DnsSrpAnycast` entry.
 
     /**
      * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
@@ -246,10 +240,7 @@ public:
 class DnsSrpUnicast
 {
 public:
-    enum : uint8_t
-    {
-        kServiceNumber = 0x5d, ///< The service number of `DnsSrpUnicast` entry.
-    };
+    static constexpr uint8_t kServiceNumber = 0x5d; ///< The service number of `DnsSrpUnicast` entry.
 
     /**
      * This constant variable represents the short version of service data.

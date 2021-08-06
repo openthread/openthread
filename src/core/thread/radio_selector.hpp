@@ -182,21 +182,21 @@ public:
     Mac::TxFrame &SelectRadio(Message &aMessage, const Mac::Address &aMacDest, Mac::TxFrames &aTxFrames);
 
 private:
-    enum
-    {
-        kPreferenceChangeOnTxError            = -35,  // Preference change on a tx error on a radio link.
-        kPreferenceChangeOnTxSuccess          = 25,   // Preference change on tx success on a radio link.
-        kPreferenceChangeOnDeferredAckSuccess = 25,   // Preference change on deferred ack success.
-        kPreferenceChangeOnDeferredAckTimeout = -100, // Preference change on deferred ack timeout.
-        kPreferenceChangeOnRx                 = 15,   // Preference change on new (secure) frame/msg rx on a radio link.
-        kPreferenceChangeOnRxDuplicate        = 15,   // Preference change on new (secure) duplicate frame/msg rx.
-        kMinPreference                        = 0,    // Minimum preference value.
-        kMaxPreference                        = 255,  // Maximum preference value.
-        kInitPreference                       = 200,  // Initial preference value
-        kHighPreference                       = 220,  // High preference.
-        kTrelProbeProbability                 = 25,   // Probability percentage to probe on TREL link
-        kRadioPreferenceStringSize            = 75,
-    };
+    static constexpr int16_t kPreferenceChangeOnTxError            = -35;  // Change on a tx error on a radio link.
+    static constexpr int16_t kPreferenceChangeOnTxSuccess          = 25;   // Change on tx success on a radio link.
+    static constexpr int16_t kPreferenceChangeOnDeferredAckSuccess = 25;   // Change on deferred ack success.
+    static constexpr int16_t kPreferenceChangeOnDeferredAckTimeout = -100; // Change on deferred ack timeout.
+    static constexpr int16_t kPreferenceChangeOnRx                 = 15;   // Change on new (secure) rx.
+    static constexpr int16_t kPreferenceChangeOnRxDuplicate        = 15;   // Change on new (secure) duplicate rx.
+
+    static constexpr uint8_t kMinPreference  = 0;   // Minimum preference value.
+    static constexpr uint8_t kMaxPreference  = 255; // Maximum preference value.
+    static constexpr uint8_t kInitPreference = 200; // Initial preference value
+    static constexpr uint8_t kHighPreference = 220; // High preference.
+
+    static constexpr uint8_t kTrelProbeProbability = 25; // Probability percentage to probe on TREL link
+
+    static constexpr uint16_t kRadioPreferenceStringSize = 75;
 
     otLogLevel     UpdatePreference(Neighbor &aNeighbor, Mac::RadioType aRadioType, int16_t aDifference);
     Mac::RadioType Select(Mac::RadioTypes aRadioOptions, const Neighbor &aNeighbor);

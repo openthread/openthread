@@ -69,17 +69,14 @@ namespace ot {
 class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>
 {
 public:
-    enum : uint8_t
-    {
-        kVersionThresholdOffsetVersion = 3, ///< Offset between the Thread Version and the
-                                            ///< Version-thresold valid for Routing.
-    };
+    /**
+     * Offset between the Thread Version and the Version-threshold valid for Routing.
+     *
+     */
+    static constexpr uint8_t kVersionThresholdOffsetVersion = 3;
 
-    enum : uint16_t
-    {
-        kMinKeyRotationTime     = 1,   ///< The minimum Key Rotation Time in hours.
-        kDefaultKeyRotationTime = 672, ///< Default Key Rotation Time (in unit of hours).
-    };
+    static constexpr uint16_t kMinKeyRotationTime     = 1;   ///< The minimum Key Rotation Time in hours.
+    static constexpr uint16_t kDefaultKeyRotationTime = 672; ///< Default Key Rotation Time (in unit of hours).
 
     /**
      * This constructor initializes the object with default Key Rotation Time
@@ -114,22 +111,19 @@ public:
     void GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const;
 
 private:
-    enum : uint8_t
-    {
-        kDefaultFlags                   = 0xff,
-        kObtainNetworkKeyMask           = 1 << 7,
-        kNativeCommissioningMask        = 1 << 6,
-        kRoutersMask                    = 1 << 5,
-        kExternalCommissioningMask      = 1 << 4,
-        kBeaconsMask                    = 1 << 3,
-        kCommercialCommissioningMask    = 1 << 2,
-        kAutonomousEnrollmentMask       = 1 << 1,
-        kNetworkKeyProvisioningMask     = 1 << 0,
-        kTobleLinkMask                  = 1 << 7,
-        kNonCcmRoutersMask              = 1 << 6,
-        kReservedMask                   = 0x38,
-        kVersionThresholdForRoutingMask = 0x07,
-    };
+    static constexpr uint8_t kDefaultFlags                   = 0xff;
+    static constexpr uint8_t kObtainNetworkKeyMask           = 1 << 7;
+    static constexpr uint8_t kNativeCommissioningMask        = 1 << 6;
+    static constexpr uint8_t kRoutersMask                    = 1 << 5;
+    static constexpr uint8_t kExternalCommissioningMask      = 1 << 4;
+    static constexpr uint8_t kBeaconsMask                    = 1 << 3;
+    static constexpr uint8_t kCommercialCommissioningMask    = 1 << 2;
+    static constexpr uint8_t kAutonomousEnrollmentMask       = 1 << 1;
+    static constexpr uint8_t kNetworkKeyProvisioningMask     = 1 << 0;
+    static constexpr uint8_t kTobleLinkMask                  = 1 << 7;
+    static constexpr uint8_t kNonCcmRoutersMask              = 1 << 6;
+    static constexpr uint8_t kReservedMask                   = 0x38;
+    static constexpr uint8_t kVersionThresholdForRoutingMask = 0x07;
 
     void SetToDefaultFlags(void);
 };
@@ -485,11 +479,8 @@ public:
     void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
 
 private:
-    enum
-    {
-        kDefaultKeySwitchGuardTime = 624,
-        kOneHourIntervalInMsec     = 3600u * 1000u,
-    };
+    static constexpr uint32_t kDefaultKeySwitchGuardTime = 624;
+    static constexpr uint32_t kOneHourIntervalInMsec     = 3600u * 1000u;
 
     OT_TOOL_PACKED_BEGIN
     struct Keys

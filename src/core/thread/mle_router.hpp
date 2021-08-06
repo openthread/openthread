@@ -555,12 +555,9 @@ public:
 #endif
 
 private:
-    enum
-    {
-        kDiscoveryMaxJitter = 250u,  ///< Maximum jitter time used to delay Discovery Responses in milliseconds.
-        kStateUpdatePeriod  = 1000u, ///< State update period in milliseconds.
-        kUnsolicitedDataResponseJitter = 500u, ///< Maximum delay before unsolicited Data Response in milliseconds.
-    };
+    static constexpr uint16_t kDiscoveryMaxJitter            = 250;  // Max jitter delay Discovery Responses (in msec).
+    static constexpr uint32_t kStateUpdatePeriod             = 1000; // State update period (in msec).
+    static constexpr uint16_t kUnsolicitedDataResponseJitter = 500;  // Max delay for unsol Data Response (in msec).
 
     Error AppendConnectivity(Message &aMessage);
     Error AppendChildAddresses(Message &aMessage, Child &aChild);

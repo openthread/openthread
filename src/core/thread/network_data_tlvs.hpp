@@ -342,12 +342,10 @@ public:
     }
 
 private:
-    enum
-    {
-        kTypeOffset = 1,
-        kTypeMask   = 0x7f << kTypeOffset,
-        kStableMask = 1 << 0,
-    };
+    static constexpr uint8_t kTypeOffset = 1;
+    static constexpr uint8_t kTypeMask   = 0x7f << kTypeOffset;
+    static constexpr uint8_t kStableMask = 1 << 0;
+
     uint8_t mType;
     uint8_t mLength;
 } OT_TOOL_PACKED_END;
@@ -437,12 +435,9 @@ public:
     const HasRouteEntry *GetNext(void) const { return (this + 1); }
 
 private:
-    enum : uint8_t
-    {
-        kPreferenceOffset = 6,
-        kPreferenceMask   = 3 << kPreferenceOffset,
-        kNat64Flag        = 1 << 5,
-    };
+    static constexpr uint8_t kPreferenceOffset = 6;
+    static constexpr uint8_t kPreferenceMask   = 3 << kPreferenceOffset;
+    static constexpr uint8_t kNat64Flag        = 1 << 5;
 
     uint16_t mRloc;
     uint8_t  mFlags;
@@ -989,23 +984,16 @@ public:
     const BorderRouterEntry *GetNext(void) const { return (this + 1); }
 
 private:
-    enum : uint8_t
-    {
-        kPreferenceOffset = 14,
-    };
-
-    enum : uint16_t
-    {
-        kPreferenceMask   = 3 << kPreferenceOffset,
-        kPreferredFlag    = 1 << 13,
-        kSlaacFlag        = 1 << 12,
-        kDhcpFlag         = 1 << 11,
-        kConfigureFlag    = 1 << 10,
-        kDefaultRouteFlag = 1 << 9,
-        kOnMeshFlag       = 1 << 8,
-        kNdDnsFlag        = 1 << 7,
-        kDpFlag           = 1 << 6,
-    };
+    static constexpr uint8_t  kPreferenceOffset = 14;
+    static constexpr uint16_t kPreferenceMask   = 3 << kPreferenceOffset;
+    static constexpr uint16_t kPreferredFlag    = 1 << 13;
+    static constexpr uint16_t kSlaacFlag        = 1 << 12;
+    static constexpr uint16_t kDhcpFlag         = 1 << 11;
+    static constexpr uint16_t kConfigureFlag    = 1 << 10;
+    static constexpr uint16_t kDefaultRouteFlag = 1 << 9;
+    static constexpr uint16_t kOnMeshFlag       = 1 << 8;
+    static constexpr uint16_t kNdDnsFlag        = 1 << 7;
+    static constexpr uint16_t kDpFlag           = 1 << 6;
 
     uint16_t mRloc;
     uint16_t mFlags;
@@ -1177,12 +1165,10 @@ public:
     uint8_t GetContextLength(void) const { return mContextLength; }
 
 private:
-    enum
-    {
-        kCompressFlag    = 1 << 4,
-        kContextIdOffset = 0,
-        kContextIdMask   = 0xf << kContextIdOffset,
-    };
+    static constexpr uint8_t kCompressFlag    = 1 << 4;
+    static constexpr uint8_t kContextIdOffset = 0;
+    static constexpr uint8_t kContextIdMask   = 0xf << kContextIdOffset;
+
     uint8_t mFlags;
     uint8_t mContextLength;
 } OT_TOOL_PACKED_END;
@@ -1219,10 +1205,7 @@ class ServiceTlv : public NetworkDataTlv
 public:
     static constexpr Type kType = kTypeService; ///< The TLV Type.
 
-    enum : uint32_t
-    {
-        kThreadEnterpriseNumber = 44970, ///< Thread enterprise number.
-    };
+    static constexpr uint32_t kThreadEnterpriseNumber = 44970; ///< Thread enterprise number.
 
     /**
      * This method initializes the TLV.
@@ -1393,12 +1376,9 @@ private:
         return kMinLength + (IsThreadEnterprise() ? 0 : sizeof(uint32_t)) + GetServiceDataLength();
     }
 
-    enum
-    {
-        kThreadEnterpriseFlag = (1 << 7),
-        kServiceIdMask        = 0xf,
-        kMinLength            = sizeof(uint8_t) + sizeof(uint8_t), // Flags and Service Data length.
-    };
+    static constexpr uint8_t kThreadEnterpriseFlag = (1 << 7);
+    static constexpr uint8_t kServiceIdMask        = 0xf;
+    static constexpr uint8_t kMinLength            = sizeof(uint8_t) + sizeof(uint8_t); // Flags & Service Data length.
 
     // When `kThreadEnterpriseFlag is set in the `mFlagsServiceId`, the
     // `mEnterpriseNumber` field is elided and `mFlagsServiceId` is

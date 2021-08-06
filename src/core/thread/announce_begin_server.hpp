@@ -68,12 +68,9 @@ public:
     void SendAnnounce(uint32_t aChannelMask, uint8_t aCount = kDefaultCount, uint16_t aPeriod = kDefaultPeriod);
 
 private:
-    enum
-    {
-        kDefaultCount  = 3,
-        kDefaultPeriod = 1000,
-        kDefaultJitter = 0,
-    };
+    static constexpr uint8_t  kDefaultCount  = 3;
+    static constexpr uint16_t kDefaultPeriod = 1000;
+    static constexpr uint16_t kDefaultJitter = 0;
 
     static void HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

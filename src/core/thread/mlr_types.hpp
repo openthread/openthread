@@ -51,7 +51,7 @@ namespace ot {
  * Multicast Listener Registration state for multicast addresses.
  *
  */
-enum MlrState
+enum MlrState : uint8_t
 {
     kMlrStateToRegister,  ///< The multicast address is to be registered.
     kMlrStateRegistering, ///< The multicast address is being registered.

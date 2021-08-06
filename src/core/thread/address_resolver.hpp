@@ -197,17 +197,17 @@ public:
                           const Ip6::Address *            aDestination);
 
 private:
-    enum
-    {
-        kCacheEntries                  = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES,
-        kMaxNonEvictableSnoopedEntries = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES,
-        kAddressQueryTimeout           = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT,             // in seconds
-        kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY, // in seconds
-        kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY,     // in seconds
-        kSnoopBlockEvictionTimeout     = OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT,         // in seconds
-        kIteratorListIndex             = 0,
-        kIteratorEntryIndex            = 1,
-    };
+    static constexpr uint16_t kCacheEntries                  = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_ENTRIES;
+    static constexpr uint16_t kMaxNonEvictableSnoopedEntries = OPENTHREAD_CONFIG_TMF_ADDRESS_CACHE_MAX_SNOOP_ENTRIES;
+
+    // All time/delay values are in seconds
+    static constexpr uint16_t kAddressQueryTimeout           = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_TIMEOUT;
+    static constexpr uint16_t kAddressQueryInitialRetryDelay = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_INITIAL_RETRY_DELAY;
+    static constexpr uint16_t kAddressQueryMaxRetryDelay     = OPENTHREAD_CONFIG_TMF_ADDRESS_QUERY_MAX_RETRY_DELAY;
+    static constexpr uint16_t kSnoopBlockEvictionTimeout     = OPENTHREAD_CONFIG_TMF_SNOOP_CACHE_ENTRY_TIMEOUT;
+
+    static constexpr uint8_t kIteratorListIndex  = 0;
+    static constexpr uint8_t kIteratorEntryIndex = 1;
 
     class CacheEntry : public InstanceLocatorInit
     {
@@ -246,15 +246,13 @@ private:
         bool Matches(const Ip6::Address &aEid) const { return GetTarget() == aEid; }
 
     private:
-        enum
-        {
-            kNoNextIndex          = 0xffff,     // mNextIndex value when at end of list.
-            kInvalidLastTransTime = 0xffffffff, // Value indicating mLastTransactionTime is invalid.
-        };
+        static constexpr uint16_t kNoNextIndex          = 0xffff;     // `mNextIndex` value when at end of list.
+        static constexpr uint32_t kInvalidLastTransTime = 0xffffffff; // Value when `mLastTransactionTime` is invalid.
 
         Ip6::Address      mTarget;
         Mac::ShortAddress mRloc16;
         uint16_t          mNextIndex;
+
         union
         {
             struct
@@ -276,14 +274,14 @@ private:
     typedef Pool<CacheEntry, kCacheEntries> CacheEntryPool;
     typedef LinkedList<CacheEntry>          CacheEntryList;
 
-    enum EntryChange
+    enum EntryChange : uint8_t
     {
         kEntryAdded,
         kEntryUpdated,
         kEntryRemoved,
     };
 
-    enum Reason
+    enum Reason : uint8_t
     {
         kReasonQueryRequest,
         kReasonSnoop,

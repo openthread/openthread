@@ -62,10 +62,11 @@ class DiscoverScanner : public InstanceLocator, private NonCopyable
     friend class Mle;
 
 public:
-    enum
-    {
-        kDefaultScanDuration = Mac::kScanDurationDefault, ///< Default scan duration (per channel), in milliseconds.
-    };
+    /**
+     * Default scan duration (per channel), in milliseconds.
+     *
+     */
+    static constexpr uint32_t kDefaultScanDuration = Mac::kScanDurationDefault;
 
     /**
      * This type represents Discover Scan result.
@@ -149,17 +150,14 @@ public:
     Error SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
 
 private:
-    enum State
+    enum State : uint8_t
     {
         kStateIdle,
         kStateScanning,
         kStateScanDone,
     };
 
-    enum : uint32_t
-    {
-        kMaxOui = 0xffffff,
-    };
+    static constexpr uint32_t kMaxOui = 0xffffff;
 
     // Methods used by `MeshForwarder`
     Mac::TxFrame *PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);

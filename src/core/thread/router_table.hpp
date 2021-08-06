@@ -69,7 +69,7 @@ public:
         explicit Iterator(Instance &aInstance);
 
     private:
-        enum IteratorType
+        enum IteratorType : uint8_t
         {
             kEndIterator,
         };

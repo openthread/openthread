@@ -309,54 +309,52 @@ public:
     int DecompressUdpHeader(Ip6::Udp::Header &aUdpHeader, const uint8_t *aBuf, uint16_t aBufLength);
 
 private:
-    enum
-    {
-        kHcDispatch     = 3 << 13,
-        kHcDispatchMask = 7 << 13,
+    static constexpr uint16_t kHcDispatch     = 3 << 13;
+    static constexpr uint16_t kHcDispatchMask = 7 << 13;
 
-        kHcTrafficClass    = 1 << 11,
-        kHcFlowLabel       = 2 << 11,
-        kHcTrafficFlow     = 3 << 11,
-        kHcTrafficFlowMask = 3 << 11,
-        kHcNextHeader      = 1 << 10,
-        kHcHopLimit1       = 1 << 8,
-        kHcHopLimit64      = 2 << 8,
-        kHcHopLimit255     = 3 << 8,
-        kHcHopLimitMask    = 3 << 8,
-        kHcContextId       = 1 << 7,
-        kHcSrcAddrContext  = 1 << 6,
-        kHcSrcAddrMode0    = 0 << 4,
-        kHcSrcAddrMode1    = 1 << 4,
-        kHcSrcAddrMode2    = 2 << 4,
-        kHcSrcAddrMode3    = 3 << 4,
-        kHcSrcAddrModeMask = 3 << 4,
-        kHcMulticast       = 1 << 3,
-        kHcDstAddrContext  = 1 << 2,
-        kHcDstAddrMode0    = 0 << 0,
-        kHcDstAddrMode1    = 1 << 0,
-        kHcDstAddrMode2    = 2 << 0,
-        kHcDstAddrMode3    = 3 << 0,
-        kHcDstAddrModeMask = 3 << 0,
+    static constexpr uint16_t kHcTrafficClass    = 1 << 11;
+    static constexpr uint16_t kHcFlowLabel       = 2 << 11;
+    static constexpr uint16_t kHcTrafficFlow     = 3 << 11;
+    static constexpr uint16_t kHcTrafficFlowMask = 3 << 11;
+    static constexpr uint16_t kHcNextHeader      = 1 << 10;
+    static constexpr uint16_t kHcHopLimit1       = 1 << 8;
+    static constexpr uint16_t kHcHopLimit64      = 2 << 8;
+    static constexpr uint16_t kHcHopLimit255     = 3 << 8;
+    static constexpr uint16_t kHcHopLimitMask    = 3 << 8;
+    static constexpr uint16_t kHcContextId       = 1 << 7;
+    static constexpr uint16_t kHcSrcAddrContext  = 1 << 6;
+    static constexpr uint16_t kHcSrcAddrMode0    = 0 << 4;
+    static constexpr uint16_t kHcSrcAddrMode1    = 1 << 4;
+    static constexpr uint16_t kHcSrcAddrMode2    = 2 << 4;
+    static constexpr uint16_t kHcSrcAddrMode3    = 3 << 4;
+    static constexpr uint16_t kHcSrcAddrModeMask = 3 << 4;
+    static constexpr uint16_t kHcMulticast       = 1 << 3;
+    static constexpr uint16_t kHcDstAddrContext  = 1 << 2;
+    static constexpr uint16_t kHcDstAddrMode0    = 0 << 0;
+    static constexpr uint16_t kHcDstAddrMode1    = 1 << 0;
+    static constexpr uint16_t kHcDstAddrMode2    = 2 << 0;
+    static constexpr uint16_t kHcDstAddrMode3    = 3 << 0;
+    static constexpr uint16_t kHcDstAddrModeMask = 3 << 0;
 
-        kExtHdrDispatch     = 0xe0,
-        kExtHdrDispatchMask = 0xf0,
+    static constexpr uint8_t kExtHdrDispatch     = 0xe0;
+    static constexpr uint8_t kExtHdrDispatchMask = 0xf0;
 
-        kExtHdrEidHbh      = 0x00,
-        kExtHdrEidRouting  = 0x02,
-        kExtHdrEidFragment = 0x04,
-        kExtHdrEidDst      = 0x06,
-        kExtHdrEidMobility = 0x08,
-        kExtHdrEidIp6      = 0x0e,
-        kExtHdrEidMask     = 0x0e,
+    static constexpr uint8_t kExtHdrEidHbh      = 0x00;
+    static constexpr uint8_t kExtHdrEidRouting  = 0x02;
+    static constexpr uint8_t kExtHdrEidFragment = 0x04;
+    static constexpr uint8_t kExtHdrEidDst      = 0x06;
+    static constexpr uint8_t kExtHdrEidMobility = 0x08;
+    static constexpr uint8_t kExtHdrEidIp6      = 0x0e;
+    static constexpr uint8_t kExtHdrEidMask     = 0x0e;
 
-        kExtHdrNextHeader = 0x01,
-        kExtHdrMaxLength  = 255,
+    static constexpr uint8_t  kExtHdrNextHeader = 0x01;
+    static constexpr uint16_t kExtHdrMaxLength  = 255;
 
-        kUdpDispatch     = 0xf0,
-        kUdpDispatchMask = 0xf8,
-        kUdpChecksum     = 1 << 2,
-        kUdpPortMask     = 3 << 0,
-    };
+    static constexpr uint8_t kUdpDispatch     = 0xf0;
+    static constexpr uint8_t kUdpDispatchMask = 0xf8;
+
+    static constexpr uint8_t kUdpChecksum = 1 << 2;
+    static constexpr uint8_t kUdpPortMask = 3 << 0;
 
     Error Compress(Message &           aMessage,
                    const Mac::Address &aMacSource,
@@ -393,10 +391,11 @@ private:
 class MeshHeader
 {
 public:
-    enum
-    {
-        kAdditionalHopsLeft = 1 ///< The additional value that is added to predicted value of the route cost.
-    };
+    /**
+     * The additional value that is added to predicted value of the route cost.
+     *
+     */
+    static constexpr uint8_t kAdditionalHopsLeft = 1;
 
     /**
      * This method initializes the Mesh Header with a given Mesh Source, Mesh Destination and Hops Left value.
@@ -530,17 +529,16 @@ public:
     uint16_t WriteTo(Message &aMessage, uint16_t aOffset) const;
 
 private:
-    enum
-    {
-        kDispatch             = 2 << 6,
-        kDispatchMask         = 3 << 6,
-        kHopsLeftMask         = 0x0f,
-        kSourceShort          = 1 << 5,
-        kDestShort            = 1 << 4,
-        kDeepHopsLeft         = 0x0f,
-        kMinHeaderLength      = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t), // dispatch byte + src + dest
-        kDeepHopsHeaderLength = kMinHeaderLength + sizeof(uint8_t),                    // min header + deep hops
-    };
+    static constexpr uint8_t kDispatch     = 2 << 6;
+    static constexpr uint8_t kDispatchMask = 3 << 6;
+    static constexpr uint8_t kHopsLeftMask = 0x0f;
+    static constexpr uint8_t kSourceShort  = 1 << 5;
+    static constexpr uint8_t kDestShort    = 1 << 4;
+    static constexpr uint8_t kDeepHopsLeft = 0x0f;
+
+    // Dispatch byte + src + dest
+    static constexpr uint16_t kMinHeaderLength      = sizeof(uint8_t) + sizeof(uint16_t) + sizeof(uint16_t);
+    static constexpr uint16_t kDeepHopsHeaderLength = kMinHeaderLength + sizeof(uint8_t); // min header + deep hops
 
     uint16_t mSource;
     uint16_t mDestination;
@@ -554,11 +552,8 @@ private:
 class FragmentHeader
 {
 public:
-    enum
-    {
-        kFirstFragmentHeaderSize      = 4, ///< First fragment header size in octets.
-        kSubsequentFragmentHeaderSize = 5, ///< Subsequent fragment header size in octets.
-    };
+    static constexpr uint16_t kFirstFragmentHeaderSize      = 4; ///< First fragment header size in octets.
+    static constexpr uint16_t kSubsequentFragmentHeaderSize = 5; ///< Subsequent fragment header size in octets.
 
     /**
      * This method initializes the Fragment Header as a first fragment.
@@ -661,17 +656,16 @@ public:
     uint16_t WriteTo(uint8_t *aFrame) const;
 
 private:
-    enum
-    {
-        kDispatch     = 0xc0,   // 0b1100_0000
-        kDispatchMask = 0xd8,   // 0b1101_1000 which accepts first frag (0b1100_0xxx) and next frag (0b1110_0xxx).
-        kOffsetFlag   = 1 << 5, // Dispatch flag to indicate first (no offset) vs. next (offset is present) fragment.
-        kSizeMask     = 0x7ff,  // 0b0111_1111_1111 (first 11 bits).
-        kOffsetMask   = 0xfff8, // Clears the last 3 bits to ensure offset is a multiple of 8.
-        kSizeIndex    = 0,      // Start index of Size field in the Fragment Header byte sequence.
-        kTagIndex     = 2,      // Start index of Tag field in the Fragment Header byte sequence.
-        kOffsetIndex  = 4,      // Start index of Offset field in the Fragment Header byte sequence.
-    };
+    static constexpr uint8_t kDispatch     = 0xc0;   // 0b1100_0000
+    static constexpr uint8_t kDispatchMask = 0xd8;   // 0b1101_1000 accepts first (0b1100_0xxx) and next (0b1110_0xxx).
+    static constexpr uint8_t kOffsetFlag   = 1 << 5; // Indicate first (no offset) vs. next (offset present) fragment.
+
+    static constexpr uint16_t kSizeMask   = 0x7ff;  // 0b0111_1111_1111 (first 11 bits).
+    static constexpr uint16_t kOffsetMask = 0xfff8; // Clears the last 3 bits to ensure offset is a multiple of 8.
+
+    static constexpr uint8_t kSizeIndex   = 0; // Start index of Size field in the Fragment Header byte sequence.
+    static constexpr uint8_t kTagIndex    = 2; // Start index of Tag field in the Fragment Header byte sequence.
+    static constexpr uint8_t kOffsetIndex = 4; // Start index of Offset field in the Fragment Header byte sequence.
 
     uint16_t mSize;
     uint16_t mTag;
