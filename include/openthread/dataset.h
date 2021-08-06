@@ -298,7 +298,7 @@ typedef enum otMeshcopTlvType
  *
  * @retval  OT_ERROR_NONE      The request was accepted by the leader.
  * @retval  OT_ERROR_REJECTED  The request was rejected by the leader.
- * @retval  OT_ERROR_FAILED    An unexpected error occured.
+ * @retval  OT_ERROR_FAILED    An unexpected error occurred.
  *
  */
 typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
