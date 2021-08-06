@@ -168,7 +168,8 @@ public:
     /**
      * This method indicates whether or not IEEE 802.15.4 Beacon transmissions are enabled.
      *
-     * @retval TRUE if IEEE 802.15.4 Beacon transmissions are enabled, FALSE otherwise.
+     * @retval TRUE   If IEEE 802.15.4 Beacon transmissions are enabled.
+     * @retval FALSE  If IEEE 802.15.4 Beacon transmissions are not enabled.
      *
      */
     bool IsBeaconEnabled(void) const { return mBeaconsEnabled; }
@@ -697,7 +698,8 @@ public:
     /**
      * This method indicates whether CSL is started at the moment.
      *
-     * @retval TURE if CSL is actually running at the moment, FALSE otherwise.
+     * @retval TRUE   If CSL is enabled.
+     * @retval FALSE  If CSL is not enabled.
      *
      */
     bool IsCslEnabled(void) const;
@@ -705,7 +707,8 @@ public:
     /**
      * This method indicates whether Link is capable of starting CSL.
      *
-     * @retval TURE if Link is capable of starting CSL, FALSE otherwise.
+     * @retval TRUE   If Link is capable of starting CSL.
+     * @retval FALSE  If link is not capable of starting CSL.
      *
      */
     bool IsCslCapable(void) const;

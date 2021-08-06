@@ -135,7 +135,8 @@ public:
     /**
      * This method indicates whether or not there is Primary Backbone Router.
      *
-     * @retval TRUE if there is Primary Backbone Router, FALSE otherwise.
+     * @retval TRUE   If there is Primary Backbone Router.
+     * @retval FALSE  If there is no Primary Backbone Router.
      *
      */
     bool HasPrimary(void) const { return mConfig.mServer16 != Mac::kShortAddrInvalid; }
@@ -154,7 +155,8 @@ public:
     /**
      * This method indicates whether or not the Domain Prefix is available in the Thread Network.
      *
-     * @retval TRUE if there is Domain Prefix, FALSE otherwise.
+     * @retval TRUE   If there is Domain Prefix.
+     * @retval FALSE  If there is no Domain Prefix.
      *
      */
     bool HasDomainPrefix(void) const { return (mDomainPrefix.GetLength() > 0); }
