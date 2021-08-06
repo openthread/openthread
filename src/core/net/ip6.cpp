@@ -781,9 +781,9 @@ exit:
     {
         if (message != nullptr)
         {
-            mReassemblyList.Dequeue(*message);
-            message->Free();
+            mReassemblyList.DequeueAndFree(*message);
         }
+
         otLogWarnIp6("Reassembly failed: %s", ErrorToString(error));
     }
 
@@ -798,13 +798,7 @@ exit:
 
 void Ip6::CleanupFragmentationBuffer(void)
 {
-    Message *message;
-
-    while ((message = mReassemblyList.GetHead()) != nullptr)
-    {
-        mReassemblyList.Dequeue(*message);
-        message->Free();
-    }
+    mReassemblyList.DequeueAndFreeAll();
 }
 
 void Ip6::HandleTimeTick(void)
@@ -834,8 +828,7 @@ void Ip6::UpdateReassemblyList(void)
             otLogNoteIp6("Reassembly timeout.");
             SendIcmpError(*message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
-            mReassemblyList.Dequeue(*message);
-            message->Free();
+            mReassemblyList.DequeueAndFree(*message);
         }
     }
 }

@@ -1437,6 +1437,20 @@ public:
     void Dequeue(Message &aMessage);
 
     /**
+     * This method removes a message from the queue and frees it.
+     *
+     * @param[in]  aMessage  The message to remove and free.
+     *
+     */
+    void DequeueAndFree(Message &aMessage);
+
+    /**
+     * This method removes and frees all messages from the queue.
+     *
+     */
+    void DequeueAndFreeAll(void);
+
+    /**
      * This method returns the number of messages and buffers enqueued.
      *
      * @param[out]  aMessageCount  Returns the number of messages enqueued.
@@ -1514,6 +1528,20 @@ public:
      *
      */
     void Dequeue(Message &aMessage);
+
+    /**
+     * This method removes a message from the queue and frees it.
+     *
+     * @param[in]  aMessage  The message to remove and free.
+     *
+     */
+    void DequeueAndFree(Message &aMessage);
+
+    /**
+     * This method removes and frees all messages from the queue.
+     *
+     */
+    void DequeueAndFreeAll(void);
 
     /**
      * This method returns the number of messages and buffers enqueued.

@@ -1983,8 +1983,7 @@ void Mle::RemoveDelayedDataResponseMessage(void)
 
         if (message->GetSubType() == Message::kSubTypeMleDataResponse)
         {
-            mDelayedResponses.Dequeue(*message);
-            message->Free();
+            mDelayedResponses.DequeueAndFree(*message);
             Log(kMessageRemoveDelayed, kTypeDataResponse, metadata.mDestination);
 
             // no more than one multicast MLE Data Response in Delayed Message Queue.

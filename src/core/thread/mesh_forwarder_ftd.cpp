@@ -329,9 +329,8 @@ void MeshForwarder::RemoveDataResponseMessages(void)
             mSendMessage = nullptr;
         }
 
-        mSendQueue.Dequeue(*message);
         LogMessage(kMessageDrop, *message, nullptr, kErrorNone);
-        message->Free();
+        mSendQueue.DequeueAndFree(*message);
     }
 }
 

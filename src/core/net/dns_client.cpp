@@ -745,8 +745,7 @@ exit:
 
 void Client::FreeQuery(Query &aQuery)
 {
-    mQueries.Dequeue(aQuery);
-    aQuery.Free();
+    mQueries.DequeueAndFree(aQuery);
 }
 
 void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)

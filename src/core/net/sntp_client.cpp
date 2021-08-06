@@ -206,16 +206,13 @@ exit:
 
 void Client::DequeueMessage(Message &aMessage)
 {
-    mPendingQueries.Dequeue(aMessage);
-
     if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == nullptr))
     {
         // No more requests pending, stop the timer.
         mRetransmissionTimer.Stop();
     }
 
-    // Free the message memory.
-    aMessage.Free();
+    mPendingQueries.DequeueAndFree(aMessage);
 }
 
 Error Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
