@@ -58,12 +58,7 @@ Error Tcp::Endpoint::Initialize(Instance &aInstance, otTcpEndpointInitializeArgs
 
 Instance &Tcp::Endpoint::GetInstance(void)
 {
-    return *reinterpret_cast<Instance *>(this->mInstance);
-}
-
-void *Tcp::Endpoint::GetContext(void)
-{
-    return this->mContext;
+    return *reinterpret_cast<Instance *>(mInstance);
 }
 
 const SockAddr &Tcp::Endpoint::GetLocalAddress(void) const
@@ -154,12 +149,7 @@ Error Tcp::Listener::Initialize(Instance &aInstance, otTcpListenerInitializeArgs
 
 Instance &Tcp::Listener::GetInstance(void)
 {
-    return *reinterpret_cast<Instance *>(this->mInstance);
-}
-
-void *Tcp::Listener::GetContext(void)
-{
-    return this->mContext;
+    return *reinterpret_cast<Instance *>(mInstance);
 }
 
 Error Tcp::Listener::Listen(const SockAddr &aSockName)
