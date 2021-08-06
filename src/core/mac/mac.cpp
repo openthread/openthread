@@ -2387,10 +2387,14 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
     Get<DataPollSender>().RecalculatePollPeriod();
 
-    if (IsCslEnabled())
+    if ((GetCslPeriod() == 0) || IsCslEnabled())
     {
         IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), Get<Mle::Mle>().GetParent().GetRloc16(),
                                            &Get<Mle::Mle>().GetParent().GetExtAddress()));
+    }
+
+    if (IsCslEnabled())
+    {
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
 
@@ -2399,7 +2403,12 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
 bool Mac::IsCslEnabled(void) const
 {
-    return (GetCslPeriod() > 0) && !GetRxOnWhenIdle() && Get<Mle::MleRouter>().IsChild() &&
+    return !GetRxOnWhenIdle() && IsCslCapable();
+}
+
+bool Mac::IsCslCapable(void) const
+{
+    return (GetCslPeriod() > 0) && Get<Mle::MleRouter>().IsChild() &&
            Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 
