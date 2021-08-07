@@ -516,6 +516,7 @@ public:
     /**
      * Processes a received TCP segment.
      *
+     * @param[in]  aIp6Header    A reference to a structure containing the segment's IPv6 header.
      * @param[in]  aMessage      A reference to the message containing the TCP segment.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
@@ -523,7 +524,7 @@ public:
      * @retval kErrorDrop  Dropped the TCP segment due to an invalid checksum.
      *
      */
-    Error ProcessReceivedSegment(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
 };
 
 } // namespace Ip6
