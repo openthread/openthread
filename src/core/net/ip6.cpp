@@ -960,6 +960,10 @@ Error Ip6::HandlePayload(Header &           aIp6Header,
     Error    error   = kErrorNone;
     Message *message = (aMessageOwnership == Message::kTakeCustody) ? &aMessage : nullptr;
 
+#if !OPENTHREAD_CONFIG_TCP_ENABLE
+    OT_UNUSED_VARIABLE(aIp6Header);
+#endif
+
     VerifyOrExit(aIpProto == kProtoTcp || aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
 
     if (aMessageOwnership == Message::kCopyToUse)
