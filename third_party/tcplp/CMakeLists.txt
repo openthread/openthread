@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,21 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+project("TCPlp" C)
 
-EXTRA_DIST                              = \
-    nlbuild-autotools                     \
-    openthread-test-driver                \
-    $(NULL)
+set(src_tcplp
+    tcplp.c
+)
 
-# Always package (e.g. for 'make dist') these subdirectories.
+set(tcplp_static_target "tcplp")
 
-DIST_SUBDIRS                            = \
-    jlink                                 \
-    mbedtls                               \
-    tcplp                                 \
-    $(NULL)
-
-SUBDIRS =                                 \
-    tcplp                                 \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-SUBDIRS                                += \
-    mbedtls                               \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-
-include $(abs_top_nlbuild_autotools_dir)/automake/post.am
+add_library(${tcplp_static_target} STATIC ${src_tcplp})
+set_target_properties(${tcplp_static_target} PROPERTIES OUTPUT_NAME tcplp)
+target_include_directories(${tcplp_static_target}
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}/bsdtcp
+        ${CMAKE_CURRENT_SOURCE_DIR}/lib
+    PRIVATE
+        ${OT_PUBLIC_INCLUDES}
+        $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
+)

@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,27 +28,41 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
-EXTRA_DIST                              = \
-    nlbuild-autotools                     \
-    openthread-test-driver                \
+EXTRA_DIST                                    = \
+    tcplp.h                                     \
     $(NULL)
 
-# Always package (e.g. for 'make dist') these subdirectories.
-
-DIST_SUBDIRS                            = \
-    jlink                                 \
-    mbedtls                               \
-    tcplp                                 \
+lib_LIBRARIES                                 = \
+    libtcplp.a                                  \
     $(NULL)
 
-SUBDIRS =                                 \
-    tcplp                                 \
+# Do not enable -Wsign-compare for TCPlp
+override CFLAGS                              := $(filter-out -Wsign-compare,$(CFLAGS))
+override CFLAGS                              := $(CFLAGS) -Wno-sign-compare
+
+# Do not enable -Wunused-parameter for TCPlp
+override CFLAGS                              := $(filter-out -Wunused-parameter,$(CFLAGS))
+override CFLAGS                              := $(CFLAGS) -Wno-unused-parameter
+
+# Do not enable -Waddress-of-packed-member for TCPlp
+override CFLAGS                              := $(filter-out -Waddress-of-packed-member,$(CFLAGS))
+override CFLAGS                              := $(CFLAGS) -Wno-address-of-packed-member
+
+# Do not enable -pedantic-errors for TCPlp
+override CFLAGS                              := $(filter-out -pedantic-errors,$(CFLAGS))
+
+TCPLP_SRCDIR                                  = $(top_srcdir)/third_party/tcplp
+
+libtcplp_a_CPPFLAGS                           = \
+    -I$(top_srcdir)/include                     \
+    -I$(top_srcdir)/src/core                    \
+    -I$(TCPLP_SRCDIR)/bsdtcp                    \
+    -I$(TCPLP_SRCDIR)/lib                       \
+    $(TCPLP_CPPFLAGS)                           \
     $(NULL)
 
-if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-SUBDIRS                                += \
-    mbedtls                               \
+libtcplp_a_SOURCES                            = \
+    tcplp.c
     $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
