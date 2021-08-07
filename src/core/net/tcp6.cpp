@@ -169,8 +169,9 @@ Error Tcp::Listener::Deinitialize(void)
     return kErrorNotImplemented;
 }
 
-Error Tcp::ProcessReceivedSegment(Message &aMessage, MessageInfo &aMessageInfo)
+Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo)
 {
+    OT_UNUSED_VARIABLE(aIp6Header);
     OT_UNUSED_VARIABLE(aMessage);
     OT_UNUSED_VARIABLE(aMessageInfo);
 
