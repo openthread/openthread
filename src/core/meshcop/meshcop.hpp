@@ -64,11 +64,8 @@ namespace MeshCoP {
 class JoinerPskd : public otJoinerPskd, public Clearable<JoinerPskd>, public Unequatable<JoinerPskd>
 {
 public:
-    enum
-    {
-        kMinLength = 6,                         ///< Minimum PSKd string length (excluding null char).
-        kMaxLength = OT_JOINER_MAX_PSKD_LENGTH, ///< Maximum PSKd string length (excluding null char)
-    };
+    static constexpr uint8_t kMinLength = 6;                         ///< Min PSKd string length (excludes null char)
+    static constexpr uint8_t kMaxLength = OT_JOINER_MAX_PSKD_LENGTH; ///< Max PSKd string length (excludes null char)
 
     /**
      * This method indicates whether the PSKd if well-formed and valid.
@@ -146,11 +143,9 @@ class JoinerDiscerner : public otJoinerDiscerner, public Unequatable<JoinerDisce
     friend class SteeringData;
 
 public:
-    enum
-    {
-        kMaxLength      = OT_JOINER_MAX_DISCERNER_LENGTH, ///< Maximum length of a Joiner Discerner in bits.
-        kInfoStringSize = 45,                             ///< Size of `InfoString` to use with `ToString()
-    };
+    static constexpr uint8_t kMaxLength = OT_JOINER_MAX_DISCERNER_LENGTH; ///< Max length of a Discerner in bits.
+
+    static constexpr uint16_t kInfoStringSize = 45; ///< Size of `InfoString` to use with `ToString()
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -246,10 +241,7 @@ private:
 class SteeringData : public otSteeringData
 {
 public:
-    enum
-    {
-        kMaxLength = OT_STEERING_DATA_MAX_LENGTH, ///< Maximum Steering Data length (in bytes).
-    };
+    static constexpr uint8_t kMaxLength = OT_STEERING_DATA_MAX_LENGTH; ///< Maximum Steering Data length (in bytes).
 
     /**
      * This structure represents the hash bit index values for the bloom filter calculated from a Joiner ID.
@@ -259,10 +251,7 @@ public:
      */
     struct HashBitIndexes
     {
-        enum
-        {
-            kNumIndexes = 2, ///< Number of hash bit indexes.
-        };
+        static constexpr uint8_t kNumIndexes = 2; ///< Number of hash bit indexes.
 
         uint16_t mIndex[kNumIndexes]; ///< The hash bit index array.
     };
@@ -400,10 +389,7 @@ public:
     static void CalculateHashBitIndexes(const JoinerDiscerner &aDiscerner, HashBitIndexes &aIndexes);
 
 private:
-    enum
-    {
-        kPermitAll = 0xff,
-    };
+    static constexpr uint8_t kPermitAll = 0xff;
 
     uint8_t GetNumBits(void) const { return (mLength * CHAR_BIT); }
 

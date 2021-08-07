@@ -207,11 +207,6 @@ protected:
         Error ReadFromMessage(const Message &aMessage, uint16_t aOffset);
 
     private:
-        enum
-        {
-            kMaxValueSize = 16, // Maximum size of a Dataset TLV value (bytes).
-        };
-
         uint8_t mValue[Dataset::kMaxValueSize];
     } OT_TOOL_PACKED_END;
 
@@ -360,11 +355,8 @@ private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif
 
-    enum
-    {
-        kMaxDatasetTlvs = 16,   // Maximum number of TLVs in a Dataset.
-        kSendSetDelay   = 5000, // Milliseconds
-    };
+    static constexpr uint8_t  kMaxDatasetTlvs = 16;   // Maximum number of TLVs in a Dataset.
+    static constexpr uint32_t kSendSetDelay   = 5000; // Milliseconds
 
     bool       mCoapPending : 1;
     TimerMilli mTimer;

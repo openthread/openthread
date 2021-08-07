@@ -72,7 +72,7 @@ public:
      * MeshCoP TLV Types.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kChannel                 = OT_MESHCOP_TLV_CHANNEL,                  ///< Channel TLV
         kPanId                   = OT_MESHCOP_TLV_PANID,                    ///< PAN ID TLV
@@ -843,10 +843,7 @@ OT_TOOL_PACKED_BEGIN
 class CommissionerIdTlv : public Tlv, public TlvInfo<Tlv::kCommissionerId>
 {
 public:
-    enum
-    {
-        kMaxLength = 64, ///< maximum length (bytes)
-    };
+    static constexpr uint8_t kMaxLength = 64; ///< maximum length (bytes)
 
     /**
      * This method initializes the TLV.
@@ -902,11 +899,6 @@ OT_TOOL_PACKED_BEGIN
 class CommissionerSessionIdTlv : public Tlv, public UintTlvInfo<Tlv::kCommissionerSessionId, uint16_t>
 {
 public:
-    enum
-    {
-        kType = kCommissionerSessionId, ///< The TLV Type.
-    };
-
     /**
      * This method initializes the TLV.
      *
@@ -990,11 +982,8 @@ public:
     void SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy);
 
 private:
-    enum : uint8_t
-    {
-        kThread11FlagsLength = 1, ///< The Thread 1.1 Security Policy Flags length.
-        kThread12FlagsLength = 2, ///< The Thread 1.2 Security Policy Flags length.
-    };
+    static constexpr uint8_t kThread11FlagsLength = 1; // The Thread 1.1 Security Policy Flags length.
+    static constexpr uint8_t kThread12FlagsLength = 2; // The Thread 1.2 Security Policy Flags length.
 
     void     SetRotationTime(uint16_t aRotationTime) { mRotationTime = HostSwap16(aRotationTime); }
     uint16_t GetRotationTime(void) const { return HostSwap16(mRotationTime); }
@@ -1214,22 +1203,19 @@ public:
      */
     void SetDelayTimer(uint32_t aDelayTimer) { mDelayTimer = HostSwap32(aDelayTimer); }
 
-    enum
-    {
-        kMaxDelayTimer = 259200, ///< maximum delay timer value for a Pending Dataset in seconds
+    static constexpr uint32_t kMaxDelayTimer = 259200; ///< Maximum delay timer value for a Pending Dataset in seconds
 
-        /**
-         * Minimum Delay Timer value for a Pending Operational Dataset (ms)
-         *
-         */
-        kDelayTimerMinimal = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY,
+    /**
+     * Minimum Delay Timer value for a Pending Operational Dataset (ms)
+     *
+     */
+    static constexpr uint32_t kDelayTimerMinimal = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_MINIMUM_DELAY;
 
-        /**
-         * Default Delay Timer value for a Pending Operational Dataset (ms)
-         *
-         */
-        kDelayTimerDefault = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY,
-    };
+    /**
+     * Default Delay Timer value for a Pending Operational Dataset (ms)
+     *
+     */
+    static constexpr uint32_t kDelayTimerDefault = OPENTHREAD_CONFIG_TMF_PENDING_DATASET_DEFAULT_DELAY;
 
 private:
     uint32_t mDelayTimer;
@@ -1486,10 +1472,7 @@ public:
     static uint32_t GetChannelMask(const Message &aMessage);
 
 private:
-    enum
-    {
-        kNumMaskEntries = Radio::kNumChannelPages,
-    };
+    static constexpr uint8_t kNumMaskEntries = Radio::kNumChannelPages;
 
     ChannelMaskEntry mEntries[kNumMaskEntries];
 } OT_TOOL_PACKED_END;
@@ -1530,10 +1513,11 @@ OT_TOOL_PACKED_BEGIN
 class ProvisioningUrlTlv : public Tlv, public TlvInfo<Tlv::kProvisioningUrl>
 {
 public:
-    enum
-    {
-        kMaxLength = OT_PROVISIONING_URL_MAX_SIZE, ///< Maximum number of chars in the Provisioning URL string.
-    };
+    /**
+     * Maximum number of chars in the Provisioning URL string.
+     *
+     */
+    static constexpr uint16_t kMaxLength = OT_PROVISIONING_URL_MAX_SIZE;
 
     /**
      * This method initializes the TLV.
@@ -1654,10 +1638,7 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxLength = 32,
-    };
+    static constexpr uint8_t kMaxLength = 32;
 
     char mVendorName[kMaxLength];
 } OT_TOOL_PACKED_END;
@@ -1718,10 +1699,7 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxLength = 32,
-    };
+    static constexpr uint8_t kMaxLength = 32;
 
     char mVendorModel[kMaxLength];
 } OT_TOOL_PACKED_END;
@@ -1782,10 +1760,7 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxLength = 16,
-    };
+    static constexpr uint8_t kMaxLength = 16;
 
     char mVendorSwVersion[kMaxLength];
 } OT_TOOL_PACKED_END;
@@ -1846,10 +1821,7 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxLength = 64,
-    };
+    static constexpr uint8_t kMaxLength = 64;
 
     char mVendorData[kMaxLength];
 } OT_TOOL_PACKED_END;
@@ -1985,25 +1957,21 @@ public:
     }
 
 private:
-    uint8_t mOui[3];
+    // For `mBuildRevision`
+    static constexpr uint8_t  kBuildOffset = 4;
+    static constexpr uint16_t kBuildMask   = 0xfff << kBuildOffset;
+    static constexpr uint8_t  kRevOffset   = 0;
+    static constexpr uint16_t kRevMask     = 0xf << kBuildOffset;
 
-    enum
-    {
-        kBuildOffset = 4,
-        kBuildMask   = 0xfff << kBuildOffset,
-        kRevOffset   = 0,
-        kRevMask     = 0xf << kBuildOffset,
-    };
+    // For `mMinorMajor`
+    static constexpr uint8_t kMinorOffset = 4;
+    static constexpr uint8_t kMinorMask   = 0xf << kMinorOffset;
+    static constexpr uint8_t kMajorOffset = 0;
+    static constexpr uint8_t kMajorMask   = 0xf << kMajorOffset;
+
+    uint8_t  mOui[3];
     uint16_t mBuildRevision;
-
-    enum
-    {
-        kMinorOffset = 4,
-        kMinorMask   = 0xf << kMinorOffset,
-        kMajorOffset = 0,
-        kMajorMask   = 0xf << kMajorOffset,
-    };
-    uint8_t mMinorMajor;
+    uint8_t  mMinorMajor;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -2162,13 +2130,11 @@ public:
     }
 
 private:
-    enum
-    {
-        kVersionOffset = 4,
-        kVersionMask   = 0xf << kVersionOffset,
-        kJoinerOffset  = 3,
-        kJoinerMask    = 1 << kJoinerOffset,
-    };
+    static constexpr uint8_t kVersionOffset = 4;
+    static constexpr uint8_t kVersionMask   = 0xf << kVersionOffset;
+    static constexpr uint8_t kJoinerOffset  = 3;
+    static constexpr uint8_t kJoinerMask    = 1 << kJoinerOffset;
+
     uint8_t mFlags;
     uint8_t mReserved;
 } OT_TOOL_PACKED_END;
@@ -2276,15 +2242,13 @@ public:
     }
 
 private:
-    enum
-    {
-        kVersionOffset = 4,
-        kVersionMask   = 0xf << kVersionOffset,
-        kNativeOffset  = 3,
-        kNativeMask    = 1 << kNativeOffset,
-        kCCMOffset     = 2,
-        kCCMMask       = 1 << kCCMOffset,
-    };
+    static constexpr uint8_t kVersionOffset = 4;
+    static constexpr uint8_t kVersionMask   = 0xf << kVersionOffset;
+    static constexpr uint8_t kNativeOffset  = 3;
+    static constexpr uint8_t kNativeMask    = 1 << kNativeOffset;
+    static constexpr uint8_t kCCMOffset     = 2;
+    static constexpr uint8_t kCCMMask       = 1 << kCCMOffset;
+
     uint8_t mFlags;
     uint8_t mReserved;
 } OT_TOOL_PACKED_END;
@@ -2297,10 +2261,7 @@ OT_TOOL_PACKED_BEGIN
 class JoinerAdvertisementTlv : public Tlv, public TlvInfo<Tlv::kJoinerAdvertisement>
 {
 public:
-    enum
-    {
-        kAdvDataMaxLength = OT_JOINER_ADVDATA_MAX_LENGTH, ///< The Max Length of AdvData
-    };
+    static constexpr uint8_t kAdvDataMaxLength = OT_JOINER_ADVDATA_MAX_LENGTH; ///< The Max Length of AdvData
 
     /**
      * This method initializes the TLV.

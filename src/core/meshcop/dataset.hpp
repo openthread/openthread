@@ -59,18 +59,15 @@ class Dataset
     friend class DatasetLocal;
 
 public:
-    enum
-    {
-        kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH, ///< Maximum size of MeshCoP Dataset (bytes)
-        kMaxValueSize = 16,                                ///< Maximum size of each Dataset TLV value (bytes)
-        kMaxGetTypes  = 64,                                ///< Maximum number of types in MGMT_GET.req
-    };
+    static constexpr uint8_t kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max size of MeshCoP Dataset (bytes)
+    static constexpr uint8_t kMaxValueSize = 16;                                ///< Max size of a TLV value (bytes)
+    static constexpr uint8_t kMaxGetTypes  = 64;                                ///< Max number of types in MGMT_GET.req
 
     /**
      * This enumeration represents the Dataset type (active or pending).
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kActive,  ///< Active Dataset
         kPending, ///< Pending Dataset
