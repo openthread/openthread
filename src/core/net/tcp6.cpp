@@ -53,6 +53,8 @@ namespace Ip6 {
 
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mTimer(aInstance, Tcp::HandleTimer)
+    , mFiringTimers(false)
     , mEphemeralPort(kDynamicPortMin)
 {
 }
@@ -60,11 +62,6 @@ Tcp::Tcp(Instance &aInstance)
 Error Tcp::Endpoint::Initialize(Instance &aInstance, otTcpEndpointInitializeArgs &aArgs)
 {
     Error error = kErrorNone;
-
-    IgnoreReturnValue(new (&GetDelackTimer()) TimerMilli(aInstance, HandleDelackTimer));
-    IgnoreReturnValue(new (&GetRexmtPersistTimer()) TimerMilli(aInstance, HandleRexmtPersistTimer));
-    IgnoreReturnValue(new (&GetKeepTimer()) TimerMilli(aInstance, HandleKeepTimer));
-    IgnoreReturnValue(new (&Get2MslTimer()) TimerMilli(aInstance, Handle2MslTimer));
 
     mContext                  = aArgs.mContext;
     mEstablishedCallback      = aArgs.mEstablishedCallback;
@@ -237,13 +234,142 @@ Error Tcp::Endpoint::Deinitialize(void)
     tcp.mEndpoints.PopAfter(prev);
     SetNext(nullptr);
 
-    GetDelackTimer().~TimerMilli();
-    GetRexmtPersistTimer().~TimerMilli();
-    GetKeepTimer().~TimerMilli();
-    Get2MslTimer().~TimerMilli();
-
 exit:
     return error;
+}
+
+uint8_t Tcp::Endpoint::TimerFlagToIndex(uint8_t aTimerFlag)
+{
+    switch (aTimerFlag)
+    {
+    case TT_DELACK:
+        return kTimerDelack;
+    case TT_REXMT:
+        /* fallthrough intentional */
+    case TT_PERSIST:
+        return kTimerRexmtPersist;
+    case TT_KEEP:
+        return kTimerKeep;
+    case TT_2MSL:
+        return kTimer2Msl;
+    default:
+        OT_ASSERT(false);
+    }
+}
+
+bool Tcp::Endpoint::IsTimerActive(uint8_t aTimerIndex)
+{
+    OT_ASSERT(aTimerIndex < kNumTimers);
+    switch (aTimerIndex)
+    {
+    case kTimerDelack:
+        return tcp_timer_active(&mTcb, TT_DELACK);
+    case kTimerRexmtPersist:
+        return tcp_timer_active(&mTcb, TT_REXMT) || tcp_timer_active(&mTcb, TT_PERSIST);
+    case kTimerKeep:
+        return tcp_timer_active(&mTcb, TT_KEEP);
+    case kTimer2Msl:
+        return tcp_timer_active(&mTcb, TT_2MSL);
+    default:
+        return false;
+    }
+}
+
+void Tcp::Endpoint::SetTimer(uint8_t aTimerFlag, uint32_t aDelay)
+{
+    TimeMilli now = TimerMilli::GetNow();
+    TimeMilli newFireTime = now + aDelay;
+    uint8_t timerIndex = TimerFlagToIndex(aTimerFlag);
+
+    /* TCPlp should have set this flag before calling this function. */
+    OT_ASSERT(tpistimeractive(&mTcb, aTimerFlag));
+    mTimers[timerIndex] = newFireTime.GetValue();
+    otLogDebgTcp("Set timer %u with delay %u", static_cast<unsigned int>(timerIndex), static_cast<unsigned int>(aDelay));
+
+    /*
+     * We're using the same timer index for both the retranxmit and persist
+     * timer, since they can't be running at the same time. So let's be
+     * defensive and check that that's indeed the case.
+     */
+    OT_ASSERT(!(tpistimeractive(&mTcb, TT_REXMT) && tpistimeractive(&mTcb, TT_PERSIST)));
+
+    GetInstance().Get<Tcp>().ResetTimer(false);
+}
+
+void Tcp::Endpoint::CancelTimer(uint8_t aTimerFlag)
+{
+    /*
+     * TCPlp has already cleared the timer flag before calling this, so all
+     * that we have to do is stop the actual timer if needed.
+     */
+    OT_ASSERT(!tpistimeractive(&mTcb, aTimerFlag));
+    if (GetInstance().Get<Tcp>().mTimer.GetFireTime() == TimeMilli(mTimers[TimerFlagToIndex(aTimerFlag)]))
+    {
+        GetInstance().Get<Tcp>().ResetTimer(false);
+    }
+}
+
+void Tcp::Endpoint::FirePendingTimers(TimeMilli aNow)
+{
+    /*
+     * NOTE: Firing a timer might potentially activate/deactive other timers.
+     * If timers x and y expire at the same time, but the callback for timer x
+     * (for x < y) cancels or postpones timer y, should timer y's callback be
+     * called?
+     *
+     * The code below wouldn't call timer y's callback in that scenario. But
+     * this point might be worth revisiting at a later date.
+     */
+    for (uint8_t timerIndex = 0; timerIndex != kNumTimers; timerIndex++)
+    {
+        if (IsTimerActive(timerIndex))
+        {
+            Time expiry(mTimers[timerIndex]);
+            if (expiry <= aNow)
+            {
+                switch (timerIndex)
+                {
+                case kTimerDelack:
+                    tcp_timer_delack(&mTcb);
+                    break;
+                case kTimerRexmtPersist:
+                    if (tcp_timer_active(&mTcb, TT_REXMT))
+                    {
+                        tcp_timer_rexmt(&mTcb);
+                    }
+                    else
+                    {
+                        tcp_timer_persist(&mTcb);
+                    }
+                    break;
+                case kTimerKeep:
+                    tcp_timer_keep(&mTcb);
+                    break;
+                case kTimer2Msl:
+                    tcp_timer_2msl(&mTcb);
+                    break;
+                }
+            }
+        }
+    }
+}
+
+bool Tcp::Endpoint::GetEarliestActiveTimer(TimeMilli aNow, uint32_t& aDelayUntilNextActiveTimer)
+{
+    bool hasUnfiredTimer = false;
+    aDelayUntilNextActiveTimer = Timer::kMaxDelay;
+
+    for (uint8_t timerIndex = 0; timerIndex != kNumTimers; timerIndex++)
+    {
+        if (IsTimerActive(timerIndex))
+        {
+            Time expiry(mTimers[timerIndex]);
+            hasUnfiredTimer = true;
+            aDelayUntilNextActiveTimer = OT_MIN(aDelayUntilNextActiveTimer, expiry - aNow);
+        }
+    }
+
+    return hasUnfiredTimer;
 }
 
 bool Tcp::Endpoint::Matches(const MessageInfo &aMessageInfo) const
@@ -544,39 +670,63 @@ bool Tcp::AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, 
     }
 }
 
-void Tcp::HandleDelackTimer(Timer &aTimer)
+void Tcp::HandleTimer(Timer &aTimer)
 {
-    TimerMilli &timer    = *static_cast<TimerMilli *>(&aTimer);
-    Endpoint &  endpoint = Endpoint::FromDelackTimer(timer);
-    tcp_timer_delack(&endpoint.mTcb);
+    OT_ASSERT(&aTimer == &aTimer.GetInstance().Get<Tcp>().mTimer);
+    aTimer.GetInstance().Get<Tcp>().ResetTimer(true);
 }
 
-void Tcp::HandleRexmtPersistTimer(Timer &aTimer)
+void Tcp::ResetTimer(bool aFirePendingTimers)
 {
-    TimerMilli &timer    = *static_cast<TimerMilli *>(&aTimer);
-    Endpoint &  endpoint = Endpoint::FromRexmtPersistTimer(timer);
-    if (tcp_timer_active(&endpoint.mTcb, TT_REXMT))
+    TimeMilli now = TimerMilli::GetNow();
+    bool pendingTimer = false;
+    uint32_t earliestPendingTimerDelay;
+
+    if (aFirePendingTimers)
     {
-        tcp_timer_rexmt(&endpoint.mTcb);
+        OT_ASSERT(!mFiringTimers);
+        mFiringTimers = true;
     }
-    else
+    else if (mFiringTimers)
     {
-        tcp_timer_persist(&endpoint.mTcb);
+        return;
     }
-}
 
-void Tcp::HandleKeepTimer(Timer &aTimer)
-{
-    TimerMilli &timer    = *static_cast<TimerMilli *>(&aTimer);
-    Endpoint &  endpoint = Endpoint::FromKeepTimer(timer);
-    tcp_timer_keep(&endpoint.mTcb);
-}
+    otLogDebgTcp("Stopping main TCP timer");
+    mTimer.Stop();
 
-void Tcp::Handle2MslTimer(Timer &aTimer)
-{
-    TimerMilli &timer    = *static_cast<TimerMilli *>(&aTimer);
-    Endpoint &  endpoint = Endpoint::From2MslTimer(timer);
-    tcp_timer_2msl(&endpoint.mTcb);
+    for (Endpoint *endpoint = mEndpoints.GetHead(); endpoint != nullptr; endpoint = endpoint->GetNext())
+    {
+        uint32_t delay;
+        if (aFirePendingTimers)
+        {
+            endpoint->FirePendingTimers(now);
+        }
+        if (endpoint->GetEarliestActiveTimer(now, delay))
+        {
+            if (pendingTimer)
+            {
+                earliestPendingTimerDelay = OT_MIN(earliestPendingTimerDelay, delay);
+            }
+            else
+            {
+                pendingTimer = true;
+                earliestPendingTimerDelay = delay;
+            }
+        }
+    }
+
+    if (pendingTimer)
+    {
+        otLogDebgTcp("Setting main TCP timer to %d", (int) earliestPendingTimerDelay);
+        mTimer.StartAt(now, earliestPendingTimerDelay);
+    }
+
+    if (aFirePendingTimers)
+    {
+        OT_ASSERT(mFiringTimers);
+        mFiringTimers = false;
+    }
 }
 
 } // namespace Ip6
@@ -614,7 +764,7 @@ void tcplp_sys_send_message(otInstance *aInstance, otMessage *aMessage, otMessag
     Message &         message  = *static_cast<Message *>(aMessage);
     Ip6::MessageInfo &info     = *static_cast<Ip6::MessageInfo *>(aMessageInfo);
 
-    otLogDebgTcp("Sending TCP segment: payload_size = %d\n", static_cast<int>(message.GetLength()));
+    otLogDebgTcp("Sending TCP segment: payload_size = %d", static_cast<int>(message.GetLength()));
 
     IgnoreError(instance.Get<Ip6::Ip6>().SendDatagram(message, info, kProtoTcp));
 }
@@ -629,18 +779,16 @@ uint32_t tcplp_sys_get_millis()
     return TimerMilli::GetNow().GetValue();
 }
 
-void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerId, uint32_t aDelay)
+void tcplp_sys_set_timer(struct tcpcb *aTcb, uint8_t aTimerFlag, uint32_t aDelay)
 {
     Tcp::Endpoint &endpoint = Tcp::Endpoint::FromTcb(*aTcb);
-    TimerMilli &   timer    = endpoint.GetTimer(aTimerId);
-    timer.Start(aDelay);
+    endpoint.SetTimer(aTimerFlag, aDelay);
 }
 
-void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerId)
+void tcplp_sys_stop_timer(struct tcpcb *aTcb, uint8_t aTimerFlag)
 {
     Tcp::Endpoint &endpoint = Tcp::Endpoint::FromTcb(*aTcb);
-    TimerMilli &   timer    = endpoint.GetTimer(aTimerId);
-    timer.Stop();
+    endpoint.CancelTimer(aTimerFlag);
 }
 
 struct tcpcb *tcplp_sys_accept_ready(struct tcpcb_listen *aTcbListen, struct in6_addr *aAddr, uint16_t aPort)

@@ -166,13 +166,15 @@ tcp_timer_keep(struct tcpcb* tp)
 			tp->t_timers->tt_flags &= ~TT_KEEP_RST;
 		}
 #endif
-		tcplp_sys_set_timer(tp, TOS_KEEP, TP_KEEPINTVL(tp));
+		tpmarktimeractive(tp, TT_KEEP);
+		tcplp_sys_set_timer(tp, TT_KEEP, TP_KEEPINTVL(tp));
 	} else /*if (!callout_reset(&tp->t_timers->tt_keep, TP_KEEPIDLE(tp),
-		    tcp_timer_keep, tp)) {
+			tcp_timer_keep, tp)) {
 			tp->t_timers->tt_flags &= ~TT_KEEP_RST;
 		}*/
 		{
-			tcplp_sys_set_timer(tp, TOS_KEEP, TP_KEEPIDLE(tp));
+			tpmarktimeractive(tp, TT_KEEP);
+			tcplp_sys_set_timer(tp, TT_KEEP, TP_KEEPIDLE(tp));
 		}
 #if 0
 #ifdef TCPDEBUG
@@ -375,7 +377,8 @@ tcp_timer_2msl(struct tcpcb* tp)
 				tp->t_timers->tt_flags &= ~TT_2MSL_RST;
 			}
 		*/
-			tcplp_sys_set_timer(tp, TOS_2MSL, TP_KEEPINTVL(tp));
+			tpmarktimeractive(tp, TT_2MSL);
+			tcplp_sys_set_timer(tp, TT_2MSL, TP_KEEPINTVL(tp));
 		} else {
 			tp = tcp_close(tp);
 			tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
@@ -443,7 +446,7 @@ tcp_timer_rexmt(struct tcpcb *tp)
 	 * been acked within retransmit interval.  Back off
 	 * to a longer retransmit interval and retransmit one segment.
 	 */
-        printf("rxtshift is %d\n", (int) tp->t_rxtshift);
+	tcplp_sys_log("rxtshift is %d\n", (int) tp->t_rxtshift);
 	if (++tp->t_rxtshift > TCP_MAXRXTSHIFT) {
 		tp->t_rxtshift = TCP_MAXRXTSHIFT;
 //		TCPSTAT_INC(tcps_timeoutdrop);
@@ -674,50 +677,29 @@ tcp_timer_active(struct tcpcb *tp, uint32_t timer_type)
 
 void
 tcp_timer_activate(struct tcpcb *tp, uint32_t timer_type, uint32_t delta) {
-	uint8_t tos_timer;
-	switch (timer_type) {
-	case TT_DELACK:
-		tos_timer = TOS_DELACK;
-		break;
-	case TT_REXMT:
-		tos_timer = TOS_REXMT;
-		break;
-	case TT_PERSIST:
-		tos_timer = TOS_PERSIST;
-		break;
-	case TT_KEEP:
-		tos_timer = TOS_KEEP;
-		break;
-	case TT_2MSL:
-		tos_timer = TOS_2MSL;
-		break;
-	default:
-		tcplp_sys_log("Invalid timer 0x%u: skipping\n", (unsigned int) timer_type);
-		return;
-	}
 	if (delta) {
 	    tpmarktimeractive(tp, timer_type);
 		if (tpistimeractive(tp, TT_REXMT) && tpistimeractive(tp, TT_PERSIST)) {
 		    char* msg = "TCP CRITICAL FAILURE: Retransmit and Persist timers are simultaneously running!\n";
 		    tcplp_sys_log("%s\n", msg);
 		}
-		tcplp_sys_set_timer(tp, tos_timer, (uint32_t) delta);
+		tcplp_sys_set_timer(tp, timer_type, (uint32_t) delta);
 	} else {
 		tpcleartimeractive(tp, timer_type);
-		tcplp_sys_stop_timer(tp, tos_timer);
+		tcplp_sys_stop_timer(tp, timer_type);
 	}
 }
 
 void
 tcp_cancel_timers(struct tcpcb* tp) {
-	tpcleartimeractive(tp, TOS_DELACK);
-	tcplp_sys_stop_timer(tp, TOS_DELACK);
-	tpcleartimeractive(tp, TOS_REXMT);
-	tcplp_sys_stop_timer(tp, TOS_REXMT);
-	tpcleartimeractive(tp, TOS_PERSIST);
-	tcplp_sys_stop_timer(tp, TOS_PERSIST);
-	tpcleartimeractive(tp, TOS_KEEP);
-	tcplp_sys_stop_timer(tp, TOS_KEEP);
-	tpcleartimeractive(tp, TOS_2MSL);
-	tcplp_sys_stop_timer(tp, TOS_2MSL);
+	tpcleartimeractive(tp, TT_DELACK);
+	tcplp_sys_stop_timer(tp, TT_DELACK);
+	tpcleartimeractive(tp, TT_REXMT);
+	tcplp_sys_stop_timer(tp, TT_REXMT);
+	tpcleartimeractive(tp, TT_PERSIST);
+	tcplp_sys_stop_timer(tp, TT_PERSIST);
+	tpcleartimeractive(tp, TT_KEEP);
+	tcplp_sys_stop_timer(tp, TT_KEEP);
+	tpcleartimeractive(tp, TT_2MSL);
+	tcplp_sys_stop_timer(tp, TT_2MSL);
 }

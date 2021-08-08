@@ -77,13 +77,6 @@
 #define TT_KEEP		0x0008
 #define TT_2MSL		0x0010
 
-// To interface with TinyOS, each timer must take up only 2 bits
-#define TOS_DELACK	0x0
-#define	TOS_REXMT	0x1
-#define	TOS_PERSIST	0x1 // The same timer is used for Persist and Retransmit, since both can't be running simultaneously
-#define	TOS_KEEP	0x2
-#define TOS_2MSL	0x3
-
 /*
  * Time constants.
  */

@@ -213,11 +213,7 @@ struct otTcpEndpoint
     otLinkedBuffer mReceiveLinks[2];
     otSockAddr     mSockAddr;
 
-    union
-    {
-        void *  mAlign;
-        uint8_t mSize[4 * sizeof(void *)];
-    } mTimers[4];
+    uint32_t mTimers[4];
 
     struct tcpcb mTcb;
 };

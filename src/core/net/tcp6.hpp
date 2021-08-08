@@ -330,32 +330,20 @@ public:
 
         enum : uint8_t
         {
+            kTimerDelack = 0,
+            kTimerRexmtPersist = 1,
+            kTimerKeep = 2,
+            kTimer2Msl = 3,
             kNumTimers = 4,
         };
 
-        static_assert(sizeof(mTimers[0]) >= sizeof(TimerMilli), "mTimers entries are too small");
-        static_assert(OT_ARRAY_LENGTH(mTimers) == kNumTimers, "mTimers has an incorrect array length");
+        static uint8_t TimerFlagToIndex(uint8_t aTimerFlag);
 
-        TimerMilli &GetTimer(std::size_t aIndex) { return *reinterpret_cast<TimerMilli *>(&mTimers[aIndex].mSize[0]); }
-
-        static Endpoint &FromTimer(TimerMilli &aTimer, std::size_t aIndex)
-        {
-            uint8_t *ptr = reinterpret_cast<uint8_t *>(&aTimer);
-            ptr -= offsetof(Endpoint, mTimers[aIndex].mSize[0]);
-            return *reinterpret_cast<Endpoint *>(ptr);
-        }
-
-        TimerMilli &     GetDelackTimer() { return GetTimer(0); }
-        static Endpoint &FromDelackTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 0); }
-
-        TimerMilli &     GetRexmtPersistTimer() { return GetTimer(1); }
-        static Endpoint &FromRexmtPersistTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 1); }
-
-        TimerMilli &     GetKeepTimer() { return GetTimer(2); }
-        static Endpoint &FromKeepTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 2); }
-
-        TimerMilli &     Get2MslTimer() { return GetTimer(3); }
-        static Endpoint &From2MslTimer(TimerMilli &aTimer) { return FromTimer(aTimer, 3); }
+        bool IsTimerActive(uint8_t aTimerId);
+        void SetTimer(uint8_t aTimerId, uint32_t aDelay);
+        void CancelTimer(uint8_t aTimerId);
+        void FirePendingTimers(TimeMilli aNow);
+        bool GetEarliestActiveTimer(TimeMilli aNow, uint32_t& aDelayUntilNextActiveTimer);
 
         Address &GetLocalIp6Address() { return *reinterpret_cast<Address *>(&mTcb.laddr); }
 
@@ -611,12 +599,13 @@ private:
     static Error BsdErrorToOtError(int aBsdError);
     bool         CanBind(const SockAddr &aSockName);
 
-    static void HandleDelackTimer(Timer &aTimer);
-    static void HandleRexmtPersistTimer(Timer &aTimer);
-    static void HandleKeepTimer(Timer &aTimer);
-    static void Handle2MslTimer(Timer &aTimer);
+    static void HandleTimer(Timer &aTimer);
+    void ResetTimer(bool aFirePendingTimers);
 
     uint16_t GetFreeEphemeralPort(void);
+
+    TimerMilli mTimer;
+    bool mFiringTimers;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;
