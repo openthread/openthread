@@ -1781,7 +1781,14 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
         newService->mIsDeleted      = false;
         newService->mIsCommitted    = true;
         newService->mTimeLastUpdate = TimerMilli::GetNow();
-        newService->mDescription.TakeResourcesFrom(service->mDescription);
+
+        if (!service->mIsSubType)
+        {
+            // (1) Service description is shared across a base type and all its subtypes.
+            // (2) `TakeResourcesFrom()` releases resources pinned to its argument.
+            // Therefore, make sure the function is called only for the base type.
+            newService->mDescription.TakeResourcesFrom(service->mDescription);
+        }
 
         newService->Log((existingService != nullptr) ? Service::kUpdateExisting : Service::kAddNew);
     }
