@@ -680,7 +680,7 @@ void Tcp::ResetTimer(bool aFirePendingTimers)
 {
     TimeMilli now = TimerMilli::GetNow();
     bool pendingTimer = false;
-    uint32_t earliestPendingTimerDelay;
+    uint32_t earliestPendingTimerDelay = 0;
 
     if (aFirePendingTimers)
     {
