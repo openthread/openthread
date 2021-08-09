@@ -317,6 +317,7 @@ void InfraNetif::TearDown(void)
     VerifyOrExit(mInfraIfIndex != 0);
 
     Mainloop::Manager::Get().Remove(*this);
+
 exit:
     return;
 }
