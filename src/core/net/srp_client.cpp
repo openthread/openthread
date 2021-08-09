@@ -1251,7 +1251,7 @@ void Client::ProcessResponse(Message &aMessage)
             // running and auto-start is enabled and selected the
             // server.
 
-            SelectNextServer();
+            SelectNextServer(/* aDisallowSwitchOnRegisteredHost */ true);
         }
 #endif
         ExitNow(error = kErrorNone);
@@ -1633,7 +1633,7 @@ void Client::HandleTimer(void)
 
         if (mTimoutFailureCount >= kMaxTimeoutFailuresToSwitchServer)
         {
-            SelectNextServer();
+            SelectNextServer(kDisallowSwitchOnRegisteredHost);
         }
 #endif
         break;
@@ -1769,7 +1769,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-void Client::SelectNextServer(void)
+void Client::SelectNextServer(bool aDisallowSwitchOnRegisteredHost)
 {
     // This method tries to find the next server info entry in the
     // Network Data after the current one selected. If found, it
@@ -1782,12 +1782,16 @@ void Client::SelectNextServer(void)
     serverSockAddr.Clear();
 
     // Ensure that client is running, auto-start is enabled and
-    // auto-start selected the server and that host info is not yet
-    // registered (indicating that no service has yet been registered
-    // either).
+    // auto-start selected the server.
 
     VerifyOrExit(IsRunning() && mAutoStartModeEnabled && mAutoStartDidSelectServer);
-    VerifyOrExit((mHostInfo.GetState() == kAdding) || (mHostInfo.GetState() == kToAdd));
+
+    if (aDisallowSwitchOnRegisteredHost)
+    {
+        // Ensure that host info is not yet registered (indicating that no
+        // service has yet been registered either).
+        VerifyOrExit((mHostInfo.GetState() == kAdding) || (mHostInfo.GetState() == kToAdd));
+    }
 
     // We go through all entries to find the one matching the currently
     // selected one, then set `selectNext` to `true` so to select the
