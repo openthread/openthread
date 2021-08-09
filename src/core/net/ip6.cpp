@@ -454,6 +454,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     header.Init();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
+    header.SetEcn(aMessageInfo.mEcn);
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
 

@@ -191,6 +191,25 @@ public:
     }
 
     /**
+     * This method returns the IPv6 ECN value.
+     *
+     * @returns The IPv6 ECN value.
+     *
+     */
+    uint8_t GetEcn(void) const { return (mVersionClassFlow.m8[1] & kEcnMask) >> kEcnOffset; }
+
+    /**
+     * This method sets the Ipv6 ECN value.
+     *
+     * @param[in]  aEcn  The Ipv6 ECN value.
+     *
+     */
+    void SetEcn(uint8_t aEcn)
+    {
+        mVersionClassFlow.m8[1] = (mVersionClassFlow.m8[1] & ~kEcnMask) | ((aEcn << kEcnOffset) & kEcnMask);
+    }
+
+    /**
      * This method returns the IPv6 Payload Length value.
      *
      * @returns The IPv6 Payload Length value.
@@ -291,7 +310,14 @@ private:
     static constexpr uint8_t  kVersionMask          = 0xf0;       // To use with `mVersionClassFlow.m8[0]`
     static constexpr uint8_t  kDscpOffset           = 6;          // To use with `mVersionClassFlow.m16[0]`
     static constexpr uint16_t kDscpMask             = 0x0fc0;     // To use with `mVersionClassFlow.m16[0]`
+    static constexpr uint8_t  kEcnOffset            = 4;          // To use with `mVersionClassFlow.m8[1]`
+    static constexpr uint8_t  kEcnMask              = 0x30;       // To use with `mVersionClassFlow.m8[1]`
     static constexpr uint32_t kVersionClassFlowInit = 0x60000000; // Version 6, TC and flow zero.
+
+    static constexpr uint8_t kEcnNotCapable = OT_ECN_NOT_CAPABLE; ///< Non-ECT
+    static constexpr uint8_t kEcnCapable0   = OT_ECN_CAPABLE_0;   ///< ECT(0)
+    static constexpr uint8_t kEcnCapable1   = OT_ECN_CAPABLE_1;   ///< ECT(1)
+    static constexpr uint8_t kEcnMarked     = OT_ECN_MARKED;      ///< Congestion encountered (CE)
 
     union OT_TOOL_PACKED_FIELD
     {
