@@ -38,31 +38,38 @@ import thread_cert
 #   configuration.
 #
 # Topology:
-#    ----------------(eth)--------------------
-#           |                   |
-#          BR (Leader)    HOST (mDNS Browser)
+#    ----------------(eth)-----------------------------
+#           |             |                    |
+#          BR1           BR2           HOST (mDNS Browser)
 #           |
 #        ROUTER
 #
 
-BR = 1
+BR1 = 1
 ROUTER = 2
-HOST = 3
+BR2 = 3
+HOST = 4
 
 
 class PublishMeshCopService(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
-        BR: {
-            'name': 'BR',
+        BR1: {
+            'name': 'BR_1',
             'allowlist': [ROUTER],
             'is_otbr': True,
             'version': '1.2',
         },
         ROUTER: {
             'name': 'Router',
-            'allowlist': [BR],
+            'allowlist': [BR1],
+            'version': '1.2',
+        },
+        BR2: {
+            'name': 'BR_2',
+            'allowlist': [],
+            'is_otbr': True,
             'version': '1.2',
         },
         HOST: {
@@ -73,27 +80,41 @@ class PublishMeshCopService(thread_cert.TestCase):
 
     def test(self):
         host = self.nodes[HOST]
-        br = self.nodes[BR]
+        br1 = self.nodes[BR1]
         client = self.nodes[ROUTER]
+        br2 = self.nodes[BR2]
+        br2.disable_br()
 
         # TODO: verify the behavior when thread is disabled
         host.bash('service otbr-agent stop')
         host.start(start_radvd=False)
         self.simulator.go(5)
 
-        br.start()
+        br1.start()
         self.simulator.go(5)
-        self.assertEqual('leader', br.get_state())
+        self.assertEqual('leader', br1.get_state())
 
         client.start()
         self.simulator.go(5)
         self.assertEqual('router', client.get_state())
 
-        self.check_meshcop_service(br, host)
+        self.check_meshcop_service(br1, host)
 
-        br.disable_backbone_router()
+        br1.disable_backbone_router()
         self.simulator.go(5)
-        self.check_meshcop_service(br, host)
+        self.check_meshcop_service(br1, host)
+
+        # verify that there are two meshcop services
+        br2.start()
+        br2.disable_backbone_router()
+        br2.enable_br()
+        self.simulator.go(5)
+        service_instances = host.browse_mdns_services('_meshcop._udp')
+        self.assertEqual(len(service_instances), 2)
+        self.check_meshcop_service(br1, host, 'OpenThread_BorderRouter')
+        for instance in service_instances:
+            if instance != 'OpenThread_BorderRouter':
+                self.check_meshcop_service(br2, host, instance)
 
     def check_meshcop_service(self, br, host, instance_name='OpenThread_BorderRouter'):
         data = host.discover_mdns_service(instance_name, '_meshcop._udp', None)
