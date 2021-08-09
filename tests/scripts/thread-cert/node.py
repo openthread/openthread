@@ -135,7 +135,7 @@ class OtbrDocker:
         assert launch_ok
 
         cmd = f'docker exec -i {self._docker_name} ot-ctl'
-        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=10)
+        self.pexpect = pexpect.popen_spawn.PopenSpawn(cmd, timeout=15)
 
         # Add delay to ensure that the process is ready to receive commands.
         timeout = 0.4
