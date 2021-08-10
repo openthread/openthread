@@ -52,6 +52,13 @@ class PartitionId(int):
     pass
 
 
+class NetifIdentifier(int):
+    """Represents a network interface identifier."""
+    UNSPECIFIED = 0
+    THERAD = 1
+    BACKBONE = 2
+
+
 class DeviceMode(str):
     """Represents a device mode."""
 

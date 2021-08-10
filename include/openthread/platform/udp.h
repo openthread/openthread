@@ -42,17 +42,6 @@ extern "C" {
 #endif
 
 /**
- * This enumeration defines the OpenThread network interface identifiers.
- *
- */
-typedef enum otNetifIdentifier
-{
-    OT_NETIF_UNSPECIFIED = 0, ///< Unspecified network interface.
-    OT_NETIF_THREAD,          ///< The Thread interface.
-    OT_NETIF_BACKBONE,        ///< The Backbone interface.
-} otNetifIdentifier;
-
-/**
  * This function initializes the UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.
