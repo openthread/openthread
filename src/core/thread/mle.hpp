@@ -1794,7 +1794,8 @@ private:
     uint32_t GetAttachStartDelay(void) const;
     Error    SendParentRequest(ParentRequestType aType);
     Error    SendChildIdRequest(void);
-    Error    SendOrphanAnnounce(void);
+    Error    GetNextAnnouceChannel(uint8_t &aChannel) const;
+    bool     HasMoreChannelsToAnnouce(void) const;
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
