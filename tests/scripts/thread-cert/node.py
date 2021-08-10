@@ -2787,6 +2787,25 @@ class LinuxHost():
                   (self.ETH_DEV, self.ETH_DEV))
         self.bash(f'ip -6 neigh list dev {self.ETH_DEV}')
 
+    def browse_mdns_services(self, name, timeout=2):
+        """ Browse mDNS services on the ethernet.
+
+        :param name: the service type name in format of '<service-name>.<protocol>'.
+        :param timeout: timeout value in seconds before returning.
+        :return: A list of service instance names.
+        """
+
+        self.bash(f'dns-sd -Z {name} local. > /tmp/{name} 2>&1 &')
+        time.sleep(timeout)
+        self.bash('pkill dns-sd')
+
+        instances = []
+        for line in self.bash(f'cat /tmp/{name}', encoding='raw_unicode_escape'):
+            elements = line.split()
+            if len(elements) >= 3 and elements[0] == name and elements[1] == 'PTR':
+                instances.append(elements[2][:-len('.' + name)])
+        return instances
+
     def discover_mdns_service(self, instance, name, host_name, timeout=2):
         """ Discover/resolve the mDNS service on ethernet.
 
@@ -2846,7 +2865,7 @@ class LinuxHost():
         txt = ''
         for line in self.bash(f'cat /tmp/{name}', encoding='raw_unicode_escape'):
             elements = line.split()
-            if len(elements) >= 2 and elements[1] == 'TXT':
+            if len(elements) >= 2 and elements[0] == full_service_name and elements[1] == 'TXT':
                 is_txt = True
             if is_txt:
                 txt += line.strip()
