@@ -356,6 +356,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
+ *
+ * This setting configures CSL auto synchronization based on data poll mechanism in Thread 1.2.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE
+#define OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD
  *
  * This setting configures the minimum CSL period that could be used, in units of milliseconds.
