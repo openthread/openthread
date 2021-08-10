@@ -41,14 +41,12 @@ import thread_cert
 #    ----------------(eth)-----------------------------
 #           |             |                    |
 #          BR1           BR2           HOST (mDNS Browser)
-#           |
-#        ROUTER
+#
 #
 
 BR1 = 1
-ROUTER = 2
-BR2 = 3
-HOST = 4
+BR2 = 2
+HOST = 3
 
 
 class PublishMeshCopService(thread_cert.TestCase):
@@ -57,13 +55,8 @@ class PublishMeshCopService(thread_cert.TestCase):
     TOPOLOGY = {
         BR1: {
             'name': 'BR_1',
-            'allowlist': [ROUTER],
+            'allowlist': [],
             'is_otbr': True,
-            'version': '1.2',
-        },
-        ROUTER: {
-            'name': 'Router',
-            'allowlist': [BR1],
             'version': '1.2',
         },
         BR2: {
@@ -81,7 +74,6 @@ class PublishMeshCopService(thread_cert.TestCase):
     def test(self):
         host = self.nodes[HOST]
         br1 = self.nodes[BR1]
-        client = self.nodes[ROUTER]
         br2 = self.nodes[BR2]
         br2.disable_br()
 
@@ -93,10 +85,6 @@ class PublishMeshCopService(thread_cert.TestCase):
         br1.start()
         self.simulator.go(5)
         self.assertEqual('leader', br1.get_state())
-
-        client.start()
-        self.simulator.go(5)
-        self.assertEqual('router', client.get_state())
 
         self.check_meshcop_service(br1, host)
 
@@ -111,10 +99,11 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.simulator.go(5)
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)
-        self.check_meshcop_service(br1, host, 'OpenThread_BorderRouter')
+        br1_service = self.check_meshcop_service(br1, host, 'OpenThread_BorderRouter')
         for instance in service_instances:
             if instance != 'OpenThread_BorderRouter':
-                self.check_meshcop_service(br2, host, instance)
+                br2_service = self.check_meshcop_service(br2, host, instance)
+        self.assertNotEqual(br1_service['host'], br2_service['host'])
 
     def check_meshcop_service(self, br, host, instance_name='OpenThread_BorderRouter'):
         data = host.discover_mdns_service(instance_name, '_meshcop._udp', None)
@@ -135,6 +124,7 @@ class PublishMeshCopService(thread_cert.TestCase):
         self.assertEqual(data['txt']['nn'], br.get_network_name())
         self.assertEqual(data['txt']['rv'], '1')
         self.assertIn(data['txt']['tv'], ['1.1.0', '1.1.1', '1.2.0'])
+        return data
 
 
 if __name__ == '__main__':
