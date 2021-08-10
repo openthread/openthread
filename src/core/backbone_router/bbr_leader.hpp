@@ -61,7 +61,7 @@ class Leader : public InstanceLocator, private NonCopyable
 {
 public:
     // Primary Backbone Router Service state or state change.
-    enum State
+    enum State : uint8_t
     {
         kStateNone = 0,       ///< Not exist (trigger Backbone Router register its service).
         kStateAdded,          ///< Newly added.
@@ -73,7 +73,7 @@ public:
     };
 
     // Domain Prefix state or state change.
-    enum DomainPrefixState
+    enum DomainPrefixState : uint8_t
     {
         kDomainPrefixNone = 0,  ///< Not available.
         kDomainPrefixAdded,     ///< Added.
