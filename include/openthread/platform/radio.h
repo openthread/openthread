@@ -239,24 +239,28 @@ typedef struct otRadioFrame
             uint8_t         mMaxFrameRetries; ///< Maximum number of retries allowed after a transmission failure.
 
             /**
-             * Indicates whether the frame is a retransmission or not.
+             * Indicates whether frame counter and CSL IEs are properly updated in the header.
              *
              * If the platform layer does not provide `OT_RADIO_CAPS_TRANSMIT_SEC` capability, it can ignore this flag.
              *
              * If the platform provides `OT_RADIO_CAPS_TRANSMIT_SEC` capability, then platform is expected to handle tx
              * security processing and assignment of frame counter. In this case the following behavior is expected:
              *
-             * When `mIsARetx` is set, it indicates that OpenThread core has already set the frame counter and key id
-             * (if security is enabled) in the prepared frame. The counter is ensured to match the counter value from
-             * the previous attempts of the same frame. The platform should not assign or change the frame counter (but
-             * may still need to perform security processing depending on `mIsSecurityProcessed` flag).
+             * When `mIsHeaderUpdated` is set, it indicates that OpenThread core has already set the frame counter and
+             * CSL IEs (if security is enabled) in the prepared frame. The counter is ensured to match the counter value
+             * from the previous attempts of the same frame. The platform should not assign or change the frame counter
+             * (but may still need to perform security processing depending on `mIsSecurityProcessed` flag).
              *
-             * If `mIsARetx` is not set, then the frame counter and key id are not set in the frame by OpenThread core
-             * and it is the responsibility of the radio platform to assign them. The platform should update the frame
-             * (assign counter and key id) even if the transmission gets aborted or fails (e.g., channel access error).
+             * If `mIsHeaderUpdated` is not set, then the frame counter and key CSL IE not set in the frame by
+             * OpenThread core and it is the responsibility of the radio platform to assign them. The platform
+             * must update the frame header (assign counter and CSL IE values) before sending the frame over the air,
+             * however if the the transmission gets aborted and the frame is never sent over the air (e.g., channel
+             * access error) the platform may choose to not update the header. If the platform updates the header,
+             * it must also set this flag before passing the frame back from the `otPlatRadioTxDone()` callback.
              *
              */
-            bool mIsARetx : 1;
+            bool mIsHeaderUpdated : 1;
+            bool mIsARetx : 1;             ///< Indicates whether the frame is a retransmission or not.
             bool mCsmaCaEnabled : 1;       ///< Set to true to enable CSMA-CA for this packet, false otherwise.
             bool mCslPresent : 1;          ///< Set to true if CSL header IE is present.
             bool mIsSecurityProcessed : 1; ///< True if SubMac should skip the AES processing of this frame.

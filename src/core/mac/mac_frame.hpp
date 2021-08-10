@@ -1336,6 +1336,23 @@ public:
         mInfo.mTxInfo.mIsSecurityProcessed = aIsSecurityProcessed;
     }
 
+    /**
+     * This method indicates whether or not the frame header is updated.
+     *
+     * @retval TRUE   The frame already has the header updated.
+     * @retval FALSE  The frame does not have the header updated.
+     *
+     */
+    bool IsHeaderUpdated(void) const { return mInfo.mTxInfo.mIsHeaderUpdated; }
+
+    /**
+     * This method sets the header updated flag attribute.
+     *
+     * @param[in]  aIsHeaderUpdated  TRUE if the frame header is updated.
+     *
+     */
+    void SetIsHeaderUpdated(bool aIsHeaderUpdated) { mInfo.mTxInfo.mIsHeaderUpdated = aIsHeaderUpdated; }
+
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
      * This method sets the Time IE offset.
