@@ -383,13 +383,13 @@ public:
      * This method reads and copies bytes from the current output frame into a given buffer.
      *
      * The NCP buffer maintains a read offset for the current output frame being read. This method attempts to read
-     * the given number of bytes (@p aDataBufferLength) from the current frame and copies the bytes into the given
+     * the given number of bytes (@p aReadLength) from the current frame and copies the bytes into the given
      * data buffer (@p aDataBuffer). It also moves the read offset forward accordingly. If there are fewer bytes
      * remaining in current frame than the requested @p aReadLength, the available bytes are read/copied. This methods
      * returns the number of bytes read from frame and copied into @p aDataBuffer.
      *
-     * @param[in]  aDataBuffer          A pointer to a data buffer.
-     * @param[in]  aReadLength          Number of bytes to read.
+     * @param[in]   aReadLength          Number of bytes to read.
+     * @param[out]  aDataBuffer          A pointer to a data buffer.
      *
      * @returns The number of bytes read and copied into data buffer.
      *
