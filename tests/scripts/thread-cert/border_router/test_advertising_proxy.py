@@ -157,7 +157,7 @@ class SingleHostAndService(thread_cert.TestCase):
         #
 
         server.srp_server_set_enabled(False)
-        self.simulator.go(2)
+        self.simulator.go(5)
 
         self.assertEqual(len(server.srp_server_get_hosts()), 0)
         self.assertEqual(len(server.srp_server_get_services()), 0)

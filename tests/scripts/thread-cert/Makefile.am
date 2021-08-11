@@ -168,6 +168,7 @@ EXTRA_DIST                                                         = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_on_mesh_prefix.py                                           \
@@ -233,6 +234,7 @@ check_SCRIPTS                                                      = \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_on_mesh_prefix.py                                           \

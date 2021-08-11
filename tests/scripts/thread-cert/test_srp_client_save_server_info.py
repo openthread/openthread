@@ -98,6 +98,7 @@ class SrpAutoStartMode(thread_cert.TestCase):
         # Enable auto start mode on client and check that server1 is used.
 
         server1.srp_server_set_enabled(True)
+        self.simulator.go(WAIT_TIME)
 
         client.srp_client_set_host_name('host')
         client.srp_client_set_host_address('2001::1')

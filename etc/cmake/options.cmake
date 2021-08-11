@@ -269,6 +269,11 @@ if(OT_NEIGHBOR_DISCOVERY_AGENT)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE=1")
 endif()
 
+option(OT_NETDATA_PUBLISHER "enable Thread Network Data publisher")
+if(OT_NETDATA_PUBLISHER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE=1")
+endif()
+
 option(OT_PING_SENDER "enable ping sender support" ${OT_APP_CLI})
 if(OT_PING_SENDER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_PING_SENDER_ENABLE=1")
