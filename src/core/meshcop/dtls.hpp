@@ -67,10 +67,7 @@ namespace MeshCoP {
 class Dtls : public InstanceLocator
 {
 public:
-    enum
-    {
-        kPskMaxLength = 32, ///< Maximum PSK length.
-    };
+    static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
 
     /**
      * This constructor initializes the DTLS object.
@@ -355,15 +352,13 @@ private:
         kStateCloseNotify,  // The DTLS service is closing a connection.
     };
 
-    enum
-    {
-        kGuardTimeNewConnectionMilli = 2000,
+    static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
+
 #if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
-        kApplicationDataMaxLength = 1152,
+    static constexpr uint16_t kApplicationDataMaxLength = 1152;
 #else
-        kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH,
+    static constexpr uint16_t kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
 #endif
-    };
 
     void  FreeMbedtls(void);
     Error Setup(bool aClient);
