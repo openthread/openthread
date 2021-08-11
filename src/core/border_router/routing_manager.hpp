@@ -141,52 +141,47 @@ public:
     Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
 private:
-    enum : uint16_t
-    {
-        kMaxRouterAdvMessageLength = 256u, // The maximum RA message length we can handle.
-    };
+    static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
 
-    enum : uint8_t
-    {
-        kMaxOmrPrefixNum =
-            OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES, // The maximum number of the OMR prefixes to advertise.
-        kMaxDiscoveredPrefixNum = 8u,                  // The maximum number of prefixes to discover on the infra link.
-        kOmrPrefixLength        = OT_IP6_PREFIX_BITSIZE, // The length of an OMR prefix. In bits.
-        kOnLinkPrefixLength     = OT_IP6_PREFIX_BITSIZE, // The length of an On-link prefix. In bits.
-    };
+    // The maximum number of the OMR prefixes to advertise.
+    static constexpr uint8_t kMaxOmrPrefixNum = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
 
-    enum : uint32_t
-    {
-        kMaxInitRtrAdvertisements = 3, // The maximum number of initial Router Advertisements.
-        kMaxRtrSolicitations = 3, // The Maximum number of Router Solicitations before sending Router Advertisements.
-    };
+    // The maximum number of prefixes to discover on the infra link.
+    static constexpr uint8_t kMaxDiscoveredPrefixNum = 8;
 
-    enum : uint32_t
-    {
-        kDefaultOmrPrefixLifetime    = 1800,                   // The default OMR prefix valid lifetime. In seconds.
-        kDefaultOnLinkPrefixLifetime = 1800,                   // The default on-link prefix valid lifetime. In seconds.
-        kMaxRtrAdvInterval           = 600,                    // Maximum Router Advertisement Interval. In seconds.
-        kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3, // Minimum Router Advertisement Interval. In seconds.
-        kMaxInitRtrAdvInterval       = 16,  // Maximum Initial Router Advertisement Interval. In seconds.
-        kMaxRaDelayTime              = 500, // The maximum delay of sending RA after receiving RS. In milliseconds.
-        kRtrSolicitationInterval     = 4,   // The interval between Router Solicitations. In seconds.
-        kMaxRtrSolicitationDelay     = 1,   // The maximum delay for initial solicitation. In seconds.
-        kMaxRoutingPolicyDelay       = 1,   // The maximum delay for routing policy evaluation. In seconds.
+    static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
+    static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
 
-        // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
-        // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
-        // seconds. The Routing Manager will then start Router Solicitation to verify
-        // that the STALE prefix is not being advertised anymore and remove the STALE
-        // prefix.
-        // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
-        kRtrAdvStaleTime = 1800,
+    // The maximum number of initial Router Advertisements.
+    static constexpr uint32_t kMaxInitRtrAdvertisements = 3;
 
-        // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
-        // the discovered prefixes invalid if they are not refreshed after receiving
-        // a Router Solicitation message.
-        // The value is equal to Router Solicitation timeout.
-        kVicariousSolicitationTime = kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay,
-    };
+    // The maximum number of Router Solicitations before sending Router Advertisements.
+    static constexpr uint32_t kMaxRtrSolicitations = 3;
+
+    static constexpr uint32_t kDefaultOmrPrefixLifetime    = 1800; // The default OMR prefix valid lifetime. In sec.
+    static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800; // The default on-link prefix valid lifetime. In sec.
+    static constexpr uint32_t kMaxRtrAdvInterval           = 600;  // Max Router Advertisement Interval. In sec.
+    static constexpr uint32_t kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3; // Min RA Interval. In sec.
+    static constexpr uint32_t kMaxInitRtrAdvInterval       = 16;                     // Max Initial RA Interval. In sec.
+    static constexpr uint32_t kMaxRaDelayTime              = 500; // Max delay of sending RA after rx RS. In msec.
+    static constexpr uint32_t kRtrSolicitationInterval     = 4;   // Interval between RSs. In sec.
+    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;   // Max delay for initial solicitation. In sec.
+    static constexpr uint32_t kMaxRoutingPolicyDelay       = 1;   // Max delay for routing policy evaluation. In sec.
+
+    // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
+    // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
+    // seconds. The Routing Manager will then start Router Solicitation to verify
+    // that the STALE prefix is not being advertised anymore and remove the STALE
+    // prefix.
+    // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
+    static constexpr uint32_t kRtrAdvStaleTime = 1800;
+
+    // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
+    // the discovered prefixes invalid if they are not refreshed after receiving
+    // a Router Solicitation message.
+    // The value is equal to Router Solicitation timeout.
+    static constexpr uint32_t kVicariousSolicitationTime =
+        kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay;
 
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
     static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");

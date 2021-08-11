@@ -78,10 +78,7 @@ public:
         kRouteInfo  = 24, ///< Route Information Option.
     };
 
-    enum : uint8_t
-    {
-        kLengthUnit = 8u, ///< The unit of length in octets.
-    };
+    static constexpr uint8_t kLengthUnit = 8; ///< The unit of length in octets.
 
     /**
      * This constructor initializes the option with given type and length.
@@ -268,11 +265,8 @@ public:
     }
 
 private:
-    enum : uint8_t
-    {
-        kAutoConfigFlagMask = 0x40u, // Bit mask of the Automatic Address Configure flag.
-        kOnLinkFlagMask     = 0x80u, // Bit mask of the On-link flag.
-    };
+    static constexpr uint8_t kAutoConfigFlagMask = 0x40; // Bit mask of the Automatic Address Configure flag.
+    static constexpr uint8_t kOnLinkFlagMask     = 0x80; // Bit mask of the On-link flag.
 
     uint8_t      mPrefixLength;      // The prefix length in bits.
     uint8_t      mReserved1;         // The reserved field.
@@ -358,18 +352,12 @@ public:
     bool IsValid(void) const;
 
 private:
-    enum : uint8_t
-    {
-        kPreferenceMask   = 0x18u,
-        kPreferenceOffset = 3u,
-    };
+    static constexpr uint8_t kPreferenceMask   = 0x18;
+    static constexpr uint8_t kPreferenceOffset = 3;
 
-    enum : uint8_t
-    {
-        kPreferenceLow  = 0x03,
-        kPreferenceMed  = 0x00,
-        kPreferenceHigh = 0x01,
-    };
+    static constexpr uint8_t kPreferenceLow  = 0x03;
+    static constexpr uint8_t kPreferenceMed  = 0x00;
+    static constexpr uint8_t kPreferenceHigh = 0x01;
 
     uint8_t      mPrefixLength;  // The prefix length in bits.
     uint8_t      mReserved;      // The reserved field.
@@ -461,12 +449,14 @@ public:
     bool operator==(const RouterAdvMessage &aOther) const;
 
 private:
-    enum : uint8_t
-    {
-        kRouteLifetimeIdx         = 1u,    // The index of Route Lifetime in ICMPv6 Header Data. In unit of 2 octets.
-        kReservedIdx              = 1u,    // The idex of Reserved byte in ICMPv6 Header Data. In unit of 1 octet.
-        kManagedAddressConfigMask = 0x80u, // The bitmask of the Managed Address Configuration ('m') flag.
-    };
+    // The index of Route Lifetime in ICMPv6 Header Data. In unit of 2 octets.
+    static constexpr uint8_t kRouteLifetimeIdx = 1;
+
+    // The index of Reserved byte in ICMPv6 Header Data. In unit of 1 octet.
+    static constexpr uint8_t kReservedIdx = 1;
+
+    // The bitmask of the Managed Address Configuration ('m') flag.
+    static constexpr uint8_t kManagedAddressConfigMask = 0x80;
 
     Ip6::Icmp::Header mHeader;        // The common ICMPv6 header.
     uint32_t          mReachableTime; // The reachable time. In milliseconds.
