@@ -249,8 +249,9 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         break;
 
     case kErrorNoAck:
-        aChild.IncrementCslTxAttempts();
+        OT_ASSERT(!aFrame.GetSecurityEnabled() || aFrame.IsHeaderUpdated());
 
+        aChild.IncrementCslTxAttempts();
         otLogInfoMac("CSL tx to child %04x failed, attempt %d/%d", aChild.GetRloc16(), aChild.GetCslTxAttempts(),
                      kMaxCslTriggeredTxAttempts);
 
@@ -274,7 +275,7 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError, C
         {
             aChild.SetIndirectDataSequenceNumber(aFrame.GetSequence());
 
-            if (aFrame.GetSecurityEnabled())
+            if (aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated())
             {
                 uint32_t frameCounter;
                 uint8_t  keyId;

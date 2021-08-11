@@ -333,7 +333,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
-    if (!mTransmitFrame.IsARetransmission())
+    if (!mTransmitFrame.IsHeaderUpdated())
     {
         mTransmitFrame.SetKeyId(mKeyId);
     }
@@ -343,7 +343,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
 
-    if (!mTransmitFrame.IsARetransmission())
+    if (!mTransmitFrame.IsHeaderUpdated())
     {
         uint32_t frameCounter = GetFrameCounter();
 

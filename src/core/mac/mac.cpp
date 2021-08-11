@@ -950,7 +950,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         aFrame.SetAesKey(keyManager.GetKek());
         extAddress = &GetExtAddress();
 
-        if (!aFrame.IsARetransmission())
+        if (!aFrame.IsHeaderUpdated())
         {
             aFrame.SetFrameCounter(keyManager.GetKekFrameCounter());
             keyManager.IncrementKekFrameCounter();
@@ -974,13 +974,13 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         aFrame.SetAesKey(*mLinks.GetCurrentMacKey(aFrame));
         extAddress = &GetExtAddress();
 
-        // If the frame is marked as a retransmission, `MeshForwarder` which
+        // If the frame header is marked as updated, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
-        // same values used in the earlier transmit attempt. For a new frame (not
-        // a retransmission), we get a new frame counter and key id from the key
+        // same values used in the earlier transmit attempt. For a new frame (header
+        // not updated), we get a new frame counter and key id from the key
         // manager.
 
-        if (!aFrame.IsARetransmission())
+        if (!aFrame.IsHeaderUpdated())
         {
             mLinks.SetMacFrameCounter(aFrame);
             aFrame.SetKeyId((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
@@ -1086,7 +1086,7 @@ void Mac::BeginTransmit(void)
         frame = Get<DataPollHandler>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
 
-        // If the frame is marked as a retransmission, then data sequence number is already set.
+        // If the frame is marked as retransmission, then data sequence number is already set.
         if (!frame->IsARetransmission())
         {
             frame->SetSequence(mDataSequence++);
@@ -1100,7 +1100,7 @@ void Mac::BeginTransmit(void)
         frame = Get<CslTxScheduler>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
 
-        // If the frame is marked as a retransmission, then data sequence number is already set.
+        // If the frame is marked as retransmission, then data sequence number is already set.
         if (!frame->IsARetransmission())
         {
             frame->SetSequence(mDataSequence++);
