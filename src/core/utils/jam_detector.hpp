@@ -178,16 +178,13 @@ public:
     uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
 
 private:
-    enum
-    {
-        kMaxWindow            = 63, // Max window size
-        kDefaultRssiThreshold = 0,
+    static constexpr uint8_t kMaxWindow            = 63; // Max window size
+    static constexpr int8_t  kDefaultRssiThreshold = 0;
 
-        kMaxSampleInterval = 256, // in ms
-        kMinSampleInterval = 2,   // in ms
-        kMaxRandomDelay    = 4,   // in ms
-        kOneSecondInterval = 1000 // in ms
-    };
+    static constexpr uint16_t kMaxSampleInterval = 256;  // in ms
+    static constexpr uint16_t kMinSampleInterval = 2;    // in ms
+    static constexpr uint32_t kMaxRandomDelay    = 4;    // in ms
+    static constexpr uint32_t kOneSecondInterval = 1000; // in ms
 
     void        CheckState(void);
     void        SetJamState(bool aNewState);

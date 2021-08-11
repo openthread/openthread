@@ -64,14 +64,11 @@ namespace Utils {
 class ChannelManager : public InstanceLocator, private NonCopyable
 {
 public:
-    enum
-    {
-        /**
-         * Minimum delay (in seconds) used for network channel change.
-         *
-         */
-        kMinimumDelay = OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY,
-    };
+    /**
+     * Minimum delay (in seconds) used for network channel change.
+     *
+     */
+    static constexpr uint16_t kMinimumDelay = OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_DELAY;
 
     /**
      * This constructor initializes a `ChanelManager` object.
@@ -244,31 +241,30 @@ public:
     void SetCcaFailureRateThreshold(uint16_t aThreshold);
 
 private:
-    enum
-    {
-        // Retry interval to resend Pending Dataset in case of tx failure (in ms).
-        kPendingDatasetTxRetryInterval = 20000,
+    // Retry interval to resend Pending Dataset in case of tx failure (in ms).
+    static constexpr uint32_t kPendingDatasetTxRetryInterval = 20000;
 
-        // Maximum jitter/wait time to start a requested channel change (in ms).
-        kRequestStartJitterInterval = 10000,
+    // Maximum jitter/wait time to start a requested channel change (in ms).
+    static constexpr uint32_t kRequestStartJitterInterval = 10000;
 
-        // The minimum number of RSSI samples required before using the collected data (by `ChannelMonitor`) to select
-        // a channel.
-        kMinChannelMonitorSampleCount = OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT,
+    // The minimum number of RSSI samples required before using the collected data (by `ChannelMonitor`) to select
+    // a channel.
+    static constexpr uint32_t kMinChannelMonitorSampleCount =
+        OPENTHREAD_CONFIG_CHANNEL_MANAGER_MINIMUM_MONITOR_SAMPLE_COUNT;
 
-        // Minimum channel occupancy difference to prefer an unfavored channel over a favored one.
-        kThresholdToSkipFavored = OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED,
+    // Minimum channel occupancy difference to prefer an unfavored channel over a favored one.
+    static constexpr uint16_t kThresholdToSkipFavored = OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_SKIP_FAVORED;
 
-        // Minimum channel occupancy difference between current channel and the selected channel to trigger the channel
-        // change process to start.
-        kThresholdToChangeChannel = OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL,
+    // Minimum channel occupancy difference between current channel and the selected channel to trigger the channel
+    // change process to start.
+    static constexpr uint16_t kThresholdToChangeChannel = OPENTHREAD_CONFIG_CHANNEL_MANAGER_THRESHOLD_TO_CHANGE_CHANNEL;
 
-        // Default auto-channel-selection period (in seconds).
-        kDefaultAutoSelectInterval = OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL,
+    // Default auto-channel-selection period (in seconds).
+    static constexpr uint32_t kDefaultAutoSelectInterval =
+        OPENTHREAD_CONFIG_CHANNEL_MANAGER_DEFAULT_AUTO_SELECT_INTERVAL;
 
-        // Minimum CCA failure rate on current channel to start the channel selection process.
-        kCcaFailureRateThreshold = OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD,
-    };
+    // Minimum CCA failure rate on current channel to start the channel selection process.
+    static constexpr uint16_t kCcaFailureRateThreshold = OPENTHREAD_CONFIG_CHANNEL_MANAGER_CCA_FAILURE_THRESHOLD;
 
     enum State : uint8_t
     {
