@@ -413,7 +413,7 @@ Error RoutingManager::PublishLocalOmrPrefix(void)
     omrPrefixConfig.mPreferred    = true;
     omrPrefixConfig.mOnMesh       = true;
     omrPrefixConfig.mDefaultRoute = false;
-    omrPrefixConfig.mPreference   = OT_ROUTE_PREFERENCE_MED;
+    omrPrefixConfig.mPreference   = NetworkData::kRoutePreferenceMedium;
 
     error = Get<NetworkData::Local>().AddOnMeshPrefix(omrPrefixConfig);
     if (error != kErrorNone)
@@ -449,7 +449,7 @@ exit:
     }
 }
 
-Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference)
+Error RoutingManager::AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference)
 {
     Error                            error;
     NetworkData::ExternalRouteConfig routeConfig;
@@ -519,7 +519,7 @@ const Ip6::Prefix *RoutingManager::EvaluateOnLinkPrefix(void)
     if (smallestOnLinkPrefix == nullptr)
     {
         if (mIsAdvertisingLocalOnLinkPrefix ||
-            (AddExternalRoute(mLocalOnLinkPrefix, OT_ROUTE_PREFERENCE_MED) == kErrorNone))
+            (AddExternalRoute(mLocalOnLinkPrefix, NetworkData::kRoutePreferenceMedium) == kErrorNone))
         {
             newOnLinkPrefix = &mLocalOnLinkPrefix;
         }
@@ -1092,7 +1092,7 @@ bool RoutingManager::UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption 
 
         if (!mDiscoveredPrefixes.IsFull())
         {
-            SuccessOrExit(AddExternalRoute(prefix, OT_ROUTE_PREFERENCE_MED));
+            SuccessOrExit(AddExternalRoute(prefix, NetworkData::kRoutePreferenceMedium));
             existingPrefix  = mDiscoveredPrefixes.PushBack();
             *existingPrefix = onLinkPrefix;
             needReevaluate  = true;
