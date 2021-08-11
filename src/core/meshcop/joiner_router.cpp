@@ -273,8 +273,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     }
     else
     {
-        mDelayedJoinEnts.Dequeue(*message);
-        message->Free();
+        mDelayedJoinEnts.DequeueAndFree(*message);
 
         Get<KeyManager>().SetKek(metadata.mKek);
 

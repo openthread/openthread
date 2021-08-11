@@ -1024,6 +1024,14 @@ public:
      *
      */
     void Dequeue(Message &aMessage) { ot::MessageQueue::Dequeue(aMessage); }
+
+    /**
+     * This method removes a message from the queue and frees it.
+     *
+     * @param[in]  aMessage  The message to remove and free.
+     *
+     */
+    void DequeueAndFree(Message &aMessage) { ot::MessageQueue::DequeueAndFree(aMessage); }
 };
 
 /**
