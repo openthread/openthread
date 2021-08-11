@@ -367,6 +367,7 @@ class TestOTCI(unittest.TestCase):
         logging.info('dns resolve: %r', client.dns_resolve('host1.default.service.arpa.'))
 
     def _test_otci_srp(self, client: OTCI, server: OTCI):
+        self.assertEqual('disabled', server.srp_server_get_state())
         self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
         server.srp_server_set_domain('example1.com')
         self.assertEqual('example1.com.', server.srp_server_get_domain())
@@ -394,8 +395,9 @@ class TestOTCI(unittest.TestCase):
         server.srp_server_disable()
         client.wait(3)
         server.srp_server_enable()
-        client.wait(3)
+        client.wait(10)
         self.assertEqual([], server.srp_server_get_hosts())
+        self.assertEqual('running', server.srp_server_get_state())
 
         self.assertFalse(client.srp_client_get_autostart())
         client.srp_client_enable_autostart()

@@ -87,6 +87,7 @@ private:
     };
 
     otError ProcessDomain(Arg aArgs[]);
+    otError ProcessState(Arg aArgs[]);
     otError ProcessEnable(Arg aArgs[]);
     otError ProcessDisable(Arg aArgs[]);
     otError ProcessLease(Arg aArgs[]);
@@ -100,7 +101,7 @@ private:
         {"disable", &SrpServer::ProcessDisable}, {"domain", &SrpServer::ProcessDomain},
         {"enable", &SrpServer::ProcessEnable},   {"help", &SrpServer::ProcessHelp},
         {"host", &SrpServer::ProcessHost},       {"lease", &SrpServer::ProcessLease},
-        {"service", &SrpServer::ProcessService},
+        {"service", &SrpServer::ProcessService}, {"state", &SrpServer::ProcessState},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");

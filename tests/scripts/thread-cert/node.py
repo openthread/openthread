@@ -795,6 +795,11 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def srp_server_get_state(self):
+        states = ['disabled', 'running', 'stopped']
+        self.send_command('srp server state')
+        return self._expect_result(states)
+
     def srp_server_set_enabled(self, enable):
         cmd = f'srp server {"enable" if enable else "disable"}'
         self.send_command(cmd)
