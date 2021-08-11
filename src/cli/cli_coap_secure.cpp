@@ -61,6 +61,7 @@ CoapSecure::CoapSecure(Interpreter &aInterpreter)
     memset(&mResource, 0, sizeof(mResource));
     memset(&mPsk, 0, sizeof(mPsk));
     memset(&mPskId, 0, sizeof(mPskId));
+    memset(&mUriPath, 0, sizeof(mUriPath));
     strncpy(mResourceContent, "0", sizeof(mResourceContent));
     mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
@@ -249,8 +250,8 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
 #endif
 
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-
-    strncpy(coapUri, aArgs[0].GetCString(), sizeof(coapUri) - 1);
+    VerifyOrExit(aArgs[0].GetLength() < sizeof(coapUri), error = OT_ERROR_INVALID_ARGS);
+    strcpy(coapUri, aArgs[0].GetCString());
 
     if (!aArgs[1].IsEmpty())
     {
