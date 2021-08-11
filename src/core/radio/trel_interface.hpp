@@ -108,10 +108,7 @@ public:
     void HandleReceived(uint8_t *aBuffer, uint16_t aLength);
 
 private:
-    enum
-    {
-        kUdpPort = 19788, // UDP port (same as MLE port).
-    };
+    static constexpr uint16_t kUdpPort = 19788; // UDP port (same as MLE port).
 
     void CreateMulticastIp6Address(Ip6::Address &aIp6Address);
 
