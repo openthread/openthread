@@ -550,7 +550,7 @@ void Udp::Update(otSysMainloopContext &aContext)
 {
     VerifyOrExit(gNetifIndex != 0);
 
-    for (otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(gInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd;
 
@@ -572,7 +572,7 @@ exit:
     return;
 }
 
-void Udp::Init(otInstance *aInstance, const char *aIfName)
+void Udp::Init(const char *aIfName)
 {
     if (aIfName == nullptr)
     {
@@ -589,17 +589,21 @@ void Udp::Init(otInstance *aInstance, const char *aIfName)
     }
 
     assert(gNetifIndex != 0);
+}
 
-    mInstance = aInstance;
+void Udp::SetUp(void)
+{
     Mainloop::Manager::Get().Add(*this);
+}
+
+void Udp::TearDown(void)
+{
+    Mainloop::Manager::Get().Remove(*this);
 }
 
 void Udp::Deinit(void)
 {
     // TODO All platform sockets should be closed
-
-    mInstance = nullptr;
-    Mainloop::Manager::Get().Remove(*this);
 }
 
 Udp &Udp::Get(void)
@@ -613,7 +617,7 @@ void Udp::Process(const otSysMainloopContext &aContext)
 {
     otMessageSettings msgSettings = {false, OT_MESSAGE_PRIORITY_NORMAL};
 
-    for (otUdpSocket *socket = otUdpGetSockets(mInstance); socket != nullptr; socket = socket->mNext)
+    for (otUdpSocket *socket = otUdpGetSockets(gInstance); socket != nullptr; socket = socket->mNext)
     {
         int fd = FdFromHandle(socket->mHandle);
 
@@ -632,7 +636,7 @@ void Udp::Process(const otSysMainloopContext &aContext)
                 continue;
             }
 
-            message = otUdpNewMessage(mInstance, &msgSettings);
+            message = otUdpNewMessage(gInstance, &msgSettings);
 
             if (message == nullptr)
             {

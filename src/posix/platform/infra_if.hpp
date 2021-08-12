@@ -69,14 +69,33 @@ public:
     /**
      * This method initializes the infrastructure network interface.
      *
-     * @param[in]  aInstance    A pointer to an OpenThread instance.
+     * @note This method is called before OpenThread instance is created.
+     *
      * @param[in]  aIfName      A pointer to infrastructure network interface name.
      *
      */
-    void Init(otInstance *aInstance, const char *aIfName);
+    void Init(const char *aIfName);
+
+    /**
+     * This method sets up the infrastructure network interface.
+     *
+     * @note This method is called after OpenThread instance is created.
+     *
+     */
+    void SetUp(void);
+
+    /**
+     * This method tears down the infrastructure network interface.
+     *
+     * @note This method is called before OpenThread instance is destructed.
+     *
+     */
+    void TearDown(void);
 
     /**
      * This method deinitializes the infrastructure network interface.
+     *
+     * @note This method is called after OpenThread instance is destructed.
      *
      */
     void Deinit(void);
@@ -117,11 +136,10 @@ public:
     static InfraNetif &Get(void);
 
 private:
-    otInstance *mInstance;
-    char        mInfraIfName[IFNAMSIZ];
-    uint32_t    mInfraIfIndex       = 0;
-    int         mInfraIfIcmp6Socket = -1;
-    int         mNetLinkSocket      = -1;
+    char     mInfraIfName[IFNAMSIZ];
+    uint32_t mInfraIfIndex       = 0;
+    int      mInfraIfIcmp6Socket = -1;
+    int      mNetLinkSocket      = -1;
 
     void ReceiveNetLinkMessage(void);
     void ReceiveIcmp6Message(void);
