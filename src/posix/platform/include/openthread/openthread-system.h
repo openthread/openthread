@@ -81,7 +81,7 @@ typedef struct otPlatformConfig
 } otPlatformConfig;
 
 /**
- * This function performs all platform-specific initialization of OpenThread's drivers and initialize the OpenThread
+ * This function performs all platform-specific initialization of OpenThread's drivers and initializes the OpenThread
  * instance.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
