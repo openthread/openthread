@@ -54,7 +54,6 @@ namespace Ip6 {
 Tcp::Tcp(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mTimer(aInstance, Tcp::HandleTimer)
-    , mFiringTimers(false)
     , mEphemeralPort(kDynamicPortMin)
 {
 }
@@ -277,54 +276,54 @@ bool Tcp::Endpoint::IsTimerActive(uint8_t aTimerIndex)
 
 void Tcp::Endpoint::SetTimer(uint8_t aTimerFlag, uint32_t aDelay)
 {
-    TimeMilli now = TimerMilli::GetNow();
-    TimeMilli newFireTime = now + aDelay;
-    uint8_t timerIndex = TimerFlagToIndex(aTimerFlag);
-
-    /* TCPlp should have set this flag before calling this function. */
-    OT_ASSERT(tpistimeractive(&mTcb, aTimerFlag));
-    mTimers[timerIndex] = newFireTime.GetValue();
-    otLogDebgTcp("Set timer %u with delay %u", static_cast<unsigned int>(timerIndex), static_cast<unsigned int>(aDelay));
-
     /*
-     * We're using the same timer index for both the retranxmit and persist
-     * timer, since they can't be running at the same time. So let's be
-     * defensive and check that that's indeed the case.
+     * TCPlp has already set the flag for this timer to record that it's
+     * running. So, all that's left to do is record the expiry time and
+     * (re)set the main timer as appropriate.
      */
-    OT_ASSERT(!(tpistimeractive(&mTcb, TT_REXMT) && tpistimeractive(&mTcb, TT_PERSIST)));
 
-    GetInstance().Get<Tcp>().ResetTimer(false);
+    TimeMilli now         = TimerMilli::GetNow();
+    TimeMilli newFireTime = now + aDelay;
+    uint8_t   timerIndex  = TimerFlagToIndex(aTimerFlag);
+
+    mTimers[timerIndex] = newFireTime.GetValue();
+    otLogDebgTcp("Endpoint %p set timer %u to %u ms", static_cast<void *>(this), static_cast<unsigned int>(timerIndex),
+                 static_cast<unsigned int>(aDelay));
+
+    GetInstance().Get<Tcp>().mTimer.FireAtIfEarlier(newFireTime);
 }
 
 void Tcp::Endpoint::CancelTimer(uint8_t aTimerFlag)
 {
     /*
-     * TCPlp has already cleared the timer flag before calling this, so all
-     * that we have to do is stop the actual timer if needed.
+     * TCPlp has already cleared the timer flag before calling this. Since the
+     * main timer's callback properly handles the case where no timers are
+     * actually due, there's actually no work to be done here.
      */
-    OT_ASSERT(!tpistimeractive(&mTcb, aTimerFlag));
-    if (GetInstance().Get<Tcp>().mTimer.GetFireTime() == TimeMilli(mTimers[TimerFlagToIndex(aTimerFlag)]))
-    {
-        GetInstance().Get<Tcp>().ResetTimer(false);
-    }
+
+    OT_UNUSED_VARIABLE(aTimerFlag);
+
+    otLogDebgTcp("Endpoint %p cancelled timer %u", static_cast<void *>(this), static_cast<unsigned int>(TimerFlagToIndex(aTimerFlag)));
 }
 
 void Tcp::Endpoint::FirePendingTimers(TimeMilli aNow)
 {
     /*
-     * NOTE: Firing a timer might potentially activate/deactive other timers.
+     * NOTE: Firing a timer might potentially activate/deactivate other timers.
      * If timers x and y expire at the same time, but the callback for timer x
      * (for x < y) cancels or postpones timer y, should timer y's callback be
-     * called?
-     *
-     * The code below wouldn't call timer y's callback in that scenario. But
-     * this point might be worth revisiting at a later date.
+     * called? Our answer is no, since timer x's callback has updated the
+     * TCP stack's state in such a way that it no longer expects timer y's
+     * callback to to be called. Because the TCP stack thinks that timer y
+     * has been cancelled, calling timer y's callback could potentially cause
+     * problems.
      */
     for (uint8_t timerIndex = 0; timerIndex != kNumTimers; timerIndex++)
     {
         if (IsTimerActive(timerIndex))
         {
-            Time expiry(mTimers[timerIndex]);
+            TimeMilli expiry(mTimers[timerIndex]);
+
             if (expiry <= aNow)
             {
                 switch (timerIndex)
@@ -354,18 +353,20 @@ void Tcp::Endpoint::FirePendingTimers(TimeMilli aNow)
     }
 }
 
-bool Tcp::Endpoint::GetEarliestActiveTimer(TimeMilli aNow, uint32_t& aDelayUntilNextActiveTimer)
+bool Tcp::Endpoint::GetEarliestActiveTimer(TimeMilli aNow, TimeMilli &aExpiryTime)
 {
     bool hasUnfiredTimer = false;
-    aDelayUntilNextActiveTimer = Timer::kMaxDelay;
+
+    aExpiryTime = aNow.GetDistantFuture();
 
     for (uint8_t timerIndex = 0; timerIndex != kNumTimers; timerIndex++)
     {
         if (IsTimerActive(timerIndex))
         {
-            Time expiry(mTimers[timerIndex]);
+            TimeMilli expiry(mTimers[timerIndex]);
+
             hasUnfiredTimer = true;
-            aDelayUntilNextActiveTimer = OT_MIN(aDelayUntilNextActiveTimer, expiry - aNow);
+            aExpiryTime     = OT_MIN(aExpiryTime, expiry);
         }
     }
 
@@ -673,59 +674,54 @@ bool Tcp::AutoBind(const SockAddr &aPeer, SockAddr &aToBind, bool aBindAddress, 
 void Tcp::HandleTimer(Timer &aTimer)
 {
     OT_ASSERT(&aTimer == &aTimer.GetInstance().Get<Tcp>().mTimer);
-    aTimer.GetInstance().Get<Tcp>().ResetTimer(true);
+    otLogDebgTcp("Main TCP timer expired");
+    aTimer.GetInstance().Get<Tcp>().FireAllPendingTimers();
 }
 
-void Tcp::ResetTimer(bool aFirePendingTimers)
+void Tcp::FireAllPendingTimers()
 {
-    TimeMilli now = TimerMilli::GetNow();
-    bool pendingTimer = false;
-    uint32_t earliestPendingTimerDelay = 0;
+    TimeMilli now                        = TimerMilli::GetNow();
+    bool      pendingTimer               = false;
+    TimeMilli earliestPendingTimerExpiry = now.GetDistantFuture();
 
-    if (aFirePendingTimers)
-    {
-        OT_ASSERT(!mFiringTimers);
-        mFiringTimers = true;
-    }
-    else if (mFiringTimers)
-    {
-        return;
-    }
+    OT_ASSERT(!mTimer.IsRunning());
 
-    otLogDebgTcp("Stopping main TCP timer");
-    mTimer.Stop();
+    /*
+     * The timer callbacks could potentially set/reset/cancel timers.
+     * Importantly, Endpoint::SetTimer and Endpoint::CancelTimer do not call
+     * this function to recompute the timer. If they did, we'd have a
+     * re-entrancy problem, where the callbacks called in this function could
+     * wind up re-entering this function in a nested call frame.
+     *
+     * In general, calling this function from Endpoint::SetTimer and
+     * Endpoint::CancelTimer could be inefficient, since those functions are
+     * called multiple times on each received TCP segment. If we want to
+     * prevent the main timer from firing except when an actual TCP timer
+     * expires, a better alternative is to reset the main timer in
+     * HandleMessage, right before processing signals. That would achieve that
+     * objective while avoiding re-entrancy issues altogether.
+     */
 
     for (Endpoint *endpoint = mEndpoints.GetHead(); endpoint != nullptr; endpoint = endpoint->GetNext())
     {
-        uint32_t delay;
-        if (aFirePendingTimers)
+        TimeMilli expiry;
+
+        endpoint->FirePendingTimers(now);
+        if (endpoint->GetEarliestActiveTimer(now, expiry))
         {
-            endpoint->FirePendingTimers(now);
-        }
-        if (endpoint->GetEarliestActiveTimer(now, delay))
-        {
-            if (pendingTimer)
-            {
-                earliestPendingTimerDelay = OT_MIN(earliestPendingTimerDelay, delay);
-            }
-            else
-            {
-                pendingTimer = true;
-                earliestPendingTimerDelay = delay;
-            }
+            pendingTimer               = true;
+            earliestPendingTimerExpiry = OT_MIN(earliestPendingTimerExpiry, expiry);
         }
     }
 
     if (pendingTimer)
     {
-        otLogDebgTcp("Setting main TCP timer to %d", (int) earliestPendingTimerDelay);
-        mTimer.StartAt(now, earliestPendingTimerDelay);
+        mTimer.FireAt(earliestPendingTimerExpiry);
+        otLogDebgTcp("Reset main TCP timer to %u ms", static_cast<unsigned int>(earliestPendingTimerExpiry - now));
     }
-
-    if (aFirePendingTimers)
+    else
     {
-        OT_ASSERT(mFiringTimers);
-        mFiringTimers = false;
+        otLogDebgTcp("Did not reset main TCP timer");
     }
 }
 

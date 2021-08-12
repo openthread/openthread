@@ -343,7 +343,7 @@ public:
         void SetTimer(uint8_t aTimerId, uint32_t aDelay);
         void CancelTimer(uint8_t aTimerId);
         void FirePendingTimers(TimeMilli aNow);
-        bool GetEarliestActiveTimer(TimeMilli aNow, uint32_t& aDelayUntilNextActiveTimer);
+        bool GetEarliestActiveTimer(TimeMilli aNow, TimeMilli& aExpiryTime);
 
         Address &GetLocalIp6Address() { return *reinterpret_cast<Address *>(&mTcb.laddr); }
 
@@ -600,12 +600,11 @@ private:
     bool         CanBind(const SockAddr &aSockName);
 
     static void HandleTimer(Timer &aTimer);
-    void ResetTimer(bool aFirePendingTimers);
+    void FireAllPendingTimers();
 
     uint16_t GetFreeEphemeralPort(void);
 
     TimerMilli mTimer;
-    bool mFiringTimers;
 
     LinkedList<Endpoint> mEndpoints;
     LinkedList<Listener> mListeners;
