@@ -13,6 +13,7 @@ See [README_SRP.md](README_SRP.md).
 - [host](#host)
 - [lease](#lease)
 - [service](#service)
+- [state](#state)
 
 ## Command Details
 
@@ -31,6 +32,7 @@ help
 host
 lease
 service
+state
 Done
 ```
 
@@ -140,5 +142,16 @@ srp-api-test-0._ipps._tcp.default.service.arpa.
     TXT: 0130
     host: srp-api-test-0.default.service.arpa.
     addresses: [fdde:ad00:beef:0:0:ff:fe00:fc10]
+Done
+```
+
+### state
+
+Usage: `srp server state`
+
+Print the state of the SRP server.
+```bash
+> srp server state
+running
 Done
 ```
