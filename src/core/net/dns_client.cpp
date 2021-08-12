@@ -36,6 +36,7 @@
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "net/udp6.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/thread_netif.hpp"
 
 /**
@@ -352,7 +353,7 @@ Error Client::AddressResponse::GetNat64Prefix(Ip6::Prefix &aPrefix) const
 {
     Error                            error      = kErrorNotFound;
     NetworkData::Iterator            iterator   = NetworkData::kIteratorInit;
-    signed int                       preference = OT_ROUTE_PREFERENCE_LOW;
+    signed int                       preference = NetworkData::kRoutePreferenceLow;
     NetworkData::ExternalRouteConfig config;
 
     aPrefix.Clear();

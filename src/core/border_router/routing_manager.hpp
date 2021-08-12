@@ -170,6 +170,8 @@ public:
     Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
 private:
+    typedef NetworkData::RoutePreference RoutePreference;
+
     static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
 
     // The maximum number of the OMR prefixes to advertise.
@@ -233,7 +235,7 @@ private:
 
             // The preference of this route, available
             // only when `mIsOnLinkPrefix` is FALSE.
-            otRoutePreference mRoutePreference;
+            RoutePreference mRoutePreference;
         };
         TimeMilli mTimeLastUpdate;
         bool      mIsOnLinkPrefix;
@@ -280,7 +282,7 @@ private:
     void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
     Error PublishLocalOmrPrefix(void);
     void  UnpublishLocalOmrPrefix(void);
-    Error AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
+    Error AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference);
     void  RemoveExternalRoute(const Ip6::Prefix &aPrefix);
     void  StartRouterSolicitationDelay(void);
     Error SendRouterSolicitation(void);

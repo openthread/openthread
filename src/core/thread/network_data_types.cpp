@@ -41,11 +41,6 @@ namespace NetworkData {
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
-static bool IsPreferenceValid(int8_t aPrf)
-{
-    return (aPrf == OT_ROUTE_PREFERENCE_LOW) || (aPrf == OT_ROUTE_PREFERENCE_MED) || (aPrf == OT_ROUTE_PREFERENCE_HIGH);
-}
-
 static bool IsPrefixValid(Instance &aInstance, const Ip6::Prefix &aPrefix)
 {
     // Check that prefix length is within the valid range and the prefix
@@ -73,7 +68,7 @@ bool OnMeshPrefixConfig::IsValid(Instance &aInstance) const
         VerifyOrExit(GetPrefix().GetLength() == Ip6::NetworkPrefix::kLength);
     }
 
-    VerifyOrExit(IsPreferenceValid(mPreference));
+    VerifyOrExit(IsRoutePreferenceValid(mPreference));
     VerifyOrExit(IsPrefixValid(aInstance, GetPrefix()));
     VerifyOrExit(GetPrefix().GetLength() > 0);
 
@@ -129,7 +124,7 @@ uint16_t OnMeshPrefixConfig::ConvertToTlvFlags(void) const
     }
 #endif
 
-    flags |= (static_cast<uint16_t>(mPreference) << BorderRouterEntry::kPreferenceOffset);
+    flags |= (static_cast<uint16_t>(RoutePreferenceToValue(mPreference)) << BorderRouterEntry::kPreferenceOffset);
 
     return flags;
 }
@@ -158,7 +153,7 @@ void OnMeshPrefixConfig::SetFromTlvFlags(uint16_t aFlags)
     mOnMesh       = ((aFlags & BorderRouterEntry::kOnMeshFlag) != 0);
     mNdDns        = ((aFlags & BorderRouterEntry::kNdDnsFlag) != 0);
     mDp           = ((aFlags & BorderRouterEntry::kDpFlag) != 0);
-    mPreference   = static_cast<int8_t>(aFlags >> BorderRouterEntry::kPreferenceOffset);
+    mPreference   = RoutePreferenceFromValue(static_cast<uint8_t>(aFlags >> BorderRouterEntry::kPreferenceOffset));
 }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -171,7 +166,7 @@ bool ExternalRouteConfig::IsValid(Instance &aInstance) const
         VerifyOrExit(GetPrefix().IsValidNat64());
     }
 
-    VerifyOrExit(IsPreferenceValid(mPreference));
+    VerifyOrExit(IsRoutePreferenceValid(mPreference));
     VerifyOrExit(IsPrefixValid(aInstance, GetPrefix()));
 
     isValid = true;
@@ -189,7 +184,7 @@ uint8_t ExternalRouteConfig::ConvertToTlvFlags(void) const
         flags |= HasRouteEntry::kNat64Flag;
     }
 
-    flags |= (static_cast<uint8_t>(mPreference) << HasRouteEntry::kPreferenceOffset);
+    flags |= (RoutePreferenceToValue(mPreference) << HasRouteEntry::kPreferenceOffset);
 
     return flags;
 }
@@ -213,7 +208,7 @@ void ExternalRouteConfig::SetFrom(Instance &           aInstance,
 void ExternalRouteConfig::SetFromTlvFlags(uint8_t aFlags)
 {
     mNat64      = ((aFlags & HasRouteEntry::kNat64Flag) != 0);
-    mPreference = static_cast<int8_t>(aFlags >> HasRouteEntry::kPreferenceOffset);
+    mPreference = RoutePreferenceFromValue(aFlags >> HasRouteEntry::kPreferenceOffset);
 }
 
 bool ServiceConfig::ServerConfig::operator==(const ServerConfig &aOther) const

@@ -453,10 +453,7 @@ public:
      * @returns The preference field from the @p aFlags.
      *
      */
-    static int8_t PreferenceFromFlags(uint8_t aFlags)
-    {
-        return static_cast<int8_t>(static_cast<int8_t>(aFlags) >> kPreferenceOffset);
-    }
+    static int8_t PreferenceFromFlags(uint8_t aFlags) { return RoutePreferenceFromValue(aFlags >> kPreferenceOffset); }
 
 private:
     static constexpr uint8_t kPreferenceOffset = 6;
@@ -1025,7 +1022,7 @@ public:
      */
     static int8_t PreferenceFromFlags(uint16_t aFlags)
     {
-        return static_cast<int8_t>(static_cast<int16_t>(aFlags) >> kPreferenceOffset);
+        return RoutePreferenceFromValue(static_cast<uint8_t>(aFlags >> kPreferenceOffset));
     }
 
 private:
