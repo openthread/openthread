@@ -242,8 +242,10 @@ bool otThreadIsSingleton(otInstance *aInstance);
  *                                    scan completes.
  * @param[in]  aCallbackContext       A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE  Accepted the Thread Discovery request.
- * @retval OT_ERROR_BUSY  Already performing an Thread Discovery.
+ * @retval OT_ERROR_NONE           Successfully started a Thread Discovery Scan.
+ * @retval OT_ERROR_INVALID_STATE  The IPv6 interface is not enabled (netif is not up).
+ * @retval OT_ERROR_NO_BUFS        Could not allocate message for Discovery Request.
+ * @retval OT_ERROR_BUSY           Thread Discovery Scan is already in progress.
  *
  */
 otError otThreadDiscover(otInstance *             aInstance,
