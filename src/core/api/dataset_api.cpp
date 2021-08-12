@@ -188,3 +188,16 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
 
     return (error == OT_ERROR_ALREADY) ? OT_ERROR_NONE : error;
 }
+
+otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset)
+{
+    Error            error = kErrorNone;
+    MeshCoP::Dataset dataset;
+
+    dataset.SetFrom(*aDatasetTlvs);
+    VerifyOrExit(dataset.IsValid(), error = kErrorInvalidArgs);
+    dataset.ConvertTo(*static_cast<MeshCoP::Dataset::Info *>(aDataset));
+
+exit:
+    return error;
+}

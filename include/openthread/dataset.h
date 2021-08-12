@@ -558,6 +558,18 @@ otError otDatasetGeneratePskc(const char *           aPassPhrase,
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
 
 /**
+ * This function parses an Operational Dataset from a `otOperationalDatasetTlvs`.
+ *
+ * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
+ * @param[out] aDataset      A pointer to where the dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully set @p aDataset from @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs is invalid.
+ *
+ */
+otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
+
+/**
  * @}
  *
  */
