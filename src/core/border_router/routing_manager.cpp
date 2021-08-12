@@ -169,7 +169,7 @@ Error RoutingManager::LoadOrGenerateRandomOnLinkPrefix(void)
     Error error = kErrorNone;
 
     if (Get<Settings>().Read<Settings::OnLinkPrefix>(mLocalOnLinkPrefix) != kErrorNone ||
-        !IsValidOnLinkPrefix(mLocalOnLinkPrefix))
+        !mLocalOnLinkPrefix.IsUniqueLocal())
     {
         Ip6::NetworkPrefix randomOnLinkPrefix;
 
@@ -803,9 +803,7 @@ bool RoutingManager::IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio
 
 bool RoutingManager::IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix)
 {
-    // Accept ULA prefix with length of 64 bits and GUA prefix.
-    return (aOnLinkPrefix.mLength == kOnLinkPrefixLength && aOnLinkPrefix.mPrefix.mFields.m8[0] == 0xfd) ||
-           (aOnLinkPrefix.mLength >= 3 && (aOnLinkPrefix.GetBytes()[0] & 0xE0) == 0x20);
+    return !aOnLinkPrefix.IsLinkLocal() && !aOnLinkPrefix.IsMulticast();
 }
 
 void RoutingManager::HandleRouterAdvertisementTimer(Timer &aTimer)
