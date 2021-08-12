@@ -150,6 +150,7 @@ Done
 Usage: `srp server state`
 
 Print the state of the SRP server.
+
 ```bash
 > srp server state
 running
