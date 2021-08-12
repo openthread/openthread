@@ -137,7 +137,7 @@ if(OT_CSL_RECEIVER)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1")
 endif()
 
-option(OT_CSL_AUTO_SYNC "enable datapolling based on csl config" ${OT_CSL_RECEIVER})
+option(OT_CSL_AUTO_SYNC "enable data polling based on csl config" ${OT_CSL_RECEIVER})
 if(OT_CSL_AUTO_SYNC)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE=1")
 else()
