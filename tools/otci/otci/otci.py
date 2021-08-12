@@ -851,6 +851,10 @@ class OTCI(object):
     # SRP server & client utilities
     #
 
+    def srp_server_get_state(self):
+        """Get the SRP server state"""
+        return self.__parse_str(self.execute_command('srp server state'))
+
     def srp_server_enable(self):
         """Enable SRP server."""
         self.execute_command('srp server enable')
