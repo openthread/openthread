@@ -160,6 +160,36 @@ public:
     bool IsValid(void) const { return (mLength <= kMaxLength); }
 
     /**
+     * This method indicates whether the prefix is a Link-Local prefix.
+     *
+     * @retval TRUE   The prefix is a Link-Local prefix.
+     * @retval FALSE  The prefix is not a Link-Local prefix.
+     *
+     */
+    bool IsLinkLocal(void) const
+    {
+        return mLength >= 10 && mPrefix.mFields.m8[0] == 0xfe && (mPrefix.mFields.m8[1] & 0xc0) == 0x80;
+    }
+
+    /**
+     * This method indicates whether the prefix is a Multicast prefix.
+     *
+     * @retval TRUE   The prefix is a Multicast prefix.
+     * @retval FALSE  The prefix is not a Multicast prefix.
+     *
+     */
+    bool IsMulticast(void) const { return mLength >= 8 && mPrefix.mFields.m8[0] == 0xff; }
+
+    /**
+     * This method indicates whether the prefix is a Unique-Local prefix.
+     *
+     * @retval TRUE   The prefix is a Unique-Local prefix.
+     * @retval FALSE  The prefix is not a Unique-Local prefix.
+     *
+     */
+    bool IsUniqueLocal(void) const { return mLength >= 7 && (mPrefix.mFields.m8[0] & 0xfe) == 0xfc; }
+
+    /**
      * This method indicates whether the prefix is equal to a given prefix.
      *
      * @param[in] aPrefixBytes   A pointer to buffer containing the prefix bytes to compare with.
