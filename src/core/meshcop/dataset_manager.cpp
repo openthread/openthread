@@ -340,10 +340,10 @@ void DatasetManager::HandleMgmtSetResponse(void *               aContext,
                                            Error                aError)
 {
     static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aError);
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aError);
 }
 
-void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo, Error aError)
+void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
@@ -351,7 +351,7 @@ void DatasetManager::HandleMgmtSetResponse(Coap::Message &aMessage, const Ip6::M
     StateTlv stateTlv;
 
     SuccessOrExit(error = aError);
-    VerifyOrExit(Tlv::FindTlv(aMessage, stateTlv) == kErrorNone, error = kErrorParse);
+    VerifyOrExit(Tlv::FindTlv(*aMessage, stateTlv) == kErrorNone, error = kErrorParse);
 
     switch (stateTlv.GetState())
     {
