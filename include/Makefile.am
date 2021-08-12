@@ -58,6 +58,7 @@ openthread_headers                      = \
     openthread/entropy.h                  \
     openthread/error.h                    \
     openthread/heap.h                     \
+    openthread/history_tracker.h          \
     openthread/icmp6.h                    \
     openthread/instance.h                 \
     openthread/ip6.h                      \

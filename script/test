@@ -59,6 +59,7 @@ build_simulation()
         "-DOT_DNS_CLIENT=ON"
         "-DOT_DNSSD_SERVER=ON"
         "-DOT_ECDSA=ON"
+        "-DOT_HISTORY_TRACKER=ON"
         "-DOT_MESSAGE_USE_HEAP=ON"
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_PING_SENDER=ON"

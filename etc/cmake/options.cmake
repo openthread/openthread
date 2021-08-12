@@ -211,6 +211,11 @@ if(OT_EXTERNAL_HEAP)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1")
 endif()
 
+option(OT_HISTORY_TRACKER "enable history tracker support")
+if(OT_HISTORY_TRACKER)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE=1")
+endif()
+
 option(OT_IP6_FRAGM "enable ipv6 fragmentation support")
 if(OT_IP6_FRAGM)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_IP6_FRAGMENTATION_ENABLE=1")

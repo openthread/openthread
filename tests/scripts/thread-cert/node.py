@@ -1331,6 +1331,10 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
+    def get_partition_id(self):
+        self.send_command('partitionid')
+        return self._expect_result(r'\d+')
+
     def get_preferred_partition_id(self):
         self.send_command('partitionid preferred')
         return self._expect_result(r'\d+')
@@ -2719,6 +2723,112 @@ class NodeImpl:
         cmd = f'mliid {mliid}'
         self.send_command(cmd)
         self._expect_command_output(cmd)
+
+    def history_netinfo(self, num_entries=0):
+        """
+        Get the `netinfo` history list, parse each entry and return
+        a list of dictionary (string key and string value) entries.
+
+        Example of return value:
+        [
+            {
+                'age': '00:00:00.000 ago',
+                'role': 'disabled',
+                'mode': 'rdn',
+                'rloc16': '0x7400',
+                'partition-id': '1318093703'
+            },
+            {
+                'age': '00:00:02.588 ago',
+                'role': 'leader',
+                'mode': 'rdn',
+                'rloc16': '0x7400',
+                'partition-id': '1318093703'
+            }
+        ]
+        """
+        cmd = f'history netinfo list {num_entries}'
+        self.send_command(cmd)
+        output = self._expect_command_output(cmd)
+        netinfos = []
+        for entry in output:
+            netinfo = {}
+            age, info = entry.split(' -> ')
+            netinfo['age'] = age
+            for item in info.split(' '):
+                k, v = item.split(':')
+                netinfo[k] = v
+            netinfos.append(netinfo)
+        return netinfos
+
+    def history_rx(self, num_entries=0):
+        """
+        Get the IPv6 RX history list, parse each entry and return
+        a list of dictionary (string key and string value) entries.
+
+        Example of return value:
+        [
+            {
+                'age': '00:00:01.999',
+                'type': 'ICMP6(EchoReqst)',
+                'len': '16',
+                'sec': 'yes',
+                'prio': 'norm',
+                'rss': '-20',
+                'from': '0xac00',
+                'radio': '15.4',
+                'src': '[fd00:db8:0:0:2cfa:fd61:58a9:f0aa]:0',
+                'dst': '[fd00:db8:0:0:ed7e:2d04:e543:eba5]:0',
+            }
+        ]
+        """
+        cmd = f'history rx list {num_entries}'
+        self.send_command(cmd)
+        return self._parse_history_rx_tx_ouput(self._expect_command_output(cmd))
+
+    def history_tx(self, num_entries=0):
+        """
+        Get the IPv6 TX history list, parse each entry and return
+        a list of dictionary (string key and string value) entries.
+
+        Example of return value:
+        [
+            {
+                'age': '00:00:01.999',
+                'type': 'ICMP6(EchoReply)',
+                'len': '16',
+                'sec': 'yes',
+                'prio': 'norm',
+                'to': '0xac00',
+                'tx-success': 'yes',
+                'radio': '15.4',
+                'src': '[fd00:db8:0:0:ed7e:2d04:e543:eba5]:0',
+                'dst': '[fd00:db8:0:0:2cfa:fd61:58a9:f0aa]:0',
+
+            }
+        ]
+        """
+        cmd = f'history tx list {num_entries}'
+        self.send_command(cmd)
+        return self._parse_history_rx_tx_ouput(self._expect_command_output(cmd))
+
+    def _parse_history_rx_tx_ouput(self, lines):
+        rxtx_list = []
+        for line in lines:
+            if line.strip().startswith('type:'):
+                for item in line.strip().split(' '):
+                    k, v = item.split(':')
+                    entry[k] = v
+            elif line.strip().startswith('src:'):
+                entry['src'] = line[4:]
+            elif line.strip().startswith('dst:'):
+                entry['dst'] = line[4:]
+                rxtx_list.append(entry)
+            else:
+                entry = {}
+                entry['age'] = line
+
+        return rxtx_list
 
 
 class Node(NodeImpl, OtCli):

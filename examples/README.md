@@ -37,6 +37,7 @@ This page lists the available common switches with description. Unless stated ot
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
 | EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Enable this switch if the platform uses its own heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. |
 | FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
+| HISTORY_TRACKER | OT_HISTORY_TRACKER | Enables support for History Tracker. |
 | IP6_FRAGM | OT_IP6_FRAGM | Enables support for IPv6 fragmentation. |
 | JAM_DETECTION | OT_JAM_DETECTION | Enables support for [Jam Detection](https://openthread.io/guides/build/features/jam-detection). Enable this switch if a device requires the ability to detect signal jamming on a specific channel. |
 | JOINER | OT_JOINER | Enables [support for Joiner](https://openthread.io/reference/group/api-joiner). Enable this switch on a device that has to be commissioned to join the network. |

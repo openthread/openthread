@@ -128,6 +128,7 @@ SOURCES_COMMON                                  = \
     api/entropy_api.cpp                           \
     api/error_api.cpp                             \
     api/heap_api.cpp                              \
+    api/history_tracker_api.cpp                   \
     api/icmp6_api.cpp                             \
     api/instance_api.cpp                          \
     api/ip6_api.cpp                               \
@@ -292,6 +293,7 @@ SOURCES_COMMON                                  = \
     utils/child_supervision.cpp                   \
     utils/flash.cpp                               \
     utils/heap.cpp                                \
+    utils/history_tracker.cpp                     \
     utils/jam_detector.cpp                        \
     utils/lookup_table.cpp                        \
     utils/otns.cpp                                \
@@ -430,6 +432,7 @@ HEADERS_COMMON                                  = \
     config/dns_client.h                           \
     config/dnssd_server.h                         \
     config/dtls.h                                 \
+    config/history_tracker.h                      \
     config/ip6.h                                  \
     config/joiner.h                               \
     config/link_quality.h                         \
@@ -562,6 +565,7 @@ HEADERS_COMMON                                  = \
     utils/child_supervision.hpp                   \
     utils/flash.hpp                               \
     utils/heap.hpp                                \
+    utils/history_tracker.hpp                     \
     utils/jam_detector.hpp                        \
     utils/lookup_table.hpp                        \
     utils/otns.hpp                                \

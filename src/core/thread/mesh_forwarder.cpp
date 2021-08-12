@@ -1042,6 +1042,10 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
     }
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordTxMessage(*mSendMessage, aMacDest);
+#endif
+
     LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
 
     if (mSendMessage->GetType() == Message::kTypeIp6)
@@ -1441,6 +1445,10 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
 {
     ThreadNetif &netif = Get<ThreadNetif>();
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
+#endif
+
     LogMessage(kMessageReceive, aMessage, &aMacSource, kErrorNone);
 
     if (aMessage.GetType() == Message::kTypeIp6)
@@ -1620,8 +1628,6 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
-
 Error MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
                                           Ip6::Header &  aIp6Header,
                                           uint16_t &     aChecksum,
@@ -1667,6 +1673,8 @@ Error MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {

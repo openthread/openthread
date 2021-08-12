@@ -145,6 +145,7 @@ SOURCES_COMMON =                      \
     cli_coap_secure.cpp               \
     cli_commissioner.cpp              \
     cli_dataset.cpp                   \
+    cli_history.cpp                   \
     cli_joiner.cpp                    \
     cli_network_data.cpp              \
     cli_srp_client.cpp                \
@@ -168,6 +169,7 @@ noinst_HEADERS                      = \
     cli_commissioner.hpp              \
     cli_config.h                      \
     cli_dataset.hpp                   \
+    cli_history.hpp                   \
     cli_joiner.hpp                    \
     cli_network_data.hpp              \
     cli_srp_client.hpp                \

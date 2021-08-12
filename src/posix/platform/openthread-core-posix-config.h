@@ -218,6 +218,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+ *
+ * Define as 1 to enable History Tracker module.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_HEAP_INTERNAL_SIZE
  *
  * The size of heap buffer when DTLS is enabled.

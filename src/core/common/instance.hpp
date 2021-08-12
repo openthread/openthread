@@ -82,6 +82,9 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
 #endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#include "utils/history_tracker.hpp"
+#endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #include "backbone_router/bbr_leader.hpp"
@@ -386,6 +389,10 @@ private:
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     Utils::ChannelManager mChannelManager;
+#endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Utils::HistoryTracker mHistoryTracker;
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
@@ -825,6 +832,13 @@ template <> inline Utils::ChannelMonitor &Instance::Get(void)
 template <> inline Utils::ChannelManager &Instance::Get(void)
 {
     return mChannelManager;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+template <> inline Utils::HistoryTracker &Instance::Get(void)
+{
+    return mHistoryTracker;
 }
 #endif
 

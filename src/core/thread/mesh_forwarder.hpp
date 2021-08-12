@@ -58,6 +58,10 @@ namespace Mle {
 class DiscoverScanner;
 }
 
+namespace Utils {
+class HistoryTracker;
+}
+
 /**
  * @addtogroup core-mesh-forwarding
  *
@@ -154,6 +158,7 @@ class MeshForwarder : public InstanceLocator, private NonCopyable
     friend class IndirectSender;
     friend class Mle::DiscoverScanner;
     friend class TimeTicker;
+    friend class Utils::HistoryTracker;
 
 public:
     /**
@@ -503,15 +508,16 @@ private:
                               const Mac::Address &aMacDest,
                               bool                aIsSecure);
 
+    static Error ParseIp6UdpTcpHeader(const Message &aMessage,
+                                      Ip6::Header &  aIp6Header,
+                                      uint16_t &     aChecksum,
+                                      uint16_t &     aSourcePort,
+                                      uint16_t &     aDestPort);
+
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
     const char *MessageActionToString(MessageAction aAction, Error aError);
     const char *MessagePriorityToString(const Message &aMessage);
 
-    Error ParseIp6UdpTcpHeader(const Message &aMessage,
-                               Ip6::Header &  aIp6Header,
-                               uint16_t &     aChecksum,
-                               uint16_t &     aSourcePort,
-                               uint16_t &     aDestPort);
 #if OPENTHREAD_FTD
     Error DecompressIp6UdpTcpHeader(const Message &     aMessage,
                                     uint16_t            aOffset,

@@ -333,3 +333,8 @@ otError otIp6SetMeshLocalIid(otInstance *aInstance, const otIp6InterfaceIdentifi
 }
 
 #endif
+
+const char *otIp6ProtoToString(uint8_t aIpProto)
+{
+    return Ip6::Ip6::IpProtoToString(aIpProto);
+}
