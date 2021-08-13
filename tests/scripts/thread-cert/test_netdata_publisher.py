@@ -416,7 +416,7 @@ class NetDataPublisher(thread_cert.TestCase):
 
         for node in routers:
             node.netdata_publish_prefix(ON_MESH_PREFIX, ON_MESH_FLAGS, 'med')
-        self.simulator.go(WAIT_TIME)
+            self.simulator.go(WAIT_TIME)
         prefixes = leader.get_prefixes()
         self.check_num_of_prefixes(prefixes, 0, 1 + len(routers), 0)
         self.assertTrue(1 + len(routers) >= DESIRED_NUM_ON_MESH_PREFIX)
