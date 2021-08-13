@@ -78,6 +78,8 @@ expect -re "\\| +$channel \\| +-?\\d+ \\|"
 expect_line "Done"
 
 switch_node 3
+send "discover\n"
+expect "Error 13: InvalidState"
 send "ifconfig up\n"
 expect_line "Done"
 send "discover $channel\n"

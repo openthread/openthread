@@ -115,9 +115,10 @@ public:
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
-     * @retval kErrorNone       Successfully started a Thread Discovery Scan.
-     * @retval kErrorNoBufs     Could not allocate message for Discovery Request.
-     * @retval kErrorBusy       Thread Discovery Scan is already in progress.
+     * @retval kErrorNone           Successfully started a Thread Discovery Scan.
+     * @retval kErrorInvalidState   The IPv6 interface is not enabled (netif is not up).
+     * @retval kErrorNoBufs         Could not allocate message for Discovery Request.
+     * @retval kErrorBusy           Thread Discovery Scan is already in progress.
      *
      */
     Error Discover(const Mac::ChannelMask &aScanChannels,
