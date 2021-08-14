@@ -29,7 +29,9 @@
 project("TCPlp" C)
 
 set(src_tcplp
-    tcplp.c
+    lib/bitmap.c
+    lib/cbuf.c
+    lib/lbuf.c
 )
 
 set(tcplp_static_target "tcplp")
