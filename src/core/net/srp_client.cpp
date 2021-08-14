@@ -501,7 +501,7 @@ exit:
     return error;
 }
 
-Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
+Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease, bool aSendUnregToServer)
 {
     Error error = kErrorNone;
 
@@ -523,7 +523,7 @@ Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
         UpdateServiceStateToRemove(*service);
     }
 
-    if (mHostInfo.GetState() == kToAdd)
+    if ((mHostInfo.GetState() == kToAdd) && !aSendUnregToServer)
     {
         // Host info is not added yet (not yet registered with
         // server), so we can remove it and all services immediately.
@@ -1260,7 +1260,7 @@ void Client::ProcessResponse(Message &aMessage)
     offset += sizeof(header);
 
     // Skip over all sections till Additional Data section
-    // SPEC ENHANCEMENT: Sever can echo the request back or not
+    // SPEC ENHANCEMENT: Server can echo the request back or not
     // include any of RRs. Would be good to explicitly require SRP server
     // to not echo back RRs.
 
@@ -1446,7 +1446,7 @@ void Client::UpdateState(void)
     bool      shouldUpdate      = false;
 
     VerifyOrExit((GetState() != kStateStopped) && (GetState() != kStatePaused));
-    VerifyOrExit((mHostInfo.GetName() != nullptr) && (mHostInfo.GetNumAddresses() > 0));
+    VerifyOrExit(mHostInfo.GetName() != nullptr);
 
     // Go through the host info and all the services to check if there
     // are any new changes (i.e., anything new to add or remove). This
@@ -1474,11 +1474,11 @@ void Client::UpdateState(void)
 
     case kToAdd:
     case kToRefresh:
-        // Make sure we have at least one service otherwise no need to
-        // send SRP update message with host info only. The exception
-        // is when removing host info where we allow for empty
-        // service list.
-        VerifyOrExit(!mServices.IsEmpty());
+        // Make sure we have at least one service and at least one
+        // host address, otherwise no need to send SRP update message.
+        // The exception is when removing host info where we allow
+        // for empty service list.
+        VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.GetNumAddresses() > 0));
 
         // Fall through
 

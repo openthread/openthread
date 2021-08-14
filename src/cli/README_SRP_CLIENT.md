@@ -201,9 +201,12 @@ The possible states are (same value for service state):
 
 ### host remove
 
-Usage: `srp client host remove [removekeylease]`
+Usage: `srp client host remove [removekeylease] [sendunregtoserver]`
 
-Remove host info and all services from server. `removekeylease` is boolean value indicating whether or not the host key lease should also be removed
+Remove host info and all services from server.
+
+- `removekeylease` is an optional boolean value indicating whether or not the host key lease should also be removed (default is false).
+- `sendunregtoserver` is a another optional boolean value indicating whether or not to send an update message to the server when host info is not yet registered (default is false).
 
 ```bash
 > srp client host remove 1

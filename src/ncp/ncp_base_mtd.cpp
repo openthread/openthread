@@ -3932,10 +3932,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_HOST_SERVI
 {
     otError error = OT_ERROR_NONE;
     bool    removeKeyLease;
+    bool    sendUnregToServer;
 
     SuccessOrExit(error = mDecoder.ReadBool(removeKeyLease));
+    SuccessOrExit(error = mDecoder.ReadBool(sendUnregToServer));
 
-    error = otSrpClientRemoveHostAndServices(mInstance, removeKeyLease);
+    error = otSrpClientRemoveHostAndServices(mInstance, removeKeyLease, sendUnregToServer);
 
 exit:
     return error;

@@ -4137,7 +4137,7 @@ enum
     SPINEL_PROP_SRP_CLIENT_SERVICES = SPINEL_PROP_OPENTHREAD__BEGIN + 23,
 
     /// SRP Client Host And Services Remove
-    /** Format: `b` : Write only
+    /** Format: `bb` : Write only
      * Required capability: `SPINEL_CAP_SRP_CLIENT`.
      *
      * Writing to this property with starts the remove process of the host info and all services.
@@ -4146,6 +4146,7 @@ enum
      * Format is:
      *
      *    `b` : A boolean indicating whether or not the host key lease should also be cleared.
+     *    `b` : A boolean indicating whether or not to send update to server when host info is not registered.
      *
      */
     SPINEL_PROP_SRP_CLIENT_HOST_SERVICES_REMOVE = SPINEL_PROP_OPENTHREAD__BEGIN + 24,
