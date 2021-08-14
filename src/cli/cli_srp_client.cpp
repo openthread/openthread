@@ -238,15 +238,21 @@ otError SrpClient::ProcessHost(Arg aArgs[])
     }
     else if (aArgs[0] == "remove")
     {
-        bool removeKeyLease = false;
+        bool removeKeyLease    = false;
+        bool sendUnregToServer = false;
 
         if (!aArgs[1].IsEmpty())
         {
             SuccessOrExit(error = aArgs[1].ParseAsBool(removeKeyLease));
-            VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+
+            if (!aArgs[2].IsEmpty())
+            {
+                SuccessOrExit(error = aArgs[2].ParseAsBool(sendUnregToServer));
+                VerifyOrExit(aArgs[3].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+            }
         }
 
-        error = otSrpClientRemoveHostAndServices(mInterpreter.mInstance, removeKeyLease);
+        error = otSrpClientRemoveHostAndServices(mInterpreter.mInstance, removeKeyLease, sendUnregToServer);
     }
     else if (aArgs[0] == "clear")
     {

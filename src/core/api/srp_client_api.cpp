@@ -179,11 +179,11 @@ const otSrpClientService *otSrpClientGetServices(otInstance *aInstance)
     return instance.Get<Srp::Client>().GetServices().GetHead();
 }
 
-otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyLease)
+otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyLease, bool aSendUnregToServer)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Srp::Client>().RemoveHostAndServices(aRemoveKeyLease);
+    return instance.Get<Srp::Client>().RemoveHostAndServices(aRemoveKeyLease, aSendUnregToServer);
 }
 
 void otSrpClientClearHostAndServices(otInstance *aInstance)

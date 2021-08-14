@@ -989,8 +989,8 @@ class NodeImpl:
         self.send_command(f'srp client host name')
         self._expect_done()
 
-    def srp_client_remove_host(self, remove_key=False):
-        self.send_command(f'srp client host remove {"1" if remove_key else "0"}')
+    def srp_client_remove_host(self, remove_key=False, send_unreg_to_server=False):
+        self.send_command(f'srp client host remove {int(remove_key)} {int(send_unreg_to_server)}')
         self._expect_done()
 
     def srp_client_clear_host(self):
