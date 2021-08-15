@@ -693,14 +693,10 @@ Error Server::ProcessHostDescriptionInstruction(Host &                   aHost,
 
     VerifyOrExit(aHost.GetFullName() != nullptr, error = kErrorFailed);
     VerifyOrExit(aHost.GetKey() != nullptr, error = kErrorFailed);
-    {
-        uint8_t hostAddressesNum;
 
-        aHost.GetAddresses(hostAddressesNum);
-
-        // There MUST be at least one valid address if we have nonzero lease.
-        VerifyOrExit(aHost.GetLease() > 0 || hostAddressesNum > 0, error = kErrorFailed);
-    }
+    // We check the number of host addresses after processing of the
+    // Lease Option in the Addition Section and determining whether
+    // the host is being removed or registered.
 
 exit:
     return error;
@@ -905,6 +901,16 @@ Error Server::ProcessAdditionalSection(Host *                   aHost,
 
     aHost->SetLease(leaseOption.GetLeaseInterval());
     aHost->SetKeyLease(leaseOption.GetKeyLeaseInterval());
+
+    if (aHost->GetLease() > 0)
+    {
+        uint8_t hostAddressesNum;
+
+        aHost->GetAddresses(hostAddressesNum);
+
+        // There MUST be at least one valid address if we have nonzero lease.
+        VerifyOrExit(hostAddressesNum > 0, error = kErrorFailed);
+    }
 
     // SIG(0).
 
