@@ -36,6 +36,13 @@ extern "C" {
 #endif
 
 /**
+ * @addtogroup api-history-tracker
+ *
+ * @{
+ *
+ */    
+    
+/**
  * @brief
  *   This header defines the public API for History Tracker.
  *
@@ -202,6 +209,11 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *
  */
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);
 
+/**
+ * @}
+ *
+ */    
+    
 #ifdef __cplusplus
 } // extern "C"
 #endif
