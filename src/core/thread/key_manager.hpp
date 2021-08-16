@@ -143,7 +143,6 @@ OT_TOOL_PACKED_BEGIN
 class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>, public Clearable<NetworkKey>
 {
 public:
-
 #if !OPENTHREAD_RADIO
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread Network Key.
@@ -161,7 +160,7 @@ public:
  * Provides a representation for Network Key reference.
  *
  */
-typedef otNetworkKeyRef NetworkKeyRef; 
+typedef otNetworkKeyRef NetworkKeyRef;
 
 /**
  * This class represents a Thread Network Key material.
@@ -178,14 +177,15 @@ public:
     Mac::CryptoType mCryptoType;
 
     /**
-     * This member holds the NetworkKey as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT enabled. 
+     * This member holds the NetworkKey as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT
+     * enabled.
      */
-    NetworkKey      mLiteralKey;
-    
+    NetworkKey mLiteralKey;
+
     /**
-     * This member holds the NetworkKey as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled. 
+     * This member holds the NetworkKey as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled.
      */
-    NetworkKeyRef   mKeyRef;
+    NetworkKeyRef mKeyRef;
 
     /**
      * This method copies the literal Thread Network Key into given buffer.
@@ -205,7 +205,6 @@ OT_TOOL_PACKED_BEGIN
 class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
 {
 public:
-
 #if !OPENTHREAD_RADIO
     /**
      * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
@@ -221,7 +220,7 @@ public:
  * Provides a representation for Network Key reference.
  *
  */
-typedef otPskcRef PskcRef; 
+typedef otPskcRef PskcRef;
 
 /**
  * This class represents a Pskc Key material.
@@ -238,14 +237,15 @@ public:
     Mac::CryptoType mCryptoType;
 
     /**
-     * This member holds the Pskc as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT enabled. 
+     * This member holds the Pskc as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT
+     * enabled.
      */
-    Pskc        mLiteralKey;
-    
+    Pskc mLiteralKey;
+
     /**
-     * This member holds the Pskc as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled. 
+     * This member holds the Pskc as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled.
      */
-    PskcRef    mKeyRef;
+    PskcRef mKeyRef;
 
     /**
      * This method copies the literal PSKc into given buffer.
