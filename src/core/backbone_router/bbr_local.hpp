@@ -280,7 +280,7 @@ private:
 
     NetworkData::OnMeshPrefixConfig mDomainPrefixConfig;
 
-    Ip6::NetifUnicastAddress             mBackboneRouterPrimaryAloc;
+    Ip6::Netif::UnicastAddress           mBackboneRouterPrimaryAloc;
     Ip6::Address                         mAllNetworkBackboneRouters;
     Ip6::Address                         mAllDomainBackboneRouters;
     otBackboneRouterDomainPrefixCallback mDomainPrefixCallback;

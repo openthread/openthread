@@ -287,7 +287,7 @@ public:
      * @returns A pointer to the selected IPv6 source address or nullptr if no source address was found.
      *
      */
-    const NetifUnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
+    const Netif::UnicastAddress *SelectSourceAddress(MessageInfo &aMessageInfo);
 
     /**
      * This method returns a reference to the send queue.

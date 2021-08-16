@@ -190,7 +190,8 @@ Error NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
 
     tlv.Init();
 
-    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr;
+         addr                                   = addr->GetNext())
     {
         count++;
     }
@@ -198,7 +199,8 @@ Error NetworkDiagnostic::AppendIp6AddressList(Message &aMessage)
     tlv.SetLength(count * sizeof(Ip6::Address));
     SuccessOrExit(error = aMessage.Append(tlv));
 
-    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr;
+         addr                                   = addr->GetNext())
     {
         SuccessOrExit(error = aMessage.Append(addr->GetAddress()));
     }

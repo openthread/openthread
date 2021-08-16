@@ -130,7 +130,7 @@ private:
          * @returns the ALOC.
          *
          */
-        Ip6::NetifUnicastAddress &GetAloc(void) { return mAloc; }
+        Ip6::Netif::UnicastAddress &GetAloc(void) { return mAloc; }
 
         /**
          * This method returns the IPv6 prefix.
@@ -176,8 +176,8 @@ private:
         }
 
     private:
-        Ip6::NetifUnicastAddress mAloc;
-        Ip6::Prefix              mPrefix;
+        Ip6::Netif::UnicastAddress mAloc;
+        Ip6::Prefix                mPrefix;
     };
 
     static constexpr uint16_t kNumPrefixes = OPENTHREAD_CONFIG_DHCP6_SERVER_NUM_PREFIXES;

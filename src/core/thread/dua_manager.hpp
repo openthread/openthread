@@ -233,8 +233,8 @@ private:
     DuaState  mDuaState;
     uint8_t   mDadCounter;
     TimeMilli mLastRegistrationTime; // The time (in milliseconds) when sent last DUA.req or received DUA.rsp.
-    Ip6::InterfaceIdentifier mFixedDuaInterfaceIdentifier;
-    Ip6::NetifUnicastAddress mDomainUnicastAddress;
+    Ip6::InterfaceIdentifier   mFixedDuaInterfaceIdentifier;
+    Ip6::Netif::UnicastAddress mDomainUnicastAddress;
 #endif
 
     union

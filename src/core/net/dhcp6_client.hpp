@@ -99,18 +99,18 @@ private:
 
     struct IdentityAssociation
     {
-        Ip6::NetifUnicastAddress mNetifAddress;
-        uint32_t                 mPreferredLifetime;
-        uint32_t                 mValidLifetime;
-        uint16_t                 mPrefixAgentRloc;
-        IaStatus                 mStatus;
+        Ip6::Netif::UnicastAddress mNetifAddress;
+        uint32_t                   mPreferredLifetime;
+        uint32_t                   mValidLifetime;
+        uint16_t                   mPrefixAgentRloc;
+        IaStatus                   mStatus;
     };
 
     void Start(void);
     void Stop(void);
 
-    static bool MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress,
-                                            const Ip6::Prefix &             aIp6Prefix);
+    static bool MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNetifAddress,
+                                            const Ip6::Prefix &               aIp6Prefix);
 
     void Solicit(uint16_t aRloc16);
 

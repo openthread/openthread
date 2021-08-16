@@ -138,10 +138,10 @@ public:
      * @retval kErrorFailed  If no valid IID was generated.
      *
      */
-    Error GenerateIid(Ip6::NetifUnicastAddress &aAddress,
-                      uint8_t *                 aNetworkId       = nullptr,
-                      uint8_t                   aNetworkIdLength = 0,
-                      uint8_t *                 aDadCounter      = nullptr) const;
+    Error GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
+                      uint8_t *                   aNetworkId       = nullptr,
+                      uint8_t                     aNetworkIdLength = 0,
+                      uint8_t *                   aDadCounter      = nullptr) const;
 
 private:
     static constexpr uint16_t kMaxIidCreationAttempts = 256; // Maximum number of attempts when generating IID.
@@ -163,11 +163,11 @@ private:
     void        GetIidSecretKey(IidSecretKey &aKey) const;
     void        HandleNotifierEvents(Events aEvents);
     static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
-                                         const Ip6::NetifUnicastAddress &       aAddr);
+                                         const Ip6::Netif::UnicastAddress &     aAddr);
 
-    bool                     mEnabled;
-    otIp6SlaacPrefixFilter   mFilter;
-    Ip6::NetifUnicastAddress mAddresses[OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES];
+    bool                       mEnabled;
+    otIp6SlaacPrefixFilter     mFilter;
+    Ip6::Netif::UnicastAddress mAddresses[OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES];
 };
 
 /**

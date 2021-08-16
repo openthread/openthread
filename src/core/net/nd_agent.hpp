@@ -76,7 +76,7 @@ private:
     void FreeAloc(void) { mAloc.mNext = &mAloc; }
     bool IsAlocInUse(void) const { return mAloc.mNext != &mAloc; }
 
-    Ip6::NetifUnicastAddress mAloc;
+    Ip6::Netif::UnicastAddress mAloc;
 };
 
 } // namespace NeighborDiscovery
