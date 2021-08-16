@@ -51,6 +51,7 @@ set(COMMON_SOURCES
     api/entropy_api.cpp
     api/error_api.cpp
     api/heap_api.cpp
+    api/history_tracker_api.cpp
     api/icmp6_api.cpp
     api/instance_api.cpp
     api/ip6_api.cpp
@@ -63,6 +64,7 @@ set(COMMON_SOURCES
     api/message_api.cpp
     api/multi_radio_api.cpp
     api/netdata_api.cpp
+    api/netdata_publisher_api.cpp
     api/netdiag_api.cpp
     api/network_time_api.cpp
     api/ping_sender_api.cpp
@@ -195,6 +197,7 @@ set(COMMON_SOURCES
     thread/network_data_leader_ftd.cpp
     thread/network_data_local.cpp
     thread/network_data_notifier.cpp
+    thread/network_data_publisher.cpp
     thread/network_data_service.cpp
     thread/network_data_tlvs.cpp
     thread/network_data_types.cpp
@@ -213,6 +216,7 @@ set(COMMON_SOURCES
     utils/child_supervision.cpp
     utils/flash.cpp
     utils/heap.cpp
+    utils/history_tracker.cpp
     utils/jam_detector.cpp
     utils/lookup_table.cpp
     utils/otns.cpp

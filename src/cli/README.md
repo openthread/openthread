@@ -52,6 +52,7 @@ Done
 - [factoryreset](#factoryreset)
 - [fake](#fake)
 - [fem](#fem)
+- [history](README_HISTORY.md)
 - [ifconfig](#ifconfig)
 - [ipaddr](#ipaddr)
 - [ipmaddr](#ipmaddr)
@@ -353,6 +354,26 @@ Done
 
 ```bash
 > br disable
+Done
+```
+
+### br omrprefix
+
+Get the randomly generated off-mesh-routable prefix of the Border Router.
+
+```bash
+> br omrprefix
+fdfc:1ff5:1512:5622::/64
+Done
+```
+
+### br onlinkprefix
+
+Get the randomly generated on-link prefix of the Border Router.
+
+```bash
+> br onlinkprefix
+fd41:2650:a6f5:0::/64
 Done
 ```
 
@@ -770,6 +791,7 @@ Get the supported counter names.
 
 ```bash
 > counters
+ip
 mac
 mle
 Done
@@ -824,6 +846,12 @@ Partition Id Changes: 1
 Better Partition Attach Attempts: 0
 Parent Changes: 0
 Done
+> counters ip
+TxSuccess: 10
+TxFailed: 0
+RxSuccess: 5
+RxFailed: 0
+Done
 ```
 
 ### counters \<countername\> reset
@@ -834,6 +862,8 @@ Reset the counter value.
 > counters mac reset
 Done
 > counters mle reset
+Done
+> counters ip reset
 Done
 ```
 
@@ -2159,11 +2189,12 @@ Get the external route list in the local Network Data.
 Done
 ```
 
-### route add \<prefix\> [s][prf]
+### route add \<prefix\> [sn][prf]
 
 Add a valid external route to the Network Data.
 
 - s: Stable flag
+- n: NAT64 flag
 - prf: Default Router Preference, which may be: 'high', 'med', or 'low'.
 
 ```bash

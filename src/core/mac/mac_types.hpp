@@ -56,24 +56,22 @@ namespace Mac {
  *
  */
 
-enum
-{
-    kShortAddrBroadcast = 0xffff,
-    kShortAddrInvalid   = 0xfffe,
-    kPanIdBroadcast     = 0xffff,
-};
-
 /**
  * This type represents the IEEE 802.15.4 PAN ID.
  *
  */
 typedef otPanId PanId;
 
+constexpr PanId kPanIdBroadcast = 0xffff; ///< Broadcast PAN ID.
+
 /**
  * This type represents the IEEE 802.15.4 Short Address.
  *
  */
 typedef otShortAddress ShortAddress;
+
+constexpr ShortAddress kShortAddrBroadcast = 0xffff; ///< Broadcast Short Address.
+constexpr ShortAddress kShortAddrInvalid   = 0xfffe; ///< Invalid Short Address.
 
 /**
  * This function generates a random IEEE 802.15.4 PAN ID.
@@ -91,10 +89,7 @@ OT_TOOL_PACKED_BEGIN
 class ExtAddress : public otExtAddress, public Equatable<ExtAddress>, public Clearable<ExtAddress>
 {
 public:
-    enum
-    {
-        kInfoStringSize = 17, // Max chars for the info string (`ToString()`).
-    };
+    static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -106,10 +101,10 @@ public:
      * This enumeration type specifies the copy byte order when Extended Address is being copied to/from a buffer.
      *
      */
-    enum CopyByteOrder
+    enum CopyByteOrder : uint8_t
     {
-        kNormalByteOrder,  // Copy address bytes in normal order (as provided in array buffer).
-        kReverseByteOrder, // Copy address bytes in reverse byte order.
+        kNormalByteOrder,  ///< Copy address bytes in normal order (as provided in array buffer).
+        kReverseByteOrder, ///< Copy address bytes in reverse byte order.
     };
 
     /**
@@ -226,13 +221,10 @@ public:
     InfoString ToString(void) const;
 
 private:
-    static void CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder);
+    static constexpr uint8_t kGroupFlag = (1 << 0);
+    static constexpr uint8_t kLocalFlag = (1 << 1);
 
-    enum
-    {
-        kGroupFlag = 1 << 0,
-        kLocalFlag = 1 << 1,
-    };
+    static void CopyAddress(uint8_t *aDst, const uint8_t *aSrc, CopyByteOrder aByteOrder);
 } OT_TOOL_PACKED_END;
 
 /**
@@ -252,7 +244,7 @@ public:
      * This enumeration specifies the IEEE 802.15.4 Address type.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTypeNone,     ///< No address.
         kTypeShort,    ///< IEEE 802.15.4 Short Address.
@@ -424,10 +416,7 @@ OT_TOOL_PACKED_BEGIN
 class Key : public otMacKey, public Equatable<Key>, public Clearable<Key>
 {
 public:
-    enum
-    {
-        kSize = OT_MAC_KEY_SIZE, // Key size in bytes.
-    };
+    static constexpr uint16_t kSize = OT_MAC_KEY_SIZE; ///< Key size in bytes.
 
     /**
      * This method gets a pointer to the buffer containing the key.
@@ -447,10 +436,7 @@ OT_TOOL_PACKED_BEGIN
 class ExtendedPanId : public otExtendedPanId, public Equatable<ExtendedPanId>, public Clearable<ExtendedPanId>
 {
 public:
-    enum
-    {
-        kInfoStringSize = 17, // Max chars for the info string (`ToString()`).
-    };
+    static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -532,10 +518,11 @@ private:
 class NetworkName : public otNetworkName
 {
 public:
-    enum
-    {
-        kMaxSize = OT_NETWORK_NAME_MAX_SIZE, // Maximum number of chars in Network Name (excludes null char).
-    };
+    /**
+     * This constant specified the maximum number of chars in Network Name (excludes null char).
+     *
+     */
+    static constexpr uint8_t kMaxSize = OT_NETWORK_NAME_MAX_SIZE;
 
     /**
      * This constructor initializes the IEEE802.15.4 Network Name as an empty string.
@@ -612,7 +599,7 @@ typedef NetworkName DomainName;
  * This enumeration defines the radio link types.
  *
  */
-enum RadioType
+enum RadioType : uint8_t
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     kRadioTypeIeee802154, ///< IEEE 802.15.4 (2.4GHz) link type.
@@ -622,15 +609,12 @@ enum RadioType
 #endif
 };
 
-enum
-{
-    /**
-     * This constant specifies the number of supported radio link types.
-     *
-     */
-    kNumRadioTypes = (((OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE) ? 1 : 0) +
-                      ((OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE) ? 1 : 0)),
-};
+/**
+ * This constant specifies the number of supported radio link types.
+ *
+ */
+constexpr uint8_t kNumRadioTypes = (((OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE) ? 1 : 0) +
+                                    ((OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE) ? 1 : 0));
 
 /**
  * This class represents a set of radio links.
@@ -639,10 +623,7 @@ enum
 class RadioTypes
 {
 public:
-    enum
-    {
-        kInfoStringSize = 32, ///< Max chars for the info string (`ToString()`).
-    };
+    static constexpr uint16_t kInfoStringSize = 32; ///< Max chars for the info string (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -671,7 +652,7 @@ public:
      * @param[in] aMask   A bit-mask representing the radio types (the first bit corresponds to radio type 0, and so on)
      *
      */
-    RadioTypes(uint8_t aMask)
+    explicit RadioTypes(uint8_t aMask)
         : mBitMask(aMask)
     {
     }

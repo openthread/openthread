@@ -149,12 +149,19 @@ public:
      * @param[in]  aDatasetInfo  The Operational Dataset.
      * @param[in]  aTlvs         Any additional raw TLVs to include.
      * @param[in]  aLength       Number of bytes in @p aTlvs.
+     * @param[in]  aCallback     A pointer to a function that is called on response reception or timeout.
+     * @param[in]  aContext      A pointer to application-specific context for @p aCallback.
      *
      * @retval kErrorNone    Successfully send the meshcop dataset command.
      * @retval kErrorNoBufs  Insufficient buffer space to send.
+     * @retval kErrorBusy    A previous request is ongoing.
      *
      */
-    Error SendSetRequest(const Dataset::Info &aDatasetInfo, const uint8_t *aTlvs, uint8_t aLength);
+    Error SendSetRequest(const Dataset::Info &    aDatasetInfo,
+                         const uint8_t *          aTlvs,
+                         uint8_t                  aLength,
+                         otDatasetMgmtSetCallback aCallback,
+                         void *                   aContext);
 
     /**
      * This method sends a MGMT_GET request.
@@ -207,11 +214,6 @@ protected:
         Error ReadFromMessage(const Message &aMessage, uint16_t aOffset);
 
     private:
-        enum
-        {
-            kMaxValueSize = 16, // Maximum size of a Dataset TLV value (bytes).
-        };
-
         uint8_t mValue[Dataset::kMaxValueSize];
     } OT_TOOL_PACKED_END;
 
@@ -339,11 +341,11 @@ protected:
     bool         mTimestampValid : 1;
 
 private:
-    static void HandleCoapResponse(void *               aContext,
-                                   otMessage *          aMessage,
-                                   const otMessageInfo *aMessageInfo,
-                                   Error                aError);
-    void        HandleCoapResponse(void);
+    static void HandleMgmtSetResponse(void *               aContext,
+                                      otMessage *          aMessage,
+                                      const otMessageInfo *aMessageInfo,
+                                      Error                aError);
+    void        HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError);
 
     bool  IsActiveDataset(void) const { return GetType() == Dataset::kActive; }
     bool  IsPendingDataset(void) const { return GetType() == Dataset::kPending; }
@@ -360,14 +362,14 @@ private:
     void SendSetResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo, StateTlv::State aState);
 #endif
 
-    enum
-    {
-        kMaxDatasetTlvs = 16,   // Maximum number of TLVs in a Dataset.
-        kDelayNoBufs    = 1000, // Milliseconds
-    };
+    static constexpr uint8_t  kMaxDatasetTlvs = 16;   // Maximum number of TLVs in a Dataset.
+    static constexpr uint32_t kSendSetDelay   = 5000; // Milliseconds
 
-    bool       mCoapPending : 1;
+    bool       mMgmtPending : 1;
     TimerMilli mTimer;
+
+    otDatasetMgmtSetCallback mMgmtSetCallback;
+    void *                   mMgmtSetCallbackContext;
 };
 
 class ActiveDataset : public DatasetManager, private NonCopyable

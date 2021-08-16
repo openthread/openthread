@@ -1347,7 +1347,7 @@ uint16_t FragmentHeader::WriteTo(uint8_t *aFrame) const
 {
     uint8_t *cur = aFrame;
 
-    WriteUint16((kDispatch << 8) + mSize, cur);
+    WriteUint16((static_cast<uint16_t>(kDispatch) << 8) + mSize, cur);
     cur += sizeof(uint16_t);
 
     WriteUint16(mTag, cur);

@@ -51,8 +51,6 @@
 
 namespace ot {
 
-class TimerMilliScheduler;
-
 /**
  * @addtogroup core-timer
  *
@@ -69,7 +67,6 @@ class TimerMilliScheduler;
  */
 class Timer : public InstanceLocator, public LinkedListEntry<Timer>
 {
-    friend class TimerScheduler;
     friend class LinkedListEntry<Timer>;
 
 public:
@@ -120,24 +117,41 @@ public:
     bool IsRunning(void) const { return (mNext != this); }
 
 protected:
-    /**
-     * This method indicates if the fire time of this timer is strictly before the fire time of a second given timer.
-     *
-     * @param[in]  aSecondTimer   A reference to the second timer object.
-     * @param[in]  aNow           The current time (milliseconds or microsecond, depending on timer type).
-     *
-     * @retval TRUE  If the fire time of this timer object is strictly before aTimer's fire time
-     * @retval FALSE If the fire time of this timer object is the same or after aTimer's fire time.
-     *
-     */
-    bool DoesFireBefore(const Timer &aSecondTimer, Time aNow) const;
+    class Scheduler : public InstanceLocator, private NonCopyable
+    {
+        friend class Timer;
 
+    protected:
+        struct AlarmApi
+        {
+            void (*AlarmStartAt)(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
+            void (*AlarmStop)(otInstance *aInstance);
+            uint32_t (*AlarmGetNow)(void);
+        };
+
+        explicit Scheduler(Instance &aInstance)
+            : InstanceLocator(aInstance)
+        {
+        }
+
+        void Add(Timer &aTimer, const AlarmApi &aAlarmApi);
+        void Remove(Timer &aTimer, const AlarmApi &aAlarmApi);
+        void RemoveAll(const AlarmApi &aAlarmApi);
+        void ProcessTimers(const AlarmApi &aAlarmApi);
+        void SetAlarm(const AlarmApi &aAlarmApi);
+
+        LinkedList<Timer> mTimerList;
+    };
+
+    bool DoesFireBefore(const Timer &aSecondTimer, Time aNow) const;
     void Fired(void) { mHandler(*this); }
 
     Handler mHandler;
     Time    mFireTime;
     Timer * mNext;
 };
+
+extern "C" void otPlatAlarmMilliFired(otInstance *aInstance);
 
 /**
  * This class implements the millisecond timer.
@@ -146,6 +160,36 @@ protected:
 class TimerMilli : public Timer
 {
 public:
+    /**
+     * This class implements the millisecond timer scheduler.
+     *
+     */
+    class Scheduler : private Timer::Scheduler
+    {
+        friend class TimerMilli;
+        friend void otPlatAlarmMilliFired(otInstance *aInstance);
+
+    public:
+        /**
+         * This constructor initializes the object.
+         *
+         * @param[in]  aInstance  A reference to the instance object.
+         *
+         */
+        explicit Scheduler(Instance &aInstance)
+            : Timer::Scheduler(aInstance)
+        {
+        }
+
+    private:
+        void Add(TimerMilli &aTimer) { Timer::Scheduler::Add(aTimer, sAlarmMilliApi); }
+        void Remove(TimerMilli &aTimer) { Timer::Scheduler::Remove(aTimer, sAlarmMilliApi); }
+        void RemoveAll(void) { Timer::Scheduler::RemoveAll(sAlarmMilliApi); }
+        void ProcessTimers(void) { Timer::Scheduler::ProcessTimers(sAlarmMilliApi); }
+
+        static const AlarmApi sAlarmMilliApi;
+    };
+
     /**
      * This constructor creates a millisecond timer instance.
      *
@@ -205,6 +249,9 @@ public:
      *
      */
     static TimeMilli GetNow(void) { return TimeMilli(otPlatAlarmMilliGetNow()); }
+
+protected:
+    static void RemoveAll(Instance &aInstance);
 };
 
 /**
@@ -245,120 +292,9 @@ private:
     void *mContext;
 };
 
-/**
- * This class implements the base timer scheduler.
- *
- */
-class TimerScheduler : public InstanceLocator, private NonCopyable
-{
-    friend class Timer;
-
-protected:
-    /**
-     * The Alarm APIs definition
-     *
-     */
-    struct AlarmApi
-    {
-        void (*AlarmStartAt)(otInstance *aInstance, uint32_t aT0, uint32_t aDt);
-        void (*AlarmStop)(otInstance *aInstance);
-        uint32_t (*AlarmGetNow)(void);
-    };
-
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance  A reference to the instance object.
-     *
-     */
-    explicit TimerScheduler(Instance &aInstance)
-        : InstanceLocator(aInstance)
-    {
-    }
-
-    /**
-     * This method adds a timer instance to the timer scheduler.
-     *
-     * @param[in]  aTimer     A reference to the timer instance.
-     * @param[in]  aAlarmApi  A reference to the Alarm APIs.
-     *
-     */
-    void Add(Timer &aTimer, const AlarmApi &aAlarmApi);
-
-    /**
-     * This method removes a timer instance to the timer scheduler.
-     *
-     * @param[in]  aTimer     A reference to the timer instance.
-     * @param[in]  aAlarmApi  A reference to the Alarm APIs.
-     *
-     */
-    void Remove(Timer &aTimer, const AlarmApi &aAlarmApi);
-
-    /**
-     * This method processes the running timers.
-     *
-     * @param[in]  aAlarmApi  A reference to the Alarm APIs.
-     *
-     */
-    void ProcessTimers(const AlarmApi &aAlarmApi);
-
-    /**
-     * This method sets the platform alarm based on timer at front of the list.
-     *
-     * @param[in]  aAlarmApi  A reference to the Alarm APIs.
-     *
-     */
-    void SetAlarm(const AlarmApi &aAlarmApi);
-
-    LinkedList<Timer> mTimerList;
-};
-
-/**
- * This class implements the millisecond timer scheduler.
- *
- */
-class TimerMilliScheduler : public TimerScheduler
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance  A reference to the instance object.
-     *
-     */
-    explicit TimerMilliScheduler(Instance &aInstance)
-        : TimerScheduler(aInstance)
-    {
-    }
-
-    /**
-     * This method adds a timer instance to the timer scheduler.
-     *
-     * @param[in]  aTimer  A reference to the timer instance.
-     *
-     */
-    void Add(TimerMilli &aTimer) { TimerScheduler::Add(aTimer, sAlarmMilliApi); }
-
-    /**
-     * This method removes a timer instance to the timer scheduler.
-     *
-     * @param[in]  aTimer  A reference to the timer instance.
-     *
-     */
-    void Remove(TimerMilli &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMilliApi); }
-
-    /**
-     * This method processes the running timers.
-     *
-     */
-    void ProcessTimers(void) { TimerScheduler::ProcessTimers(sAlarmMilliApi); }
-
-private:
-    static const AlarmApi sAlarmMilliApi;
-};
-
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-class TimerMicroScheduler;
+
+extern "C" void otPlatAlarmMicroFired(otInstance *aInstance);
 
 /**
  * This class implements the microsecond timer.
@@ -367,6 +303,36 @@ class TimerMicroScheduler;
 class TimerMicro : public Timer
 {
 public:
+    /**
+     * This class implements the microsecond timer scheduler.
+     *
+     */
+    class Scheduler : private Timer::Scheduler
+    {
+        friend class TimerMicro;
+        friend void otPlatAlarmMicroFired(otInstance *aInstance);
+
+    public:
+        /**
+         * This constructor initializes the object.
+         *
+         * @param[in]  aInstance  A reference to the instance object.
+         *
+         */
+        explicit Scheduler(Instance &aInstance)
+            : Timer::Scheduler(aInstance)
+        {
+        }
+
+    private:
+        void Add(TimerMicro &aTimer) { Timer::Scheduler::Add(aTimer, sAlarmMicroApi); }
+        void Remove(TimerMicro &aTimer) { Timer::Scheduler::Remove(aTimer, sAlarmMicroApi); }
+        void RemoveAll(void) { Timer::Scheduler::RemoveAll(sAlarmMicroApi); }
+        void ProcessTimers(void) { Timer::Scheduler::ProcessTimers(sAlarmMicroApi); }
+
+        static const AlarmApi sAlarmMicroApi;
+    };
+
     /**
      * This constructor creates a timer instance.
      *
@@ -417,50 +383,9 @@ public:
      *
      */
     static TimeMicro GetNow(void) { return Time(otPlatAlarmMicroGetNow()); }
-};
 
-/**
- * This class implements the microsecond timer scheduler.
- *
- */
-class TimerMicroScheduler : public TimerScheduler
-{
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     * @param[in]  aInstance  A reference to the instance object.
-     *
-     */
-    explicit TimerMicroScheduler(Instance &aInstance)
-        : TimerScheduler(aInstance)
-    {
-    }
-
-    /**
-     * This method adds a timer instance to the timer scheduler.
-     *
-     * @param[in]  aTimer  A reference to the timer instance.
-     *
-     */
-    void Add(TimerMicro &aTimer) { TimerScheduler::Add(aTimer, sAlarmMicroApi); }
-
-    /**
-     * This method removes a timer instance to the timer scheduler.
-     *
-     * @param[in]  aTimer  A reference to the timer instance.
-     *
-     */
-    void Remove(TimerMicro &aTimer) { TimerScheduler::Remove(aTimer, sAlarmMicroApi); }
-
-    /**
-     * This method processes the running timers.
-     *
-     */
-    void ProcessTimers(void) { TimerScheduler::ProcessTimers(sAlarmMicroApi); }
-
-private:
-    static const AlarmApi sAlarmMicroApi;
+protected:
+    static void RemoveAll(Instance &aInstance);
 };
 #endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
 

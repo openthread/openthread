@@ -35,10 +35,10 @@ set -euo pipefail
 readonly OT_BUILDDIR="${OT_BUILDDIR:-${PWD}/build}"
 readonly OT_SRCDIR="${PWD}"
 
-readonly COLOR_PASS='\033[0;32m'
-readonly COLOR_FAIL='\033[0;31m'
-readonly COLOR_SKIP='\033[0;33m'
-readonly COLOR_NONE='\033[0m'
+readonly OT_COLOR_PASS='\033[0;32m'
+readonly OT_COLOR_FAIL='\033[0;31m'
+readonly OT_COLOR_SKIP='\033[0;33m'
+readonly OT_COLOR_NONE='\033[0m'
 
 readonly OT_NODE_TYPE="${OT_NODE_TYPE:-cli}"
 readonly OT_NATIVE_IP="${OT_NATIVE_IP:-0}"
@@ -55,17 +55,19 @@ build_simulation()
 {
     local version="$1"
     local options=(
-        "-DOT_MESSAGE_USE_HEAP=ON"
-        "-DOT_THREAD_VERSION=${version}"
         "-DBUILD_TESTING=ON"
-        "-DOT_REFERENCE_DEVICE=ON"
-        "-DOT_SRP_SERVER=ON"
-        "-DOT_SRP_CLIENT=ON"
-        "-DOT_SERVICE=ON"
-        "-DOT_ECDSA=ON"
-        "-DOT_PING_SENDER=ON"
-        "-DOT_DNSSD_SERVER=ON"
         "-DOT_DNS_CLIENT=ON"
+        "-DOT_DNSSD_SERVER=ON"
+        "-DOT_ECDSA=ON"
+        "-DOT_HISTORY_TRACKER=ON"
+        "-DOT_MESSAGE_USE_HEAP=ON"
+        "-DOT_NETDATA_PUBLISHER=ON"
+        "-DOT_PING_SENDER=ON"
+        "-DOT_REFERENCE_DEVICE=ON"
+        "-DOT_SERVICE=ON"
+        "-DOT_SRP_CLIENT=ON"
+        "-DOT_SRP_SERVER=ON"
+        "-DOT_THREAD_VERSION=${version}"
     )
 
     if [[ ${FULL_LOGS} == 1 ]]; then
@@ -269,10 +271,12 @@ do_build_otbr_docker()
         "-DOT_DNS_CLIENT=ON"
         "-DOT_DUA=ON"
         "-DOT_MLR=ON"
+        "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_SLAAC=ON"
         "-DOT_SRP_CLIENT=ON"
         "-DOT_TREL=OFF"
         "-DOTBR_DUA_ROUTING=ON"
+        "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
@@ -309,38 +313,39 @@ do_pktverify()
 ot_exec_expect_script()
 {
     local log_file="tmp/log_expect"
-    local script="$1"
 
-    echo -e "\n${COLOR_PASS}EXEC${COLOR_NONE} ${script}"
-    sudo killall ot-rcp || true
-    sudo killall ot-cli || true
-    sudo killall ot-cli-ftd || true
-    sudo killall ot-cli-mtd || true
-    sudo rm -rf tmp
-    mkdir tmp
-    {
-        if [[ ${OT_NATIVE_IP} == 1 ]]; then
-            sudo -E expect -df "${script}" 2>"${log_file}"
-        else
-            expect -df "${script}" 2>"${log_file}"
-        fi
-    } || {
-        local EXIT_CODE=$?
+    for script in "$@"; do
+        echo -e "\n${OT_COLOR_PASS}EXEC${OT_COLOR_NONE} ${script}"
+        sudo killall ot-rcp || true
+        sudo killall ot-cli || true
+        sudo killall ot-cli-ftd || true
+        sudo killall ot-cli-mtd || true
+        sudo rm -rf tmp
+        mkdir tmp
+        {
+            if [[ ${OT_NATIVE_IP} == 1 ]]; then
+                sudo -E expect -df "${script}" 2>"${log_file}"
+            else
+                expect -df "${script}" 2>"${log_file}"
+            fi
+        } || {
+            local EXIT_CODE=$?
 
-        # The exit status 77 for skipping is inherited from automake's test driver for script-based testsuites
-        if [[ ${EXIT_CODE} == 77 ]]; then
-            echo -e "\n${COLOR_SKIP}SKIP${COLOR_NONE} ${script}"
-            return 0
-        else
-            echo -e "\n${COLOR_FAIL}FAIL${COLOR_NONE} ${script}"
+            # The exit status 77 for skipping is inherited from automake's test driver for script-based testsuites
+            if [[ ${EXIT_CODE} == 77 ]]; then
+                echo -e "\n${OT_COLOR_SKIP}SKIP${OT_COLOR_NONE} ${script}"
+                return 0
+            else
+                echo -e "\n${OT_COLOR_FAIL}FAIL${OT_COLOR_NONE} ${script}"
+                cat "${log_file}" >&2
+                return "${EXIT_CODE}"
+            fi
+        }
+        echo -e "\n${OT_COLOR_PASS}PASS${OT_COLOR_NONE} ${script}"
+        if [[ ${VERBOSE} == 1 ]]; then
             cat "${log_file}" >&2
-            return "${EXIT_CODE}"
         fi
-    }
-    echo -e "\n${COLOR_PASS}PASS${COLOR_NONE} ${script}"
-    if [[ ${VERBOSE} == 1 ]]; then
-        cat "${log_file}" >&2
-    fi
+    done
 }
 
 do_expect()
@@ -348,23 +353,25 @@ do_expect()
     local test_patterns
 
     if [[ ${OT_NODE_TYPE} == rcp* ]]; then
-        if [[ ${THREAD_VERSION} == "1.2" ]]; then
-            test_patterns=(-name 'v1_2-*.exp')
-        elif [[ ${OT_NATIVE_IP} == 1 ]]; then
+        if [[ ${OT_NATIVE_IP} == 1 ]]; then
             test_patterns=(-name 'tun-*.exp')
         else
             test_patterns=(-name 'posix-*.exp' -o -name 'cli-*.exp')
+            if [[ ${THREAD_VERSION} == "1.2" ]]; then
+                test_patterns+=(-o -name 'v1_2-*.exp')
+            fi
         fi
     else
         test_patterns=(-name 'cli-*.exp' -o -name 'simulation-*.exp')
     fi
 
-    export -f ot_exec_expect_script
-
     if [[ $# != 0 ]]; then
-        for script in "$@"; do bash -c "ot_exec_expect_script ${script}"; done
+        ot_exec_expect_script "$@"
     else
-        find tests/scripts/expect -type f -perm "$([[ $OSTYPE == darwin* ]] && echo '+' || echo '/')"111 \( "${test_patterns[@]}" \) -exec bash -c 'ot_exec_expect_script "$1"' _ {} \;
+        export OT_COLOR_PASS OT_COLOR_FAIL OT_COLOR_SKIP OT_COLOR_NONE OT_NATIVE_IP VERBOSE
+        export -f ot_exec_expect_script
+
+        find tests/scripts/expect -type f -perm "$([[ $OSTYPE == darwin* ]] && echo '+' || echo '/')"111 \( "${test_patterns[@]}" \) -exec bash -c 'set -euo pipefail;ot_exec_expect_script "$@"' _ {} +
     fi
 
     exit 0
@@ -628,7 +635,7 @@ main()
                 ;;
             *)
                 echo
-                echo -e "${COLOR_FAIL}Warning:${COLOR_NONE} Ignoring: '$1'"
+                echo -e "${OT_COLOR_FAIL}Warning:${OT_COLOR_NONE} Ignoring: '$1'"
                 ;;
         esac
         shift

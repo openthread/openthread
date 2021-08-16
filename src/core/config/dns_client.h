@@ -35,6 +35,8 @@
 #ifndef CONFIG_DNS_CLIENT_H_
 #define CONFIG_DNS_CLIENT_H_
 
+#include "config/srp_client.h"
+
 /**
  * @def OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
  *
@@ -75,6 +77,22 @@
  */
 #ifndef OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 #define OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+ *
+ * Set to 1 for DNS client to automatically set and update the server IPv6 address in the default config (when it is
+ * not explicitly set by user).
+ *
+ * This feature requires SRP client and its auto-start feature to be also enabled. SRP client will then monitor the
+ * Thread Network Data for DNS/SRP Service entries to select an SRP server. The selected SRP server address is also set
+ * as the DNS server address in the default config.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+#define OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE \
+    (OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE)
 #endif
 
 /**

@@ -601,7 +601,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::ThreadDatasetHandler(con
     otOperationalDataset opDataset;
     bool                 isActive = ((mWaitingKey == SPINEL_PROP_THREAD_ACTIVE_DATASET) ? true : false);
     Spinel::Decoder      decoder;
-    MeshCoP::Dataset     dataset(isActive ? MeshCoP::Dataset::kActive : MeshCoP::Dataset::kPending);
+    MeshCoP::Dataset     dataset;
 
     memset(&opDataset, 0, sizeof(otOperationalDataset));
     decoder.Init(aBuffer, aLength);
@@ -1514,6 +1514,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::EnergyScan(uint8_t aScan
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_PERIOD, SPINEL_DATATYPE_UINT16_S, aScanDuration));
     SuccessOrExit(error = Set(SPINEL_PROP_MAC_SCAN_STATE, SPINEL_DATATYPE_UINT8_S, SPINEL_SCAN_STATE_ENERGY));
 
+    mChannel = aScanChannel;
+
 exit:
     return error;
 }
@@ -1841,9 +1843,10 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
                                                                         const uint8_t *   aBuffer,
                                                                         uint16_t          aLength)
 {
-    otError         error        = OT_ERROR_NONE;
-    spinel_status_t status       = SPINEL_STATUS_OK;
-    bool            framePending = false;
+    otError         error         = OT_ERROR_NONE;
+    spinel_status_t status        = SPINEL_STATUS_OK;
+    bool            framePending  = false;
+    bool            headerUpdated = false;
     spinel_ssize_t  unpacked;
 
     VerifyOrExit(aCommand == SPINEL_CMD_PROP_VALUE_IS && aKey == SPINEL_PROP_LAST_STATUS, error = OT_ERROR_FAILED);
@@ -1860,6 +1863,12 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
     aBuffer += unpacked;
     aLength -= static_cast<uint16_t>(unpacked);
 
+    unpacked = spinel_datatype_unpack(aBuffer, aLength, SPINEL_DATATYPE_BOOL_S, &headerUpdated);
+    VerifyOrExit(unpacked > 0, error = OT_ERROR_PARSE);
+
+    aBuffer += unpacked;
+    aLength -= static_cast<uint16_t>(unpacked);
+
     if (status == SPINEL_STATUS_OK)
     {
         SuccessOrExit(error = ParseRadioFrame(mAckRadioFrame, aBuffer, aLength, unpacked));
@@ -1871,7 +1880,10 @@ void RadioSpinel<InterfaceType, ProcessContextType>::HandleTransmitDone(uint32_t
         error = SpinelStatusToOtError(status);
     }
 
-    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
+    static_cast<Mac::TxFrame *>(mTransmitFrame)->SetIsHeaderUpdated(headerUpdated);
+
+    if ((mRadioCaps & OT_RADIO_CAPS_TRANSMIT_SEC) && headerUpdated &&
+        static_cast<Mac::TxFrame *>(mTransmitFrame)->GetSecurityEnabled())
     {
         uint8_t  keyId;
         uint32_t frameCounter;
@@ -1903,26 +1915,28 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::Transmit(otRadioFrame &a
     otPlatRadioTxStarted(mInstance, mTransmitFrame);
 
     error = Request(SPINEL_CMD_PROP_VALUE_SET, SPINEL_PROP_STREAM_RAW,
-                    SPINEL_DATATYPE_DATA_WLEN_S                               // Frame data
-                        SPINEL_DATATYPE_UINT8_S                               // Channel
-                            SPINEL_DATATYPE_UINT8_S                           // MaxCsmaBackoffs
-                                SPINEL_DATATYPE_UINT8_S                       // MaxFrameRetries
-                                    SPINEL_DATATYPE_BOOL_S                    // CsmaCaEnabled
-                                        SPINEL_DATATYPE_BOOL_S                // IsARetx
-                                            SPINEL_DATATYPE_BOOL_S            // SkipAes
-                                                SPINEL_DATATYPE_UINT32_S      // TxDelay
-                                                    SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
+                    SPINEL_DATATYPE_DATA_WLEN_S                                   // Frame data
+                        SPINEL_DATATYPE_UINT8_S                                   // Channel
+                            SPINEL_DATATYPE_UINT8_S                               // MaxCsmaBackoffs
+                                SPINEL_DATATYPE_UINT8_S                           // MaxFrameRetries
+                                    SPINEL_DATATYPE_BOOL_S                        // CsmaCaEnabled
+                                        SPINEL_DATATYPE_BOOL_S                    // IsHeaderUpdated
+                                            SPINEL_DATATYPE_BOOL_S                // IsARetx
+                                                SPINEL_DATATYPE_BOOL_S            // SkipAes
+                                                    SPINEL_DATATYPE_UINT32_S      // TxDelay
+                                                        SPINEL_DATATYPE_UINT32_S, // TxDelayBaseTime
                     mTransmitFrame->mPsdu, mTransmitFrame->mLength, mTransmitFrame->mChannel,
                     mTransmitFrame->mInfo.mTxInfo.mMaxCsmaBackoffs, mTransmitFrame->mInfo.mTxInfo.mMaxFrameRetries,
-                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsARetx,
-                    mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed, mTransmitFrame->mInfo.mTxInfo.mTxDelay,
-                    mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
+                    mTransmitFrame->mInfo.mTxInfo.mCsmaCaEnabled, mTransmitFrame->mInfo.mTxInfo.mIsHeaderUpdated,
+                    mTransmitFrame->mInfo.mTxInfo.mIsARetx, mTransmitFrame->mInfo.mTxInfo.mIsSecurityProcessed,
+                    mTransmitFrame->mInfo.mTxInfo.mTxDelay, mTransmitFrame->mInfo.mTxInfo.mTxDelayBaseTime);
 
     if (error == OT_ERROR_NONE)
     {
         // Waiting for `TransmitDone` event.
         mState        = kStateTransmitting;
         mTxRadioEndUs = otPlatTimeGet() + TX_WAIT_US;
+        mChannel      = mTransmitFrame->mChannel;
     }
 
 exit:

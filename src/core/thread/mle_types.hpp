@@ -43,6 +43,7 @@
 #include <openthread/thread.h>
 
 #include "common/clearable.hpp"
+#include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
@@ -62,149 +63,124 @@ namespace Mle {
  *
  */
 
-enum
-{
-    kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN,
-    kMaxChildKeepAliveAttempts = 4, ///< Maximum keep alive attempts before attempting to reattach to a new Parent
-    kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS, ///< FAILED_CHILD_TRANSMISSIONS
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    // Extra one for core Backbone Router Service.
-    kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1,
-#else
-    kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS,
-#endif
-};
+constexpr uint16_t kMaxChildren               = OPENTHREAD_CONFIG_MLE_MAX_CHILDREN;
+constexpr uint8_t  kMaxChildKeepAliveAttempts = 4; ///< Max keep alive attempts before reattach to a new Parent.
+constexpr uint8_t  kFailedChildTransmissions  = OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS;
 
-/**
- * MLE Protocol Constants
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+// Extra one for core Backbone Router Service.
+constexpr uint8_t kMaxServiceAlocs = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS + 1;
+#else
+constexpr uint8_t  kMaxServiceAlocs      = OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_MAX_ALOCS;
+#endif
+
+constexpr uint8_t  kThreadVersion = OPENTHREAD_CONFIG_THREAD_VERSION; ///< Thread Version
+constexpr uint16_t kUdpPort       = 19788;                            ///< MLE UDP Port
+
+/*
+ * MLE Protocol delays and timeouts.
  *
  */
-enum
-{
-    kThreadVersion                  = OPENTHREAD_CONFIG_THREAD_VERSION, ///< Thread Version
-    kUdpPort                        = 19788,                            ///< MLE UDP Port
-    kParentRequestRouterTimeout     = 750,                              ///< Router Parent Request timeout
-    kParentRequestDuplicateMargin   = 50,                               ///< Margin for duplicate parent request
-    kParentRequestReedTimeout       = 1250,                             ///< Router and REEDs Parent Request timeout
-    kAttachStartJitter              = 50,   ///< Maximum jitter time added to start of attach.
-    kAnnounceProcessTimeout         = 250,  ///< Timeout after receiving Announcement before channel/pan-id change
-    kAnnounceTimeout                = 1400, ///< Total timeout used for sending Announcement messages
-    kMinAnnounceDelay               = 80,   ///< Minimum delay between Announcement messages
-    kParentResponseMaxDelayRouters  = 500,  ///< Maximum delay for response for Parent Request sent to routers only
-    kParentResponseMaxDelayAll      = 1000, ///< Maximum delay for response for Parent Request sent to all devices
-    kUnicastRetransmissionDelay     = 1000, ///< Base delay before retransmitting an MLE unicast.
-    kChildUpdateRequestPendingDelay = 100,  ///< Delay (in ms) for aggregating Child Update Request.
-    kMaxTransmissionCount           = 3,    ///< Maximum number of times an MLE message may be transmitted.
-    kMaxResponseDelay               = 1000, ///< Maximum delay before responding to a multicast request
-    kMaxChildIdRequestTimeout       = 5000, ///< Maximum delay for receiving a Child ID Request
-    kMaxChildUpdateResponseTimeout  = 2000, ///< Maximum delay for receiving a Child Update Response
-    kMaxLinkRequestTimeout          = 2000, ///< Maximum delay for receiving a Link Accept
-    kMinTimeoutKeepAlive            = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) /
-                            1000), ///< Minimum timeout(in seconds) for keep alive
-    kMinTimeoutDataPoll             = (OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD +
-                           OPENTHREAD_CONFIG_FAILED_CHILD_TRANSMISSIONS * OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD) /
-                          1000, ///< Minimum timeout(in seconds) for data poll
-    kMinTimeout = (kMinTimeoutKeepAlive >= kMinTimeoutDataPoll ? kMinTimeoutKeepAlive
-                                                               : kMinTimeoutDataPoll), ///< Minimum timeout(in seconds)
+constexpr uint32_t kParentRequestRouterTimeout     = 750;  ///< Router Parent Request timeout (in msec)
+constexpr uint32_t kParentRequestDuplicateMargin   = 50;   ///< Margin for duplicate parent request
+constexpr uint32_t kParentRequestReedTimeout       = 1250; ///< Router and REEDs Parent Request timeout (in msec)
+constexpr uint32_t kAttachStartJitter              = 50;   ///< Max jitter time added to start of attach (in msec)
+constexpr uint32_t kAnnounceProcessTimeout         = 250;  ///< Delay after Announce rx before channel/pan-id change
+constexpr uint32_t kAnnounceTimeout                = 1400; ///< Total timeout for sending Announce messages (in msec)
+constexpr uint32_t kMinAnnounceDelay               = 80;   ///< Min delay between Announcement messages (in msec)
+constexpr uint32_t kParentResponseMaxDelayRouters  = 500;  ///< Max response delay for Parent Req to routers (in msec)
+constexpr uint32_t kParentResponseMaxDelayAll      = 1000; ///< Max response delay for Parent Req to all (in msec)
+constexpr uint32_t kUnicastRetransmissionDelay     = 1000; ///< Base delay before an MLE unicast retx (in msec)
+constexpr uint32_t kChildUpdateRequestPendingDelay = 100;  ///< Delay for aggregating Child Update Req (in msec)
+constexpr uint8_t  kMaxTransmissionCount           = 3;    ///< Max number of times an MLE message may be transmitted
+constexpr uint32_t kMaxResponseDelay               = 1000; ///< Max response delay for a multicast request (in msec)
+constexpr uint32_t kMaxChildIdRequestTimeout       = 5000; ///< Max delay to rx a Child ID Request (in msec)
+constexpr uint32_t kMaxChildUpdateResponseTimeout  = 2000; ///< Max delay to rx a Child Update Response (in msec)
+constexpr uint32_t kMaxLinkRequestTimeout          = 2000; ///< Max delay to rx a Link Accept
+
+constexpr uint32_t kMinTimeoutKeepAlive = (((kMaxChildKeepAliveAttempts + 1) * kUnicastRetransmissionDelay) / 1000);
+constexpr uint32_t kMinPollPeriod       = OPENTHREAD_CONFIG_MAC_MINIMUM_POLL_PERIOD;
+constexpr uint32_t kRetxPollPeriod      = OPENTHREAD_CONFIG_MAC_RETX_POLL_PERIOD;
+constexpr uint32_t kMinTimeoutDataPoll  = (kMinPollPeriod + kFailedChildTransmissions * kRetxPollPeriod) / 1000;
+constexpr uint32_t kMinTimeout          = OT_MAX(kMinTimeoutKeepAlive, kMinTimeoutDataPoll); ///< Min timeout (in sec)
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
-    kLinkAcceptMaxRouters = 3, ///< Maximum Route TLV entries in a Link Accept message.
+constexpr uint8_t kLinkAcceptMaxRouters = 3; ///< Max Route TLV entries in a Link Accept message
 #else
-    kLinkAcceptMaxRouters = 20, ///< Maximum Route TLV entries in a Link Accept message.
+constexpr uint8_t  kLinkAcceptMaxRouters = 20; ///< Max Route TLV entries in a Link Accept message
 #endif
-    kLinkAcceptSequenceRollback = 64, ///< Route Sequence value rollback in a Link Accept message.
-};
+constexpr uint8_t kLinkAcceptSequenceRollback = 64; ///< Route Sequence value rollback in a Link Accept message.
 
-enum
-{
-    kMinChildId       = 1,   ///< Minimum Child ID
-    kMaxChildId       = 511, ///< Maximum Child ID
-    kRouterIdOffset   = 10,  ///< Bit offset of Router ID in RLOC16
-    kRlocPrefixLength = 14,  ///< Prefix length of RLOC in bytes
-};
+constexpr uint16_t kMinChildId = 1;   ///< Minimum Child ID
+constexpr uint16_t kMaxChildId = 511; ///< Maximum Child ID
 
-/**
- *  MLE TLV Constants
- */
-enum
-{
-    kMinChallengeSize = 4, ///< Minimum Challenge size in bytes.
-    kMaxChallengeSize = 8, ///< Maximum Challenge size in bytes.
-};
+constexpr uint8_t kRouterIdOffset   = 10; ///< Bit offset of Router ID in RLOC16
+constexpr uint8_t kRlocPrefixLength = 14; ///< Prefix length of RLOC in bytes
 
-/**
+constexpr uint8_t kMinChallengeSize = 4; ///< Minimum Challenge size in bytes.
+constexpr uint8_t kMaxChallengeSize = 8; ///< Maximum Challenge size in bytes.
+
+/*
  * Routing Protocol Constants
  *
  */
-enum
-{
-    kAdvertiseIntervalMin = 1, ///< ADVERTISEMENT_I_MIN (sec)
+constexpr uint32_t kAdvertiseIntervalMin = 1; ///< Min Advertise interval (in sec)
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-    kAdvertiseIntervalMax = 5, ///< ADVERTISEMENT_I_MAX (sec) proposal
+constexpr uint32_t kAdvertiseIntervalMax = 5; ///< Max Advertise interval (in sec)
 #else
-    kAdvertiseIntervalMax = 32, ///< ADVERTISEMENT_I_MAX (sec)
+constexpr uint32_t kAdvertiseIntervalMax = 32; ///< Max Advertise interval (in sec)
 #endif
-    kFailedRouterTransmissions = 4,   ///< FAILED_ROUTER_TRANSMISSIONS
-    kRouterIdReuseDelay        = 100, ///< ID_REUSE_DELAY (sec)
-    kRouterIdSequencePeriod    = 10,  ///< ID_SEQUENCE_PERIOD (sec)
-    kMaxNeighborAge            = 100, ///< MAX_NEIGHBOR_AGE (sec)
+
+constexpr uint8_t kFailedRouterTransmissions = 4;
+
+constexpr uint8_t  kRouterIdReuseDelay     = 100; ///< (in sec)
+constexpr uint32_t kRouterIdSequencePeriod = 10;  ///< (in sec)
+constexpr uint32_t kMaxNeighborAge         = 100; ///< (in sec)
+
 #if OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
-    kMaxRouteCost = 127, ///< MAX_ROUTE_COST proposal
+constexpr uint8_t kMaxRouteCost = 127;
 #else
-    kMaxRouteCost         = 16, ///< MAX_ROUTE_COST
+constexpr uint8_t  kMaxRouteCost         = 16;
 #endif
-    kMaxRouterId                = OT_NETWORK_MAX_ROUTER_ID,                    ///< MAX_ROUTER_ID
-    kInvalidRouterId            = kMaxRouterId + 1,                            ///< Value indicating incorrect Router Id
-    kMaxRouters                 = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS,           ///< MAX_ROUTERS
-    kMinDowngradeNeighbors      = 7,                                           ///< MIN_DOWNGRADE_NEIGHBORS
-    kNetworkIdTimeout           = 120,                                         ///< NETWORK_ID_TIMEOUT (sec)
-    kParentRouteToLeaderTimeout = 20,                                          ///< PARENT_ROUTE_TO_LEADER_TIMEOUT (sec)
-    kRouterSelectionJitter      = 120,                                         ///< ROUTER_SELECTION_JITTER (sec)
-    kRouterDowngradeThreshold   = 23,                                          ///< ROUTER_DOWNGRADE_THRESHOLD (routers)
-    kRouterUpgradeThreshold     = 16,                                          ///< ROUTER_UPGRADE_THRESHOLD (routers)
-    kMaxLeaderToRouterTimeout   = 90,                                          ///< INFINITE_COST_TIMEOUT (sec)
-    kReedAdvertiseInterval      = 570,                                         ///< REED_ADVERTISEMENT_INTERVAL (sec)
-    kReedAdvertiseJitter        = 60,                                          ///< REED_ADVERTISEMENT_JITTER (sec)
-    kLeaderWeight               = 64,                                          ///< Default leader weight
-    kMleEndDeviceTimeout        = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT, ///< MLE_END_DEVICE_TIMEOUT (sec)
-    kMeshLocalPrefixContextId   = 0,                                           ///< 0 is reserved for Mesh Local Prefix
-};
 
-/**
- * Parent Priority values
- *
- */
-enum
-{
-    kParentPriorityHigh        = 1,  // Parent Priority High
-    kParentPriorityMedium      = 0,  // Parent Priority Medium (default)
-    kParentPriorityLow         = -1, // Parent Priority Low
-    kParentPriorityUnspecified = -2, // Parent Priority Unspecified
-};
+constexpr uint8_t kMaxRouterId           = OT_NETWORK_MAX_ROUTER_ID; ///< Max Router ID
+constexpr uint8_t kInvalidRouterId       = kMaxRouterId + 1;         ///< Value indicating incorrect Router ID
+constexpr uint8_t kMaxRouters            = OPENTHREAD_CONFIG_MLE_MAX_ROUTERS;
+constexpr uint8_t kMinDowngradeNeighbors = 7;
 
-enum
-{
-    kLinkQuality3LinkCost = 1,             ///< Link Cost for Link Quality 3
-    kLinkQuality2LinkCost = 2,             ///< Link Cost for Link Quality 2
-    kLinkQuality1LinkCost = 4,             ///< Link Cost for Link Quality 1
-    kLinkQuality0LinkCost = kMaxRouteCost, ///< Link Cost for Link Quality 0
-};
+constexpr uint8_t kNetworkIdTimeout           = 120; ///< (in sec)
+constexpr uint8_t kParentRouteToLeaderTimeout = 20;  ///< (in sec)
+constexpr uint8_t kRouterSelectionJitter      = 120; ///< (in sec)
 
-/**
- * Multicast Forwarding Constants
- *
- */
-enum
-{
-    kMplChildDataMessageTimerExpirations  = 0, ///< Number of MPL retransmissions for Children.
-    kMplRouterDataMessageTimerExpirations = 2, ///< Number of MPL retransmissions for Routers.
-};
+constexpr uint8_t kRouterDowngradeThreshold = 23;
+constexpr uint8_t kRouterUpgradeThreshold   = 16;
+
+constexpr uint32_t kMaxLeaderToRouterTimeout = 90;  ///< (in sec)
+constexpr uint32_t kReedAdvertiseInterval    = 570; ///< (in sec)
+constexpr uint32_t kReedAdvertiseJitter      = 60;  ///< (in sec)
+
+constexpr uint8_t  kLeaderWeight             = 64;                                          ///< Default leader weight
+constexpr uint32_t kMleEndDeviceTimeout      = OPENTHREAD_CONFIG_MLE_CHILD_TIMEOUT_DEFAULT; ///< (in sec)
+constexpr uint8_t  kMeshLocalPrefixContextId = 0; ///< 0 is reserved for Mesh Local Prefix
+
+constexpr int8_t kParentPriorityHigh        = 1;  ///< Parent Priority High
+constexpr int8_t kParentPriorityMedium      = 0;  ///< Parent Priority Medium (default)
+constexpr int8_t kParentPriorityLow         = -1; ///< Parent Priority Low
+constexpr int8_t kParentPriorityUnspecified = -2; ///< Parent Priority Unspecified
+
+constexpr uint8_t kLinkQuality3LinkCost = 1;             ///< Link Cost for Link Quality 3
+constexpr uint8_t kLinkQuality2LinkCost = 2;             ///< Link Cost for Link Quality 2
+constexpr uint8_t kLinkQuality1LinkCost = 4;             ///< Link Cost for Link Quality 1
+constexpr uint8_t kLinkQuality0LinkCost = kMaxRouteCost; ///< Link Cost for Link Quality 0
+
+constexpr uint8_t kMplChildDataMessageTimerExpirations  = 0; ///< Number of MPL retransmissions for Children.
+constexpr uint8_t kMplRouterDataMessageTimerExpirations = 2; ///< Number of MPL retransmissions for Routers.
 
 /**
  * This type represents a Thread device role.
  *
  */
-enum DeviceRole
+enum DeviceRole : uint8_t
 {
     kRoleDisabled = OT_DEVICE_ROLE_DISABLED, ///< The Thread stack is disabled.
     kRoleDetached = OT_DEVICE_ROLE_DETACHED, ///< Not currently participating in a Thread network/partition.
@@ -217,7 +193,7 @@ enum DeviceRole
  * MLE Attach modes
  *
  */
-enum AttachMode
+enum AttachMode : uint8_t
 {
     kAttachAny           = 0, ///< Attach to any Thread partition.
     kAttachSame1         = 1, ///< Attach to the same Thread partition (attempt 1 when losing connectivity).
@@ -226,60 +202,57 @@ enum AttachMode
     kAttachSameDowngrade = 4, ///< Attach to the same Thread partition during downgrade process.
 };
 
-/**
- * This enumeration represents the allocation of the ALOC Space
- *
- */
-enum AlocAllocation
-{
-    kAloc16Leader                      = 0xfc00,
-    kAloc16DhcpAgentStart              = 0xfc01,
-    kAloc16DhcpAgentEnd                = 0xfc0f,
-    kAloc16ServiceStart                = 0xfc10,
-    kAloc16ServiceEnd                  = 0xfc2f,
-    kAloc16CommissionerStart           = 0xfc30,
-    kAloc16CommissionerEnd             = 0xfc37,
-    kAloc16BackboneRouterPrimary       = 0xfc38,
-    kAloc16CommissionerMask            = 0x0007,
-    kAloc16NeighborDiscoveryAgentStart = 0xfc40,
-    kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e,
-};
+constexpr uint16_t kAloc16Leader                      = 0xfc00;
+constexpr uint16_t kAloc16DhcpAgentStart              = 0xfc01;
+constexpr uint16_t kAloc16DhcpAgentEnd                = 0xfc0f;
+constexpr uint16_t kAloc16ServiceStart                = 0xfc10;
+constexpr uint16_t kAloc16ServiceEnd                  = 0xfc2f;
+constexpr uint16_t kAloc16CommissionerStart           = 0xfc30;
+constexpr uint16_t kAloc16CommissionerEnd             = 0xfc37;
+constexpr uint16_t kAloc16BackboneRouterPrimary       = 0xfc38;
+constexpr uint16_t kAloc16CommissionerMask            = 0x0007;
+constexpr uint16_t kAloc16NeighborDiscoveryAgentStart = 0xfc40;
+constexpr uint16_t kAloc16NeighborDiscoveryAgentEnd   = 0xfc4e;
 
-/**
- * Service IDs
- *
- */
-enum
-{
-    kServiceMinId = 0x00, ///< Minimal Service ID.
-    kServiceMaxId = 0x0f, ///< Maximal Service ID.
-};
+constexpr uint8_t kServiceMinId = 0x00; ///< Minimal Service ID.
+constexpr uint8_t kServiceMaxId = 0x0f; ///< Maximal Service ID.
 
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-/**
+/*
  * Backbone Router / DUA / MLR constants
  *
  */
-enum
-{
-    kRegistrationDelayDefault         = 1200,              ///< In seconds.
-    kMlrTimeoutDefault                = 3600,              ///< In seconds.
-    kMlrTimeoutMin                    = 300,               ///< In seconds.
-    kMlrTimeoutMax                    = 0x7fffffff / 1000, ///< In seconds (about 24 days).
-    kBackboneRouterRegistrationJitter = 5,                 ///< In seconds.
-    kParentAggregateDelay             = 5,                 ///< In seconds.
-    kNoBufDelay                       = 5,                 ///< In seconds.
-    kImmediateReRegisterDelay         = 1,                 ///< In seconds.
-    KResponseTimeoutDelay             = 30,                ///< In seconds.
-    kDuaDadPeriod                     = 100,               ///< In seconds. Time period after which the address
-                                                           ///< becomes "Preferred" if no duplicate address error.
-    kDuaDadRepeats = 3,  ///< Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are
-                         ///< repeated by the BBR, as part of the DAD process.
-    kDuaRecentTime = 20, ///< Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
-    kTimeSinceLastTransactionMax = 10 * 86400, ///< In seconds (10 days).
-    kDefaultBackboneHoplimit     = 1,          ///< default hoplimit for Thread Backbone Link Protocol messages
-};
+constexpr uint16_t kRegistrationDelayDefault         = 1200;              ///< In seconds.
+constexpr uint32_t kMlrTimeoutDefault                = 3600;              ///< In seconds.
+constexpr uint32_t kMlrTimeoutMin                    = 300;               ///< In seconds.
+constexpr uint32_t kMlrTimeoutMax                    = 0x7fffffff / 1000; ///< In seconds (about 24 days).
+constexpr uint8_t  kBackboneRouterRegistrationJitter = 5;                 ///< In seconds.
+constexpr uint8_t  kParentAggregateDelay             = 5;                 ///< In seconds.
+constexpr uint8_t  kNoBufDelay                       = 5;                 ///< In seconds.
+constexpr uint8_t  kImmediateReRegisterDelay         = 1;                 ///< In seconds.
+constexpr uint8_t  KResponseTimeoutDelay             = 30;                ///< In seconds.
+
+/**
+ * Time period after which the address becomes "Preferred" if no duplicate address error (in seconds).
+ *
+ */
+constexpr uint32_t kDuaDadPeriod = 100;
+
+/**
+ * Maximum number of times the multicast DAD query and wait time DUA_DAD_QUERY_TIMEOUT are repeated by the BBR, as
+ * part of the DAD process.
+ *
+ */
+constexpr uint8_t kDuaDadRepeats = 3;
+
+/**
+ * Time period (in seconds) during which a DUA registration is considered 'recent' at a BBR.
+ *
+ */
+constexpr uint32_t kDuaRecentTime               = 20;
+constexpr uint32_t kTimeSinceLastTransactionMax = 10 * 86400; ///< In seconds (10 days).
+constexpr uint8_t  kDefaultBackboneHoplimit     = 1;          ///< default hoplimit for Backbone Link Protocol messages
 
 static_assert(kMlrTimeoutDefault >= kMlrTimeoutMin && kMlrTimeoutDefault <= kMlrTimeoutMax,
               "kMlrTimeoutDefault must be larger than or equal to kMlrTimeoutMin");
@@ -311,15 +284,12 @@ enum class ChildDuaState : uint8_t
 class DeviceMode : public Equatable<DeviceMode>
 {
 public:
-    enum
-    {
-        kModeRxOnWhenIdle     = 1 << 3, ///< If the device has its receiver on when not transmitting.
-        kModeReserved         = 1 << 2, ///< Set to 1 on transmission, ignore on reception.
-        kModeFullThreadDevice = 1 << 1, ///< If the device is an FTD.
-        kModeFullNetworkData  = 1 << 0, ///< If the device requires the full Network Data.
+    static constexpr uint8_t kModeRxOnWhenIdle     = 1 << 3; ///< If to keep receiver on when not transmitting.
+    static constexpr uint8_t kModeReserved         = 1 << 2; ///< Set on transmission, ignore on reception.
+    static constexpr uint8_t kModeFullThreadDevice = 1 << 1; ///< If the device is an FTD.
+    static constexpr uint8_t kModeFullNetworkData  = 1 << 0; ///< If the device requires the full Network Data.
 
-        kInfoStringSize = 45, ///< String buffer size used for `ToString()`.
-    };
+    static constexpr uint16_t kInfoStringSize = 45; ///< String buffer size used for `ToString()`.
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.

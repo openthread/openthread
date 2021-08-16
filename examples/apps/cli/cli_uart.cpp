@@ -199,34 +199,6 @@ static otError ProcessCommand(void)
         sRxBuffer[--sRxLength] = '\0';
     }
 
-#if OPENTHREAD_CONFIG_LOG_OUTPUT != OPENTHREAD_CONFIG_LOG_OUTPUT_NONE
-    /*
-     * Note this is here for this reason:
-     *
-     * TEXT (command) input ... in a test automation script occurs
-     * rapidly and often without gaps between the command and the
-     * terminal CR
-     *
-     * In contrast as a human is typing there is a delay between the
-     * last character of a command and the terminal CR which executes
-     * a command.
-     *
-     * During that human induced delay a tasklet may be scheduled and
-     * the LOG becomes confusing and it is hard to determine when
-     * something happened.  Which happened first? the command-CR or
-     * the tasklet.
-     *
-     * Yes, while rare it is a race condition that is hard to debug.
-     *
-     * Thus this is here to affirmatively LOG exactly when the CLI
-     * command is being executed.
-     */
-#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
-    /* TODO: how exactly do we get the instance here? */
-#else
-    otLogInfoCli("execute command: %s", sRxBuffer);
-#endif
-#endif
     if (sRxLength > 0)
     {
         otCliInputLine(sRxBuffer);

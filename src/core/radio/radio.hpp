@@ -44,15 +44,22 @@
 
 namespace ot {
 
-enum
-{
-    kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS, ///< The microseconds per 10 symbols.
+static constexpr uint32_t kUsPerTenSymbols = OT_US_PER_TEN_SYMBOLS; ///< The microseconds per 10 symbols.
+
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    kMinCslPeriod = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 /
-                    kUsPerTenSymbols, ///< Minimum CSL period supported in units of 10 symbols.
-    kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT
+/**
+ * Minimum CSL period supported in units of 10 symbols.
+ *
+ */
+static constexpr uint64_t kMinCslPeriod  = OPENTHREAD_CONFIG_MAC_CSL_MIN_PERIOD * 1000 / kUsPerTenSymbols;
+static constexpr uint64_t kMaxCslTimeout = OPENTHREAD_CONFIG_MAC_CSL_MAX_TIMEOUT;
 #endif
-};
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+static constexpr uint8_t kCslWorstCrystalPpm  = 255; ///< Worst possible crystal accuracy, in units of ± ppm.
+static constexpr uint8_t kCslWorstUncertainty = 255; ///< Worst possible scheduling uncertainty, in units of 10 us.
+static constexpr uint8_t kUsPerUncertUnit     = 10;  ///< Number of microseconds by uncertainty unit.
+#endif
 
 /**
  * @addtogroup core-radio
@@ -73,38 +80,32 @@ class Radio : public InstanceLocator, private NonCopyable
     friend class Instance;
 
 public:
-    /**
-     * This enumeration defines the IEEE 802.15.4 channel related parameters. It also
-     * supports proprietary channel parameters defined by platform.
-     */
-    enum
-    {
 #if (OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT && OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT)
-        kNumChannelPages       = 2,
-        kSupportedChannels     = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK | OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK,
-        kChannelMin            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,
-        kChannelMax            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
-        kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_0_MASK | OT_RADIO_CHANNEL_PAGE_2_MASK,
+    static constexpr uint16_t kNumChannelPages = 2;
+    static constexpr uint32_t kSupportedChannels =
+        OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK | OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
+    static constexpr uint8_t  kChannelMin            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    static constexpr uint8_t  kChannelMax            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
+    static constexpr uint32_t kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_0_MASK | OT_RADIO_CHANNEL_PAGE_2_MASK;
 #elif OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT
-        kNumChannelPages       = 1,
-        kSupportedChannels     = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK,
-        kChannelMin            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN,
-        kChannelMax            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX,
-        kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_2_MASK,
+    static constexpr uint16_t kNumChannelPages       = 1;
+    static constexpr uint32_t kSupportedChannels     = OT_RADIO_915MHZ_OQPSK_CHANNEL_MASK;
+    static constexpr uint8_t  kChannelMin            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MIN;
+    static constexpr uint8_t  kChannelMax            = OT_RADIO_915MHZ_OQPSK_CHANNEL_MAX;
+    static constexpr uint32_t kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_2_MASK;
 #elif OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT
-        kNumChannelPages       = 1,
-        kSupportedChannels     = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK,
-        kChannelMin            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN,
-        kChannelMax            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX,
-        kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_0_MASK,
+    static constexpr uint16_t kNumChannelPages       = 1;
+    static constexpr uint32_t kSupportedChannels     = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MASK;
+    static constexpr uint8_t  kChannelMin            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MIN;
+    static constexpr uint8_t  kChannelMax            = OT_RADIO_2P4GHZ_OQPSK_CHANNEL_MAX;
+    static constexpr uint32_t kSupportedChannelPages = OT_RADIO_CHANNEL_PAGE_0_MASK;
 #elif OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT
-        kNumChannelPages       = 1,
-        kSupportedChannels     = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK,
-        kChannelMin            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN,
-        kChannelMax            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX,
-        kSupportedChannelPages = (1U << OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE),
+    static constexpr uint16_t kNumChannelPages       = 1;
+    static constexpr uint32_t kSupportedChannels     = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MASK;
+    static constexpr uint8_t  kChannelMin            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MIN;
+    static constexpr uint8_t  kChannelMax            = OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_MAX;
+    static constexpr uint32_t kSupportedChannelPages = (1 << OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_CHANNEL_PAGE);
 #endif
-    };
 
     static_assert((OPENTHREAD_CONFIG_RADIO_2P4GHZ_OQPSK_SUPPORT || OPENTHREAD_CONFIG_RADIO_915MHZ_OQPSK_SUPPORT ||
                    OPENTHREAD_CONFIG_PLATFORM_RADIO_PROPRIETARY_SUPPORT),
@@ -449,7 +450,9 @@ public:
      *
      */
     Error EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, const otExtAddress *aExtAddr);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
     /**
      * Get the current accuracy, in units of ± ppm, of the clock used for scheduling CSL operations.
      *
@@ -459,7 +462,17 @@ public:
      *
      */
     uint8_t GetCslAccuracy(void);
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+
+    /**
+     * Get the current uncertainty, in units of 10 us, of the clock used for scheduling CSL operations.
+     *
+     * @param[in]   aInstance    A pointer to an OpenThread instance.
+     *
+     * @returns The current CSL Clock Uncertainty in units of 10 us.
+     *
+     */
+    uint8_t GetCslClockUncertainty(void);
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 
     /**
      * This method gets the radio transmit frame buffer.
@@ -775,10 +788,17 @@ inline Error Radio::EnableCsl(uint32_t aCslPeriod, otShortAddress aShortAddr, co
 {
     return otPlatRadioEnableCsl(GetInstancePtr(), aCslPeriod, aShortAddr, aExtAddr);
 }
+#endif
 
-inline uint8_t Radio::GetCslAccuracy()
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+inline uint8_t Radio::GetCslAccuracy(void)
 {
     return otPlatRadioGetCslAccuracy(GetInstancePtr());
+}
+
+inline uint8_t Radio::GetCslClockUncertainty(void)
+{
+    return otPlatRadioGetCslClockUncertainty(GetInstancePtr());
 }
 #endif
 
@@ -933,8 +953,15 @@ inline Error Radio::EnableCsl(uint32_t, otShortAddress aShortAddr, const otExtAd
 {
     return kErrorNotImplemented;
 }
+#endif
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 inline uint8_t Radio::GetCslAccuracy(void)
+{
+    return UINT8_MAX;
+}
+
+inline uint8_t Radio::GetCslClockUncertainty(void)
 {
     return UINT8_MAX;
 }

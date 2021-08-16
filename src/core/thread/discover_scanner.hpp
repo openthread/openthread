@@ -62,10 +62,11 @@ class DiscoverScanner : public InstanceLocator, private NonCopyable
     friend class Mle;
 
 public:
-    enum
-    {
-        kDefaultScanDuration = Mac::kScanDurationDefault, ///< Default scan duration (per channel), in milliseconds.
-    };
+    /**
+     * Default scan duration (per channel), in milliseconds.
+     *
+     */
+    static constexpr uint32_t kDefaultScanDuration = Mac::kScanDurationDefault;
 
     /**
      * This type represents Discover Scan result.
@@ -114,9 +115,10 @@ public:
      * @param[in]  aHandler           A pointer to a function that is called on receiving an MLE Discovery Response.
      * @param[in]  aContext           A pointer to arbitrary context information.
      *
-     * @retval kErrorNone       Successfully started a Thread Discovery Scan.
-     * @retval kErrorNoBufs     Could not allocate message for Discovery Request.
-     * @retval kErrorBusy       Thread Discovery Scan is already in progress.
+     * @retval kErrorNone           Successfully started a Thread Discovery Scan.
+     * @retval kErrorInvalidState   The IPv6 interface is not enabled (netif is not up).
+     * @retval kErrorNoBufs         Could not allocate message for Discovery Request.
+     * @retval kErrorBusy           Thread Discovery Scan is already in progress.
      *
      */
     Error Discover(const Mac::ChannelMask &aScanChannels,
@@ -149,17 +151,14 @@ public:
     Error SetJoinerAdvertisement(uint32_t aOui, const uint8_t *aAdvData, uint8_t aAdvDataLength);
 
 private:
-    enum State
+    enum State : uint8_t
     {
         kStateIdle,
         kStateScanning,
         kStateScanDone,
     };
 
-    enum : uint32_t
-    {
-        kMaxOui = 0xffffff,
-    };
+    static constexpr uint32_t kMaxOui = 0xffffff;
 
     // Methods used by `MeshForwarder`
     Mac::TxFrame *PrepareDiscoveryRequestFrame(Mac::TxFrame &aFrame);

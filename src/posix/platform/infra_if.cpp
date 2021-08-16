@@ -163,7 +163,6 @@ int CreateNetLinkSocket(void)
     memset(&addr, 0, sizeof(addr));
     addr.nl_family = AF_NETLINK;
     addr.nl_groups = RTMGRP_LINK | RTMGRP_IPV6_IFADDR;
-    addr.nl_pid    = getpid();
 
     rval = bind(sock, reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr));
     VerifyOrDie(rval == 0, OT_EXIT_ERROR_ERRNO);
@@ -268,7 +267,7 @@ bool InfraNetif::IsRunning(void) const
     return (ifReq.ifr_flags & IFF_RUNNING);
 }
 
-void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
+void InfraNetif::Init(const char *aIfName)
 {
     ssize_t  rval;
     uint32_t ifIndex = 0;
@@ -297,11 +296,27 @@ void InfraNetif::Init(otInstance *aInstance, const char *aIfName)
 
     mNetLinkSocket = CreateNetLinkSocket();
 
-    SuccessOrDie(otBorderRoutingInit(aInstance, ifIndex, platformInfraIfIsRunning()));
-    SuccessOrDie(otBorderRoutingSetEnabled(aInstance, /* aEnabled */ true));
+exit:
+    return;
+}
 
-    mInstance = aInstance;
+void InfraNetif::SetUp(void)
+{
+    OT_ASSERT(gInstance != nullptr);
+    VerifyOrExit(mInfraIfIndex != 0);
+
+    SuccessOrDie(otBorderRoutingInit(gInstance, mInfraIfIndex, platformInfraIfIsRunning()));
+    SuccessOrDie(otBorderRoutingSetEnabled(gInstance, /* aEnabled */ true));
     Mainloop::Manager::Get().Add(*this);
+exit:
+    return;
+}
+
+void InfraNetif::TearDown(void)
+{
+    VerifyOrExit(mInfraIfIndex != 0);
+
+    Mainloop::Manager::Get().Remove(*this);
 
 exit:
     return;
@@ -309,8 +324,6 @@ exit:
 
 void InfraNetif::Deinit(void)
 {
-    Mainloop::Manager::Get().Remove(*this);
-
     if (mInfraIfIcmp6Socket != -1)
     {
         close(mInfraIfIcmp6Socket);
@@ -370,7 +383,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
         case RTM_DELADDR:
         case RTM_NEWLINK:
         case RTM_DELLINK:
-            SuccessOrDie(otPlatInfraIfStateChanged(mInstance, mInfraIfIndex, platformInfraIfIsRunning()));
+            SuccessOrDie(otPlatInfraIfStateChanged(gInstance, mInfraIfIndex, platformInfraIfIsRunning()));
             break;
         case NLMSG_ERROR:
         {
@@ -450,7 +463,7 @@ void InfraNetif::ReceiveIcmp6Message(void)
     // the hoplimit must be 255 and the source address must be a link-local address.
     VerifyOrExit(hopLimit == 255 && IN6_IS_ADDR_LINKLOCAL(&srcAddr.sin6_addr), error = OT_ERROR_DROP);
 
-    otPlatInfraIfRecvIcmp6Nd(mInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
+    otPlatInfraIfRecvIcmp6Nd(gInstance, ifIndex, reinterpret_cast<otIp6Address *>(&srcAddr.sin6_addr), buffer,
                              bufferLength);
 
 exit:

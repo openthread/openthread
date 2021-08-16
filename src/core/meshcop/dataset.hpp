@@ -59,18 +59,15 @@ class Dataset
     friend class DatasetLocal;
 
 public:
-    enum
-    {
-        kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH, ///< Maximum size of MeshCoP Dataset (bytes)
-        kMaxValueSize = 16,                                ///< Maximum size of each Dataset TLV value (bytes)
-        kMaxGetTypes  = 64,                                ///< Maximum number of types in MGMT_GET.req
-    };
+    static constexpr uint8_t kMaxSize      = OT_OPERATIONAL_DATASET_MAX_LENGTH; ///< Max size of MeshCoP Dataset (bytes)
+    static constexpr uint8_t kMaxValueSize = 16;                                ///< Max size of a TLV value (bytes)
+    static constexpr uint8_t kMaxGetTypes  = 64;                                ///< Max number of types in MGMT_GET.req
 
     /**
      * This enumeration represents the Dataset type (active or pending).
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kActive,  ///< Active Dataset
         kPending, ///< Pending Dataset
@@ -615,10 +612,8 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aType       The type of the dataset, active or pending.
-     *
      */
-    explicit Dataset(Type aType);
+    Dataset(void);
 
     /**
      * This method clears the Dataset.
@@ -735,18 +730,21 @@ public:
     /**
      * This method returns a reference to the Timestamp.
      *
+     * @param[in]  aType       The type of the dataset, active or pending.
+     *
      * @returns A pointer to the Timestamp.
      *
      */
-    const Timestamp *GetTimestamp(void) const;
+    const Timestamp *GetTimestamp(Type aType) const;
 
     /**
      * This method sets the Timestamp value.
      *
+     * @param[in] aType        The type of the dataset, active or pending.
      * @param[in] aTimestamp   A Timestamp.
      *
      */
-    void SetTimestamp(const Timestamp &aTimestamp);
+    void SetTimestamp(Type aType, const Timestamp &aTimestamp);
 
     /**
      * This method sets a TLV in the Dataset.
@@ -810,10 +808,11 @@ public:
      * If this Dataset is an Active Dataset, any Pending Timestamp and Delay Timer TLVs will be omitted in the copy
      * from @p aDataset.
      *
+     * @param[in]  aType     The type of the dataset, active or pending.
      * @param[in]  aDataset  The input Dataset.
      *
      */
-    void Set(const Dataset &aDataset);
+    void Set(Type aType, const Dataset &aDataset);
 
     /**
      * This method sets the Dataset from a given structure representation.
@@ -845,13 +844,14 @@ public:
     /**
      * This method appends the MLE Dataset TLV but excluding MeshCoP Sub Timestamp TLV.
      *
+     * @param[in] aType          The type of the dataset, active or pending.
      * @param[in] aMessage       A message to append to.
      *
      * @retval kErrorNone    Successfully append MLE Dataset TLV without MeshCoP Sub Timestamp TLV.
      * @retval kErrorNoBufs  Insufficient available buffers to append the message with MLE Dataset TLV.
      *
      */
-    Error AppendMleDatasetTlv(Message &aMessage) const;
+    Error AppendMleDatasetTlv(Type aType, Message &aMessage) const;
 
     /**
      * This method applies the Active or Pending Dataset to the Thread interface.
@@ -923,7 +923,6 @@ private:
     uint8_t   mTlvs[kMaxSize]; ///< The Dataset buffer
     TimeMilli mUpdateTime;     ///< Local time last updated
     uint16_t  mLength;         ///< The number of valid bytes in @var mTlvs
-    Type      mType;           ///< Active or Pending
 };
 
 /**

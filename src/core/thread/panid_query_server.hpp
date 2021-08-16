@@ -60,10 +60,7 @@ public:
     explicit PanIdQueryServer(Instance &aInstance);
 
 private:
-    enum
-    {
-        kScanDelay = 1000, ///< SCAN_DELAY (milliseconds)
-    };
+    static constexpr uint32_t kScanDelay = 1000; ///< SCAN_DELAY (in msec)
 
     static void HandleQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
     void        HandleQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);

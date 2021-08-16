@@ -65,6 +65,27 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL
+ *
+ * Define the compile-time log level which is the lowest log level
+ * that can be set at run-time by `otLoggingSetLevel`.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_LEVEL
+#define OPENTHREAD_CONFIG_LOG_LEVEL OT_LOG_LEVEL_DEBG
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_LEVEL_INIT
+ *
+ * The initial log level used when OpenThread is initialized. See
+ * `OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE`.
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_LEVEL_INIT
+#define OPENTHREAD_CONFIG_LOG_LEVEL_INIT OT_LOG_LEVEL_CRIT
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
  *
  * Define as 1 to enable dynamic log level control.
@@ -194,6 +215,16 @@
  */
 #ifndef OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS
 #define OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS 8
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+ *
+ * Define as 1 to enable History Tracker module.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE 1
 #endif
 
 /**

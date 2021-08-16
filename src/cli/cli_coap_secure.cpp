@@ -61,6 +61,7 @@ CoapSecure::CoapSecure(Interpreter &aInterpreter)
     memset(&mResource, 0, sizeof(mResource));
     memset(&mPsk, 0, sizeof(mPsk));
     memset(&mPskId, 0, sizeof(mPskId));
+    memset(&mUriPath, 0, sizeof(mUriPath));
     strncpy(mResourceContent, "0", sizeof(mResourceContent));
     mResourceContent[sizeof(mResourceContent) - 1] = '\0';
 }
@@ -240,18 +241,17 @@ otError CoapSecure::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     uint16_t   payloadLength = 0;
 
     // Default parameters
-    char       coapUri[kMaxUriLength] = "test";
-    otCoapType coapType               = OT_COAP_TYPE_NON_CONFIRMABLE;
+    char       coapUri[kMaxUriLength];
+    otCoapType coapType = OT_COAP_TYPE_NON_CONFIRMABLE;
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
     bool           coapBlock     = false;
     otCoapBlockSzx coapBlockSize = OT_COAP_OPTION_BLOCK_SZX_16;
     BlockType      coapBlockType = (aCoapCode == OT_COAP_CODE_GET) ? kBlockType2 : kBlockType1;
 #endif
 
-    if (!aArgs[0].IsEmpty())
-    {
-        strncpy(coapUri, aArgs[0].GetCString(), sizeof(coapUri) - 1);
-    }
+    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
+    VerifyOrExit(aArgs[0].GetLength() < sizeof(coapUri), error = OT_ERROR_INVALID_ARGS);
+    strcpy(coapUri, aArgs[0].GetCString());
 
     if (!aArgs[1].IsEmpty())
     {

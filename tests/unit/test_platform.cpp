@@ -712,6 +712,14 @@ otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const ot
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+{
+    OT_UNUSED_VARIABLE(aInfraIfIndex);
+    OT_UNUSED_VARIABLE(aAddress);
+
+    return false;
+}
+
 otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
                                  const otIp6Address *aDestAddress,
                                  const uint8_t *     aBuffer,

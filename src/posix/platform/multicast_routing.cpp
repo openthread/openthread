@@ -46,18 +46,27 @@
 
 #include <openthread/backbone_router_ftd.h>
 
+#include "core/common/debug.hpp"
 #include "core/common/logging.hpp"
 
 namespace ot {
 namespace Posix {
 
-void MulticastRoutingManager::Init(otInstance *aInstance)
+void MulticastRoutingManager::SetUp(void)
 {
-    mInstance = aInstance;
+    OT_ASSERT(gInstance != nullptr);
 
-    otBackboneRouterSetMulticastListenerCallback(aInstance,
+    otBackboneRouterSetMulticastListenerCallback(gInstance,
                                                  &MulticastRoutingManager::HandleBackboneMulticastListenerEvent, this);
     Mainloop::Manager::Get().Add(*this);
+}
+
+void MulticastRoutingManager::TearDown(void)
+{
+    OT_ASSERT(gInstance != nullptr);
+
+    otBackboneRouterSetMulticastListenerCallback(gInstance, nullptr, nullptr);
+    Mainloop::Manager::Get().Remove(*this);
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void *                                 aContext,
@@ -130,7 +139,7 @@ bool MulticastRoutingManager::HasMulticastListener(const Ip6::Address &aAddress)
     otBackboneRouterMulticastListenerIterator iter  = OT_BACKBONE_ROUTER_MULTICAST_LISTENER_ITERATOR_INIT;
     otBackboneRouterMulticastListenerInfo     listenerInfo;
 
-    while (otBackboneRouterMulticastListenerGetNext(mInstance, &iter, &listenerInfo) == OT_ERROR_NONE)
+    while (otBackboneRouterMulticastListenerGetNext(gInstance, &iter, &listenerInfo) == OT_ERROR_NONE)
     {
         VerifyOrExit(static_cast<const Ip6::Address &>(listenerInfo.mAddress) != aAddress, found = true);
     }

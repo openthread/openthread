@@ -41,8 +41,8 @@ class Daemon : public Mainloop::Source, private NonCopyable
 public:
     static Daemon &Get(void);
 
-    void Enable(otInstance *aInstance);
-    void Disable(void);
+    void SetUp(void);
+    void TearDown(void);
     void Update(otSysMainloopContext &aContext) override;
     void Process(const otSysMainloopContext &aContext) override;
 

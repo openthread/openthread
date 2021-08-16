@@ -58,7 +58,7 @@ public:
      * This enumeration defines packet types.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTypeBroadcast = 0, ///< A TREL broadcast packet.
         kTypeUnicast   = 1, ///< A TREL unicast packet.
@@ -69,16 +69,13 @@ public:
      * This enumeration represents Ack Mode field in TREL header.
      *
      */
-    enum AckMode
+    enum AckMode : uint8_t
     {
         kNoAck,        ///< No TREL Ack is requested.
         kAckRequested, ///< A TREL Ack is requested.
     };
 
-    enum
-    {
-        kInfoStringSize = 128, ///< Max chars needed for the info string representation (@sa ToInfoString()).
-    };
+    static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for the info string (@sa ToInfoString()).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()` method.
@@ -237,13 +234,10 @@ public:
     InfoString ToString(void) const;
 
 private:
-    enum
-    {
-        kTypeMask    = (3 << 0), // Bits 0-1 specify packet `Type`
-        kAckModeFlag = (1 << 2), // Bit 2 indicate "ack mode" (TREL ack requested or not).
-        kVersionMask = (7 << 5), // Bits 5-7 specify the version.
-        kVersion     = (0 << 5), // Current TREL header version.
-    };
+    static constexpr uint8_t kTypeMask    = (3 << 0); // Bits 0-1 specify packet `Type`
+    static constexpr uint8_t kAckModeFlag = (1 << 2); // Bit 2 indicate "ack mode" (TREL ack requested or not).
+    static constexpr uint8_t kVersionMask = (7 << 5); // Bits 5-7 specify the version.
+    static constexpr uint8_t kVersion     = (0 << 5); // Current TREL header version.
 
     // All header fields are big-endian.
 
@@ -284,7 +278,6 @@ public:
      * @param[in] aPayloadLength The length (number of bytes) in the payload only (not including the header).
      *
      */
-
     void Init(Header::Type aType, uint8_t *aPayload, uint16_t aPayloadLength);
 
     /**

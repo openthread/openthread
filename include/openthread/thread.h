@@ -242,8 +242,10 @@ bool otThreadIsSingleton(otInstance *aInstance);
  *                                    scan completes.
  * @param[in]  aCallbackContext       A pointer to application-specific context.
  *
- * @retval OT_ERROR_NONE  Accepted the Thread Discovery request.
- * @retval OT_ERROR_BUSY  Already performing an Thread Discovery.
+ * @retval OT_ERROR_NONE           Successfully started a Thread Discovery Scan.
+ * @retval OT_ERROR_INVALID_STATE  The IPv6 interface is not enabled (netif is not up).
+ * @retval OT_ERROR_NO_BUFS        Could not allocate message for Discovery Request.
+ * @retval OT_ERROR_BUSY           Thread Discovery Scan is already in progress.
  *
  */
 otError otThreadDiscover(otInstance *             aInstance,
@@ -378,11 +380,11 @@ otLinkModeConfig otThreadGetLinkMode(otInstance *aInstance);
 otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 
 /**
- * Get the thrNetworkKey.
+ * Get the Thread Network Key.
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
  *
- * @returns A pointer to a buffer containing the thrNetworkKey.
+ * @returns A pointer to a buffer containing the Thread Network Key.
  *
  * @sa otThreadSetNetworkKey
  *
@@ -390,16 +392,16 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
 const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
 
 /**
- * Set the thrNetworkKey.
+ * Set the Thread Network Key.
  *
  * This function succeeds only when Thread protocols are disabled.  A successful
  * call to this function invalidates the Active and Pending Operational Datasets in
  * non-volatile memory.
  *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
- * @param[in]  aKey        A pointer to a buffer containing the thrNetworkKey.
+ * @param[in]  aKey        A pointer to a buffer containing the Thread Network Key.
  *
- * @retval OT_ERROR_NONE            Successfully set the thrNetworkKey.
+ * @retval OT_ERROR_NONE            Successfully set the Thread Network Key.
  * @retval OT_ERROR_INVALID_ARGS    If aKeyLength is larger than 16.
  * @retval OT_ERROR_INVALID_STATE   Thread protocols are enabled.
  *
@@ -708,6 +710,16 @@ otError otThreadGetNextNeighborInfo(otInstance *aInstance, otNeighborInfoIterato
  *
  */
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance);
+
+/**
+ * Convert the device role to human-readable string.
+ *
+ * @param[in] aRole   The device role to convert.
+ *
+ * @returns A string representing @p aRole.
+ *
+ */
+const char *otThreadDeviceRoleToString(otDeviceRole aRole);
 
 /**
  * This function get the Thread Leader Data.

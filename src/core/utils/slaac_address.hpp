@@ -65,18 +65,15 @@ class Slaac : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
 
 public:
-    enum
-    {
-        kIidSecretKeySize = 32, ///< Number of bytes in secret key for generating semantically opaque IID.
-    };
-
     /**
      * This type represents the secret key used for generating semantically opaque IID (per RFC 7217).
      *
      */
     struct IidSecretKey
     {
-        uint8_t m8[kIidSecretKeySize];
+        static constexpr uint16_t kSize = 32; ///< Secret key size for generating semantically opaque IID.
+
+        uint8_t m8[kSize];
     };
 
     /**
@@ -147,22 +144,19 @@ public:
                       uint8_t *                 aDadCounter      = nullptr) const;
 
 private:
-    enum
-    {
-        kMaxIidCreationAttempts = 256, // Maximum number of attempts when generating IID.
-    };
-
-    // Values for `UpdateMode` input parameter in `Update()`.
-    enum
-    {
-        kModeNone   = 0x0,    // No action.
-        kModeAdd    = 1 << 0, // Add new SLAAC addresses for new prefixes in network data.
-        kModeRemove = 1 << 1, // Remove SLAAC addresses.
-                              // When SLAAC is enabled, remove addresses with no matching prefix in network data,
-                              // When SLAAC is disabled, remove all previously added addresses.
-    };
+    static constexpr uint16_t kMaxIidCreationAttempts = 256; // Maximum number of attempts when generating IID.
 
     typedef uint8_t UpdateMode;
+
+    // Values for `UpdateMode` input parameter in `Update()`.
+
+    static constexpr UpdateMode kModeNone = 0x0;    // No action.
+    static constexpr UpdateMode kModeAdd  = 1 << 0; // Add new SLAAC addresses for new prefixes in network data.
+
+    // Remove SLAAC addresses.
+    // - When SLAAC is enabled, remove addresses with no matching prefix in network data,
+    // - When SLAAC is disabled, remove all previously added addresses.
+    static constexpr UpdateMode kModeRemove = 1 << 1;
 
     bool        ShouldFilter(const Ip6::Prefix &aPrefix) const;
     void        Update(UpdateMode aMode);

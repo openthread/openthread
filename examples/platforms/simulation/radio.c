@@ -643,7 +643,7 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
 
     aFrame->mInfo.mTxInfo.mAesKey = key;
 
-    if (!aFrame->mInfo.mTxInfo.mIsARetx)
+    if (!aFrame->mInfo.mTxInfo.mIsHeaderUpdated)
     {
         otMacFrameSetKeyId(aFrame, keyId);
         otMacFrameSetFrameCounter(aFrame, sMacFrameCounter++);
@@ -678,7 +678,7 @@ void radioSendMessage(otInstance *aInstance)
 #endif // OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT && OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (sCslPeriod > 0 && !sTransmitFrame.mInfo.mTxInfo.mIsARetx)
+    if (sCslPeriod > 0 && !sTransmitFrame.mInfo.mTxInfo.mIsHeaderUpdated)
     {
         otMacFrameSetCslIe(&sTransmitFrame, (uint16_t)sCslPeriod, getCslPhase());
     }

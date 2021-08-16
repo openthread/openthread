@@ -48,6 +48,18 @@
  *   This file includes definitions for the DNS client.
  */
 
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+
+#if !OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+#error "DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE requires OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE"
+#endif
+
+#if !OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
+#error "DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE requires OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE"
+#endif
+
+#endif
+
 /**
  * This struct represents an opaque (and empty) type for a response to an address resolution DNS query.
  *
@@ -77,6 +89,11 @@ struct otDnsServiceResponse
 #endif // OPENTHREAD_CONFIG_DNS_CLIENT_SERVICE_DISCOVERY_ENABLE
 
 namespace ot {
+
+namespace Srp {
+class Client;
+}
+
 namespace Dns {
 
 /**
@@ -85,6 +102,8 @@ namespace Dns {
  */
 class Client : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Srp::Client;
+
     typedef Message Query; // `Message` is used to save `Query` related info.
 
 public:
@@ -101,7 +120,7 @@ public:
          * This enumeration type represents the "Recursion Desired" (RD) flag in a `otDnsQueryConfig`.
          *
          */
-        enum RecursionFlag
+        enum RecursionFlag : uint8_t
         {
             kFlagUnspecified      = OT_DNS_FLAG_UNSPECIFIED,       ///< The flag is not specified.
             kFlagRecursionDesired = OT_DNS_FLAG_RECURSION_DESIRED, ///< Server can resolve the query recursively.
@@ -113,7 +132,7 @@ public:
          * This enumeration type represents the NAT64 mode.
          *
          */
-        enum Nat64Mode
+        enum Nat64Mode : uint8_t
         {
             kNat64Unspecified = OT_DNS_NAT64_UNSPECIFIED, ///< NAT64 mode is not specified. Use default NAT64 mode.
             kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation
@@ -173,31 +192,13 @@ public:
 #endif
 
     private:
-        enum : uint32_t
-        {
-            kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT, // in msec
-        };
-
-        enum : uint16_t
-        {
-            kDefaultServerPort = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT,
-        };
-
-        enum : uint8_t
-        {
-            kDefaultMaxTxAttempts = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS,
-        };
-
-        enum : bool
-        {
-            kDefaultRecursionDesired = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG,
-        };
+        static constexpr uint32_t kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT;
+        static constexpr uint16_t kDefaultServerPort      = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT;
+        static constexpr uint8_t  kDefaultMaxTxAttempts   = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS;
+        static constexpr bool kDefaultRecursionDesired    = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG;
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-        enum : bool
-        {
-            kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED,
-        };
+        static constexpr bool kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED;
 #endif
 
         enum InitMode : uint8_t
@@ -695,10 +696,7 @@ private:
         // Followed by the name (service, host, instance) encoded as a `Dns::Name`.
     };
 
-    enum : uint16_t
-    {
-        kNameOffsetInQuery = sizeof(QueryInfo),
-    };
+    static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
     Error       StartQuery(QueryInfo &        aInfo,
                            const QueryConfig *aConfig,
@@ -722,6 +720,9 @@ private:
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
     Error CheckAddressResponse(Response &aResponse, Error aResponseError) const;
 #endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    void UpdateDefaultConfigAddress(void);
+#endif
 
     static const uint8_t   kQuestionCount[];
     static const uint16_t *kQuestionRecordTypes[];
@@ -739,6 +740,9 @@ private:
     QueryList        mQueries;
     TimerMilli       mTimer;
     QueryConfig      mDefaultConfig;
+#if OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE
+    bool mUserDidSetDefaultAddress;
+#endif
 };
 
 } // namespace Dns

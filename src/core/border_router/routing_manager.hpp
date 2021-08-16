@@ -51,6 +51,7 @@
 #include <openthread/platform/infra_if.h>
 
 #include "border_router/router_advertisement.hpp"
+#include "common/array.hpp"
 #include "common/error.hpp"
 #include "common/locator.hpp"
 #include "common/notifier.hpp"
@@ -109,6 +110,35 @@ public:
     Error SetEnabled(bool aEnabled);
 
     /**
+     * This method returns the off-mesh-routable (OMR) prefix.
+     *
+     * The randomly generated 64-bit prefix will be published
+     * in the Thread network if there isn't already an OMR prefix.
+     *
+     * @param[out]  aPrefix  A reference to where the prefix will be output to.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the OMR prefix.
+     *
+     */
+    Error GetOmrPrefix(Ip6::Prefix &aPrefix);
+
+    /**
+     * This method returns the on-link prefix for the adjacent  infrastructure link.
+     *
+     * The randomly generated 64-bit prefix will be advertised
+     * on the infrastructure link if there isn't already a usable
+     * on-link prefix being advertised on the link.
+     *
+     * @param[out]  aPrefix  A reference to where the prefix will be output to.
+     *
+     * @retval  kErrorInvalidState  The Border Routing Manager is not initialized yet.
+     * @retval  kErrorNone          Successfully retrieved the on-link prefix.
+     *
+     */
+    Error GetOnLinkPrefix(Ip6::Prefix &aPrefix);
+
+    /**
      * This method receives an ICMPv6 message on the infrastructure interface.
      *
      * Malformed or undesired messages are dropped silently.
@@ -140,52 +170,49 @@ public:
     Error HandleInfraIfStateChanged(uint32_t aInfraIfIndex, bool aIsRunning);
 
 private:
-    enum : uint16_t
-    {
-        kMaxRouterAdvMessageLength = 256u, // The maximum RA message length we can handle.
-    };
+    typedef NetworkData::RoutePreference RoutePreference;
 
-    enum : uint8_t
-    {
-        kMaxOmrPrefixNum =
-            OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES, // The maximum number of the OMR prefixes to advertise.
-        kMaxDiscoveredPrefixNum = 8u,                  // The maximum number of prefixes to discover on the infra link.
-        kOmrPrefixLength        = OT_IP6_PREFIX_BITSIZE, // The length of an OMR prefix. In bits.
-        kOnLinkPrefixLength     = OT_IP6_PREFIX_BITSIZE, // The length of an On-link prefix. In bits.
-    };
+    static constexpr uint16_t kMaxRouterAdvMessageLength = 256; // The maximum RA message length we can handle.
 
-    enum : uint32_t
-    {
-        kMaxInitRtrAdvertisements = 3, // The maximum number of initial Router Advertisements.
-        kMaxRtrSolicitations = 3, // The Maximum number of Router Solicitations before sending Router Advertisements.
-    };
+    // The maximum number of the OMR prefixes to advertise.
+    static constexpr uint8_t kMaxOmrPrefixNum = OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES;
 
-    enum : uint32_t
-    {
-        kDefaultOmrPrefixLifetime    = 1800,                   // The default OMR prefix valid lifetime. In seconds.
-        kDefaultOnLinkPrefixLifetime = 1800,                   // The default on-link prefix valid lifetime. In seconds.
-        kMaxRtrAdvInterval           = 600,                    // Maximum Router Advertisement Interval. In seconds.
-        kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3, // Minimum Router Advertisement Interval. In seconds.
-        kMaxInitRtrAdvInterval       = 16,  // Maximum Initial Router Advertisement Interval. In seconds.
-        kMaxRaDelayTime              = 500, // The maximum delay of sending RA after receiving RS. In milliseconds.
-        kRtrSolicitationInterval     = 4,   // The interval between Router Solicitations. In seconds.
-        kMaxRtrSolicitationDelay     = 1,   // The maximum delay for initial solicitation. In seconds.
-        kMaxRoutingPolicyDelay       = 1,   // The maximum delay for routing policy evaluation. In seconds.
+    // The maximum number of prefixes to discover on the infra link.
+    static constexpr uint8_t kMaxDiscoveredPrefixNum = 8;
 
-        // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
-        // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
-        // seconds. The Routing Manager will then start Router Solicitation to verify
-        // that the STALE prefix is not being advertised anymore and remove the STALE
-        // prefix.
-        // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
-        kRtrAdvStaleTime = 1800,
+    static constexpr uint8_t kOmrPrefixLength    = OT_IP6_PREFIX_BITSIZE; // The length of an OMR prefix. In bits.
+    static constexpr uint8_t kOnLinkPrefixLength = OT_IP6_PREFIX_BITSIZE; // The length of an On-link prefix. In bits.
 
-        // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
-        // the discovered prefixes invalid if they are not refreshed after receiving
-        // a Router Solicitation message.
-        // The value is equal to Router Solicitation timeout.
-        kVicariousSolicitationTime = kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay,
-    };
+    // The maximum number of initial Router Advertisements.
+    static constexpr uint32_t kMaxInitRtrAdvertisements = 3;
+
+    // The maximum number of Router Solicitations before sending Router Advertisements.
+    static constexpr uint32_t kMaxRtrSolicitations = 3;
+
+    static constexpr uint32_t kDefaultOmrPrefixLifetime    = 1800; // The default OMR prefix valid lifetime. In sec.
+    static constexpr uint32_t kDefaultOnLinkPrefixLifetime = 1800; // The default on-link prefix valid lifetime. In sec.
+    static constexpr uint32_t kMaxRtrAdvInterval           = 600;  // Max Router Advertisement Interval. In sec.
+    static constexpr uint32_t kMinRtrAdvInterval           = kMaxRtrAdvInterval / 3; // Min RA Interval. In sec.
+    static constexpr uint32_t kMaxInitRtrAdvInterval       = 16;                     // Max Initial RA Interval. In sec.
+    static constexpr uint32_t kMaxRaDelayTime              = 500; // Max delay of sending RA after rx RS. In msec.
+    static constexpr uint32_t kRtrSolicitationInterval     = 4;   // Interval between RSs. In sec.
+    static constexpr uint32_t kMaxRtrSolicitationDelay     = 1;   // Max delay for initial solicitation. In sec.
+    static constexpr uint32_t kMaxRoutingPolicyDelay       = 1;   // Max delay for routing policy evaluation. In sec.
+
+    // The STALE_RA_TIME in seconds. The Routing Manager will consider the prefixes
+    // and learned RA parameters STALE when they are not refreshed in STALE_RA_TIME
+    // seconds. The Routing Manager will then start Router Solicitation to verify
+    // that the STALE prefix is not being advertised anymore and remove the STALE
+    // prefix.
+    // The value is chosen in range of [`kMaxRtrAdvInterval` upper bound (1800s), `kDefaultOnLinkPrefixLifetime`].
+    static constexpr uint32_t kRtrAdvStaleTime = 1800;
+
+    // The VICARIOUS_SOLICIT_TIME in seconds. The Routing Manager will consider
+    // the discovered prefixes invalid if they are not refreshed after receiving
+    // a Router Solicitation message.
+    // The value is equal to Router Solicitation timeout.
+    static constexpr uint32_t kVicariousSolicitationTime =
+        kRtrSolicitationInterval * (kMaxRtrSolicitations - 1) + kMaxRtrSolicitationDelay;
 
     static_assert(kMinRtrAdvInterval <= 3 * kMaxRtrAdvInterval / 4, "invalid RA intervals");
     static_assert(kDefaultOmrPrefixLifetime >= kMaxRtrAdvInterval, "invalid default OMR prefix lifetime");
@@ -195,17 +222,49 @@ private:
 
     // This struct represents an external prefix which is
     // discovered on the infrastructure interface.
-    struct ExternalPrefix : public Clearable<ExternalPrefix>
+    struct ExternalPrefix : public Clearable<ExternalPrefix>, public Unequatable<ExternalPrefix>
     {
         Ip6::Prefix mPrefix;
         uint32_t    mValidLifetime;
-        TimeMilli   mTimeLastUpdate;
-        bool        mIsOnLinkPrefix;
 
-        TimeMilli       GetExpireTime(void) const { return mTimeLastUpdate + GetPrefixExpireDelay(mValidLifetime); }
-        TimeMilli       GetStaleTime(void) const { return mTimeLastUpdate + TimeMilli::SecToMsec(kRtrAdvStaleTime); }
+        union
+        {
+            // Preferred Lifetime of on-link prefix, available
+            // only when `mIsOnLinkPrefix` is TRUE.
+            uint32_t mPreferredLifetime;
+
+            // The preference of this route, available
+            // only when `mIsOnLinkPrefix` is FALSE.
+            RoutePreference mRoutePreference;
+        };
+        TimeMilli mTimeLastUpdate;
+        bool      mIsOnLinkPrefix;
+
+        bool operator==(const ExternalPrefix &aPrefix) const
+        {
+            return mPrefix == aPrefix.mPrefix && mIsOnLinkPrefix == aPrefix.mIsOnLinkPrefix;
+        }
+
+        bool IsDeprecated(void) const
+        {
+            OT_ASSERT(mIsOnLinkPrefix);
+
+            return mTimeLastUpdate + TimeMilli::SecToMsec(mPreferredLifetime) <= TimerMilli::GetNow();
+        }
+
+        TimeMilli GetExpireTime(void) const { return mTimeLastUpdate + GetPrefixExpireDelay(mValidLifetime); }
+        TimeMilli GetStaleTime(void) const
+        {
+            uint32_t delay = OT_MIN(kRtrAdvStaleTime, mIsOnLinkPrefix ? mPreferredLifetime : mValidLifetime);
+
+            return mTimeLastUpdate + TimeMilli::SecToMsec(delay);
+        }
+
         static uint32_t GetPrefixExpireDelay(uint32_t aValidLifetime);
     };
+
+    typedef Array<Ip6::Prefix, kMaxOmrPrefixNum>           OmrPrefixArray;
+    typedef Array<ExternalPrefix, kMaxDiscoveredPrefixNum> ExternalPrefixArray;
 
     void  EvaluateState(void);
     void  Start(void);
@@ -218,18 +277,16 @@ private:
 
     const Ip6::Prefix *EvaluateOnLinkPrefix(void);
 
-    void    EvaluateRoutingPolicy(void);
-    void    StartRoutingPolicyEvaluationDelay(void);
-    uint8_t EvaluateOmrPrefix(Ip6::Prefix *aNewOmrPrefixes, uint8_t aMaxOmrPrefixNum);
-    Error   PublishLocalOmrPrefix(void);
-    void    UnpublishLocalOmrPrefix(void);
-    Error   AddExternalRoute(const Ip6::Prefix &aPrefix, otRoutePreference aRoutePreference);
-    void    RemoveExternalRoute(const Ip6::Prefix &aPrefix);
-    void    StartRouterSolicitationDelay(void);
-    Error   SendRouterSolicitation(void);
-    void    SendRouterAdvertisement(const Ip6::Prefix *aNewOmrPrefixes,
-                                    uint8_t            aNewOmrPrefixNum,
-                                    const Ip6::Prefix *aNewOnLinkPrefix);
+    void  EvaluateRoutingPolicy(void);
+    void  StartRoutingPolicyEvaluationDelay(void);
+    void  EvaluateOmrPrefix(OmrPrefixArray &aNewOmrPrefixes);
+    Error PublishLocalOmrPrefix(void);
+    void  UnpublishLocalOmrPrefix(void);
+    Error AddExternalRoute(const Ip6::Prefix &aPrefix, RoutePreference aRoutePreference);
+    void  RemoveExternalRoute(const Ip6::Prefix &aPrefix);
+    void  StartRouterSolicitationDelay(void);
+    Error SendRouterSolicitation(void);
+    void  SendRouterAdvertisement(const OmrPrefixArray &aNewOmrPrefixes, const Ip6::Prefix *aNewOnLinkPrefix);
 
     static void HandleRouterAdvertisementTimer(Timer &aTimer);
     void        HandleRouterAdvertisementTimer(void);
@@ -242,17 +299,16 @@ private:
     static void HandleDiscoveredPrefixStaleTimer(Timer &aTimer);
     void        HandleDiscoveredPrefixStaleTimer(void);
     static void HandleRoutingPolicyTimer(Timer &aTimer);
+    void        HandleOnLinkPrefixDeprecateTimer(void);
+    static void HandleOnLinkPrefixDeprecateTimer(Timer &aTimer);
 
+    void DeprecateOnLinkPrefix(void);
     void HandleRouterSolicit(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     void HandleRouterAdvertisement(const Ip6::Address &aSrcAddress, const uint8_t *aBuffer, uint16_t aBufferLength);
     bool UpdateDiscoveredPrefixes(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig);
     bool UpdateDiscoveredPrefixes(const RouterAdv::RouteInfoOption &aRio);
     bool InvalidateDiscoveredPrefixes(const Ip6::Prefix *aPrefix = nullptr, bool aIsOnLinkPrefix = true);
     void InvalidateAllDiscoveredPrefixes(void);
-    bool AddDiscoveredPrefix(const Ip6::Prefix &aPrefix,
-                             bool               aIsOnLinkPrefix,
-                             uint32_t           aLifetime,
-                             otRoutePreference  aRoutePreference = OT_ROUTE_PREFERENCE_MED);
     bool NetworkDataContainsOmrPrefix(const Ip6::Prefix &aPrefix) const;
     bool UpdateRouterAdvMessage(const RouterAdv::RouterAdvMessage *aRouterAdvMessage);
 
@@ -260,7 +316,6 @@ private:
     static bool IsValidOmrPrefix(const Ip6::Prefix &aOmrPrefix);
     static bool IsValidOnLinkPrefix(const RouterAdv::PrefixInfoOption &aPio, bool aManagedAddrConfig);
     static bool IsValidOnLinkPrefix(const Ip6::Prefix &aOnLinkPrefix);
-    static bool ContainsPrefix(const Ip6::Prefix &aPrefix, const Ip6::Prefix *aPrefixList, uint8_t aPrefixNum);
 
     // Indicates whether the Routing Manager is running (started).
     bool mIsRunning;
@@ -287,22 +342,24 @@ private:
     // the smallest OMR prefix sorted by method IsPrefixSmallerThan. If
     // manually configured OMR prefixes exist, they will also be
     // advertised on infra link.
-    Ip6::Prefix mAdvertisedOmrPrefixes[kMaxOmrPrefixNum];
-    uint8_t     mAdvertisedOmrPrefixNum;
+    OmrPrefixArray mAdvertisedOmrPrefixes;
 
     // The on-link prefix loaded from local persistent storage or
     // randomly generated if non is found in persistent storage.
     Ip6::Prefix mLocalOnLinkPrefix;
 
-    // Could only be nullptr or a pointer to mLocalOnLinkPrefix.
-    const Ip6::Prefix *mAdvertisedOnLinkPrefix;
+    bool mIsAdvertisingLocalOnLinkPrefix;
+
+    // The last time when the on-link prefix is advertised with
+    // non-zero preferred lifetime.
+    TimeMilli  mTimeAdvertisedOnLinkPrefix;
+    TimerMilli mOnLinkPrefixDeprecateTimer;
 
     // The array of prefixes discovered on the infra link. Those
     // prefixes consist of on-link prefix(es) and OMR prefixes
     // advertised by BRs in another Thread Network which is connected to
     // the same infra link.
-    ExternalPrefix mDiscoveredPrefixes[kMaxDiscoveredPrefixNum];
-    uint8_t        mDiscoveredPrefixNum;
+    ExternalPrefixArray mDiscoveredPrefixes;
 
     // The RA header and parameters for the infra interface.
     // This value is initialized with `RouterAdvMessage::SetToDefault`

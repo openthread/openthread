@@ -47,11 +47,14 @@
 #include <openthread/platform/radio.h>
 
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "posix/platform/daemon.hpp"
 #include "posix/platform/infra_if.hpp"
 #include "posix/platform/mainloop.hpp"
 #include "posix/platform/radio_url.hpp"
 #include "posix/platform/udp.hpp"
+
+otInstance *gInstance = nullptr;
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 static void processStateChange(otChangedFlags aFlags, void *aContext)
@@ -115,10 +118,8 @@ static const char *getTrelRadioUrl(otPlatformConfig *aPlatformConfig)
 }
 #endif
 
-otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
+void platformInit(otPlatformConfig *aPlatformConfig)
 {
-    otInstance *instance = nullptr;
-
     platformAlarmInit(aPlatformConfig->mSpeedUpFactor, aPlatformConfig->mRealTimeSignal);
     platformRadioInit(get802154RadioUrl(aPlatformConfig));
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
@@ -126,40 +127,95 @@ otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
 #endif
     platformRandomInit();
 
-    instance = otInstanceInitSingle();
-    assert(instance != nullptr);
-
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    platformBackboneInit(instance, aPlatformConfig->mBackboneInterfaceName);
+    platformBackboneInit(aPlatformConfig->mBackboneInterfaceName);
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-    ot::Posix::InfraNetif::Get().Init(instance, aPlatformConfig->mBackboneInterfaceName);
+    ot::Posix::InfraNetif::Get().Init(aPlatformConfig->mBackboneInterfaceName);
+#endif
+
+    gNetifName[0] = '\0';
+
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    platformNetifInit(aPlatformConfig->mInterfaceName);
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    ot::Posix::Udp::Get().Init(otSysGetThreadNetifName());
+#else
+    ot::Posix::Udp::Get().Init(aPlatformConfig->mInterfaceName);
+#endif
+#endif
+}
+
+void platformSetUp(void)
+{
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneSetUp();
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    ot::Posix::InfraNetif::Get().SetUp();
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-    platformNetifInit(instance, aPlatformConfig->mInterfaceName);
-#elif OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    ot::Posix::Udp::Init(instance, aPlatformConfig->mInterfaceName);
-#else
-    gNetifName[0] = '\0';
+    platformNetifSetUp();
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    ot::Posix::Udp::Get().SetUp();
+#endif
+
+#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
+    ot::Posix::Daemon::Get().SetUp();
 #endif
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE || OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    SuccessOrDie(otSetStateChangedCallback(instance, processStateChange, instance));
+    SuccessOrDie(otSetStateChangedCallback(gInstance, processStateChange, gInstance));
 #endif
-
-#if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    ot::Posix::Daemon::Get().Enable(instance);
-#endif
-    return instance;
 }
 
-void otSysDeinit(void)
+otInstance *otSysInit(otPlatformConfig *aPlatformConfig)
+{
+    OT_ASSERT(gInstance == nullptr);
+
+    platformInit(aPlatformConfig);
+
+    gInstance = otInstanceInitSingle();
+    OT_ASSERT(gInstance != nullptr);
+
+    platformSetUp();
+
+    return gInstance;
+}
+
+void platformTearDown(void)
 {
 #if OPENTHREAD_POSIX_CONFIG_DAEMON_ENABLE
-    ot::Posix::Daemon::Get().Disable();
+    ot::Posix::Daemon::Get().TearDown();
 #endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+    ot::Posix::Udp::Get().TearDown();
+#endif
+
+#if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+    platformNetifTearDown();
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
+    ot::Posix::InfraNetif::Get().TearDown();
+#endif
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneTearDown();
+#endif
+}
+
+void platformDeinit(void)
+{
 #if OPENTHREAD_POSIX_VIRTUAL_TIME
     virtualTimeDeinit();
 #endif
@@ -177,6 +233,20 @@ void otSysDeinit(void)
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     ot::Posix::InfraNetif::Get().Deinit();
 #endif
+
+#if OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    platformBackboneDeinit();
+#endif
+}
+
+void otSysDeinit(void)
+{
+    OT_ASSERT(gInstance != nullptr);
+
+    platformTearDown();
+    otInstanceFinalize(gInstance);
+    gInstance = nullptr;
+    platformDeinit();
 }
 
 #if OPENTHREAD_POSIX_VIRTUAL_TIME

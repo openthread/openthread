@@ -256,7 +256,7 @@ private:
     }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    MlrState mMlrState : 2;
+    MlrState mMlrState;
 #endif
 };
 
@@ -299,7 +299,7 @@ public:
         }
 
     private:
-        enum IteratorType
+        enum IteratorType : uint8_t
         {
             kEndIterator,
         };

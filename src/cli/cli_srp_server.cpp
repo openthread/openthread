@@ -81,6 +81,29 @@ otError SrpServer::ProcessDomain(Arg aArgs[])
     return error;
 }
 
+otError SrpServer::ProcessState(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    switch (otSrpServerGetState(mInterpreter.mInstance))
+    {
+    case OT_SRP_SERVER_STATE_DISABLED:
+        mInterpreter.OutputLine("disabled");
+        break;
+    case OT_SRP_SERVER_STATE_RUNNING:
+        mInterpreter.OutputLine("running");
+        break;
+    case OT_SRP_SERVER_STATE_STOPPED:
+        mInterpreter.OutputLine("stopped");
+        break;
+    default:
+        mInterpreter.OutputLine("invalid state");
+        break;
+    }
+
+    return OT_ERROR_NONE;
+}
+
 otError SrpServer::ProcessEnable(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);

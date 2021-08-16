@@ -1528,18 +1528,12 @@ void ResponsesQueue::UpdateQueue(void)
 
 void ResponsesQueue::DequeueResponse(Message &aMessage)
 {
-    mQueue.Dequeue(aMessage);
-    aMessage.Free();
+    mQueue.DequeueAndFree(aMessage);
 }
 
 void ResponsesQueue::DequeueAllResponses(void)
 {
-    Message *message;
-
-    while ((message = mQueue.GetHead()) != nullptr)
-    {
-        DequeueResponse(*message);
-    }
+    mQueue.DequeueAndFreeAll();
 }
 
 void ResponsesQueue::HandleTimer(Timer &aTimer)

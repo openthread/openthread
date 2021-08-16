@@ -104,6 +104,8 @@ public:
 
     void ResetFiredCounter(void) { mFiredCounter = 0; }
 
+    static void RemoveAll(ot::Instance &aInstance) { TimerType::RemoveAll(aInstance); }
+
 private:
     uint32_t mFiredCounter; //< Number of times timer has been fired so far
 };
@@ -134,6 +136,7 @@ template <typename TimerType> int TestOneTimer(void)
 
     // Test one Timer basic operation.
 
+    TestTimer<TimerType>::RemoveAll(*instance);
     InitTestTimer();
     InitCounters();
 
@@ -259,6 +262,7 @@ template <typename TimerType> int TestTwoTimers(void)
     TestTimer<TimerType> timer1(*instance);
     TestTimer<TimerType> timer2(*instance);
 
+    TestTimer<TimerType>::RemoveAll(*instance);
     InitTestTimer();
     printf("TestTwoTimers() ");
 
@@ -491,6 +495,7 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
 
     // Start the Ten timers.
 
+    TestTimer<TimerType>::RemoveAll(*instance);
     InitTestTimer();
     InitCounters();
 

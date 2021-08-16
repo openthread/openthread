@@ -70,12 +70,9 @@ public:
     void HandleServerDataUpdated(void);
 
 private:
-    enum
-    {
-        kDelayNoBufs                = 1000,   ///< milliseconds
-        kDelayRemoveStaleChildren   = 5000,   ///< milliseconds
-        kDelaySynchronizeServerData = 300000, ///< milliseconds
-    };
+    static constexpr uint32_t kDelayNoBufs                = 1000;   // in msec
+    static constexpr uint32_t kDelayRemoveStaleChildren   = 5000;   // in msec
+    static constexpr uint32_t kDelaySynchronizeServerData = 300000; // in msec
 
     void HandleNotifierEvents(Events aEvents);
 

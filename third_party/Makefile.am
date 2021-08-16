@@ -38,9 +38,11 @@ EXTRA_DIST                              = \
 DIST_SUBDIRS                            = \
     jlink                                 \
     mbedtls                               \
+    tcplp                                 \
     $(NULL)
 
 SUBDIRS =                                 \
+    tcplp                                 \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS

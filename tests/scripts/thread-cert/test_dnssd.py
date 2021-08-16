@@ -156,6 +156,18 @@ class TestDnssd(thread_cert.TestCase):
             'aaaa_ttl': lambda x: x > 0,
         }
 
+        instance4_verify_info = {
+            'port': 44444,
+            'priority': 4,
+            'weight': 4,
+            'host': 'host3.default.service.arpa.',
+            'address': client3_addrs,
+            'txt_data': 'KEY=414243',  # KEY=ABC
+            'srv_ttl': lambda x: x > 0,
+            'txt_ttl': lambda x: x > 0,
+            'aaaa_ttl': lambda x: x > 0,
+        }
+
         # Browse for main service
         service_instances = client1.dns_browse(f'{SERVICE}.{DOMAIN}', server.get_mleid(), 53)
         self.assertEqual({'ins1', 'ins2', 'ins3'}, set(service_instances.keys()))
@@ -181,6 +193,20 @@ class TestDnssd(thread_cert.TestCase):
 
         service_instance = client1.dns_resolve_service('ins2', f'{SERVICE}.{DOMAIN}', server.get_mleid(), 53)
         self._assert_service_instance_equal(service_instance, instance2_verify_info)
+
+        #---------------------------------------------------------------
+        # Add another service with TXT entries to the existing host and
+        # verify that it is properly merged.
+
+        client3.srp_client_add_service('ins4', SERVICE + ",_s1", 44444, 4, 4, txt_entries=['KEY=ABC'])
+        self.simulator.go(5)
+
+        service_instances = client1.dns_browse(f'{SERVICE}.{DOMAIN}', server.get_mleid(), 53)
+        self.assertEqual({'ins1', 'ins2', 'ins3', 'ins4'}, set(service_instances.keys()))
+        self._assert_service_instance_equal(service_instances['ins1'], instance1_verify_info)
+        self._assert_service_instance_equal(service_instances['ins2'], instance2_verify_info)
+        self._assert_service_instance_equal(service_instances['ins3'], instance3_verify_info)
+        self._assert_service_instance_equal(service_instances['ins4'], instance4_verify_info)
 
     def _assert_service_instance_equal(self, instance, info):
         for f in ('port', 'priority', 'weight', 'host', 'txt_data'):

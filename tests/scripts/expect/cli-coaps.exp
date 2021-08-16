@@ -66,9 +66,6 @@ expect_line "Done"
 expect "coaps response from $addr_1"
 send "coaps post test/resource none Testing123\n"
 expect_line "Done"
-send "coaps get default\n"
-expect_line "Done"
-expect "coaps response from $addr_1"
 set addr_2 [get_ipaddr mleid]
 
 switch_node 1

@@ -291,6 +291,21 @@ typedef enum otMeshcopTlvType
 } otMeshcopTlvType;
 
 /**
+ * This function pointer is called when a response to a MGMT_SET request is received or times out.
+ *
+ * @param[in]  aResult   A result of the operation.
+ * @param[in]  aContext  A pointer to application-specific context.
+ *
+ * @retval  OT_ERROR_NONE              The request was accepted by the leader.
+ * @retval  OT_ERROR_REJECTED          The request was rejected by the leader.
+ * @retval  OT_ERROR_PARSE             An error occurred during parsing the response.
+ * @retval  OT_ERROR_ABORT             The request was reset by peer.
+ * @retval  OT_ERROR_RESPONSE_TIMEOUT  No response or acknowledgment received during timeout period.
+ *
+ */
+typedef void (*otDatasetMgmtSetCallback)(otError aResult, void *aContext);
+
+/**
  * This function indicates whether a valid network is present in the Active Operational Dataset or not.
  *
  * @param[in]  aInstance A pointer to an OpenThread instance.
@@ -452,15 +467,20 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
+ * @param[in]  aCallback  A pointer to a function that is called on response reception or timeout.
+ * @param[in]  aContext   A pointer to application-specific context for @p aCallback.
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ * @retval OT_ERROR_BUSY          A previous request is ongoing.
  *
  */
 otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
                                    const otOperationalDataset *aDataset,
                                    const uint8_t *             aTlvs,
-                                   uint8_t                     aLength);
+                                   uint8_t                     aLength,
+                                   otDatasetMgmtSetCallback    aCallback,
+                                   void *                      aContext);
 
 /**
  * This function sends MGMT_PENDING_GET.
@@ -488,15 +508,20 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
  * @param[in]  aDataset   A pointer to operational dataset.
  * @param[in]  aTlvs      A pointer to TLVs.
  * @param[in]  aLength    The length of TLVs.
+ * @param[in]  aCallback  A pointer to a function that is called on response reception or timeout.
+ * @param[in]  aContext   A pointer to application-specific context for @p aCallback.
  *
  * @retval OT_ERROR_NONE          Successfully send the meshcop dataset command.
  * @retval OT_ERROR_NO_BUFS       Insufficient buffer space to send.
+ * @retval OT_ERROR_BUSY          A previous request is ongoing.
  *
  */
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     const otOperationalDataset *aDataset,
                                     const uint8_t *             aTlvs,
-                                    uint8_t                     aLength);
+                                    uint8_t                     aLength,
+                                    otDatasetMgmtSetCallback    aCallback,
+                                    void *                      aContext);
 
 /**
  * This function generates PSKc from a given pass-phrase, network name, and extended PAN ID.
@@ -531,6 +556,18 @@ otError otDatasetGeneratePskc(const char *           aPassPhrase,
  *
  */
 otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameString);
+
+/**
+ * This function parses an Operational Dataset from a `otOperationalDatasetTlvs`.
+ *
+ * @param[in]  aDatasetTlvs  A pointer to dataset TLVs.
+ * @param[out] aDataset      A pointer to where the dataset will be placed.
+ *
+ * @retval OT_ERROR_NONE          Successfully set @p aDataset from @p aDatasetTlvs.
+ * @retval OT_ERROR_INVALID_ARGS  @p aDatasetTlvs is invalid.
+ *
+ */
+otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset);
 
 /**
  * @}

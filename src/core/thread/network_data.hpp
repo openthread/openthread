@@ -91,16 +91,13 @@ class Manager;
  *
  */
 
-enum
-{
-    kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT, ///< Initializer for `Iterator` type.
-};
-
 /**
  * This type represents a Iterator used to iterate through Network Data info (e.g., see `GetNextOnMeshPrefix()`)
  *
  */
 typedef otNetworkDataIterator Iterator;
+
+constexpr Iterator kIteratorInit = OT_NETWORK_DATA_ITERATOR_INIT; ///< Initializer for `Iterator` type.
 
 /**
  * This class implements Network Data processing.
@@ -109,18 +106,16 @@ typedef otNetworkDataIterator Iterator;
 class NetworkData : public InstanceLocator
 {
     friend class Service::Manager;
+    friend class Publisher;
 
 public:
-    enum
-    {
-        kMaxSize = 254, ///< Maximum size of Thread Network Data in bytes.
-    };
+    static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
 
     /**
      * This enumeration specifies the type of Network Data (local or leader).
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTypeLocal,  ///< Local Network Data.
         kTypeLeader, ///< Leader Network Data.
@@ -309,6 +304,16 @@ public:
 
 protected:
     /**
+     * This enumeration defines Service Data match mode.
+     *
+     */
+    enum ServiceMatchMode : uint8_t
+    {
+        kServicePrefixMatch, ///< Match the Service Data by prefix.
+        kServiceExactMatch,  ///< Match the full Service Data exactly.
+    };
+
+    /**
      * This method returns a pointer to the start of Network Data TLV sequence.
      *
      * @returns A pointer to the start of Network Data TLV sequence.
@@ -427,14 +432,18 @@ protected:
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    ServiceTlv *FindService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+    ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
+                            const uint8_t *  aServiceData,
+                            uint8_t          aServiceDataLength,
+                            ServiceMatchMode aServiceMatchMode)
     {
-        return const_cast<ServiceTlv *>(
-            const_cast<const NetworkData *>(this)->FindService(aEnterpriseNumber, aServiceData, aServiceDataLength));
+        return const_cast<ServiceTlv *>(const_cast<const NetworkData *>(this)->FindService(
+            aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
     }
 
     /**
@@ -443,78 +452,82 @@ protected:
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
-                                  const uint8_t *aServiceData,
-                                  uint8_t        aServiceDataLength) const;
+    const ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
+                                  const uint8_t *  aServiceData,
+                                  uint8_t          aServiceDataLength,
+                                  ServiceMatchMode aServiceMatchMode) const;
 
     /**
      * This method returns a pointer to a Service TLV in a specified tlvs buffer.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to an Service Data.
+     * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    static ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
-                                   const uint8_t *aServiceData,
-                                   uint8_t        aServiceDataLength,
-                                   uint8_t *      aTlvs,
-                                   uint8_t        aTlvsLength)
+    static ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
+                                   const uint8_t *  aServiceData,
+                                   uint8_t          aServiceDataLength,
+                                   ServiceMatchMode aServiceMatchMode,
+                                   uint8_t *        aTlvs,
+                                   uint8_t          aTlvsLength)
     {
         return const_cast<ServiceTlv *>(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength,
-                                                    const_cast<const uint8_t *>(aTlvs), aTlvsLength));
+                                                    aServiceMatchMode, const_cast<const uint8_t *>(aTlvs),
+                                                    aTlvsLength));
     }
 
     /**
      * This method returns a pointer to a Service TLV in a specified tlvs buffer.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to an Service Data.
+     * @param[in]  aServiceData       A pointer to a Service Data.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    static const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
-                                         const uint8_t *aServiceData,
-                                         uint8_t        aServiceDataLength,
-                                         const uint8_t *aTlvs,
-                                         uint8_t        aTlvsLength);
+    static const ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
+                                         const uint8_t *  aServiceData,
+                                         uint8_t          aServiceDataLength,
+                                         ServiceMatchMode aServiceMatchMode,
+                                         const uint8_t *  aTlvs,
+                                         uint8_t          aTlvsLength);
 
     /**
      * This method returns the next pointer to a matching Service TLV.
      *
      * This method can be used to iterate over all Service TLVs that start with a given Service Data.
      *
-     * Unlike `FindService()` method which searches for a Service TLV with an exact match with the given Service Data,
-     * this method performs a relaxed check allowing a matching Service TLV to contain additional bytes after
-     * @p aServiceData, i.e., a Service TLV is considered to match if its Service Data length is larger than or equal
-     * to @p aServiceDataLength and its first @p aServiceDataLength Service Data bytes are equal to @p aServiceData.
-     *
-     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first
-     *                                matching Service TLV), or a pointer to the previous Service TLV returned from
-     *                                this method to iterate to the next matching Service TLV.
+     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first matching
+     *                                Service TLV), or a pointer to the previous Service TLV returned from this method
+     *                                to iterate to the next matching Service TLV.
      * @param[in]  aEnterpriseNumber  Enterprise Number.
      * @param[in]  aServiceData       A pointer to a Service Data to match with Service TLVs.
      * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextMatchingService(const ServiceTlv *aPrevServiceTlv,
-                                              uint32_t          aEnterpriseNumber,
-                                              const uint8_t *   aServiceData,
-                                              uint8_t           aServiceDataLength) const;
+    const ServiceTlv *FindNextService(const ServiceTlv *aPrevServiceTlv,
+                                      uint32_t          aEnterpriseNumber,
+                                      const uint8_t *   aServiceData,
+                                      uint8_t           aServiceDataLength,
+                                      ServiceMatchMode  aServiceMatchMode) const;
 
     /**
      * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
@@ -633,12 +646,9 @@ private:
         void MarkEntryAsNotNew(void) { SetEntryIndex(1); }
 
     private:
-        enum
-        {
-            kTlvPosition    = 0,
-            kSubTlvPosition = 1,
-            kEntryPosition  = 2,
-        };
+        static constexpr uint8_t kTlvPosition    = 0;
+        static constexpr uint8_t kSubTlvPosition = 1;
+        static constexpr uint8_t kEntryPosition  = 2;
 
         uint8_t GetTlvOffset(void) const { return mIteratorBuffer[kTlvPosition]; }
         uint8_t GetSubTlvOffset(void) const { return mIteratorBuffer[kSubTlvPosition]; }
@@ -668,13 +678,6 @@ private:
         ServiceConfig *      mService;
     };
 
-    static const ServiceTlv *FindService(uint32_t       aEnterpriseNumber,
-                                         const uint8_t *aServiceData,
-                                         uint8_t        aServiceDataLength,
-                                         bool           aExactServiceDataMatch,
-                                         const uint8_t *aTlvs,
-                                         uint8_t        aTlvsLength);
-
     Error Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const;
 
     static void RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix);
@@ -682,6 +685,12 @@ private:
 
     static void Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength);
     static void RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv);
+
+    static bool MatchService(const ServiceTlv &aServiceTlv,
+                             uint32_t          aEnterpriseNumber,
+                             const uint8_t *   aServiceData,
+                             uint8_t           aServiceDataLength,
+                             ServiceMatchMode  aServiceMatchMode);
 
     const Type mType;
 };

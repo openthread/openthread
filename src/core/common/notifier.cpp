@@ -177,17 +177,23 @@ void Notifier::EmitEvents(void)
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().HandleNotifierEvents(events);
 #endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().HandleNotifierEvents(events);
+#endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Get<Extension::ExtensionBase>().HandleNotifierEvents(events);
 #endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
     Get<BorderRouter::RoutingManager>().HandleNotifierEvents(events);
 #endif
-#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
-    Get<Srp::Server>().HandleNotifierEvents(events);
-#endif
 #if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
     Get<Srp::Client>().HandleNotifierEvents(events);
+#endif
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+    // The `NetworkData::Publisher` is notified last (e.g., after SRP
+    // client) to allow other modules to request changes to what is
+    // being published (if needed).
+    Get<NetworkData::Publisher>().HandleNotifierEvents(events);
 #endif
 
     for (ExternalCallback &callback : mExternalCallbacks)

@@ -35,6 +35,8 @@
 #ifndef OPENTHREAD_PLATFORM_MEMORY_H_
 #define OPENTHREAD_PLATFORM_MEMORY_H_
 
+#include <stddef.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

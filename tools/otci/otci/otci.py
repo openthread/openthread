@@ -30,14 +30,14 @@ import ipaddress
 import logging
 import re
 from collections import Counter
-from typing import List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
+from typing import Callable, List, Collection, Union, Tuple, Optional, Dict, Pattern, Any
 
 from . import connectors
 from .command_handlers import OTCommandHandler, OtCliCommandRunner, OtbrSshCommandRunner
 from .connectors import Simulator
 from .errors import UnexpectedCommandOutput, ExpectLineTimeoutError, CommandError, InvalidArgumentsError
 from .types import ChildId, Rloc16, Ip6Addr, ThreadState, PartitionId, DeviceMode, RouterId, SecurityPolicy, Ip6Prefix, \
-    RouterTableEntry
+    RouterTableEntry, NetifIdentifier
 from .utils import match_line, constant_property
 
 
@@ -117,6 +117,10 @@ class OTCI(object):
     def set_logger(self, logger: logging.Logger):
         """Set the logger for the OTCI instance, or None to disable logging."""
         self.__logger = logger
+
+    def set_line_read_callback(self, callback: Optional[Callable[[str], Any]]):
+        """Set the callback that will be called for each line output by the CLI."""
+        self.__otcmd.set_line_read_callback(callback)
 
     #
     # Constant properties
@@ -846,6 +850,10 @@ class OTCI(object):
     #
     # SRP server & client utilities
     #
+
+    def srp_server_get_state(self):
+        """Get the SRP server state"""
+        return self.__parse_str(self.execute_command('srp server state'))
 
     def srp_server_enable(self):
         """Enable SRP server."""
@@ -2117,13 +2125,19 @@ class OTCI(object):
         """Opens the example socket."""
         self.execute_command('udp close')
 
-    def udp_bind(self, ip: str, port: int):
+    def udp_bind(self, ip: str, port: int, netif: NetifIdentifier = NetifIdentifier.THERAD):
         """Assigns a name (i.e. IPv6 address and port) to the example socket.
 
         :param ip: the IPv6 address or the unspecified IPv6 address (::).
         :param port: the UDP port
         """
-        self.execute_command(f'udp bind {ip} {port}')
+        bindarg = ''
+        if netif == NetifIdentifier.UNSPECIFIED:
+            bindarg += ' -u'
+        elif netif == NetifIdentifier.BACKBONE:
+            bindarg += ' -b'
+
+        self.execute_command(f'udp bind{bindarg} {ip} {port}')
 
     def udp_connect(self, ip: str, port: int):
         """Specifies the peer with which the socket is to be associated.

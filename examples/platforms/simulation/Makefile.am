@@ -44,6 +44,7 @@ PLATFORM_SOURCES                          = \
     diag.c                                  \
     entropy.c                               \
     flash.c                                 \
+    infra_if.c                              \
     logging.c                               \
     misc.c                                  \
     openthread-core-simulation-config.h     \

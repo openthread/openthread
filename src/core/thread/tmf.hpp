@@ -39,10 +39,7 @@
 namespace ot {
 namespace Tmf {
 
-enum
-{
-    kUdpPort = 61631, ///< TMF UDP Port
-};
+constexpr uint16_t kUdpPort = 61631; ///< TMF UDP Port
 
 /**
  * This class implements functionality of the Thread TMF agent.

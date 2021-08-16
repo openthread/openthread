@@ -856,18 +856,26 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame &      frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame *      frame;
     uint8_t        beaconLength;
     uint16_t       fcf;
     Beacon *       beacon        = nullptr;
     BeaconPayload *beaconPayload = nullptr;
 
-    fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
-    frame.InitMacHeader(fcf, Frame::kSecNone);
-    IgnoreError(frame.SetSrcPanId(mPanId));
-    frame.SetSrcAddr(GetExtAddress());
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
+    frame = &mLinks.GetTxFrames().GetTxFrame(mTxBeaconRadioLinks);
+    mTxBeaconRadioLinks.Clear();
+#else
+    frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
+#endif
 
-    beacon = reinterpret_cast<Beacon *>(frame.GetPayload());
+    fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
+    frame->InitMacHeader(fcf, Frame::kSecNone);
+    IgnoreError(frame->SetSrcPanId(mPanId));
+    frame->SetSrcAddr(GetExtAddress());
+
+    beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
     beaconLength = sizeof(*beacon);
 
@@ -892,11 +900,11 @@ TxFrame *Mac::PrepareBeacon(void)
         beaconLength += sizeof(*beaconPayload);
     }
 
-    frame.SetPayloadLength(beaconLength);
+    frame->SetPayloadLength(beaconLength);
 
     LogBeacon("Sending", *beaconPayload);
 
-    return &frame;
+    return frame;
 }
 
 bool Mac::ShouldSendBeacon(void) const
@@ -950,7 +958,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         aFrame.SetAesKey(keyManager.GetKek());
         extAddress = &GetExtAddress();
 
-        if (!aFrame.IsARetransmission())
+        if (!aFrame.IsHeaderUpdated())
         {
             aFrame.SetFrameCounter(keyManager.GetKekFrameCounter());
             keyManager.IncrementKekFrameCounter();
@@ -974,13 +982,13 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         aFrame.SetAesKey(*mLinks.GetCurrentMacKey(aFrame));
         extAddress = &GetExtAddress();
 
-        // If the frame is marked as a retransmission, `MeshForwarder` which
+        // If the frame header is marked as updated, `MeshForwarder` which
         // prepared the frame should set the frame counter and key id to the
-        // same values used in the earlier transmit attempt. For a new frame (not
-        // a retransmission), we get a new frame counter and key id from the key
+        // same values used in the earlier transmit attempt. For a new frame (header
+        // not updated), we get a new frame counter and key id from the key
         // manager.
 
-        if (!aFrame.IsARetransmission())
+        if (!aFrame.IsHeaderUpdated())
         {
             mLinks.SetMacFrameCounter(aFrame);
             aFrame.SetKeyId((keyManager.GetCurrentKeySequence() & 0x7f) + 1);
@@ -1086,7 +1094,7 @@ void Mac::BeginTransmit(void)
         frame = Get<DataPollHandler>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
 
-        // If the frame is marked as a retransmission, then data sequence number is already set.
+        // If the frame is marked as retransmission, then data sequence number is already set.
         if (!frame->IsARetransmission())
         {
             frame->SetSequence(mDataSequence++);
@@ -1100,7 +1108,7 @@ void Mac::BeginTransmit(void)
         frame = Get<CslTxScheduler>().HandleFrameRequest(txFrames);
         VerifyOrExit(frame != nullptr);
 
-        // If the frame is marked as a retransmission, then data sequence number is already set.
+        // If the frame is marked as retransmission, then data sequence number is already set.
         if (!frame->IsARetransmission())
         {
             frame->SetSequence(mDataSequence++);
@@ -2164,8 +2172,12 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
 
         if (ShouldSendBeacon())
         {
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+            mTxBeaconRadioLinks.Add(aFrame.GetRadioType());
+#endif
             StartOperation(kOperationTransmitBeacon);
         }
+
         didHandle = true;
         break;
 
@@ -2387,10 +2399,14 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
     Get<DataPollSender>().RecalculatePollPeriod();
 
-    if (IsCslEnabled())
+    if ((GetCslPeriod() == 0) || IsCslEnabled())
     {
         IgnoreError(Get<Radio>().EnableCsl(GetCslPeriod(), Get<Mle::Mle>().GetParent().GetRloc16(),
                                            &Get<Mle::Mle>().GetParent().GetExtAddress()));
+    }
+
+    if (IsCslEnabled())
+    {
         Get<Mle::Mle>().ScheduleChildUpdateRequest();
     }
 
@@ -2399,7 +2415,12 @@ void Mac::SetCslPeriod(uint16_t aPeriod)
 
 bool Mac::IsCslEnabled(void) const
 {
-    return (GetCslPeriod() > 0) && !GetRxOnWhenIdle() && Get<Mle::MleRouter>().IsChild() &&
+    return !GetRxOnWhenIdle() && IsCslCapable();
+}
+
+bool Mac::IsCslCapable(void) const
+{
+    return (GetCslPeriod() > 0) && Get<Mle::MleRouter>().IsChild() &&
            Get<Mle::Mle>().GetParent().IsEnhancedKeepAliveSupported();
 }
 
@@ -2436,10 +2457,7 @@ exit:
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
 {
-    enum
-    {
-        kEnhAckProbingIeMaxLen = 2,
-    };
+    constexpr uint8_t kEnhAckProbingIeMaxLen = 2;
 
     const HeaderIe *enhAckProbingIe =
         reinterpret_cast<const HeaderIe *>(aFrame.GetThreadIe(ThreadIe::kEnhAckProbingIe));
@@ -2452,7 +2470,7 @@ void Mac::ProcessEnhAckProbing(const RxFrame &aFrame, const Neighbor &aNeighbor)
     dataLen = enhAckProbingIe->GetLength() - sizeof(VendorIeHeader);
     VerifyOrExit(dataLen <= kEnhAckProbingIeMaxLen);
 
-    Get<LinkMetrics>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
+    Get<LinkMetrics::LinkMetrics>().ProcessEnhAckIeData(data, dataLen, aNeighbor);
 exit:
     return;
 }

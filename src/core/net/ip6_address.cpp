@@ -491,10 +491,7 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
     //    |96|     prefix                                    |    v4(32)     |
     //    +--+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+---+
 
-    enum : uint8_t
-    {
-        kSkipIndex = 8,
-    };
+    constexpr uint8_t kSkipIndex = 8;
 
     uint8_t ip6Index;
 
@@ -518,17 +515,10 @@ void Address::SynthesizeFromIp4Address(const Prefix &aPrefix, const Ip4::Address
 
 Error Address::FromString(const char *aString)
 {
-    enum : uint8_t
-    {
-        kInvalidIndex = 0xff,
-    };
-
-    enum : char
-    {
-        kColonChar = ':',
-        kDotChar   = '.',
-        kNullChar  = '\0',
-    };
+    constexpr uint8_t kInvalidIndex = 0xff;
+    constexpr char    kColonChar    = ':';
+    constexpr char    kDotChar      = '.';
+    constexpr char    kNullChar     = '\0';
 
     Error   error      = kErrorParse;
     uint8_t index      = 0;

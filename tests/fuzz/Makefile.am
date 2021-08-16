@@ -43,6 +43,7 @@ AM_CPPFLAGS                                               = \
 COMMON_LDADD                                              = \
     $(top_builddir)/src/core/libopenthread-ftd.a            \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a     \
+    $(top_builddir)/third_party/tcplp/libtcplp.a            \
     $(LIB_FUZZING_ENGINE)                                   \
     $(NULL)
 

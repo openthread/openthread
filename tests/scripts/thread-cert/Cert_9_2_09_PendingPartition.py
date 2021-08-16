@@ -165,6 +165,11 @@ class Cert_9_2_09_PendingPartition(thread_cert.TestCase):
         self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
         self.assertEqual(self.nodes[ROUTER2].get_state(), 'leader')
 
+        # Keeping network id timeout at 70 can result in ROUTER2
+        # occasionally creating its own partition. Reset back to 120
+        # here to avoid occasional test failures.
+        self.nodes[ROUTER2].set_network_id_timeout(120)
+
         self.nodes[ROUTER2].commissioner_start()
         self.simulator.go(3)
         self.nodes[ROUTER2].send_mgmt_active_set(

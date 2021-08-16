@@ -164,6 +164,13 @@ expect "0:0:0:0::/64 s low"
 send "route remove ::/64\n"
 expect_line "Done"
 
+send "route add ::/0 s low\n"
+expect_line "Done"
+send "route\n"
+expect "::/0 s low"
+send "route remove ::/0\n"
+expect_line "Done"
+
 send "diag start\n"
 expect ": InvalidState"
 

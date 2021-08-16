@@ -82,6 +82,9 @@
 #if OPENTHREAD_CONFIG_CHANNEL_MONITOR_ENABLE
 #include "utils/channel_monitor.hpp"
 #endif
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+#include "utils/history_tracker.hpp"
+#endif
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 #include "backbone_router/bbr_leader.hpp"
@@ -333,10 +336,10 @@ private:
     // Tasklet and Timer Schedulers are first to ensure other
     // objects/classes can use them from their constructors.
 
-    TaskletScheduler    mTaskletScheduler;
-    TimerMilliScheduler mTimerMilliScheduler;
+    Tasklet::Scheduler    mTaskletScheduler;
+    TimerMilli::Scheduler mTimerMilliScheduler;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-    TimerMicroScheduler mTimerMicroScheduler;
+    TimerMicro::Scheduler mTimerMicroScheduler;
 #endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
@@ -386,6 +389,10 @@ private:
 
 #if OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE && OPENTHREAD_FTD
     Utils::ChannelManager mChannelManager;
+#endif
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Utils::HistoryTracker mHistoryTracker;
 #endif
 
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
@@ -640,6 +647,13 @@ template <> inline NetworkData::Notifier &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+template <> inline NetworkData::Publisher &Instance::Get(void)
+{
+    return mThreadNetif.mNetworkDataPublisher;
+}
+#endif
+
 template <> inline NetworkData::Service::Manager &Instance::Get(void)
 {
     return mThreadNetif.mNetworkDataServiceManager;
@@ -821,6 +835,13 @@ template <> inline Utils::ChannelManager &Instance::Get(void)
 }
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+template <> inline Utils::HistoryTracker &Instance::Get(void)
+{
+    return mHistoryTracker;
+}
+#endif
+
 #if (OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE || OPENTHREAD_CONFIG_CHANNEL_MANAGER_ENABLE) && OPENTHREAD_FTD
 template <> inline MeshCoP::DatasetUpdater &Instance::Get(void)
 {
@@ -899,7 +920,7 @@ template <> inline DuaManager &Instance::Get(void)
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-template <> inline LinkMetrics &Instance::Get(void)
+template <> inline LinkMetrics::LinkMetrics &Instance::Get(void)
 {
     return mThreadNetif.mLinkMetrics;
 }
@@ -945,18 +966,18 @@ template <> inline Mac::SubMac &Instance::Get(void)
 
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
-template <> inline TaskletScheduler &Instance::Get(void)
+template <> inline Tasklet::Scheduler &Instance::Get(void)
 {
     return mTaskletScheduler;
 }
 
-template <> inline TimerMilliScheduler &Instance::Get(void)
+template <> inline TimerMilli::Scheduler &Instance::Get(void)
 {
     return mTimerMilliScheduler;
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-template <> inline TimerMicroScheduler &Instance::Get(void)
+template <> inline TimerMicro::Scheduler &Instance::Get(void)
 {
     return mTimerMicroScheduler;
 }

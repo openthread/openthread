@@ -107,7 +107,7 @@ set mleid4 [get_ipaddr "mleid"]
 switch_node 1
 
 send "ping ${mleid4}\n"
-expect_line "Done"
 expect "16 bytes from $mleid4: icmp_seq=1"
+expect_line "Done"
 
 dispose_all

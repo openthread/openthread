@@ -124,6 +124,12 @@ const otDnsQueryConfig *otDnsClientGetDefaultConfig(otInstance *aInstance);
  * (value zero). The unspecified fields are replaced by the corresponding OT config option definitions
  * `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_{}` to form the default query config.
  *
+ * When `OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_ADDRESS_AUTO_SET_ENABLE` is enabled, the server's IPv6 address in
+ * the default config is automatically set and updated by DNS client. This is done only when user does not explicitly
+ * set or specify it. This behavior requires SRP client and its auto-start feature to be enabled. SRP client will then
+ * monitor the Thread Network Data for DNS/SRP Service entries to select an SRP server. The selected SRP server address
+ * is also set as the DNS server address in the default config.
+ *
  * @param[in]  aInstance   A pointer to an OpenThread instance.
  * @param[in]  aConfig     A pointer to the new query config to use as default.
  *

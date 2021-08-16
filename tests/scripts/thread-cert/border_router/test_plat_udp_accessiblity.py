@@ -38,104 +38,107 @@ import config
 # Topology:
 #    -----------(eth)------
 #           |
-#          BR1 (Leader)
+#          BR (Leader)
 #           |
-#        ROUTER1
+#        ROUTER
 #
 
-BR1 = 1
-ROUTER1 = 2
+BR = 1
+ROUTER = 2
 
 
 class TestPlatUdpAccessibility(thread_cert.TestCase):
     USE_MESSAGE_FACTORY = False
 
     TOPOLOGY = {
-        BR1: {
-            'name': 'BR_1',
+        BR: {
+            'name': 'BR',
             'is_otbr': True,
             'version': '1.2',
         },
-        ROUTER1: {
-            'name': 'Router_1',
+        ROUTER: {
+            'name': 'Router',
             'version': '1.2',
         },
     }
 
     def test(self):
-        self.nodes[BR1].start()
-        self.simulator.go(5)
-        self.assertEqual('leader', self.nodes[BR1].get_state())
-        self.nodes[BR1].srp_server_set_enabled(True)
+        br = self.nodes[BR]
+        router = self.nodes[ROUTER]
 
-        self.nodes[ROUTER1].start()
+        br.start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[ROUTER1].get_state())
+        self.assertEqual('leader', br.get_state())
+        br.srp_server_set_enabled(True)
+
+        router.start()
+        self.simulator.go(5)
+        self.assertEqual('router', router.get_state())
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[ROUTER1].ping(self.nodes[BR1].get_rloc()))
+        self.assertTrue(router.ping(br.get_rloc()))
 
-        server_port = self.nodes[BR1].get_srp_server_port()
+        server_port = br.get_srp_server_port()
 
-        self._test_srp_server(self.nodes[BR1].get_mleid(), server_port)
-        self._test_srp_server(self.nodes[BR1].get_linklocal(), server_port)
-        self._test_srp_server(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0], server_port)
-        self._test_srp_server(self.nodes[BR1].get_rloc(), server_port)
-        for server_aloc in self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.ALOC):
-            self._test_srp_server(server_aloc, server_port)
+        self._test_srp_server(router, br.get_mleid(), server_port)
+        self._test_srp_server(router, br.get_linklocal(), server_port)
+        self._test_srp_server(router, br.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], server_port)
+        self._test_srp_server(router, br.get_rloc(), server_port)
+        for server_aloc in br.get_ip6_address(config.ADDRESS_TYPE.ALOC):
+            self._test_srp_server(router, server_aloc, server_port)
 
-        self._testDhcp6ClientAfterReset(BR1, BR1, BR1)
+        self._testDhcp6ClientAfterReset(br, br, br)
 
     def _testDhcp6ClientAfterReset(self, server, client, reset_device):
         DHCP6_PREFIX = '2001::/64'
 
         # Configure DHCP6 server
-        self.nodes[server].add_prefix(DHCP6_PREFIX, 'pdros')
+        server.add_prefix(DHCP6_PREFIX, 'pdros')
         self.simulator.go(3)
-        self.nodes[server].register_netdata()
+        server.register_netdata()
         self.simulator.go(10)
 
         # Verify DHCP6 client works
-        self.assertTrue(self.nodes[client].get_addr(DHCP6_PREFIX))
+        self.assertTrue(client.get_addr(DHCP6_PREFIX))
         self.simulator.go(3)
 
-        self.nodes[reset_device].reset()
-        self.nodes[reset_device].start()
+        reset_device.reset()
+        reset_device.start()
         self.simulator.go(5)
-        self.assertIn(self.nodes[reset_device].get_state(), ['leader', 'router'])
+        self.assertIn(reset_device.get_state(), ['leader', 'router'])
         self.simulator.go(5)
 
         if reset_device == server:
             # Reconfigure DHCP6 server if necessary
-            self.nodes[server].add_prefix(DHCP6_PREFIX, 'pdros')
+            server.add_prefix(DHCP6_PREFIX, 'pdros')
             self.simulator.go(3)
-            self.nodes[server].register_netdata()
+            server.register_netdata()
 
         self.simulator.go(10)
 
         # Verify DHCP6 client works after reset
-        self.assertTrue(self.nodes[client].get_addr(DHCP6_PREFIX))
+        self.assertTrue(client.get_addr(DHCP6_PREFIX))
         self.simulator.go(3)
 
-    def _test_srp_server(self, server_addr, server_port):
+    def _test_srp_server(self, client, server_addr, server_port):
         print(f'Testing SRP server: {server_addr}:{server_port}')
 
         # check if the SRP client can register to the SRP server
-        self.nodes[ROUTER1].srp_client_start(server_addr, server_port)
-        self.nodes[ROUTER1].srp_client_set_host_name('host1')
-        self.nodes[ROUTER1].srp_client_set_host_address(self.nodes[ROUTER1].get_rloc())
-        self.nodes[ROUTER1].srp_client_add_service('ins1', '_ipp._tcp', 11111)
+        client.srp_client_start(server_addr, server_port)
+        client.srp_client_set_host_name('host1')
+        client.srp_client_set_host_address(client.get_rloc())
+        client.srp_client_add_service('ins1', '_ipp._tcp', 11111)
         self.simulator.go(3)
-        self.assertEqual(self.nodes[ROUTER1].srp_client_get_host_state(), 'Registered')
+        self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
         # check if the SRP client can remove from the SRP server
-        self.nodes[ROUTER1].srp_client_remove_host('host1')
-        self.nodes[ROUTER1].srp_client_remove_service('ins1', '_ipp._tcp')
+        client.srp_client_remove_host('host1')
+        client.srp_client_remove_service('ins1', '_ipp._tcp')
         self.simulator.go(3)
-        self.assertEqual(self.nodes[ROUTER1].srp_client_get_host_state(), 'Removed')
+        self.assertEqual(client.srp_client_get_host_state(), 'Removed')
 
         # stop the SRP client for the next round
-        self.nodes[ROUTER1].srp_client_stop()
+        client.srp_client_stop()
         self.simulator.go(3)
 
 

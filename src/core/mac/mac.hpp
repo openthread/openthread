@@ -70,31 +70,20 @@ class Neighbor;
 
 namespace Mac {
 
-/**
- * Protocol parameters and constants.
- *
- */
-enum
-{
-    kDataPollTimeout = 100, ///< Timeout for receiving Data Frame (milliseconds).
-    kSleepDelay      = 300, ///< Max sleep delay when frame is pending (milliseconds).
+constexpr uint32_t kDataPollTimeout = 100; ///< Timeout for receiving Data Frame (in msec).
+constexpr uint32_t kSleepDelay      = 300; ///< Max sleep delay when frame is pending (in msec).
 
-    kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION, ///< Default interval between channels (milliseconds).
+constexpr uint16_t kScanDurationDefault = OPENTHREAD_CONFIG_MAC_SCAN_DURATION; ///< Duration per channel (in msec).
 
-    kMaxCsmaBackoffsDirect =
-        OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT, ///< macMaxCsmaBackoffs for direct transmissions
-    kMaxCsmaBackoffsIndirect =
-        OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT, ///< macMaxCsmaBackoffs for indirect transmissions
-    kMaxCsmaBackoffsCsl = 0,                              ///< macMaxCsmaBackoffs for CSL transmissions
+constexpr uint8_t kMaxCsmaBackoffsDirect   = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
+constexpr uint8_t kMaxCsmaBackoffsIndirect = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_INDIRECT;
+constexpr uint8_t kMaxCsmaBackoffsCsl      = 0;
 
-    kDefaultMaxFrameRetriesDirect =
-        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT, ///< macDefaultMaxFrameRetries for direct transmissions
-    kDefaultMaxFrameRetriesIndirect =
-        OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT, ///< macDefaultMaxFrameRetries for indirect
-    kMaxFrameRetriesCsl = 0,                                      ///< macMaxFrameRetries for CSL transmissions
+constexpr uint8_t kDefaultMaxFrameRetriesDirect   = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
+constexpr uint8_t kDefaultMaxFrameRetriesIndirect = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_INDIRECT;
+constexpr uint8_t kMaxFrameRetriesCsl             = 0;
 
-    kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST ///< Number of times each broadcast frame is transmitted
-};
+constexpr uint8_t kTxNumBcast = OPENTHREAD_CONFIG_MAC_TX_NUM_BCAST; ///< Num of times broadcast frame is tx.
 
 /**
  * This type defines the function pointer called on receiving an IEEE 802.15.4 Beacon during an Active Scan.
@@ -179,7 +168,8 @@ public:
     /**
      * This method indicates whether or not IEEE 802.15.4 Beacon transmissions are enabled.
      *
-     * @retval TRUE if IEEE 802.15.4 Beacon transmissions are enabled, FALSE otherwise.
+     * @retval TRUE   If IEEE 802.15.4 Beacon transmissions are enabled.
+     * @retval FALSE  If IEEE 802.15.4 Beacon transmissions are not enabled.
      *
      */
     bool IsBeaconEnabled(void) const { return mBeaconsEnabled; }
@@ -708,20 +698,63 @@ public:
     /**
      * This method indicates whether CSL is started at the moment.
      *
-     * @retval TURE if CSL is actually running at the moment, FALSE otherwise.
+     * @retval TRUE   If CSL is enabled.
+     * @retval FALSE  If CSL is not enabled.
      *
      */
     bool IsCslEnabled(void) const;
 
+    /**
+     * This method indicates whether Link is capable of starting CSL.
+     *
+     * @retval TRUE   If Link is capable of starting CSL.
+     * @retval FALSE  If link is not capable of starting CSL.
+     *
+     */
+    bool IsCslCapable(void) const;
+
+    /**
+     * This method returns CSL parent clock accuracy, in ± ppm.
+     *
+     * @retval CSL parent clock accuracy, in ± ppm.
+     *
+     */
+    uint8_t GetCslParentClockAccuracy(void) const { return mLinks.GetSubMac().GetCslParentClockAccuracy(); }
+
+    /**
+     * This method sets CSL parent clock accuracy, in ± ppm.
+     *
+     * @param[in] aCslParentAccuracy CSL parent clock accuracy, in ± ppm.
+     *
+     */
+    void SetCslParentClockAccuracy(uint8_t aCslParentAccuracy)
+    {
+        mLinks.GetSubMac().SetCslParentClockAccuracy(aCslParentAccuracy);
+    }
+
+    /**
+     * This method returns CSL parent uncertainty, in ±10 us units.
+     *
+     * @retval CSL parent uncertainty, in ±10 us units.
+     *
+     */
+    uint8_t GetCslParentUncertainty(void) const { return mLinks.GetSubMac().GetCslParentUncertainty(); }
+
+    /**
+     * This method returns CSL parent uncertainty, in ±10 us units.
+     *
+     * @param[in] aCslParentUncert  CSL parent uncertainty, in ±10 us units.
+     *
+     */
+    void SetCslParentUncertainty(uint8_t aCslParentUncert)
+    {
+        mLinks.GetSubMac().SetCslParentUncertainty(aCslParentUncert);
+    }
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
 
 private:
-    enum
-    {
-        kInvalidRssiValue  = SubMac::kInvalidRssiValue,
-        kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW,
-        kMaxAcquisitionId  = 0xffff,
-    };
+    static constexpr int8_t   kInvalidRssiValue  = SubMac::kInvalidRssiValue;
+    static constexpr uint16_t kMaxCcaSampleCount = OPENTHREAD_CONFIG_CCA_FAILURE_RATE_AVERAGING_WINDOW;
 
     enum Operation : uint8_t
     {
@@ -883,6 +916,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioTypes mTxPendingRadioLinks;
+    RadioTypes mTxBeaconRadioLinks;
     Error      mTxError;
 #endif
 

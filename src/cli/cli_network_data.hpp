@@ -103,6 +103,10 @@ private:
     };
 
     otError ProcessHelp(Arg aArgs[]);
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+    otError ProcessPublish(Arg aArgs[]);
+    otError ProcessUnpublish(Arg aArgs[]);
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     otError ProcessRegister(Arg aArgs[]);
 #endif
@@ -113,16 +117,20 @@ private:
     void    OutputPrefixes(void);
     void    OutputRoutes(void);
     void    OutputServices(void);
-    void    OutputIp6Prefix(const otIp6Prefix &aPrefix);
     void    OutputPreference(signed int aPreference);
 
     static constexpr Command sCommands[] = {
         {"help", &NetworkData::ProcessHelp},
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+        {"publish", &NetworkData::ProcessPublish},
+#endif
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
         {"register", &NetworkData::ProcessRegister},
 #endif
-        {"show", &NetworkData::ProcessShow},
-        {"steeringdata", &NetworkData::ProcessSteeringData},
+        {"show", &NetworkData::ProcessShow},           {"steeringdata", &NetworkData::ProcessSteeringData},
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+        {"unpublish", &NetworkData::ProcessUnpublish},
+#endif
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");

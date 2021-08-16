@@ -71,6 +71,8 @@ public:
         kDnsQueryResolveHost = OT_DNSSD_QUERY_TYPE_RESOLVE_HOST, ///< Service type resolve hostname.
     };
 
+    static constexpr uint16_t kPort = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT; ///< The DNS-SD server port.
+
     /**
      * This constructor initializes the object.
      *
@@ -160,10 +162,7 @@ private:
         {
         }
 
-        enum : uint16_t
-        {
-            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
-        };
+        static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
 
         uint16_t GetDomainNameOffset(void) const { return mDomainNameOffset; }
 
@@ -227,21 +226,15 @@ private:
         uint16_t    mHostNameOffset;     // Offset of host name serialization into the response message.
     };
 
-    enum
-    {
-        kPort                 = OPENTHREAD_CONFIG_DNSSD_SERVER_PORT,
-        kProtocolLabelLength  = 4,
-        kSubTypeLabelLength   = 4,
-        kMaxConcurrentQueries = 32,
-    };
+    static constexpr bool     kBindUnspecifiedNetif = OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF;
+    static constexpr uint8_t  kProtocolLabelLength  = 4;
+    static constexpr uint8_t  kSubTypeLabelLength   = 4;
+    static constexpr uint16_t kMaxConcurrentQueries = 32;
 
     // This structure represents the splitting information of a full name.
     struct NameComponentsOffsetInfo
     {
-        enum : uint8_t
-        {
-            kNotPresent = 0xff, // Indicates the component is not present.
-        };
+        static constexpr uint8_t kNotPresent = 0xff; // Indicates the component is not present.
 
         explicit NameComponentsOffsetInfo(void)
             : mDomainOffset(kNotPresent)
@@ -301,10 +294,7 @@ private:
         TimeMilli        mStartTime;
     };
 
-    enum : uint32_t
-    {
-        kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT,
-    };
+    static constexpr uint32_t kQueryTimeout = OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT;
 
     bool        IsRunning(void) const { return mSocket.IsBound(); }
     static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);

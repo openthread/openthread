@@ -73,6 +73,7 @@ AM_CPPFLAGS                                                        += \
 endif
 
 COMMON_LDADD                                                        = \
+    $(top_builddir)/third_party/tcplp/libtcplp.a                      \
     $(NULL)
 
 if OPENTHREAD_ENABLE_NCP
@@ -107,6 +108,7 @@ check_PROGRAMS                                                      = \
 if OPENTHREAD_ENABLE_FTD
 check_PROGRAMS                                                     += \
     ot-test-aes                                                       \
+    ot-test-array                                                     \
     ot-test-checksum                                                  \
     ot-test-child                                                     \
     ot-test-child-table                                               \
@@ -179,6 +181,9 @@ COMMON_SOURCES               = test_platform.cpp test_util.cpp
 
 ot_test_aes_LDADD               = $(COMMON_LDADD)
 ot_test_aes_SOURCES             = $(COMMON_SOURCES) test_aes.cpp
+
+ot_test_array_LDADD             = $(COMMON_LDADD)
+ot_test_array_SOURCES           = $(COMMON_SOURCES) test_array.cpp
 
 ot_test_checksum_LDADD          = $(COMMON_LDADD)
 ot_test_checksum_SOURCES        = $(COMMON_SOURCES) test_checksum.cpp
@@ -292,4 +297,3 @@ endif # OPENTHREAD_BUILD_COVERAGE
 endif # OPENTHREAD_BUILD_TESTS
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
-

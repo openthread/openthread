@@ -44,6 +44,10 @@
 
 #ifdef OPENTHREAD_PROJECT_CORE_CONFIG_FILE
 #include OPENTHREAD_PROJECT_CORE_CONFIG_FILE
+#elif defined(OPENTHREAD_CONFIG_CORE_USER_CONFIG_HEADER_ENABLE)
+// This configuration header file should be provided by the user when
+// OPENTHREAD_CONFIG_CORE_USER_CONFIG_HEADER_ENABLE is defined to 1.
+#include "openthread-core-user-config.h"
 #endif
 
 #ifndef OPENTHREAD_CONFIG_THREAD_VERSION
@@ -67,6 +71,7 @@
 #include "config/dns_client.h"
 #include "config/dnssd_server.h"
 #include "config/dtls.h"
+#include "config/history_tracker.h"
 #include "config/ip6.h"
 #include "config/joiner.h"
 #include "config/link_quality.h"
@@ -74,6 +79,7 @@
 #include "config/logging.h"
 #include "config/mac.h"
 #include "config/mle.h"
+#include "config/netdata_publisher.h"
 #include "config/parent_search.h"
 #include "config/ping_sender.h"
 #include "config/platform.h"

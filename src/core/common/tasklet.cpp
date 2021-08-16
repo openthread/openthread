@@ -34,34 +34,19 @@
 #include "tasklet.hpp"
 
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
-#include "net/ip6.hpp"
 
 namespace ot {
-
-Tasklet::Tasklet(Instance &aInstance, Handler aHandler)
-    : InstanceLocator(aInstance)
-    , mHandler(aHandler)
-    , mNext(nullptr)
-{
-}
 
 void Tasklet::Post(void)
 {
     if (!IsPosted())
     {
-        Get<TaskletScheduler>().PostTasklet(*this);
+        Get<Scheduler>().PostTasklet(*this);
     }
 }
 
-TaskletScheduler::TaskletScheduler(void)
-    : mTail(nullptr)
-{
-}
-
-void TaskletScheduler::PostTasklet(Tasklet &aTasklet)
+void Tasklet::Scheduler::PostTasklet(Tasklet &aTasklet)
 {
     // Tasklets are saved in a circular singly linked list.
 
@@ -79,7 +64,7 @@ void TaskletScheduler::PostTasklet(Tasklet &aTasklet)
     }
 }
 
-void TaskletScheduler::ProcessQueuedTasklets(void)
+void Tasklet::Scheduler::ProcessQueuedTasklets(void)
 {
     Tasklet *tail = mTail;
 

@@ -59,18 +59,15 @@ namespace Crypto {
 class AesCcm
 {
 public:
-    enum
-    {
-        kMinTagLength = 4,                  ///< Minimum tag length (in bytes).
-        kMaxTagLength = AesEcb::kBlockSize, ///< Maximum tag length (in bytes).
-        kNonceSize    = 13,                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
-    };
+    static constexpr uint8_t kMinTagLength = 4;                  ///< Minimum tag length (in bytes).
+    static constexpr uint8_t kMaxTagLength = AesEcb::kBlockSize; ///< Maximum tag length (in bytes).
+    static constexpr uint8_t kNonceSize    = 13;                 ///< Size of IEEE 802.15.4 Nonce (in bytes).
 
     /**
      * This enumeration type represent the encryption vs decryption mode.
      *
      */
-    enum Mode
+    enum Mode : uint8_t
     {
         kEncrypt, // Encryption mode.
         kDecrypt, // Decryption mode.

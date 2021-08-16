@@ -54,6 +54,7 @@
         -DOT_DHCP6_SERVER=ON \
         -DOT_DNS_CLIENT=ON \
         -DOT_ECDSA=ON \
+        -DOT_HISTORY_TRACKER=ON \
         -DOT_IP6_FRAGM=ON \
         -DOT_JAM_DETECTION=ON \
         -DOT_JOINER=ON \
@@ -61,6 +62,7 @@
         -DOT_LOG_OUTPUT=APP \
         -DOT_MAC_FILTER=ON \
         -DOT_MTD_NETDIAG=ON \
+        -DOT_NETDATA_PUBLISHER=ON \
         -DOT_PING_SENDER=ON \
         -DOT_SERVICE=ON \
         -DOT_SLAAC=ON \

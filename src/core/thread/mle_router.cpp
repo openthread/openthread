@@ -1101,14 +1101,14 @@ int MleRouter::ComparePartitions(bool              aSingletonA,
 {
     int rval = 0;
 
-    if (aSingletonA != aSingletonB)
-    {
-        ExitNow(rval = aSingletonB ? 1 : -1);
-    }
-
     if (aLeaderDataA.GetWeighting() != aLeaderDataB.GetWeighting())
     {
         ExitNow(rval = aLeaderDataA.GetWeighting() > aLeaderDataB.GetWeighting() ? 1 : -1);
+    }
+
+    if (aSingletonA != aSingletonB)
+    {
+        ExitNow(rval = aSingletonB ? 1 : -1);
     }
 
     if (aLeaderDataA.GetPartitionId() != aLeaderDataB.GetPartitionId())
@@ -1935,6 +1935,12 @@ void MleRouter::SendParentResponse(Child *aChild, const Challenge &aChallenge, b
     if (aChild->IsTimeSyncEnabled())
     {
         SuccessOrExit(error = AppendTimeParameter(*message));
+    }
+#endif
+#if OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+    if (!aChild->IsRxOnWhenIdle())
+    {
+        SuccessOrExit(error = AppendCslClockAccuracy(*message));
     }
 #endif
 
@@ -3284,7 +3290,7 @@ void MleRouter::SendDataResponse(const Ip6::Address &aDestination,
             OT_ASSERT(aRequestMessage != nullptr);
             neighbor = mNeighborTable.FindNeighbor(aDestination);
             VerifyOrExit(neighbor != nullptr, error = kErrorInvalidState);
-            SuccessOrExit(error = Get<LinkMetrics>().AppendLinkMetricsReport(*message, *aRequestMessage, *neighbor));
+            SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().AppendReport(*message, *aRequestMessage, *neighbor));
             break;
 #endif
         }
@@ -4359,6 +4365,8 @@ exit:
 Error MleRouter::GetMaxChildTimeout(uint32_t &aTimeout) const
 {
     Error error = kErrorNotFound;
+
+    aTimeout = 0;
 
     VerifyOrExit(IsRouterOrLeader(), error = kErrorInvalidState);
 

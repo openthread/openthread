@@ -150,10 +150,9 @@ exit:
     return isSubset;
 }
 
-Dataset::Dataset(Type aType)
+Dataset::Dataset(void)
     : mUpdateTime(0)
     , mLength(0)
-    , mType(aType)
 {
     memset(mTlvs, 0, sizeof(mTlvs));
 }
@@ -263,12 +262,12 @@ void Dataset::ConvertTo(otOperationalDatasetTlvs &aDataset) const
     aDataset.mLength = static_cast<uint8_t>(mLength);
 }
 
-void Dataset::Set(const Dataset &aDataset)
+void Dataset::Set(Type aType, const Dataset &aDataset)
 {
     memcpy(mTlvs, aDataset.mTlvs, aDataset.mLength);
     mLength = aDataset.mLength;
 
-    if (mType == kActive)
+    if (aType == kActive)
     {
         RemoveTlv(Tlv::kPendingTimestamp);
         RemoveTlv(Tlv::kDelayTimer);
@@ -372,11 +371,11 @@ Error Dataset::SetFrom(const Info &aDatasetInfo)
     return error;
 }
 
-const Timestamp *Dataset::GetTimestamp(void) const
+const Timestamp *Dataset::GetTimestamp(Type aType) const
 {
     const Timestamp *timestamp = nullptr;
 
-    if (mType == kActive)
+    if (aType == kActive)
     {
         const ActiveTimestampTlv *tlv = GetTlv<ActiveTimestampTlv>();
         VerifyOrExit(tlv != nullptr);
@@ -393,9 +392,9 @@ exit:
     return timestamp;
 }
 
-void Dataset::SetTimestamp(const Timestamp &aTimestamp)
+void Dataset::SetTimestamp(Type aType, const Timestamp &aTimestamp)
 {
-    IgnoreError(SetTlv((mType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, aTimestamp));
+    IgnoreError(SetTlv((aType == kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp, aTimestamp));
 }
 
 Error Dataset::SetTlv(Tlv::Type aType, const void *aValue, uint8_t aLength)
@@ -461,7 +460,7 @@ exit:
     return;
 }
 
-Error Dataset::AppendMleDatasetTlv(Message &aMessage) const
+Error Dataset::AppendMleDatasetTlv(Type aType, Message &aMessage) const
 {
     Error          error = kErrorNone;
     Mle::Tlv       tlv;
@@ -469,7 +468,7 @@ Error Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     VerifyOrExit(mLength > 0);
 
-    type = (mType == kActive ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
+    type = (aType == kActive ? Mle::Tlv::kActiveDataset : Mle::Tlv::kPendingDataset);
 
     tlv.SetType(type);
     tlv.SetLength(static_cast<uint8_t>(mLength) - sizeof(Tlv) - sizeof(Timestamp));
@@ -477,8 +476,8 @@ Error Dataset::AppendMleDatasetTlv(Message &aMessage) const
 
     for (const Tlv *cur = GetTlvsStart(); cur < GetTlvsEnd(); cur = cur->GetNext())
     {
-        if (((mType == kActive) && (cur->GetType() == Tlv::kActiveTimestamp)) ||
-            ((mType == kPending) && (cur->GetType() == Tlv::kPendingTimestamp)))
+        if (((aType == kActive) && (cur->GetType() == Tlv::kActiveTimestamp)) ||
+            ((aType == kPending) && (cur->GetType() == Tlv::kPendingTimestamp)))
         {
             ; // skip Active or Pending Timestamp TLV
         }
@@ -608,7 +607,6 @@ void Dataset::ConvertToActive(void)
 {
     RemoveTlv(Tlv::kPendingTimestamp);
     RemoveTlv(Tlv::kDelayTimer);
-    mType = kActive;
 }
 
 const char *Dataset::TypeToString(Type aType)

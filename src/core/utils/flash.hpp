@@ -137,10 +137,7 @@ public:
     void Wipe(void);
 
 private:
-    enum
-    {
-        kSwapMarkerSize = 4, // in bytes
-    };
+    static constexpr uint32_t kSwapMarkerSize = 4; // in bytes
 
     static const uint32_t sSwapActive   = 0xbe5cc5ee;
     static const uint32_t sSwapInactive = 0xbe5cc5ec;
@@ -186,14 +183,11 @@ private:
         void SetFirst(void) { mFlags &= ~kFlagFirst; }
 
     private:
-        enum
-        {
-            kFlagsInit       = 0xffff, ///< Flags initialize to all-ones.
-            kFlagAddBegin    = 1 << 0, ///< 0 indicates record write has started, 1 otherwise.
-            kFlagAddComplete = 1 << 1, ///< 0 indicates record write has completed, 1 otherwise.
-            kFlagDelete      = 1 << 2, ///< 0 indicates record was deleted, 1 otherwise.
-            kFlagFirst       = 1 << 3, ///< 0 indicates first record for key, 1 otherwise.
-        };
+        static constexpr uint16_t kFlagsInit       = 0xffff; // Flags initialize to all-ones.
+        static constexpr uint16_t kFlagAddBegin    = 1 << 0; // 0 indicates record write has started, 1 otherwise.
+        static constexpr uint16_t kFlagAddComplete = 1 << 1; // 0 indicates record write has completed, 1 otherwise.
+        static constexpr uint16_t kFlagDelete      = 1 << 2; // 0 indicates record was deleted, 1 otherwise.
+        static constexpr uint16_t kFlagFirst       = 1 << 3; // 0 indicates first record for key, 1 otherwise.
 
         uint16_t mKey;
         uint16_t mFlags;
@@ -214,10 +208,7 @@ private:
         }
 
     private:
-        enum
-        {
-            kMaxDataSize = 255,
-        };
+        static constexpr uint16_t kMaxDataSize = 255;
 
         uint8_t mData[kMaxDataSize];
     } OT_TOOL_PACKED_END;

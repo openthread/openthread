@@ -59,28 +59,15 @@ Error Manager::AddService(const void *aServiceData,
                           const void *aServerData,
                           uint8_t     aServerDataLength)
 {
-    Error error;
-
-    SuccessOrExit(error = Get<Local>().AddService(
-                      kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData), aServiceDataLength,
-                      aServerStable, reinterpret_cast<const uint8_t *>(aServerData), aServerDataLength));
-
-    Get<Notifier>().HandleServerDataUpdated();
-
-exit:
-    return error;
+    return Get<Local>().AddService(kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData),
+                                   aServiceDataLength, aServerStable, reinterpret_cast<const uint8_t *>(aServerData),
+                                   aServerDataLength);
 }
 
 Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLength)
 {
-    Error error;
-
-    SuccessOrExit(error = Get<Local>().RemoveService(
-                      kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData), aServiceDataLength));
-    Get<Notifier>().HandleServerDataUpdated();
-
-exit:
-    return error;
+    return Get<Local>().RemoveService(kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData),
+                                      aServiceDataLength);
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
@@ -100,29 +87,35 @@ void Manager::GetBackboneRouterPrimary(ot::BackboneRouter::BackboneRouterConfig 
 {
     const ServerTlv *                 rvalServerTlv  = nullptr;
     const BackboneRouter::ServerData *rvalServerData = nullptr;
-    Iterator                          iterator;
+    const ServiceTlv *                serviceTlv     = nullptr;
 
     aConfig.mServer16 = Mac::kShortAddrInvalid;
 
-    iterator.mServiceTlv = Get<Leader>().FindService(kThreadEnterpriseNumber, &BackboneRouter::kServiceData,
-                                                     sizeof(BackboneRouter::kServiceData));
-
-    while (IterateToNextServer(iterator) == kErrorNone)
+    while ((serviceTlv = Get<Leader>().FindNextService(
+                serviceTlv, kThreadEnterpriseNumber, &BackboneRouter::kServiceData, BackboneRouter::kServiceDataMinSize,
+                NetworkData::kServicePrefixMatch)) != nullptr)
     {
-        const BackboneRouter::ServerData *serverData;
+        Iterator iterator;
 
-        if (iterator.mServerSubTlv->GetServerDataLength() < sizeof(BackboneRouter::ServerData))
+        iterator.mServiceTlv = serviceTlv;
+
+        while (IterateToNextServer(iterator) == kErrorNone)
         {
-            continue;
-        }
+            const BackboneRouter::ServerData *serverData;
 
-        serverData = reinterpret_cast<const BackboneRouter::ServerData *>(iterator.mServerSubTlv->GetServerData());
+            if (iterator.mServerSubTlv->GetServerDataLength() < sizeof(BackboneRouter::ServerData))
+            {
+                continue;
+            }
 
-        if (rvalServerTlv == nullptr ||
-            IsBackboneRouterPreferredTo(*iterator.mServerSubTlv, *serverData, *rvalServerTlv, *rvalServerData))
-        {
-            rvalServerTlv  = iterator.mServerSubTlv;
-            rvalServerData = serverData;
+            serverData = reinterpret_cast<const BackboneRouter::ServerData *>(iterator.mServerSubTlv->GetServerData());
+
+            if (rvalServerTlv == nullptr ||
+                IsBackboneRouterPreferredTo(*iterator.mServerSubTlv, *serverData, *rvalServerTlv, *rvalServerData))
+            {
+                rvalServerTlv  = iterator.mServerSubTlv;
+                rvalServerData = serverData;
+            }
         }
     }
 
@@ -165,7 +158,8 @@ Error Manager::GetNextDnsSrpAnycastInfo(Iterator &aIterator, DnsSrpAnycast::Info
 
     do
     {
-        tlv = Get<Leader>().FindNextMatchingService(tlv, kThreadEnterpriseNumber, &serviceData, sizeof(serviceData));
+        tlv = Get<Leader>().FindNextService(tlv, kThreadEnterpriseNumber, &serviceData, sizeof(serviceData),
+                                            NetworkData::kServicePrefixMatch);
         VerifyOrExit(tlv != nullptr, error = kErrorNotFound);
 
     } while (tlv->GetServiceDataLength() < sizeof(DnsSrpAnycast::ServiceData));
@@ -238,8 +232,8 @@ Error Manager::GetNextDnsSrpUnicastInfo(Iterator &aIterator, DnsSrpUnicast::Info
         // Find the next matching Service TLV.
 
         aIterator.mServiceTlv =
-            Get<Leader>().FindNextMatchingService(aIterator.mServiceTlv, kThreadEnterpriseNumber,
-                                                  &DnsSrpUnicast::kServiceData, sizeof(DnsSrpUnicast::kServiceData));
+            Get<Leader>().FindNextService(aIterator.mServiceTlv, kThreadEnterpriseNumber, &DnsSrpUnicast::kServiceData,
+                                          sizeof(DnsSrpUnicast::kServiceData), NetworkData::kServicePrefixMatch);
 
         VerifyOrExit(aIterator.mServiceTlv != nullptr, error = kErrorNotFound);
 

@@ -273,8 +273,7 @@ void JoinerRouter::SendDelayedJoinerEntrust(void)
     }
     else
     {
-        mDelayedJoinEnts.Dequeue(*message);
-        message->Free();
+        mDelayedJoinEnts.DequeueAndFree(*message);
 
         Get<KeyManager>().SetKek(metadata.mKek);
 
@@ -314,7 +313,7 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
 {
     Error          error;
     Coap::Message *message = nullptr;
-    Dataset        dataset(Dataset::kActive);
+    Dataset        dataset;
 
     NetworkNameTlv networkName;
     const Tlv *    tlv;

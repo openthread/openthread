@@ -959,6 +959,7 @@ Error TxtEntry::AppendTo(Message &aMessage) const
 {
     Error    error = kErrorNone;
     uint16_t keyLength;
+    char     separator = kKeyValueSeparator;
 
     if (mKey == nullptr)
     {
@@ -985,7 +986,7 @@ Error TxtEntry::AppendTo(Message &aMessage) const
 
     SuccessOrExit(error = aMessage.Append<uint8_t>(static_cast<uint8_t>(keyLength + mValueLength + sizeof(char))));
     SuccessOrExit(error = aMessage.AppendBytes(mKey, keyLength));
-    SuccessOrExit(error = aMessage.Append<char>(kKeyValueSeparator));
+    SuccessOrExit(error = aMessage.Append(separator));
     error = aMessage.AppendBytes(mValue, mValueLength);
 
 exit:

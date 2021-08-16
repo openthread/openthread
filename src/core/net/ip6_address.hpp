@@ -67,11 +67,8 @@ OT_TOOL_PACKED_BEGIN
 class NetworkPrefix : public otIp6NetworkPrefix, public Equatable<NetworkPrefix>, public Clearable<NetworkPrefix>
 {
 public:
-    enum
-    {
-        kSize   = OT_IP6_PREFIX_SIZE,            ///< Size in bytes.
-        kLength = OT_IP6_PREFIX_SIZE * CHAR_BIT, ///< Length of Network Prefix in bits.
-    };
+    static constexpr uint8_t kSize   = OT_IP6_PREFIX_SIZE;            ///< Size in bytes.
+    static constexpr uint8_t kLength = OT_IP6_PREFIX_SIZE * CHAR_BIT; ///< Length of Network Prefix in bits.
 
     /**
      * This method generates and sets the Network Prefix to a crypto-secure random Unique Local Address (ULA) based
@@ -93,16 +90,10 @@ OT_TOOL_PACKED_BEGIN
 class Prefix : public otIp6Prefix, public Clearable<Prefix>, public Unequatable<Prefix>
 {
 public:
-    enum : uint8_t
-    {
-        kMaxLength = OT_IP6_ADDRESS_SIZE * CHAR_BIT, ///< Max length of a prefix in bits.
-        kMaxSize   = OT_IP6_ADDRESS_SIZE,            ///< Max (byte) size of a prefix.
-    };
+    static constexpr uint8_t kMaxLength = OT_IP6_ADDRESS_SIZE * CHAR_BIT; ///< Max length of a prefix in bits.
+    static constexpr uint8_t kMaxSize   = OT_IP6_ADDRESS_SIZE;            ///< Max (byte) size of a prefix.
 
-    enum : uint16_t
-    {
-        kInfoStringSize = OT_IP6_PREFIX_STRING_SIZE, ///< Max chars for the info string (`ToString()`).
-    };
+    static constexpr uint16_t kInfoStringSize = OT_IP6_PREFIX_STRING_SIZE; ///< Info string size (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -167,6 +158,36 @@ public:
      *
      */
     bool IsValid(void) const { return (mLength <= kMaxLength); }
+
+    /**
+     * This method indicates whether the prefix is a Link-Local prefix.
+     *
+     * @retval TRUE   The prefix is a Link-Local prefix.
+     * @retval FALSE  The prefix is not a Link-Local prefix.
+     *
+     */
+    bool IsLinkLocal(void) const
+    {
+        return mLength >= 10 && mPrefix.mFields.m8[0] == 0xfe && (mPrefix.mFields.m8[1] & 0xc0) == 0x80;
+    }
+
+    /**
+     * This method indicates whether the prefix is a Multicast prefix.
+     *
+     * @retval TRUE   The prefix is a Multicast prefix.
+     * @retval FALSE  The prefix is not a Multicast prefix.
+     *
+     */
+    bool IsMulticast(void) const { return mLength >= 8 && mPrefix.mFields.m8[0] == 0xff; }
+
+    /**
+     * This method indicates whether the prefix is a Unique-Local prefix.
+     *
+     * @retval TRUE   The prefix is a Unique-Local prefix.
+     * @retval FALSE  The prefix is not a Unique-Local prefix.
+     *
+     */
+    bool IsUniqueLocal(void) const { return mLength >= 7 && (mPrefix.mFields.m8[0] & 0xfe) == 0xfc; }
 
     /**
      * This method indicates whether the prefix is equal to a given prefix.
@@ -312,11 +333,9 @@ class InterfaceIdentifier : public otIp6InterfaceIdentifier,
     friend class Address;
 
 public:
-    enum
-    {
-        kSize           = OT_IP6_IID_SIZE, ///< Size of an IPv6 Interface Identifier (in bytes).
-        kInfoStringSize = 17,              ///< Max chars for the info string (`ToString()`).
-    };
+    static constexpr uint8_t kSize = OT_IP6_IID_SIZE; ///< Size of an IPv6 Interface Identifier (in bytes).
+
+    static constexpr uint16_t kInfoStringSize = 17; ///< Max chars for the info string (`ToString()`).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToString()`.
@@ -492,11 +511,8 @@ public:
     InfoString ToString(void) const;
 
 private:
-    enum : uint8_t
-    {
-        kAloc16Mask            = 0xfc, // The mask for Aloc16.
-        kRloc16ReservedBitMask = 0x02, // The mask for the reserved bit of Rloc16.
-    };
+    static constexpr uint8_t kAloc16Mask            = 0xfc; // The mask for ALOC16.
+    static constexpr uint8_t kRloc16ReservedBitMask = 0x02; // The mask for the reserved bit of RLOC16.
 
 } OT_TOOL_PACKED_END;
 
@@ -510,39 +526,21 @@ class Address : public otIp6Address, public Equatable<Address>, public Clearable
     friend class Prefix;
 
 public:
-    /**
-     * Masks
-     *
-     */
-    enum
-    {
-        kAloc16Mask = InterfaceIdentifier::kAloc16Mask, ///< The mask for Aloc16.
-    };
+    static constexpr uint8_t kAloc16Mask = InterfaceIdentifier::kAloc16Mask; ///< The mask for ALOC16.
 
-    /**
-     * Constants
-     *
-     */
-    enum
-    {
-        kSize           = OT_IP6_ADDRESS_SIZE,        ///< Size of an IPv6 Address (in bytes).
-        kInfoStringSize = OT_IP6_ADDRESS_STRING_SIZE, ///< Max string size for an IPv6 address in string format.
-    };
+    static constexpr uint8_t kSize = OT_IP6_ADDRESS_SIZE; ///< Size of an IPv6 Address (in bytes).
 
-    /**
-     * IPv6 Address Scopes
-     */
-    enum
-    {
-        kNodeLocalScope      = 0,  ///< Node-Local scope
-        kInterfaceLocalScope = 1,  ///< Interface-Local scope
-        kLinkLocalScope      = 2,  ///< Link-Local scope
-        kRealmLocalScope     = 3,  ///< Realm-Local scope
-        kAdminLocalScope     = 4,  ///< Admin-Local scope
-        kSiteLocalScope      = 5,  ///< Site-Local scope
-        kOrgLocalScope       = 8,  ///< Organization-Local scope
-        kGlobalScope         = 14, ///< Global scope
-    };
+    static constexpr uint16_t kInfoStringSize = OT_IP6_ADDRESS_STRING_SIZE; ///< String Size for IPv6 address.
+
+    // IPv6 Address Scopes
+    static constexpr uint8_t kNodeLocalScope      = 0;  ///< Node-Local scope
+    static constexpr uint8_t kInterfaceLocalScope = 1;  ///< Interface-Local scope
+    static constexpr uint8_t kLinkLocalScope      = 2;  ///< Link-Local scope
+    static constexpr uint8_t kRealmLocalScope     = 3;  ///< Realm-Local scope
+    static constexpr uint8_t kAdminLocalScope     = 4;  ///< Admin-Local scope
+    static constexpr uint8_t kSiteLocalScope      = 5;  ///< Site-Local scope
+    static constexpr uint8_t kOrgLocalScope       = 8;  ///< Organization-Local scope
+    static constexpr uint8_t kGlobalScope         = 14; ///< Global scope
 
     /**
      * This enumeration defines IPv6 address type filter.
@@ -983,11 +981,8 @@ private:
     static const Address &GetRealmLocalAllRoutersMulticast(void);
     static const Address &GetRealmLocalAllMplForwarders(void);
 
-    enum
-    {
-        kMulticastNetworkPrefixLengthOffset = 3, ///< Prefix-Based Multicast Address (RFC3306).
-        kMulticastNetworkPrefixOffset       = 4, ///< Prefix-Based Multicast Address (RFC3306).
-    };
+    static constexpr uint8_t kMulticastNetworkPrefixLengthOffset = 3; // Prefix-Based Multicast Address (RFC3306).
+    static constexpr uint8_t kMulticastNetworkPrefixOffset       = 4; // Prefix-Based Multicast Address (RFC3306).
 } OT_TOOL_PACKED_END;
 
 /**

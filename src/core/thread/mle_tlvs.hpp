@@ -73,7 +73,7 @@ public:
      * MLE TLV Types.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kSourceAddress         = 0,  ///< Source Address TLV
         kMode                  = 1,  ///< Mode TLV
@@ -104,6 +104,7 @@ public:
         kDiscovery             = 26, ///< Thread Discovery TLV
         kCslChannel            = 80, ///< CSL Channel TLV
         kCslTimeout            = 85, ///< CSL Timeout TLV
+        kCslClockAccuracy      = 86, ///< CSL Clock Accuracy TLV
         kLinkMetricsQuery      = 87, ///< Link Metrics Query TLV
         kLinkMetricsManagement = 88, ///< Link Metrics Management TLV
         kLinkMetricsReport     = 89, ///< Link Metrics Report TLV
@@ -392,15 +393,13 @@ public:
     }
 
 private:
-    enum
-    {
-        kLinkQualityOutOffset = 6,
-        kLinkQualityOutMask   = 3 << kLinkQualityOutOffset,
-        kLinkQualityInOffset  = 4,
-        kLinkQualityInMask    = 3 << kLinkQualityInOffset,
-        kRouteCostOffset      = 0,
-        kRouteCostMask        = 0xf << kRouteCostOffset,
-    };
+    static constexpr uint8_t kLinkQualityOutOffset = 6;
+    static constexpr uint8_t kLinkQualityOutMask   = 3 << kLinkQualityOutOffset;
+    static constexpr uint8_t kLinkQualityInOffset  = 4;
+    static constexpr uint8_t kLinkQualityInMask    = 3 << kLinkQualityInOffset;
+    static constexpr uint8_t kRouteCostOffset      = 0;
+    static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
+
     uint8_t     mRouterIdSequence;
     RouterIdSet mRouterIdMask;
     uint8_t     mRouteData[kMaxRouterId + 1];
@@ -612,16 +611,14 @@ public:
     }
 
 private:
-    enum
-    {
-        kLinkQualityOutOffset = 6,
-        kLinkQualityOutMask   = 3 << kLinkQualityOutOffset,
-        kLinkQualityInOffset  = 4,
-        kLinkQualityInMask    = 3 << kLinkQualityInOffset,
-        kRouteCostOffset      = 0,
-        kRouteCostMask        = 0xf << kRouteCostOffset,
-        kOddEntryOffset       = 4,
-    };
+    static constexpr uint8_t kLinkQualityOutOffset = 6;
+    static constexpr uint8_t kLinkQualityOutMask   = 3 << kLinkQualityOutOffset;
+    static constexpr uint8_t kLinkQualityInOffset  = 4;
+    static constexpr uint8_t kLinkQualityInMask    = 3 << kLinkQualityInOffset;
+    static constexpr uint8_t kRouteCostOffset      = 0;
+    static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
+    static constexpr uint8_t kOddEntryOffset       = 4;
+
     uint8_t     mRouterIdSequence;
     RouterIdSet mRouterIdMask;
     // Since we do hold 12 (compressible to 11) bits of data per router, each entry occupies 1.5 bytes,
@@ -703,11 +700,8 @@ private:
 class ScanMaskTlv : public UintTlvInfo<Tlv::kScanMask, uint8_t>
 {
 public:
-    enum
-    {
-        kRouterFlag    = 1 << 7, ///< Scan Mask Router Flag.
-        kEndDeviceFlag = 1 << 6, ///< Scan Mask End Device Flag.
-    };
+    static constexpr uint8_t kRouterFlag    = 1 << 7; ///< Scan Mask Router Flag.
+    static constexpr uint8_t kEndDeviceFlag = 1 << 6; ///< Scan Mask End Device Flag.
 
     /**
      * This method indicates whether or not the Router flag is set.
@@ -939,11 +933,8 @@ public:
     void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
 
 private:
-    enum
-    {
-        kParentPriorityOffset = 6,
-        kParentPriorityMask   = 3 << kParentPriorityOffset,
-    };
+    static constexpr uint8_t kParentPriorityOffset = 6;
+    static constexpr uint8_t kParentPriorityMask   = 3 << kParentPriorityOffset;
 
     uint8_t  mParentPriority;
     uint8_t  mLinkQuality3;
@@ -1052,11 +1043,8 @@ public:
     void SetIp6Address(const Ip6::Address &aAddress) { mIp6Address = aAddress; }
 
 private:
-    enum
-    {
-        kCompressed = 1 << 7,
-        kCidMask    = 0xf,
-    };
+    static constexpr uint8_t kCompressed = 1 << 7;
+    static constexpr uint8_t kCidMask    = 0xf;
 
     uint8_t mControl;
     union
@@ -1332,6 +1320,63 @@ private:
 
 #endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
+/**
+ * This class implements CSL Clock Accuracy TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslClockAccuracyTlv : public Tlv, public TlvInfo<Tlv::kCslClockAccuracy>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslClockAccuracy);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method returns the CSL Clock Accuracy value.
+     *
+     * @returns The CSL Clock Accuracy value.
+     *
+     */
+    uint8_t GetCslClockAccuracy(void) { return mCslClockAccuracy; }
+
+    /**
+     * This method sets the CSL Clock Accuracy value.
+     *
+     * @param[in]  aCslClockAccuracy  The CSL Clock Accuracy value.
+     *
+     */
+    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
+
+    /**
+     * This method returns the Clock Accuracy value.
+     *
+     * @returns The Clock Accuracy value.
+     *
+     */
+    uint8_t GetCslUncertainty(void) { return mCslUncertainty; }
+
+    /**
+     * This method sets the CSL Uncertainty value.
+     *
+     * @param[in]  aCslUncertainty  The CSL Uncertainty value.
+     *
+     */
+    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
+
+private:
+    uint8_t mCslClockAccuracy;
+    uint8_t mCslUncertainty;
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**
  * @}
  *

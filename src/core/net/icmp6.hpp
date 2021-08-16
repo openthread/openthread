@@ -101,13 +101,10 @@ public:
             kCodeFragmReasTimeEx   = OT_ICMP6_CODE_FRAGM_REAS_TIME_EX,   ///< Fragment Reassembly Time Exceeded
         };
 
-        enum : uint8_t
-        {
-            kTypeFieldOffset     = 0, ///< The byte offset of Type field in ICMP6 header.
-            kCodeFieldOffset     = 1, ///< The byte offset of Code field in ICMP6 header.
-            kChecksumFieldOffset = 2, ///< The byte offset of Checksum field in ICMP6 header.
-            kDataFieldOffset     = 4, ///< The byte offset of Data field in ICMP6 header.
-        };
+        static constexpr uint8_t kTypeFieldOffset     = 0; ///< The byte offset of Type field in ICMP6 header.
+        static constexpr uint8_t kCodeFieldOffset     = 1; ///< The byte offset of Code field in ICMP6 header.
+        static constexpr uint8_t kChecksumFieldOffset = 2; ///< The byte offset of Checksum field in ICMP6 header.
+        static constexpr uint8_t kDataFieldOffset     = 4; ///< The byte offset of Data field in ICMP6 header.
 
         /**
          * This method indicates whether the ICMPv6 message is an error message.

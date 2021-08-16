@@ -189,10 +189,7 @@ public:
                   otBackboneRouterMulticastListenerInfo &    aListenerInfo);
 
 private:
-    enum
-    {
-        kMulticastListenersTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS,
-    };
+    static constexpr uint16_t kMulticastListenersTableSize = OPENTHREAD_CONFIG_MAX_MULTICAST_LISTENERS;
 
     static_assert(
         kMulticastListenersTableSize >= 75,

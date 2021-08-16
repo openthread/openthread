@@ -48,8 +48,6 @@ SERVER = BR1 = 1
 CLIENT1, CLIENT2 = 2, 3
 HOST = 4
 
-DIGGER = HOST
-
 DOMAIN = 'default.service.arpa.'
 SERVICE = '_testsrv._udp'
 SERVICE_FULL_NAME = f'{SERVICE}.{DOMAIN}'
@@ -87,42 +85,41 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
     }
 
     def test(self):
-        self.nodes[HOST].start(start_radvd=False)
+        server = br1 = self.nodes[BR1]
+        client1 = self.nodes[CLIENT1]
+        client2 = self.nodes[CLIENT2]
+        digger = host = self.nodes[HOST]
+
+        host.start(start_radvd=False)
         self.simulator.go(5)
 
-        self.nodes[BR1].start()
+        br1.start()
         self.simulator.go(5)
-        self.assertEqual('leader', self.nodes[BR1].get_state())
-        self.nodes[SERVER].srp_server_set_enabled(True)
+        self.assertEqual('leader', br1.get_state())
+        server.srp_server_set_enabled(True)
 
-        self.nodes[CLIENT1].start()
+        client1.start()
 
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[CLIENT1].get_state())
+        self.assertEqual('router', client1.get_state())
 
-        self.nodes[CLIENT2].start()
+        client2.start()
         self.simulator.go(5)
-        self.assertEqual('router', self.nodes[CLIENT2].get_state())
+        self.assertEqual('router', client2.get_state())
 
         self.simulator.go(10)
 
-        server_addr = self.nodes[SERVER].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+        server_addr = server.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
 
         # Router1 can ping to/from the Host on infra link.
-        self.assertTrue(self.nodes[BR1].ping(self.nodes[HOST].get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0],
-                                             backbone=True))
-        self.assertTrue(self.nodes[HOST].ping(self.nodes[BR1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0],
-                                              backbone=True))
+        self.assertTrue(br1.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0], backbone=True))
+        self.assertTrue(host.ping(br1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True))
 
-        client1_addrs = [
-            self.nodes[CLIENT1].get_mleid(), self.nodes[CLIENT1].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
-        ]
-        self._config_srp_client_services(CLIENT1, 'ins1', 'host1', 11111, 1, 1, client1_addrs)
+        client1_addrs = [client1.get_mleid(), client1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]]
+        self._config_srp_client_services(client1, 'ins1', 'host1', 11111, 1, 1, client1_addrs)
 
-        client2_addrs = [
-            self.nodes[CLIENT2].get_mleid(), self.nodes[CLIENT2].get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
-        ]
-        self._config_srp_client_services(CLIENT2, 'ins2', 'host2', 22222, 2, 2, client2_addrs)
+        client2_addrs = [client2.get_mleid(), client2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]]
+        self._config_srp_client_services(client2, 'ins2', 'host2', 22222, 2, 2, client2_addrs)
 
         ins1_full_name = f'ins1.{SERVICE_FULL_NAME}'
         ins2_full_name = f'ins2.{SERVICE_FULL_NAME}'
@@ -131,7 +128,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
         EMPTY_TXT = {}
 
         # check if PTR query works
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, SERVICE_FULL_NAME, 'PTR')
+        dig_result = digger.dns_dig(server_addr, SERVICE_FULL_NAME, 'PTR')
 
         self._assert_dig_result_matches(
             dig_result, {
@@ -151,7 +148,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             })
 
         # check if SRV query works
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, ins1_full_name, 'SRV')
+        dig_result = digger.dns_dig(server_addr, ins1_full_name, 'SRV')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(ins1_full_name, 'IN', 'SRV')],
@@ -162,7 +159,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 ],
             })
 
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, ins2_full_name, 'SRV')
+        dig_result = digger.dns_dig(server_addr, ins2_full_name, 'SRV')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(ins2_full_name, 'IN', 'SRV')],
@@ -174,20 +171,20 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             })
 
         # check if TXT query works
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, ins1_full_name, 'TXT')
+        dig_result = digger.dns_dig(server_addr, ins1_full_name, 'TXT')
         self._assert_dig_result_matches(dig_result, {
             'QUESTION': [(ins1_full_name, 'IN', 'TXT')],
             'ANSWER': [(ins1_full_name, 'IN', 'TXT', EMPTY_TXT),],
         })
 
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, ins2_full_name, 'TXT')
+        dig_result = digger.dns_dig(server_addr, ins2_full_name, 'TXT')
         self._assert_dig_result_matches(dig_result, {
             'QUESTION': [(ins2_full_name, 'IN', 'TXT')],
             'ANSWER': [(ins2_full_name, 'IN', 'TXT', EMPTY_TXT),],
         })
 
         # check if AAAA query works
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, host1_full_name, 'AAAA')
+        dig_result = digger.dns_dig(server_addr, host1_full_name, 'AAAA')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(host1_full_name, 'IN', 'AAAA'),],
@@ -197,7 +194,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                 ],
             })
 
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, host2_full_name, 'AAAA')
+        dig_result = digger.dns_dig(server_addr, host2_full_name, 'AAAA')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(host2_full_name, 'IN', 'AAAA'),],
@@ -209,30 +206,32 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
         # check some invalid queries
         for qtype in ['A', 'CNAME']:
-            dig_result = self.nodes[DIGGER].dns_dig(server_addr, host1_full_name, qtype)
+            dig_result = digger.dns_dig(server_addr, host1_full_name, qtype)
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NOTIMP',
             })
 
         for service_name in WRONG_SERVICE_NAMES:
-            dig_result = self.nodes[DIGGER].dns_dig(server_addr, service_name, 'PTR')
+            dig_result = digger.dns_dig(server_addr, service_name, 'PTR')
             self._assert_dig_result_matches(dig_result, {
                 'status': 'NXDOMAIN',
             })
 
         # verify Discovery Proxy works for _meshcop._udp
-        self._verify_discovery_proxy_meshcop(server_addr)
+        self._verify_discovery_proxy_meshcop(server_addr, server.get_network_name(), digger)
 
-    def _verify_discovery_proxy_meshcop(self, server_addr):
+    def _verify_discovery_proxy_meshcop(self, server_addr, network_name, digger):
         dp_service_name = '_meshcop._udp.default.service.arpa.'
-        network_name = self.nodes[SERVER].get_network_name()
-        dp_instance_name = f'{network_name}._meshcop._udp.default.service.arpa.'
         dp_hostname = lambda x: x.endswith('.default.service.arpa.')
 
         def check_border_agent_port(port):
             return 0 < port <= 65535
 
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, dp_service_name, 'PTR')
+        dig_result = digger.dns_dig(server_addr, dp_service_name, 'PTR')
+        for answer in dig_result['ANSWER']:
+            if len(answer) >= 2 and answer[-2] == 'PTR':
+                dp_instance_name = answer[-1]
+                break
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(dp_service_name, 'IN', 'PTR'),],
@@ -254,7 +253,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
 
         assert isinstance(dp_hostname, str), dig_result
 
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, dp_instance_name, 'SRV')
+        dig_result = digger.dns_dig(server_addr, dp_instance_name, 'SRV')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(dp_instance_name, 'IN', 'SRV'),],
@@ -263,7 +262,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
                     'nn') == network_name and 'xp' in txt and 'tv' in txt and 'dd' in txt)),],
             })
 
-        dig_result = self.nodes[DIGGER].dns_dig(server_addr, dp_instance_name, 'TXT')
+        dig_result = digger.dns_dig(server_addr, dp_instance_name, 'TXT')
         self._assert_dig_result_matches(
             dig_result, {
                 'QUESTION': [(dp_instance_name, 'IN', 'TXT'),],
@@ -273,7 +272,7 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             })
 
         if dp_ip6_address is not None:
-            dig_result = self.nodes[DIGGER].dns_dig(server_addr, dp_hostname, 'AAAA')
+            dig_result = digger.dns_dig(server_addr, dp_hostname, 'AAAA')
 
             self._assert_dig_result_matches(dig_result, {
                 'QUESTION': [(dp_hostname, 'IN', 'AAAA'),],
@@ -281,16 +280,13 @@ class TestDnssdServerOnBr(thread_cert.TestCase):
             })
 
     def _config_srp_client_services(self, client, instancename, hostname, port, priority, weight, addrs):
-        self.nodes[client].netdata_show()
-        srp_server_port = self.nodes[client].get_srp_server_port()
-
-        self.nodes[client].srp_client_start(self.nodes[SERVER].get_mleid(), srp_server_port)
-        self.nodes[client].srp_client_set_host_name(hostname)
-        self.nodes[client].srp_client_set_host_address(*addrs)
-        self.nodes[client].srp_client_add_service(instancename, SERVICE, port, priority, weight)
+        client.srp_client_enable_auto_start_mode()
+        client.srp_client_set_host_name(hostname)
+        client.srp_client_set_host_address(*addrs)
+        client.srp_client_add_service(instancename, SERVICE, port, priority, weight)
 
         self.simulator.go(5)
-        self.assertEqual(self.nodes[client].srp_client_get_host_state(), 'Registered')
+        self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
     def _assert_have_question(self, dig_result, question):
         for dig_question in dig_result['QUESTION']:

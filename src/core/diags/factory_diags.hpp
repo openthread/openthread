@@ -122,10 +122,7 @@ public:
     void TransmitDone(Error aError);
 
 private:
-    enum : uint8_t
-    {
-        kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX,
-    };
+    static constexpr uint8_t kMaxArgs = OPENTHREAD_CONFIG_DIAG_CMD_LINE_ARGS_MAX;
 
     struct Command
     {

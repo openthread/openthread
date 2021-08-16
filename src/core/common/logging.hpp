@@ -97,6 +97,10 @@ extern "C" {
 #define _OT_REGION_BR_PREFIX "-BR------: "
 #define _OT_REGION_SRP_PREFIX "-SRP-----: "
 #define _OT_REGION_DNS_PREFIX "-DNS-----: "
+
+// When adding a new log region, please ensure to update the array
+// `kRegionPrefixStrings[]` in `Log()` function in `logging.cpp`.
+
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -137,7 +141,8 @@ extern "C" {
 #define otLogCrit(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_CRIT, aRegion, _OT_LEVEL_CRIT_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogCrit(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogCrit(aRegion, aRegionPrefix, ...) _otLogCrit(aRegion, __VA_ARGS__)
+void _otLogCrit(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -155,7 +160,8 @@ void otLogCrit(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogWarn(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_WARN, aRegion, _OT_LEVEL_WARN_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogWarn(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogWarn(aRegion, aRegionPrefix, ...) _otLogWarn(aRegion, __VA_ARGS__)
+void _otLogWarn(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -173,7 +179,8 @@ void otLogWarn(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogNote(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_NOTE, aRegion, _OT_LEVEL_NOTE_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogNote(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogNote(aRegion, aRegionPrefix, ...) _otLogNote(aRegion, __VA_ARGS__)
+void _otLogNote(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -191,7 +198,8 @@ void otLogNote(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogInfo(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_INFO, aRegion, _OT_LEVEL_INFO_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogInfo(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogInfo(aRegion, aRegionPrefix, ...) _otLogInfo(aRegion, __VA_ARGS__)
+void _otLogInfo(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -209,7 +217,8 @@ void otLogInfo(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogDebg(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_DEBG, aRegion, _OT_LEVEL_DEBG_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogDebg(aRegion, aRegionPrefix, ...) _otLogDebg(aRegion, __VA_ARGS__)
+void _otLogDebg(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -2326,6 +2335,74 @@ void otLogOtns(const char *aFormat, ...);
 #endif
 
 /**
+ * @def otDumpCritBr
+ *
+ * This function generates a memory dump with log level critical and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWarnBr
+ *
+ * This function generates a memory dump with log level warning and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNoteBr
+ *
+ * This function generates a memory dump with log level note and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInfoBr
+ *
+ * This function generates a memory dump with log level info and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebgBr
+ *
+ * This function generates a memory dump with log level debug and region Border Routing.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_BR
+#define otDumpCritBr(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpWarnBr(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpNoteBr(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpInfoBr(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#define otDumpDebgBr(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_BR, aId, aBuf, aLength)
+#else
+#define otDumpCritBr(aId, aBuf, aLength)
+#define otDumpWarnBr(aId, aBuf, aLength)
+#define otDumpNoteBr(aId, aBuf, aLength)
+#define otDumpInfoBr(aId, aBuf, aLength)
+#define otDumpDebgBr(aId, aBuf, aLength)
+#endif
+
+/**
  * @def otDumpCritDns
  *
  * This function generates a memory dump with log level critical and region DNS.
@@ -2478,22 +2555,6 @@ void otLogOtns(const char *aFormat, ...);
 #endif
 
 /**
- * @def otDumpCertBr
- *
- * This function generates a memory dump with log level none for the BR certification test.
- *
- * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
- * @param[in]  aBuf         A pointer to the buffer.
- * @param[in]  aLength      Number of bytes to print.
- *
- */
-#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
-#define otDumpCertBr(aId, aBuf, aLength) otDump(OT_LOG_LEVEL_NONE, OT_LOG_REGION_BR, aId, aBuf, aLength)
-#else
-#define otDumpCertBr(aId, aBuf, aLength)
-#endif
-
-/**
  * This function dumps bytes to the log in a human-readable fashion.
  *
  * @param[in]  aLogLevel    The log level.
@@ -2505,8 +2566,7 @@ void otLogOtns(const char *aFormat, ...);
  */
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, size_t aLength);
 
-#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
-
+#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY || OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 /**
  * This function converts a log level to a prefix string for appending to log message.
  *
@@ -2516,6 +2576,9 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
  *
  */
 const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
 
 /**
  * Local/private macro to format the log message

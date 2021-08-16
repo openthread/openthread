@@ -235,6 +235,11 @@ typedef enum OT_MUST_USE_RESULT otError
     OT_ERROR_PENDING = 36,
 
     /**
+     * Request rejected.
+     */
+    OT_ERROR_REJECTED = 37,
+
+    /**
      * The number of defined errors.
      */
     OT_NUM_ERRORS,

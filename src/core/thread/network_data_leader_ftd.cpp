@@ -433,7 +433,7 @@ Error Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc
             // Ensure there is no duplicate Service TLV with same
             // Enterprise Number and Service Data.
             VerifyOrExit(FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                     service->GetServiceDataLength(), aTlvs, offset) == nullptr,
+                                     service->GetServiceDataLength(), kServiceExactMatch, aTlvs, offset) == nullptr,
                          error = kErrorParse);
 
             SuccessOrExit(error = ValidateService(*service, aRloc16));
@@ -786,9 +786,9 @@ exit:
 
 Error Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags)
 {
-    Error       error = kErrorNone;
-    ServiceTlv *dstService =
-        FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(), aService.GetServiceDataLength());
+    Error            error      = kErrorNone;
+    ServiceTlv *     dstService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(),
+                                         aService.GetServiceDataLength(), kServiceExactMatch);
     const ServerTlv *server;
 
     if (dstService == nullptr)
@@ -1080,7 +1080,7 @@ void Leader::RemoveRloc(uint16_t       aRloc16,
             ServiceTlv *      service = static_cast<ServiceTlv *>(cur);
             const ServiceTlv *excludeService =
                 FindService(service->GetEnterpriseNumber(), service->GetServiceData(), service->GetServiceDataLength(),
-                            aExcludeTlvs, aExcludeTlvsLength);
+                            kServiceExactMatch, aExcludeTlvs, aExcludeTlvsLength);
 
             RemoveRlocInService(*service, aRloc16, aMatchMode, excludeService, aChangedFlags);
 

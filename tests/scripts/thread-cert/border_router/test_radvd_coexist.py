@@ -107,6 +107,9 @@ class SingleBorderRouter(thread_cert.TestCase):
 
         self.assertEqual(len(br.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
         self.assertEqual(len(router.get_ip6_address(config.ADDRESS_TYPE.OMR)), 1)
+
+        # radvd doesn't deprecates the PIO so that the Border Router will not
+        # advertise its own on-link prefix immediately.
         self.assertEqual(len(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)), 1)
 
         self.assertTrue(router.ping(host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]))

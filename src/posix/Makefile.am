@@ -57,6 +57,7 @@ LIBTOOLFLAGS_COMMON = --preserve-dup-deps
 LDADD_COMMON                                                           = \
     $(top_builddir)/src/posix/platform/libopenthread-posix.a             \
     -lutil                                                               \
+    $(top_builddir)/third_party/tcplp/libtcplp.a                         \
     $(NULL)
 
 if OPENTHREAD_TARGET_LINUX
