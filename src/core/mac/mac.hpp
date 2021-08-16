@@ -916,6 +916,7 @@ private:
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
     RadioTypes mTxPendingRadioLinks;
+    RadioTypes mTxBeaconRadioLinks;
     Error      mTxError;
 #endif
 

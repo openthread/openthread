@@ -856,18 +856,26 @@ TxFrame *Mac::PrepareBeaconRequest(void)
 
 TxFrame *Mac::PrepareBeacon(void)
 {
-    TxFrame &      frame = mLinks.GetTxFrames().GetBroadcastTxFrame();
+    TxFrame *      frame;
     uint8_t        beaconLength;
     uint16_t       fcf;
     Beacon *       beacon        = nullptr;
     BeaconPayload *beaconPayload = nullptr;
 
-    fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
-    frame.InitMacHeader(fcf, Frame::kSecNone);
-    IgnoreError(frame.SetSrcPanId(mPanId));
-    frame.SetSrcAddr(GetExtAddress());
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    OT_ASSERT(!mTxBeaconRadioLinks.IsEmpty());
+    frame = &mLinks.GetTxFrames().GetTxFrame(mTxBeaconRadioLinks);
+    mTxBeaconRadioLinks.Clear();
+#else
+    frame = &mLinks.GetTxFrames().GetBroadcastTxFrame();
+#endif
 
-    beacon = reinterpret_cast<Beacon *>(frame.GetPayload());
+    fcf = Frame::kFcfFrameBeacon | Frame::kFcfDstAddrNone | Frame::kFcfSrcAddrExt;
+    frame->InitMacHeader(fcf, Frame::kSecNone);
+    IgnoreError(frame->SetSrcPanId(mPanId));
+    frame->SetSrcAddr(GetExtAddress());
+
+    beacon = reinterpret_cast<Beacon *>(frame->GetPayload());
     beacon->Init();
     beaconLength = sizeof(*beacon);
 
@@ -892,11 +900,11 @@ TxFrame *Mac::PrepareBeacon(void)
         beaconLength += sizeof(*beaconPayload);
     }
 
-    frame.SetPayloadLength(beaconLength);
+    frame->SetPayloadLength(beaconLength);
 
     LogBeacon("Sending", *beaconPayload);
 
-    return &frame;
+    return frame;
 }
 
 bool Mac::ShouldSendBeacon(void) const
@@ -2164,8 +2172,12 @@ bool Mac::HandleMacCommand(RxFrame &aFrame)
 
         if (ShouldSendBeacon())
         {
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+            mTxBeaconRadioLinks.Add(aFrame.GetRadioType());
+#endif
             StartOperation(kOperationTransmitBeacon);
         }
+
         didHandle = true;
         break;
 
