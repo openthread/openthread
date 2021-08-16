@@ -632,15 +632,15 @@ Error NetworkKeyInfo::CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const
 Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
 {
     Error       error = kErrorNone;
-    otMacKeyRef aKeyRef;
+    otMacKeyRef keyRef;
 
-    aKeyRef = kNetworkKeyPsaItsOffset;
+    keyRef = kNetworkKeyPsaItsOffset;
 
     if (!aOverWriteExisting)
     {
         otCryptoKeyAttributes mKeyAttributes;
 
-        error = otPlatCryptoGetKeyAttributes(aKeyRef, &mKeyAttributes);
+        error = otPlatCryptoGetKeyAttributes(keyRef, &mKeyAttributes);
         // We will be able to retrieve the key_attributes only if there is
         // already a network key stored in ITS. If stored, and we are not
         // overwriting the existing key, return without doing anything.
@@ -650,15 +650,15 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
         }
     }
 
-    CheckAndDestroyStoredKey(aKeyRef);
+    CheckAndDestroyStoredKey(keyRef);
 
-    error = otPlatCryptoImportKey(&aKeyRef, OT_CRYPTO_KEY_TYPE_HMAC, OT_CRYPTO_KEY_ALG_HMAC_SHA_256,
+    error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_HMAC, OT_CRYPTO_KEY_ALG_HMAC_SHA_256,
                                   OT_CRYPTO_KEY_USAGE_SIGN_HASH | OT_CRYPTO_KEY_USAGE_EXPORT,
                                   OT_CRYPTO_KEY_STORAGE_PERSISTENT, mNetworkKey.mLiteralKey.m8, OT_NETWORK_KEY_SIZE);
 
 exit:
     mNetworkKey.mLiteralKey.Clear();
-    mNetworkKey.mKeyRef     = aKeyRef;
+    mNetworkKey.mKeyRef     = keyRef;
     mNetworkKey.mCryptoType = Mac::CryptoType::kUseKeyRefs;
 
     return error;
