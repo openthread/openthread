@@ -112,17 +112,19 @@ void Otns::EmitNeighborChange(NeighborTable::Event aEvent, const Neighbor &aNeig
 {
     switch (aEvent)
     {
-    case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
+    case NeighborTable::kRouterAdded:
         EmitStatus("router_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
-    case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
+    case NeighborTable::kRouterRemoved:
         EmitStatus("router_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
+    case NeighborTable::kChildAdded:
         EmitStatus("child_added=%s", aNeighbor.GetExtAddress().ToString().AsCString());
         break;
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+    case NeighborTable::kChildRemoved:
         EmitStatus("child_removed=%s", aNeighbor.GetExtAddress().ToString().AsCString());
+        break;
+    case NeighborTable::kChildModeChanged:
         break;
     }
 }

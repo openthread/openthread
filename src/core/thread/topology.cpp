@@ -294,6 +294,19 @@ void Child::ClearIp6Addresses(void)
 #endif
 }
 
+void Child::SetDeviceMode(Mle::DeviceMode aMode)
+{
+    VerifyOrExit(aMode != GetDeviceMode());
+
+    Neighbor::SetDeviceMode(aMode);
+
+    VerifyOrExit(IsStateValid());
+    Get<NeighborTable>().Signal(NeighborTable::kChildModeChanged, *this);
+
+exit:
+    return;
+}
+
 Error Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const
 {
     Error error = kErrorNone;

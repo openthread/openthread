@@ -643,16 +643,16 @@ uint8_t otThreadGetMaxChildIpAddresses(otInstance *aInstance);
 otError otThreadSetMaxChildIpAddresses(otInstance *aInstance, uint8_t aMaxIpAddresses);
 
 /**
- * This enumeration defines the constants used in `otNeighborTableCallback` to indicate whether a child or router
- * neighbor is being added or removed.
+ * This enumeration defines the constants used in `otNeighborTableCallback` to indicate changes in neighbor table.
  *
  */
 typedef enum
 {
-    OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED,    ///< A child is being added.
-    OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED,  ///< A child is being removed.
-    OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED,   ///< A router is being added.
-    OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, ///< A router is being removed.
+    OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED,        ///< A child is being added.
+    OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED,      ///< A child is being removed.
+    OT_NEIGHBOR_TABLE_EVENT_CHILD_MODE_CHANGED, ///< An existing child's mode is changed.
+    OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED,       ///< A router is being added.
+    OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED,     ///< A router is being removed.
 } otNeighborTableEvent;
 
 /**
@@ -671,8 +671,7 @@ typedef struct
 } otNeighborTableEntryInfo;
 
 /**
- * This function pointer is called to notify that a child or router neighbor is being added to or removed from neighbor
- * table.
+ * This function pointer is called to notify that there is a change in the neighbor table.
  *
  * @param[in]  aEvent      A event flag.
  * @param[in]  aEntryInfo  A pointer to table entry info.
@@ -683,9 +682,11 @@ typedef void (*otNeighborTableCallback)(otNeighborTableEvent aEvent, const otNei
 /**
  * This function registers a neighbor table callback function.
  *
- * The provided callback (if non-NULL) will be invoked when a child or router neighbor entry is being added/removed
- * to/from the neighbor table. Subsequent calls to this method will overwrite the previous callback.  Note that this
- * callback in invoked while the neighbor/child table is being updated and always before the `otStateChangedCallback`.
+ * The provided callback (if non-NULL) will be invoked when there is a change in the neighbor table (e.g., a child or a
+ * router neighbor entry is being added/removed or an existing child's mode is changed).
+ *
+ * Subsequent calls to this method will overwrite the previous callback.  Note that this callback in invoked while the
+ * neighbor/child table is being updated and always before the `otStateChangedCallback`.
  *
  * @param[in] aInstance  A pointer to an OpenThread instance.
  * @param[in] aCallback  A pointer to callback handler function.
