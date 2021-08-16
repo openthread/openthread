@@ -143,16 +143,6 @@ OT_TOOL_PACKED_BEGIN
 class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>, public Clearable<NetworkKey>
 {
 public:
-    /**
-     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
-     * a reference.
-     */
-    Mac::CryptoType mCryptoType;
-
-    /**
-     * Reference to Network Key.
-     */
-    otNetworkKeyRef mKeyRef;
 
 #if !OPENTHREAD_RADIO
     /**
@@ -165,6 +155,38 @@ public:
     Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
 
+} OT_TOOL_PACKED_END;
+
+/**
+ * Provides a representation for Network Key reference.
+ *
+ */
+typedef otNetworkKeyRef NetworkKeyRef; 
+
+/**
+ * This class represents a Thread Network Key material.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NetworkKeyInfo
+{
+public:
+    /**
+     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
+     * a reference.
+     */
+    Mac::CryptoType mCryptoType;
+
+    /**
+     * This member holds the NetworkKey as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT enabled. 
+     */
+    NetworkKey      mLiteralKey;
+    
+    /**
+     * This member holds the NetworkKey as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled. 
+     */
+    NetworkKeyRef   mKeyRef;
+
     /**
      * This method copies the literal Thread Network Key into given buffer.
      *
@@ -173,7 +195,6 @@ public:
      *
      */
     Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
-
 } OT_TOOL_PACKED_END;
 
 /**
@@ -184,16 +205,6 @@ OT_TOOL_PACKED_BEGIN
 class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
 {
 public:
-    /**
-     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
-     * a reference.
-     */
-    Mac::CryptoType mCryptoType;
-
-    /**
-     * Reference to PSKC.
-     */
-    otPskcRef mKeyRef;
 
 #if !OPENTHREAD_RADIO
     /**
@@ -204,6 +215,38 @@ public:
      */
     Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
 #endif
+} OT_TOOL_PACKED_END;
+
+/**
+ * Provides a representation for Network Key reference.
+ *
+ */
+typedef otPskcRef PskcRef; 
+
+/**
+ * This class represents a Pskc Key material.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class PskcInfo
+{
+public:
+    /**
+     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
+     * a reference.
+     */
+    Mac::CryptoType mCryptoType;
+
+    /**
+     * This member holds the Pskc as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT enabled. 
+     */
+    Pskc        mLiteralKey;
+    
+    /**
+     * This member holds the Pskc as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled. 
+     */
+    PskcRef    mKeyRef;
+
     /**
      * This method copies the literal PSKc into given buffer.
      *
@@ -260,7 +303,7 @@ public:
      * @returns The Thread Network Key.
      *
      */
-    const NetworkKey &GetNetworkKey(void) const { return mNetworkKey; }
+    const NetworkKeyInfo &GetNetworkKey(void) const { return mNetworkKey; }
 
     /**
      * This method sets the Thread Network Key.
@@ -302,7 +345,7 @@ public:
      * @returns A reference to the PSKc.
      *
      */
-    const Pskc &GetPskc(void) const { return mPskc; }
+    const PskcInfo &GetPskc(void) const { return mPskc; }
 
     /**
      * This method sets the PSKc.
@@ -557,10 +600,6 @@ public:
      */
     void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
 
-    otCryptoType GetCryptoType(void) { return mCryptoType; }
-
-    void SetCryptoType(otCryptoType aCryptoType) { mCryptoType = aCryptoType; }
-
 private:
     enum
     {
@@ -603,7 +642,7 @@ private:
     static const uint8_t kTrelInfoString[];
 #endif
 
-    NetworkKey mNetworkKey;
+    NetworkKeyInfo mNetworkKey;
 
     uint32_t mKeySequence;
     Mle::Key mMleKey;
@@ -625,12 +664,11 @@ private:
     TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    Pskc mPskc;
+    PskcInfo mPskc;
 #endif
     Kek      mKek;
     uint32_t mKekFrameCounter;
 
-    otCryptoType   mCryptoType;
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
 };

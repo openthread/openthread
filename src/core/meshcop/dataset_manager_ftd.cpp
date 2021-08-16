@@ -380,21 +380,17 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<PskcTlv>() == nullptr)
     {
-        uint8_t pskcLiteral[OT_PSKC_MAX_SIZE];
-
-        if (!Get<KeyManager>().IsPskcSet())
+        if (Get<KeyManager>().IsPskcSet())
+        {
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, Get<KeyManager>().GetPskc().mLiteralKey));
+        }
+        else
         {
             // PSKc has not yet been configured, generate new PSKc at random
             Pskc pskc;
             SuccessOrExit(error = pskc.GenerateRandom());
-            IgnoreError(pskc.CopyKey(pskcLiteral, OT_PSKC_MAX_SIZE));
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
         }
-        else
-        {
-            IgnoreError(Get<KeyManager>().GetPskc().CopyKey(pskcLiteral, OT_PSKC_MAX_SIZE));
-        }
-
-        IgnoreError(dataset.SetTlv(Tlv::kPskc, pskcLiteral));
     }
 
     if (dataset.GetTlv<SecurityPolicyTlv>() == nullptr)

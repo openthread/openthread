@@ -416,11 +416,11 @@ private:
     Type mType; ///< The address type (Short, Extended, or none).
 };
 
-typedef enum CryptoType
+enum CryptoType
 {
-    kUseKeyLiterals = 0,
-    kUseKeyRefs     = 1,
-} CryptoType;
+    kUseKeyLiterals = OT_KEY_TYPE_LITERAL_KEY,
+    kUseKeyRefs     = OT_KEY_TYPE_KEY_REF,
+};
 
 /**
  * This class represents a MAC key.

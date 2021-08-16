@@ -347,7 +347,7 @@ const otPskc *otThreadGetPskc(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetPskc();
+    return &instance.Get<KeyManager>().GetPskc().mLiteralKey;
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
