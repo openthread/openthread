@@ -64,6 +64,8 @@ public:
      *
      */
     virtual void Process(const otSysMainloopContext &aContext) = 0;
+    
+    virtual ~Source(void) = default;
 
 private:
     Source *mNext = nullptr;
