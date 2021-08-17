@@ -149,7 +149,7 @@ Done
 
 Usage: `srp server state`
 
-Print the state of the SRP server.
+Print the state of the SRP server. It could be `disabled`, `stopped` or `running`.
 
 ```bash
 > srp server state
