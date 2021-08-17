@@ -113,7 +113,7 @@ public:
      * Defines types of DNS message.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTypeQuery    = 0,
         kTypeResponse = 1,
@@ -143,7 +143,7 @@ public:
      * Defines types of query.
      *
      */
-    enum QueryType
+    enum QueryType : uint8_t
     {
         kQueryTypeStandard = 0,
         kQueryTypeInverse  = 1,
@@ -258,7 +258,7 @@ public:
      * Defines response codes.
      *
      */
-    enum Response
+    enum Response : uint8_t
     {
         kResponseSuccess         = 0,  ///< Success (no error condition).
         kResponseFormatError     = 1,  ///< Server unable to interpret request due to format error.
@@ -385,27 +385,21 @@ public:
     void SetAdditionalRecordCount(uint16_t aCount) { mArCount = HostSwap16(aCount); }
 
 private:
-    /**
-     * Protocol Constants (RFC 1035).
-     *
-     */
-    enum
-    {
-        kQrFlagOffset = 7,                     // QR Flag offset.
-        kQrFlagMask   = 0x01 << kQrFlagOffset, // QR Flag mask.
-        kOpCodeOffset = 3,                     // OpCode field offset.
-        kOpCodeMask   = 0x0f << kOpCodeOffset, // OpCode field mask.
-        kAaFlagOffset = 2,                     // AA Flag offset.
-        kAaFlagMask   = 0x01 << kAaFlagOffset, // AA Flag mask.
-        kTcFlagOffset = 1,                     // TC Flag offset.
-        kTcFlagMask   = 0x01 << kTcFlagOffset, // TC Flag mask.
-        kRdFlagOffset = 0,                     // RD Flag offset.
-        kRdFlagMask   = 0x01 << kRdFlagOffset, // RD Flag mask.
-        kRaFlagOffset = 7,                     // RA Flag offset.
-        kRaFlagMask   = 0x01 << kRaFlagOffset, // RA Flag mask.
-        kRCodeOffset  = 0,                     // RCODE field offset.
-        kRCodeMask    = 0x0f << kRCodeOffset,  // RCODE field mask.
-    };
+    // Protocol Constants (RFC 1035).
+    static constexpr uint8_t kQrFlagOffset = 7;                     // QR Flag offset.
+    static constexpr uint8_t kQrFlagMask   = 0x01 << kQrFlagOffset; // QR Flag mask.
+    static constexpr uint8_t kOpCodeOffset = 3;                     // OpCode field offset.
+    static constexpr uint8_t kOpCodeMask   = 0x0f << kOpCodeOffset; // OpCode field mask.
+    static constexpr uint8_t kAaFlagOffset = 2;                     // AA Flag offset.
+    static constexpr uint8_t kAaFlagMask   = 0x01 << kAaFlagOffset; // AA Flag mask.
+    static constexpr uint8_t kTcFlagOffset = 1;                     // TC Flag offset.
+    static constexpr uint8_t kTcFlagMask   = 0x01 << kTcFlagOffset; // TC Flag mask.
+    static constexpr uint8_t kRdFlagOffset = 0;                     // RD Flag offset.
+    static constexpr uint8_t kRdFlagMask   = 0x01 << kRdFlagOffset; // RD Flag mask.
+    static constexpr uint8_t kRaFlagOffset = 7;                     // RA Flag offset.
+    static constexpr uint8_t kRaFlagMask   = 0x01 << kRaFlagOffset; // RA Flag mask.
+    static constexpr uint8_t kRCodeOffset  = 0;                     // RCODE field offset.
+    static constexpr uint8_t kRCodeMask    = 0x0f << kRCodeOffset;  // RCODE field mask.
 
     uint16_t mMessageId; // Message identifier for requester to match up replies to outstanding queries.
     uint8_t  mFlags[2];  // DNS header flags.
@@ -491,37 +485,31 @@ public:
 class Name : public Clearable<Name>
 {
 public:
-    enum : uint8_t
-    {
-        /**
-         * Max size (number of chars) in a name string array (includes null char at the end of string).
-         *
-         */
-        kMaxNameSize = OT_DNS_MAX_NAME_SIZE,
+    /**
+     * Max size (number of chars) in a name string array (includes null char at the end of string).
+     *
+     */
+    static constexpr uint8_t kMaxNameSize = OT_DNS_MAX_NAME_SIZE;
 
-        /**
-         * Maximum length in a name string (does not include null char at the end of string).
-         *
-         */
-        kMaxNameLength = kMaxNameSize - 1,
+    /**
+     * Maximum length in a name string (does not include null char at the end of string).
+     *
+     */
+    static constexpr uint8_t kMaxNameLength = kMaxNameSize - 1;
 
-        /**
-         * Max size (number of chars) in a label string array (includes null char at the end of the string).
-         *
-         */
-        kMaxLabelSize = OT_DNS_MAX_LABEL_SIZE,
+    /**
+     * Max size (number of chars) in a label string array (includes null char at the end of the string).
+     *
+     */
+    static constexpr uint8_t kMaxLabelSize = OT_DNS_MAX_LABEL_SIZE;
 
-        /**
-         * Maximum length in a label string (does not include null char at the end of string).
-         *
-         */
-        kMaxLabelLength = kMaxLabelSize - 1,
-    };
+    /**
+     * Maximum length in a label string (does not include null char at the end of string).
+     *
+     */
+    static constexpr uint8_t kMaxLabelLength = kMaxLabelSize - 1;
 
-    enum : char
-    {
-        kLabelSeperatorChar = '.',
-    };
+    static constexpr char kLabelSeperatorChar = '.';
 
     /**
      * This enumeration represents the name type.
@@ -995,38 +983,26 @@ public:
     static bool IsSubDomainOf(const char *aName, const char *aDomain);
 
 private:
-    enum : char
-    {
-        kNullChar = '\0',
-    };
+    static constexpr char kNullChar = '\0';
 
-    enum : uint8_t
-    {
-        // The first 2 bits of the encoded label specifies label type.
-        //
-        // - Value 00 indicates normal text label (lower 6-bits indicates the label length).
-        // - Value 11 indicates pointer label type (lower 14-bits indicates the pointer offset).
-        // - Values 01,10 are reserved (RFC 6891 recommends to not use)
+    // The first 2 bits of the encoded label specifies label type.
+    //
+    // - Value 00 indicates normal text label (lower 6-bits indicates the label length).
+    // - Value 11 indicates pointer label type (lower 14-bits indicates the pointer offset).
+    // - Values 01,10 are reserved (RFC 6891 recommends to not use)
 
-        kLabelTypeMask    = 0xc0, // 0b1100_0000 (first two bits)
-        kTextLabelType    = 0x00, // Text label type (00)
-        kPointerLabelType = 0xc0, // Pointer label type - compressed name (11)
+    static constexpr uint8_t kLabelTypeMask    = 0xc0; // 0b1100_0000 (first two bits)
+    static constexpr uint8_t kTextLabelType    = 0x00; // Text label type (00)
+    static constexpr uint8_t kPointerLabelType = 0xc0; // Pointer label type - compressed name (11)
 
-        kMaxEncodedLength = 255, ///< Max length of an encoded name.
-    };
+    static constexpr uint8_t kMaxEncodedLength = 255; ///< Max length of an encoded name.
 
-    enum : uint16_t
-    {
-        kPointerLabelTypeUint16 = 0xc000, // Pointer label type as `uint16_t` mask (first 2 bits).
-        kPointerLabelOffsetMask = 0x3fff, // Mask to get the offset field in a pointer label (lower 14 bits).
-    };
+    static constexpr uint16_t kPointerLabelTypeUint16 = 0xc000; // Pointer label type mask (first 2 bits).
+    static constexpr uint16_t kPointerLabelOffsetMask = 0x3fff; // Mask for offset in a pointer label (lower 14 bits).
 
     struct LabelIterator
     {
-        enum : uint16_t
-        {
-            kUnsetNameEndOffset = 0, // Special value indicating `mNameEndOffset` is not yet set.
-        };
+        static constexpr uint16_t kUnsetNameEndOffset = 0; // Special value indicating `mNameEndOffset` is not yet set.
 
         LabelIterator(const Message &aMessage, uint16_t aLabelOffset)
             : mMessage(aMessage)
@@ -1070,14 +1046,20 @@ class TxtEntry : public otDnsTxtEntry
     friend class TxtRecord;
 
 public:
-    enum : uint8_t
-    {
-        kMinKeyLength = OT_DNS_TXT_KEY_MIN_LENGTH, ///< Minimum length of key string (RFC 6763 - section 6.4).
-        kMaxKeyLength = OT_DNS_TXT_KEY_MAX_LENGTH, ///< Recommended max length of key string (RFC 6763 - section 6.4).
-    };
+    /**
+     * Minimum length of key string (RFC 6763 - section 6.4).
+     *
+     */
+    static constexpr uint8_t kMinKeyLength = OT_DNS_TXT_KEY_MIN_LENGTH;
 
     /**
-     * This class represents an iterator for TXT record entires (key/value pairs).
+     * Recommended max length of key string (RFC 6763 - section 6.4).
+     *
+     */
+    static constexpr uint8_t kMaxKeyLength = OT_DNS_TXT_KEY_MAX_LENGTH;
+
+    /**
+     * This class represents an iterator for TXT record entries (key/value pairs).
      *
      */
     class Iterator : public otDnsTxtEntryIterator
@@ -1117,11 +1099,8 @@ public:
         Error GetNextEntry(TxtEntry &aEntry);
 
     private:
-        enum : uint8_t
-        {
-            kIndexTxtLength   = 0,
-            kIndexTxtPosition = 1,
-        };
+        static constexpr uint8_t kIndexTxtLength   = 0;
+        static constexpr uint8_t kIndexTxtPosition = 1;
 
         const char *GetTxtData(void) const { return reinterpret_cast<const char *>(mPtr); }
         void        SetTxtData(const uint8_t *aTxtData) { mPtr = aTxtData; }
@@ -1182,16 +1161,9 @@ public:
     static Error AppendEntries(const TxtEntry *aEntries, uint8_t aNumEntries, Message &aMessage);
 
 private:
-    enum : uint8_t
-    {
-        kMaxKeyValueEncodedSize = 255,
-    };
-
-    enum : char
-    {
-        kKeyValueSeparator = '=',
-        kNullChar          = '\0',
-    };
+    static constexpr uint8_t kMaxKeyValueEncodedSize = 255;
+    static constexpr char    kKeyValueSeparator      = '=';
+    static constexpr char    kNullChar               = '\0';
 };
 
 /**
@@ -1204,36 +1176,24 @@ class ResourceRecord
     friend class OptRecord;
 
 public:
-    /**
-     * Resource Record Types.
-     *
-     */
-    enum : uint16_t
-    {
-        kTypeZero  = 0,   ///< Zero is used as a special indicator for the SIG RR (SIG(0) from RFC 2931).
-        kTypeA     = 1,   ///< Address record (IPv4).
-        kTypeSoa   = 6,   ///< Start of (zone of) authority.
-        kTypeCname = 5,   ///< CNAME record.
-        kTypePtr   = 12,  ///< PTR record.
-        kTypeTxt   = 16,  ///< TXT record.
-        kTypeSig   = 24,  ///< SIG record.
-        kTypeKey   = 25,  ///< KEY record.
-        kTypeAaaa  = 28,  ///< IPv6 address record.
-        kTypeSrv   = 33,  ///< SRV locator record.
-        kTypeOpt   = 41,  ///< Option record.
-        kTypeAny   = 255, ///< ANY record.
-    };
+    // Resource Record Types.
+    static constexpr uint16_t kTypeZero  = 0;   ///< Zero as special indicator for the SIG RR (SIG(0) from RFC 2931).
+    static constexpr uint16_t kTypeA     = 1;   ///< Address record (IPv4).
+    static constexpr uint16_t kTypeSoa   = 6;   ///< Start of (zone of) authority.
+    static constexpr uint16_t kTypeCname = 5;   ///< CNAME record.
+    static constexpr uint16_t kTypePtr   = 12;  ///< PTR record.
+    static constexpr uint16_t kTypeTxt   = 16;  ///< TXT record.
+    static constexpr uint16_t kTypeSig   = 24;  ///< SIG record.
+    static constexpr uint16_t kTypeKey   = 25;  ///< KEY record.
+    static constexpr uint16_t kTypeAaaa  = 28;  ///< IPv6 address record.
+    static constexpr uint16_t kTypeSrv   = 33;  ///< SRV locator record.
+    static constexpr uint16_t kTypeOpt   = 41;  ///< Option record.
+    static constexpr uint16_t kTypeAny   = 255; ///< ANY record.
 
-    /**
-     * Resource Record Class Codes.
-     *
-     */
-    enum : uint16_t
-    {
-        kClassInternet = 1,   ///< Class code Internet (IN).
-        kClassNone     = 254, ///< Class code None (NONE) - RFC 2136.
-        kClassAny      = 255, ///< Class code Any (ANY).
-    };
+    // Resource Record Class Codes.
+    static constexpr uint16_t kClassInternet = 1;   ///< Class code Internet (IN).
+    static constexpr uint16_t kClassNone     = 254; ///< Class code None (NONE) - RFC 2136.
+    static constexpr uint16_t kClassAny      = 255; ///< Class code Any (ANY).
 
     /**
      * This method initializes the resource record by setting its type and class.
@@ -1468,10 +1428,7 @@ protected:
     Error SkipRecord(const Message &aMessage, uint16_t &aOffset) const;
 
 private:
-    enum : uint8_t
-    {
-        kType = kTypeAny, // This is intended for used by `ReadRecord()` only.
-    };
+    static constexpr uint16_t kType = kTypeAny; // This is intended for used by `ReadRecord<RecordType>()` only.
 
     static Error FindRecord(const Message & aMessage,
                             uint16_t &      aOffset,
@@ -1506,10 +1463,7 @@ OT_TOOL_PACKED_BEGIN
 class ARecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeA, ///< The A record type.
-    };
+    static constexpr uint16_t kType = kTypeA; ///< The A record type.
 
     /**
      * This method initializes the A Resource Record by setting its type, class, and length.
@@ -1551,10 +1505,7 @@ OT_TOOL_PACKED_BEGIN
 class CnameRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeCname, ///< The CNAME record type.
-    };
+    static constexpr uint16_t kType = kTypeCname; ///< The CNAME record type.
 
     /**
      * This method initializes the CNAME Resource Record by setting its type and class.
@@ -1605,10 +1556,7 @@ OT_TOOL_PACKED_BEGIN
 class PtrRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypePtr, ///< The PTR record type.
-    };
+    static constexpr uint16_t kType = kTypePtr; ///< The PTR record type.
 
     /**
      * This method initializes the PTR Resource Record by setting its type and class.
@@ -1693,10 +1641,7 @@ OT_TOOL_PACKED_BEGIN
 class TxtRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeTxt, ///< The TXT record type.
-    };
+    static constexpr uint16_t kType = kTypeTxt; ///< The TXT record type.
 
     /**
      * This method initializes the TXT Resource Record by setting its type and class.
@@ -1750,10 +1695,7 @@ OT_TOOL_PACKED_BEGIN
 class AaaaRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeAaaa, ///< The AAAA record type.
-    };
+    static constexpr uint16_t kType = kTypeAaaa; ///< The AAAA record type.
 
     /**
      * This method initializes the AAAA Resource Record by setting its type, class, and length.
@@ -1803,10 +1745,7 @@ OT_TOOL_PACKED_BEGIN
 class SrvRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeSrv, ///< The SRV record type.
-    };
+    static constexpr uint16_t kType = kTypeSrv; ///< The SRV record type.
 
     /**
      * This method initializes the SRV Resource Record by settings its type and class.
@@ -1912,32 +1851,17 @@ OT_TOOL_PACKED_BEGIN
 class KeyRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeKey, ///< The KEY record type.
-    };
+    static constexpr uint16_t kType = kTypeKey; ///< The KEY record type.
 
-    /**
-     * This enumeration defines protocol field values (RFC 2535 - section 3.1.3).
-     *
-     */
-    enum : uint8_t
-    {
-        kProtocolTls    = 1, ///< TLS protocol code.
-        kProtocolDnsSec = 3, ///< DNS security protocol code.
-    };
+    // Protocol field values (RFC 2535 - section 3.1.3).
+    static constexpr uint8_t kProtocolTls    = 1; ///< TLS protocol code.
+    static constexpr uint8_t kProtocolDnsSec = 3; ///< DNS security protocol code.
 
-    /**
-     * This enumeration defines algorithm field values (RFC 8624 - section 3.1).
-     *
-     */
-    enum : uint8_t
-    {
-        kAlgorithmEcdsaP256Sha256 = 13, ///< ECDSA-P256-SHA256 algorithm.
-        kAlgorithmEcdsaP384Sha384 = 14, ///< ECDSA-P384-SHA384 algorithm.
-        kAlgorithmEd25519         = 15, ///< ED25519 algorithm.
-        kAlgorithmEd448           = 16, ///< ED448 algorithm.
-    };
+    // Algorithm field values (RFC 8624 - section 3.1).
+    static constexpr uint8_t kAlgorithmEcdsaP256Sha256 = 13; ///< ECDSA-P256-SHA256 algorithm.
+    static constexpr uint8_t kAlgorithmEcdsaP384Sha384 = 14; ///< ECDSA-P384-SHA384 algorithm.
+    static constexpr uint8_t kAlgorithmEd25519         = 15; ///< ED25519 algorithm.
+    static constexpr uint8_t kAlgorithmEd448           = 16; ///< ED448 algorithm.
 
     /**
      * This enumeration type represents the use (or key type) flags (RFC 2535 - section 3.1.2).
@@ -1963,19 +1887,33 @@ public:
         kOwnerReserved = 0x03, ///< Reserved for future use.
     };
 
+    // Constants for flag bits for the "signatory" flags (RFC 2137).
+    //
+    // The flags defined are for non-zone (`kOwnerNoneZone`) keys (RFC 2137 - section 3.1.3).
+
     /**
-     * This enumeration defines flag bits for the "signatory" flags (RFC 2137).
-     *
-     * The flags defined are for non-zone (`kOwnerNoneZone`) keys (RFC 2137 - section 3.1.3).
+     * Key is authorized to attach, detach, and move zones.
      *
      */
-    enum : uint8_t
-    {
-        kSignatoryFlagZone    = 1 << 3, ///< Key is authorized to attach, detach, and move zones.
-        kSignatoryFlagStrong  = 1 << 2, ///< Key is authorized to add and delete RRs even if RRs auth with other key.
-        kSignatoryFlagUnique  = 1 << 1, ///< Key is authorized to add and update RRs for only a single owner name.
-        kSignatoryFlagGeneral = 1 << 0, ///< If the other flags are zero, this is used to indicate it is an update key.
-    };
+    static constexpr uint8_t kSignatoryFlagZone = 1 << 3;
+
+    /**
+     * Key is authorized to add and delete RRs even if RRs auth with other key.
+     *
+     */
+    static constexpr uint8_t kSignatoryFlagStrong = 1 << 2;
+
+    /**
+     * Key is authorized to add and update RRs for only a single owner name.
+     *
+     */
+    static constexpr uint8_t kSignatoryFlagUnique = 1 << 1;
+
+    /**
+     * If the other flags are zero, this is used to indicate it is an update key.
+     *
+     */
+    static constexpr uint8_t kSignatoryFlagGeneral = 1 << 0;
 
     /**
      * This method initializes the KEY Resource Record by setting its type and class.
@@ -2066,12 +2004,9 @@ public:
     void SetAlgorithm(uint8_t aAlgorithm) { mAlgorithm = aAlgorithm; }
 
 private:
-    enum : uint8_t
-    {
-        kUseFlagsMask       = 0xc0, // top two bits in the first flag byte.
-        kOwnerFlagsMask     = 0x03, // lowest two bits in the first flag byte.
-        kSignatoryFlagsMask = 0x0f, // lower 4 bits in the second flag byte.
-    };
+    static constexpr uint8_t kUseFlagsMask       = 0xc0; // top two bits in the first flag byte.
+    static constexpr uint8_t kOwnerFlagsMask     = 0x03; // lowest two bits in the first flag byte.
+    static constexpr uint8_t kSignatoryFlagsMask = 0x0f; // lower 4 bits in the second flag byte.
 
     // Flags format:
     //
@@ -2132,10 +2067,7 @@ OT_TOOL_PACKED_BEGIN
 class SigRecord : public ResourceRecord, public Clearable<SigRecord>
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeSig, ///< The SIG record type.
-    };
+    static constexpr uint16_t kType = kTypeSig; ///< The SIG record type.
 
     /**
      * This method initializes the SIG Resource Record by setting its type and class.
@@ -2322,10 +2254,7 @@ OT_TOOL_PACKED_BEGIN
 class OptRecord : public ResourceRecord
 {
 public:
-    enum : uint16_t
-    {
-        kType = kTypeOpt, ///< The OPT record type.
-    };
+    static constexpr uint16_t kType = kTypeOpt; ///< The OPT record type.
 
     /**
      * This method initializes the OPT Resource Record by setting its type and clearing extended Response Code, version
@@ -2431,13 +2360,10 @@ private:
     //
     // The variable data part of OPT RR can contain zero of more `Option`.
 
-    enum : uint8_t
-    {
-        kExtRCodeByteIndex = 0,      // Byte index of Extended RCODE within the TTL field.
-        kVersionByteIndex  = 1,      // Byte index of Version within the TTL field.
-        kFlagByteIndex     = 2,      // Byte index of flag byte within the TTL field.
-        kDnsSecFlag        = 1 << 7, // DNSSec OK bit flag.
-    };
+    static constexpr uint8_t kExtRCodeByteIndex = 0;      // Byte index of Extended RCODE within the TTL field.
+    static constexpr uint8_t kVersionByteIndex  = 1;      // Byte index of Version within the TTL field.
+    static constexpr uint8_t kFlagByteIndex     = 2;      // Byte index of flag byte within the TTL field.
+    static constexpr uint8_t kDnsSecFlag        = 1 << 7; // DNSSec OK bit flag.
 
     uint8_t  GetTtlByteAt(uint8_t aIndex) const { return reinterpret_cast<const uint8_t *>(&mTtl)[aIndex]; }
     uint8_t &GetTtlByteAt(uint8_t aIndex) { return reinterpret_cast<uint8_t *>(&mTtl)[aIndex]; }
@@ -2452,14 +2378,7 @@ OT_TOOL_PACKED_BEGIN
 class Option
 {
 public:
-    /**
-     * This enumeration defines option code values.
-     *
-     */
-    enum : uint16_t
-    {
-        kUpdateLease = 2, ///< Update lease option code.
-    };
+    static constexpr uint16_t kUpdateLease = 2; ///< Update lease option code.
 
     /**
      * This method returns the option code value.
@@ -2519,10 +2438,7 @@ OT_TOOL_PACKED_BEGIN
 class LeaseOption : public Option
 {
 public:
-    enum : uint16_t
-    {
-        kOptionLength = sizeof(uint32_t) + sizeof(uint32_t), ///< Option length (lease and key lease values)
-    };
+    static constexpr uint16_t kOptionLength = sizeof(uint32_t) + sizeof(uint32_t); ///< lease and key lease values
 
     /**
      * This method initialize the Update Lease Option by setting the Option Code and Option Length.

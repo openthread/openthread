@@ -60,50 +60,47 @@ namespace Utils {
 class SrpClientBuffers : public InstanceLocator, private NonCopyable
 {
 public:
-    enum : uint16_t
-    {
-        /**
-         * Maximum number of service entries in the pool.
-         *
-         */
-        kMaxServices = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES,
+    /**
+     * Maximum number of service entries in the pool.
+     *
+     */
+    static constexpr uint16_t kMaxServices = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_SERVICES;
 
-        /**
-         * Max number of host address entries.
-         *
-         */
-        kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES,
+    /**
+     * Max number of host address entries.
+     *
+     */
+    static constexpr uint16_t kMaxHostAddresses = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_MAX_HOST_ADDRESSES;
 
-        /**
-         * Size (number of char) of host name string (includes null `\0` termination char).
-         *
-         */
-        kHostNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_HOST_NAME_SIZE,
+    /**
+     * Size (number of char) of host name string (includes null `\0` termination char).
+     *
+     */
+    static constexpr uint16_t kHostNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_HOST_NAME_SIZE;
 
-        /**
-         * Size (number of char) of service name string (includes null `\0` termination char).
-         *
-         */
-        kServiceNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_NAME_SIZE,
+    /**
+     * Size (number of char) of service name string (includes null `\0` termination char).
+     *
+     */
+    static constexpr uint16_t kServiceNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_NAME_SIZE;
 
-        /**
-         * Array length for service subtype label.
-         *
-         */
-        kServiceMaxSubTypes = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_MAX_SUB_TYPES,
+    /**
+     * Array length for service subtype label.
+     *
+     */
+    static constexpr uint16_t kServiceMaxSubTypes = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_MAX_SUB_TYPES;
 
-        /**
-         * Size (number of char) of service instance name string (includes null `\0` termination char).
-         *
-         */
-        kInstanceNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_INSTANCE_NAME_SIZE,
+    /**
+     * Size (number of char) of service instance name string (includes null `\0` termination char).
+     *
+     */
+    static constexpr uint16_t kInstanceNameSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_SERVICE_INSTANCE_NAME_SIZE;
 
-        /**
-         * Size (number of bytes) of TXT record buffer.
-         *
-         */
-        kTxtBufferSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE,
-    };
+    /**
+     * Size (number of bytes) of TXT record buffer.
+     *
+     */
+    static constexpr uint16_t kTxtBufferSize = OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_TXT_BUFFER_SIZE;
 
     /**
      * This class represents a SRP client service entry from the pool.

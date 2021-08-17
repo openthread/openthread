@@ -203,14 +203,11 @@ public:
     void HandleChildModeChange(Child &aChild, Mle::DeviceMode aOldMode);
 
 private:
-    enum
-    {
-        /**
-         * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
-         *
-         */
-        kSupervisionMsgAckRequest = (OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST == 0) ? true : false,
-    };
+    /**
+     * Indicates whether to set/enable 15.4 ack request in the MAC header of a supervision message.
+     *
+     */
+    static constexpr bool kSupervisionMsgAckRequest = (OPENTHREAD_CONFIG_CHILD_SUPERVISION_MSG_NO_ACK_REQUEST == 0);
 
     // Callbacks from DataPollHandler
     Error PrepareFrameForChild(Mac::TxFrame &aFrame, FrameContext &aContext, Child &aChild);

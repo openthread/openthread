@@ -44,7 +44,7 @@ expect "2"
 expect_line "Done"
 
 send "mac\n"
-expect "Error 7: InvalidArgs"
+expect "Error 35: InvalidCommand"
 send "mac something_invalid\n"
 expect "Error 35: InvalidCommand"
 send "mac retries\n"

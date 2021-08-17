@@ -119,25 +119,14 @@ void MeshForwarder::Start(void)
 
 void MeshForwarder::Stop(void)
 {
-    Message *message;
-
     VerifyOrExit(mEnabled);
 
     mDataPollSender.StopPolling();
     Get<TimeTicker>().UnregisterReceiver(TimeTicker::kMeshForwarder);
     Get<Mle::DiscoverScanner>().Stop();
 
-    while ((message = mSendQueue.GetHead()) != nullptr)
-    {
-        mSendQueue.Dequeue(*message);
-        message->Free();
-    }
-
-    while ((message = mReassemblyList.GetHead()) != nullptr)
-    {
-        mReassemblyList.Dequeue(*message);
-        message->Free();
-    }
+    mSendQueue.DequeueAndFreeAll();
+    mReassemblyList.DequeueAndFreeAll();
 
 #if OPENTHREAD_FTD
     mIndirectSender.Stop();
@@ -223,9 +212,8 @@ void MeshForwarder::RemoveMessage(Message &aMessage)
         }
     }
 
-    queue->Dequeue(aMessage);
     LogMessage(kMessageEvict, aMessage, nullptr, kErrorNoBufs);
-    aMessage.Free();
+    queue->DequeueAndFree(aMessage);
 }
 
 void MeshForwarder::ResumeMessageTransmissions(void)
@@ -320,9 +308,8 @@ Message *MeshForwarder::GetDirectTransmission(void)
 #endif
 
         default:
-            mSendQueue.Dequeue(*curMessage);
             LogMessage(kMessageDrop, *curMessage, nullptr, error);
-            curMessage->Free();
+            mSendQueue.DequeueAndFree(*curMessage);
             continue;
         }
     }
@@ -1055,6 +1042,10 @@ void MeshForwarder::UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDes
     }
 #endif
 
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordTxMessage(*mSendMessage, aMacDest);
+#endif
+
     LogMessage(kMessageTransmit, *mSendMessage, &aMacDest, txError);
 
     if (mSendMessage->GetType() == Message::kTypeIp6)
@@ -1112,8 +1103,7 @@ void MeshForwarder::RemoveMessageIfNoPendingTx(Message &aMessage)
         mMessageNextOffset = 0;
     }
 
-    mSendQueue.Dequeue(aMessage);
-    aMessage.Free();
+    mSendQueue.DequeueAndFree(aMessage);
 
 exit:
     return;
@@ -1326,23 +1316,17 @@ exit:
 
 void MeshForwarder::ClearReassemblyList(void)
 {
-    Message *message;
-    Message *next;
-
-    for (message = mReassemblyList.GetHead(); message; message = next)
+    for (const Message *message = mReassemblyList.GetHead(); message != nullptr; message = message->GetNext())
     {
-        next = message->GetNext();
-        mReassemblyList.Dequeue(*message);
-
         LogMessage(kMessageReassemblyDrop, *message, nullptr, kErrorNoFrameReceived);
 
         if (message->GetType() == Message::kTypeIp6)
         {
             mIpCounters.mRxFailure++;
         }
-
-        message->Free();
     }
+
+    mReassemblyList.DequeueAndFreeAll();
 }
 
 void MeshForwarder::HandleTimeTick(void)
@@ -1375,15 +1359,14 @@ bool MeshForwarder::UpdateReassemblyList(void)
         }
         else
         {
-            mReassemblyList.Dequeue(*message);
-
             LogMessage(kMessageReassemblyDrop, *message, nullptr, kErrorReassemblyTimeout);
+
             if (message->GetType() == Message::kTypeIp6)
             {
                 mIpCounters.mRxFailure++;
             }
 
-            message->Free();
+            mReassemblyList.DequeueAndFree(*message);
         }
     }
 
@@ -1461,6 +1444,10 @@ exit:
 Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource)
 {
     ThreadNetif &netif = Get<ThreadNetif>();
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordRxMessage(aMessage, aMacSource);
+#endif
 
     LogMessage(kMessageReceive, aMessage, &aMacSource, kErrorNone);
 
@@ -1641,8 +1628,6 @@ uint16_t MeshForwarder::CalcFrameVersion(const Neighbor *aNeighbor, bool aIePres
 
 // LCOV_EXCL_START
 
-#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
-
 Error MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
                                           Ip6::Header &  aIp6Header,
                                           uint16_t &     aChecksum,
@@ -1688,6 +1673,8 @@ Error MeshForwarder::ParseIp6UdpTcpHeader(const Message &aMessage,
 exit:
     return error;
 }
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
 const char *MeshForwarder::MessageActionToString(MessageAction aAction, Error aError)
 {

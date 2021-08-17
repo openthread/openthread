@@ -163,8 +163,8 @@ void Neighbor::GenerateChallenge(void)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
-    for (LinkMetricsSeriesInfo *entry = mLinkMetricsSeriesInfoList.GetHead(); entry != nullptr;
-         entry                        = entry->GetNext())
+    for (LinkMetrics::SeriesInfo *entry = mLinkMetricsSeriesInfoList.GetHead(); entry != nullptr;
+         entry                          = entry->GetNext())
     {
         if (aSeriesId == 0 || aSeriesId == entry->GetSeriesId())
         {
@@ -173,17 +173,17 @@ void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8
     }
 }
 
-LinkMetricsSeriesInfo *Neighbor::GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
+LinkMetrics::SeriesInfo *Neighbor::GetForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
 {
     return mLinkMetricsSeriesInfoList.FindMatching(aSeriesId);
 }
 
-void Neighbor::AddForwardTrackingSeriesInfo(LinkMetricsSeriesInfo &aLinkMetricsSeriesInfo)
+void Neighbor::AddForwardTrackingSeriesInfo(LinkMetrics::SeriesInfo &aSeriesInfo)
 {
-    mLinkMetricsSeriesInfoList.Push(aLinkMetricsSeriesInfo);
+    mLinkMetricsSeriesInfoList.Push(aSeriesInfo);
 }
 
-LinkMetricsSeriesInfo *Neighbor::RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
+LinkMetrics::SeriesInfo *Neighbor::RemoveForwardTrackingSeriesInfo(const uint8_t &aSeriesId)
 {
     return mLinkMetricsSeriesInfoList.RemoveMatching(aSeriesId);
 }
@@ -192,8 +192,8 @@ void Neighbor::RemoveAllForwardTrackingSeriesInfo(void)
 {
     while (!mLinkMetricsSeriesInfoList.IsEmpty())
     {
-        LinkMetricsSeriesInfo *seriesInfo = mLinkMetricsSeriesInfoList.Pop();
-        Get<LinkMetrics>().mLinkMetricsSeriesInfoPool.Free(*seriesInfo);
+        LinkMetrics::SeriesInfo *seriesInfo = mLinkMetricsSeriesInfoList.Pop();
+        Get<LinkMetrics::LinkMetrics>().mSeriesInfoPool.Free(*seriesInfo);
     }
 }
 #endif // OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

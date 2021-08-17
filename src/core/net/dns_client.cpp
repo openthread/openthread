@@ -36,6 +36,7 @@
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
 #include "net/udp6.hpp"
+#include "thread/network_data_types.hpp"
 #include "thread/thread_netif.hpp"
 
 /**
@@ -352,7 +353,7 @@ Error Client::AddressResponse::GetNat64Prefix(Ip6::Prefix &aPrefix) const
 {
     Error                            error      = kErrorNotFound;
     NetworkData::Iterator            iterator   = NetworkData::kIteratorInit;
-    signed int                       preference = OT_ROUTE_PREFERENCE_LOW;
+    signed int                       preference = NetworkData::kRoutePreferenceLow;
     NetworkData::ExternalRouteConfig config;
 
     aPrefix.Clear();
@@ -579,7 +580,7 @@ Error Client::Start(void)
     Error error;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind());
+    SuccessOrExit(error = mSocket.Bind(0, OT_NETIF_UNSPECIFIED));
 
 exit:
     return error;
@@ -745,8 +746,7 @@ exit:
 
 void Client::FreeQuery(Query &aQuery)
 {
-    mQueries.Dequeue(aQuery);
-    aQuery.Free();
+    mQueries.DequeueAndFree(aQuery);
 }
 
 void Client::SendQuery(Query &aQuery, QueryInfo &aInfo, bool aUpdateTimer)

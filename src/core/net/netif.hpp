@@ -256,7 +256,7 @@ private:
     }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
-    MlrState mMlrState : 2;
+    MlrState mMlrState;
 #endif
 };
 
@@ -299,7 +299,7 @@ public:
         }
 
     private:
-        enum IteratorType
+        enum IteratorType : uint8_t
         {
             kEndIterator,
         };
@@ -358,6 +358,8 @@ public:
      * This method is intended for addresses internal to OpenThread. The @p aAddress instance is directly added in the
      * unicast address linked list.
      *
+     * If @p aAddress is already added, the call to `AddUnicastAddress()` with the same address will perform no action.
+     *
      * @param[in]  aAddress  A reference to the unicast address.
      *
      */
@@ -368,6 +370,8 @@ public:
      *
      * This method is intended for addresses internal to OpenThread. The @p aAddress instance is removed from the
      * unicast address linked list.
+     *
+     * If @p aAddress is not in the list, the call to `RemoveUnicastAddress()` will perform no action.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *

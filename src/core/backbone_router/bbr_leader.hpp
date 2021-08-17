@@ -61,7 +61,7 @@ class Leader : public InstanceLocator, private NonCopyable
 {
 public:
     // Primary Backbone Router Service state or state change.
-    enum State
+    enum State : uint8_t
     {
         kStateNone = 0,       ///< Not exist (trigger Backbone Router register its service).
         kStateAdded,          ///< Newly added.
@@ -73,7 +73,7 @@ public:
     };
 
     // Domain Prefix state or state change.
-    enum DomainPrefixState
+    enum DomainPrefixState : uint8_t
     {
         kDomainPrefixNone = 0,  ///< Not available.
         kDomainPrefixAdded,     ///< Added.
@@ -135,7 +135,8 @@ public:
     /**
      * This method indicates whether or not there is Primary Backbone Router.
      *
-     * @retval TRUE if there is Primary Backbone Router, FALSE otherwise.
+     * @retval TRUE   If there is Primary Backbone Router.
+     * @retval FALSE  If there is no Primary Backbone Router.
      *
      */
     bool HasPrimary(void) const { return mConfig.mServer16 != Mac::kShortAddrInvalid; }
@@ -154,7 +155,8 @@ public:
     /**
      * This method indicates whether or not the Domain Prefix is available in the Thread Network.
      *
-     * @retval TRUE if there is Domain Prefix, FALSE otherwise.
+     * @retval TRUE   If there is Domain Prefix.
+     * @retval FALSE  If there is no Domain Prefix.
      *
      */
     bool HasDomainPrefix(void) const { return (mDomainPrefix.GetLength() > 0); }

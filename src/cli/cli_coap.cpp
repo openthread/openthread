@@ -402,8 +402,8 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(coapDestinationIp));
 
     VerifyOrExit(!aArgs[1].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
-    VerifyOrExit(aArgs[1].GetLength() < kMaxUriLength, error = OT_ERROR_INVALID_ARGS);
-    strncpy(coapUri, aArgs[1].GetCString(), sizeof(coapUri) - 1);
+    VerifyOrExit(aArgs[1].GetLength() < sizeof(coapUri), error = OT_ERROR_INVALID_ARGS);
+    strcpy(coapUri, aArgs[1].GetCString());
 
     // CoAP-Type
     if (!aArgs[2].IsEmpty())

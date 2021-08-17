@@ -73,11 +73,8 @@ class Link : public InstanceLocator
     friend class Interface;
 
 public:
-    enum
-    {
-        kMtuSize = 1280 - 48 - sizeof(Header), ///< MTU size for TREL frame.
-        kFcsSize = 0,                          ///< FCS size for TREL frame.
-    };
+    static constexpr uint16_t kMtuSize = 1280 - 48 - sizeof(Header); ///< MTU size for TREL frame.
+    static constexpr uint8_t  kFcsSize = 0;                          ///< FCS size for TREL frame.
 
     /**
      * This constructor initializes the `Link` object.
@@ -150,13 +147,10 @@ public:
     void Send(void);
 
 private:
-    enum
-    {
-        kMaxHeaderSize   = sizeof(Header),
-        k154AckFrameSize = 3 + kFcsSize,
-        kRxRssi          = -20, // The RSSI value used for received frames on TREL radio link.
-        kAckWaitWindow   = 750, // (in msec)
-    };
+    static constexpr uint16_t kMaxHeaderSize   = sizeof(Header);
+    static constexpr uint16_t k154AckFrameSize = 3 + kFcsSize;
+    static constexpr int8_t   kRxRssi          = -20; // The RSSI value used for received frames on TREL radio link.
+    static constexpr uint32_t kAckWaitWindow   = 750; // (in msec)
 
     enum State : uint8_t
     {

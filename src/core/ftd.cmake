@@ -43,5 +43,6 @@ target_sources(openthread-ftd PRIVATE ${COMMON_SOURCES})
 target_link_libraries(openthread-ftd
     PRIVATE
         ${OT_MBEDTLS}
+        tcplp
         ot-config
 )

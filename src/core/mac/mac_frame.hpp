@@ -124,17 +124,10 @@ private:
     // | Length    | Element ID | Type=0 |
     // +-----------+------------+--------+
 
-    enum : uint8_t
-    {
-        kSize       = 2,
-        kIdOffset   = 7,
-        kLengthMask = 0x7f
-    };
-
-    enum : uint16_t
-    {
-        kIdMask = 0x00ff << kIdOffset,
-    };
+    static constexpr uint8_t  kSize       = 2;
+    static constexpr uint8_t  kIdOffset   = 7;
+    static constexpr uint8_t  kLengthMask = 0x7f;
+    static constexpr uint16_t kIdMask     = 0x00ff << kIdOffset;
 
     union OT_TOOL_PACKED_FIELD
     {
@@ -154,11 +147,8 @@ OT_TOOL_PACKED_BEGIN
 class VendorIeHeader
 {
 public:
-    enum : uint8_t
-    {
-        kHeaderIeId    = 0x00,
-        kIeContentSize = sizeof(uint8_t) * 4,
-    };
+    static constexpr uint8_t kHeaderIeId    = 0x00;
+    static constexpr uint8_t kIeContentSize = sizeof(uint8_t) * 4;
 
     /**
      * This method returns the Vendor OUI.
@@ -193,10 +183,7 @@ public:
     void SetSubType(uint8_t aSubType) { mSubType = aSubType; }
 
 private:
-    enum : uint8_t
-    {
-        kOuiSize = 3,
-    };
+    static constexpr uint8_t kOuiSize = 3;
 
     uint8_t mOui[kOuiSize];
     uint8_t mSubType;
@@ -211,21 +198,10 @@ OT_TOOL_PACKED_BEGIN
 class TimeIe : public VendorIeHeader
 {
 public:
-    enum : uint32_t
-    {
-        kVendorOuiNest = 0x18b430,
-    };
-
-    enum : uint8_t
-    {
-        kVendorIeTime = 0x01,
-    };
-
-    enum
-    {
-        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
-        kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t),
-    };
+    static constexpr uint32_t kVendorOuiNest = 0x18b430;
+    static constexpr uint8_t  kVendorIeTime  = 0x01;
+    static constexpr uint8_t  kHeaderIeId    = VendorIeHeader::kHeaderIeId;
+    static constexpr uint8_t  kIeContentSize = VendorIeHeader::kIeContentSize + sizeof(uint8_t) + sizeof(uint64_t);
 
     /**
      * This method initializes the time IE.
@@ -279,21 +255,10 @@ private:
 class ThreadIe
 {
 public:
-    enum : uint8_t
-    {
-        kHeaderIeId    = VendorIeHeader::kHeaderIeId,
-        kIeContentSize = VendorIeHeader::kIeContentSize,
-    };
-
-    enum : uint32_t
-    {
-        kVendorOuiThreadCompanyId = 0xeab89b,
-    };
-
-    enum SubType : uint8_t
-    {
-        kEnhAckProbingIe = 0x00,
-    };
+    static constexpr uint8_t  kHeaderIeId               = VendorIeHeader::kHeaderIeId;
+    static constexpr uint8_t  kIeContentSize            = VendorIeHeader::kIeContentSize;
+    static constexpr uint32_t kVendorOuiThreadCompanyId = 0xeab89b;
+    static constexpr uint8_t  kEnhAckProbingIe          = 0x00;
 };
 #endif
 
@@ -307,80 +272,77 @@ public:
 class Frame : public otRadioFrame
 {
 public:
-    enum
-    {
-        kFcfSize             = sizeof(uint16_t),
-        kDsnSize             = sizeof(uint8_t),
-        kSecurityControlSize = sizeof(uint8_t),
-        kFrameCounterSize    = sizeof(uint32_t),
-        kCommandIdSize       = sizeof(uint8_t),
-        k154FcsSize          = sizeof(uint16_t),
+    static constexpr uint8_t kFcfSize             = sizeof(uint16_t);
+    static constexpr uint8_t kDsnSize             = sizeof(uint8_t);
+    static constexpr uint8_t kSecurityControlSize = sizeof(uint8_t);
+    static constexpr uint8_t kFrameCounterSize    = sizeof(uint32_t);
+    static constexpr uint8_t kCommandIdSize       = sizeof(uint8_t);
+    static constexpr uint8_t k154FcsSize          = sizeof(uint16_t);
 
-        kFcfFrameBeacon      = 0 << 0,
-        kFcfFrameData        = 1 << 0,
-        kFcfFrameAck         = 2 << 0,
-        kFcfFrameMacCmd      = 3 << 0,
-        kFcfFrameTypeMask    = 7 << 0,
-        kFcfSecurityEnabled  = 1 << 3,
-        kFcfFramePending     = 1 << 4,
-        kFcfAckRequest       = 1 << 5,
-        kFcfPanidCompression = 1 << 6,
-        kFcfIePresent        = 1 << 9,
-        kFcfDstAddrNone      = 0 << 10,
-        kFcfDstAddrShort     = 2 << 10,
-        kFcfDstAddrExt       = 3 << 10,
-        kFcfDstAddrMask      = 3 << 10,
-        kFcfFrameVersion2006 = 1 << 12,
-        kFcfFrameVersion2015 = 2 << 12,
-        kFcfFrameVersionMask = 3 << 12,
-        kFcfSrcAddrNone      = 0 << 14,
-        kFcfSrcAddrShort     = 2 << 14,
-        kFcfSrcAddrExt       = 3 << 14,
-        kFcfSrcAddrMask      = 3 << 14,
+    static constexpr uint16_t kFcfFrameBeacon      = 0 << 0;
+    static constexpr uint16_t kFcfFrameData        = 1 << 0;
+    static constexpr uint16_t kFcfFrameAck         = 2 << 0;
+    static constexpr uint16_t kFcfFrameMacCmd      = 3 << 0;
+    static constexpr uint16_t kFcfFrameTypeMask    = 7 << 0;
+    static constexpr uint16_t kFcfSecurityEnabled  = 1 << 3;
+    static constexpr uint16_t kFcfFramePending     = 1 << 4;
+    static constexpr uint16_t kFcfAckRequest       = 1 << 5;
+    static constexpr uint16_t kFcfPanidCompression = 1 << 6;
+    static constexpr uint16_t kFcfIePresent        = 1 << 9;
+    static constexpr uint16_t kFcfDstAddrNone      = 0 << 10;
+    static constexpr uint16_t kFcfDstAddrShort     = 2 << 10;
+    static constexpr uint16_t kFcfDstAddrExt       = 3 << 10;
+    static constexpr uint16_t kFcfDstAddrMask      = 3 << 10;
+    static constexpr uint16_t kFcfFrameVersion2006 = 1 << 12;
+    static constexpr uint16_t kFcfFrameVersion2015 = 2 << 12;
+    static constexpr uint16_t kFcfFrameVersionMask = 3 << 12;
+    static constexpr uint16_t kFcfSrcAddrNone      = 0 << 14;
+    static constexpr uint16_t kFcfSrcAddrShort     = 2 << 14;
+    static constexpr uint16_t kFcfSrcAddrExt       = 3 << 14;
+    static constexpr uint16_t kFcfSrcAddrMask      = 3 << 14;
 
-        kSecNone      = 0 << 0,
-        kSecMic32     = 1 << 0,
-        kSecMic64     = 2 << 0,
-        kSecMic128    = 3 << 0,
-        kSecEnc       = 4 << 0,
-        kSecEncMic32  = 5 << 0,
-        kSecEncMic64  = 6 << 0,
-        kSecEncMic128 = 7 << 0,
-        kSecLevelMask = 7 << 0,
+    static constexpr uint8_t kSecNone      = 0 << 0;
+    static constexpr uint8_t kSecMic32     = 1 << 0;
+    static constexpr uint8_t kSecMic64     = 2 << 0;
+    static constexpr uint8_t kSecMic128    = 3 << 0;
+    static constexpr uint8_t kSecEnc       = 4 << 0;
+    static constexpr uint8_t kSecEncMic32  = 5 << 0;
+    static constexpr uint8_t kSecEncMic64  = 6 << 0;
+    static constexpr uint8_t kSecEncMic128 = 7 << 0;
+    static constexpr uint8_t kSecLevelMask = 7 << 0;
 
-        kMic0Size   = 0,
-        kMic32Size  = 32 / CHAR_BIT,
-        kMic64Size  = 64 / CHAR_BIT,
-        kMic128Size = 128 / CHAR_BIT,
-        kMaxMicSize = kMic128Size,
+    static constexpr uint8_t kMic0Size   = 0;
+    static constexpr uint8_t kMic32Size  = 32 / CHAR_BIT;
+    static constexpr uint8_t kMic64Size  = 64 / CHAR_BIT;
+    static constexpr uint8_t kMic128Size = 128 / CHAR_BIT;
+    static constexpr uint8_t kMaxMicSize = kMic128Size;
 
-        kKeyIdMode0    = 0 << 3,
-        kKeyIdMode1    = 1 << 3,
-        kKeyIdMode2    = 2 << 3,
-        kKeyIdMode3    = 3 << 3,
-        kKeyIdModeMask = 3 << 3,
+    static constexpr uint8_t kKeyIdMode0    = 0 << 3;
+    static constexpr uint8_t kKeyIdMode1    = 1 << 3;
+    static constexpr uint8_t kKeyIdMode2    = 2 << 3;
+    static constexpr uint8_t kKeyIdMode3    = 3 << 3;
+    static constexpr uint8_t kKeyIdModeMask = 3 << 3;
 
-        kKeySourceSizeMode0 = 0,
-        kKeySourceSizeMode1 = 0,
-        kKeySourceSizeMode2 = 4,
-        kKeySourceSizeMode3 = 8,
+    static constexpr uint8_t kKeySourceSizeMode0 = 0;
+    static constexpr uint8_t kKeySourceSizeMode1 = 0;
+    static constexpr uint8_t kKeySourceSizeMode2 = 4;
+    static constexpr uint8_t kKeySourceSizeMode3 = 8;
 
-        kKeyIndexSize = sizeof(uint8_t),
+    static constexpr uint8_t kKeyIndexSize = sizeof(uint8_t);
 
-        kMacCmdAssociationRequest         = 1,
-        kMacCmdAssociationResponse        = 2,
-        kMacCmdDisassociationNotification = 3,
-        kMacCmdDataRequest                = 4,
-        kMacCmdPanidConflictNotification  = 5,
-        kMacCmdOrphanNotification         = 6,
-        kMacCmdBeaconRequest              = 7,
-        kMacCmdCoordinatorRealignment     = 8,
-        kMacCmdGtsRequest                 = 9,
+    static constexpr uint8_t kMacCmdAssociationRequest         = 1;
+    static constexpr uint8_t kMacCmdAssociationResponse        = 2;
+    static constexpr uint8_t kMacCmdDisassociationNotification = 3;
+    static constexpr uint8_t kMacCmdDataRequest                = 4;
+    static constexpr uint8_t kMacCmdPanidConflictNotification  = 5;
+    static constexpr uint8_t kMacCmdOrphanNotification         = 6;
+    static constexpr uint8_t kMacCmdBeaconRequest              = 7;
+    static constexpr uint8_t kMacCmdCoordinatorRealignment     = 8;
+    static constexpr uint8_t kMacCmdGtsRequest                 = 9;
 
-        kImmAckLength = kFcfSize + kDsnSize + k154FcsSize,
+    static constexpr uint8_t kImmAckLength = kFcfSize + kDsnSize + k154FcsSize;
 
-        kInfoStringSize = 128, ///< Max chars needed for the info string representation (@sa ToInfoString()).
-    };
+    static constexpr uint16_t kInfoStringSize = 128; ///< Max chars for `InfoString` (ToInfoString()).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToInfoString()` method.
@@ -391,8 +353,8 @@ public:
     /**
      * This method indicates whether the frame is empty (no payload).
      *
-     * @retval TRUE  The frame is empty (no PSDU payload).
-     * @retval FALSE The frame is not empty.
+     * @retval TRUE   The frame is empty (no PSDU payload).
+     * @retval FALSE  The frame is not empty.
      *
      */
     bool IsEmpty(void) const { return (mLength == 0); }
@@ -555,7 +517,8 @@ public:
     /**
      * This method indicates whether or not the Destination Address is present for this object.
      *
-     * @retval TRUE if the Destination Address is present, FALSE otherwise.
+     * @retval TRUE   If the Destination Address is present.
+     * @retval FALSE  If the Destination Address is not present.
      *
      */
     bool IsDstAddrPresent() const { return IsDstAddrPresent(GetFrameControlField()); }
@@ -597,7 +560,8 @@ public:
     /**
      * This method indicates whether or not the Source Address is present for this object.
      *
-     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     * @retval TRUE   If the Source Address is present.
+     * @retval FALSE  If the Source Address is not present.
      *
      */
     bool IsSrcPanIdPresent(void) const { return IsSrcPanIdPresent(GetFrameControlField()); }
@@ -625,7 +589,8 @@ public:
     /**
      * This method indicates whether or not the Source Address is present for this object.
      *
-     * @retval TRUE if the Source Address is present, FALSE otherwise.
+     * @retval TRUE   If the Source Address is present.
+     * @retval FALSE  If the Source Address is not present.
      *
      */
     bool IsSrcAddrPresent(void) const { return IsSrcAddrPresent(GetFrameControlField()); }
@@ -956,8 +921,8 @@ public:
      *                          appended at `aIndex` on input. And on output, `aIndex` will be set to the end of the
      *                          IE just appended.
      *
-     * @tparam  IeType  The Header IE type, it MUST contain an enum `kHeaderIeId` equal to the IE's Id
-     *                  and an enum `kIeContentSize` indicating the IE body's size.
+     * @tparam  IeType  The Header IE type, it MUST contain a constant `kHeaderIeId` equal to the IE's Id
+     *                  and a constant `kIeContentSize` indicating the IE body's size.
      *
      * @retval kErrorNone      Successfully appended the Header IE.
      * @retval kErrorNotFound  The position for first IE is not found.
@@ -1104,13 +1069,10 @@ public:
     uint16_t GetFrameControlField(void) const;
 
 protected:
-    enum
-    {
-        kInvalidIndex  = 0xff,
-        kInvalidSize   = kInvalidIndex,
-        kMaxPsduSize   = kInvalidSize - 1,
-        kSequenceIndex = kFcfSize,
-    };
+    static constexpr uint8_t kInvalidIndex  = 0xff;
+    static constexpr uint8_t kInvalidSize   = kInvalidIndex;
+    static constexpr uint8_t kMaxPsduSize   = kInvalidSize - 1;
+    static constexpr uint8_t kSequenceIndex = kFcfSize;
 
     uint8_t FindDstPanIdIndex(void) const;
     uint8_t FindDstAddrIndex(void) const;
@@ -1304,8 +1266,8 @@ public:
     /**
      * This method indicates whether or not CSMA-CA is enabled.
      *
-     * @retval TRUE  CSMA-CA is enabled.
-     * @retval FALSE CSMA-CA is not enabled is not enabled.
+     * @retval TRUE   CSMA-CA is enabled.
+     * @retval FALSE  CSMA-CA is not enabled is not enabled.
      *
      */
     bool IsCsmaCaEnabled(void) const { return mInfo.mTxInfo.mCsmaCaEnabled; }
@@ -1373,6 +1335,23 @@ public:
     {
         mInfo.mTxInfo.mIsSecurityProcessed = aIsSecurityProcessed;
     }
+
+    /**
+     * This method indicates whether or not the frame header is updated.
+     *
+     * @retval TRUE   The frame already has the header updated.
+     * @retval FALSE  The frame does not have the header updated.
+     *
+     */
+    bool IsHeaderUpdated(void) const { return mInfo.mTxInfo.mIsHeaderUpdated; }
+
+    /**
+     * This method sets the header updated flag attribute.
+     *
+     * @param[in]  aIsHeaderUpdated  TRUE if the frame header is updated.
+     *
+     */
+    void SetIsHeaderUpdated(bool aIsHeaderUpdated) { mInfo.mTxInfo.mIsHeaderUpdated = aIsHeaderUpdated; }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     /**
@@ -1457,10 +1436,7 @@ OT_TOOL_PACKED_BEGIN
 class Beacon
 {
 public:
-    enum
-    {
-        kSuperFrameSpec = 0x0fff, ///< Superframe Specification value.
-    };
+    static constexpr uint16_t kSuperFrameSpec = 0x0fff; ///< Superframe Specification value.
 
     /**
      * This method initializes the Beacon message.
@@ -1476,8 +1452,8 @@ public:
     /**
      * This method indicates whether or not the beacon appears to be a valid Thread Beacon message.
      *
-     * @retval TRUE  if the beacon appears to be a valid Thread Beacon message.
-     * @retval FALSE if the beacon does not appear to be a valid Thread Beacon message.
+     * @retval TRUE   If the beacon appears to be a valid Thread Beacon message.
+     * @retval FALSE  If the beacon does not appear to be a valid Thread Beacon message.
      *
      */
     bool IsValid(void) const
@@ -1515,20 +1491,14 @@ OT_TOOL_PACKED_BEGIN
 class BeaconPayload
 {
 public:
-    enum
-    {
-        kProtocolId     = 3,  ///< Thread Protocol ID.
-        kInfoStringSize = 92, ///< Max chars for the info string (@sa ToInfoString()).
-    };
+    static constexpr uint8_t kProtocolId      = 3;                     ///< Thread Protocol ID.
+    static constexpr uint8_t kProtocolVersion = 2;                     ///< Thread Protocol version.
+    static constexpr uint8_t kVersionOffset   = 4;                     ///< Version field bit offset.
+    static constexpr uint8_t kVersionMask     = 0xf << kVersionOffset; ///< Version field mask.
+    static constexpr uint8_t kNativeFlag      = 1 << 3;                ///< Native Commissioner flag.
+    static constexpr uint8_t kJoiningFlag     = 1 << 0;                ///< Joining Permitted flag.
 
-    enum
-    {
-        kProtocolVersion = 2,                     ///< Thread Protocol version.
-        kVersionOffset   = 4,                     ///< Version field bit offset.
-        kVersionMask     = 0xf << kVersionOffset, ///< Version field mask.
-        kNativeFlag      = 1 << 3,                ///< Native Commissioner flag.
-        kJoiningFlag     = 1 << 0,                ///< Joining Permitted flag.
-    };
+    static constexpr uint16_t kInfoStringSize = 92; ///< Max chars for the info string (@sa ToInfoString()).
 
     /**
      * This type defines the fixed-length `String` object returned from `ToInfoString()` method.
@@ -1549,8 +1519,8 @@ public:
     /**
      * This method indicates whether or not the beacon appears to be a valid Thread Beacon Payload.
      *
-     * @retval TRUE  if the beacon appears to be a valid Thread Beacon Payload.
-     * @retval FALSE if the beacon does not appear to be a valid Thread Beacon Payload.
+     * @retval TRUE   If the beacon appears to be a valid Thread Beacon Payload.
+     * @retval FALSE  If the beacon does not appear to be a valid Thread Beacon Payload.
      *
      */
     bool IsValid(void) const { return (mProtocolId == kProtocolId); }
@@ -1574,8 +1544,8 @@ public:
     /**
      * This method indicates whether or not the Native Commissioner flag is set.
      *
-     * @retval TRUE   if the Native Commissioner flag is set.
-     * @retval FALSE  if the Native Commissioner flag is not set.
+     * @retval TRUE   If the Native Commissioner flag is set.
+     * @retval FALSE  If the Native Commissioner flag is not set.
      *
      */
     bool IsNative(void) const { return (mFlags & kNativeFlag) != 0; }
@@ -1595,8 +1565,8 @@ public:
     /**
      * This method indicates whether or not the Joining Permitted flag is set.
      *
-     * @retval TRUE   if the Joining Permitted flag is set.
-     * @retval FALSE  if the Joining Permitted flag is not set.
+     * @retval TRUE   If the Joining Permitted flag is set.
+     * @retval FALSE  If the Joining Permitted flag is not set.
      *
      */
     bool IsJoiningPermitted(void) const { return (mFlags & kJoiningFlag) != 0; }
@@ -1676,11 +1646,8 @@ OT_TOOL_PACKED_BEGIN
 class CslIe
 {
 public:
-    enum : uint8_t
-    {
-        kHeaderIeId    = 0x1a,
-        kIeContentSize = sizeof(uint16_t) * 2,
-    };
+    static constexpr uint8_t kHeaderIeId    = 0x1a;
+    static constexpr uint8_t kIeContentSize = sizeof(uint16_t) * 2;
 
     /**
      * This method returns the CSL Period.
@@ -1728,11 +1695,8 @@ private:
 class Termination2Ie
 {
 public:
-    enum : uint8_t
-    {
-        kHeaderIeId    = 0x7f,
-        kIeContentSize = 0,
-    };
+    static constexpr uint8_t kHeaderIeId    = 0x7f;
+    static constexpr uint8_t kIeContentSize = 0;
 };
 
 /**

@@ -64,10 +64,7 @@ class CslTxScheduler : public InstanceLocator, private NonCopyable
     friend class IndirectSender;
 
 public:
-    enum
-    {
-        kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS,
-    };
+    static constexpr uint8_t kMaxCslTriggeredTxAttempts = OPENTHREAD_CONFIG_MAC_MAX_TX_ATTEMPTS_INDIRECT_POLLS;
 
     /**
      * This class defines all the child info required for scheduling CSL transmissions.

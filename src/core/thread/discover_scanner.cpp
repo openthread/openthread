@@ -73,6 +73,8 @@ Error DiscoverScanner::Discover(const Mac::ChannelMask &aScanChannels,
     MeshCoP::DiscoveryRequestTlv    discoveryRequest;
     MeshCoP::JoinerAdvertisementTlv joinerAdvertisement;
 
+    VerifyOrExit(Get<ThreadNetif>().IsUp(), error = kErrorInvalidState);
+
     VerifyOrExit(mState == kStateIdle, error = kErrorBusy);
 
     mEnableFiltering = aEnableFiltering;

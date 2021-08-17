@@ -77,14 +77,17 @@ class SingleHostAndService(thread_cert.TestCase):
         server = self.nodes[BR]
         client = self.nodes[ROUTER]
 
+        server.srp_server_set_enabled(False)
         host.start(start_radvd=False)
         self.simulator.go(5)
 
+        self.assertEqual(server.srp_server_get_state(), 'disabled')
         server.srp_server_set_enabled(True)
         server.srp_server_set_lease_range(LEASE, LEASE, KEY_LEASE, KEY_LEASE)
         server.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('leader', server.get_state())
+        self.assertEqual(server.srp_server_get_state(), 'running')
 
         client.start()
         self.simulator.go(5)
@@ -157,7 +160,7 @@ class SingleHostAndService(thread_cert.TestCase):
         #
 
         server.srp_server_set_enabled(False)
-        self.simulator.go(2)
+        self.simulator.go(5)
 
         self.assertEqual(len(server.srp_server_get_hosts()), 0)
         self.assertEqual(len(server.srp_server_get_services()), 0)

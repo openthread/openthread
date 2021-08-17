@@ -97,7 +97,7 @@ class Mle : public InstanceLocator, private NonCopyable
     friend class DiscoverScanner;
     friend class ot::Notifier;
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    friend class ot::LinkMetrics;
+    friend class ot::LinkMetrics::LinkMetrics;
 #endif
 
 public:
@@ -132,8 +132,8 @@ public:
      * @param[in]  aAnnounceAttach True if attach on the announced thread network with newer active timestamp,
      *                             or False if not.
      *
-     * @retval kErrorNone     Successfully started the protocol operation.
-     * @retval kErrorAlready  The protocol operation was already started.
+     * @retval kErrorNone           Successfully started the protocol operation.
+     * @retval kErrorInvalidState   IPv6 interface is down or device is in raw-link mode.
      *
      */
     Error Start(bool aAnnounceAttach);
@@ -786,14 +786,14 @@ protected:
         kCommandLinkMetricsManagementRequest  = 18, ///< Link Metrics Management Request
         kCommandLinkMetricsManagementResponse = 19, ///< Link Metrics Management Response
         kCommandLinkProbe                     = 20, ///< Link Probe
-        kCommandTimeSync = 99, ///< Time Sync (applicable when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
+        kCommandTimeSync                      = 99, ///< Time Sync (when OPENTHREAD_CONFIG_TIME_SYNC_ENABLE enabled)
     };
 
     /**
      * States during attach (when searching for a parent).
      *
      */
-    enum AttachState
+    enum AttachState : uint8_t
     {
         kAttachStateIdle,                ///< Not currently searching for a parent.
         kAttachStateProcessAnnounce,     ///< Waiting to process a received Announce (to switch channel/pan-id).
@@ -808,7 +808,7 @@ protected:
      * States when reattaching network using stored dataset
      *
      */
-    enum ReattachState
+    enum ReattachState : uint8_t
     {
         kReattachStop    = 0, ///< Reattach process is disabled or finished
         kReattachStart   = 1, ///< Start reattach process
@@ -816,17 +816,14 @@ protected:
         kReattachPending = 3, ///< Reattach using stored Pending Dataset
     };
 
-    enum
-    {
-        kMleMaxResponseDelay = 1000u, ///< Maximum delay before responding to a multicast request.
-    };
+    static constexpr uint16_t kMleMaxResponseDelay = 1000u; ///< Max delay before responding to a multicast request.
 
     /**
      * This enumeration type is used in `AppendAddressRegistration()` to determine which addresses to include in the
      * appended Address Registration TLV.
      *
      */
-    enum AddressRegistrationMode
+    enum AddressRegistrationMode : uint8_t
     {
         kAppendAllAddresses,  ///< Append all addresses (unicast/multicast) in Address Registration TLV.
         kAppendMeshLocalOnly, ///< Only append the Mesh Local (ML-EID) address in Address Registration TLV.
@@ -935,10 +932,7 @@ protected:
      */
     struct RequestedTlvs
     {
-        enum
-        {
-            kMaxNumTlvs = 16, ///< Maximum number of TLVs in request array.
-        };
+        static constexpr uint8_t kMaxNumTlvs = 16; ///< Maximum number of TLVs in request array.
 
         uint8_t mTlvs[kMaxNumTlvs]; ///< Array of requested TLVs.
         uint8_t mNumTlvs;           ///< Number of TLVs in the array.
@@ -1619,45 +1613,40 @@ protected:
     uint8_t       mParentLeaderCost;
 
 private:
-    enum
-    {
-        kMleHopLimit        = 255,
-        kMleSecurityTagSize = 4, // Security tag size in bytes.
+    static constexpr uint8_t kMleHopLimit        = 255;
+    static constexpr uint8_t kMleSecurityTagSize = 4; // Security tag size in bytes.
 
-        // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
-        // All timer intervals are converted to milliseconds.
-        kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u),
-        kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u),
-        kParentSearchJitterInterval  = (15 * 1000u),
-        kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD,
-    };
+    // Parameters related to "periodic parent search" feature (CONFIG_ENABLE_PERIODIC_PARENT_SEARCH).
+    // All timer intervals are converted to milliseconds.
+    static constexpr uint32_t kParentSearchCheckInterval   = (OPENTHREAD_CONFIG_PARENT_SEARCH_CHECK_INTERVAL * 1000u);
+    static constexpr uint32_t kParentSearchBackoffInterval = (OPENTHREAD_CONFIG_PARENT_SEARCH_BACKOFF_INTERVAL * 1000u);
+    static constexpr uint32_t kParentSearchJitterInterval  = (15 * 1000u);
+    static constexpr int8_t   kParentSearchRssThreadhold   = OPENTHREAD_CONFIG_PARENT_SEARCH_RSS_THRESHOLD;
 
     // Parameters for "attach backoff" feature (CONFIG_ENABLE_ATTACH_BACKOFF) - Intervals are in milliseconds.
-    enum : uint32_t
+    static constexpr uint32_t kAttachBackoffMinInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL;
+    static constexpr uint32_t kAttachBackoffMaxInterval = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL;
+    static constexpr uint32_t kAttachBackoffJitter      = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL;
+    static constexpr uint32_t kAttachBackoffDelayToResetCounter =
+        OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL;
+
+    enum ParentRequestType : uint8_t
     {
-        kAttachBackoffMinInterval         = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MINIMUM_INTERVAL,
-        kAttachBackoffMaxInterval         = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_MAXIMUM_INTERVAL,
-        kAttachBackoffJitter              = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_JITTER_INTERVAL,
-        kAttachBackoffDelayToResetCounter = OPENTHREAD_CONFIG_MLE_ATTACH_BACKOFF_DELAY_TO_RESET_BACKOFF_INTERVAL,
+        kParentRequestTypeRouters,         // Parent Request to all routers.
+        kParentRequestTypeRoutersAndReeds, // Parent Request to all routers and REEDs.
     };
 
-    enum ParentRequestType
+    enum ChildUpdateRequestState : uint8_t
     {
-        kParentRequestTypeRouters,         ///< Parent Request to all routers.
-        kParentRequestTypeRoutersAndReeds, ///< Parent Request to all routers and REEDs.
+        kChildUpdateRequestNone,    // No pending or active Child Update Request.
+        kChildUpdateRequestPending, // Pending Child Update Request due to relative OT_CHANGED event.
+        kChildUpdateRequestActive,  // Child Update Request has been sent and Child Update Response is expected.
     };
 
-    enum ChildUpdateRequestState
+    enum DataRequestState : uint8_t
     {
-        kChildUpdateRequestNone,    ///< No pending or active Child Update Request.
-        kChildUpdateRequestPending, ///< Pending Child Update Request due to relative OT_CHANGED event.
-        kChildUpdateRequestActive,  ///< Child Update Request has been sent and Child Update Response is expected.
-    };
-
-    enum DataRequestState
-    {
-        kDataRequestNone,   ///< Not waiting for a Data Response.
-        kDataRequestActive, ///< Data Request has been sent, Data Response is expected.
+        kDataRequestNone,   // Not waiting for a Data Response.
+        kDataRequestActive, // Data Request has been sent, Data Response is expected.
     };
 
     struct DelayedResponseMetadata
@@ -1674,7 +1663,7 @@ private:
     class Header
     {
     public:
-        enum SecuritySuite
+        enum SecuritySuite : uint8_t
         {
             k154Security = 0,
             kNoSecurity  = 255,
@@ -1805,11 +1794,12 @@ private:
     uint32_t GetAttachStartDelay(void) const;
     Error    SendParentRequest(ParentRequestType aType);
     Error    SendChildIdRequest(void);
-    Error    SendOrphanAnnounce(void);
+    Error    GetNextAnnouceChannel(uint8_t &aChannel) const;
+    bool     HasMoreChannelsToAnnouce(void) const;
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-    Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus);
+    Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus);
 #endif
     uint32_t Reattach(void);
 

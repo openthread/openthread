@@ -26,9 +26,9 @@
 #  ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 #  POSSIBILITY OF SUCH DAMAGE.
 #
-import ipaddress
 import logging
 import unittest
+from ipaddress import IPv6Network
 
 import config
 import thread_cert
@@ -124,7 +124,7 @@ class MultiThreadNetworks(thread_cert.TestCase):
 
         self.assertEqual(len(br1.get_routes()), 1)
         br1_on_link_prefix = br1.get_routes()[0].split(' ')[0]
-        self.assertEqual(ipaddress.IPv6Network(br1_on_link_prefix), ipaddress.IPv6Network(ON_LINK_PREFIX))
+        self.assertEqual(IPv6Network(br1_on_link_prefix), IPv6Network(ON_LINK_PREFIX))
 
         host_on_link_addr = host.get_matched_ula_addresses(br1_on_link_prefix)[0]
         self.assertTrue(router1.ping(host_on_link_addr))
@@ -156,14 +156,15 @@ class MultiThreadNetworks(thread_cert.TestCase):
         self.assertTrue(len(br2.get_prefixes()) == 1)
         self.assertTrue(len(router2.get_prefixes()) == 1)
 
-        br1_omr_prefix = br1.get_prefixes()[0].split(' ')[0]
-        br2_omr_prefix = br2.get_prefixes()[0].split(' ')[0]
+        br1_omr_prefix = br1.get_omr_prefix()
+        br2_omr_prefix = br2.get_omr_prefix()
         self.assertNotEqual(br1_omr_prefix, br2_omr_prefix)
 
-        # Verify that BR1 removed ON_LINK_PREFIX from its
-        # external routes list.
-        self.assertEqual(len(br1.get_routes()), 2)
-        self.assertEqual(len(router1.get_routes()), 2)
+        # Verify that the Border Routers starts advertsing new on-link prefix
+        # but don't remove the external routes for the radvd on-link prefix
+        # immediately, because the SLAAC addresses are still valid.
+        self.assertEqual(len(br1.get_routes()), 3)
+        self.assertEqual(len(router1.get_routes()), 3)
         self.assertEqual(len(br2.get_routes()), 2)
         self.assertEqual(len(router2.get_routes()), 2)
 
@@ -172,21 +173,39 @@ class MultiThreadNetworks(thread_cert.TestCase):
 
         on_link_prefixes = list(set(br1_external_routes).intersection(br2_external_routes))
         self.assertEqual(len(on_link_prefixes), 1)
-        on_link_prefix = on_link_prefixes[0]
+        self.assertEqual(IPv6Network(on_link_prefixes[0]), IPv6Network(br2.get_on_link_prefix()))
 
-        # Verify that both BR1 and BR2 are using a new on-link prefix.
-        # BR1 is depending on the Vicarious Router Solicitation to find
-        # out that the ON_LINK_PREFIX is stale and starts Router Solicitation
-        # on its own.
-        self.assertNotEqual(ipaddress.IPv6Network(on_link_prefix), ipaddress.IPv6Network(ON_LINK_PREFIX))
+        router1_omr_addr = router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
+        router2_omr_addr = router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
 
-        host_on_link_addr = host.get_matched_ula_addresses(on_link_prefix)[0]
-        self.assertTrue(router1.ping(host_on_link_addr))
-        self.assertTrue(
-            host.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True, interface=host_on_link_addr))
-        self.assertTrue(router2.ping(host.get_matched_ula_addresses(on_link_prefix)[0]))
-        self.assertTrue(
-            host.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0], backbone=True, interface=host_on_link_addr))
+        # Make sure that addresses of both the deprecated radvd `ON_LINK_PREFIX`
+        # and preferred Border Router on-link prefix can be reached by Thread
+        # devices in network of Border Router 1.
+        for host_on_link_addr in [
+                host.get_matched_ula_addresses(on_link_prefixes[0])[0],
+                host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
+        ]:
+            self.assertTrue(router1.ping(host_on_link_addr))
+            self.assertTrue(host.ping(router1_omr_addr, backbone=True, interface=host_on_link_addr))
+
+        host_on_link_addr = host.get_matched_ula_addresses(ON_LINK_PREFIX)[0]
+
+        # Make sure that addresses of the deprecated radvd `ON_LINK_PREFIX`
+        # can't be reached by Thread devices in network of Border Router 2.
+        self.assertFalse(router2.ping(host_on_link_addr))
+        self.assertFalse(host.ping(router2_omr_addr, backbone=True, interface=host_on_link_addr))
+
+        # Wait 30 seconds for the radvd `ON_LINK_PREFIX` to be invalidated
+        # and make sure that Thread devices in both networks can't reach
+        # the on-link address.
+        self.simulator.go(30)  # Valid Lifetime of radvd PIO is set to 60 seconds.
+        self.assertEqual(len(host.get_matched_ula_addresses(ON_LINK_PREFIX)), 0)
+        self.assertFalse(router1.ping(host_on_link_addr))
+        self.assertFalse(host.ping(router1_omr_addr, backbone=True, interface=host_on_link_addr))
+        self.assertFalse(router2.ping(host_on_link_addr))
+        self.assertFalse(host.ping(router2_omr_addr, backbone=True, interface=host_on_link_addr))
+
+        # Verify connectivity between the two networks.
         self.assertTrue(router1.ping(router2.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
         self.assertTrue(router2.ping(router1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]))
 

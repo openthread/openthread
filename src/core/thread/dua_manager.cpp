@@ -60,7 +60,7 @@ DuaManager::DuaManager(Instance &aInstance)
     , mLastRegistrationTime(0)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
-    , mChildIndexDuaRegistering(0)
+    , mChildIndexDuaRegistering(Mle::kMaxChildren)
 #endif
 {
     mDelay.mValue = 0;
@@ -474,17 +474,16 @@ void DuaManager::PerformNextRegistration(void)
         const Ip6::Address *duaPtr = nullptr;
         Child *             child  = nullptr;
 
-        if (!mChildDuaMask.Get(mChildIndexDuaRegistering) || mChildDuaRegisteredMask.Get(mChildIndexDuaRegistering))
-        {
-            for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
-            {
-                uint16_t childIndex = Get<ChildTable>().GetChildIndex(iter);
+        OT_ASSERT(mChildIndexDuaRegistering == Mle::kMaxChildren);
 
-                if (mChildDuaMask.Get(childIndex) && !mChildDuaRegisteredMask.Get(childIndex))
-                {
-                    mChildIndexDuaRegistering = childIndex;
-                    break;
-                }
+        for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
+        {
+            uint16_t childIndex = Get<ChildTable>().GetChildIndex(iter);
+
+            if (mChildDuaMask.Get(childIndex) && !mChildDuaRegisteredMask.Get(childIndex))
+            {
+                mChildIndexDuaRegistering = childIndex;
+                break;
             }
         }
 
@@ -550,6 +549,9 @@ void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageIn
     Error error;
 
     mIsDuaPending = false;
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
+    mChildIndexDuaRegistering = Mle::kMaxChildren;
+#endif
 
     if (aResult == kErrorResponseTimeout)
     {
@@ -611,6 +613,8 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
         SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
     }
 
+    VerifyOrExit(Get<BackboneRouter::Leader>().IsDomainUnicast(target), error = kErrorDrop);
+
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     if (Get<ThreadNetif>().HasUnicastAddress(target))
     {
@@ -645,27 +649,41 @@ Error DuaManager::ProcessDuaResponse(Coap::Message &aMessage)
 #endif
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     {
-        Child *child = Get<ChildTable>().GetChildAtIndex(mChildIndexDuaRegistering);
+        Child *  child = nullptr;
+        uint16_t childIndex;
+
+        for (Child &iter : Get<ChildTable>().Iterate(Child::kInStateValid))
+        {
+            if (iter.HasIp6Address(target))
+            {
+                child = &iter;
+                break;
+            }
+        }
 
         VerifyOrExit(child != nullptr, error = kErrorNotFound);
-        VerifyOrExit(child->HasIp6Address(target), error = kErrorNotFound);
+
+        childIndex = Get<ChildTable>().GetChildIndex(*child);
 
         switch (status)
         {
         case ThreadStatusTlv::kDuaSuccess:
             // Mark as Registered
-            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, true);
+            if (mChildDuaMask.Get(childIndex))
+            {
+                mChildDuaRegisteredMask.Set(childIndex, true);
+            }
             break;
         case ThreadStatusTlv::kDuaReRegister:
             // Parent stops registering for the Child's DUA until next Child Update Request
-            mChildDuaMask.Set(mChildIndexDuaRegistering, false);
-            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
+            mChildDuaMask.Set(childIndex, false);
+            mChildDuaRegisteredMask.Set(childIndex, false);
             break;
         case ThreadStatusTlv::kDuaInvalid:
         case ThreadStatusTlv::kDuaDuplicate:
             IgnoreError(child->RemoveIp6Address(target));
-            mChildDuaMask.Set(mChildIndexDuaRegistering, false);
-            mChildDuaRegisteredMask.Set(mChildIndexDuaRegistering, false);
+            mChildDuaMask.Set(childIndex, false);
+            mChildDuaRegisteredMask.Set(childIndex, false);
             break;
         case ThreadStatusTlv::kDuaNoResources:
         case ThreadStatusTlv::kDuaNotPrimary:
@@ -731,11 +749,7 @@ void DuaManager::UpdateChildDomainUnicastAddress(const Child &aChild, Mle::Child
         mChildDuaMask.Get(childIndex))
     {
         // Abort on going proxy DUA.req for this child
-#if OPENTHREAD_CONFIG_DUA_ENABLE
-        if (mIsDuaPending && mDuaState != DuaState::kRegistering && mChildIndexDuaRegistering == childIndex)
-#else
-        if (mIsDuaPending && mChildIndexDuaRegistering == childIndex)
-#endif
+        if (mChildIndexDuaRegistering == childIndex)
         {
             IgnoreError(Get<Tmf::Agent>().AbortTransaction(&DuaManager::HandleDuaResponse, this));
         }

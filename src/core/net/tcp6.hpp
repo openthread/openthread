@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for UDP/IPv6 sockets.
+ *   This file includes definitions for TCP/IPv6 sockets.
  */
 
 #ifndef TCP6_HPP_
@@ -44,11 +44,10 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/timer.hpp"
 
 namespace ot {
 namespace Ip6 {
-
-class Udp;
 
 /**
  * @addtogroup core-tcp
@@ -57,6 +56,11 @@ class Udp;
  *   This module includes definitions for TCP/IPv6 sockets.
  *
  * @{
+ *
+ */
+
+/**
+ * This class implements TCP message handling.
  *
  */
 class Tcp : public InstanceLocator, private NonCopyable
@@ -69,7 +73,6 @@ public:
     class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>
     {
         friend class Tcp;
-        friend class LinkedList<Endpoint>;
 
     public:
         /**
@@ -78,7 +81,7 @@ public:
          * Calling this function causes OpenThread to keep track of this Endpoint
          * and store and retrieve TCP data inside of it. The application
          * should refrain from directly accessing or modifying the fields in
-         * this Endpoint. If the application needs to reclaimthe memory backing
+         * this Endpoint. If the application needs to reclaim the memory backing
          * this Endpoint, it should call otTcpEndpointDeinitialize().
          *
          * @sa otTcpEndpointInitialize in include/openthread/tcp.h.
@@ -88,6 +91,7 @@ public:
          *
          * @retval kErrorNone    Successfully opened the TCP endpoint.
          * @retval kErrorFailed  Failed to open the TCP endpoint.
+         *
          */
         Error Initialize(Instance &aInstance, otTcpEndpointInitializeArgs &aArgs);
 
@@ -98,6 +102,7 @@ public:
          * @sa otTcpEndpointGetInstance
          *
          * @returns  The Instance pointer associated with this Endpoint.
+         *
          */
         Instance &GetInstance(void);
 
@@ -108,8 +113,9 @@ public:
          * @sa otTcpEndpointGetContext
          *
          * @returns  The context pointer associated with this Endpoint.
+         *
          */
-        void *GetContext(void);
+        void *GetContext(void) { return mContext; }
 
         /**
          * Obtains a pointer to a TCP endpoint's local host and port.
@@ -120,6 +126,7 @@ public:
          * @sa otTcpGetLocalAddress
          *
          * @returns  The local host and port of this Endpoint.
+         *
          */
         const SockAddr &GetLocalAddress(void) const;
 
@@ -132,6 +139,7 @@ public:
          * @sa otTcpGetPeerAddress
          *
          * @returns  The host and port of the connection peer of this Endpoint.
+         *
          */
         const SockAddr &GetPeerAddress(void) const;
 
@@ -144,6 +152,7 @@ public:
          *
          * @retval kErrorNone    Successfully bound the TCP endpoint.
          * @retval kErrorFailed  Failed to bind the TCP endpoint.
+         *
          */
         Error Bind(const SockAddr &aSockName);
 
@@ -163,6 +172,7 @@ public:
          *
          * @retval kErrorNone    Successfully completed the operation.
          * @retval kErrorFailed  Failed to complete the operation.
+         *
          */
         Error Connect(const SockAddr &aSockName, uint32_t aFlags);
 
@@ -170,7 +180,7 @@ public:
          * Adds data referenced by the linked buffer pointed to by @p aBuffer to the
          * send buffer.
          *
-         * Upon a sucessful call to this function, the linked buffer and data it
+         * Upon a successful call to this function, the linked buffer and data it
          * references are owned by the TCP stack; they should not be modified by the
          * application until a "send done" callback returns ownership of those objects
          * to the application. It is acceptable to call this function to add another
@@ -189,6 +199,7 @@ public:
          *
          * @retval kErrorNone    Successfully added data to the send buffer.
          * @retval kErrorFailed  Failed to add data to the send buffer.
+         *
          */
         Error SendByReference(otLinkedBuffer &aBuffer, uint32_t aFlags);
 
@@ -205,6 +216,7 @@ public:
          *
          * @retval kErrorNone    Successfully added data to the send buffer.
          * @retval kErrorFailed  Failed to add data to the send buffer.
+         *
          */
         Error SendByExtension(size_t aNumBytes, uint32_t aFlags);
 
@@ -239,6 +251,7 @@ public:
          *
          * @retval kErrorNone    Successfully completed the operation.
          * @retval kErrorFailed  Failed to complete the operation.
+         *
          */
         Error ReceiveContiguify(void);
 
@@ -254,6 +267,7 @@ public:
          *
          * @retval kErrorNone    Successfully completed the receive operation.
          * @retval kErrorFailed  Failed to complete the receive operation.
+         *
          */
         Error CommitReceive(size_t aNumBytes, uint32_t aFlags);
 
@@ -273,6 +287,7 @@ public:
          *
          * @retval kErrorNone    Successfully queued the "end of stream" condition for transmission.
          * @retval kErrorFailed  Failed to queue the "end of stream" condition for transmission.
+         *
          */
         Error SendEndOfStream(void);
 
@@ -289,6 +304,7 @@ public:
          *
          * @retval kErrorNone    Successfully aborted the TCP endpoint's connection.
          * @retval kErrorFailed  Failed to abort the TCP endpoint's connection.
+         *
          */
         Error Abort(void);
 
@@ -309,18 +325,34 @@ public:
          *
          * @retval kErrorNone    Successfully deinitialized the TCP endpoint.
          * @retval kErrorFailed  Failed to deinitialize the TCP endpoint.
+         *
          */
         Error Deinitialize(void);
+
+    private:
+        enum : uint8_t
+        {
+            kTimerDelack       = 0,
+            kTimerRexmtPersist = 1,
+            kTimerKeep         = 2,
+            kTimer2Msl         = 3,
+            kNumTimers         = 4,
+        };
+
+        static uint8_t TimerFlagToIndex(uint8_t aTimerFlag);
+
+        bool IsTimerActive(uint8_t aTimerIndex);
+        void SetTimer(uint8_t aTimerFlag, uint32_t aDelay);
+        void CancelTimer(uint8_t aTimerFlag);
+        bool FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry);
     };
 
     /**
      * This class represents a TCP/IPv6 listener.
+     *
      */
     class Listener : public otTcpListener, public LinkedListEntry<Listener>
     {
-        friend class Tcp;
-        friend class LinkedList<Listener>;
-
     public:
         /**
          * Initializes a TCP listener.
@@ -338,6 +370,7 @@ public:
          *
          * @retval kErrorNone    Successfully opened the TCP listener.
          * @retval kErrorFailed  Failed to open the TCP listener.
+         *
          */
         Error Initialize(Instance &aInstance, otTcpListenerInitializeArgs &aArgs);
 
@@ -348,6 +381,7 @@ public:
          * @sa otTcpListenerGetInstance
          *
          * @returns  The otInstance pointer associated with this Listener.
+         *
          */
         Instance &GetInstance(void);
 
@@ -358,8 +392,9 @@ public:
          * @sa otTcpListenerGetContext
          *
          * @returns  The context pointer associated with this Listener.
+         *
          */
-        void *GetContext(void);
+        void *GetContext(void) { return mContext; }
 
         /**
          * Causes incoming TCP connections that match the specified IP address and port
@@ -371,6 +406,7 @@ public:
          *
          * @retval kErrorNone    Successfully initiated listening on the TCP listener.
          * @retval kErrorFailed  Failed to initiate listening on the TCP listener.
+         *
          */
         Error Listen(const SockAddr &aSockName);
 
@@ -381,6 +417,7 @@ public:
          *
          * @retval kErrorNone    Successfully stopped listening on the TCP listener.
          * @retval kErrorFailed  Failed to stop listening on the TCP listener.
+         *
          */
         Error StopListening(void);
 
@@ -388,7 +425,7 @@ public:
          * Deinitializes this TCP listener.
          *
          * This means that OpenThread no longer keeps track of this TCP listener and
-         * deallocates all resources it has internally allocated for this TCP listener.
+         * deallocates all resources it has internally allocated for this TCP endpoint.
          * The application can reuse the memory backing the TCP listener as it sees
          * fit.
          *
@@ -398,6 +435,7 @@ public:
          *
          * @retval kErrorNone    Successfully deinitialized the TCP listener.
          * @retval kErrorFailed  Failed to deinitialize the TCP listener.
+         *
          */
         Error Deinitialize(void);
     };
@@ -410,10 +448,7 @@ public:
     class Header
     {
     public:
-        enum : uint8_t
-        {
-            kChecksumFieldOffset = 16, ///< The byte offset of the Checksum field in the TCP header.
-        };
+        static constexpr uint8_t kChecksumFieldOffset = 16; ///< Byte offset of the Checksum field in the TCP header.
 
         /**
          * This method returns the TCP Source Port.
@@ -488,7 +523,6 @@ public:
         uint16_t mWindow;
         uint16_t mChecksum;
         uint16_t mUrgentPointer;
-
     } OT_TOOL_PACKED_END;
 
     /**
@@ -502,14 +536,31 @@ public:
     /**
      * Processes a received TCP segment.
      *
+     * @param[in]  aIp6Header    A reference to a structure containing the segment's IPv6 header.
      * @param[in]  aMessage      A reference to the message containing the TCP segment.
-     * @param[in]  aMessageInfo  A refernce to the message info associated with @p aMessage.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      * @retval kErrorNone  Successfully processed the TCP segment.
      * @retval kErrorDrop  Dropped the TCP segment due to an invalid checksum.
      *
      */
-    Error ProcessReceivedSegment(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
+
+private:
+    enum
+    {
+        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
+    };
+
+    static void HandleTimer(Timer &aTimer);
+    void        ProcessTimers(void);
+
+    TimerMilli mTimer;
+
+    LinkedList<Endpoint> mEndpoints;
+    LinkedList<Listener> mListeners;
+    uint16_t             mEphemeralPort;
 };
 
 } // namespace Ip6

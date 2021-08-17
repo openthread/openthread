@@ -313,7 +313,7 @@ Done
 
 ### init
 
-Usage: `dataset init <active|new|pending>`
+Usage: `dataset init <active|new|pending|tlvs <hex-encoded TLVs>>`
 
 Initialize operational dataset buffer.
 

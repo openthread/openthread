@@ -558,6 +558,9 @@ bool Udp::IsPortInUse(uint16_t aPort) const
 bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
 {
     return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && !OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
+            && aPort != Dns::ServiceDiscovery::Server::kPort
+#endif
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
             && aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort()
 #endif

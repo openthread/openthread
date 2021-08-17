@@ -44,7 +44,7 @@ expect_line "Done"
 send "promiscuous disable\n"
 expect_line "Done"
 send "promiscuous a\n"
-expect "Error 7: InvalidArgs"
+expect "Error 35: InvalidCommand"
 
 dispose_all
 
@@ -73,6 +73,7 @@ expect_line "Done"
 switch_node 1
 send "ping $addr\n"
 expect "16 bytes from $addr: icmp_seq=1"
+expect_line "Done"
 
 switch_node 3
 expect -re {============================================\[len = +\d+]============================}

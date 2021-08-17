@@ -86,11 +86,8 @@ public:
     void UpdateAddresses(void);
 
 private:
-    enum
-    {
-        kTrickleTimerImin = 1,
-        kTrickleTimerImax = 120,
-    };
+    static constexpr uint32_t kTrickleTimerImin = 1;
+    static constexpr uint32_t kTrickleTimerImax = 120;
 
     enum IaStatus : uint8_t
     {

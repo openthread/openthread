@@ -40,31 +40,6 @@ jobs:
         GITHUB_TOKEN: "${{ secrets.GITHUB_TOKEN }}"
       if: "github.ref != 'refs/heads/main'"
 
-  expects-macos:
-    runs-on: macos-10.15
-    env:
-      CFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15 -DOPENTHREAD_CONFIG_MAC_SCAN_DURATION=500
-      CXXFLAGS: -DCLI_COAP_SECURE_USE_COAP_DEFAULT_HANDLER=1 -DOPENTHREAD_CONFIG_MLE_MAX_CHILDREN=15 -DOPENTHREAD_CONFIG_MAC_SCAN_DURATION=500
-      CC: clang
-      CXX: clang++
-      THREAD_VERSION: 1.1
-    steps:
-    - uses: actions/checkout@v2
-    - name: Bootstrap
-      run: |
-        brew update
-        brew install ninja
-    - name: Run RCP Mode
-      run: |
-        OT_OPTIONS='-DOT_READLINE=OFF -DOT_APP_NCP=OFF' OT_NODE_TYPE=rcp-cli ./script/test build expect
-    - name: Run Native IP Mode
-      run: |
-        brew install dnsmasq
-        echo 'listen-address=::1' | sudo tee $(brew --prefix)/etc/dnsmasq.conf
-        sudo brew services start dnsmasq
-        host ipv6.google.com ::1
-        OT_OPTIONS=-DOT_READLINE=OFF OT_NATIVE_IP=1 OT_NODE_TYPE=rcp-cli ./script/test clean build expect
-
   expects-linux:
     runs-on: ubuntu-18.04
     env:

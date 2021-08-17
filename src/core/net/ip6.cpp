@@ -454,6 +454,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     header.Init();
     header.SetDscp(PriorityToDscp(aMessage.GetPriority()));
+    header.SetEcn(aMessageInfo.mEcn);
     header.SetPayloadLength(payloadLength);
     header.SetNextHeader(aIpProto);
 
@@ -781,9 +782,9 @@ exit:
     {
         if (message != nullptr)
         {
-            mReassemblyList.Dequeue(*message);
-            message->Free();
+            mReassemblyList.DequeueAndFree(*message);
         }
+
         otLogWarnIp6("Reassembly failed: %s", ErrorToString(error));
     }
 
@@ -798,13 +799,7 @@ exit:
 
 void Ip6::CleanupFragmentationBuffer(void)
 {
-    Message *message;
-
-    while ((message = mReassemblyList.GetHead()) != nullptr)
-    {
-        mReassemblyList.Dequeue(*message);
-        message->Free();
-    }
+    mReassemblyList.DequeueAndFreeAll();
 }
 
 void Ip6::HandleTimeTick(void)
@@ -834,8 +829,7 @@ void Ip6::UpdateReassemblyList(void)
             otLogNoteIp6("Reassembly timeout.");
             SendIcmpError(*message, Icmp::Header::kTypeTimeExceeded, Icmp::Header::kCodeFragmReasTimeEx);
 
-            mReassemblyList.Dequeue(*message);
-            message->Free();
+            mReassemblyList.DequeueAndFree(*message);
         }
     }
 }
@@ -944,15 +938,20 @@ exit:
     return error;
 }
 
-Error Ip6::HandlePayload(Message &          aMessage,
+Error Ip6::HandlePayload(Header &           aIp6Header,
+                         Message &          aMessage,
                          MessageInfo &      aMessageInfo,
                          uint8_t            aIpProto,
                          Message::Ownership aMessageOwnership)
 {
+#if !OPENTHREAD_CONFIG_TCP_ENABLE
+    OT_UNUSED_VARIABLE(aIp6Header);
+#endif
+
     Error    error   = kErrorNone;
     Message *message = (aMessageOwnership == Message::kTakeCustody) ? &aMessage : nullptr;
 
-    VerifyOrExit(aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
+    VerifyOrExit(aIpProto == kProtoTcp || aIpProto == kProtoUdp || aIpProto == kProtoIcmp6);
 
     if (aMessageOwnership == Message::kCopyToUse)
     {
@@ -963,7 +962,7 @@ Error Ip6::HandlePayload(Message &          aMessage,
     {
 #if OPENTHREAD_CONFIG_TCP_ENABLE
     case kProtoTcp:
-        error = mTcp.ProcessReceivedSegment(*message, aMessageInfo);
+        error = mTcp.HandleMessage(aIp6Header, *message, aMessageInfo);
         if (error == kErrorDrop)
         {
             otLogNoteIp6("Error TCP Checksum");
@@ -1240,7 +1239,7 @@ start:
             forwardHost = false;
         }
 
-        error             = HandlePayload(aMessage, messageInfo, nextHeader,
+        error             = HandlePayload(header, aMessage, messageInfo, nextHeader,
                               (forwardThread || forwardHost ? Message::kCopyToUse : Message::kTakeCustody));
         shouldFreeMessage = forwardThread || forwardHost;
     }

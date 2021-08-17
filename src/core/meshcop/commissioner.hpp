@@ -326,14 +326,11 @@ public:
     void ApplyMeshLocalPrefix(void);
 
 private:
-    enum
-    {
-        kPetitionAttemptDelay = 5,  ///< COMM_PET_ATTEMPT_DELAY (seconds)
-        kPetitionRetryCount   = 2,  ///< COMM_PET_RETRY_COUNT
-        kPetitionRetryDelay   = 1,  ///< COMM_PET_RETRY_DELAY (seconds)
-        kKeepAliveTimeout     = 50, ///< TIMEOUT_COMM_PET (seconds)
-        kRemoveJoinerDelay    = 20, ///< Delay to remove successfully joined joiner
-    };
+    static constexpr uint32_t kPetitionAttemptDelay = 5;  // COMM_PET_ATTEMPT_DELAY (seconds)
+    static constexpr uint8_t  kPetitionRetryCount   = 2;  // COMM_PET_RETRY_COUNT
+    static constexpr uint32_t kPetitionRetryDelay   = 1;  // COMM_PET_RETRY_DELAY (seconds)
+    static constexpr uint32_t kKeepAliveTimeout     = 50; // TIMEOUT_COMM_PET (seconds)
+    static constexpr uint32_t kRemoveJoinerDelay    = 20; // Delay to remove successfully joined joiner
 
     enum JoinerEvent : uint8_t
     {

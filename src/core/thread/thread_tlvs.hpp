@@ -48,12 +48,9 @@ namespace ot {
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
-enum
-{
-    // Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
-    kIp6AddressesNumMin = 1,
-    kIp6AddressesNumMax = 15,
-};
+// Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
+constexpr uint8_t kIp6AddressesNumMin = 1;
+constexpr uint8_t kIp6AddressesNumMax = 15;
 
 /**
  * This class implements Network Layer TLV generation and parsing.
@@ -67,7 +64,7 @@ public:
      * Network Layer TLV Types.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTarget                = 0,  ///< Target EID TLV
         kExtMacAddress         = 1,  ///< Extended MAC Address TLV
@@ -301,10 +298,7 @@ public:
     uint8_t *GetTlvs(void) { return mTlvs; }
 
 private:
-    enum
-    {
-        kMaxSize = 255,
-    };
+    static constexpr uint8_t kMaxSize = 255;
 
     uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;

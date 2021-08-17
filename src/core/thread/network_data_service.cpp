@@ -59,28 +59,15 @@ Error Manager::AddService(const void *aServiceData,
                           const void *aServerData,
                           uint8_t     aServerDataLength)
 {
-    Error error;
-
-    SuccessOrExit(error = Get<Local>().AddService(
-                      kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData), aServiceDataLength,
-                      aServerStable, reinterpret_cast<const uint8_t *>(aServerData), aServerDataLength));
-
-    Get<Notifier>().HandleServerDataUpdated();
-
-exit:
-    return error;
+    return Get<Local>().AddService(kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData),
+                                   aServiceDataLength, aServerStable, reinterpret_cast<const uint8_t *>(aServerData),
+                                   aServerDataLength);
 }
 
 Error Manager::RemoveService(const void *aServiceData, uint8_t aServiceDataLength)
 {
-    Error error;
-
-    SuccessOrExit(error = Get<Local>().RemoveService(
-                      kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData), aServiceDataLength));
-    Get<Notifier>().HandleServerDataUpdated();
-
-exit:
-    return error;
+    return Get<Local>().RemoveService(kThreadEnterpriseNumber, reinterpret_cast<const uint8_t *>(aServiceData),
+                                      aServiceDataLength);
 }
 
 #endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE

@@ -646,101 +646,95 @@ public:
 #endif // OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
 
 private:
-    enum : uint8_t
-    {
-        kFastPollsAfterUpdateTx = 11, // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
+    // Number of fast data polls after SRP Update tx (11x 188ms = ~2 seconds)
+    static constexpr uint8_t kFastPollsAfterUpdateTx = 11;
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-        kMaxTimeoutFailuresToSwitchServer = OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER,
+    static constexpr uint8_t kMaxTimeoutFailuresToSwitchServer =
+        OPENTHREAD_CONFIG_SRP_CLIENT_MAX_TIMEOUT_FAILURES_TO_SWITCH_SERVER;
 #endif
-    };
 
-    enum : uint16_t
-    {
-        kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header), // Max UDP payload size
-    };
+    static constexpr uint16_t kUdpPayloadSize = Ip6::Ip6::kMaxDatagramLength - sizeof(Ip6::Udp::Header);
 
-    enum : uint32_t
-    {
-        // -------------------------------
-        // Lease related constants
+    // -------------------------------
+    // Lease related constants
 
-        kDefaultLease    = OPENTHREAD_CONFIG_SRP_CLIENT_DEFAULT_LEASE,     // in seconds.
-        kDefaultKeyLease = OPENTHREAD_CONFIG_SRP_CLIENT_DEFAULT_KEY_LEASE, // in seconds.
+    static constexpr uint32_t kDefaultLease    = OPENTHREAD_CONFIG_SRP_CLIENT_DEFAULT_LEASE;     // in seconds.
+    static constexpr uint32_t kDefaultKeyLease = OPENTHREAD_CONFIG_SRP_CLIENT_DEFAULT_KEY_LEASE; // in seconds.
 
-        // The guard interval determines how much earlier (relative to
-        // the lease expiration time) the client will send an update
-        // to renew the lease.
-        kLeaseRenewGuardInterval = OPENTHREAD_CONFIG_SRP_CLIENT_LEASE_RENEW_GUARD_INTERVAL, // in seconds.
+    // The guard interval determines how much earlier (relative to
+    // the lease expiration time) the client will send an update
+    // to renew the lease. Value is in seconds.
+    static constexpr uint32_t kLeaseRenewGuardInterval = OPENTHREAD_CONFIG_SRP_CLIENT_LEASE_RENEW_GUARD_INTERVAL;
 
-        // Max allowed lease time to avoid timer roll-over (~24.8 days).
-        kMaxLease = (Timer::kMaxDelay / 1000) - 1,
+    // Max allowed lease time to avoid timer roll-over (~24.8 days).
+    static constexpr uint32_t kMaxLease = (Timer::kMaxDelay / 1000) - 1;
 
-        // Opportunistic early refresh: When sending an SRP update, the
-        // services that are not yet expired but are close, are allowed
-        // to refresh early and are included in the SRP update. This
-        // helps place more services on the same lease refresh schedule
-        // reducing number of messages sent to the SRP server. The
-        // "early lease renewal interval" is used to determine if a
-        // service can renew early. The interval is calculated by
-        // multiplying the accepted lease interval by the"early lease
-        // renewal factor" which is given as a fraction (numerator and
-        // denominator).
-        //
-        // If the factor is set to zero (numerator=0, denominator=1),
-        // the opportunistic early refresh behavior is disabled. If
-        // denominator is set to zero (the factor is set to infinity),
-        // then all services (including previously registered ones)
-        // are always included in SRP update message.
+    // Opportunistic early refresh: When sending an SRP update, the
+    // services that are not yet expired but are close, are allowed
+    // to refresh early and are included in the SRP update. This
+    // helps place more services on the same lease refresh schedule
+    // reducing number of messages sent to the SRP server. The
+    // "early lease renewal interval" is used to determine if a
+    // service can renew early. The interval is calculated by
+    // multiplying the accepted lease interval by the"early lease
+    // renewal factor" which is given as a fraction (numerator and
+    // denominator).
+    //
+    // If the factor is set to zero (numerator=0, denominator=1),
+    // the opportunistic early refresh behavior is disabled. If
+    // denominator is set to zero (the factor is set to infinity),
+    // then all services (including previously registered ones)
+    // are always included in SRP update message.
 
-        kEarlyLeaseRenewFactorNumerator   = OPENTHREAD_CONFIG_SRP_CLIENT_EARLY_LEASE_RENEW_FACTOR_NUMERATOR,
-        kEarlyLeaseRenewFactorDenominator = OPENTHREAD_CONFIG_SRP_CLIENT_EARLY_LEASE_RENEW_FACTOR_DENOMINATOR,
+    static constexpr uint32_t kEarlyLeaseRenewFactorNumerator =
+        OPENTHREAD_CONFIG_SRP_CLIENT_EARLY_LEASE_RENEW_FACTOR_NUMERATOR;
+    static constexpr uint32_t kEarlyLeaseRenewFactorDenominator =
+        OPENTHREAD_CONFIG_SRP_CLIENT_EARLY_LEASE_RENEW_FACTOR_DENOMINATOR;
 
-        // -------------------------------
-        // When there is a change (e.g., a new service is added/removed)
-        // that requires an update, the SRP client will wait for a short
-        // delay as specified by `kUpdateTxDelay` before sending an SRP
-        // update to server. This allows the user to provide more change
-        // that are then all sent in same update message.
-        kUpdateTxDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_DELAY, // in msec.
+    // -------------------------------
+    // When there is a change (e.g., a new service is added/removed)
+    // that requires an update, the SRP client will wait for a short
+    // delay as specified by `kUpdateTxDelay` before sending an SRP
+    // update to server. This allows the user to provide more change
+    // that are then all sent in same update message.
+    static constexpr uint32_t kUpdateTxDelay = OPENTHREAD_CONFIG_SRP_CLIENT_UPDATE_TX_DELAY; // in msec.
 
-        // -------------------------------
-        // Retry related constants
-        //
-        // If the preparation or transmission of an SRP update message
-        // fails (e.g., no buffer to allocate the message), SRP client
-        // will retry after a short interval `kTxFailureRetryInterval`
-        // up to `kMaxTxFailureRetries` attempts. After this, the retry
-        // wait interval will be used (which keeps growing on each failure
-        // - please see bellow).
-        //
-        // If the update message is sent successfully but there is no
-        // response from server or if server rejects the update, the
-        // client will retransmit the update message after some wait
-        // interval. The wait interval starts from the minimum value and
-        // is increased by the growth factor on back-to-back failures up
-        // to the max value. The growth factor is given as a fraction
-        // (e.g., for 1.5, we can use 15 as the numerator and 10 as the
-        // denominator). A random jitter is added to the retry interval.
-        // If the current wait interval value is smaller than the jitter
-        // interval, then wait interval value itself is used as the
-        // jitter value. For example, with jitter interval of 2 seconds
-        // if the current retry interval is 800ms, then a random wait
-        // interval in [0,2*800] ms will be used.
+    // -------------------------------
+    // Retry related constants
+    //
+    // If the preparation or transmission of an SRP update message
+    // fails (e.g., no buffer to allocate the message), SRP client
+    // will retry after a short interval `kTxFailureRetryInterval`
+    // up to `kMaxTxFailureRetries` attempts. After this, the retry
+    // wait interval will be used (which keeps growing on each failure
+    // - please see bellow).
+    //
+    // If the update message is sent successfully but there is no
+    // response from server or if server rejects the update, the
+    // client will retransmit the update message after some wait
+    // interval. The wait interval starts from the minimum value and
+    // is increased by the growth factor on back-to-back failures up
+    // to the max value. The growth factor is given as a fraction
+    // (e.g., for 1.5, we can use 15 as the numerator and 10 as the
+    // denominator). A random jitter is added to the retry interval.
+    // If the current wait interval value is smaller than the jitter
+    // interval, then wait interval value itself is used as the
+    // jitter value. For example, with jitter interval of 2 seconds
+    // if the current retry interval is 800ms, then a random wait
+    // interval in [0,2*800] ms will be used.
 
-        kTxFailureRetryInterval               = 250, // in ms
-        kMaxTxFailureRetries                  = 8,   // num of quick retries after tx failure
-        kMinRetryWaitInterval                 = OPENTHREAD_CONFIG_SRP_CLIENT_MIN_RETRY_WAIT_INTERVAL, // in ms
-        kMaxRetryWaitInterval                 = OPENTHREAD_CONFIG_SRP_CLIENT_MAX_RETRY_WAIT_INTERVAL, // in ms
-        kRetryIntervalGrowthFactorNumerator   = OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_INTERVAL_GROWTH_FACTOR_NUMERATOR,
-        kRetryIntervalGrowthFactorDenominator = OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_INTERVAL_GROWTH_FACTOR_DENOMINATOR,
-    };
+    static constexpr uint32_t kTxFailureRetryInterval = 250; // in ms
+    static constexpr uint32_t kMaxTxFailureRetries    = 8;   // num of quick retries after tx failure
+    static constexpr uint32_t kMinRetryWaitInterval   = OPENTHREAD_CONFIG_SRP_CLIENT_MIN_RETRY_WAIT_INTERVAL; // in ms
+    static constexpr uint32_t kMaxRetryWaitInterval   = OPENTHREAD_CONFIG_SRP_CLIENT_MAX_RETRY_WAIT_INTERVAL; // in ms
+    static constexpr uint32_t kRetryIntervalGrowthFactorNumerator =
+        OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_INTERVAL_GROWTH_FACTOR_NUMERATOR;
+    static constexpr uint32_t kRetryIntervalGrowthFactorDenominator =
+        OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_INTERVAL_GROWTH_FACTOR_DENOMINATOR;
 
-    enum : uint16_t
-    {
-        kTxFailureRetryJitter = 10,                                                      // in ms
-        kRetryIntervalJitter  = OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_WAIT_INTERVAL_JITTER, // in ms
-    };
+    static constexpr uint16_t kTxFailureRetryJitter = 10;                                                      // in ms
+    static constexpr uint16_t kRetryIntervalJitter  = OPENTHREAD_CONFIG_SRP_CLIENT_RETRY_WAIT_INTERVAL_JITTER; // in ms
 
     static_assert(kDefaultLease <= static_cast<uint32_t>(kMaxLease), "kDefaultLease is larger than max");
     static_assert(kDefaultKeyLease <= static_cast<uint32_t>(kMaxLease), "kDefaultKeyLease is larger than max");
@@ -755,20 +749,17 @@ private:
         kStateToRetry,  // SRP update tx failed, waiting to retry.
     };
 
-    enum : bool
-    {
-        kAutoStartDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE,
-    };
+    static constexpr bool kAutoStartDefaultMode = OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_DEFAULT_MODE;
+    static constexpr bool kDisallowSwitchOnRegisteredHost =
+        OPENTHREAD_CONFIG_SRP_CLIENT_DISALLOW_SERVER_SWITCH_WITH_REGISTERED_HOST;
 
-    enum : uint16_t
-    {
-        kAnycastServerPort = 53, // Port number to use when server is discovered using "network data anycast service".
-    };
+    // Port number to use when server is discovered using "network data anycast service".
+    static constexpr uint16_t kAnycastServerPort = 53;
 
     // This enumeration type is used by the private `Start()` and
     // `Stop()` methods to indicate whether it is being requested by the
     // user or by the auto-start feature.
-    enum Requester
+    enum Requester : uint8_t
     {
         kRequesterUser,
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
@@ -786,10 +777,7 @@ private:
 
     struct Info : public Clearable<Info>
     {
-        enum : uint16_t
-        {
-            kUnknownOffset = 0, // Unknown offset value (used when offset is not yet set).
-        };
+        static constexpr uint16_t kUnknownOffset = 0; // Unknown offset value (used when offset is not yet set).
 
         uint16_t                     mDomainNameOffset; // Offset of domain name serialization
         uint16_t                     mHostNameOffset;   // Offset of host name serialization.
@@ -838,7 +826,7 @@ private:
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE
     void ProcessAutoStart(void);
 #if OPENTHREAD_CONFIG_SRP_CLIENT_SWITCH_SERVER_ON_FAILURE
-    void SelectNextServer(void);
+    void SelectNextServer(bool aDisallowSwitchOnRegisteredHost);
 #endif
 #endif
 

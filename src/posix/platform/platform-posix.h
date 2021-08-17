@@ -172,12 +172,6 @@ void platformRadioInit(const char *aUrl);
 void platformRadioDeinit(void);
 
 /**
- * This function shuts down platform network interface.
- *
- */
-void platformNetifDeinit(void);
-
-/**
  * This function inputs a received radio frame.
  *
  * @param[in]  aInstance   A pointer to the OpenThread instance.
@@ -245,11 +239,38 @@ void platformUartProcess(const fd_set *aReadFdSet, const fd_set *aWriteFdSet, co
 /**
  * This function initializes platform netif.
  *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @note This function is called before OpenThread instance is created.
+ *
  * @param[in]   aInterfaceName  A pointer to Thread network interface name.
  *
  */
-void platformNetifInit(otInstance *aInstance, const char *aInterfaceName);
+void platformNetifInit(const char *aInterfaceName);
+
+/**
+ * This function sets up platform netif.
+ *
+ * @note This function is called after OpenThread instance is created.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ *
+ */
+void platformNetifSetUp(void);
+
+/**
+ * This function tears down platform netif.
+ *
+ * @note This function is called before OpenThread instance is destructed.
+ *
+ */
+void platformNetifTearDown(void);
+
+/**
+ * This function deinitializes platform netif.
+ *
+ * @note This function is called after OpenThread instance is destructed.
+ *
+ */
+void platformNetifDeinit(void);
 
 /**
  * This function updates the file descriptor sets with file descriptors used by platform netif module.
@@ -430,14 +451,35 @@ extern unsigned int gNetifIndex;
 /**
  * This function initializes platform Backbone network.
  *
- * @param[in]   aInstance       A pointer to the OpenThread instance.
+ * @note This function is called before OpenThread instance is created.
+ *
  * @param[in]   aInterfaceName  A pointer to Thread network interface name.
  *
  */
-void platformBackboneInit(otInstance *aInstance, const char *aInterfaceName);
+void platformBackboneInit(const char *aInterfaceName);
+
+/**
+ * This function sets up platform Backbone network.
+ *
+ * @note This function is called after OpenThread instance is created.
+ *
+ * @param[in]   aInstance       A pointer to the OpenThread instance.
+ *
+ */
+void platformBackboneSetUp(void);
+
+/**
+ * This function tears down platform Backbone network.
+ *
+ * @note This function is called before OpenThread instance is destructed.
+ *
+ */
+void platformBackboneTearDown(void);
 
 /**
  * This function shuts down the platform Backbone network.
+ *
+ * @note This function is called after OpenThread instance is destructed.
  *
  */
 void platformBackboneDeinit(void);
@@ -450,6 +492,12 @@ void platformBackboneDeinit(void);
  *
  */
 void platformBackboneStateChange(otInstance *aInstance, otChangedFlags aFlags);
+
+/**
+ * A pointer to the OpenThread instance.
+ *
+ */
+extern otInstance *gInstance;
 
 /**
  * The name of Backbone network interface.

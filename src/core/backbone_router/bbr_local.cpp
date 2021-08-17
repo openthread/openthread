@@ -187,6 +187,8 @@ Error Local::AddService(bool aForce)
     serverData.SetMlrTimeout(mMlrTimeout);
 
     SuccessOrExit(error = Get<NetworkData::Service::Manager>().Add<NetworkData::Service::BackboneRouter>(serverData));
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
+
     mIsServiceAdded = true;
 
 exit:
@@ -199,6 +201,7 @@ void Local::RemoveService(void)
     Error error;
 
     SuccessOrExit(error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::BackboneRouter>());
+    Get<NetworkData::Notifier>().HandleServerDataUpdated();
     mIsServiceAdded = false;
 
 exit:

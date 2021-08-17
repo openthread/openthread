@@ -109,10 +109,7 @@ public:
     void SetEmptyCommissionerData(void);
 
 private:
-    enum
-    {
-        kTimeoutLeaderPetition = 50, ///< TIMEOUT_LEAD_PET (seconds)
-    };
+    static constexpr uint32_t kTimeoutLeaderPetition = 50; // TIMEOUT_LEAD_PET (seconds)
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

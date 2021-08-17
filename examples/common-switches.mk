@@ -55,6 +55,7 @@ DUA                       ?= 0
 DYNAMIC_LOG_LEVEL         ?= 0
 ECDSA                     ?= 0
 EXTERNAL_HEAP             ?= 0
+HISTORY_TRACKER           ?= 0
 IP6_FRAGM                 ?= 0
 JAM_DETECTION             ?= 0
 JOINER                    ?= 0
@@ -70,6 +71,7 @@ MLR                       ?= 0
 MTD_NETDIAG               ?= 0
 MULTIPLE_INSTANCE         ?= 0
 NEIGHBOR_DISCOVERY_AGENT  ?= 0
+NETDATA_PUBLISHER         ?= 0
 OTNS                      ?= 0
 PING_SENDER               ?= 1
 PLATFORM_UDP              ?= 0
@@ -148,6 +150,12 @@ ifeq ($(CSL_RECEIVER),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE=1
 endif
 
+ifeq ($(CSL_AUTO_SYNC),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE=1
+else ifeq ($(CSL_AUTO_SYNC),0)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_AUTO_SYNC_ENABLE=0
+endif
+
 ifeq ($(CSL_DEBUG),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE=1
 endif
@@ -202,6 +210,10 @@ endif
 
 ifeq ($(EXTERNAL_HEAP),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE=1
+endif
+
+ifeq ($(HISTORY_TRACKER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE=1
 endif
 
 ifeq ($(IP6_FRAGM),1)
@@ -263,6 +275,10 @@ endif
 
 ifeq ($(NEIGHBOR_DISCOVERY_AGENT),1)
 COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE=1
+endif
+
+ifeq ($(NETDATA_PUBLISHER),1)
+COMMONCFLAGS                   += -DOPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE=1
 endif
 
 ifeq ($(PING_SENDER),1)

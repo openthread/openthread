@@ -129,33 +129,15 @@ RouteInfoOption::RouteInfoOption(void)
     mPrefix.Clear();
 }
 
-void RouteInfoOption::SetPreference(otRoutePreference aPreference)
+void RouteInfoOption::SetPreference(RoutePreference aPreference)
 {
     mReserved &= ~kPreferenceMask;
-    mReserved |= (static_cast<uint8_t>(aPreference) << kPreferenceOffset) & kPreferenceMask;
+    mReserved |= (NetworkData::RoutePreferenceToValue(aPreference) << kPreferenceOffset) & kPreferenceMask;
 }
 
-otRoutePreference RouteInfoOption::GetPreference(void) const
+RouteInfoOption::RoutePreference RouteInfoOption::GetPreference(void) const
 {
-    otRoutePreference preference;
-
-    switch ((mReserved & kPreferenceMask) >> kPreferenceOffset)
-    {
-    case kPreferenceLow:
-        preference = OT_ROUTE_PREFERENCE_LOW;
-        break;
-    case kPreferenceMed:
-        preference = OT_ROUTE_PREFERENCE_MED;
-        break;
-    case kPreferenceHigh:
-        preference = OT_ROUTE_PREFERENCE_HIGH;
-        break;
-    default:
-        preference = OT_ROUTE_PREFERENCE_LOW;
-        break;
-    }
-
-    return preference;
+    return NetworkData::RoutePreferenceFromValue((mReserved & kPreferenceMask) >> kPreferenceOffset);
 }
 
 void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
@@ -180,11 +162,8 @@ Ip6::Prefix RouteInfoOption::GetPrefix(void) const
 
 bool RouteInfoOption::IsValid(void) const
 {
-    otRoutePreference pref = GetPreference();
-
     return (GetLength() == 1 || GetLength() == 2 || GetLength() == 3) &&
-           (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT) &&
-           (pref == OT_ROUTE_PREFERENCE_LOW || pref == OT_ROUTE_PREFERENCE_MED || pref == OT_ROUTE_PREFERENCE_HIGH);
+           (mPrefixLength <= OT_IP6_ADDRESS_SIZE * CHAR_BIT) && NetworkData::IsRoutePreferenceValid(GetPreference());
 }
 
 void RouterAdvMessage::SetToDefault(void)

@@ -65,14 +65,26 @@ otError UdpExample::ProcessHelp(Arg aArgs[])
 
 otError UdpExample::ProcessBind(Arg aArgs[])
 {
-    otError    error;
-    otSockAddr sockaddr;
+    otError           error;
+    otSockAddr        sockaddr;
+    otNetifIdentifier netif = OT_NETIF_THREAD;
+
+    if (aArgs[0] == "-u")
+    {
+        netif = OT_NETIF_UNSPECIFIED;
+        aArgs++;
+    }
+    else if (aArgs[0] == "-b")
+    {
+        netif = OT_NETIF_BACKBONE;
+        aArgs++;
+    }
 
     SuccessOrExit(error = aArgs[0].ParseAsIp6Address(sockaddr.mAddress));
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    error = otUdpBind(mInterpreter.mInstance, &mSocket, &sockaddr);
+    error = otUdpBind(mInterpreter.mInstance, &mSocket, &sockaddr, netif);
 
 exit:
     return error;

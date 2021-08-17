@@ -64,7 +64,7 @@ switch_node 1
 send "udp help\n"
 expect_line "Done"
 send "udp connect something_invalid\n"
-expect "Error 7: InvalidArgs"
+expect "Error 6: Parse"
 send "udp send -x something_invalid\n"
 expect "Error 7: InvalidArgs"
 send "udp\n"

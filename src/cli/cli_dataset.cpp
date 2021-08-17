@@ -173,7 +173,18 @@ otError Dataset::ProcessInit(Arg aArgs[])
         error = otDatasetCreateNewNetwork(mInterpreter.mInstance, &sDataset);
     }
 #endif
+    else if (aArgs[0] == "tlvs")
+    {
+        otOperationalDatasetTlvs datasetTlvs;
+        uint16_t                 size = sizeof(datasetTlvs.mTlvs);
 
+        SuccessOrExit(error = aArgs[1].ParseAsHexString(size, datasetTlvs.mTlvs));
+        datasetTlvs.mLength = static_cast<uint8_t>(size);
+
+        SuccessOrExit(error = otDatasetParseTlvs(&datasetTlvs, &sDataset));
+    }
+
+exit:
     return error;
 }
 
@@ -565,11 +576,13 @@ otError Dataset::ProcessMgmtSetCommand(Arg aArgs[])
 
     if (aArgs[0] == "active")
     {
-        error = otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength);
+        error = otDatasetSendMgmtActiveSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
+                                           /* aContext */ nullptr);
     }
     else if (aArgs[0] == "pending")
     {
-        error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength);
+        error = otDatasetSendMgmtPendingSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength, /* aCallback */ nullptr,
+                                            /* aContext */ nullptr);
     }
     else
     {

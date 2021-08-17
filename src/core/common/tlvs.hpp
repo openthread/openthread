@@ -58,13 +58,10 @@ class Tlv
 {
 public:
     /**
-     * Length values.
+     * The maximum length of the Base TLV format.
      *
      */
-    enum
-    {
-        kBaseTlvMaxLength = OT_NETWORK_BASE_TLV_MAX_LENGTH, ///< The maximum length of the Base TLV format.
-    };
+    static constexpr uint8_t kBaseTlvMaxLength = OT_NETWORK_BASE_TLV_MAX_LENGTH;
 
     /**
      * This method returns the Type value.
@@ -431,10 +428,7 @@ public:
     }
 
 protected:
-    enum
-    {
-        kExtendedLength = 255, ///< Extended Length value
-    };
+    static const uint8_t kExtendedLength = 255; // Extended Length value.
 
 private:
     static Error Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv);
@@ -483,10 +477,7 @@ private:
 template <uint8_t kTlvTypeValue> class TlvInfo
 {
 public:
-    enum : uint8_t
-    {
-        kType = kTlvTypeValue, ///< The TLV Type value.
-    };
+    static constexpr uint8_t kType = kTlvTypeValue; ///< The TLV Type value.
 };
 
 /**

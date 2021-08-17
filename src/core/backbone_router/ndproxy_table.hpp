@@ -231,10 +231,7 @@ public:
     Error GetInfo(const Ip6::Address &aDua, otBackboneRouterNdProxyInfo &aNdProxyInfo);
 
 private:
-    enum
-    {
-        kMaxNdProxyNum = OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM,
-    };
+    static constexpr uint16_t kMaxNdProxyNum = OPENTHREAD_CONFIG_NDPROXY_TABLE_ENTRY_NUM;
 
     enum Filter : uint8_t
     {
@@ -254,7 +251,7 @@ private:
         friend class IteratorBuilder;
 
     private:
-        enum IteratorType
+        enum IteratorType : uint8_t
         {
             kEndIterator,
         };

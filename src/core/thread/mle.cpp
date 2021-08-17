@@ -692,10 +692,10 @@ void Mle::SetStateChild(uint16_t aRloc16)
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    if (Get<Mac::Mac>().IsCslEnabled())
+    if (Get<Mac::Mac>().IsCslCapable())
     {
-        IgnoreError(Get<Radio>().EnableCsl(Get<Mac::Mac>().GetCslPeriod(), GetParent().GetRloc16(),
-                                           &GetParent().GetExtAddress()));
+        uint32_t period = IsRxOnWhenIdle() ? 0 : Get<Mac::Mac>().GetCslPeriod();
+        IgnoreError(Get<Radio>().EnableCsl(period, GetParent().GetRloc16(), &GetParent().GetExtAddress()));
         ScheduleChildUpdateRequest();
     }
 #endif
@@ -747,6 +747,10 @@ Error Mle::SetDeviceMode(DeviceMode aDeviceMode)
     VerifyOrExit(aDeviceMode.IsValid(), error = kErrorInvalidArgs);
     VerifyOrExit(mDeviceMode != aDeviceMode);
     mDeviceMode = aDeviceMode;
+
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+    Get<Utils::HistoryTracker>().RecordNetworkInfo();
+#endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
     Get<Utils::Otns>().EmitDeviceMode(mDeviceMode);
@@ -911,22 +915,23 @@ void Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != oldRloc16)
     {
         otLogNoteMle("RLOC16 %04x -> %04x", oldRloc16, aRloc16);
-
-        // Clear cached CoAP with old RLOC source
-        if (oldRloc16 != Mac::kShortAddrInvalid)
-        {
-            Get<Tmf::Agent>().ClearRequests(mMeshLocal16.GetAddress());
-        }
     }
 
-    Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
+    if (Get<ThreadNetif>().HasUnicastAddress(mMeshLocal16) &&
+        (mMeshLocal16.GetAddress().GetIid().GetLocator() != aRloc16))
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
+        Get<Tmf::Agent>().ClearRequests(mMeshLocal16.GetAddress());
+    }
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
     Get<Ip6::Mpl>().SetSeedId(aRloc16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        // mesh-local 16
+        // We can always call `AddUnicastAddress(mMeshLocat16)` and if
+        // the address is already added, it will perform no action.
+
         mMeshLocal16.GetAddress().GetIid().SetLocator(aRloc16);
         Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
 #if OPENTHREAD_FTD
@@ -1689,7 +1694,7 @@ void Mle::HandleAttachTimer(void)
     bool     shouldAnnounce = true;
 
     if (mAttachState == kAttachStateParentRequestRouter || mAttachState == kAttachStateParentRequestReed ||
-        mAttachState == kAttachStateAnnounce)
+        (mAttachState == kAttachStateAnnounce && !HasMoreChannelsToAnnouce()))
     {
         uint8_t linkQuality;
 
@@ -1777,6 +1782,14 @@ void Mle::HandleAttachTimer(void)
 
         if (shouldAnnounce)
         {
+            // We send an extra "Parent Request" as we switch to
+            // `kAttachStateAnnounce` and start sending Announce on
+            // all channels. This gives an additional chance to find
+            // a parent during this phase. Note that we can stay in
+            // `kAttachStateAnnounce` for multiple iterations, each
+            // time sending an Announce on a different channel
+            // (with `mAnnounceDelay` wait between them).
+
             SetAttachState(kAttachStateAnnounce);
             IgnoreError(SendParentRequest(kParentRequestTypeRoutersAndReeds));
             mAnnounceChannel = Mac::ChannelMask::kChannelIteratorFirst;
@@ -1787,13 +1800,11 @@ void Mle::HandleAttachTimer(void)
         OT_FALL_THROUGH;
 
     case kAttachStateAnnounce:
-        if (shouldAnnounce)
+        if (shouldAnnounce && (GetNextAnnouceChannel(mAnnounceChannel) == kErrorNone))
         {
-            if (SendOrphanAnnounce() == kErrorNone)
-            {
-                delay = mAnnounceDelay;
-                break;
-            }
+            SendAnnounce(mAnnounceChannel, /* aOrphanAnnounce */ true);
+            delay = mAnnounceDelay;
+            break;
         }
 
         OT_FALL_THROUGH;
@@ -1983,8 +1994,7 @@ void Mle::RemoveDelayedDataResponseMessage(void)
 
         if (message->GetSubType() == Message::kSubTypeMleDataResponse)
         {
-            mDelayedResponses.Dequeue(*message);
-            message->Free();
+            mDelayedResponses.DequeueAndFree(*message);
             Log(kMessageRemoveDelayed, kTypeDataResponse, metadata.mDestination);
 
             // no more than one multicast MLE Data Response in Delayed Message Queue.
@@ -2493,9 +2503,12 @@ exit:
     FreeMessageOnError(message, error);
 }
 
-Error Mle::SendOrphanAnnounce(void)
+Error Mle::GetNextAnnouceChannel(uint8_t &aChannel) const
 {
-    Error            error;
+    // This method gets the next channel to send announce on after
+    // `aChannel`. Returns `kErrorNotFound` if no more channel in the
+    // channel mask after `aChannel`.
+
     Mac::ChannelMask channelMask;
 
     if (Get<MeshCoP::ActiveDataset>().GetChannelMask(channelMask) != kErrorNone)
@@ -2503,16 +2516,18 @@ Error Mle::SendOrphanAnnounce(void)
         channelMask = Get<Mac::Mac>().GetSupportedChannelMask();
     }
 
-    SuccessOrExit(error = channelMask.GetNextChannel(mAnnounceChannel));
+    return channelMask.GetNextChannel(aChannel);
+}
 
-    SendAnnounce(mAnnounceChannel, true);
+bool Mle::HasMoreChannelsToAnnouce(void) const
+{
+    uint8_t channel = mAnnounceChannel;
 
-exit:
-    return error;
+    return GetNextAnnouceChannel(channel) == kErrorNone;
 }
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::LinkMetricsStatus aStatus)
+Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus)
 {
     Error    error = kErrorNone;
     Message *message;
@@ -2523,7 +2538,7 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     SuccessOrExit(error = AppendHeader(*message, kCommandLinkMetricsManagementResponse));
 
     tlv.SetType(Tlv::kLinkMetricsManagement);
-    statusSubTlv.SetType(kLinkMetricsStatus);
+    statusSubTlv.SetType(LinkMetrics::SubTlv::kStatus);
     statusSubTlv.SetLength(sizeof(aStatus));
     tlv.SetLength(statusSubTlv.GetSize());
 
@@ -2532,7 +2547,9 @@ Error Mle::SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, L
     SuccessOrExit(error = message->Append(aStatus));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
+
 exit:
+    FreeMessageOnError(message, error);
     return error;
 }
 #endif
@@ -2555,7 +2572,9 @@ Error Mle::SendLinkProbe(const Ip6::Address &aDestination, uint8_t aSeriesId, ui
     SuccessOrExit(error = message->AppendBytes(aBuf, aLength));
 
     SuccessOrExit(error = SendMessage(*message, aDestination));
+
 exit:
+    FreeMessageOnError(message, error);
     return error;
 }
 #endif
@@ -3031,8 +3050,8 @@ void Mle::HandleDataResponse(const Message &aMessage, const Ip6::MessageInfo &aM
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE
     if (Tlv::FindTlvValueOffset(aMessage, Tlv::kLinkMetricsReport, metricsReportValueOffset, length) == kErrorNone)
     {
-        Get<LinkMetrics>().HandleLinkMetricsReport(aMessage, metricsReportValueOffset, length,
-                                                   aMessageInfo.GetPeerAddr());
+        Get<LinkMetrics::LinkMetrics>().HandleReport(aMessage, metricsReportValueOffset, length,
+                                                     aMessageInfo.GetPeerAddr());
     }
 #endif
 
@@ -3942,14 +3961,14 @@ void Mle::HandleLinkMetricsManagementRequest(const Message &         aMessage,
                                              const Ip6::MessageInfo &aMessageInfo,
                                              Neighbor *              aNeighbor)
 {
-    Error                          error = kErrorNone;
-    LinkMetrics::LinkMetricsStatus status;
+    Error               error = kErrorNone;
+    LinkMetrics::Status status;
 
     Log(kMessageReceive, kTypeLinkMetricsManagementRequest, aMessageInfo.GetPeerAddr());
 
     VerifyOrExit(aNeighbor != nullptr, error = kErrorInvalidState);
 
-    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkMetricsManagementRequest(aMessage, *aNeighbor, status));
+    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleManagementRequest(aMessage, *aNeighbor, status));
     error = SendLinkMetricsManagementResponse(aMessageInfo.GetPeerAddr(), status);
 
 exit:
@@ -3969,7 +3988,7 @@ void Mle::HandleLinkMetricsManagementResponse(const Message &         aMessage,
 
     VerifyOrExit(aNeighbor != nullptr, error = kErrorInvalidState);
 
-    error = Get<LinkMetrics>().HandleLinkMetricsManagementResponse(aMessage, aMessageInfo.GetPeerAddr());
+    error = Get<LinkMetrics::LinkMetrics>().HandleManagementResponse(aMessage, aMessageInfo.GetPeerAddr());
 
 exit:
     LogProcessError(kTypeLinkMetricsManagementResponse, error);
@@ -3984,8 +4003,8 @@ void Mle::HandleLinkProbe(const Message &aMessage, const Ip6::MessageInfo &aMess
 
     Log(kMessageReceive, kTypeLinkProbe, aMessageInfo.GetPeerAddr());
 
-    SuccessOrExit(error = Get<LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
-    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetricsSeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
+    SuccessOrExit(error = Get<LinkMetrics::LinkMetrics>().HandleLinkProbe(aMessage, seriesId));
+    aNeighbor->AggregateLinkMetrics(seriesId, LinkMetrics::SeriesInfo::kSeriesTypeLinkProbe, aMessage.GetAverageLqi(),
                                     aMessage.GetAverageRss());
 
 exit:
@@ -4392,11 +4411,11 @@ const char *Mle::MessageTypeActionToSuffixString(MessageType aType, MessageActio
 const char *Mle::RoleToString(DeviceRole aRole)
 {
     static const char *const kRoleStrings[] = {
-        "Disabled", // (0) kRoleDisabled
-        "Detached", // (1) kRoleDetached
-        "Child",    // (2) kRoleChild
-        "Router",   // (3) kRoleRouter
-        "Leader",   // (4) kRoleLeader
+        "disabled", // (0) kRoleDisabled
+        "detached", // (1) kRoleDetached
+        "child",    // (2) kRoleChild
+        "router",   // (3) kRoleRouter
+        "leader",   // (4) kRoleLeader
     };
 
     static_assert(kRoleDisabled == 0, "kRoleDisabled value is incorrect");
@@ -4405,7 +4424,7 @@ const char *Mle::RoleToString(DeviceRole aRole)
     static_assert(kRoleRouter == 3, "kRoleRouter value is incorrect");
     static_assert(kRoleLeader == 4, "kRoleLeader value is incorrect");
 
-    return kRoleStrings[aRole];
+    return (aRole <= OT_ARRAY_LENGTH(kRoleStrings)) ? kRoleStrings[aRole] : "invalid";
 }
 
 // LCOV_EXCL_START
@@ -4495,6 +4514,7 @@ Error Mle::SendLinkMetricsManagementRequest(const Ip6::Address &aDestination, co
     SuccessOrExit(error = SendMessage(*message, aDestination));
 
 exit:
+    FreeMessageOnError(message, error);
     return error;
 }
 #endif

@@ -85,26 +85,21 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 
-/**
- * Internet Protocol Numbers
- */
-enum
-{
-    kProtoHopOpts  = 0,  ///< IPv6 Hop-by-Hop Option
-    kProtoTcp      = 6,  ///< Transmission Control Protocol
-    kProtoUdp      = 17, ///< User Datagram
-    kProtoIp6      = 41, ///< IPv6 encapsulation
-    kProtoRouting  = 43, ///< Routing Header for IPv6
-    kProtoFragment = 44, ///< Fragment Header for IPv6
-    kProtoIcmp6    = 58, ///< ICMP for IPv6
-    kProtoNone     = 59, ///< No Next Header for IPv6
-    kProtoDstOpts  = 60, ///< Destination Options for IPv6
-};
+// Internet Protocol Numbers
+static constexpr uint8_t kProtoHopOpts  = OT_IP6_PROTO_HOP_OPTS; ///< IPv6 Hop-by-Hop Option
+static constexpr uint8_t kProtoTcp      = OT_IP6_PROTO_TCP;      ///< Transmission Control Protocol
+static constexpr uint8_t kProtoUdp      = OT_IP6_PROTO_UDP;      ///< User Datagram
+static constexpr uint8_t kProtoIp6      = OT_IP6_PROTO_IP6;      ///< IPv6 encapsulation
+static constexpr uint8_t kProtoRouting  = OT_IP6_PROTO_ROUTING;  ///< Routing Header for IPv6
+static constexpr uint8_t kProtoFragment = OT_IP6_PROTO_FRAGMENT; ///< Fragment Header for IPv6
+static constexpr uint8_t kProtoIcmp6    = OT_IP6_PROTO_ICMP6;    ///< ICMP for IPv6
+static constexpr uint8_t kProtoNone     = OT_IP6_PROTO_NONE;     ///< No Next Header for IPv6
+static constexpr uint8_t kProtoDstOpts  = OT_IP6_PROTO_DST_OPTS; ///< Destination Options for IPv6
 
 /**
  * Class Selectors
  */
-enum IpDscpCs
+enum IpDscpCs : uint8_t
 {
     kDscpCs0    = 0,    ///< Class selector codepoint 0
     kDscpCs1    = 8,    ///< Class selector codepoint 8
@@ -125,14 +120,11 @@ OT_TOOL_PACKED_BEGIN
 class Header
 {
 public:
-    enum : uint8_t
-    {
-        kPayloadLengthFieldOffset = 4,  ///< The byte offset of Payload Length field in IPv6 header.
-        kNextHeaderFieldOffset    = 6,  ///< The byte offset of Next Header field in IPv6 header.
-        kHopLimitFieldOffset      = 7,  ///< The byte offset of Hop Limit field in IPv6 header.
-        kSourceFieldOffset        = 8,  ///< The byte offset of Source Address field in IPv6 header.
-        kDestinationFieldOffset   = 24, ///< The byte offset of Destination Address field in IPv6 header.
-    };
+    static constexpr uint8_t kPayloadLengthFieldOffset = 4;  ///< Offset of Payload Length field in IPv6 header.
+    static constexpr uint8_t kNextHeaderFieldOffset    = 6;  ///< Offset of Next Header field in IPv6 header.
+    static constexpr uint8_t kHopLimitFieldOffset      = 7;  ///< Offset of Hop Limit field in IPv6 header.
+    static constexpr uint8_t kSourceFieldOffset        = 8;  ///< Offset of Source Address field in IPv6 header.
+    static constexpr uint8_t kDestinationFieldOffset   = 24; ///< Offset of Destination Address field in IPv6 header.
 
     /**
      * This method initializes the IPv6 header.
@@ -196,6 +188,25 @@ public:
     {
         mVersionClassFlow.m16[0] = HostSwap16((HostSwap16(mVersionClassFlow.m16[0]) & ~kDscpMask) |
                                               ((static_cast<uint16_t>(aDscp) << kDscpOffset) & kDscpMask));
+    }
+
+    /**
+     * This method returns the IPv6 ECN value.
+     *
+     * @returns The IPv6 ECN value.
+     *
+     */
+    uint8_t GetEcn(void) const { return (mVersionClassFlow.m8[1] & kEcnMask) >> kEcnOffset; }
+
+    /**
+     * This method sets the Ipv6 ECN value.
+     *
+     * @param[in]  aEcn  The Ipv6 ECN value.
+     *
+     */
+    void SetEcn(uint8_t aEcn)
+    {
+        mVersionClassFlow.m8[1] = (mVersionClassFlow.m8[1] & ~kEcnMask) | ((aEcn << kEcnOffset) & kEcnMask);
     }
 
     /**
@@ -295,22 +306,18 @@ public:
     void SetDestination(const Address &aDestination) { mDestination = aDestination; }
 
 private:
-    enum : uint8_t
-    {
-        kVersion6    = 0x60,
-        kVersionMask = 0xf0, // To use with `mVersionClassFlow.m8[0]`
-        kDscpOffset  = 6,    // To use with `mVersionClassFlow.m16[0]`
-    };
+    static constexpr uint8_t  kVersion6             = 0x60;
+    static constexpr uint8_t  kVersionMask          = 0xf0;       // To use with `mVersionClassFlow.m8[0]`
+    static constexpr uint8_t  kDscpOffset           = 6;          // To use with `mVersionClassFlow.m16[0]`
+    static constexpr uint16_t kDscpMask             = 0x0fc0;     // To use with `mVersionClassFlow.m16[0]`
+    static constexpr uint8_t  kEcnOffset            = 4;          // To use with `mVersionClassFlow.m8[1]`
+    static constexpr uint8_t  kEcnMask              = 0x30;       // To use with `mVersionClassFlow.m8[1]`
+    static constexpr uint32_t kVersionClassFlowInit = 0x60000000; // Version 6, TC and flow zero.
 
-    enum : uint16_t
-    {
-        kDscpMask = 0x0fc0, // To use with `mVersionClassFlow.m16[0]`
-    };
-
-    enum : uint32_t
-    {
-        kVersionClassFlowInit = 0x60000000, // Version 6, TC and flow zero.
-    };
+    static constexpr uint8_t kEcnNotCapable = OT_ECN_NOT_CAPABLE; ///< Non-ECT
+    static constexpr uint8_t kEcnCapable0   = OT_ECN_CAPABLE_0;   ///< ECT(0)
+    static constexpr uint8_t kEcnCapable1   = OT_ECN_CAPABLE_1;   ///< ECT(1)
+    static constexpr uint8_t kEcnMarked     = OT_ECN_MARKED;      ///< Congestion encountered (CE)
 
     union OT_TOOL_PACKED_FIELD
     {
@@ -450,10 +457,7 @@ public:
     void SetLength(uint8_t aLength) { mLength = aLength; }
 
 private:
-    enum : uint8_t
-    {
-        kActionMask = 0xc0,
-    };
+    static constexpr uint8_t kActionMask = 0xc0;
 
     uint8_t mType;
     uint8_t mLength;
@@ -467,12 +471,9 @@ OT_TOOL_PACKED_BEGIN
 class OptionPadN : public OptionHeader
 {
 public:
-    enum
-    {
-        kType      = 0x01, ///< PadN type
-        kData      = 0x00, ///< PadN specific data
-        kMaxLength = 0x05  ///< Maximum length of PadN option data
-    };
+    static constexpr uint8_t kType      = 0x01; ///< PadN type
+    static constexpr uint8_t kData      = 0x00; ///< PadN specific data
+    static constexpr uint8_t kMaxLength = 0x05; ///< Maximum length of PadN option data
 
     /**
      * This method initializes the PadN header.
@@ -483,8 +484,8 @@ public:
      */
     void Init(uint8_t aPadLength)
     {
-        OptionHeader::SetType(kType);
-        OptionHeader::SetLength(aPadLength - sizeof(OptionHeader));
+        SetType(kType);
+        SetLength(aPadLength - sizeof(OptionHeader));
         memset(mPad, kData, aPadLength - sizeof(OptionHeader));
     }
 
@@ -495,7 +496,7 @@ public:
      * @returns The total IPv6 Option Length.
      *
      */
-    uint8_t GetTotalLength(void) const { return OptionHeader::GetLength() + sizeof(OptionHeader); }
+    uint8_t GetTotalLength(void) const { return GetLength() + sizeof(OptionHeader); }
 
 private:
     uint8_t mPad[kMaxLength];
@@ -509,10 +510,7 @@ OT_TOOL_PACKED_BEGIN
 class OptionPad1
 {
 public:
-    enum
-    {
-        kType = 0x00
-    };
+    static constexpr uint8_t kType = 0x00;
 
     /**
      * This method initializes the Pad1 header.
@@ -644,15 +642,12 @@ public:
     static inline uint16_t BytesToFragmentOffset(uint16_t aOffset) { return aOffset >> 3; }
 
 private:
-    uint8_t mNextHeader;
-    uint8_t mReserved;
+    static constexpr uint8_t  kOffsetOffset = 3;
+    static constexpr uint16_t kOffsetMask   = 0xfff8;
+    static constexpr uint16_t kMoreFlag     = 1;
 
-    enum
-    {
-        kOffsetOffset = 3,
-        kOffsetMask   = 0xfff8,
-        kMoreFlag     = 1,
-    };
+    uint8_t  mNextHeader;
+    uint8_t  mReserved;
     uint16_t mOffsetMore;
     uint32_t mIdentification;
 } OT_TOOL_PACKED_END;
