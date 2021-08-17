@@ -73,7 +73,7 @@ void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 void HmacSha256::Finish(Hash &aHash)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoHmacSha256Finish(context, sizeof(mContext), aHash.m8, aHash.kSize);
+    Error err     = otPlatCryptoHmacSha256Finish(context, sizeof(mContext), aHash.m8, Hash::kSize);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

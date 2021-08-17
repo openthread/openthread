@@ -88,7 +88,7 @@ void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
 void Sha256::Finish(Hash &aHash)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Finish(context, sizeof(mContext), aHash.m8, aHash.kSize);
+    Error err     = otPlatCryptoSha256Finish(context, sizeof(mContext), aHash.m8, Hash::kSize);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
