@@ -44,3 +44,21 @@ target_include_directories(${tcplp_static_target}
         ${OT_PUBLIC_INCLUDES}
         $<TARGET_PROPERTY:ot-config,INTERFACE_INCLUDE_DIRECTORIES>
 )
+
+# TCPlp calls functions that are defined by the core OpenThread (like
+# "otMessageWrite()"), so we need to add the core library (FTD or MTD, as
+# appropriate) as a link dependency.
+
+if(OT_FTD)
+    target_link_libraries(${tcplp_static_target}
+        PRIVATE
+            openthread-ftd
+    )
+endif()
+
+if(OT_MTD)
+    target_link_libraries(${tcplp_static_target}
+        PRIVATE
+            openthread-mtd
+    )
+endif()
