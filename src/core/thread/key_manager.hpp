@@ -257,7 +257,7 @@ public:
      * @returns A key reference to the Thread Network Key.
      *
      */
-    const NetworkKeyRef &GetNetworkKeyRef(void) {return mNetworkKeyRef; }
+    const NetworkKeyRef &GetNetworkKeyRef(void) { return mNetworkKeyRef; }
 
     /**
      * This method sets the Thread Network Key using Key Reference.
@@ -269,7 +269,7 @@ public:
      *
      */
     Error SetNetworkKeyRef(NetworkKeyRef aKeyRef);
-#endif    
+#endif
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -306,7 +306,7 @@ public:
      * @returns A key reference to the PSKc.
      *
      */
-    const PskcRef &GetPskcRef(void) {return mPskcRef; }
+    const PskcRef &GetPskcRef(void) { return mPskcRef; }
 
     /**
      * This method sets the PSKc as a Key reference.
@@ -315,7 +315,7 @@ public:
      *
      */
     void SetPskcRef(otPskcRef aKeyRef);
-#endif    
+#endif
 #endif
 
     /**
@@ -627,11 +627,11 @@ private:
     bool           mIsPskcSet : 1;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    NetworkKeyRef   mNetworkKeyRef;
-#if OPENTHREAD_MTD || OPENTHREAD_FTD    
-    PskcRef         mPskcRef;
-#endif    
-#endif    
+    NetworkKeyRef mNetworkKeyRef;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    PskcRef mPskcRef;
+#endif
+#endif
 };
 
 /**

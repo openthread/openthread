@@ -235,12 +235,6 @@ typedef enum OT_MUST_USE_RESULT otError
     OT_ERROR_PENDING = 36,
 
     /**
-     * Operation is not supported.
-     *
-     */
-    OT_ERROR_NOT_SUPPORTED = 37,
-
-    /**
      * The number of defined errors.
      */
     OT_NUM_ERRORS,

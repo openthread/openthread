@@ -584,13 +584,14 @@ void KeyManager::HandleKeyRotationTimer(void)
 const NetworkKey &KeyManager::GetNetworkKey(void) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error error = kErrorNone;
+    Error  error   = kErrorNone;
     size_t mKeyLen = 0;
 
-    error = otPlatCryptoExportKey(mNetworkKeyRef, const_cast<uint8_t *> (mNetworkKey.m8), sizeof(mNetworkKey.m8), &mKeyLen);
+    error =
+        otPlatCryptoExportKey(mNetworkKeyRef, const_cast<uint8_t *>(mNetworkKey.m8), sizeof(mNetworkKey.m8), &mKeyLen);
 
     OT_ASSERT(error == kErrorNone);
-#endif    
+#endif
 
     return mNetworkKey;
 }
@@ -598,13 +599,13 @@ const NetworkKey &KeyManager::GetNetworkKey(void) const
 const Pskc &KeyManager::GetPskc(void) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error error = kErrorNone;
+    Error  error   = kErrorNone;
     size_t mKeyLen = 0;
 
-    error = otPlatCryptoExportKey(mPskcRef, const_cast<uint8_t *> (mPskc.m8), sizeof(mPskc.m8), &mKeyLen);
+    error = otPlatCryptoExportKey(mPskcRef, const_cast<uint8_t *>(mPskc.m8), sizeof(mPskc.m8), &mKeyLen);
 
     OT_ASSERT(error == kErrorNone);
-#endif    
+#endif
 
     return mPskc;
 }
@@ -640,7 +641,7 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
 
 exit:
     mNetworkKey.Clear();
-    mNetworkKeyRef     = keyRef;
+    mNetworkKeyRef = keyRef;
 
     return error;
 }
@@ -659,7 +660,7 @@ Error KeyManager::StorePskc(void)
     OT_ASSERT(error == kErrorNone);
 
     mPskc.Clear();
-    mPskcRef     = keyRef;
+    mPskcRef = keyRef;
 
     return error;
 }

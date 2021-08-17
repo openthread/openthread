@@ -599,7 +599,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         }
     }
 
-exit: 
+exit:
     return error;
 }
 
