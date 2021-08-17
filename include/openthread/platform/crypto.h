@@ -316,7 +316,7 @@ otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContextSize, otCrypt
  * @retval OT_ERROR_FAILED        Failed to update HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
  *
- * @note Incase PSA is supported pointer to psa_mac_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
