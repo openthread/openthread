@@ -154,11 +154,9 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check network key
     if (Tlv::Find<NetworkKeyTlv>(aMessage, networkKey) == kErrorNone)
     {
-        uint8_t networkKeyLiteral[OT_NETWORK_KEY_SIZE];
-        IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
         hasNetworkKey = true;
 
-        if (memcmp(networkKey.m8, networkKeyLiteral, OT_NETWORK_KEY_SIZE) != 0)
+        if (networkKey != Get<KeyManager>().GetNetworkKey())
         {
             doesAffectConnectivity = true;
             doesAffectNetworkKey   = true;
@@ -166,18 +164,12 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (type == Tlv::kPendingTimestamp)
+    if (type == Tlv::kPendingTimestamp && (!hasNetworkKey || (networkKey == Get<KeyManager>().GetNetworkKey())))
     {
-        uint8_t networkKeyLiteral[OT_NETWORK_KEY_SIZE];
-        IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
+        // no change to network key, active timestamp must be ahead
+        const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
 
-        if (!hasNetworkKey || (memcmp(networkKey.m8, networkKeyLiteral, OT_NETWORK_KEY_SIZE) != 0))
-        {
-            // no change to network key, active timestamp must be ahead
-            const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
-
-            VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0);
-        }
+        VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0);
     }
 
     // check commissioner session id
@@ -361,9 +353,7 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<NetworkKeyTlv>() == nullptr)
     {
-        otNetworkKey networkKey;
-        IgnoreError(Get<KeyManager>().GetNetworkKey().CopyKey(networkKey.m8, OT_NETWORK_KEY_SIZE));
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, networkKey));
+        IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, Get<KeyManager>().GetNetworkKey()));
     }
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
@@ -382,12 +372,13 @@ Error ActiveDataset::GenerateLocal(void)
     {
         if (Get<KeyManager>().IsPskcSet())
         {
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, Get<KeyManager>().GetPskc().mLiteralKey));
+            IgnoreError(dataset.SetTlv(Tlv::kPskc, Get<KeyManager>().GetPskc()));
         }
         else
         {
             // PSKc has not yet been configured, generate new PSKc at random
             Pskc pskc;
+            
             SuccessOrExit(error = pskc.GenerateRandom());
             IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
         }

@@ -583,13 +583,14 @@ void BorderAgent::Start(void)
 {
     Error             error;
     Coap::CoapSecure &coaps = Get<Coap::CoapSecure>();
-    uint8_t           pskc[OT_PSKC_MAX_SIZE];
-
-    IgnoreError(Get<KeyManager>().GetPskc().CopyKey(pskc, OT_PSKC_MAX_SIZE));
+    
     VerifyOrExit(mState == kStateStopped, error = kErrorAlready);
 
     SuccessOrExit(error = coaps.Start(kBorderAgentUdpPort));
-    SuccessOrExit(error = coaps.SetPsk(pskc, OT_PSKC_MAX_SIZE));
+    SuccessOrExit(error = coaps.SetPsk(Get<KeyManager>().GetPskc().m8, OT_PSKC_MAX_SIZE));
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE    
+    Get<KeyManager>().GetPskc().Clear();
+#endif    
     coaps.SetConnectedCallback(HandleConnected, this);
 
     coaps.AddResource(mActiveGet);

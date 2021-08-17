@@ -116,7 +116,7 @@ const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetNetworkKey().mLiteralKey;
+    return &instance.Get<KeyManager>().GetNetworkKey();
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -124,7 +124,7 @@ otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<KeyManager>().GetNetworkKey().mKeyRef;
+    return instance.Get<KeyManager>().GetNetworkKeyRef();
 }
 #endif
 
@@ -156,7 +156,7 @@ otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = instance.Get<KeyManager>().SetNetworkKeyRef(aKeyRef);
+    error = instance.Get<KeyManager>().SetNetworkKeyRef(static_cast<NetworkKeyRef>(aKeyRef));
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 

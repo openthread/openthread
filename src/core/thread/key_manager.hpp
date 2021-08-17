@@ -156,46 +156,13 @@ public:
 
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 /**
  * Provides a representation for Network Key reference.
  *
  */
 typedef otNetworkKeyRef NetworkKeyRef;
-
-/**
- * This class represents a Thread Network Key material.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class NetworkKeyInfo
-{
-public:
-    /**
-     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
-     * a reference.
-     */
-    Mac::CryptoType mCryptoType;
-
-    /**
-     * This member holds the NetworkKey as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT
-     * enabled.
-     */
-    NetworkKey mLiteralKey;
-
-    /**
-     * This member holds the NetworkKey as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled.
-     */
-    NetworkKeyRef mKeyRef;
-
-    /**
-     * This method copies the literal Thread Network Key into given buffer.
-     *
-     * @retval kErrorNone     Successfully copied the Thread Network Key.
-     * @retval kErrorFailed   Failed to copy Thread Network Key.
-     *
-     */
-    Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
-} OT_TOOL_PACKED_END;
+#endif
 
 /**
  * This class represents a Thread Pre-Shared Key for the Commissioner (PSKc).
@@ -216,46 +183,13 @@ public:
 #endif
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 /**
  * Provides a representation for Network Key reference.
  *
  */
 typedef otPskcRef PskcRef;
-
-/**
- * This class represents a Pskc Key material.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class PskcInfo
-{
-public:
-    /**
-     * Type of Crypto used by the platform. This defines if the key is stored as a literal string, or as
-     * a reference.
-     */
-    Mac::CryptoType mCryptoType;
-
-    /**
-     * This member holds the Pskc as a literal string, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is NOT
-     * enabled.
-     */
-    Pskc mLiteralKey;
-
-    /**
-     * This member holds the Pskc as a reference, if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled.
-     */
-    PskcRef mKeyRef;
-
-    /**
-     * This method copies the literal PSKc into given buffer.
-     *
-     * @retval kErrorNone     Successfully copied the PSKc.
-     * @retval kErrorFailed   Failed to copy PSKc.
-     *
-     */
-    Error CopyKey(uint8_t *aBuffer, uint16_t aBufferSize) const;
-} OT_TOOL_PACKED_END;
+#endif
 
 /**
  *
@@ -303,7 +237,7 @@ public:
      * @returns The Thread Network Key.
      *
      */
-    const NetworkKeyInfo &GetNetworkKey(void) const { return mNetworkKey; }
+    const NetworkKey &GetNetworkKey(void) const;
 
     /**
      * This method sets the Thread Network Key.
@@ -316,6 +250,15 @@ public:
      */
     Error SetNetworkKey(const NetworkKey &aKey);
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    /**
+     * This method returns a Key Ref to Thread Network Key.
+     *
+     * @returns A key reference to the Thread Network Key.
+     *
+     */
+    const NetworkKeyRef &GetNetworkKeyRef(void) {return mNetworkKeyRef; }
+
     /**
      * This method sets the Thread Network Key using Key Reference.
      *
@@ -325,7 +268,8 @@ public:
      * @retval kErrorInvalidArgs  The @p aKeyRef is invalid.
      *
      */
-    Error SetNetworkKeyRef(otNetworkKeyRef aKeyRef);
+    Error SetNetworkKeyRef(NetworkKeyRef aKeyRef);
+#endif    
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
@@ -345,7 +289,7 @@ public:
      * @returns A reference to the PSKc.
      *
      */
-    const PskcInfo &GetPskc(void) const { return mPskc; }
+    const Pskc &GetPskc(void) const;
 
     /**
      * This method sets the PSKc.
@@ -355,6 +299,15 @@ public:
      */
     void SetPskc(const Pskc &aPskc);
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    /**
+     * This method returns a Key Ref to PSKc.
+     *
+     * @returns A key reference to the PSKc.
+     *
+     */
+    const PskcRef &GetPskcRef(void) {return mPskcRef; }
+
     /**
      * This method sets the PSKc as a Key reference.
      *
@@ -362,6 +315,7 @@ public:
      *
      */
     void SetPskcRef(otPskcRef aKeyRef);
+#endif    
 #endif
 
     /**
@@ -642,7 +596,7 @@ private:
     static const uint8_t kTrelInfoString[];
 #endif
 
-    NetworkKeyInfo mNetworkKey;
+    NetworkKey mNetworkKey;
 
     uint32_t mKeySequence;
     Mle::Key mMleKey;
@@ -664,13 +618,20 @@ private:
     TimerMilli mKeyRotationTimer;
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
-    PskcInfo mPskc;
+    Pskc mPskc;
 #endif
     Kek      mKek;
     uint32_t mKekFrameCounter;
 
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    NetworkKeyRef   mNetworkKeyRef;
+#if OPENTHREAD_MTD || OPENTHREAD_FTD    
+    PskcRef         mPskcRef;
+#endif    
+#endif    
 };
 
 /**

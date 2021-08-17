@@ -563,15 +563,9 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
 
         case Tlv::kNetworkKey:
         {
-            const NetworkKeyTlv *key                   = static_cast<const NetworkKeyTlv *>(cur);
-            bool                 KeyManagerHasValidKey = false;
-            uint8_t              networkKeyLiteral[OT_NETWORK_KEY_SIZE];
-            IgnoreError(keyManager.GetNetworkKey().CopyKey(networkKeyLiteral, OT_NETWORK_KEY_SIZE));
+            const NetworkKeyTlv *key = static_cast<const NetworkKeyTlv *>(cur);
 
-            KeyManagerHasValidKey =
-                (memcmp(networkKeyLiteral, key->GetNetworkKey().m8, sizeof(key->GetNetworkKey().m8)) == 0);
-
-            if (aIsNetworkKeyUpdated && !KeyManagerHasValidKey)
+            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != keyManager.GetNetworkKey()))
             {
                 *aIsNetworkKeyUpdated = true;
             }
@@ -605,7 +599,7 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         }
     }
 
-exit:
+exit: 
     return error;
 }
 
