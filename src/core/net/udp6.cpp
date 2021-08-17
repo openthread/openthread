@@ -492,9 +492,9 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort) || IsPortInUse(aMessageInfo.mSockPort));
 #endif
 
-    for (Receiver *receiver = mReceivers.GetHead(); receiver; receiver = receiver->GetNext())
+    for (Receiver &receiver : mReceivers)
     {
-        VerifyOrExit(!receiver->HandleMessage(aMessage, aMessageInfo));
+        VerifyOrExit(!receiver.HandleMessage(aMessage, aMessageInfo));
     }
 
     HandlePayload(aMessage, aMessageInfo);
@@ -543,9 +543,9 @@ bool Udp::IsPortInUse(uint16_t aPort) const
 {
     bool found = false;
 
-    for (const SocketHandle *socket = mSockets.GetHead(); socket != nullptr; socket = socket->GetNext())
+    for (const SocketHandle &socket : mSockets)
     {
-        if (socket->GetSockName().GetPort() == aPort)
+        if (socket.GetSockName().GetPort() == aPort)
         {
             found = true;
             break;

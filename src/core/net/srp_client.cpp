@@ -518,9 +518,9 @@ Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
 
     mShouldRemoveKeyLease = aShouldRemoveKeyLease;
 
-    for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+    for (Service &service : mServices)
     {
-        UpdateServiceStateToRemove(*service);
+        UpdateServiceStateToRemove(service);
     }
 
     if (mHostInfo.GetState() == kToAdd)
@@ -602,9 +602,9 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
 
     mHostInfo.SetState(aNewStates[mHostInfo.GetState()]);
 
-    for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+    for (Service &service : mServices)
     {
-        service->SetState(aNewStates[service->GetState()]);
+        service.SetState(aNewStates[service.GetState()]);
     }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
@@ -768,9 +768,9 @@ Error Client::PrepareUpdateMessage(Message &aMessage)
 
     if (mHostInfo.GetState() != kToRemove)
     {
-        for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+        for (Service &service : mServices)
         {
-            SuccessOrExit(error = AppendServiceInstructions(*service, aMessage, info));
+            SuccessOrExit(error = AppendServiceInstructions(service, aMessage, info));
         }
     }
 
@@ -1310,11 +1310,11 @@ void Client::ProcessResponse(Message &aMessage)
         mLeaseRenewTime += Time::SecToMsec(mAcceptedLeaseInterval) / 2;
     }
 
-    for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+    for (Service &service : mServices)
     {
-        if ((service->GetState() == kAdding) || (service->GetState() == kRefreshing))
+        if ((service.GetState() == kAdding) || (service.GetState() == kRefreshing))
         {
-            service->SetLeaseRenewTime(mLeaseRenewTime);
+            service.SetLeaseRenewTime(mLeaseRenewTime);
         }
     }
 
@@ -1499,9 +1499,9 @@ void Client::UpdateState(void)
 
     if (mHostInfo.GetState() != kRemoving)
     {
-        for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+        for (Service &service : mServices)
         {
-            switch (service->GetState())
+            switch (service.GetState())
             {
             case kToAdd:
             case kToRefresh:
@@ -1510,14 +1510,14 @@ void Client::UpdateState(void)
                 break;
 
             case kRegistered:
-                if (service->GetLeaseRenewTime() <= now)
+                if (service.GetLeaseRenewTime() <= now)
                 {
-                    service->SetState(kToRefresh);
+                    service.SetState(kToRefresh);
                     shouldUpdate = true;
                 }
-                else if (service->GetLeaseRenewTime() < earliestRenewTime)
+                else if (service.GetLeaseRenewTime() < earliestRenewTime)
                 {
-                    earliestRenewTime = service->GetLeaseRenewTime();
+                    earliestRenewTime = service.GetLeaseRenewTime();
                 }
 
                 break;

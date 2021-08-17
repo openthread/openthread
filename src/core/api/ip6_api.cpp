@@ -79,7 +79,7 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<ThreadNetif>().GetUnicastAddresses();
+    return instance.Get<ThreadNetif>().GetUnicastAddresses().GetHead();
 }
 
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
@@ -101,7 +101,7 @@ const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<ThreadNetif>().GetMulticastAddresses();
+    return instance.Get<ThreadNetif>().GetMulticastAddresses().GetHead();
 }
 
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
