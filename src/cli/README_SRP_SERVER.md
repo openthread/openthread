@@ -151,6 +151,12 @@ Usage: `srp server state`
 
 Print the state of the SRP server. It could be `disabled`, `stopped` or `running`.
 
+disabled: The SRP server is not enabled yet.
+
+stopped: The SRP server is enabled but it's not active. It may become active SRP server spontaneously when detecting the lost of some active SRP server in Thread network.
+
+running: The SRP server is active and it will handle service registration.
+
 ```bash
 > srp server state
 running
