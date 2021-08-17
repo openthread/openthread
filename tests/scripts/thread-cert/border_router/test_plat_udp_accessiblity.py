@@ -33,7 +33,7 @@ import config
 
 # Test description:
 #   This test verifies UDP servers can be accessible using RLOC/ALOC/MLEID/LINK-LOCAL/OMR when PLAT_UDP is enabled.
-#   This test uses SRP server for convince.
+#   This test uses SRP server for convenience.
 #
 # Topology:
 #    -----------(eth)------
@@ -132,8 +132,7 @@ class TestPlatUdpAccessibility(thread_cert.TestCase):
         self.assertEqual(client.srp_client_get_host_state(), 'Registered')
 
         # check if the SRP client can remove from the SRP server
-        client.srp_client_remove_host('host1')
-        client.srp_client_remove_service('ins1', '_ipp._tcp')
+        client.srp_client_remove_host()
         self.simulator.go(3)
         self.assertEqual(client.srp_client_get_host_state(), 'Removed')
 
