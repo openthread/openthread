@@ -52,10 +52,7 @@ namespace Service {
 using ot::Encoding::BigEndian::HostSwap16;
 using ot::Encoding::BigEndian::HostSwap32;
 
-enum : uint32_t
-{
-    kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber, ///< Thread enterprise number.
-};
+const uint32_t kThreadEnterpriseNumber = ServiceTlv::kThreadEnterpriseNumber; ///< Thread enterprise number.
 
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
 
@@ -160,10 +157,7 @@ public:
 class DnsSrpAnycast
 {
 public:
-    enum : uint8_t
-    {
-        kServiceNumber = 0x5c, ///< The service number of a `DnsSrpAnycast` entry.
-    };
+    static constexpr uint8_t kServiceNumber = 0x5c; ///< The service number of a `DnsSrpAnycast` entry.
 
     /**
      * This structure represents information about an DNS/SRP server parsed from related Network Data service entries.
@@ -246,10 +240,7 @@ public:
 class DnsSrpUnicast
 {
 public:
-    enum : uint8_t
-    {
-        kServiceNumber = 0x5d, ///< The service number of `DnsSrpUnicast` entry.
-    };
+    static constexpr uint8_t kServiceNumber = 0x5d; ///< The service number of `DnsSrpUnicast` entry.
 
     /**
      * This constant variable represents the short version of service data.
@@ -430,9 +421,6 @@ public:
     /**
      * This method adds a Thread Service entry to the local Thread Network Data.
      *
-     * When successfully added, this method also invokes `Notifier::HandleServerDataUpdated()` to register the changes
-     * in local Network Data with leader.
-     *
      * This version of `Add<SeviceType>()` is intended for use with a `ServiceType` that has a constant service data
      * format with a non-empty and potentially non-const server data format (provided as input parameter).
      *
@@ -460,9 +448,6 @@ public:
     /**
      * This method adds a Thread Service entry to the local Thread Network Data.
      *
-     * When successfully added, this method also invokes `Notifier::HandleServerDataUpdated()` to register the changes
-     * in local Network Data with leader.
-     *
      * This version of `Add<SeviceType>()` is intended for use with a `ServiceType` that has a non-const service data
      * format (provided as input parameter) with an empty server data.
      *
@@ -488,9 +473,6 @@ public:
     /**
      * This method removes a Thread Service entry from the local Thread Network Data.
      *
-     * When successfully removed, this method also invokes `Notifier::HandleServerDataUpdated()` to register the
-     * changes in local Network Data with leader.
-     *
      * This version of `Remove<SeviceType>()` is intended for use with a `ServiceType` that has a constant service data
      * format.
      *
@@ -511,9 +493,6 @@ public:
     /**
      * This method removes a Thread Service entry from the local Thread Network Data.
      *
-     * When successfully removed, this method also invokes `Notifier::HandleServerDataUpdated()` to register the
-     * changes in local Network Data with leader.
-     *
      * This version of `Remove<SeviceType>()` is intended for use with a `ServiceType` that has a non-const service data
      * format (provided as input parameter).
      *
@@ -522,6 +501,8 @@ public:
      *   - The `ServiceType::ServiceData` MUST provide `GetLength()` method returning the length of service data.
      *
      * @tparam   ServiceType       The service type to be removed.
+     *
+     * @param[in] aServiceData     The service data.
      *
      * @retval kErrorNone       Successfully removed the Service entry.
      * @retval kErrorNotFound   Could not find the Service entry.

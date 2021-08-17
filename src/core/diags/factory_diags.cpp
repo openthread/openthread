@@ -532,10 +532,7 @@ exit:
 
 void Diags::ProcessLine(const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
-    enum
-    {
-        kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE,
-    };
+    constexpr uint16_t kMaxCommandBuffer = OPENTHREAD_CONFIG_DIAG_CMD_LINE_BUFFER_SIZE;
 
     Error   error = kErrorNone;
     char    buffer[kMaxCommandBuffer];

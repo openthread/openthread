@@ -81,7 +81,8 @@ typedef struct otPlatformConfig
 } otPlatformConfig;
 
 /**
- * This function performs all platform-specific initialization of OpenThread's drivers.
+ * This function performs all platform-specific initialization of OpenThread's drivers and initializes the OpenThread
+ * instance.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when initialization of OpenThread's drivers is most appropriate.
@@ -94,7 +95,8 @@ typedef struct otPlatformConfig
 otInstance *otSysInit(otPlatformConfig *aPlatformConfig);
 
 /**
- * This function performs all platform-specific deinitialization for OpenThread's drivers.
+ * This function finalizes the OpenThread instance and performs all platform-specific deinitialization for OpenThread's
+ * drivers.
  *
  * @note This function is not called by the OpenThread library. Instead, the system/RTOS should call this function
  *       when deinitialization of OpenThread's drivers is most appropriate.

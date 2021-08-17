@@ -102,7 +102,7 @@ Error Client::Start(void)
     Error error;
 
     SuccessOrExit(error = mSocket.Open(&Client::HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind());
+    SuccessOrExit(error = mSocket.Bind(0, OT_NETIF_UNSPECIFIED));
 
 exit:
     return error;
@@ -146,7 +146,7 @@ Error Client::Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, v
     messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
 
     queryMetadata.mTransmitTimestamp   = header.GetTransmitTimestampSeconds();
-    queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + static_cast<uint32_t>(kResponseTimeout);
+    queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + kResponseTimeout;
     queryMetadata.mSourceAddress       = messageInfo->GetSockAddr();
     queryMetadata.mDestinationPort     = messageInfo->GetPeerPort();
     queryMetadata.mDestinationAddress  = messageInfo->GetPeerAddr();
@@ -206,16 +206,13 @@ exit:
 
 void Client::DequeueMessage(Message &aMessage)
 {
-    mPendingQueries.Dequeue(aMessage);
-
     if (mRetransmissionTimer.IsRunning() && (mPendingQueries.GetHead() == nullptr))
     {
         // No more requests pending, stop the timer.
         mRetransmissionTimer.Stop();
     }
 
-    // Free the message memory.
-    aMessage.Free();
+    mPendingQueries.DequeueAndFree(aMessage);
 }
 
 Error Client::SendMessage(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

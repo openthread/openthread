@@ -37,6 +37,7 @@ This page lists the available common switches with description. Unless stated ot
 | ECDSA | OT_ECDSA | Enables support for Elliptic Curve Digital Signature Algorithm. Enable this switch if ECDSA digital signature is used by application. |
 | EXTERNAL_HEAP | OT_EXTERNAL_HEAP | Enables support for external heap. Enable this switch if the platform uses its own heap. Make sure to specify the external heap Calloc and Free functions to be used by the OpenThread stack. |
 | FULL_LOGS | OT_FULL_LOGS | Enables all log levels and regions. This switch sets the log level to OT_LOG_LEVEL_DEBG and turns on all region flags. See [Logging guide](https://openthread.io/guides/build/logs) to learn more. |
+| HISTORY_TRACKER | OT_HISTORY_TRACKER | Enables support for History Tracker. |
 | IP6_FRAGM | OT_IP6_FRAGM | Enables support for IPv6 fragmentation. |
 | JAM_DETECTION | OT_JAM_DETECTION | Enables support for [Jam Detection](https://openthread.io/guides/build/features/jam-detection). Enable this switch if a device requires the ability to detect signal jamming on a specific channel. |
 | JOINER | OT_JOINER | Enables [support for Joiner](https://openthread.io/reference/group/api-joiner). Enable this switch on a device that has to be commissioned to join the network. |
@@ -48,6 +49,7 @@ This page lists the available common switches with description. Unless stated ot
 | MLR | OT_MLR | Enables Multicast Listener Registration feature for Thread 1.2. |
 | MTD_NETDIAG | OT_MTD_NETDIAG | Enables the TMF network diagnostics on MTDs. |
 | MULTIPLE_INSTANCE | OT_MULTIPLE_INSTANCE | Enables multiple OpenThread instances. |
+| NETDATA_PUBLISHER | OT_NETDATA_PUBLISHER | Enables support for Thread Network Data publisher. |
 | PING_SENDER | OT_PING_SENDER | Enables support for ping sender. |
 | OTNS | OT_OTNS | Enables support for [OpenThread Network Simulator](https://github.com/openthread/ot-ns). Enable this switch if you are building OpenThread for OpenThread Network Simulator. |
 | PLATFORM_UDP | OT_PLATFORM_UDP | Enables platform UDP support. |

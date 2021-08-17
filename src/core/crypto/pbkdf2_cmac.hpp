@@ -50,10 +50,7 @@ namespace Pbkdf2 {
  *
  */
 
-enum : uint16_t
-{
-    kMaxSaltLength = 30, ///< Max SALT length: salt prefix (6) + extended panid (8) + network name (16)
-};
+constexpr uint16_t kMaxSaltLength = 30; ///< Max SALT length: salt prefix (6) + extended panid (8) + network name (16)
 
 /**
  * This function performs PKCS#5 PBKDF2 using CMAC (AES-CMAC-PRF-128).

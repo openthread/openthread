@@ -61,7 +61,7 @@ expect_line "Done"
 send "udp connect $prefix:bb1:ebd6:ad10:f33 1234\n"
 expect_line "Done"
 
-send "udp connect :: 1\n"
+send "udp connect $prefix:1:2:3:4 4321\n"
 expect_line "Done"
 
 send "udp close\n"

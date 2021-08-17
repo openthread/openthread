@@ -84,10 +84,7 @@ public:
     void SetJoinerUdpPort(uint16_t aJoinerUdpPort);
 
 private:
-    enum
-    {
-        kJoinerEntrustTxDelay = 50, ///< milliseconds
-    };
+    static constexpr uint32_t kJoinerEntrustTxDelay = 50; // in msec
 
     struct JoinerEntrustMetadata
     {

@@ -120,7 +120,7 @@ public:
          * This enumeration type represents the "Recursion Desired" (RD) flag in a `otDnsQueryConfig`.
          *
          */
-        enum RecursionFlag
+        enum RecursionFlag : uint8_t
         {
             kFlagUnspecified      = OT_DNS_FLAG_UNSPECIFIED,       ///< The flag is not specified.
             kFlagRecursionDesired = OT_DNS_FLAG_RECURSION_DESIRED, ///< Server can resolve the query recursively.
@@ -132,7 +132,7 @@ public:
          * This enumeration type represents the NAT64 mode.
          *
          */
-        enum Nat64Mode
+        enum Nat64Mode : uint8_t
         {
             kNat64Unspecified = OT_DNS_NAT64_UNSPECIFIED, ///< NAT64 mode is not specified. Use default NAT64 mode.
             kNat64Allow       = OT_DNS_NAT64_ALLOW,       ///< Allow NAT64 address translation
@@ -192,31 +192,13 @@ public:
 #endif
 
     private:
-        enum : uint32_t
-        {
-            kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT, // in msec
-        };
-
-        enum : uint16_t
-        {
-            kDefaultServerPort = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT,
-        };
-
-        enum : uint8_t
-        {
-            kDefaultMaxTxAttempts = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS,
-        };
-
-        enum : bool
-        {
-            kDefaultRecursionDesired = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG,
-        };
+        static constexpr uint32_t kDefaultResponseTimeout = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RESPONSE_TIMEOUT;
+        static constexpr uint16_t kDefaultServerPort      = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_SERVER_PORT;
+        static constexpr uint8_t  kDefaultMaxTxAttempts   = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_MAX_TX_ATTEMPTS;
+        static constexpr bool kDefaultRecursionDesired    = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_RECURSION_DESIRED_FLAG;
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_NAT64_ENABLE
-        enum : bool
-        {
-            kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED,
-        };
+        static constexpr bool kDefaultNat64Allowed = OPENTHREAD_CONFIG_DNS_CLIENT_DEFAULT_NAT64_ALLOWED;
 #endif
 
         enum InitMode : uint8_t
@@ -714,10 +696,7 @@ private:
         // Followed by the name (service, host, instance) encoded as a `Dns::Name`.
     };
 
-    enum : uint16_t
-    {
-        kNameOffsetInQuery = sizeof(QueryInfo),
-    };
+    static constexpr uint16_t kNameOffsetInQuery = sizeof(QueryInfo);
 
     Error       StartQuery(QueryInfo &        aInfo,
                            const QueryConfig *aConfig,

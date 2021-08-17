@@ -32,9 +32,9 @@ source "tests/scripts/expect/_common.exp"
 spawn_node 1
 
 send "counters\n"
+expect "ip"
 expect "mac"
 expect "mle"
-expect "ip"
 expect_line "Done"
 send "counters mac\n"
 expect_line "Done"

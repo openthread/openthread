@@ -77,6 +77,7 @@ const char *ErrorToString(Error aError)
         "LinkMarginLow",              // (34) kErrorLinkMarginLow
         "InvalidCommand",             // (35) kErrorInvalidCommand
         "Pending",                    // (36) kErrorPending
+        "Rejected",                   // (37) kErrorRejected
     };
 
     return aError < OT_ARRAY_LENGTH(kErrorStrings) ? kErrorStrings[aError] : "UnknownErrorType";

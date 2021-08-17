@@ -104,6 +104,27 @@ template <typename Type> struct IsSame<Type, Type> : public TrueValue
 {
 };
 
+/**
+ * This type selects between two given types based on a boolean condition at compile time.
+ *
+ * It provides member type named `Type` which is defined as `TypeOnTrue` if `kCondition` is `true` at compile time, or
+ * as `TypeOnFalse` if `kCondition` is `false`.
+ *
+ * @tparam kCondition   The boolean condition which is used to select between the two types.
+ * @tparam TypeOnTrue   The type to select when `kCondition` is `true`.
+ * @tparam TypeOnFalse  The type to select when `kCondition` is `false`.
+ *
+ */
+template <bool kCondition, typename TypeOnTrue, typename TypeOnFalse> struct Conditional
+{
+    typedef TypeOnFalse Type; ///< The selected type based on `kCondition`.
+};
+
+template <typename TypeOnTrue, typename TypeOnFalse> struct Conditional<true, TypeOnTrue, TypeOnFalse>
+{
+    typedef TypeOnTrue Type;
+};
+
 } // namespace TypeTraits
 } // namespace ot
 

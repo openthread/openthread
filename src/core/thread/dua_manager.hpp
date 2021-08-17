@@ -171,11 +171,8 @@ public:
 #endif
 
 private:
-    enum
-    {
-        kNewRouterRegistrationDelay = 3, ///< Delay (in seconds) for waiting link establishment for a new Router.
-        kNewDuaRegistrationDelay    = 1, ///< Delay (in seconds) for newly added DUA.
-    };
+    static constexpr uint8_t kNewRouterRegistrationDelay = 3; ///< Delay (in sec) to establish link for a new router.
+    static constexpr uint8_t kNewDuaRegistrationDelay    = 1; ///< Delay (in sec) for newly added DUA.
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
     Error GenerateDomainUnicastAddressIid(void);
@@ -225,7 +222,7 @@ private:
     bool           mIsDuaPending : 1;
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-    enum DuaState
+    enum DuaState : uint8_t
     {
         kNotExist,    ///< DUA is not available.
         kToRegister,  ///< DUA is to be registered.
@@ -233,9 +230,9 @@ private:
         kRegistered,  ///< DUA is registered.
     };
 
-    DuaState  mDuaState : 2;
+    DuaState  mDuaState;
     uint8_t   mDadCounter;
-    TimeMilli mLastRegistrationTime; ///< The time (in milliseconds) when sent last DUA.req or received DUA.rsp.
+    TimeMilli mLastRegistrationTime; // The time (in milliseconds) when sent last DUA.req or received DUA.rsp.
     Ip6::InterfaceIdentifier mFixedDuaInterfaceIdentifier;
     Ip6::NetifUnicastAddress mDomainUnicastAddress;
 #endif
@@ -244,22 +241,22 @@ private:
     {
         struct
         {
-            uint16_t mReregistrationDelay; ///< Delay (in seconds) for DUA re-registration.
-            uint8_t  mCheckDelay;          ///< Delay (in seconds) for checking whether or not registration is required.
+            uint16_t mReregistrationDelay; // Delay (in seconds) for DUA re-registration.
+            uint8_t  mCheckDelay;          // Delay (in seconds) for checking whether or not registration is required.
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-            uint8_t mRegistrationDelay; ///< Delay (in seconds) for DUA registration.
+            uint8_t mRegistrationDelay; // Delay (in seconds) for DUA registration.
 #endif
         } mFields;
-        uint32_t mValue; ///< Non-zero indicates timer should start.
+        uint32_t mValue; // Non-zero indicates timer should start.
     } mDelay;
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
     // TODO: (DUA) may re-evaluate the alternative option of distributing the flags into the child table:
     //       - Child class itself have some padding - may save some RAM
     //       - Avoid cross reference between a bit-vector and the child entry
-    ChildMask mChildDuaMask;             ///< Child Mask for child who registers DUA via Child Update Request.
-    ChildMask mChildDuaRegisteredMask;   ///< Child Mask for child's DUA that was registered by the parent on behalf.
-    uint16_t  mChildIndexDuaRegistering; ///< Child Index of the DUA being registered.
+    ChildMask mChildDuaMask;             // Child Mask for child who registers DUA via Child Update Request.
+    ChildMask mChildDuaRegisteredMask;   // Child Mask for child's DUA that was registered by the parent on behalf.
+    uint16_t  mChildIndexDuaRegistering; // Child Index of the DUA being registered.
 #endif
 };
 

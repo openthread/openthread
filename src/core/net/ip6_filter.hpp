@@ -132,10 +132,8 @@ public:
     const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const;
 
 private:
-    enum
-    {
-        kMaxUnsecurePorts = 2,
-    };
+    static constexpr uint16_t kMaxUnsecurePorts = 2;
+
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
 };
 

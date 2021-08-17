@@ -180,6 +180,7 @@ public:
         mTxFrame802154.SetIsARetransmission(false);
         mTxFrame802154.SetIsSecurityProcessed(false);
         mTxFrame802154.SetCsmaCaEnabled(true); // Set to true by default, only set to `false` for CSL transmission
+        mTxFrame802154.SetIsHeaderUpdated(false);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
         mTxFrame802154.SetTxDelay(0);
         mTxFrame802154.SetTxDelayBaseTime(0);
@@ -190,6 +191,7 @@ public:
         mTxFrameTrel.SetIsARetransmission(false);
         mTxFrameTrel.SetIsSecurityProcessed(false);
         mTxFrameTrel.SetCsmaCaEnabled(true);
+        mTxFrameTrel.SetIsHeaderUpdated(false);
 #endif
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
@@ -289,10 +291,7 @@ class Links : public InstanceLocator
     friend class ot::Instance;
 
 public:
-    enum
-    {
-        kInvalidRssiValue = SubMac::kInvalidRssiValue, ///< Invalid Received Signal Strength Indicator (RSSI) value.
-    };
+    static const int8_t kInvalidRssiValue = SubMac::kInvalidRssiValue; ///< Invalid RSSI value.
 
     /**
      * This constructor initializes the `Links` object.
@@ -662,10 +661,7 @@ public:
 #endif
 
 private:
-    enum
-    {
-        kDefaultNoiseFloor = -100,
-    };
+    static constexpr int8_t kDefaultNoiseFloor = -100;
 
     SubMac mSubMac;
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

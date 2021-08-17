@@ -41,11 +41,8 @@ namespace Ip4 {
 
 Error Address::FromString(const char *aString)
 {
-    enum : char
-    {
-        kSeperatorChar = '.',
-        kNullChar      = '\0',
-    };
+    constexpr char kSeperatorChar = '.';
+    constexpr char kNullChar      = '\0';
 
     Error error = kErrorParse;
 

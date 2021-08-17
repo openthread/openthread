@@ -132,6 +132,17 @@ enum
 };
 
 /**
+ * Represents the state of an SRP server
+ *
+ */
+typedef enum
+{
+    OT_SRP_SERVER_STATE_DISABLED = 0, ///< The SRP server is disabled.
+    OT_SRP_SERVER_STATE_RUNNING  = 1, ///< The SRP server is running.
+    OT_SRP_SERVER_STATE_STOPPED  = 2, ///< The SRP server is stopped.
+} otSrpServerState;
+
+/**
  * This structure includes SRP server LEASE and KEY-LEASE configurations.
  *
  */
@@ -172,6 +183,16 @@ const char *otSrpServerGetDomain(otInstance *aInstance);
  *
  */
 otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain);
+
+/**
+ * This function returns the state of the SRP server.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ *
+ * @returns The current state of the SRP server.
+ *
+ */
+otSrpServerState otSrpServerGetState(otInstance *aInstance);
 
 /**
  * This function enables/disables the SRP server.

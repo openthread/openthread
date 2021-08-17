@@ -58,6 +58,7 @@ openthread_headers                      = \
     openthread/entropy.h                  \
     openthread/error.h                    \
     openthread/heap.h                     \
+    openthread/history_tracker.h          \
     openthread/icmp6.h                    \
     openthread/instance.h                 \
     openthread/ip6.h                      \
@@ -71,6 +72,7 @@ openthread_headers                      = \
     openthread/multi_radio.h              \
     openthread/ncp.h                      \
     openthread/netdata.h                  \
+    openthread/netdata_publisher.h        \
     openthread/netdiag.h                  \
     openthread/network_time.h             \
     openthread/ping_sender.h              \

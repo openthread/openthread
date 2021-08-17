@@ -224,6 +224,12 @@ int8_t LinkQualityInfo::ConvertLinkQualityToRss(int8_t aNoiseFloor, uint8_t aLin
 
 uint8_t LinkQualityInfo::CalculateLinkQuality(uint8_t aLinkMargin, uint8_t aLastLinkQuality)
 {
+    // Static private method to calculate the link quality from a given
+    // link margin while taking into account the last link quality
+    // value and adding the hysteresis value to the thresholds. If
+    // there is no previous value for link quality, the constant
+    // kNoLinkQuality should be passed as the second argument.
+
     uint8_t threshold1, threshold2, threshold3;
     uint8_t linkQuality = 0;
 

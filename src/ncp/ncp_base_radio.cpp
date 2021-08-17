@@ -148,8 +148,9 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
 
     if (mCurTransmitTID)
     {
-        uint8_t header       = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
-        bool    framePending = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
+        uint8_t header        = SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0 | mCurTransmitTID;
+        bool    framePending  = (aAckFrame != nullptr && static_cast<Mac::RxFrame *>(aAckFrame)->GetFramePending());
+        bool    headerUpdated = static_cast<Mac::TxFrame *>(aFrame)->IsHeaderUpdated();
 
         // Clear cached transmit TID
         mCurTransmitTID = 0;
@@ -157,13 +158,14 @@ void NcpBase::LinkRawTransmitDone(otRadioFrame *aFrame, otRadioFrame *aAckFrame,
         SuccessOrExit(mEncoder.BeginFrame(header, SPINEL_CMD_PROP_VALUE_IS, SPINEL_PROP_LAST_STATUS));
         SuccessOrExit(mEncoder.WriteUintPacked(ThreadErrorToSpinelStatus(aError)));
         SuccessOrExit(mEncoder.WriteBool(framePending));
+        SuccessOrExit(mEncoder.WriteBool(headerUpdated));
 
         if (aError == OT_ERROR_NONE)
         {
             SuccessOrExit(PackRadioFrame(aAckFrame, aError));
         }
 
-        if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled())
+        if (static_cast<Mac::TxFrame *>(aFrame)->GetSecurityEnabled() && headerUpdated)
         {
             uint8_t  keyId;
             uint32_t frameCounter;
@@ -386,6 +388,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     uint16_t       payloadLen;
     bool           csmaEnable;
     bool           isARetx;
+    bool           isHeaderUpdated;
     bool           isSecurityProcessed;
 
     SuccessOrExit(error = mDecoder.ReadDataWithLen(payloadPtr, payloadLen));
@@ -403,6 +406,7 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs     = OPENTHREAD_CONFIG_MAC_MAX_CSMA_BACKOFFS_DIRECT;
     aFrame.mInfo.mTxInfo.mMaxFrameRetries     = OPENTHREAD_CONFIG_MAC_DEFAULT_MAX_FRAME_RETRIES_DIRECT;
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = true;
+    aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = false;
     aFrame.mInfo.mTxInfo.mIsARetx             = false;
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed = false;
     aFrame.mInfo.mTxInfo.mTxDelay             = 0;
@@ -416,11 +420,13 @@ otError NcpBase::DecodeStreamRawTxRequest(otRadioFrame &aFrame)
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxCsmaBackoffs));
     SuccessOrExit(mDecoder.ReadUint8(aFrame.mInfo.mTxInfo.mMaxFrameRetries));
     SuccessOrExit(mDecoder.ReadBool(csmaEnable));
+    SuccessOrExit(mDecoder.ReadBool(isHeaderUpdated));
     SuccessOrExit(mDecoder.ReadBool(isARetx));
     SuccessOrExit(mDecoder.ReadBool(isSecurityProcessed));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelay));
     SuccessOrExit(mDecoder.ReadUint32(aFrame.mInfo.mTxInfo.mTxDelayBaseTime));
     aFrame.mInfo.mTxInfo.mCsmaCaEnabled       = csmaEnable;
+    aFrame.mInfo.mTxInfo.mIsHeaderUpdated     = isHeaderUpdated;
     aFrame.mInfo.mTxInfo.mIsARetx             = isARetx;
     aFrame.mInfo.mTxInfo.mIsSecurityProcessed = isSecurityProcessed;
 

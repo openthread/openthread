@@ -134,11 +134,8 @@ class HmacSha256;
         }                                                        \
     } while (false)
 
-enum
-{
-    kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS,
-    kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE,
-};
+constexpr uint16_t kNumBuffers = OPENTHREAD_CONFIG_NUM_MESSAGE_BUFFERS;
+constexpr uint16_t kBufferSize = OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE;
 
 class Message;
 class MessagePool;
@@ -285,11 +282,8 @@ private:
      */
     const uint8_t *GetData(void) const { return mBuffer.mData; }
 
-    enum
-    {
-        kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer),
-        kHeadBufferDataSize = kBufferDataSize - sizeof(MessageMetadata),
-    };
+    static constexpr uint16_t kBufferDataSize     = kBufferSize - sizeof(otMessageBuffer);
+    static constexpr uint16_t kHeadBufferDataSize = kBufferDataSize - sizeof(MessageMetadata);
 
 protected:
     union
@@ -321,7 +315,7 @@ public:
      * This enumeration represents the message type.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
         kTypeIp6          = 0, ///< A full uncompressed IPv6 packet
         kType6lowpan      = 1, ///< A 6lowpan frame
@@ -334,7 +328,7 @@ public:
      * This enumeration represents the message sub-type.
      *
      */
-    enum SubType
+    enum SubType : uint8_t
     {
         kSubTypeNone                   = 0,  ///< None
         kSubTypeMleAnnounce            = 1,  ///< MLE Announce
@@ -349,7 +343,7 @@ public:
         kSubTypeMleChildIdRequest      = 10, ///< MLE Child ID Request
     };
 
-    enum Priority
+    enum Priority : uint8_t
     {
         kPriorityLow    = OT_MESSAGE_PRIORITY_LOW,      ///< Low priority level.
         kPriorityNormal = OT_MESSAGE_PRIORITY_NORMAL,   ///< Normal priority level.
@@ -357,16 +351,13 @@ public:
         kPriorityNet    = OT_MESSAGE_PRIORITY_HIGH + 1, ///< Network Control priority level.
     };
 
-    enum
-    {
-        kNumPriorities = 4, ///< Number of priority levels.
-    };
+    static constexpr uint8_t kNumPriorities = 4; ///< Number of priority levels.
 
     /**
      * This enumeration represents the link security mode (used by `Settings` constructor).
      *
      */
-    enum LinkSecurityMode
+    enum LinkSecurityMode : uint8_t
     {
         kNoLinkSecurity,   ///< Link security disabled (no link security).
         kWithLinkSecurity, ///< Link security enabled.
@@ -1400,7 +1391,7 @@ public:
      * should be added in the queue.
      *
      */
-    enum QueuePosition
+    enum QueuePosition : uint8_t
     {
         kQueuePositionHead, ///< Indicates the head (front) of the list.
         kQueuePositionTail, ///< Indicates the tail (end) of the list.
@@ -1444,6 +1435,20 @@ public:
      *
      */
     void Dequeue(Message &aMessage);
+
+    /**
+     * This method removes a message from the queue and frees it.
+     *
+     * @param[in]  aMessage  The message to remove and free.
+     *
+     */
+    void DequeueAndFree(Message &aMessage);
+
+    /**
+     * This method removes and frees all messages from the queue.
+     *
+     */
+    void DequeueAndFreeAll(void);
 
     /**
      * This method returns the number of messages and buffers enqueued.
@@ -1523,6 +1528,20 @@ public:
      *
      */
     void Dequeue(Message &aMessage);
+
+    /**
+     * This method removes a message from the queue and frees it.
+     *
+     * @param[in]  aMessage  The message to remove and free.
+     *
+     */
+    void DequeueAndFree(Message &aMessage);
+
+    /**
+     * This method removes and frees all messages from the queue.
+     *
+     */
+    void DequeueAndFreeAll(void);
 
     /**
      * This method returns the number of messages and buffers enqueued.

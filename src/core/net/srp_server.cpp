@@ -41,7 +41,6 @@
 #include "common/new.hpp"
 #include "common/random.hpp"
 #include "net/dns_types.hpp"
-#include "thread/network_data_service.hpp"
 #include "thread/thread_netif.hpp"
 
 namespace ot {
@@ -87,7 +86,8 @@ Server::Server(Instance &aInstance)
     , mLeaseTimer(aInstance, HandleLeaseTimer)
     , mOutstandingUpdatesTimer(aInstance, HandleOutstandingUpdatesTimer)
     , mServiceUpdateId(Random::NonCrypto::GetUint32())
-    , mEnabled(false)
+    , mPort(kUdpPortMin)
+    , mState(kStateDisabled)
     , mHasRegisteredAnyService(false)
 {
     IgnoreError(SetDomain(kDefaultDomain));
@@ -101,17 +101,27 @@ void Server::SetServiceHandler(otSrpServerServiceUpdateHandler aServiceHandler, 
 
 void Server::SetEnabled(bool aEnabled)
 {
-    VerifyOrExit(mEnabled != aEnabled);
-
-    mEnabled = aEnabled;
-
-    if (!mEnabled)
+    if (aEnabled)
     {
-        Stop();
+        VerifyOrExit(mState == kStateDisabled);
+        mState = kStateStopped;
+
+        // Select a port and then publish "DNS/SRP Unicast Address
+        // Service" in Thread Network Data using the device's
+        // mesh-local EID as the address. Then wait for callback
+        // `HandleNetDataPublisherEntryChange()` from to `Publisher` to
+        // start server operation when entry is published (i.e., added
+        // to the Network Data).
+
+        SelectPort();
+        Get<NetworkData::Publisher>().PublishDnsSrpServiceUnicast(mPort);
     }
-    else if (Get<Mle::MleRouter>().IsAttached())
+    else
     {
-        Start();
+        VerifyOrExit(mState != kStateDisabled);
+        Get<NetworkData::Publisher>().UnpublishDnsSrpService();
+        Stop();
+        mState = kStateDisabled;
     }
 
 exit:
@@ -174,7 +184,7 @@ Error Server::SetDomain(const char *aDomain)
     Error    error = kErrorNone;
     uint16_t length;
 
-    VerifyOrExit(!mEnabled, error = kErrorInvalidState);
+    VerifyOrExit(mState == kStateDisabled, error = kErrorInvalidState);
 
     length = StringLength(aDomain, Dns::Name::kMaxNameSize);
     VerifyOrExit((length > 0) && (length < Dns::Name::kMaxNameSize), error = kErrorInvalidArgs);
@@ -407,12 +417,9 @@ exit:
     }
 }
 
-void Server::Start(void)
+void Server::SelectPort(void)
 {
-    Error    error = kErrorNone;
-    uint16_t port  = kUdpPortMin;
-
-    VerifyOrExit(!IsRunning());
+    mPort = kUdpPortMin;
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_PORT_SWITCH_ENABLE
     {
@@ -420,35 +427,44 @@ void Server::Start(void)
 
         if (Get<Settings>().Read(info) == kErrorNone)
         {
-            port = info.GetPort() + 1;
-            if (port < kUdpPortMin || port > kUdpPortMax)
+            mPort = info.GetPort() + 1;
+            if (mPort < kUdpPortMin || mPort > kUdpPortMax)
             {
-                port = kUdpPortMin;
+                mPort = kUdpPortMin;
             }
         }
     }
 #endif
 
-    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
-    SuccessOrExit(error = mSocket.Bind(port, OT_NETIF_THREAD));
-    SuccessOrExit(error = PublishServerData());
+    otLogInfoSrp("[server] selected port %u", mPort);
+}
 
-    otLogInfoSrp("[server] start listening on port %hu", mSocket.GetSockName().mPort);
+void Server::Start(void)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(mState == kStateStopped);
+
+    mState = kStateRunning;
+
+    SuccessOrExit(error = mSocket.Open(HandleUdpReceive, this));
+    SuccessOrExit(error = mSocket.Bind(mPort, OT_NETIF_THREAD));
+
+    otLogInfoSrp("[server] start listening on port %u", mPort);
 
 exit:
     if (error != kErrorNone)
     {
         otLogCritSrp("[server] failed to start: %s", ErrorToString(error));
-        // Cleanup any resources we may have allocated.
         Stop();
     }
 }
 
 void Server::Stop(void)
 {
-    VerifyOrExit(IsRunning());
+    VerifyOrExit(mState == kStateRunning);
 
-    UnpublishServerData();
+    mState = kStateStopped;
 
     while (!mHosts.IsEmpty())
     {
@@ -465,7 +481,7 @@ void Server::Stop(void)
     mLeaseTimer.Stop();
     mOutstandingUpdatesTimer.Stop();
 
-    otLogInfoSrp("[server] stop listening on %hu", mSocket.GetSockName().mPort);
+    otLogInfoSrp("[server] stop listening on %u", mPort);
     IgnoreError(mSocket.Close());
     mHasRegisteredAnyService = false;
 
@@ -473,41 +489,17 @@ exit:
     return;
 }
 
-void Server::HandleNotifierEvents(Events aEvents)
+void Server::HandleNetDataPublisherEvent(NetworkData::Publisher::Event aEvent)
 {
-    VerifyOrExit(mEnabled);
-    VerifyOrExit(aEvents.Contains(kEventThreadRoleChanged));
-
-    if (Get<Mle::MleRouter>().IsAttached())
+    switch (aEvent)
     {
+    case NetworkData::Publisher::kEventEntryAdded:
         Start();
-    }
-    else
-    {
+        break;
+
+    case NetworkData::Publisher::kEventEntryRemoved:
         Stop();
-    }
-
-exit:
-    return;
-}
-
-Error Server::PublishServerData(void)
-{
-    NetworkData::Service::DnsSrpUnicast::ServerData serverData(Get<Mle::Mle>().GetMeshLocal64(),
-                                                               mSocket.GetSockName().GetPort());
-
-    OT_ASSERT(mSocket.IsBound());
-
-    return Get<NetworkData::Service::Manager>().Add<NetworkData::Service::DnsSrpUnicast>(serverData);
-}
-
-void Server::UnpublishServerData(void)
-{
-    Error error = Get<NetworkData::Service::Manager>().Remove<NetworkData::Service::DnsSrpUnicast>();
-
-    if (error != kErrorNone)
-    {
-        otLogWarnSrp("[server] failed to unpublish SRP service: %s", ErrorToString(error));
+        break;
     }
 }
 
@@ -1781,7 +1773,14 @@ Error Server::Host::MergeServicesAndResourcesFrom(Host &aHost)
         newService->mIsDeleted      = false;
         newService->mIsCommitted    = true;
         newService->mTimeLastUpdate = TimerMilli::GetNow();
-        newService->mDescription.TakeResourcesFrom(service->mDescription);
+
+        if (!service->mIsSubType)
+        {
+            // (1) Service description is shared across a base type and all its subtypes.
+            // (2) `TakeResourcesFrom()` releases resources pinned to its argument.
+            // Therefore, make sure the function is called only for the base type.
+            newService->mDescription.TakeResourcesFrom(service->mDescription);
+        }
 
         newService->Log((existingService != nullptr) ? Service::kUpdateExisting : Service::kAddNew);
     }

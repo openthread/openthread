@@ -87,6 +87,37 @@ otError otBorderRoutingInit(otInstance *aInstance, uint32_t aInfraIfIndex, bool 
 otError otBorderRoutingSetEnabled(otInstance *aInstance, bool aEnabled);
 
 /**
+ * This method returns the off-mesh-routable (OMR) prefix.
+ *
+ * The randomly generated 64-bit prefix will be published
+ * in the Thread network if there isn't already an OMR prefix.
+ *
+ * @param[in]   aInstance  A pointer to an OpenThread instance.
+ * @param[out]  aPrefix    A pointer to where the prefix will be output to.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the OMR prefix.
+ *
+ */
+otError otBorderRoutingGetOmrPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
+ * This method returns the on-link prefix for the adjacent infrastructure link.
+ *
+ * The randomly generated 64-bit prefix will be advertised
+ * on the infrastructure link if there isn't already a usable
+ * on-link prefix being advertised on the link.
+ *
+ * @param[in]   aInstance  A pointer to an OpenThread instance.
+ * @param[out]  aPrefix    A pointer to where the prefix will be output to.
+ *
+ * @retval  OT_ERROR_INVALID_STATE  The Border Routing Manager is not initialized yet.
+ * @retval  OT_ERROR_NONE           Successfully retrieved the on-link prefix.
+ *
+ */
+otError otBorderRoutingGetOnLinkPrefix(otInstance *aInstance, otIp6Prefix *aPrefix);
+
+/**
  * This method provides a full or stable copy of the local Thread Network Data.
  *
  * @param[in]     aInstance    A pointer to an OpenThread instance.

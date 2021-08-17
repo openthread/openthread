@@ -56,6 +56,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
+ *
+ * Define to 1 to bind DNS-SD server to unspecified interface, 0 to bind to Thread interface.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
+#define OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_DNSSD_QUERY_TIMEOUT
  *
  * Specifies the default wait time that DNS-SD Server waits for a query response (e.g. from Discovery Proxy).

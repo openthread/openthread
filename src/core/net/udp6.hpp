@@ -331,13 +331,10 @@ public:
     class Header
     {
     public:
-        enum : uint8_t
-        {
-            kSourcePortFieldOffset = 0, ///< The byte offset of Source Port field in UDP header.
-            kDestPortFieldOffset   = 2, ///< The byte offset of Destination Port field in UDP header.
-            kLengthFieldOffset     = 4, ///< The byte offset of Length field in UDP header.
-            kChecksumFieldOffset   = 6, ///< The byte offset of Checksum field in UDP header.
-        };
+        static constexpr uint16_t kSourcePortFieldOffset = 0; ///< Byte offset of Source Port field in UDP header.
+        static constexpr uint16_t kDestPortFieldOffset   = 2; ///< Byte offset of Destination Port field in UDP header.
+        static constexpr uint16_t kLengthFieldOffset     = 4; ///< Byte offset of Length field in UDP header.
+        static constexpr uint16_t kChecksumFieldOffset   = 6; ///< Byte offset of Checksum field in UDP header.
 
         /**
          * This method returns the UDP Source Port.
@@ -615,15 +612,12 @@ public:
     bool ShouldUsePlatformUdp(uint16_t aPort) const;
 
 private:
-    enum
-    {
-        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
-        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
-        kSrpServerPortMin =
-            OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN, // The min port in the port range reserved for SRP server.
-        kSrpServerPortMax =
-            OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX, // The max port in the port range reserved for SRP server.
-    };
+    static constexpr uint16_t kDynamicPortMin = 49152; // Service Name and Transport Protocol Port Number Registry
+    static constexpr uint16_t kDynamicPortMax = 65535; // Service Name and Transport Protocol Port Number Registry
+
+    // Reserved range for use by SRP server
+    static constexpr uint16_t kSrpServerPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN;
+    static constexpr uint16_t kSrpServerPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX;
 
     static bool IsPortReserved(uint16_t aPort);
 

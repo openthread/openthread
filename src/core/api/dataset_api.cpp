@@ -136,12 +136,14 @@ otError otDatasetSendMgmtActiveGet(otInstance *                          aInstan
 otError otDatasetSendMgmtActiveSet(otInstance *                aInstance,
                                    const otOperationalDataset *aDataset,
                                    const uint8_t *             aTlvs,
-                                   uint8_t                     aLength)
+                                   uint8_t                     aLength,
+                                   otDatasetMgmtSetCallback    aCallback,
+                                   void *                      aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<MeshCoP::ActiveDataset>().SendSetRequest(*static_cast<const MeshCoP::Dataset::Info *>(aDataset),
-                                                                 aTlvs, aLength);
+                                                                 aTlvs, aLength, aCallback, aContext);
 }
 
 otError otDatasetSendMgmtPendingGet(otInstance *                          aInstance,
@@ -159,12 +161,14 @@ otError otDatasetSendMgmtPendingGet(otInstance *                          aInsta
 otError otDatasetSendMgmtPendingSet(otInstance *                aInstance,
                                     const otOperationalDataset *aDataset,
                                     const uint8_t *             aTlvs,
-                                    uint8_t                     aLength)
+                                    uint8_t                     aLength,
+                                    otDatasetMgmtSetCallback    aCallback,
+                                    void *                      aContext)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<MeshCoP::PendingDataset>().SendSetRequest(
-        *static_cast<const MeshCoP::Dataset::Info *>(aDataset), aTlvs, aLength);
+        *static_cast<const MeshCoP::Dataset::Info *>(aDataset), aTlvs, aLength, aCallback, aContext);
 }
 
 #if OPENTHREAD_FTD
@@ -183,4 +187,17 @@ otError otNetworkNameFromString(otNetworkName *aNetworkName, const char *aNameSt
     otError error = static_cast<Mac::NetworkName *>(aNetworkName)->Set(aNameString);
 
     return (error == OT_ERROR_ALREADY) ? OT_ERROR_NONE : error;
+}
+
+otError otDatasetParseTlvs(const otOperationalDatasetTlvs *aDatasetTlvs, otOperationalDataset *aDataset)
+{
+    Error            error = kErrorNone;
+    MeshCoP::Dataset dataset;
+
+    dataset.SetFrom(*aDatasetTlvs);
+    VerifyOrExit(dataset.IsValid(), error = kErrorInvalidArgs);
+    dataset.ConvertTo(*static_cast<MeshCoP::Dataset::Info *>(aDataset));
+
+exit:
+    return error;
 }

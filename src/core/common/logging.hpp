@@ -81,6 +81,7 @@ extern "C" {
 #define _OT_REGION_NET_DATA_PREFIX "-N-DATA--: "
 #define _OT_REGION_ICMP_PREFIX "-ICMP----: "
 #define _OT_REGION_IP6_PREFIX "-IP6-----: "
+#define _OT_REGION_TCP_PREFIX "-TCP-----: "
 #define _OT_REGION_MAC_PREFIX "-MAC-----: "
 #define _OT_REGION_MEM_PREFIX "-MEM-----: "
 #define _OT_REGION_NCP_PREFIX "-NCP-----: "
@@ -97,6 +98,10 @@ extern "C" {
 #define _OT_REGION_BR_PREFIX "-BR------: "
 #define _OT_REGION_SRP_PREFIX "-SRP-----: "
 #define _OT_REGION_DNS_PREFIX "-DNS-----: "
+
+// When adding a new log region, please ensure to update the array
+// `kRegionPrefixStrings[]` in `Log()` function in `logging.cpp`.
+
 #else
 #define _OT_REGION_API_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MLE_PREFIX _OT_REGION_SUFFIX
@@ -104,6 +109,7 @@ extern "C" {
 #define _OT_REGION_NET_DATA_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_ICMP_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_IP6_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_TCP_PREFIX _OT_REGION_PREFIX
 #define _OT_REGION_MAC_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MEM_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_NCP_PREFIX _OT_REGION_SUFFIX
@@ -137,7 +143,8 @@ extern "C" {
 #define otLogCrit(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_CRIT, aRegion, _OT_LEVEL_CRIT_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogCrit(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogCrit(aRegion, aRegionPrefix, ...) _otLogCrit(aRegion, __VA_ARGS__)
+void _otLogCrit(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -155,7 +162,8 @@ void otLogCrit(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogWarn(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_WARN, aRegion, _OT_LEVEL_WARN_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogWarn(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogWarn(aRegion, aRegionPrefix, ...) _otLogWarn(aRegion, __VA_ARGS__)
+void _otLogWarn(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -173,7 +181,8 @@ void otLogWarn(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogNote(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_NOTE, aRegion, _OT_LEVEL_NOTE_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogNote(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogNote(aRegion, aRegionPrefix, ...) _otLogNote(aRegion, __VA_ARGS__)
+void _otLogNote(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -191,7 +200,8 @@ void otLogNote(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogInfo(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_INFO, aRegion, _OT_LEVEL_INFO_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogInfo(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogInfo(aRegion, aRegionPrefix, ...) _otLogInfo(aRegion, __VA_ARGS__)
+void _otLogInfo(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -209,7 +219,8 @@ void otLogInfo(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogDebg(aRegion, aRegionPrefix, ...) \
     _otLogFormatter(OT_LOG_LEVEL_DEBG, aRegion, _OT_LEVEL_DEBG_PREFIX aRegionPrefix __VA_ARGS__)
 #else
-void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aFormat, ...);
+#define otLogDebg(aRegion, aRegionPrefix, ...) _otLogDebg(aRegion, __VA_ARGS__)
+void _otLogDebg(otLogRegion aRegion, const char *aFormat, ...);
 #endif
 
 /**
@@ -798,6 +809,64 @@ void otLogDebg(otLogRegion aRegion, const char *aRegionPrefix, const char *aForm
 #define otLogNoteIp6(...)
 #define otLogInfoIp6(...)
 #define otLogDebgIp6(...)
+#endif
+
+/**
+ * @def otLogCritTcp
+ *
+ * This function generates a log with level critical for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnTcp
+ *
+ * This function generates a log with level warning for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteTcp
+ *
+ * This function generates a log with level note for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoTcp
+ *
+ * This function generates a log with level info for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgTcp
+ *
+ * This function generates a log with level debug for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_TCP
+#define otLogCritTcp(...) otLogCrit(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogWarnTcp(...) otLogWarn(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogNoteTcp(...) otLogNote(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogInfoTcp(...) otLogInfo(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogDebgTcp(...) otLogDebg(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritTcp(...)
+#define otLogWarnTcp(...)
+#define otLogNoteTcp(...)
+#define otLogInfoTcp(...)
+#define otLogDebgTcp(...)
 #endif
 
 /**
@@ -2054,6 +2123,74 @@ void otLogOtns(const char *aFormat, ...);
 #endif
 
 /**
+ * @def otDumpCritTcp
+ *
+ * This function generates a memory dump with log level debug and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWartTcp
+ *
+ * This function generates a memory dump with log level warning and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNottTcp
+ *
+ * This function generates a memory dump with log level note and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInftTcp
+ *
+ * This function generates a memory dump with log level info and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebtTcp
+ *
+ * This function generates a memory dump with log level debug and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_TCP
+#define otDumpCritTcp(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpWarnTcp(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpNoteTcp(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpInfoTcp(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpDebgTcp(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#else
+#define otDumpCritTcp(aId, aBuf, aLength)
+#define otDumpWarnTcp(aId, aBuf, aLength)
+#define otDumpNoteTcp(aId, aBuf, aLength)
+#define otDumpInfoTcp(aId, aBuf, aLength)
+#define otDumpDebgTcp(aId, aBuf, aLength)
+#endif
+
+/**
  * @def otDumpCritMac
  *
  * This function generates a memory dump with log level debug and region MAC.
@@ -2557,8 +2694,7 @@ void otLogOtns(const char *aFormat, ...);
  */
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, size_t aLength);
 
-#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
-
+#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY || OPENTHREAD_CONFIG_LOG_PREPEND_LEVEL
 /**
  * This function converts a log level to a prefix string for appending to log message.
  *
@@ -2568,6 +2704,9 @@ void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const
  *
  */
 const char *otLogLevelToPrefixString(otLogLevel aLogLevel);
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_DEFINE_AS_MACRO_ONLY
 
 /**
  * Local/private macro to format the log message

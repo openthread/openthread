@@ -178,6 +178,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/entropy_api.cpp                                    \
     src/core/api/error_api.cpp                                      \
     src/core/api/heap_api.cpp                                       \
+    src/core/api/history_tracker_api.cpp                            \
     src/core/api/icmp6_api.cpp                                      \
     src/core/api/instance_api.cpp                                   \
     src/core/api/ip6_api.cpp                                        \
@@ -190,6 +191,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/message_api.cpp                                    \
     src/core/api/multi_radio_api.cpp                                \
     src/core/api/netdata_api.cpp                                    \
+    src/core/api/netdata_publisher_api.cpp                          \
     src/core/api/netdiag_api.cpp                                    \
     src/core/api/network_time_api.cpp                               \
     src/core/api/ping_sender_api.cpp                                \
@@ -323,6 +325,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/thread/network_data_leader_ftd.cpp                     \
     src/core/thread/network_data_local.cpp                          \
     src/core/thread/network_data_notifier.cpp                       \
+    src/core/thread/network_data_publisher.cpp                      \
     src/core/thread/network_data_service.cpp                        \
     src/core/thread/network_data_tlvs.cpp                           \
     src/core/thread/network_data_types.cpp                          \
@@ -341,6 +344,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/utils/child_supervision.cpp                            \
     src/core/utils/flash.cpp                                        \
     src/core/utils/heap.cpp                                         \
+    src/core/utils/history_tracker.cpp                              \
     src/core/utils/jam_detector.cpp                                 \
     src/core/utils/lookup_table.cpp                                 \
     src/core/utils/otns.cpp                                         \
@@ -497,6 +501,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_coap_secure.cpp               \
     src/cli/cli_commissioner.cpp              \
     src/cli/cli_dataset.cpp                   \
+    src/cli/cli_history.cpp                   \
     src/cli/cli_joiner.cpp                    \
     src/cli/cli_network_data.cpp              \
     src/cli/cli_srp_client.cpp                \

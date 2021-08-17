@@ -34,6 +34,7 @@
 #include "cli_network_data.hpp"
 
 #include <openthread/border_router.h>
+#include <openthread/netdata_publisher.h>
 #include <openthread/server.h>
 
 #include "cli/cli.hpp"
@@ -62,7 +63,7 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
     char  flagsString[kMaxFlagStringSize];
     char *flagsPtr = &flagsString[0];
 
-    OutputIp6Prefix(aConfig.mPrefix);
+    mInterpreter.OutputIp6Prefix(aConfig.mPrefix);
 
     if (aConfig.mPreferred)
     {
@@ -134,7 +135,7 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     char  flagsString[kMaxFlagStringSize];
     char *flagsPtr = &flagsString[0];
 
-    OutputIp6Prefix(aConfig.mPrefix);
+    mInterpreter.OutputIp6Prefix(aConfig.mPrefix);
 
     if (aConfig.mStable)
     {
@@ -156,15 +157,6 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     OutputPreference(aConfig.mPreference);
 
     mInterpreter.OutputLine(" %04x", aConfig.mRloc16);
-}
-
-void NetworkData::OutputIp6Prefix(const otIp6Prefix &aPrefix)
-{
-    char string[OT_IP6_PREFIX_STRING_SIZE];
-
-    otIp6PrefixToString(&aPrefix, string, sizeof(string));
-
-    mInterpreter.OutputFormat("%s", string);
 }
 
 void NetworkData::OutputPreference(signed int aPreference)
@@ -214,6 +206,100 @@ otError NetworkData::ProcessHelp(Arg aArgs[])
 
     return OT_ERROR_NONE;
 }
+
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+otError NetworkData::ProcessPublish(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    if (aArgs[0] == "dnssrp")
+    {
+        if (aArgs[1] == "anycast")
+        {
+            uint8_t sequenceNumber;
+
+            SuccessOrExit(error = aArgs[2].ParseAsUint8(sequenceNumber));
+            otNetDataPublishDnsSrpServiceAnycast(mInterpreter.mInstance, sequenceNumber);
+            ExitNow();
+        }
+
+        if (aArgs[1] == "unicast")
+        {
+            otIp6Address address;
+            uint16_t     port;
+
+            if (aArgs[3].IsEmpty())
+            {
+                SuccessOrExit(error = aArgs[2].ParseAsUint16(port));
+                otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(mInterpreter.mInstance, port);
+                ExitNow();
+            }
+
+            SuccessOrExit(error = aArgs[2].ParseAsIp6Address(address));
+            SuccessOrExit(error = aArgs[3].ParseAsUint16(port));
+            otNetDataPublishDnsSrpServiceUnicast(mInterpreter.mInstance, &address, port);
+            ExitNow();
+        }
+    }
+#endif // OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    if (aArgs[0] == "prefix")
+    {
+        otBorderRouterConfig config;
+
+        SuccessOrExit(error = Interpreter::ParsePrefix(aArgs + 1, config));
+        error = otNetDataPublishOnMeshPrefix(mInterpreter.mInstance, &config);
+        ExitNow();
+    }
+
+    if (aArgs[0] == "route")
+    {
+        otExternalRouteConfig config;
+
+        SuccessOrExit(error = Interpreter::ParseRoute(aArgs + 1, config));
+        error = otNetDataPublishExternalRoute(mInterpreter.mInstance, &config);
+        ExitNow();
+    }
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+
+    error = OT_ERROR_INVALID_ARGS;
+
+exit:
+    return error;
+}
+
+otError NetworkData::ProcessUnpublish(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+#if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    if (aArgs[0] == "dnssrp")
+    {
+        otNetDataUnpublishDnsSrpService(mInterpreter.mInstance);
+        ExitNow();
+    }
+#endif
+
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
+    {
+        otIp6Prefix prefix;
+
+        if (aArgs[0].ParseAsIp6Prefix(prefix) == OT_ERROR_NONE)
+        {
+            error = otNetDataUnpublishPrefix(mInterpreter.mInstance, &prefix);
+            ExitNow();
+        }
+    }
+#endif
+
+    error = OT_ERROR_INVALID_ARGS;
+
+exit:
+    return error;
+}
+#endif // OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 otError NetworkData::ProcessRegister(Arg aArgs[])

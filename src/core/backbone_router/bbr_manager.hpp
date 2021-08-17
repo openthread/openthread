@@ -169,10 +169,7 @@ public:
                                             uint32_t                        aTimeSinceLastTransaction);
 
 private:
-    enum
-    {
-        kTimerInterval = 1000,
-    };
+    static constexpr uint32_t kTimerInterval = 1000;
 
 #if OPENTHREAD_CONFIG_BACKBONE_ROUTER_MULTICAST_ROUTING_ENABLE
     static void HandleMulticastListenerRegistration(void *               aContext,

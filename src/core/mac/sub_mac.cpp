@@ -333,7 +333,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     SuccessOrExit(mTransmitFrame.GetKeyIdMode(keyIdMode));
 
-    if (!mTransmitFrame.IsARetransmission())
+    if (!mTransmitFrame.IsHeaderUpdated())
     {
         mTransmitFrame.SetKeyId(mKeyId);
     }
@@ -343,7 +343,7 @@ void SubMac::ProcessTransmitSecurity(void)
 
     mTransmitFrame.SetAesKey(GetCurrentMacKey());
 
-    if (!mTransmitFrame.IsARetransmission())
+    if (!mTransmitFrame.IsHeaderUpdated())
     {
         uint32_t frameCounter = GetFrameCounter();
 
@@ -406,7 +406,7 @@ void SubMac::StartCsmaBackoff(void)
     }
 
     backoff = Random::NonCrypto::GetUint32InRange(0, static_cast<uint32_t>(1UL << backoffExponent));
-    backoff *= (static_cast<uint32_t>(kUnitBackoffPeriod) * OT_RADIO_SYMBOL_TIME);
+    backoff *= (kUnitBackoffPeriod * OT_RADIO_SYMBOL_TIME);
 
     if (mRxOnWhenBackoff)
     {

@@ -297,13 +297,15 @@ public:
     }
 
 private:
-    enum
-    {
-        kMaxExternalHandlers   = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS,
-        kFlagsStringLineLimit  = 70, // Character limit to divide the log into multiple lines in `LogChangedFlags()`.
-        kMaxFlagNameLength     = 25, // Max length for string representation of a flag by `FlagToString()`.
-        kFlagsStringBufferSize = kFlagsStringLineLimit + kMaxFlagNameLength,
-    };
+    static constexpr uint16_t kMaxExternalHandlers = OPENTHREAD_CONFIG_MAX_STATECHANGE_HANDLERS;
+
+    // Character limit to divide the log into multiple lines in `LogChangedFlags()`.
+    static constexpr uint16_t kFlagsStringLineLimit = 70;
+
+    // Max length for string representation of a flag by `FlagToString()`.
+    static constexpr uint8_t kMaxFlagNameLength = 25;
+
+    static constexpr uint16_t kFlagsStringBufferSize = kFlagsStringLineLimit + kMaxFlagNameLength;
 
     struct ExternalCallback
     {

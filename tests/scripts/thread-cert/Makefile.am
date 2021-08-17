@@ -162,12 +162,14 @@ EXTRA_DIST                                                         = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_history_tracker.py                                          \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_on_mesh_prefix.py                                           \
@@ -227,12 +229,14 @@ check_SCRIPTS                                                      = \
     test_diag.py                                                     \
     test_dns_client_config_auto_start.py                             \
     test_dnssd.py                                                    \
+    test_history_tracker.py                                          \
     test_ipv6.py                                                     \
     test_ipv6_fragmentation.py                                       \
     test_ipv6_source_selection.py                                    \
     test_lowpan.py                                                   \
     test_mac802154.py                                                \
     test_mle.py                                                      \
+    test_netdata_publisher.py                                        \
     test_network_data.py                                             \
     test_network_layer.py                                            \
     test_on_mesh_prefix.py                                           \

@@ -36,6 +36,7 @@ import unittest
 import otci
 from otci import OTCI
 from otci.errors import CommandError
+from otci import NetifIdentifier
 
 logging.basicConfig(level=logging.DEBUG)
 
@@ -303,13 +304,14 @@ class TestOTCI(unittest.TestCase):
         leader.wait(1)
         leader.coap_stop()
 
-        leader.udp_open()
-        leader.udp_bind("::", 1234)
-        leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
-        leader.udp_send(leader.get_ipaddr_rloc(), 1234, random_bytes=3)
-        leader.udp_send(leader.get_ipaddr_rloc(), 1234, hex='112233')
-        leader.wait(1)
-        leader.udp_close()
+        for netif in (NetifIdentifier.THERAD, NetifIdentifier.UNSPECIFIED, NetifIdentifier.BACKBONE):
+            leader.udp_open()
+            leader.udp_bind("::", 1234, netif=netif)
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, text='hello')
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, random_bytes=3)
+            leader.udp_send(leader.get_ipaddr_rloc(), 1234, hex='112233')
+            leader.wait(1)
+            leader.udp_close()
 
         logging.info('dataset: %r', leader.get_dataset())
         logging.info('dataset active: %r', leader.get_dataset('active'))
@@ -365,6 +367,7 @@ class TestOTCI(unittest.TestCase):
         logging.info('dns resolve: %r', client.dns_resolve('host1.default.service.arpa.'))
 
     def _test_otci_srp(self, client: OTCI, server: OTCI):
+        self.assertEqual('disabled', server.srp_server_get_state())
         self.assertEqual('default.service.arpa.', server.srp_server_get_domain())
         server.srp_server_set_domain('example1.com')
         self.assertEqual('example1.com.', server.srp_server_get_domain())
@@ -392,8 +395,9 @@ class TestOTCI(unittest.TestCase):
         server.srp_server_disable()
         client.wait(3)
         server.srp_server_enable()
-        client.wait(3)
+        client.wait(10)
         self.assertEqual([], server.srp_server_get_hosts())
+        self.assertEqual('running', server.srp_server_get_state())
 
         self.assertFalse(client.srp_client_get_autostart())
         client.srp_client_enable_autostart()

@@ -72,7 +72,7 @@ public:
      * This enumeration defines the match mode constants to compare two RLOC16 values.
      *
      */
-    enum MatchMode
+    enum MatchMode : uint8_t
     {
         kMatchModeRloc16,   ///< Perform exact RLOC16 match.
         kMatchModeRouterId, ///< Perform Router ID match (match the router and any of its children).
@@ -197,7 +197,7 @@ private:
         bool mStableChanged; // Stable network data change (add/remove).
     };
 
-    enum UpdateStatus
+    enum UpdateStatus : uint8_t
     {
         kTlvRemoved, // TLV contained no sub TLVs and therefore is removed.
         kTlvUpdated, // TLV stable flag is updated based on its sub TLVs.
@@ -289,17 +289,10 @@ private:
     void IncrementVersions(bool aIncludeStable);
     void IncrementVersions(const ChangedFlags &aFlags);
 
-    /**
-     * Thread Specification Constants.
-     *
-     */
-    enum
-    {
-        kMinContextId        = 1,            ///< Minimum Context ID (0 is used for Mesh Local)
-        kNumContextIds       = 15,           ///< Maximum Context ID
-        kContextIdReuseDelay = 48 * 60 * 60, ///< CONTEXT_ID_REUSE_DELAY (seconds)
-        kStateUpdatePeriod   = 60 * 1000,    ///< State update period in milliseconds
-    };
+    static constexpr uint8_t  kMinContextId        = 1;            // Minimum Context ID (0 is used for Mesh Local)
+    static constexpr uint8_t  kNumContextIds       = 15;           // Maximum Context ID
+    static constexpr uint32_t kContextIdReuseDelay = 48 * 60 * 60; // in seconds
+    static constexpr uint32_t kStateUpdatePeriod   = 60 * 1000;    // State update period in milliseconds
 
     uint16_t   mContextUsed;
     TimeMilli  mContextLastUsed[kNumContextIds];

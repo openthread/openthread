@@ -119,12 +119,11 @@ public:
     bool IsUpdateOngoing(void) const { return mDataset != nullptr; }
 
 private:
-    enum : uint32_t
-    {
-        kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY, // Default delay (in ms) in Pending Dataset.
+    // Default delay (in ms) in Pending Dataset.
+    static constexpr uint32_t kDefaultDelay = OPENTHREAD_CONFIG_DATASET_UPDATER_DEFAULT_DELAY;
 
-        kRetryInterval = 1000, // In ms. Retry interval when preparing and/or sending Pending Dataset fails.
-    };
+    // Retry interval (in ms) when preparing and/or sending Pending Dataset fails.
+    static constexpr uint32_t kRetryInterval = 1000;
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);

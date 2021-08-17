@@ -43,10 +43,7 @@
 namespace ot {
 namespace BackboneRouter {
 
-enum
-{
-    kBackboneUdpPort = 61631, ///< Backbone TMF UDP Port
-};
+constexpr uint16_t kBackboneUdpPort = 61631; ///< Backbone TMF UDP Port
 
 /**
  * This class implements functionality of the Backbone TMF agent.

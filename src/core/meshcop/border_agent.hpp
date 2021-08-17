@@ -173,11 +173,7 @@ private:
     }
     bool HandleUdpReceive(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    enum
-    {
-        kKeepAliveTimeout = 50 * 1000, ///< Timeout to reject a commissioner.
-        kRestartDelay     = 1 * 1000,  ///< Delay to restart border agent service.
-    };
+    static constexpr uint32_t kKeepAliveTimeout = 50 * 1000; // Timeout to reject a commissioner.
 
     Ip6::MessageInfo mMessageInfo;
 

@@ -56,6 +56,13 @@ otError otSrpServerSetDomain(otInstance *aInstance, const char *aDomain)
     return instance.Get<Srp::Server>().SetDomain(aDomain);
 }
 
+otSrpServerState otSrpServerGetState(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return static_cast<otSrpServerState>(instance.Get<Srp::Server>().GetState());
+}
+
 void otSrpServerSetEnabled(otInstance *aInstance, bool aEnabled)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
