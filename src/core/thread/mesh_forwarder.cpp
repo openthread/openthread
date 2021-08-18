@@ -1569,8 +1569,10 @@ void MeshForwarder::AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame
 {
     uint8_t index     = 0;
     bool    iePresent = false;
-    bool    payloadPresent =
-        (aFrame.GetType() == Mac::Frame::kFcfFrameMacCmd) || (aMessage != nullptr && aMessage->GetLength() != 0);
+    // MIC is a part of Data Payload, so if it's present, Data Payload is not empty even if the message is
+    // MIC is always present when the frame is secured
+    bool payloadPresent = (aFrame.GetType() == Mac::Frame::kFcfFrameMacCmd) ||
+                          (aMessage != nullptr && aMessage->GetLength() != 0) || aFrame.GetSecurityEnabled();
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
     if (aMessage != nullptr && aMessage->IsTimeSync())
