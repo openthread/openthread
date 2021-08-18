@@ -4731,7 +4731,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
     // Convert OT_CHANGED flags to corresponding NCP property update.
 
-    for (auto flag : kFlags)
+    for (auto &flag : kFlags)
     {
         uint32_t threadFlag = flag.mThreadFlag;
 
