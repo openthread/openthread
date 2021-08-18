@@ -979,7 +979,7 @@ Error MleRouter::HandleLinkAccept(const Message &         aMessage,
     router->SetState(Neighbor::kStateValid);
     router->SetKeySequence(aKeySequence);
 
-    mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED, *router);
+    mNeighborTable.Signal(NeighborTable::kRouterAdded, *router);
 
     if (aRequest)
     {
@@ -3378,7 +3378,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
 
         if (aNeighbor.IsStateValidOrRestoring())
         {
-            mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED, aNeighbor);
+            mNeighborTable.Signal(NeighborTable::kChildRemoved, aNeighbor);
         }
 
         Get<IndirectSender>().ClearAllMessagesForSleepyChild(static_cast<Child &>(aNeighbor));
@@ -3395,7 +3395,7 @@ void MleRouter::RemoveNeighbor(Neighbor &aNeighbor)
     {
         OT_ASSERT(mRouterTable.Contains(aNeighbor));
 
-        mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED, aNeighbor);
+        mNeighborTable.Signal(NeighborTable::kRouterRemoved, aNeighbor);
         mRouterTable.RemoveRouterLink(static_cast<Router &>(aNeighbor));
     }
 
@@ -4315,7 +4315,7 @@ void MleRouter::SetChildStateToValid(Child &aChild)
     Get<MlrManager>().UpdateProxiedSubscriptions(aChild, nullptr, 0);
 #endif
 
-    mNeighborTable.Signal(OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED, aChild);
+    mNeighborTable.Signal(NeighborTable::kChildAdded, aChild);
 
 exit:
     return;

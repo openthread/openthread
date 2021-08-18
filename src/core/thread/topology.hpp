@@ -1011,6 +1011,14 @@ public:
     void ClearIp6Addresses(void);
 
     /**
+     * This method sets the device mode flags.
+     *
+     * @param[in]  aMode  The device mode flags.
+     *
+     */
+    void SetDeviceMode(Mle::DeviceMode aMode);
+
+    /**
      * This method gets the mesh-local IPv6 address.
      *
      * @param[out]   aAddress            A reference to an IPv6 address to provide address (if any).
