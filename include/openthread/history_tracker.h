@@ -40,8 +40,8 @@ extern "C" {
  *
  * @{
  *
- */    
-    
+ */
+
 /**
  * @brief
  *   This header defines the public API for History Tracker.
@@ -212,8 +212,8 @@ void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
 /**
  * @}
  *
- */    
-    
+ */
+
 #ifdef __cplusplus
 } // extern "C"
 #endif
