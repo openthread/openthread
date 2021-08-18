@@ -51,7 +51,7 @@ Sha256::Sha256(void)
 Sha256::~Sha256(void)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoSha256Uninit(context, sizeof(mContext));
+    Error err     = otPlatCryptoSha256Deinit(context, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

@@ -97,11 +97,6 @@ OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyId, otCrypt
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otCryptoType otPlatCryptoGetType(void)
-{
-    return OT_CRYPTO_TYPE_USE_LITERAL_KEYS;
-}
-
 // AES  Implementation
 OT_TOOL_WEAK otError otPlatCryptoAesInit(void *aContext, size_t aContextSize)
 {
@@ -182,7 +177,7 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoHmacSha256UnInit(void *aContext, size_t aContextSize)
+OT_TOOL_WEAK otError otPlatCryptoHmacSha256Deinit(void *aContext, size_t aContextSize)
 {
     otError error = OT_ERROR_NONE;
 
@@ -420,7 +415,7 @@ exit:
     return error;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoSha256Uninit(void *aContext, size_t aContextSize)
+OT_TOOL_WEAK otError otPlatCryptoSha256Deinit(void *aContext, size_t aContextSize)
 {
     otError error = OT_ERROR_NONE;
 

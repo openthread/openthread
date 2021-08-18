@@ -285,7 +285,7 @@ otError otPlatCryptoHmacSha256Init(void *aContext, size_t aContextSize);
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
-otError otPlatCryptoHmacSha256UnInit(void *aContext, size_t aContextSize);
+otError otPlatCryptoHmacSha256Deinit(void *aContext, size_t aContextSize);
 
 /**
  * Start HMAC operation.
@@ -475,7 +475,7 @@ otError otPlatCryptoSha256Init(void *aContext, size_t aContextSize);
  * @note Incase PSA is supported pointer to psa_hash_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
-otError otPlatCryptoSha256Uninit(void *aContext, size_t aContextSize);
+otError otPlatCryptoSha256Deinit(void *aContext, size_t aContextSize);
 
 /**
  * Start SHA-256 operation.

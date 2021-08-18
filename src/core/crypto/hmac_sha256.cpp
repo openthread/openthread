@@ -49,7 +49,7 @@ HmacSha256::HmacSha256(void)
 HmacSha256::~HmacSha256(void)
 {
     void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoHmacSha256UnInit(context, sizeof(mContext));
+    Error err     = otPlatCryptoHmacSha256Deinit(context, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
