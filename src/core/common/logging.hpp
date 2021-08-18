@@ -81,6 +81,7 @@ extern "C" {
 #define _OT_REGION_NET_DATA_PREFIX "-N-DATA--: "
 #define _OT_REGION_ICMP_PREFIX "-ICMP----: "
 #define _OT_REGION_IP6_PREFIX "-IP6-----: "
+#define _OT_REGION_TCP_PREFIX "-TCP-----: "
 #define _OT_REGION_MAC_PREFIX "-MAC-----: "
 #define _OT_REGION_MEM_PREFIX "-MEM-----: "
 #define _OT_REGION_NCP_PREFIX "-NCP-----: "
@@ -108,6 +109,7 @@ extern "C" {
 #define _OT_REGION_NET_DATA_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_ICMP_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_IP6_PREFIX _OT_REGION_SUFFIX
+#define _OT_REGION_TCP_PREFIX _OT_REGION_PREFIX
 #define _OT_REGION_MAC_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_MEM_PREFIX _OT_REGION_SUFFIX
 #define _OT_REGION_NCP_PREFIX _OT_REGION_SUFFIX
@@ -807,6 +809,64 @@ void _otLogDebg(otLogRegion aRegion, const char *aFormat, ...);
 #define otLogNoteIp6(...)
 #define otLogInfoIp6(...)
 #define otLogDebgIp6(...)
+#endif
+
+/**
+ * @def otLogCritTcp
+ *
+ * This function generates a log with level critical for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogWarnTcp
+ *
+ * This function generates a log with level warning for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogNoteTcp
+ *
+ * This function generates a log with level note for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogInfoTcp
+ *
+ * This function generates a log with level info for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+
+/**
+ * @def otLogDebgTcp
+ *
+ * This function generates a log with level debug for the TCP region.
+ *
+ * @param[in]  ...  Arguments for the format specification.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_TCP
+#define otLogCritTcp(...) otLogCrit(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogWarnTcp(...) otLogWarn(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogNoteTcp(...) otLogNote(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogInfoTcp(...) otLogInfo(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#define otLogDebgTcp(...) otLogDebg(OT_LOG_REGION_TCP, _OT_REGION_TCP_PREFIX, __VA_ARGS__)
+#else
+#define otLogCritTcp(...)
+#define otLogWarnTcp(...)
+#define otLogNoteTcp(...)
+#define otLogInfoTcp(...)
+#define otLogDebgTcp(...)
 #endif
 
 /**
@@ -2060,6 +2120,74 @@ void otLogOtns(const char *aFormat, ...);
 #define otDumpNoteIp6(aId, aBuf, aLength)
 #define otDumpInfoIp6(aId, aBuf, aLength)
 #define otDumpDebgIp6(aId, aBuf, aLength)
+#endif
+
+/**
+ * @def otDumpCritTcp
+ *
+ * This function generates a memory dump with log level debug and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpWartTcp
+ *
+ * This function generates a memory dump with log level warning and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpNottTcp
+ *
+ * This function generates a memory dump with log level note and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpInftTcp
+ *
+ * This function generates a memory dump with log level info and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+
+/**
+ * @def otDumpDebtTcp
+ *
+ * This function generates a memory dump with log level debug and region TCP.
+ *
+ * @param[in]  aId          A pointer to a NULL-terminated string that is printed before the bytes.
+ * @param[in]  aBuf         A pointer to the buffer.
+ * @param[in]  aLength      Number of bytes to print.
+ *
+ */
+#if OPENTHREAD_CONFIG_LOG_TCP
+#define otDumpCritTcp(aId, aBuf, aLength) otDumpCrit(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpWarnTcp(aId, aBuf, aLength) otDumpWarn(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpNoteTcp(aId, aBuf, aLength) otDumpNote(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpInfoTcp(aId, aBuf, aLength) otDumpInfo(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#define otDumpDebgTcp(aId, aBuf, aLength) otDumpDebg(OT_LOG_REGION_TCP, aId, aBuf, aLength)
+#else
+#define otDumpCritTcp(aId, aBuf, aLength)
+#define otDumpWarnTcp(aId, aBuf, aLength)
+#define otDumpNoteTcp(aId, aBuf, aLength)
+#define otDumpInfoTcp(aId, aBuf, aLength)
+#define otDumpDebgTcp(aId, aBuf, aLength)
 #endif
 
 /**

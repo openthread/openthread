@@ -591,6 +591,10 @@ unsigned int NcpBase::ConvertLogRegion(otLogRegion aLogRegion)
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_IP6;
         break;
 
+    case OT_LOG_REGION_TCP:
+        spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_TCP;
+        break;
+
     case OT_LOG_REGION_MAC:
         spinelLogRegion = SPINEL_NCP_LOG_REGION_OT_MAC;
         break;

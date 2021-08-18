@@ -28,7 +28,7 @@
 
 /**
  * @file
- *   This file includes definitions for UDP/IPv6 sockets.
+ *   This file includes definitions for TCP/IPv6 sockets.
  */
 
 #ifndef TCP6_HPP_
@@ -44,6 +44,7 @@
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
+#include "common/timer.hpp"
 
 namespace ot {
 namespace Ip6 {
@@ -71,6 +72,8 @@ public:
      */
     class Endpoint : public otTcpEndpoint, public LinkedListEntry<Endpoint>
     {
+        friend class Tcp;
+
     public:
         /**
          * Initializes a TCP endpoint.
@@ -325,6 +328,23 @@ public:
          *
          */
         Error Deinitialize(void);
+
+    private:
+        enum : uint8_t
+        {
+            kTimerDelack       = 0,
+            kTimerRexmtPersist = 1,
+            kTimerKeep         = 2,
+            kTimer2Msl         = 3,
+            kNumTimers         = 4,
+        };
+
+        static uint8_t TimerFlagToIndex(uint8_t aTimerFlag);
+
+        bool IsTimerActive(uint8_t aTimerIndex);
+        void SetTimer(uint8_t aTimerFlag, uint32_t aDelay);
+        void CancelTimer(uint8_t aTimerFlag);
+        bool FirePendingTimers(TimeMilli aNow, bool &aHasFutureTimer, TimeMilli &aEarliestFutureExpiry);
     };
 
     /**
@@ -516,6 +536,7 @@ public:
     /**
      * Processes a received TCP segment.
      *
+     * @param[in]  aIp6Header    A reference to a structure containing the segment's IPv6 header.
      * @param[in]  aMessage      A reference to the message containing the TCP segment.
      * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
@@ -523,7 +544,23 @@ public:
      * @retval kErrorDrop  Dropped the TCP segment due to an invalid checksum.
      *
      */
-    Error ProcessReceivedSegment(Message &aMessage, MessageInfo &aMessageInfo);
+    Error HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, MessageInfo &aMessageInfo);
+
+private:
+    enum
+    {
+        kDynamicPortMin = 49152, ///< Service Name and Transport Protocol Port Number Registry
+        kDynamicPortMax = 65535, ///< Service Name and Transport Protocol Port Number Registry
+    };
+
+    static void HandleTimer(Timer &aTimer);
+    void        ProcessTimers(void);
+
+    TimerMilli mTimer;
+
+    LinkedList<Endpoint> mEndpoints;
+    LinkedList<Listener> mListeners;
+    uint16_t             mEphemeralPort;
 };
 
 } // namespace Ip6

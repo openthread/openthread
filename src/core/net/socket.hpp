@@ -204,6 +204,22 @@ public:
     const ThreadLinkInfo *GetThreadLinkInfo(void) const { return reinterpret_cast<const ThreadLinkInfo *>(mLinkInfo); }
 
     /**
+     * This method gets the ECN status.
+     *
+     * @returns The ECN status, as represented in the IP header.
+     *
+     */
+    uint8_t GetEcn(void) const { return mEcn; }
+
+    /**
+     * This method sets the ECN status.
+     *
+     * @param[in]  aEcn  The ECN status, as represented in the IP header.
+     *
+     */
+    void SetEcn(uint8_t aEcn) { mEcn = aEcn; }
+
+    /**
      * This method indicates whether peer is via the host interface.
      *
      * @retval TRUE if the peer is via the host interface.

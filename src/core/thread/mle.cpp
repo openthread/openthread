@@ -915,22 +915,23 @@ void Mle::SetRloc16(uint16_t aRloc16)
     if (aRloc16 != oldRloc16)
     {
         otLogNoteMle("RLOC16 %04x -> %04x", oldRloc16, aRloc16);
-
-        // Clear cached CoAP with old RLOC source
-        if (oldRloc16 != Mac::kShortAddrInvalid)
-        {
-            Get<Tmf::Agent>().ClearRequests(mMeshLocal16.GetAddress());
-        }
     }
 
-    Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
+    if (Get<ThreadNetif>().HasUnicastAddress(mMeshLocal16) &&
+        (mMeshLocal16.GetAddress().GetIid().GetLocator() != aRloc16))
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mMeshLocal16);
+        Get<Tmf::Agent>().ClearRequests(mMeshLocal16.GetAddress());
+    }
 
     Get<Mac::Mac>().SetShortAddress(aRloc16);
     Get<Ip6::Mpl>().SetSeedId(aRloc16);
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        // mesh-local 16
+        // We can always call `AddUnicastAddress(mMeshLocat16)` and if
+        // the address is already added, it will perform no action.
+
         mMeshLocal16.GetAddress().GetIid().SetLocator(aRloc16);
         Get<ThreadNetif>().AddUnicastAddress(mMeshLocal16);
 #if OPENTHREAD_FTD

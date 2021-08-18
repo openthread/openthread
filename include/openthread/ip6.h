@@ -208,22 +208,35 @@ typedef struct otSockAddr
 } otSockAddr;
 
 /**
+ * ECN statuses, represented as in the IP header.
+ *
+ */
+enum
+{
+    OT_ECN_NOT_CAPABLE = 0x0, ///< Non-ECT
+    OT_ECN_CAPABLE_0   = 0x2, ///< ECT(0)
+    OT_ECN_CAPABLE_1   = 0x1, ///< ECT(1)
+    OT_ECN_MARKED      = 0x3, ///< Congestion encountered (CE)
+};
+
+/**
  * This structure represents the local and peer IPv6 socket addresses.
  *
  */
 typedef struct otMessageInfo
 {
-    otIp6Address mSockAddr;      ///< The local IPv6 address.
-    otIp6Address mPeerAddr;      ///< The peer IPv6 address.
-    uint16_t     mSockPort;      ///< The local transport-layer port.
-    uint16_t     mPeerPort;      ///< The peer transport-layer port.
-    const void * mLinkInfo;      ///< A pointer to link-specific information.
-    uint8_t      mHopLimit;      ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
-                                 ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
-                                 ///< Otherwise, specifies the IPv6 Hop Limit.
-    bool mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
-    bool mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
-    bool mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
+    otIp6Address mSockAddr; ///< The local IPv6 address.
+    otIp6Address mPeerAddr; ///< The peer IPv6 address.
+    uint16_t     mSockPort; ///< The local transport-layer port.
+    uint16_t     mPeerPort; ///< The peer transport-layer port.
+    const void * mLinkInfo; ///< A pointer to link-specific information.
+    uint8_t      mHopLimit; ///< The IPv6 Hop Limit value. Only applies if `mAllowZeroHopLimit` is FALSE.
+                            ///< If `0`, IPv6 Hop Limit is default value `OPENTHREAD_CONFIG_IP6_HOP_LIMIT_DEFAULT`.
+                            ///< Otherwise, specifies the IPv6 Hop Limit.
+    uint8_t mEcn : 2;       ///< The ECN status of the packet, represented as in the IPv6 header.
+    bool    mIsHostInterface : 1;   ///< TRUE if packets sent/received via host interface, FALSE otherwise.
+    bool    mAllowZeroHopLimit : 1; ///< TRUE to allow IPv6 Hop Limit 0 in `mHopLimit`, FALSE otherwise.
+    bool    mMulticastLoop : 1;     ///< TRUE to allow looping back multicast, FALSE otherwise.
 } otMessageInfo;
 
 /**

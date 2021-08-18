@@ -215,6 +215,8 @@ struct otTcpEndpoint
     otTcpReceiveAvailable mReceiveAvailableCallback; ///< "Receive available" callback function
     otTcpDisconnected     mDisconnectedCallback;     ///< "Disconnected" callback function
 
+    uint32_t mTimers[4];
+
     /* Other implementation-defined fields go here. */
 };
 
