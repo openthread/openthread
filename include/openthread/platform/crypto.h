@@ -246,17 +246,6 @@ otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyId);
 otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyId, otCryptoKeyAttributes *aKeyAttributes);
 
 /**
- * Get the Crypto type supported by the platform.
- *
- * @retval OT_CRYPTO_TYPE_MBEDTLS If the platform supports mbedTLS.
- * @retval OT_CRYPTO_TYPE_PSA     If platform supports PSA.
- *
- * @note This API is available only if platform supports PSA crypto
- *
- */
-otCryptoType otPlatCryptoGetType(void);
-
-/**
  * Initialise the HMAC operation.
  *
  * @param[in]  aContext          Context for HMAC operation.
