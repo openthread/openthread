@@ -219,10 +219,10 @@ exit:
 
 Error Ip6::AddTunneledMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMessageInfo)
 {
-    Error                      error = kErrorNone;
-    Header                     tunnelHeader;
-    const NetifUnicastAddress *source;
-    MessageInfo                messageInfo(aMessageInfo);
+    Error                        error = kErrorNone;
+    Header                       tunnelHeader;
+    const Netif::UnicastAddress *source;
+    MessageInfo                  messageInfo(aMessageInfo);
 
     // Use IP-in-IP encapsulation (RFC2473) and ALL_MPL_FORWARDERS address.
     messageInfo.GetPeerAddr().SetToRealmLocalAllMplForwarders();
@@ -469,7 +469,7 @@ Error Ip6::SendDatagram(Message &aMessage, MessageInfo &aMessageInfo, uint8_t aI
 
     if (aMessageInfo.GetSockAddr().IsUnspecified() || aMessageInfo.GetSockAddr().IsMulticast())
     {
-        const NetifUnicastAddress *source = SelectSourceAddress(aMessageInfo);
+        const Netif::UnicastAddress *source = SelectSourceAddress(aMessageInfo);
 
         VerifyOrExit(source != nullptr, error = kErrorInvalidSourceAddress);
         header.SetSource(source->GetAddress());
@@ -1373,15 +1373,15 @@ exit:
     return rval;
 }
 
-const NetifUnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
+const Netif::UnicastAddress *Ip6::SelectSourceAddress(MessageInfo &aMessageInfo)
 {
-    Address *                  destination                 = &aMessageInfo.GetPeerAddr();
-    uint8_t                    destinationScope            = destination->GetScope();
-    const bool                 destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(*destination);
-    const NetifUnicastAddress *rvalAddr                    = nullptr;
-    uint8_t                    rvalPrefixMatched           = 0;
+    Address *                    destination                 = &aMessageInfo.GetPeerAddr();
+    uint8_t                      destinationScope            = destination->GetScope();
+    const bool                   destinationIsRoutingLocator = Get<Mle::Mle>().IsRoutingLocator(*destination);
+    const Netif::UnicastAddress *rvalAddr                    = nullptr;
+    uint8_t                      rvalPrefixMatched           = 0;
 
-    for (const NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
     {
         const Address *candidateAddr = &addr->GetAddress();
         uint8_t        candidatePrefixMatched;
@@ -1488,7 +1488,7 @@ bool Ip6::IsOnLink(const Address &aAddress) const
         ExitNow(rval = true);
     }
 
-    for (const NetifUnicastAddress *cur = Get<ThreadNetif>().GetUnicastAddresses(); cur; cur = cur->GetNext())
+    for (const Netif::UnicastAddress *cur = Get<ThreadNetif>().GetUnicastAddresses(); cur; cur = cur->GetNext())
     {
         if (cur->GetAddress().PrefixMatch(aAddress) >= cur->mPrefixLength)
         {

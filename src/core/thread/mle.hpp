@@ -1594,7 +1594,7 @@ protected:
 
 #endif
 
-    Ip6::NetifUnicastAddress mLeaderAloc; ///< Leader anycast locator
+    Ip6::Netif::UnicastAddress mLeaderAloc; ///< Leader anycast locator
 
     LeaderData    mLeaderData;               ///< Last received Leader Data TLV.
     bool          mRetrieveNewNetworkData;   ///< Indicating new Network Data is needed if set.
@@ -1889,16 +1889,16 @@ private:
     uint64_t mAlternateTimestamp;
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    Ip6::NetifUnicastAddress mServiceAlocs[kMaxServiceAlocs];
+    Ip6::Netif::UnicastAddress mServiceAlocs[kMaxServiceAlocs];
 #endif
 
     otMleCounters mCounters;
 
-    Ip6::NetifUnicastAddress   mLinkLocal64;
-    Ip6::NetifUnicastAddress   mMeshLocal64;
-    Ip6::NetifUnicastAddress   mMeshLocal16;
-    Ip6::NetifMulticastAddress mLinkLocalAllThreadNodes;
-    Ip6::NetifMulticastAddress mRealmLocalAllThreadNodes;
+    Ip6::Netif::UnicastAddress   mLinkLocal64;
+    Ip6::Netif::UnicastAddress   mMeshLocal64;
+    Ip6::Netif::UnicastAddress   mMeshLocal16;
+    Ip6::Netif::MulticastAddress mLinkLocalAllThreadNodes;
+    Ip6::Netif::MulticastAddress mRealmLocalAllThreadNodes;
 
     otThreadParentResponseCallback mParentResponseCb;
     void *                         mParentResponseCbContext;

@@ -57,7 +57,7 @@ Client::Client(Instance &aInstance)
     memset(mIdentityAssociations, 0, sizeof(mIdentityAssociations));
 }
 
-bool Client::MatchNetifAddressWithPrefix(const Ip6::NetifUnicastAddress &aNetifAddress, const Ip6::Prefix &aIp6Prefix)
+bool Client::MatchNetifAddressWithPrefix(const Ip6::Netif::UnicastAddress &aNetifAddress, const Ip6::Prefix &aIp6Prefix)
 {
     return aNetifAddress.HasPrefix(aIp6Prefix);
 }

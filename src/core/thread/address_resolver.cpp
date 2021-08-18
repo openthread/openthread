@@ -726,8 +726,8 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
 
-    for (const Ip6::NetifUnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
-         address                                 = address->GetNext())
+    for (const Ip6::Netif::UnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
+         address                                   = address->GetNext())
     {
         if (address->GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
         {

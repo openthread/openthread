@@ -130,7 +130,7 @@ Mle::Mle(Instance &aInstance)
     mLeaderAloc.InitAsThreadOriginRealmLocalScope();
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-    for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
+    for (Ip6::Netif::UnicastAddress &serviceAloc : mServiceAlocs)
     {
         serviceAloc.InitAsThreadOriginRealmLocalScope();
         serviceAloc.GetAddress().GetIid().SetLocator(Mac::kShortAddrInvalid);
@@ -882,7 +882,7 @@ void Mle::ApplyMeshLocalPrefix(void)
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 
-    for (Ip6::NetifUnicastAddress &serviceAloc : mServiceAlocs)
+    for (Ip6::Netif::UnicastAddress &serviceAloc : mServiceAlocs)
     {
         if (serviceAloc.GetAddress().GetIid().GetLocator() != Mac::kShortAddrInvalid)
         {
@@ -1248,7 +1248,8 @@ bool Mle::HasUnregisteredAddress(void)
     // Checks whether there are any addresses in addition to the mesh-local
     // address that need to be registered.
 
-    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr;
+         addr                                   = addr->GetNext())
     {
         if (!addr->GetAddress().IsLinkLocal() && !IsRoutingLocator(addr->GetAddress()) &&
             !IsAnycastLocator(addr->GetAddress()) && addr->GetAddress() != GetMeshLocal64())
@@ -1314,7 +1315,8 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
     }
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
-    for (const Ip6::NetifUnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr;
+         addr                                   = addr->GetNext())
     {
         if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
             IsAnycastLocator(addr->GetAddress()) || addr->GetAddress() == GetMeshLocal64())
@@ -1361,7 +1363,7 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
 #endif
     )
     {
-        for (const Ip6::NetifMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+        for (const Ip6::Netif::MulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
         {
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
             // For Thread 1.2 MED, skip multicast address with scope not

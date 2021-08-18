@@ -189,8 +189,8 @@ private:
     Coap::Resource mPendingSet;
     Coap::Resource mProxyTransmit;
 
-    Ip6::Udp::Receiver       mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
-    Ip6::NetifUnicastAddress mCommissionerAloc;
+    Ip6::Udp::Receiver         mUdpReceiver; ///< The UDP receiver to receive packets from external commissioner
+    Ip6::Netif::UnicastAddress mCommissionerAloc;
 
     TimerMilli mTimer;
     State      mState;
