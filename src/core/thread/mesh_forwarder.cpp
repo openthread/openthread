@@ -917,12 +917,10 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error a
                                    /* aFailLimit */ Mle::kFailedCslDataPollTransmissions);
     }
     else
+#endif
     {
         UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true);
     }
-#else
-    UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true);
-#endif
 
 exit:
     return neighbor;
