@@ -254,6 +254,7 @@ public:
      * @param[in]   aNextKey          The next MAC key.
      *
      * @retval kErrorNone            If successful.
+     * @retval kErrorFailed          Platform failed to import key.
      * @retval kErrorInvalidState    If the raw link-layer isn't enabled.
      *
      */

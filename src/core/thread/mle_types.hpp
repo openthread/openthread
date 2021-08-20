@@ -571,7 +571,7 @@ private:
  * This class represents a MLE key.
  *
  */
-typedef Mac::Key Key;
+typedef Mac::KeyMaterial KeyMaterial;
 
 /**
  * @}

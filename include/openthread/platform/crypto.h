@@ -104,6 +104,7 @@ typedef enum
  */
 typedef enum
 {
+    OT_CRYPTO_KEY_USAGE_NONE      = 0, ///< Key Usage: Key Usage is empty.
     OT_CRYPTO_KEY_USAGE_EXPORT    = 1, ///< Key Usage: Key can be exported.
     OT_CRYPTO_KEY_USAGE_ENCRYPT   = 2, ///< Key Usage: Vendor Defined.
     OT_CRYPTO_KEY_USAGE_DECRYPT   = 4, ///< Key Usage: AES ECB.
@@ -133,12 +134,12 @@ typedef uint32_t otCryptoKeyRef;
  *
  */
 
-struct otCryptoKey
+typedef struct otCryptoKey
 {
     const uint8_t *mKey;       ///< Pointer to the buffer containing key. NULL indicates to use `mKeyRef`.
     uint16_t       mKeyLength; ///< The key length in bytes (applicable when `mKey` is not NULL).
     uint32_t       mKeyRef;    ///< The PSA key ref (requires `mKey` to be NULL).
-};
+}otCryptoKey;
 
 /**
  * @struct otCryptoKeyAttributes
@@ -147,25 +148,11 @@ struct otCryptoKey
  *
  */
 
-struct otCryptoKeyAttributes
+typedef struct otCryptoKeyAttributes
 {
-    uint8_t m8[OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE];
-};
+     uint8_t m8[OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE];
+} otCryptoKeyAttributes;
 
-/**
- *
- * This structure represents the Key Attributes structure.
- *
- */
-
-typedef struct otCryptoKeyAttributes otCryptoKeyAttributes;
-
-/**
- *
- * This structure represents the Key Material required for Crypto operations.
- *
- */
-typedef struct otCryptoKey otCryptoKey;
 
 /**
  * Initialise the Crypto module.
@@ -291,7 +278,7 @@ otError otPlatCryptoHmacSha256Deinit(void *aContext, size_t aContextSize);
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
-otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContextSize, otCryptoKey *aKey);
+otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContextSize, const otCryptoKey *aKey);
 
 /**
  * Update the HMAC operation with new input.
@@ -360,7 +347,7 @@ otError otPlatCryptoAesInit(void *aContext, size_t aContextSize);
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
  */
-otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, otCryptoKey *aKey);
+otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, const otCryptoKey *aKey);
 
 /**
  * Encrypt the given data.
@@ -434,7 +421,7 @@ otError otPlatCryptoHkdfExtract(void *         aContext,
                                 size_t         aContextSize,
                                 const uint8_t *aSalt,
                                 uint16_t       aSaltLength,
-                                otCryptoKey *  aKey);
+                                const otCryptoKey *  aKey);
 
 /**
  * Initialise the SHA-256 operation.

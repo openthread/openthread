@@ -322,7 +322,6 @@ typedef struct otRadioFrame
             uint8_t  mAckKeyId;        ///< ACK security key index (applicable when `mAckedWithSecEnhAck` is set).
             int8_t   mRssi;            ///< Received signal strength indicator in dBm for received frames.
             uint8_t  mLqi;             ///< Link Quality Indicator for received frames.
-            uint8_t  mIID;             ///< IID for this transaction.
 
             // Flags
             bool mAckedWithFramePending : 1; ///< This indicates if this frame was acknowledged with frame pending set.

@@ -389,7 +389,7 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig);
  * @sa otThreadSetNetworkKey
  *
  */
-const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance);
+otNetworkKey otThreadGetNetworkKey(otInstance *aInstance);
 
 /**
  * Get the Key Refence for Thread Network Key.

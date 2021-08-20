@@ -39,6 +39,7 @@
 #include <openthread/link.h>
 
 #include <openthread/platform/crypto.h>
+
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 #include "common/timer.hpp"
@@ -493,7 +494,7 @@ public:
      * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const Key &aPrevKey, const Key &aCurrKey, const Key &aNextKey);
+    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const KeyMaterial &aPrevKey, const KeyMaterial &aCurrKey, const KeyMaterial &aNextKey);
 
     /**
      * This method returns a reference to the current MAC key.
@@ -501,7 +502,7 @@ public:
      * @returns A reference to the current MAC key.
      *
      */
-    const Key &GetCurrentMacKey(void) const { return mCurrKey; }
+    const KeyMaterial &GetCurrentMacKey(void) const { return mCurrKey; }
 
     /**
      * This method returns a reference to the previous MAC key.
@@ -509,7 +510,7 @@ public:
      * @returns A reference to the previous MAC key.
      *
      */
-    const Key &GetPreviousMacKey(void) const { return mPrevKey; }
+    const KeyMaterial &GetPreviousMacKey(void) const { return mPrevKey; }
 
     /**
      * This method returns a reference to the next MAC key.
@@ -517,7 +518,7 @@ public:
      * @returns A reference to the next MAC key.
      *
      */
-    const Key &GetNextMacKey(void) const { return mNextKey; }
+    const KeyMaterial &GetNextMacKey(void) const { return mNextKey; }
 
     /**
      * This method returns the current MAC frame counter value.
@@ -643,9 +644,9 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
-    Key                mPrevKey;
-    Key                mCurrKey;
-    Key                mNextKey;
+    KeyMaterial                mPrevKey;
+    KeyMaterial                mCurrKey;
+    KeyMaterial                mNextKey;
     uint32_t           mFrameCounter;
     uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

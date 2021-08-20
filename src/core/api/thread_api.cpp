@@ -112,11 +112,11 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
     return instance.Get<Mle::MleRouter>().SetDeviceMode(Mle::DeviceMode(aConfig));
 }
 
-const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
+otNetworkKey otThreadGetNetworkKey(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetNetworkKey();
+    return instance.Get<KeyManager>().GetNetworkKey();
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -152,7 +152,7 @@ otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
     Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    OT_ASSERT(aKeyRef != 0);
+    VerifyOrExit(aKeyRef != 0, error = kErrorInvalidArgs);
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 

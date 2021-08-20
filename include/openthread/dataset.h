@@ -37,6 +37,7 @@
 
 #include <openthread/instance.h>
 #include <openthread/ip6.h>
+#include <openthread/platform/crypto.h>
 #include <openthread/platform/radio.h>
 
 #ifdef __cplusplus
@@ -74,7 +75,7 @@ typedef struct otNetworkKey otNetworkKey;
  * This datatype represents KeyRef to NetworkKey.
  *
  */
-typedef uint32_t otNetworkKeyRef; ///< Reference to Key
+typedef otCryptoKeyRef otNetworkKeyRef; ///< Reference to Key
 
 #define OT_NETWORK_NAME_MAX_SIZE 16 ///< Maximum size of the Thread Network Name field (bytes)
 
@@ -137,7 +138,7 @@ typedef struct otPskc otPskc;
  * This datatype represents KeyRef to PSKc.
  *
  */
-typedef uint32_t otPskcRef; ///< Reference to Key
+typedef otCryptoKeyRef otPskcRef; ///< Reference to Key
 
 /**
  * This structure represent Security Policy.

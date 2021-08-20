@@ -41,9 +41,8 @@
 #include <mbedtls/md.h>
 #include <psa/crypto.h>
 
-#include "crypto/sha256.hpp"
-
 #include <openthread/platform/crypto.h>
+#include "crypto/sha256.hpp"
 
 namespace ot {
 
@@ -86,11 +85,11 @@ public:
     /**
      * This method sets the key and starts the HMAC computation.
      *
-     * @param[in]  aKey        A pointer to the key.
+     * @param[in]  aKey        A pointer to the Crypto key.
      * @param[in]  aKeyLength  The key length in bytes.
      *
      */
-    void Start(otCryptoKey *aKey);
+    void Start(const otCryptoKey *aKey);
 
     /**
      * This method inputs bytes into the HMAC computation.

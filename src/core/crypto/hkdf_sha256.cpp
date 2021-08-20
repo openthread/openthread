@@ -41,18 +41,16 @@
 namespace ot {
 namespace Crypto {
 
-void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey *aKey)
+void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const otCryptoKey *aKey)
 {
-    void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoHkdfExtract(context, sizeof(mContext), aSalt, aSaltLength, aKey);
+    Error err     = otPlatCryptoHkdfExtract(&mContext, sizeof(mContext), aSalt, aSaltLength, aKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoHkdfExpand(context, sizeof(mContext), aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+    Error err     = otPlatCryptoHkdfExpand(&mContext, sizeof(mContext), aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

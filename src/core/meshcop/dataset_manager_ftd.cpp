@@ -378,7 +378,7 @@ Error ActiveDataset::GenerateLocal(void)
         {
             // PSKc has not yet been configured, generate new PSKc at random
             Pskc pskc;
-
+            
             SuccessOrExit(error = pskc.GenerateRandom());
             IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
         }

@@ -408,7 +408,7 @@ private:
     Type mType; ///< The address type (Short, Extended, or none).
 };
 
-enum CryptoType
+enum CryptoType : uint8_t
 {
     kUseKeyLiterals = OT_KEY_TYPE_LITERAL_KEY,
     kUseKeyRefs     = OT_KEY_TYPE_KEY_REF,
@@ -419,10 +419,31 @@ enum CryptoType
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Key : public otMacKeyMaterial, public Equatable<Key>, public Clearable<Key>
+class Key : public otMacKey, public Equatable<Key>, public Clearable<Key>
 {
 public:
     static constexpr uint16_t kSize = OT_MAC_KEY_SIZE; ///< Key size in bytes.
+
+    /**
+     * This method gets a pointer to the buffer containing the key.
+     *
+     * @returns A pointer to the buffer containing the key.
+     *
+     */
+    const uint8_t *GetKey(void) const { return m8; }
+
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class represents a MAC key Material.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class KeyMaterial : public otMacKeyMaterial, public Clearable<KeyMaterial>
+{
+public:
+    static constexpr uint16_t kSize         = OT_MAC_KEY_SIZE;  ///< Key size in bytes.
+    static constexpr uint32_t kInvalidKeyId = 0x80000000;       ///< Max allowed keyId range.
 
     /**
      * This method gets a pointer to the buffer containing the key.
@@ -439,6 +460,64 @@ public:
      *
      */
     otMacKeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
+
+    /**
+     * This method Sets the `KeyMaterial` from a given Key.
+     *
+     * @param[in] aKey           A rreference to the input key.
+     * @param[in] aIsExportable  Boolean indicating if the key is exportable.
+     * 
+     * @returns A Error reported by the platform.
+     *
+     */
+    Error SetFrom(const Key &aKey, bool aIsExportable);
+
+    /**
+     * This method Sets the `KeyMaterial` from a given literal key.
+     *
+     * @param[in] aKey           A pointer to the input key.
+     * @param[in] aIsExportable  Boolean indicating if the key is exportable.
+     * 
+     * @returns A Error reported by the platform.
+     *
+     */
+    Error SetFrom(const uint8_t *aKey, bool aIsExportable);
+
+    /**
+     * This method extracts the Literal Key from Key Material.
+     * 
+     * @param[out] aKey  A rreference to the output key.
+     *
+     * @returns A Error reported by the platform.
+     *
+     */
+    Error GetKeyFromKeyMaterial(Key &aKey);
+
+    /**
+     * This creates a otCryptoKey based on the KeyMaterial available.
+     *
+     * @returns A CryptoKey created based on KeyMaterial.
+     *
+     */
+    otCryptoKey GetCryptoKey(void);
+
+    /**
+     * 
+     * This method Destroys the key stored in PSA.
+     *
+     */
+    void DestroyKey(void);
+
+    /**
+     * This method overloads operator `==` to evaluate whether or not two `Key` instances are equal.
+     *
+     * @param[in]  aOther  The other `Key` instance to compare with.
+     *
+     * @retval TRUE   If the two `Key` instances are equal.
+     * @retval FALSE  If the two `Key` instances are not equal.
+     *
+     */
+    bool operator==(const KeyMaterial &aOther) const;
 
 } OT_TOOL_PACKED_END;
 

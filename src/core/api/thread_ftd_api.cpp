@@ -343,11 +343,11 @@ void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddr
 }
 #endif
 
-const otPskc *otThreadGetPskc(otInstance *aInstance)
+const otPskc otThreadGetPskc(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetPskc();
+    return instance.Get<KeyManager>().GetPskc();
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
@@ -380,6 +380,7 @@ otError otThreadSetPskcRef(otInstance *aInstance, otPskcRef aKeyRef)
     Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
+    VerifyOrExit(aKeyRef != 0, error = kErrorInvalidArgs);
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<KeyManager>().SetPskcRef(aKeyRef);

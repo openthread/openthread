@@ -833,9 +833,9 @@ void SubMac::SetState(State aState)
 
 void SubMac::SetMacKey(uint8_t    aKeyIdMode,
                        uint8_t    aKeyId,
-                       const Key &aPrevKey,
-                       const Key &aCurrKey,
-                       const Key &aNextKey)
+                       const KeyMaterial &aPrevKey,
+                       const KeyMaterial &aCurrKey,
+                       const KeyMaterial &aNextKey)
 {
     switch (aKeyIdMode)
     {
@@ -844,10 +844,11 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
         break;
     case Frame::kKeyIdMode1:
 
-        IgnoreError(otPlatCryptoDestroyKey(mPrevKey.GetKeyRef()));
-        IgnoreError(otPlatCryptoDestroyKey(mCurrKey.GetKeyRef()));
-        IgnoreError(otPlatCryptoDestroyKey(mNextKey.GetKeyRef()));
-
+        //Destroy Previously stored Key References if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled
+        mPrevKey.DestroyKey();
+        mCurrKey.DestroyKey();
+        mNextKey.DestroyKey();
+        
         mKeyId   = aKeyId;
         mPrevKey = aPrevKey;
         mCurrKey = aCurrKey;

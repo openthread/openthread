@@ -846,7 +846,7 @@ private:
     static const otExtendedPanId sExtendedPanidInit;
     static const char            sNetworkNameInit[];
     static const char            sDomainNameInit[];
-    Key                          sMode2KeyMaterial;
+    KeyMaterial                  Mode2KeyMaterial;
 
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;

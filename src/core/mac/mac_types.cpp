@@ -334,5 +334,87 @@ void LinkFrameCounters::SetAll(uint32_t aCounter)
 #endif
 }
 
+Error KeyMaterial::SetFrom(const uint8_t *aKey, bool aIsExportable)
+{
+    Error error = kErrorNone;
+
+#if  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE    
+    otCryptoKeyUsage cryptoKeyExport = ((aIsExportable) ? OT_CRYPTO_KEY_USAGE_EXPORT : OT_CRYPTO_KEY_USAGE_NONE);
+    otMacKeyRef keyRef = 0;
+    
+    // Import key into ITS and remember the key ref
+    error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                  (cryptoKeyExport | OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
+                                  OT_CRYPTO_KEY_STORAGE_VOLATILE, aKey, kSize);
+
+    Clear();
+    mKeyMaterial.mKeyRef = keyRef;
+
+#else
+    // Use the literal key
+    memcpy(mKeyMaterial.mKey.m8, aKey, kSize);
+    OT_UNUSED_VARIABLE(aIsExportable);
+#endif
+
+    return error;
+}
+
+Error KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
+{
+    return SetFrom(aKey.m8, aIsExportable);
+}
+
+Error KeyMaterial::GetKeyFromKeyMaterial(Key &aKey)
+{
+    size_t aKeySize;
+    Error error = kErrorNone;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    error = otPlatCryptoExportKey(GetKeyRef(), aKey.m8, kSize, &aKeySize);
+#else    
+    memcpy(aKey.m8, GetKey(), kSize);
+#endif
+    OT_UNUSED_VARIABLE(aKeySize);
+    return error;
+}
+
+otCryptoKey KeyMaterial::GetCryptoKey(void)
+{
+    otCryptoKey cryptoKey;
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    cryptoKey.mKey       = nullptr;
+    cryptoKey.mKeyRef    = mKeyMaterial.mKeyRef;
+    cryptoKey.mKeyLength = 0;
+#else
+    cryptoKey.mKey       = mKeyMaterial.mKey.m8;
+    cryptoKey.mKeyLength = kSize;
+    cryptoKey.mKeyRef    = 0;
+#endif
+
+    return cryptoKey;
+}
+
+void KeyMaterial::DestroyKey(void)
+{
+#if  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE    
+    if (mKeyMaterial.mKeyRef < kInvalidKeyId)
+    {
+        IgnoreError(otPlatCryptoDestroyKey(mKeyMaterial.mKeyRef));
+    }
+#endif
+
+    mKeyMaterial.mKeyRef = kInvalidKeyId;
+}
+
+bool KeyMaterial::operator==(const KeyMaterial &aOther) const
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    return (mKeyMaterial.mKeyRef == aOther.GetKeyRef());
+#else    
+    return (memcmp(mKeyMaterial.mKey.m8, aOther.GetKey(), kSize) == 0);
+#endif
+}
+
 } // namespace Mac
 } // namespace ot

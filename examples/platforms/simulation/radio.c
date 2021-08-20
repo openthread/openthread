@@ -149,12 +149,12 @@ otRadioCaps gRadioCaps =
     OT_RADIO_CAPS_NONE;
 #endif
 
-static uint32_t                sMacFrameCounter;
-static uint8_t                 sKeyId;
-static struct otMacKeyMaterial sPrevKey;
-static struct otMacKeyMaterial sCurrKey;
-static struct otMacKeyMaterial sNextKey;
-static otRadioKeyType          sKeyType;
+static uint32_t         sMacFrameCounter;
+static uint8_t          sKeyId;
+static otMacKeyMaterial sPrevKey;
+static otMacKeyMaterial sCurrKey;
+static otMacKeyMaterial sNextKey;
+static otRadioKeyType   sKeyType;
 
 static void ReverseExtAddress(otExtAddress *aReversed, const otExtAddress *aOrigin)
 {
@@ -606,8 +606,8 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
 {
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
-    struct otMacKeyMaterial *key = NULL;
-    uint8_t                  keyId;
+    otMacKeyMaterial *key = NULL;
+    uint8_t          keyId;
 
     otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
              !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);

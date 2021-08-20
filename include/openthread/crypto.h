@@ -105,7 +105,7 @@ void otCryptoHmacSha256(otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLen
  * @param[out]    aTag           A pointer to the tag.
  *
  */
-void otCryptoAesCcm(otCryptoKey *aKey,
+void otCryptoAesCcm(const otCryptoKey &aKey,
                     uint8_t      aTagLength,
                     const void * aNonce,
                     uint8_t      aNonceLength,

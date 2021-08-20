@@ -72,10 +72,10 @@ public:
     /**
      * This method sets the key.
      *
-     * @param[in]  aKey     Key material for ECB operation
+     * @param[in]  aKey     Crypto Key used for ECB operation
      *
      */
-    void SetKey(otCryptoKey *aKey);
+    void SetKey(const otCryptoKey *aKey);
 
     /**
      * This method encrypts data.

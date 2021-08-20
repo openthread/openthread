@@ -280,9 +280,9 @@ public:
      */
     void SetMacKey(uint8_t         aKeyIdMode,
                    uint8_t         aKeyId,
-                   const Mac::Key &aPrevKey,
-                   const Mac::Key &aCurrKey,
-                   const Mac::Key &aNextKey);
+                   const Mac::KeyMaterial &aPrevKey,
+                   const Mac::KeyMaterial &aCurrKey,
+                   const Mac::KeyMaterial &aNextKey);
 
     /**
      * This method sets the current MAC Frame Counter value.
@@ -707,9 +707,9 @@ inline void Radio::SetPanId(Mac::PanId aPanId)
 
 inline void Radio::SetMacKey(uint8_t         aKeyIdMode,
                              uint8_t         aKeyId,
-                             const Mac::Key &aPrevKey,
-                             const Mac::Key &aCurrKey,
-                             const Mac::Key &aNextKey)
+                             const Mac::KeyMaterial &aPrevKey,
+                             const Mac::KeyMaterial &aCurrKey,
+                             const Mac::KeyMaterial &aNextKey)
 {
     otRadioKeyType aKeyType;
 
@@ -885,7 +885,7 @@ inline void Radio::SetShortAddress(Mac::ShortAddress)
 {
 }
 
-inline void Radio::SetMacKey(uint8_t, uint8_t, const Mac::Key &, const Mac::Key &, const Mac::Key &)
+inline void Radio::SetMacKey(uint8_t, uint8_t, const Mac::KeyMaterial &, const Mac::KeyMaterial &, const Mac::KeyMaterial &)
 {
 }
 

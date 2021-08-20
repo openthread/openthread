@@ -67,7 +67,7 @@ public:
      * @param[in] aInputKeyLength   The input key length (in bytes).
      *
      */
-    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, otCryptoKey *aKey);
+    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const otCryptoKey *aKey);
 
     /**
      * This method performs the HKDF Expand step.

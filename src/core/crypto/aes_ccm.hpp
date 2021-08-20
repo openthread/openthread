@@ -77,10 +77,10 @@ public:
     /**
      * This method sets the key.
      *
-     * @param[in]  aKeyRef    Reference to the Key to use.
+     * @param[in]  aKey    Crypto Key used in AES operation
      *
      */
-    void SetKey(otCryptoKey *aKey);
+    void SetKey(const otCryptoKey &aKey);
 
     /**
      * This method sets the key.
@@ -94,10 +94,10 @@ public:
     /**
      * This method sets the key.
      *
-     * @param[in]  aMacKey        A MAC key.
+     * @param[in]  aMacKey        Key Material for AES operation.
      *
      */
-    void SetKey(const Mac::Key &aMacKey);
+    void SetKey(const Mac::KeyMaterial &aMacKey);
 
     /**
      * This method initializes the AES CCM computation.

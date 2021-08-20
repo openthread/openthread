@@ -56,7 +56,7 @@ void otCryptoHmacSha256(otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLen
     hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
 }
 
-void otCryptoAesCcm(otCryptoKey *aKey,
+void otCryptoAesCcm(const otCryptoKey &aKey,
                     uint8_t      aTagLength,
                     const void * aNonce,
                     uint8_t      aNonceLength,
@@ -69,7 +69,7 @@ void otCryptoAesCcm(otCryptoKey *aKey,
                     void *       aTag)
 {
     AesCcm aesCcm;
-    OT_ASSERT((aKey != nullptr) && (aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) &&
+    OT_ASSERT((aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) &&
               (aTag != nullptr));
 
     aesCcm.SetKey(aKey);

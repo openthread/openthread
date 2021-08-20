@@ -2668,7 +2668,7 @@ void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageIn
     Error           error = kErrorNone;
     Header          header;
     uint32_t        keySequence;
-    const Key *     mleKey;
+    const KeyMaterial *     mleKey;
     uint32_t        frameCounter;
     uint8_t         messageTag[kMleSecurityTagSize];
     uint8_t         nonce[Crypto::AesCcm::kNonceSize];

@@ -2547,9 +2547,9 @@ otError Interpreter::ProcessPskc(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        const otPskc *pskc = otThreadGetPskc(mInstance);
+        const otPskc pskc = otThreadGetPskc(mInstance);
 
-        OutputBytes(pskc->m8);
+        OutputBytes(pskc.m8);
         OutputLine("");
     }
     else
@@ -2992,7 +2992,7 @@ otError Interpreter::ProcessNetworkKey(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputBytes(otThreadGetNetworkKey(mInstance)->m8);
+        OutputBytes(otThreadGetNetworkKey(mInstance).m8);
         OutputLine("");
     }
     else

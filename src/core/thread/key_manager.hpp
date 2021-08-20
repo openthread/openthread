@@ -193,17 +193,28 @@ typedef otPskcRef PskcRef;
 typedef Mac::Key Kek;
 
 /**
+ *
+ * This class represents a Key Material for Key Encryption Key (KEK).
+ *
+ */
+typedef Mac::KeyMaterial KekKeyMaterial;
+
+/**
+ *
+ * This class represents a Key Encryption Key (KEK).
+ *
+ */
+typedef Mac::Key KekLiteral;
+
+/**
  * This class defines Thread Key Manager.
  *
  */
 class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
-    enum
-    {
-        kNetworkKeyPsaItsOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1,
-        kPskcPsaItsOffset       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2
-    };
+    static constexpr uint32_t kNetworkKeyPsaItsOffset = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 1;
+    static constexpr uint32_t kPskcPsaItsOffset       = OPENTHREAD_CONFIG_PSA_ITS_NVM_OFFSET + 2;
 
     /**
      * This constructor initializes the object.
@@ -231,7 +242,7 @@ public:
      * @returns The Thread Network Key.
      *
      */
-    const NetworkKey &GetNetworkKey(void) const;
+    NetworkKey GetNetworkKey(void);
 
     /**
      * This method sets the Thread Network Key.
@@ -251,7 +262,7 @@ public:
      * @returns A key reference to the Thread Network Key.
      *
      */
-    const NetworkKeyRef &GetNetworkKeyRef(void) { return mNetworkKeyRef; }
+    NetworkKeyRef GetNetworkKeyRef(void) { return mNetworkKeyRef; }
 
     /**
      * This method sets the Thread Network Key using Key Reference.
@@ -283,7 +294,7 @@ public:
      * @returns A reference to the PSKc.
      *
      */
-    const Pskc &GetPskc(void) const;
+    const Pskc GetPskc(void) const;
 
     /**
      * This method sets the PSKc.
@@ -335,7 +346,7 @@ public:
      * @returns The current TREL MAC key.
      *
      */
-    const Mac::Key &GetCurrentTrelMacKey(void) const { return mTrelKey; }
+    const Mac::KeyMaterial &GetCurrentTrelMacKey(void) const { return mTrelKey; }
 
     /**
      * This method returns a temporary MAC key for TREL radio link computed from the given key sequence.
@@ -345,26 +356,26 @@ public:
      * @returns The temporary TREL MAC key.
      *
      */
-    const Mac::Key &GetTemporaryTrelMacKey(uint32_t aKeySequence);
+    const Mac::KeyMaterial &GetTemporaryTrelMacKey(uint32_t aKeySequence);
 #endif
 
     /**
-     * This method returns the current MLE key.
+     * This method returns the current MLE key Material.
      *
      * @returns The current MLE key.
      *
      */
-    const Mle::Key &GetCurrentMleKey(void) const { return mMleKey; }
+    const Mle::KeyMaterial &GetCurrentMleKey(void) const { return mMleKey; }
 
     /**
-     * This method returns a temporary MLE key computed from the given key sequence.
+     * This method returns a temporary MLE key Material computed from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
      *
      * @returns The temporary MLE key.
      *
      */
-    const Mle::Key &GetTemporaryMleKey(uint32_t aKeySequence);
+    const Mle::KeyMaterial &GetTemporaryMleKey(uint32_t aKeySequence);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
@@ -452,7 +463,7 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const Kek &GetKek(void) const { return mKek; }
+    const KekKeyMaterial &GetKek(void) const { return mKek; }
 
     /**
      * This method returns the KEK.
@@ -460,7 +471,7 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    Error GetKekLiteral(Kek &aKek);
+    Error GetKekLiteral(KekLiteral &aKek);
 
     /**
      * This method sets the KEK.
@@ -468,7 +479,7 @@ public:
      * @param[in]  aKek  A KEK.
      *
      */
-    void SetKek(const Kek &aKek);
+    void SetKek(const KekLiteral &aKek);
 
     /**
      * This method sets the KEK.
@@ -555,8 +566,8 @@ private:
     OT_TOOL_PACKED_BEGIN
     struct Keys
     {
-        Mle::Key mMleKey;
-        Mac::Key mMacKey;
+        Mle::KeyMaterial mMleKey;
+        Mac::KeyMaterial mMacKey;
     } OT_TOOL_PACKED_END;
 
     union HashKeys
@@ -568,7 +579,7 @@ private:
     void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey);
+    void ComputeTrelKey(uint32_t aKeySequence, Mac::KeyMaterial &aTrelKey);
 #endif
 
     void        StartKeyRotationTimer(void);
@@ -590,12 +601,12 @@ private:
     NetworkKey mNetworkKey;
 
     uint32_t mKeySequence;
-    Mle::Key mMleKey;
-    Mle::Key mTemporaryMleKey;
+    Mle::KeyMaterial mMleKey;
+    Mle::KeyMaterial mTemporaryMleKey;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    Mac::Key mTrelKey;
-    Mac::Key mTemporaryTrelKey;
+    Mac::KeyMaterial mTrelKey;
+    Mac::KeyMaterial mTemporaryTrelKey;
 #endif
 
     Mac::LinkFrameCounters mMacFrameCounters;
@@ -611,7 +622,7 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     Pskc mPskc;
 #endif
-    Kek      mKek;
+    KekKeyMaterial  mKek;
     uint32_t mKekFrameCounter;
 
     SecurityPolicy mSecurityPolicy;

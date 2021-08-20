@@ -145,18 +145,20 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-    memcpy(sMode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
+    memcpy(Mode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    otMacKeyRef keyRef = 0;
-    Error       error  = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
-                                        (OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
-                                        OT_CRYPTO_KEY_STORAGE_VOLATILE, sMode2Key.m8, sizeof(sMode2Key.m8));
+    {
+        otMacKeyRef keyRef = 0;
+        Error       error  = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                            (OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
+                                            OT_CRYPTO_KEY_STORAGE_VOLATILE, sMode2Key.m8, sizeof(sMode2Key.m8));
 
-    sMode2KeyMaterial.mKeyMaterial.mKeyRef = keyRef;
+        Mode2KeyMaterial.mKeyMaterial.mKeyRef = keyRef;
 
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+    }
 #endif
 }
 
@@ -1012,7 +1014,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-        aFrame.SetAesKey(static_cast<const Key &>(sMode2KeyMaterial));
+        aFrame.SetAesKey(static_cast<const KeyMaterial &>(Mode2KeyMaterial));
 
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
@@ -1634,7 +1636,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
     uint32_t          frameCounter;
     uint8_t           keyid;
     uint32_t          keySequence = 0;
-    const Key *       macKey;
+    const KeyMaterial *       macKey;
     const ExtAddress *extAddress;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
@@ -1711,7 +1713,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = static_cast<const Key *>(&sMode2KeyMaterial);
+        macKey     = static_cast<const KeyMaterial *>(&Mode2KeyMaterial);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
 
@@ -1773,7 +1775,7 @@ Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
     Address     dstAddr;
     Neighbor *  neighbor   = nullptr;
     KeyManager &keyManager = Get<KeyManager>();
-    const Key * macKey;
+    const KeyMaterial * macKey;
 
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());

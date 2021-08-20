@@ -40,32 +40,28 @@ namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-    void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoAesInit(context, sizeof(mContext));
+    Error err     = otPlatCryptoAesInit(&mContext, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
-void AesEcb::SetKey(otCryptoKey *aKey)
+void AesEcb::SetKey(const otCryptoKey *aKey)
 {
-    void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoAesSetKey(context, sizeof(mContext), aKey);
+    Error err     = otPlatCryptoAesSetKey(&mContext, sizeof(mContext), aKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 void AesEcb::Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize])
 {
-    void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoAesEncrypt(context, sizeof(mContext), aInput, aOutput);
+    Error err     = otPlatCryptoAesEncrypt(&mContext, sizeof(mContext), aInput, aOutput);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 AesEcb::~AesEcb(void)
 {
-    void *context = static_cast<void *>(&mContext);
-    Error err     = otPlatCryptoAesFree(context, sizeof(mContext));
+    Error err     = otPlatCryptoAesFree(&mContext, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
