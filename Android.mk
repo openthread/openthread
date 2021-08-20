@@ -374,6 +374,7 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/settings.cpp                                 \
     src/posix/platform/spi_interface.cpp                            \
     src/posix/platform/system.cpp                                   \
+    src/posix/platform/trel_udp6.cpp                                \
     src/posix/platform/udp.cpp                                      \
     third_party/mbedtls/repo/library/aes.c                          \
     third_party/mbedtls/repo/library/aesni.c                        \
