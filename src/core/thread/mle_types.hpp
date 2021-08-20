@@ -152,8 +152,8 @@ constexpr uint8_t kNetworkIdTimeout           = 120; ///< (in sec)
 constexpr uint8_t kParentRouteToLeaderTimeout = 20;  ///< (in sec)
 constexpr uint8_t kRouterSelectionJitter      = 120; ///< (in sec)
 
-constexpr uint8_t kRouterDowngradeThreshold = 23;
-constexpr uint8_t kRouterUpgradeThreshold   = 16;
+constexpr uint8_t kRouterDowngradeThreshold = OPENTHREAD_CONFIG_MLE_ROUTER_DOWNGRADE_THRESHOLD_DEFAULT;
+constexpr uint8_t kRouterUpgradeThreshold   = OPENTHREAD_CONFIG_MLE_ROUTER_UPGRADE_THRESHOLD_DEFAULT;
 
 constexpr uint32_t kMaxLeaderToRouterTimeout = 90;  ///< (in sec)
 constexpr uint32_t kReedAdvertiseInterval    = 570; ///< (in sec)
