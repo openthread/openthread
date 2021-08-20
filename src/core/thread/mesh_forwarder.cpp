@@ -910,13 +910,26 @@ Neighbor *MeshForwarder::UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error a
     }
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-    UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true);
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    if ((aFrame.GetHeaderIe(Mac::CslIe::kHeaderIeId) != nullptr) && aFrame.IsDataRequestCommand())
+    {
+        UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true,
+                                   /* aFailLimit */ Mle::kFailedCslDataPollTransmissions);
+    }
+    else
+#endif
+    {
+        UpdateNeighborLinkFailures(*neighbor, aError, /* aAllowNeighborRemove */ true);
+    }
 
 exit:
     return neighbor;
 }
 
-void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove)
+void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor,
+                                               Error     aError,
+                                               bool      aAllowNeighborRemove,
+                                               uint8_t   aFailLimit)
 {
     // Update neighbor `LinkFailures` counter on ack error.
 
@@ -929,7 +942,7 @@ void MeshForwarder::UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError
         aNeighbor.IncrementLinkFailures();
 
         if (aAllowNeighborRemove && (Mle::Mle::IsActiveRouter(aNeighbor.GetRloc16())) &&
-            (aNeighbor.GetLinkFailures() >= Mle::kFailedRouterTransmissions))
+            (aNeighbor.GetLinkFailures() >= aFailLimit))
         {
             Get<Mle::MleRouter>().RemoveRouterLink(static_cast<Router &>(aNeighbor));
         }

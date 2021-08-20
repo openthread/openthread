@@ -462,7 +462,10 @@ private:
     void          HandleReceivedFrame(Mac::RxFrame &aFrame);
     Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
     Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error aError, const Mac::Address &aMacDest);
-    void          UpdateNeighborLinkFailures(Neighbor &aNeighbor, Error aError, bool aAllowNeighborRemove);
+    void          UpdateNeighborLinkFailures(Neighbor &aNeighbor,
+                                             Error     aError,
+                                             bool      aAllowNeighborRemove,
+                                             uint8_t   aFailLimit = Mle::kFailedRouterTransmissions);
     void          HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
     void          UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
     void          RemoveMessageIfNoPendingTx(Message &aMessage);
