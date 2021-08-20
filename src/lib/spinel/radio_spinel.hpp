@@ -638,8 +638,8 @@ public:
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      *
      */
-    otError SetMacKey(uint8_t                aKeyIdMode,
-                      uint8_t                aKeyId,
+    otError SetMacKey(uint8_t                 aKeyIdMode,
+                      uint8_t                 aKeyId,
                       const otMacKeyMaterial *aPrevKey,
                       const otMacKeyMaterial *aCurrKey,
                       const otMacKeyMaterial *aNextKey);

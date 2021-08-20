@@ -192,17 +192,16 @@ KeyManager::KeyManager(Instance &aInstance)
     mMleKey.Clear();
     mTemporaryMleKey.Clear();
 
-    mKek.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
-    mMleKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
+    mKek.mKeyMaterial.mKeyRef             = Mac::KeyMaterial::kInvalidKeyId;
+    mMleKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyId;
     mTemporaryMleKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrelKey.Clear();
     mTemporaryTrelKey.Clear();
-    mTrelKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
+    mTrelKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyId;
     mTemporaryTrelKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
 #endif
-
 }
 
 void KeyManager::Start(void)
@@ -281,7 +280,7 @@ Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
 exit:
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     mNetworkKey.Clear();
-#endif    
+#endif
     return error;
 }
 
@@ -407,7 +406,7 @@ exit:
 const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
     HashKeys hashKeys;
-    Error error;
+    Error    error;
 
     ComputeKeys(aKeySequence, hashKeys);
 
@@ -535,8 +534,7 @@ NetworkKey KeyManager::GetNetworkKey(void)
     Error  error   = kErrorNone;
     size_t mKeyLen = 0;
 
-    error =
-        otPlatCryptoExportKey(mNetworkKeyRef, networkKey.m8, sizeof(networkKey.m8), &mKeyLen);
+    error = otPlatCryptoExportKey(mNetworkKeyRef, networkKey.m8, sizeof(networkKey.m8), &mKeyLen);
 
     OT_ASSERT(error == kErrorNone);
 #else
@@ -563,7 +561,6 @@ const Pskc KeyManager::GetPskc(void) const
 
     return pskc;
 }
-
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
@@ -632,7 +629,7 @@ void KeyManager::SetPskcRef(otPskcRef aKeyRef)
 exit:
     return;
 }
-#endif //OPENTHREAD_MTD || OPENTHREAD_FTD
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 Error KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
 {
@@ -660,6 +657,6 @@ void KeyManager::CheckAndDestroyStoredKey(otMacKeyRef aKeyRef)
         IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
     }
 }
-#endif  //OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 } // namespace ot

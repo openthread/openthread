@@ -494,7 +494,11 @@ public:
      * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t aKeyIdMode, uint8_t aKeyId, const KeyMaterial &aPrevKey, const KeyMaterial &aCurrKey, const KeyMaterial &aNextKey);
+    void SetMacKey(uint8_t            aKeyIdMode,
+                   uint8_t            aKeyId,
+                   const KeyMaterial &aPrevKey,
+                   const KeyMaterial &aCurrKey,
+                   const KeyMaterial &aNextKey);
 
     /**
      * This method returns a reference to the current MAC key.
@@ -644,9 +648,9 @@ private:
     Callbacks          mCallbacks;
     otLinkPcapCallback mPcapCallback;
     void *             mPcapCallbackContext;
-    KeyMaterial                mPrevKey;
-    KeyMaterial                mCurrKey;
-    KeyMaterial                mNextKey;
+    KeyMaterial        mPrevKey;
+    KeyMaterial        mCurrKey;
+    KeyMaterial        mNextKey;
     uint32_t           mFrameCounter;
     uint8_t            mKeyId;
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE

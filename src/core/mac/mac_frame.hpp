@@ -1286,7 +1286,10 @@ public:
      * @returns The pointer to the key.
      *
      */
-    const Mac::KeyMaterial &GetAesKey(void) const { return *static_cast<const Mac::KeyMaterial *>(mInfo.mTxInfo.mAesKey); }
+    const Mac::KeyMaterial &GetAesKey(void) const
+    {
+        return *static_cast<const Mac::KeyMaterial *>(mInfo.mTxInfo.mAesKey);
+    }
 
     /**
      * This method sets the key used for frame encryption and authentication (AES CCM).

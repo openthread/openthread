@@ -831,8 +831,8 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetMacKey(uint8_t    aKeyIdMode,
-                       uint8_t    aKeyId,
+void SubMac::SetMacKey(uint8_t            aKeyIdMode,
+                       uint8_t            aKeyId,
                        const KeyMaterial &aPrevKey,
                        const KeyMaterial &aCurrKey,
                        const KeyMaterial &aNextKey)
@@ -844,11 +844,11 @@ void SubMac::SetMacKey(uint8_t    aKeyIdMode,
         break;
     case Frame::kKeyIdMode1:
 
-        //Destroy Previously stored Key References if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled
+        // Destroy Previously stored Key References if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled
         mPrevKey.DestroyKey();
         mCurrKey.DestroyKey();
         mNextKey.DestroyKey();
-        
+
         mKeyId   = aKeyId;
         mPrevKey = aPrevKey;
         mCurrKey = aCurrKey;

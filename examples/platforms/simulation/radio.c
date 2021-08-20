@@ -607,7 +607,7 @@ static otError radioProcessTransmitSecurity(otRadioFrame *aFrame)
     otError error = OT_ERROR_NONE;
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
     otMacKeyMaterial *key = NULL;
-    uint8_t          keyId;
+    uint8_t           keyId;
 
     otEXPECT(otMacFrameIsSecurityEnabled(aFrame) && otMacFrameIsKeyIdMode1(aFrame) &&
              !aFrame->mInfo.mTxInfo.mIsSecurityProcessed);

@@ -442,8 +442,8 @@ OT_TOOL_PACKED_BEGIN
 class KeyMaterial : public otMacKeyMaterial, public Clearable<KeyMaterial>
 {
 public:
-    static constexpr uint16_t kSize         = OT_MAC_KEY_SIZE;  ///< Key size in bytes.
-    static constexpr uint32_t kInvalidKeyId = 0x80000000;       ///< Max allowed keyId range.
+    static constexpr uint16_t kSize         = OT_MAC_KEY_SIZE; ///< Key size in bytes.
+    static constexpr uint32_t kInvalidKeyId = 0x80000000;      ///< Max allowed keyId range.
 
     /**
      * This method gets a pointer to the buffer containing the key.
@@ -466,7 +466,7 @@ public:
      *
      * @param[in] aKey           A rreference to the input key.
      * @param[in] aIsExportable  Boolean indicating if the key is exportable.
-     * 
+     *
      * @returns A Error reported by the platform.
      *
      */
@@ -477,7 +477,7 @@ public:
      *
      * @param[in] aKey           A pointer to the input key.
      * @param[in] aIsExportable  Boolean indicating if the key is exportable.
-     * 
+     *
      * @returns A Error reported by the platform.
      *
      */
@@ -485,7 +485,7 @@ public:
 
     /**
      * This method extracts the Literal Key from Key Material.
-     * 
+     *
      * @param[out] aKey  A rreference to the output key.
      *
      * @returns A Error reported by the platform.
@@ -502,7 +502,7 @@ public:
     otCryptoKey GetCryptoKey(void);
 
     /**
-     * 
+     *
      * This method Destroys the key stored in PSA.
      *
      */

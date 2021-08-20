@@ -40,35 +40,35 @@ namespace Crypto {
 
 HmacSha256::HmacSha256(void)
 {
-    Error err     = otPlatCryptoHmacSha256Init(&mContext, sizeof(mContext));
+    Error err = otPlatCryptoHmacSha256Init(&mContext, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 HmacSha256::~HmacSha256(void)
 {
-    Error err     = otPlatCryptoHmacSha256Deinit(&mContext, sizeof(mContext));
+    Error err = otPlatCryptoHmacSha256Deinit(&mContext, sizeof(mContext));
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 void HmacSha256::Start(const otCryptoKey *aKey)
 {
-    Error err     = otPlatCryptoHmacSha256Start(&mContext, sizeof(mContext), aKey);
+    Error err = otPlatCryptoHmacSha256Start(&mContext, sizeof(mContext), aKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
 {
-    Error err     = otPlatCryptoHmacSha256Update(&mContext, sizeof(mContext), aBuf, aBufLength);
+    Error err = otPlatCryptoHmacSha256Update(&mContext, sizeof(mContext), aBuf, aBufLength);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 void HmacSha256::Finish(Hash &aHash)
 {
-    Error err     = otPlatCryptoHmacSha256Finish(&mContext, sizeof(mContext), aHash.m8, Hash::kSize);
+    Error err = otPlatCryptoHmacSha256Finish(&mContext, sizeof(mContext), aHash.m8, Hash::kSize);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

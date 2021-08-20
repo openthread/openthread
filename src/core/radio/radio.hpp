@@ -278,8 +278,8 @@ public:
      * @param[in] aNextKey    The next MAC key.
      *
      */
-    void SetMacKey(uint8_t         aKeyIdMode,
-                   uint8_t         aKeyId,
+    void SetMacKey(uint8_t                 aKeyIdMode,
+                   uint8_t                 aKeyId,
                    const Mac::KeyMaterial &aPrevKey,
                    const Mac::KeyMaterial &aCurrKey,
                    const Mac::KeyMaterial &aNextKey);
@@ -705,8 +705,8 @@ inline void Radio::SetPanId(Mac::PanId aPanId)
     otPlatRadioSetPanId(GetInstancePtr(), aPanId);
 }
 
-inline void Radio::SetMacKey(uint8_t         aKeyIdMode,
-                             uint8_t         aKeyId,
+inline void Radio::SetMacKey(uint8_t                 aKeyIdMode,
+                             uint8_t                 aKeyId,
                              const Mac::KeyMaterial &aPrevKey,
                              const Mac::KeyMaterial &aCurrKey,
                              const Mac::KeyMaterial &aNextKey)
@@ -885,7 +885,11 @@ inline void Radio::SetShortAddress(Mac::ShortAddress)
 {
 }
 
-inline void Radio::SetMacKey(uint8_t, uint8_t, const Mac::KeyMaterial &, const Mac::KeyMaterial &, const Mac::KeyMaterial &)
+inline void Radio::SetMacKey(uint8_t,
+                             uint8_t,
+                             const Mac::KeyMaterial &,
+                             const Mac::KeyMaterial &,
+                             const Mac::KeyMaterial &)
 {
 }
 

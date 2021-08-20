@@ -221,11 +221,11 @@ void LinkRaw::InvokeEnergyScanDone(int8_t aEnergyScanMaxRssi)
 
 Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
                          uint8_t    aKeyId,
-                         const Key  &aPrevKey,
-                         const Key  &aCurrKey,
-                         const Key  &aNextKey)
+                         const Key &aPrevKey,
+                         const Key &aCurrKey,
+                         const Key &aNextKey)
 {
-    Error error = kErrorNone;
+    Error       error = kErrorNone;
     KeyMaterial prevKey;
     KeyMaterial currKey;
     KeyMaterial nextKey;

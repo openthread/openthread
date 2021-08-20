@@ -139,7 +139,7 @@ typedef struct otCryptoKey
     const uint8_t *mKey;       ///< Pointer to the buffer containing key. NULL indicates to use `mKeyRef`.
     uint16_t       mKeyLength; ///< The key length in bytes (applicable when `mKey` is not NULL).
     uint32_t       mKeyRef;    ///< The PSA key ref (requires `mKey` to be NULL).
-}otCryptoKey;
+} otCryptoKey;
 
 /**
  * @struct otCryptoKeyAttributes
@@ -150,9 +150,8 @@ typedef struct otCryptoKey
 
 typedef struct otCryptoKeyAttributes
 {
-     uint8_t m8[OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE];
+    uint8_t m8[OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE];
 } otCryptoKeyAttributes;
-
 
 /**
  * Initialise the Crypto module.
@@ -417,11 +416,11 @@ otError otPlatCryptoHkdfExpand(void *         aContext,
  * @retval OT_ERROR_FAILED        HKDF Extract failed.
  *
  */
-otError otPlatCryptoHkdfExtract(void *         aContext,
-                                size_t         aContextSize,
-                                const uint8_t *aSalt,
-                                uint16_t       aSaltLength,
-                                const otCryptoKey *  aKey);
+otError otPlatCryptoHkdfExtract(void *             aContext,
+                                size_t             aContextSize,
+                                const uint8_t *    aSalt,
+                                uint16_t           aSaltLength,
+                                const otCryptoKey *aKey);
 
 /**
  * Initialise the SHA-256 operation.

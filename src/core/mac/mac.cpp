@@ -1629,15 +1629,15 @@ void Mac::HandleTimer(void)
 
 Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neighbor *aNeighbor)
 {
-    KeyManager &      keyManager = Get<KeyManager>();
-    Error             error      = kErrorSecurity;
-    uint8_t           securityLevel;
-    uint8_t           keyIdMode;
-    uint32_t          frameCounter;
-    uint8_t           keyid;
-    uint32_t          keySequence = 0;
-    const KeyMaterial *       macKey;
-    const ExtAddress *extAddress;
+    KeyManager &       keyManager = Get<KeyManager>();
+    Error              error      = kErrorSecurity;
+    uint8_t            securityLevel;
+    uint8_t            keyIdMode;
+    uint32_t           frameCounter;
+    uint8_t            keyid;
+    uint32_t           keySequence = 0;
+    const KeyMaterial *macKey;
+    const ExtAddress * extAddress;
 
     VerifyOrExit(aFrame.GetSecurityEnabled(), error = kErrorNone);
 
@@ -1765,17 +1765,17 @@ exit:
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 Error Mac::ProcessEnhAckSecurity(TxFrame &aTxFrame, RxFrame &aAckFrame)
 {
-    Error       error = kErrorSecurity;
-    uint8_t     securityLevel;
-    uint8_t     txKeyId;
-    uint8_t     ackKeyId;
-    uint8_t     keyIdMode;
-    uint32_t    frameCounter;
-    Address     srcAddr;
-    Address     dstAddr;
-    Neighbor *  neighbor   = nullptr;
-    KeyManager &keyManager = Get<KeyManager>();
-    const KeyMaterial * macKey;
+    Error              error = kErrorSecurity;
+    uint8_t            securityLevel;
+    uint8_t            txKeyId;
+    uint8_t            ackKeyId;
+    uint8_t            keyIdMode;
+    uint32_t           frameCounter;
+    Address            srcAddr;
+    Address            dstAddr;
+    Neighbor *         neighbor   = nullptr;
+    KeyManager &       keyManager = Get<KeyManager>();
+    const KeyMaterial *macKey;
 
     VerifyOrExit(aAckFrame.GetSecurityEnabled(), error = kErrorNone);
     VerifyOrExit(aAckFrame.IsVersion2015());

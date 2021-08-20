@@ -1136,21 +1136,24 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t                aKeyIdMode,
-                                                                  uint8_t                aKeyId,
+otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t                 aKeyIdMode,
+                                                                  uint8_t                 aKeyId,
                                                                   const otMacKeyMaterial *aPrevKey,
                                                                   const otMacKeyMaterial *aCurrKey,
                                                                   const otMacKeyMaterial *aNextKey)
 {
     otError error;
-    size_t aKeySize;
+    size_t  aKeySize;
 
-     VerifyOrExit((aPrevKey != nullptr) && (aCurrKey != nullptr) && (aNextKey != nullptr), error = kErrorInvalidArgs);
+    VerifyOrExit((aPrevKey != nullptr) && (aCurrKey != nullptr) && (aNextKey != nullptr), error = kErrorInvalidArgs);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    SuccessOrExit(error = otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef, aPrevKey->mKeyMaterial.mKey.m8, sizeof(aPrevKey->mKeyMaterial.mKey.m8), &aKeySize));
-    SuccessOrExit(error = otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef, aCurrKey->mKeyMaterial.mKey.m8, sizeof(aCurrKey->mKeyMaterial.mKey.m8), &aKeySize));
-    SuccessOrExit(error = otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef, aNextKey->mKeyMaterial.mKey.m8, sizeof(aNextKey->mKeyMaterial.mKey.m8), &aKeySize));
+    SuccessOrExit(error = otPlatCryptoExportKey(aPrevKey->mKeyMaterial.mKeyRef, aPrevKey->mKeyMaterial.mKey.m8,
+                                                sizeof(aPrevKey->mKeyMaterial.mKey.m8), &aKeySize));
+    SuccessOrExit(error = otPlatCryptoExportKey(aCurrKey->mKeyMaterial.mKeyRef, aCurrKey->mKeyMaterial.mKey.m8,
+                                                sizeof(aCurrKey->mKeyMaterial.mKey.m8), &aKeySize));
+    SuccessOrExit(error = otPlatCryptoExportKey(aNextKey->mKeyMaterial.mKeyRef, aNextKey->mKeyMaterial.mKey.m8,
+                                                sizeof(aNextKey->mKeyMaterial.mKey.m8), &aKeySize));
 #else
     OT_UNUSED_VARIABLE(aKeySize);
 #endif
@@ -1158,8 +1161,9 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::SetMacKey(uint8_t       
     SuccessOrExit(error = Set(SPINEL_PROP_RCP_MAC_KEY,
                               SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_UINT8_S SPINEL_DATATYPE_DATA_WLEN_S
                                   SPINEL_DATATYPE_DATA_WLEN_S SPINEL_DATATYPE_DATA_WLEN_S,
-                              aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey.m8, sizeof(otMacKey), aCurrKey->mKeyMaterial.mKey.m8, sizeof(otMacKey),
-                              aNextKey->mKeyMaterial.mKey.m8, sizeof(otMacKey)));
+                              aKeyIdMode, aKeyId, aPrevKey->mKeyMaterial.mKey.m8, sizeof(otMacKey),
+                              aCurrKey->mKeyMaterial.mKey.m8, sizeof(otMacKey), aNextKey->mKeyMaterial.mKey.m8,
+                              sizeof(otMacKey)));
 
 #if OPENTHREAD_SPINEL_CONFIG_RCP_RESTORATION_MAX_COUNT > 0
     mKeyIdMode = aKeyIdMode;

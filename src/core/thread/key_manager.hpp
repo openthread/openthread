@@ -600,7 +600,7 @@ private:
 
     NetworkKey mNetworkKey;
 
-    uint32_t mKeySequence;
+    uint32_t         mKeySequence;
     Mle::KeyMaterial mMleKey;
     Mle::KeyMaterial mTemporaryMleKey;
 
@@ -622,8 +622,8 @@ private:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     Pskc mPskc;
 #endif
-    KekKeyMaterial  mKek;
-    uint32_t mKekFrameCounter;
+    KekKeyMaterial mKek;
+    uint32_t       mKekFrameCounter;
 
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;

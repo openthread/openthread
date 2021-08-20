@@ -338,10 +338,10 @@ Error KeyMaterial::SetFrom(const uint8_t *aKey, bool aIsExportable)
 {
     Error error = kErrorNone;
 
-#if  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE    
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     otCryptoKeyUsage cryptoKeyExport = ((aIsExportable) ? OT_CRYPTO_KEY_USAGE_EXPORT : OT_CRYPTO_KEY_USAGE_NONE);
-    otMacKeyRef keyRef = 0;
-    
+    otMacKeyRef      keyRef          = 0;
+
     // Import key into ITS and remember the key ref
     error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
                                   (cryptoKeyExport | OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
@@ -367,11 +367,11 @@ Error KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 Error KeyMaterial::GetKeyFromKeyMaterial(Key &aKey)
 {
     size_t aKeySize;
-    Error error = kErrorNone;
+    Error  error = kErrorNone;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     error = otPlatCryptoExportKey(GetKeyRef(), aKey.m8, kSize, &aKeySize);
-#else    
+#else
     memcpy(aKey.m8, GetKey(), kSize);
 #endif
     OT_UNUSED_VARIABLE(aKeySize);
@@ -397,7 +397,7 @@ otCryptoKey KeyMaterial::GetCryptoKey(void)
 
 void KeyMaterial::DestroyKey(void)
 {
-#if  OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE    
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     if (mKeyMaterial.mKeyRef < kInvalidKeyId)
     {
         IgnoreError(otPlatCryptoDestroyKey(mKeyMaterial.mKeyRef));
@@ -411,7 +411,7 @@ bool KeyMaterial::operator==(const KeyMaterial &aOther) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     return (mKeyMaterial.mKeyRef == aOther.GetKeyRef());
-#else    
+#else
     return (memcmp(mKeyMaterial.mKey.m8, aOther.GetKey(), kSize) == 0);
 #endif
 }
