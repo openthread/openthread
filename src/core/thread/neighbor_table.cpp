@@ -257,7 +257,9 @@ exit:
 
 void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 {
+#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     if (mCallback != nullptr)
+#endif
     {
         EntryInfo info;
 
@@ -279,7 +281,14 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
             break;
         }
 
-        mCallback(static_cast<otNeighborTableEvent>(aEvent), &info);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordNeighborEvent(aEvent, info);
+
+        if (mCallback != nullptr)
+#endif
+        {
+            mCallback(static_cast<otNeighborTableEvent>(aEvent), &info);
+        }
     }
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE

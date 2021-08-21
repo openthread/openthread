@@ -50,6 +50,7 @@
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle.hpp"
 #include "thread/mle_types.hpp"
+#include "thread/neighbor_table.hpp"
 
 namespace ot {
 namespace Utils {
@@ -63,6 +64,7 @@ class HistoryTracker : public InstanceLocator, private NonCopyable
     friend class ot::MeshForwarder;
     friend class ot::Notifier;
     friend class ot::Mle::Mle;
+    friend class ot::NeighborTable;
 
 public:
     /**
@@ -116,6 +118,12 @@ public:
      *
      */
     typedef otHistoryTrackerMessageInfo MessageInfo;
+
+    /**
+     * This type represents a neighbor info.
+     *
+     */
+    typedef otHistoryTrackerNeighborInfo NeighborInfo;
 
     /**
      * This constructor initializes the `HistoryTracker`.
@@ -173,6 +181,11 @@ public:
         return mTxHistory.Iterate(aIterator, aEntryAge);
     }
 
+    const NeighborInfo *IterateNeighborHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mNeighborHistory.Iterate(aIterator, aEntryAge);
+    }
+
     /**
      * This static method converts a given entry age to a human-readable string.
      *
@@ -201,12 +214,20 @@ private:
 
     static constexpr uint32_t kAgeCheckPeriod = 16 * kOneHourInMsec;
 
-    static constexpr uint16_t kNetInfoListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE;
-    static constexpr uint16_t kRxListSize      = OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE;
-    static constexpr uint16_t kTxListSize      = OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE;
+    static constexpr uint16_t kNetInfoListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE;
+    static constexpr uint16_t kRxListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE;
+    static constexpr uint16_t kTxListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE;
+    static constexpr uint16_t kNeighborListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE;
 
     static constexpr int8_t   kInvalidRss    = OT_RADIO_RSSI_INVALID;
     static constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid;
+
+    typedef otHistoryTrackerNeighborEvent NeighborEvent;
+
+    static constexpr NeighborEvent kNeighborAdded     = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_ADDED;
+    static constexpr NeighborEvent kNeighborRemoved   = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_REMOVED;
+    static constexpr NeighborEvent kNeighborChanged   = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_CHANGED;
+    static constexpr NeighborEvent kNeighborRestoring = OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING;
 
     class Timestamp
     {
@@ -301,14 +322,16 @@ private:
 
     void        RecordNetworkInfo(void);
     void        RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType);
+    void        RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
     void        HandleNotifierEvents(Events aEvents);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    EntryList<NetworkInfo, kNetInfoListSize> mNetInfoHistory;
-    EntryList<MessageInfo, kRxListSize>      mRxHistory;
-    EntryList<MessageInfo, kTxListSize>      mTxHistory;
-    TimerMilli                               mTimer;
+    EntryList<NetworkInfo, kNetInfoListSize>   mNetInfoHistory;
+    EntryList<MessageInfo, kRxListSize>        mRxHistory;
+    EntryList<MessageInfo, kTxListSize>        mTxHistory;
+    EntryList<NeighborInfo, kNeighborListSize> mNeighborHistory;
+    TimerMilli                                 mTimer;
 };
 
 } // namespace Utils

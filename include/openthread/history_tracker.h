@@ -61,6 +61,8 @@ extern "C" {
  */
 #define OT_HISTORY_TRACKER_MAX_AGE (49 * 24 * 60 * 60 * 1000u)
 
+#define OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE 21 ///< Recommended size for string representation of an entry age.
+
 /**
  * This type represents an iterator to iterate through a history list.
  *
@@ -123,6 +125,38 @@ typedef struct otHistoryTrackerMessageInfo
     bool       mRadioIeee802154 : 1; ///< Indicates whether msg was sent/received over a 15.4 radio link.
     bool       mRadioTrelUdp6 : 1;   ///< Indicates whether msg was sent/received over a TREL radio link.
 } otHistoryTrackerMessageInfo;
+
+/**
+ * This enumeration defines the events in a neighbor info (i.e. whether neighbor is added, removed, or changed).
+ *
+ * Event `OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING` is applicable to child neighbors only. It is triggered after
+ * the device (re)starts and when the previous children list is retrieved from non-volatile settings and the device
+ * tries to restore connection to them.
+ *
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_NEIGHBOR_EVENT_ADDED     = 0, ///< Neighbor is added.
+    OT_HISTORY_TRACKER_NEIGHBOR_EVENT_REMOVED   = 1, ///< Neighbor is removed.
+    OT_HISTORY_TRACKER_NEIGHBOR_EVENT_CHANGED   = 2, ///< Neighbor changed (e.g., device mode flags changed).
+    OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING = 3, ///< Neighbor is being restored (applicable to child only).
+} otHistoryTrackerNeighborEvent;
+
+/**
+ * This structure represents a neighbor info.
+ *
+ */
+typedef struct otHistoryTrackerNeighborInfo
+{
+    otExtAddress mExtAddress;           ///< Neighbor's Extended Address.
+    uint16_t     mRloc16;               ///< Neighbor's RLOC16.
+    int8_t       mAverageRssi;          ///< Average RSSI of rx frames from neighbor at the time of recording entry.
+    uint8_t      mEvent : 2;            ///< Indicates the event (`OT_HISTORY_TRACKER_NEIGHBOR_EVENT_*` enumeration).
+    bool         mRxOnWhenIdle : 1;     ///< Rx-on-when-idle.
+    bool         mFullThreadDevice : 1; ///< Full Thread Device.
+    bool         mFullNetworkData : 1;  ///< Full Network Data.
+    bool         mIsChild : 1;          ///< Indicates whether or not the neighbor is a child.
+} otHistoryTrackerNeighborInfo;
 
 /**
  * This function initializes an `otHistoryTrackerIterator`.
@@ -191,7 +225,22 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *
                                                                     otHistoryTrackerIterator *aIterator,
                                                                     uint32_t *                aEntryAge);
 
-#define OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE 21 ///< Recommended size for string representation of an entry age.
+/**
+ * This function iterates over the entries in the neighbor history list.
+ *
+ * @param[in]    aInstance   A pointer to the OpenThread instance.
+ * @param[inout] aIterator   A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]   aEntryAge   A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns The `otHistoryTrackerNeighborInfo` entry or `NULL` if no more entries in the list.
+ *
+ */
+const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance *              aInstance,
+                                                                           otHistoryTrackerIterator *aIterator,
+                                                                           uint32_t *                aEntryAge);
 
 /**
  * This function converts a given entry age to a human-readable string.
@@ -204,7 +253,7 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *
  *
  * @param[in]  aEntryAge The entry age (duration in msec).
  * @param[out] aBuffer   A pointer to a char array to output the string (MUST NOT be NULL).
- * @param[in]  aSize     The size of @p aBuffer (in bytes). Recommended to use `OT_IP6_ADDRESS_STRING_SIZE`.
+ * @param[in]  aSize     The size of @p aBuffer. Recommended to use `OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE`.
  *
  */
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize);

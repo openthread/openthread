@@ -11,6 +11,7 @@ The number of entries recorded for each history list is configurable through a s
 Usage : `history [command] ...`
 
 - [help](#help)
+- [neighbor](#neighbor)
 - [netinfo](#netinfo)
 - [rx](#rx)
 - [rxtx](#rxtx)
@@ -45,6 +46,7 @@ Print SRP client help menu.
 ```bash
 > history help
 help
+neighbor
 netinfo
 rx
 rxtx
@@ -53,11 +55,59 @@ Done
 >
 ```
 
+### neighbor
+
+Usage `history neighbor [list] [<num-entries>]`
+
+Print the neighbor table history. Each entry provides:
+
+- Type: Child or Router
+- Event: Added, Removed, Changed (e.g., mode change).
+- Extended Address
+- RLOC16
+- MLE Link Mode
+- Average RSS (in dBm) of received frames from neighbor at the time the entry was recorded
+
+Print the neighbor history as a table.
+
+```bash
+> history neighbor
+| Age                  | Type   | Event     | Extended Address | RLOC16 | Mode | Ave RSS |
++----------------------+--------+-----------+------------------+--------+------+---------+
+|         00:00:29.233 | Child  | Added     | ae5105292f0b9169 | 0x8404 | -    |     -20 |
+|         00:01:38.368 | Child  | Removed   | ae5105292f0b9169 | 0x8401 | -    |     -20 |
+|         00:04:27.181 | Child  | Changed   | ae5105292f0b9169 | 0x8401 | -    |     -20 |
+|         00:04:51.236 | Router | Added     | 865c7ca38a5fa960 | 0x9400 | rdn  |     -20 |
+|         00:04:51.587 | Child  | Removed   | 865c7ca38a5fa960 | 0x8402 | rdn  |     -20 |
+|         00:05:22.764 | Child  | Changed   | ae5105292f0b9169 | 0x8401 | rn   |     -20 |
+|         00:06:40.764 | Child  | Added     | 4ec99efc874a1841 | 0x8403 | r    |     -20 |
+|         00:06:44.060 | Child  | Added     | 865c7ca38a5fa960 | 0x8402 | rdn  |     -20 |
+|         00:06:49.515 | Child  | Added     | ae5105292f0b9169 | 0x8401 | -    |     -20 |
+Done
+```
+
+Print the neighbor history as a list.
+
+```bash
+
+> history neighbor list
+00:00:34.753 -> type:Child event:Added extaddr:ae5105292f0b9169 rloc16:0x8404 mode:- rss:-20
+00:01:43.888 -> type:Child event:Removed extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
+00:04:32.701 -> type:Child event:Changed extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
+00:04:56.756 -> type:Router event:Added extaddr:865c7ca38a5fa960 rloc16:0x9400 mode:rdn rss:-20
+00:04:57.107 -> type:Child event:Removed extaddr:865c7ca38a5fa960 rloc16:0x8402 mode:rdn rss:-20
+00:05:28.284 -> type:Child event:Changed extaddr:ae5105292f0b9169 rloc16:0x8401 mode:rn rss:-20
+00:06:46.284 -> type:Child event:Added extaddr:4ec99efc874a1841 rloc16:0x8403 mode:r rss:-20
+00:06:49.580 -> type:Child event:Added extaddr:865c7ca38a5fa960 rloc16:0x8402 mode:rdn rss:-20
+00:06:55.035 -> type:Child event:Added extaddr:ae5105292f0b9169 rloc16:0x8401 mode:- rss:-20
+Done
+```
+
 ### netinfo
 
 Usage `history netinfo [list] [<num-entries>]`
 
-Print the Network Info history. Each Network Info provides
+Print the Network Info history. Each Network Info provides:
 
 - Device Role
 - MLE Link Mode
