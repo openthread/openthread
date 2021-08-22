@@ -445,10 +445,19 @@ typedef otMacKeyRef KeyRef;
  *
  */
 OT_TOOL_PACKED_BEGIN
-class KeyMaterial : public otMacKeyMaterial, public Clearable<KeyMaterial>, public Unequatable<KeyMaterial>
+class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
 {
 public:
     static constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Max allowed keyId range.
+
+    /**
+     *  This method clears the `KeyMaterial`.
+     *
+     * When `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled, this method sets the `KeyRef` to the invalid
+     * value `kInvalidKeyRef`.
+     *
+     */
+    void Clear(void);
 
     /**
      * This method gets the literal `Key`.
@@ -472,31 +481,16 @@ public:
      * @param[in] aKey           A reference to the input key.
      * @param[in] aIsExportable  Boolean indicating if the key is exportable.
      *
-     * @returns An `Error` reported by the platform.
-     *
      */
-    Error SetFrom(const Key &aKey, bool aIsExportable = false);
-
-    /**
-     * This method sets the `KeyMaterial` from a given literal key.
-     *
-     * @param[in] aKey           A pointer to the input key.
-     * @param[in] aIsExportable  Boolean indicating if the key is exportable.
-     *
-     * @returns An `Error` reported by the platform.
-     *
-     */
-    Error SetFrom(const uint8_t *aKey, bool aIsExportable);
+    void SetFrom(const Key &aKey, bool aIsExportable = false);
 
     /**
      * This method extracts the literal key from `KeyMaterial`
      *
-     * @param[out] aKey  A reference to the output key.
-     *
-     * @returns An `Error` reported by the platform.
+     * @param[out] aKey  A reference to the output the key.
      *
      */
-    Error GetKeyFromKeyMaterial(Key &aKey);
+    void ExtractKey(Key &aKey);
 
     /**
      * This method converts `KeyMaterial` to a `CryptoKey`.
@@ -507,8 +501,7 @@ public:
     void ConvertToCryptoKey(otCryptoKey &aCryptoKey) const;
 
     /**
-     *
-     * This method destroys the key stored in PSA.
+     * This method destroys the key reference stored in PSA.
      *
      */
     void DestroyKey(void);
@@ -523,6 +516,11 @@ public:
      *
      */
     bool operator==(const KeyMaterial &aOther) const;
+
+private:
+    Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
+    void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
+    void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
 
 } OT_TOOL_PACKED_END;
 

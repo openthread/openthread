@@ -1167,7 +1167,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    IgnoreError(Get<KeyManager>().GetKekLiteral(kek));
+    Get<KeyManager>().ExtractKek(kek);
 
     message->InitAsNonConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayTx));

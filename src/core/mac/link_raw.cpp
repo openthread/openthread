@@ -232,9 +232,9 @@ Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
 
-    VerifyOrExit(prevKey.SetFrom(aPrevKey.m8, false), error = kErrorFailed);
-    VerifyOrExit(currKey.SetFrom(aCurrKey.m8, false), error = kErrorFailed);
-    VerifyOrExit(nextKey.SetFrom(aNextKey.m8, false), error = kErrorFailed);
+    prevKey.SetFrom(aPrevKey);
+    currKey.SetFrom(aCurrKey);
+    nextKey.SetFrom(aNextKey);
 
     mSubMac.SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
 

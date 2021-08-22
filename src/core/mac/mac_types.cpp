@@ -334,46 +334,53 @@ void LinkFrameCounters::SetAll(uint32_t aCounter)
 #endif
 }
 
-Error KeyMaterial::SetFrom(const uint8_t *aKey, bool aIsExportable)
+void KeyMaterial::Clear(void)
 {
-    Error error = kErrorNone;
-
+    GetKey().Clear();
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    otCryptoKeyUsage cryptoKeyExport = ((aIsExportable) ? OT_CRYPTO_KEY_USAGE_EXPORT : OT_CRYPTO_KEY_USAGE_NONE);
-    KeyRef           keyRef          = 0;
+    SetKeyRef(kInvalidKeyRef);
+#endif
+}
 
-    error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
-                                  (cryptoKeyExport | OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
-                                  OT_CRYPTO_KEY_STORAGE_VOLATILE, aKey, Key::kSize);
+void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    {
+        Error  error;
+        KeyRef keyRef;
 
-    Clear();
-    mKeyMaterial.mKeyRef = keyRef;
+        GetKey().Clear();
 
+        error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
+                                      (aIsExportable ? OT_CRYPTO_KEY_USAGE_EXPORT : 0) | OT_CRYPTO_KEY_USAGE_ENCRYPT |
+                                          OT_CRYPTO_KEY_USAGE_DECRYPT,
+                                      OT_CRYPTO_KEY_STORAGE_VOLATILE, aKey.GetBytes(), Key::kSize);
+        OT_ASSERT(error == kErrorNone);
+
+        SetKeyRef(keyRef);
+    }
 #else
-    memcpy(mKeyMaterial.mKey.m8, aKey, Key::kSize);
+    GetKey() = aKey;
     OT_UNUSED_VARIABLE(aIsExportable);
 #endif
-
-    return error;
 }
 
-Error KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
+void KeyMaterial::ExtractKey(Key &aKey)
 {
-    return SetFrom(aKey.GetBytes(), aIsExportable);
-}
-
-Error KeyMaterial::GetKeyFromKeyMaterial(Key &aKey)
-{
-    Error error = kErrorNone;
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    size_t aKeySize;
+    aKey.Clear();
 
-    error = otPlatCryptoExportKey(GetKeyRef(), aKey.m8, Key::kSize, &aKeySize);
+    if (GetKeyRef() < kInvalidKeyRef)
+    {
+        Error  error;
+        size_t keySize;
+
+        error = otPlatCryptoExportKey(GetKeyRef(), aKey.m8, Key::kSize, &keySize);
+        OT_ASSERT(error == kErrorNone);
+    }
 #else
     aKey                  = GetKey();
 #endif
-
-    return error;
 }
 
 void KeyMaterial::ConvertToCryptoKey(otCryptoKey &aCryptoKey) const
@@ -392,13 +399,13 @@ void KeyMaterial::ConvertToCryptoKey(otCryptoKey &aCryptoKey) const
 void KeyMaterial::DestroyKey(void)
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    if (mKeyMaterial.mKeyRef < kInvalidKeyRef)
+    if (GetKeyRef() < kInvalidKeyRef)
     {
-        IgnoreError(otPlatCryptoDestroyKey(mKeyMaterial.mKeyRef));
+        IgnoreError(otPlatCryptoDestroyKey(GetKeyRef()));
     }
-#endif
 
-    mKeyMaterial.mKeyRef = kInvalidKeyRef;
+    SetKeyRef(kInvalidKeyRef);
+#endif
 }
 
 bool KeyMaterial::operator==(const KeyMaterial &aOther) const

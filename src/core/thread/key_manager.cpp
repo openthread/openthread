@@ -192,15 +192,9 @@ KeyManager::KeyManager(Instance &aInstance)
     mMleKey.Clear();
     mTemporaryMleKey.Clear();
 
-    mKek.mKeyMaterial.mKeyRef             = Mac::KeyMaterial::kInvalidKeyRef;
-    mMleKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyRef;
-    mTemporaryMleKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyRef;
-
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrelKey.Clear();
     mTemporaryTrelKey.Clear();
-    mTrelKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyRef;
-    mTemporaryTrelKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyRef;
 #endif
 }
 
@@ -309,7 +303,7 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 }
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::KeyMaterial &aTrelKey)
+void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey)
 {
     Crypto::HkdfSha256 hkdf;
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
@@ -328,51 +322,47 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::KeyMaterial &aTrelKe
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
     hkdf.Extract(salt, sizeof(salt), &cryptoKey);
-    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.mKeyMaterial.mKey.m8, sizeof(Mac::Key));
+    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aKey.m8, Mac::Key::kSize);
 }
 #endif
 
 void KeyManager::UpdateKeyMaterial(void)
 {
-    HashKeys cur;
-    Error    error;
-#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    HashKeys prev;
-    HashKeys next;
-#endif
+    HashKeys hashKeys;
 
-    ComputeKeys(mKeySequence, cur);
-
-    error = cur.mKeys.mMacKey.SetFrom(cur.mKeys.mMacKey.GetKey(), false);
-    OT_ASSERT(error == kErrorNone);
+    ComputeKeys(mKeySequence, hashKeys);
 
     mMleKey.DestroyKey();
-    error = mMleKey.SetFrom(cur.mKeys.mMleKey.GetKey(), false);
-    OT_ASSERT(error == kErrorNone);
+    mMleKey.SetFrom(hashKeys.GetMleKey());
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
-    ComputeKeys(mKeySequence - 1, prev);
-    ComputeKeys(mKeySequence + 1, next);
+    {
+        Mac::KeyMaterial curKey;
+        Mac::KeyMaterial prevKey;
+        Mac::KeyMaterial nextKey;
 
-    error = prev.mKeys.mMacKey.SetFrom(prev.mKeys.mMacKey.GetKey(), false);
-    OT_ASSERT(error == kErrorNone);
+        curKey.SetFrom(hashKeys.GetMacKey());
 
-    error = next.mKeys.mMacKey.SetFrom(next.mKeys.mMacKey.GetKey(), false);
-    OT_ASSERT(error == kErrorNone);
+        ComputeKeys(mKeySequence - 1, hashKeys);
+        prevKey.SetFrom(hashKeys.GetMacKey());
 
-    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
-                                 cur.mKeys.mMacKey, next.mKeys.mMacKey);
+        ComputeKeys(mKeySequence + 1, hashKeys);
+        nextKey.SetFrom(hashKeys.GetMacKey());
+
+        Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prevKey, curKey, nextKey);
+    }
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    ComputeTrelKey(mKeySequence, mTrelKey);
+    {
+        Mac::Key key;
 
-    mTrelKey.DestroyKey();
-    error = mTrelKey.SetFrom(mTrelKey.GetKey(), false);
-    OT_ASSERT(error == kErrorNone);
+        ComputeTrelKey(mKeySequence, key);
+
+        mTrelKey.DestroyKey();
+        mTrelKey.SetFrom(key);
+    }
 #endif
-
-    OT_UNUSED_VARIABLE(error);
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
@@ -406,12 +396,11 @@ exit:
 const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
     HashKeys hashKeys;
-    Error    error;
 
     ComputeKeys(aKeySequence, hashKeys);
 
-    error = mMleKey.SetFrom(hashKeys.mKeys.mMleKey.GetKey(), false);
-    OT_ASSERT(error == kErrorNone);
+    mTemporaryMleKey.DestroyKey();
+    mTemporaryMleKey.SetFrom(hashKeys.GetMleKey());
 
     return mTemporaryMleKey;
 }
@@ -419,7 +408,11 @@ const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 const Mac::KeyMaterial &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
 {
-    ComputeTrelKey(aKeySequence, mTemporaryTrelKey);
+    Mac::Key key;
+
+    ComputeTrelKey(aKeySequence, key);
+    mTemporaryTrelKey.DestroyKey();
+    mTemporaryTrelKey.SetFrom(key);
 
     return mTemporaryTrelKey;
 }
@@ -474,19 +467,9 @@ void KeyManager::IncrementMleFrameCounter(void)
 
 void KeyManager::SetKek(const Kek &aKek)
 {
-    IgnoreError(mKek.SetFrom(aKek, true));
+    mKek.DestroyKey();
+    mKek.SetFrom(aKek, /* aIsExportable */ true);
     mKekFrameCounter = 0;
-}
-
-void KeyManager::SetKek(const uint8_t *aKek)
-{
-    IgnoreError(mKek.SetFrom(aKek, true));
-    mKekFrameCounter = 0;
-}
-
-Error KeyManager::GetKekLiteral(Kek &aKek)
-{
-    return mKek.GetKeyFromKeyMaterial(aKek);
 }
 
 void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)

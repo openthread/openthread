@@ -146,7 +146,7 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-    IgnoreError(mMode2KeyMaterial.SetFrom(static_cast<const Key &>(sMode2Key)));
+    mMode2KeyMaterial.SetFrom(static_cast<const Key &>(sMode2Key));
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)

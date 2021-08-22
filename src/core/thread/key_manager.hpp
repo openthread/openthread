@@ -200,13 +200,6 @@ typedef Mac::Key Kek;
 typedef Mac::KeyMaterial KekKeyMaterial;
 
 /**
- *
- * This class represents a Key Encryption Key (KEK).
- *
- */
-typedef Mac::Key KekLiteral;
-
-/**
  * This class defines Thread Key Manager.
  *
  */
@@ -458,20 +451,20 @@ public:
     void IncrementMleFrameCounter(void);
 
     /**
-     * This method returns the KEK.
+     * This method returns the KEK as `KekKeyMaterail`
      *
-     * @returns A pointer to the KEK.
+     * @returns The KEK as `KekKeyMaterial`.
      *
      */
     const KekKeyMaterial &GetKek(void) const { return mKek; }
 
     /**
-     * This method returns the KEK.
+     * This method retrieves the KEK as literal `Kek` key.
      *
-     * @returns A pointer to the KEK.
+     * @param[out] aKek  A reference to a `Kek` to output the retrieved KEK.
      *
      */
-    Error GetKekLiteral(KekLiteral &aKek);
+    void ExtractKek(Kek &aKek) { mKek.ExtractKey(aKek); }
 
     /**
      * This method sets the KEK.
@@ -479,15 +472,15 @@ public:
      * @param[in]  aKek  A KEK.
      *
      */
-    void SetKek(const KekLiteral &aKek);
+    void SetKek(const Kek &aKek);
 
     /**
      * This method sets the KEK.
      *
-     * @param[in]  aKek  A pointer to the KEK.
+     * @param[in]  aKekBytes  A pointer to the KEK bytes.
      *
      */
-    void SetKek(const uint8_t *aKek);
+    void SetKek(const uint8_t *aKekBytes) { SetKek(*reinterpret_cast<const Kek *>(aKekBytes)); }
 
     /**
      * This method returns the current KEK Frame Counter value.
@@ -566,20 +559,23 @@ private:
     OT_TOOL_PACKED_BEGIN
     struct Keys
     {
-        Mle::KeyMaterial mMleKey;
-        Mac::KeyMaterial mMacKey;
+        Mle::Key mMleKey;
+        Mac::Key mMacKey;
     } OT_TOOL_PACKED_END;
 
     union HashKeys
     {
         Crypto::HmacSha256::Hash mHash;
         Keys                     mKeys;
+
+        const Mle::Key &GetMleKey(void) const { return mKeys.mMleKey; }
+        const Mac::Key &GetMacKey(void) const { return mKeys.mMacKey; }
     };
 
     void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    void ComputeTrelKey(uint32_t aKeySequence, Mac::KeyMaterial &aTrelKey);
+    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey);
 #endif
 
     void        StartKeyRotationTimer(void);
