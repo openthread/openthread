@@ -36,9 +36,10 @@
 #define OPENTHREAD_PLATFORM_CRYPTO_H_
 
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <openthread/error.h>
-#include <openthread/platform/radio.h>
+
 #ifdef OT_PLAT_CRYPTO_ATTRIBUTES_TYPE_HEADER
 #include OT_PLAT_CRYPTO_ATTRIBUTES_TYPE_HEADER
 #endif

@@ -80,7 +80,7 @@ public:
      * @param[in]  aKey    Crypto Key used in AES operation
      *
      */
-    void SetKey(const otCryptoKey &aKey);
+    void SetKey(const otCryptoKey &aKey) { mEcb.SetKey(aKey); }
 
     /**
      * This method sets the key.

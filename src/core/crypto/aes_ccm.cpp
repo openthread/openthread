@@ -42,11 +42,6 @@
 namespace ot {
 namespace Crypto {
 
-void AesCcm::SetKey(const otCryptoKey &aKey)
-{
-    mEcb.SetKey(&aKey);
-}
-
 void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
     otCryptoKey cryptoKey;
@@ -55,23 +50,14 @@ void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
     cryptoKey.mKeyLength = aKeyLength;
     cryptoKey.mKeyRef    = 0;
 
-    mEcb.SetKey(&cryptoKey);
+    SetKey(cryptoKey);
 }
 
 void AesCcm::SetKey(const Mac::KeyMaterial &aMacKey)
 {
     otCryptoKey cryptoKey;
 
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    cryptoKey.mKey       = nullptr;
-    cryptoKey.mKeyLength = 0;
-    cryptoKey.mKeyRef    = aMacKey.GetKeyRef();
-#else
-    cryptoKey.mKey       = aMacKey.GetKey();
-    cryptoKey.mKeyLength = Mac::KeyMaterial::kSize;
-    cryptoKey.mKeyRef    = 0;
-#endif
-
+    aMacKey.ConvertToCryptoKey(cryptoKey);
     SetKey(cryptoKey);
 }
 

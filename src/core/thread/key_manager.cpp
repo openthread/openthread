@@ -192,15 +192,15 @@ KeyManager::KeyManager(Instance &aInstance)
     mMleKey.Clear();
     mTemporaryMleKey.Clear();
 
-    mKek.mKeyMaterial.mKeyRef             = Mac::KeyMaterial::kInvalidKeyId;
-    mMleKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyId;
-    mTemporaryMleKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
+    mKek.mKeyMaterial.mKeyRef             = Mac::KeyMaterial::kInvalidKeyRef;
+    mMleKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyRef;
+    mTemporaryMleKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyRef;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     mTrelKey.Clear();
     mTemporaryTrelKey.Clear();
-    mTrelKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyId;
-    mTemporaryTrelKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyId;
+    mTrelKey.mKeyMaterial.mKeyRef          = Mac::KeyMaterial::kInvalidKeyRef;
+    mTemporaryTrelKey.mKeyMaterial.mKeyRef = Mac::KeyMaterial::kInvalidKeyRef;
 #endif
 }
 
@@ -288,18 +288,18 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 {
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
-    otCryptoKey        keyMaterial;
+    otCryptoKey        cryptoKey;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    keyMaterial.mKey    = nullptr;
-    keyMaterial.mKeyRef = mNetworkKeyRef;
+    cryptoKey.mKey    = nullptr;
+    cryptoKey.mKeyRef = mNetworkKeyRef;
 #else
-    keyMaterial.mKey       = mNetworkKey.m8;
-    keyMaterial.mKeyLength = sizeof(mNetworkKey.m8);
-    keyMaterial.mKeyRef    = 0;
+    cryptoKey.mKey       = mNetworkKey.m8;
+    cryptoKey.mKeyLength = sizeof(mNetworkKey.m8);
+    cryptoKey.mKeyRef    = 0;
 #endif
 
-    hmac.Start(&keyMaterial);
+    hmac.Start(&cryptoKey);
 
     Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
     hmac.Update(keySequenceBytes);
@@ -313,21 +313,21 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::KeyMaterial &aTrelKe
 {
     Crypto::HkdfSha256 hkdf;
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
-    otCryptoKey        keyMaterial;
+    otCryptoKey        cryptoKey;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    keyMaterial.mKey    = nullptr;
-    keyMaterial.mKeyRef = mNetworkKeyRef;
+    cryptoKey.mKey    = nullptr;
+    cryptoKey.mKeyRef = mNetworkKeyRef;
 #else
-    keyMaterial.mKey       = mNetworkKey.m8;
-    keyMaterial.mKeyLength = sizeof(mNetworkKey.m8);
-    keyMaterial.mKeyRef    = 0;
+    cryptoKey.mKey       = mNetworkKey.m8;
+    cryptoKey.mKeyLength = sizeof(mNetworkKey.m8);
+    cryptoKey.mKeyRef    = 0;
 #endif
 
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), &keyMaterial);
+    hkdf.Extract(salt, sizeof(salt), &cryptoKey);
     hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.mKeyMaterial.mKey.m8, sizeof(Mac::Key));
 }
 #endif
@@ -474,7 +474,7 @@ void KeyManager::IncrementMleFrameCounter(void)
 
 void KeyManager::SetKek(const Kek &aKek)
 {
-    IgnoreError(mKek.SetFrom(aKek.GetKey(), true));
+    IgnoreError(mKek.SetFrom(aKek, true));
     mKekFrameCounter = 0;
 }
 
@@ -567,7 +567,7 @@ const Pskc KeyManager::GetPskc(void) const
 Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
 {
     Error       error = kErrorNone;
-    otMacKeyRef keyRef;
+    Mac::KeyRef keyRef;
 
     keyRef = kNetworkKeyPsaItsOffset;
 
@@ -601,7 +601,7 @@ exit:
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 Error KeyManager::StorePskc(void)
 {
-    otMacKeyRef keyRef = kPskcPsaItsOffset;
+    Mac::KeyRef keyRef = kPskcPsaItsOffset;
     Error       error  = kErrorNone;
 
     CheckAndDestroyStoredKey(keyRef);
@@ -650,9 +650,9 @@ exit:
     return error;
 }
 
-void KeyManager::CheckAndDestroyStoredKey(otMacKeyRef aKeyRef)
+void KeyManager::CheckAndDestroyStoredKey(Mac::KeyRef aKeyRef)
 {
-    if (aKeyRef < Mac::KeyMaterial::kInvalidKeyId)
+    if (aKeyRef < Mac::KeyMaterial::kInvalidKeyRef)
     {
         IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
     }

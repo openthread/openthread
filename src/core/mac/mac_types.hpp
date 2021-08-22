@@ -425,96 +425,101 @@ public:
     static constexpr uint16_t kSize = OT_MAC_KEY_SIZE; ///< Key size in bytes.
 
     /**
-     * This method gets a pointer to the buffer containing the key.
+     * This method gets a pointer to the bytes array containing the key
      *
-     * @returns A pointer to the buffer containing the key.
+     * @returns A pointer to the byte array containing the key.
      *
      */
-    const uint8_t *GetKey(void) const { return m8; }
+    const uint8_t *GetBytes(void) const { return m8; }
 
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a MAC key Material.
+ * This type represents a MAC Key Ref used by PSA.
+ *
+ */
+typedef otMacKeyRef KeyRef;
+
+/**
+ * This class represents a MAC Key Material.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class KeyMaterial : public otMacKeyMaterial, public Clearable<KeyMaterial>
+class KeyMaterial : public otMacKeyMaterial, public Clearable<KeyMaterial>, public Unequatable<KeyMaterial>
 {
 public:
-    static constexpr uint16_t kSize         = OT_MAC_KEY_SIZE; ///< Key size in bytes.
-    static constexpr uint32_t kInvalidKeyId = 0x80000000;      ///< Max allowed keyId range.
+    static constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Max allowed keyId range.
 
     /**
-     * This method gets a pointer to the buffer containing the key.
+     * This method gets the literal `Key`.
      *
-     * @returns A pointer to the buffer containing the key.
+     * @returns The literal `Key`
      *
      */
-    const uint8_t *GetKey(void) const { return mKeyMaterial.mKey.m8; }
+    const Key &GetKey(void) const { return static_cast<const Key &>(mKeyMaterial.mKey); }
 
     /**
-     * This method gets the reference to the stored key.
+     * This method gets the stored `KeyRef`
      *
-     * @returns A key reference.
+     * @returns The `KeyRef`
      *
      */
-    otMacKeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
+    KeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
 
     /**
-     * This method Sets the `KeyMaterial` from a given Key.
+     * This method sets the `KeyMaterial` from a given Key.
      *
-     * @param[in] aKey           A rreference to the input key.
+     * @param[in] aKey           A reference to the input key.
      * @param[in] aIsExportable  Boolean indicating if the key is exportable.
      *
-     * @returns A Error reported by the platform.
+     * @returns An `Error` reported by the platform.
      *
      */
-    Error SetFrom(const Key &aKey, bool aIsExportable);
+    Error SetFrom(const Key &aKey, bool aIsExportable = false);
 
     /**
-     * This method Sets the `KeyMaterial` from a given literal key.
+     * This method sets the `KeyMaterial` from a given literal key.
      *
      * @param[in] aKey           A pointer to the input key.
      * @param[in] aIsExportable  Boolean indicating if the key is exportable.
      *
-     * @returns A Error reported by the platform.
+     * @returns An `Error` reported by the platform.
      *
      */
     Error SetFrom(const uint8_t *aKey, bool aIsExportable);
 
     /**
-     * This method extracts the Literal Key from Key Material.
+     * This method extracts the literal key from `KeyMaterial`
      *
-     * @param[out] aKey  A rreference to the output key.
+     * @param[out] aKey  A reference to the output key.
      *
-     * @returns A Error reported by the platform.
+     * @returns An `Error` reported by the platform.
      *
      */
     Error GetKeyFromKeyMaterial(Key &aKey);
 
     /**
-     * This creates a otCryptoKey based on the KeyMaterial available.
+     * This method converts `KeyMaterial` to a `CryptoKey`.
      *
-     * @returns A CryptoKey created based on KeyMaterial.
+     * @param[out]  A reference to a `CryptoKey` to populate.
      *
      */
-    otCryptoKey GetCryptoKey(void);
+    void ConvertToCryptoKey(otCryptoKey &aCryptoKey) const;
 
     /**
      *
-     * This method Destroys the key stored in PSA.
+     * This method destroys the key stored in PSA.
      *
      */
     void DestroyKey(void);
 
     /**
-     * This method overloads operator `==` to evaluate whether or not two `Key` instances are equal.
+     * This method overloads operator `==` to evaluate whether or not two `KeyMaterial` instances are equal.
      *
-     * @param[in]  aOther  The other `Key` instance to compare with.
+     * @param[in]  aOther  The other `KeyMaterial` instance to compare with.
      *
-     * @retval TRUE   If the two `Key` instances are equal.
-     * @retval FALSE  If the two `Key` instances are not equal.
+     * @retval TRUE   If the two `KeyMaterial` instances are equal.
+     * @retval FALSE  If the two `KeyMaterial` instances are not equal.
      *
      */
     bool operator==(const KeyMaterial &aOther) const;

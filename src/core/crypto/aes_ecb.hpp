@@ -75,7 +75,7 @@ public:
      * @param[in]  aKey     Crypto Key used for ECB operation
      *
      */
-    void SetKey(const otCryptoKey *aKey);
+    void SetKey(const otCryptoKey &aKey);
 
     /**
      * This method encrypts data.

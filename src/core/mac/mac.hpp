@@ -846,7 +846,6 @@ private:
     static const otExtendedPanId sExtendedPanidInit;
     static const char            sNetworkNameInit[];
     static const char            sDomainNameInit[];
-    KeyMaterial                  Mode2KeyMaterial;
 
     bool mEnabled : 1;
     bool mPendingActiveScan : 1;
@@ -923,6 +922,8 @@ private:
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     Filter mFilter;
 #endif // OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
+
+    KeyMaterial mMode2KeyMaterial;
 };
 
 /**

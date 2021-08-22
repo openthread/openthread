@@ -45,9 +45,9 @@ AesEcb::AesEcb(void)
     OT_UNUSED_VARIABLE(err);
 }
 
-void AesEcb::SetKey(const otCryptoKey *aKey)
+void AesEcb::SetKey(const otCryptoKey &aKey)
 {
-    Error err = otPlatCryptoAesSetKey(&mContext, sizeof(mContext), aKey);
+    Error err = otPlatCryptoAesSetKey(&mContext, sizeof(mContext), &aKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

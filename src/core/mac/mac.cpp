@@ -122,8 +122,9 @@ Mac::Mac(Instance &aInstance)
     , mTxError(kErrorNone)
 #endif
 {
-    ExtAddress     randomExtAddress;
-    const otMacKey sMode2Key = {
+    ExtAddress randomExtAddress;
+
+    static const otMacKey sMode2Key = {
         {0x78, 0x58, 0x16, 0x86, 0xfd, 0xb4, 0x58, 0x0f, 0xb0, 0x92, 0x54, 0x6a, 0xec, 0xbd, 0x15, 0x66}};
 
     randomExtAddress.GenerateRandom();
@@ -145,21 +146,7 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-    memcpy(Mode2KeyMaterial.mKeyMaterial.mKey.m8, sMode2Key.m8, sizeof(sMode2Key.m8));
-
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    {
-        otMacKeyRef keyRef = 0;
-        Error       error  = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
-                                            (OT_CRYPTO_KEY_USAGE_ENCRYPT | OT_CRYPTO_KEY_USAGE_DECRYPT),
-                                            OT_CRYPTO_KEY_STORAGE_VOLATILE, sMode2Key.m8, sizeof(sMode2Key.m8));
-
-        Mode2KeyMaterial.mKeyMaterial.mKeyRef = keyRef;
-
-        OT_ASSERT(error == kErrorNone);
-        OT_UNUSED_VARIABLE(error);
-    }
-#endif
+    IgnoreError(mMode2KeyMaterial.SetFrom(static_cast<const Key &>(sMode2Key)));
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -1014,7 +1001,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-        aFrame.SetAesKey(static_cast<const KeyMaterial &>(Mode2KeyMaterial));
+        aFrame.SetAesKey(static_cast<const KeyMaterial &>(mMode2KeyMaterial));
 
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
@@ -1713,7 +1700,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = static_cast<const KeyMaterial *>(&Mode2KeyMaterial);
+        macKey     = static_cast<const KeyMaterial *>(&mMode2KeyMaterial);
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
 

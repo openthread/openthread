@@ -40,6 +40,7 @@
 
 #include <openthread/error.h>
 #include <openthread/instance.h>
+#include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -200,10 +201,10 @@ struct otMacKey
 typedef struct otMacKey otMacKey;
 
 /**
- * This enum represents a MAC Key Ref used by PSA.
+ * This type represents a MAC Key Ref used by PSA.
  *
  */
-typedef uint32_t otMacKeyRef;
+typedef otCryptoKeyRef otMacKeyRef;
 
 /**
  * @struct otMacKeyMaterial
