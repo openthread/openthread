@@ -243,7 +243,7 @@ void TestHmacSha256(void)
         Crypto::HmacSha256       hmac;
         Crypto::HmacSha256::Hash hash;
 
-        hmac.Start(const_cast<otCryptoKey *>(&testCase.mKey));
+        hmac.Start(static_cast<const Crypto::Key &>(testCase.mKey));
         hmac.Update(testCase.mData, testCase.mDataLength);
         hmac.Finish(hash);
 
@@ -269,7 +269,7 @@ void TestHmacSha256(void)
         Crypto::HmacSha256       hmac;
         Crypto::HmacSha256::Hash hash;
 
-        hmac.Start(const_cast<otCryptoKey *>(&testCase.mKey));
+        hmac.Start(static_cast<const Crypto::Key &>(testCase.mKey));
         hmac.Update(*message, offsets[index++], testCase.mDataLength);
         hmac.Finish(hash);
 

@@ -38,6 +38,8 @@
 #include <mbedtls/aes.h>
 #include <openthread/platform/crypto.h>
 
+#include "crypto/storage.hpp"
+
 namespace ot {
 namespace Crypto {
 
@@ -75,7 +77,7 @@ public:
      * @param[in]  aKey     Crypto Key used for ECB operation
      *
      */
-    void SetKey(const otCryptoKey &aKey);
+    void SetKey(const Key &aKey);
 
     /**
      * This method encrypts data.

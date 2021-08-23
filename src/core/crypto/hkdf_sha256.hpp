@@ -36,7 +36,9 @@
 #define HKDF_SHA256_HPP_
 
 #include "openthread-core-config.h"
+
 #include <psa/crypto.h>
+
 #include "crypto/hmac_sha256.hpp"
 
 namespace ot {
@@ -63,11 +65,10 @@ public:
      *
      * @param[in] aSalt             A pointer to buffer containing salt.
      * @param[in] aSaltLength       The salt length (in bytes).
-     * @param[in] aInputKey         A pointer to buffer containing the input key.
-     * @param[in] aInputKeyLength   The input key length (in bytes).
+     * @param[in] aInputKey         The input key.
      *
      */
-    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const otCryptoKey *aKey);
+    void Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey);
 
     /**
      * This method performs the HKDF Expand step.

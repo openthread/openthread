@@ -42,8 +42,8 @@
 #include <psa/crypto.h>
 
 #include <openthread/crypto.h>
-
 #include <openthread/platform/crypto.h>
+
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"

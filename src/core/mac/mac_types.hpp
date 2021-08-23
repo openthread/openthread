@@ -45,6 +45,7 @@
 #include "common/clearable.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
+#include "crypto/storage.hpp"
 
 namespace ot {
 namespace Mac {
@@ -448,7 +449,7 @@ OT_TOOL_PACKED_BEGIN
 class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
 {
 public:
-    static constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Max allowed keyId range.
+    static constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Max allowed `KeyRef` range.
 
     /**
      * This constructor initializes a `KeyMaterial`.
@@ -486,6 +487,7 @@ public:
      */
     void Clear(void);
 
+#if !OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
      * This method gets the literal `Key`.
      *
@@ -494,6 +496,7 @@ public:
      */
     const Key &GetKey(void) const { return static_cast<const Key &>(mKeyMaterial.mKey); }
 
+#else
     /**
      * This method gets the stored `KeyRef`
      *
@@ -501,6 +504,7 @@ public:
      *
      */
     KeyRef GetKeyRef(void) const { return mKeyMaterial.mKeyRef; }
+#endif
 
     /**
      * This method sets the `KeyMaterial` from a given Key.
@@ -524,12 +528,12 @@ public:
     void ExtractKey(Key &aKey);
 
     /**
-     * This method converts `KeyMaterial` to a `CryptoKey`.
+     * This method converts `KeyMaterial` to a `Crypto::Key`.
      *
-     * @param[out]  A reference to a `CryptoKey` to populate.
+     * @param[out]  A reference to a `Crypto::Key` to populate.
      *
      */
-    void ConvertToCryptoKey(otCryptoKey &aCryptoKey) const;
+    void ConvertToCryptoKey(Crypto::Key &aCryptoKey) const;
 
     /**
      * This method overloads operator `==` to evaluate whether or not two `KeyMaterial` instances are equal.

@@ -39,6 +39,7 @@
 #include "common/locator_getters.hpp"
 #include "common/timer.hpp"
 #include "crypto/hkdf_sha256.hpp"
+#include "crypto/storage.hpp"
 #include "thread/mle_router.hpp"
 #include "thread/thread_netif.hpp"
 
@@ -274,18 +275,15 @@ void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 {
     Crypto::HmacSha256 hmac;
     uint8_t            keySequenceBytes[sizeof(uint32_t)];
-    otCryptoKey        cryptoKey;
+    Crypto::Key        cryptoKey;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    cryptoKey.mKey    = nullptr;
-    cryptoKey.mKeyRef = mNetworkKeyRef;
+    cryptoKey.SetAsKeyRef(mNetworkKeyRef);
 #else
-    cryptoKey.mKey       = mNetworkKey.m8;
-    cryptoKey.mKeyLength = sizeof(mNetworkKey.m8);
-    cryptoKey.mKeyRef    = 0;
+    cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
 #endif
 
-    hmac.Start(&cryptoKey);
+    hmac.Start(cryptoKey);
 
     Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
     hmac.Update(keySequenceBytes);
@@ -299,21 +297,18 @@ void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aKey)
 {
     Crypto::HkdfSha256 hkdf;
     uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
-    otCryptoKey        cryptoKey;
+    Crypto::Key        cryptoKey;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    cryptoKey.mKey    = nullptr;
-    cryptoKey.mKeyRef = mNetworkKeyRef;
+    cryptoKey.SetAsKeyRef(mNetworkKeyRef);
 #else
-    cryptoKey.mKey       = mNetworkKey.m8;
-    cryptoKey.mKeyLength = sizeof(mNetworkKey.m8);
-    cryptoKey.mKeyRef    = 0;
+    cryptoKey.Set(mNetworkKey.m8, NetworkKey::kSize);
 #endif
 
     Encoding::BigEndian::WriteUint32(aKeySequence, salt);
     memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
 
-    hkdf.Extract(salt, sizeof(salt), &cryptoKey);
+    hkdf.Extract(salt, sizeof(salt), cryptoKey);
     hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aKey.m8, Mac::Key::kSize);
 }
 #endif
@@ -499,12 +494,13 @@ NetworkKey KeyManager::GetNetworkKey(void)
     NetworkKey networkKey;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error  error   = kErrorNone;
-    size_t mKeyLen = 0;
+    Error  error = kErrorNone;
+    size_t keyLen;
 
-    error = otPlatCryptoExportKey(mNetworkKeyRef, networkKey.m8, sizeof(networkKey.m8), &mKeyLen);
-
+    error = Crypto::Storage::ExportKey(mNetworkKeyRef, networkKey.m8, NetworkKey::kSize, keyLen);
     OT_ASSERT(error == kErrorNone);
+    OT_ASSERT(keyLen == NetworkKey::kSize);
+    OT_UNUSED_VARIABLE(error);
 #else
     networkKey = mNetworkKey;
 #endif
@@ -517,12 +513,13 @@ const Pskc KeyManager::GetPskc(void) const
     Pskc pskc;
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error  error   = kErrorNone;
-    size_t mKeyLen = 0;
+    Error  error = kErrorNone;
+    size_t keyLen;
 
-    error = otPlatCryptoExportKey(mPskcRef, pskc.m8, sizeof(pskc.m8), &mKeyLen);
-
+    error = Crypto::Storage::ExportKey(mPskcRef, pskc.m8, Pskc::kSize, keyLen);
     OT_ASSERT(error == kErrorNone);
+    OT_ASSERT(keyLen == Pskc::kSize);
+    OT_UNUSED_VARIABLE(error);
 #else
     pskc = mPskc;
 #endif
@@ -541,10 +538,11 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
 
     if (!aOverWriteExisting)
     {
-        otCryptoKeyAttributes mKeyAttributes;
+        Crypto::Storage::KeyAttributes keyAttributes;
 
-        error = otPlatCryptoGetKeyAttributes(keyRef, &mKeyAttributes);
-        // We will be able to retrieve the key_attributes only if there is
+        error = Crypto::Storage::GetKeyAttributes(keyRef, keyAttributes);
+
+        // We will be able to retrieve the keyAttributes only if there is
         // already a network key stored in ITS. If stored, and we are not
         // overwriting the existing key, return without doing anything.
         if (error == OT_ERROR_NONE)
@@ -555,9 +553,9 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
 
     CheckAndDestroyStoredKey(keyRef);
 
-    error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_HMAC, OT_CRYPTO_KEY_ALG_HMAC_SHA_256,
-                                  OT_CRYPTO_KEY_USAGE_SIGN_HASH | OT_CRYPTO_KEY_USAGE_EXPORT,
-                                  OT_CRYPTO_KEY_STORAGE_PERSISTENT, mNetworkKey.m8, OT_NETWORK_KEY_SIZE);
+    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac, Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                       Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
+                                       Crypto::Storage::kTypePersistent, mNetworkKey.m8, NetworkKey::kSize);
 
 exit:
     mNetworkKey.Clear();
@@ -574,8 +572,9 @@ Error KeyManager::StorePskc(void)
 
     CheckAndDestroyStoredKey(keyRef);
 
-    error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_RAW, OT_CRYPTO_KEY_ALG_VENDOR, OT_CRYPTO_KEY_USAGE_EXPORT,
-                                  OT_CRYPTO_KEY_STORAGE_PERSISTENT, mPskc.m8, OT_PSKC_MAX_SIZE);
+    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
+                                       Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, mPskc.m8,
+                                       Pskc::kSize);
 
     OT_ASSERT(error == kErrorNone);
 
@@ -622,7 +621,7 @@ void KeyManager::CheckAndDestroyStoredKey(Mac::KeyRef aKeyRef)
 {
     if (aKeyRef < Mac::KeyMaterial::kInvalidKeyRef)
     {
-        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
+        IgnoreError(Crypto::Storage::DestroyKey(aKeyRef));
     }
 }
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE

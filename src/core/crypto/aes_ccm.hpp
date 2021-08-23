@@ -41,6 +41,7 @@
 #include <openthread/platform/crypto.h>
 #include "common/error.hpp"
 #include "crypto/aes_ecb.hpp"
+#include "crypto/storage.hpp"
 #include "mac/mac_types.hpp"
 
 namespace ot {
@@ -80,7 +81,7 @@ public:
      * @param[in]  aKey    Crypto Key used in AES operation
      *
      */
-    void SetKey(const otCryptoKey &aKey) { mEcb.SetKey(aKey); }
+    void SetKey(const Key &aKey) { mEcb.SetKey(aKey); }
 
     /**
      * This method sets the key.

@@ -52,9 +52,9 @@ HmacSha256::~HmacSha256(void)
     OT_UNUSED_VARIABLE(err);
 }
 
-void HmacSha256::Start(const otCryptoKey *aKey)
+void HmacSha256::Start(const Key &aKey)
 {
-    Error err = otPlatCryptoHmacSha256Start(&mContext, sizeof(mContext), aKey);
+    Error err = otPlatCryptoHmacSha256Start(&mContext, sizeof(mContext), &aKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

@@ -32,18 +32,18 @@
  */
 
 #include "hkdf_sha256.hpp"
-#include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/error.hpp"
 
 #include <string.h>
+
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
 
 namespace ot {
 namespace Crypto {
 
-void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const otCryptoKey *aKey)
+void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey)
 {
-    Error err = otPlatCryptoHkdfExtract(&mContext, sizeof(mContext), aSalt, aSaltLength, aKey);
+    Error err = otPlatCryptoHkdfExtract(&mContext, sizeof(mContext), aSalt, aSaltLength, &aInputKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

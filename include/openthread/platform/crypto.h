@@ -134,7 +134,6 @@ typedef uint32_t otCryptoKeyRef;
  * This structure represents the Key Material required for Crypto operations.
  *
  */
-
 typedef struct otCryptoKey
 {
     const uint8_t *mKey;       ///< Pointer to the buffer containing key. NULL indicates to use `mKeyRef`.
@@ -148,17 +147,16 @@ typedef struct otCryptoKey
  * This structure represents the Key Attributes structure.
  *
  */
-
 typedef struct otCryptoKeyAttributes
 {
     uint8_t m8[OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE];
 } otCryptoKeyAttributes;
 
 /**
- * Initialise the Crypto module.
+ * Initialize the Crypto module.
  *
- * @retval OT_ERROR_NONE          Successfully initialised Crypto module.
- * @retval OT_ERROR_FAILED        Failed to initialise Crypto module.
+ * @retval OT_ERROR_NONE          Successfully initialized Crypto module.
+ * @retval OT_ERROR_FAILED        Failed to initialize Crypto module.
  *
  */
 otError otPlatCryptoInit(void);
@@ -166,7 +164,7 @@ otError otPlatCryptoInit(void);
 /**
  * Import a key into PSA ITS.
  *
- * @param[inout] aKeyId            Reference to the key to be used for crypto operations.
+ * @param[inout] aKeyRef           Pointer to the key ref to be used for crypto operations.
  * @param[in]    aKeyType          Key Type encoding for the key.
  * @param[in]    aKeyAlgorithm     Key algorithm encoding for the key.
  * @param[in]    aKeyUsage         Key Usage encoding for the key.
@@ -174,14 +172,14 @@ otError otPlatCryptoInit(void);
  * @param[in]    aKey              Actual key to be imported.
  * @param[in]    aKeyLen           Length of the key to be imported.
  *
- * @retval OT_ERROR_NONE          Successfully imported the key  @p aInput.
- * @retval OT_ERROR_FAILED        Failed to import the key @p aInput.
+ * @retval OT_ERROR_NONE          Successfully imported the key.
+ * @retval OT_ERROR_FAILED        Failed to import the key.
  * @retval OT_ERROR_INVALID_ARGS  @p aKey was set to NULL.
  *
- * @note This API is available only if platform supports PSA crypto
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
-otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
+otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
                               otCryptoKeyType      aKeyType,
                               otCryptoKeyAlgorithm aKeyAlgorithm,
                               int                  aKeyUsage,
@@ -192,72 +190,76 @@ otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
 /**
  * Export a key stored in PSA ITS.
  *
- * @param[in]   aKeyId            Reference to the key to be used for crypto operations.
+ * @param[in]   aKeyRef           The key ref to be used for crypto operations.
  * @param[out]  aBuffer           Pointer to the buffer where key needs to be exported.
  * @param[in]   aBufferLen        Length of the buffer passed to store the exported key.
- * @param[out]  aKeyLen           Length of the exported key.
+ * @param[out]  aKeyLen           Pointer to return the length of the exported key.
  *
- * @retval OT_ERROR_NONE          Successfully exported  @p aKeyId.
- * @retval OT_ERROR_FAILED        Failed to export @p aInput.
+ * @retval OT_ERROR_NONE          Successfully exported  @p aKeyRef.
+ * @retval OT_ERROR_FAILED        Failed to export @p aKeyRef.
  * @retval OT_ERROR_INVALID_ARGS  @p aBuffer was NULL
  *
- * @note This API is available only if platform supports PSA crypto
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
-otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen);
+otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen);
 
 /**
  * Destroy a key stored in PSA ITS.
  *
- * @param[in]   aKeyId            Reference to the key to be used for crypto operations.
+ * @param[in]   aKeyRef          The key ref to be destroyed
  *
- * @retval OT_ERROR_NONE          Successfully destroyed key.
+ * @retval OT_ERROR_NONE          Successfully destroyed the key.
  * @retval OT_ERROR_FAILED        Failed to destroy the key.
  *
- * @note This API is available only if platform supports PSA crypto
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
-otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyId);
+otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
 
 /**
  * Get Attributes for a key stored in PSA ITS.
  *
- * @param[in]  aKeyId            Reference to the key to be used for Verifying the signature.
- * @param[out] aKeyAttributes    Pointer to the Key attributes for the key.
+ * @param[in]  aKeyRef           The key ref for which to get the attributed.
+ * @param[out] aKeyAttributes    Pointer to a otCryptoKeyAttributes to populate.
  *
  * @retval OT_ERROR_NONE          Successfully copied the key attributes to @p aKeyAttributes.
  * @retval OT_ERROR_FAILED        Failed to copy the key attributes to @p aKeyAttributes.
  * @retval OT_ERROR_INVALID_ARGS  @p aKeyAttributes was NULL
  *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ *
  */
-otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyId, otCryptoKeyAttributes *aKeyAttributes);
+otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyRef, otCryptoKeyAttributes *aKeyAttributes);
 
 /**
- * Initialise the HMAC operation.
+ * Initialize the HMAC operation.
  *
  * @param[in]  aContext          Context for HMAC operation.
  * @param[in]  aContextSize      Context size HMAC operation.
  *
- * @retval OT_ERROR_NONE          Successfully initialised HMAC operation.
- * @retval OT_ERROR_FAILED        Failed to initialise HMAC operation.
+ * @retval OT_ERROR_NONE          Successfully initialized HMAC operation.
+ * @retval OT_ERROR_FAILED        Failed to initialize HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_mac_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
 otError otPlatCryptoHmacSha256Init(void *aContext, size_t aContextSize);
 
 /**
- * UnInitialise the HMAC operation.
+ * Uninitialize the HMAC operation.
  *
  * @param[in]  aContext          Context for HMAC operation.
+ * @param[in]  aContextSize      Context size HMAC operation.
  *
- * @retval OT_ERROR_NONE          Successfully uninitialised HMAC operation.
- * @retval OT_ERROR_FAILED        Failed to uninitialised HMAC operation.
+ *
+ * @retval OT_ERROR_NONE          Successfully uninitialized HMAC operation.
+ * @retval OT_ERROR_FAILED        Failed to uninitialized HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_mac_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
@@ -310,7 +312,7 @@ otError otPlatCryptoHmacSha256Update(void *aContext, size_t aContextSize, const 
  * @retval OT_ERROR_FAILED        Failed to complete HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
  *
- * @note Incase PSA is supported pointer to psa_mac_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
  *
  */
@@ -326,7 +328,7 @@ otError otPlatCryptoHmacSha256Finish(void *aContext, size_t aContextSize, uint8_
  * @retval OT_ERROR_FAILED        Failed to Initialise AES operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_key_id will be passed as input.
+ * @note In case PSA is supported pointer to psa_key_id will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
  */
@@ -343,7 +345,7 @@ otError otPlatCryptoAesInit(void *aContext, size_t aContextSize);
  * @retval OT_ERROR_FAILED        Failed to set the key for AES operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aKey was NULL
  *
- * @note Incase PSA is supported pointer to psa_key_id will be passed as input.
+ * @note In case PSA is supported pointer to psa_key_id will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
  */
@@ -361,7 +363,7 @@ otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, const otCrypt
  * @retval OT_ERROR_FAILED        Failed to encrypt @p aInput.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aKey or @p aOutput were NULL
  *
- * @note Incase PSA is supported pointer to psa_key_id will be passed as input.
+ * @note In case PSA is supported pointer to psa_key_id will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
  */
@@ -377,7 +379,7 @@ otError otPlatCryptoAesEncrypt(void *aContext, size_t aContextSize, const uint8_
  * @retval OT_ERROR_FAILED        Failed to free AES context.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_key_id will be passed as input.
+ * @note In case PSA is supported pointer to psa_key_id will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
  *
  */
@@ -411,7 +413,7 @@ otError otPlatCryptoHkdfExpand(void *         aContext,
  * @param[in]  aContextSize       Context size HKDF operation.
  * @param[in]  aSalt              Pointer to the Salt for HKDF.
  * @param[in]  aInfoLength        length of Salt.
- * @param[out] aKey               Ponter to key material to be used.
+ * @param[out] aKey               Pointer to key material to be used.
  *
  * @retval OT_ERROR_NONE          HKDF Extract was successful.
  * @retval OT_ERROR_FAILED        HKDF Extract failed.
@@ -433,7 +435,7 @@ otError otPlatCryptoHkdfExtract(void *             aContext,
  * @retval OT_ERROR_FAILED        Failed to initialise SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_hash_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
 otError otPlatCryptoSha256Init(void *aContext, size_t aContextSize);
@@ -448,7 +450,7 @@ otError otPlatCryptoSha256Init(void *aContext, size_t aContextSize);
  * @retval OT_ERROR_FAILED        Failed to un-initialised SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_hash_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
 otError otPlatCryptoSha256Deinit(void *aContext, size_t aContextSize);
@@ -463,7 +465,7 @@ otError otPlatCryptoSha256Deinit(void *aContext, size_t aContextSize);
  * @retval OT_ERROR_FAILED        Failed to start SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note Incase PSA is supported pointer to psa_hash_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
 otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize);
@@ -480,7 +482,7 @@ otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize);
  * @retval OT_ERROR_FAILED        Failed to update SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
  *
- * @note Incase PSA is supported pointer to psa_hash_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
 otError otPlatCryptoSha256Update(void *aContext, size_t aContextSize, const void *aBuf, uint16_t aBufLength);
@@ -497,7 +499,7 @@ otError otPlatCryptoSha256Update(void *aContext, size_t aContextSize, const void
  * @retval OT_ERROR_FAILED        Failed to complete SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aHash was NULL
  *
- * @note Incase PSA is supported pointer to psa_hash_operation_t will be passed as input.
+ * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
  * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
 otError otPlatCryptoSha256Finish(void *aContext, size_t aContextSize, uint8_t *aHash, uint16_t aHashSize);

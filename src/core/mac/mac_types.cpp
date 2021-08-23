@@ -361,15 +361,17 @@ void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     {
         Error  error;
-        KeyRef keyRef;
+        KeyRef keyRef = 0;
 
         DestroyKey();
 
-        error = otPlatCryptoImportKey(&keyRef, OT_CRYPTO_KEY_TYPE_AES, OT_CRYPTO_KEY_ALG_AES_ECB,
-                                      (aIsExportable ? OT_CRYPTO_KEY_USAGE_EXPORT : 0) | OT_CRYPTO_KEY_USAGE_ENCRYPT |
-                                          OT_CRYPTO_KEY_USAGE_DECRYPT,
-                                      OT_CRYPTO_KEY_STORAGE_VOLATILE, aKey.GetBytes(), Key::kSize);
+        error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeAes, Crypto::Storage::kKeyAlgorithmAesEcb,
+                                           (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
+                                               Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
+                                           Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize);
+
         OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
 
         SetKeyRef(keyRef);
     }
@@ -389,24 +391,21 @@ void KeyMaterial::ExtractKey(Key &aKey)
         Error  error;
         size_t keySize;
 
-        error = otPlatCryptoExportKey(GetKeyRef(), aKey.m8, Key::kSize, &keySize);
+        error = Crypto::Storage::ExportKey(GetKeyRef(), aKey.m8, Key::kSize, keySize);
         OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
     }
 #else
-    aKey                  = GetKey();
+    aKey = GetKey();
 #endif
 }
 
-void KeyMaterial::ConvertToCryptoKey(otCryptoKey &aCryptoKey) const
+void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
 {
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    aCryptoKey.mKey       = nullptr;
-    aCryptoKey.mKeyLength = 0;
-    aCryptoKey.mKeyRef    = GetKeyRef();
+    aCryptoKey.SetAsKeyRef(GetKeyRef());
 #else
-    aCryptoKey.mKey       = GetKey().GetBytes();
-    aCryptoKey.mKeyLength = Key::kSize;
-    aCryptoKey.mKeyRef    = 0;
+    aCryptoKey.Set(GetKey().GetBytes(), Key::kSize);
 #endif
 }
 
@@ -415,7 +414,7 @@ void KeyMaterial::DestroyKey(void)
 {
     if (GetKeyRef() < kInvalidKeyRef)
     {
-        IgnoreError(otPlatCryptoDestroyKey(GetKeyRef()));
+        IgnoreError(Crypto::Storage::DestroyKey(GetKeyRef()));
     }
 
     SetKeyRef(kInvalidKeyRef);

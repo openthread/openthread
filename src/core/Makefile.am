@@ -462,6 +462,7 @@ HEADERS_COMMON                                  = \
     crypto/mbedtls.hpp                            \
     crypto/pbkdf2_cmac.hpp                        \
     crypto/sha256.hpp                             \
+    crypto/storage.hpp                            \
     diags/factory_diags.hpp                       \
     mac/channel_mask.hpp                          \
     mac/data_poll_handler.hpp                     \

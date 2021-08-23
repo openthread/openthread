@@ -435,6 +435,7 @@ openthread_core_files = [
   "crypto/pbkdf2_cmac.hpp",
   "crypto/sha256.cpp",
   "crypto/sha256.hpp",
+  "crypto/storage.hpp",
   "diags/factory_diags.cpp",
   "diags/factory_diags.hpp",
   "mac/channel_mask.cpp",

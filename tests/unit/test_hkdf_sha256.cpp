@@ -129,7 +129,7 @@ void TestHkdfSha256(void)
     {
         ot::Crypto::HkdfSha256 hkdf;
         uint8_t                outKey[kMaxOuttKey];
-        otCryptoKey            testInputKey;
+        ot::Crypto::Key        testInputKey;
 
         printf("\n- - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -");
         DumpBuffer("\nInput Key", test->mInKey, test->mInKeyLength);
@@ -142,7 +142,7 @@ void TestHkdfSha256(void)
         testInputKey.mKey       = test->mInKey;
         testInputKey.mKeyLength = test->mInKeyLength;
 
-        hkdf.Extract(test->mSalt, test->mSaltLength, &testInputKey);
+        hkdf.Extract(test->mSalt, test->mSaltLength, testInputKey);
         hkdf.Expand(test->mInfo, test->mInfoLength, outKey, test->mOutKeyLength);
 
         DumpBuffer("\nCalculated Output Key", outKey, test->mOutKeyLength);

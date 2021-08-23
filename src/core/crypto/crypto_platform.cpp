@@ -53,7 +53,7 @@ OT_TOOL_WEAK otError otPlatCryptoInit(void)
     return OT_ERROR_NONE;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
+OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
                                            otCryptoKeyType      aKeyType,
                                            otCryptoKeyAlgorithm aKeyAlgorithm,
                                            int                  aKeyUsage,
@@ -61,7 +61,7 @@ OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
                                            const uint8_t *      aKey,
                                            size_t               aKeyLen)
 {
-    OT_UNUSED_VARIABLE(aKeyId);
+    OT_UNUSED_VARIABLE(aKeyRef);
     OT_UNUSED_VARIABLE(aKeyType);
     OT_UNUSED_VARIABLE(aKeyAlgorithm);
     OT_UNUSED_VARIABLE(aKeyUsage);
@@ -72,9 +72,9 @@ OT_TOOL_WEAK otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyId,
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
+OT_TOOL_WEAK otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
 {
-    OT_UNUSED_VARIABLE(aKeyId);
+    OT_UNUSED_VARIABLE(aKeyRef);
     OT_UNUSED_VARIABLE(aBuffer);
     OT_UNUSED_VARIABLE(aBufferLen);
     OT_UNUSED_VARIABLE(aKeyLen);
@@ -82,16 +82,16 @@ OT_TOOL_WEAK otError otPlatCryptoExportKey(otCryptoKeyRef aKeyId, uint8_t *aBuff
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyId)
+OT_TOOL_WEAK otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
 {
-    OT_UNUSED_VARIABLE(aKeyId);
+    OT_UNUSED_VARIABLE(aKeyRef);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyId, otCryptoKeyAttributes *aKeyAttributes)
+OT_TOOL_WEAK otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyRef, otCryptoKeyAttributes *aKeyAttributes)
 {
-    OT_UNUSED_VARIABLE(aKeyId);
+    OT_UNUSED_VARIABLE(aKeyRef);
     OT_UNUSED_VARIABLE(aKeyAttributes);
 
     return OT_ERROR_NOT_IMPLEMENTED;
@@ -310,13 +310,10 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(void *         aContext,
 
     while (aOutputKeyLength > 0)
     {
-        otCryptoKey cryptoKey;
+        Key cryptoKey;
 
-        cryptoKey.mKey       = prk->GetBytes();
-        cryptoKey.mKeyLength = sizeof(HmacSha256::Hash);
-        cryptoKey.mKeyRef    = 0;
-
-        hmac.Start(&cryptoKey);
+        cryptoKey.Set(prk->GetBytes(), sizeof(HmacSha256::Hash));
+        hmac.Start(cryptoKey);
 
         if (iter != 0)
         {
@@ -362,17 +359,16 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *             aContext,
 
 #if !OPENTHREAD_RADIO
     HmacSha256        hmac;
-    otCryptoKey       cryptoKey;
+    Key               cryptoKey;
     HmacSha256::Hash *prk = static_cast<HmacSha256::Hash *>(aContext);
 
     VerifyOrExit(aContextSize >= sizeof(HmacSha256::Hash), error = OT_ERROR_FAILED);
 
-    cryptoKey.mKey       = aSalt;
-    cryptoKey.mKeyLength = aSaltLength;
-    cryptoKey.mKeyRef    = 0;
+    cryptoKey.Set(aSalt, aSaltLength);
 
     // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
-    hmac.Start(&cryptoKey);
+    hmac.Start(cryptoKey);
+
     hmac.Update(aKey->mKey, aKey->mKeyLength);
     hmac.Finish(*prk);
 

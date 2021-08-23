@@ -44,18 +44,15 @@ namespace Crypto {
 
 void AesCcm::SetKey(const uint8_t *aKey, uint16_t aKeyLength)
 {
-    otCryptoKey cryptoKey;
+    Key cryptoKey;
 
-    cryptoKey.mKey       = aKey;
-    cryptoKey.mKeyLength = aKeyLength;
-    cryptoKey.mKeyRef    = 0;
-
+    cryptoKey.Set(aKey, aKeyLength);
     SetKey(cryptoKey);
 }
 
 void AesCcm::SetKey(const Mac::KeyMaterial &aMacKey)
 {
-    otCryptoKey cryptoKey;
+    Key cryptoKey;
 
     aMacKey.ConvertToCryptoKey(cryptoKey);
     SetKey(cryptoKey);
