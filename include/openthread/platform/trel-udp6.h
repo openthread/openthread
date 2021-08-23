@@ -137,6 +137,7 @@ extern void otPlatTrelUdp6HandleReceived(otInstance *aInstance, uint8_t *aBuffer
  * @param[in] aEnable          Indicates whether to enable/disable the TREL interface.
  *
  * @retval OT_ERROR_NONE             Successfully changed the TREL interface test status (enabled/disabled).
+ * @retval OT_ERROR_FAILED           Failed to enable the TREL interface.
  * @retval OT_ERROR_NOT_IMPLEMENTED  This function is not provided by the platform.
  *
  */
