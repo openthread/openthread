@@ -451,10 +451,37 @@ public:
     static constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Max allowed keyId range.
 
     /**
+     * This constructor initializes a `KeyMaterial`.
+     *
+     */
+    KeyMaterial(void)
+    {
+        GetKey().Clear();
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        SetKeyRef(kInvalidKeyRef);
+#endif
+    }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    /**
+     * This method overload `=` operator to assign the `KeyMaterial` from another one.
+     *
+     * If the `KeyMaterial` currently stores a valid and different `KeyRef`, the assignment of new value will ensure to
+     * delete the previous one before using the new `KeyRef` from @p aOther.
+     *
+     * @param[in] aOther  aOther  The other `KeyMaterial` instance to assign from.
+     *
+     * @returns A reference to the current `KeyMaterial`
+     *
+     */
+    KeyMaterial &operator=(const KeyMaterial &aOther);
+#endif
+
+    /**
      *  This method clears the `KeyMaterial`.
      *
-     * When `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled, this method sets the `KeyRef` to the invalid
-     * value `kInvalidKeyRef`.
+     * Under `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE`, if the `KeyMaterial` currently stores a valid previous
+     * `KeyRef`, the `Clear()` call will ensure to delete the previous `KeyRef` and set it to `kInvalidKeyRef`.
      *
      */
     void Clear(void);
@@ -478,8 +505,12 @@ public:
     /**
      * This method sets the `KeyMaterial` from a given Key.
      *
-     * @param[in] aKey           A reference to the input key.
-     * @param[in] aIsExportable  Boolean indicating if the key is exportable.
+     * If the `KeyMaterial` currently stores a valid `KeyRef`, the `SetFrom()` call will ensure to delete the previous
+     * one before creating and using a new `KeyRef` associated with the new `Key`.
+     *
+     * @param[in] aKey           A reference to the new key.
+     * @param[in] aIsExportable  Boolean indicating if the key is exportable (this is only applicable under
+     *                           `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` config).
      *
      */
     void SetFrom(const Key &aKey, bool aIsExportable = false);
@@ -501,12 +532,6 @@ public:
     void ConvertToCryptoKey(otCryptoKey &aCryptoKey) const;
 
     /**
-     * This method destroys the key reference stored in PSA.
-     *
-     */
-    void DestroyKey(void);
-
-    /**
      * This method overloads operator `==` to evaluate whether or not two `KeyMaterial` instances are equal.
      *
      * @param[in]  aOther  The other `KeyMaterial` instance to compare with.
@@ -517,11 +542,13 @@ public:
      */
     bool operator==(const KeyMaterial &aOther) const;
 
+    KeyMaterial(const KeyMaterial &) = delete;
+
 private:
     Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
     void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
-
+    void DestroyKey(void);
 } OT_TOOL_PACKED_END;
 
 /**

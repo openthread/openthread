@@ -188,14 +188,6 @@ KeyManager::KeyManager(Instance &aInstance)
 
     mMacFrameCounters.Reset();
     mPskc.Clear();
-    mKek.Clear();
-    mMleKey.Clear();
-    mTemporaryMleKey.Clear();
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    mTrelKey.Clear();
-    mTemporaryTrelKey.Clear();
-#endif
 }
 
 void KeyManager::Start(void)
@@ -332,7 +324,6 @@ void KeyManager::UpdateKeyMaterial(void)
 
     ComputeKeys(mKeySequence, hashKeys);
 
-    mMleKey.DestroyKey();
     mMleKey.SetFrom(hashKeys.GetMleKey());
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -358,8 +349,6 @@ void KeyManager::UpdateKeyMaterial(void)
         Mac::Key key;
 
         ComputeTrelKey(mKeySequence, key);
-
-        mTrelKey.DestroyKey();
         mTrelKey.SetFrom(key);
     }
 #endif
@@ -398,8 +387,6 @@ const Mle::KeyMaterial &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
     HashKeys hashKeys;
 
     ComputeKeys(aKeySequence, hashKeys);
-
-    mTemporaryMleKey.DestroyKey();
     mTemporaryMleKey.SetFrom(hashKeys.GetMleKey());
 
     return mTemporaryMleKey;
@@ -411,7 +398,6 @@ const Mac::KeyMaterial &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence
     Mac::Key key;
 
     ComputeTrelKey(aKeySequence, key);
-    mTemporaryTrelKey.DestroyKey();
     mTemporaryTrelKey.SetFrom(key);
 
     return mTemporaryTrelKey;
@@ -467,7 +453,6 @@ void KeyManager::IncrementMleFrameCounter(void)
 
 void KeyManager::SetKek(const Kek &aKek)
 {
-    mKek.DestroyKey();
     mKek.SetFrom(aKek, /* aIsExportable */ true);
     mKekFrameCounter = 0;
 }

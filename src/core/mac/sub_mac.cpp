@@ -78,9 +78,6 @@ SubMac::SubMac(Instance &aInstance)
 #endif
 {
     mExtAddress.Clear();
-    mPrevKey.Clear();
-    mCurrKey.Clear();
-    mNextKey.Clear();
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -843,12 +840,6 @@ void SubMac::SetMacKey(uint8_t            aKeyIdMode,
     case Frame::kKeyIdMode2:
         break;
     case Frame::kKeyIdMode1:
-
-        // Destroy Previously stored Key References if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE is enabled
-        mPrevKey.DestroyKey();
-        mCurrKey.DestroyKey();
-        mNextKey.DestroyKey();
-
         mKeyId   = aKeyId;
         mPrevKey = aPrevKey;
         mCurrKey = aCurrKey;
