@@ -33,12 +33,15 @@
 #ifndef _NETINET_TCP_VAR_H_
 #define _NETINET_TCP_VAR_H_
 
+/* Dependencies on OpenThread. */
 #include <openthread/ip6.h>
 #include <openthread/message.h>
 
+/* Dependencies on TCPlp buffering libraries. */
 #include "../lib/bitmap.h"
 #include "../lib/cbuf.h"
 #include "../lib/lbuf.h"
+
 #include "cc.h"
 #include "tcp.h"
 #include "types.h"
@@ -46,7 +49,7 @@
 
 #include "sys/queue.h"
 
-/* Implement byte-order-specific functions using host. */
+/* Implement byte-order-specific functions using OpenThread. */
 uint16_t tcplp_sys_hostswap16(uint16_t hostport);
 uint32_t tcplp_sys_hostswap32(uint32_t hostport);
 
@@ -82,9 +85,6 @@ struct sackhint {
 	struct sackhole	*nexthole;
 	int		sack_bytes_rexmit;
 	tcp_seq		last_sack_ack;	/* Most recent/largest sacked ack */
-
-//	int		ispare;		/* explicit pad for 64bit alignment */
-//	uint64_t	_pad[2];	/* 1 sacked_bytes, 1 TBD */
 };
 
 struct tcptemp {
@@ -131,9 +131,20 @@ struct signals;
  * Tcp control block, one per tcp; fields:
  * Organized for 16 byte cacheline efficiency.
  */
+/*
+ * samkumar: I added some fields for TCPlp to the beginning of this structure,
+ * replaced the fields for buffering and timers, and deleted unused fields to
+ * save memory. I've left some of the deleted fields in, as comments, for
+ * clarity. At times, I reduced the configurability of the implementation
+ * (e.g., by removing the ability to set keepalive parameters) in order to
+ * reduce the size of this structure.
+ */
 struct tcpcb {
-
-	/* Extra fields that I added. */
+	/*
+	 * samkumar: Extra fields that I added. TCPlp doesn't have a struct inpcb,
+	 * so some of the fields I added represent data that would normally be
+	 * stored in the inpcb.
+	 */
 	otInstance *instance;
 
 	struct tcpcb_listen* accepted_from;
@@ -150,18 +161,21 @@ struct tcpcb {
 	uint16_t fport; // foreign port, network byte order
 	uint8_t miscflags;
 
+	/* samkumar: This field was there previously. */
 	uint8_t	t_state;		/* state of this connection */
 
-	/* Pool of SACK holes. */
+	/* Pool of SACK holes (on per-connection basis, for OpenThread port). */
 	struct sackhole sackhole_pool[SACKHOLE_POOL_SIZE];
 	uint8_t sackhole_bmp[SACKHOLE_BMP_SIZE];
 
-#if 0 // I used unused space in the receive buffer for the reassembly queue
+#if 0
 	struct	tsegqe_head t_segq;	/* segment reassembly queue */
 	void	*t_pspare[2];		/* new reassembly queue */
 	int	t_segqlen;		/* segment reassembly queue length */
 #endif
+
 	int	t_dupacks;		/* consecutive dup acks recd */
+
 #if 0
 	struct tcp_timer *t_timers;	/* All the TCP timers in one struct */
 
@@ -507,20 +521,19 @@ tcp_fields_to_host(struct tcphdr *th)
 }
 
 void	 tcp_twstart(struct tcpcb*);
-void	 tcp_twclose(struct /*tcptw*/tcpcb*, int);
-int	 tcp_twcheck(struct tcpcb*,/*struct inpcb *, struct tcpopt *,*/ struct tcphdr *,
-	    /*struct mbuf *,*/ int);
+void	 tcp_twclose(struct tcpcb*, int);
+int	 tcp_twcheck(struct tcpcb*, struct tcphdr *, int);
 void tcp_dropwithreset(struct ip6_hdr* ip6, struct tcphdr *th, struct tcpcb *tp, otInstance* instance,
     int tlen, int rstreason);
 int tcp_input(struct ip6_hdr* ip6, struct tcphdr* th, otMessage* msg, struct tcpcb* tp, struct tcpcb_listen* tpl,
           struct signals* sig);
 int	 tcp_output(struct tcpcb *);
-void tcpip_maketemplate(struct /*inp*/tcpcb *, struct tcptemp*);
-void	 tcpip_fillheaders(struct /*inp*/tcpcb *, /*void*/ otMessageInfo *, void *);
-uint64_t	 tcp_maxmtu6(/*struct in_conninfo **/ struct tcpcb*, struct tcp_ifcap *);
+void tcpip_maketemplate(struct tcpcb *, struct tcptemp*);
+void	 tcpip_fillheaders(struct tcpcb *, otMessageInfo *, void *);
+uint64_t	 tcp_maxmtu6(struct tcpcb*, struct tcp_ifcap *);
 int	 tcp_addoptions(struct tcpopt *, uint8_t *);
-int	 tcp_mssopt(/*struct in_conninfo **/ struct tcpcb*);
-int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, /*struct mbuf*/otMessage *, off_t, struct signals*);
+int	 tcp_mssopt(struct tcpcb*);
+int	 tcp_reass(struct tcpcb *, struct tcphdr *, int *, otMessage *, off_t, struct signals*);
 void tcp_sack_init(struct tcpcb *); // Sam: new function that I added
 void	 tcp_sack_doack(struct tcpcb *, struct tcpopt *, tcp_seq);
 void	 tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_laststart, tcp_seq rcv_lastend);

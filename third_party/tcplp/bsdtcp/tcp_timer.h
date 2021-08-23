@@ -30,6 +30,14 @@
  * $FreeBSD$
  */
 
+/**
+ * samkumar: The FreeBSD Operating System uses its callout subsystem to
+ * implement TCP timers. I've removed the relevant definitions/declarations
+ * below, since TCPlp relies on the host system to implement TCP timers. To
+ * save memory, I've removed some configurability (e.g., per-TCB keepalive
+ * parameters) and global statistics (e.g. tcp_keepcnt).
+ */
+
 #ifndef _NETINET_TCP_TIMER_H_
 #define _NETINET_TCP_TIMER_H_
 
@@ -153,16 +161,20 @@ void tcp_timer_2msl(struct tcpcb* tp);
 void tcp_timer_rexmt(struct tcpcb *tp);
 int tcp_timer_active(struct tcpcb *tp, uint32_t timer_type);
 
-/* Copied from below, with modifications. */
+/*
+ * samkumar: Modified to use default keepalive parameters, since we removed
+ * the fields from tcpcb that allow them to be set on a per-connection basis.
+ */
 #define	TP_KEEPINIT(tp)	(/*(tp)->t_keepinit ? (tp)->t_keepinit :*/ tcp_keepinit)
 #define	TP_KEEPIDLE(tp)	(/*(tp)->t_keepidle ? (tp)->t_keepidle :*/ tcp_keepidle)
 #define	TP_KEEPINTVL(tp) (/*(tp)->t_keepintvl ? (tp)->t_keepintvl :*/ tcp_keepintvl)
 #define	TP_KEEPCNT(tp)	(/*(tp)->t_keepcnt ? (tp)->t_keepcnt :*/ tcp_keepcnt)
 #define	TP_MAXIDLE(tp)	(TP_KEEPCNT(tp) * TP_KEEPINTVL(tp))
 
-//extern int tcp_keepcnt;			/* number of keepalives */
-
-// MOVED NECESSARY EXTERN DECLARATIONS TO TCP_SUBR.C
-/* Removed timer declarations that aren't needed since timers are handled externally in TCPlp. */
+/*
+ * samkumar: MOVED NECESSARY EXTERN DECLARATIONS TO TCP_SUBR.C
+ * Removed timer declarations that aren't needed since timers are handled
+ * by the host system (in this case, OpenThread), in TCPlp.
+ */
 
 #endif /* !_NETINET_TCP_TIMER_H_ */

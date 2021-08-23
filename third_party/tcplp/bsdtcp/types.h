@@ -35,16 +35,17 @@
  * $FreeBSD$
  */
 
+/*
+ * samkumar: I've omitted definitions for u_char, u_short, u_int, etc., because
+ * they come predefined by certain compilers, sometimes differently. I just
+ * replaced all usages of these types in the code with the corresponding
+ * standard integer types (uint8_t, uint16_t, etc.).
+ */
+
 #ifndef _SYS_TYPES_H_
 #define	_SYS_TYPES_H_
 
 #include <stdint.h>
-
-/* I've omitted definitions for u_char, u_short, u_int, etc., because they come
- * predefined by certain compilers, sometimes differently. I just replaced all
- * usages of these types with the corresponding standard integer types
- * (uint8_t, uint16_t, etc.).
- */
 
 typedef uint8_t __uint8_t;
 typedef uint16_t __uint16_t;

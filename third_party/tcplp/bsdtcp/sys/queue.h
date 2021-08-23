@@ -33,6 +33,7 @@
 #ifndef _SYS_QUEUE_H_
 #define	_SYS_QUEUE_H_
 
+/* samkumar: Removing this, as it adds yet another dependency. */
 //#include <sys/cdefs.h>
 
 /*

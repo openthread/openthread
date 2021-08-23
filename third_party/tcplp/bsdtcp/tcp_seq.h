@@ -80,7 +80,7 @@
 static __inline uint32_t
 tcp_ts_getticks(void)
 {
-	/* This used to be implemented using getmicrouptime(). */
+	/* samkumar: This used to be implemented using getmicrouptime(). */
 	return tcplp_sys_get_millis();
 }
 

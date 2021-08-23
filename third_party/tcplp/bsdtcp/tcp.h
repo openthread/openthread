@@ -30,6 +30,13 @@
  * $FreeBSD$
  */
 
+/*
+ * samkumar: In one instance (in struct tcphdr), where there are Big Endian
+ * and Little Endian alternatives for ordering two fields, I hardcoded the
+ * Little Endian alternative. If ever we port this to a Big Endian platform,
+ * we should look at that very closely, and consider rewriting it.
+ */
+
 #ifndef _NETINET_TCP_H_
 #define _NETINET_TCP_H_
 

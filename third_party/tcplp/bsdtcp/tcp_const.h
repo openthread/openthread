@@ -28,11 +28,11 @@
  */
 
 /*
- * I created this file to store many of the constants shared by the
- * various files in the FreeBSD protocol logic. I've changed the
- * definitions to be enumerations rather than globals, to save
- * some memory.
- * @}
+ * samkumar: I created this file to store many of the constants shared by the
+ * various files in the FreeBSD protocol logic. The original variables were
+ * often virtualized ("V_"-prefixed) variables. I've changed the definitions to
+ * be enumerations rather than globals, to save some memory. These variables
+ * often serve to enable, disable, or configure certain TCP-related features.
  */
 
 #ifndef _TCP_CONST_H_

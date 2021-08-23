@@ -66,7 +66,7 @@
 
 #include "types.h"
 
-/* Copied from netinet/in6.h */
+/* samkumar: Copied from netinet/in6.h */
 struct in6_addr {
 	union {
 		uint8_t		__u6_addr8[16];
@@ -113,13 +113,12 @@ struct ip6_hdr {
 #define IPV6_VERSION		0x60
 #define IPV6_VERSION_MASK	0xf0
 
-#if 1
+/* samkumar: Removed #if guard since ECN is enabled in TCPlp. */
 /* ECN bits proposed by Sally Floyd */
 #define IP6TOS_CE		0x01	/* congestion experienced */
 #define IP6TOS_ECT		0x02	/* ECN-capable transport */
-#endif
 
-// Copied from in6.h
+// samkumar: Copied from in6.h
 #define IN6_ARE_ADDR_EQUAL(a, b)			\
     (memcmp(&(a)->s6_addr[0], &(b)->s6_addr[0], sizeof(struct in6_addr)) == 0)
 
