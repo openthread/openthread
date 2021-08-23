@@ -139,9 +139,9 @@ Error Icmp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
 
     aMessage.MoveOffset(sizeof(icmp6Header));
 
-    for (Handler *handler = mHandlers.GetHead(); handler; handler = handler->GetNext())
+    for (Handler &handler : mHandlers)
     {
-        handler->HandleReceiveMessage(aMessage, aMessageInfo, icmp6Header);
+        handler.HandleReceiveMessage(aMessage, aMessageInfo, icmp6Header);
     }
 
 exit:

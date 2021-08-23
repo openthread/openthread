@@ -1254,11 +1254,10 @@ bool Mle::HasUnregisteredAddress(void)
     // Checks whether there are any addresses in addition to the mesh-local
     // address that need to be registered.
 
-    for (const Ip6::Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr;
-         addr                                   = addr->GetNext())
+    for (const Ip6::Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (!addr->GetAddress().IsLinkLocal() && !IsRoutingLocator(addr->GetAddress()) &&
-            !IsAnycastLocator(addr->GetAddress()) && addr->GetAddress() != GetMeshLocal64())
+        if (!addr.GetAddress().IsLinkLocal() && !IsRoutingLocator(addr.GetAddress()) &&
+            !IsAnycastLocator(addr.GetAddress()) && addr.GetAddress() != GetMeshLocal64())
         {
             ExitNow(retval = true);
         }
@@ -1321,34 +1320,33 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
     }
 #endif // OPENTHREAD_CONFIG_DUA_ENABLE
 
-    for (const Ip6::Netif::UnicastAddress *addr = Get<ThreadNetif>().GetUnicastAddresses(); addr;
-         addr                                   = addr->GetNext())
+    for (const Ip6::Netif::UnicastAddress &addr : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (addr->GetAddress().IsLinkLocal() || IsRoutingLocator(addr->GetAddress()) ||
-            IsAnycastLocator(addr->GetAddress()) || addr->GetAddress() == GetMeshLocal64())
+        if (addr.GetAddress().IsLinkLocal() || IsRoutingLocator(addr.GetAddress()) ||
+            IsAnycastLocator(addr.GetAddress()) || addr.GetAddress() == GetMeshLocal64())
         {
             continue;
         }
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE
         // Skip DUA that was already appended above.
-        if (addr->GetAddress() == domainUnicastAddress)
+        if (addr.GetAddress() == domainUnicastAddress)
         {
             continue;
         }
 #endif
 
-        if (Get<NetworkData::Leader>().GetContext(addr->GetAddress(), context) == kErrorNone)
+        if (Get<NetworkData::Leader>().GetContext(addr.GetAddress(), context) == kErrorNone)
         {
             // compressed entry
             entry.SetContextId(context.mContextId);
-            entry.SetIid(addr->GetAddress().GetIid());
+            entry.SetIid(addr.GetAddress().GetIid());
         }
         else
         {
             // uncompressed entry
             entry.SetUncompressed();
-            entry.SetIp6Address(addr->GetAddress());
+            entry.SetIp6Address(addr.GetAddress());
         }
 
         SuccessOrExit(error = aMessage.AppendBytes(&entry, entry.GetLength()));

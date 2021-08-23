@@ -589,7 +589,7 @@ Netif::ExternalMulticastAddress::Iterator::Iterator(const Netif &aNetif, Address
     , mNetif(aNetif)
     , mFilter(aFilter)
 {
-    AdvanceFrom(mNetif.GetMulticastAddresses());
+    AdvanceFrom(mNetif.GetMulticastAddresses().GetHead());
 }
 
 void Netif::ExternalMulticastAddress::Iterator::AdvanceFrom(const MulticastAddress *aAddr)

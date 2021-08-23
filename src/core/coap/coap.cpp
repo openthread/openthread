@@ -1319,24 +1319,24 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
 
     curUriPath[0] = '\0';
 
-    for (const ResourceBlockWise *resource = mBlockWiseResources.GetHead(); resource; resource = resource->GetNext())
+    for (const ResourceBlockWise &resource : mBlockWiseResources)
     {
-        if (strcmp(resource->GetUriPath(), uriPath) != 0)
+        if (strcmp(resource.GetUriPath(), uriPath) != 0)
         {
             continue;
         }
 
-        if ((resource->mReceiveHook != nullptr || resource->mTransmitHook != nullptr) && blockOptionType != 0)
+        if ((resource.mReceiveHook != nullptr || resource.mTransmitHook != nullptr) && blockOptionType != 0)
         {
             switch (blockOptionType)
             {
             case 1:
-                if (resource->mReceiveHook != nullptr)
+                if (resource.mReceiveHook != nullptr)
                 {
-                    switch (ProcessBlock1Request(aMessage, aMessageInfo, *resource, totalTransfereSize))
+                    switch (ProcessBlock1Request(aMessage, aMessageInfo, resource, totalTransfereSize))
                     {
                     case kErrorNone:
-                        resource->HandleRequest(aMessage, aMessageInfo);
+                        resource.HandleRequest(aMessage, aMessageInfo);
                         // Fall through
                     case kErrorBusy:
                         error = kErrorNone;
@@ -1357,9 +1357,9 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
                 }
                 break;
             case 2:
-                if (resource->mTransmitHook != nullptr)
+                if (resource.mTransmitHook != nullptr)
                 {
-                    if ((error = ProcessBlock2Request(aMessage, aMessageInfo, *resource)) != kErrorNone)
+                    if ((error = ProcessBlock2Request(aMessage, aMessageInfo, resource)) != kErrorNone)
                     {
                         IgnoreReturnValue(SendHeaderResponse(kCodeInternalError, aMessage, aMessageInfo));
                         error = kErrorDrop;
@@ -1371,7 +1371,7 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
         }
         else
         {
-            resource->HandleRequest(aMessage, aMessageInfo);
+            resource.HandleRequest(aMessage, aMessageInfo);
             error = kErrorNone;
             ExitNow();
         }
@@ -1380,11 +1380,11 @@ void CoapBase::ProcessReceivedRequest(Message &aMessage, const Ip6::MessageInfo 
     SuccessOrExit(error = aMessage.ReadUriPathOptions(uriPath));
 #endif // OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
 
-    for (const Resource *resource = mResources.GetHead(); resource; resource = resource->GetNext())
+    for (const Resource &resource : mResources)
     {
-        if (strcmp(resource->mUriPath, uriPath) == 0)
+        if (strcmp(resource.mUriPath, uriPath) == 0)
         {
-            resource->HandleRequest(aMessage, aMessageInfo);
+            resource.HandleRequest(aMessage, aMessageInfo);
             error = kErrorNone;
             ExitNow();
         }

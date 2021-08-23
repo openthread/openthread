@@ -68,7 +68,7 @@ class Ip6;
  * This class implements an IPv6 network interface.
  *
  */
-class Netif : public InstanceLocator, public LinkedListEntry<Netif>, private NonCopyable
+class Netif : public InstanceLocator, private NonCopyable
 {
     friend class Ip6;
     friend class Address;
@@ -342,12 +342,12 @@ public:
     void SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackContext);
 
     /**
-     * This method returns a pointer to the head of the linked list of unicast addresses.
+     * This method returns the linked list of unicast addresses.
      *
-     * @returns A pointer to the head of the linked list of unicast addresses.
+     * @returns The linked list of unicast addresses.
      *
      */
-    const UnicastAddress *GetUnicastAddresses(void) const { return mUnicastAddresses.GetHead(); }
+    const LinkedList<UnicastAddress> &GetUnicastAddresses(void) const { return mUnicastAddresses; }
 
     /**
      * This method adds a unicast address to the network interface.
@@ -469,12 +469,12 @@ public:
     void UnsubscribeAllRoutersMulticast(void);
 
     /**
-     * This method returns a pointer to the head of the linked list of multicast addresses.
+     * This method returns the linked list of multicast addresses.
      *
-     * @returns A pointer to the head of the linked list of multicast addresses.
+     * @returns The linked list of multicast addresses.
      *
      */
-    const MulticastAddress *GetMulticastAddresses(void) const { return mMulticastAddresses.GetHead(); }
+    const LinkedList<MulticastAddress> &GetMulticastAddresses(void) const { return mMulticastAddresses; }
 
     /**
      * This method indicates whether a multicast address is an external or internal address.

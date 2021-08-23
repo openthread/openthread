@@ -309,12 +309,14 @@ Error Tcp::HandleMessage(ot::Ip6::Header &aIp6Header, Message &aMessage, Message
 
     Error error = kErrorNotImplemented;
 
-    for (Endpoint *active = mEndpoints.GetHead(); active != nullptr; active = active->GetNext())
+    for (Endpoint &active : mEndpoints)
     {
+        OT_UNUSED_VARIABLE(active);
     }
 
-    for (Listener *passive = mListeners.GetHead(); passive != nullptr; passive = passive->GetNext())
+    for (Listener &passive : mListeners)
     {
+        OT_UNUSED_VARIABLE(passive);
     }
 
     return error;
@@ -332,7 +334,6 @@ void Tcp::ProcessTimers()
     TimeMilli now = TimerMilli::GetNow();
     bool      pendingTimer;
     TimeMilli earliestPendingTimerExpiry;
-    Endpoint *endpoint;
 
     OT_ASSERT(!mTimer.IsRunning());
 
@@ -354,9 +355,10 @@ void Tcp::ProcessTimers()
 restart:
     pendingTimer               = false;
     earliestPendingTimerExpiry = now.GetDistantFuture();
-    for (endpoint = mEndpoints.GetHead(); endpoint != nullptr; endpoint = endpoint->GetNext())
+
+    for (Endpoint &endpoint : mEndpoints)
     {
-        if (endpoint->FirePendingTimers(now, pendingTimer, earliestPendingTimerExpiry))
+        if (endpoint.FirePendingTimers(now, pendingTimer, earliestPendingTimerExpiry))
         {
             /*
              * If a non-OpenThread callback is called --- which, in practice,

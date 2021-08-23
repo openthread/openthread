@@ -61,7 +61,7 @@ namespace ot {
  *                        would set the pointer to `nullptr` when there's no more elements.
  *
  */
-template <class ItemType, class IteratorType> class ItemPtrIterator
+template <typename ItemType, typename IteratorType> class ItemPtrIterator
 {
 public:
     /**
@@ -148,7 +148,7 @@ protected:
     }
 
     /**
-     * Contructor with an Item pointer.
+     * Constructor with an Item pointer.
      *
      */
     explicit ItemPtrIterator(ItemType *item)

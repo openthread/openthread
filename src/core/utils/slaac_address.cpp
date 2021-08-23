@@ -208,10 +208,9 @@ void Slaac::Update(UpdateMode aMode)
 
             found = false;
 
-            for (const Ip6::Netif::UnicastAddress *netifAddr = Get<ThreadNetif>().GetUnicastAddresses();
-                 netifAddr != nullptr; netifAddr             = netifAddr->GetNext())
+            for (const Ip6::Netif::UnicastAddress &netifAddr : Get<ThreadNetif>().GetUnicastAddresses())
             {
-                if (DoesConfigMatchNetifAddr(config, *netifAddr))
+                if (DoesConfigMatchNetifAddr(config, netifAddr))
                 {
                     found = true;
                     break;

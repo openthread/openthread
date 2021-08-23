@@ -74,11 +74,11 @@ void VerifyLinkedListContent(const ot::LinkedList<Entry> *aList, ...)
 
     va_start(args, aList);
 
-    for (const Entry *entry = aList->GetHead(); entry; entry = entry->GetNext())
+    for (const Entry &entry : *aList)
     {
         argEntry = va_arg(args, Entry *);
         VerifyOrQuit(argEntry != nullptr, "List contains more entries than expected");
-        VerifyOrQuit(argEntry == entry, "List does not contain the same entry");
+        VerifyOrQuit(argEntry == &entry, "List does not contain the same entry");
         VerifyOrQuit(aList->Contains(*argEntry));
         VerifyOrQuit(aList->ContainsMatching(argEntry->GetName()));
         VerifyOrQuit(aList->ContainsMatching(argEntry->GetId()));

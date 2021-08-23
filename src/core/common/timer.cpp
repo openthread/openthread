@@ -119,12 +119,14 @@ void Timer::Scheduler::Add(Timer &aTimer, const AlarmApi &aAlarmApi)
 
     Remove(aTimer, aAlarmApi);
 
-    for (Timer *cur = mTimerList.GetHead(); cur; prev = cur, cur = cur->GetNext())
+    for (Timer &cur : mTimerList)
     {
-        if (aTimer.DoesFireBefore(*cur, now))
+        if (aTimer.DoesFireBefore(cur, now))
         {
             break;
         }
+
+        prev = &cur;
     }
 
     if (prev == nullptr)

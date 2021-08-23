@@ -429,12 +429,12 @@ public:
         TimeMilli GetKeyExpireTime(void) const;
 
         /**
-         * This method returns the head of `Service` linked list associated with the host.
+         * This method returns the `Service` linked list associated with the host.
          *
-         * @returns A pointer to the head of `Service` linked list.
+         * @returns The `Service` linked list.
          *
          */
-        const Service *GetServices(void) const { return mServices.GetHead(); }
+        const LinkedList<Service> &GetServices(void) const { return mServices; }
 
         /**
          * This method finds the next matching service on the host.
@@ -473,7 +473,7 @@ public:
         void                        SetKey(Dns::Ecdsa256KeyRecord &aKey);
         void                        SetLease(uint32_t aLease) { mLease = aLease; }
         void                        SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
-        Service *                   GetServices(void) { return mServices.GetHead(); }
+        LinkedList<Service> &       GetServices(void) { return mServices; }
         Service *                   AddNewService(const char *aServiceName, const char *aInstanceName, bool aIsSubType);
         void                        RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler);
         void                        FreeAllServices(void);
