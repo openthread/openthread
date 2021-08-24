@@ -154,9 +154,12 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // check network key
     if (Tlv::Find<NetworkKeyTlv>(aMessage, networkKey) == kErrorNone)
     {
-        hasNetworkKey = true;
+        NetworkKey localNetworkKey;
 
-        if (networkKey != Get<KeyManager>().GetNetworkKey())
+        hasNetworkKey = true;
+        Get<KeyManager>().GetNetworkKey(localNetworkKey);
+
+        if (networkKey != localNetworkKey)
         {
             doesAffectConnectivity = true;
             doesAffectNetworkKey   = true;
@@ -164,7 +167,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (type == Tlv::kPendingTimestamp && (!hasNetworkKey || (networkKey == Get<KeyManager>().GetNetworkKey())))
+    if (type == Tlv::kPendingTimestamp && (!hasNetworkKey || !doesAffectNetworkKey))
     {
         // no change to network key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
@@ -353,7 +356,10 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<NetworkKeyTlv>() == nullptr)
     {
-        IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, Get<KeyManager>().GetNetworkKey()));
+        NetworkKey networkKey;
+
+        Get<KeyManager>().GetNetworkKey(networkKey);
+        IgnoreError(dataset.SetTlv(Tlv::kNetworkKey, networkKey));
     }
 
     if (dataset.GetTlv<NetworkNameTlv>() == nullptr)
@@ -370,18 +376,18 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<PskcTlv>() == nullptr)
     {
+        Pskc pskc;
+
         if (Get<KeyManager>().IsPskcSet())
         {
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, Get<KeyManager>().GetPskc()));
+            Get<KeyManager>().GetPskc(pskc);
         }
         else
         {
-            // PSKc has not yet been configured, generate new PSKc at random
-            Pskc pskc;
-
             SuccessOrExit(error = pskc.GenerateRandom());
-            IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
         }
+
+        IgnoreError(dataset.SetTlv(Tlv::kPskc, pskc));
     }
 
     if (dataset.GetTlv<SecurityPolicyTlv>() == nullptr)

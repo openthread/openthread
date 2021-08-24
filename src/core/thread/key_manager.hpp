@@ -234,23 +234,20 @@ public:
     void Stop(void);
 
     /**
-     * This method returns the Thread Network Key.
+     * This method gets the Thread Network Key.
      *
-     * @returns The Thread Network Key.
+     * @param[out] aNetworkKey   A reference to a `NetworkKey` to output the Thread Network Key.
      *
      */
-    NetworkKey GetNetworkKey(void);
+    void GetNetworkKey(NetworkKey &aNetworkKey) const;
 
     /**
      * This method sets the Thread Network Key.
      *
-     * @param[in]  aKey        A Thread Network Key.
-     *
-     * @retval kErrorNone         Successfully set the Thread Network Key.
-     * @retval kErrorInvalidArgs  The @p aKeyLength value was invalid.
+     * @param[in]  aNetworkKey        A Thread Network Key.
      *
      */
-    Error SetNetworkKey(const NetworkKey &aKey);
+    void SetNetworkKey(const NetworkKey &aNetworkKey);
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
@@ -266,14 +263,10 @@ public:
      *
      * @param[in]  aKeyRef        Reference to Thread Network Key.
      *
-     * @retval kErrorNone         Successfully set the Thread Network Key.
-     * @retval kErrorInvalidArgs  The @p aKeyRef is invalid.
-     *
      */
-    Error SetNetworkKeyRef(NetworkKeyRef aKeyRef);
+    void SetNetworkKeyRef(NetworkKeyRef aKeyRef);
 #endif
 
-#if OPENTHREAD_FTD || OPENTHREAD_MTD
     /**
      * This method indicates whether the PSKc is configured.
      *
@@ -286,12 +279,12 @@ public:
     bool IsPskcSet(void) const { return mIsPskcSet; }
 
     /**
-     * This method returns a pointer to the PSKc.
+     * This method gets the PKSc.
      *
-     * @returns A reference to the PSKc.
+     * @param[out] aPskc  A reference to a `Pskc` to return the PSKc.
      *
      */
-    const Pskc GetPskc(void) const;
+    void GetPskc(Pskc &aPskc) const;
 
     /**
      * This method sets the PSKc.
@@ -316,8 +309,7 @@ public:
      * @param[in]  aPskc    A reference to the PSKc.
      *
      */
-    void SetPskcRef(otPskcRef aKeyRef);
-#endif
+    void SetPskcRef(PskcRef aKeyRef);
 #endif
 
     /**
@@ -585,11 +577,13 @@ private:
     void        StartKeyRotationTimer(void);
     static void HandleKeyRotationTimer(Timer &aTimer);
     void        HandleKeyRotationTimer(void);
-    Error       StoreNetworkKey(bool aOverWriteExisting);
-    Error       StorePskc(void);
-    Error       ImportKek(const uint8_t *aKey, uint8_t aKeyLen);
-    void        CheckAndDestroyStoredKey(otMacKeyRef aKeyRef);
-    void        ResetFrameCounters(void);
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    void StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteExisting);
+    void StorePskc(const Pskc &aPskc);
+#endif
+
+    void ResetFrameCounters(void);
 
     static const uint8_t kThreadString[];
 
@@ -598,7 +592,11 @@ private:
     static const uint8_t kTrelInfoString[];
 #endif
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    NetworkKeyRef mNetworkKeyRef;
+#else
     NetworkKey mNetworkKey;
+#endif
 
     uint32_t         mKeySequence;
     Mle::KeyMaterial mMleKey;
@@ -619,21 +617,17 @@ private:
     bool       mKeySwitchGuardEnabled;
     TimerMilli mKeyRotationTimer;
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    Pskc mPskc;
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    PskcRef mPskcRef;
+#else
+    Pskc       mPskc;
 #endif
+
     KekKeyMaterial mKek;
     uint32_t       mKekFrameCounter;
 
     SecurityPolicy mSecurityPolicy;
     bool           mIsPskcSet : 1;
-
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    NetworkKeyRef mNetworkKeyRef;
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-    PskcRef mPskcRef;
-#endif
-#endif
 };
 
 /**

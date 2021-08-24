@@ -39,6 +39,7 @@
 #include <openthread/platform/crypto.h>
 
 #include "common/clearable.hpp"
+#include "common/code_utils.hpp"
 #include "common/error.hpp"
 
 namespace ot {
@@ -92,11 +93,27 @@ enum StorageType : uint8_t
  */
 typedef otCryptoKeyRef KeyRef;
 
+constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value.
+
 /**
  * This type represents the Key Attributes structure.
  *
  */
 typedef otCryptoKeyAttributes KeyAttributes;
+
+/**
+ * Determine if a given `KeyRef` is valid or not.
+ *
+ * @param[in] aKeyRef   The `KeyRef` to check.
+ *
+ * @retval TRUE   If @p aKeyRef is valid.
+ * @retval FALSE  If @p aKeyRef is not valid.
+ *
+ */
+inline bool IsKeyRefValid(KeyRef aKeyRef)
+{
+    return (aKeyRef < kInvalidKeyRef);
+}
 
 /**
  * Import a key into PSA ITS.
@@ -148,15 +165,15 @@ inline Error ExportKey(KeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size
 /**
  * Destroy a key stored in PSA ITS.
  *
- * @param[in]   aKeyRef        The key ref to be removed.
- *
- * @retval kErrorNone          Successfully destroyed key.
- * @retval kErrorFailed        Failed to destroy the key.
+ * @param[in]   aKeyRef   The key ref to be removed.
  *
  */
-inline Error DestroyKey(KeyRef aKeyRef)
+inline void DestroyKey(KeyRef aKeyRef)
 {
-    return otPlatCryptoDestroyKey(aKeyRef);
+    if (IsKeyRefValid(aKeyRef))
+    {
+        IgnoreError(otPlatCryptoDestroyKey(aKeyRef));
+    }
 }
 
 /**

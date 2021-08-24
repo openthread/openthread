@@ -449,8 +449,6 @@ OT_TOOL_PACKED_BEGIN
 class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
 {
 public:
-    static constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Max allowed `KeyRef` range.
-
     /**
      * This constructor initializes a `KeyMaterial`.
      *
@@ -549,10 +547,14 @@ public:
     KeyMaterial(const KeyMaterial &) = delete;
 
 private:
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    static constexpr KeyRef kInvalidKeyRef = Crypto::Storage::kInvalidKeyRef;
+
+    void DestroyKey(void);
+    void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
+#endif
     Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
-    void SetKeyRef(KeyRef aKeyRef) { mKeyMaterial.mKeyRef = aKeyRef; }
-    void DestroyKey(void);
 } OT_TOOL_PACKED_END;
 
 /**

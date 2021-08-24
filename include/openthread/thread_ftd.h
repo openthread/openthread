@@ -556,13 +556,12 @@ otError otThreadGetNextCacheEntry(otInstance *aInstance, otCacheEntryInfo *aEntr
  * Get the Thread PSKc
  *
  * @param[in]   aInstance   A pointer to an OpenThread instance.
- *
- * @returns Thread PSKc
+ * @param[out]  aPskc       A pointer to an `otPskc` to return the retrieved Thread PSKc.
  *
  * @sa otThreadSetPskc
  *
  */
-const otPskc otThreadGetPskc(otInstance *aInstance);
+void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc);
 
 /**
  * Get Key Reference to Thread PSKc stored

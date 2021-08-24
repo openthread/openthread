@@ -181,14 +181,23 @@ KeyManager::KeyManager(Instance &aInstance)
     , mIsPskcSet(false)
 {
     IgnoreError(otPlatCryptoInit());
-    IgnoreError(mNetworkKey.GenerateRandom());
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    IgnoreError(StoreNetworkKey(false));
+    {
+        NetworkKey networkKey;
+
+        mNetworkKeyRef = Crypto::Storage::kInvalidKeyRef;
+        mPskcRef       = Crypto::Storage::kInvalidKeyRef;
+
+        IgnoreError(networkKey.GenerateRandom());
+        StoreNetworkKey(networkKey, /* aOverWriteExisting */ false);
+    }
+#else
+    IgnoreError(mNetworkKey.GenerateRandom());
+    mPskc.Clear();
 #endif
 
     mMacFrameCounters.Reset();
-    mPskc.Clear();
 }
 
 void KeyManager::Start(void)
@@ -202,18 +211,26 @@ void KeyManager::Stop(void)
     mKeyRotationTimer.Stop();
 }
 
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-
 void KeyManager::SetPskc(const Pskc &aPskc)
 {
-    IgnoreError(Get<Notifier>().Update(mPskc, aPskc, kEventPskcChanged));
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    IgnoreError(StorePskc());
+    if (Crypto::Storage::IsKeyRefValid(mPskcRef))
+    {
+        Pskc pskc;
+
+        GetPskc(pskc);
+        VerifyOrExit(aPskc != pskc, Get<Notifier>().SignalIfFirst(kEventPskcChanged));
+    }
+
+    StorePskc(aPskc);
+    Get<Notifier>().Signal(kEventPskcChanged);
+#else
+    SuccessOrExit(Get<Notifier>().Update(mPskc, aPskc, kEventPskcChanged));
 #endif
 
+exit:
     mIsPskcSet = true;
 }
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
 void KeyManager::ResetFrameCounters(void)
 {
@@ -247,28 +264,31 @@ void KeyManager::ResetFrameCounters(void)
 #endif
 }
 
-Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
+void KeyManager::SetNetworkKey(const NetworkKey &aNetworkKey)
 {
-    Error error = kErrorNone;
-
-    mNetworkKey = GetNetworkKey();
-
-    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, aKey, kEventNetworkKeyChanged));
-    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    IgnoreError(StoreNetworkKey(true));
+    if (Crypto::Storage::IsKeyRefValid(mNetworkKeyRef))
+    {
+        NetworkKey networkKey;
+
+        GetNetworkKey(networkKey);
+        VerifyOrExit(networkKey != aNetworkKey, Get<Notifier>().SignalIfFirst(kEventNetworkKeyChanged));
+    }
+
+    StoreNetworkKey(aNetworkKey, /* aOverWriteExisting */ true);
+    Get<Notifier>().Signal(kEventNetworkKeyChanged);
+#else
+    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, aNetworkKey, kEventNetworkKeyChanged));
 #endif
+
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
 
     mKeySequence = 0;
     UpdateKeyMaterial();
     ResetFrameCounters();
 
 exit:
-#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    mNetworkKey.Clear();
-#endif
-    return error;
+    return;
 }
 
 void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
@@ -489,50 +509,56 @@ void KeyManager::HandleKeyRotationTimer(void)
     }
 }
 
-NetworkKey KeyManager::GetNetworkKey(void)
+void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
 {
-    NetworkKey networkKey;
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error  error = kErrorNone;
-    size_t keyLen;
+    if (Crypto::Storage::IsKeyRefValid(mNetworkKeyRef))
+    {
+        Error  error = kErrorNone;
+        size_t keyLen;
 
-    error = Crypto::Storage::ExportKey(mNetworkKeyRef, networkKey.m8, NetworkKey::kSize, keyLen);
-    OT_ASSERT(error == kErrorNone);
-    OT_ASSERT(keyLen == NetworkKey::kSize);
-    OT_UNUSED_VARIABLE(error);
+        error = Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen);
+        OT_ASSERT(error == kErrorNone);
+        OT_ASSERT(keyLen == NetworkKey::kSize);
+        OT_UNUSED_VARIABLE(error);
+    }
+    else
+    {
+        aNetworkKey.Clear();
+    }
 #else
-    networkKey = mNetworkKey;
+    aNetworkKey = mNetworkKey;
 #endif
-
-    return networkKey;
 }
 
-const Pskc KeyManager::GetPskc(void) const
+void KeyManager::GetPskc(Pskc &aPskc) const
 {
-    Pskc pskc;
-
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
-    Error  error = kErrorNone;
-    size_t keyLen;
+    if (Crypto::Storage::IsKeyRefValid(mPskcRef))
+    {
+        Error  error = kErrorNone;
+        size_t keyLen;
 
-    error = Crypto::Storage::ExportKey(mPskcRef, pskc.m8, Pskc::kSize, keyLen);
-    OT_ASSERT(error == kErrorNone);
-    OT_ASSERT(keyLen == Pskc::kSize);
-    OT_UNUSED_VARIABLE(error);
+        error = Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen);
+        OT_ASSERT(error == kErrorNone);
+        OT_ASSERT(keyLen == Pskc::kSize);
+        OT_UNUSED_VARIABLE(error);
+    }
+    else
+    {
+        aPskc.Clear();
+    }
 #else
-    pskc = mPskc;
+    aPskc = mPskc;
 #endif
-
-    return pskc;
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
-Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
+void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteExisting)
 {
-    Error       error = kErrorNone;
-    Mac::KeyRef keyRef;
+    Error         error;
+    NetworkKeyRef keyRef;
 
     keyRef = kNetworkKeyPsaItsOffset;
 
@@ -545,85 +571,79 @@ Error KeyManager::StoreNetworkKey(bool aOverWriteExisting)
         // We will be able to retrieve the keyAttributes only if there is
         // already a network key stored in ITS. If stored, and we are not
         // overwriting the existing key, return without doing anything.
-        if (error == OT_ERROR_NONE)
+        if (error == kErrorNone)
         {
             ExitNow();
         }
     }
 
-    CheckAndDestroyStoredKey(keyRef);
+    Crypto::Storage::DestroyKey(keyRef);
 
     error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac, Crypto::Storage::kKeyAlgorithmHmacSha256,
                                        Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
-                                       Crypto::Storage::kTypePersistent, mNetworkKey.m8, NetworkKey::kSize);
-
-exit:
-    mNetworkKey.Clear();
-    mNetworkKeyRef = keyRef;
-
-    return error;
-}
-
-#if OPENTHREAD_MTD || OPENTHREAD_FTD
-Error KeyManager::StorePskc(void)
-{
-    Mac::KeyRef keyRef = kPskcPsaItsOffset;
-    Error       error  = kErrorNone;
-
-    CheckAndDestroyStoredKey(keyRef);
-
-    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
-                                       Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, mPskc.m8,
-                                       Pskc::kSize);
-
+                                       Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize);
     OT_ASSERT(error == kErrorNone);
 
-    mPskc.Clear();
-    mPskcRef = keyRef;
+exit:
+    if (mNetworkKeyRef != keyRef)
+    {
+        Crypto::Storage::DestroyKey(mNetworkKeyRef);
+    }
 
-    return error;
+    mNetworkKeyRef = keyRef;
 }
 
-void KeyManager::SetPskcRef(otPskcRef aKeyRef)
+void KeyManager::StorePskc(const Pskc &aPskc)
 {
-    VerifyOrExit(aKeyRef != mPskcRef, Get<Notifier>().SignalIfFirst(kEventPskcChanged));
+    PskcRef keyRef = kPskcPsaItsOffset;
+    Error   error  = kErrorNone;
+
+    Crypto::Storage::DestroyKey(keyRef);
+
+    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
+                                       Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, aPskc.m8,
+                                       Pskc::kSize);
+    OT_ASSERT(error == kErrorNone);
+    OT_UNUSED_VARIABLE(error);
+
+    if (mPskcRef != keyRef)
+    {
+        Crypto::Storage::DestroyKey(mPskcRef);
+    }
+
+    mPskcRef = keyRef;
+}
+
+void KeyManager::SetPskcRef(PskcRef aKeyRef)
+{
+    VerifyOrExit(mPskcRef != aKeyRef, Get<Notifier>().SignalIfFirst(kEventPskcChanged));
+
+    Crypto::Storage::DestroyKey(mPskcRef);
 
     mPskcRef = aKeyRef;
     Get<Notifier>().Signal(kEventPskcChanged);
 
-    mIsPskcSet = true;
-
 exit:
-    return;
+    mIsPskcSet = true;
 }
-#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
-Error KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
+void KeyManager::SetNetworkKeyRef(otNetworkKeyRef aKeyRef)
 {
-    Error error = kErrorNone;
+    VerifyOrExit(mNetworkKeyRef != aKeyRef, Get<Notifier>().SignalIfFirst(kEventNetworkKeyChanged));
 
-    VerifyOrExit(aKeyRef != mNetworkKeyRef, Get<Notifier>().SignalIfFirst(kEventNetworkKeyChanged));
+    Crypto::Storage::DestroyKey(mNetworkKeyRef);
 
     mNetworkKeyRef = aKeyRef;
-
     Get<Notifier>().Signal(kEventNetworkKeyChanged);
     Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
-
     mKeySequence = 0;
     UpdateKeyMaterial();
     ResetFrameCounters();
 
 exit:
-    return error;
+    return;
 }
 
-void KeyManager::CheckAndDestroyStoredKey(Mac::KeyRef aKeyRef)
-{
-    if (aKeyRef < Mac::KeyMaterial::kInvalidKeyRef)
-    {
-        IgnoreError(Crypto::Storage::DestroyKey(aKeyRef));
-    }
-}
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 
 } // namespace ot

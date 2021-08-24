@@ -564,13 +564,16 @@ Error Dataset::ApplyConfiguration(Instance &aInstance, bool *aIsNetworkKeyUpdate
         case Tlv::kNetworkKey:
         {
             const NetworkKeyTlv *key = static_cast<const NetworkKeyTlv *>(cur);
+            NetworkKey           networkKey;
 
-            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != keyManager.GetNetworkKey()))
+            keyManager.GetNetworkKey(networkKey);
+
+            if (aIsNetworkKeyUpdated && (key->GetNetworkKey() != networkKey))
             {
                 *aIsNetworkKeyUpdated = true;
             }
 
-            IgnoreError(keyManager.SetNetworkKey(key->GetNetworkKey()));
+            keyManager.SetNetworkKey(key->GetNetworkKey());
             break;
         }
 

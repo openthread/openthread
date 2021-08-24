@@ -386,7 +386,7 @@ void KeyMaterial::ExtractKey(Key &aKey)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     aKey.Clear();
 
-    if (GetKeyRef() < kInvalidKeyRef)
+    if (Crypto::Storage::IsKeyRefValid(GetKeyRef()))
     {
         Error  error;
         size_t keySize;
@@ -412,11 +412,7 @@ void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
 void KeyMaterial::DestroyKey(void)
 {
-    if (GetKeyRef() < kInvalidKeyRef)
-    {
-        IgnoreError(Crypto::Storage::DestroyKey(GetKeyRef()));
-    }
-
+    Crypto::Storage::DestroyKey(GetKeyRef());
     SetKeyRef(kInvalidKeyRef);
 }
 #endif

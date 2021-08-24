@@ -343,11 +343,11 @@ void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddr
 }
 #endif
 
-const otPskc otThreadGetPskc(otInstance *aInstance)
+void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<KeyManager>().GetPskc();
+    instance.Get<KeyManager>().GetPskc(*static_cast<Pskc *>(aPskc));
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
