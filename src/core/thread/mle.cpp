@@ -2208,7 +2208,11 @@ void Mle::ScheduleMessageTransmissionTimer(void)
     case kChildUpdateRequestActive:
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         // CSL transmitter may respond in next CSL cycle.
-        if (Get<Mac::Mac>().IsCslEnabled())
+        // This condition IsCslCapable() && !IsRxOnWhenIdle() is used instead of
+        // IsCslEnabled because during transitions SSED -> MED and MED -> SSED
+        // there is a delay in synchronisation of IsRxOnWhenIdle residing in MAC
+        // and in MLE, which causes below datapoll interval to be calculated incorrectly.
+        if (Get<Mac::Mac>().IsCslCapable() && !IsRxOnWhenIdle())
         {
             ExitNow(interval = Get<Mac::Mac>().GetCslPeriod() * kUsPerTenSymbols / 1000 +
                                static_cast<uint32_t>(kUnicastRetransmissionDelay));
@@ -2374,12 +2378,12 @@ Error Mle::SendChildUpdateRequest(void)
 
     if (!IsRxOnWhenIdle())
     {
+        Get<MeshForwarder>().SetRxOnWhenIdle(false);
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
         Get<DataPollSender>().SetAttachMode(!Get<Mac::Mac>().IsCslEnabled());
 #else
         Get<DataPollSender>().SetAttachMode(true);
 #endif
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
     }
     else
     {
