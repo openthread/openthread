@@ -80,6 +80,71 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
     return aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
+otError History::ProcessNeighbor(Arg aArgs[])
+{
+    static const char *const kEventString[] = {
+        /* (0) OT_HISTORY_TRACKER_NEIGHBOR_EVENT_ADDED     -> */ "Added",
+        /* (1) OT_HISTORY_TRACKER_NEIGHBOR_EVENT_REMOVED   -> */ "Removed",
+        /* (2) OT_HISTORY_TRACKER_NEIGHBOR_EVENT_CHANGED   -> */ "Changed",
+        /* (3) OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING -> */ "Restoring",
+    };
+
+    otError                             error;
+    bool                                isList;
+    uint16_t                            numEntries;
+    otHistoryTrackerIterator            iterator;
+    const otHistoryTrackerNeighborInfo *info;
+    uint32_t                            entryAge;
+    char                                ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    otLinkModeConfig                    mode;
+    char                                linkModeString[Interpreter::kLinkModeStringSize];
+
+    static_assert(0 == OT_HISTORY_TRACKER_NEIGHBOR_EVENT_ADDED, "NEIGHBOR_EVENT_ADDED value is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_NEIGHBOR_EVENT_REMOVED, "NEIGHBOR_EVENT_REMOVED value is incorrect");
+    static_assert(2 == OT_HISTORY_TRACKER_NEIGHBOR_EVENT_CHANGED, "NEIGHBOR_EVENT_CHANGED value is incorrect");
+    static_assert(3 == OT_HISTORY_TRACKER_NEIGHBOR_EVENT_RESTORING, "NEIGHBOR_EVENT_RESTORING value is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Type   | Event     | Extended Address | RLOC16 | Mode | Ave RSS |
+        // +----------------------+--------+-----------+------------------+--------+------+---------+
+
+        static const char *const kNeighborInfoTitles[] = {
+            "Age", "Type", "Event", "Extended Address", "RLOC16", "Mode", "Ave RSS",
+        };
+
+        static const uint8_t kNeighborInfoColumnWidths[] = {22, 8, 11, 18, 8, 6, 9};
+
+        mInterpreter.OutputTableHeader(kNeighborInfoTitles, kNeighborInfoColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateNeighborHistory(mInterpreter.mInstance, &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+
+        mode.mRxOnWhenIdle = info->mRxOnWhenIdle;
+        mode.mDeviceType   = info->mFullThreadDevice;
+        mode.mNetworkData  = info->mFullNetworkData;
+        Interpreter::LinkModeToString(mode, linkModeString);
+
+        mInterpreter.OutputFormat(isList ? "%s -> type:%s event:%s extaddr:" : "| %20s | %-6s | %-9s | ", ageString,
+                                  info->mIsChild ? "Child" : "Router", kEventString[info->mEvent]);
+        mInterpreter.OutputExtAddress(info->mExtAddress);
+        mInterpreter.OutputLine(isList ? " rloc16:0x%04x mode:%s rss:%d" : " | 0x%04x | %-4s | %7d |", info->mRloc16,
+                                linkModeString, info->mAverageRssi);
+    }
+
+exit:
+    return error;
+}
+
 otError History::ProcessNetInfo(Arg aArgs[])
 {
     otError                            error;

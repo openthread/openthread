@@ -193,6 +193,67 @@ exit:
     return;
 }
 
+void HistoryTracker::RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo)
+{
+    NeighborInfo *entry = mNeighborHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    switch (aEvent)
+    {
+    case NeighborTable::kChildAdded:
+    case NeighborTable::kChildRemoved:
+    case NeighborTable::kChildModeChanged:
+        entry->mExtAddress       = aInfo.mInfo.mChild.mExtAddress;
+        entry->mRloc16           = aInfo.mInfo.mChild.mRloc16;
+        entry->mAverageRssi      = aInfo.mInfo.mChild.mAverageRssi;
+        entry->mRxOnWhenIdle     = aInfo.mInfo.mChild.mRxOnWhenIdle;
+        entry->mFullThreadDevice = aInfo.mInfo.mChild.mFullThreadDevice;
+        entry->mFullNetworkData  = aInfo.mInfo.mChild.mFullNetworkData;
+        entry->mIsChild          = true;
+        break;
+
+    case NeighborTable::kRouterAdded:
+    case NeighborTable::kRouterRemoved:
+        entry->mExtAddress       = aInfo.mInfo.mRouter.mExtAddress;
+        entry->mRloc16           = aInfo.mInfo.mRouter.mRloc16;
+        entry->mAverageRssi      = aInfo.mInfo.mRouter.mAverageRssi;
+        entry->mRxOnWhenIdle     = aInfo.mInfo.mRouter.mRxOnWhenIdle;
+        entry->mFullThreadDevice = aInfo.mInfo.mRouter.mFullThreadDevice;
+        entry->mFullNetworkData  = aInfo.mInfo.mRouter.mFullNetworkData;
+        entry->mIsChild          = false;
+        break;
+    }
+
+    switch (aEvent)
+    {
+    case NeighborTable::kChildAdded:
+        if (aInfo.mInfo.mChild.mIsStateRestoring)
+        {
+            entry->mEvent = kNeighborRestoring;
+            break;
+        }
+
+        OT_FALL_THROUGH;
+
+    case NeighborTable::kRouterAdded:
+        entry->mEvent = kNeighborAdded;
+        break;
+
+    case NeighborTable::kChildRemoved:
+    case NeighborTable::kRouterRemoved:
+        entry->mEvent = kNeighborRemoved;
+        break;
+
+    case NeighborTable::kChildModeChanged:
+        entry->mEvent = kNeighborChanged;
+        break;
+    }
+
+exit:
+    return;
+}
+
 void HistoryTracker::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadRlocAdded | kEventThreadRlocRemoved |
@@ -212,6 +273,7 @@ void HistoryTracker::HandleTimer(void)
     mNetInfoHistory.UpdateAgedEntries();
     mRxHistory.UpdateAgedEntries();
     mTxHistory.UpdateAgedEntries();
+    mNeighborHistory.UpdateAgedEntries();
 
     mTimer.Start(kAgeCheckPeriod);
 }

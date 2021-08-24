@@ -91,4 +91,16 @@
 #define OPENTHREAD_CONFIG_HISTORY_TRACKER_EXCLUDE_THREAD_CONTROL_MESSAGES 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE
+ *
+ * Specifies the maximum number of entries in neighbor table history list.
+ *
+ * Can be set to zero to configure History Tracker module not to collect any neighbor table history.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE
+#define OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE 64
+#endif
+
 #endif // CONFIG_HISTORY_TRACKER_H_
