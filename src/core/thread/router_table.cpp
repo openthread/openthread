@@ -89,6 +89,7 @@ exit:
 
 void RouterTable::Clear(void)
 {
+    ClearNeighbors();
     mAllocatedRouterIds.Clear();
     memset(mRouterIdReuseDelay, 0, sizeof(mRouterIdReuseDelay));
     UpdateAllocation();
@@ -265,18 +266,26 @@ Error RouterTable::Release(uint8_t aRouterId)
 {
     Error    error  = kErrorNone;
     uint16_t rloc16 = Mle::Mle::Rloc16FromRouterId(aRouterId);
+    Router * router;
 
     OT_ASSERT(aRouterId <= Mle::kMaxRouterId);
 
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader(), error = kErrorInvalidState);
     VerifyOrExit(IsAllocated(aRouterId), error = kErrorNotFound);
 
+    router = GetNeighbor(rloc16);
+
+    if (router != nullptr)
+    {
+        Get<NeighborTable>().Signal(NeighborTable::kRouterRemoved, *router);
+    }
+
     mAllocatedRouterIds.Remove(aRouterId);
     UpdateAllocation();
 
     mRouterIdReuseDelay[aRouterId] = Mle::kRouterIdReuseDelay;
 
-    for (Router *router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
+    for (router = GetFirstEntry(); router != nullptr; router = GetNextEntry(router))
     {
         if (router->GetNextHop() == rloc16)
         {
