@@ -73,7 +73,7 @@ enum KeyAlgorithm : uint8_t
 
 constexpr uint8_t kUsageNone     = OT_CRYPTO_KEY_USAGE_NONE;      ///< Key Usage: Key Usage is empty.
 constexpr uint8_t kUsageExport   = OT_CRYPTO_KEY_USAGE_EXPORT;    ///< Key Usage: Key can be exported.
-constexpr uint8_t kUsageEncrypt  = OT_CRYPTO_KEY_USAGE_ENCRYPT;   ///< Key Usage: Vendor Defined.
+constexpr uint8_t kUsageEncrypt  = OT_CRYPTO_KEY_USAGE_ENCRYPT;   ///< Key Usage: Encrypt (vendor defined).
 constexpr uint8_t kUsageDecrypt  = OT_CRYPTO_KEY_USAGE_DECRYPT;   ///< Key Usage: AES ECB.
 constexpr uint8_t kUsageSignHash = OT_CRYPTO_KEY_USAGE_SIGN_HASH; ///< Key Usage: HMAC SHA-256.
 

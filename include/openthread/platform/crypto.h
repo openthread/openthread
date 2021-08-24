@@ -68,16 +68,6 @@ extern "C" {
 #endif
 
 /**
- * This enumeration defines the crypto to use.
- *
- */
-typedef enum
-{
-    OT_CRYPTO_TYPE_USE_LITERAL_KEYS = 0, ///< Use Literal Keys.
-    OT_CRYPTO_TYPE_USE_KEY_REFS     = 1, ///< Use Key References.
-} otCryptoType;
-
-/**
  * This enumeration defines the key types.
  *
  */
@@ -100,17 +90,17 @@ typedef enum
 } otCryptoKeyAlgorithm;
 
 /**
- * This enumeration defines the key usage types.
+ * This enumeration defines the key usage flags.
  *
  */
-typedef enum
+enum
 {
-    OT_CRYPTO_KEY_USAGE_NONE      = 0, ///< Key Usage: Key Usage is empty.
-    OT_CRYPTO_KEY_USAGE_EXPORT    = 1, ///< Key Usage: Key can be exported.
-    OT_CRYPTO_KEY_USAGE_ENCRYPT   = 2, ///< Key Usage: Vendor Defined.
-    OT_CRYPTO_KEY_USAGE_DECRYPT   = 4, ///< Key Usage: AES ECB.
-    OT_CRYPTO_KEY_USAGE_SIGN_HASH = 8, ///< Key Usage: HMAC SHA-256.
-} otCryptoKeyUsage;
+    OT_CRYPTO_KEY_USAGE_NONE      = 0,      ///< Key Usage: Key Usage is empty.
+    OT_CRYPTO_KEY_USAGE_EXPORT    = 1 << 0, ///< Key Usage: Key can be exported.
+    OT_CRYPTO_KEY_USAGE_ENCRYPT   = 1 << 1, ///< Key Usage: Encryption (vendor defined).
+    OT_CRYPTO_KEY_USAGE_DECRYPT   = 1 << 2, ///< Key Usage: AES ECB.
+    OT_CRYPTO_KEY_USAGE_SIGN_HASH = 1 << 3, ///< Key Usage: HMAC SHA-256.
+};
 
 /**
  * This enumeration defines the key storage types.
@@ -167,7 +157,7 @@ otError otPlatCryptoInit(void);
  * @param[inout] aKeyRef           Pointer to the key ref to be used for crypto operations.
  * @param[in]    aKeyType          Key Type encoding for the key.
  * @param[in]    aKeyAlgorithm     Key algorithm encoding for the key.
- * @param[in]    aKeyUsage         Key Usage encoding for the key.
+ * @param[in]    aKeyUsage         Key Usage encoding for the key (combinations of `OT_CRYPTO_KEY_USAGE_*`).
  * @param[in]    aKeyPersistence   Key Persistence for this key
  * @param[in]    aKey              Actual key to be imported.
  * @param[in]    aKeyLen           Length of the key to be imported.

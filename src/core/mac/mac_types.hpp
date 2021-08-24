@@ -409,12 +409,6 @@ private:
     Type mType; ///< The address type (Short, Extended, or none).
 };
 
-enum CryptoType : uint8_t
-{
-    kUseKeyLiterals = OT_KEY_TYPE_LITERAL_KEY,
-    kUseKeyRefs     = OT_KEY_TYPE_KEY_REF,
-};
-
 /**
  * This class represents a MAC key.
  *
