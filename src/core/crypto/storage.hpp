@@ -41,6 +41,7 @@
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
 #include "common/error.hpp"
+#include "common/non_copyable.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -206,7 +207,7 @@ class Key : public otCryptoKey, public Clearable<Key>
 {
 public:
     /**
-     * This method sets the `Key` as a literal key from a given byte array and length
+     * This method sets the `Key` as a literal key from a given byte array and length.
      *
      * @param[in] aKeyBytes   A pointer to buffer containing the key.
      * @param[in] aKeyLength  The key length (number of bytes in @p akeyBytes).
@@ -218,9 +219,32 @@ public:
         mKeyLength = aKeyLength;
     }
 
+    /**
+     * This method gets the pointer to the bye array containing the key.
+     *
+     * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
+     * method returns `nullptr`.
+     *
+     * @returns The pointer to the byte array containing the key, or `nullptr` if the `Key` represents a `KeyRef`
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mKey; }
+
+    /**
+     * This method gets the key length (number of bytes).
+     *
+     * If `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled and `IsKeyRef()` returns `true`, then this
+     * method returns zero.
+     *
+     * @returns The key length (number of bytes in the byte array from `GetBytes()`), or zero if `Key` represents a
+     *          `keyRef`.
+     *
+     */
+    uint16_t GetLength(void) const { return mKeyLength; }
+
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     /**
-     * This method indicates whether or not the key is represented as as `KeyRef`.
+     * This method indicates whether or not the key is represented as a `KeyRef`.
      *
      * @retval TRUE  The `Key` represents a `KeyRef`
      * @retval FALSE The `Key` represents a literal key.
@@ -250,7 +274,66 @@ public:
         mKeyLength = 0;
         mKeyRef    = aKeyRef;
     }
+
+    /**
+     * This method extracts and return the literal key when the key is represented as a `KeyRef`
+     *
+     * This method MUST be used when `IsKeyRef()` returns `true`.
+     *
+     * @param[out]    aKeyBuffer  Pointer to a byte array buffer to place the extracted key.
+     * @param[inout]  aKeyLength  On input, the size of @p aKeyBuffer.
+     *                            On exit, returns the key length (number of bytes written in @p aKeyBuffer).
+     *
+     * @retval kErrorNone    Successfully extracted the key, @p aKeyBuffer and @p aKeyLength are updated.
+     * @retval kErrorNoBufs  Key does not fit in @p aKeyBuffer (extracted key length is larger than @p aKeyLength).
+     *
+     */
+    Error ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const;
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+};
+
+/**
+ * This class represents a literal key derived from a `Key`.
+ *
+ */
+class LiteralKey : public Clearable<LiteralKey>, private NonCopyable
+{
+public:
+    static constexpr uint16_t kMaxSize = 32; ///< Maximum size of the key.
+
+    /**
+     * This constructor initializes the `LiteralKey` from a given `Key`.
+     *
+     * If the @p aKey is itself represents a literal key the same key buffer pointers are used. If the @p aKey is
+     * a `KeyRef` then the literal key is extracted. In this case, the extracted key MUST be smaller than `kMaxSize`.
+     *
+     * @param[in] aKey   The key to convert from.
+     *
+     */
+    explicit LiteralKey(const Key &aKey);
+
+    /*
+     * This method gets the pointer to the bye array containing the literal key.
+     *
+     * @returns The pointer to the byte array containing the literal key.
+     *
+     */
+    const uint8_t *GetBytes(void) const { return mKey; }
+
+    /**
+     * This method gets the key length.
+     *
+     * @returns The key length (number of bytes in the byte array from `GetBytes()`).
+     *
+     */
+    uint16_t GetLength(void) const { return mLength; }
+
+private:
+    const uint8_t *mKey;
+    uint16_t       mLength;
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    uint8_t mBuffer[kMaxSize];
+#endif
 };
 
 } // namespace Crypto

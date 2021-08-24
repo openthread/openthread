@@ -193,6 +193,7 @@ SOURCES_COMMON                                  = \
     crypto/mbedtls.cpp                            \
     crypto/pbkdf2_cmac.cpp                        \
     crypto/sha256.cpp                             \
+    crypto/storage.cpp                            \
     diags/factory_diags.cpp                       \
     mac/channel_mask.cpp                          \
     mac/data_poll_handler.cpp                     \
@@ -327,6 +328,7 @@ libopenthread_radio_a_SOURCES              = \
     crypto/aes_ccm.cpp                       \
     crypto/aes_ecb.cpp                       \
     crypto/crypto_platform.cpp               \
+    crypto/storage.cpp                       \
     diags/factory_diags.cpp                  \
     mac/link_raw.cpp                         \
     mac/mac_frame.cpp                        \

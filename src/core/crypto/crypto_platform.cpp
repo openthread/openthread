@@ -30,17 +30,21 @@
  *   This file implements the Crypto platform callbacks into OpenThread and default/weak Crypto platform APIs.
  */
 
+#include "openthread-core-config.h"
+
 #include <mbedtls/aes.h>
 #include <mbedtls/md.h>
 
 #include <openthread/instance.h>
+#include <openthread/platform/crypto.h>
 #include <openthread/platform/time.h>
 
-#include <openthread/platform/crypto.h>
 #include "common/code_utils.hpp"
+#include "common/debug.hpp"
 #include "common/instance.hpp"
 #include "common/message.hpp"
 #include "crypto/hmac_sha256.hpp"
+#include "crypto/storage.hpp"
 
 using namespace ot;
 using namespace Crypto;
@@ -114,9 +118,10 @@ OT_TOOL_WEAK otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, 
 {
     Error                error   = kErrorNone;
     mbedtls_aes_context *context = static_cast<mbedtls_aes_context *>(aContext);
+    const LiteralKey     key(*static_cast<const Key *>(aKey));
 
     VerifyOrExit(aContextSize >= sizeof(mbedtls_aes_context), error = kErrorFailed);
-    VerifyOrExit((mbedtls_aes_setkey_enc(context, aKey->mKey, (aKey->mKeyLength * CHAR_BIT)) == 0),
+    VerifyOrExit((mbedtls_aes_setkey_enc(context, key.GetBytes(), (key.GetLength() * CHAR_BIT)) == 0),
                  error = kErrorFailed);
 
 exit:
@@ -205,9 +210,10 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContext
 
 #if !OPENTHREAD_RADIO
     mbedtls_md_context_t *context = static_cast<mbedtls_md_context_t *>(aContext);
+    const LiteralKey      key(*static_cast<const Key *>(aKey));
 
     VerifyOrExit(aContextSize >= sizeof(mbedtls_md_context_t), error = kErrorFailed);
-    VerifyOrExit((mbedtls_md_hmac_starts(context, aKey->mKey, aKey->mKeyLength) == 0), error = kErrorFailed);
+    VerifyOrExit((mbedtls_md_hmac_starts(context, key.GetBytes(), key.GetLength()) == 0), error = kErrorFailed);
 #else
 
     OT_UNUSED_VARIABLE(aContext);
@@ -353,7 +359,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *             aContext,
                                              size_t             aContextSize,
                                              const uint8_t *    aSalt,
                                              uint16_t           aSaltLength,
-                                             const otCryptoKey *aKey)
+                                             const otCryptoKey *aInputKey)
 {
     Error error = kErrorFailed;
 
@@ -361,6 +367,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *             aContext,
     HmacSha256        hmac;
     Key               cryptoKey;
     HmacSha256::Hash *prk = static_cast<HmacSha256::Hash *>(aContext);
+    const LiteralKey  inputKey(*static_cast<const Key *>(aInputKey));
 
     VerifyOrExit(aContextSize >= sizeof(HmacSha256::Hash), error = kErrorFailed);
 
@@ -368,8 +375,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *             aContext,
 
     // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
     hmac.Start(cryptoKey);
-
-    hmac.Update(aKey->mKey, aKey->mKeyLength);
+    hmac.Update(inputKey.GetBytes(), inputKey.GetLength());
     hmac.Finish(*prk);
 
     error = kErrorNone;
@@ -380,7 +386,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(void *             aContext,
     OT_UNUSED_VARIABLE(aContextSize);
     OT_UNUSED_VARIABLE(aSalt);
     OT_UNUSED_VARIABLE(aSaltLength);
-    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aInputKey);
 
     ExitNow(error = kErrorNotImplemented);
 #endif

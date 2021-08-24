@@ -403,7 +403,7 @@ otError otPlatCryptoHkdfExpand(void *         aContext,
  * @param[in]  aContextSize       Context size HKDF operation.
  * @param[in]  aSalt              Pointer to the Salt for HKDF.
  * @param[in]  aInfoLength        length of Salt.
- * @param[out] aKey               Pointer to key material to be used.
+ * @param[in]  aInputKey          Pointer to the input key.
  *
  * @retval OT_ERROR_NONE          HKDF Extract was successful.
  * @retval OT_ERROR_FAILED        HKDF Extract failed.
@@ -413,7 +413,7 @@ otError otPlatCryptoHkdfExtract(void *             aContext,
                                 size_t             aContextSize,
                                 const uint8_t *    aSalt,
                                 uint16_t           aSaltLength,
-                                const otCryptoKey *aKey);
+                                const otCryptoKey *aInputKey);
 
 /**
  * Initialise the SHA-256 operation.
