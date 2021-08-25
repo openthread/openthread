@@ -80,23 +80,23 @@ class PublishMeshCopService(thread_cert.TestCase):
         # TODO: verify the behavior when thread is disabled
         host.bash('service otbr-agent stop')
         host.start(start_radvd=False)
-        self.simulator.go(5)
+        self.simulator.go(10)
 
         br1.start()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.assertEqual('leader', br1.get_state())
 
         self.check_meshcop_service(br1, host)
 
         br1.disable_backbone_router()
-        self.simulator.go(5)
+        self.simulator.go(10)
         self.check_meshcop_service(br1, host)
 
         # verify that there are two meshcop services
         br2.start()
         br2.disable_backbone_router()
         br2.enable_br()
-        self.simulator.go(5)
+        self.simulator.go(10)
         service_instances = host.browse_mdns_services('_meshcop._udp')
         self.assertEqual(len(service_instances), 2)
         br1_service = self.check_meshcop_service(br1, host, 'OpenThread_BorderRouter')
