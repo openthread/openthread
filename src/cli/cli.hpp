@@ -667,6 +667,9 @@ private:
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     otError ProcessMacSend(Arg aArgs[]);
 #endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    otError ProcessTrel(Arg aArgs[]);
+#endif
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
     static void HandlePingReply(const otPingSenderReply *aReply, void *aContext);
@@ -931,6 +934,9 @@ private:
         {"tcp", &Interpreter::ProcessTcp},
 #endif
         {"thread", &Interpreter::ProcessThread},
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+        {"trel", &Interpreter::ProcessTrel},
+#endif
         {"txpower", &Interpreter::ProcessTxPower},
         {"udp", &Interpreter::ProcessUdp},
         {"unsecureport", &Interpreter::ProcessUnsecurePort},

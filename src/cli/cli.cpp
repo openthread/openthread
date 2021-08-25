@@ -81,6 +81,9 @@
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && OPENTHREAD_POSIX
 #include <openthread/platform/debug_uart.h>
 #endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#include <openthread/platform/trel-udp6.h>
+#endif
 
 #include "common/logging.hpp"
 #include "common/new.hpp"
@@ -4538,6 +4541,21 @@ otError Interpreter::ProcessMacSend(Arg aArgs[])
     {
         error = otLinkSendEmptyData(mInstance);
     }
+
+exit:
+    return error;
+}
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+otError Interpreter::ProcessTrel(Arg aArgs[])
+{
+    otError error;
+    bool    enable;
+
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+
+    error = otPlatTrelUdp6SetTestMode(mInstance, enable);
 
 exit:
     return error;

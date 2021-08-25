@@ -106,6 +106,7 @@ Done
 - [state](#state)
 - [srp](README_SRP.md)
 - [thread](#thread-start)
+- [trel](#trel-enable)
 - [txpower](#txpower)
 - [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
@@ -2510,6 +2511,30 @@ Get the Thread Version number.
 ```bash
 > thread version
 2
+Done
+```
+
+### trel enable
+
+Enable TREL radio link.
+
+`OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required.
+
+Note: TREL radio link can be enabled only when a valid TREL URL was specified.
+
+```bash
+> trel enable
+Done
+```
+
+### trel disable
+
+Disable TREL radio link.
+
+`OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE` is required.
+
+```bash
+> trel disable
 Done
 ```
 
