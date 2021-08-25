@@ -234,9 +234,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
     if (aResetRadio)
     {
         SuccessOrExit(error = SendReset());
-#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
         SuccessOrDie(mSpinelInterface.ResetConnection());
-#endif
     }
 
     SuccessOrExit(error = WaitResponse());
@@ -2244,9 +2242,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
     if (mResetRadioOnStartup)
     {
         SuccessOrDie(SendReset());
-#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
         SuccessOrDie(mSpinelInterface.ResetConnection());
-#endif
     }
 
     SuccessOrDie(WaitResponse());

@@ -73,7 +73,8 @@ const char *otSysGetRadioUrlHelpString(void)
     "    uart-parity[=even|odd]         Uart parity config, optional.\n"                             \
     "    uart-stop[=number-of-bits]     Uart stop bit, default is 1.\n"                              \
     "    uart-baudrate[=baudrate]       Uart baud rate, default is 115200.\n"                        \
-    "    uart-flow-control              Enable flow control, disabled by default.\n"
+    "    uart-flow-control              Enable flow control, disabled by default.\n"                 \
+    "    uart-reset                     Reset connection after hard resetting RCP(USB CDC ACM).\n"
 
 #endif // OPENTHREAD_POSIX_CONFIG_RCP_BUS == OT_POSIX_RCP_BUS_SPI
 

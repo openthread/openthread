@@ -62,20 +62,6 @@ if(NOT OT_CONFIG)
     set(OT_CONFIG "openthread-core-posix-config.h" PARENT_SCOPE)
 endif()
 
-option(OT_SPINEL_RESET_CONNECTION "reset connection after hard resetting RCP(USB CDC ACM) device" OFF)
-if (OT_SPINEL_RESET_CONNECTION)
-    target_compile_definitions(ot-posix-config
-        INTERFACE "OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION=1"
-    )
-
-    find_library(LIBUDEV "udev")
-    if (LIBUDEV)
-        set(UDEV_LINK_LIBRARIES "${LIBUDEV}")
-    else()
-        message(FATAL_ERROR "test for udev failed")
-    endif()
-endif()
-
 add_library(openthread-posix
     alarm.cpp
     backbone.cpp
@@ -107,7 +93,6 @@ target_link_libraries(openthread-posix
         ot-config
         ot-posix-config
         util
-        ${UDEV_LINK_LIBRARIES}
         $<$<STREQUAL:${CMAKE_SYSTEM_NAME},Linux>:rt>
 )
 
