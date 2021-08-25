@@ -59,6 +59,7 @@ set(OT_PLATFORM_DEFINES ${OT_PLATFORM_DEFINES} PARENT_SCOPE)
 
 add_library(openthread-simulation
     alarm.c
+    crypto.c
     diag.c
     entropy.c
     flash.c
