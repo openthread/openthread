@@ -2976,7 +2976,7 @@ class LinuxHost():
                 instances.append(elements[2][:-len('.' + name)])
         return instances
 
-    def discover_mdns_service(self, instance, name, host_name, timeout=5):
+    def discover_mdns_service(self, instance, name, host_name, timeout=2):
         """ Discover/resolve the mDNS service on ethernet.
 
         :param instance: the service instance name.
