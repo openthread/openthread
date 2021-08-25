@@ -113,7 +113,8 @@ jobs:
       THREAD_VERSION: 1.2
       INTER_OP: 1
       COVERAGE: 1
-      MULTIPLY: 1
+      MULTIPLY: 30
+      MAX_JOBS: 1
       OTBR_MDNS: ${{ matrix.otbr_mdns }}
       PYTHONUNBUFFERED: 1
       VERBOSE: 1
@@ -140,7 +141,7 @@ jobs:
       run: |
         export CI_ENV="$(bash <(curl -s https://codecov.io/env)) -e GITHUB_ACTIONS -e COVERAGE"
         echo "CI_ENV=${CI_ENV}"
-        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/border_router/*.py || (sudo chmod a+r *.log *.json *.pcap && false)
+        sudo -E ./script/test cert_suite ./tests/scripts/thread-cert/border_router/test_publish_meshcop_service.py || (sudo chmod a+r *.log *.json *.pcap && false)
     - uses: actions/upload-artifact@v2
       with:
         name: cov-thread-border-router-docker

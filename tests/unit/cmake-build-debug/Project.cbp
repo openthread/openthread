@@ -1,0 +1,1872 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6"/>
+	<Project>
+		<Option title="Project"/>
+		<Option makefile_is_custom="1"/>
+		<Option compiler="gcc"/>
+		<Option virtualFolders="CMake Files\;"/>
+		<Build>
+			<Target title="all">
+				<Option working_dir="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 all"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-timer">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-timer" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-timer"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-timer/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-timer" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-timer/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-string">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-string" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-string"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-string/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-string" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-string/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-pskc">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-pskc" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-pskc"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-pskc/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-pskc" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-pskc/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-network-data">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-network-data" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-network-data"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-network-data/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-network-data" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-network-data/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="edit_cache">
+				<Option working_dir="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 edit_cache"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-netif">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-netif" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-netif"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-netif/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-netif" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-netif/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-ndproxy-table">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-ndproxy-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-ndproxy-table"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-ndproxy-table/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-ndproxy-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-ndproxy-table/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-multicast-listeners-table">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-multicast-listeners-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-multicast-listeners-table"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-multicast-listeners-table/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-multicast-listeners-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-multicast-listeners-table/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-aes">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-aes" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-aes"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-aes/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-aes" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-aes/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="rebuild_cache">
+				<Option working_dir="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug"/>
+				<Option type="4"/>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 rebuild_cache"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-steering-data">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-steering-data" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-steering-data"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-steering-data/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-steering-data" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-steering-data/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-flash">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-flash" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-flash"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-flash/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-flash" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-flash/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-cmd-line-parser">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-cmd-line-parser" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-cmd-line-parser"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-cmd-line-parser/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-cmd-line-parser" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-cmd-line-parser/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-checksum">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-checksum" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-checksum"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-checksum/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-checksum" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-checksum/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-array">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-array" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-array"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-array/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-array" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-array/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-ecdsa">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-ecdsa" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-ecdsa"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-ecdsa/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-ecdsa" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-ecdsa/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-child-table">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-child-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-child-table"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-child-table/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-child-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-child-table/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-child">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-child" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-child"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-child/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-child" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-child/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-heap">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-heap" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-heap"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-heap/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-heap" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-heap/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-message-queue">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-message-queue" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-message-queue"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-message-queue/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-message-queue" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-message-queue/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-dns">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-dns" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-dns"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-dns/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-dns" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-dns/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-heap-string">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-heap-string" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-heap-string"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-heap-string/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-heap-string" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-heap-string/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-hkdf-sha256">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-hkdf-sha256" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-hkdf-sha256"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-hkdf-sha256/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-hkdf-sha256" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-hkdf-sha256/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-priority-queue">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-priority-queue" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-priority-queue"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-priority-queue/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-priority-queue" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-priority-queue/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-lookup-table">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-lookup-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-lookup-table"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-lookup-table/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-lookup-table" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-lookup-table/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-hmac-sha256">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-hmac-sha256" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-hmac-sha256"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-hmac-sha256/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-hmac-sha256" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-hmac-sha256/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-ip-address">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-ip-address" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-ip-address"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-ip-address/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-ip-address" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-ip-address/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-link-quality">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-link-quality" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-link-quality"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-link-quality/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-link-quality" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-link-quality/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-lowpan">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-lowpan" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-lowpan"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-lowpan/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-lowpan" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-lowpan/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-mac-frame">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-mac-frame" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-mac-frame"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-mac-frame/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-mac-frame" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-mac-frame/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-macros">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-macros" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-macros"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-macros/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-macros" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-macros/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-platform">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/libot-test-platform.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-platform"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-platform/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/libot-test-platform.a" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug"/>
+				<Option object_output="./"/>
+				<Option type="2"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-platform/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-linked-list">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-linked-list" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-linked-list"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-linked-list/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-linked-list" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-linked-list/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-pool">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-pool" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-pool"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-pool/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-pool" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-pool/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-message">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-message" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-message"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+			<Target title="ot-test-message/fast">
+				<Option output="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/ot-test-message" prefix_auto="0" extension_auto="0"/>
+				<Option working_dir=""/>
+				<Option object_output="./"/>
+				<Option type="1"/>
+				<Option compiler="gcc"/>
+				<Compiler>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/include"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/src/core"/>
+					<Add directory="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/examples/platforms/simulation"/>
+					<Add directory="/usr/include/c++/10"/>
+					<Add directory="/usr/include/x86_64-linux-gnu/c++/10"/>
+					<Add directory="/usr/include/c++/10/backward"/>
+					<Add directory="/usr/lib/gcc/x86_64-linux-gnu/10/include"/>
+					<Add directory="/usr/local/include"/>
+					<Add directory="/usr/include/x86_64-linux-gnu"/>
+					<Add directory="/usr/include"/>
+				</Compiler>
+				<MakeCommands>
+					<Build command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 ot-test-message/fast"/>
+					<CompileFile command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 &quot;$file&quot;"/>
+					<Clean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+					<DistClean command="/usr/bin/gmake -j12 -f &quot;/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/cmake-build-debug/Makefile&quot;  VERBOSE=1 clean"/>
+				</MakeCommands>
+			</Target>
+		</Build>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_aes.cpp">
+			<Option target="ot-test-aes"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_array.cpp">
+			<Option target="ot-test-array"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_checksum.cpp">
+			<Option target="ot-test-checksum"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_child.cpp">
+			<Option target="ot-test-child"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_child_table.cpp">
+			<Option target="ot-test-child-table"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_cmd_line_parser.cpp">
+			<Option target="ot-test-cmd-line-parser"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_dns.cpp">
+			<Option target="ot-test-dns"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_ecdsa.cpp">
+			<Option target="ot-test-ecdsa"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_flash.cpp">
+			<Option target="ot-test-flash"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_heap.cpp">
+			<Option target="ot-test-heap"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_heap_string.cpp">
+			<Option target="ot-test-heap-string"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_hkdf_sha256.cpp">
+			<Option target="ot-test-hkdf-sha256"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_hmac_sha256.cpp">
+			<Option target="ot-test-hmac-sha256"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_ip_address.cpp">
+			<Option target="ot-test-ip-address"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_link_quality.cpp">
+			<Option target="ot-test-link-quality"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_linked_list.cpp">
+			<Option target="ot-test-linked-list"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_lookup_table.cpp">
+			<Option target="ot-test-lookup-table"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_lowpan.cpp">
+			<Option target="ot-test-lowpan"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_lowpan.hpp">
+			<Option target="ot-test-lowpan"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_mac_frame.cpp">
+			<Option target="ot-test-mac-frame"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_macros.cpp">
+			<Option target="ot-test-macros"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_message.cpp">
+			<Option target="ot-test-message"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_message_queue.cpp">
+			<Option target="ot-test-message-queue"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_multicast_listeners_table.cpp">
+			<Option target="ot-test-multicast-listeners-table"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_ndproxy_table.cpp">
+			<Option target="ot-test-ndproxy-table"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_netif.cpp">
+			<Option target="ot-test-netif"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_network_data.cpp">
+			<Option target="ot-test-network-data"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_platform.cpp">
+			<Option target="ot-test-platform"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_platform.h">
+			<Option target="ot-test-platform"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_pool.cpp">
+			<Option target="ot-test-pool"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_priority_queue.cpp">
+			<Option target="ot-test-priority-queue"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_pskc.cpp">
+			<Option target="ot-test-pskc"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_steering_data.cpp">
+			<Option target="ot-test-steering-data"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_string.cpp">
+			<Option target="ot-test-string"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_timer.cpp">
+			<Option target="ot-test-timer"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_util.cpp">
+			<Option target="ot-test-platform"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/test_util.h">
+			<Option target="ot-test-platform"/>
+		</Unit>
+		<Unit filename="/usr/local/google/home/handaw/src/ot-br-posix/third_party/openthread/repo/tests/unit/CMakeLists.txt">
+			<Option virtualFolder="CMake Files\"/>
+		</Unit>
+	</Project>
+</CodeBlocks_project_file>
