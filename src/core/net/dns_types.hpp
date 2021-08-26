@@ -1683,7 +1683,7 @@ public:
      * @returns  TRUE if @p aTxtData contains valid encoded TXT data, FALSE if not.
      *
      */
-    static bool VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength, bool aAllowEmpty);
+    static bool VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength);
 
 } OT_TOOL_PACKED_END;
 
