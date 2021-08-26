@@ -178,18 +178,19 @@ inline void DestroyKey(KeyRef aKeyRef)
 }
 
 /**
- * Get Attributes for a key stored in PSA ITS.
+ * Check if the keyId passed has an associated key in PSA ITS.
  *
- * @param[in]  aKeyRef            The key ref to get the attributes.
- * @param[out] aKeyAttributes     A reference to a `KeyAttributes` to return the retrieved attributes.
+ * @param[in]  aKeyRef          The Key Id for to check.
  *
- * @retval kErrorNone          Successfully copied the key attributes to @p aKeyAttributes.
- * @retval kErrorFailed        Failed to copy the key attributes to @p aKeyAttributes.
+ * @retval true                 Key Id passed has a key associated in PSA.
+ * @retval false                Key Id passed is invalid and has no key associated in PSA.
+ *
+ * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
-inline Error GetKeyAttributes(KeyRef aKeyRef, KeyAttributes &aKeyAttributes)
+inline bool HasKey(KeyRef aKeyRef)
 {
-    return otPlatCryptoGetKeyAttributes(aKeyRef, &aKeyAttributes);
+    return otPlatCryptoHasKey(aKeyRef);
 }
 
 } // namespace Storage

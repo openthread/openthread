@@ -564,14 +564,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     if (!aOverWriteExisting)
     {
-        Crypto::Storage::KeyAttributes keyAttributes;
-
-        error = Crypto::Storage::GetKeyAttributes(keyRef, keyAttributes);
-
-        // We will be able to retrieve the keyAttributes only if there is
-        // already a network key stored in ITS. If stored, and we are not
-        // overwriting the existing key, return without doing anything.
-        if (error == kErrorNone)
+        // Check if there is already a network key stored in ITS. If
+        // stored, and we are not overwriting the existing key,
+        // return without doing anything.
+        if (Crypto::Storage::HasKey(mNetworkKeyRef))
         {
             ExitNow();
         }

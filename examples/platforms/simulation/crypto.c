@@ -74,10 +74,9 @@ otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyRef, otCryptoKeyAttributes *aKeyAttributes)
+bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
 {
     OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aKeyAttributes);
 
     return OT_ERROR_NOT_IMPLEMENTED;
 }

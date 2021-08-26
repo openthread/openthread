@@ -208,19 +208,17 @@ otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t a
 otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
 
 /**
- * Get Attributes for a key stored in PSA ITS.
+ * Check if the keyId passed has an associated key in PSA ITS.
  *
- * @param[in]  aKeyRef           The key ref for which to get the attributed.
- * @param[out] aKeyAttributes    Pointer to a otCryptoKeyAttributes to populate.
+ * @param[in]  aKeyRef          The Key Id to check.
  *
- * @retval OT_ERROR_NONE          Successfully copied the key attributes to @p aKeyAttributes.
- * @retval OT_ERROR_FAILED        Failed to copy the key attributes to @p aKeyAttributes.
- * @retval OT_ERROR_INVALID_ARGS  @p aKeyAttributes was NULL
+ * @retval true                 Key Id passed has a key associated in PSA.
+ * @retval false                Key Id passed is invalid and has no key associated in PSA.
  *
  * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
-otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyRef, otCryptoKeyAttributes *aKeyAttributes);
+bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef);
 
 /**
  * Initialize the HMAC operation.
