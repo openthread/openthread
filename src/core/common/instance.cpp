@@ -64,6 +64,9 @@ Instance::Instance(void)
     , mTimerMicroScheduler(*this)
 #endif
     , mRadio(*this)
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    , mUptime(*this)
+#endif
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     , mNotifier(*this)
     , mTimeTicker(*this)

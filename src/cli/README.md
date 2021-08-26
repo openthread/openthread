@@ -110,6 +110,7 @@ Done
 - [txpower](#txpower)
 - [udp](README_UDP.md)
 - [unsecureport](#unsecureport-add-port)
+- [uptime](#uptime)
 - [version](#version)
 
 ## OpenThread Command Details
@@ -2592,6 +2593,32 @@ Print all ports from the allowed unsecured port list.
 > unsecureport get
 1234
 Done
+```
+
+### uptime
+
+This command requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+
+Print the OpenThread stack uptime (duration since OpenThread stack initialization).
+
+```bash
+> uptime
+12:46:35.469
+Done
+>
+```
+
+### uptime ms
+
+This command requires `OPENTHREAD_CONFIG_UPTIME_ENABLE` to be enabled.
+
+Print the OpenThread stack uptime in msec.
+
+```bash
+> uptime ms
+426238
+Done
+>
 ```
 
 ### version

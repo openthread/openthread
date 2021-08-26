@@ -100,6 +100,22 @@ void otInstanceReset(otInstance *aInstance)
     instance.Reset();
 }
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+uint64_t otInstanceGetUptime(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Uptime>().GetUptime();
+}
+
+void otInstanceGetUptimeAsString(otInstance *aInstance, char *aBuffer, uint16_t aSize)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.Get<Uptime>().GetUptime(aBuffer, aSize);
+}
+#endif
+
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 otError otSetStateChangedCallback(otInstance *aInstance, otStateChangedCallback aCallback, void *aContext)
 {
