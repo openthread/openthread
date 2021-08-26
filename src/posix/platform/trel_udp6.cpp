@@ -678,7 +678,7 @@ void platformTrelInit(const char *aTrelUrl)
 
 void platformTrelDeinit(void)
 {
-    assert(sInitialized);
+    VerifyOrExit(sInitialized);
 
     if (sSocket != -1)
     {
@@ -699,6 +699,8 @@ void platformTrelDeinit(void)
     sEnabled     = false;
 
     otLogDebgPlat("[trel] platformTrelDeinit()");
+exit:
+    return;
 }
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)
