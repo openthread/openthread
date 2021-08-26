@@ -55,6 +55,24 @@ const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInsta
     return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateNetInfoHistory(AsCoreType(aIterator), *aEntryAge);
 }
 
+const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge)
+{
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateUnicastAddressHistory(AsCoreType(aIterator),
+                                                                                           *aEntryAge);
+}
+
+const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddressHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge)
+{
+    return AsCoreType(aInstance).Get<Utils::HistoryTracker>().IterateMulticastAddressHistory(AsCoreType(aIterator),
+                                                                                             *aEntryAge);
+}
+
 const otHistoryTrackerMessageInfo *otHistoryTrackerIterateRxHistory(otInstance *              aInstance,
                                                                     otHistoryTrackerIterator *aIterator,
                                                                     uint32_t *                aEntryAge)

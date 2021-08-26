@@ -46,6 +46,7 @@
 #include "common/non_copyable.hpp"
 #include "common/notifier.hpp"
 #include "common/timer.hpp"
+#include "net/netif.hpp"
 #include "net/socket.hpp"
 #include "thread/mesh_forwarder.hpp"
 #include "thread/mle.hpp"
@@ -65,6 +66,7 @@ class HistoryTracker : public InstanceLocator, private NonCopyable
     friend class ot::Notifier;
     friend class ot::Mle::Mle;
     friend class ot::NeighborTable;
+    friend class ot::Ip6::Netif;
 
 public:
     /**
@@ -114,6 +116,18 @@ public:
     typedef otHistoryTrackerNetworkInfo NetworkInfo;
 
     /**
+     * This structure represents a unicast IPv6 address info.
+     *
+     */
+    typedef otHistoryTrackerUnicastAddressInfo UnicastAddressInfo;
+
+    /**
+     * This structure represent a multicast IPv6 address info.
+     *
+     */
+    typedef otHistoryTrackerMulticastAddressInfo MulticastAddressInfo;
+
+    /**
      * This type represents a RX/TX IPv6 message info.
      *
      */
@@ -147,6 +161,38 @@ public:
     const NetworkInfo *IterateNetInfoHistory(Iterator &aIterator, uint32_t &aEntryAge) const
     {
         return mNetInfoHistory.Iterate(aIterator, aEntryAge);
+    }
+
+    /**
+     * This method iterates over the entries in the unicast address history list.
+     *
+     * @param[inout] aIterator  An iterator. MUST be initialized.
+     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
+     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     *
+     * @returns A pointer to `UnicastAddress` entry or `nullptr` if no more entries in the list.
+     *
+     */
+    const UnicastAddressInfo *IterateUnicastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mUnicastAddressHistory.Iterate(aIterator, aEntryAge);
+    }
+
+    /**
+     * This method iterates over the entries in the multicast address history list.
+     *
+     * @param[inout] aIterator  An iterator. MUST be initialized.
+     * @param[out]   aEntryAge  A reference to a variable to output the entry's age.
+     *                          Age is provided as the duration (in milliseconds) from when entry was recorded to
+     *                          @p aIterator initialization time. It is set to `kMaxAge` for entries older than max age.
+     *
+     * @returns A pointer to `MulticastAddress` entry or `nullptr` if no more entries in the list.
+     *
+     */
+    const MulticastAddressInfo *IterateMulticastAddressHistory(Iterator &aIterator, uint32_t &aEntryAge) const
+    {
+        return mMulticastAddressHistory.Iterate(aIterator, aEntryAge);
     }
 
     /**
@@ -214,10 +260,17 @@ private:
 
     static constexpr uint32_t kAgeCheckPeriod = 16 * kOneHourInMsec;
 
-    static constexpr uint16_t kNetInfoListSize  = OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE;
-    static constexpr uint16_t kRxListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE;
-    static constexpr uint16_t kTxListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE;
-    static constexpr uint16_t kNeighborListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE;
+    static constexpr uint16_t kNetInfoListSize       = OPENTHREAD_CONFIG_HISTORY_TRACKER_NET_INFO_LIST_SIZE;
+    static constexpr uint16_t kUnicastAddrListSize   = OPENTHREAD_CONFIG_HISTORY_TRACKER_UNICAST_ADDRESS_LIST_SIZE;
+    static constexpr uint16_t kMulticastAddrListSize = OPENTHREAD_CONFIG_HISTORY_TRACKER_MULTICAST_ADDRESS_LIST_SIZE;
+    static constexpr uint16_t kRxListSize            = OPENTHREAD_CONFIG_HISTORY_TRACKER_RX_LIST_SIZE;
+    static constexpr uint16_t kTxListSize            = OPENTHREAD_CONFIG_HISTORY_TRACKER_TX_LIST_SIZE;
+    static constexpr uint16_t kNeighborListSize      = OPENTHREAD_CONFIG_HISTORY_TRACKER_NEIGHBOR_LIST_SIZE;
+
+    typedef otHistoryTrackerAddressEvent AddressEvent;
+
+    static constexpr AddressEvent kAddressAdded   = OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED;
+    static constexpr AddressEvent kAddressRemoved = OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED;
 
     static constexpr int8_t   kInvalidRss    = OT_RADIO_RSSI_INVALID;
     static constexpr uint16_t kInvalidRloc16 = Mac::kShortAddrInvalid;
@@ -323,15 +376,22 @@ private:
     void        RecordNetworkInfo(void);
     void        RecordMessage(const Message &aMessage, const Mac::Address &aMacAddress, MessageType aType);
     void        RecordNeighborEvent(NeighborTable::Event aEvent, const NeighborTable::EntryInfo &aInfo);
+    void        RecordAddressEvent(Ip6::Netif::AddressEvent aEvent, const Ip6::Netif::UnicastAddress &aUnicastAddress);
+    void        RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
+                                   const Ip6::Netif::MulticastAddress &aMulticastAddress,
+                                   Ip6::Netif::AddressOrigin           aAddressOrigin);
     void        HandleNotifierEvents(Events aEvents);
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    EntryList<NetworkInfo, kNetInfoListSize>   mNetInfoHistory;
-    EntryList<MessageInfo, kRxListSize>        mRxHistory;
-    EntryList<MessageInfo, kTxListSize>        mTxHistory;
-    EntryList<NeighborInfo, kNeighborListSize> mNeighborHistory;
-    TimerMilli                                 mTimer;
+    EntryList<NetworkInfo, kNetInfoListSize>                mNetInfoHistory;
+    EntryList<UnicastAddressInfo, kUnicastAddrListSize>     mUnicastAddressHistory;
+    EntryList<MulticastAddressInfo, kMulticastAddrListSize> mMulticastAddressHistory;
+    EntryList<MessageInfo, kRxListSize>                     mRxHistory;
+    EntryList<MessageInfo, kTxListSize>                     mTxHistory;
+    EntryList<NeighborInfo, kNeighborListSize>              mNeighborHistory;
+
+    TimerMilli mTimer;
 };
 
 } // namespace Utils

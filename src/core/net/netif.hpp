@@ -76,6 +76,30 @@ class Netif : public InstanceLocator, private NonCopyable
 
 public:
     /**
+     * This enumeration represent an address event (added or removed)
+     *
+     * The boolean values are used for `aIsAdded` parameter in the call of `otIp6AddressCallback`.
+     *
+     */
+    enum AddressEvent : bool
+    {
+        kAddressRemoved = false, ///< Indicates that address was added.
+        kAddressAdded   = true,  ///< Indicates that address was removed.
+    };
+
+    /**
+     * This enumeration represents the address origin.
+     *
+     */
+    enum AddressOrigin : uint8_t
+    {
+        kOriginThread = OT_ADDRESS_ORIGIN_THREAD, ///< Thread assigned address (ALOC, RLOC, MLEID, etc)
+        kOriginSlaac  = OT_ADDRESS_ORIGIN_SLAAC,  ///< SLAAC assigned address
+        kOriginDhcp6  = OT_ADDRESS_ORIGIN_DHCPV6, ///< DHCPv6 assigned address
+        kOriginManual = OT_ADDRESS_ORIGIN_MANUAL, ///< Manually assigned address
+    };
+
+    /**
      * This class implements an IPv6 network interface unicast address.
      *
      */
@@ -180,6 +204,14 @@ public:
             mScopeOverride      = aScope;
             mScopeOverrideValid = true;
         }
+
+        /**
+         * This method gets the IPv6 address origin.
+         *
+         * @returns The address origin.
+         *
+         */
+        AddressOrigin GetOrigin(void) const { return static_cast<AddressOrigin>(mAddressOrigin); }
 
     private:
         bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
