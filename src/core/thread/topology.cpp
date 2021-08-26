@@ -163,12 +163,11 @@ void Neighbor::GenerateChallenge(void)
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
 void Neighbor::AggregateLinkMetrics(uint8_t aSeriesId, uint8_t aFrameType, uint8_t aLqi, int8_t aRss)
 {
-    for (LinkMetrics::SeriesInfo *entry = mLinkMetricsSeriesInfoList.GetHead(); entry != nullptr;
-         entry                          = entry->GetNext())
+    for (LinkMetrics::SeriesInfo &entry : mLinkMetricsSeriesInfoList)
     {
-        if (aSeriesId == 0 || aSeriesId == entry->GetSeriesId())
+        if (aSeriesId == 0 || aSeriesId == entry.GetSeriesId())
         {
-            entry->AggregateLinkMetrics(aFrameType, aLqi, aRss);
+            entry.AggregateLinkMetrics(aFrameType, aLqi, aRss);
         }
     }
 }
@@ -292,6 +291,19 @@ void Child::ClearIp6Addresses(void)
     mMlrToRegisterMask.Clear();
     mMlrRegisteredMask.Clear();
 #endif
+}
+
+void Child::SetDeviceMode(Mle::DeviceMode aMode)
+{
+    VerifyOrExit(aMode != GetDeviceMode());
+
+    Neighbor::SetDeviceMode(aMode);
+
+    VerifyOrExit(IsStateValid());
+    Get<NeighborTable>().Signal(NeighborTable::kChildModeChanged, *this);
+
+exit:
+    return;
 }
 
 Error Child::GetMeshLocalIp6Address(Ip6::Address &aAddress) const

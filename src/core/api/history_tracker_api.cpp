@@ -78,6 +78,16 @@ const otHistoryTrackerMessageInfo *otHistoryTrackerIterateTxHistory(otInstance *
         *static_cast<Utils::HistoryTracker::Iterator *>(aIterator), *aEntryAge);
 }
 
+const otHistoryTrackerNeighborInfo *otHistoryTrackerIterateNeighborHistory(otInstance *              aInstance,
+                                                                           otHistoryTrackerIterator *aIterator,
+                                                                           uint32_t *                aEntryAge)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<Utils::HistoryTracker>().IterateNeighborHistory(
+        *static_cast<Utils::HistoryTracker::Iterator *>(aIterator), *aEntryAge);
+}
+
 void otHistoryTrackerEntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_t aSize)
 {
     Utils::HistoryTracker::EntryAgeToString(aEntryAge, aBuffer, aSize);

@@ -97,6 +97,7 @@ private:
 
     otError ProcessHelp(Arg aArgs[]);
     otError ProcessNetInfo(Arg aArgs[]);
+    otError ProcessNeighbor(Arg aArgs[]);
     otError ProcessRx(Arg aArgs[]);
     otError ProcessRxTx(Arg aArgs[]);
     otError ProcessTx(Arg aArgs[]);
@@ -111,8 +112,8 @@ private:
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
 
     static constexpr Command sCommands[] = {
-        {"help", &History::ProcessHelp}, {"netinfo", &History::ProcessNetInfo}, {"rx", &History::ProcessRx},
-        {"rxtx", &History::ProcessRxTx}, {"tx", &History::ProcessTx},
+        {"help", &History::ProcessHelp}, {"neighbor", &History::ProcessNeighbor}, {"netinfo", &History::ProcessNetInfo},
+        {"rx", &History::ProcessRx},     {"rxtx", &History::ProcessRxTx},         {"tx", &History::ProcessTx},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");

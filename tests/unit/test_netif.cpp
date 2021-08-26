@@ -65,13 +65,13 @@ void VerifyMulticastAddressList(const Ip6::Netif &aNetif, Ip6::Address aAddresse
         VerifyOrQuit(aNetif.IsMulticastSubscribed(aAddresses[i]));
     }
 
-    for (const Ip6::NetifMulticastAddress *addr = aNetif.GetMulticastAddresses(); addr; addr = addr->GetNext())
+    for (const Ip6::Netif::MulticastAddress &addr : aNetif.GetMulticastAddresses())
     {
         bool didFind = false;
 
         for (uint8_t i = 0; i < aLength; i++)
         {
-            if (addr->GetAddress() == aAddresses[i])
+            if (addr.GetAddress() == aAddresses[i])
             {
                 didFind = true;
                 break;
@@ -93,8 +93,8 @@ void TestNetifMulticastAddresses(void)
     TestNetif    netif(*instance);
     Ip6::Address addresses[kMaxAddresses];
 
-    Ip6::Address               address;
-    Ip6::NetifMulticastAddress netifAddress;
+    Ip6::Address                 address;
+    Ip6::Netif::MulticastAddress netifAddress;
 
     const char *kLinkLocalAllNodes    = "ff02::01";
     const char *kRealmLocalAllNodes   = "ff03::01";

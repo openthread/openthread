@@ -257,7 +257,9 @@ exit:
 
 void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 {
+#if !OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
     if (mCallback != nullptr)
+#endif
     {
         EntryInfo info;
 
@@ -265,20 +267,28 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 
         switch (aEvent)
         {
-        case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
-        case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+        case kChildAdded:
+        case kChildRemoved:
+        case kChildModeChanged:
 #if OPENTHREAD_FTD
             static_cast<Child::Info &>(info.mInfo.mChild).SetFrom(static_cast<const Child &>(aNeighbor));
 #endif
             break;
 
-        case OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED:
-        case OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED:
+        case kRouterAdded:
+        case kRouterRemoved:
             static_cast<Neighbor::Info &>(info.mInfo.mRouter).SetFrom(aNeighbor);
             break;
         }
 
-        mCallback(aEvent, &info);
+#if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
+        Get<Utils::HistoryTracker>().RecordNeighborEvent(aEvent, info);
+
+        if (mCallback != nullptr)
+#endif
+        {
+            mCallback(static_cast<otNeighborTableEvent>(aEvent), &info);
+        }
     }
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
@@ -287,11 +297,11 @@ void NeighborTable::Signal(Event aEvent, const Neighbor &aNeighbor)
 
     switch (aEvent)
     {
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED:
+    case kChildAdded:
         Get<Notifier>().Signal(kEventThreadChildAdded);
         break;
 
-    case OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED:
+    case kChildRemoved:
         Get<Notifier>().Signal(kEventThreadChildRemoved);
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
         Get<DuaManager>().UpdateChildDomainUnicastAddress(static_cast<const Child &>(aNeighbor),

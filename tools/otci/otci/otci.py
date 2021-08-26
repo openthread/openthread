@@ -785,7 +785,7 @@ class OTCI(object):
     def dns_browse(self, service: str) -> List[Dict]:
         """Browse DNS service instances."""
         cmd = f'dns browse {service}'
-        output = '\n'.join(self.execute_command(cmd))
+        output = '\n'.join(self.execute_command(cmd, 30.0))
 
         result = []
         for ins, port, priority, weight, srv_ttl, hostname, address, aaaa_ttl, txt_data, txt_ttl in re.findall(
@@ -810,7 +810,7 @@ class OTCI(object):
     def dns_resolve(self, hostname: str) -> List[Dict]:
         """Resolve a DNS host name."""
         cmd = f'dns resolve {hostname}'
-        output = self.execute_command(cmd)
+        output = self.execute_command(cmd, 30.0)
         dns_resp = output[0]
         addrs = dns_resp.strip().split(' - ')[1].split(' ')
         ips = [Ip6Addr(item.strip()) for item in addrs[::2]]
@@ -824,7 +824,7 @@ class OTCI(object):
     def dns_resolve_service(self, instance: str, service: str) -> Dict:
         """Resolves aservice instance."""
         cmd = f'dns service {instance} {service}'
-        output = self.execute_command(cmd)
+        output = self.execute_command(cmd, 30.0)
 
         m = re.match(
             r'.*Port:(\d+), Priority:(\d+), Weight:(\d+), TTL:(\d+)\s+Host:(.*?)\s+HostAddress:(\S+) TTL:(\d+)\s+TXT:(\[.*?\]) TTL:(\d+)',

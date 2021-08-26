@@ -501,7 +501,7 @@ exit:
     return error;
 }
 
-Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
+Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease, bool aSendUnregToServer)
 {
     Error error = kErrorNone;
 
@@ -518,12 +518,12 @@ Error Client::RemoveHostAndServices(bool aShouldRemoveKeyLease)
 
     mShouldRemoveKeyLease = aShouldRemoveKeyLease;
 
-    for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+    for (Service &service : mServices)
     {
-        UpdateServiceStateToRemove(*service);
+        UpdateServiceStateToRemove(service);
     }
 
-    if (mHostInfo.GetState() == kToAdd)
+    if ((mHostInfo.GetState() == kToAdd) && !aSendUnregToServer)
     {
         // Host info is not added yet (not yet registered with
         // server), so we can remove it and all services immediately.
@@ -602,9 +602,9 @@ void Client::ChangeHostAndServiceStates(const ItemState *aNewStates)
 
     mHostInfo.SetState(aNewStates[mHostInfo.GetState()]);
 
-    for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+    for (Service &service : mServices)
     {
-        service->SetState(aNewStates[service->GetState()]);
+        service.SetState(aNewStates[service.GetState()]);
     }
 
 #if OPENTHREAD_CONFIG_SRP_CLIENT_AUTO_START_API_ENABLE && OPENTHREAD_CONFIG_SRP_CLIENT_SAVE_SELECTED_SERVER_ENABLE
@@ -768,9 +768,9 @@ Error Client::PrepareUpdateMessage(Message &aMessage)
 
     if (mHostInfo.GetState() != kToRemove)
     {
-        for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+        for (Service &service : mServices)
         {
-            SuccessOrExit(error = AppendServiceInstructions(*service, aMessage, info));
+            SuccessOrExit(error = AppendServiceInstructions(service, aMessage, info));
         }
     }
 
@@ -1260,7 +1260,7 @@ void Client::ProcessResponse(Message &aMessage)
     offset += sizeof(header);
 
     // Skip over all sections till Additional Data section
-    // SPEC ENHANCEMENT: Sever can echo the request back or not
+    // SPEC ENHANCEMENT: Server can echo the request back or not
     // include any of RRs. Would be good to explicitly require SRP server
     // to not echo back RRs.
 
@@ -1310,11 +1310,11 @@ void Client::ProcessResponse(Message &aMessage)
         mLeaseRenewTime += Time::SecToMsec(mAcceptedLeaseInterval) / 2;
     }
 
-    for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+    for (Service &service : mServices)
     {
-        if ((service->GetState() == kAdding) || (service->GetState() == kRefreshing))
+        if ((service.GetState() == kAdding) || (service.GetState() == kRefreshing))
         {
-            service->SetLeaseRenewTime(mLeaseRenewTime);
+            service.SetLeaseRenewTime(mLeaseRenewTime);
         }
     }
 
@@ -1446,7 +1446,7 @@ void Client::UpdateState(void)
     bool      shouldUpdate      = false;
 
     VerifyOrExit((GetState() != kStateStopped) && (GetState() != kStatePaused));
-    VerifyOrExit((mHostInfo.GetName() != nullptr) && (mHostInfo.GetNumAddresses() > 0));
+    VerifyOrExit(mHostInfo.GetName() != nullptr);
 
     // Go through the host info and all the services to check if there
     // are any new changes (i.e., anything new to add or remove). This
@@ -1474,11 +1474,11 @@ void Client::UpdateState(void)
 
     case kToAdd:
     case kToRefresh:
-        // Make sure we have at least one service otherwise no need to
-        // send SRP update message with host info only. The exception
-        // is when removing host info where we allow for empty
-        // service list.
-        VerifyOrExit(!mServices.IsEmpty());
+        // Make sure we have at least one service and at least one
+        // host address, otherwise no need to send SRP update message.
+        // The exception is when removing host info where we allow
+        // for empty service list.
+        VerifyOrExit(!mServices.IsEmpty() && (mHostInfo.GetNumAddresses() > 0));
 
         // Fall through
 
@@ -1499,9 +1499,9 @@ void Client::UpdateState(void)
 
     if (mHostInfo.GetState() != kRemoving)
     {
-        for (Service *service = mServices.GetHead(); service != nullptr; service = service->GetNext())
+        for (Service &service : mServices)
         {
-            switch (service->GetState())
+            switch (service.GetState())
             {
             case kToAdd:
             case kToRefresh:
@@ -1510,14 +1510,14 @@ void Client::UpdateState(void)
                 break;
 
             case kRegistered:
-                if (service->GetLeaseRenewTime() <= now)
+                if (service.GetLeaseRenewTime() <= now)
                 {
-                    service->SetState(kToRefresh);
+                    service.SetState(kToRefresh);
                     shouldUpdate = true;
                 }
-                else if (service->GetLeaseRenewTime() < earliestRenewTime)
+                else if (service.GetLeaseRenewTime() < earliestRenewTime)
                 {
-                    earliestRenewTime = service->GetLeaseRenewTime();
+                    earliestRenewTime = service.GetLeaseRenewTime();
                 }
 
                 break;

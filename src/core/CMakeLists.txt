@@ -245,3 +245,7 @@ endif()
 if(OT_RCP)
     include(radio.cmake)
 endif()
+
+set_property(SOURCE api/instance_api.cpp
+    APPEND PROPERTY COMPILE_DEFINITIONS "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\""
+)

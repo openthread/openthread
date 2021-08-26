@@ -124,6 +124,7 @@
  * @defgroup api-entropy              Entropy Source
  * @defgroup api-factory-diagnostics  Factory Diagnostics
  * @defgroup api-heap                 Heap
+ * @defgroup api-history-tracker      History Tracker
  * @defgroup api-jam-detection        Jam Detection
  * @defgroup api-logging              Logging
  * @defgroup api-ncp                  Network Co-Processor

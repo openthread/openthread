@@ -395,9 +395,9 @@ void AddressResolver::UpdateSnoopedCacheEntry(const Ip6::Address &aEid,
     entry = NewCacheEntry(/* aSnoopedEntry */ true);
     VerifyOrExit(entry != nullptr);
 
-    for (CacheEntry *snooped = mSnoopedList.GetHead(); snooped != nullptr; snooped = snooped->GetNext())
+    for (CacheEntry &snooped : mSnoopedList)
     {
-        if (!snooped->CanEvict())
+        if (!snooped.CanEvict())
         {
             numNonEvictable++;
         }
@@ -448,13 +448,13 @@ void AddressResolver::RestartAddressQueries(void)
 
     mQueryRetryList.Clear();
 
-    for (CacheEntry *entry = mQueryList.GetHead(); entry != nullptr; entry = entry->GetNext())
+    for (CacheEntry &entry : mQueryList)
     {
-        IgnoreError(SendAddressQuery(entry->GetTarget()));
+        IgnoreError(SendAddressQuery(entry.GetTarget()));
 
-        entry->SetTimeout(kAddressQueryTimeout);
-        entry->SetRetryDelay(kAddressQueryInitialRetryDelay);
-        entry->SetCanEvict(false);
+        entry.SetTimeout(kAddressQueryTimeout);
+        entry.SetRetryDelay(kAddressQueryInitialRetryDelay);
+        entry.SetCanEvict(false);
     }
 }
 
@@ -726,22 +726,22 @@ void AddressResolver::HandleAddressError(Coap::Message &aMessage, const Ip6::Mes
     SuccessOrExit(error = Tlv::Find<ThreadTargetTlv>(aMessage, target));
     SuccessOrExit(error = Tlv::Find<ThreadMeshLocalEidTlv>(aMessage, meshLocalIid));
 
-    for (const Ip6::NetifUnicastAddress *address = Get<ThreadNetif>().GetUnicastAddresses(); address;
-         address                                 = address->GetNext())
+    for (const Ip6::Netif::UnicastAddress &address : Get<ThreadNetif>().GetUnicastAddresses())
     {
-        if (address->GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
+        if (address.GetAddress() == target && Get<Mle::MleRouter>().GetMeshLocal64().GetIid() != meshLocalIid)
         {
             // Target EID matches address and Mesh Local EID differs
 #if OPENTHREAD_CONFIG_DUA_ENABLE
-            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address->GetAddress()))
+            if (Get<BackboneRouter::Leader>().IsDomainUnicast(address.GetAddress()))
             {
                 Get<DuaManager>().NotifyDuplicateDomainUnicastAddress();
             }
             else
 #endif
             {
-                Get<ThreadNetif>().RemoveUnicastAddress(*address);
+                Get<ThreadNetif>().RemoveUnicastAddress(address);
             }
+
             ExitNow();
         }
     }
@@ -871,77 +871,78 @@ exit:
 
 void AddressResolver::HandleTimeTick(void)
 {
-    bool        continueRxingTicks = false;
-    CacheEntry *prev;
-    CacheEntry *entry;
+    bool continueRxingTicks = false;
 
-    for (entry = mSnoopedList.GetHead(); entry != nullptr; entry = entry->GetNext())
+    for (CacheEntry &entry : mSnoopedList)
     {
-        if (entry->IsTimeoutZero())
+        if (entry.IsTimeoutZero())
         {
             continue;
         }
 
         continueRxingTicks = true;
-        entry->DecrementTimeout();
+        entry.DecrementTimeout();
 
-        if (entry->IsTimeoutZero())
+        if (entry.IsTimeoutZero())
         {
-            entry->SetCanEvict(true);
+            entry.SetCanEvict(true);
         }
     }
 
-    for (entry = mQueryRetryList.GetHead(); entry != nullptr; entry = entry->GetNext())
+    for (CacheEntry &entry : mQueryRetryList)
     {
-        if (entry->IsTimeoutZero())
+        if (entry.IsTimeoutZero())
         {
             continue;
         }
 
         continueRxingTicks = true;
-        entry->DecrementTimeout();
+        entry.DecrementTimeout();
     }
 
-    prev = nullptr;
-
-    while ((entry = GetEntryAfter(prev, mQueryList)) != nullptr)
     {
-        OT_ASSERT(!entry->IsTimeoutZero());
+        CacheEntry *prev = nullptr;
+        CacheEntry *entry;
 
-        continueRxingTicks = true;
-        entry->DecrementTimeout();
-
-        if (entry->IsTimeoutZero())
+        while ((entry = GetEntryAfter(prev, mQueryList)) != nullptr)
         {
-            uint16_t retryDelay = entry->GetRetryDelay();
+            OT_ASSERT(!entry->IsTimeoutZero());
 
-            entry->SetTimeout(retryDelay);
+            continueRxingTicks = true;
+            entry->DecrementTimeout();
 
-            retryDelay <<= 1;
-
-            if (retryDelay > kAddressQueryMaxRetryDelay)
+            if (entry->IsTimeoutZero())
             {
-                retryDelay = kAddressQueryMaxRetryDelay;
+                uint16_t retryDelay = entry->GetRetryDelay();
+
+                entry->SetTimeout(retryDelay);
+
+                retryDelay <<= 1;
+
+                if (retryDelay > kAddressQueryMaxRetryDelay)
+                {
+                    retryDelay = kAddressQueryMaxRetryDelay;
+                }
+
+                entry->SetRetryDelay(retryDelay);
+                entry->SetCanEvict(true);
+
+                // Move the entry from `mQueryList` to `mQueryRetryList`
+                mQueryList.PopAfter(prev);
+                mQueryRetryList.Push(*entry);
+
+                otLogInfoArp("Timed out waiting for address notification for %s, retry: %d",
+                             entry->GetTarget().ToString().AsCString(), entry->GetTimeout());
+
+                Get<MeshForwarder>().HandleResolved(entry->GetTarget(), kErrorDrop);
+
+                // When the entry is removed from `mQueryList`
+                // we keep the `prev` pointer same as before.
             }
-
-            entry->SetRetryDelay(retryDelay);
-            entry->SetCanEvict(true);
-
-            // Move the entry from `mQueryList` to `mQueryRetryList`
-            mQueryList.PopAfter(prev);
-            mQueryRetryList.Push(*entry);
-
-            otLogInfoArp("Timed out waiting for address notification for %s, retry: %d",
-                         entry->GetTarget().ToString().AsCString(), entry->GetTimeout());
-
-            Get<MeshForwarder>().HandleResolved(entry->GetTarget(), kErrorDrop);
-
-            // When the entry is removed from `mQueryList`
-            // we keep the `prev` pointer same as before.
-        }
-        else
-        {
-            prev = entry;
+            else
+            {
+                prev = entry;
+            }
         }
     }
 

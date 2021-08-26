@@ -132,6 +132,9 @@ constexpr uint32_t kAdvertiseIntervalMax = 32; ///< Max Advertise interval (in s
 #endif
 
 constexpr uint8_t kFailedRouterTransmissions = 4;
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+constexpr uint8_t kFailedCslDataPollTransmissions = 15;
+#endif
 
 constexpr uint8_t  kRouterIdReuseDelay     = 100; ///< (in sec)
 constexpr uint32_t kRouterIdSequencePeriod = 10;  ///< (in sec)

@@ -71,7 +71,14 @@ public:
      * neighbor is being added or removed.
      *
      */
-    typedef otNeighborTableEvent Event;
+    enum Event : uint8_t
+    {
+        kChildAdded       = OT_NEIGHBOR_TABLE_EVENT_CHILD_ADDED,        ///< A child is being added.
+        kChildRemoved     = OT_NEIGHBOR_TABLE_EVENT_CHILD_REMOVED,      ///< A child is being removed.
+        kChildModeChanged = OT_NEIGHBOR_TABLE_EVENT_CHILD_MODE_CHANGED, ///< An existing child's mode changed.
+        kRouterAdded      = OT_NEIGHBOR_TABLE_EVENT_ROUTER_ADDED,       ///< A router is being added.
+        kRouterRemoved    = OT_NEIGHBOR_TABLE_EVENT_ROUTER_REMOVED,     ///< A router is being removed.
+    };
 
     /**
      * This constructor initializes the `NeighborTable` instance.
@@ -213,7 +220,7 @@ public:
      *
      * This method invokes the `NeighborTable::Callback` and also signals the change through a related `Notifier` event.
      *
-     * @param[in] aEvent     The event to emit (child/router added/removed).
+     * @param[in] aEvent     The event to emit (child/router added/removed, or child mode changed).
      * @param[in] aNeighbor  The neighbor that is being added/removed.
      *
      */

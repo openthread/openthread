@@ -79,7 +79,7 @@ const otNetifAddress *otIp6GetUnicastAddresses(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<ThreadNetif>().GetUnicastAddresses();
+    return instance.Get<ThreadNetif>().GetUnicastAddresses().GetHead();
 }
 
 otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAddress)
@@ -87,7 +87,7 @@ otError otIp6AddUnicastAddress(otInstance *aInstance, const otNetifAddress *aAdd
     Instance &instance = *static_cast<Instance *>(aInstance);
 
     return instance.Get<ThreadNetif>().AddExternalUnicastAddress(
-        *static_cast<const Ip6::NetifUnicastAddress *>(aAddress));
+        *static_cast<const Ip6::Netif::UnicastAddress *>(aAddress));
 }
 
 otError otIp6RemoveUnicastAddress(otInstance *aInstance, const otIp6Address *aAddress)
@@ -101,7 +101,7 @@ const otNetifMulticastAddress *otIp6GetMulticastAddresses(otInstance *aInstance)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<ThreadNetif>().GetMulticastAddresses();
+    return instance.Get<ThreadNetif>().GetMulticastAddresses().GetHead();
 }
 
 otError otIp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aAddress)
@@ -266,9 +266,9 @@ bool otIp6IsAddressUnspecified(const otIp6Address *aAddress)
 
 otError otIp6SelectSourceAddress(otInstance *aInstance, otMessageInfo *aMessageInfo)
 {
-    Error                           error    = kErrorNone;
-    Instance &                      instance = *static_cast<Instance *>(aInstance);
-    const Ip6::NetifUnicastAddress *netifAddr;
+    Error                             error    = kErrorNone;
+    Instance &                        instance = *static_cast<Instance *>(aInstance);
+    const Ip6::Netif::UnicastAddress *netifAddr;
 
     netifAddr = instance.Get<Ip6::Ip6>().SelectSourceAddress(*static_cast<Ip6::MessageInfo *>(aMessageInfo));
     VerifyOrExit(netifAddr != nullptr, error = kErrorNotFound);

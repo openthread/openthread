@@ -556,7 +556,7 @@ public:
     /**
      * This method starts the remove process of the host info and all services.
      *
-     * After retuning from this method, `Callback` will be called to report the status of remove request with
+     * After returning from this method, `Callback` will be called to report the status of remove request with
      * SRP server.
      *
      * If the host info is to be permanently removed from server, @p aRemoveKeyLease should be set to `true` which
@@ -564,14 +564,28 @@ public:
      * ensures that the server holds the host name in reserve for when the client once again able to provide and
      * register its service(s).
      *
-     * @param[in] aRemoveKeyLease  A boolean indicating whether or not the host key lease should also be removed.
+     * The @p aSendUnregToServer determines the behavior when the host info is not yet registered with the server. If
+     * @p aSendUnregToServer is set to `false` (which is the default/expected value) then the SRP client will
+     * immediately remove the host info and services without sending an update message to server (no need to update the
+     * server if nothing is yet registered with it). If @p aSendUnregToServer is set to `true` then the SRP client will
+     * send an update message to the server. Note that if the host info is registered then the value of
+     * @p aSendUnregToServer does not matter and the SRP client will always send an update message to server requesting
+     * removal of all info.
+     *
+     * One situation where @p aSendUnregToServer can be useful is on a device reset/reboot, caller may want to remove
+     * any previously registered services with the server. In this case, caller can `SetHostName()` and then request
+     * `RemoveHostAndServices()` with `aSendUnregToServer` as `true`.
+     *
+     * @param[in] aRemoveKeyLease     A boolean indicating whether or not the host key lease should also be removed.
+     * @param[in] aSendUnregToServer   A boolean indicating whether to send update to server when host info is not
+     *                                registered.
      *
      * @retval kErrorNone      The removal of host and services started successfully. The `Callback` will be called
      *                         to report the status.
      * @retval kErrorAlready   The host is already removed.
      *
      */
-    Error RemoveHostAndServices(bool aShouldRemoveKeyLease);
+    Error RemoveHostAndServices(bool aShouldRemoveKeyLease, bool aSendUnregToServer = false);
 
     /**
      * This method clears all host info and all the services.

@@ -182,6 +182,7 @@ EXTRA_DIST                                                         = \
     test_service.py                                                  \
     test_set_mliid.py                                                \
     test_srp_auto_start_mode.py                                      \
+    test_srp_client_remove_host.py                                   \
     test_srp_client_save_server_info.py                              \
     test_srp_lease.py                                                \
     test_srp_name_conflicts.py                                       \
@@ -248,6 +249,7 @@ check_SCRIPTS                                                      = \
     test_router_reattach.py                                          \
     test_service.py                                                  \
     test_srp_auto_start_mode.py                                      \
+    test_srp_client_remove_host.py                                   \
     test_srp_client_save_server_info.py                              \
     test_srp_lease.py                                                \
     test_srp_name_conflicts.py                                       \

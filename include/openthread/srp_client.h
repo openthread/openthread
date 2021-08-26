@@ -180,8 +180,8 @@ typedef void (*otSrpClientCallback)(otError                    aError,
  * This callback is invoked when auto-start mode is enabled and the SRP client is either automatically started or
  * stopped.
  *
- * @param[in] aSeverSockAddress    A non-NULL pointer indicates SRP sever was started and pointer will give the
- *                                 selected server socket address. A NULL pointer indicates SRP sever was stopped.
+ * @param[in] aServerSockAddress   A non-NULL pointer indicates SRP server was started and pointer will give the
+ *                                 selected server socket address. A NULL pointer indicates SRP server was stopped.
  * @param[in] aContext             A pointer to an arbitrary context (provided when callback was registered).
  *
  */
@@ -515,15 +515,27 @@ const otSrpClientService *otSrpClientGetServices(otInstance *aInstance);
  * that the server holds the host name in reserve for when the client is once again able to provide and register its
  * service(s).
  *
- * @param[in] aInstance        A pointer to the OpenThread instance.
- * @param[in] aRemoveKeyLease  A boolean indicating whether or not the host key lease should also be removed.
+ * The @p aSendUnregToServer determines the behavior when the host info is not yet registered with the server. If
+ * @p aSendUnregToServer is set to `false` (which is the default/expected value) then the SRP client will immediately
+ * remove the host info and services without sending an update message to server (no need to update the server if
+ * nothing is yet registered with it). If @p aSendUnregToServer is set to `true` then the SRP client will send an
+ * update message to the server. Note that if the host info is registered then the value of @p aSendUnregToServer does
+ * not matter and the SRP client will always send an update message to server requesting removal of all info.
+ *
+ * One situation where @p aSendUnregToServer can be useful is on a device reset/reboot, caller may want to remove any
+ * previously registered services with the server. In this case, caller can `otSrpClientSetHostName()` and then request
+ * `otSrpClientRemoveHostAndServices()` with `aSendUnregToServer` as `true`.
+ *
+ * @param[in] aInstance          A pointer to the OpenThread instance.
+ * @param[in] aRemoveKeyLease    A boolean indicating whether or not the host key lease should also be removed.
+ * @param[in] aSendUnregToServer A boolean indicating whether to send update to server when host info is not registered.
  *
  * @retval OT_ERROR_NONE       The removal of host info and services started successfully. The `otSrpClientCallback`
  *                             will be called to report the status.
  * @retval OT_ERROR_ALREADY    The host info is already removed.
  *
  */
-otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyLease);
+otError otSrpClientRemoveHostAndServices(otInstance *aInstance, bool aRemoveKeyLease, bool aSendUnregToServer);
 
 /**
  * This function clears all host info and all the services.

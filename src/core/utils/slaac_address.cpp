@@ -133,7 +133,7 @@ exit:
 }
 
 bool Slaac::DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
-                                     const Ip6::NetifUnicastAddress &       aAddr)
+                                     const Ip6::Netif::UnicastAddress &     aAddr)
 {
     return (((aConfig.mOnMesh && (aAddr.mPrefixLength == aConfig.mPrefix.mLength)) ||
              (!aConfig.mOnMesh && (aAddr.mPrefixLength == 128))) &&
@@ -151,7 +151,7 @@ void Slaac::Update(UpdateMode aMode)
         // If enabled, remove any SLAAC addresses with no matching on-mesh prefix,
         // otherwise (when disabled) remove all previously added SLAAC addresses.
 
-        for (Ip6::NetifUnicastAddress &slaacAddr : mAddresses)
+        for (Ip6::Netif::UnicastAddress &slaacAddr : mAddresses)
         {
             if (!slaacAddr.mValid)
             {
@@ -208,10 +208,9 @@ void Slaac::Update(UpdateMode aMode)
 
             found = false;
 
-            for (const Ip6::NetifUnicastAddress *netifAddr = Get<ThreadNetif>().GetUnicastAddresses();
-                 netifAddr != nullptr; netifAddr           = netifAddr->GetNext())
+            for (const Ip6::Netif::UnicastAddress &netifAddr : Get<ThreadNetif>().GetUnicastAddresses())
             {
-                if (DoesConfigMatchNetifAddr(config, *netifAddr))
+                if (DoesConfigMatchNetifAddr(config, netifAddr))
                 {
                     found = true;
                     break;
@@ -222,7 +221,7 @@ void Slaac::Update(UpdateMode aMode)
             {
                 bool added = false;
 
-                for (Ip6::NetifUnicastAddress &slaacAddr : mAddresses)
+                for (Ip6::Netif::UnicastAddress &slaacAddr : mAddresses)
                 {
                     if (slaacAddr.mValid)
                     {
@@ -252,10 +251,10 @@ void Slaac::Update(UpdateMode aMode)
     }
 }
 
-Error Slaac::GenerateIid(Ip6::NetifUnicastAddress &aAddress,
-                         uint8_t *                 aNetworkId,
-                         uint8_t                   aNetworkIdLength,
-                         uint8_t *                 aDadCounter) const
+Error Slaac::GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
+                         uint8_t *                   aNetworkId,
+                         uint8_t                     aNetworkIdLength,
+                         uint8_t *                   aDadCounter) const
 {
     /*
      *  This method generates a semantically opaque IID per RFC 7217.

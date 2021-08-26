@@ -84,6 +84,7 @@ static TxPacket     sTxPacketPool[TREL_PACKET_POOL_SIZE];
 static TxPacket *   sFreeTxPacketHead;  // A singly linked list of free/available `TxPacket` from pool.
 static TxPacket *   sTxPacketQueueTail; // A circular linked list for queued tx packets.
 static char         sInterfaceName[IFNAMSIZ + 1];
+static bool         sInitialized     = false;
 static bool         sEnabled         = false;
 static int          sInterfaceIndex  = -1;
 static int          sMulticastSocket = -1;
@@ -398,7 +399,10 @@ static void ReceivePacket(int aSocket, otInstance *aInstance)
                   Ip6AddrToString(&sockAddr.sin6_addr), ntohs(sockAddr.sin6_port), sockAddr.sin6_scope_id,
                   BufferToString(sRxPacketBuffer, sRxPacketLength));
 
-    otPlatTrelUdp6HandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength);
+    if (sEnabled)
+    {
+        otPlatTrelUdp6HandleReceived(aInstance, sRxPacketBuffer, sRxPacketLength);
+    }
 }
 
 static void InitPacketQueue(void)
@@ -620,11 +624,37 @@ exit:
     return error;
 }
 
+otError otPlatTrelUdp6SetTestMode(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+
+    otError error = OT_ERROR_NONE;
+
+    VerifyOrExit(aEnable != sEnabled);
+
+    if (aEnable)
+    {
+        VerifyOrExit(sInitialized, error = OT_ERROR_FAILED);
+    }
+
+    sEnabled = aEnable;
+
+    if (!sEnabled)
+    {
+        InitPacketQueue();
+    }
+
+exit:
+    return error;
+}
+
 //---------------------------------------------------------------------------------------------------------------------
 // platformTrel system
 
 void platformTrelInit(const char *aTrelUrl)
 {
+    assert(!sInitialized);
+
     if (aTrelUrl != NULL)
     {
         ot::Posix::RadioUrl url(aTrelUrl);
@@ -642,11 +672,14 @@ void platformTrelInit(const char *aTrelUrl)
     InitPacketQueue();
 
     // Disable trel platform when interface name is empty.
-    sEnabled = (sInterfaceName[0] != '\0');
+    sInitialized = (sInterfaceName[0] != '\0');
+    sEnabled     = sInitialized;
 }
 
 void platformTrelDeinit(void)
 {
+    VerifyOrExit(sInitialized);
+
     if (sSocket != -1)
     {
         close(sSocket);
@@ -662,7 +695,12 @@ void platformTrelDeinit(void)
         RemoveUnicastAddress(&sInterfaceAddress);
     }
 
+    sInitialized = false;
+    sEnabled     = false;
+
     otLogDebgPlat("[trel] platformTrelDeinit()");
+exit:
+    return;
 }
 
 void platformTrelUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMaxFd, struct timeval *aTimeout)

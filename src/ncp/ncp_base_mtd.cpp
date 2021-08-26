@@ -3936,10 +3936,12 @@ template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_SRP_CLIENT_HOST_SERVI
 {
     otError error = OT_ERROR_NONE;
     bool    removeKeyLease;
+    bool    sendUnregToServer;
 
     SuccessOrExit(error = mDecoder.ReadBool(removeKeyLease));
+    SuccessOrExit(error = mDecoder.ReadBool(sendUnregToServer));
 
-    error = otSrpClientRemoveHostAndServices(mInstance, removeKeyLease);
+    error = otSrpClientRemoveHostAndServices(mInstance, removeKeyLease, sendUnregToServer);
 
 exit:
     return error;
@@ -4735,7 +4737,7 @@ void NcpBase::ProcessThreadChangedFlags(void)
 
     // Convert OT_CHANGED flags to corresponding NCP property update.
 
-    for (auto flag : kFlags)
+    for (auto &flag : kFlags)
     {
         uint32_t threadFlag = flag.mThreadFlag;
 
