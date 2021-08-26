@@ -350,6 +350,11 @@ if(OT_UDP_FORWARD)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE=1")
 endif()
 
+option(OT_UPTIME "enable support for tracking OpenThread instance's uptime")
+if(OT_UPTIME)
+    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_UPTIME_ENABLE=1")
+endif()
+
 option(OT_FULL_LOGS "enable full logs")
 if(OT_FULL_LOGS)
     if(NOT OT_LOG_LEVEL)

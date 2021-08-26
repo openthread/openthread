@@ -655,6 +655,9 @@ private:
 #endif
     otError ProcessUdp(Arg aArgs[]);
     otError ProcessUnsecurePort(Arg aArgs[]);
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    otError ProcessUptime(Arg aArgs[]);
+#endif
     otError ProcessVersion(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     otError ProcessMacFilter(Arg aArgs[]);
@@ -940,6 +943,9 @@ private:
         {"txpower", &Interpreter::ProcessTxPower},
         {"udp", &Interpreter::ProcessUdp},
         {"unsecureport", &Interpreter::ProcessUnsecurePort},
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+        {"uptime", &Interpreter::ProcessUptime},
+#endif
         {"version", &Interpreter::ProcessVersion},
     };
 
