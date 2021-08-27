@@ -1084,7 +1084,7 @@ Error TxtRecord::ReadTxtData(const Message &aMessage,
 
     VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
     SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
-    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength()), error = kErrorParse);
+    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength(), /* aAllowEmpty */ true), error = kErrorParse);
     aTxtBufferSize = GetLength();
     aOffset += GetLength();
 
@@ -1092,13 +1092,13 @@ exit:
     return error;
 }
 
-bool TxtRecord::VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength)
+bool TxtRecord::VerifyTxtData(const uint8_t *aTxtData, uint16_t aTxtLength, bool aAllowEmpty)
 {
     bool    valid          = false;
     uint8_t curEntryLength = 0;
 
     // Per RFC 1035, TXT-DATA MUST have one or more <character-string>s.
-    VerifyOrExit(aTxtLength > 0);
+    VerifyOrExit(aAllowEmpty || aTxtLength > 0);
 
     for (uint16_t i = 0; i < aTxtLength; ++i)
     {

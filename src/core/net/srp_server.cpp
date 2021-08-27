@@ -1526,7 +1526,7 @@ Error Server::Service::Description::SetTxtDataFromMessage(const Message &aMessag
     VerifyOrExit(txtData != nullptr, error = kErrorNoBufs);
 
     VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = kErrorParse);
-    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength), error = kErrorParse);
+    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength, /* aAllowEmpty */ false), error = kErrorParse);
 
     Instance::HeapFree(mTxtData);
     mTxtData   = txtData;
