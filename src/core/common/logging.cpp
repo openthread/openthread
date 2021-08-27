@@ -43,7 +43,15 @@
  * It is reasonable to only enable the debug uart and not enable logs to the DEBUG uart.
  */
 #if (OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_DEBUG_UART) && (!OPENTHREAD_CONFIG_ENABLE_DEBUG_UART)
-#error OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART
+#error "OPENTHREAD_CONFIG_ENABLE_DEBUG_UART_LOG requires OPENTHREAD_CONFIG_ENABLE_DEBUG_UART"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME && !OPENTHREAD_CONFIG_UPTIME_ENABLE
+#error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME requires OPENTHREAD_CONFIG_UPTIME_ENABLE"
+#endif
+
+#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME && OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+#error "OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME is not supported under OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE"
 #endif
 
 #ifdef __cplusplus
@@ -55,6 +63,11 @@ extern "C" {
 static void Log(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     ot::String<OPENTHREAD_CONFIG_LOG_MAX_SIZE> logString;
+
+#if OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
+    ot::Uptime::UptimeToString(ot::Instance::Get().Get<ot::Uptime>().GetUptime(), logString);
+    logString.Append(" ");
+#endif
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     VerifyOrExit(otLoggingGetLevel() >= aLogLevel);
