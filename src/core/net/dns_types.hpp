@@ -1677,8 +1677,9 @@ public:
     /**
      * This static method tests if a buffer contains valid encoded TXT data.
      *
-     * @param[in]  aTxtData    The TXT data buffer.
-     * @param[in]  aTxtLength  The length of the TXT data buffer.
+     * @param[in]  aTxtData     The TXT data buffer.
+     * @param[in]  aTxtLength   The length of the TXT data buffer.
+     * @param[in]  aAllowEmpty  True if zero-length TXT data is allowed.
      *
      * @returns  TRUE if @p aTxtData contains valid encoded TXT data, FALSE if not.
      *
