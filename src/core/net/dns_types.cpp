@@ -1084,7 +1084,7 @@ Error TxtRecord::ReadTxtData(const Message &aMessage,
 
     VerifyOrExit(GetLength() <= aTxtBufferSize, error = kErrorNoBufs);
     SuccessOrExit(error = aMessage.Read(aOffset, aTxtBuffer, GetLength()));
-    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength(), /*aAllowEmpty */ true), error = kErrorParse);
+    VerifyOrExit(VerifyTxtData(aTxtBuffer, GetLength(), /* aAllowEmpty */ true), error = kErrorParse);
     aTxtBufferSize = GetLength();
     aOffset += GetLength();
 
