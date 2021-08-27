@@ -59,7 +59,6 @@
 #endif
 
 /**
-<<<<<<< HEAD
  * @def OPENTHREAD_CONFIG_CLI_TCP_ENABLE
  *
  * Indicates whether TCP should be enabled in the CLI tool.
