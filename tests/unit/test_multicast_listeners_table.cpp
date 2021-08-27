@@ -57,22 +57,15 @@ static const otIp6Address MA501 = {
 
 uint32_t sNow;
 
-uint32_t testTimerAlarmGetNow(void)
+extern "C" uint32_t otPlatAlarmMilliGetNow(void)
 {
     return sNow;
-}
-
-void InitTestTimer(void)
-{
-    g_testPlatAlarmGetNow = testTimerAlarmGetNow;
 }
 
 void testMulticastListenersTableAPIs(Instance *aInstance);
 
 void TestMulticastListenersTable(void)
 {
-    InitTestTimer();
-
     sInstance = testInitInstance();
     VerifyOrQuit(sInstance != nullptr);
 
