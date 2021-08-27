@@ -59,15 +59,6 @@ extern "C" {
  */
 
 /**
- * This is the default definition of OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE.
- *
- */
-
-#ifndef OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE
-#define OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE 1
-#endif
-
-/**
  * This enumeration defines the key types.
  *
  */
@@ -132,17 +123,6 @@ typedef struct otCryptoKey
 } otCryptoKey;
 
 /**
- * @struct otCryptoKeyAttributes
- *
- * This structure represents the Key Attributes structure.
- *
- */
-typedef struct otCryptoKeyAttributes
-{
-    uint8_t m8[OT_PLAT_CRYPTO_KEY_ATTRIBUTES_SIZE];
-} otCryptoKeyAttributes;
-
-/**
  * Initialize the Crypto module.
  *
  * @retval OT_ERROR_NONE          Successfully initialized Crypto module.
@@ -166,7 +146,13 @@ otError otPlatCryptoInit(void);
  * @retval OT_ERROR_FAILED        Failed to import the key.
  * @retval OT_ERROR_INVALID_ARGS  @p aKey was set to NULL.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
+ * @note If OT_CRYPTO_KEY_STORAGE_PERSISTENT is passed for aKeyPersistence then @p aKeyRef is input and platform
+ *       should use the given aKeyRef and MUST not change it.
+ *
+ *       If OT_CRYPTO_KEY_STORAGE_VOLATILE is passed for aKeyPersistence then @p aKeyRef is output, the initial
+ *       value does not matter and platform API MUST update it to return the new key ref.
+ *
+ *       This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *
  */
 otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
@@ -208,12 +194,12 @@ otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t a
 otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef);
 
 /**
- * Check if the keyId passed has an associated key in PSA ITS.
+ * Check if the key ref passed has an associated key in PSA ITS.
  *
- * @param[in]  aKeyRef          The Key Id to check.
+ * @param[in]  aKeyRef          The Key Ref to check.
  *
- * @retval true                 Key Id passed has a key associated in PSA.
- * @retval false                Key Id passed is invalid and has no key associated in PSA.
+ * @retval TRUE                 There is an associated key with @p aKeyRef.
+ * @retval FALSE                There is no associated key with @p aKeyRef.
  *
  * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
  *

@@ -567,7 +567,7 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
         // Check if there is already a network key stored in ITS. If
         // stored, and we are not overwriting the existing key,
         // return without doing anything.
-        if (Crypto::Storage::HasKey(mNetworkKeyRef))
+        if (Crypto::Storage::HasKey(keyRef))
         {
             ExitNow();
         }

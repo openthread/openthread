@@ -185,8 +185,6 @@ inline void DestroyKey(KeyRef aKeyRef)
  * @retval true                 Key Id passed has a key associated in PSA.
  * @retval false                Key Id passed is invalid and has no key associated in PSA.
  *
- * @note This API is only used by OT core when `OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE` is enabled.
- *
  */
 inline bool HasKey(KeyRef aKeyRef)
 {
