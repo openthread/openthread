@@ -105,35 +105,40 @@ void otPlatAlarmMicroStop(otInstance *aInstance)
     sIsUsRunning = false;
 }
 
-int32_t platformAlarmGetNext(void)
+uint64_t platformAlarmGetNext(void)
 {
-    int32_t remaining = INT32_MAX;
+    uint64_t remaining = INT64_MAX;
 
     if (sIsMsRunning)
     {
         int32_t milli = (int32_t)(sMsAlarm - otPlatAlarmMilliGetNow());
 
-        remaining = milli * US_PER_MS;
-
-        if (remaining < 0 && milli > 0)
+        if (milli < 0)
         {
-            remaining = INT32_MAX;
+            remaining = 0;
+        }
+        else
+        {
+            remaining = (uint64_t)milli;
+            remaining *= US_PER_MS;
         }
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
-
     if (sIsUsRunning)
     {
         int32_t micro = (int32_t)(sUsAlarm - otPlatAlarmMicroGetNow());
 
-        if (remaining > micro)
+        if (micro < 0)
         {
-            remaining = micro;
+            remaining = 0;
+        }
+        else if (remaining > ((uint64_t)micro))
+        {
+            remaining = (uint64_t)micro;
         }
     }
-
-#endif // OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+#endif
 
     return remaining;
 }

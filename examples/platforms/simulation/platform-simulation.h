@@ -113,12 +113,12 @@ void platformAlarmUpdateTimeout(struct timeval *aTimeout);
 void platformAlarmProcess(otInstance *aInstance);
 
 /**
- * This function returns the next alarm event time.
+ * This function returns the duration to the next alarm event time (in micro seconds)
  *
- * @returns The next alarm fire time.
+ * @returns The duration (in micro seconds) to the next alarm event.
  *
  */
-int32_t platformAlarmGetNext(void);
+uint64_t platformAlarmGetNext(void);
 
 /**
  * This function returns the current alarm time.
