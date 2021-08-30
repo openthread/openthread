@@ -260,11 +260,8 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
         DieNow(exitCode);
     }
 
-    if (!aSkipRcpCompatibilityCheck)
-    {
-        SuccessOrDie(CheckRcpApiVersion(supportsRcpApiVersion));
-        SuccessOrDie(CheckRadioCapabilities());
-    }
+    SuccessOrExit(CheckRcpApiVersion(aSkipRcpCompatibilityCheck, supportsRcpApiVersion));
+    SuccessOrExit(CheckRadioCapabilities(aSkipRcpCompatibilityCheck));
 
     mRxRadioFrame.mPsdu  = mRxPsdu;
     mTxRadioFrame.mPsdu  = mTxPsdu;
@@ -352,7 +349,7 @@ bool RadioSpinel<InterfaceType, ProcessContextType>::IsRcp(bool &aSupportsRcpApi
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(void)
+otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(bool aSkipRcpCompatibilityCheck)
 {
     const otRadioCaps kRequiredRadioCaps =
 #if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
@@ -366,7 +363,7 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRadioCapabilities(v
     SuccessOrExit(error = Get(SPINEL_PROP_RADIO_CAPS, SPINEL_DATATYPE_UINT_PACKED_S, &radioCaps));
     mRadioCaps = static_cast<otRadioCaps>(radioCaps);
 
-    if ((mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
+    if (!aSkipRcpCompatibilityCheck && (mRadioCaps & kRequiredRadioCaps) != kRequiredRadioCaps)
     {
         otRadioCaps missingCaps = (mRadioCaps & kRequiredRadioCaps) ^ kRequiredRadioCaps;
 
@@ -389,7 +386,8 @@ exit:
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool aSupportsRcpApiVersion)
+otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool aSkipRcpCompatibilityCheck,
+                                                                           bool aSupportsRcpApiVersion)
 {
     otError      error         = OT_ERROR_NONE;
     unsigned int rcpApiVersion = 1;
@@ -407,7 +405,8 @@ otError RadioSpinel<InterfaceType, ProcessContextType>::CheckRcpApiVersion(bool 
     static_assert(SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION <= SPINEL_RCP_API_VERSION,
                   "MIN_HOST_SUPPORTED_RCP_API_VERSION must be smaller than or equal to RCP_API_VERSION");
 
-    if ((rcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION) || (rcpApiVersion > SPINEL_RCP_API_VERSION))
+    if (!aSkipRcpCompatibilityCheck &&
+        (rcpApiVersion < SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION || rcpApiVersion > SPINEL_RCP_API_VERSION))
     {
         otLogCritPlat("RCP API Version %u is not in the supported range [%u-%u]", rcpApiVersion,
                       SPINEL_MIN_HOST_SUPPORTED_RCP_API_VERSION, SPINEL_RCP_API_VERSION);

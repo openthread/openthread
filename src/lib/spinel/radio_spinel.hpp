@@ -765,8 +765,8 @@ private:
     static void HandleReceivedFrame(void *aContext);
 
     otError CheckSpinelVersion(void);
-    otError CheckRadioCapabilities(void);
-    otError CheckRcpApiVersion(bool aSupportsRcpApiVersion);
+    otError CheckRadioCapabilities(bool aSkipRcpCompatibilityCheck);
+    otError CheckRcpApiVersion(bool aSkipRcpCompatibilityCheck, bool aSupportsRcpApiVersion);
 
     /**
      * This method triggers a state transfer of the state machine.
