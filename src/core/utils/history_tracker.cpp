@@ -297,8 +297,8 @@ void HistoryTracker::EntryAgeToString(uint32_t aEntryAge, char *aBuffer, uint16_
         }
 
         writer.Append("%02u:%02u:%02u.%03u", (aEntryAge / kOneHourInMsec),
-                      (aEntryAge % kOneDayInMsec) / kOneMinuteInMsec, (aEntryAge % kOneMinuteInMsec) / kOneSecondInMsec,
-                      (aEntryAge % kOneSecondInMsec));
+                      (aEntryAge % kOneHourInMsec) / kOneMinuteInMsec,
+                      (aEntryAge % kOneMinuteInMsec) / kOneSecondInMsec, (aEntryAge % kOneSecondInMsec));
     }
 }
 
