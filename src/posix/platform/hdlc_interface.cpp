@@ -47,9 +47,6 @@
 #include <pty.h>
 #endif
 #endif
-#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
-#include <libudev.h>
-#endif
 #include <stdarg.h>
 #include <stdlib.h>
 #include <sys/resource.h>
@@ -667,90 +664,34 @@ void HdlcInterface::HandleHdlcFrame(otError aError)
     }
 }
 
-#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
 otError HdlcInterface::ResetConnection(void)
 {
-    otError error = OT_ERROR_NONE;
+    otError  error = OT_ERROR_NONE;
+    uint64_t end;
 
-    VerifyOrExit(mRadioUrl != nullptr, error = OT_ERROR_FAILED);
-    SuccessOrExit(error = WaitForUsbDevice(mRadioUrl->GetPath()));
-
-    CloseFile();
-
-    mSockFd = OpenFile(*mRadioUrl);
-    VerifyOrExit(mSockFd != -1, error = OT_ERROR_FAILED);
-
-exit:
-    return error;
-}
-
-otError HdlcInterface::WaitForUsbDevice(const char *aRadioUrlPath)
-{
-    int                  fd;
-    uint64_t             end;
-    struct udev_monitor *mon;
-    otError              error = OT_ERROR_NONE;
-
-    struct udev *udev = udev_new();
-    VerifyOrExit(udev != nullptr, error = OT_ERROR_FAILED);
-
-    mon = udev_monitor_new_from_netlink(udev, "udev");
-    udev_monitor_filter_add_match_subsystem_devtype(mon, "tty", NULL);
-    udev_monitor_enable_receiving(mon);
-    fd = udev_monitor_get_fd(mon);
-
-    // wait maximally 10 seconds
-    end = otPlatTimeGet() + 10 * US_PER_S;
-    do
+    if (mRadioUrl->GetValue("uart-reset") != nullptr)
     {
-        int            ret;
-        fd_set         fds;
-        struct timeval tv;
+        usleep(static_cast<useconds_t>(kRemoveRcpDelay) * US_PER_MS);
+        CloseFile();
 
-        tv.tv_sec  = 0;
-        tv.tv_usec = 100 * US_PER_MS;
-
-        FD_ZERO(&fds);
-        FD_SET(fd, &fds);
-
-        ret = select(fd + 1, &fds, NULL, NULL, &tv);
-        if (ret > 0 && FD_ISSET(fd, &fds))
+        end = otPlatTimeGet() + kResetTimeout * US_PER_MS;
+        do
         {
-            struct udev_device *dev = udev_monitor_receive_device(mon);
-            if (dev)
+            mSockFd = OpenFile(*mRadioUrl);
+            if (mSockFd != -1)
             {
-                const char *action = udev_device_get_action(dev);
-                VerifyOrExit(action != nullptr, error = OT_ERROR_FAILED);
-                if (strcmp(action, "add") == 0)
-                {
-                    struct udev_list_entry *entry;
-                    udev_list_entry_foreach(entry, udev_device_get_devlinks_list_entry(dev))
-                    {
-                        const char *name = udev_list_entry_get_name(entry);
-                        VerifyOrExit(name != nullptr, error = OT_ERROR_FAILED);
-                        if (strcmp(name, aRadioUrlPath) == 0)
-                        {
-                            udev_device_unref(dev);
-                            ExitNow();
-                        }
-                    }
-                }
-                udev_device_unref(dev);
+                ExitNow();
             }
-        }
-    } while (end > otPlatTimeGet());
+            usleep(static_cast<useconds_t>(kOpenFileDelay) * US_PER_MS);
+        } while (end > otPlatTimeGet());
 
-    error = OT_ERROR_FAILED;
-
-exit:
-    if (udev)
-    {
-        udev_unref(udev);
+        otLogCritPlat("Failed to reopen UART connection after resetting the RCP device.");
+        error = OT_ERROR_FAILED;
     }
 
+exit:
     return error;
 }
-#endif // OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
 
 } // namespace Posix
 } // namespace ot
