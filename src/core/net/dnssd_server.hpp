@@ -375,7 +375,7 @@ private:
                                   const otDnssdServiceInstanceInfo &aInstanceInfo);
     static bool       CanAnswerQuery(const Server::QueryTransaction &aQuery, const char *aHostFullName);
     void AnswerQuery(QueryTransaction &aQuery, const char *aHostFullName, const otDnssdHostInfo &aHostInfo);
-    void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode);
+    void FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode, bool aFinalizeSameQueries = false);
     static DnsQueryType GetQueryTypeAndName(const Header & aHeader,
                                             const Message &aMessage,
                                             char (&aName)[Name::kMaxNameSize]);

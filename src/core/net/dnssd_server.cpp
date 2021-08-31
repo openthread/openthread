@@ -1105,7 +1105,7 @@ void Server::HandleTimer(void)
         expire = query.GetStartTime() + kQueryTimeout;
         if (expire <= now)
         {
-            FinalizeQuery(query, Header::kResponseSuccess);
+            FinalizeQuery(query, Header::kResponseSuccess, /* aFinalizeSameQueries */ true);
         }
     }
 
@@ -1147,7 +1147,7 @@ void Server::ResetTimer(void)
     }
 }
 
-void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode)
+void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseCode, bool aFinalizeSameQueries)
 {
     char         name[Name::kMaxNameSize];
     DnsQueryType sdType;
@@ -1161,6 +1161,29 @@ void Server::FinalizeQuery(QueryTransaction &aQuery, Header::Response aResponseC
 
     mQueryUnsubscribe(mQueryCallbackContext, name);
     aQuery.Finalize(aResponseCode, mSocket);
+
+    if (aFinalizeSameQueries)
+    {
+        for (QueryTransaction &otherQuery : mQueryTransactions)
+        {
+            char         otherName[Name::kMaxNameSize];
+            DnsQueryType otherSdType;
+
+            if (!otherQuery.IsValid())
+            {
+                continue;
+            }
+
+            otherSdType =
+                GetQueryTypeAndName(otherQuery.GetResponseHeader(), otherQuery.GetResponseMessage(), otherName);
+
+            if (otherSdType == sdType && !strcmp(name, otherName))
+            {
+                mQueryUnsubscribe(mQueryCallbackContext, otherName);
+                otherQuery.Finalize(aResponseCode, mSocket);
+            }
+        }
+    }
 }
 
 void Server::QueryTransaction::Init(const Header &          aResponseHeader,
