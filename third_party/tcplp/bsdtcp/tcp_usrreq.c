@@ -54,70 +54,17 @@
 //static void	tcp_disconnect(struct tcpcb *);
 static void	tcp_usrclosed(struct tcpcb *);
 
-#if 0
-static int
-tcp6_usr_bind(struct socket *so, struct sockaddr *nam, struct thread *td)
-{
-	int error = 0;
-	struct inpcb *inp;
-	struct tcpcb *tp = NULL;
-	struct sockaddr_in6 *sin6p;
+/*
+ * samkumar: Removed tcp6_usr_bind, since checking if an address/port is free
+ * needs to be done at the host system (along with other socket management
+ * duties). TCPlp doesn't know what other sockets are in the system, or which
+ * other addresses/ports are busy.
+ */
 
-	sin6p = (struct sockaddr_in6 *)nam;
-	if (nam->sa_len != sizeof (*sin6p))
-		return (EINVAL);
-	/*
-	 * Must check for multicast addresses and disallow binding
-	 * to them.
-	 */
-	if (sin6p->sin6_family == AF_INET6 &&
-	    IN6_IS_ADDR_MULTICAST(&sin6p->sin6_addr))
-		return (EAFNOSUPPORT);
-
-	TCPDEBUG0;
-	inp = sotoinpcb(so);
-	KASSERT(inp != NULL, ("tcp6_usr_bind: inp == NULL"));
-	INP_WLOCK(inp);
-	if (inp->inp_flags & (INP_TIMEWAIT | INP_DROPPED)) {
-		error = EINVAL;
-		goto out;
-	}
-	tp = intotcpcb(inp);
-	TCPDEBUG1();
-	INP_HASH_WLOCK(&V_tcbinfo);
-	inp->inp_vflag &= ~INP_IPV4;
-	inp->inp_vflag |= INP_IPV6;
-#ifdef INET
-	if ((inp->inp_flags & IN6P_IPV6_V6ONLY) == 0) {
-		if (IN6_IS_ADDR_UNSPECIFIED(&sin6p->sin6_addr))
-			inp->inp_vflag |= INP_IPV4;
-		else if (IN6_IS_ADDR_V4MAPPED(&sin6p->sin6_addr)) {
-			struct sockaddr_in sin;
-
-			in6_sin6_2_sin(&sin, sin6p);
-			inp->inp_vflag |= INP_IPV4;
-			inp->inp_vflag &= ~INP_IPV6;
-			error = in_pcbbind(inp, (struct sockaddr *)&sin,
-			    td->td_ucred);
-			INP_HASH_WUNLOCK(&V_tcbinfo);
-			goto out;
-		}
-	}
-#endif
-	error = in6_pcbbind(inp, nam, td->td_ucred);
-	INP_HASH_WUNLOCK(&V_tcbinfo);
-out:
-	TCPDEBUG2(PRU_BIND);
-	TCP_PROBE2(debug__user, tp, PRU_BIND);
-	INP_WUNLOCK(inp);
-	return (error);
-}
-#endif
-
-/* Based on a function in in6_pcb.c. */
+/* samkumar: This is based on a function in in6_pcb.c. */
 static int in6_pcbconnect(struct tcpcb* tp, struct sockaddr_in6* nam) {
-    register struct sockaddr_in6 *sin6 = nam;
-    tp->faddr = sin6->sin6_addr;
+	register struct sockaddr_in6 *sin6 = nam;
+	tp->faddr = sin6->sin6_addr;
 	tp->fport = sin6->sin6_port;
 	return 0;
 }
@@ -129,25 +76,26 @@ static int in6_pcbconnect(struct tcpcb* tp, struct sockaddr_in6* nam) {
  * Start keep-alive timer, and seed output sequence space.
  * Send initial segment on connection.
  */
-/* Signature used to be
-static int
-tcp6_connect(struct tcpcb *tp, struct sockaddr *nam, struct thread *td)
-*/
+/*
+ * samkumar: I removed locking, statistics, and inpcb management. The signature
+ * used to be
+ *
+ * static int
+ * tcp6_connect(struct tcpcb *tp, struct sockaddr *nam, struct thread *td)
+ */
 static int
 tcp6_connect(struct tcpcb *tp, struct sockaddr_in6 *nam)
 {
-//	struct inpcb *inp = tp->t_inpcb;
 	int error;
 
 	int sb_max = cbuf_free_space(&tp->recvbuf); // same as sendbuf
-//	INP_WLOCK_ASSERT(inp);
-//	INP_HASH_WLOCK(&V_tcbinfo);
 
 	/*
-	 * For autobind, the original BSD code assigned the port first (with logic
-	 * that also looked at the address) and then the address.
-	 * Here, we just use the tcplp_sys_autobind function to do all of that
-	 * work.
+	 * samkumar: For autobind, the original BSD code assigned the port first
+	 * (with logic that also looked at the address) and then the address. This
+	 * was done by calling into other parts of the FreeBSD network stack,
+	 * outside of the TCP stack. Here, we just use the tcplp_sys_autobind
+	 * function to do all of that work.
 	 */
 	bool autobind_addr = IN6_IS_ADDR_UNSPECIFIED(&tp->laddr);
 	bool autobind_port = (tp->lport == 0);
@@ -180,18 +128,15 @@ tcp6_connect(struct tcpcb *tp, struct sockaddr_in6 *nam)
 			tp->lport = htons(local.mPort);
 		}
 	}
-	error = in6_pcbconnect(/*inp*/tp, nam/*, td->td_ucred*/);
+	error = in6_pcbconnect(tp, nam);
 	if (error != 0)
 		goto out;
-//	INP_HASH_WUNLOCK(&V_tcbinfo);
 
 	/* Compute window scaling to request.  */
 	while (tp->request_r_scale < TCP_MAX_WINSHIFT &&
 	    (TCP_MAXWIN << tp->request_r_scale) < sb_max)
 		tp->request_r_scale++;
 
-//	soisconnecting(inp->inp_socket);
-//	TCPSTAT_INC(tcps_connattempt);
 	tcp_state_change(tp, TCPS_SYN_SENT);
 	tp->iss = tcp_new_isn(tp);
 	tcp_sendseqinit(tp);
@@ -199,114 +144,89 @@ tcp6_connect(struct tcpcb *tp, struct sockaddr_in6 *nam)
 	return 0;
 
 out:
-//	INP_HASH_WUNLOCK(&V_tcbinfo);
 	return error;
 }
 
 /*
-The signature used to be
-static int
-tcp6_usr_connect(struct socket *so, struct sockaddr *nam, struct thread *td)
-*/
+ * samkumar: I removed locking, statistics, inpcb management, and debug probes.
+ * I also remove codepaths that check for IPv6, since the address is assumed to
+ * be IPv6. The signature used to be
+ *
+ * static int
+ * tcp6_usr_connect(struct socket *so, struct sockaddr *nam, struct thread *td)
+ */
 int
 tcp6_usr_connect(struct tcpcb* tp, struct sockaddr_in6* sin6p)
 {
 	int error = 0;
 
-	if (tp->t_state != TCPS_CLOSED) { // This is a check that I added
+	if (tp->t_state != TCPS_CLOSED) { // samkumar: This is a check that I added
 		return (EISCONN);
 	}
-//	struct inpcb *inp;
-//	struct tcpcb *tp = NULL;
-//	struct sockaddr_in6 *sin6p;
 
-//	TCPDEBUG0;
+	/* samkumar: I removed the following error check since we receive sin6p
+	 * in the function argument and don't need to convert a struct sockaddr to
+	 * a struct sockaddr_in6 anymore.
+	 *
+	 * if (nam->sa_len != sizeof (*sin6p))
+	 * 	return (EINVAL);
+	 */
 
-//	sin6p = (struct sockaddr_in6 *)nam;
-//	if (nam->sa_len != sizeof (*sin6p))
-//		return (EINVAL);
 	/*
 	 * Must disallow TCP ``connections'' to multicast addresses.
 	 */
+	/* samkumar: I commented out the check on sin6p->sin6_family. */
 	if (/*sin6p->sin6_family == AF_INET6
 	    && */IN6_IS_ADDR_MULTICAST(&sin6p->sin6_addr))
 		return (EAFNOSUPPORT);
-#if 0 // We already have the TCB
-	inp = sotoinpcb(so);
-	KASSERT(inp != NULL, ("tcp6_usr_connect: inp == NULL"));
-	INP_WLOCK(inp);
-	if (inp->inp_flags & INP_TIMEWAIT) {
-		error = EADDRINUSE;
-		goto out;
-	}
-	if (inp->inp_flags & INP_DROPPED) {
-		error = ECONNREFUSED;
-		goto out;
-	}
-	tp = intotcpcb(inp);
-#endif
-//	TCPDEBUG1();
-//#ifdef INET
+
+	/*
+	 * samkumar: There was some code here that obtained the TCB (struct tcpcb*)
+	 * by getting the inpcb from the socket and the TCB from the inpcb. I
+	 * removed that code.
+	 */
+
 	/*
 	 * XXXRW: Some confusion: V4/V6 flags relate to binding, and
 	 * therefore probably require the hash lock, which isn't held here.
 	 * Is this a significant problem?
 	 */
 	if (IN6_IS_ADDR_V4MAPPED(&sin6p->sin6_addr)) {
-//		struct sockaddr_in sin;
+		tcplp_sys_log("V4-Mapped Address!\n");
 
-        tcplp_sys_log("V4-Mapped Address!\n");
-
-		if (/*(inp->inp_flags & IN6P_IPV6_V6ONLY) != 0*/1) {
-			error = EINVAL;
-			goto out;
-		}
-#if 0 // Not needed since we'll take the if branch anyway
-		in6_sin6_2_sin(&sin, sin6p);
-		inp->inp_vflag |= INP_IPV4;
-		inp->inp_vflag &= ~INP_IPV6;
-		if ((error = prison_remote_ip4(td->td_ucred,
-		    &sin.sin_addr)) != 0)
-			goto out;
-		if ((error = tcp_connect(tp, (struct sockaddr *)&sin, td)) != 0)
-			goto out;
-#endif
-#if 0
-#ifdef TCP_OFFLOAD
-		if (registered_toedevs > 0 &&
-		    (so->so_options & SO_NO_OFFLOAD) == 0 &&
-		    (error = tcp_offload_connect(so, nam)) == 0)
-			goto out;
-#endif
-#endif
-		error = tcp_output(tp);
+		/*
+		 * samkumar: There used to be code that woulf handle the case of
+		 * v4-mapped addresses. It would call in6_sin6_2_sin to convert the
+		 * struct sockaddr_in6 to a struct sockaddr_in, set the INP_IPV4 flag
+		 * and clear the INP_IPV6 flag on inp->inp_vflag, do some other
+		 * processing, and finally call tcp_connect and tcp_output. However,
+		 * it would first check if the IN6P_IPV6_V6ONLY flag was set in
+		 * inp->inp_flags, and if so, it would return with EINVAL. In TCPlp, we
+		 * support IPv6 only, so I removed the check for IN6P_IPV6_V6ONLY and
+		 * always act as if that flag is set. I kept the code in that if
+		 * statement making the check, and removed the other code that actually
+		 * handled this case.
+		 */
+		error = EINVAL;
 		goto out;
 	}
-//#endif
-//	inp->inp_vflag &= ~INP_IPV4;
-//	inp->inp_vflag |= INP_IPV6;
-//	inp->inp_inc.inc_flags |= INC_ISIPV6;
-//	if ((error = prison_remote_ip6(td->td_ucred, &sin6p->sin6_addr)) != 0)
-//		goto out;
-	if ((error = tcp6_connect(tp, sin6p/*, td*/)) != 0)
+
+	/*
+	 * samkumar: I removed some code here that set/cleared some flags in the`
+	 * inpcb and called prison_remote_ip6.
+	 */
+
+	/*
+	 * samkumar: Originally, the struct thread *td was passed along to
+	 * tcp6_connect.
+	 */
+	if ((error = tcp6_connect(tp, sin6p)) != 0)
 		goto out;
-#if 0
-#ifdef TCP_OFFLOAD
-	if (registered_toedevs > 0 &&
-	    (so->so_options & SO_NO_OFFLOAD) == 0 &&
-	    (error = tcp_offload_connect(so, nam)) == 0)
-		goto out;
-#endif
-#endif
+
 	tcp_timer_activate(tp, TT_KEEP, TP_KEEPINIT(tp));
 	error = tcp_output(tp);
 
 out:
-#if 0
-	TCPDEBUG2(PRU_CONNECT);
-	TCP_PROBE2(debug__user, tp, PRU_CONNECT);
-	INP_WUNLOCK(inp);
-#endif
 	return (error);
 }
 
@@ -317,199 +237,110 @@ out:
  * must either enqueue them or free them.  The other pru_* routines
  * generally are caller-frees.
  */
-/* I changed the signature of this function. */
-/*static int
-tcp_usr_send(struct socket *so, int flags, struct mbuf *m,
-    struct sockaddr *nam, struct mbuf *control, struct thread *td)*/
-/* Returns error condition, and stores bytes sent into SENT. */
+/*
+ * samkumar: I removed locking, statistics, inpcb management, and debug probes.
+ * I also removed support for the urgent pointer.
+ *
+ * I changed the signature of this function. It used to be
+ * static int
+ * tcp_usr_send(struct socket *so, int flags, struct mbuf *m,
+ *     struct sockaddr *nam, struct mbuf *control, struct thread *td)
+ *
+ * The new function signature works as follows. DATA is a new linked buffer to
+ * add to the end of the send buffer. EXTENDBY is the number of bytes by which
+ * to extend the final linked buffer of the send buffer. Either DATA should be
+ * NULL, or EXTENDBY should be 0.
+ */
 int tcp_usr_send(struct tcpcb* tp, int moretocome, otLinkedBuffer* data, size_t extendby)
 {
 	int error = 0;
-//	struct inpcb *inp;
-//	struct tcpcb *tp = NULL;
-#if 0
-#ifdef INET6
-	int isipv6;
-#endif
-	TCPDEBUG0;
-#endif
-	if (tp->t_state < TCPS_ESTABLISHED) { // This if statement and the next are checks that I added
+
+	/*
+	 * samkumar: This if statement and the next are checks that I added
+	 */
+	if (tp->t_state < TCPS_ESTABLISHED) {
 		error = ENOTCONN;
 		goto out;
 	}
 
-    /* For the TinyOS version I used ESHUTDOWN, but apparently it doesn't
-     * come by default when you include errno.h: you need to also #define
-     * __LINUX_ERRNO_EXTENSIONS__. So I switched to EPIPE.
-     */
 	if (tpiscantsend(tp)) {
-		//error = ESHUTDOWN;
-        error = EPIPE;
+		error = EPIPE;
 		goto out;
 	}
 
-	if ((tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED)) { // copied from the commented-out code from below
+	/*
+	 * samkumar: There used to be logic here that acquired locks, dealt with
+	 * INP_TIMEWAIT and INP_DROPPED flags on inp->inp_flags, and handled the
+	 * control mbuf passed as an argument (which would result in an error since
+	 * TCP doesn't support control information). I've deleted that code, but
+	 * left the following if block.
+	 */
+	 if ((tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED)) {
 		error = ECONNRESET;
 		goto out;
 	}
 
 	/*
-	 * We require the pcbinfo lock if we will close the socket as part of
-	 * this call.
+	 * The following code used to be wrapped in an if statement:
+	 * "if (!(flags & PRUS_OOB))", that only executed it if the "out of band"
+	 * flag was not set. In TCB, "out of band" data is conveyed via the urgent
+	 * pointer, and TCPlp does not support the urgent pointer. Therefore, I
+	 * removed the "if" check and put its body below.
 	 */
-#if 0
-	if (flags & PRUS_EOF)
-		INP_INFO_RLOCK(&V_tcbinfo);
-	inp = sotoinpcb(so);
-	KASSERT(inp != NULL, ("tcp_usr_send: inp == NULL"));
-	INP_WLOCK(inp);
-	if (inp->inp_flags & (INP_TIMEWAIT | INP_DROPPED)) {
-		if (control)
-			m_freem(control);
-		/*
-		 * In case of PRUS_NOTREADY, tcp_usr_ready() is responsible
-		 * for freeing memory.
-		 */
-		if (m && (flags & PRUS_NOTREADY) == 0)
-			m_freem(m);
-		error = ECONNRESET;
-		goto out;
-	}
-#ifdef INET6
-	isipv6 = nam && nam->sa_family == AF_INET6;
-#endif /* INET6 */
-	tp = intotcpcb(inp);
-	TCPDEBUG1();
-	if (control) {
-		/* TCP doesn't do control messages (rights, creds, etc) */
-		if (control->m_len) {
-			m_freem(control);
-			if (m)
-				m_freem(m);
-			error = EINVAL;
+
+	/*
+	 * samkumar; The FreeBSD code calls sbappendstream(&so->so_snd, m, flags);
+	 * I've replaced it with the following logic, which appends to the
+	 * send buffer according to TCPlp's data structures.
+	 */
+	if (data == NULL) {
+		if (extendby == 0) {
 			goto out;
 		}
-		m_freem(control);	/* empty control, just free it */
-	}
-	if (!(flags & PRUS_OOB)) {
-#endif // DON'T SUPPORT URGENT DATA
-		/*sbappendstream(&so->so_snd, m, flags);*/
-        if (data == NULL) {
-            if (extendby == 0) {
-                goto out;
-            }
-            lbuf_extend(&tp->sendbuf, extendby);
-        } else {
-            if (data->mLength == 0) {
-                 goto out;
-            }
-            lbuf_append(&tp->sendbuf, data);
-        }
-#if 0 // DON'T SUPPORT IMPLIED CONNECTION
-		if (nam && tp->t_state < TCPS_SYN_SENT) {
-			/*
-			 * Do implied connect if not yet connected,
-			 * initialize window to default value, and
-			 * initialize maxseg/maxopd using peer's cached
-			 * MSS.
-			 */
-#ifdef INET6
-			if (isipv6)
-				error = tcp6_connect(tp, nam, td);
-#endif /* INET6 */
-#if defined(INET6) && defined(INET)
-			else
-#endif
-#ifdef INET
-				error = tcp_connect(tp, nam, td);
-#endif
-			if (error)
-				goto out;
-			tp->snd_wnd = TTCP_CLIENT_SND_WND;
-			tcp_mss(tp, -1);
-		}
-#endif
-#if 0
-		if (flags & PRUS_EOF) {
-			/*
-			 * Close the send side of the connection after
-			 * the data is sent.
-			 */
-			INP_INFO_RLOCK_ASSERT(&V_tcbinfo);
-			socantsendmore(so);
-			tcp_usrclosed(tp);
-		}
-#endif
-//		if (!(inp->inp_flags & INP_DROPPED) &&
-//		    !(flags & PRUS_NOTREADY)) {
-			if (/*flags & PRUS_MORETOCOME*/ moretocome)
-				tp->t_flags |= TF_MORETOCOME;
-			error = tcp_output(tp);
-			if (/*flags & PRUS_MORETOCOME*/ moretocome)
-				tp->t_flags &= ~TF_MORETOCOME;
-//		}
-#if 0 // DON'T SUPPORT OUT-OF-BAND DATA (URGENT POINTER IN TCP CASE)
+		lbuf_extend(&tp->sendbuf, extendby);
 	} else {
-		/*
-		 * XXXRW: PRUS_EOF not implemented with PRUS_OOB?
-		 */
-		SOCKBUF_LOCK(&so->so_snd);
-		if (sbspace(&so->so_snd) < -512) {
-			SOCKBUF_UNLOCK(&so->so_snd);
-			m_freem(m);
-			error = ENOBUFS;
+		if (data->mLength == 0) {
 			goto out;
 		}
-		/*
-		 * According to RFC961 (Assigned Protocols),
-		 * the urgent pointer points to the last octet
-		 * of urgent data.  We continue, however,
-		 * to consider it to indicate the first octet
-		 * of data past the urgent section.
-		 * Otherwise, snd_up should be one lower.
-		 */
-		sbappendstream_locked(&so->so_snd, m, flags);
-		SOCKBUF_UNLOCK(&so->so_snd);
-		if (nam && tp->t_state < TCPS_SYN_SENT) {
-			/*
-			 * Do implied connect if not yet connected,
-			 * initialize window to default value, and
-			 * initialize maxseg/maxopd using peer's cached
-			 * MSS.
-			 */
-#ifdef INET6
-			if (isipv6)
-				error = tcp6_connect(tp, nam, td);
-#endif /* INET6 */
-#if defined(INET6) && defined(INET)
-			else
-#endif
-#ifdef INET
-				error = tcp_connect(tp, nam, td);
-#endif
-			if (error)
-				goto out;
-			tp->snd_wnd = TTCP_CLIENT_SND_WND;
-			tcp_mss(tp, -1);
-		}
-		tp->snd_up = tp->snd_una + sbavail(&so->so_snd);
-		if (!(flags & PRUS_NOTREADY)) {
-			tp->t_flags |= TF_FORCEDATA;
-			error = tcp_output(tp);
-			tp->t_flags &= ~TF_FORCEDATA;
-		}
+		lbuf_append(&tp->sendbuf, data);
 	}
-#endif
+
+	/*
+	 * samkumar: There used to be code here to handle "implied connect,"
+	 * which initiates the TCP handshake if sending data on a socket that
+	 * isn't yet connected. TCPlp doesn't support this at the moment, but
+	 * it might be worth revisiting  when implementing TCP Fast Open.
+	 */
+
+	/*
+	 * samkumar: There used to be code here handling the PRUS_EOF flag in
+	 * the former flags parameter. I've removed this code.
+	 */
+
+	/*
+	 * samkumar: The code below was previously wrapped in an if statement
+	 * that checked that the INP_DROPPED flag in inp->inp_flags and the
+	 * PRUS_NOTREADY flag in the former flags parameter were both clear.
+	 * If either one was set, then tcp_output would not be called.
+	 *
+	 * The "more to come" functionality was previously triggered via the
+	 * PRUS_MORETOCOME flag in the flags parameter to this function. Since
+	 * that's the only flag that TCPlp uses here, I replaced the flags
+	 * parameter with a "moretocome" parameter, which we check instead.
+	 */
+	if (moretocome)
+		tp->t_flags |= TF_MORETOCOME;
+	error = tcp_output(tp);
+	if (moretocome)
+		tp->t_flags &= ~TF_MORETOCOME;
+
+	/*
+	 * samkumar: This is where the "if (!(flags & PRUS_OOB))" block would end.
+	 * There used to be a large "else" block handling out-of-band data, but I
+	 * removed that entire block since we do not support the urgent pointer in
+	 * TCPlp.
+	 */
 out:
-#if 0 // REMOVE THEIR SYNCHRONIZATION
-	TCPDEBUG2((flags & PRUS_OOB) ? PRU_SENDOOB :
-		  ((flags & PRUS_EOF) ? PRU_SEND_EOF : PRU_SEND));
-	TCP_PROBE2(debug__user, tp, (flags & PRUS_OOB) ? PRU_SENDOOB :
-		   ((flags & PRUS_EOF) ? PRU_SEND_EOF : PRU_SEND));
-	INP_WUNLOCK(inp);
-	if (flags & PRUS_EOF)
-		INP_INFO_RUNLOCK(&V_tcbinfo);
-#endif
 	return (error);
 }
 
@@ -517,123 +348,67 @@ out:
  * After a receive, possibly send window update to peer.
  */
 int
-tcp_usr_rcvd(struct tcpcb* tp/*, int flags*/)
+tcp_usr_rcvd(struct tcpcb* tp)
 {
-//	struct inpcb *inp;
-//	struct tcpcb *tp = NULL;
 	int error = 0;
+
+	/*
+	 * samkumar: There used to be logic here that acquired locks, dealt with
+	 * INP_TIMEWAIT and INP_DROPPED flags on inp->inp_flags, and added debug
+	 * probes I've deleted that code, but left the following if block.
+	 */
 	if ((tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED)) {
 		error = ECONNRESET;
 		goto out;
 	}
-#if 0
-	TCPDEBUG0;
-	inp = sotoinpcb(so);
-	KASSERT(inp != NULL, ("tcp_usr_rcvd: inp == NULL"));
-	INP_WLOCK(inp);
-	if (inp->inp_flags & (INP_TIMEWAIT | INP_DROPPED)) {
-		error = ECONNRESET;
-		goto out;
-	}
-	tp = intotcpcb(inp);
-	TCPDEBUG1();
-#ifdef TCP_OFFLOAD
-	if (tp->t_flags & TF_TOE)
-		tcp_offload_rcvd(tp);
-	else
-#endif
-#endif
+
 	tcp_output(tp);
 
 out:
-//	TCPDEBUG2(PRU_RCVD);
-//	TCP_PROBE2(debug__user, tp, PRU_RCVD);
-//	INP_WUNLOCK(inp);
 	return (error);
 }
 
-#if 0
-
 /*
- * Initiate (or continue) disconnect.
- * If embryonic state, just send reset (once).
- * If in ``let data drain'' option and linger null, just drop.
- * Otherwise (hard), mark socket disconnecting and drop
- * current input data; switch states based on user close, and
- * send segment to peer (with FIN).
+ * samkumar: Removed the tcp_disconnect function. It is meant to be a
+ * "friendly" disconnect to complement the unceremonious "abort" functionality
+ * that is also provbided. The FreeBSD implementation called it from
+ * tcp_usr_close, which we removed (see the comment below for the reason why).
+ * It's not called from anywhere else, so I'm removing this function entirely.
  */
-static void
-tcp_disconnect(struct tcpcb *tp)
-{
-//	struct inpcb *inp = tp->t_inpcb;
-//	struct socket *so = inp->inp_socket;
-
-//	INP_INFO_RLOCK_ASSERT(&V_tcbinfo);
-//	INP_WLOCK_ASSERT(inp);
-
-	/*
-	 * Neither tcp_close() nor tcp_drop() should return NULL, as the
-	 * socket is still open.
-	 */
-	if (tp->t_state < TCPS_ESTABLISHED) {
-		tp = tcp_close(tp);
-		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
-		KASSERT(tp != NULL,
-		    ("tcp_disconnect: tcp_close() returned NULL"));
-	}/* else if ((so->so_options & SO_LINGER) && so->so_linger == 0) {
-		tp = tcp_drop(tp, 0);
-		KASSERT(tp != NULL,
-		    ("tcp_disconnect: tcp_drop() returned NULL"));
-	}*/ else {
-//		soisdisconnecting(so);
-//		sbflush(&so->so_rcv);
-		tcp_usrclosed(tp);
-		if (/*!(inp->inp_flags & INP_DROPPED)*/tp->t_state != TCPS_CLOSED)
-			tcp_output(tp);
-	}
-}
-
-#endif
 
 /*
  * Mark the connection as being incapable of further output.
+ */
+/*
+ * samkumar: Modified to remove locking, socket/inpcb handling, and debug
+ * probes.
  */
 int
 tcp_usr_shutdown(struct tcpcb* tp)
 {
 	int error = 0;
-#if 0
-	struct inpcb *inp;
-	struct tcpcb *tp = NULL;
 
-	TCPDEBUG0;
-	INP_INFO_RLOCK(&V_tcbinfo);
-	inp = sotoinpcb(so);
-	KASSERT(inp != NULL, ("inp == NULL"));
-	INP_WLOCK(inp);
-#endif
-	if (/*inp->inp_flags & (INP_TIMEWAIT | INP_DROPPED)*/
-	    (tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED)) {
+	/*
+	 * samkumar: replaced checks on the INP_TIMEWAIT and INP_DROPPED flags on
+	 * inp->inp_flags with these checks on tp->t_state.
+	 */
+	if ((tp->t_state == TCPS_TIME_WAIT) || (tp->t_state == TCPS_CLOSED)) {
 		error = ECONNRESET;
 		goto out;
 	}
-#if 0
-	tp = intotcpcb(inp);
-	TCPDEBUG1();
-#endif
-//	socantsendmore(so);
+
+	/* samkumar: replaced socantsendmore with tpcantsendmore */
 	tpcantsendmore(tp);
 	tcp_usrclosed(tp);
-	if (/*!(inp->inp_flags & INP_DROPPED)*/tp->t_state != TCPS_CLOSED)
+
+	/*
+	 * samkumar: replaced check on INP_DROPPED flag in inp->inp_flags with
+	 * this check on tp->t_state.
+	 */
+	if (tp->t_state != TCPS_CLOSED)
 		error = tcp_output(tp);
 
 out:
-#if 0
-	TCPDEBUG2(PRU_SHUTDOWN);
-	TCP_PROBE2(debug__user, tp, PRU_SHUTDOWN);
-	INP_WUNLOCK(inp);
-	INP_INFO_RUNLOCK(&V_tcbinfo);
-#endif
 	return (error);
 }
 
@@ -648,18 +423,14 @@ out:
  * for peer to send FIN or not respond to keep-alives, etc.
  * We can let the user exit from the close as soon as the FIN is acked.
  */
+/*
+ * Removed locking, TCP Offload, and socket/inpcb handling.
+ */
 static void
 tcp_usrclosed(struct tcpcb *tp)
 {
-
-//	INP_INFO_RLOCK_ASSERT(&V_tcbinfo);
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
-
 	switch (tp->t_state) {
 	case TCPS_LISTEN:
-//#ifdef TCP_OFFLOAD
-//		tcp_offload_listen_stop(tp);
-//#endif
 		tcp_state_change(tp, TCPS_CLOSED);
 		/* FALLTHROUGH */
 	case TCPS_CLOSED:
@@ -687,7 +458,8 @@ tcp_usrclosed(struct tcpcb *tp)
 		break;
 	}
 	if (tp->t_state >= TCPS_FIN_WAIT_2) {
-//		soisdisconnected(tp->t_inpcb->inp_socket);
+		/* samkumar: commented out the following "soisdisconnected" line. */
+		// soisdisconnected(tp->t_inpcb->inp_socket);
 		/* Prevent the connection hanging in FIN_WAIT_2 forever. */
 		if (tp->t_state == TCPS_FIN_WAIT_2) {
 			int timeout;
@@ -699,95 +471,40 @@ tcp_usrclosed(struct tcpcb *tp)
 	}
 }
 
-#if 0
 /*
- * TCP socket is closed.  Start friendly disconnect.
+ * samkumar: I removed the tcp_usr_close function. It was meant to be called in
+ * case the socket is closed. It calls tcp_disconnect if the underlying TCP
+ * connection is still alive when the socket is closed ("full TCP state").
+ * In TCPlp, we can't handle this because we want to free up the underlying
+ * memory immediately when the user deallocates a TCP connection, making it
+ * unavailable for the somewhat more ceremonious closing that tcp_disconnect
+ * would allow. The host system is expected to simply abort the connection if
+ * the application deallocates it.
  */
-static void
-tcp_usr_close(struct tcpcb* tp/*struct socket *so*/)
-{
-//	struct inpcb *inp;
-//	struct tcpcb *tp = NULL;
-//	TCPDEBUG0;
-
-//	inp = sotoinpcb(so);
-//	KASSERT(inp != NULL, ("tcp_usr_close: inp == NULL"));
-
-//	INP_INFO_RLOCK(&V_tcbinfo);
-//	INP_WLOCK(inp);
-//	KASSERT(inp->inp_socket != NULL,
-//	    ("tcp_usr_close: inp_socket == NULL"));
-
-	/*
-	 * If we still have full TCP state, and we're not dropped, initiate
-	 * a disconnect.
-	 */
-	if ((tp->t_state != TCP6S_TIME_WAIT) && (tp->t_state != TCPS_CLOSED)/*!(inp->inp_flags & INP_TIMEWAIT) &&
-	    !(inp->inp_flags & INP_DROPPED)*/) {
-//		tp = intotcpcb(inp);
-//		TCPDEBUG1();
-		tpcantsendmore(tp);
-		tpcantrcvmore(tp); /* Added by Sam: This would be probably be done at the socket layer. */
-		tcp_disconnect(tp);
-//		TCPDEBUG2(PRU_CLOSE);
-//		TCP_PROBE2(debug__user, tp, PRU_CLOSE);
-	}
-#if 0
-	if (!(inp->inp_flags & INP_DROPPED)) {
-		SOCK_LOCK(so);
-		so->so_state |= SS_PROTOREF;
-		SOCK_UNLOCK(so);
-		inp->inp_flags |= INP_SOCKREF;
-	}
-#endif
-//	INP_WUNLOCK(inp);
-//	INP_INFO_RUNLOCK(&V_tcbinfo);
-}
-#endif
 
 /*
  * Abort the TCP.  Drop the connection abruptly.
  */
+/*
+ * samkumar: Modified to remove locking, socket/inpcb handling, and debug
+ * probes.
+ */
 void
-tcp_usr_abort(/*struct socket *so*/struct tcpcb* tp)
+tcp_usr_abort(struct tcpcb* tp)
 {
-#if 0
-	struct inpcb *inp;
-	struct tcpcb *tp = NULL;
-	TCPDEBUG0;
-
-	inp = sotoinpcb(so);
-	KASSERT(inp != NULL, ("tcp_usr_abort: inp == NULL"));
-
-	INP_INFO_RLOCK(&V_tcbinfo);
-	INP_WLOCK(inp);
-	KASSERT(inp->inp_socket != NULL,
-	    ("tcp_usr_abort: inp_socket == NULL"));
-#endif
 	/*
 	 * If we still have full TCP state, and we're not dropped, drop.
 	 */
-	if (/*!(inp->inp_flags & INP_TIMEWAIT) &&
-	    !(inp->inp_flags & INP_DROPPED)*/
-	    tp->t_state != TCP6S_TIME_WAIT &&
-	    tp->t_state != TCP6S_CLOSED) {
-//		tp = intotcpcb(inp);
-//		TCPDEBUG1();
+	/*
+	 * I replaced the checks on inp->inp_flags (which tested for the absence of
+	 * INP_TIMEWAIT and INP_DROPPED flags), with the following checks on
+	 * tp->t_state.
+	 */
+	if (tp->t_state != TCP6S_TIME_WAIT &&
+		tp->t_state != TCP6S_CLOSED) {
 		tcp_drop(tp, ECONNABORTED);
-//		TCPDEBUG2(PRU_ABORT);
-//		TCP_PROBE2(debug__user, tp, PRU_ABORT);
-	} else if (tp->t_state == TCPS_TIME_WAIT) { // This clause added by Sam
-	    tp = tcp_close(tp);
+	} else if (tp->t_state == TCPS_TIME_WAIT) { // samkumar: I added this clause
+		tp = tcp_close(tp);
 		tcplp_sys_connection_lost(tp, CONN_LOST_NORMAL);
 	}
-#if 0
-	if (!(inp->inp_flags & INP_DROPPED)) {
-		SOCK_LOCK(so);
-		so->so_state |= SS_PROTOREF;
-		SOCK_UNLOCK(so);
-		inp->inp_flags |= INP_SOCKREF;
-	}
-	INP_WUNLOCK(inp);
-	INP_INFO_RUNLOCK(&V_tcbinfo);
-#endif
 }
