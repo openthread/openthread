@@ -625,8 +625,6 @@ Error CoapBase::PrepareNextBlockRequest(Message::BlockType aType,
         aRequest.SetBlockWiseBlockNumber(aMessage.GetBlockWiseBlockNumber() + 1);
         aRequest.SetBlockWiseBlockSize(aMessage.GetBlockWiseBlockSize());
         aRequest.SetMoreBlocksFlag(aMoreBlocks);
-
-        isOptionSet = true;
     }
 
 exit:
