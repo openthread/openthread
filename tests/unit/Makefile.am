@@ -33,8 +33,8 @@ include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 # since they are not part of the package.
 #
 noinst_HEADERS                                                      = \
-    test_platform.h                                                   \
     test_lowpan.hpp                                                   \
+    test_platform.h                                                   \
     test_util.h                                                       \
     test_util.hpp                                                     \
     $(NULL)
@@ -50,73 +50,114 @@ if OPENTHREAD_BUILD_TESTS
 # makefile.
 
 AM_CPPFLAGS                                                         = \
+    -DOPENTHREAD_FTD=1                                                \
+    -DOPENTHREAD_MTD=0                                                \
+    -DOPENTHREAD_RADIO=0                                              \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1            \
     -I$(top_srcdir)/include                                           \
     -I$(top_srcdir)/src                                               \
     -I$(top_srcdir)/src/core                                          \
     $(NULL)
 
+if OPENTHREAD_EXAMPLES_SIMULATION
+AM_CPPFLAGS                                                        += \
+    -I$(top_srcdir)/examples/platforms                                \
+    $(NULL)
+endif
+
+if OPENTHREAD_PLATFORM_POSIX
+AM_CPPFLAGS                                                        += \
+    -DOPENTHREAD_PLATFORM_POSIX=1                                     \
+    -I$(top_srcdir)/src/posix/platform                                \
+    $(NULL)
+endif
+
+COMMON_LDADD                                                        = \
+    $(top_builddir)/third_party/tcplp/libtcplp.a                      \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_NCP
+COMMON_LDADD                                                       += \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                   \
+    $(NULL)
+endif
 
-COMMON_LDADD                                                        = \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                       \
+COMMON_LDADD                                                       += \
     $(top_builddir)/src/core/libopenthread-ftd.a                      \
     -lpthread                                                         \
     $(NULL)
-
-else
-
-COMMON_LDADD                                                        = \
-    $(top_builddir)/src/core/libopenthread-ftd.a                      \
-    -lpthread                                                         \
-    $(NULL)
-
-endif # OPENTHREAD_ENABLE_NCP
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-AM_CPPFLAGS                                                        += \
-    -I$(top_srcdir)/third_party/mbedtls/repo/include                  \
-    $(NULL)
-
 COMMON_LDADD                                                       += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a               \
     $(NULL)
-endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
+endif
+
+if OPENTHREAD_PLATFORM_POSIX
+COMMON_LDADD                                                       += \
+    -lutil
+    $(NULL)
+endif
 
 # Test applications that should be run when the 'check' target is run.
 
 check_PROGRAMS                                                      = \
-    test-aes                                                          \
-    test-fuzz                                                         \
-    test-hmac-sha256                                                  \
-    test-lowpan                                                       \
-    test-link-quality                                                 \
-    test-mac-frame                                                    \
-    test-message                                                      \
-    test-message-queue                                                \
-    test-priority-queue                                               \
-    test-timer                                                        \
-    test-toolchain                                                    \
+    ot-test-toolchain                                                 \
     $(NULL)
+
+if OPENTHREAD_ENABLE_FTD
+check_PROGRAMS                                                     += \
+    ot-test-aes                                                       \
+    ot-test-array                                                     \
+    ot-test-checksum                                                  \
+    ot-test-child                                                     \
+    ot-test-child-table                                               \
+    ot-test-cmd-line-parser                                           \
+    ot-test-dns                                                       \
+    ot-test-ecdsa                                                     \
+    ot-test-flash                                                     \
+    ot-test-heap                                                      \
+    ot-test-heap-string                                               \
+    ot-test-hkdf-sha256                                               \
+    ot-test-hmac-sha256                                               \
+    ot-test-ip-address                                                \
+    ot-test-link-quality                                              \
+    ot-test-linked-list                                               \
+    ot-test-lookup-table                                              \
+    ot-test-lowpan                                                    \
+    ot-test-mac-frame                                                 \
+    ot-test-macros                                                    \
+    ot-test-message                                                   \
+    ot-test-message-queue                                             \
+    ot-test-multicast-listeners-table                                 \
+    ot-test-ndproxy-table                                             \
+    ot-test-netif                                                     \
+    ot-test-network-data                                              \
+    ot-test-pool                                                      \
+    ot-test-priority-queue                                            \
+    ot-test-pskc                                                      \
+    ot-test-steering-data                                             \
+    ot-test-string                                                    \
+    ot-test-timer                                                     \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_NCP
+check_PROGRAMS                                                     += \
+    ot-test-hdlc                                                      \
+    ot-test-spinel-buffer                                             \
+    ot-test-spinel-decoder                                            \
+    ot-test-spinel-encoder                                            \
+    $(NULL)
+endif
+endif # OPENTHREAD_ENABLE_FTD
 
 XFAIL_TESTS                                                         = \
     $(NULL)
 
-if OPENTHREAD_ENABLE_DIAG
-check_PROGRAMS                                                     += \
-    test-diag                                                         \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_DIAG
-
-if OPENTHREAD_ENABLE_NCP
-check_PROGRAMS                                                     += \
-    test-ncp-buffer                                                   \
-    $(NULL)
-endif # OPENTHREAD_ENABLE_NCP
-
 if OPENTHREAD_WITH_ADDRESS_SANITIZER
-check_PROGRAMS                 += test-address-sanitizer
-XFAIL_TESTS                    += test-address-sanitizer
-test_address_sanitizer_SOURCES  = test_address_sanitizer.cpp
+check_PROGRAMS                    += ot-test-address-sanitizer
+XFAIL_TESTS                       += ot-test-address-sanitizer
+ot_test_address_sanitizer_SOURCES  = test_address_sanitizer.cpp
 endif # OPENTHREAD_WITH_ADDRESS_SANITIZER
 
 
@@ -131,52 +172,123 @@ TESTS                                                               = \
 # made available to all programs and scripts in TESTS.
 
 TESTS_ENVIRONMENT                                                   = \
+    top_srcdir='$(top_srcdir)'                                        \
     $(NULL)
+
+COMMON_SOURCES               = test_platform.cpp test_util.cpp
 
 # Source, compiler, and linker options for test programs.
 
-test_aes_LDADD               = $(COMMON_LDADD)
-test_aes_SOURCES             = test_platform.cpp test_aes.cpp
+ot_test_aes_LDADD               = $(COMMON_LDADD)
+ot_test_aes_SOURCES             = $(COMMON_SOURCES) test_aes.cpp
 
-test_fuzz_LDADD              = $(COMMON_LDADD)
-test_fuzz_SOURCES            = test_platform.cpp test_fuzz.cpp
+ot_test_array_LDADD             = $(COMMON_LDADD)
+ot_test_array_SOURCES           = $(COMMON_SOURCES) test_array.cpp
 
-test_hmac_sha256_LDADD       = $(COMMON_LDADD)
-test_hmac_sha256_SOURCES     = test_platform.cpp test_hmac_sha256.cpp
+ot_test_checksum_LDADD          = $(COMMON_LDADD)
+ot_test_checksum_SOURCES        = $(COMMON_SOURCES) test_checksum.cpp
 
-test_link_quality_LDADD      = $(COMMON_LDADD)
-test_link_quality_SOURCES    = test_platform.cpp test_link_quality.cpp
+ot_test_child_LDADD             = $(COMMON_LDADD)
+ot_test_child_SOURCES           = $(COMMON_SOURCES) test_child.cpp
 
-test_lowpan_LDADD            = $(COMMON_LDADD)
-test_lowpan_SOURCES          = test_platform.cpp test_lowpan.cpp test_util.cpp
+ot_test_child_table_LDADD       = $(COMMON_LDADD)
+ot_test_child_table_SOURCES     = $(COMMON_SOURCES) test_child_table.cpp
 
-test_mac_frame_LDADD         = $(COMMON_LDADD)
-test_mac_frame_SOURCES       = test_platform.cpp test_mac_frame.cpp
+ot_test_cmd_line_parser_LDADD   = $(COMMON_LDADD)
+ot_test_cmd_line_parser_SOURCES = $(COMMON_SOURCES) test_cmd_line_parser.cpp
 
-test_message_LDADD           = $(COMMON_LDADD)
-test_message_SOURCES         = test_platform.cpp test_message.cpp
+ot_test_dns_LDADD               = $(COMMON_LDADD)
+ot_test_dns_SOURCES             = $(COMMON_SOURCES) test_dns.cpp
 
-test_message_queue_LDADD     = $(COMMON_LDADD)
-test_message_queue_SOURCES   = test_platform.cpp test_message_queue.cpp
+ot_test_ecdsa_LDADD             = $(COMMON_LDADD)
+ot_test_ecdsa_SOURCES           = $(COMMON_SOURCES) test_ecdsa.cpp
 
-test_ncp_buffer_LDADD        = $(COMMON_LDADD)
-test_ncp_buffer_SOURCES      = test_platform.cpp test_ncp_buffer.cpp
+ot_test_flash_LDADD             = $(COMMON_LDADD)
+ot_test_flash_SOURCES           = $(COMMON_SOURCES) test_flash.cpp
 
-test_priority_queue_LDADD    = $(COMMON_LDADD)
-test_priority_queue_SOURCES  = test_platform.cpp test_priority_queue.cpp
+ot_test_hdlc_LDADD              = $(COMMON_LDADD)
+ot_test_hdlc_SOURCES            = $(COMMON_SOURCES) test_hdlc.cpp
 
-test_timer_LDADD             = $(COMMON_LDADD)
-test_timer_SOURCES           = test_platform.cpp test_timer.cpp
+ot_test_heap_LDADD              = $(COMMON_LDADD)
+ot_test_heap_SOURCES            = $(COMMON_SOURCES) test_heap.cpp
 
-test_toolchain_LDADD         = $(COMMON_LDADD)
-test_toolchain_SOURCES       = test_platform.cpp test_toolchain.cpp test_toolchain_c.c
+ot_test_heap_string_LDADD       = $(COMMON_LDADD)
+ot_test_heap_string_SOURCES     = $(COMMON_SOURCES) test_heap_string.cpp
 
-if OPENTHREAD_ENABLE_DIAG
-test_diag_LDADD              = $(top_builddir)/src/diag/libopenthread-diag.a                  \
-                               $(top_builddir)/examples/platforms/posix/libopenthread-posix.a \
-                               $(NULL)
-test_diag_SOURCES            = test_diag.cpp
-endif
+ot_test_hkdf_sha256_LDADD       = $(COMMON_LDADD)
+ot_test_hkdf_sha256_SOURCES     = $(COMMON_SOURCES) test_hkdf_sha256.cpp
+
+ot_test_hmac_sha256_LDADD       = $(COMMON_LDADD)
+ot_test_hmac_sha256_SOURCES     = $(COMMON_SOURCES) test_hmac_sha256.cpp
+
+ot_test_ip_address_LDADD        = $(COMMON_LDADD)
+ot_test_ip_address_SOURCES      = $(COMMON_SOURCES) test_ip_address.cpp
+
+ot_test_link_quality_LDADD      = $(COMMON_LDADD)
+ot_test_link_quality_SOURCES    = $(COMMON_SOURCES) test_link_quality.cpp
+
+ot_test_linked_list_LDADD       = $(COMMON_LDADD)
+ot_test_linked_list_SOURCES     = $(COMMON_SOURCES) test_linked_list.cpp
+
+ot_test_lookup_table_LDADD      = $(COMMON_LDADD)
+ot_test_lookup_table_SOURCES    = $(COMMON_SOURCES) test_lookup_table.cpp
+
+ot_test_lowpan_LDADD            = $(COMMON_LDADD)
+ot_test_lowpan_SOURCES          = $(COMMON_SOURCES) test_lowpan.cpp
+
+ot_test_mac_frame_LDADD         = $(COMMON_LDADD)
+ot_test_mac_frame_SOURCES       = $(COMMON_SOURCES) test_mac_frame.cpp
+
+ot_test_macros_LDADD            = $(COMMON_LDADD)
+ot_test_macros_SOURCES          = $(COMMON_SOURCES) test_macros.cpp
+
+ot_test_message_LDADD           = $(COMMON_LDADD)
+ot_test_message_SOURCES         = $(COMMON_SOURCES) test_message.cpp
+
+ot_test_message_queue_LDADD     = $(COMMON_LDADD)
+ot_test_message_queue_SOURCES   = $(COMMON_SOURCES) test_message_queue.cpp
+
+ot_test_multicast_listeners_table_LDADD   = $(COMMON_LDADD)
+ot_test_multicast_listeners_table_SOURCES = $(COMMON_SOURCES) test_multicast_listeners_table.cpp
+
+ot_test_spinel_buffer_LDADD     = $(COMMON_LDADD)
+ot_test_spinel_buffer_SOURCES   = $(COMMON_SOURCES) test_spinel_buffer.cpp
+
+ot_test_ndproxy_table_LDADD     = $(COMMON_LDADD)
+ot_test_ndproxy_table_SOURCES   = $(COMMON_SOURCES) test_ndproxy_table.cpp
+
+ot_test_netif_LDADD             = $(COMMON_LDADD)
+ot_test_netif_SOURCES           = $(COMMON_SOURCES) test_netif.cpp
+
+ot_test_network_data_LDADD      = $(COMMON_LDADD)
+ot_test_network_data_SOURCES    = $(COMMON_SOURCES) test_network_data.cpp
+
+ot_test_pool_LDADD              = $(COMMON_LDADD)
+ot_test_pool_SOURCES            = $(COMMON_SOURCES) test_pool.cpp
+
+ot_test_priority_queue_LDADD    = $(COMMON_LDADD)
+ot_test_priority_queue_SOURCES  = $(COMMON_SOURCES) test_priority_queue.cpp
+
+ot_test_pskc_LDADD              = $(COMMON_LDADD)
+ot_test_pskc_SOURCES            = $(COMMON_SOURCES) test_pskc.cpp
+
+ot_test_steering_data_LDADD     = $(COMMON_LDADD)
+ot_test_steering_data_SOURCES   = $(COMMON_SOURCES) test_steering_data.cpp
+
+ot_test_string_LDADD            = $(COMMON_LDADD)
+ot_test_string_SOURCES          = $(COMMON_SOURCES) test_string.cpp
+
+ot_test_spinel_decoder_LDADD    = $(COMMON_LDADD)
+ot_test_spinel_decoder_SOURCES  = $(COMMON_SOURCES) test_spinel_decoder.cpp
+
+ot_test_spinel_encoder_LDADD    = $(COMMON_LDADD)
+ot_test_spinel_encoder_SOURCES  = $(COMMON_SOURCES) test_spinel_encoder.cpp
+
+ot_test_timer_LDADD             = $(COMMON_LDADD)
+ot_test_timer_SOURCES           = $(COMMON_SOURCES) test_timer.cpp
+
+ot_test_toolchain_LDADD         = $(NULL)
+ot_test_toolchain_SOURCES       = test_toolchain.cpp test_toolchain_c.c
 
 if OPENTHREAD_BUILD_COVERAGE
 CLEANFILES                   = $(wildcard *.gcda *.gcno)

@@ -34,12 +34,16 @@
 #ifndef TASKLET_HPP_
 #define TASKLET_HPP_
 
-#include <openthread-types.h>
-#include <openthread-tasklet.h>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#include <stdio.h>
 
-namespace Ip6 { class Ip6; }
+#include <openthread/tasklet.h>
+
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+
+namespace ot {
 
 class TaskletScheduler;
 
@@ -57,94 +61,130 @@ class TaskletScheduler;
  * This class is used to represent a tasklet.
  *
  */
-class Tasklet
+class Tasklet : public InstanceLocator
 {
-    friend class TaskletScheduler;
-
 public:
     /**
-     * This function pointer is called when the tasklet is run.
-     *
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * This class implements the tasklet scheduler.
      *
      */
-    typedef void (*Handler)(void *aContext);
+    class Scheduler : private NonCopyable
+    {
+        friend class Tasklet;
+
+    public:
+        /**
+         * This constructor initializes the object.
+         *
+         */
+        Scheduler(void)
+            : mTail(nullptr)
+        {
+        }
+
+        /**
+         * This method indicates whether or not there are tasklets pending.
+         *
+         * @retval TRUE   If there are tasklets pending.
+         * @retval FALSE  If there are no tasklets pending.
+         *
+         */
+        bool AreTaskletsPending(void) const { return mTail != nullptr; }
+
+        /**
+         * This method processes all tasklets queued when this is called.
+         *
+         */
+        void ProcessQueuedTasklets(void);
+
+    private:
+        void PostTasklet(Tasklet &aTasklet);
+
+        Tasklet *mTail; // A circular singly linked-list
+    };
+
+    /**
+     * This function reference is called when the tasklet is run.
+     *
+     * @param[in]  aTasklet  A reference to the tasklet being run.
+     *
+     */
+    typedef void (&Handler)(Tasklet &aTasklet);
 
     /**
      * This constructor creates a tasklet instance.
      *
-     * @param[in]  aScheduler  A reference to the tasklet scheduler.
+     * @param[in]  aInstance   A reference to the OpenThread instance object.
      * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
-     * @param[in]  aContext    A pointer to arbitrary context information.
      *
      */
-    Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext);
+    Tasklet(Instance &aInstance, Handler aHandler)
+        : InstanceLocator(aInstance)
+        , mHandler(aHandler)
+        , mNext(nullptr)
+    {
+    }
 
     /**
-     * This method puts the tasklet on the run queue.
+     * This method puts the tasklet on the tasklet scheduler run queue.
+     *
+     * If the tasklet is already posted, no change is made and run queue stays as before.
      *
      */
-    ThreadError Post(void);
+    void Post(void);
+
+    /**
+     * This method indicates whether the tasklet is posted or not.
+     *
+     * @retval TRUE  The tasklet is posted.
+     * @retval FALSE The tasklet is not posted.
+     *
+     */
+    bool IsPosted(void) const { return (mNext != nullptr); }
 
 private:
-    void RunTask(void) { mHandler(mContext); }
+    void RunTask(void) { mHandler(*this); }
 
-    TaskletScheduler &mScheduler;
-    Handler           mHandler;
-    void             *mContext;
-    Tasklet          *mNext;
+    Handler  mHandler;
+    Tasklet *mNext;
 };
 
 /**
- * This class implements the tasklet scheduler.
+ * This class defines a tasklet that also maintains a user context pointer.
+ *
+ * In typical `Tasklet` use, in the handler callback, the owner of the tasklet is determined using `GetOwner<Type>`
+ * method. This method works if there is a single instance of `Type` within OpenThread instance hierarchy. The
+ * `TaskletContext` is intended for cases where there may be multiple instances of the same class/type using a `Tasklet`
+ * object. `TaskletContext` will store a context `void *` information.
  *
  */
-class TaskletScheduler
+class TaskletContext : public Tasklet
 {
 public:
     /**
-     * This constructor initializes the object.
+     * This constructor creates a tasklet instance.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A pointer to a function that is called when the tasklet is run.
+     * @param[in]  aContext    A pointer to an arbitrary context information.
      *
      */
-    TaskletScheduler(void);
+    TaskletContext(Instance &aInstance, Handler aHandler, void *aContext)
+        : Tasklet(aInstance, aHandler)
+        , mContext(aContext)
+    {
+    }
 
     /**
-     * This method enqueues a tasklet into the run queue.
+     * This method returns the pointer to the arbitrary context information.
      *
-     * @param[in]  aTasklet  A reference to the tasklet to enqueue.
-     *
-     * @retval kThreadError_None  Successfully enqueued the tasklet.
-     * @retval kThreadError_Already  The tasklet was already enqueued.
-     */
-    ThreadError Post(Tasklet &aTasklet);
-
-    /**
-     * This method indicates whether or not there are tasklets pending.
-     *
-     * @retval TRUE   If there are tasklets pending.
-     * @retval FALSE  If there are no tasklets pending.
+     * @returns Pointer to the arbitrary context information.
      *
      */
-    bool AreTaskletsPending(void);
-
-    /**
-     * This method processes all tasklets queued when this is called.
-     *
-     */
-    void ProcessQueuedTasklets(void);
-
-    /**
-     * This method returns the pointer to the parent Ip6 structure.
-     *
-     * @returns The pointer to the parent Ip6 structure.
-     *
-     */
-    Ip6::Ip6 *GetIp6();
+    void *GetContext(void) { return mContext; }
 
 private:
-    Tasklet *PopTasklet(void);
-    Tasklet *mHead;
-    Tasklet *mTail;
+    void *mContext;
 };
 
 /**
@@ -152,6 +192,6 @@ private:
  *
  */
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // TASKLET_HPP_
+#endif // TASKLET_HPP_

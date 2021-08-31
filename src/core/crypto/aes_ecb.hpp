@@ -34,9 +34,11 @@
 #ifndef AES_ECB_HPP_
 #define AES_ECB_HPP_
 
+#include "openthread-core-config.h"
+
 #include <mbedtls/aes.h>
 
-namespace Thread {
+namespace ot {
 namespace Crypto {
 
 /**
@@ -53,16 +55,25 @@ namespace Crypto {
 class AesEcb
 {
 public:
-    enum
-    {
-        kBlockSize = 16,  ///< AES-128 block size (bytes).
-    };
+    static constexpr uint8_t kBlockSize = 16; ///< AES-128 block size (bytes).
+
+    /**
+     * Constructor to initialize the mbedtls_aes_context.
+     *
+     */
+    AesEcb(void);
+
+    /**
+     * Destructor to free the mbedtls_aes_context.
+     *
+     */
+    ~AesEcb(void);
 
     /**
      * This method sets the key.
      *
      * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bytes.
+     * @param[in]  aKeyLength  The key length in bits.
      *
      */
     void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
@@ -85,7 +96,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace Thread
+} // namespace Crypto
+} // namespace ot
 
-#endif  // AES_ECB_HPP_
+#endif // AES_ECB_HPP_

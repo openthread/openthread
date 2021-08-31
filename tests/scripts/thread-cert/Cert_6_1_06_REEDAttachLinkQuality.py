@@ -1,6 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -27,70 +27,228 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
+import config
+import copy
+import mle
+import thread_cert
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_PARENT_RESPONSE, MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, SOURCE_ADDRESS_TLV, MODE_TLV, TIMEOUT_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, NETWORK_DATA_TLV, TLV_REQUEST_TLV, SCAN_MASK_TLV, CONNECTIVITY_TLV, LINK_MARGIN_TLV, VERSION_TLV, ADDRESS_REGISTRATION_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 REED = 2
-ROUTER2 = 3
-ED = 4
+ROUTER = 3
+MTD = 4
 
-class Cert_6_1_6_REEDAttachLinkQuality(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,5):
-            self.nodes[i] = node.Node(i)
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test is to verify that the DUT sends a second Parent Request
+# to the all-routers and all-reeds multicast address if it gets a reply from the
+# first Parent Request to the all-routers address with a bad link quality.
+#
+# Test Topology:
+# -------------
+#     Leader
+#     /    \
+#  REED   ROUTER
+#      \  /
+#       DUT
+#
+# DUT Types:
+# ----------
+#  ED
+#  SED
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
 
-        self.nodes[REED].set_panid(0xface)
-        self.nodes[REED].set_mode('rsdn')
-        self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[REED].set_router_upgrade_threshold(0)
-        self.nodes[REED].enable_whitelist()
+class Cert_6_1_6_REEDAttachLinkQuality_Base(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
 
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64(), rssi=-85)
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64(), rssi=-85)
-        self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'LEADER',
+            'mode': 'rdn',
+            'allowlist': [REED, ROUTER]
+        },
+        REED: {
+            'name': 'REED',
+            'mode': 'rdn',
+            'router_upgrade_threshold': 0,
+            'allowlist': [LEADER, MTD]
+        },
+        ROUTER: {
+            'name': 'ROUTER',
+            'mode': 'rdn',
+            'allowlist': [LEADER, (MTD, -85)]
+        },
+        MTD: {
+            'name': 'DUT',
+            'is_mtd': True,
+            'timeout': config.DEFAULT_CHILD_TIMEOUT,
+            'allowlist': [REED, ROUTER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[REED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[REED].get_state(), 'child')
 
-        self.nodes[ROUTER2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER2].get_state(), 'router')
+        self.nodes[ROUTER].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
-        self.nodes[ED].start()
-        time.sleep(10)
-        self.assertEqual(self.nodes[ED].get_state(), 'child')
+        self.nodes[MTD].start()
+        self.simulator.go(10)
+        self.assertEqual(self.nodes[MTD].get_state(), 'child')
         self.assertEqual(self.nodes[REED].get_state(), 'router')
+
+        self.collect_ipaddrs()
+        self.collect_rlocs()
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        REED = pv.vars['REED']
+        ROUTER = pv.vars['ROUTER']
+        DUT = pv.vars['DUT']
+
+        # Step 1: Setup the topology without the DUT. Ensure all routers and leader
+        #         are sending MLE advertisements
+        pkts.filter_wpan_src64(LEADER).\
+            filter_mle_advertisement('Leader').\
+            must_next()
+
+        pv.verify_attached('REED', 'LEADER')
+        pv.verify_attached('ROUTER', 'LEADER')
+
+        # Step 3: DUT sends a MLE Parent Request with an IP hop limit of
+        #         255 to the Link-Local All Routers multicast address (FF02::2).
+        #         The following TLVs MUST be present in the MLE Parent Request:
+        #            - Challenge TLV
+        #            - Mode TLV
+        #            - Scan Mask TLV
+        #                Verify sent to routers only
+        #            -  Version TLV
+        #         If the first Request was sent to all routers and REEDS, then
+        #         the test has failed.
+        pkts.filter_wpan_src64(DUT).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              MODE_TLV,
+                              SCAN_MASK_TLV,
+                              VERSION_TLV
+                              } <= set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255 and\
+                   p.mle.tlv.scan_mask.r == 1 and\
+                   p.mle.tlv.scan_mask.e == 0 and\
+                   p.wpan.aux_sec.key_id_mode == 0x2
+                   ).\
+            must_next()
+
+        # Step 4: Router responds with MLE Parent Response
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(DUT).\
+            filter_mle_cmd(MLE_PARENT_RESPONSE).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              CONNECTIVITY_TLV,
+                              LEADER_DATA_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              LINK_MARGIN_TLV,
+                              RESPONSE_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              VERSION_TLV
+                               } <= set(p.mle.tlv.type)).\
+            must_next()
+
+        # Step 5: DUT sends a MLE Parent Request with an IP hop limit of
+        #         255 to the Link-Local All Routers multicast address (FF02::2).
+        #         The following TLVs MUST be present in the MLE Parent Request:
+        #            - Challenge TLV
+        #            - Mode TLV
+        #            - Scan Mask TLV
+        #                    Verify that it is sent to Routers AND REEDs
+        #            -  Version TLV
+        pkts.filter_wpan_src64(DUT).\
+            filter_LLARMA().\
+            filter_mle_cmd(MLE_PARENT_REQUEST).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              MODE_TLV,
+                              SCAN_MASK_TLV,
+                              VERSION_TLV
+                              } <= set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255 and\
+                   p.mle.tlv.scan_mask.r == 1 and\
+                   p.mle.tlv.scan_mask.e == 1 and\
+                   p.wpan.aux_sec.key_id_mode == 0x2
+                   ).\
+            must_next()
+        index2 = pkts.index
+
+        # Step 6: REED sends MLE Parent Response to DUT
+        pkts.filter_wpan_src64(REED).\
+            filter_wpan_dst64(DUT).\
+            filter_mle_cmd(MLE_PARENT_RESPONSE).\
+            filter(lambda p: {
+                              CHALLENGE_TLV,
+                              CONNECTIVITY_TLV,
+                              LEADER_DATA_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              LINK_MARGIN_TLV,
+                              RESPONSE_TLV,
+                              SOURCE_ADDRESS_TLV,
+                              VERSION_TLV
+                               } <= set(p.mle.tlv.type)).\
+            must_next()
+
+        # Step 6: DUT sends a MLE Child ID Request to REED
+        #         The following TLVs MUST be present in the MLE Child ID Request:
+        #             - Address Registration TLV
+        #             - Link-layer Frame Counter TLV
+        #             - Mode TLV
+        #             - Response TLV
+        #             - Timeout TLV
+        #             - TLV Request TLV
+        #             - Version TLV
+        #             - MLE Frame Counter TLV (optional)
+        pkts.filter_wpan_src64(DUT).\
+            filter_wpan_dst64(REED).\
+            filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+            filter(lambda p: {
+                              ADDRESS_REGISTRATION_TLV,
+                              LINK_LAYER_FRAME_COUNTER_TLV,
+                              MODE_TLV,
+                              RESPONSE_TLV,
+                              TIMEOUT_TLV,
+                              TLV_REQUEST_TLV,
+                              VERSION_TLV
+                             } <= set(p.mle.tlv.type) and\
+                   p.wpan.aux_sec.key_id_mode == 0x2
+                   ).\
+             must_next()
+
+
+class Cert_6_1_6_REEDAttachLinkQuality_ED(Cert_6_1_6_REEDAttachLinkQuality_Base):
+    TOPOLOGY = copy.deepcopy(Cert_6_1_6_REEDAttachLinkQuality_Base.TOPOLOGY)
+    TOPOLOGY[MTD]['mode'] = 'rn'
+
+
+class Cert_6_1_6_REEDAttachLinkQuality_SED(Cert_6_1_6_REEDAttachLinkQuality_Base):
+    TOPOLOGY = copy.deepcopy(Cert_6_1_6_REEDAttachLinkQuality_Base.TOPOLOGY)
+    TOPOLOGY[MTD]['mode'] = '-'
+
+
+del (Cert_6_1_6_REEDAttachLinkQuality_Base)
 
 if __name__ == '__main__':
     unittest.main()

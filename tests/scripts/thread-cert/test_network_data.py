@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -55,15 +55,14 @@ def convert_has_route_to_bytearray(has_route):
 
 
 def convert_border_router_to_bytearray(border_router):
-    data = struct.pack(">HBB", border_router.border_router_16,
-                       (border_router.o & 0x01) |
-                       ((border_router.r & 0x01) << 1) |
-                       ((border_router.c & 0x01) << 2) |
-                       ((border_router.d & 0x01) << 3) |
-                       ((border_router.s & 0x01) << 4) |
-                       ((border_router.p & 0x01) << 5) |
-                       ((border_router.prf & 0x03) << 6),
-                       ((border_router.n & 0x01) << 7))
+    data = struct.pack(
+        ">HBB",
+        border_router.border_router_16,
+        (border_router.o & 0x01) | ((border_router.r & 0x01) << 1) | ((border_router.c & 0x01) << 2) |
+        ((border_router.d & 0x01) << 3) | ((border_router.s & 0x01) << 4) | ((border_router.p & 0x01) << 5) |
+        ((border_router.prf & 0x03) << 6),
+        ((border_router.n & 0x01) << 7),
+    )
 
     return data
 
@@ -78,15 +77,15 @@ def convert_prefix_sub_tlvs_to_bytearray(sub_tlvs):
     for sub_tlv in sub_tlvs:
         if isinstance(sub_tlv, network_data.HasRoute):
             value = convert_has_route_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((0 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((0 & 0x7F) << 1)
 
         elif isinstance(sub_tlv, network_data.BorderRouter):
             value = convert_border_router_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((2 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((2 & 0x7F) << 1)
 
         elif isinstance(sub_tlv, network_data.LowpanId):
             value = convert_lowpan_id_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((3 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((3 & 0x7F) << 1)
 
         else:
             raise ValueError
@@ -106,7 +105,7 @@ def convert_service_sub_tlvs_to_bytearray(sub_tlvs):
     for sub_tlv in sub_tlvs:
         if isinstance(sub_tlv, network_data.Server):
             value = convert_server_to_bytearray(sub_tlv)
-            _type = sub_tlv.stable | ((6 & 0x7f) << 1)
+            _type = sub_tlv.stable | ((6 & 0x7F) << 1)
 
         else:
             raise ValueError
@@ -117,11 +116,12 @@ def convert_service_sub_tlvs_to_bytearray(sub_tlvs):
 
 
 def convert_service_to_bytearray(service):
-    return struct.pack(">BLB", ((service.t & 0x01) << 7) | ((service.id) & 0x0f),
-                       service.enterprise_number,
-                       service.service_data_length) + \
-        service.service_data + \
-        convert_service_sub_tlvs_to_bytearray(service.sub_tlvs)
+    return (struct.pack(
+        ">BLB",
+        ((service.t & 0x01) << 7) | ((service.id) & 0x0F),
+        service.enterprise_number,
+        service.service_data_length,
+    ) + service.service_data + convert_service_sub_tlvs_to_bytearray(service.sub_tlvs))
 
 
 def any_border_router_16():
@@ -199,7 +199,18 @@ def any_context_length():
 
 
 def any_border_router():
-    return network_data.BorderRouter(any_border_router_16(), any_prf(), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+    return network_data.BorderRouter(
+        any_border_router_16(),
+        any_prf(),
+        any_p(),
+        any_s(),
+        any_d(),
+        any_c(),
+        any_r(),
+        any_o(),
+        any_n(),
+        any_stable(),
+    )
 
 
 def any_lowpan_id():
@@ -207,11 +218,7 @@ def any_lowpan_id():
 
 
 def any_prefix_sub_tlvs():
-    creator = [
-        any_has_route,
-        any_border_router,
-        any_lowpan_id
-    ]
+    creator = [any_has_route, any_border_router, any_lowpan_id]
 
     sub_tlvs = []
 
@@ -261,9 +268,7 @@ def any_server():
 
 
 def any_service_sub_tlvs():
-    creator = [
-        any_server
-    ]
+    creator = [any_server]
 
     sub_tlvs = []
 
@@ -398,7 +403,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         domain_id = any_domain_id()
 
-        prefix = network_data.Prefix(domain_id, any_prefix_length(), any_prefix(), any_prefix_sub_tlvs(), any_stable())
+        prefix = network_data.Prefix(
+            domain_id,
+            any_prefix_length(),
+            any_prefix(),
+            any_prefix_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_domain_id = prefix.domain_id
@@ -410,7 +421,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         prefix_length = any_prefix_length()
 
-        prefix = network_data.Prefix(any_domain_id(), prefix_length, any_prefix(), any_prefix_sub_tlvs(), any_stable())
+        prefix = network_data.Prefix(
+            any_domain_id(),
+            prefix_length,
+            any_prefix(),
+            any_prefix_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_prefix_length = prefix.prefix_length
@@ -422,8 +439,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         prefix = any_prefix()
 
-        prefix_obj = network_data.Prefix(any_domain_id(), any_prefix_length(),
-                                         prefix, any_prefix_sub_tlvs(), any_stable())
+        prefix_obj = network_data.Prefix(
+            any_domain_id(),
+            any_prefix_length(),
+            prefix,
+            any_prefix_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_prefix = prefix_obj.prefix
@@ -435,7 +457,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         sub_tlvs = any_prefix_sub_tlvs()
 
-        prefix_obj = network_data.Prefix(any_domain_id(), any_prefix_length(), any_prefix(), sub_tlvs, any_stable())
+        prefix_obj = network_data.Prefix(
+            any_domain_id(),
+            any_prefix_length(),
+            any_prefix(),
+            sub_tlvs,
+            any_stable(),
+        )
 
         # WHEN
         actual_sub_tlvs = prefix_obj.sub_tlvs
@@ -447,8 +475,13 @@ class TestPrefix(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        prefix_obj = network_data.Prefix(any_domain_id(), any_prefix_length(),
-                                         any_prefix(), any_prefix_sub_tlvs(), stable)
+        prefix_obj = network_data.Prefix(
+            any_domain_id(),
+            any_prefix_length(),
+            any_prefix(),
+            any_prefix_sub_tlvs(),
+            stable,
+        )
 
         # WHEN
         actual_stable = prefix_obj.stable
@@ -486,7 +519,7 @@ class TestPrefixFactory(unittest.TestCase):
 
         factory = network_data.PrefixFactory(config.create_default_network_data_prefix_sub_tlvs_factory())
 
-        data = bytearray([domain_id, prefix_length]) + prefix + convert_prefix_sub_tlvs_to_bytearray(sub_tlvs)
+        data = (bytearray([domain_id, prefix_length]) + prefix + convert_prefix_sub_tlvs_to_bytearray(sub_tlvs))
 
         message_info = common.MessageInfo()
 
@@ -507,8 +540,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         border_router_16 = any_border_router_16()
 
-        border_router = network_data.BorderRouter(border_router_16, any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            border_router_16,
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_border_router_16 = border_router.border_router_16
@@ -520,8 +563,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         prf = any_prf()
 
-        border_router = network_data.BorderRouter(any_border_router_16(
-        ), prf, any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            prf,
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_prf = border_router.prf
@@ -533,8 +586,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         p = any_p()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), p, any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            p,
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_p = border_router.p
@@ -546,8 +609,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         s = any_s()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), s, any_d(), any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            s,
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_s = border_router.s
@@ -559,8 +632,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         d = any_d()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), d, any_c(), any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            d,
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_d = border_router.d
@@ -572,8 +655,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         c = any_c()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), c, any_r(), any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            c,
+            any_r(),
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_c = border_router.c
@@ -585,8 +678,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         r = any_r()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), r, any_o(), any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            r,
+            any_o(),
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_r = border_router.r
@@ -598,8 +701,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         o = any_o()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), o, any_n(), any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            o,
+            any_n(),
+            any_stable(),
+        )
 
         # WHEN
         actual_o = border_router.o
@@ -611,8 +724,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         n = any_n()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), n, any_stable())
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            n,
+            any_stable(),
+        )
 
         # WHEN
         actual_n = border_router.n
@@ -624,8 +747,18 @@ class TestBorderRouter(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        border_router = network_data.BorderRouter(any_border_router_16(), any_prf(
-        ), any_p(), any_s(), any_d(), any_c(), any_r(), any_o(), any_n(), stable)
+        border_router = network_data.BorderRouter(
+            any_border_router_16(),
+            any_prf(),
+            any_p(),
+            any_s(),
+            any_d(),
+            any_c(),
+            any_r(),
+            any_o(),
+            any_n(),
+            stable,
+        )
 
         # WHEN
         actual_stable = border_router.stable
@@ -757,8 +890,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         t = any_t()
 
-        service = network_data.Service(t, any_id(), any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            t,
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_t = service.t
@@ -770,8 +910,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         _id = any_id()
 
-        service = network_data.Service(any_t(), _id, any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            _id,
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_id = service.id
@@ -783,8 +930,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         enterprise_number = any_enterprise_number()
 
-        service = network_data.Service(any_t(), any_id(), enterprise_number, any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            enterprise_number,
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_enterprise_number = service.enterprise_number
@@ -796,8 +950,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         service_data_length = any_service_data_length()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), service_data_length,
-                                       any_service_data(), any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            service_data_length,
+            any_service_data(),
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_service_data_length = service.service_data_length
@@ -809,8 +970,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         service_data = any_service_data()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), any_service_data_length(),
-                                       service_data, any_service_sub_tlvs(), any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            service_data,
+            any_service_sub_tlvs(),
+            any_stable(),
+        )
 
         # WHEN
         actual_service_data = service.service_data
@@ -822,8 +990,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         sub_tlvs = any_service_sub_tlvs()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), sub_tlvs, any_stable())
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            sub_tlvs,
+            any_stable(),
+        )
 
         # WHEN
         actual_sub_tlvs = service.sub_tlvs
@@ -835,8 +1010,15 @@ class TestService(unittest.TestCase):
         # GIVEN
         stable = any_stable()
 
-        service = network_data.Service(any_t(), any_id(), any_enterprise_number(), any_service_data_length(),
-                                       any_service_data(), any_service_sub_tlvs(), stable)
+        service = network_data.Service(
+            any_t(),
+            any_id(),
+            any_enterprise_number(),
+            any_service_data_length(),
+            any_service_data(),
+            any_service_sub_tlvs(),
+            stable,
+        )
 
         # WHEN
         actual_stable = service.stable
@@ -877,8 +1059,16 @@ class TestServiceFactory(unittest.TestCase):
 
         factory = network_data.ServiceFactory(config.create_default_network_data_service_sub_tlvs_factory())
 
-        data = convert_service_to_bytearray(network_data.Service(
-            t, _id, enterprise_number, service_data_length, service_data, sub_tlvs, stable))
+        data = convert_service_to_bytearray(
+            network_data.Service(
+                t,
+                _id,
+                enterprise_number,
+                service_data_length,
+                service_data,
+                sub_tlvs,
+                stable,
+            ))
 
         message_info = common.MessageInfo()
         message_info.stable = stable

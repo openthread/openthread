@@ -39,43 +39,81 @@ NM                              = arm-none-eabi-nm
 RANLIB                          = arm-none-eabi-ranlib
 OBJCOPY                         = arm-none-eabi-objcopy
 
-BuildJobs                      ?= 99
+BuildJobs                      ?= 10
 
 configure_OPTIONS               = \
     --enable-cli                  \
+    --enable-ftd                  \
+    --enable-mtd                  \
     --enable-ncp                  \
-    --enable-diag                 \
-    --enable-default-logging      \
+    --enable-radio-only           \
+    --enable-linker-map           \
     --with-examples=cc2538        \
-    --with-platform-info=CC2538   \
     $(NULL)
 
-ifeq ($(CERT_LOG),1)
-configure_OPTIONS              += --enable-cert-log
-endif
+TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
+AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
 
-ifeq ($(COMMISSIONER),1)
-configure_OPTIONS              += --enable-commissioner
-endif
+CC2538_CONFIG_FILE_CPPFLAGS  = -DOPENTHREAD_PROJECT_CORE_CONFIG_FILE='\"openthread-core-cc2538-config.h\"'
+CC2538_CONFIG_FILE_CPPFLAGS += -DOPENTHREAD_CORE_CONFIG_PLATFORM_CHECK_FILE='\"openthread-core-cc2538-config-check.h\"'
+CC2538_CONFIG_FILE_CPPFLAGS += -I$(AbsTopSourceDir)/examples/platforms/cc2538/
 
-ifeq ($(JOINER),1)
-configure_OPTIONS              += --enable-joiner
-endif
-
-ifeq ($(DHCP6_SERVER),1)
-configure_OPTIONS              += --enable-dhcp6-server
-endif
-
-ifeq ($(DHCP6_CLIENT),1)
-configure_OPTIONS              += --enable-dhcp6-client
-endif
-
-COMMONCFLAGS                   := \
-    -fdata-sections               \
-    -ffunction-sections           \
-    -Os                           \
-    -g                            \
+COMMONCFLAGS                    := \
+    -fdata-sections                \
+    -ffunction-sections            \
+    -Os                            \
+    -g                             \
+    $(CC2538_CONFIG_FILE_CPPFLAGS) \
     $(NULL)
+
+include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/common-switches.mk
+
+# Optional CC2592 options, first and foremost, whether to enable support for it
+# at all.
+ifeq ($(CC2592),1)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2538_WITH_CC2592=1
+
+# If the PA_EN is on another port C pin, specify it with CC2592_PA_PIN.
+ifneq ($(CC2592_PA_EN),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_PA_EN_PIN=$(CC2592_PA_EN)
+endif
+
+# If the LNA_EN is on another port C pin, specify it with CC2592_LNA_PIN.
+ifneq ($(CC2592_LNA_EN),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_LNA_EN_PIN=$(CC2592_LNA_EN)
+endif
+
+# If we're not using HGM, set CC2538_USE_HGM to 0.
+ifeq ($(CC2592_USE_HGM),0)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_USE_HGM=0
+else # CC2592_USE_HGM=1
+
+# HGM in use, if not on port D, specify the port here (A, B or C) with CC2592_HGM_PORT.
+ifneq ($(CC2592_HGM_PORT),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_HGM_PORT=GPIO_$(CC2592_HGM_PORT)_BASE
+endif
+
+# If HGM is not at pin 2, specify which pin here with CC2592_HGM_PIN.
+ifneq ($(CC2592_HGM_PIN),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_HGM_PIN=$(CC2592_HGM_PIN)
+endif
+
+# If we want it off by default, specify CC2592_HGM_DEFAULT_STATE=0
+ifeq ($(CC2592_HGM_DEFAULT_STATE),0)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2592_HGM_DEFAULT_STATE=false
+endif
+
+endif # CC2592_USE_HGM
+
+endif # CC2592
+
+ifneq ($(CC2538_RECEIVE_SENSITIVITY),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2538_RECEIVE_SENSITIVITY=$(CC2538_RECEIVE_SENSITIVITY)
+endif
+
+ifneq ($(CC2538_RSSI_OFFSET),)
+COMMONCFLAGS += -DOPENTHREAD_CONFIG_CC2538_RSSI_OFFSET=$(CC2538_RSSI_OFFSET)
+endif
 
 CPPFLAGS                       += \
     $(COMMONCFLAGS)               \
@@ -101,7 +139,6 @@ LDFLAGS                        += \
     -specs=nano.specs             \
     -specs=nosys.specs            \
     -Wl,--gc-sections             \
-    -Wl,-Map=map.map              \
     $(NULL)
 
 ECHO                            := @echo
@@ -113,9 +150,6 @@ RM_F                            := rm -f
 INSTALL                         := /usr/bin/install
 INSTALLFLAGS                    := -p
 
-TopSourceDir                    := $(dir $(shell readlink $(firstword $(MAKEFILE_LIST))))..
-AbsTopSourceDir                 := $(dir $(realpath $(firstword $(MAKEFILE_LIST))))..
-
 BuildPath                       = build
 TopBuildDir                     = $(BuildPath)
 AbsTopBuildDir                  = $(PWD)/$(TopBuildDir)
@@ -124,11 +158,11 @@ ResultPath                      = output
 TopResultDir                    = $(ResultPath)
 AbsTopResultDir                 = $(PWD)/$(TopResultDir)
 
-TargetTuple                     = arm-none-eabi
+TargetTuple                     = cc2538
 
 ARCHS                           = cortex-m3
 
-TopTargetLibDir                 = $(TopResultDir)/$(if $(1),$(1)-,)$(TargetTuple)/lib
+TopTargetLibDir                 = $(TopResultDir)/$(TargetTuple)/lib
 
 ifndef BuildJobs
 BuildJobs := $(shell getconf _NPROCESSORS_ONLN)
@@ -143,13 +177,13 @@ JOBSFLAG := -j$(BuildJobs)
 #   arch - The architecture to configure.
 #
 define configure-arch
-$(ECHO) "  CONFIG   $(1)-$(TargetTuple)..."
-(cd $(BuildPath)/$(1)-$(TargetTuple) && $(AbsTopSourceDir)/configure \
+$(ECHO) "  CONFIG   $(TargetTuple)..."
+(cd $(BuildPath)/$(TargetTuple) && $(AbsTopSourceDir)/configure \
 INSTALL="$(INSTALL) $(INSTALLFLAGS)" \
 CPP="$(CPP)" CC="$(CC)" CXX="$(CXX)" OBJC="$(OBJC)" OBJCXX="$(OBJCXX)" AR="$(AR)" RANLIB="$(RANLIB)" NM="$(NM)" STRIP="$(STRIP)" CPPFLAGS="$(CPPFLAGS)" CFLAGS="$(CFLAGS)" CXXFLAGS="$(CXXFLAGS)" LDFLAGS="$(LDFLAGS)" \
 --host=arm-none-eabi \
---target=arm-none-eabi \
 --prefix=/ \
+--exec-prefix=/$(TargetTuple) \
 $(configure_OPTIONS))
 endef # configure-arch
 
@@ -162,8 +196,8 @@ endef # configure-arch
 #   arch - The architecture to build.
 #
 define build-arch
-$(ECHO) "  BUILD    $(1)-$(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1)-$(TargetTuple) --no-print-directory \
+$(ECHO) "  BUILD    $(TargetTuple)"
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
 all
 endef # build-arch
 
@@ -176,8 +210,8 @@ endef # build-arch
 #   arch - The architecture to stage.
 #
 define stage-arch
-$(ECHO) "  STAGE    $(1)-$(TargetTuple)"
-$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(1)-$(TargetTuple) --no-print-directory \
+$(ECHO) "  STAGE    $(TargetTuple)"
+$(MAKE) $(JOBSFLAG) -C $(BuildPath)/$(TargetTuple) --no-print-directory \
 DESTDIR=$(AbsTopResultDir) \
 install
 endef # stage-arch
@@ -194,17 +228,17 @@ define ARCH_template
 CONFIGURE_TARGETS += configure-$(1)
 BUILD_TARGETS     += do-build-$(1)
 STAGE_TARGETS     += stage-$(1)
-BUILD_DIRS        += $(BuildPath)/$(1)-$(TargetTuple)
-DIRECTORIES       += $(BuildPath)/$(1)-$(TargetTuple)
+BUILD_DIRS        += $(BuildPath)/$(TargetTuple)
+DIRECTORIES       += $(BuildPath)/$(TargetTuple)
 
 configure-$(1): target_CPPFLAGS=$($(1)_target_CPPFLAGS)
 configure-$(1): target_CFLAGS=$($(1)_target_CFLAGS)
 configure-$(1): target_CXXFLAGS=$($(1)_target_CXXFLAGS)
 configure-$(1): target_LDFLAGS=$($(1)_target_LDFLAGS)
 
-configure-$(1): $(BuildPath)/$(1)-$(TargetTuple)/config.status
+configure-$(1): $(BuildPath)/$(TargetTuple)/config.status
 
-$(BuildPath)/$(1)-$(TargetTuple)/config.status: | $(BuildPath)/$(1)-$(TargetTuple)
+$(BuildPath)/$(TargetTuple)/config.status: | $(BuildPath)/$(TargetTuple)
 	$$(call configure-arch,$(1))
 
 do-build-$(1): configure-$(1)

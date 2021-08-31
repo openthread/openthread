@@ -34,22 +34,22 @@
 #ifndef MLE_TLVS_HPP_
 #define MLE_TLVS_HPP_
 
-#include <string.h>
+#include "openthread-core-config.h"
 
-#include <openthread-types.h>
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <meshcop/timestamp.hpp>
-#include <net/ip6_address.hpp>
-#include <thread/mle_constants.hpp>
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "meshcop/timestamp.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/link_metrics_tlvs.hpp"
+#include "thread/mle_types.hpp"
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
-
-namespace Thread {
+namespace ot {
 
 namespace Mle {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-mle-tlvs
@@ -66,43 +66,60 @@ namespace Mle {
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Tlv : public Thread::Tlv
+class Tlv : public ot::Tlv
 {
 public:
     /**
      * MLE TLV Types.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
-        kSourceAddress       = 0,    ///< Source Address TLV
-        kMode                = 1,    ///< Mode TLV
-        kTimeout             = 2,    ///< Timeout TLV
-        kChallenge           = 3,    ///< Challenge TLV
-        kResponse            = 4,    ///< Response TLV
-        kLinkFrameCounter    = 5,    ///< Link-Layer Frame Counter TLV
-        kLinkQuality         = 6,    ///< Link Quality TLV
-        kNetworkParameter    = 7,    ///< Network Parameter TLV
-        kMleFrameCounter     = 8,    ///< MLE Frame Counter TLV
-        kRoute               = 9,    ///< Route64 TLV
-        kAddress16           = 10,   ///< Address16 TLV
-        kLeaderData          = 11,   ///< Leader Data TLV
-        kNetworkData         = 12,   ///< Network Data TLV
-        kTlvRequest          = 13,   ///< TLV Request TLV
-        kScanMask            = 14,   ///< Scan Mask TLV
-        kConnectivity        = 15,   ///< Connectivity TLV
-        kLinkMargin          = 16,   ///< Link Margin TLV
-        kStatus              = 17,   ///< Status TLV
-        kVersion             = 18,   ///< Version TLV
-        kAddressRegistration = 19,   ///< Address Registration TLV
-        kChannel             = 20,   ///< Channel TLV
-        kPanId               = 21,   ///< PAN ID TLV
-        kActiveTimestamp     = 22,   ///< Active Timestamp TLV
-        kPendingTimestamp    = 23,   ///< Pending Timestamp TLV
-        kActiveDataset       = 24,   ///< Active Operational Dataset TLV
-        kPendingDataset      = 25,   ///< Pending Operational Dataset TLV
-        kDiscovery           = 26,   ///< Thread Discovery TLV
-        kInvalid             = 255,
+        kSourceAddress         = 0,  ///< Source Address TLV
+        kMode                  = 1,  ///< Mode TLV
+        kTimeout               = 2,  ///< Timeout TLV
+        kChallenge             = 3,  ///< Challenge TLV
+        kResponse              = 4,  ///< Response TLV
+        kLinkFrameCounter      = 5,  ///< Link-Layer Frame Counter TLV
+        kLinkQuality           = 6,  ///< Link Quality TLV
+        kNetworkParameter      = 7,  ///< Network Parameter TLV
+        kMleFrameCounter       = 8,  ///< MLE Frame Counter TLV
+        kRoute                 = 9,  ///< Route64 TLV
+        kAddress16             = 10, ///< Address16 TLV
+        kLeaderData            = 11, ///< Leader Data TLV
+        kNetworkData           = 12, ///< Network Data TLV
+        kTlvRequest            = 13, ///< TLV Request TLV
+        kScanMask              = 14, ///< Scan Mask TLV
+        kConnectivity          = 15, ///< Connectivity TLV
+        kLinkMargin            = 16, ///< Link Margin TLV
+        kStatus                = 17, ///< Status TLV
+        kVersion               = 18, ///< Version TLV
+        kAddressRegistration   = 19, ///< Address Registration TLV
+        kChannel               = 20, ///< Channel TLV
+        kPanId                 = 21, ///< PAN ID TLV
+        kActiveTimestamp       = 22, ///< Active Timestamp TLV
+        kPendingTimestamp      = 23, ///< Pending Timestamp TLV
+        kActiveDataset         = 24, ///< Active Operational Dataset TLV
+        kPendingDataset        = 25, ///< Pending Operational Dataset TLV
+        kDiscovery             = 26, ///< Thread Discovery TLV
+        kCslChannel            = 80, ///< CSL Channel TLV
+        kCslTimeout            = 85, ///< CSL Timeout TLV
+        kCslClockAccuracy      = 86, ///< CSL Clock Accuracy TLV
+        kLinkMetricsQuery      = 87, ///< Link Metrics Query TLV
+        kLinkMetricsManagement = 88, ///< Link Metrics Management TLV
+        kLinkMetricsReport     = 89, ///< Link Metrics Report TLV
+        kLinkProbe             = 90, ///< Link Probe TLV
+
+        /**
+         * Applicable/Required only when time synchronization service
+         * (`OPENTHREAD_CONFIG_TIME_SYNC_ENABLE`) is enabled.
+         *
+         */
+        kTimeRequest   = 252, ///< Time Request TLV
+        kTimeParameter = 253, ///< Time Parameter TLV
+        kXtalAccuracy  = 254, ///< XTAL Accuracy TLV
+
+        kInvalid = 255,
     };
 
     /**
@@ -111,7 +128,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
+    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -119,342 +136,130 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
+    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class defines Source Address TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kSourceAddress, uint16_t> SourceAddressTlv;
+
+/**
+ * This class defines Mode TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kMode, uint8_t> ModeTlv;
+
+/**
+ * This class defines Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kTimeout, uint32_t> TimeoutTlv;
+
+/**
+ * This class defines Challenge TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kChallenge> ChallengeTlv;
+
+/**
+ * This class defines Response TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kResponse> ResponseTlv;
+
+/**
+ * This class defines Link Frame Counter TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kLinkFrameCounter, uint32_t> LinkFrameCounterTlv;
+
+/**
+ * This class defines MLE Frame Counter TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kMleFrameCounter, uint32_t> MleFrameCounterTlv;
+
+/**
+ * This class defines Address16 TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kAddress16, uint16_t> Address16Tlv;
+
+/**
+ * This class defines Network Data TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kNetworkData> NetworkDataTlv;
+
+/**
+ * This class defines TLV Request TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kTlvRequest> TlvRequestTlv;
+
+/**
+ * This class defines Link Margin TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kLinkMargin, uint8_t> LinkMarginTlv;
+
+/**
+ * This class defines Version TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kVersion, uint16_t> VersionTlv;
+
+/**
+ * This class defines PAN ID TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kPanId, uint16_t> PanIdTlv;
+
+/**
+ * This class defines CSL Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kCslTimeout, uint32_t> CslTimeoutTlv;
+
+/**
+ * This class defines XTAL Accuracy TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<Tlv::kXtalAccuracy, uint16_t> XtalAccuracyTlv;
+
+#if !OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+
+/**
+ * This class implements Route TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class RouteTlv : public Tlv, public TlvInfo<Tlv::kRoute>
+{
+public:
     /**
-     * This static method reads the requested TLV out of @p aMessage.
-     *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[in]   aMaxLength  Maximum number of bytes to read.
-     * @param[out]  aTlv        A reference to the TLV that will be copied to.
-     *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
+     * This method initializes the TLV.
      *
      */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
-        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
+    void Init(void)
+    {
+        SetType(kRoute);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+        mRouterIdMask.Clear();
+        memset(mRouteData, 0, sizeof(mRouteData));
     }
 
     /**
-     * This static method obtains the offset of a TLV within @p aMessage.
-     *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[out]  aOffset     A reference to the offset of the TLV.
-     *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
-     *
-     */
-    static ThreadError GetOffset(const Message &aMessage, Type aType, uint16_t &aOffset) {
-        return Thread::Tlv::GetOffset(aMessage, static_cast<uint8_t>(aType), aOffset);
-    }
-
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class SourceAddressTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kSourceAddress); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
      * This method indicates whether or not the TLV appears to be well-formed.
      *
      * @retval TRUE   If the TLV appears to be well-formed.
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the RLOC16 value.
-     *
-     * @returns The RLOC16 value.
-     *
-     */
-    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
-
-    /**
-     * This method sets the RLOC16 value.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
-
-private:
-    uint16_t mRloc16;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ModeTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kMode); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    enum
-    {
-        kModeRxOnWhenIdle      = 1 << 3,
-        kModeSecureDataRequest = 1 << 2,
-        kModeFFD               = 1 << 1,
-        kModeFullNetworkData   = 1 << 0,
-    };
-
-    /**
-     * This method returns the Mode value.
-     *
-     * @returns The Mode value.
-     *
-     */
-    uint8_t GetMode(void) const { return mMode; }
-
-    /**
-     * This method sets the Mode value.
-     *
-     * @param[in]  aMode  The Mode value.
-     *
-     */
-    void SetMode(uint8_t aMode) { mMode = aMode; }
-
-private:
-    uint8_t mMode;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TimeoutTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kTimeout); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Timeout value.
-     *
-     * @returns The Timeout value.
-     *
-     */
-    uint32_t GetTimeout(void) const { return HostSwap32(mTimeout); }
-
-    /**
-     * This method sets the Timeout value.
-     *
-     * @param[in]  aTimeout  The Timeout value.
-     *
-     */
-    void SetTimeout(uint32_t aTimeout) { mTimeout = HostSwap32(aTimeout); }
-
-private:
-    uint32_t mTimeout;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ChallengeTlv: public Tlv
-{
-public:
-    enum
-    {
-        kMaxSize = 8,  ///< Maximum size in bytes (Thread Specification).
-    };
-
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kChallenge); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() >= 4 && GetLength() <= 8; }
-
-    /**
-     * This method returns a pointer to the Challenge value.
-     *
-     * @returns A pointer to the Challenge value.
-     *
-     */
-    const uint8_t *GetChallenge(void) const { return mChallenge; }
-
-    /**
-     * This method sets the Challenge value.
-     *
-     * @param[in]  aChallenge  A pointer to the Challenge value.
-     *
-     */
-    void SetChallenge(const uint8_t *aChallenge) { memcpy(mChallenge, aChallenge, GetLength()); }
-
-private:
-    uint8_t mChallenge[kMaxSize];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ResponseTlv: public Tlv
-{
-public:
-    enum
-    {
-        kMaxSize = 8,  ///< Maximum size in bytes (Thread Specification).
-    };
-
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kResponse); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Response value.
-     *
-     * @returns A pointer to the Response value.
-     *
-     */
-    const uint8_t *GetResponse(void) const { return mResponse; }
-
-    /**
-     * This method sets the Response value.
-     *
-     * @param[in]  aResponse  A pointer to the Response value.
-     *
-     */
-    void SetResponse(const uint8_t *aResponse) { memcpy(mResponse, aResponse, GetLength()); }
-
-private:
-    uint8_t mResponse[kMaxSize];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class LinkFrameCounterTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kLinkFrameCounter); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Frame Counter value.
-     *
-     * @returns The Frame Counter value.
-     *
-     */
-    uint32_t GetFrameCounter(void) const { return HostSwap32(mFrameCounter); }
-
-    /**
-     * This method sets the Frame Counter value.
-     *
-     * @param[in]  aFrameCounter  The Frame Counter value.
-     *
-     */
-    void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = HostSwap32(aFrameCounter); }
-
-private:
-    uint32_t mFrameCounter;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class RouteTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kRoute); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const {
-        return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) &&
-               GetLength() <= sizeof(*this) - sizeof(Tlv);
-    }
+    bool IsValid(void) const { return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask); }
 
     /**
      * This method returns the Router ID Sequence value.
@@ -473,31 +278,29 @@ public:
     void SetRouterIdSequence(uint8_t aSequence) { mRouterIdSequence = aSequence; }
 
     /**
-     * This method clears the Router ID Mask.
+     * This method gets the Router ID Mask.
      *
      */
-    void ClearRouterIdMask(void) { memset(mRouterIdMask, 0, sizeof(mRouterIdMask)); }
+    const RouterIdSet &GetRouterIdMask(void) const { return mRouterIdMask; }
+
+    /**
+     * This method sets the Router ID Mask.
+     *
+     * @param[in]  aRouterIdSet The Router ID Mask to set.
+     *
+     */
+    void SetRouterIdMask(const RouterIdSet &aRouterIdSet) { mRouterIdMask = aRouterIdSet; }
 
     /**
      * This method indicates whether or not a Router ID bit is set.
      *
-     * @param[in]  aRouterId  The Router ID.
+     * @param[in]  aRouterId  The Router ID bit.
      *
      * @retval TRUE   If the Router ID bit is set.
      * @retval FALSE  If the Router ID bit is not set.
      *
      */
-    bool IsRouterIdSet(uint8_t aRouterId) const {
-        return (mRouterIdMask[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0;
-    }
-
-    /**
-     * This method sets the Router ID bit.
-     *
-     * @param[in]  aRouterId  The Router ID bit to set.
-     *
-     */
-    void SetRouterId(uint8_t aRouterId) { mRouterIdMask[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
 
     /**
      * This method returns the Route Data Length value.
@@ -513,148 +316,114 @@ public:
      * @param[in]  aLength  The Route Data Length value.
      *
      */
-    void SetRouteDataLength(uint8_t aLength) {
-        SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength);
-    }
+    void SetRouteDataLength(uint8_t aLength) { SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength); }
 
     /**
-     * This method returns the Route Cost value for a given Router ID.
+     * This method returns the Route Cost value for a given Router index.
      *
-     * @returns The Route Cost value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Route Cost value for a given Router index.
      *
      */
-    uint8_t GetRouteCost(uint8_t aRouterId) const {
-        return mRouteData[aRouterId] & kRouteCostMask;
-    }
+    uint8_t GetRouteCost(uint8_t aRouterIndex) const { return mRouteData[aRouterIndex] & kRouteCostMask; }
 
     /**
-     * This method sets the Route Cost value for a given Router ID.
+     * This method sets the Route Cost value for a given Router index.
      *
-     * @param[in]  aRouterId   The Router ID.
-     * @param[in]  aRouteCost  The Route Cost value.
-     *
-     */
-    void SetRouteCost(uint8_t aRouterId, uint8_t aRouteCost) {
-        mRouteData[aRouterId] = (mRouteData[aRouterId] & ~kRouteCostMask) | aRouteCost;
-    }
-
-    /**
-     * This method returns the Link Quality In value for a given Router ID.
-     *
-     * @returns The Link Quality In value for a given Router ID.
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aRouteCost    The Route Cost value.
      *
      */
-    uint8_t GetLinkQualityIn(uint8_t aRouterId) const {
-        return (mRouteData[aRouterId] & kLinkQualityInMask) >> kLinkQualityInOffset;
-    }
-
-    /**
-     * This method sets the Link Quality In value for a given Router ID.
-     *
-     * @param[in]  aRouterId     The Router ID.
-     * @param[in]  aLinkQuality  The Link Quality In value for a given Router ID.
-     *
-     */
-    void SetLinkQualityIn(uint8_t aRouterId, uint8_t aLinkQuality) {
-        mRouteData[aRouterId] =
-            (mRouteData[aRouterId] & ~kLinkQualityInMask) |
-            ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
-    }
-
-    /**
-     * This method returns the Link Quality Out value for a given Router ID.
-     *
-     * @returns The Link Quality Out value for a given Router ID.
-     *
-     */
-    uint8_t GetLinkQualityOut(uint8_t aRouterId) const {
-        return (mRouteData[aRouterId] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
-    }
-
-    /**
-     * This method sets the Link Quality Out value for a given Router ID.
-     *
-     * @param[in]  aRouterId     The Router ID.
-     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router ID.
-     *
-     */
-    void SetLinkQualityOut(uint8_t aRouterId, uint8_t aLinkQuality) {
-        mRouteData[aRouterId] =
-            (mRouteData[aRouterId] & ~kLinkQualityOutMask) |
-            ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
-    }
-
-private:
-    enum
+    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
     {
-        kLinkQualityOutOffset = 6,
-        kLinkQualityOutMask = 3 << kLinkQualityOutOffset,
-        kLinkQualityInOffset = 4,
-        kLinkQualityInMask = 3 << kLinkQualityInOffset,
-        kRouteCostOffset = 0,
-        kRouteCostMask = 0xf << kRouteCostOffset,
-    };
-    uint8_t mRouterIdSequence;
-    uint8_t mRouterIdMask[BitVectorBytes(kMaxRouterId + 1)];
-    uint8_t mRouteData[kMaxRouters];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class MleFrameCounterTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kMleFrameCounter); SetLength(sizeof(*this) - sizeof(Tlv)); }
+        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kRouteCostMask) | aRouteCost;
+    }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the Link Quality In value for a given Router index.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Link Quality In value for a given Router index.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetLinkQualityIn(uint8_t aRouterIndex) const
+    {
+        return (mRouteData[aRouterIndex] & kLinkQualityInMask) >> kLinkQualityInOffset;
+    }
 
     /**
-     * This method returns the Frame Counter value.
+     * This method sets the Link Quality In value for a given Router index.
      *
-     * @returns The Frame Counter value.
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
      *
      */
-    uint32_t GetFrameCounter(void) const { return HostSwap32(mFrameCounter); }
+    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    {
+        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityInMask) |
+                                   ((aLinkQuality << kLinkQualityInOffset) & kLinkQualityInMask);
+    }
 
     /**
-     * This method sets the Frame Counter value.
+     * This method returns the Link Quality Out value for a given Router index.
      *
-     * @param[in]  aFrameCounter  The Frame Counter value.
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Link Quality Out value for a given Router index.
      *
      */
-    void SetFrameCounter(uint32_t aFrameCounter) { mFrameCounter = HostSwap32(aFrameCounter); }
+    uint8_t GetLinkQualityOut(uint8_t aRouterIndex) const
+    {
+        return (mRouteData[aRouterIndex] & kLinkQualityOutMask) >> kLinkQualityOutOffset;
+    }
+
+    /**
+     * This method sets the Link Quality Out value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
+     *
+     */
+    void SetLinkQualityOut(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    {
+        mRouteData[aRouterIndex] = (mRouteData[aRouterIndex] & ~kLinkQualityOutMask) |
+                                   ((aLinkQuality << kLinkQualityOutOffset) & kLinkQualityOutMask);
+    }
 
 private:
-    uint32_t mFrameCounter;
+    static constexpr uint8_t kLinkQualityOutOffset = 6;
+    static constexpr uint8_t kLinkQualityOutMask   = 3 << kLinkQualityOutOffset;
+    static constexpr uint8_t kLinkQualityInOffset  = 4;
+    static constexpr uint8_t kLinkQualityInMask    = 3 << kLinkQualityInOffset;
+    static constexpr uint8_t kRouteCostOffset      = 0;
+    static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
+
+    uint8_t     mRouterIdSequence;
+    RouterIdSet mRouterIdMask;
+    uint8_t     mRouteData[kMaxRouterId + 1];
 } OT_TOOL_PACKED_END;
 
+#else // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Route TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Address16Tlv: public Tlv
+class RouteTlv : public Tlv, public TlvInfo<Tlv::kRoute>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kAddress16); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kRoute);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -663,41 +432,219 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(mRouterIdSequence) + sizeof(mRouterIdMask); }
 
     /**
-     * This method returns the RLOC16 value.
+     * This method returns the Router ID Sequence value.
      *
-     * @returns The RLOC16 value.
+     * @returns The Router ID Sequence value.
      *
      */
-    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
+    uint8_t GetRouterIdSequence(void) const { return mRouterIdSequence; }
 
     /**
-     * This method sets the RLOC16 value.
+     * This method sets the Router ID Sequence value.
      *
-     * @param[in]  aRloc16  The RLOC16 value.
+     * @param[in]  aSequence  The Router ID Sequence value.
      *
      */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
+    void SetRouterIdSequence(uint8_t aSequence) { mRouterIdSequence = aSequence; }
+
+    /**
+     * This method gets the Router ID Mask.
+     *
+     */
+    const RouterIdSet &GetRouterIdMask(void) const { return mRouterIdMask; }
+
+    /**
+     * This method sets the Router ID Mask.
+     *
+     * @param[in]  aRouterIdSet The Router ID Mask to set.
+     *
+     */
+    void SetRouterIdMask(const RouterIdSet &aRouterIdSet) { mRouterIdMask = aRouterIdSet; }
+
+    /**
+     * This method indicates whether or not a Router ID bit is set.
+     *
+     * @param[in]  aRouterId  The Router ID.
+     *
+     * @retval TRUE   If the Router ID bit is set.
+     * @retval FALSE  If the Router ID bit is not set.
+     *
+     */
+    bool IsRouterIdSet(uint8_t aRouterId) const { return mRouterIdMask.Contains(aRouterId); }
+
+    /**
+     * This method sets the Router ID bit.
+     *
+     * @param[in]  aRouterId  The Router ID bit to set.
+     *
+     */
+    void SetRouterId(uint8_t aRouterId) { mRouterIdMask.Add(aRouterId); }
+
+    /**
+     * This method returns the Route Data Length value.
+     *
+     * @returns The Route Data Length value in bytes
+     *
+     */
+    uint8_t GetRouteDataLength(void) const { return GetLength() - sizeof(mRouterIdSequence) - sizeof(mRouterIdMask); }
+
+    /**
+     * This method sets the Route Data Length value.
+     *
+     * @param[in]  aLength  The Route Data Length value in number of router entries
+     *
+     */
+    void SetRouteDataLength(uint8_t aLength)
+    {
+        SetLength(sizeof(mRouterIdSequence) + sizeof(mRouterIdMask) + aLength + (aLength + 1) / 2);
+    }
+
+    /**
+     * This method returns the Route Cost value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Route Cost value for a given Router index.
+     *
+     */
+    uint8_t GetRouteCost(uint8_t aRouterIndex) const
+    {
+        if (aRouterIndex & 1)
+        {
+            return mRouteData[aRouterIndex + aRouterIndex / 2 + 1];
+        }
+        else
+        {
+            return static_cast<uint8_t>((mRouteData[aRouterIndex + aRouterIndex / 2] & kRouteCostMask)
+                                        << kOddEntryOffset) |
+                   ((mRouteData[aRouterIndex + aRouterIndex / 2 + 1] &
+                     static_cast<uint8_t>(kRouteCostMask << kOddEntryOffset)) >>
+                    kOddEntryOffset);
+        }
+    }
+
+    /**
+     * This method sets the Route Cost value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aRouteCost    The Route Cost value.
+     *
+     */
+    void SetRouteCost(uint8_t aRouterIndex, uint8_t aRouteCost)
+    {
+        if (aRouterIndex & 1)
+        {
+            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = aRouteCost;
+        }
+        else
+        {
+            mRouteData[aRouterIndex + aRouterIndex / 2] =
+                (mRouteData[aRouterIndex + aRouterIndex / 2] & ~kRouteCostMask) |
+                ((aRouteCost >> kOddEntryOffset) & kRouteCostMask);
+            mRouteData[aRouterIndex + aRouterIndex / 2 + 1] = static_cast<uint8_t>(
+                (mRouteData[aRouterIndex + aRouterIndex / 2 + 1] & ~(kRouteCostMask << kOddEntryOffset)) |
+                ((aRouteCost & kRouteCostMask) << kOddEntryOffset));
+        }
+    }
+
+    /**
+     * This method returns the Link Quality In value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Link Quality In value for a given Router index.
+     *
+     */
+    uint8_t GetLinkQualityIn(uint8_t aRouterIndex) const
+    {
+        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
+        return (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityInMask >> offset)) >>
+               (kLinkQualityInOffset - offset);
+    }
+
+    /**
+     * This method sets the Link Quality In value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aLinkQuality  The Link Quality In value for a given Router index.
+     *
+     */
+    void SetLinkQualityIn(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    {
+        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
+        mRouteData[aRouterIndex + aRouterIndex / 2] =
+            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityInMask >> offset)) |
+            ((aLinkQuality << (kLinkQualityInOffset - offset)) & (kLinkQualityInMask >> offset));
+    }
+
+    /**
+     * This method returns the Link Quality Out value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     *
+     * @returns The Link Quality Out value for a given Router index.
+     *
+     */
+    uint8_t GetLinkQualityOut(uint8_t aRouterIndex) const
+    {
+        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
+        return (mRouteData[aRouterIndex + aRouterIndex / 2] & (kLinkQualityOutMask >> offset)) >>
+               (kLinkQualityOutOffset - offset);
+    }
+
+    /**
+     * This method sets the Link Quality Out value for a given Router index.
+     *
+     * @param[in]  aRouterIndex  The Router index.
+     * @param[in]  aLinkQuality  The Link Quality Out value for a given Router index.
+     *
+     */
+    void SetLinkQualityOut(uint8_t aRouterIndex, uint8_t aLinkQuality)
+    {
+        int offset = ((aRouterIndex & 1) ? kOddEntryOffset : 0);
+        mRouteData[aRouterIndex + aRouterIndex / 2] =
+            (mRouteData[aRouterIndex + aRouterIndex / 2] & ~(kLinkQualityOutMask >> offset)) |
+            ((aLinkQuality << (kLinkQualityOutOffset - offset)) & (kLinkQualityOutMask >> offset));
+    }
 
 private:
-    uint16_t mRloc16;
+    static constexpr uint8_t kLinkQualityOutOffset = 6;
+    static constexpr uint8_t kLinkQualityOutMask   = 3 << kLinkQualityOutOffset;
+    static constexpr uint8_t kLinkQualityInOffset  = 4;
+    static constexpr uint8_t kLinkQualityInMask    = 3 << kLinkQualityInOffset;
+    static constexpr uint8_t kRouteCostOffset      = 0;
+    static constexpr uint8_t kRouteCostMask        = 0xf << kRouteCostOffset;
+    static constexpr uint8_t kOddEntryOffset       = 4;
+
+    uint8_t     mRouterIdSequence;
+    RouterIdSet mRouterIdMask;
+    // Since we do hold 12 (compressible to 11) bits of data per router, each entry occupies 1.5 bytes,
+    // consecutively. First 4 bits are link qualities, remaining 8 bits are route cost.
+    uint8_t mRouteData[kMaxRouterId + 1 + kMaxRouterId / 2 + 1];
 } OT_TOOL_PACKED_END;
 
+#endif // OPENTHREAD_CONFIG_MLE_LONG_ROUTES_ENABLE
+
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Leader Data TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class LeaderDataTlv: public Tlv
+class LeaderDataTlv : public Tlv, public TlvInfo<Tlv::kLeaderData>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kLeaderData); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kLeaderData);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -706,280 +653,94 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns the Partition ID value.
+     * This method gets the Leader Data info from TLV.
      *
-     * @returns The Partition ID value.
+     * @param[out] aLeaderData   A reference to output Leader Data info.
      *
      */
-    uint32_t GetPartitionId(void) const { return HostSwap32(mPartitionId); }
+    void Get(LeaderData &aLeaderData) const
+    {
+        aLeaderData.SetPartitionId(HostSwap32(mPartitionId));
+        aLeaderData.SetWeighting(mWeighting);
+        aLeaderData.SetDataVersion(mDataVersion);
+        aLeaderData.SetStableDataVersion(mStableDataVersion);
+        aLeaderData.SetLeaderRouterId(mLeaderRouterId);
+    }
 
     /**
-     * This method sets the Partition ID value.
+     * This method sets the Leader Data.
      *
-     * @param[in]  aPartitionId  The Partition ID value.
-     *
-     */
-    void SetPartitionId(uint32_t aPartitionId) { mPartitionId = HostSwap32(aPartitionId); }
-
-    /**
-     * This method returns the Weighting value.
-     *
-     * @returns The Weighting value.
+     * @param[in] aLeaderData   A Leader Data.
      *
      */
-    uint8_t GetWeighting(void) const { return mWeighting; }
-
-    /**
-     * This method sets the Weighting value.
-     *
-     * @param[in]  aWeighting  The Weighting value.
-     *
-     */
-    void SetWeighting(uint8_t aWeighting) { mWeighting = aWeighting; }
-
-    /**
-     * This method returns the Data Version value.
-     *
-     * @returns The Data Version value.
-     *
-     */
-    uint8_t GetDataVersion(void) const { return mDataVersion; }
-
-    /**
-     * This method sets the Data Version value.
-     *
-     * @param[in]  aVersion  The Data Version value.
-     *
-     */
-    void SetDataVersion(uint8_t aVersion)  { mDataVersion = aVersion; }
-
-    /**
-     * This method returns the Stable Data Version value.
-     *
-     * @returns The Stable Data Version value.
-     *
-     */
-    uint8_t GetStableDataVersion(void) const { return mStableDataVersion; }
-
-    /**
-     * This method sets the Stable Data Version value.
-     *
-     * @param[in]  aVersion  The Stable Data Version value.
-     *
-     */
-    void SetStableDataVersion(uint8_t aVersion) { mStableDataVersion = aVersion; }
-
-    /**
-     * This method returns the Leader Router ID value.
-     *
-     * @returns The Leader Router ID value.
-     *
-     */
-    uint8_t GetLeaderRouterId(void) const { return mLeaderRouterId; }
-
-    /**
-     * This method sets the Leader Router ID value.
-     *
-     * @param[in]  aRouterId  The Leader Router ID value.
-     *
-     */
-    void SetLeaderRouterId(uint8_t aRouterId) { mLeaderRouterId = aRouterId; }
+    void Set(const LeaderData &aLeaderData)
+    {
+        mPartitionId       = HostSwap32(aLeaderData.GetPartitionId());
+        mWeighting         = aLeaderData.GetWeighting();
+        mDataVersion       = aLeaderData.GetDataVersion();
+        mStableDataVersion = aLeaderData.GetStableDataVersion();
+        mLeaderRouterId    = aLeaderData.GetLeaderRouterId();
+    }
 
 private:
     uint32_t mPartitionId;
-    uint8_t mWeighting;
-    uint8_t mDataVersion;
-    uint8_t mStableDataVersion;
-    uint8_t mLeaderRouterId;
+    uint8_t  mWeighting;
+    uint8_t  mDataVersion;
+    uint8_t  mStableDataVersion;
+    uint8_t  mLeaderRouterId;
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Scan Mask TLV generation and parsing.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class NetworkDataTlv: public Tlv
+class ScanMaskTlv : public UintTlvInfo<Tlv::kScanMask, uint8_t>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kNetworkData); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() < sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the Network Data.
-     *
-     * @returns A pointer to the Network Data.
-     *
-     */
-    uint8_t *GetNetworkData(void) { return mNetworkData; }
-
-    /**
-     * This method sets the Network Data.
-     *
-     * @param[in]  aNetworkData  A pointer to the Network Data.
-     *
-     */
-    void SetNetworkData(const uint8_t *aNetworkData) { memcpy(mNetworkData, aNetworkData, GetLength()); }
-
-private:
-    uint8_t mNetworkData[255];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class TlvRequestTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kTlvRequest); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns a pointer to the TLV list.
-     *
-     * @returns A pointer to the TLV list.
-     *
-     */
-    const uint8_t *GetTlvs(void) const { return mTlvs; }
-
-    /**
-     * This method sets the list of TLVs.
-     *
-     * @param[in]  aTlvs  A pointer to the TLV list.
-     *
-     */
-    void SetTlvs(const uint8_t *aTlvs) { memcpy(mTlvs, aTlvs, GetLength()); }
-
-private:
-    enum
-    {
-        kMaxTlvs = 8,
-    };
-    uint8_t mTlvs[kMaxTlvs];
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ScanMaskTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kScanMask); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    enum
-    {
-        kRouterFlag = 1 << 7,
-        kEndDeviceFlag = 1 << 6,
-    };
-
-    /**
-     * This method clears Router flag.
-     *
-     */
-    void ClearRouterFlag(void) { mMask &= ~kRouterFlag; }
-
-    /**
-     * This method sets the Router flag.
-     *
-     */
-    void SetRouterFlag(void) { mMask |= kRouterFlag; }
+    static constexpr uint8_t kRouterFlag    = 1 << 7; ///< Scan Mask Router Flag.
+    static constexpr uint8_t kEndDeviceFlag = 1 << 6; ///< Scan Mask End Device Flag.
 
     /**
      * This method indicates whether or not the Router flag is set.
      *
+     * @param[in] aMask   A scan mask value.
+     *
      * @retval TRUE   If the Router flag is set.
      * @retval FALSE  If the Router flag is not set.
      */
-    bool IsRouterFlagSet(void) { return (mMask & kRouterFlag) != 0; }
-
-    /**
-     * This method clears the End Device flag.
-     *
-     */
-    void ClearEndDeviceFlag(void) { mMask &= ~kEndDeviceFlag; }
-
-    /**
-     * This method sets the End Device flag.
-     *
-     */
-    void SetEndDeviceFlag(void) { mMask |= kEndDeviceFlag; }
+    static bool IsRouterFlagSet(uint8_t aMask) { return (aMask & kRouterFlag) != 0; }
 
     /**
      * This method indicates whether or not the End Device flag is set.
      *
+     * @param[in] aMask   A scan mask value.
+     *
      * @retval TRUE   If the End Device flag is set.
      * @retval FALSE  If the End Device flag is not set.
      */
-    bool IsEndDeviceFlagSet(void) { return (mMask & kEndDeviceFlag) != 0; }
-
-    /**
-     * This method sets the Mask byte value.
-     *
-     * @param[in]  aMask  The Mask byte value.
-     *
-     */
-    void SetMask(uint8_t aMask) { mMask = aMask; }
-
-private:
-    uint8_t mMask;
-} OT_TOOL_PACKED_END;
+    static bool IsEndDeviceFlagSet(uint8_t aMask) { return (aMask & kEndDeviceFlag) != 0; }
+};
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Connectivity TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ConnectivityTlv: public Tlv
+class ConnectivityTlv : public Tlv, public TlvInfo<Tlv::kConnectivity>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kConnectivity); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kConnectivity);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -988,7 +749,20 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const
+    {
+        return IsSedBufferingIncluded() ||
+               (GetLength() == sizeof(*this) - sizeof(Tlv) - sizeof(mSedBufferSize) - sizeof(mSedDatagramCount));
+    }
+
+    /**
+     * This method indicates whether or not the sed buffer size and datagram count are included.
+     *
+     * @retval TRUE   If the sed buffer size and datagram count are included.
+     * @retval FALSE  If the sed buffer size and datagram count are not included.
+     *
+     */
+    bool IsSedBufferingIncluded(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
      * This method returns the Parent Priority value.
@@ -996,7 +770,10 @@ public:
      * @returns The Parent Priority value.
      *
      */
-    int8_t GetParentPriority(void) const { return (mParentPriority & kParentPriorityMask) >> kParentPriorityOffset; }
+    int8_t GetParentPriority(void) const
+    {
+        return (static_cast<int8_t>(mParentPriority & kParentPriorityMask)) >> kParentPriorityOffset;
+    }
 
     /**
      * This method sets the Parent Priority value.
@@ -1004,8 +781,9 @@ public:
      * @param[in] aParentPriority  The Parent Priority value.
      *
      */
-    void SetParentPriority(int8_t aParentPriority) {
-        mParentPriority = (aParentPriority << kParentPriorityOffset) & kParentPriorityMask;
+    void SetParentPriority(int8_t aParentPriority)
+    {
+        mParentPriority = (static_cast<uint8_t>(aParentPriority) << kParentPriorityOffset) & kParentPriorityMask;
     }
 
     /**
@@ -1110,7 +888,16 @@ public:
      * @returns The SED Buffer Size value.
      *
      */
-    uint16_t GetSedBufferSize(void) const { return HostSwap16(mSedBufferSize); }
+    uint16_t GetSedBufferSize(void) const
+    {
+        uint16_t buffersize = OPENTHREAD_CONFIG_DEFAULT_SED_BUFFER_SIZE;
+
+        if (IsSedBufferingIncluded())
+        {
+            buffersize = HostSwap16(mSedBufferSize);
+        }
+        return buffersize;
+    }
 
     /**
      * This method sets the SED Buffer Size value.
@@ -1126,7 +913,16 @@ public:
      * @returns The SED Datagram Count value.
      *
      */
-    uint8_t GetSedDatagramCount(void) const { return mSedDatagramCount; }
+    uint8_t GetSedDatagramCount(void) const
+    {
+        uint8_t count = OPENTHREAD_CONFIG_DEFAULT_SED_DATAGRAM_COUNT;
+
+        if (IsSedBufferingIncluded())
+        {
+            count = mSedDatagramCount;
+        }
+        return count;
+    }
 
     /**
      * This method sets the SED Datagram Count value.
@@ -1137,11 +933,8 @@ public:
     void SetSedDatagramCount(uint8_t aSedDatagramCount) { mSedDatagramCount = aSedDatagramCount; }
 
 private:
-    enum
-    {
-        kParentPriorityOffset = 6,
-        kParentPriorityMask = 3 << kParentPriorityOffset,
-    };
+    static constexpr uint8_t kParentPriorityOffset = 6;
+    static constexpr uint8_t kParentPriorityMask   = 3 << kParentPriorityOffset;
 
     uint8_t  mParentPriority;
     uint8_t  mLinkQuality3;
@@ -1152,144 +945,22 @@ private:
     uint8_t  mActiveRouters;
     uint16_t mSedBufferSize;
     uint8_t  mSedDatagramCount;
-}  OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class LinkMarginTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kLinkMargin); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Link Margin value.
-     *
-     * @returns The Link Margin value.
-     *
-     */
-    uint8_t GetLinkMargin(void) const { return mLinkMargin; }
-
-    /**
-     * This method sets the Link Margin value.
-     *
-     * @param[in]  aLinkMargin  The Link Margin value.
-     *
-     */
-    void SetLinkMargin(uint8_t aLinkMargin) { mLinkMargin = aLinkMargin; }
-
-private:
-    uint8_t mLinkMargin;
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class specifies Status TLV status values.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class StatusTlv: public Tlv
+struct StatusTlv : public UintTlvInfo<Tlv::kStatus, uint8_t>
 {
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kStatus); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
     /**
      * Status values.
      */
-    enum Status
+    enum Status : uint8_t
     {
-        kError = 1,   ///< Error.
+        kError = 1, ///< Error.
     };
-
-    /**
-     * This method returns the Status value.
-     *
-     * @returns The Status value.
-     *
-     */
-    Status GetStatus(void) const { return static_cast<Status>(mStatus); }
-
-    /**
-     * This method sets the Status value.
-     *
-     * @param[in]  aStatus  The Status value.
-     *
-     */
-    void SetStatus(Status aStatus) { mStatus = static_cast<uint8_t>(aStatus); }
-
-private:
-    uint8_t mStatus;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Source Address TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class VersionTlv: public Tlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kVersion); SetLength(sizeof(*this) - sizeof(Tlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-
-    /**
-     * This method returns the Version value.
-     *
-     * @returns The Version value.
-     *
-     */
-    uint16_t GetVersion(void) const { return HostSwap16(mVersion); }
-
-    /**
-     * This method sets the Version value.
-     *
-     * @param[in]  aVersion  The Version value.
-     *
-     */
-    void SetVersion(uint16_t aVersion) { mVersion = HostSwap16(aVersion); }
-
-private:
-    uint16_t mVersion;
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This class implements Source Address TLV generation and parsing.
@@ -1340,28 +1011,28 @@ public:
     void SetContextId(uint8_t aContextId) { mControl = kCompressed | aContextId; }
 
     /**
-     * This method returns a pointer to the IID value.
+     * This method returns the IID value.
      *
-     * @returns A pointer to the IID value.
+     * @returns The IID value.
      *
      */
-    const uint8_t *GetIid(void) const { return mIid; }
+    const Ip6::InterfaceIdentifier &GetIid(void) const { return mIid; }
 
     /**
      * This method sets the IID value.
      *
-     * @param[in]  aIid  A pointer to the IID value.
+     * @param[in]  aIid  The IID value.
      *
      */
-    void SetIid(const uint8_t *aIid) { memcpy(mIid, aIid, sizeof(mIid)); }
+    void SetIid(const Ip6::InterfaceIdentifier &aIid) { mIid = aIid; }
 
     /**
-     * This method returns a pointer to the IPv6 Address value.
+     * This method returns the IPv6 Address value.
      *
-     * @returns A pointer to the IPv6 Address value.
+     * @returns The IPv6 Address value.
      *
      */
-    const Ip6::Address *GetIp6Address(void) const { return &mIp6Address; }
+    const Ip6::Address &GetIp6Address(void) const { return mIp6Address; }
 
     /**
      * This method sets the IPv6 Address value.
@@ -1372,33 +1043,34 @@ public:
     void SetIp6Address(const Ip6::Address &aAddress) { mIp6Address = aAddress; }
 
 private:
-    enum
-    {
-        kCompressed = 1 << 7,
-        kCidMask = 0xf,
-    };
+    static constexpr uint8_t kCompressed = 1 << 7;
+    static constexpr uint8_t kCidMask    = 0xf;
 
     uint8_t mControl;
     union
     {
-        uint8_t mIid[Ip6::Address::kInterfaceIdentifierSize];
-        Ip6::Address mIp6Address;
+        Ip6::InterfaceIdentifier mIid;
+        Ip6::Address             mIp6Address;
     } OT_TOOL_PACKED_FIELD;
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Source Address TLV generation and parsing.
+ * This class implements Channel TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class AddressRegistrationTlv: public Tlv
+class ChannelTlv : public Tlv, public TlvInfo<Tlv::kChannel>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kAddressRegistration); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kChannel);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1407,52 +1079,198 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() <= sizeof(*this) - sizeof(Tlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
 
     /**
-     * This method returns a pointer to the i'th Address Entry.
+     * This method returns the Channel Page value.
      *
-     * @param[in]  aIndex  The index.
-     *
-     * @returns A pointer to the i'th Address Entry.
+     * @returns The Channel Page value.
      *
      */
-    const AddressRegistrationEntry *GetAddressEntry(uint8_t aIndex) const {
-        const AddressRegistrationEntry *entry = NULL;
-        const uint8_t *cur = reinterpret_cast<const uint8_t *>(mAddresses);
-        const uint8_t *end = cur + GetLength();
+    uint8_t GetChannelPage(void) const { return mChannelPage; }
 
-        while (cur < end) {
-            entry = reinterpret_cast<const AddressRegistrationEntry *>(cur);
+    /**
+     * This method sets the Channel Page value.
+     *
+     * @param[in]  aChannelPage  The Channel Page value.
+     *
+     */
+    void SetChannelPage(uint8_t aChannelPage) { mChannelPage = aChannelPage; }
 
-            if (aIndex == 0) {
-                break;
-            }
+    /**
+     * This method returns the Channel value.
+     *
+     * @returns The Channel value.
+     *
+     */
+    uint16_t GetChannel(void) const { return HostSwap16(mChannel); }
 
-            cur += entry->GetLength();
-            aIndex--;
-        }
-
-        return (cur < end) ? entry : NULL;
-    }
+    /**
+     * This method sets the Channel value.
+     *
+     * @param[in]  aChannel  The Channel value.
+     *
+     */
+    void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
 
 private:
-    AddressRegistrationEntry mAddresses[4];
+    uint8_t  mChannelPage;
+    uint16_t mChannel;
 } OT_TOOL_PACKED_END;
 
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
 /**
- * This class implements Channel TLV generation and parsing.
+ * This class defines Time Request TLV constants and types.
+ *
+ */
+typedef TlvInfo<Tlv::kTimeRequest> TimeRequestTlv;
+
+/**
+ * This class implements Time Parameter TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ChannelTlv: public Tlv
+class TimeParameterTlv : public Tlv, public TlvInfo<Tlv::kTimeParameter>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kChannel); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kTimeParameter);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method returns the time sync period.
+     *
+     * @returns The time sync period.
+     *
+     */
+    uint16_t GetTimeSyncPeriod(void) const { return HostSwap16(mTimeSyncPeriod); }
+
+    /**
+     * This method sets the time sync period.
+     *
+     * @param[in]  aTimeSyncPeriod  The time sync period.
+     *
+     */
+    void SetTimeSyncPeriod(uint16_t aTimeSyncPeriod) { mTimeSyncPeriod = HostSwap16(aTimeSyncPeriod); }
+
+    /**
+     * This method returns the XTAL accuracy threshold.
+     *
+     * @returns The XTAL accuracy threshold.
+     *
+     */
+    uint16_t GetXtalThreshold(void) const { return HostSwap16(mXtalThreshold); }
+
+    /**
+     * This method sets the XTAL accuracy threshold.
+     *
+     * @param[in]  aXTALThreshold  The XTAL accuracy threshold.
+     *
+     */
+    void SetXtalThreshold(uint16_t aXtalThreshold) { mXtalThreshold = HostSwap16(aXtalThreshold); }
+
+private:
+    uint16_t mTimeSyncPeriod;
+    uint16_t mXtalThreshold;
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+
+/**
+ * This class implements Active Timestamp TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class ActiveTimestampTlv : public Tlv,
+                           public MeshCoP::Timestamp,
+                           public SimpleTlvInfo<Tlv::kActiveTimestamp, MeshCoP::Timestamp>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(Tlv::kActiveTimestamp);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+        Timestamp::Init();
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class implements Pending Timestamp TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class PendingTimestampTlv : public Tlv,
+                            public MeshCoP::Timestamp,
+                            public SimpleTlvInfo<Tlv::kPendingTimestamp, MeshCoP::Timestamp>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(Tlv::kPendingTimestamp);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+        Timestamp::Init();
+    }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+} OT_TOOL_PACKED_END;
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
+/**
+ * This class implements CSL Channel TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class CslChannelTlv : public Tlv, public TlvInfo<Tlv::kCslChannel>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void)
+    {
+        SetType(kCslChannel);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -1496,117 +1314,76 @@ public:
     void SetChannel(uint16_t aChannel) { mChannel = HostSwap16(aChannel); }
 
 private:
-    uint8_t mChannelPage;
+    uint8_t  mChannelPage;
     uint16_t mChannel;
 } OT_TOOL_PACKED_END;
 
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE)
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**
- * This class implements PAN ID TLV generation and parsing.
+ * This class implements CSL Clock Accuracy TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PanIdTlv: public Tlv
+class CslClockAccuracyTlv : public Tlv, public TlvInfo<Tlv::kCslClockAccuracy>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kPanId); SetLength(sizeof(*this) - sizeof(Tlv)); }
+    void Init(void)
+    {
+        SetType(kCslClockAccuracy);
+        SetLength(sizeof(*this) - sizeof(Tlv));
+    }
 
     /**
-     * This method indicates whether or not the TLV appears to be well-formed.
+     * This method returns the CSL Clock Accuracy value.
      *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
+     * @returns The CSL Clock Accuracy value.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
+    uint8_t GetCslClockAccuracy(void) { return mCslClockAccuracy; }
 
     /**
-     * This method returns the PAN ID value.
+     * This method sets the CSL Clock Accuracy value.
      *
-     * @returns The PAN ID value.
+     * @param[in]  aCslClockAccuracy  The CSL Clock Accuracy value.
      *
      */
-    uint16_t GetPanId(void) const { return HostSwap16(mPanId); }
+    void SetCslClockAccuracy(uint8_t aCslClockAccuracy) { mCslClockAccuracy = aCslClockAccuracy; }
 
     /**
-     * This method sets the PAN ID value.
+     * This method returns the Clock Accuracy value.
      *
-     * @param[in]  aPanId  The PAN ID value.
+     * @returns The Clock Accuracy value.
      *
      */
-    void SetPanId(uint16_t aPanId) { mPanId = HostSwap16(aPanId); }
+    uint8_t GetCslUncertainty(void) { return mCslUncertainty; }
+
+    /**
+     * This method sets the CSL Uncertainty value.
+     *
+     * @param[in]  aCslUncertainty  The CSL Uncertainty value.
+     *
+     */
+    void SetCslUncertainty(uint8_t aCslUncertainty) { mCslUncertainty = aCslUncertainty; }
 
 private:
-    uint16_t mPanId;
+    uint8_t mCslClockAccuracy;
+    uint8_t mCslUncertainty;
 } OT_TOOL_PACKED_END;
 
-/**
- * This class implements Active Timestamp TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ActiveTimestampTlv : public Tlv, public MeshCoP::Timestamp
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) {
-        SetType(Mle::Tlv::kActiveTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Pending Timestamp TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class PendingTimestampTlv : public Tlv, public MeshCoP::Timestamp
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) {
-        SetType(Mle::Tlv::kPendingTimestamp);
-        SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
-    }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(Tlv); }
-} OT_TOOL_PACKED_END;
-
+#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_TRANSMITTER_ENABLE
 /**
  * @}
  *
  */
 
-}  // namespace Mle
+} // namespace Mle
 
+} // namespace ot
 
-}  // namespace Thread
-
-#endif  // MLE_TLVS_HPP_
+#endif // MLE_TLVS_HPP_

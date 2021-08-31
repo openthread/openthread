@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,75 +27,154 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
+import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_CHILD_ID_RESPONSE, MLE_DATA_REQUEST, MLE_DATA_RESPONSE, TLV_REQUEST_TLV, NETWORK_DATA_TLV, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
-ROUTER = 2
-REED = 3
+ROUTER1 = 2
+ROUTER2 = 3
+ROUTER3 = 4
+ROUTER15 = 16
+REED1 = 17
 
-class Cert_5_6_7_NetworkDataRequestREED(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,4):
-            self.nodes[i] = node.Node(i)
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[REED].set_panid(0xface)
-        self.nodes[REED].set_mode('rsdn')
-        self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[REED].enable_whitelist()
-        self.nodes[REED].set_router_upgrade_threshold(0)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+class Cert_5_6_7_NetworkDataRequestREED(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'LEADER',
+            'mode': 'rdn',
+            'allowlist': [ROUTER1, ROUTER2, ROUTER3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, ROUTER15]
+        },
+        ROUTER1: {
+            'name': 'ROUTER_1',
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        ROUTER2: {
+            'name': 'ROUTER_2',
+            'mode': 'rdn',
+            'allowlist': [LEADER, REED1]
+        },
+        ROUTER3: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        5: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        6: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        7: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        8: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        9: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        10: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        11: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        12: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        13: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        14: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        15: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        ROUTER15: {
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+        REED1: {
+            'name': 'REED',
+            'mode': 'rdn',
+            'allowlist': [ROUTER2]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(4)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+        for i in range(ROUTER1, ROUTER15 + 1):
+            self.nodes[i].start()
+            self.simulator.go(5)
+            self.assertEqual(self.nodes[i].get_state(), 'router')
 
-        self.nodes[REED].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[REED].get_state(), 'child')
+        self.nodes[REED1].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[REED1].get_state(), 'child')
 
-        self.nodes[LEADER].remove_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[REED].remove_whitelist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER2].remove_allowlist(self.nodes[REED1].get_addr64())
+        self.nodes[REED1].remove_allowlist(self.nodes[ROUTER2].get_addr64())
 
-        self.nodes[ROUTER].add_prefix('2001:2:0:3::/64', 'paros')
-        self.nodes[ROUTER].register_netdata()
+        self.nodes[LEADER].add_prefix('2001:2:0:3::/64', 'paros')
+        self.nodes[LEADER].register_netdata()
 
-        time.sleep(2)
+        # Set lowpan context of sniffer
+        self.simulator.set_lowpan_context(1, '2001:2:0:3::/64')
 
-        self.nodes[LEADER].add_whitelist(self.nodes[REED].get_addr64())
-        self.nodes[REED].add_whitelist(self.nodes[LEADER].get_addr64())
+        self.simulator.go(2)
 
-        time.sleep(10)
+        self.nodes[ROUTER2].add_allowlist(self.nodes[REED1].get_addr64())
+        self.nodes[REED1].add_allowlist(self.nodes[ROUTER2].get_addr64())
 
-        addrs = self.nodes[REED].get_addrs()
+        self.simulator.go(30)
+        self.simulator.go(600)
+
+        addrs = self.nodes[REED1].get_addrs()
         self.assertTrue(any('2001:2:0:3' in addr[0:10] for addr in addrs))
         for addr in addrs:
             if addr[0:10] == '2001:2:0:3':
                 self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        REED = pv.vars['REED']
+
+        # Step 4: Leader multicasts a MLE Data Response with the new information
+        _pkt = pkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).filter_wpan_dst64(REED).must_next()
+        pkts.filter_wpan_src64(LEADER).filter_mle_cmd(MLE_DATA_RESPONSE).must_next().must_verify(
+            lambda p: {NWD_PREFIX_TLV, NWD_BORDER_ROUTER_TLV, NWD_6LOWPAN_ID_TLV} <= set(p.thread_nwd.tlv.type))
+
+        # Step 8: REED1 MUST send a MLE Data Request to its parent to get the new Network Dataset.
+        # MLE Data Request includes a TLV Request TLV for Network Data TLV
+        pkts.filter_wpan_src64(REED).filter_mle_cmd(MLE_DATA_REQUEST).must_next().must_verify(
+            lambda p: {TLV_REQUEST_TLV, NETWORK_DATA_TLV} <= set(p.mle.tlv.type))
+
+        # Step 10: REED1 send MLE Advertisement
+        pkts.filter_wpan_src64(REED).filter_mle_cmd(MLE_ADVERTISEMENT).must_next().must_verify(
+            lambda p: p.mle.tlv.leader_data.data_version == (_pkt.mle.tlv.leader_data.data_version + 1) % 256)
+
 
 if __name__ == '__main__':
     unittest.main()

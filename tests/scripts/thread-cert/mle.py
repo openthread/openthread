@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -28,15 +28,15 @@
 #
 
 import io
-import ipaddress
+import logging
 import struct
 
 from binascii import hexlify
 
 import common
-import network_data
 
 from enum import IntEnum
+from tlvs_parsing import UnknownTlvFactory
 
 
 class CommandType(IntEnum):
@@ -58,6 +58,10 @@ class CommandType(IntEnum):
     ANNOUNCE = 15
     DISCOVERY_REQUEST = 16
     DISCOVERY_RESPONSE = 17
+    LINK_METRICS_MANAGEMENT_REQUEST = 18
+    LINK_METRICS_MANAGEMENT_RESPONSE = 19
+    LINK_PROBE = 20
+    TIME_SYNC = 99
 
 
 class TlvType(IntEnum):
@@ -86,6 +90,24 @@ class TlvType(IntEnum):
     ACTIVE_OPERATIONAL_DATASET = 24
     PENDING_OPERATIONAL_DATASET = 25
     THREAD_DISCOVERY = 26
+    CSL_CHANNEL = 80
+    CSL_SYNCHRONIZED_TIMEOUT = 85
+    CSL_CLOCK_ACCURACY = 86
+    LINK_METRICS_QUERY = 87
+    LINK_METRICS_MANAGEMENT = 88
+    LINK_METRICS_REPORT = 89
+    LINK_PROBE = 90
+    TIME_REQUEST = 252
+    TIME_PARAMETER = 253
+
+
+class LinkMetricsSubTlvType(IntEnum):
+    LINK_METRICS_REPORT = 0
+    LINK_METRICS_QUERY_ID = 1
+    LINK_METRICS_QUERY_OPTIONS = 2
+    FORWARD_PROBING_REGISTRATION = 3
+    LINK_METRICS_STATUS = 5
+    ENHANCED_ACK_LINK_METRICS_CONFIGURATION = 7
 
 
 class SourceAddress(object):
@@ -140,16 +162,12 @@ class Mode(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.receiver == other.receiver and \
-            self.secure == other.secure and \
-            self.device_type == other.device_type and \
-            self.network_data == other.network_data
+        return (self.receiver == other.receiver and self.secure == other.secure and
+                self.device_type == other.device_type and self.network_data == other.network_data)
 
     def __repr__(self):
-        return "Mode(receiver={}, secure={}, device_type={}, network_data={})".format(self.receiver,
-                                                                                      self.secure,
-                                                                                      self.device_type,
-                                                                                      self.network_data)
+        return "Mode(receiver={}, secure={}, device_type={}, network_data={})".format(
+            self.receiver, self.secure, self.device_type, self.network_data)
 
 
 class ModeFactory:
@@ -310,7 +328,7 @@ class LinkQualityAndRouteData(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.output == other.output and self.input == other.input and self.route == other.route
+        return (self.output == other.output and self.input == other.input and self.route == other.route)
 
     def __repr__(self):
         return "LinkQualityAndRouteData(ouput={}, input={}, route={})".format(self.output, self.input, self.route)
@@ -322,7 +340,7 @@ class LinkQualityAndRouteDataFactory:
         lqrd = ord(data.read(1))
         output = (lqrd >> 6) & 0x3
         _input = (lqrd >> 4) & 0x3
-        route = lqrd & 0x0f
+        route = lqrd & 0x0F
         return LinkQualityAndRouteData(output, _input, route)
 
 
@@ -348,9 +366,8 @@ class Route64(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.id_sequence == other.id_sequence and \
-            self.router_id_mask == other.router_id_mask and \
-            self.link_quality_and_route_data == other.link_quality_and_route_data
+        return (self.id_sequence == other.id_sequence and self.router_id_mask == other.router_id_mask and
+                self.link_quality_and_route_data == other.link_quality_and_route_data)
 
     def __repr__(self):
         lqrd_str = ", ".join(["{}".format(lqrd) for lqrd in self.link_quality_and_route_data])
@@ -402,7 +419,14 @@ class Address16Factory:
 
 class LeaderData(object):
 
-    def __init__(self, partition_id, weighting, data_version, stable_data_version, leader_router_id):
+    def __init__(
+        self,
+        partition_id,
+        weighting,
+        data_version,
+        stable_data_version,
+        leader_router_id,
+    ):
         self._partition_id = partition_id
         self._weighting = weighting
         self._data_version = data_version
@@ -432,15 +456,18 @@ class LeaderData(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.partition_id == other.partition_id and \
-            self.weighting == other.weighting and \
-            self.data_version == other.data_version and \
-            self.stable_data_version == other.stable_data_version and \
-            self.leader_router_id == other.leader_router_id
+        return (self.partition_id == other.partition_id and self.weighting == other.weighting and
+                self.data_version == other.data_version and self.stable_data_version == other.stable_data_version and
+                self.leader_router_id == other.leader_router_id)
 
     def __repr__(self):
-        return "LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={}, leader_router_id={})".format(
-            self.partition_id, self.weighting, self.data_version, self.stable_data_version, self.leader_router_id)
+        return 'LeaderData(partition_id={}, weighting={}, data_version={}, stable_data_version={},leader_router_id={}'.format(
+            self.partition_id,
+            self.weighting,
+            self.data_version,
+            self.stable_data_version,
+            self.leader_router_id,
+        )
 
 
 class LeaderDataFactory:
@@ -451,7 +478,13 @@ class LeaderDataFactory:
         data_version = ord(data.read(1))
         stable_data_version = ord(data.read(1))
         leader_router_id = ord(data.read(1))
-        return LeaderData(partition_id, weighting, data_version, stable_data_version, leader_router_id)
+        return LeaderData(
+            partition_id,
+            weighting,
+            data_version,
+            stable_data_version,
+            leader_router_id,
+        )
 
 
 class NetworkData(object):
@@ -526,7 +559,7 @@ class ScanMask(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.router == other.router and self.end_device == other.end_device
+        return (self.router == other.router and self.end_device == other.end_device)
 
     def __repr__(self):
         return "ScanMask(router={}, end_device={})".format(self.router, self.end_device)
@@ -543,17 +576,19 @@ class ScanMaskFactory:
 
 class Connectivity(object):
 
-    def __init__(self,
-                 pp,
-                 link_quality_3,
-                 link_quality_2,
-                 link_quality_1,
-                 leader_cost,
-                 id_sequence,
-                 active_routers,
-                 sed_buffer_size=None,
-                 sed_datagram_count=None):
-        self._pp = pp
+    def __init__(
+        self,
+        pp_byte,
+        link_quality_3,
+        link_quality_2,
+        link_quality_1,
+        leader_cost,
+        id_sequence,
+        active_routers,
+        sed_buffer_size=None,
+        sed_datagram_count=None,
+    ):
+        self._pp_byte = pp_byte
         self._link_quality_3 = link_quality_3
         self._link_quality_2 = link_quality_2
         self._link_quality_1 = link_quality_1
@@ -564,8 +599,12 @@ class Connectivity(object):
         self._sed_datagram_count = sed_datagram_count
 
     @property
+    def pp_byte(self):
+        return self._pp_byte
+
+    @property
     def pp(self):
-        return self._pp
+        return common.map_pp(self._pp_byte)
 
     @property
     def link_quality_3(self):
@@ -602,15 +641,11 @@ class Connectivity(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.pp == other.pp and \
-            self.link_quality_3 == other.link_quality_3 and \
-            self.link_quality_2 == other.link_quality_2 and \
-            self.link_quality_1 == other.link_quality_1 and \
-            self.leader_cost == other.leader_cost and \
-            self.id_sequence == other.id_sequence and \
-            self.active_routers == other.active_routers and \
-            self.sed_buffer_size == other.sed_buffer_size and \
-            self.sed_datagram_count == other.sed_datagram_count
+        return (self.pp == other.pp and self.link_quality_3 == other.link_quality_3 and
+                self.link_quality_2 == other.link_quality_2 and self.link_quality_1 == other.link_quality_1 and
+                self.leader_cost == other.leader_cost and self.id_sequence == other.id_sequence and
+                self.active_routers == other.active_routers and self.sed_buffer_size == other.sed_buffer_size and
+                self.sed_datagram_count == other.sed_datagram_count)
 
     def __repr__(self):
         return r"Connectivity(pp={}, \
@@ -630,14 +665,14 @@ class Connectivity(object):
             self.id_sequence,
             self.active_routers,
             self.sed_buffer_size,
-            self.sed_datagram_count
+            self.sed_datagram_count,
         )
 
 
 class ConnectivityFactory:
 
     def parse(self, data, message_info):
-        pp = ord(data.read(1)) & 0x03
+        pp_byte = ord(data.read(1))
         link_quality_3 = ord(data.read(1))
         link_quality_2 = ord(data.read(1))
         link_quality_1 = ord(data.read(1))
@@ -654,15 +689,17 @@ class ConnectivityFactory:
             sed_buffer_size = None
             sed_datagram_count = None
 
-        return Connectivity(pp,
-                            link_quality_3,
-                            link_quality_2,
-                            link_quality_1,
-                            leader_cost,
-                            id_sequence,
-                            active_routers,
-                            sed_buffer_size,
-                            sed_datagram_count)
+        return Connectivity(
+            pp_byte,
+            link_quality_3,
+            link_quality_2,
+            link_quality_1,
+            leader_cost,
+            id_sequence,
+            active_routers,
+            sed_buffer_size,
+            sed_datagram_count,
+        )
 
 
 class LinkMargin(object):
@@ -792,7 +829,7 @@ class AddressCompressed(object):
 class AddressCompressedFactory:
 
     def parse(self, data, message_info):
-        cid = (ord(data.read(1)) & 0x0F)
+        cid = ord(data.read(1)) & 0x0F
         iid = bytearray(data.read(8))
         return AddressCompressed(cid, iid)
 
@@ -854,11 +891,10 @@ class Channel(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.channel_page == other.channel_page and \
-            self.channel == other.channel
+        return (self.channel_page == other.channel_page and self.channel == other.channel)
 
     def __repr__(self):
-        return "Channel(channel_page={}, channel={})".format(self.channel_page, channel)
+        return "Channel(channel_page={}, channel={})".format(self.channel_page, self.channel)
 
 
 class ChannelFactory:
@@ -916,9 +952,8 @@ class ActiveTimestamp(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.timestamp_seconds == other.timestamp_seconds and \
-            self.timestamp_ticks == other.timestamp_ticks and \
-            self.u == other.u
+        return (self.timestamp_seconds == other.timestamp_seconds and self.timestamp_ticks == other.timestamp_ticks and
+                self.u == other.u)
 
     def __repr__(self):
         return "ActiveTimestamp(timestamp_seconds={}, timestamp_ticks={}, u={})".format(
@@ -932,7 +967,7 @@ class ActiveTimestampFactory:
         ticks = struct.unpack(">H", data.read(2))[0]
 
         timestamp_seconds = struct.unpack(">Q", bytes(seconds))[0]
-        timestamp_ticks = (ticks >> 1)
+        timestamp_ticks = ticks >> 1
         u = ticks & 0x01
         return ActiveTimestamp(timestamp_seconds, timestamp_ticks, u)
 
@@ -959,9 +994,8 @@ class PendingTimestamp(object):
     def __eq__(self, other):
         common.expect_the_same_class(self, other)
 
-        return self.timestamp_seconds == other.timestamp_seconds and \
-            self.timestamp_ticks == other.timestamp_ticks and \
-            self.u == other.u
+        return (self.timestamp_seconds == other.timestamp_seconds and self.timestamp_ticks == other.timestamp_ticks and
+                self.u == other.u)
 
     def __repr__(self):
         return "PendingTimestamp(timestamp_seconds={}, timestamp_ticks={}, u={})".format(
@@ -975,7 +1009,7 @@ class PendingTimestampFactory:
         ticks = struct.unpack(">H", data.read(2))[0]
 
         timestamp_seconds = struct.unpack(">Q", bytes(seconds))[0]
-        timestamp_ticks = (ticks >> 1)
+        timestamp_ticks = ticks >> 1
         u = ticks & 0x01
         return PendingTimestamp(timestamp_seconds, timestamp_ticks, u)
 
@@ -1006,17 +1040,148 @@ class PendingOperationalDatasetFactory:
         return PendingOperationalDataset()
 
 
-class ThreadDiscovery:
-    # TODO: Not implemented yet
+class ThreadDiscovery(object):
 
-    def __init__(self):
-        print("ThreadDiscovery is not implemented yet.")
+    def __init__(self, tlvs):
+        self._tlvs = tlvs
+
+    @property
+    def tlvs(self):
+        return self._tlvs
+
+    def __eq__(self, other):
+        return self.tlvs == other.tlvs
+
+    def __repr__(self):
+        return "ThreadDiscovery(tlvs={})".format(self.tlvs)
 
 
 class ThreadDiscoveryFactory:
 
+    def __init__(self, thread_discovery_tlvs_factory):
+        self._tlvs_factory = thread_discovery_tlvs_factory
+
     def parse(self, data, message_info):
-        return ThreadDiscovery()
+        tlvs = self._tlvs_factory.parse(data, message_info)
+        return ThreadDiscovery(tlvs)
+
+
+class CslChannel:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("CslChannel is not implemented yet.")
+
+
+class CslChannelFactory:
+    # TODO: Not implemented yet
+
+    def parse(self, data, message_info):
+        return CslChannel()
+
+
+class CslSynchronizedTimeout:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("CslSynchronizedTimeout is not implemented yet.")
+
+
+class CslSynchronizedTimeoutFactory:
+
+    def parse(self, data, message_info):
+        return CslSynchronizedTimeout()
+
+
+class CslClockAccuracy:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("CslClockAccuracy is not implemented yet.")
+
+
+class CslClockAccuracyFactory:
+
+    def parse(self, data, message_info):
+        return CslClockAccuracy()
+
+
+class TimeRequest:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("TimeRequest is not implemented yet.")
+
+
+class TimeRequestFactory:
+
+    def parse(self, data, message_info):
+        return TimeRequest()
+
+
+class TimeParameter:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("TimeParameter is not implemented yet.")
+
+
+class TimeParameterFactory:
+
+    def parse(self, data, message_info):
+        return TimeParameter()
+
+
+class LinkMetricsQuery:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsQuery is not implemented yet.")
+
+
+class LinkMetricsQueryFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsQuery()
+
+
+class LinkMetricsManagement:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsManagement is not implemented yet.")
+
+
+class LinkMetricsManagementFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsManagement()
+
+
+class LinkMetricsReport:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkMetricsReport is not implemented yet.")
+
+
+class LinkMetricsReportFactory:
+
+    def parse(self, data, message_info):
+        return LinkMetricsReport()
+
+
+class LinkProbe:
+    # TODO: Not implemented yet
+
+    def __init__(self):
+        print("LinkProbe is not implemented yet.")
+
+
+class LinkProbeFactory:
+
+    def parse(self, data, message_info):
+        return LinkProbe()
 
 
 class MleCommand(object):
@@ -1057,7 +1222,8 @@ class MleCommandFactory:
         try:
             return self._tlvs_factories[_type]
         except KeyError:
-            raise KeyError("Could not find TLV factory. Unsupported TLV type: {}".format(_type))
+            logging.error('Could not find TLV factory. Unsupported TLV type: {}'.format(_type))
+            return UnknownTlvFactory(_type)
 
     def _parse_tlv(self, data, message_info):
         _type = TlvType(ord(data.read(1)))
@@ -1108,8 +1274,8 @@ class MleMessageSecured(MleMessage):
         return self._mic
 
     def __repr__(self):
-        return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(
-            self.aux_sec_hdr, self.command, hexlify(self.mic))
+        return "MleMessageSecured(aux_sec_hdr={}, command={}, mic=\"{}\")".format(self.aux_sec_hdr, self.command,
+                                                                                  hexlify(self.mic))
 
 
 class MleMessageFactory:

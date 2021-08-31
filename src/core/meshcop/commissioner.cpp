@@ -31,265 +31,583 @@
  *   This file implements a Commissioner role.
  */
 
-#define WPP_NAME "commissioner.tmh"
+#include "commissioner.hpp"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
 #include <stdio.h>
-#include <string.h>
 
-#include <coap/coap_header.hpp>
-#include <common/crc16.hpp>
-#include <common/encoding.hpp>
-#include <common/logging.hpp>
-#include <meshcop/commissioner.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/tlvs.hpp>
-#include <platform/random.h>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
+#include "coap/coap_message.hpp"
+#include "common/encoding.hpp"
+#include "common/instance.hpp"
+#include "common/locator_getters.hpp"
+#include "common/logging.hpp"
+#include "common/string.hpp"
+#include "meshcop/joiner.hpp"
+#include "meshcop/joiner_router.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/uri_paths.hpp"
 
-using Thread::Encoding::BigEndian::HostSwap64;
-
-namespace Thread {
+namespace ot {
 namespace MeshCoP {
 
-Commissioner::Commissioner(ThreadNetif &aThreadNetif):
-    mAnnounceBegin(aThreadNetif),
-    mEnergyScan(aThreadNetif),
-    mPanIdQuery(aThreadNetif),
-    mState(kStateDisabled),
-    mJoinerPort(0),
-    mJoinerRloc(0),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, HandleTimer, this),
-    mSessionId(0),
-    mTransmitAttempts(0),
-    mSendKek(false),
-    mRelayReceive(OPENTHREAD_URI_RELAY_RX, &Commissioner::HandleRelayReceive, this),
-    mDatasetChanged(OPENTHREAD_URI_DATASET_CHANGED, &Commissioner::HandleDatasetChanged, this),
-    mJoinerFinalize(OPENTHREAD_URI_JOINER_FINALIZE, &Commissioner::HandleJoinerFinalize, this),
-    mNetif(aThreadNetif)
+Commissioner::Commissioner(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mActiveJoiner(nullptr)
+    , mJoinerPort(0)
+    , mJoinerRloc(0)
+    , mSessionId(0)
+    , mTransmitAttempts(0)
+    , mJoinerExpirationTimer(aInstance, HandleJoinerExpirationTimer)
+    , mTimer(aInstance, HandleTimer)
+    , mRelayReceive(UriPath::kRelayRx, &Commissioner::HandleRelayReceive, this)
+    , mDatasetChanged(UriPath::kDatasetChanged, &Commissioner::HandleDatasetChanged, this)
+    , mJoinerFinalize(UriPath::kJoinerFinalize, &Commissioner::HandleJoinerFinalize, this)
+    , mAnnounceBegin(aInstance)
+    , mEnergyScan(aInstance)
+    , mPanIdQuery(aInstance)
+    , mState(kStateDisabled)
+    , mStateCallback(nullptr)
+    , mJoinerCallback(nullptr)
+    , mCallbackContext(nullptr)
 {
-    memset(mJoiners, 0, sizeof(mJoiners));
-    mNetif.GetCoapServer().AddResource(mRelayReceive);
-    mNetif.GetCoapServer().AddResource(mDatasetChanged);
-    mNetif.GetSecureCoapServer().AddResource(mJoinerFinalize);
+    memset(reinterpret_cast<void *>(mJoiners), 0, sizeof(mJoiners));
+
+    mCommissionerAloc.Clear();
+    mCommissionerAloc.mPrefixLength       = 64;
+    mCommissionerAloc.mPreferred          = true;
+    mCommissionerAloc.mValid              = true;
+    mCommissionerAloc.mScopeOverride      = Ip6::Address::kRealmLocalScope;
+    mCommissionerAloc.mScopeOverrideValid = true;
+
+    mProvisioningUrl[0] = '\0';
 }
 
-ThreadError Commissioner::Start(void)
+void Commissioner::SetState(State aState)
 {
-    ThreadError error = kThreadError_None;
+    State oldState = mState;
 
-    otLogFuncEntry();
-    VerifyOrExit(mState == kStateDisabled, error = kThreadError_InvalidState);
+    OT_UNUSED_VARIABLE(oldState);
 
-    SuccessOrExit(error = mNetif.GetSecureCoapServer().Start(SendRelayTransmit, this));
+    SuccessOrExit(Get<Notifier>().Update(mState, aState, kEventCommissionerStateChanged));
 
-    mState = kStatePetition;
-    mTransmitAttempts = 0;
-    mSendKek = false;
+    otLogInfoMeshCoP("CommissionerState: %s -> %s", StateToString(oldState), StateToString(aState));
 
-    SendPetition();
+    if (mStateCallback)
+    {
+        mStateCallback(static_cast<otCommissionerState>(mState), mCallbackContext);
+    }
 
 exit:
-    otLogFuncExitErr(error);
+    return;
+}
+
+void Commissioner::SignalJoinerEvent(JoinerEvent aEvent, const Joiner *aJoiner) const
+{
+    otJoinerInfo    joinerInfo;
+    Mac::ExtAddress joinerId;
+    bool            noJoinerId = false;
+
+    VerifyOrExit((mJoinerCallback != nullptr) && (aJoiner != nullptr));
+
+    aJoiner->CopyToJoinerInfo(joinerInfo);
+
+    if (aJoiner->mType == Joiner::kTypeEui64)
+    {
+        ComputeJoinerId(aJoiner->mSharedId.mEui64, joinerId);
+    }
+    else if (aJoiner == mActiveJoiner)
+    {
+        mJoinerIid.ConvertToExtAddress(joinerId);
+    }
+    else
+    {
+        noJoinerId = true;
+    }
+
+    mJoinerCallback(static_cast<otCommissionerJoinerEvent>(aEvent), &joinerInfo, noJoinerId ? nullptr : &joinerId,
+                    mCallbackContext);
+
+exit:
+    return;
+}
+
+void Commissioner::AddCoapResources(void)
+{
+    Get<Tmf::Agent>().AddResource(mRelayReceive);
+    Get<Tmf::Agent>().AddResource(mDatasetChanged);
+    Get<Coap::CoapSecure>().AddResource(mJoinerFinalize);
+}
+
+void Commissioner::RemoveCoapResources(void)
+{
+    Get<Tmf::Agent>().RemoveResource(mRelayReceive);
+    Get<Tmf::Agent>().RemoveResource(mDatasetChanged);
+    Get<Coap::CoapSecure>().RemoveResource(mJoinerFinalize);
+}
+
+void Commissioner::HandleCoapsConnected(bool aConnected, void *aContext)
+{
+    static_cast<Commissioner *>(aContext)->HandleCoapsConnected(aConnected);
+}
+
+void Commissioner::HandleCoapsConnected(bool aConnected)
+{
+    SignalJoinerEvent(aConnected ? kJoinerEventConnected : kJoinerEventEnd, mActiveJoiner);
+}
+
+Commissioner::Joiner *Commissioner::GetUnusedJoinerEntry(void)
+{
+    Joiner *rval = nullptr;
+
+    for (Joiner &joiner : mJoiners)
+    {
+        if (joiner.mType == Joiner::kTypeUnused)
+        {
+            rval = &joiner;
+            break;
+        }
+    }
+
+    return rval;
+}
+
+Commissioner::Joiner *Commissioner::FindJoinerEntry(const Mac::ExtAddress *aEui64)
+{
+    Joiner *rval = nullptr;
+
+    for (Joiner &joiner : mJoiners)
+    {
+        switch (joiner.mType)
+        {
+        case Joiner::kTypeUnused:
+        case Joiner::kTypeDiscerner:
+            break;
+
+        case Joiner::kTypeAny:
+            if (aEui64 == nullptr)
+            {
+                ExitNow(rval = &joiner);
+            }
+            break;
+
+        case Joiner::kTypeEui64:
+            if ((aEui64 != nullptr) && (joiner.mSharedId.mEui64 == *aEui64))
+            {
+                ExitNow(rval = &joiner);
+            }
+            break;
+        }
+    }
+
+exit:
+    return rval;
+}
+
+Commissioner::Joiner *Commissioner::FindJoinerEntry(const JoinerDiscerner &aDiscerner)
+{
+    Joiner *rval = nullptr;
+
+    for (Joiner &joiner : mJoiners)
+    {
+        if ((joiner.mType == Joiner::kTypeDiscerner) && (aDiscerner == joiner.mSharedId.mDiscerner))
+        {
+            rval = &joiner;
+            break;
+        }
+    }
+
+    return rval;
+}
+
+Commissioner::Joiner *Commissioner::FindBestMatchingJoinerEntry(const Mac::ExtAddress &aReceivedJoinerId)
+{
+    Joiner *        best = nullptr;
+    Mac::ExtAddress joinerId;
+
+    // Prefer a full Joiner ID match, if not found use the entry
+    // accepting any joiner.
+
+    for (Joiner &joiner : mJoiners)
+    {
+        switch (joiner.mType)
+        {
+        case Joiner::kTypeUnused:
+            break;
+
+        case Joiner::kTypeAny:
+            if (best == nullptr)
+            {
+                best = &joiner;
+            }
+            break;
+
+        case Joiner::kTypeEui64:
+            ComputeJoinerId(joiner.mSharedId.mEui64, joinerId);
+            if (joinerId == aReceivedJoinerId)
+            {
+                ExitNow(best = &joiner);
+            }
+            break;
+
+        case Joiner::kTypeDiscerner:
+            if (joiner.mSharedId.mDiscerner.Matches(aReceivedJoinerId))
+            {
+                if ((best == nullptr) ||
+                    ((best->mType == Joiner::kTypeDiscerner) &&
+                     (best->mSharedId.mDiscerner.GetLength() < joiner.mSharedId.mDiscerner.GetLength())))
+                {
+                    best = &joiner;
+                }
+            }
+            break;
+        }
+    }
+
+exit:
+    return best;
+}
+
+void Commissioner::RemoveJoinerEntry(Commissioner::Joiner &aJoiner)
+{
+    // Create a copy of `aJoiner` to use for signaling joiner event
+    // and logging after the entry is removed. This ensures the joiner
+    // event callback is invoked after all states are cleared.
+
+    Joiner joinerCopy = aJoiner;
+
+    aJoiner.mType = Joiner::kTypeUnused;
+
+    if (&aJoiner == mActiveJoiner)
+    {
+        mActiveJoiner = nullptr;
+    }
+
+    UpdateJoinerExpirationTimer();
+
+    SendCommissionerSet();
+
+    LogJoinerEntry("Removed", joinerCopy);
+    SignalJoinerEvent(kJoinerEventRemoved, &joinerCopy);
+}
+
+Error Commissioner::Start(otCommissionerStateCallback  aStateCallback,
+                          otCommissionerJoinerCallback aJoinerCallback,
+                          void *                       aCallbackContext)
+{
+    Error error = kErrorNone;
+
+    VerifyOrExit(Get<Mle::MleRouter>().IsAttached(), error = kErrorInvalidState);
+    VerifyOrExit(mState == kStateDisabled, error = kErrorAlready);
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().Stop();
+#endif
+
+    SuccessOrExit(error = Get<Coap::CoapSecure>().Start(SendRelayTransmit, this));
+    Get<Coap::CoapSecure>().SetConnectedCallback(&Commissioner::HandleCoapsConnected, this);
+
+    mStateCallback    = aStateCallback;
+    mJoinerCallback   = aJoinerCallback;
+    mCallbackContext  = aCallbackContext;
+    mTransmitAttempts = 0;
+
+    SuccessOrExit(error = SendPetition());
+    SetState(kStatePetition);
+
+exit:
+    if ((error != kErrorNone) && (error != kErrorAlready))
+    {
+        Get<Coap::CoapSecure>().Stop();
+    }
+
+    LogError("start commissioner", error);
     return error;
 }
 
-ThreadError Commissioner::Stop(void)
+Error Commissioner::Stop(bool aResign)
 {
-    ThreadError error = kThreadError_None;
+    Error error      = kErrorNone;
+    bool  needResign = false;
 
-    otLogFuncEntry();
-    VerifyOrExit(mState != kStateDisabled, error = kThreadError_InvalidState);
+    VerifyOrExit(mState != kStateDisabled, error = kErrorAlready);
 
-    mNetif.GetSecureCoapServer().Stop();
+    Get<Coap::CoapSecure>().Stop();
 
-    mState = kStateDisabled;
-    mTransmitAttempts = 0;
-    mSendKek = false;
+    if (mState == kStateActive)
+    {
+        Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+        RemoveCoapResources();
+        ClearJoiners();
+        needResign = true;
+    }
+    else if (mState == kStatePetition)
+    {
+        mTransmitAttempts = 0;
+    }
 
     mTimer.Stop();
 
-    mNetif.GetDtls().Stop();
+    SetState(kStateDisabled);
 
-    SendKeepAlive();
+    if (needResign && aResign)
+    {
+        SendKeepAlive();
+    }
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    Get<MeshCoP::BorderAgent>().Start();
+#endif
 
 exit:
-    otLogFuncExitErr(error);
+    LogError("stop commissioner", error);
     return error;
 }
 
-ThreadError Commissioner::SendCommissionerSet(void)
+void Commissioner::ComputeBloomFilter(SteeringData &aSteeringData) const
 {
-    ThreadError error;
-    otCommissioningDataset dataset;
-    SteeringDataTlv steeringData;
+    Mac::ExtAddress joinerId;
 
-    otLogFuncEntry();
-    VerifyOrExit(mState == kStateActive, error = kThreadError_InvalidState);
+    aSteeringData.Init();
+
+    for (const Joiner &joiner : mJoiners)
+    {
+        switch (joiner.mType)
+        {
+        case Joiner::kTypeUnused:
+            break;
+
+        case Joiner::kTypeEui64:
+            ComputeJoinerId(joiner.mSharedId.mEui64, joinerId);
+            aSteeringData.UpdateBloomFilter(joinerId);
+            break;
+
+        case Joiner::kTypeDiscerner:
+            aSteeringData.UpdateBloomFilter(joiner.mSharedId.mDiscerner);
+            break;
+
+        case Joiner::kTypeAny:
+            aSteeringData.SetToPermitAllJoiners();
+            ExitNow();
+        }
+    }
+
+exit:
+    return;
+}
+
+void Commissioner::SendCommissionerSet(void)
+{
+    Error                  error = kErrorNone;
+    otCommissioningDataset dataset;
+
+    VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
     memset(&dataset, 0, sizeof(dataset));
 
-    // session id
-    dataset.mSessionId = mSessionId;
+    dataset.mSessionId      = mSessionId;
     dataset.mIsSessionIdSet = true;
 
-    // compute bloom filter
-    steeringData.Init();
-    steeringData.Clear();
-
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
-    {
-        Crc16 ccitt(Crc16::kCcitt);
-        Crc16 ansi(Crc16::kAnsi);
-
-        if (!mJoiners[i].mValid)
-        {
-            continue;
-        }
-
-        if (mJoiners[i].mAny)
-        {
-            steeringData.SetLength(1);
-            steeringData.Set();
-            break;
-        }
-
-        for (size_t j = 0; j < sizeof(mJoiners[i].mExtAddress.m8); j++)
-        {
-            uint8_t byte = mJoiners[i].mExtAddress.m8[j];
-            ccitt.Update(byte);
-            ansi.Update(byte);
-        }
-
-        steeringData.SetBit(ccitt.Get() % steeringData.GetNumBits());
-        steeringData.SetBit(ansi.Get() % steeringData.GetNumBits());
-    }
-
-    // set bloom filter
-    memcpy(dataset.mSteeringData.m8, steeringData.GetValue(), steeringData.GetLength());
-    dataset.mSteeringData.mLength = steeringData.GetLength();
+    ComputeBloomFilter(static_cast<SteeringData &>(dataset.mSteeringData));
     dataset.mIsSteeringDataSet = true;
 
-    SuccessOrExit(error = SendMgmtCommissionerSetRequest(dataset, NULL, 0));
+    error = SendMgmtCommissionerSetRequest(dataset, nullptr, 0);
 
 exit:
-    otLogFuncExitErr(error);
-    return error;
+    LogError("send MGMT_COMMISSIONER_SET.req", error);
 }
 
 void Commissioner::ClearJoiners(void)
 {
-    otLogFuncEntry();
-
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    for (Joiner &joiner : mJoiners)
     {
-        mJoiners[i].mValid = false;
+        joiner.mType = Joiner::kTypeUnused;
     }
 
     SendCommissionerSet();
-    otLogFuncExit();
 }
 
-ThreadError Commissioner::AddJoiner(const Mac::ExtAddress *aExtAddress, const char *aPSKd)
+Error Commissioner::AddJoiner(const Mac::ExtAddress *aEui64,
+                              const JoinerDiscerner *aDiscerner,
+                              const char *           aPskd,
+                              uint32_t               aTimeout)
 {
-    ThreadError error = kThreadError_NoBufs;
+    Error   error = kErrorNone;
+    Joiner *joiner;
 
-    otLogFuncEntryMsg("%llX, %s", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0), aPSKd);
-    VerifyOrExit(strlen(aPSKd) <= Dtls::kPskMaxLength, error = kThreadError_InvalidArgs);
-    RemoveJoiner(aExtAddress);
+    VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    if (aDiscerner != nullptr)
     {
-        if (mJoiners[i].mValid)
-        {
-            continue;
-        }
-
-        if (aExtAddress != NULL)
-        {
-            mJoiners[i].mExtAddress = *aExtAddress;
-            mJoiners[i].mAny = false;
-        }
-        else
-        {
-            mJoiners[i].mAny = true;
-        }
-
-        strncpy(mJoiners[i].mPsk, aPSKd, sizeof(mJoiners[i].mPsk) - 1);
-        mJoiners[i].mValid = true;
-
-        SendCommissionerSet();
-
-        ExitNow(error = kThreadError_None);
+        VerifyOrExit(aDiscerner->IsValid(), error = kErrorInvalidArgs);
+        joiner = FindJoinerEntry(*aDiscerner);
+    }
+    else
+    {
+        joiner = FindJoinerEntry(aEui64);
     }
 
+    if (joiner == nullptr)
+    {
+        joiner = GetUnusedJoinerEntry();
+    }
+
+    VerifyOrExit(joiner != nullptr, error = kErrorNoBufs);
+
+    SuccessOrExit(error = joiner->mPskd.SetFrom(aPskd));
+
+    if (aDiscerner != nullptr)
+    {
+        joiner->mType                = Joiner::kTypeDiscerner;
+        joiner->mSharedId.mDiscerner = *aDiscerner;
+    }
+    else if (aEui64 != nullptr)
+    {
+        joiner->mType            = Joiner::kTypeEui64;
+        joiner->mSharedId.mEui64 = *aEui64;
+    }
+    else
+    {
+        joiner->mType = Joiner::kTypeAny;
+    }
+
+    joiner->mExpirationTime = TimerMilli::GetNow() + Time::SecToMsec(aTimeout);
+
+    UpdateJoinerExpirationTimer();
+
+    SendCommissionerSet();
+
+    LogJoinerEntry("Added", *joiner);
+
 exit:
-    otLogFuncExitErr(error);
     return error;
 }
 
-ThreadError Commissioner::RemoveJoiner(const Mac::ExtAddress *aExtAddress)
+void Commissioner::Joiner::CopyToJoinerInfo(otJoinerInfo &aJoiner) const
 {
-    ThreadError error = kThreadError_NotFound;
+    memset(&aJoiner, 0, sizeof(aJoiner));
 
-    otLogFuncEntryMsg("%llX", (aExtAddress ? HostSwap64(*reinterpret_cast<const uint64_t *>(aExtAddress)) : 0));
-
-    for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
+    switch (mType)
     {
-        if (!mJoiners[i].mValid)
-        {
-            continue;
-        }
+    case kTypeAny:
+        aJoiner.mType = OT_JOINER_INFO_TYPE_ANY;
+        break;
 
-        if (aExtAddress != NULL)
-        {
-            if (memcmp(&mJoiners[i].mExtAddress, &aExtAddress, sizeof(mJoiners[i].mExtAddress)))
-            {
-                continue;
-            }
-        }
-        else if (!mJoiners[i].mAny)
-        {
-            continue;
-        }
+    case kTypeEui64:
+        aJoiner.mType            = OT_JOINER_INFO_TYPE_EUI64;
+        aJoiner.mSharedId.mEui64 = mSharedId.mEui64;
+        break;
 
-        mJoiners[i].mValid = false;
+    case kTypeDiscerner:
+        aJoiner.mType                = OT_JOINER_INFO_TYPE_DISCERNER;
+        aJoiner.mSharedId.mDiscerner = mSharedId.mDiscerner;
+        break;
 
-        SendCommissionerSet();
-
-        ExitNow(error = kThreadError_None);
+    case kTypeUnused:
+        ExitNow();
     }
 
+    aJoiner.mPskd           = mPskd;
+    aJoiner.mExpirationTime = mExpirationTime - TimerMilli::GetNow();
+
 exit:
-    otLogFuncExitErr(error);
+    return;
+}
+
+Error Commissioner::GetNextJoinerInfo(uint16_t &aIterator, otJoinerInfo &aJoinerInfo) const
+{
+    Error error = kErrorNone;
+
+    while (aIterator < OT_ARRAY_LENGTH(mJoiners))
+    {
+        const Joiner &joiner = mJoiners[aIterator++];
+
+        if (joiner.mType != Joiner::kTypeUnused)
+        {
+            joiner.CopyToJoinerInfo(aJoinerInfo);
+            ExitNow();
+        }
+    }
+
+    error = kErrorNotFound;
+
+exit:
     return error;
 }
 
-ThreadError Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
+Error Commissioner::RemoveJoiner(const Mac::ExtAddress *aEui64, const JoinerDiscerner *aDiscerner, uint32_t aDelay)
 {
-    return mNetif.GetDtls().mProvisioningUrl.SetProvisioningUrl(aProvisioningUrl);
+    Error   error = kErrorNone;
+    Joiner *joiner;
+
+    VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
+
+    if (aDiscerner != nullptr)
+    {
+        VerifyOrExit(aDiscerner->IsValid(), error = kErrorInvalidArgs);
+        joiner = FindJoinerEntry(*aDiscerner);
+    }
+    else
+    {
+        joiner = FindJoinerEntry(aEui64);
+    }
+
+    VerifyOrExit(joiner != nullptr, error = kErrorNotFound);
+
+    RemoveJoiner(*joiner, aDelay);
+
+exit:
+    return error;
 }
 
-uint16_t Commissioner::GetSessionId(void) const
+void Commissioner::RemoveJoiner(Joiner &aJoiner, uint32_t aDelay)
 {
-    return mSessionId;
+    if (aDelay > 0)
+    {
+        TimeMilli newExpirationTime = TimerMilli::GetNow() + Time::SecToMsec(aDelay);
+
+        if (aJoiner.mExpirationTime > newExpirationTime)
+        {
+            aJoiner.mExpirationTime = newExpirationTime;
+            UpdateJoinerExpirationTimer();
+        }
+    }
+    else
+    {
+        RemoveJoinerEntry(aJoiner);
+    }
 }
 
-uint8_t Commissioner::GetState(void) const
+Error Commissioner::SetProvisioningUrl(const char *aProvisioningUrl)
 {
-    return mState;
+    Error   error = kErrorNone;
+    uint8_t len;
+
+    if (aProvisioningUrl == nullptr)
+    {
+        mProvisioningUrl[0] = '\0';
+        ExitNow();
+    }
+
+    VerifyOrExit(IsValidUtf8String(aProvisioningUrl), error = kErrorInvalidArgs);
+
+    len = static_cast<uint8_t>(StringLength(aProvisioningUrl, sizeof(mProvisioningUrl)));
+
+    VerifyOrExit(len < sizeof(mProvisioningUrl), error = kErrorInvalidArgs);
+
+    memcpy(mProvisioningUrl, aProvisioningUrl, len);
+    mProvisioningUrl[len] = '\0';
+
+exit:
+    return error;
 }
 
-void Commissioner::HandleTimer(void *aContext)
+void Commissioner::HandleTimer(Timer &aTimer)
 {
-    static_cast<Commissioner *>(aContext)->HandleTimer();
+    aTimer.Get<Commissioner>().HandleTimer();
 }
 
 void Commissioner::HandleTimer(void)
@@ -300,7 +618,7 @@ void Commissioner::HandleTimer(void)
         break;
 
     case kStatePetition:
-        SendPetition();
+        IgnoreError(SendPetition());
         break;
 
     case kStateActive:
@@ -309,252 +627,274 @@ void Commissioner::HandleTimer(void)
     }
 }
 
-ThreadError Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs,
-                                                         uint8_t aLength)
+void Commissioner::HandleJoinerExpirationTimer(Timer &aTimer)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message;
+    aTimer.Get<Commissioner>().HandleJoinerExpirationTimer();
+}
+
+void Commissioner::HandleJoinerExpirationTimer(void)
+{
+    TimeMilli now = TimerMilli::GetNow();
+
+    for (Joiner &joiner : mJoiners)
+    {
+        if (joiner.mType == Joiner::kTypeUnused)
+        {
+            continue;
+        }
+
+        if (joiner.mExpirationTime <= now)
+        {
+            otLogDebgMeshCoP("removing joiner due to timeout or successfully joined");
+            RemoveJoinerEntry(joiner);
+        }
+    }
+
+    UpdateJoinerExpirationTimer();
+}
+
+void Commissioner::UpdateJoinerExpirationTimer(void)
+{
+    TimeMilli now  = TimerMilli::GetNow();
+    TimeMilli next = now.GetDistantFuture();
+
+    for (Joiner &joiner : mJoiners)
+    {
+        if (joiner.mType == Joiner::kTypeUnused)
+        {
+            continue;
+        }
+
+        if (joiner.mExpirationTime <= now)
+        {
+            next = now;
+        }
+        else if (joiner.mExpirationTime < next)
+        {
+            next = joiner.mExpirationTime;
+        }
+    }
+
+    if (next < now.GetDistantFuture())
+    {
+        mJoinerExpirationTimer.FireAt(next);
+    }
+    else
+    {
+        mJoinerExpirationTimer.Stop();
+    }
+}
+
+Error Commissioner::SendMgmtCommissionerGetRequest(const uint8_t *aTlvs, uint8_t aLength)
+{
+    Error            error = kErrorNone;
+    Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
-    MeshCoP::Tlv tlv;
+    MeshCoP::Tlv     tlv;
 
-    otLogFuncEntry();
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_GET);
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerGet));
 
     if (aLength > 0)
     {
-        header.SetPayloadMarker();
+        SuccessOrExit(error = message->SetPayloadMarker());
     }
-
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
 
     if (aLength > 0)
     {
         tlv.SetType(MeshCoP::Tlv::kGet);
         tlv.SetLength(aLength);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(aTlvs, aLength));
+        SuccessOrExit(error = message->Append(tlv));
+        SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
-    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleMgmtCommissionerGetResponse, this));
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo,
+                                                        Commissioner::HandleMgmtCommissionerGetResponse, this));
 
     otLogInfoMeshCoP("sent MGMT_COMMISSIONER_GET.req to leader");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    otLogFuncExitErr(error);
+    FreeMessageOnError(message, error);
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleMgmtCommissionerGetResponse(void *               aContext,
+                                                     otMessage *          aMessage,
+                                                     const otMessageInfo *aMessageInfo,
+                                                     Error                aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerGetResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
-        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerGetResponse(
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissisonerGetResponse(Coap::Header *aHeader, Message *aMessage,
-                                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleMgmtCommissionerGetResponse(Coap::Message *         aMessage,
+                                                     const Ip6::MessageInfo *aMessageInfo,
+                                                     Error                   aResult)
 {
-    (void) aMessage;
-    (void) aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otLogFuncEntry();
-
-    VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_GET response");
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
-ThreadError Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
-                                                         const uint8_t *aTlvs, uint8_t aLength)
+Error Commissioner::SendMgmtCommissionerSetRequest(const otCommissioningDataset &aDataset,
+                                                   const uint8_t *               aTlvs,
+                                                   uint8_t                       aLength)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message;
+    Error            error = kErrorNone;
+    Coap::Message *  message;
     Ip6::MessageInfo messageInfo;
 
-    otLogFuncEntry();
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_COMMISSIONER_SET);
-    header.SetPayloadMarker();
-
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kCommissionerSet));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     if (aDataset.mIsLocatorSet)
     {
-        MeshCoP::BorderAgentLocatorTlv locator;
-        locator.Init();
-        locator.SetBorderAgentLocator(aDataset.mLocator);
-        SuccessOrExit(error = message->Append(&locator, sizeof(locator)));
+        SuccessOrExit(error = Tlv::Append<MeshCoP::BorderAgentLocatorTlv>(*message, aDataset.mLocator));
     }
 
     if (aDataset.mIsSessionIdSet)
     {
-        MeshCoP::CommissionerSessionIdTlv sessionId;
-        sessionId.Init();
-        sessionId.SetCommissionerSessionId(aDataset.mSessionId);
-        SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+        SuccessOrExit(error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, aDataset.mSessionId));
     }
 
     if (aDataset.mIsSteeringDataSet)
     {
-        MeshCoP::SteeringDataTlv steeringData;
-        steeringData.Init();
-        steeringData.SetLength(aDataset.mSteeringData.mLength);
-        SuccessOrExit(error = message->Append(&steeringData, sizeof(MeshCoP::Tlv)));
-        SuccessOrExit(error = message->Append(&aDataset.mSteeringData.m8, aDataset.mSteeringData.mLength));
+        SuccessOrExit(
+            error = Tlv::Append<SteeringDataTlv>(*message, aDataset.mSteeringData.m8, aDataset.mSteeringData.mLength));
     }
 
     if (aDataset.mIsJoinerUdpPortSet)
     {
-        MeshCoP::JoinerUdpPortTlv joinerUdpPort;
-        joinerUdpPort.Init();
-        joinerUdpPort.SetUdpPort(aDataset.mJoinerUdpPort);
-        SuccessOrExit(error = message->Append(&joinerUdpPort, sizeof(joinerUdpPort)));
+        SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, aDataset.mJoinerUdpPort));
     }
 
     if (aLength > 0)
     {
-        SuccessOrExit(error = message->Append(aTlvs, aLength));
+        SuccessOrExit(error = message->AppendBytes(aTlvs, aLength));
     }
 
-    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleMgmtCommissionerSetResponse, this));
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo,
+                                                        Commissioner::HandleMgmtCommissionerSetResponse, this));
 
     otLogInfoMeshCoP("sent MGMT_COMMISSIONER_SET.req to leader");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    otLogFuncExitErr(error);
+    FreeMessageOnError(message, error);
     return error;
 }
 
-void Commissioner::HandleMgmtCommissionerSetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                     const otMessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleMgmtCommissionerSetResponse(void *               aContext,
+                                                     otMessage *          aMessage,
+                                                     const otMessageInfo *aMessageInfo,
+                                                     Error                aResult)
 {
-    static_cast<Commissioner *>(aContext)->HandleMgmtCommissisonerSetResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
-        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<Commissioner *>(aContext)->HandleMgmtCommissionerSetResponse(
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleMgmtCommissisonerSetResponse(Coap::Header *aHeader, Message *aMessage,
-                                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleMgmtCommissionerSetResponse(Coap::Message *         aMessage,
+                                                     const Ip6::MessageInfo *aMessageInfo,
+                                                     Error                   aResult)
 {
-    (void) aMessage;
-    (void) aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otLogFuncEntry();
-
-    VerifyOrExit(aResult == kThreadError_None && aHeader->GetCode() == kCoapResponseChanged, ;);
+    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged);
     otLogInfoMeshCoP("received MGMT_COMMISSIONER_SET response");
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
-ThreadError Commissioner::SendPetition(void)
+Error Commissioner::SendPetition(void)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message = NULL;
-    Ip6::MessageInfo messageInfo;
+    Error             error   = kErrorNone;
+    Coap::Message *   message = nullptr;
+    Ip6::MessageInfo  messageInfo;
     CommissionerIdTlv commissionerId;
-
-    otLogFuncEntry();
 
     mTransmitAttempts++;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_PETITION);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderPetition));
+    SuccessOrExit(error = message->SetPayloadMarker());
+
     commissionerId.Init();
     commissionerId.SetCommissionerId("OpenThread Commissioner");
 
-    SuccessOrExit(error = message->Append(&commissionerId, sizeof(Tlv) + commissionerId.GetLength()));
+    SuccessOrExit(error = commissionerId.AppendTo(*message));
 
-    mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleLeaderPetitionResponse, this));
+    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    SuccessOrExit(
+        error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, Commissioner::HandleLeaderPetitionResponse, this));
 
     otLogInfoMeshCoP("sent petition");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    otLogFuncExitErr(error);
+    FreeMessageOnError(message, error);
     return error;
 }
 
-void Commissioner::HandleLeaderPetitionResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                const otMessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleLeaderPetitionResponse(void *               aContext,
+                                                otMessage *          aMessage,
+                                                const otMessageInfo *aMessageInfo,
+                                                Error                aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderPetitionResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
-        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
-
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleLeaderPetitionResponse(Coap::Header *aHeader, Message *aMessage,
-                                                const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleLeaderPetitionResponse(Coap::Message *         aMessage,
+                                                const Ip6::MessageInfo *aMessageInfo,
+                                                Error                   aResult)
 {
-    (void) aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
-    StateTlv state;
-    CommissionerSessionIdTlv sessionId;
-    bool retransmit = false;
+    uint8_t state;
+    bool    retransmit = false;
 
-    otLogFuncEntry();
-
-    VerifyOrExit(mState == kStatePetition, mState = kStateDisabled);
-    VerifyOrExit(aResult == kThreadError_None &&
-                 aHeader->GetCode() == kCoapResponseChanged, retransmit = true);
+    VerifyOrExit(mState != kStateActive);
+    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged,
+                 retransmit = (mState == kStatePetition));
 
     otLogInfoMeshCoP("received Leader Petition response");
 
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(), ;);
+    SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
+    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(/* aResign */ false)));
 
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kStateDisabled);
+    SuccessOrExit(Tlv::Find<CommissionerSessionIdTlv>(*aMessage, mSessionId));
 
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kCommissionerSessionId, sizeof(sessionId), sessionId));
-    VerifyOrExit(sessionId.IsValid(), ;);
-    mSessionId = sessionId.GetCommissionerSessionId();
+    // reject this session by sending KeepAlive reject if commissioner is in disabled state
+    // this could happen if commissioner is stopped by API during petitioning
+    if (mState == kStateDisabled)
+    {
+        SendKeepAlive(mSessionId);
+        ExitNow();
+    }
 
-    mState = kStateActive;
+    IgnoreError(Get<Mle::MleRouter>().GetCommissionerAloc(mCommissionerAloc.GetAddress(), mSessionId));
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+
+    AddCoapResources();
+    SetState(kStateActive);
+
     mTransmitAttempts = 0;
-    mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
+    mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
 
@@ -562,363 +902,369 @@ exit:
     {
         if (mTransmitAttempts >= kPetitionRetryCount)
         {
-            mState = kStateDisabled;
+            IgnoreError(Stop(/* aResign */ false));
         }
         else
         {
-            mTimer.Start(Timer::SecToMsec(kPetitionRetryDelay));
+            mTimer.Start(Time::SecToMsec(kPetitionRetryDelay));
         }
     }
-
-    otLogFuncExit();
 }
 
-ThreadError Commissioner::SendKeepAlive(void)
+void Commissioner::SendKeepAlive(void)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message = NULL;
+    SendKeepAlive(mSessionId);
+}
+
+void Commissioner::SendKeepAlive(uint16_t aSessionId)
+{
+    Error            error   = kErrorNone;
+    Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
-    StateTlv state;
-    CommissionerSessionIdTlv sessionId;
 
-    otLogFuncEntry();
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_LEADER_KEEP_ALIVE);
-    header.SetPayloadMarker();
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderKeepAlive));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(
+        error = Tlv::Append<StateTlv>(*message, (mState == kStateActive) ? StateTlv::kAccept : StateTlv::kReject));
 
-    state.Init();
-    state.SetState(mState == kStateActive ? StateTlv::kAccept : StateTlv::kReject);
-    SuccessOrExit(error = message->Append(&state, sizeof(state)));
+    SuccessOrExit(error = Tlv::Append<CommissionerSessionIdTlv>(*message, aSessionId));
 
-    sessionId.Init();
-    sessionId.SetCommissionerSessionId(mSessionId);
-    SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
-
-    mNetif.GetMle().GetLeaderAloc(*static_cast<Ip6::Address *>(&messageInfo.mPeerAddr));
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo,
-                                                             Commissioner::HandleLeaderKeepAliveResponse, this));
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    SuccessOrExit(error = Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo,
+                                                        Commissioner::HandleLeaderKeepAliveResponse, this));
 
     otLogInfoMeshCoP("sent keep alive");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    otLogFuncExitErr(error);
-    return error;
+    FreeMessageOnError(message, error);
+    LogError("send keep alive", error);
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                                 const otMessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleLeaderKeepAliveResponse(void *               aContext,
+                                                 otMessage *          aMessage,
+                                                 const otMessageInfo *aMessageInfo,
+                                                 Error                aResult)
 {
     static_cast<Commissioner *>(aContext)->HandleLeaderKeepAliveResponse(
-        static_cast<Coap::Header *>(aHeader), static_cast<Message *>(aMessage),
-        static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
 }
 
-void Commissioner::HandleLeaderKeepAliveResponse(Coap::Header *aHeader, Message *aMessage,
-                                                 const Ip6::MessageInfo *aMessageInfo, ThreadError aResult)
+void Commissioner::HandleLeaderKeepAliveResponse(Coap::Message *         aMessage,
+                                                 const Ip6::MessageInfo *aMessageInfo,
+                                                 Error                   aResult)
 {
-    (void) aMessageInfo;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
-    StateTlv state;
+    uint8_t state;
 
-    otLogFuncEntry();
+    VerifyOrExit(mState == kStateActive);
+    VerifyOrExit(aResult == kErrorNone && aMessage->GetCode() == Coap::kCodeChanged,
+                 IgnoreError(Stop(/* aResign */ false)));
 
-    VerifyOrExit(mState == kStateActive, mState = kStateDisabled);
-    VerifyOrExit(aResult == kThreadError_None &&
-                 aHeader->GetCode() == kCoapResponseChanged, mState = kStateDisabled);
+    otLogInfoMeshCoP("received Leader keep-alive response");
 
-    otLogInfoMeshCoP("received Leader Petition response");
+    SuccessOrExit(Tlv::Find<StateTlv>(*aMessage, state));
+    VerifyOrExit(state == StateTlv::kAccept, IgnoreError(Stop(/* aResign */ false)));
 
-    SuccessOrExit(Tlv::GetTlv(*aMessage, Tlv::kState, sizeof(state), state));
-    VerifyOrExit(state.IsValid(), ;);
-
-    VerifyOrExit(state.GetState() == StateTlv::kAccept, mState = kStateDisabled);
-
-    mTimer.Start(Timer::SecToMsec(kKeepAliveTimeout) / 2);
+    mTimer.Start(Time::SecToMsec(kKeepAliveTimeout) / 2);
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
-void Commissioner::HandleRelayReceive(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                      const otMessageInfo *aMessageInfo)
+void Commissioner::HandleRelayReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleRelayReceive(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Commissioner *>(aContext)->HandleRelayReceive(*static_cast<Coap::Message *>(aMessage),
+                                                              *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Commissioner::HandleRelayReceive(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Commissioner::HandleRelayReceive(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadError error;
-    JoinerUdpPortTlv joinerPort;
-    JoinerIidTlv joinerIid;
-    JoinerRouterLocatorTlv joinerRloc;
-    Ip6::MessageInfo joinerMessageInfo;
-    uint16_t offset;
-    uint16_t length;
-    bool enableJoiner = false;
+    OT_UNUSED_VARIABLE(aMessageInfo);
 
-    otLogFuncEntry();
+    Error                    error;
+    uint16_t                 joinerPort;
+    Ip6::InterfaceIdentifier joinerIid;
+    uint16_t                 joinerRloc;
+    Ip6::MessageInfo         joinerMessageInfo;
+    uint16_t                 offset;
+    uint16_t                 length;
 
-    VerifyOrExit(aHeader.GetType() == kCoapTypeNonConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(mState == kStateActive, error = kErrorInvalidState);
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerUdpPort, sizeof(joinerPort), joinerPort));
-    VerifyOrExit(joinerPort.IsValid(), error = kThreadError_Parse);
+    VerifyOrExit(aMessage.IsNonConfirmablePostRequest());
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerIid, sizeof(joinerIid), joinerIid));
-    VerifyOrExit(joinerIid.IsValid(), error = kThreadError_Parse);
+    SuccessOrExit(error = Tlv::Find<JoinerUdpPortTlv>(aMessage, joinerPort));
+    SuccessOrExit(error = Tlv::Find<JoinerIidTlv>(aMessage, joinerIid));
+    SuccessOrExit(error = Tlv::Find<JoinerRouterLocatorTlv>(aMessage, joinerRloc));
 
-    SuccessOrExit(error = Tlv::GetTlv(aMessage, Tlv::kJoinerRouterLocator, sizeof(joinerRloc), joinerRloc));
-    VerifyOrExit(joinerRloc.IsValid(), error = kThreadError_Parse);
+    SuccessOrExit(error = Tlv::FindTlvValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
+    VerifyOrExit(length <= aMessage.GetLength() - offset, error = kErrorParse);
 
-    SuccessOrExit(error = Tlv::GetValueOffset(aMessage, Tlv::kJoinerDtlsEncapsulation, offset, length));
-    VerifyOrExit(length <= aMessage.GetLength() - offset, error = kThreadError_Parse);
-
-    if (!mNetif.GetSecureCoapServer().IsConnectionActive())
+    if (!Get<Coap::CoapSecure>().IsConnectionActive())
     {
-        memcpy(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid));
-        mJoinerPort = joinerPort.GetUdpPort();
-        mJoinerRloc = joinerRloc.GetJoinerRouterLocator();
+        Mac::ExtAddress receivedId;
+        Joiner *        joiner;
 
-        otLogInfoMeshCoP("Received relay receive for %llX, rloc:%x", HostSwap64(mJoinerIid64), mJoinerRloc);
+        mJoinerIid = joinerIid;
+        mJoinerIid.ConvertToExtAddress(receivedId);
 
-        mJoinerIid[0] ^= 0x2;
+        joiner = FindBestMatchingJoinerEntry(receivedId);
+        VerifyOrExit(joiner != nullptr);
 
-        for (size_t i = 0; i < sizeof(mJoiners) / sizeof(mJoiners[0]); i++)
-        {
-            if (!mJoiners[i].mValid)
-            {
-                continue;
-            }
+        Get<Coap::CoapSecure>().SetPsk(joiner->mPskd);
+        mActiveJoiner = joiner;
 
-            if (mJoiners[i].mAny || !memcmp(&mJoiners[i].mExtAddress, mJoinerIid, sizeof(mJoiners[i].mExtAddress)))
-            {
-
-                error = mNetif.GetSecureCoapServer().SetPsk(reinterpret_cast<const uint8_t *>(mJoiners[i].mPsk),
-                                                            static_cast<uint8_t>(strlen(mJoiners[i].mPsk)));
-                SuccessOrExit(error);
-                otLogInfoMeshCoP("found joiner, starting new session");
-                enableJoiner = true;
-                break;
-            }
-        }
-
-        mJoinerIid[0] ^= 0x2;
+        LogJoinerEntry("Starting new session with", *joiner);
+        SignalJoinerEvent(kJoinerEventStart, joiner);
     }
     else
     {
-        enableJoiner = (memcmp(mJoinerIid, joinerIid.GetIid(), sizeof(mJoinerIid)) == 0);
+        VerifyOrExit(mJoinerIid == joinerIid);
     }
 
-    VerifyOrExit(enableJoiner, ;);
+    mJoinerPort = joinerPort;
+    mJoinerRloc = joinerRloc;
+
+    otLogInfoMeshCoP("Received Relay Receive (%s, 0x%04x)", mJoinerIid.ToString().AsCString(), mJoinerRloc);
 
     aMessage.SetOffset(offset);
     SuccessOrExit(error = aMessage.SetLength(offset + length));
 
-    joinerMessageInfo.SetPeerAddr(mNetif.GetMle().GetMeshLocal64());
+    joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal64());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-    mNetif.GetSecureCoapServer().Receive(aMessage, joinerMessageInfo);
+    Get<Coap::CoapSecure>().HandleUdpReceive(aMessage, joinerMessageInfo);
 
 exit:
-    (void)aMessageInfo;
-    otLogFuncExit();
+    return;
 }
 
-void Commissioner::HandleDatasetChanged(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                        const otMessageInfo *aMessageInfo)
+void Commissioner::HandleDatasetChanged(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Commissioner *>(aContext)->HandleDatasetChanged(*static_cast<Coap::Message *>(aMessage),
+                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Commissioner::HandleDatasetChanged(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Commissioner::HandleDatasetChanged(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    otLogFuncEntry();
-    VerifyOrExit(aHeader.GetType() == kCoapTypeConfirmable &&
-                 aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(aMessage.IsConfirmablePostRequest());
 
     otLogInfoMeshCoP("received dataset changed");
-    (void)aMessage;
 
-    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, aMessageInfo));
+    SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
 
     otLogInfoMeshCoP("sent dataset changed acknowledgment");
 
 exit:
-    otLogFuncExit();
+    return;
 }
 
-void Commissioner::HandleJoinerFinalize(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                        const otMessageInfo *aMessageInfo)
+void Commissioner::HandleJoinerFinalize(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Commissioner *>(aContext)->HandleJoinerFinalize(*static_cast<Coap::Message *>(aMessage),
+                                                                *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void Commissioner::HandleJoinerFinalize(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void Commissioner::HandleJoinerFinalize(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    (void)aMessageInfo;
-    StateTlv::State state = StateTlv::kAccept;
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    StateTlv::State    state = StateTlv::kAccept;
     ProvisioningUrlTlv provisioningUrl;
 
-    otLogFuncEntry();
     otLogInfoMeshCoP("received joiner finalize");
 
-    if (Tlv::GetTlv(aMessage, Tlv::kProvisioningUrl, sizeof(provisioningUrl), provisioningUrl) == kThreadError_None)
+    if (Tlv::FindTlv(aMessage, provisioningUrl) == kErrorNone)
     {
-        if (provisioningUrl.GetLength() != mNetif.GetDtls().mProvisioningUrl.GetLength() ||
-            memcmp(provisioningUrl.GetProvisioningUrl(), mNetif.GetDtls().mProvisioningUrl.GetProvisioningUrl(),
-                   provisioningUrl.GetLength()) != 0)
+        uint8_t len = static_cast<uint8_t>(StringLength(mProvisioningUrl, sizeof(mProvisioningUrl)));
+
+        if ((provisioningUrl.GetProvisioningUrlLength() != len) ||
+            !memcmp(provisioningUrl.GetProvisioningUrl(), mProvisioningUrl, len))
         {
             state = StateTlv::kReject;
         }
     }
 
-#if OPENTHREAD_ENABLE_CERT_LOG
-    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
-    VerifyOrExit(aMessage.GetLength() <= sizeof(buf), ;);
-    aMessage.Read(aHeader.GetLength(), aMessage.GetLength() - aHeader.GetLength(), buf);
-    otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req |", buf, aMessage.GetLength() - aHeader.GetLength());
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    if (aMessage.GetLength() <= OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE)
+    {
+        uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-exit:
+        aMessage.ReadBytes(aMessage.GetOffset(), buf, aMessage.GetLength() - aMessage.GetOffset());
+        otDumpCertMeshCoP("[THCI] direction=recv | type=JOIN_FIN.req |", buf,
+                          aMessage.GetLength() - aMessage.GetOffset());
+    }
 #endif
 
-    SendJoinFinalizeResponse(aHeader, state);
-
-    otLogFuncExit();
+    SendJoinFinalizeResponse(aMessage, state);
 }
 
-
-void Commissioner::SendJoinFinalizeResponse(const Coap::Header &aRequestHeader, StateTlv::State aState)
+void Commissioner::SendJoinFinalizeResponse(const Coap::Message &aRequest, StateTlv::State aState)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header responseHeader;
+    Error            error = kErrorNone;
     Ip6::MessageInfo joinerMessageInfo;
-    MeshCoP::StateTlv stateTlv;
-    Message *message;
+    Coap::Message *  message;
 
-    otLogFuncEntry();
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Coap::CoapSecure>())) != nullptr, error = kErrorNoBufs);
 
-    responseHeader.SetDefaultResponseHeader(aRequestHeader);
-    responseHeader.SetPayloadMarker();
+    SuccessOrExit(error = message->SetDefaultResponseHeader(aRequest));
+    SuccessOrExit(error = message->SetPayloadMarker());
+    message->SetOffset(message->GetLength());
+    message->SetSubType(Message::kSubTypeJoinerFinalizeResponse);
 
-    VerifyOrExit((message = mNetif.GetSecureCoapServer().NewMeshCoPMessage(responseHeader)) != NULL,
-                 error = kThreadError_NoBufs);
+    SuccessOrExit(error = Tlv::Append<StateTlv>(*message, aState));
 
-    stateTlv.Init();
-    stateTlv.SetState(aState);
-    SuccessOrExit(error = message->Append(&stateTlv, sizeof(stateTlv)));
-
-    joinerMessageInfo.SetPeerAddr(mNetif.GetMle().GetMeshLocal64());
+    joinerMessageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal64());
     joinerMessageInfo.GetPeerAddr().SetIid(mJoinerIid);
     joinerMessageInfo.SetPeerPort(mJoinerPort);
 
-    mSendKek = true;
-    SuccessOrExit(error = mNetif.GetSecureCoapServer().SendMessage(*message, joinerMessageInfo));
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    uint8_t buf[OPENTHREAD_CONFIG_MESSAGE_BUFFER_SIZE];
 
-    otLogInfoMeshCoP("sent joiner finalize response");
-    otLogCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp");
-exit:
+    VerifyOrExit(message->GetLength() <= sizeof(buf));
+    message->ReadBytes(message->GetOffset(), buf, message->GetLength() - message->GetOffset());
+    otDumpCertMeshCoP("[THCI] direction=send | type=JOIN_FIN.rsp |", buf, message->GetLength() - message->GetOffset());
+#endif
 
-    if (error != kThreadError_None && message != NULL)
+    SuccessOrExit(error = Get<Coap::CoapSecure>().SendMessage(*message, joinerMessageInfo));
+
+    SignalJoinerEvent(kJoinerEventFinalize, mActiveJoiner);
+
+    if ((mActiveJoiner != nullptr) && (mActiveJoiner->mType != Joiner::kTypeAny))
     {
-        mSendKek = false;
-        message->Free();
+        // Remove after kRemoveJoinerDelay (seconds)
+        RemoveJoiner(*mActiveJoiner, kRemoveJoinerDelay);
     }
 
-    otLogFuncExit();
+    otLogInfoMeshCoP("sent joiner finalize response");
+
+exit:
+    FreeMessageOnError(message, error);
 }
 
-ThreadError Commissioner::SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Commissioner::SendRelayTransmit(void *aContext, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     return static_cast<Commissioner *>(aContext)->SendRelayTransmit(aMessage, aMessageInfo);
 }
 
-ThreadError Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    (void)aMessageInfo;
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    JoinerUdpPortTlv udpPort;
-    JoinerIidTlv iid;
-    JoinerRouterLocatorTlv rloc;
-    ExtendedTlv tlv;
-    Message *message;
-    uint16_t offset;
+    OT_UNUSED_VARIABLE(aMessageInfo);
+
+    Error            error = kErrorNone;
+    ExtendedTlv      tlv;
+    Coap::Message *  message;
+    uint16_t         offset;
     Ip6::MessageInfo messageInfo;
 
-    otLogFuncEntry();
+    VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    header.Init(kCoapTypeNonConfirmable, kCoapRequestPost);
-    header.AppendUriPathOptions(OPENTHREAD_URI_RELAY_TX);
-    header.SetPayloadMarker();
+    message->InitAsNonConfirmablePost();
+    SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayTx));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = Tlv::Append<JoinerUdpPortTlv>(*message, mJoinerPort));
+    SuccessOrExit(error = Tlv::Append<JoinerIidTlv>(*message, mJoinerIid));
+    SuccessOrExit(error = Tlv::Append<JoinerRouterLocatorTlv>(*message, mJoinerRloc));
 
-    udpPort.Init();
-    udpPort.SetUdpPort(mJoinerPort);
-    SuccessOrExit(error = message->Append(&udpPort, sizeof(udpPort)));
-
-    iid.Init();
-    iid.SetIid(mJoinerIid);
-    SuccessOrExit(error = message->Append(&iid, sizeof(iid)));
-
-    rloc.Init();
-    rloc.SetJoinerRouterLocator(mJoinerRloc);
-    SuccessOrExit(error = message->Append(&rloc, sizeof(rloc)));
-
-    if (mSendKek)
+    if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
-        JoinerRouterKekTlv kek;
-        kek.Init();
-        kek.SetKek(mNetif.GetKeyManager().GetKek());
-        SuccessOrExit(error = message->Append(&kek, sizeof(kek)));
-        mSendKek = false;
+        SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, Get<KeyManager>().GetKek()));
     }
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);
     tlv.SetLength(aMessage.GetLength());
-    SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
+    SuccessOrExit(error = message->Append(tlv));
     offset = message->GetLength();
-    message->SetLength(offset + aMessage.GetLength());
+    SuccessOrExit(error = message->SetLength(offset + aMessage.GetLength()));
     aMessage.CopyTo(0, offset, aMessage.GetLength(), *message);
 
-    messageInfo.SetPeerAddr(mNetif.GetMle().GetMeshLocal16());
-    messageInfo.GetPeerAddr().mFields.m16[7] = HostSwap16(mJoinerRloc);
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetPeerAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.GetPeerAddr().GetIid().SetLocator(mJoinerRloc);
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
 
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     aMessage.Free();
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
-    otLogFuncExitErr(error);
+    FreeMessageOnError(message, error);
     return error;
 }
 
-}  // namespace MeshCoP
-}  // namespace Thread
+void Commissioner::ApplyMeshLocalPrefix(void)
+{
+    VerifyOrExit(mState == kStateActive);
+
+    Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
+    mCommissionerAloc.GetAddress().SetPrefix(Get<Mle::MleRouter>().GetMeshLocalPrefix());
+    Get<ThreadNetif>().AddUnicastAddress(mCommissionerAloc);
+
+exit:
+    return;
+}
+
+// LCOV_EXCL_START
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+
+const char *Commissioner::StateToString(State aState)
+{
+    static const char *const kStateStrings[] = {
+        "disabled", // (0) kStateDisabled
+        "petition", // (1) kStatePetition
+        "active",   // (2) kStateActive
+    };
+
+    static_assert(kStateDisabled == 0, "kStateDisabled value is incorrect");
+    static_assert(kStatePetition == 1, "kStatePetition value is incorrect");
+    static_assert(kStateActive == 2, "kStateActive value is incorrect");
+
+    return kStateStrings[aState];
+}
+
+void Commissioner::LogJoinerEntry(const char *aAction, const Joiner &aJoiner) const
+{
+    switch (aJoiner.mType)
+    {
+    case Joiner::kTypeUnused:
+        break;
+
+    case Joiner::kTypeAny:
+        otLogInfoMeshCoP("%s Joiner (any, %s)", aAction, aJoiner.mPskd.GetAsCString());
+        break;
+
+    case Joiner::kTypeEui64:
+        otLogInfoMeshCoP("%s Joiner (eui64:%s, %s)", aAction, aJoiner.mSharedId.mEui64.ToString().AsCString(),
+                         aJoiner.mPskd.GetAsCString());
+        break;
+
+    case Joiner::kTypeDiscerner:
+        otLogInfoMeshCoP("%s Joiner (disc:%s, %s)", aAction, aJoiner.mSharedId.mDiscerner.ToString().AsCString(),
+                         aJoiner.mPskd.GetAsCString());
+        break;
+    }
+}
+
+#else
+
+void Commissioner::LogJoinerEntry(const char *, const Joiner &) const
+{
+}
+
+#endif // (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MESHCOP == 1)
+
+// LCOV_EXCL_STOP
+
+} // namespace MeshCoP
+} // namespace ot
+
+#endif // OPENTHREAD_FTD && OPENTHREAD_CONFIG_COMMISSIONER_ENABLE

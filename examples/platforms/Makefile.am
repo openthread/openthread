@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2016, The OpenThread Authors.
+#  Copyright (c) 2017, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -28,13 +28,25 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+EXTRA_DIST                              = \
+    cc1352                                \
+    cc2652                                \
+    efr32                                 \
+    gp712                                 \
+    k32w                                  \
+    kw41z                                 \
+    nrf528xx                              \
+    qpg6095                               \
+    qpg6100                               \
+    qpg7015m                              \
+    samr21                                \
+    $(NULL)
+
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
     cc2538                                \
-    da15000                               \
-    nrf52840                              \
-    posix                                 \
+    simulation                            \
     utils                                 \
     $(NULL)
 
@@ -44,30 +56,16 @@ SUBDIRS                                 = \
     utils                                 \
     $(NULL)
 
-if OPENTHREAD_EXAMPLES_CC2538
+if OPENTHREAD_PLATFORM_CC2538
 SUBDIRS                                += cc2538
 endif
 
-if OPENTHREAD_EXAMPLES_DA15000
-SUBDIRS                                += da15000
+if OPENTHREAD_PLATFORM_SIMULATION
+SUBDIRS                                += simulation
 endif
 
-if OPENTHREAD_EXAMPLES_NRF52840
-SUBDIRS                                += nrf52840
-endif
-
-if OPENTHREAD_EXAMPLES_POSIX
-SUBDIRS                                += posix
-endif
-
-# Always pretty (e.g. for 'make pretty') these subdirectories.
-
-PRETTY_SUBDIRS                          = \
-    cc2538                                \
-    da15000                               \
-    nrf52840                              \
-    posix                                 \
-    utils                                 \
+noinst_HEADERS                          = \
+    openthread-system.h                   \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

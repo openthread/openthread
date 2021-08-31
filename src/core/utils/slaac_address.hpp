@@ -34,10 +34,17 @@
 #ifndef SLAAC_ADDRESS_HPP_
 #define SLAAC_ADDRESS_HPP_
 
-#include <openthread-types.h>
-#include <platform/random.h>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
+#include "net/netif.hpp"
+#include "thread/network_data.hpp"
+
+namespace ot {
 namespace Utils {
 
 /**
@@ -53,110 +60,123 @@ namespace Utils {
  * This class implements the SLAAC utility for Thread protocol.
  *
  */
-class Slaac
+class Slaac : public InstanceLocator, private NonCopyable
 {
+    friend class ot::Notifier;
+
 public:
     /**
-     * This function pointer is called when SLAAC creates global address.
-     *
-     * @param[in]     aInstance  A pointer to an OpenThread instance.
-     * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
-     * @param[in]     aContext   A pointer to creator-specific context.
-     *
-     * @retval  kThreadError_None    if generated valid IID.
-     * @retval  kThreadError_Failed  if creating IID failed.
+     * This type represents the secret key used for generating semantically opaque IID (per RFC 7217).
      *
      */
-    typedef ThreadError(*IidCreator)(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
-
-    /**
-     * This function update addresses that shall be automatically created using SLAAC.
-     *
-     * @param[in]     aInstance     A pointer to openThread instance.
-     * @param[inout]  aAddresses    A pointer to an array containing addresses created by this module.
-     * @param[in]     aNumAddresses The number of elements in aAddresses array.
-     * @param[in]     aIidCreator   A pointer to function that will be used to create IID for IPv6 addresses.
-     * @param[in]     aContext      A pointer to IID creator-specific context data.
-     *
-     */
-    static void UpdateAddresses(otInstance *aInstance, otNetifAddress *aAddresses, uint32_t aNumAddresses,
-                                IidCreator aIidCreator, void *aContext);
-
-    /**
-     * This function creates randomly generated IPv6 IID for given IPv6 address.
-     *
-     * @param[in]     aInstance  A pointer to an OpenThread instance.
-     * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
-     * @param[in]     aContext   Unused pointer.
-     *
-     * @retval  kThreadError_None  Generated valid IID.
-     */
-    static ThreadError CreateRandomIid(otInstance *aInstance, otNetifAddress *aAddress, void *aContext);
-};
-
-/**
- * This class implements the Method for Generating Semantically Opaque IIDs with IPv6 SLAAC (RFC 7217).
- *
- */
-class SemanticallyOpaqueIidGenerator: public otSemanticallyOpaqueIidGeneratorData
-{
-public:
-    /**
-     * This function creates semantically opaque IID for given IPv6 address and context.
-     *
-     * The generator starts with DAD counter provided as a class member field. The DAD counter is automatically
-     * incremented at most kMaxRetries times if creation of valid IPv6 address fails.
-     *
-     * @param[in]     aInstance  A pointer to an OpenThread instance.
-     * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
-     *
-     * @retval  kThreadError_None                        Generated valid IID.
-     * @retval  kThreadError_InvalidArgs                 Any given parameter is invalid.
-     * @retval  kThreadError_Ipv6AddressCreationFailure  Could not generate IID due to RFC 7217 restrictions.
-     *
-     */
-    ThreadError CreateIid(otInstance *aInstance, otNetifAddress *aAddress);
-
-private:
-    enum
+    struct IidSecretKey
     {
-        kMaxRetries = 255,
+        static constexpr uint16_t kSize = 32; ///< Secret key size for generating semantically opaque IID.
+
+        uint8_t m8[kSize];
     };
 
     /**
-     * This function creates semantically opaque IID for given arguments.
+     * This constructor initializes the SLAAC manager object.
      *
-     * This function creates IID only for given DAD counter value.
+     * Note that SLAAC module starts enabled.
      *
-     * @param[in]     aInstance  A pointer to an OpenThread instance.
-     * @param[inout]  aAddress   A pointer to structure containing IPv6 address for which IID is being created.
-     *
-     * @retval  kThreadError_None                        Generated valid IID.
-     * @retval  kThreadError_InvalidArgs                 Any given parameter is invalid.
-     * @retval  kThreadError_Ipv6AddressCreationFailure  Could not generate IID due to RFC 7217 restrictions.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    ThreadError CreateIidOnce(otInstance *aInstance, otNetifAddress *aAddress);
+    explicit Slaac(Instance &aInstance);
 
     /**
-     * This function checks if created IPv6 address is already registered in the Thread interface.
+     * This method enables the SLAAC module.
      *
-     * @param[in]  aInstance        A pointer to an OpenThread instance.
-     * @param[in]  aCreatedAddress  A pointer to created IPv6 address.
-     *
-     * @retval  true   Given address is present in the address list.
-     * @retval  false  Given address is missing in the address list.
+     * When enabled, new SLAAC addresses are generated and added from on-mesh prefixes in network data.
      *
      */
-    bool IsAddressRegistered(otInstance *aInstance, otNetifAddress *aCreatedAddress);
+    void Enable(void);
+
+    /**
+     * This method disables the SLAAC module.
+     *
+     * When disabled, any previously added SLAAC address by this module is removed.
+     *
+     */
+    void Disable(void);
+
+    /**
+     * This method indicates whether SLAAC module is enabled or not.
+     *
+     * @retval TRUE    SLAAC module is enabled.
+     * @retval FALSE   SLAAC module is disabled.
+     *
+     */
+    bool IsEnabled(void) const { return mEnabled; }
+
+    /**
+     * This method sets a SLAAC prefix filter handler.
+     *
+     * The handler is invoked by SLAAC module when it is about to add a SLAAC address based on a prefix. The return
+     * boolean value from handler determines whether the address is filtered or added (TRUE to filter the address,
+     * FALSE to add address).
+     *
+     * The filter can be set to `nullptr` to disable filtering (i.e., allow SLAAC addresses for all prefixes).
+     *
+     */
+    void SetFilter(otIp6SlaacPrefixFilter aFilter);
+
+    /**
+     * This method generates the IID of an IPv6 address.
+     *
+     * @param[inout]  aAddress             A reference to the address that will be filled with the IID generated.
+     *                                     Note the prefix of the address must already be filled and will be used
+     *                                     to generate the IID.
+     * @param[in]     aNetworkId           A pointer to a byte array of Network_ID to generate IID.
+     * @param[in]     aNetworkIdLength     The size of array @p aNetworkId.
+     * @param[inout]  aDadCounter          A pointer to the DAD_Counter that is employed to resolve Duplicate
+     *                                     Address Detection connflicts.
+     *
+     * @retval kErrorNone    If successfully generated the IID.
+     * @retval kErrorFailed  If no valid IID was generated.
+     *
+     */
+    Error GenerateIid(Ip6::Netif::UnicastAddress &aAddress,
+                      uint8_t *                   aNetworkId       = nullptr,
+                      uint8_t                     aNetworkIdLength = 0,
+                      uint8_t *                   aDadCounter      = nullptr) const;
+
+private:
+    static constexpr uint16_t kMaxIidCreationAttempts = 256; // Maximum number of attempts when generating IID.
+
+    typedef uint8_t UpdateMode;
+
+    // Values for `UpdateMode` input parameter in `Update()`.
+
+    static constexpr UpdateMode kModeNone = 0x0;    // No action.
+    static constexpr UpdateMode kModeAdd  = 1 << 0; // Add new SLAAC addresses for new prefixes in network data.
+
+    // Remove SLAAC addresses.
+    // - When SLAAC is enabled, remove addresses with no matching prefix in network data,
+    // - When SLAAC is disabled, remove all previously added addresses.
+    static constexpr UpdateMode kModeRemove = 1 << 1;
+
+    bool        ShouldFilter(const Ip6::Prefix &aPrefix) const;
+    void        Update(UpdateMode aMode);
+    void        GetIidSecretKey(IidSecretKey &aKey) const;
+    void        HandleNotifierEvents(Events aEvents);
+    static bool DoesConfigMatchNetifAddr(const NetworkData::OnMeshPrefixConfig &aConfig,
+                                         const Ip6::Netif::UnicastAddress &     aAddr);
+
+    bool                       mEnabled;
+    otIp6SlaacPrefixFilter     mFilter;
+    Ip6::Netif::UnicastAddress mAddresses[OPENTHREAD_CONFIG_IP6_SLAAC_NUM_ADDRESSES];
 };
 
 /**
  * @}
  */
 
-}  // namespace Slaac
-}  // namespace Thread
+} // namespace Utils
+} // namespace ot
 
-#endif  // SLAAC_ADDRESS_HPP_
+#endif // OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
 
+#endif // SLAAC_ADDRESS_HPP_

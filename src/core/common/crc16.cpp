@@ -31,9 +31,9 @@
  *   This file implements CRC16 computations.
  */
 
-#include <common/crc16.hpp>
+#include "crc16.hpp"
 
-namespace Thread {
+namespace ot {
 
 Crc16::Crc16(Polynomial aPolynomial)
 {
@@ -41,17 +41,12 @@ Crc16::Crc16(Polynomial aPolynomial)
     Init();
 }
 
-void Crc16::Init(void)
-{
-    mCrc = 0;
-}
-
 void Crc16::Update(uint8_t aByte)
 {
     uint8_t i;
 
     mCrc = mCrc ^ static_cast<uint16_t>(aByte << 8);
-    i = 8;
+    i    = 8;
 
     do
     {
@@ -63,13 +58,7 @@ void Crc16::Update(uint8_t aByte)
         {
             mCrc = static_cast<uint16_t>(mCrc << 1);
         }
-    }
-    while (--i);
+    } while (--i);
 }
 
-uint16_t Crc16::Get(void) const
-{
-    return mCrc;
-}
-
-}  // namespace Thread
+} // namespace ot

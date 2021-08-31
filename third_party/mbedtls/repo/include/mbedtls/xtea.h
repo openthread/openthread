@@ -2,8 +2,9 @@
  * \file xtea.h
  *
  * \brief XTEA block cipher (32-bit)
- *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ */
+/*
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -17,14 +18,12 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 #ifndef MBEDTLS_XTEA_H
 #define MBEDTLS_XTEA_H
 
 #if !defined(MBEDTLS_CONFIG_FILE)
-#include "config.h"
+#include "mbedtls/config.h"
 #else
 #include MBEDTLS_CONFIG_FILE
 #endif
@@ -37,22 +36,29 @@
 
 #define MBEDTLS_ERR_XTEA_INVALID_INPUT_LENGTH             -0x0028  /**< The data input has an invalid length. */
 
-#if !defined(MBEDTLS_XTEA_ALT)
-// Regular implementation
-//
+/* MBEDTLS_ERR_XTEA_HW_ACCEL_FAILED is deprecated and should not be used. */
+#define MBEDTLS_ERR_XTEA_HW_ACCEL_FAILED                  -0x0029  /**< XTEA hardware accelerator failed. */
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+#if !defined(MBEDTLS_XTEA_ALT)
+// Regular implementation
+//
+
 /**
  * \brief          XTEA context structure
  */
-typedef struct
+typedef struct mbedtls_xtea_context
 {
     uint32_t k[4];       /*!< key */
 }
 mbedtls_xtea_context;
+
+#else  /* MBEDTLS_XTEA_ALT */
+#include "xtea_alt.h"
+#endif /* MBEDTLS_XTEA_ALT */
 
 /**
  * \brief          Initialize XTEA context
@@ -113,17 +119,7 @@ int mbedtls_xtea_crypt_cbc( mbedtls_xtea_context *ctx,
                     unsigned char *output);
 #endif /* MBEDTLS_CIPHER_MODE_CBC */
 
-#ifdef __cplusplus
-}
-#endif
-
-#else  /* MBEDTLS_XTEA_ALT */
-#include "xtea_alt.h"
-#endif /* MBEDTLS_XTEA_ALT */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#if defined(MBEDTLS_SELF_TEST)
 
 /**
  * \brief          Checkup routine
@@ -131,6 +127,8 @@ extern "C" {
  * \return         0 if successful, or 1 if the test failed
  */
 int mbedtls_xtea_self_test( int verbose );
+
+#endif /* MBEDTLS_SELF_TEST */
 
 #ifdef __cplusplus
 }

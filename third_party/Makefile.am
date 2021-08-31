@@ -29,20 +29,24 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                              = \
-    dialog                                \
     nlbuild-autotools                     \
     openthread-test-driver                \
-    NordicSemiconductor                   \
     $(NULL)
 
 # Always package (e.g. for 'make dist') these subdirectories.
 
 DIST_SUBDIRS                            = \
+    jlink                                 \
     mbedtls                               \
+    tcplp                                 \
+    $(NULL)
+
+SUBDIRS =                                 \
+    tcplp                                 \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-SUBDIRS                                 = \
+SUBDIRS                                += \
     mbedtls                               \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS

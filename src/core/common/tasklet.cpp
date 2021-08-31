@@ -31,104 +31,67 @@
  *   This file implements the tasklet scheduler.
  */
 
-#include <openthread.h>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/tasklet.hpp>
-#include <net/ip6.hpp>
+#include "tasklet.hpp"
 
-namespace Thread {
+#include "common/code_utils.hpp"
+#include "common/locator_getters.hpp"
 
-Tasklet::Tasklet(TaskletScheduler &aScheduler, Handler aHandler, void *aContext):
-    mScheduler(aScheduler),
-    mHandler(aHandler),
-    mContext(aContext),
-    mNext(NULL)
+namespace ot {
+
+void Tasklet::Post(void)
 {
-}
-
-ThreadError Tasklet::Post(void)
-{
-    return mScheduler.Post(*this);
-}
-
-TaskletScheduler::TaskletScheduler(void):
-    mHead(NULL),
-    mTail(NULL)
-{
-}
-
-ThreadError TaskletScheduler::Post(Tasklet &aTasklet)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(mTail != &aTasklet && aTasklet.mNext == NULL, error = kThreadError_Already);
-
-    if (mTail == NULL)
+    if (!IsPosted())
     {
-        mHead = &aTasklet;
-        mTail = &aTasklet;
-        otSignalTaskletPending(aTasklet.mScheduler.GetIp6()->GetInstance());
+        Get<Scheduler>().PostTasklet(*this);
+    }
+}
+
+void Tasklet::Scheduler::PostTasklet(Tasklet &aTasklet)
+{
+    // Tasklets are saved in a circular singly linked list.
+
+    if (mTail == nullptr)
+    {
+        mTail        = &aTasklet;
+        mTail->mNext = mTail;
+        otTaskletsSignalPending(&aTasklet.GetInstance());
     }
     else
     {
-        mTail->mNext = &aTasklet;
-        mTail = &aTasklet;
+        aTasklet.mNext = mTail->mNext;
+        mTail->mNext   = &aTasklet;
+        mTail          = &aTasklet;
     }
-
-exit:
-    return error;
 }
 
-Tasklet *TaskletScheduler::PopTasklet(void)
-{
-    Tasklet *task = mHead;
-
-    if (task != NULL)
-    {
-        mHead = mHead->mNext;
-
-        if (mHead == NULL)
-        {
-            mTail = NULL;
-        }
-
-        task->mNext = NULL;
-    }
-
-    return task;
-}
-
-bool TaskletScheduler::AreTaskletsPending(void)
-{
-    return mHead != NULL;
-}
-
-void TaskletScheduler::ProcessQueuedTasklets(void)
+void Tasklet::Scheduler::ProcessQueuedTasklets(void)
 {
     Tasklet *tail = mTail;
-    Tasklet *cur;
 
-    while ((cur = PopTasklet()) != NULL)
+    // This method processes all tasklets queued when this is called. We
+    // keep a copy the current list and then clear the main list by
+    // setting `mTail` to nullptr. A newly posted tasklet while processing
+    // the currently queued tasklets will then trigger a call to
+    // `otTaskletsSignalPending()`.
+
+    mTail = nullptr;
+
+    while (tail != nullptr)
     {
-        cur->RunTask();
+        Tasklet *tasklet = tail->mNext;
 
-        // only process tasklets that were queued at the time this method was called
-        if (cur == tail)
+        if (tasklet == tail)
         {
-            if (mHead != NULL)
-            {
-                otSignalTaskletPending(cur->mScheduler.GetIp6()->GetInstance());
-            }
-
-            break;
+            tail = nullptr;
         }
+        else
+        {
+            tail->mNext = tasklet->mNext;
+        }
+
+        tasklet->mNext = nullptr;
+        tasklet->RunTask();
     }
 }
 
-Ip6::Ip6 *TaskletScheduler::GetIp6()
-{
-    return Ip6::Ip6FromTaskletScheduler(this);
-}
-
-}  // namespace Thread
+} // namespace ot

@@ -34,9 +34,13 @@
 #ifndef IP6_FILTER_HPP_
 #define IP6_FILTER_HPP_
 
-#include <openthread.h>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/non_copyable.hpp"
+
+namespace ot {
 namespace Ip6 {
 
 /**
@@ -53,14 +57,16 @@ namespace Ip6 {
  * This class implements an IPv6 datagram filter.
  *
  */
-class Filter
+class Filter : public InstanceLocator, private NonCopyable
 {
 public:
     /**
      * This constructor initializes the Filter object.
      *
+     * @param[in]  aInstance  A reference to the OpenThread instance.
+     *
      */
-    Filter(void);
+    explicit Filter(Instance &aInstance);
 
     /**
      * This method indicates whether or not the IPv6 datagram passes the filter.
@@ -78,22 +84,40 @@ public:
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval kThreadError_None    The port was successfully added to the allowed unsecure port list.
-     * @retval kThreadError_NoBufs  The unsecure port list is full.
+     * @retval kErrorNone         The port was successfully added to the allowed unsecure port list.
+     * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
+     * @retval kErrorNoBufs       The unsecure port list is full.
      *
      */
-    ThreadError AddUnsecurePort(uint16_t aPort);
+    Error AddUnsecurePort(uint16_t aPort);
 
     /**
      * This method removes a port from the allowed unsecure port list.
      *
      * @param[in]  aPort  The port value.
      *
-     * @retval kThreadError_None      The port was successfully removed from the allowed unsecure port list.
-     * @retval kThreadError_NotFound  The port was not found in the unsecure port list.
+     * @retval kErrorNone         The port was successfully removed from the allowed unsecure port list.
+     * @retval kErrorInvalidArgs  The port is invalid (value 0 is reserved for internal use).
+     * @retval kErrorNotFound     The port was not found in the unsecure port list.
      *
      */
-    ThreadError RemoveUnsecurePort(uint16_t aPort);
+    Error RemoveUnsecurePort(uint16_t aPort);
+
+    /**
+     * This method checks whether a port is in the unsecure port list.
+     *
+     * @param[in]  aPort  The port value.
+     *
+     * @returns Whether the given port is in the unsecure port list.
+     *
+     */
+    bool IsUnsecurePort(uint16_t aPort);
+
+    /**
+     * This method removes all ports from the allowed unsecure port list.
+     *
+     */
+    void RemoveAllUnsecurePorts(void);
 
     /**
      * This method returns a pointer to the unsecure port list.
@@ -108,14 +132,12 @@ public:
     const uint16_t *GetUnsecurePorts(uint8_t &aNumEntries) const;
 
 private:
-    enum
-    {
-        kMaxUnsecurePorts = 2,
-    };
+    static constexpr uint16_t kMaxUnsecurePorts = 2;
+
     uint16_t mUnsecurePorts[kMaxUnsecurePorts];
 };
 
-}  // namespace Ip6
-}  // namespace Thread
+} // namespace Ip6
+} // namespace ot
 
-#endif  // IP6_FILTER_HPP_
+#endif // IP6_FILTER_HPP_

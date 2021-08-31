@@ -34,13 +34,22 @@
 #ifndef NET_NETIF_HPP_
 #define NET_NETIF_HPP_
 
-#include <common/message.hpp>
-#include <common/tasklet.hpp>
-#include <mac/mac_frame.hpp>
-#include <net/ip6_address.hpp>
-#include <net/socket.hpp>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#include "common/clearable.hpp"
+#include "common/code_utils.hpp"
+#include "common/iterator_utils.hpp"
+#include "common/linked_list.hpp"
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/non_copyable.hpp"
+#include "common/tasklet.hpp"
+#include "mac/mac_types.hpp"
+#include "net/ip6_address.hpp"
+#include "net/socket.hpp"
+#include "thread/mlr_types.hpp"
+
+namespace ot {
 namespace Ip6 {
 
 class Ip6;
@@ -56,299 +65,383 @@ class Ip6;
  */
 
 /**
- * This class represents an IPv6 Link Address.
- *
- */
-class LinkAddress
-{
-public :
-    /**
-     * Hardware types.
-     *
-     */
-    enum HardwareType
-    {
-        kEui64 = 27,
-    };
-    HardwareType   mType;       ///< Link address type.
-    uint8_t        mLength;     ///< Length of link address.
-    Mac::ExtAddress mExtAddress;  ///< Link address.
-};
-
-/**
- * This class implements an IPv6 network interface unicast address.
- *
- */
-class NetifUnicastAddress: public otNetifAddress
-{
-    friend class Netif;
-
-public:
-    /**
-     * This method returns the unicast address.
-     *
-     * @returns The unicast address.
-     *
-     */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
-
-    /**
-     * This method returns the unicast address.
-     *
-     * @returns The unicast address.
-     *
-     */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
-
-    /**
-     * This method returns the IPv6 scope value.
-     *
-     * @returns The IPv6 scope value.
-     *
-     */
-    uint8_t GetScope(void) const {
-        return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
-    }
-
-    /**
-     * This method returns the next unicast address assigned to the interface.
-     *
-     * @returns A pointer to the next unicast address.
-     *
-     */
-    const NetifUnicastAddress *GetNext(void) const { return static_cast<const NetifUnicastAddress *>(mNext); }
-
-    /**
-     * This method returns the next unicast address assigned to the interface.
-     *
-     * @returns A pointer to the next unicast address.
-     *
-     */
-    NetifUnicastAddress *GetNext(void) { return static_cast<NetifUnicastAddress *>(mNext); }
-};
-
-/**
- * This class implements an IPv6 network interface multicast address.
- *
- */
-class NetifMulticastAddress: public otNetifMulticastAddress
-{
-    friend class Netif;
-
-public:
-    /**
-     * This method returns the multicast address.
-     *
-     * @returns The multicast address.
-     *
-     */
-    const Address &GetAddress(void) const { return *static_cast<const Address *>(&mAddress); }
-
-    /**
-     * This method returns the multicast address.
-     *
-     * @returns The multicast address.
-     *
-     */
-    Address &GetAddress(void) { return *static_cast<Address *>(&mAddress); }
-
-    /**
-     * This method returns the next multicast address subscribed to the interface.
-     *
-     * @returns A pointer to the next multicast address.
-     *
-     */
-    const NetifMulticastAddress *GetNext(void) const { return static_cast<NetifMulticastAddress *>(mNext); }
-
-    /**
-     * This method returns the next multicast address subscribed to the interface.
-     *
-     * @returns A pointer to the next multicast address.
-     *
-     */
-    NetifMulticastAddress *GetNext(void) { return static_cast<NetifMulticastAddress *>(mNext); }
-};
-
-/**
- * This class implements network interface handlers.
- *
- */
-class NetifCallback
-{
-    friend class Netif;
-
-public:
-    /**
-     * This constructor initializes the object.
-     *
-     */
-    NetifCallback(void):
-        mCallback(NULL),
-        mContext(NULL),
-        mNext(NULL) {
-    }
-
-    /**
-     * This method sets the callback information.
-     *
-     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     */
-    void Set(otStateChangedCallback aCallback, void *aContext) {
-        mCallback = aCallback;
-        mContext = aContext;
-    }
-
-    /**
-     * This method tests whether the object is free or in use.
-     *
-     * @returns True if the object is free, false otherwise.
-     *
-     */
-    bool IsFree(void) {
-        return (mCallback == NULL);
-    }
-
-    /**
-     * This method frees the object.
-     *
-     */
-    void Free(void) {
-        mCallback = NULL;
-        mContext = NULL;
-        mNext = NULL;
-    }
-
-    /**
-     * This method tests whether the object is set to the provided elements.
-     *
-     * @param[in]  aCallback  A pointer to a function that is called when configuration or state changes.
-     * @param[in]  aContext   A pointer to arbitrary context information.
-     *
-     * @returns True if the object elements equal the input params, false otherwise.
-     *
-     */
-    bool IsServing(otStateChangedCallback aCallback, void *aContext) {
-        return (aCallback == mCallback && aContext == mContext);
-    }
-
-private:
-    void Callback(uint32_t aFlags) {
-        if (mCallback != NULL) {
-            mCallback(aFlags, mContext);
-        }
-    }
-
-    otStateChangedCallback mCallback;
-    void *mContext;
-    NetifCallback *mNext;
-};
-
-/**
  * This class implements an IPv6 network interface.
  *
  */
-class Netif
+class Netif : public InstanceLocator, private NonCopyable
 {
     friend class Ip6;
+    friend class Address;
 
 public:
     /**
+     * This class implements an IPv6 network interface unicast address.
+     *
+     */
+    class UnicastAddress : public otNetifAddress,
+                           public LinkedListEntry<UnicastAddress>,
+                           public Clearable<UnicastAddress>
+    {
+        friend class LinkedList<UnicastAddress>;
+
+    public:
+        /**
+         * This method clears and initializes the unicast address as a preferred, valid, thread-origin address with
+         * 64-bit prefix length.
+         *
+         * @param[in]   aPreferred  Whether to initialize as a preferred address.
+         *
+         */
+        void InitAsThreadOrigin(bool aPreferred = false);
+
+        /**
+         * This method clears and initializes the unicast address as a valid (but not preferred), thread-origin,
+         * realm-local scope (overridden) address with 64-bit prefix length.
+         *
+         */
+        void InitAsThreadOriginRealmLocalScope(void);
+
+        /**
+         * This method clears and initializes the unicast address as a valid (but not preferred), thread-origin, global
+         * scope address.
+         *
+         */
+        void InitAsThreadOriginGlobalScope(void);
+
+        /**
+         * This method clears and initializes the unicast address as a valid, SLAAC-origin address with a given
+         * preferred flag and a given prefix length.
+         *
+         * @param[in] aPrefixLength    The prefix length (in bits).
+         * @param[in] aPreferred       The preferred flag.
+         *
+         */
+        void InitAsSlaacOrigin(uint8_t aPrefixLength, bool aPreferred);
+
+        /**
+         * This method returns the unicast address.
+         *
+         * @returns The unicast address.
+         *
+         */
+        const Address &GetAddress(void) const { return static_cast<const Address &>(mAddress); }
+
+        /**
+         * This method returns the unicast address.
+         *
+         * @returns The unicast address.
+         *
+         */
+        Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
+
+        /**
+         * This method returns the address's prefix length (in bits).
+         *
+         * @returns The prefix length (in bits).
+         *
+         */
+        uint8_t GetPrefixLength(void) const { return mPrefixLength; }
+
+        /**
+         * This method indicates whether the address has a given prefix (i.e. same prefix length and matches the
+         * prefix).
+         *
+         * @param[in] aPrefix   A prefix to check against.
+         *
+         * @retval TRUE  The address has and fully matches the @p aPrefix.
+         * @retval FALSE The address does not contain or match the @p aPrefix.
+         *
+         */
+        bool HasPrefix(const Prefix &aPrefix) const
+        {
+            return (mPrefixLength == aPrefix.GetLength()) && GetAddress().MatchesPrefix(aPrefix);
+        }
+
+        /**
+         * This method returns the IPv6 scope value.
+         *
+         * @returns The IPv6 scope value.
+         *
+         */
+        uint8_t GetScope(void) const
+        {
+            return mScopeOverrideValid ? static_cast<uint8_t>(mScopeOverride) : GetAddress().GetScope();
+        }
+
+        /**
+         * This method sets the IPv6 scope override value.
+         *
+         * @param[in]  aScope  The IPv6 scope value.
+         *
+         */
+        void SetScopeOverride(uint8_t aScope)
+        {
+            mScopeOverride      = aScope;
+            mScopeOverrideValid = true;
+        }
+
+    private:
+        bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
+    };
+
+    /**
+     * This class implements an IPv6 network interface multicast address.
+     *
+     */
+    class MulticastAddress : public otNetifMulticastAddress,
+                             public LinkedListEntry<MulticastAddress>,
+                             public Clearable<MulticastAddress>
+    {
+        friend class LinkedList<MulticastAddress>;
+
+    public:
+        /**
+         * This method returns the multicast address.
+         *
+         * @returns The multicast address.
+         *
+         */
+        const Address &GetAddress(void) const { return static_cast<const Address &>(mAddress); }
+
+        /**
+         * This method returns the multicast address.
+         *
+         * @returns The multicast address.
+         *
+         */
+        Address &GetAddress(void) { return static_cast<Address &>(mAddress); }
+
+        /**
+         * This method returns the next multicast address subscribed to the interface.
+         *
+         * @returns A pointer to the next multicast address.
+         *
+         */
+        const MulticastAddress *GetNext(void) const { return static_cast<const MulticastAddress *>(mNext); }
+
+        /**
+         * This method returns the next multicast address subscribed to the interface.
+         *
+         * @returns A pointer to the next multicast address.
+         *
+         */
+        MulticastAddress *GetNext(void)
+        {
+            return static_cast<MulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
+        }
+
+    private:
+        bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
+    };
+
+    class ExternalMulticastAddress : public MulticastAddress
+    {
+        friend class Netif;
+        friend class LinkedList<ExternalMulticastAddress>;
+
+    public:
+        /**
+         * This class represents an iterator for iterating external multicast addresses in a `Netif` instance.
+         *
+         */
+        class Iterator : public ItemPtrIterator<ExternalMulticastAddress, Iterator>
+        {
+            friend class ItemPtrIterator<ExternalMulticastAddress, Iterator>;
+            friend class Netif;
+
+        public:
+            /**
+             * This constructor initializes an `Iterator` instance to start from the first external multicast address
+             * that matches a given IPv6 address type filter.
+             *
+             * @param[in] aNetif   A reference to the `Netif` instance.
+             * @param[in] aFilter  The IPv6 address type filter.
+             *
+             */
+            explicit Iterator(const Netif &aNetif, Address::TypeFilter aFilter = Address::kTypeAny);
+
+        private:
+            class Builder
+            {
+            public:
+                Builder(const Netif &aNetif, Address::TypeFilter aFilter)
+                    : mNetif(aNetif)
+                    , mFilter(aFilter)
+                {
+                }
+
+                Iterator begin(void) { return Iterator(mNetif, mFilter); }
+                Iterator end(void) { return Iterator(mNetif, Iterator::kEndIterator); }
+
+            private:
+                const Netif &       mNetif;
+                Address::TypeFilter mFilter;
+            };
+
+            enum IteratorType : uint8_t
+            {
+                kEndIterator,
+            };
+
+            Iterator(const Netif &aNetif, IteratorType)
+                : mNetif(aNetif)
+            {
+            }
+
+            void AdvanceFrom(const MulticastAddress *aAddr);
+            void Advance(void) { AdvanceFrom(mItem->GetNext()); }
+
+            const Netif &       mNetif;
+            Address::TypeFilter mFilter;
+        };
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+        /**
+         * This method returns the current Multicast Listener Registration (MLR) state.
+         *
+         * @returns The current Multicast Listener Registration state.
+         *
+         */
+        MlrState GetMlrState(void) const { return mMlrState; }
+
+        /**
+         * This method sets the Multicast Listener Registration (MLR) state.
+         *
+         * @param[in] aState  The new Multicast Listener Registration state.
+         *
+         */
+        void SetMlrState(MlrState aState) { mMlrState = aState; }
+#endif
+
+    private:
+        ExternalMulticastAddress *GetNext(void)
+        {
+            return static_cast<ExternalMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
+        }
+
+#if OPENTHREAD_CONFIG_MLR_ENABLE
+        MlrState mMlrState;
+#endif
+    };
+
+    /**
      * This constructor initializes the network interface.
      *
-     * @param[in]  aIp6             A reference to the IPv6 network object.
-     * @param[in]  aInterfaceId     The interface ID for this object.
+     * @param[in]  aInstance        A reference to the OpenThread instance.
      *
      */
-    Netif(Ip6 &aIp6, int8_t aInterfaceId);
+    explicit Netif(Instance &aInstance);
 
     /**
-     * This method returns a reference to the IPv6 network object.
+     * This method registers a callback to notify internal IPv6 address changes.
      *
-     * @returns A reference to the IPv6 network object.
+     * @param[in]  aCallback         A pointer to a function that is called when an IPv6 address is added or removed.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    Ip6 &GetIp6(void);
+    void SetAddressCallback(otIp6AddressCallback aCallback, void *aCallbackContext);
 
     /**
-     * This method returns the next network interface in the list.
+     * This method returns the linked list of unicast addresses.
      *
-     * @returns A pointer to the next network interface.
-     */
-    Netif *GetNext(void) const;
-
-    /**
-     * This method returns the network interface identifier.
-     *
-     * @returns The network interface identifier.
+     * @returns The linked list of unicast addresses.
      *
      */
-    int8_t GetInterfaceId(void) const;
-
-    /**
-     * This method returns a pointer to the list of unicast addresses.
-     *
-     * @returns A pointer to the list of unicast addresses.
-     *
-     */
-    const NetifUnicastAddress *GetUnicastAddresses(void) const;
+    const LinkedList<UnicastAddress> &GetUnicastAddresses(void) const { return mUnicastAddresses; }
 
     /**
      * This method adds a unicast address to the network interface.
      *
+     * This method is intended for addresses internal to OpenThread. The @p aAddress instance is directly added in the
+     * unicast address linked list.
+     *
+     * If @p aAddress is already added, the call to `AddUnicastAddress()` with the same address will perform no action.
+     *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None     Successfully added the unicast address.
-     * @retval kThreadError_Already  The unicast address was already added.
-     *
      */
-    ThreadError AddUnicastAddress(NetifUnicastAddress &aAddress);
+    void AddUnicastAddress(UnicastAddress &aAddress);
 
     /**
      * This method removes a unicast address from the network interface.
      *
+     * This method is intended for addresses internal to OpenThread. The @p aAddress instance is removed from the
+     * unicast address linked list.
+     *
+     * If @p aAddress is not in the list, the call to `RemoveUnicastAddress()` will perform no action.
+     *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None      Successfully removed the unicast address.
-     * @retval kThreadError_NotFound  The unicast address wasn't found to be removed.
+     */
+    void RemoveUnicastAddress(const UnicastAddress &aAddress);
+
+    /**
+     * This method indicates whether or not an address is assigned to the interface.
+     *
+     * @param[in]  aAddress  A reference to the unicast address.
+     *
+     * @retval TRUE   If @p aAddress is assigned to the network interface,
+     * @retval FALSE  If @p aAddress is not assigned to the network interface.
      *
      */
-    ThreadError RemoveUnicastAddress(const NetifUnicastAddress &aAddress);
+    bool HasUnicastAddress(const Address &aAddress) const;
+
+    /**
+     * This method indicates whether or not a unicast address is assigned to the network interface.
+     *
+     * @param[in]  aAddress  A reference to the unicast address.
+     *
+     * @retval TRUE   If @p aAddress is assigned to the network interface,
+     * @retval FALSE  If @p aAddress is not assigned to the network interface.
+     *
+     */
+    bool HasUnicastAddress(const UnicastAddress &aAddress) const { return mUnicastAddresses.Contains(aAddress); }
+
+    /**
+     * This method indicates whether a unicast address is an external or internal address.
+     *
+     * @param[in] aAddress  A reference to the unicast address.
+     *
+     * @retval TRUE   The address is an external address.
+     * @retval FALSE  The address is not an external address (it is an OpenThread internal address).
+     *
+     */
+    bool IsUnicastAddressExternal(const UnicastAddress &aAddress) const;
 
     /**
      * This method adds an external (to OpenThread) unicast address to the network interface.
      *
+     * For external address, the @p aAddress instance is not directly used (i.e., it can be temporary). It is copied
+     * into a local entry (allocated from an internal pool) before being added in the unicast address linked list.
+     * The maximum number of external addresses is specified by `OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS`.
+     *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None         Successfully added (or updated) the unicast address.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_NoBufs       The maximum number of allowed external addresses are already added.
+     * @retval kErrorNone         Successfully added (or updated) the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNoBufs       The maximum number of allowed external addresses are already added.
      *
      */
-    ThreadError AddExternalUnicastAddress(const NetifUnicastAddress &aAddress);
+    Error AddExternalUnicastAddress(const UnicastAddress &aAddress);
 
     /**
      * This method removes a external (to OpenThread) unicast address from the network interface.
      *
      * @param[in]  aAddress  A reference to the unicast address.
      *
-     * @retval kThreadError_None         Successfully removed the unicast address.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_NotFound     The unicast address was not found.
+     * @retval kErrorNone         Successfully removed the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNotFound     The unicast address was not found.
      *
      */
-    ThreadError RemoveExternalUnicastAddress(const Address &aAddress);
+    Error RemoveExternalUnicastAddress(const Address &aAddress);
 
     /**
-     * This method indicates whether or not an address is assigned to this interface.
-     *
-     * @param[in]  aAddress  A reference to the unicast address.
-     *
-     * @returns TRUE if @p aAddress is assigned to this interface, FALSE otherwise.
+     * This method removes all the previously added external (to OpenThread) unicast addresses from the
+     * network interface.
      *
      */
-    bool IsUnicastAddress(const Address &aAddress) const;
+    void RemoveAllExternalUnicastAddresses(void);
 
     /**
      * This method indicates whether or not the network interface is subscribed to a multicast address.
@@ -362,7 +455,9 @@ public:
     bool IsMulticastSubscribed(const Address &aAddress) const;
 
     /**
-     * This method subscribes the network interface to the link-local and realm-local all routers address.
+     * This method subscribes the network interface to the link-local and realm-local all routers addresses.
+     *
+     * @note This method MUST be called after `SubscribeAllNodesMulticast()` or its behavior is undefined.
      *
      */
     void SubscribeAllRoutersMulticast(void);
@@ -374,211 +469,167 @@ public:
     void UnsubscribeAllRoutersMulticast(void);
 
     /**
-     * This method returns a pointer to the list of multicast addresses.
+     * This method returns the linked list of multicast addresses.
      *
-     * @returns A pointer to the list of multicast addresses.
+     * @returns The linked list of multicast addresses.
      *
      */
-    const NetifMulticastAddress *GetMulticastAddresses(void) const;
+    const LinkedList<MulticastAddress> &GetMulticastAddresses(void) const { return mMulticastAddresses; }
+
+    /**
+     * This method indicates whether a multicast address is an external or internal address.
+     *
+     * @param[in] aAddress  A reference to the multicast address.
+     *
+     * @retval TRUE   The address is an external address.
+     * @retval FALSE  The address is not an external address (it is an OpenThread internal address).
+     *
+     */
+    bool IsMulticastAddressExternal(const MulticastAddress &aAddress) const;
 
     /**
      * This method subscribes the network interface to a multicast address.
      *
+     * This method is intended for addresses internal to OpenThread. The @p aAddress instance is directly added in the
+     * multicast address linked list.
+     *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None     Successfully subscribed to @p aAddress.
-     * @retval kThreadError_Already  The multicast address is already subscribed.
-     *
      */
-    ThreadError SubscribeMulticast(NetifMulticastAddress &aAddress);
+    void SubscribeMulticast(MulticastAddress &aAddress);
 
     /**
      * This method unsubscribes the network interface to a multicast address.
      *
+     * This method is intended for addresses internal to OpenThread. The @p aAddress instance is directly removed from
+     * the multicast address linked list.
+     *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None     Successfully unsubscribed to @p aAddress.
-     * @retval kThreadError_Already  The multicast address is already unsubscribed.
-     *
      */
-    ThreadError UnsubscribeMulticast(const NetifMulticastAddress &aAddress);
+    void UnsubscribeMulticast(const MulticastAddress &aAddress);
 
     /**
      * This method subscribes the network interface to the external (to OpenThread) multicast address.
      *
+     * For external address, the @p aAddress instance is not directly used (i.e., it can be temporary). It is copied
+     * into a local entry (allocated from an internal pool) before being added in the multicast address linked list.
+     * The maximum number of external addresses is specified by `OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS`.
+     *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None         Successfully subscribed to @p aAddress.
-     * @retval kThreadError_Already      The multicast address is already subscribed.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal multicast address.
-     * @retval kThreadError_NoBufs       The maximum number of allowed external multicast addresses are already added.
+     * @retval kErrorNone          Successfully subscribed to @p aAddress.
+     * @retval kErrorAlready       The multicast address is already subscribed.
+     * @retval kErrorInvalidArgs   The address indicated by @p aAddress is an internal multicast address.
+     * @retval kErrorNoBufs        The maximum number of allowed external multicast addresses are already added.
      *
      */
-    ThreadError SubscribeExternalMulticast(const Address &aAddress);
+    Error SubscribeExternalMulticast(const Address &aAddress);
 
     /**
-     * This method ussubscribes the network interface to the external (to OpenThread) multicast address.
+     * This method unsubscribes the network interface to the external (to OpenThread) multicast address.
      *
      * @param[in]  aAddress  A reference to the multicast address.
      *
-     * @retval kThreadError_None         Successfully unsubscribed to the unicast address.
-     * @retval kThreadError_InvalidArgs  The address indicated by @p aAddress is an internal address.
-     * @retval kThreadError_NotFound     The multicast address was not found.
+     * @retval kErrorNone         Successfully unsubscribed to the unicast address.
+     * @retval kErrorInvalidArgs  The address indicated by @p aAddress is an internal address.
+     * @retval kErrorNotFound     The multicast address was not found.
      *
      */
-    ThreadError UnsubscribeExternalMulticast(const Address &aAddress);
+    Error UnsubscribeExternalMulticast(const Address &aAddress);
+
+    /**
+     * This method unsubscribes the network interface from all previously added external (to OpenThread) multicast
+     * addresses.
+     *
+     */
+    void UnsubscribeAllExternalMulticastAddresses(void);
 
     /**
      * This method checks if multicast promiscuous mode is enabled on the network interface.
      *
      * @retval TRUE   If the multicast promiscuous mode is enabled.
      * @retval FALSE  If the multicast promiscuous mode is disabled.
+     *
      */
-    bool IsMulticastPromiscuousModeEnabled(void);
+    bool IsMulticastPromiscuousEnabled(void) const { return mMulticastPromiscuous; }
 
     /**
      * This method enables multicast promiscuous mode on the network interface.
      *
+     * @param[in]  aEnabled  TRUE if Multicast Promiscuous mode is enabled, FALSE otherwise.
+     *
      */
-    void EnableMulticastPromiscuousMode(void);
+    void SetMulticastPromiscuous(bool aEnabled) { mMulticastPromiscuous = aEnabled; }
 
     /**
-     * This method disables multicast promiscuous mode on the network interface.
+     * This method enables range-based `for` loop iteration over external multicast addresses on the Netif that matches
+     * a given IPv6 address type filter.
+     *
+     * This method should be used like follows: to iterate over all external multicast addresses
+     *
+     *     for (Ip6::Netif::ExternalMulticastAddress &addr : Get<ThreadNetif>().IterateExternalMulticastAddresses())
+     *     { ... }
+     *
+     * or to iterate over a subset of external multicast addresses determined by a given address type filter
+     *
+     *     for (Ip6::Netif::ExternalMulticastAddress &addr :
+     *          Get<ThreadNetif>().IterateExternalMulticastAddresses(Ip6::Address::kTypeMulticastLargerThanRealmLocal))
+     *     { ... }
+     *
+     * @param[in] aFilter  The IPv6 address type filter.
+     *
+     * @returns An `ExternalMulticastAddress::Iterator::Builder` instance.
      *
      */
-    void DisableMulticastPromiscuousMode(void);
+    ExternalMulticastAddress::Iterator::Builder IterateExternalMulticastAddresses(
+        Address::TypeFilter aFilter = Address::kTypeAny)
+    {
+        return ExternalMulticastAddress::Iterator::Builder(*this, aFilter);
+    }
 
     /**
-     * This method registers a network interface callback.
+     * This method indicates whether or not the network interfaces is subscribed to any external multicast address.
      *
-     * @param[in]  aCallback  A reference to the callback.
-     *
-     * @retval kThreadError_None    Successfully registered the callback.
-     * @retval kThreadError_Already The callback was already registered.
-     */
-    ThreadError RegisterCallback(NetifCallback &aCallback);
-
-    /**
-     * This method removes a network interface callback.
-     *
-     * @param[in]  aCallback  A reference to the callback.
-     *
-     * @retval kThreadError_None    Successfully removed the callback.
-     * @retval kThreadError_Already The callback was not in the list.
-     */
-    ThreadError RemoveCallback(NetifCallback &aCallback);
-
-    /**
-     * This method indicates whether or not a state changed callback is pending.
-     *
-     * @retval TRUE if a state changed callback is pending, FALSE otherwise.
+     * @retval TRUE  The network interface is subscribed to at least one external multicast address.
+     * @retval FALSE The network interface is not subscribed to any external multicast address.
      *
      */
-    bool IsStateChangedCallbackPending(void);
-
-    /**
-     * This method schedules notification of @p aFlags.
-     *
-     * The @p aFlags are combined (bitwise-or) with other flags that have not been provided in a callback yet.
-     *
-     * @param[in]  aFlags  A bit-field indicating what configuration or state has changed.
-     *
-     */
-    void SetStateChangedFlags(uint32_t aFlags);
-
-    /**
-     * This virtual method enqueues an IPv6 messages on this network interface.
-     *
-     * @param[in]  aMessage  A reference to the IPv6 message.
-     *
-     * @retval kThreadError_None  Successfully enqueued the IPv6 message.
-     *
-     */
-    virtual ThreadError SendMessage(Message &aMessage) = 0;
-
-    /**
-     * This virtual method fills out @p aAddress with the link address.
-     *
-     * @param[out]  aAddress  A reference to the link address.
-     *
-     * @retval kThreadError_None  Successfully retrieved the link address.
-     *
-     */
-    virtual ThreadError GetLinkAddress(LinkAddress &aAddress) const = 0;
-
-    /**
-     * This virtual method performs a source-destination route lookup.
-     *
-     * @param[in]   aSource       A reference to the IPv6 source address.
-     * @param[in]   aDestination  A reference to the IPv6 destination address.
-     * @param[out]  aPrefixMatch  The longest prefix match result.
-     *
-     * @retval kThreadError_None     Successfully found a route.
-     * @retval kThreadError_NoRoute  No route to destination.
-     *
-     */
-    virtual ThreadError RouteLookup(const Address &aSource, const Address &aDestination,
-                                    uint8_t *aPrefixMatch) = 0;
+    bool HasAnyExternalMulticastAddress(void) const { return !ExternalMulticastAddress::Iterator(*this).IsDone(); }
 
 protected:
-    Ip6 &mIp6;
+    /**
+     * This method subscribes the network interface to the realm-local all MPL forwarders, link-local, and realm-local
+     * all nodes address.
+     *
+     */
+    void SubscribeAllNodesMulticast(void);
+
+    /**
+     * This method unsubscribes the network interface from the realm-local all MPL forwarders, link-local and
+     * realm-local all nodes address.
+     *
+     * @note This method MUST be called after `UnsubscribeAllRoutersMulticast()` or its behavior is undefined
+     *
+     */
+    void UnsubscribeAllNodesMulticast(void);
 
 private:
-    static void HandleStateChangedTask(void *aContext);
-    void HandleStateChangedTask(void);
+    LinkedList<UnicastAddress>   mUnicastAddresses;
+    LinkedList<MulticastAddress> mMulticastAddresses;
+    bool                         mMulticastPromiscuous;
 
-    NetifCallback *mCallbacks;
-    NetifUnicastAddress *mUnicastAddresses;
-    NetifMulticastAddress *mMulticastAddresses;
-    int8_t mInterfaceId;
-    bool mAllRoutersSubscribed;
-    bool mMulticastPromiscuousMode;
-    Tasklet mStateChangedTask;
-    Netif *mNext;
+    otIp6AddressCallback mAddressCallback;
+    void *               mAddressCallbackContext;
 
-    uint32_t mStateChangedFlags;
+    Pool<UnicastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_UCAST_ADDRS>           mExtUnicastAddressPool;
+    Pool<ExternalMulticastAddress, OPENTHREAD_CONFIG_IP6_MAX_EXT_MCAST_ADDRS> mExtMulticastAddressPool;
 
-    NetifUnicastAddress mExtUnicastAddresses[OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS];
-    uint8_t mMaskExtUnicastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS
-
-    NetifMulticastAddress mExtMulticastAddresses[OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS];
-    uint8_t mMaskExtMulticastAddresses; // Must have enough bits to hold OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS
-
-    /**
-     * This method determines if an address is one of the external unicast addresses, and if so returns
-     * the index in the mExtUnicastAddresses array.
-     *
-     * @param[in]  aAddress  A pointer to the Network Interface address.
-     *
-     * @returns The index in the mExtUnicastAddresses array or -1 if not part of the array.
-     *
-     */
-    int8_t GetExtUnicastAddressIndex(const NetifUnicastAddress *address) {
-        if (address < &mExtUnicastAddresses[0] ||
-            address >= &mExtUnicastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_IP_ADDRS) {
-            return -1;
-        }
-
-        return static_cast<int8_t>(address - &mExtUnicastAddresses[0]);
-    }
-
-    /**
-     * This method determines if an address is one of the external multicast addresses, and if so returns
-     * the index in the mExtMulticastAddresses array.
-     *
-     * @param[in]  aAddress  A pointer to the Network Interface Multicast address.
-     *
-     * @returns The index in the mExtMulticastAddresses array or -1 if not part of the array.
-     *
-     */
-    int8_t GetExtMulticastAddressIndex(const NetifMulticastAddress *address) {
-        if (address < &mExtMulticastAddresses[0] ||
-            address >= &mExtMulticastAddresses[0] + OPENTHREAD_CONFIG_MAX_EXT_MULTICAST_IP_ADDRS) {
-            return -1;
-        }
-
-        return static_cast<int8_t>(address - &mExtMulticastAddresses[0]);
-    }
+    static const otNetifMulticastAddress kRealmLocalAllMplForwardersMulticastAddress;
+    static const otNetifMulticastAddress kLinkLocalAllNodesMulticastAddress;
+    static const otNetifMulticastAddress kRealmLocalAllNodesMulticastAddress;
+    static const otNetifMulticastAddress kLinkLocalAllRoutersMulticastAddress;
+    static const otNetifMulticastAddress kRealmLocalAllRoutersMulticastAddress;
 };
 
 /**
@@ -586,7 +637,7 @@ private:
  *
  */
 
-}  // namespace Ip6
-}  // namespace Thread
+} // namespace Ip6
+} // namespace ot
 
-#endif  // NET_NETIF_HPP_
+#endif // NET_NETIF_HPP_

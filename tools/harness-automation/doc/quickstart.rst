@@ -4,7 +4,7 @@ Thread Harness Automation Quick Start
 Setup
 -----
 
-#. Install Thread-Test-Harness1.1-Alpha v1.0-Release_13.0
+#. Install Thread-Test-Harness1.1-Alpha v1.0-Release_40.0
 #. Install python 2.7
 #. Get the OpenThread and switch to the harness automation path::
 

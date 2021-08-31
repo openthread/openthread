@@ -34,14 +34,20 @@
 #ifndef DHCP6_HPP_
 #define DHCP6_HPP_
 
-#include <common/message.hpp>
-#include <net/udp6.hpp>
+#include "openthread-core-config.h"
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+#include "common/clearable.hpp"
+#include "common/equatable.hpp"
+#include "common/message.hpp"
+#include "common/random.hpp"
+#include "mac/mac_types.hpp"
+#include "net/udp6.hpp"
 
-namespace Thread {
+namespace ot {
 namespace Dhcp6 {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * @addtogroup core-dhcp6
@@ -53,65 +59,73 @@ namespace Dhcp6 {
  *
  */
 
-
-/**
- * DHCPv6 constant
- *
- */
-enum
-{
-    kDhcpClientPort = 546,
-    kDhcpServerPort = 547,
-    kTransactionIdSize = 3,
-    kLinkLayerAddressLen = 8,
-    kHardwareTypeEui64 = 27,
-};
+constexpr uint16_t kDhcpClientPort       = 546;
+constexpr uint16_t kDhcpServerPort       = 547;
+constexpr uint16_t kHardwareTypeEui64    = 27;
+constexpr uint16_t kHardwareTypeEthernet = 1;
 
 /**
  * DHCPv6 Message Types
  *
  */
-typedef enum Type
+enum Type : uint8_t
 {
-    kTypeSolicit = 1,
-    kTypeAdvertise = 2,
-    kTypeRequest = 3,
-    kTypeConfirm = 4,
-    kTypeRenew = 5,
-    kTypeRebind = 6,
-    kTypeReply = 7,
-    kTypeRelease = 8,
-    kTypeDecline = 9,
-    kTypeReconfigure = 10,
+    kTypeNone               = 0,
+    kTypeSolicit            = 1,
+    kTypeAdvertise          = 2,
+    kTypeRequest            = 3,
+    kTypeConfirm            = 4,
+    kTypeRenew              = 5,
+    kTypeRebind             = 6,
+    kTypeReply              = 7,
+    kTypeRelease            = 8,
+    kTypeDecline            = 9,
+    kTypeReconfigure        = 10,
     kTypeInformationRequest = 11,
-    kTypeRelayForward = 12,
-    kTypeRelayReply = 13,
-    kTypeLeaseQuery = 14,
-    kTypeLeaseQueryReply = 15,
-} Type;
+    kTypeRelayForward       = 12,
+    kTypeRelayReply         = 13,
+    kTypeLeaseQuery         = 14,
+    kTypeLeaseQueryReply    = 15,
+};
 
+/**
+ * This class represents a DHCP6 transaction identifier.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class TransactionId : public Equatable<TransactionId>, public Clearable<TransactionId>
+{
+public:
+    static constexpr uint16_t kSize = 3; ///< Transaction Id size (in bytes).
+
+    /**
+     * This method generates a cryptographically secure random sequence to populate the transaction identifier.
+     *
+     * @retval kErrorNone     Successfully generated a random transaction identifier.
+     * @retval kErrorFailed   Failed to generate random sequence.
+     *
+     */
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, kSize); }
+
+private:
+    uint8_t m8[kSize];
+} OT_TOOL_PACKED_END;
 
 /**
  * This class implements DHCPv6 header.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Dhcp6Header
+class Header : public Clearable<Header>
 {
 public:
-    /**
-     * This method initializes the DHCPv6 header to all zeros.
-     *
-     */
-    void Init(void) { mType = 0; mTransactionId[0] = 0; }
-
     /**
      * This method returns the DHCPv6 message type.
      *
      * @returns The DHCPv6 message type.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(mType); }
+    Type GetType(void) const { return mType; }
 
     /**
      * This method sets the DHCPv6 message type.
@@ -119,72 +133,76 @@ public:
      * @param[in]  aType  The DHCPv6 message type.
      *
      */
-    void SetType(Type aType) { mType = static_cast<uint8_t>(aType); }
+    void SetType(Type aType) { mType = aType; }
 
     /**
-     * This method returns the DHCPv6 message transaction id.
+     * This method returns the DHCPv6 message transaction identifier.
      *
-     * @returns A pointer of DHCPv6 message transaction id.
+     * @returns The DHCPv6 message transaction identifier.
      *
      */
-    uint8_t *GetTransactionId(void) { return mTransactionId; }
+    const TransactionId &GetTransactionId(void) const { return mTransactionId; }
 
     /**
-     * This method sets the DHCPv6 message transaction id.
+     * This method sets the DHCPv6 message transaction identifier.
      *
-     * @param[in]  aBuf  The DHCPv6 message transaction id.
+     * @param[in]  aTransactionId  The DHCPv6 message transaction identifier.
      *
      */
-    void SetTransactionId(uint8_t *aBuf) { memcpy(mTransactionId, aBuf, kTransactionIdSize); }
+    void SetTransactionId(const TransactionId &aTransactionId) { mTransactionId = aTransactionId; }
 
 private:
-    uint8_t mType;                                   ///< Type
-    uint8_t mTransactionId[kTransactionIdSize];      ///< Transaction Id
+    Type          mType;
+    TransactionId mTransactionId;
 } OT_TOOL_PACKED_END;
 
 /**
- * DHCPv6 Option Codes
+ * DHCPv6 Option Codes.
  *
  */
-typedef enum Code
+enum Code : uint16_t
 {
-    kOptionClientIdentifier = 1,
-    kOptionServerIdentifier = 2,
-    kOptionIaNa = 3,
-    kOptionIaTa = 4,
-    kOptionIaAddress = 5,
-    kOptionRequestOption = 6,
-    kOptionPreference = 7,
-    kOptionElapsedTime = 8,
-    kOptionRelayMessage = 9,
-    kOptionAuthentication = 11,
-    kOptionServerUnicast = 12,
-    kOptionStatusCode = 13,
-    kOptionRapidCommit = 14,
-    kOptionUserClass = 15,
-    kOptionVendorClass = 16,
+    kOptionClientIdentifier          = 1,
+    kOptionServerIdentifier          = 2,
+    kOptionIaNa                      = 3,
+    kOptionIaTa                      = 4,
+    kOptionIaAddress                 = 5,
+    kOptionRequestOption             = 6,
+    kOptionPreference                = 7,
+    kOptionElapsedTime               = 8,
+    kOptionRelayMessage              = 9,
+    kOptionAuthentication            = 11,
+    kOptionServerUnicast             = 12,
+    kOptionStatusCode                = 13,
+    kOptionRapidCommit               = 14,
+    kOptionUserClass                 = 15,
+    kOptionVendorClass               = 16,
     kOptionVendorSpecificInformation = 17,
-    kOptionInterfaceId = 18,
-    kOptionReconfigureMessage = 19,
-    kOptionReconfigureAccept = 20,
-    kOptionLeaseQuery = 44,
-    kOptionClientData = 45,
+    kOptionInterfaceId               = 18,
+    kOptionReconfigureMessage        = 19,
+    kOptionReconfigureAccept         = 20,
+    kOptionLeaseQuery                = 44,
+    kOptionClientData                = 45,
     kOptionClientLastTransactionTime = 46,
-} Code;
+};
 
 /**
  * This class implements DHCPv6 option.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Dhcp6Option
+class Option
 {
 public:
     /**
      * This method initializes the DHCPv6 option to all zeros.
      *
      */
-    void Init(void) { mCode = 0; mLength = 0; }
+    void Init(void)
+    {
+        mCode   = 0;
+        mLength = 0;
+    }
 
     /**
      * This method returns the DHCPv6 option code.
@@ -203,7 +221,7 @@ public:
     void SetCode(Code aCode) { mCode = HostSwap16(static_cast<uint16_t>(aCode)); }
 
     /**
-     * This method returns the Length of DHCPv6 option.
+     * This method returns the length of DHCPv6 option.
      *
      * @returns The length of DHCPv6 option.
      *
@@ -219,43 +237,47 @@ public:
     void SetLength(uint16_t aLength) { mLength = HostSwap16(aLength); }
 
 private:
-    uint16_t mCode;                                  ///< Code
-    uint16_t mLength;                                ///< Length
+    uint16_t mCode;
+    uint16_t mLength;
 } OT_TOOL_PACKED_END;
 
 /**
- * Duid Type
+ * DHCP6 Unique Identifier (DUID) Type.
  *
  */
-typedef enum DuidType
+enum DuidType : uint16_t
 {
-    kDuidLLT = 1,
-    kDuidEN = 2,
-    kDuidLL = 3,
-} DuidType;
+    kDuidLinkLayerAddressPlusTime = 1, ///< Link-layer address plus time (DUID-LLT).
+    kDuidEnterpriseNumber         = 2, ///< Vendor-assigned unique ID based on Enterprise Number (DUID-EN).
+    kDuidLinkLayerAddress         = 3, ///< Link-layer address (DUID-LL).
+};
 
 OT_TOOL_PACKED_BEGIN
-class ClientIdentifier: public Dhcp6Option
+class ClientIdentifier : public Option
 {
 public:
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionClientIdentifier); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionClientIdentifier);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 
     /**
-     * This method returns the client Duid Type.
+     * This method returns the client DUID Type.
      *
-     * @returns The client Duid Type.
+     * @returns The client DUID Type.
      *
      */
     DuidType GetDuidType(void) const { return static_cast<DuidType>(HostSwap16(mDuidType)); }
 
     /**
-     * This method sets the client Duid Type.
+     * This method sets the client DUID Type.
      *
-     * @param[in]  aDuidType  The client Duid Type.
+     * @param[in]  aDuidType  The client DUID Type.
      *
      */
     void SetDuidType(DuidType aDuidType) { mDuidType = HostSwap16(static_cast<uint16_t>(aDuidType)); }
@@ -279,10 +301,10 @@ public:
     /**
      * This method returns the client LinkLayerAddress.
      *
-     * @returns A pointer to the client LinkLayerAddress.
+     * @returns The link-layer address.
      *
      */
-    uint8_t *GetDuidLinkLayerAddress(void) { return mDuidLinkLayerAddress; }
+    const Mac::ExtAddress &GetDuidLinkLayerAddress(void) const { return mDuidLinkLayerAddress; }
 
     /**
      * This method sets the client LinkLayerAddress.
@@ -290,52 +312,59 @@ public:
      * @param[in]  aLinkLayerAddress The client LinkLayerAddress.
      *
      */
-    void SetDuidLinkLayerAddress(const Mac::ExtAddress *aDuidLinkLayerAddress) { memcpy(mDuidLinkLayerAddress, aDuidLinkLayerAddress, sizeof(Mac::ExtAddress)); }
+    void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress)
+    {
+        mDuidLinkLayerAddress = aDuidLinkLayerAddress;
+    }
 
 private:
-    uint16_t mDuidType;                                         ///< Duid Type
-    uint16_t mDuidHardwareType;                                 ///< Duid HardwareType
-    uint8_t  mDuidLinkLayerAddress[kLinkLayerAddressLen];       ///< Duid LinkLayerAddress
+    uint16_t        mDuidType;
+    uint16_t        mDuidHardwareType;
+    Mac::ExtAddress mDuidLinkLayerAddress;
 } OT_TOOL_PACKED_END;
 
 OT_TOOL_PACKED_BEGIN
-class ServerIdentifier: public Dhcp6Option
+class ServerIdentifier : public Option
 {
 public:
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionServerIdentifier); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionServerIdentifier);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 
     /**
-     * This method returns the server Duid Type.
+     * This method returns the server DUID Type.
      *
-     * @returns The server Duid Type.
+     * @returns The server DUID Type.
      *
      */
     DuidType GetDuidType(void) const { return static_cast<DuidType>(HostSwap16(mDuidType)); }
 
     /**
-     * This method sets the server Duid Type.
+     * This method sets the server DUID Type.
      *
-     * @param[in]  aDuidType  The server Duid Type.
+     * @param[in]  aDuidType  The server DUID Type.
      *
      */
     void SetDuidType(DuidType aDuidType) { mDuidType = HostSwap16(static_cast<uint16_t>(aDuidType)); }
 
     /**
-     * This method returns the server Duid HardwareType.
+     * This method returns the server DUID HardwareType.
      *
-     * @returns The server Duid HardwareType.
+     * @returns The server DUID HardwareType.
      *
      */
     uint16_t GetDuidHardwareType(void) const { return HostSwap16(mDuidHardwareType); }
 
     /**
-     * This method sets the server Duid HardwareType.
+     * This method sets the server DUID HardwareType.
      *
-     * @param[in]  aDuidHardwareType  The server Duid HardwareType.
+     * @param[in]  aDuidHardwareType  The server DUID HardwareType.
      *
      */
     void SetDuidHardwareType(uint16_t aDuidHardwareType) { mDuidHardwareType = HostSwap16(aDuidHardwareType); }
@@ -343,10 +372,10 @@ public:
     /**
      * This method returns the server LinkLayerAddress.
      *
-     * @returns A pointer to the server LinkLayerAddress.
+     * @returns The link-layer address.
      *
      */
-    uint8_t *GetDuidLinkLayerAddress(void) { return mDuidLinkLayerAddress; }
+    const Mac::ExtAddress &GetDuidLinkLayerAddress(void) const { return mDuidLinkLayerAddress; }
 
     /**
      * This method sets the server LinkLayerAddress.
@@ -354,23 +383,37 @@ public:
      * @param[in]  aLinkLayerAddress The server LinkLayerAddress.
      *
      */
-    void SetDuidLinkLayerAddress(const Mac::ExtAddress *aDuidLinkLayerAddress) { memcpy(mDuidLinkLayerAddress, aDuidLinkLayerAddress, sizeof(Mac::ExtAddress)); }
+    void SetDuidLinkLayerAddress(const Mac::ExtAddress &aDuidLinkLayerAddress)
+    {
+        mDuidLinkLayerAddress = aDuidLinkLayerAddress;
+    }
 
 private:
-    uint16_t mDuidType;                                         ///< Duid Type
-    uint16_t mDuidHardwareType;                                 ///< Duid HardwareType
-    uint8_t  mDuidLinkLayerAddress[kLinkLayerAddressLen];       ///< Duid LinkLayerAddress
+    uint16_t        mDuidType;
+    uint16_t        mDuidHardwareType;
+    Mac::ExtAddress mDuidLinkLayerAddress;
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an Identity Association for Non-temporary Address DHCPv6 option.
+ *
+ */
 OT_TOOL_PACKED_BEGIN
-class IaNa: public Dhcp6Option
+class IaNa : public Option
 {
 public:
+    static constexpr uint32_t kDefaultT1 = 0xffffffffU; ///< Default T1 value.
+    static constexpr uint32_t kDefaultT2 = 0xffffffffU; ///< Default T2 value.
+
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionIaNa); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionIaNa);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 
     /**
      * This method returns client IAID.
@@ -421,28 +464,47 @@ public:
     void SetT2(uint32_t aT2) { mT2 = HostSwap32(aT2); }
 
 private:
-    uint32_t mIaid;                                  ///< IAID
-    uint32_t mT1;                                    ///< T1
-    uint32_t mT2;                                    ///< T2
+    uint32_t mIaid;
+    uint32_t mT1;
+    uint32_t mT2;
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an Identity Association Address DHCPv6 option.
+ *
+ */
 OT_TOOL_PACKED_BEGIN
-class IaAddress: public Dhcp6Option
+class IaAddress : public Option
 {
 public:
+    static constexpr uint32_t kDefaultPreferredLifetime = 0xffffffffU; ///< Default preferred lifetime.
+    static constexpr uint32_t kDefaultValidLiftetime    = 0xffffffffU; ///< Default valid lifetime.
+
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionIaAddress); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionIaAddress);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 
     /**
-     * This method returns the pointer to the IPv6 address.
+     * This method returns a reference to the IPv6 address.
      *
-     * @returns A pointer to the IPv6 address.
+     * @returns A reference to the IPv6 address.
      *
      */
-    otIp6Address *GetAddress(void) { return &mAddress; }
+    Ip6::Address &GetAddress(void) { return mAddress; }
+
+    /**
+     * This method returns a reference to the IPv6 address.
+     *
+     * @returns A reference to the IPv6 address.
+     *
+     */
+    const Ip6::Address &GetAddress(void) const { return mAddress; }
 
     /**
      * This method sets the IPv6 address.
@@ -450,7 +512,7 @@ public:
      * @param[in]  aAddress  The reference to the IPv6 address to set.
      *
      */
-    void SetAddress(otIp6Address &aAddress) { memcpy(mAddress.mFields.m8, aAddress.mFields.m8, sizeof(otIp6Address)); }
+    void SetAddress(const Ip6::Address &aAddress) { mAddress = aAddress; }
 
     /**
      * This method returns the preferred lifetime of the IPv6 address.
@@ -485,20 +547,28 @@ public:
     void SetValidLifetime(uint32_t aValidLifetime) { mValidLifetime = HostSwap32(aValidLifetime); }
 
 private:
-    otIp6Address mAddress;                           ///< IPv6 address
-    uint32_t mPreferredLifetime;                     ///< Preferred Lifetime
-    uint32_t mValidLifetime;                         ///< Valid Lifetime
+    Ip6::Address mAddress;
+    uint32_t     mPreferredLifetime;
+    uint32_t     mValidLifetime;
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an Elapsed Time DHCPv6 option.
+ *
+ */
 OT_TOOL_PACKED_BEGIN
-class ElapsedTime: public Dhcp6Option
+class ElapsedTime : public Option
 {
 public:
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionElapsedTime); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionElapsedTime);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 
     /**
      * This method returns the elapsed time since solicit starts.
@@ -517,36 +587,44 @@ public:
     void SetElapsedTime(uint16_t aElapsedTime) { mElapsedTime = HostSwap16(aElapsedTime); }
 
 private:
-    uint16_t mElapsedTime;                           ///< Elapsed time
+    uint16_t mElapsedTime;
 } OT_TOOL_PACKED_END;
 
 /**
- * Status Code
+ * Status Code.
  *
  */
-typedef enum Status
+enum Status : uint16_t
 {
-    kStatusSuccess = 0,
-    kStatusUnspecFail = 1,
+    kStatusSuccess      = 0,
+    kStatusUnspecFail   = 1,
     kStatusNoAddrsAvail = 2,
-    kStatusNoBinding = 3,
-    kStatusNotOnLink = 4,
+    kStatusNoBinding    = 3,
+    kStatusNotOnLink    = 4,
     kStatusUseMulticast = 5,
-    kUnknownQueryType = 7,
-    kMalformedQuery = 8,
-    kNotConfigured = 9,
-    kNotAllowed = 10,
-} Status;
+    kUnknownQueryType   = 7,
+    kMalformedQuery     = 8,
+    kNotConfigured      = 9,
+    kNotAllowed         = 10,
+};
 
+/**
+ * This type represents an Status Code DHCPv6 option.
+ *
+ */
 OT_TOOL_PACKED_BEGIN
-class StatusCode: public Dhcp6Option
+class StatusCode : public Option
 {
 public:
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionStatusCode); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionStatusCode);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 
     /**
      * This method returns the status code.
@@ -565,21 +643,29 @@ public:
     void SetStatusCode(Status aStatus) { mStatus = HostSwap16(static_cast<uint16_t>(aStatus)); }
 
 private:
-    uint16_t mStatus;                                ///< Status Code
+    uint16_t mStatus;
 } OT_TOOL_PACKED_END;
 
+/**
+ * This type represents an Rapid Commit DHCPv6 option.
+ *
+ */
 OT_TOOL_PACKED_BEGIN
-class RapidCommit: public Dhcp6Option
+class RapidCommit : public Option
 {
 public:
     /**
      * This method initializes the DHCPv6 Option.
      *
      */
-    void Init(void) { SetCode(kOptionRapidCommit); SetLength(sizeof(*this) - sizeof(Dhcp6Option)); }
+    void Init(void)
+    {
+        SetCode(kOptionRapidCommit);
+        SetLength(sizeof(*this) - sizeof(Option));
+    }
 } OT_TOOL_PACKED_END;
 
-}  // namespace Dhcp6
-}  // namespace Thread
+} // namespace Dhcp6
+} // namespace ot
 
-#endif  // DHCP6_HPP_
+#endif // DHCP6_HPP_

@@ -34,15 +34,14 @@
 #ifndef OT_MBEDTLS_HPP_
 #define OT_MBEDTLS_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include "openthread-core-config.h"
 
-#include <mbedtls/memory_buffer_alloc.h>
+#include <openthread/instance.h>
 
-namespace Thread {
+#include "common/error.hpp"
+#include "common/non_copyable.hpp"
+
+namespace ot {
 namespace Crypto {
 
 /**
@@ -56,26 +55,24 @@ namespace Crypto {
  * This class implements mbedTLS memory.
  *
  */
-class MbedTls
+class MbedTls : private NonCopyable
 {
 public:
-    enum
-    {
-#if OPENTHREAD_ENABLE_DTLS
-        kMemorySize = 2048 * sizeof(void *), ///< Size of memory buffer (bytes).
-#else
-        kMemorySize = 384,                   ///< Size of memory buffer (bytes).
-#endif
-    };
-
     /**
      * This constructor initializes the object.
      *
      */
     MbedTls(void);
 
-private:
-    unsigned char mMemory[kMemorySize];
+    /**
+     * This method converts an mbed TLS error to OpenThread error.
+     *
+     * @param[in] aMbedTlsError  The mbed TLS error.
+     *
+     * @returns The mapped Error.
+     *
+     */
+    static Error MapError(int aMbedTlsError);
 };
 
 /**
@@ -83,7 +80,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace Thread
+} // namespace Crypto
+} // namespace ot
 
-#endif  // OT_MBEDTLS_HPP_
+#endif // OT_MBEDTLS_HPP_

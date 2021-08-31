@@ -31,27 +31,50 @@
  *   This file implements SHA-256.
  */
 
-#include <crypto/sha256.hpp>
+#include "sha256.hpp"
 
-namespace Thread {
+#include "common/message.hpp"
+
+namespace ot {
 namespace Crypto {
 
-void Sha256::Start(void)
+Sha256::Sha256(void)
 {
     mbedtls_sha256_init(&mContext);
-    mbedtls_sha256_starts(&mContext, 0);
 }
 
-void Sha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
+Sha256::~Sha256(void)
 {
-    mbedtls_sha256_update(&mContext, aBuf, aBufLength);
-}
-
-void Sha256::Finish(uint8_t aHash[kHashSize])
-{
-    mbedtls_sha256_finish(&mContext, aHash);
     mbedtls_sha256_free(&mContext);
 }
 
-}  // namespace Crypto
-}  // namespace Thread
+void Sha256::Start(void)
+{
+    mbedtls_sha256_starts_ret(&mContext, 0);
+}
+
+void Sha256::Update(const void *aBuf, uint16_t aBufLength)
+{
+    mbedtls_sha256_update_ret(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+}
+
+void Sha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Message::Chunk chunk;
+
+    aMessage.GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        Update(chunk.GetData(), chunk.GetLength());
+        aMessage.GetNextChunk(aLength, chunk);
+    }
+}
+
+void Sha256::Finish(Hash &aHash)
+{
+    mbedtls_sha256_finish_ret(&mContext, aHash.m8);
+}
+
+} // namespace Crypto
+} // namespace ot

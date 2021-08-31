@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,81 +27,114 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
+import thread_cert
+from pktverify.consts import MLE_CHILD_ID_RESPONSE, MLE_DISCOVERY_RESPONSE, HANDSHAKE_CLIENT_HELLO, NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV, NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV, RLY_RX_URI, RLY_TX_URI
+from pktverify.packet_verifier import PacketVerifier
 
 COMMISSIONER = 1
 JOINER_ROUTER = 2
 JOINER = 3
 
-class Cert_8_2_01_JoinerRouter(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,4):
-            self.nodes[i] = node.Node(i)
 
-        self.nodes[COMMISSIONER].set_panid(0xface)
-        self.nodes[COMMISSIONER].set_mode('rsdn')
-        self.nodes[COMMISSIONER].set_masterkey('deadbeefdeadbeefdeadbeefdeadbeef')
-        self.nodes[COMMISSIONER].enable_whitelist()
-        self.nodes[COMMISSIONER].set_router_selection_jitter(1)
+class Cert_8_2_01_JoinerRouter(thread_cert.TestCase):
+    SUPPORT_NCP = False
 
-        self.nodes[JOINER_ROUTER].set_mode('rsdn')
-        self.nodes[JOINER_ROUTER].set_masterkey('00112233445566778899aabbccddeeff')
-        self.nodes[JOINER_ROUTER].enable_whitelist()
-        self.nodes[JOINER_ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[JOINER].set_mode('rsdn')
-        self.nodes[JOINER].set_masterkey('00112233445566778899aabbccddeeff')
-        self.nodes[JOINER].enable_whitelist()
-        self.nodes[JOINER].set_router_selection_jitter(1)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+    TOPOLOGY = {
+        COMMISSIONER: {
+            'name': 'COMMISSIONER',
+            'networkkey': '00112233445566778899aabbccddeeff',
+            'mode': 'rdn',
+        },
+        JOINER_ROUTER: {
+            'name': 'JOINER_ROUTER',
+            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'mode': 'rdn',
+        },
+        JOINER: {
+            'name': 'JOINER',
+            'networkkey': 'deadbeefdeadbeefdeadbeefdeadbeef',
+            'mode': 'rdn',
+        },
+    }
 
     def test(self):
         self.nodes[COMMISSIONER].interface_up()
         self.nodes[COMMISSIONER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[COMMISSIONER].get_state(), 'leader')
 
         self.nodes[COMMISSIONER].commissioner_start()
-        time.sleep(5)
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER_ROUTER].get_hashmacaddr(), 'openthread')
-        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_hashmacaddr(), 'openthread2')
-        time.sleep(5)
-
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_hashmacaddr())
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[COMMISSIONER].get_addr64())
+        self.simulator.go(5)
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER_ROUTER].get_eui64(), 'PSKD01')
+        self.nodes[COMMISSIONER].commissioner_add_joiner(self.nodes[JOINER].get_eui64(), 'PSKD02')
+        self.simulator.go(5)
 
         self.nodes[JOINER_ROUTER].interface_up()
-        self.nodes[JOINER_ROUTER].joiner_start('openthread')
-        time.sleep(10)
-        self.assertEqual(self.nodes[JOINER_ROUTER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
-
-        self.nodes[COMMISSIONER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
+        self.nodes[JOINER_ROUTER].joiner_start('PSKD01')
+        self.simulator.go(10)
+        self.assertEqual(
+            self.nodes[JOINER_ROUTER].get_networkkey(),
+            self.nodes[COMMISSIONER].get_networkkey(),
+        )
 
         self.nodes[JOINER_ROUTER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER_ROUTER].get_state(), 'router')
 
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_hashmacaddr())
-        self.nodes[JOINER].add_whitelist(self.nodes[JOINER_ROUTER].get_addr64())
+        self.nodes[COMMISSIONER].enable_allowlist()
+        self.nodes[COMMISSIONER].add_allowlist(self.nodes[JOINER_ROUTER].get_addr64())
+
+        self.nodes[JOINER].enable_allowlist()
+        self.nodes[JOINER].add_allowlist(self.nodes[JOINER_ROUTER].get_addr64())
 
         self.nodes[JOINER].interface_up()
-        self.nodes[JOINER].joiner_start('openthread2')
-        time.sleep(10)
-        self.assertEqual(self.nodes[JOINER].get_masterkey(), self.nodes[COMMISSIONER].get_masterkey())
-
-        self.nodes[JOINER_ROUTER].add_whitelist(self.nodes[JOINER].get_addr64())
+        self.nodes[JOINER].joiner_start('PSKD02')
+        self.simulator.go(10)
+        self.assertEqual(
+            self.nodes[JOINER].get_networkkey(),
+            self.nodes[COMMISSIONER].get_networkkey(),
+        )
 
         self.nodes[JOINER].thread_start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[JOINER].get_state(), 'router')
+        self.collect_rloc16s()
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        COMMISSIONER = pv.vars['COMMISSIONER']
+        _cpkts = pkts.filter_wpan_src64(COMMISSIONER)
+        _cpkts.filter_mle_cmd(MLE_CHILD_ID_RESPONSE).must_next()
+
+        # Step 3: Verify that the following details occur in the exchange between the Joiner,
+        # the Joiner_Router and the Commissioner
+        # 1. UDP port (Specified by the Commissioner: in Discovery Response) is used as destination port
+        # for UDP datagrams from Joiner_1 to the Commissioner.
+        pkts.range(_cpkts.index).filter_mle_cmd(MLE_DISCOVERY_RESPONSE).must_next().must_verify(
+            lambda p: {
+                NM_EXTENDED_PAN_ID_TLV, NM_NETWORK_NAME_TLV, NM_STEERING_DATA_TLV, NM_COMMISSIONER_UDP_PORT_TLV,
+                NM_JOINER_UDP_PORT_TLV, NM_DISCOVERY_RESPONSE_TLV
+            } == set(p.thread_meshcop.tlv.type))
+
+        # 2. Joiner_1 sends an initial DTLS-ClientHello handshake record to the Commissioner
+        pkts.filter(lambda p: p.dtls.handshake.type == [HANDSHAKE_CLIENT_HELLO]).must_next()
+
+        # 3. The Joiner_Router receives the initial DTLS-ClientHello handshake record and sends a RLY_RX.ntf
+        # message to the Commissioner
+        # Todo: verify coap payload
+        jr_rloc16 = pv.vars["JOINER_ROUTER_RLOC16"]
+        c_rloc16 = pv.vars["COMMISSIONER_RLOC16"]
+        pkts.filter_coap_request(RLY_RX_URI).must_next().must_verify(
+            lambda p: p.wpan.src16 == jr_rloc16 and p.wpan.dst16 == c_rloc16)
+
+        # 4. The Commissioner receives the RLY_RX.ntf message and sends a RLY_TX.ntf message to the Joiner_Router
+        pkts.filter_coap_request(RLY_TX_URI).must_next().must_verify(
+            lambda p: p.wpan.src16 == c_rloc16 and p.wpan.dst16 == jr_rloc16)
+
 
 if __name__ == '__main__':
     unittest.main()

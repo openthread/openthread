@@ -34,70 +34,117 @@
 #ifndef CLI_DATASET_HPP_
 #define CLI_DATASET_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdarg.h>
 
-#include <cli/cli_server.hpp>
+#include <openthread/dataset.h>
 
-namespace Thread {
+#include "utils/lookup_table.hpp"
+#include "utils/parse_cmdline.hpp"
+
+namespace ot {
 namespace Cli {
 
-/**
- * This structure represents a CLI command.
- *
- */
-struct DatasetCommand
-{
-    const char *mName;                                                      ///< A pointer to the command string.
-    ThreadError(*mCommand)(otInstance *aInstance, int argc,
-                           char *argv[]);    ///< A function pointer to process the command.
-};
+class Interpreter;
 
 /**
- * This class implements the CLI interpreter.
+ * This class implements the Dataset CLI interpreter.
  *
  */
 class Dataset
 {
 public:
+    typedef Utils::CmdLineParser::Arg Arg;
+
+    explicit Dataset(Interpreter &aInterpreter)
+        : mInterpreter(aInterpreter)
+    {
+    }
+
     /**
      * This method interprets a list of CLI arguments.
      *
-     * @param[in]  argc  The number of elements in argv.
-     * @param[in]  argv  A pointer to an array of command line arguments.
+     * @param[in]  aArgs        An array of command line arguments.
      *
      */
-    static ThreadError Process(otInstance *aInstance, int argc, char *argv[], Server &aServer);
+    otError Process(Arg aArgs[]);
 
 private:
-    static void OutputBytes(const uint8_t *aBytes, uint8_t aLength);
-    static ThreadError Print(otOperationalDataset &aDataset);
+    struct Command
+    {
+        const char *mName;
+        otError (Dataset::*mHandler)(Arg aArgs[]);
+    };
 
-    static ThreadError ProcessHelp(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessActive(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessActiveTimestamp(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessChannel(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessChannelMask(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessClear(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessCommit(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessDelay(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessExtPanId(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMasterKey(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMeshLocalPrefix(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessNetworkName(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPanId(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPending(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPendingTimestamp(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMgmtSetCommand(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessMgmtGetCommand(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessPSKc(otInstance *aInstance, int argc, char *argv[]);
-    static ThreadError ProcessSecurityPolicy(otInstance *aInstance, int argc, char *argv[]);
+    otError Print(otOperationalDataset &aDataset);
 
-    static const DatasetCommand sCommands[];
+    otError ProcessHelp(Arg aArgs[]);
+    otError ProcessActive(Arg aArgs[]);
+    otError ProcessActiveTimestamp(Arg aArgs[]);
+    otError ProcessChannel(Arg aArgs[]);
+    otError ProcessChannelMask(Arg aArgs[]);
+    otError ProcessClear(Arg aArgs[]);
+    otError ProcessCommit(Arg aArgs[]);
+    otError ProcessDelay(Arg aArgs[]);
+    otError ProcessExtPanId(Arg aArgs[]);
+    otError ProcessInit(Arg aArgs[]);
+    otError ProcessMeshLocalPrefix(Arg aArgs[]);
+    otError ProcessNetworkName(Arg aArgs[]);
+    otError ProcessNetworkKey(Arg aArgs[]);
+    otError ProcessPanId(Arg aArgs[]);
+    otError ProcessPending(Arg aArgs[]);
+    otError ProcessPendingTimestamp(Arg aArgs[]);
+    otError ProcessMgmtSetCommand(Arg aArgs[]);
+    otError ProcessMgmtGetCommand(Arg aArgs[]);
+    otError ProcessPskc(Arg aArgs[]);
+    otError ProcessSecurityPolicy(Arg aArgs[]);
+    otError ProcessSet(Arg aArgs[]);
+
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+    otError     ProcessUpdater(Arg aArgs[]);
+    static void HandleDatasetUpdater(otError aError, void *aContext);
+    void        HandleDatasetUpdater(otError aError);
+#endif
+
+    void    OutputSecurityPolicy(const otSecurityPolicy &aSecurityPolicy);
+    otError ParseSecurityPolicy(otSecurityPolicy &aSecurityPolicy, Arg *&aArgs);
+
+    static constexpr Command sCommands[] = {
+        {"active", &Dataset::ProcessActive},
+        {"activetimestamp", &Dataset::ProcessActiveTimestamp},
+        {"channel", &Dataset::ProcessChannel},
+        {"channelmask", &Dataset::ProcessChannelMask},
+        {"clear", &Dataset::ProcessClear},
+        {"commit", &Dataset::ProcessCommit},
+        {"delay", &Dataset::ProcessDelay},
+        {"extpanid", &Dataset::ProcessExtPanId},
+        {"help", &Dataset::ProcessHelp},
+        {"init", &Dataset::ProcessInit},
+        {"meshlocalprefix", &Dataset::ProcessMeshLocalPrefix},
+        {"mgmtgetcommand", &Dataset::ProcessMgmtGetCommand},
+        {"mgmtsetcommand", &Dataset::ProcessMgmtSetCommand},
+        {"networkkey", &Dataset::ProcessNetworkKey},
+        {"networkname", &Dataset::ProcessNetworkName},
+        {"panid", &Dataset::ProcessPanId},
+        {"pending", &Dataset::ProcessPending},
+        {"pendingtimestamp", &Dataset::ProcessPendingTimestamp},
+        {"pskc", &Dataset::ProcessPskc},
+        {"securitypolicy", &Dataset::ProcessSecurityPolicy},
+        {"set", &Dataset::ProcessSet},
+#if OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD
+        {"updater", &Dataset::ProcessUpdater},
+#endif
+    };
+
+    static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
+
+    Interpreter &mInterpreter;
+
     static otOperationalDataset sDataset;
-    static Server *sServer;
 };
 
-}  // namespace Cli
-}  // namespace Thread
+} // namespace Cli
+} // namespace ot
 
-#endif  // CLI_DATASET_HPP_
+#endif // CLI_DATASET_HPP_

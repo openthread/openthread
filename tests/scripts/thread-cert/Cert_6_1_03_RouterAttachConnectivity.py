@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,10 +27,12 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
+import config
+import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_PARENT_REQUEST, MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, TIMEOUT_TLV, ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV, LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER1 = 2
@@ -38,69 +40,93 @@ ROUTER2 = 3
 ROUTER3 = 4
 ED = 5
 
-class Cert_6_1_3_RouterAttachConnectivity(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,6):
-            self.nodes[i] = node.Node(i)
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER2].set_panid(0xface)
-        self.nodes[ROUTER2].set_mode('rsdn')
-        self.nodes[ROUTER2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER2].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ROUTER2].enable_whitelist()
-        self.nodes[ROUTER2].set_router_selection_jitter(1)
-
-        self.nodes[ROUTER3].set_panid(0xface)
-        self.nodes[ROUTER3].set_mode('rsdn')
-        self.nodes[ROUTER3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[ROUTER3].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ROUTER3].enable_whitelist()
-        self.nodes[ROUTER3].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER2].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER3].get_addr64())
-        self.nodes[ED].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+class Cert_6_1_3_RouterAttachConnectivity(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'LEADER',
+            'mode': 'rdn',
+            'allowlist': [ROUTER1, ROUTER2, ROUTER3]
+        },
+        ROUTER1: {
+            'name': 'ROUTER_1',
+            'mode': 'rdn',
+            'allowlist': [LEADER, ROUTER3]
+        },
+        ROUTER2: {
+            'name': 'ROUTER_2',
+            'mode': 'rdn',
+            'allowlist': [LEADER, ED]
+        },
+        ROUTER3: {
+            'name': 'ROUTER_3',
+            'mode': 'rdn',
+            'allowlist': [LEADER, ROUTER1, ED]
+        },
+        ED: {
+            'name': 'ED',
+            'is_mtd': True,
+            'mode': 'rn',
+            'allowlist': [ROUTER2, ROUTER3]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         for i in range(2, 5):
             self.nodes[i].start()
-            time.sleep(5)
+
+        self.simulator.go(5)
+
+        for i in range(2, 5):
             self.assertEqual(self.nodes[i].get_state(), 'router')
 
+        self.simulator.go(config.MAX_ADVERTISEMENT_INTERVAL)
+
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
+        self.collect_ipaddrs()
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[ROUTER3].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        ROUTER_3 = pv.vars['ROUTER_3']
+        ED = pv.vars['ED']
+        _router3_pkts = pkts.filter_wpan_src64(ROUTER_3)
+        _ed_pkts = pkts.filter_wpan_src64(ED)
+
+        # Step 2: The DUT MUST send a MLE Parent Request to the
+        # All-Routers multicast address
+        _ed_pkts.filter_mle_cmd(MLE_PARENT_REQUEST).filter_ipv6_dst(
+            LINK_LOCAL_ALL_ROUTERS_MULTICAST_ADDRESS).must_next().must_verify(
+                lambda p: {MODE_TLV, CHALLENGE_TLV, SCAN_MASK_TLV, VERSION_TLV} == set(p.mle.tlv.type
+                                                                                      ) and p.mle.tlv.scan_mask.r == 1)
+
+        # Step 3: Router_2, Router_3 Respond with MLE Parent Response
+        # Step 4: DUT Send a Child ID Request to Router_3 due to better connectivity
+        _ed_pkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next().must_verify(
+            lambda p: {
+                RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, MLE_FRAME_COUNTER_TLV, MODE_TLV, TIMEOUT_TLV, VERSION_TLV,
+                ADDRESS_REGISTRATION_TLV, TLV_REQUEST_TLV
+            } <= set(p.mle.tlv.type))
+
+        # Step 5: The DUT MUST respond with ICMPv6 Echo Reply
+        ed_mleid = pv.vars['ED_MLEID']
+        router3_mleid = pv.vars['ROUTER_3_MLEID']
+        _pkt = _router3_pkts.filter(
+            lambda p: p.ipv6.src == router3_mleid and p.ipv6.dst == ed_mleid).filter_ping_request().must_next()
+        _ed_pkts.filter(lambda p: p.ipv6.src == ed_mleid and p.ipv6.dst == router3_mleid).filter_ping_reply(
+            identifier=_pkt.icmpv6.echo.identifier).must_next()
+
 
 if __name__ == '__main__':
     unittest.main()

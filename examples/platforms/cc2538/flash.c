@@ -26,153 +26,76 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
+#include <assert.h>
+#include <stdint.h>
+#include <string.h>
 
-#include <openthread-config.h>
-#include <platform/alarm.h>
-#include <utils/flash.h>
-
-#include <common/code_utils.hpp>
 #include "platform-cc2538.h"
 #include "rom-utility.h"
 
-#define FLASH_CTRL_FCTL_BUSY   0x00000080
+#define FLASH_CTRL_FCTL_BUSY 0x00000080
 
-enum
+#define FLASH_PAGE_SIZE 2048
+#define FLASH_PAGE_NUM 2
+#define FLASH_SWAP_SIZE (FLASH_PAGE_SIZE * (FLASH_PAGE_NUM / 2))
+
+/* The linker script creates this external symbol */
+extern uint8_t _FLASH_settings_pageA[];
+
+/* Convert a settings offset to the physical address within the flash settings pages */
+static uint32_t flashPhysAddr(uint8_t aSwapIndex, uint32_t aOffset)
 {
-    FLASH_PAGE_SIZE = 0x800,
-};
+    uint32_t address = (uint32_t)(&_FLASH_settings_pageA[0]) + aOffset;
 
-static ThreadError romStatusToThread(int32_t aStatus)
-{
-    ThreadError error = kThreadError_None;
-
-    switch (aStatus)
+    if (aSwapIndex)
     {
-    case 0:
-        error = kThreadError_None;
-        break;
-
-    case -1:
-        error = kThreadError_Failed;
-        break;
-
-    case -2:
-        error = kThreadError_InvalidArgs;
-        break;
-
-    default:
-        error = kThreadError_Abort;
+        address += FLASH_SWAP_SIZE;
     }
 
-    return error;
+    return address;
 }
 
-ThreadError utilsFlashInit(void)
+void otPlatFlashInit(otInstance *aInstance)
 {
-    return kThreadError_None;
+    OT_UNUSED_VARIABLE(aInstance);
 }
 
-uint32_t utilsFlashGetSize(void)
+uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
 {
-    uint32_t reg = (HWREG(FLASH_CTRL_DIECFG0) & 0x00000070) >> 4;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    return reg ? (0x20000 * reg) : 0x10000;
+    return FLASH_SWAP_SIZE;
 }
 
-ThreadError utilsFlashErasePage(uint32_t aAddress)
+void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
 {
-    ThreadError error = kThreadError_None;
-    int32_t status;
-    uint32_t address;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    VerifyOrExit(aAddress < utilsFlashGetSize(), error = kThreadError_InvalidArgs);
-
-    address = FLASH_BASE + aAddress - (aAddress & (FLASH_PAGE_SIZE - 1));
-    status = ROM_PageErase(address, FLASH_PAGE_SIZE);
-    error = romStatusToThread(status);
-
-exit:
-    return error;
-}
-
-ThreadError utilsFlashStatusWait(uint32_t aTimeout)
-{
-    ThreadError error = kThreadError_None;
-    uint32_t start = otPlatAlarmGetNow();
-    uint32_t busy = 1;
-
-    while (busy && ((otPlatAlarmGetNow() - start) < aTimeout))
+    ROM_PageErase(flashPhysAddr(aSwapIndex, 0), FLASH_PAGE_SIZE);
+    while (HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY)
     {
-        busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
     }
-
-    VerifyOrExit(!busy, error = kThreadError_Busy);
-
-exit:
-    return error;
 }
 
-uint32_t utilsFlashWrite(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
 {
-    int32_t status;
-    uint32_t busy = 1;
-    uint32_t *data;
-    uint32_t size = 0;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    VerifyOrExit(((aAddress + aSize) < utilsFlashGetSize()) &&
-                 (!(aAddress & 3)) && (!(aSize & 3)), aSize = 0);
+    uint32_t *data = (uint32_t *)(aData);
 
-    data = (uint32_t *)(aData);
-
-    while (size < aSize)
+    for (uint32_t size = 0; size < aSize; size += sizeof(uint32_t), aOffset += sizeof(uint32_t), data++)
     {
-        status = ROM_ProgramFlash(data, aAddress + FLASH_BASE, 4);
+        ROM_ProgramFlash(data, flashPhysAddr(aSwapIndex, aOffset), sizeof(uint32_t));
 
-        while (busy)
+        while (HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY)
         {
-            busy = HWREG(FLASH_CTRL_FCTL) & FLASH_CTRL_FCTL_BUSY;
         }
-
-        VerifyOrExit(romStatusToThread(status) == kThreadError_None, ;);
-        size += 4;
-        data++;
-        aAddress += 4;
     }
-
-exit:
-    return size;
 }
 
-uint32_t utilsFlashRead(uint32_t aAddress, uint8_t *aData, uint32_t aSize)
+void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, uint8_t *aData, uint32_t aSize)
 {
-    uint32_t size = 0;
+    OT_UNUSED_VARIABLE(aInstance);
 
-    VerifyOrExit((aAddress + aSize) < utilsFlashGetSize(), ;);
-
-    while (size < aSize)
-    {
-        uint32_t reg = HWREG(aAddress + FLASH_BASE);
-        uint8_t *byte = (uint8_t *)&reg;
-        uint8_t maxIndex = 4;
-
-        if (size == (aSize - aSize % 4))
-        {
-            maxIndex = aSize % 4;
-        }
-
-        for (uint8_t index = 0; index < maxIndex; index++, byte++, aData++)
-        {
-            *aData = *byte;
-        }
-
-        size += maxIndex;
-        aAddress += maxIndex;
-    }
-
-exit:
-    return size;
+    memcpy(aData, (void *)flashPhysAddr(aSwapIndex, aOffset), aSize);
 }

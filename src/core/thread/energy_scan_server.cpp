@@ -31,102 +31,93 @@
  *   This file implements the Energy Scan Server.
  */
 
-#define WPP_NAME "energy_scan_server.tmh"
+#include "energy_scan_server.hpp"
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <meshcop/tlvs.hpp>
-#include <platform/random.h>
-#include <thread/energy_scan_server.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
+#include "coap/coap_message.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/instance.hpp"
+#include "common/locator_getters.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/uri_paths.hpp"
 
-namespace Thread {
+namespace ot {
 
-EnergyScanServer::EnergyScanServer(ThreadNetif &aThreadNetif) :
-    mChannelMask(0),
-    mChannelMaskCurrent(0),
-    mPeriod(0),
-    mScanDuration(0),
-    mCount(0),
-    mActive(false),
-    mScanResultsLength(0),
-    mTimer(aThreadNetif.GetIp6().mTimerScheduler, &EnergyScanServer::HandleTimer, this),
-    mEnergyScan(OPENTHREAD_URI_ENERGY_SCAN, &EnergyScanServer::HandleRequest, this),
-    mNetif(aThreadNetif)
+EnergyScanServer::EnergyScanServer(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mChannelMask(0)
+    , mChannelMaskCurrent(0)
+    , mPeriod(0)
+    , mScanDuration(0)
+    , mCount(0)
+    , mActive(false)
+    , mScanResultsLength(0)
+    , mTimer(aInstance, EnergyScanServer::HandleTimer)
+    , mEnergyScan(UriPath::kEnergyScan, &EnergyScanServer::HandleRequest, this)
 {
-    mNetifCallback.Set(&EnergyScanServer::HandleNetifStateChanged, this);
-    mNetif.RegisterCallback(mNetifCallback);
-
-    mNetif.GetCoapServer().AddResource(mEnergyScan);
+    Get<Tmf::Agent>().AddResource(mEnergyScan);
 }
 
-void EnergyScanServer::HandleRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                     const otMessageInfo *aMessageInfo)
+void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleRequest(
-        *static_cast<Coap::Header *>(aHeader), *static_cast<Message *>(aMessage),
-        *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<EnergyScanServer *>(aContext)->HandleRequest(*static_cast<Coap::Message *>(aMessage),
+                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
 }
 
-void EnergyScanServer::HandleRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
+void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
-    MeshCoP::ScanDurationTlv scanDuration;
-    MeshCoP::ChannelMask0Tlv channelMask;
+    uint8_t          count;
+    uint16_t         period;
+    uint16_t         scanDuration;
     Ip6::MessageInfo responseInfo(aMessageInfo);
+    uint32_t         mask;
 
-    VerifyOrExit(aHeader.GetCode() == kCoapRequestPost, ;);
+    VerifyOrExit(aMessage.IsPostRequest());
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kCount, sizeof(count), count));
-    VerifyOrExit(count.IsValid(), ;);
+    SuccessOrExit(Tlv::Find<MeshCoP::CountTlv>(aMessage, count));
+    SuccessOrExit(Tlv::Find<MeshCoP::PeriodTlv>(aMessage, period));
+    SuccessOrExit(Tlv::Find<MeshCoP::ScanDurationTlv>(aMessage, scanDuration));
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kPeriod, sizeof(period), period));
-    VerifyOrExit(period.IsValid(), ;);
+    VerifyOrExit((mask = MeshCoP::ChannelMaskTlv::GetChannelMask(aMessage)) != 0);
 
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kScanDuration, sizeof(scanDuration), scanDuration));
-    VerifyOrExit(scanDuration.IsValid(), ;);
-
-    SuccessOrExit(MeshCoP::Tlv::GetTlv(aMessage, MeshCoP::Tlv::kChannelMask, sizeof(channelMask), channelMask));
-    VerifyOrExit(channelMask.IsValid(), ;);
-
-    mChannelMask = channelMask.GetMask();
+    mChannelMask        = mask;
     mChannelMaskCurrent = mChannelMask;
-    mCount = count.GetCount();
-    mPeriod = period.GetPeriod();
-    mScanDuration = scanDuration.GetScanDuration();
-    mScanResultsLength = 0;
-    mActive = true;
+    mCount              = count;
+    mPeriod             = period;
+    mScanDuration       = scanDuration;
+    mScanResultsLength  = 0;
+    mActive             = true;
     mTimer.Start(kScanDelay);
 
     mCommissioner = aMessageInfo.GetPeerAddr();
 
-    memset(&responseInfo.mSockAddr, 0, sizeof(responseInfo.mSockAddr));
-    SuccessOrExit(mNetif.GetCoapServer().SendEmptyAck(aHeader, responseInfo));
-
-    otLogInfoMeshCoP("sent energy scan query response");
+    if (aMessage.IsConfirmable() && !aMessageInfo.GetSockAddr().IsMulticast())
+    {
+        SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, responseInfo));
+        otLogInfoMeshCoP("sent energy scan query response");
+    }
 
 exit:
     return;
 }
 
-void EnergyScanServer::HandleTimer(void *aContext)
+void EnergyScanServer::HandleTimer(Timer &aTimer)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleTimer();
+    aTimer.Get<EnergyScanServer>().HandleTimer();
 }
 
 void EnergyScanServer::HandleTimer(void)
 {
-    VerifyOrExit(mActive, ;);
+    VerifyOrExit(mActive);
 
     if (mCount)
     {
         // grab the lowest channel to scan
         uint32_t channelMask = mChannelMaskCurrent & ~(mChannelMaskCurrent - 1);
-        mNetif.GetMac().EnergyScan(channelMask, mScanDuration, HandleScanResult, this);
+        IgnoreError(Get<Mac::Mac>().EnergyScan(channelMask, mScanDuration, HandleScanResult, this));
     }
     else
     {
@@ -137,17 +128,18 @@ exit:
     return;
 }
 
-void EnergyScanServer::HandleScanResult(void *aContext, otEnergyScanResult *aResult)
+void EnergyScanServer::HandleScanResult(Mac::EnergyScanResult *aResult, void *aContext)
 {
     static_cast<EnergyScanServer *>(aContext)->HandleScanResult(aResult);
 }
 
-void EnergyScanServer::HandleScanResult(otEnergyScanResult *aResult)
+void EnergyScanServer::HandleScanResult(Mac::EnergyScanResult *aResult)
 {
-    VerifyOrExit(mActive, ;);
+    VerifyOrExit(mActive);
 
     if (aResult)
     {
+        VerifyOrExit(mScanResultsLength < OPENTHREAD_CONFIG_TMF_ENERGY_SCAN_MAX_RESULTS);
         mScanResults[mScanResultsLength++] = aResult->mMaxRssi;
     }
     else
@@ -175,63 +167,49 @@ exit:
     return;
 }
 
-ThreadError EnergyScanServer::SendReport(void)
+void EnergyScanServer::SendReport(void)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::EnergyListTlv energyList;
-    Ip6::MessageInfo messageInfo;
-    Message *message;
+    Error                   error = kErrorNone;
+    MeshCoP::ChannelMaskTlv channelMask;
+    MeshCoP::EnergyListTlv  energyList;
+    Ip6::MessageInfo        messageInfo;
+    Coap::Message *         message;
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ENERGY_REPORT);
-    header.SetPayloadMarker();
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kEnergyReport));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
     channelMask.Init();
-    channelMask.SetMask(mChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(mChannelMask);
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
     energyList.Init();
     energyList.SetLength(mScanResultsLength);
-    SuccessOrExit(error = message->Append(&energyList, sizeof(energyList)));
-    SuccessOrExit(error = message->Append(mScanResults, mScanResultsLength));
+    SuccessOrExit(error = message->Append(energyList));
+    SuccessOrExit(error = message->AppendBytes(mScanResults, mScanResultsLength));
 
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(mCommissioner);
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent scan results");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
+    MeshCoP::LogError("send scan results", error);
     mActive = false;
-
-    return error;
 }
 
-void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags, void *aContext)
+void EnergyScanServer::HandleNotifierEvents(Events aEvents)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleNetifStateChanged(aFlags);
-}
-
-void EnergyScanServer::HandleNetifStateChanged(uint32_t aFlags)
-{
-    if ((aFlags & OT_THREAD_NETDATA_UPDATED) != 0 &&
-        !mActive &&
-        mNetif.GetNetworkDataLeader().GetCommissioningData() == NULL)
+    if (aEvents.Contains(kEventThreadNetdataChanged) && !mActive &&
+        Get<NetworkData::Leader>().GetCommissioningData() == nullptr)
     {
         mActive = false;
         mTimer.Stop();
     }
 }
 
-}  // namespace Thread
+} // namespace ot

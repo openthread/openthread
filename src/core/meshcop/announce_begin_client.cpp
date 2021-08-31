@@ -31,84 +31,67 @@
  *   This file implements the Announce Begin Client.
  */
 
-#define WPP_NAME "announce_begin_client.tmh"
+#include "announce_begin_client.hpp"
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <platform/random.h>
-#include <meshcop/announce_begin_client.hpp>
-#include <meshcop/tlvs.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_uris.hpp>
+#include "coap/coap_message.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/instance.hpp"
+#include "common/locator_getters.hpp"
+#include "common/logging.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/uri_paths.hpp"
 
-namespace Thread {
+namespace ot {
 
-AnnounceBeginClient::AnnounceBeginClient(ThreadNetif &aThreadNetif) :
-    mNetif(aThreadNetif)
+AnnounceBeginClient::AnnounceBeginClient(Instance &aInstance)
+    : InstanceLocator(aInstance)
 {
 }
 
-ThreadError AnnounceBeginClient::SendRequest(uint32_t aChannelMask, uint8_t aCount, uint16_t aPeriod,
-                                             const Ip6::Address &aAddress)
+Error AnnounceBeginClient::SendRequest(uint32_t            aChannelMask,
+                                       uint8_t             aCount,
+                                       uint16_t            aPeriod,
+                                       const Ip6::Address &aAddress)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    MeshCoP::CommissionerSessionIdTlv sessionId;
-    MeshCoP::ChannelMask0Tlv channelMask;
-    MeshCoP::CountTlv count;
-    MeshCoP::PeriodTlv period;
+    Error                   error = kErrorNone;
+    MeshCoP::ChannelMaskTlv channelMask;
+    Ip6::MessageInfo        messageInfo;
+    Coap::Message *         message = nullptr;
 
-    Ip6::MessageInfo messageInfo;
-    Message *message;
+    VerifyOrExit(Get<MeshCoP::Commissioner>().IsActive(), error = kErrorInvalidState);
+    VerifyOrExit((message = MeshCoP::NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
-    header.Init(aAddress.IsMulticast() ? kCoapTypeNonConfirmable : kCoapTypeConfirmable,
-                kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_ANNOUNCE_BEGIN);
-    header.SetPayloadMarker();
+    SuccessOrExit(error = message->InitAsPost(aAddress, UriPath::kAnnounceBegin));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMeshCoPMessage(header)) != NULL, error = kThreadError_NoBufs);
-
-    sessionId.Init();
-    sessionId.SetCommissionerSessionId(mNetif.GetCommissioner().GetSessionId());
-    SuccessOrExit(error = message->Append(&sessionId, sizeof(sessionId)));
+    SuccessOrExit(
+        error = Tlv::Append<MeshCoP::CommissionerSessionIdTlv>(*message, Get<MeshCoP::Commissioner>().GetSessionId()));
 
     channelMask.Init();
-    channelMask.SetMask(aChannelMask);
-    SuccessOrExit(error = message->Append(&channelMask, sizeof(channelMask)));
+    channelMask.SetChannelMask(aChannelMask);
+    SuccessOrExit(error = channelMask.AppendTo(*message));
 
-    count.Init();
-    count.SetCount(aCount);
-    SuccessOrExit(error = message->Append(&count, sizeof(count)));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::CountTlv>(*message, aCount));
+    SuccessOrExit(error = Tlv::Append<MeshCoP::PeriodTlv>(*message, aPeriod));
 
-    period.Init();
-    period.SetPeriod(aPeriod);
-    SuccessOrExit(error = message->Append(&period, sizeof(period)));
-
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
     messageInfo.SetPeerAddr(aAddress);
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    messageInfo.SetInterfaceId(mNetif.GetInterfaceId());
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
 
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo));
 
     otLogInfoMeshCoP("sent announce begin query");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
-}  // namespace Thread
+} // namespace ot
+
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD

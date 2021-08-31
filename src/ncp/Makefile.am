@@ -27,75 +27,126 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+include $(top_srcdir)/src/lib/common.am
 
-EXTRA_DIST                          = \
-    PROTOCOL.md                       \
+EXTRA_DIST                                        = \
+    example_vendor_hook.cpp                         \
     $(NULL)
 
 # Pull in the sources that comprise the OpenThread NCP library.
 
-lib_LIBRARIES                       = libopenthread-ncp.a
+lib_LIBRARIES                                     = $(NULL)
 
-libopenthread_ncp_a_CPPFLAGS        = \
-    -I$(top_srcdir)/include           \
-    -I$(top_srcdir)/src               \
-    -I$(top_srcdir)/src/core          \
-    -I$(top_srcdir)/third_party       \
-    -D_GNU_SOURCE                     \
-    $(OPENTHREAD_TARGET_DEFINES)      \
-    $(NULL)
-
-libopenthread_ncp_a_CXXFLAGS        = \
-    -I$(top_srcdir)/include           \
-    -I$(top_srcdir)/src               \
-    -I$(top_srcdir)/src/core          \
-    -I$(top_srcdir)/third_party       \
-    $(OPENTHREAD_TARGET_DEFINES)      \
-    $(NULL)
-
-libopenthread_ncp_a_SOURCES         = \
-    ncp_base.cpp                      \
-    ncp_base.hpp                      \
-    ncp_buffer.cpp                    \
-    ncp_buffer.hpp                    \
-    spinel.c                          \
-    spinel.h                          \
-    $(NULL)
-
-if OPENTHREAD_ENABLE_NCP_SPI
-libopenthread_ncp_a_SOURCES        += \
-    ncp_spi.cpp                       \
-    ncp_spi.hpp                       \
-    $(NULL)
+if OPENTHREAD_ENABLE_NCP
+if OPENTHREAD_ENABLE_FTD
+lib_LIBRARIES                                    += libopenthread-ncp-ftd.a
 endif
 
-if OPENTHREAD_ENABLE_NCP_UART
-libopenthread_ncp_a_SOURCES        += \
-    hdlc.cpp                          \
-    hdlc.hpp                          \
-    flen.cpp                          \
-    flen.hpp                          \
-    ncp_uart.cpp                      \
-    ncp_uart.hpp                      \
-    $(NULL)
+if OPENTHREAD_ENABLE_MTD
+lib_LIBRARIES                                    += libopenthread-ncp-mtd.a
+endif
 endif
 
-include_HEADERS                     = \
+if OPENTHREAD_ENABLE_RADIO_ONLY
+lib_LIBRARIES                                    += libopenthread-rcp.a
+endif
+
+COMMON_CPPFLAGS                                   = \
+    -I$(top_srcdir)/include                         \
+    -I$(top_srcdir)/src                             \
+    -I$(top_srcdir)/src/core                        \
+    -I$(top_srcdir)/third_party                     \
+    -D_GNU_SOURCE                                   \
+    -DSPINEL_PLATFORM_HEADER=\"spinel_platform.h\"  \
+    $(OPENTHREAD_TARGET_DEFINES)                    \
     $(NULL)
 
-if OPENTHREAD_BUILD_TESTS
+libopenthread_ncp_mtd_a_CPPFLAGS                         = \
+    -DOPENTHREAD_RADIO=0                                   \
+    -DOPENTHREAD_FTD=0                                     \
+    -DOPENTHREAD_MTD=1                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
+    $(NULL)
 
-noinst_PROGRAMS                     = spinel-test
-spinel_test_SOURCES                 = spinel.c
-spinel_test_CFLAGS                  = -DSPINEL_SELF_TEST=1 -D_GNU_SOURCE
+libopenthread_ncp_ftd_a_CPPFLAGS                         = \
+    -DOPENTHREAD_RADIO=0                                   \
+    -DOPENTHREAD_FTD=1                                     \
+    -DOPENTHREAD_MTD=0                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=1 \
+    $(COMMON_CPPFLAGS)                                     \
+    $(NULL)
 
-TESTS = spinel-test
+libopenthread_rcp_a_CPPFLAGS                             = \
+    -DOPENTHREAD_RADIO=1                                   \
+    -DOPENTHREAD_FTD=0                                     \
+    -DOPENTHREAD_MTD=0                                     \
+    -DOPENTHREAD_SPINEL_CONFIG_OPENTHREAD_MESSAGE_ENABLE=0 \
+    $(COMMON_CPPFLAGS)                                     \
+    $(NULL)
 
-install-headers: install-includeHEADERS
+libopenthread_ncp_mtd_a_LIBADD                                                      = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a)         \
+    $(call ot_list_objects,$(top_builddir)/src/lib/spinel/libopenthread-spinel-ncp.a) \
+    $(NULL)
 
-if OPENTHREAD_BUILD_COVERAGE
-CLEANFILES                          = $(wildcard *.gcda *.gcno)
-endif # OPENTHREAD_BUILD_COVERAGE
-endif # OPENTHREAD_BUILD_TESTS
+libopenthread_ncp_ftd_a_LIBADD                                                      = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a  )       \
+    $(call ot_list_objects,$(top_builddir)/src/lib/spinel/libopenthread-spinel-ncp.a) \
+    $(NULL)
+
+libopenthread_rcp_a_LIBADD                                                          = \
+    $(call ot_list_objects,$(top_builddir)/src/lib/hdlc/libopenthread-hdlc.a)         \
+    $(call ot_list_objects,$(top_builddir)/src/lib/spinel/libopenthread-spinel-rcp.a) \
+    $(NULL)
+
+COMMON_SOURCES                                    = \
+    changed_props_set.cpp                           \
+    changed_props_set.hpp                           \
+    ncp_base.cpp                                    \
+    ncp_base.hpp                                    \
+    ncp_base_ftd.cpp                                \
+    ncp_base_mtd.cpp                                \
+    ncp_base_radio.cpp                              \
+    ncp_base_dispatcher.cpp                         \
+    ncp_config.h                                    \
+    ncp_spi.cpp                                     \
+    ncp_spi.hpp                                     \
+    ncp_hdlc.cpp                                    \
+    ncp_hdlc.hpp                                    \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+
+.INTERMEDIATE: ncp_vendor_hook_temp.cpp
+ncp_vendor_hook_temp.cpp: ${OPENTHREAD_NCP_VENDOR_HOOK_SOURCE}
+	$(AM_V_GEN)cp $< $@
+
+# "nodist_" prefix tells automake not to include in 'make dist'
+nodist_libopenthread_ncp_mtd_a_SOURCES            = \
+    ncp_vendor_hook_temp.cpp                        \
+    $(NULL)
+
+# "nodist_" prefix tells automake not to include in 'make dist'
+nodist_libopenthread_ncp_ftd_a_SOURCES            = \
+    ncp_vendor_hook_temp.cpp                        \
+    $(NULL)
+
+endif # if OPENTHREAD_ENABLE_NCP_VENDOR_HOOK
+
+libopenthread_ncp_mtd_a_SOURCES                   = \
+   $(COMMON_SOURCES)                                \
+   $(NULL)
+
+libopenthread_ncp_ftd_a_SOURCES                   = \
+   $(COMMON_SOURCES)                                \
+   $(NULL)
+
+libopenthread_rcp_a_SOURCES                       = \
+   $(COMMON_SOURCES)                                \
+   $(NULL)
+
+include_HEADERS                                   = \
+    $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am

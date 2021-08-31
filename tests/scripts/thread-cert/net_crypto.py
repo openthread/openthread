@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -37,13 +37,12 @@ from Crypto.Cipher import AES
 
 
 class CryptoEngine:
-
     """ Class responsible for encryption and decryption of data. """
 
     def __init__(self, crypto_material_creator):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
         self._crypto_material_creator = crypto_material_creator
@@ -95,13 +94,13 @@ class CryptoMaterialCreator(object):
 
     _salt = b'Thread'
 
-    def __init__(self, master_key):
+    def __init__(self, network_key):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
-        self.master_key = master_key
+        self.network_key = network_key
 
     def _generate_keys(self, sequence_counter):
         """ Generate MLE and MAC keys.
@@ -115,7 +114,7 @@ class CryptoMaterialCreator(object):
             tuple: MLE and MAC as bytes
 
         """
-        k = self.master_key
+        k = self.network_key
         s = struct.pack(">L", sequence_counter) + self._salt
         d = hmac.new(k, s, digestmod=hashlib.sha256).digest()
 
@@ -133,13 +132,13 @@ class CryptoMaterialCreator(object):
 
 class MacCryptoMaterialCreator(CryptoMaterialCreator):
 
-    def __init__(self, master_key):
+    def __init__(self, network_key):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
-        super(MacCryptoMaterialCreator, self).__init__(master_key)
+        super(MacCryptoMaterialCreator, self).__init__(network_key)
 
     def _create_nonce(self, eui64, frame_counter, security_level):
         """ Create CCM Nonce required by AES-128 CCM for encryption and decryption.
@@ -157,7 +156,7 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         """
         return bytes(eui64 + struct.pack(">LB", frame_counter, security_level))
 
-    def _create_authenticated_data(self, mhr, auxiliary_security_header, nonpayload_fields):
+    def _create_authenticated_data(self, mhr, auxiliary_security_header, extra_open_fields):
         """ Create Authenticated Data
 
         Read more: 7.6.3.3 CCM prerequisites - Std 802.15.4-2006
@@ -165,24 +164,28 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
         Args:
             mhr (bytes)
             auxiliary_security_header (bytes)
-            nonpayload_fields (bytes)
+            extra_open_fields (bytes)
 
         Returns:
             bytes: Authenticated Data
 
         """
-        return bytes(mhr + auxiliary_security_header + nonpayload_fields)
+        return bytes(mhr + auxiliary_security_header + extra_open_fields)
 
     def create_key_and_nonce_and_authenticated_data(self, message_info):
         _, mac_key = self._generate_keys(message_info.aux_sec_hdr.sequence_counter)
 
-        nonce = self._create_nonce(message_info.source_mac_address,
-                                   message_info.aux_sec_hdr.frame_counter,
-                                   message_info.aux_sec_hdr.security_level)
+        nonce = self._create_nonce(
+            message_info.source_mac_address,
+            message_info.aux_sec_hdr.frame_counter,
+            message_info.aux_sec_hdr.security_level,
+        )
 
-        auth_data = self._create_authenticated_data(message_info.mhr_bytes,
-                                                    message_info.aux_sec_hdr_bytes,
-                                                    message_info.nonpayload_fields)
+        auth_data = self._create_authenticated_data(
+            message_info.mhr_bytes,
+            message_info.aux_sec_hdr_bytes,
+            message_info.extra_open_fields,
+        )
 
         return mac_key, nonce, auth_data
 
@@ -193,13 +196,13 @@ class MacCryptoMaterialCreator(CryptoMaterialCreator):
 
 class MleCryptoMaterialCreator(CryptoMaterialCreator):
 
-    def __init__(self, master_key):
+    def __init__(self, network_key):
         """
         Args:
-            master_key (bytearray)
+            network_key (bytearray)
 
         """
-        super(MleCryptoMaterialCreator, self).__init__(master_key)
+        super(MleCryptoMaterialCreator, self).__init__(network_key)
 
     def _create_nonce(self, source_eui64, frame_counter, security_level):
         """ Create CCM Nonce required by AES-128 CCM for encryption and decryption.
@@ -236,13 +239,17 @@ class MleCryptoMaterialCreator(CryptoMaterialCreator):
     def create_key_and_nonce_and_authenticated_data(self, message_info):
         mle_key, _ = self._generate_keys(message_info.aux_sec_hdr.sequence_counter)
 
-        nonce = self._create_nonce(message_info.source_mac_address.mac_address,
-                                   message_info.aux_sec_hdr.frame_counter,
-                                   message_info.aux_sec_hdr.security_level)
+        nonce = self._create_nonce(
+            message_info.source_mac_address.mac_address,
+            message_info.aux_sec_hdr.frame_counter,
+            message_info.aux_sec_hdr.security_level,
+        )
 
-        auth_data = self._create_authenticated_data(message_info.source_ipv6,
-                                                    message_info.destination_ipv6,
-                                                    message_info.aux_sec_hdr_bytes)
+        auth_data = self._create_authenticated_data(
+            message_info.source_ipv6,
+            message_info.destination_ipv6,
+            message_info.aux_sec_hdr_bytes,
+        )
 
         return mle_key, nonce, auth_data
 
@@ -253,7 +260,14 @@ class MleCryptoMaterialCreator(CryptoMaterialCreator):
 
 class AuxiliarySecurityHeader:
 
-    def __init__(self, key_id_mode, security_level, frame_counter, key_id, big_endian=True):
+    def __init__(
+        self,
+        key_id_mode,
+        security_level,
+        frame_counter,
+        key_id,
+        big_endian=True,
+    ):
         """
         Args:
             key_id_mode (int)
@@ -271,17 +285,18 @@ class AuxiliarySecurityHeader:
     def sequence_counter(self):
         """ Compute or extract sequence counter based on currently set Key Index Mode. """
 
-        if self.key_id_mode == 1:
-            # Try to guess valid Key Sequence Counter based on Key Index. This one should work for now.
-            return self.key_index - 1
-        elif self.key_id_mode == 2:
-            # In this mode sequence counter is stored on the first four bytes of Key ID.
-            key_source = self.key_id[:4]
-            format = ">I" if self._big_endian else "<I"
-        elif self.key_id_mode == 3:
+        if self.key_id_mode == 0:
             key_source = self.key_id[:8]
             format = ">Q" if self._big_endian else "<Q"
-
+        elif self.key_id_mode == 1:
+            # Try to guess valid Key Sequence Counter based on Key Index. This
+            # one should work for now.
+            return self.key_index - 1
+        elif self.key_id_mode == 2:
+            # In this mode sequence counter is stored on the first four bytes
+            # of Key ID.
+            key_source = self.key_id[:4]
+            format = ">I" if self._big_endian else "<I"
         else:
             raise ValueError("Unsupported Key Index Mode: {}".format(self.key_id_mode))
 
@@ -309,7 +324,11 @@ class AuxiliarySecurityHeader:
 
     def __repr__(self):
         return "AuxiliarySecurityHeader(key_id_mode={}, security_level={}, frame_counter={}, key_id={})".format(
-            self.key_id_mode, self.security_level, self.frame_counter, hexlify(self.key_id))
+            self.key_id_mode,
+            self.security_level,
+            self.frame_counter,
+            hexlify(self.key_id),
+        )
 
 
 class AuxiliarySecurityHeaderFactory:
@@ -326,11 +345,11 @@ class AuxiliarySecurityHeaderFactory:
         0: _KEY_ID_LENGTH_KEY_ID_0,
         1: _KEY_ID_LENGTH_KEY_ID_1,
         2: _KEY_ID_LENGTH_KEY_ID_2,
-        3: _KEY_ID_LENGTH_KEY_ID_3
+        3: _KEY_ID_LENGTH_KEY_ID_3,
     }
 
     def _parse_security_control(self, security_control_byte):
-        security_level = (security_control_byte & 0x07)
+        security_level = security_control_byte & 0x07
         key_id_mode = (security_control_byte >> 3) & 0x03
 
         return security_level, key_id_mode
@@ -353,7 +372,7 @@ class AuxiliarySecurityHeaderFactory:
 
         aux_sec_hdr = AuxiliarySecurityHeader(key_id_mode, security_level, frame_counter, key_id_bytes)
 
-        message_info.aux_sec_hdr_bytes = security_control_bytes + frame_counter_bytes + key_id_bytes
+        message_info.aux_sec_hdr_bytes = (security_control_bytes + frame_counter_bytes + key_id_bytes)
         message_info.aux_sec_hdr = aux_sec_hdr
 
         return aux_sec_hdr

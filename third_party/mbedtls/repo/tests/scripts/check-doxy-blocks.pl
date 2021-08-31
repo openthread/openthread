@@ -1,4 +1,4 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
 # Detect comment blocks that are likely meant to be doxygen blocks but aren't.
 #
@@ -7,6 +7,21 @@
 #   sed -e '/EXTRACT/s/YES/NO/' doxygen/mbedtls.doxyfile | doxygen -
 # but that would warn about any undocumented item, while our goal is to find
 # items that are documented, but not marked as such by mistake.
+#
+# Copyright The Mbed TLS Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
 
 use warnings;
 use strict;
@@ -18,6 +33,10 @@ my @directories = qw(include/mbedtls library doxygen/input);
 # very naive pattern to find directives:
 # everything with a backslach except '\0' and backslash at EOL
 my $doxy_re = qr/\\(?!0|\n)/;
+
+# Return an error code to the environment if a potential error in the
+# source code is found.
+my $exit_code = 0;
 
 sub check_file {
     my ($fname) = @_;
@@ -32,6 +51,7 @@ sub check_file {
         if ($block_start and $line =~ m/$doxy_re/) {
             print "$fname:$block_start: directive on line $.\n";
             $block_start = 0; # report only one directive per block
+            $exit_code = 1;
         }
     }
 
@@ -45,13 +65,15 @@ sub check_dir {
     }
 }
 
-# locate root directory based on invocation name
-my $root = dirname($0) . '/..';
-chdir $root or die "Can't chdir to '$root': $!\n";
-
-# just do it
+# Check that the script is being run from the project's root directory.
 for my $dir (@directories) {
-    check_dir($dir)
+    if (! -d $dir) {
+        die "This script must be run from the mbed TLS root directory";
+    } else {
+        check_dir($dir)
+    }
 }
+
+exit $exit_code;
 
 __END__

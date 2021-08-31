@@ -34,25 +34,33 @@
 #ifndef MESH_FORWARDER_HPP_
 #define MESH_FORWARDER_HPP_
 
-#include <openthread-core-config.h>
-#include <openthread-types.h>
-#include <common/tasklet.hpp>
-#include <mac/mac.hpp>
-#include <net/ip6.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/lowpan.hpp>
-#include <thread/network_data_leader.hpp>
-#include <thread/topology.hpp>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#include "common/clearable.hpp"
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "common/tasklet.hpp"
+#include "common/time_ticker.hpp"
+#include "mac/channel_mask.hpp"
+#include "mac/data_poll_sender.hpp"
+#include "mac/mac.hpp"
+#include "mac/mac_frame.hpp"
+#include "net/ip6.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/indirect_sender.hpp"
+#include "thread/lowpan.hpp"
+#include "thread/network_data_leader.hpp"
+#include "thread/topology.hpp"
 
-enum
-{
-    kReassemblyTimeout = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT,
-};
+namespace ot {
 
-class MleRouter;
-struct ThreadMessageInfo;
+namespace Mle {
+class DiscoverScanner;
+}
+
+namespace Utils {
+class HistoryTracker;
+}
 
 /**
  * @addtogroup core-mesh-forwarding
@@ -64,54 +72,147 @@ struct ThreadMessageInfo;
  */
 
 /**
+ * This class represents link-specific information for messages received from the Thread radio.
+ *
+ */
+class ThreadLinkInfo : public otThreadLinkInfo, public Clearable<ThreadLinkInfo>
+{
+public:
+    /**
+     * This method returns the IEEE 802.15.4 Source PAN ID.
+     *
+     * @returns The IEEE 802.15.4 Source PAN ID.
+     *
+     */
+    Mac::PanId GetPanId(void) const { return mPanId; }
+
+    /**
+     * This method returns the IEEE 802.15.4 Channel.
+     *
+     * @returns The IEEE 802.15.4 Channel.
+     *
+     */
+    uint8_t GetChannel(void) const { return mChannel; }
+
+    /**
+     * This method indicates whether or not link security is enabled.
+     *
+     * @retval TRUE   If link security is enabled.
+     * @retval FALSE  If link security is not enabled.
+     *
+     */
+    bool IsLinkSecurityEnabled(void) const { return mLinkSecurity; }
+
+    /**
+     * This method returns the Received Signal Strength (RSS) in dBm.
+     *
+     * @returns The Received Signal Strength (RSS) in dBm.
+     *
+     */
+    int8_t GetRss(void) const { return mRss; }
+
+    /**
+     * This method returns the frame/radio Link Quality Indicator (LQI) value.
+     *
+     * @returns The Link Quality Indicator value.
+     *
+     */
+    uint8_t GetLqi(void) const { return mLqi; }
+
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    /**
+     * This method returns the Time Sync Sequence.
+     *
+     * @returns The Time Sync Sequence.
+     *
+     */
+    uint8_t GetTimeSyncSeq(void) const { return mTimeSyncSeq; }
+
+    /**
+     * This method returns the time offset to the Thread network time (in microseconds).
+     *
+     * @returns The time offset to the Thread network time (in microseconds).
+     *
+     */
+    int64_t GetNetworkTimeOffset(void) const { return mNetworkTimeOffset; }
+#endif
+
+    /**
+     * This method sets the `ThreadLinkInfo` from a given received frame.
+     *
+     * @param[in] aFrame  A received frame.
+     *
+     */
+    void SetFrom(const Mac::RxFrame &aFrame);
+};
+
+/**
  * This class implements mesh forwarding within Thread.
  *
  */
-class MeshForwarder
+class MeshForwarder : public InstanceLocator, private NonCopyable
 {
+    friend class Mac::Mac;
+    friend class Instance;
+    friend class DataPollSender;
+    friend class IndirectSender;
+    friend class Mle::DiscoverScanner;
+    friend class TimeTicker;
+    friend class Utils::HistoryTracker;
+
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit MeshForwarder(ThreadNetif &aThreadNetif);
+    explicit MeshForwarder(Instance &aInstance);
 
     /**
      * This method enables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval kThreadError_None          Successfully enabled the mesh forwarder.
-     *
      */
-    ThreadError Start(void);
+    void Start(void);
 
     /**
      * This method disables mesh forwarding and the IEEE 802.15.4 MAC layer.
      *
-     * @retval kThreadError_None          Successfully disabled the mesh forwarder.
-     *
      */
-    ThreadError Stop(void);
+    void Stop(void);
 
     /**
      * This method submits a message to the mesh forwarder for forwarding.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully enqueued the message.
+     * @retval kErrorNone     Successfully enqueued the message.
+     * @retval kErrorAlready  The message was already enqueued.
+     * @retval kErrorDrop     The message could not be sent and should be dropped.
      *
      */
-    ThreadError SendMessage(Message &aMessage);
+    Error SendMessage(Message &aMessage);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    /**
+     * This method sends an empty data frame to the parent.
+     *
+     * @retval kErrorNone          Successfully enqueued an empty message.
+     * @retval kErrorInvalidState  Device is not in Rx-Off-When-Idle mode or it has no parent.
+     * @retval kErrorNoBufs        Insufficient message buffers available.
+     *
+     */
+    Error SendEmptyMessage(void);
+#endif
 
     /**
      * This method is called by the address resolver when an EID-to-RLOC mapping has been resolved.
      *
      * @param[in]  aEid    A reference to the EID that has been resolved.
-     * @param[in]  aError  kThreadError_None on success and kThreadError_Drop otherwise.
+     * @param[in]  aError  kErrorNone on success and kErrorDrop otherwise.
      *
      */
-    void HandleResolved(const Ip6::Address &aEid, ThreadError aError);
+    void HandleResolved(const Ip6::Address &aEid, Error aError);
 
     /**
      * This method indicates whether or not rx-on-when-idle mode is enabled.
@@ -120,7 +221,7 @@ public:
      * @retval FALSE  The rx-on-when-idle-mode is disabled.
      *
      */
-    bool GetRxOnWhenIdle(void);
+    bool GetRxOnWhenIdle(void) const;
 
     /**
      * This method sets the rx-on-when-idle mode
@@ -131,62 +232,42 @@ public:
     void SetRxOnWhenIdle(bool aRxOnWhenIdle);
 
     /**
-     * This method sets customized Data Poll period. Only for certification test
-     *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds.
-     *
-     */
-    void SetAssignPollPeriod(uint32_t aPeriod);
-
-    /**
-     * This method gets the customized Data Poll period. Only for certification test
-     *
-     * @returns  The Data Poll period in milliseconds.
-     *
-     */
-    uint32_t GetAssignPollPeriod(void);
-
-    /**
-     * This method sets the Data Poll period.
-     *
-     * @param[in]  aPeriod  The Data Poll period in milliseconds.
-     *
-     */
-    void SetPollPeriod(uint32_t aPeriod);
-
-    /**
-     * This method enqueues an IEEE 802.15.4 Data Request message.
-     *
-     * @retval kThreadError_None          Successfully enqueued an IEEE 802.15.4 Data Request message.
-     * @retval kThreadError_Already       An IEEE 802.15.4 Data Request message is already enqueued.
-     * @retval kThreadError_InvalidState  Device is not in rx-off-when-idle mode.
-     * @retval kThreadError_NoBufs        Insufficient message buffers available.
-     *
-     */
-    ThreadError SendMacDataRequest(void);
-
-    /**
-     * This method gets the Data Poll period.
-     *
-     * @returns  The Data Poll period in milliseconds.
-     *
-     */
-    uint32_t GetPollPeriod(void);
-
-    /**
      * This method sets the scan parameters for MLE Discovery Request messages.
      *
-     * @param[in]  aScanChannels  A bit vector indicating which channels to scan.
-     * @param[in]  aScanDuration  The time in milliseconds to spend scanning each channel.
+     * @param[in]  aScanChannels  A reference to channel mask indicating which channels to scan.
+     *                            If @p aScanChannels is empty, then all channels are used instead.
      *
      */
-    void SetDiscoverParameters(uint32_t aScanChannels, uint16_t aScanDuration);
+    void SetDiscoverParameters(const Mac::ChannelMask &aScanChannels);
+
+#if OPENTHREAD_FTD
+    /**
+     * This method frees any messages queued for an existing child.
+     *
+     * @param[in]  aChild    A reference to the child.
+     * @param[in]  aSubType  The message sub-type to remove.
+     *                       Use Message::kSubTypeNone remove all messages for @p aChild.
+     *
+     */
+    void RemoveMessages(Child &aChild, Message::SubType aSubType);
+#endif
 
     /**
-     * This method frees any indirect messages queued for children that are no longer attached.
+     * This method frees unicast/multicast MLE Data Responses from Send Message Queue if any.
      *
      */
-    void UpdateIndirectMessages(void);
+    void RemoveDataResponseMessages(void);
+
+    /**
+     * This method evicts the message with lowest priority in the send queue.
+     *
+     * @param[in]  aPriority  The highest priority level of the evicted message.
+     *
+     * @retval kErrorNone       Successfully evicted a low priority message.
+     * @retval kErrorNotFound   No low priority messages available to evict.
+     *
+     */
+    Error EvictMessage(Message::Priority aPriority);
 
     /**
      * This method returns a reference to the send queue.
@@ -205,102 +286,307 @@ public:
     const MessageQueue &GetReassemblyQueue(void) const { return mReassemblyList; }
 
     /**
+     * This method returns a reference to the IP level counters.
+     *
+     * @returns A reference to the IP level counters.
+     *
+     */
+    const otIpCounters &GetCounters(void) const { return mIpCounters; }
+
+    /**
+     * This method resets the IP level counters.
+     *
+     */
+    void ResetCounters(void) { memset(&mIpCounters, 0, sizeof(mIpCounters)); }
+
+#if OPENTHREAD_FTD
+    /**
      * This method returns a reference to the resolving queue.
      *
      * @returns  A reference to the resolving queue.
      *
      */
-    const MessageQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
+    const PriorityQueue &GetResolvingQueue(void) const { return mResolvingQueue; }
+#endif
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    /**
+     * This method handles a deferred ack.
+     *
+     * Some radio links can use deferred ack logic, where a tx request always report `HandleSentFrame()` quickly. The
+     * link layer would wait for the ack and report it at a later time using this method.
+     *
+     * The link layer is expected to call `HandleDeferredAck()` (with success or failure status) for every tx request
+     * on the radio link.
+     *
+     * @param[in] aNeighbor  The neighbor for which the deferred ack status is being reported.
+     * @param[in] aError     The deferred ack error status: `kErrorNone` to indicate a deferred ack was received,
+     *                       `kErrorNoAck` to indicate an ack timeout.
+     *
+     */
+    void HandleDeferredAck(Neighbor &aNeighbor, Error aError);
+#endif
 
 private:
-    enum
+    static constexpr uint8_t kReassemblyTimeout      = OPENTHREAD_CONFIG_6LOWPAN_REASSEMBLY_TIMEOUT; // in seconds.
+    static constexpr uint8_t kMeshHeaderFrameMtu     = OT_RADIO_FRAME_MAX_SIZE; // Max MTU with a Mesh Header frame.
+    static constexpr uint8_t kMeshHeaderFrameFcsSize = sizeof(uint16_t);        // Frame FCS size for Mesh Header frame.
+
+    enum MessageAction : uint8_t
     {
-        kStateUpdatePeriod    = 1000,  ///< State update period in milliseconds.
-        kDataRequstRetryDelay = 1000,  ///< Retry delay in milliseconds.
+        kMessageReceive,         // Indicates that the message was received.
+        kMessageTransmit,        // Indicates that the message was sent.
+        kMessagePrepareIndirect, // Indicates that the message is being prepared for indirect tx.
+        kMessageDrop,            // Indicates that the outbound message is being dropped (e.g., dst unknown).
+        kMessageReassemblyDrop,  // Indicates that the message is being dropped from reassembly list.
+        kMessageEvict,           // Indicates that the message was evicted.
     };
 
-    ThreadError CheckReachability(uint8_t *aFrame, uint8_t aFrameLength,
-                                  const Mac::Address &aMeshSource, const Mac::Address &aMeshDest);
-    ThreadError GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
-    ThreadError GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    enum AnycastType : uint8_t
+    {
+        kAnycastDhcp6Agent,
+        kAnycastNeighborDiscoveryAgent,
+        kAnycastService,
+    };
+
+#if OPENTHREAD_FTD
+    class FragmentPriorityList : public Clearable<FragmentPriorityList>
+    {
+    public:
+        class Entry : public Clearable<Entry>
+        {
+            friend class FragmentPriorityList;
+
+        public:
+            Message::Priority GetPriority(void) const { return mPriority; }
+            bool              IsExpired(void) const { return (mLifetime == 0); }
+            void              DecrementLifetime(void) { mLifetime--; }
+            void              ResetLifetime(void) { mLifetime = kReassemblyTimeout; }
+
+            bool Matches(uint16_t aSrcRloc16, uint16_t aTag) const
+            {
+                return (mSrcRloc16 == aSrcRloc16) && (mDatagramTag == aTag);
+            }
+
+        private:
+            uint16_t          mSrcRloc16;
+            uint16_t          mDatagramTag;
+            Message::Priority mPriority;
+            uint8_t           mLifetime;
+        };
+
+        Entry *AllocateEntry(uint16_t aSrcRloc16, uint16_t aTag, Message::Priority aPriority);
+        Entry *FindEntry(uint16_t aSrcRloc16, uint16_t aTag);
+        bool   UpdateOnTimeTick(void);
+
+    private:
+        static constexpr uint16_t kNumEntries = OPENTHREAD_CONFIG_NUM_FRAGMENT_PRIORITY_ENTRIES;
+
+        Entry mEntries[kNumEntries];
+    };
+#endif // OPENTHREAD_FTD
+
+    void  SendIcmpErrorIfDstUnreach(const Message &     aMessage,
+                                    const Mac::Address &aMacSource,
+                                    const Mac::Address &aMacDest);
+    Error CheckReachability(const uint8_t *     aFrame,
+                            uint16_t            aFrameLength,
+                            const Mac::Address &aMeshSource,
+                            const Mac::Address &aMeshDest);
+    void  UpdateRoutes(const uint8_t *     aFrame,
+                       uint16_t            aFrameLength,
+                       const Mac::Address &aMeshSource,
+                       const Mac::Address &aMeshDest);
+
+    Error    DecompressIp6Header(const uint8_t *     aFrame,
+                                 uint16_t            aFrameLength,
+                                 const Mac::Address &aMacSource,
+                                 const Mac::Address &aMacDest,
+                                 Ip6::Header &       aIp6Header,
+                                 uint8_t &           aHeaderLength,
+                                 bool &              aNextHeaderCompressed);
+    Error    FrameToMessage(const uint8_t *     aFrame,
+                            uint16_t            aFrameLength,
+                            uint16_t            aDatagramSize,
+                            const Mac::Address &aMacSource,
+                            const Mac::Address &aMacDest,
+                            Message *&          aMessage);
+    Error    GetIp6Header(const uint8_t *     aFrame,
+                          uint16_t            aFrameLength,
+                          const Mac::Address &aMacSource,
+                          const Mac::Address &aMacDest,
+                          Ip6::Header &       aIp6Header);
+    void     GetMacDestinationAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
+    void     GetMacSourceAddress(const Ip6::Address &aIp6Addr, Mac::Address &aMacAddr);
     Message *GetDirectTransmission(void);
-    Message *GetIndirectTransmission(const Child &aChild);
-    void HandleMesh(uint8_t *aFrame, uint8_t aPayloadLength, const Mac::Address &aMacSource,
-                    const ThreadMessageInfo &aMessageInfo);
-    void HandleFragment(uint8_t *aFrame, uint8_t aPayloadLength,
-                        const Mac::Address &aMacSource, const Mac::Address &aMacDest,
-                        const ThreadMessageInfo &aMessageInfo);
-    void HandleLowpanHC(uint8_t *aFrame, uint8_t aPayloadLength,
-                        const Mac::Address &aMacSource, const Mac::Address &aMacDest,
-                        const ThreadMessageInfo &aMessageInfo);
-    void HandleDataRequest(const Mac::Address &aMacSource, const ThreadMessageInfo &aMessageInfo);
-    ThreadError SendPoll(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendMesh(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendFragment(Message &aMessage, Mac::Frame &aFrame);
-    ThreadError SendEmptyFrame(Mac::Frame &aFrame);
-    void UpdateFramePending(void);
-    ThreadError UpdateIp6Route(Message &aMessage);
-    ThreadError UpdateMeshRoute(Message &aMessage);
-    ThreadError HandleDatagram(Message &aMessage, const ThreadMessageInfo &aMessageInfo);
+    void     HandleMesh(uint8_t *             aFrame,
+                        uint16_t              aFrameLength,
+                        const Mac::Address &  aMacSource,
+                        const ThreadLinkInfo &aLinkInfo);
+    void     HandleFragment(const uint8_t *       aFrame,
+                            uint16_t              aFrameLength,
+                            const Mac::Address &  aMacSource,
+                            const Mac::Address &  aMacDest,
+                            const ThreadLinkInfo &aLinkInfo);
+    void     HandleLowpanHC(const uint8_t *       aFrame,
+                            uint16_t              aFrameLength,
+                            const Mac::Address &  aMacSource,
+                            const Mac::Address &  aMacDest,
+                            const ThreadLinkInfo &aLinkInfo);
+    uint16_t PrepareDataFrame(Mac::TxFrame &      aFrame,
+                              Message &           aMessage,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest,
+                              bool                aAddMeshHeader = false,
+                              uint16_t            aMeshSource    = 0xffff,
+                              uint16_t            aMeshDest      = 0xffff,
+                              bool                aAddFragHeader = false);
+    void     PrepareEmptyFrame(Mac::TxFrame &aFrame, const Mac::Address &aMacDest, bool aAckRequest);
 
-    static void HandleReceivedFrame(void *aContext, Mac::Frame &aFrame);
-    void HandleReceivedFrame(Mac::Frame &aFrame);
+    void  SendMesh(Message &aMessage, Mac::TxFrame &aFrame);
+    void  SendDestinationUnreachable(uint16_t aMeshSource, const Message &aMessage);
+    Error UpdateIp6Route(Message &aMessage);
+    Error UpdateIp6RouteFtd(Ip6::Header &ip6Header, Message &aMessage);
+    void  EvaluateRoutingCost(uint16_t aDest, uint8_t &aBestCost, uint16_t &aBestDest) const;
+    Error AnycastRouteLookup(uint8_t aServiceId, AnycastType aType, uint16_t &aMeshDest) const;
+    Error UpdateMeshRoute(Message &aMessage);
+    bool  UpdateReassemblyList(void);
+    void  UpdateFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                                 uint16_t                aFragmentLength,
+                                 uint16_t                aSrcRloc16,
+                                 Message::Priority       aPriority);
+    Error HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource);
+    void  ClearReassemblyList(void);
+    void  RemoveMessage(Message &aMessage);
+    void  HandleDiscoverComplete(void);
 
-    static ThreadError HandleFrameRequest(void *aContext, Mac::Frame &aFrame);
-    ThreadError HandleFrameRequest(Mac::Frame &aFrame);
+    void          HandleReceivedFrame(Mac::RxFrame &aFrame);
+    Mac::TxFrame *HandleFrameRequest(Mac::TxFrames &aTxFrames);
+    Neighbor *    UpdateNeighborOnSentFrame(Mac::TxFrame &aFrame, Error aError, const Mac::Address &aMacDest);
+    void          UpdateNeighborLinkFailures(Neighbor &aNeighbor,
+                                             Error     aError,
+                                             bool      aAllowNeighborRemove,
+                                             uint8_t   aFailLimit = Mle::kFailedRouterTransmissions);
+    void          HandleSentFrame(Mac::TxFrame &aFrame, Error aError);
+    void          UpdateSendMessage(Error aFrameTxError, Mac::Address &aMacDest, Neighbor *aNeighbor);
+    void          RemoveMessageIfNoPendingTx(Message &aMessage);
 
-    static void HandleSentFrame(void *aContext, Mac::Frame &aFrame, ThreadError aError);
-    void HandleSentFrame(Mac::Frame &aFrame, ThreadError aError);
+    void        HandleTimeTick(void);
+    static void ScheduleTransmissionTask(Tasklet &aTasklet);
+    void        ScheduleTransmissionTask(void);
 
-    static void HandleDiscoverTimer(void *aContext);
-    void HandleDiscoverTimer(void);
-    static void HandleReassemblyTimer(void *aContext);
-    void HandleReassemblyTimer(void);
-    static void HandlePollTimer(void *aContext);
-    void HandlePollTimer(void);
+    Error GetFramePriority(const uint8_t *     aFrame,
+                           uint16_t            aFrameLength,
+                           const Mac::Address &aMacSource,
+                           const Mac::Address &aMacDest,
+                           Message::Priority & aPriority);
+    Error GetFragmentPriority(Lowpan::FragmentHeader &aFragmentHeader,
+                              uint16_t                aSrcRloc16,
+                              Message::Priority &     aPriority);
+    void  GetForwardFramePriority(const uint8_t *     aFrame,
+                                  uint16_t            aFrameLength,
+                                  const Mac::Address &aMeshSource,
+                                  const Mac::Address &aMeshDest,
+                                  Message::Priority & aPriority);
 
-    static void ScheduleTransmissionTask(void *aContext);
-    void ScheduleTransmissionTask(void);
+    bool     CalcIePresent(const Message *aMessage);
+    uint16_t CalcFrameVersion(const Neighbor *aNeighbor, bool aIePresent);
+#if OPENTHREAD_CONFIG_MAC_HEADER_IE_SUPPORT
+    void AppendHeaderIe(const Message *aMessage, Mac::TxFrame &aFrame);
+#endif
 
-    ThreadError AddPendingSrcMatchEntries(void);
-    ThreadError AddSrcMatchEntry(Child &aChild);
-    void ClearSrcMatchEntry(Child &aChild);
+    void PauseMessageTransmissions(void) { mTxPaused = true; }
+    void ResumeMessageTransmissions(void);
 
-    Mac::Receiver mMacReceiver;
-    Mac::Sender mMacSender;
-    Timer mDiscoverTimer;
-    Timer mPollTimer;
-    Timer mReassemblyTimer;
+    void LogMessage(MessageAction aAction, const Message &aMessage, const Mac::Address *aAddress, Error aError);
+    void LogFrame(const char *aActionText, const Mac::Frame &aFrame, Error aError);
+    void LogFragmentFrameDrop(Error                         aError,
+                              uint16_t                      aFrameLength,
+                              const Mac::Address &          aMacSource,
+                              const Mac::Address &          aMacDest,
+                              const Lowpan::FragmentHeader &aFragmentHeader,
+                              bool                          aIsSecure);
+    void LogLowpanHcFrameDrop(Error               aError,
+                              uint16_t            aFrameLength,
+                              const Mac::Address &aMacSource,
+                              const Mac::Address &aMacDest,
+                              bool                aIsSecure);
+
+    static Error ParseIp6UdpTcpHeader(const Message &aMessage,
+                                      Ip6::Header &  aIp6Header,
+                                      uint16_t &     aChecksum,
+                                      uint16_t &     aSourcePort,
+                                      uint16_t &     aDestPort);
+
+#if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
+    const char *MessageActionToString(MessageAction aAction, Error aError);
+    const char *MessagePriorityToString(const Message &aMessage);
+
+#if OPENTHREAD_FTD
+    Error DecompressIp6UdpTcpHeader(const Message &     aMessage,
+                                    uint16_t            aOffset,
+                                    const Mac::Address &aMeshSource,
+                                    const Mac::Address &aMeshDest,
+                                    Ip6::Header &       aIp6Header,
+                                    uint16_t &          aChecksum,
+                                    uint16_t &          aSourcePort,
+                                    uint16_t &          aDestPort);
+    Error LogMeshFragmentHeader(MessageAction       aAction,
+                                const Message &     aMessage,
+                                const Mac::Address *aMacAddress,
+                                Error               aError,
+                                uint16_t &          aOffset,
+                                Mac::Address &      aMeshSource,
+                                Mac::Address &      aMeshDest,
+                                otLogLevel          aLogLevel);
+    void  LogMeshIpHeader(const Message &     aMessage,
+                          uint16_t            aOffset,
+                          const Mac::Address &aMeshSource,
+                          const Mac::Address &aMeshDest,
+                          otLogLevel          aLogLevel);
+    void  LogMeshMessage(MessageAction       aAction,
+                         const Message &     aMessage,
+                         const Mac::Address *aAddress,
+                         Error               aError,
+                         otLogLevel          aLogLevel);
+#endif
+    void LogIp6SourceDestAddresses(Ip6::Header &aIp6Header,
+                                   uint16_t     aSourcePort,
+                                   uint16_t     aDestPort,
+                                   otLogLevel   aLogLevel);
+    void LogIp6Message(MessageAction       aAction,
+                       const Message &     aMessage,
+                       const Mac::Address *aAddress,
+                       Error               aError,
+                       otLogLevel          aLogLevel);
+#endif // #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_NOTE) && (OPENTHREAD_CONFIG_LOG_MAC == 1)
 
     PriorityQueue mSendQueue;
-    MessageQueue mReassemblyList;
-    MessageQueue mResolvingQueue;
-    uint16_t mFragTag;
-    uint16_t mMessageNextOffset;
-    uint32_t mPollPeriod;
-    uint32_t mAssignPollPeriod;  ///< only for certification test
+    MessageQueue  mReassemblyList;
+    uint16_t      mFragTag;
+    uint16_t      mMessageNextOffset;
+
     Message *mSendMessage;
 
     Mac::Address mMacSource;
     Mac::Address mMacDest;
-    uint16_t mMeshSource;
-    uint16_t mMeshDest;
-    bool mAddMeshHeader;
-
-    bool mSendBusy;
+    uint16_t     mMeshSource;
+    uint16_t     mMeshDest;
+    bool         mAddMeshHeader : 1;
+    bool         mEnabled : 1;
+    bool         mTxPaused : 1;
+    bool         mSendBusy : 1;
 
     Tasklet mScheduleTransmissionTask;
-    bool mEnabled;
 
-    uint32_t mScanChannels;
-    uint16_t mScanDuration;
-    uint8_t mScanChannel;
-    uint8_t mRestoreChannel;
-    bool mScanning;
+    otIpCounters mIpCounters;
 
-    ThreadNetif &mNetif;
+#if OPENTHREAD_FTD
+    FragmentPriorityList mFragmentPriorityList;
+    PriorityQueue        mResolvingQueue;
+    IndirectSender       mIndirectSender;
+#endif
 
-    bool mSrcMatchEnabled;
+    DataPollSender mDataPollSender;
 };
 
 /**
@@ -308,6 +594,6 @@ private:
  *
  */
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // MESH_FORWARDER_HPP_
+#endif // MESH_FORWARDER_HPP_

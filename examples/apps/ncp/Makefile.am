@@ -27,79 +27,173 @@
 #
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
+include $(top_srcdir)/examples/platforms/Makefile.platform.am
 
 bin_PROGRAMS                                                           = \
-    ot-ncp                                                               \
     $(NULL)
 
-ot_ncp_CPPFLAGS                                                        = \
+CPPFLAGS_COMMON                                                       += \
     -I$(top_srcdir)/include                                              \
+    -I$(top_srcdir)/src                                                  \
     -I$(top_srcdir)/src/core                                             \
     -I$(top_srcdir)/examples/platforms                                   \
     $(NULL)
 
-ot_ncp_LDADD                                                           = \
-    $(top_builddir)/src/core/libopenthread-ftd.a                         \
-    $(top_builddir)/src/ncp/libopenthread-ncp.a                          \
+LDADD_COMMON                                                          += \
+    $(top_builddir)/third_party/tcplp/libtcplp.a                         \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                         = \
+LDFLAGS_COMMON                                                        += \
+    $(NULL)
+
+LIBTOOLFLAGS_COMMON                                                   += \
+    $(NULL)
+
+SOURCES_COMMON                                                        += \
+    main.c                                                               \
+    ncp.c                                                                \
+    $(NULL)
+
+LDADD_MBEDTLS                                                          = \
+    $(NULL)
+
+LDADD_MBEDTLS_RADIO                                                    = \
+    $(NULL)
+
+LDADD_DIAG                                                             = \
     $(NULL)
 
 if OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
-ot_ncp_LDADD                                                          += \
+LDADD_MBEDTLS                                                         += \
     $(top_builddir)/third_party/mbedtls/libmbedcrypto.a                  \
+    $(NULL)
+
+LDADD_MBEDTLS_RADIO                                                   += \
+    $(top_builddir)/third_party/mbedtls/libmbedcrypto-radio.a            \
     $(NULL)
 endif # OPENTHREAD_ENABLE_BUILTIN_MBEDTLS
 
-if OPENTHREAD_ENABLE_DIAG
-ot_ncp_LDADD                                                          += \
-    $(top_builddir)/src/diag/libopenthread-diag.a                        \
+if OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+LDADD_COMMON                                                          += \
+    $(OPENTHREAD_NCP_SPINEL_ENCRYPTER_LIBS)                              \
+    $(NULL)
+endif # OPENTHREAD_ENABLE_NCP_SPINEL_ENCRYPTER
+
+if OPENTHREAD_ENABLE_NCP
+if OPENTHREAD_ENABLE_FTD
+bin_PROGRAMS                                                          += \
+    ot-ncp-ftd                                                           \
+    $(NULL)
+endif
+endif
+
+ot_ncp_ftd_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_ncp_ftd_LDADD                                                       = \
+    $(top_builddir)/src/ncp/libopenthread-ncp-ftd.a                      \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
+    $(top_builddir)/src/core/libopenthread-ftd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
+    $(NULL)
+
+ot_ncp_ftd_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_ftd_LIBTOOLFLAGS                                                = \
+    $(LIBTOOLFLAGS_COMMON)                                               \
+    $(NULL)
+
+ot_ncp_ftd_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                    \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_NCP
+if OPENTHREAD_ENABLE_MTD
+bin_PROGRAMS                                                          += \
+    ot-ncp-mtd                                                           \
+    $(NULL)
+endif
+endif
+
+ot_ncp_mtd_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                   \
+    $(NULL)
+
+ot_ncp_mtd_LDADD                                                       = \
+    $(top_builddir)/src/ncp/libopenthread-ncp-mtd.a                      \
+    $(top_builddir)/src/core/libopenthread-mtd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
+    $(top_builddir)/src/core/libopenthread-mtd.a                         \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS)                                                     \
+    $(LDADD_DIAG)                                                        \
+    $(NULL)
+
+ot_ncp_mtd_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                    \
+    $(NULL)
+
+ot_ncp_mtd_LIBTOOLFLAGS                                                = \
+    $(LIBTOOLFLAGS_COMMON)                                               \
+    $(NULL)
+
+ot_ncp_mtd_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                    \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_RADIO_ONLY
+bin_PROGRAMS                                                          += \
+    ot-rcp                                                               \
     $(NULL)
 endif
 
-if OPENTHREAD_EXAMPLES_POSIX
-ot_ncp_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/posix/libopenthread-posix.a       \
-    -lstdc++                                                             \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_POSIX
-
-if OPENTHREAD_EXAMPLES_CC2538
-ot_ncp_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/cc2538/libopenthread-cc2538.a     \
+ot_rcp_CPPFLAGS                                                        = \
+    $(CPPFLAGS_COMMON)                                                   \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                        += \
-    -T $(top_srcdir)/examples/platforms/cc2538/cc2538.ld                 \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_CC2538
-
-if OPENTHREAD_EXAMPLES_DA15000
-ot_ncp_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/da15000/libopenthread-da15000.a   \
-    $(NULL)
-
-ot_ncp_LDFLAGS                                                        += \
-    -T $(top_srcdir)/examples/platforms/da15000/da15000.ld               \
-    $(NULL)
-endif # OPENTHREAD_EXAMPLES_DA15000
-
-if OPENTHREAD_EXAMPLES_NRF52840
-ot_ncp_LDADD                                                          += \
-    $(top_builddir)/examples/platforms/nrf52840/libopenthread-nrf52840.a \
+ot_rcp_LDADD                                                           = \
+    $(top_builddir)/src/ncp/libopenthread-rcp.a                          \
+    $(top_builddir)/src/core/libopenthread-radio.a                       \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS_RADIO)                                               \
+    $(top_builddir)/src/core/libopenthread-radio.a                       \
+    $(LDADD_COMMON)                                                      \
+    $(LDADD_MBEDTLS_RADIO)                                               \
     $(NULL)
 
-ot_ncp_LDFLAGS                                                        += \
-    -T $(top_srcdir)/examples/platforms/nrf52840/nrf52840.ld             \
+ot_rcp_LDFLAGS                                                         = \
+    $(LDFLAGS_COMMON)                                                    \
     $(NULL)
+
+ot_rcp_LIBTOOLFLAGS                                                    = \
+    $(LIBTOOLFLAGS_COMMON)                                               \
+    $(NULL)
+
+ot_rcp_SOURCES                                                         = \
+    $(SOURCES_COMMON)                                                    \
+    $(NULL)
+
+if OPENTHREAD_ENABLE_LINKER_MAP
+ot_ncp_ftd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-ftd.map
+ot_ncp_mtd_LDFLAGS                                                    += -Wl,-Map=ot-ncp-mtd.map
+ot_rcp_LDFLAGS                                                        += -Wl,-Map=ot-rcp.map
 endif
-
-ot_ncp_SOURCES                                                         = \
-    main.c                                                               \
-    $(NULL)
 
 if OPENTHREAD_BUILD_COVERAGE
+CPPFLAGS_COMMON                                                       += \
+    -DOPENTHREAD_ENABLE_COVERAGE                                         \
+    $(NULL)
+
 CLEANFILES                                                             = $(wildcard *.gcda *.gcno)
 endif # OPENTHREAD_BUILD_COVERAGE
 

@@ -34,15 +34,24 @@
 #ifndef KEY_MANAGER_HPP_
 #define KEY_MANAGER_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdint.h>
 
-#include <openthread-types.h>
-#include <common/timer.hpp>
-#include <crypto/hmac_sha256.hpp>
+#include <openthread/dataset.h>
 
-namespace Thread {
+#include "common/clearable.hpp"
+#include "common/encoding.hpp"
+#include "common/equatable.hpp"
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "common/random.hpp"
+#include "common/timer.hpp"
+#include "crypto/hmac_sha256.hpp"
+#include "mac/mac_types.hpp"
+#include "thread/mle_types.hpp"
 
-class ThreadNetif;
+namespace ot {
 
 /**
  * @addtogroup core-security
@@ -53,16 +62,133 @@ class ThreadNetif;
  * @{
  */
 
-class KeyManager
+/**
+ * This class represents Security Policy Rotation and Flags.
+ *
+ */
+class SecurityPolicy : public otSecurityPolicy, public Equatable<SecurityPolicy>
+{
+public:
+    /**
+     * Offset between the Thread Version and the Version-threshold valid for Routing.
+     *
+     */
+    static constexpr uint8_t kVersionThresholdOffsetVersion = 3;
+
+    static constexpr uint16_t kMinKeyRotationTime     = 1;   ///< The minimum Key Rotation Time in hours.
+    static constexpr uint16_t kDefaultKeyRotationTime = 672; ///< Default Key Rotation Time (in unit of hours).
+
+    /**
+     * This constructor initializes the object with default Key Rotation Time
+     * and Security Policy Flags.
+     *
+     */
+    SecurityPolicy(void) { SetToDefault(); }
+
+    /**
+     * This method sets the Security Policy to default values.
+     *
+     */
+    void SetToDefault(void);
+
+    /**
+     * This method sets the Security Policy Flags.
+     *
+     * @param[in]  aFlags        The Security Policy Flags.
+     * @param[in]  aFlagsLength  The length of the Security Policy Flags, 1 byte for
+     *                           Thread 1.1 devices, and 2 bytes for Thread 1.2 or higher.
+     *
+     */
+    void SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength);
+
+    /**
+     * This method returns the Security Policy Flags.
+     *
+     * @param[out] aFlags        A pointer to the Security Policy Flags buffer.
+     * @param[in]  aFlagsLength  The length of the Security Policy Flags buffer.
+     *
+     */
+    void GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const;
+
+private:
+    static constexpr uint8_t kDefaultFlags                   = 0xff;
+    static constexpr uint8_t kObtainNetworkKeyMask           = 1 << 7;
+    static constexpr uint8_t kNativeCommissioningMask        = 1 << 6;
+    static constexpr uint8_t kRoutersMask                    = 1 << 5;
+    static constexpr uint8_t kExternalCommissioningMask      = 1 << 4;
+    static constexpr uint8_t kBeaconsMask                    = 1 << 3;
+    static constexpr uint8_t kCommercialCommissioningMask    = 1 << 2;
+    static constexpr uint8_t kAutonomousEnrollmentMask       = 1 << 1;
+    static constexpr uint8_t kNetworkKeyProvisioningMask     = 1 << 0;
+    static constexpr uint8_t kTobleLinkMask                  = 1 << 7;
+    static constexpr uint8_t kNonCcmRoutersMask              = 1 << 6;
+    static constexpr uint8_t kReservedMask                   = 0x38;
+    static constexpr uint8_t kVersionThresholdForRoutingMask = 0x07;
+
+    void SetToDefaultFlags(void);
+};
+
+/**
+ * This class represents a Thread Network Key.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class NetworkKey : public otNetworkKey, public Equatable<NetworkKey>
+{
+public:
+#if !OPENTHREAD_RADIO
+    /**
+     * This method generates a cryptographically secure random sequence to populate the Thread Network Key.
+     *
+     * @retval kErrorNone     Successfully generated a random Thread Network Key.
+     * @retval kErrorFailed   Failed to generate random sequence.
+     *
+     */
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(m8)); }
+#endif
+} OT_TOOL_PACKED_END;
+
+/**
+ * This class represents a Thread Pre-Shared Key for the Commissioner (PSKc).
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class Pskc : public otPskc, public Equatable<Pskc>, public Clearable<Pskc>
+{
+public:
+#if !OPENTHREAD_RADIO
+    /**
+     * This method generates a cryptographically secure random sequence to populate the Thread PSKc.
+     *
+     * @retval kErrorNone  Successfully generated a random Thread PSKc.
+     *
+     */
+    Error GenerateRandom(void) { return Random::Crypto::FillBuffer(m8, sizeof(Pskc)); }
+#endif
+
+} OT_TOOL_PACKED_END;
+
+/**
+ *
+ * This class represents a Key Encryption Key (KEK).
+ *
+ */
+typedef Mac::Key Kek;
+
+/**
+ * This class defines Thread Key Manager.
+ *
+ */
+class KeyManager : public InstanceLocator, private NonCopyable
 {
 public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit KeyManager(ThreadNetif &aThreadNetif);
+    explicit KeyManager(Instance &aInstance);
 
     /**
      * This method starts KeyManager rotation timer and sets guard timer to initial value.
@@ -77,26 +203,52 @@ public:
     void Stop(void);
 
     /**
-     * This method returns a pointer to the Thread Master Key
+     * This method returns the Thread Network Key.
      *
-     * @param[out]  aKeyLength  A pointer where the key length value will be placed.
-     *
-     * @returns A pointer to the Thread Master Key.
+     * @returns The Thread Network Key.
      *
      */
-    const uint8_t *GetMasterKey(uint8_t *aKeyLength) const;
+    const NetworkKey &GetNetworkKey(void) const { return mNetworkKey; }
 
     /**
-     * This method sets the Thread Master Key.
+     * This method sets the Thread Network Key.
      *
-     * @param[in]  aKey        A pointer to the Thread Master Key.
-     * @param[in]  aKeyLength  The length of @p aKey.
+     * @param[in]  aKey        A Thread Network Key.
      *
-     * @retval kThreadError_None         Successfully set the Thread Master Key.
-     * @retval kThreadError_InvalidArgs  The @p aKeyLength value was invalid.
+     * @retval kErrorNone         Successfully set the Thread Network Key.
+     * @retval kErrorInvalidArgs  The @p aKeyLength value was invalid.
      *
      */
-    ThreadError SetMasterKey(const void *aKey, uint8_t aKeyLength);
+    Error SetNetworkKey(const NetworkKey &aKey);
+
+#if OPENTHREAD_FTD || OPENTHREAD_MTD
+    /**
+     * This method indicates whether the PSKc is configured.
+     *
+     * A value of all zeros indicates that the PSKc is not configured.
+     *
+     * @retval TRUE  if the PSKc is configured.
+     * @retval FALSE if the PSKc is not not configured.
+     *
+     */
+    bool IsPskcSet(void) const { return mIsPskcSet; }
+
+    /**
+     * This method returns a pointer to the PSKc.
+     *
+     * @returns A reference to the PSKc.
+     *
+     */
+    const Pskc &GetPskc(void) const { return mPskc; }
+
+    /**
+     * This method sets the PSKc.
+     *
+     * @param[in]  aPskc    A reference to the PSKc.
+     *
+     */
+    void SetPskc(const Pskc &aPskc);
+#endif
 
     /**
      * This method returns the current key sequence value.
@@ -104,7 +256,7 @@ public:
      * @returns The current key sequence value.
      *
      */
-    uint32_t GetCurrentKeySequence(void) const;
+    uint32_t GetCurrentKeySequence(void) const { return mKeySequence; }
 
     /**
      * This method sets the current key sequence value.
@@ -114,57 +266,85 @@ public:
      */
     void SetCurrentKeySequence(uint32_t aKeySequence);
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
     /**
-     * This method returns a pointer to the current MAC key.
+     * This method returns the current MAC key for TREL radio link.
      *
-     * @returns A pointer to the current MAC key.
+     * @returns The current TREL MAC key.
      *
      */
-    const uint8_t *GetCurrentMacKey(void) const;
+    const Mac::Key &GetCurrentTrelMacKey(void) const { return mTrelKey; }
 
     /**
-     * This method returns a pointer to the current MLE key.
-     *
-     * @returns A pointer to the current MLE key.
-     *
-     */
-    const uint8_t *GetCurrentMleKey(void) const;
-
-    /**
-     * This method returns a pointer to a temporary MAC key computed from the given key sequence.
+     * This method returns a temporary MAC key for TREL radio link computed from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
      *
-     * @returns A pointer to the temporary MAC key.
+     * @returns The temporary TREL MAC key.
      *
      */
-    const uint8_t *GetTemporaryMacKey(uint32_t aKeySequence);
+    const Mac::Key &GetTemporaryTrelMacKey(uint32_t aKeySequence);
+#endif
 
     /**
-     * This method returns a pointer to a temporary MLE key computed from the given key sequence.
+     * This method returns the current MLE key.
+     *
+     * @returns The current MLE key.
+     *
+     */
+    const Mle::Key &GetCurrentMleKey(void) const { return mMleKey; }
+
+    /**
+     * This method returns a temporary MLE key computed from the given key sequence.
      *
      * @param[in]  aKeySequence  The key sequence value.
      *
-     * @returns A pointer to the temporary MLE key.
+     * @returns The temporary MLE key.
      *
      */
-    const uint8_t *GetTemporaryMleKey(uint32_t aKeySequence);
+    const Mle::Key &GetTemporaryMleKey(uint32_t aKeySequence);
 
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
     /**
-     * This method returns the current MAC Frame Counter value.
+     * This method returns the current MAC Frame Counter value for 15.4 radio link.
      *
      * @returns The current MAC Frame Counter value.
      *
      */
-    uint32_t GetMacFrameCounter(void) const;
+    uint32_t Get154MacFrameCounter(void) const { return mMacFrameCounters.Get154(); }
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    /**
+     * This method returns the current MAC Frame Counter value for TREL radio link.
+     *
+     * @returns The current MAC Frame Counter value for TREL radio link.
+     *
+     */
+    uint32_t GetTrelMacFrameCounter(void) const { return mMacFrameCounters.GetTrel(); }
 
     /**
-     * This method sets the current MAC Frame Counter value.
+     * This method increments the current MAC Frame Counter value for TREL radio link.
+     *
+     */
+    void IncrementTrelMacFrameCounter(void);
+#endif
+
+    /**
+     * This method gets the maximum MAC Frame Counter among all supported radio links.
+     *
+     * @return The maximum MAC frame Counter among all supported radio links.
+     *
+     */
+    uint32_t GetMaximumMacFrameCounter(void) const { return mMacFrameCounters.GetMaximum(); }
+
+    /**
+     * This method sets the current MAC Frame Counter value for all radio links.
      *
      * @param[in]  aMacFrameCounter  The MAC Frame Counter value.
      *
      */
-    void SetMacFrameCounter(uint32_t aMacFrameCounter);
+    void SetAllMacFrameCounters(uint32_t aMacFrameCounter);
 
     /**
      * This method sets the MAC Frame Counter value which is stored in non-volatile memory.
@@ -172,13 +352,7 @@ public:
      * @param[in]  aStoredMacFrameCounter  The stored MAC Frame Counter value.
      *
      */
-    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter);
-
-    /**
-     * This method increments the current MAC Frame Counter value.
-     *
-     */
-    void IncrementMacFrameCounter(void);
+    void SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter) { mStoredMacFrameCounter = aStoredMacFrameCounter; }
 
     /**
      * This method returns the current MLE Frame Counter value.
@@ -186,7 +360,7 @@ public:
      * @returns The current MLE Frame Counter value.
      *
      */
-    uint32_t GetMleFrameCounter(void) const;
+    uint32_t GetMleFrameCounter(void) const { return mMleFrameCounter; }
 
     /**
      * This method sets the current MLE Frame Counter value.
@@ -194,7 +368,7 @@ public:
      * @param[in]  aMleFrameCounter  The MLE Frame Counter value.
      *
      */
-    void SetMleFrameCounter(uint32_t aMleFrameCounter);
+    void SetMleFrameCounter(uint32_t aMleFrameCounter) { mMleFrameCounter = aMleFrameCounter; }
 
     /**
      * This method sets the MLE Frame Counter value which is stored in non-volatile memory.
@@ -202,7 +376,7 @@ public:
      * @param[in]  aStoredMleFrameCounter  The stored MLE Frame Counter value.
      *
      */
-    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter);
+    void SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter) { mStoredMleFrameCounter = aStoredMleFrameCounter; }
 
     /**
      * This method increments the current MLE Frame Counter value.
@@ -216,7 +390,15 @@ public:
      * @returns A pointer to the KEK.
      *
      */
-    const uint8_t *GetKek(void) const;
+    const Kek &GetKek(void) const { return mKek; }
+
+    /**
+     * This method sets the KEK.
+     *
+     * @param[in]  aKek  A KEK.
+     *
+     */
+    void SetKek(const Kek &aKek);
 
     /**
      * This method sets the KEK.
@@ -232,36 +414,13 @@ public:
      * @returns The current KEK Frame Counter value.
      *
      */
-    uint32_t GetKekFrameCounter(void) const;
+    uint32_t GetKekFrameCounter(void) const { return mKekFrameCounter; }
 
     /**
      * This method increments the current KEK Frame Counter value.
      *
      */
-    void IncrementKekFrameCounter(void);
-
-    /**
-     * This method returns the KeyRotation time.
-     *
-     * The KeyRotation time is the time interval after witch security key will be automatically rotated.
-     *
-     * @returns The KeyRotation value in hours.
-     */
-    uint32_t GetKeyRotation(void) const { return mKeyRotationTime; }
-
-    /**
-     * This method sets the KeyRotation time.
-     *
-     * The KeyRotation time is the time interval after witch security key will be automatically rotated.
-     * It's value shall be in range [kMinKeyRotationTime, kMaxKeyRotationTime].
-     *
-     * @param[in]  aKeyRotation  The KeyRotation value in hours.
-     *
-     * @retval  kThreadError_None         KeyRotation time updated.
-     * @retval  kThreadError_InvalidArgs  @p aKeyRotation is out of range.
-     *
-     */
-    ThreadError SetKeyRotation(uint32_t aKeyRotation);
+    void IncrementKekFrameCounter(void) { mKekFrameCounter++; }
 
     /**
      * This method returns the KeySwitchGuardTime.
@@ -284,72 +443,110 @@ public:
     void SetKeySwitchGuardTime(uint32_t aKeySwitchGuardTime) { mKeySwitchGuardTime = aKeySwitchGuardTime; }
 
     /**
-     * This method returns the Security Policy Flags.
+     * This method returns the Security Policy.
      *
-     * The Security Policy Flags specifies network administrator preferences for which
-     * security-related operations are allowed or disallowed.
+     * The Security Policy specifies Key Rotation Time and network administrator preferences
+     * for which security-related operations are allowed or disallowed.
      *
-     * @returns The SecurityPolicy Flags.
+     * @returns The SecurityPolicy.
      *
      */
-    uint8_t GetSecurityPolicyFlags(void) const { return mSecurityPolicyFlags; }
+    const SecurityPolicy &GetSecurityPolicy(void) const { return mSecurityPolicy; }
 
     /**
-     * This method sets the Security Policy Flags.
+     * This method sets the Security Policy.
      *
-     * The Security Policy Flags specifies network administrator preferences for which
-     * security-related operations are allowed or disallowed.
+     * The Security Policy specifies Key Rotation Time and network administrator preferences
+     * for which security-related operations are allowed or disallowed.
      *
-     * @param[in]  aSecurityPolicyFlags  The Security Policy Flags.
+     * @param[in]  aSecurityPolicy  The Security Policy.
      *
      */
-    void SetSecurityPolicyFlags(uint8_t aSecurityPolicyFlags) { mSecurityPolicyFlags = aSecurityPolicyFlags; }
+    void SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy);
+
+    /**
+     * This method updates the MAC keys and MLE key.
+     *
+     */
+    void UpdateKeyMaterial(void);
+
+    /**
+     * This method handles MAC frame counter change (callback from `SubMac` for 15.4 security frame change)
+     *
+     * @param[in]  aMacFrameCounter  The 15.4 link MAC frame counter value.
+     *
+     */
+    void MacFrameCounterUpdated(uint32_t aMacFrameCounter);
 
 private:
-    enum
+    static constexpr uint32_t kDefaultKeySwitchGuardTime = 624;
+    static constexpr uint32_t kOneHourIntervalInMsec     = 3600u * 1000u;
+
+    OT_TOOL_PACKED_BEGIN
+    struct Keys
     {
-        kMaxKeyLength = 16,
-        kMinKeyRotationTime = 1,
-        kMaxKeyRotationTime = 0xffffffff / 3600u / 1000u,
-        kDefaultKeyRotationTime = 672,
-        kDefaultKeySwitchGuardTime = 624,
+        Mle::Key mMleKey;
+        Mac::Key mMacKey;
+    } OT_TOOL_PACKED_END;
+
+    union HashKeys
+    {
+        Crypto::HmacSha256::Hash mHash;
+        Keys                     mKeys;
     };
 
-    ThreadError ComputeKey(uint32_t aKeySequence, uint8_t *aKey);
+    void ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys);
 
-    static void HandleKeyRotationTimer(void *aContext);
-    void HandleKeyRotationTimer(void);
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    void ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey);
+#endif
 
-    ThreadNetif &mNetif;
+    void        StartKeyRotationTimer(void);
+    static void HandleKeyRotationTimer(Timer &aTimer);
+    void        HandleKeyRotationTimer(void);
 
-    uint8_t mMasterKey[kMaxKeyLength];
-    uint8_t mMasterKeyLength;
+    static const uint8_t kThreadString[];
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    static const uint8_t kHkdfExtractSaltString[];
+    static const uint8_t kTrelInfoString[];
+#endif
+
+    NetworkKey mNetworkKey;
 
     uint32_t mKeySequence;
-    uint8_t mKey[Crypto::HmacSha256::kHashSize];
+    Mle::Key mMleKey;
+    Mle::Key mTemporaryMleKey;
 
-    uint8_t mTemporaryKey[Crypto::HmacSha256::kHashSize];
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    Mac::Key mTrelKey;
+    Mac::Key mTemporaryTrelKey;
+#endif
 
-    uint32_t mMacFrameCounter;
-    uint32_t mMleFrameCounter;
-    uint32_t mStoredMacFrameCounter;
-    uint32_t mStoredMleFrameCounter;
+    Mac::LinkFrameCounters mMacFrameCounters;
+    uint32_t               mMleFrameCounter;
+    uint32_t               mStoredMacFrameCounter;
+    uint32_t               mStoredMleFrameCounter;
 
-    uint32_t mKeyRotationTime;
-    uint32_t mKeySwitchGuardTime;
-    bool     mKeySwitchGuardEnabled;
-    Timer    mKeyRotationTimer;
+    uint32_t   mHoursSinceKeyRotation;
+    uint32_t   mKeySwitchGuardTime;
+    bool       mKeySwitchGuardEnabled;
+    TimerMilli mKeyRotationTimer;
 
-    uint8_t mKek[kMaxKeyLength];
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+    Pskc mPskc;
+#endif
+    Kek      mKek;
     uint32_t mKekFrameCounter;
 
-    uint8_t mSecurityPolicyFlags;
+    SecurityPolicy mSecurityPolicy;
+    bool           mIsPskcSet : 1;
 };
 
 /**
  * @}
  */
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // KEY_MANAGER_HPP_
+#endif // KEY_MANAGER_HPP_

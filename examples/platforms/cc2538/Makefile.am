@@ -28,6 +28,10 @@
 
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
+# Do not enable -Wcast-align for this platform
+override CFLAGS    := $(filter-out -Wcast-align,$(CFLAGS))
+override CXXFLAGS  := $(filter-out -Wcast-align,$(CXXFLAGS))
+
 lib_LIBRARIES                             = libopenthread-cc2538.a
 
 libopenthread_cc2538_a_CPPFLAGS           = \
@@ -36,27 +40,26 @@ libopenthread_cc2538_a_CPPFLAGS           = \
     -I$(top_srcdir)/src/core                \
     $(NULL)
 
-libopenthread_cc2538_a_SOURCES            = \
+PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    cc2538-reg.h                            \
+    diag.c                                  \
+    entropy.c                               \
     flash.c                                 \
     misc.c                                  \
-    platform.c                              \
+    openthread-core-cc2538-config.h         \
+    openthread-core-cc2538-config-check.h   \
+    platform-cc2538.h                       \
     radio.c                                 \
-    random.c                                \
+    rom-utility.h                           \
     startup-gcc.c                           \
+    system.c                                \
+    logging.c                               \
     uart.c                                  \
     $(NULL)
 
-if OPENTHREAD_ENABLE_DIAG
-libopenthread_cc2538_a_SOURCES           += \
-    diag.c                                  \
-    $(NULL)
-endif
-
-noinst_HEADERS                            = \
-    cc2538-reg.h                            \
-    platform-cc2538.h                       \
-    rom-utility.h                           \
+libopenthread_cc2538_a_SOURCES            = \
+    $(PLATFORM_SOURCES)                     \
     $(NULL)
 
 Dash                                      = -

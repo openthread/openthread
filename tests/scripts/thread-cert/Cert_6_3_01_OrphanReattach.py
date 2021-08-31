@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,67 +27,88 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
+import thread_cert
+from pktverify.consts import MLE_PARENT_REQUEST, MLE_CHILD_ID_REQUEST, MLE_CHILD_UPDATE_REQUEST, SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, MODE_TLV
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
 ROUTER = 2
 ED = 3
 
-class Cert_6_3_1_OrphanReattach(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,4):
-            self.nodes[i] = node.Node(i)
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
-        self.nodes[ROUTER].set_router_selection_jitter(1)
-
-        self.nodes[ED].set_panid(0xface)
-        self.nodes[ED].set_mode('rsn')
-        self.nodes[ED].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[ED].enable_whitelist()
-        self.nodes[ED].set_timeout(10)
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+class Cert_6_3_1_OrphanReattach(thread_cert.TestCase):
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'LEADER',
+            'mode': 'rdn',
+            'allowlist': [ROUTER]
+        },
+        ROUTER: {
+            'name': 'ROUTER',
+            'mode': 'rdn',
+            'allowlist': [LEADER, ED]
+        },
+        ED: {
+            'name': 'ED',
+            'is_mtd': True,
+            'mode': 'rn',
+            'timeout': 10,
+            'allowlist': [ROUTER]
+        },
+    }
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
 
         self.nodes[ED].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
+        self.collect_ipaddrs()
         self.nodes[ROUTER].stop()
-        self.nodes[LEADER].add_whitelist(self.nodes[ED].get_addr64())
-        self.nodes[ED].add_whitelist(self.nodes[LEADER].get_addr64())
-        time.sleep(20)
+        self.nodes[LEADER].add_allowlist(self.nodes[ED].get_addr64())
+        self.nodes[ED].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.simulator.go(20)
 
         self.assertEqual(self.nodes[ED].get_state(), 'child')
 
         addrs = self.nodes[ED].get_addrs()
         for addr in addrs:
             self.assertTrue(self.nodes[LEADER].ping(addr))
+
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
+
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        ED = pv.vars['ED']
+        _epkts = pkts.filter_wpan_src64(ED)
+
+        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).must_next()
+
+        # Step 2: Remove Router from the network
+        # Step 3: The DUT MUST send three MLE Child Update Requests to its parent
+        for i in range(1, 3):
+            _epkts.filter_mle_cmd(MLE_CHILD_UPDATE_REQUEST).filter_wpan_dst64(ROUTER).must_next().must_verify(
+                lambda p: {SOURCE_ADDRESS_TLV, LEADER_DATA_TLV, MODE_TLV} <= set(p.mle.tlv.type))
+
+        # Step 5: The DUT MUST perform the attach procedure with the Leader
+        _epkts.filter_mle_cmd(MLE_PARENT_REQUEST).must_next()
+        _epkts.filter_mle_cmd(MLE_CHILD_ID_REQUEST).filter_wpan_dst64(LEADER).must_next()
+
+        # Step 6: The DUT MUST respond with ICMPv6 Echo Reply
+        _epkts.filter('ipv6.src == {ED_MLEID} and ipv6.dst == {LEADER_MLEID}',
+                      **pv.vars).filter_ping_reply().must_next()
+
 
 if __name__ == '__main__':
     unittest.main()

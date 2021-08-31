@@ -1,9 +1,26 @@
-#!/usr/bin/perl
+#!/usr/bin/env perl
 
-# test standard configurations:
-# - build
-# - run test suite
-# - run compat.sh
+# test-ref-configs.pl
+#
+# Copyright The Mbed TLS Contributors
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License"); you may
+# not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+# WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Purpose
+#
+# For each reference configuration file in the configs directory, build the
+# configuration, run the test suites and compat.sh
 #
 # Usage: tests/scripts/test-ref-configs.pl [config-name [...]]
 
@@ -11,16 +28,20 @@ use warnings;
 use strict;
 
 my %configs = (
+    'config-ccm-psk-tls1_2.h' => {
+        'compat' => '-m tls1_2 -f \'^TLS-PSK-WITH-AES-...-CCM-8\'',
+    },
     'config-mini-tls1_1.h' => {
-        'compat' => '-m tls1_1 -f \'^DES-CBC3-SHA$\|^TLS-RSA-WITH-3DES-EDE-CBC-SHA$\'',
+        'compat' => '-m tls1_1 -f \'^DES-CBC3-SHA$\|^TLS-RSA-WITH-3DES-EDE-CBC-SHA$\'', #'
+    },
+    'config-no-entropy.h' => {
+    },
+    'config-psa-crypto.h' => {
     },
     'config-suite-b.h' => {
         'compat' => "-m tls1_2 -f 'ECDHE-ECDSA.*AES.*GCM' -p mbedTLS",
     },
-    'config-picocoin.h' => {
-    },
-    'config-ccm-psk-tls1_2.h' => {
-        'compat' => '-m tls1_2 -f \'^TLS-PSK-WITH-AES-...-CCM-8\'',
+    'config-symmetric-only.h' => {
     },
     'config-thread.h' => {
         'opt' => '-f ECJPAKE.*nolog',
@@ -49,7 +70,18 @@ my $config_h = 'include/mbedtls/config.h';
 system( "cp $config_h $config_h.bak" ) and die;
 sub abort {
     system( "mv $config_h.bak $config_h" ) and warn "$config_h not restored\n";
-    die $_[0];
+    # use an exit code between 1 and 124 for git bisect (die returns 255)
+    warn $_[0];
+    exit 1;
+}
+
+# Create a seedfile for configurations that enable MBEDTLS_ENTROPY_NV_SEED.
+# For test purposes, this doesn't have to be cryptographically random.
+if (!-e "tests/seedfile" || -s "tests/seedfile" < 64) {
+    local *SEEDFILE;
+    open SEEDFILE, ">tests/seedfile" or die;
+    print SEEDFILE "*" x 64 or die;
+    close SEEDFILE or die;
 }
 
 while( my ($conf, $data) = each %configs ) {
@@ -59,11 +91,12 @@ while( my ($conf, $data) = each %configs ) {
     print "\n******************************************\n";
     print "* Testing configuration: $conf\n";
     print "******************************************\n";
+    $ENV{MBEDTLS_TEST_CONFIGURATION} = $conf;
 
     system( "cp configs/$conf $config_h" )
         and abort "Failed to activate $conf\n";
 
-    system( "make CFLAGS='-Os -Werror'" ) and abort "Failed to build: $conf\n";
+    system( "CFLAGS='-Os -Werror -Wall -Wextra' make" ) and abort "Failed to build: $conf\n";
     system( "make test" ) and abort "Failed test suite: $conf\n";
 
     my $compat = $data->{'compat'};

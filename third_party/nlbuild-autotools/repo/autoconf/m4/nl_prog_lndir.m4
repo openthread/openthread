@@ -61,8 +61,8 @@ AC_DEFUN([NL_PROG_LNDIR],
 	elif `_NL_CHECK_LNDIR(lndir)`; then
 	    LNDIR="lndir -silent"
 
-	elif `_NL_CHECK_CP_RS(${ac_abs_confdir}/build/tools/host/${filtered_build}/bin/cp)`; then
-	    LNDIR="\${top_srcdir}/build/tools/host/${filtered_build}/bin/cp -Rs"
+	elif `_NL_CHECK_CP_RS($1)`; then
+	    LNDIR="$2 -Rs"
 
 	else
 	    AC_MSG_ERROR([Cannot determine how to shadow a directory tree. Neither 'cp -Rs' nor 'lndir -silent' appear to be available or functional. Please consider installing or making available in your PATH one of: GNU coreutils <http://www.gnu.org/software/coreutils/>, XQuartz (Mac OS X-only) <http://xquartz.macosforge.org/>, or lndir <http://www.mit.edu/afs/sipb/project/sipbsrc/rt/lndir/>.])

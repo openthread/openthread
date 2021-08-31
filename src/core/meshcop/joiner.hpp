@@ -34,122 +34,215 @@
 #ifndef JOINER_HPP_
 #define JOINER_HPP_
 
-#include <openthread-types.h>
-#include <commissioning/joiner.h>
+#include "openthread-core-config.h"
 
-#include <coap/coap_header.hpp>
-#include <coap/coap_server.hpp>
-#include <coap/secure_coap_client.hpp>
-#include <common/message.hpp>
-#include <net/udp6.hpp>
-#include <meshcop/dtls.hpp>
-#include <meshcop/tlvs.hpp>
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
 
-namespace Thread {
+#include <openthread/joiner.h>
 
-class ThreadNetif;
+#include "coap/coap.hpp"
+#include "coap/coap_message.hpp"
+#include "coap/coap_secure.hpp"
+#include "common/locator.hpp"
+#include "common/logging.hpp"
+#include "common/message.hpp"
+#include "common/non_copyable.hpp"
+#include "mac/mac_types.hpp"
+#include "meshcop/dtls.hpp"
+#include "meshcop/meshcop.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "thread/discover_scanner.hpp"
+
+namespace ot {
 
 namespace MeshCoP {
 
-class Joiner
+class Joiner : public InstanceLocator, private NonCopyable
 {
 public:
     /**
-     * This constructor initializes the Joiner object.
-     *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * This enumeration type defines the Joiner State.
      *
      */
-    Joiner(ThreadNetif &aThreadNetif);
+    enum State : uint8_t
+    {
+        kStateIdle      = OT_JOINER_STATE_IDLE,
+        kStateDiscover  = OT_JOINER_STATE_DISCOVER,
+        kStateConnect   = OT_JOINER_STATE_CONNECT,
+        kStateConnected = OT_JOINER_STATE_CONNECTED,
+        kStateEntrust   = OT_JOINER_STATE_ENTRUST,
+        kStateJoined    = OT_JOINER_STATE_JOINED,
+    };
+
+    /**
+     * This constructor initializes the Joiner object.
+     *
+     * @param[in]  aInstance     A reference to the OpenThread instance.
+     *
+     */
+    explicit Joiner(Instance &aInstance);
 
     /**
      * This method starts the Joiner service.
      *
-     * @param[in]  aPSKd             A pointer to the PSKd.
-     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be NULL).
-     * @param[in]  aVendorName       A pointer to the Vendor Name (must be static).
-     * @param[in]  aVendorModel      A pointer to the Vendor Model (must be static).
-     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (must be static).
-     * @param[in]  aVendorData       A pointer to the Vendor Data (must be static).
+     * @param[in]  aPskd             A pointer to the PSKd.
+     * @param[in]  aProvisioningUrl  A pointer to the Provisioning URL (may be nullptr).
+     * @param[in]  aVendorName       A pointer to the Vendor Name (may be nullptr).
+     * @param[in]  aVendorModel      A pointer to the Vendor Model (may be nullptr).
+     * @param[in]  aVendorSwVersion  A pointer to the Vendor SW Version (may be nullptr).
+     * @param[in]  aVendorData       A pointer to the Vendor Data (may be nullptr).
      * @param[in]  aCallback         A pointer to a function that is called when the join operation completes.
      * @param[in]  aContext          A pointer to application-specific context.
      *
-     * @retval kThreadError_None  Successfully started the Joiner service.
+     * @retval kErrorNone          Successfully started the Joiner service.
+     * @retval kErrorBusy          The previous attempt is still on-going.
+     * @retval kErrorInvalidState  The IPv6 stack is not enabled or Thread stack is fully enabled.
      *
      */
-    ThreadError Start(const char *aPSKd, const char *aProvisioningUrl,
-                      const char *aVendorName, const char *aVendorModel,
-                      const char *aVendorSwVersion, const char *aVendorData,
-                      otJoinerCallback aCallback, void *aContext);
+    Error Start(const char *     aPskd,
+                const char *     aProvisioningUrl,
+                const char *     aVendorName,
+                const char *     aVendorModel,
+                const char *     aVendorSwVersion,
+                const char *     aVendorData,
+                otJoinerCallback aCallback,
+                void *           aContext);
 
     /**
      * This method stops the Joiner service.
      *
-     * @retval kThreadError_None  Successfully stopped the Joiner service.
+     */
+    void Stop(void);
+
+    /**
+     * This method gets the Joiner State.
+     *
+     * @returns The Joiner state (see `State`).
      *
      */
-    ThreadError Stop(void);
+    State GetState(void) const { return mState; }
+
+    /**
+     * This method retrieves the Joiner ID.
+     *
+     * @returns The Joiner ID.
+     *
+     */
+    const Mac::ExtAddress &GetId(void) const { return mId; }
+
+    /**
+     * This method gets the Jointer Discerner.
+     *
+     * @returns A pointer to the current Joiner Discerner or `nullptr` if none is set.
+     *
+     */
+    const JoinerDiscerner *GetDiscerner(void) const;
+
+    /**
+     * This method sets the Joiner Discerner.
+     *
+     * The Joiner Discerner is used to calculate the Joiner ID used during commissioning/joining process.
+     *
+     * By default (when a discerner is not provided or cleared), Joiner ID is derived as first 64 bits of the
+     * result of computing SHA-256 over factory-assigned IEEE EUI-64. Note that this is the main behavior expected by
+     * Thread specification.
+     *
+     * @param[in]   aDiscerner  A Joiner Discerner
+     *
+     * @retval kErrorNone          The Joiner Discerner updated successfully.
+     * @retval kErrorInvalidArgs   @p aDiscerner is not valid (specified length is not within valid range).
+     * @retval kErrorInvalidState  There is an ongoing Joining process so Joiner Discerner could not be changed.
+     *
+     */
+    Error SetDiscerner(const JoinerDiscerner &aDiscerner);
+
+    /**
+     * This method clears any previously set Joiner Discerner.
+     *
+     * When cleared, Joiner ID is derived as first 64 bits of SHA-256 of factory-assigned IEEE EUI-64.
+     *
+     * @retval kErrorNone          The Joiner Discerner cleared and Joiner ID updated.
+     * @retval kErrorInvalidState  There is an ongoing Joining process so Joiner Discerner could not be changed.
+     *
+     */
+    Error ClearDiscerner(void);
 
 private:
-    enum
+    static constexpr uint16_t kJoinerUdpPort = OPENTHREAD_CONFIG_JOINER_UDP_PORT;
+
+    static constexpr uint32_t kConfigExtAddressDelay = 100;  // in msec.
+    static constexpr uint32_t kReponseTimeout        = 4000; ///< Max wait time to receive response (in msec).
+
+    struct JoinerRouter
     {
-        kConfigExtAddressDelay = 100,  ///< milliseconds
-        kTimeout               = 4000, ///< milliseconds
+        Mac::ExtAddress mExtAddr;
+        Mac::PanId      mPanId;
+        uint16_t        mJoinerUdpPort;
+        uint8_t         mChannel;
+        uint8_t         mPriority;
     };
 
-    static void HandleDiscoverResult(otActiveScanResult *aResult, void *aContext);
-    void HandleDiscoverResult(otActiveScanResult *aResult);
-
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
-
-    void Close(void);
-    void Complete(ThreadError aError);
+    static void HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult, void *aContext);
+    void        HandleDiscoverResult(Mle::DiscoverScanner::ScanResult *aResult);
 
     static void HandleSecureCoapClientConnect(bool aConnected, void *aContext);
-    void HandleSecureCoapClientConnect(bool aConnected);
+    void        HandleSecureCoapClientConnect(bool aConnected);
 
-    void SendJoinerFinalize(void);
-    static void HandleJoinerFinalizeResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                             const otMessageInfo *aMessageInfo, ThreadError aResult);
-    void HandleJoinerFinalizeResponse(Coap::Header *aHeader, Message *aMessage,
-                                      const Ip6::MessageInfo *aMessageInfo, ThreadError aResult);
+    static void HandleJoinerFinalizeResponse(void *               aContext,
+                                             otMessage *          aMessage,
+                                             const otMessageInfo *aMessageInfo,
+                                             Error                aResult);
+    void HandleJoinerFinalizeResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleJoinerEntrust(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                    const otMessageInfo *aMessageInfo);
-    void HandleJoinerEntrust(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-    void SendJoinerEntrustResponse(const Coap::Header &aRequestHeader, const Ip6::MessageInfo &aRequestInfo);
+    static void HandleJoinerEntrust(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleJoinerEntrust(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    enum State
-    {
-        kStateIdle      = 0,
-        kStateDiscover  = 1,
-        kStateConnect   = 2,
-        kStateConnected = 3,
-        kStateEntrust   = 4,
-        kStateJoined    = 5,
-    };
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+
+    static const char *StateToString(State aState);
+
+    void    SetState(State aState);
+    void    SetIdFromIeeeEui64(void);
+    void    SaveDiscoveredJoinerRouter(const Mle::DiscoverScanner::ScanResult &aResult);
+    void    TryNextJoinerRouter(Error aPrevError);
+    Error   Connect(JoinerRouter &aRouter);
+    void    Finish(Error aError);
+    uint8_t CalculatePriority(int8_t aRssi, bool aSteeringDataAllowsAny);
+
+    Error PrepareJoinerFinalizeMessage(const char *aProvisioningUrl,
+                                       const char *aVendorName,
+                                       const char *aVendorModel,
+                                       const char *aVendorSwVersion,
+                                       const char *aVendorData);
+    void  FreeJoinerFinalizeMessage(void);
+    void  SendJoinerFinalize(void);
+    void  SendJoinerEntrustResponse(const Coap::Message &aRequest, const Ip6::MessageInfo &aRequestInfo);
+
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    void LogCertMessage(const char *aText, const Coap::Message &aMessage) const;
+#endif
+
+    Mac::ExtAddress mId;
+    JoinerDiscerner mDiscerner;
+
     State mState;
 
     otJoinerCallback mCallback;
-    void *mContext;
+    void *           mContext;
 
-    uint8_t mJoinerRouterChannel;
-    uint16_t mJoinerRouterPanId;
-    uint16_t mJoinerUdpPort;
-    Mac::ExtAddress mJoinerRouter;
+    JoinerRouter mJoinerRouters[OPENTHREAD_CONFIG_JOINER_MAX_CANDIDATES];
+    uint16_t     mJoinerRouterIndex;
 
-    const char *mVendorName;
-    const char *mVendorModel;
-    const char *mVendorSwVersion;
-    const char *mVendorData;
+    Coap::Message *mFinalizeMessage;
 
-    Timer mTimer;
+    TimerMilli     mTimer;
     Coap::Resource mJoinerEntrust;
-    ThreadNetif &mNetif;
 };
 
-}  // namespace MeshCoP
-}  // namespace Thread
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // JOINER_HPP_
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
+
+#endif // JOINER_HPP_

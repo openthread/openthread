@@ -34,55 +34,87 @@
 #ifndef THREAD_NETIF_HPP_
 #define THREAD_NETIF_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+#include "openthread-core-config.h"
+
+#include "coap/coap_secure.hpp"
+#include "mac/mac.hpp"
+#include "thread/tmf.hpp"
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+#include "meshcop/border_agent.hpp"
+#endif
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+#include "meshcop/commissioner.hpp"
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+#include "backbone_router/bbr_leader.hpp"
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+#include "backbone_router/backbone_tmf.hpp"
+#include "backbone_router/bbr_local.hpp"
+#include "backbone_router/bbr_manager.hpp"
 #endif
 
-#include <openthread-types.h>
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+#include "thread/mlr_manager.hpp"
+#endif
 
-#include <coap/coap_server.hpp>
-#include <coap/coap_client.hpp>
-#include <coap/secure_coap_client.hpp>
-#include <coap/secure_coap_server.hpp>
-#include <mac/mac.hpp>
-#include <meshcop/dataset_manager.hpp>
-#include <meshcop/joiner_router.hpp>
-#include <meshcop/leader.hpp>
-#include <net/dhcp6.hpp>
-#include <net/dhcp6_client.hpp>
-#include <net/dhcp6_server.hpp>
-#include <net/ip6_filter.hpp>
-#include <net/netif.hpp>
-#include <thread/address_resolver.hpp>
-#include <thread/announce_begin_server.hpp>
-#include <thread/energy_scan_server.hpp>
-#include <thread/network_diagnostic.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mesh_forwarder.hpp>
-#include <thread/mle.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/network_data_local.hpp>
-#include <thread/panid_query_server.hpp>
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+#include "thread/dua_manager.hpp"
+#endif
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-#include <utils/jam_detector.hpp>
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+#include "net/srp_server.hpp"
+#endif
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
-#include <meshcop/commissioner.hpp>
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#include "meshcop/dataset_manager.hpp"
 
-#if OPENTHREAD_ENABLE_DTLS
-#include <meshcop/dtls.hpp>
-#endif  // OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
+#include "meshcop/joiner.hpp"
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#if OPENTHREAD_ENABLE_JOINER
-#include <meshcop/joiner.hpp>
-#endif  // OPENTHREAD_ENABLE_JOINER
+#include "meshcop/joiner_router.hpp"
+#include "meshcop/meshcop_leader.hpp"
+#include "net/dhcp6.hpp"
+#include "net/dhcp6_client.hpp"
+#include "net/dhcp6_server.hpp"
+#include "net/dns_client.hpp"
+#include "net/dnssd_server.hpp"
+#include "net/ip6_filter.hpp"
+#include "net/nd_agent.hpp"
+#include "net/netif.hpp"
+#include "net/sntp_client.hpp"
+#include "net/srp_client.hpp"
+#include "thread/address_resolver.hpp"
+#include "thread/announce_begin_server.hpp"
+#include "thread/discover_scanner.hpp"
+#include "thread/energy_scan_server.hpp"
+#include "thread/key_manager.hpp"
+#include "thread/link_metrics.hpp"
+#include "thread/mesh_forwarder.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/network_data_local.hpp"
+#include "thread/network_data_notifier.hpp"
+#include "thread/network_data_publisher.hpp"
+#include "thread/network_data_service.hpp"
+#include "thread/network_diagnostic.hpp"
+#include "thread/panid_query_server.hpp"
+#include "thread/radio_selector.hpp"
+#include "thread/time_sync_service.hpp"
+#include "utils/child_supervision.hpp"
+#include "utils/srp_client_buffers.hpp"
 
-namespace Thread {
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+#include "utils/slaac_address.hpp"
+#endif
+
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+#include "utils/jam_detector.hpp"
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+
+namespace ot {
 
 /**
  * @addtogroup core-netif
@@ -93,28 +125,30 @@ namespace Thread {
  * @{
  */
 
-class ThreadNetif: public Ip6::Netif
+class ThreadNetif : public Ip6::Netif
 {
+    friend class Instance;
+
 public:
     /**
      * This constructor initializes the Thread network interface.
      *
-     * @param[in]  aIp6  A reference to the IPv6 network object.
+     * @param[in]  aInstance  A reference to the OpenThread instance.
      *
      */
-    ThreadNetif(Ip6::Ip6 &aIp6);
+    explicit ThreadNetif(Instance &aInstance);
 
     /**
      * This method enables the Thread network interface.
      *
      */
-    ThreadError Up(void);
+    void Up(void);
 
     /**
      * This method disables the Thread network interface.
      *
      */
-    ThreadError Down(void);
+    void Down(void);
 
     /**
      * This method indicates whether or not the Thread network interface is enabled.
@@ -123,25 +157,17 @@ public:
      * @retval FALSE  If the Thread network interface is not enabled.
      *
      */
-    bool IsUp(void) const;
-
-    /**
-     * This method retrieves the link address.
-     *
-     * @param[out]  aAddress  A reference to the link address.
-     *
-     */
-    ThreadError GetLinkAddress(Ip6::LinkAddress &aAddress) const;
+    bool IsUp(void) const { return mIsUp; }
 
     /**
      * This method submits a message to the network interface.
      *
      * @param[in]  aMessage  A reference to the message.
      *
-     * @retval kThreadError_None  Successfully submitted the message to the interface.
+     * @retval kErrorNone  Successfully submitted the message to the interface.
      *
      */
-    ThreadError SendMessage(Message &aMessage);
+    Error SendMessage(Message &aMessage) { return mMeshForwarder.SendMessage(aMessage); }
 
     /**
      * This method performs a route lookup.
@@ -150,238 +176,144 @@ public:
      * @param[in]   aDestination  A reference to the IPv6 destination address.
      * @param[out]  aPrefixMatch  A pointer where the number of prefix match bits for the chosen route is stored.
      *
-     * @retval kThreadError_None     Successfully found a route.
-     * @retval kThreadError_NoRoute  Could not find a valid route.
+     * @retval kErrorNone      Successfully found a route.
+     * @retval kErrorNoRoute   Could not find a valid route.
      *
      */
-    ThreadError RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
+    Error RouteLookup(const Ip6::Address &aSource, const Ip6::Address &aDestination, uint8_t *aPrefixMatch);
 
     /**
-     * This method returns a pointer to the address resolver object.
+     * This method indicates whether @p aAddress matches an on-mesh prefix.
      *
-     * @returns A pointer to the address resolver object.
+     * @param[in]  aAddress  The IPv6 address.
      *
-     */
-    AddressResolver &GetAddressResolver(void) { return mAddressResolver; }
-
-    /**
-     * This method returns a pointer to the network diagnostic object.
-     *
-     * @returns A reference to the address resolver object.
+     * @retval TRUE   If @p aAddress matches an on-mesh prefix.
+     * @retval FALSE  If @p aAddress does not match an on-mesh prefix.
      *
      */
-    NetworkDiagnostic::NetworkDiagnostic &GetNetworkDiagnostic(void) { return mNetworkDiagnostic; }
-
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    /**
-     * This method returns a pointer to the dhcp client object.
-     *
-     * @returns A reference to the dhcp client object.
-     *
-     */
-    Dhcp6::Dhcp6Client &GetDhcp6Client(void) { return mDhcp6Client; }
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
-
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-    /**
-     * This method returns a pointer to the dhcp server object.
-     *
-     * @returns A reference to the the dhcp server object.
-     *
-     */
-    Dhcp6::Dhcp6Server &GetDhcp6Server(void) { return mDhcp6Server; }
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
-
-    /**
-     * This method returns a reference to the CoAP server object.
-     *
-     * @returns A reference to the CoAP server object.
-     *
-     */
-    Coap::Server &GetCoapServer(void) { return mCoapServer; }
-
-    /**
-     * This method returns a reference to the CoAP client object.
-     *
-     * @returns A reference to the CoAP client object.
-     *
-     */
-    Coap::Client &GetCoapClient(void) { return mCoapClient; }
-
-    /**
-     * This method returns a reference to the IPv6 filter object.
-     *
-     * @returns A reference to the IPv6 filter object.
-     *
-     */
-    Ip6::Filter &GetIp6Filter(void) { return mIp6Filter; }
-
-    /**
-     * This method returns a pointer to the key manager object.
-     *
-     * @returns A pointer to the key manager object.
-     *
-     */
-    KeyManager &GetKeyManager(void) { return mKeyManager; }
-
-    /**
-     * This method returns a pointer to the lowpan object.
-     *
-     * @returns A pointer to the lowpan object.
-     *
-     */
-    Lowpan::Lowpan &GetLowpan(void) { return mLowpan; }
-
-    /**
-     * This method returns a pointer to the mac object.
-     *
-     * @returns A pointer to the mac object.
-     *
-     */
-    Mac::Mac &GetMac(void) { return mMac; }
-
-    /**
-     * This method returns a pointer to the mle object.
-     *
-     * @returns A pointer to the mle object.
-     *
-     */
-    Mle::MleRouter &GetMle(void) { return mMleRouter; }
-
-    /**
-     * This method returns a pointer to the mesh forwarder object.
-     *
-     * @returns A pointer to the mesh forwarder object.
-     *
-     */
-    MeshForwarder &GetMeshForwarder(void) { return mMeshForwarder; }
-
-    /**
-     * This method returns a pointer to the network data local object.
-     *
-     * @returns A pointer to the network data local object.
-     *
-     */
-    NetworkData::Local &GetNetworkDataLocal(void) { return mNetworkDataLocal; }
-
-    /**
-     * This method returns a pointer to the network data leader object.
-     *
-     * @returns A pointer to the network data leader object.
-     *
-     */
-    NetworkData::Leader &GetNetworkDataLeader(void) { return mNetworkDataLeader; }
-
-    MeshCoP::ActiveDataset &GetActiveDataset(void) { return mActiveDataset; }
-
-    MeshCoP::PendingDataset &GetPendingDataset(void) { return mPendingDataset; }
-
-    MeshCoP::JoinerRouter &GetJoinerRouter(void) { return mJoinerRouter; }
-
-    MeshCoP::Leader &GetLeader(void) { return mLeader; }
-
-    AnnounceBeginServer &GetAnnounceBeginServer(void) { return mAnnounceBegin; }
-
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    MeshCoP::Commissioner &GetCommissioner(void) { return mCommissioner; }
-
-    Coap::SecureServer &GetSecureCoapServer(void) { return mSecureCoapServer; }
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
-
-#if OPENTHREAD_ENABLE_DTLS
-    MeshCoP::Dtls &GetDtls(void) { return mDtls; }
-#endif  // OPENTHREAD_ENABLE_DTLS
-
-#if OPENTHREAD_ENABLE_JOINER
-    MeshCoP::Joiner &GetJoiner(void) { return mJoiner; }
-
-    Coap::SecureClient &GetSecureCoapClient(void) { return mSecureCoapClient; }
-#endif  // OPENTHREAD_ENABLE_JOINER
-
-#if OPENTHREAD_ENABLE_JAM_DETECTION
-    /**
-     * This method returns the jam detector instance.
-     *
-     * @returns Reference to the JamDetector instance.
-     *
-     */
-    Utils::JamDetector &GetJamDetector(void) { return mJamDetector; }
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
-
-    /**
-     * This method returns the pointer to the parent otInstance structure.
-     *
-     * @returns The pointer to the parent otInstance structure.
-     *
-     */
-    otInstance *GetInstance();
+    bool IsOnMesh(const Ip6::Address &aAddress) const;
 
 private:
-    Coap::Server mCoapServer;
-    Coap::Client mCoapClient;
-    AddressResolver mAddressResolver;
-#if OPENTHREAD_ENABLE_DHCP6_CLIENT
-    Dhcp6::Dhcp6Client mDhcp6Client;
-#endif  // OPENTHREAD_ENABLE_DHCP6_CLIENT
-#if OPENTHREAD_ENABLE_DHCP6_SERVER
-    Dhcp6::Dhcp6Server mDhcp6Server;
-#endif  // OPENTHREAD_ENABLE_DHCP6_SERVER
-    MeshCoP::ActiveDataset mActiveDataset;
+    Tmf::Agent mTmfAgent;
+#if OPENTHREAD_CONFIG_DHCP6_CLIENT_ENABLE
+    Dhcp6::Client mDhcp6Client;
+#endif
+#if OPENTHREAD_CONFIG_DHCP6_SERVER_ENABLE
+    Dhcp6::Server mDhcp6Server;
+#endif
+#if OPENTHREAD_CONFIG_NEIGHBOR_DISCOVERY_AGENT_ENABLE
+    NeighborDiscovery::Agent mNeighborDiscoveryAgent;
+#endif
+#if OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+    Utils::Slaac mSlaac;
+#endif
+#if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
+    Dns::Client mDnsClient;
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_ENABLE
+    Srp::Client mSrpClient;
+#endif
+#if OPENTHREAD_CONFIG_SRP_CLIENT_BUFFERS_ENABLE
+    Utils::SrpClientBuffers mSrpClientBuffers;
+#endif
+#if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
+    Dns::ServiceDiscovery::Server mDnssdServer;
+#endif
+#if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
+    Sntp::Client mSntpClient;
+#endif
+    MeshCoP::ActiveDataset  mActiveDataset;
     MeshCoP::PendingDataset mPendingDataset;
-    Ip6::Filter mIp6Filter;
-    KeyManager mKeyManager;
-    Lowpan::Lowpan mLowpan;
-    Mac::Mac mMac;
-    MeshForwarder mMeshForwarder;
-    Mle::MleRouter mMleRouter;
+    Ip6::Filter             mIp6Filter;
+    KeyManager              mKeyManager;
+    Lowpan::Lowpan          mLowpan;
+    Mac::Mac                mMac;
+    MeshForwarder           mMeshForwarder;
+    Mle::MleRouter          mMleRouter;
+    Mle::DiscoverScanner    mDiscoverScanner;
+#if OPENTHREAD_CONFIG_MULTI_RADIO
+    RadioSelector mRadioSelector;
+#endif
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Local mNetworkDataLocal;
+#endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     NetworkData::Leader mNetworkDataLeader;
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
+    NetworkData::Notifier mNetworkDataNotifier;
+#endif
+#if OPENTHREAD_CONFIG_NETDATA_PUBLISHER_ENABLE
+    NetworkData::Publisher mNetworkDataPublisher;
+#endif
+    NetworkData::Service::Manager mNetworkDataServiceManager;
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     NetworkDiagnostic::NetworkDiagnostic mNetworkDiagnostic;
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
     bool mIsUp;
 
-#if OPENTHREAD_ENABLE_COMMISSIONER
-    Coap::SecureServer mSecureCoapServer;
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    MeshCoP::BorderAgent mBorderAgent;
+#endif
+#if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
     MeshCoP::Commissioner mCommissioner;
-#endif  // OPENTHREAD_ENABLE_COMMISSIONER
+#endif // OPENTHREAD_CONFIG_COMMISSIONER_ENABLE
 
-#if OPENTHREAD_ENABLE_DTLS
-    MeshCoP::Dtls mDtls;
-#endif// OPENTHREAD_ENABLE_DTLS
+#if OPENTHREAD_CONFIG_DTLS_ENABLE
+    Coap::CoapSecure mCoapSecure;
+#endif // OPENTHREAD_CONFIG_DTLS_ENABLE
 
-#if OPENTHREAD_ENABLE_JOINER
-    Coap::SecureClient mSecureCoapClient;
+#if OPENTHREAD_CONFIG_JOINER_ENABLE
     MeshCoP::Joiner mJoiner;
-#endif  // OPENTHREAD_ENABLE_JOINER
+#endif // OPENTHREAD_CONFIG_JOINER_ENABLE
 
-#if OPENTHREAD_ENABLE_JAM_DETECTION
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
     Utils::JamDetector mJamDetector;
-#endif // OPENTHREAD_ENABLE_JAM_DETECTION
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
+#if OPENTHREAD_FTD
     MeshCoP::JoinerRouter mJoinerRouter;
-    MeshCoP::Leader mLeader;
+    MeshCoP::Leader       mLeader;
+    AddressResolver       mAddressResolver;
+#endif // OPENTHREAD_FTD
+
+#if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
+    BackboneRouter::Leader mBackboneRouterLeader;
+#endif
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
+    BackboneRouter::Local   mBackboneRouterLocal;
+    BackboneRouter::Manager mBackboneRouterManager;
+#endif
+#if OPENTHREAD_CONFIG_MLR_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_MLR_ENABLE)
+    MlrManager mMlrManager;
+#endif
+#if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
+    DuaManager mDuaManager;
+#endif
+#if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
+    Srp::Server mSrpServer;
+#endif
+
+#if OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE
+#if OPENTHREAD_FTD
+    Utils::ChildSupervisor mChildSupervisor;
+#endif
+    Utils::SupervisionListener mSupervisionListener;
+#endif
     AnnounceBeginServer mAnnounceBegin;
-    PanIdQueryServer mPanIdQuery;
-    EnergyScanServer mEnergyScan;
+    PanIdQueryServer    mPanIdQuery;
+    EnergyScanServer    mEnergyScan;
 
-};
-
-/**
- * This structure represents Thread-specific link information.
- *
- */
-struct ThreadMessageInfo
-{
-    uint16_t mPanId;         ///< Source PAN ID
-    uint8_t  mChannel;       ///< 802.15.4 Channel
-    int8_t   mRss;           ///< Received Signal Strength in dBm.
-    uint8_t  mLqi;           ///< Link Quality Indicator for a received message.
-    bool     mLinkSecurity;  ///< Indicates whether or not link security is enabled.
+#if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
+    TimeSync mTimeSync;
+#endif
+#if OPENTHREAD_CONFIG_MLE_LINK_METRICS_INITIATOR_ENABLE || OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
+    LinkMetrics::LinkMetrics mLinkMetrics;
+#endif
 };
 
 /**
  * @}
  */
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // THREAD_NETIF_HPP_
+#endif // THREAD_NETIF_HPP_

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -61,7 +61,6 @@ class CoapOptionsTypes(IntEnum):
 
 
 class CoapOptionHeader(object):
-
     """ Class representing CoAP optiona header. """
 
     def __init__(self, delta, length):
@@ -78,7 +77,7 @@ class CoapOptionHeader(object):
 
     @property
     def is_payload_marker(self):
-        return self.delta == 0xf and self.length == 0xf
+        return self.delta == 0xF and self.length == 0xF
 
     @classmethod
     def _read_extended_value(cls, data, value):
@@ -94,8 +93,8 @@ class CoapOptionHeader(object):
     def from_bytes(cls, data):
         initial_byte = ord(data.read(1))
 
-        delta = (initial_byte >> 4) & 0xf
-        length = initial_byte & 0xf
+        delta = (initial_byte >> 4) & 0xF
+        length = initial_byte & 0xF
 
         delta = cls._read_extended_value(data, delta)
         length = cls._read_extended_value(data, length)
@@ -104,7 +103,6 @@ class CoapOptionHeader(object):
 
 
 class CoapOption(object):
-
     """ Class representing CoAP option. """
 
     def __init__(self, _type, value):
@@ -124,7 +122,6 @@ class CoapOption(object):
 
 
 class CoapOptionsFactory(object):
-
     """ Factory that produces CoAP options. """
 
     def parse(self, data, message_info):
@@ -146,7 +143,6 @@ class CoapOptionsFactory(object):
 
 
 class CoapCode(object):
-
     """ Class representing CoAP code. """
 
     def __init__(self, code):
@@ -162,11 +158,11 @@ class CoapCode(object):
 
     @property
     def detail(self):
-        return self.code & 0x1f
+        return self.code & 0x1F
 
     @classmethod
     def from_class_and_detail(cls, _class, detail):
-        return cls(((_class & 0x7) << 5) | (detail & 0x1f))
+        return cls(((_class & 0x7) << 5) | (detail & 0x1F))
 
     @classmethod
     def from_dotted(cls, dotted_str):
@@ -199,10 +195,19 @@ class CoapCode(object):
 
 
 class CoapMessage(object):
-
     """ Class representing CoAP message. """
 
-    def __init__(self, version, _type, code, message_id, token, options, payload, uri_path=None):
+    def __init__(
+        self,
+        version,
+        _type,
+        code,
+        message_id,
+        token,
+        options,
+        payload,
+        uri_path=None,
+    ):
         self._version = version
         self._type = _type
         self._code = code
@@ -250,25 +255,38 @@ class CoapMessage(object):
 
     def __repr__(self):
         options_str = ", ".join([repr(opt) for opt in self.options])
-        return "CoapMessage(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={}, uri-path='{}')".format(
-            self.version, CoapMessageType.name[self.type], self.code, self.message_id, hexlify(self.token),
-            options_str, self.payload, self.uri_path)
+        return ("CoapMessage(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
+                "uri-path='{}')").format(
+                    self.version,
+                    CoapMessageType.name[self.type],
+                    self.code,
+                    self.message_id,
+                    hexlify(self.token),
+                    options_str,
+                    self.payload,
+                    self.uri_path,
+                )
 
 
 class CoapMessageProxy(object):
+    """ Proxy class of CoAP message.
 
-    """ Proxy class of CoAP message. 
-
-    The main idea behind this class is to delay parsing payload. Due to architecture of the existing solution 
-    it is possible to process confirmation message before a request message. In such case it is not possible 
+    The main idea behind this class is to delay parsing payload. Due to architecture of the existing solution
+    it is possible to process confirmation message before a request message. In such case it is not possible
     to get URI path to get proper payload parser.
     """
 
-    def __init__(self, coap_message, message_info, mid_to_uri_path_binder, uri_path_based_payload_factories):
+    def __init__(
+        self,
+        coap_message,
+        message_info,
+        mid_to_uri_path_binder,
+        uri_path_based_payload_factories,
+    ):
         self._coap_message = coap_message
         self._message_info = message_info
         self._mid_to_uri_path_binder = mid_to_uri_path_binder
-        self._uri_path_based_payload_factories = uri_path_based_payload_factories
+        self._uri_path_based_payload_factories = (uri_path_based_payload_factories)
 
     @property
     def version(self):
@@ -316,13 +334,20 @@ class CoapMessageProxy(object):
 
     def __repr__(self):
         options_str = ", ".join([repr(opt) for opt in self.options])
-        return "CoapMessageProxy(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={}, uri-path='{}')".format(
-            self.version, self.type, self.code, self.message_id, hexlify(self.token),
-            options_str, self.payload, self.uri_path)
+        return ("CoapMessageProxy(version={}, type={}, code={}, message_id={}, token={}, options=[{}], payload={},",
+                "uri-path='{}')").format(
+                    self.version,
+                    self.type,
+                    self.code,
+                    self.message_id,
+                    hexlify(self.token),
+                    options_str,
+                    self.payload,
+                    self.uri_path,
+                )
 
 
 class CoapMessageIdToUriPathBinder:
-
     """ Class binds message id and token with URI path. """
 
     def __init__(self):
@@ -340,12 +365,16 @@ class CoapMessageIdToUriPathBinder:
 
 
 class CoapMessageFactory(object):
-
     """ Factory that produces CoAP messages. """
 
-    def __init__(self, options_factory, uri_path_based_payload_factories, message_id_to_uri_path_binder):
+    def __init__(
+        self,
+        options_factory,
+        uri_path_based_payload_factories,
+        message_id_to_uri_path_binder,
+    ):
         self._options_factory = options_factory
-        self._uri_path_based_payload_factories = uri_path_based_payload_factories
+        self._uri_path_based_payload_factories = (uri_path_based_payload_factories)
         self._mid_to_uri_path_binder = message_id_to_uri_path_binder
 
     def _uri_path_from(self, options):
@@ -365,7 +394,7 @@ class CoapMessageFactory(object):
 
         version = (initial_byte >> 6) & 0x3
         _type = CoapMessageType((initial_byte >> 4) & 0x3)
-        token_length = initial_byte & 0xf
+        token_length = initial_byte & 0xF
 
         return version, _type, token_length
 
@@ -382,6 +411,20 @@ class CoapMessageFactory(object):
         if uri_path is not None:
             self._mid_to_uri_path_binder.add_uri_path_for(message_id, token, uri_path)
 
-        coap_message = CoapMessage(version, _type, code, message_id, token, options, data.read(), uri_path)
+        coap_message = CoapMessage(
+            version,
+            _type,
+            code,
+            message_id,
+            token,
+            options,
+            data.read(),
+            uri_path,
+        )
 
-        return CoapMessageProxy(coap_message, message_info, self._mid_to_uri_path_binder, self._uri_path_based_payload_factories)
+        return CoapMessageProxy(
+            coap_message,
+            message_info,
+            self._mid_to_uri_path_binder,
+            self._uri_path_based_payload_factories,
+        )

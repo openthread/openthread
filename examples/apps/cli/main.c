@@ -26,37 +26,94 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
+#include <assert.h>
+#include <openthread-core-config.h>
+#include <openthread/config.h>
+
+#include <openthread/cli.h>
+#include <openthread/diag.h>
+#include <openthread/tasklet.h>
+#include <openthread/platform/logging.h>
+
+#include "openthread-system.h"
+#include "cli/cli_config.h"
+#include "common/code_utils.hpp"
+
+/**
+ * This function initializes the CLI app.
+ *
+ * @param[in]  aInstance  The OpenThread instance structure.
+ *
+ */
+extern void otAppCliInit(otInstance *aInstance);
+
+#if OPENTHREAD_EXAMPLES_SIMULATION
+#include <setjmp.h>
+#include <unistd.h>
+
+jmp_buf gResetJump;
+
+void __gcov_flush();
 #endif
 
-#include <openthread-core-config.h>
-#include <openthread.h>
-#include <openthread-diag.h>
-#include <openthread-tasklet.h>
-#include <cli/cli-uart.h>
-#include <platform/platform.h>
-#include <assert.h>
+#ifndef OPENTHREAD_ENABLE_COVERAGE
+#define OPENTHREAD_ENABLE_COVERAGE 0
+#endif
 
-void otSignalTaskletPending(otInstance *aInstance)
+#if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
+void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
-    (void)aInstance;
+    return calloc(aNum, aSize);
 }
+
+void otPlatFree(void *aPtr)
+{
+    free(aPtr);
+}
+#endif
+
+void otTaskletsSignalPending(otInstance *aInstance)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+}
+
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+static void ProcessExit(void *aContext, uint8_t aArgsLength, char *aArgs[])
+{
+    OT_UNUSED_VARIABLE(aContext);
+    OT_UNUSED_VARIABLE(aArgsLength);
+    OT_UNUSED_VARIABLE(aArgs);
+
+    exit(EXIT_SUCCESS);
+}
+static const otCliCommand kCommands[] = {{"exit", ProcessExit}};
+#endif
 
 int main(int argc, char *argv[])
 {
-    otInstance *sInstance;
+    otInstance *instance;
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    uint64_t otInstanceBufferLength = 0;
-    uint8_t *otInstanceBuffer = NULL;
+#if OPENTHREAD_EXAMPLES_SIMULATION
+    if (setjmp(gResetJump))
+    {
+        alarm(0);
+#if OPENTHREAD_ENABLE_COVERAGE
+        __gcov_flush();
+#endif
+        execvp(argv[0], argv);
+    }
 #endif
 
-    PlatformInit(argc, argv);
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    size_t   otInstanceBufferLength = 0;
+    uint8_t *otInstanceBuffer       = NULL;
+#endif
 
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
+pseudo_reset:
+
+    otSysInit(argc, argv);
+
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
     // Call to query the buffer size
     (void)otInstanceInit(NULL, &otInstanceBufferLength);
 
@@ -64,29 +121,50 @@ int main(int argc, char *argv[])
     otInstanceBuffer = (uint8_t *)malloc(otInstanceBufferLength);
     assert(otInstanceBuffer);
 
-    // Initialize Openthread with the buffer
-    sInstance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
+    // Initialize OpenThread with the buffer
+    instance = otInstanceInit(otInstanceBuffer, &otInstanceBufferLength);
 #else
-    sInstance = otInstanceInit();
+    instance = otInstanceInitSingle();
 #endif
-    assert(sInstance);
+    assert(instance);
 
-    otCliUartInit(sInstance);
+    otAppCliInit(instance);
 
-#if OPENTHREAD_ENABLE_DIAG
-    diagInit(sInstance);
+#if OPENTHREAD_POSIX && !defined(FUZZING_BUILD_MODE_UNSAFE_FOR_PRODUCTION)
+    otCliSetUserCommands(kCommands, OT_ARRAY_LENGTH(kCommands), instance);
 #endif
 
-    while (1)
+    while (!otSysPseudoResetWasRequested())
     {
-        otProcessQueuedTasklets(sInstance);
-        PlatformProcessDrivers(sInstance);
+        otTaskletsProcess(instance);
+        otSysProcessDrivers(instance);
     }
 
-    // otInstanceFinalize(sInstance);
-#ifdef OPENTHREAD_MULTIPLE_INSTANCE
-    // free(otInstanceBuffer);
+    otInstanceFinalize(instance);
+#if OPENTHREAD_CONFIG_MULTIPLE_INSTANCE_ENABLE
+    free(otInstanceBuffer);
 #endif
+
+    goto pseudo_reset;
 
     return 0;
 }
+
+/*
+ * Provide, if required an "otPlatLog()" function
+ */
+#if OPENTHREAD_CONFIG_LOG_OUTPUT == OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+void otPlatLog(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, ...)
+{
+    va_list ap;
+    va_start(ap, aFormat);
+    otCliPlatLogv(aLogLevel, aLogRegion, aFormat, ap);
+    va_end(ap);
+}
+
+void otPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine)
+{
+    otCliPlatLogLine(aLogLevel, aLogRegion, aLogLine);
+}
+
+#endif

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -33,7 +33,6 @@ import string
 import unittest
 
 import coap
-import config
 
 
 def any_delta():
@@ -108,7 +107,8 @@ def any_uri_path():
 
 class TestCoapMessageOptionHeader(unittest.TestCase):
 
-    def test_should_return_passed_on_value_when_read_extended_value_is_called_with_value_different_than_13_and_14(self):
+    def test_should_return_passed_on_value_when_read_extended_value_is_called_with_value_different_than_13_and_14(
+            self):
         # GIVEN
         value = any_4bits_value_different_than_13_and_14()
 
@@ -118,7 +118,8 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         # THEN
         self.assertEqual(value, actual_value)
 
-    def test_should_return_value_stored_in_first_byte_plus_13_when_read_extended_value_is_called_with_value_equal_13(self):
+    def test_should_return_value_stored_in_first_byte_plus_13_when_read_extended_value_is_called_with_value_equal_13(
+            self):
         # GIVEN
         value = 13
         extended_value = any_value()
@@ -131,7 +132,8 @@ class TestCoapMessageOptionHeader(unittest.TestCase):
         # THEN
         self.assertEqual(extended_value + 13, actual_value)
 
-    def test_should_return_value_stored_in_first_byte_plus_269_when_read_extended_value_is_called_with_value_equal_14(self):
+    def test_should_return_value_stored_in_first_byte_plus_269_when_read_extended_value_is_called_with_value_equal_14(
+            self):
         # GIVEN
         value = 14
         extended_value = any_value()
@@ -256,7 +258,7 @@ class TestCoapCode(unittest.TestCase):
         actual_detail = code_obj.detail
 
         # THEN
-        self.assertEqual(code & 0x1f, actual_detail)
+        self.assertEqual(code & 0x1F, actual_detail)
 
     def test_should_return_dotted_value_when_dotted_property_is_called(self):
         # GIVEN
@@ -276,7 +278,7 @@ class TestCoapCode(unittest.TestCase):
         code = any_code()
 
         _class = (code >> 5) & 0x7
-        detail = code & 0x1f
+        detail = code & 0x1F
 
         # WHEN
         actual_coap_obj = coap.CoapCode.from_class_and_detail(_class, detail)
@@ -303,8 +305,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         version = any_version()
 
-        coap_message = coap.CoapMessage(version, any_type(), any_code(), any_message_id(),
-                                        any_token(), any_options(), any_payload())
+        coap_message = coap.CoapMessage(
+            version,
+            any_type(),
+            any_code(),
+            any_message_id(),
+            any_token(),
+            any_options(),
+            any_payload(),
+        )
 
         # WHEN
         actual_version = coap_message.version
@@ -316,8 +325,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         _type = any_type()
 
-        coap_message = coap.CoapMessage(any_version(), _type, any_code(), any_message_id(),
-                                        any_token(), any_options(), any_payload())
+        coap_message = coap.CoapMessage(
+            any_version(),
+            _type,
+            any_code(),
+            any_message_id(),
+            any_token(),
+            any_options(),
+            any_payload(),
+        )
 
         # WHEN
         actual_type = coap_message.type
@@ -329,8 +345,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         code = any_code()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), code, any_message_id(),
-                                        any_token(), any_options(), any_payload())
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            code,
+            any_message_id(),
+            any_token(),
+            any_options(),
+            any_payload(),
+        )
 
         # WHEN
         actual_code = coap_message.code
@@ -342,8 +365,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         message_id = any_message_id()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), any_code(), message_id,
-                                        any_token(), any_options(), any_payload())
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            any_code(),
+            message_id,
+            any_token(),
+            any_options(),
+            any_payload(),
+        )
 
         # WHEN
         actual_message_id = coap_message.message_id
@@ -355,8 +385,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         token = any_token()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), any_code(), any_message_id(),
-                                        token, any_options(), any_payload())
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            any_code(),
+            any_message_id(),
+            token,
+            any_options(),
+            any_payload(),
+        )
 
         # WHEN
         actual_token = coap_message.token
@@ -368,8 +405,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         token = any_token()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), any_code(), any_message_id(),
-                                        token, any_options(), any_payload())
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            any_code(),
+            any_message_id(),
+            token,
+            any_options(),
+            any_payload(),
+        )
 
         # WHEN
         actual_tkl = coap_message.tkl
@@ -381,8 +425,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         options = any_options()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), any_code(), any_message_id(),
-                                        any_token(), options, any_payload())
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            any_code(),
+            any_message_id(),
+            any_token(),
+            options,
+            any_payload(),
+        )
 
         # WHEN
         actual_options = coap_message.options
@@ -394,8 +445,15 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         payload = any_payload()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), any_code(), any_message_id(),
-                                        any_token(), any_options(), payload)
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            any_code(),
+            any_message_id(),
+            any_token(),
+            any_options(),
+            payload,
+        )
 
         # WHEN
         actual_payload = coap_message.payload
@@ -407,8 +465,16 @@ class TestCoapMessage(unittest.TestCase):
         # GIVEN
         uri_path = any_uri_path()
 
-        coap_message = coap.CoapMessage(any_version(), any_type(), any_code(), any_message_id(),
-                                        any_token(), any_options(), any_payload(), uri_path)
+        coap_message = coap.CoapMessage(
+            any_version(),
+            any_type(),
+            any_code(),
+            any_message_id(),
+            any_token(),
+            any_options(),
+            any_payload(),
+            uri_path,
+        )
 
         # WHEN
         actual_uri_path = coap_message.uri_path
@@ -437,7 +503,7 @@ class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
         # GIVEN
         message_id = any_message_id()
         token = any_token()
-        uri_path = any_uri_path()
+        any_uri_path()
 
         binder = coap.CoapMessageIdToUriPathBinder()
 
@@ -448,6 +514,7 @@ class TestCoapMessageIdToUriPathBinder(unittest.TestCase):
 class TestCoapMessageFactory(unittest.TestCase):
 
     def _create_dummy_payload_factory(self):
+
         class DummyPayloadFactory:
 
             def parse(self, data, message_info):
@@ -458,17 +525,39 @@ class TestCoapMessageFactory(unittest.TestCase):
     def _create_coap_message_factory(self):
         return coap.CoapMessageFactory(
             options_factory=coap.CoapOptionsFactory(),
-            uri_path_based_payload_factories={
-                "/a/as": self._create_dummy_payload_factory()
-            },
-            message_id_to_uri_path_binder=coap.CoapMessageIdToUriPathBinder())
+            uri_path_based_payload_factories={"/a/as": self._create_dummy_payload_factory()},
+            message_id_to_uri_path_binder=coap.CoapMessageIdToUriPathBinder(),
+        )
 
     def test_should_create_CoapMessage_from_solicit_request_data_when_parse_method_is_called(self):
         # GIVEN
-        data = bytearray([0x42, 0x02, 0x00, 0xbd, 0x65, 0xee, 0xb1, 0x61,
-                          0x02, 0x61, 0x73, 0xff, 0x01, 0x08, 0x16, 0x6e,
-                          0x0a, 0x00, 0x00, 0x00, 0x00, 0x02, 0x04, 0x01,
-                          0x02])
+        data = bytearray([
+            0x42,
+            0x02,
+            0x00,
+            0xBD,
+            0x65,
+            0xee,
+            0xB1,
+            0x61,
+            0x02,
+            0x61,
+            0x73,
+            0xff,
+            0x01,
+            0x08,
+            0x16,
+            0x6E,
+            0x0A,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x02,
+            0x04,
+            0x01,
+            0x02,
+        ])
 
         factory = self._create_coap_message_factory()
 
@@ -485,25 +574,63 @@ class TestCoapMessageFactory(unittest.TestCase):
         self.assertEqual("a", coap_message.options[0].value.decode("utf-8"))
         self.assertEqual("as", coap_message.options[1].value.decode("utf-8"))
         self.assertEqual("/a/as", coap_message.uri_path)
-        self.assertEqual(bytearray([0x01, 0x08, 0x16, 0x6e, 0x0a, 0x00, 0x00, 0x00,
-                                    0x00, 0x02, 0x04, 0x01, 0x02]), coap_message.payload)
+        self.assertEqual(
+            bytearray([
+                0x01,
+                0x08,
+                0x16,
+                0x6E,
+                0x0A,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x02,
+                0x04,
+                0x01,
+                0x02,
+            ]),
+            coap_message.payload,
+        )
 
     def test_should_create_CoapMessage_from_solicit_response_data_when_parse_method_is_called(self):
         # GIVEN
-        data = bytearray([0x62, 0x44, 0x00, 0xbd, 0x65, 0xee, 0xff, 0x04,
-                          0x01, 0x00, 0x02, 0x02, 0x00, 0x00, 0x07, 0x09,
-                          0x76, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00,
-                          0x00])
+        data = bytearray([
+            0x62,
+            0x44,
+            0x00,
+            0xBD,
+            0x65,
+            0xee,
+            0xff,
+            0x04,
+            0x01,
+            0x00,
+            0x02,
+            0x02,
+            0x00,
+            0x00,
+            0x07,
+            0x09,
+            0x76,
+            0x80,
+            0x00,
+            0x01,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+            0x00,
+        ])
 
         mid_binder = coap.CoapMessageIdToUriPathBinder()
         mid_binder.add_uri_path_for(189, bytearray([0x65, 0xee]), "/a/as")
 
         factory = coap.CoapMessageFactory(
             options_factory=coap.CoapOptionsFactory(),
-            uri_path_based_payload_factories={
-                "/a/as": self._create_dummy_payload_factory()
-            },
-            message_id_to_uri_path_binder=mid_binder)
+            uri_path_based_payload_factories={"/a/as": self._create_dummy_payload_factory()},
+            message_id_to_uri_path_binder=mid_binder,
+        )
 
         # WHEN
         coap_message = factory.parse(io.BytesIO(data), None)
@@ -516,9 +643,30 @@ class TestCoapMessageFactory(unittest.TestCase):
         self.assertEqual(189, coap_message.message_id)
         self.assertEqual(bytearray([0x65, 0xee]), coap_message.token)
         self.assertEqual(None, coap_message.uri_path)
-        self.assertEqual(bytearray([0x04, 0x01, 0x00, 0x02, 0x02, 0x00, 0x00, 0x07,
-                                    0x09, 0x76, 0x80, 0x00, 0x01, 0x00, 0x00, 0x00,
-                                    0x00, 0x00]), coap_message.payload)
+        self.assertEqual(
+            bytearray([
+                0x04,
+                0x01,
+                0x00,
+                0x02,
+                0x02,
+                0x00,
+                0x00,
+                0x07,
+                0x09,
+                0x76,
+                0x80,
+                0x00,
+                0x01,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+                0x00,
+            ]),
+            coap_message.payload,
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

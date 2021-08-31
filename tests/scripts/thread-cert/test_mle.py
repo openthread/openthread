@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -34,11 +34,8 @@ import unittest
 
 import common
 import config
-import net_crypto
 import mle
 import network_data
-
-from ipaddress import ip_address
 
 
 def any_address():
@@ -60,23 +57,104 @@ def any_device_type():
 def any_network_data():
     return random.getrandbits(1)
 
+
 mode_map = {
-    0x00: {"receiver": 0, "secure": 0, "device_type": 0, "network_data": 0},
-    0x08: {"receiver": 1, "secure": 0, "device_type": 0, "network_data": 0},
-    0x04: {"receiver": 0, "secure": 1, "device_type": 0, "network_data": 0},
-    0x0C: {"receiver": 1, "secure": 1, "device_type": 0, "network_data": 0},
-    0x02: {"receiver": 0, "secure": 0, "device_type": 1, "network_data": 0},
-    0x0A: {"receiver": 1, "secure": 0, "device_type": 1, "network_data": 0},
-    0x06: {"receiver": 0, "secure": 1, "device_type": 1, "network_data": 0},
-    0x0E: {"receiver": 1, "secure": 1, "device_type": 1, "network_data": 0},
-    0x01: {"receiver": 0, "secure": 0, "device_type": 0, "network_data": 1},
-    0x09: {"receiver": 1, "secure": 0, "device_type": 0, "network_data": 1},
-    0x05: {"receiver": 0, "secure": 1, "device_type": 0, "network_data": 1},
-    0x0D: {"receiver": 1, "secure": 1, "device_type": 0, "network_data": 1},
-    0x03: {"receiver": 0, "secure": 0, "device_type": 1, "network_data": 1},
-    0x0B: {"receiver": 1, "secure": 0, "device_type": 1, "network_data": 1},
-    0x07: {"receiver": 0, "secure": 1, "device_type": 1, "network_data": 1},
-    0x0F: {"receiver": 1, "secure": 1, "device_type": 1, "network_data": 1}
+    0x00: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x08: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x04: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x0C: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 0
+    },
+    0x02: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x0A: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x06: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x0E: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 0
+    },
+    0x01: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x09: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x05: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x0D: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 0,
+        "network_data": 1
+    },
+    0x03: {
+        "receiver": 0,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 1
+    },
+    0x0B: {
+        "receiver": 1,
+        "secure": 0,
+        "device_type": 1,
+        "network_data": 1
+    },
+    0x07: {
+        "receiver": 0,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 1
+    },
+    0x0F: {
+        "receiver": 1,
+        "secure": 1,
+        "device_type": 1,
+        "network_data": 1
+    }
 }
 
 
@@ -118,10 +196,6 @@ def any_route():
     return random.getrandbits(4)
 
 
-def any_id_sequence():
-    return random.getrandbits(1)
-
-
 def any_router_id_mask():
     return random.getrandbits(64)
 
@@ -150,11 +224,24 @@ def any_stable_data_version():
 def any_leader_router_id():
     return random.getrandbits(8)
 
+
 scan_mask_map = {
-    0x00: {"router": 0, "end_device": 0},
-    0x40: {"router": 0, "end_device": 1},
-    0x80: {"router": 1, "end_device": 0},
-    0xC0: {"router": 1, "end_device": 1},
+    0x00: {
+        "router": 0,
+        "end_device": 0
+    },
+    0x40: {
+        "router": 0,
+        "end_device": 1
+    },
+    0x80: {
+        "router": 1,
+        "end_device": 0
+    },
+    0xC0: {
+        "router": 1,
+        "end_device": 1
+    },
 }
 
 
@@ -207,7 +294,7 @@ def any_u():
 
 
 def any_pp():
-    return random.getrandbits(2)
+    return (random.getrandbits(2) << 6)
 
 
 def any_link_quality_3():
@@ -262,10 +349,7 @@ def any_ipv6_address():
 
 
 def any_addresses():
-    addresses = [
-        mle.AddressCompressed(any_cid(), any_iid()),
-        mle.AddressFull(any_ipv6_address())
-    ]
+    addresses = [mle.AddressCompressed(any_cid(), any_iid()), mle.AddressFull(any_ipv6_address())]
 
     return addresses
 
@@ -756,8 +840,8 @@ class TestLeaderData(unittest.TestCase):
         # GIVEN
         partition_id = any_partition_id()
 
-        leader_data = mle.LeaderData(partition_id, any_weighting(), any_data_version(),
-                                     any_stable_data_version(), any_leader_router_id())
+        leader_data = mle.LeaderData(partition_id, any_weighting(), any_data_version(), any_stable_data_version(),
+                                     any_leader_router_id())
 
         # WHEN
         actual_partition_id = leader_data.partition_id
@@ -769,8 +853,8 @@ class TestLeaderData(unittest.TestCase):
         # GIVEN
         weighting = any_weighting()
 
-        leader_data = mle.LeaderData(any_partition_id(), weighting, any_data_version(),
-                                     any_stable_data_version(), any_leader_router_id())
+        leader_data = mle.LeaderData(any_partition_id(), weighting, any_data_version(), any_stable_data_version(),
+                                     any_leader_router_id())
 
         # WHEN
         actual_weighting = leader_data.weighting
@@ -782,8 +866,8 @@ class TestLeaderData(unittest.TestCase):
         # GIVEN
         data_version = any_data_version()
 
-        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), data_version,
-                                     any_stable_data_version(), any_leader_router_id())
+        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), data_version, any_stable_data_version(),
+                                     any_leader_router_id())
 
         # WHEN
         actual_data_version = leader_data.data_version
@@ -795,8 +879,8 @@ class TestLeaderData(unittest.TestCase):
         # GIVEN
         stable_data_version = any_stable_data_version()
 
-        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), any_data_version(),
-                                     stable_data_version, any_leader_router_id())
+        leader_data = mle.LeaderData(any_partition_id(), any_weighting(), any_data_version(), stable_data_version,
+                                     any_leader_router_id())
 
         # WHEN
         actual_stable_data_version = leader_data.stable_data_version
@@ -966,37 +1050,25 @@ class TestConnectivity(unittest.TestCase):
 
     def test_should_return_pp_value_when_pp_property_is_called(self):
         # GIVEN
-        pp = any_pp()
+        pp_byte = any_pp()
 
-        connectivity_obj = mle.Connectivity(pp,
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(pp_byte, any_link_quality_3(), any_link_quality_2(), any_link_quality_1(),
+                                            any_leader_cost(), any_id_sequence(), any_active_routers(),
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_pp = connectivity_obj.pp
 
         # THEN
-        self.assertEqual(pp, actual_pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_pp)
 
     def test_should_return_link_quality_3_value_when_link_quality_3_property_is_called(self):
         # GIVEN
         link_quality_3 = any_link_quality_3()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            link_quality_3,
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), link_quality_3, any_link_quality_2(), any_link_quality_1(),
+                                            any_leader_cost(), any_id_sequence(), any_active_routers(),
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_link_quality_3 = connectivity_obj.link_quality_3
@@ -1008,15 +1080,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         link_quality_2 = any_link_quality_2()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            link_quality_2,
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), link_quality_2, any_link_quality_1(),
+                                            any_leader_cost(), any_id_sequence(), any_active_routers(),
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_link_quality_2 = connectivity_obj.link_quality_2
@@ -1028,15 +1094,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         link_quality_1 = any_link_quality_1()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            link_quality_1,
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), any_link_quality_2(), link_quality_1,
+                                            any_leader_cost(), any_id_sequence(), any_active_routers(),
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_link_quality_1 = connectivity_obj.link_quality_1
@@ -1048,15 +1108,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         leader_cost = any_leader_cost()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            leader_cost,
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), any_link_quality_2(),
+                                            any_link_quality_1(), leader_cost, any_id_sequence(), any_active_routers(),
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_leader_cost = connectivity_obj.leader_cost
@@ -1068,15 +1122,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         id_sequence = any_id_sequence()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            id_sequence,
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), any_link_quality_2(), any_link_quality_1(),
+                                            any_leader_cost(), id_sequence, any_active_routers(),
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_id_sequence = connectivity_obj.id_sequence
@@ -1088,15 +1136,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         active_routers = any_active_routers()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            active_routers,
-                                            any_sed_buffer_size(),
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), any_link_quality_2(), any_link_quality_1(),
+                                            any_leader_cost(), any_id_sequence(), active_routers,
+                                            any_sed_buffer_size(), any_sed_datagram_count())
 
         # WHEN
         actual_active_routers = connectivity_obj.active_routers
@@ -1108,15 +1150,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         sed_buffer_size = any_sed_buffer_size()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            sed_buffer_size,
-                                            any_sed_datagram_count())
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), any_link_quality_2(), any_link_quality_1(),
+                                            any_leader_cost(), any_id_sequence(), any_active_routers(),
+                                            sed_buffer_size, any_sed_datagram_count())
 
         # WHEN
         actual_sed_buffer_size = connectivity_obj.sed_buffer_size
@@ -1128,15 +1164,9 @@ class TestConnectivity(unittest.TestCase):
         # GIVEN
         sed_datagram_count = any_sed_datagram_count()
 
-        connectivity_obj = mle.Connectivity(any_pp(),
-                                            any_link_quality_3(),
-                                            any_link_quality_2(),
-                                            any_link_quality_1(),
-                                            any_leader_cost(),
-                                            any_id_sequence(),
-                                            any_active_routers(),
-                                            any_sed_buffer_size(),
-                                            sed_datagram_count)
+        connectivity_obj = mle.Connectivity(any_pp(), any_link_quality_3(), any_link_quality_2(), any_link_quality_1(),
+                                            any_leader_cost(), any_id_sequence(), any_active_routers(),
+                                            any_sed_buffer_size(), sed_datagram_count)
 
         # WHEN
         actual_sed_datagram_count = connectivity_obj.sed_datagram_count
@@ -1149,7 +1179,7 @@ class TestConnectivityFactory(unittest.TestCase):
 
     def test_should_create_Connectivity_from_bytearray_when_parse_method_is_called(self):
         # GIVEN
-        pp = any_pp()
+        pp_byte = any_pp()
         link_quality_3 = any_link_quality_3()
         link_quality_2 = any_link_quality_2()
         link_quality_1 = any_link_quality_1()
@@ -1161,15 +1191,16 @@ class TestConnectivityFactory(unittest.TestCase):
 
         factory = mle.ConnectivityFactory()
 
-        data = bytearray([pp, link_quality_3, link_quality_2, link_quality_1, leader_cost, id_sequence,
-                          active_routers]) + struct.pack(">H", sed_buffer_size) + bytearray([sed_datagram_count])
+        data = bytearray([
+            pp_byte, link_quality_3, link_quality_2, link_quality_1, leader_cost, id_sequence, active_routers
+        ]) + struct.pack(">H", sed_buffer_size) + bytearray([sed_datagram_count])
 
         # WHEN
         actual_connectivity = factory.parse(io.BytesIO(data), dict())
 
         # THEN
         self.assertTrue(isinstance(actual_connectivity, mle.Connectivity))
-        self.assertEqual(pp, actual_connectivity.pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_connectivity.pp)
         self.assertEqual(link_quality_3, actual_connectivity.link_quality_3)
         self.assertEqual(link_quality_2, actual_connectivity.link_quality_2)
         self.assertEqual(link_quality_1, actual_connectivity.link_quality_1)
@@ -1181,27 +1212,27 @@ class TestConnectivityFactory(unittest.TestCase):
 
     def test_should_create_Connectivity_without_sed_data_when_parse_method_is_called(self):
         # GIVEN
-        pp = any_pp()
+        pp_byte = any_pp()
         link_quality_3 = any_link_quality_3()
         link_quality_2 = any_link_quality_2()
         link_quality_1 = any_link_quality_1()
         leader_cost = any_leader_cost()
         id_sequence = any_id_sequence()
         active_routers = any_active_routers()
-        sed_buffer_size = any_sed_buffer_size()
-        sed_datagram_count = any_sed_datagram_count()
+        any_sed_buffer_size()
+        any_sed_datagram_count()
 
         factory = mle.ConnectivityFactory()
 
-        data = bytearray([pp, link_quality_3, link_quality_2, link_quality_1, leader_cost, id_sequence,
-                          active_routers])
+        data = bytearray(
+            [pp_byte, link_quality_3, link_quality_2, link_quality_1, leader_cost, id_sequence, active_routers])
 
         # WHEN
         actual_connectivity = factory.parse(io.BytesIO(data), dict())
 
         # THEN
         self.assertTrue(isinstance(actual_connectivity, mle.Connectivity))
-        self.assertEqual(pp, actual_connectivity.pp)
+        self.assertEqual(common.map_pp(pp_byte), actual_connectivity.pp)
         self.assertEqual(link_quality_3, actual_connectivity.link_quality_3)
         self.assertEqual(link_quality_2, actual_connectivity.link_quality_2)
         self.assertEqual(link_quality_1, actual_connectivity.link_quality_1)
@@ -1414,13 +1445,9 @@ class TestAddressRegistrationFactory(unittest.TestCase):
         iid = any_iid()
         ipv6_address = any_ipv6_address()
 
-        addresses = [
-            mle.AddressCompressed(cid, iid),
-            mle.AddressFull(ipv6_address)
-        ]
+        addresses = [mle.AddressCompressed(cid, iid), mle.AddressFull(ipv6_address)]
 
-        factory = mle.AddressRegistrationFactory(mle.AddressCompressedFactory(),
-                                                 mle.AddressFullFactory())
+        factory = mle.AddressRegistrationFactory(mle.AddressCompressedFactory(), mle.AddressFullFactory())
 
         data = bytearray([(1 << 7) | cid]) + iid + bytearray([0]) + ipv6_address
 
@@ -1639,13 +1666,11 @@ class TestPendingTimestampFactory(unittest.TestCase):
 class TestMleCommandFactory(unittest.TestCase):
 
     def test_should_create_MleCommand_from_bytearray_when_parse_method_is_called(self):
-        data = bytearray([0x0b, 0x04, 0x08, 0xa5, 0xf2, 0x9b, 0xde, 0xe3,
-                          0xd8, 0xbe, 0xb9, 0x05, 0x04, 0x00, 0x00, 0x00,
-                          0x00, 0x08, 0x04, 0x00, 0x00, 0x00, 0x01, 0x01,
-                          0x01, 0x0d, 0x02, 0x04, 0x00, 0x00, 0x00, 0xf0,
-                          0x12, 0x02, 0x00, 0x02, 0x13, 0x09, 0x80, 0x86,
-                          0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8, 0x0d,
-                          0x03, 0x0a, 0x0c, 0x09])
+        data = bytearray([
+            0x0b, 0x04, 0x08, 0xa5, 0xf2, 0x9b, 0xde, 0xe3, 0xd8, 0xbe, 0xb9, 0x05, 0x04, 0x00, 0x00, 0x00, 0x00, 0x08,
+            0x04, 0x00, 0x00, 0x00, 0x01, 0x01, 0x01, 0x0d, 0x02, 0x04, 0x00, 0x00, 0x00, 0xf0, 0x12, 0x02, 0x00, 0x02,
+            0x13, 0x09, 0x80, 0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8, 0x0d, 0x03, 0x0a, 0x0c, 0x09
+        ])
 
         factory = mle.MleCommandFactory(config.create_default_mle_tlvs_factories())
 
@@ -1664,16 +1689,16 @@ class TestMleCommandFactory(unittest.TestCase):
 
         self.assertEqual(mle.MleFrameCounter(1), actual_mle_command.tlvs[2])
 
-        self.assertEqual(mle.Mode(receiver=1, secure=1, device_type=0, network_data=1),
-                         actual_mle_command.tlvs[3])
+        self.assertEqual(mle.Mode(receiver=1, secure=1, device_type=0, network_data=1), actual_mle_command.tlvs[3])
 
         self.assertEqual(mle.Timeout(240), actual_mle_command.tlvs[4])
 
         self.assertEqual(mle.Version(2), actual_mle_command.tlvs[5])
 
-        self.assertEqual(mle.AddressRegistration(addresses=[
-            mle.AddressCompressed(cid=0, iid=bytearray([0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))]),
-            actual_mle_command.tlvs[6])
+        self.assertEqual(
+            mle.AddressRegistration(addresses=[
+                mle.AddressCompressed(cid=0, iid=bytearray([0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))
+            ]), actual_mle_command.tlvs[6])
 
         self.assertEqual(mle.TlvRequest(tlvs=[10, 12, 9]), actual_mle_command.tlvs[7])
 
@@ -1691,17 +1716,14 @@ class TestMleMessageFactory(unittest.TestCase):
         message_info.destination_mac_address = common.MacAddress.from_eui64(
             bytearray([0x3a, 0x3e, 0x9e, 0xed, 0x7a, 0x01, 0x36, 0xa5]))
 
-        data = bytearray([0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x01, 0x14, 0x03, 0xe3, 0x72, 0x50, 0x4f,
-                          0x8c, 0x5c, 0x42, 0x81, 0x68, 0xe2, 0x11, 0xfc,
-                          0xf5, 0x8c, 0x62, 0x8e, 0x83, 0x99, 0xe7, 0x26,
-                          0x86, 0x34, 0x3b, 0xa7, 0x68, 0xc7, 0x93, 0xfb,
-                          0x72, 0xd9, 0xcc, 0x13, 0x5e, 0x5b, 0x96, 0x0e,
-                          0xf1, 0x80, 0x03, 0x55, 0x4f, 0x27, 0xc2, 0x96,
-                          0xf4, 0x9c, 0x65, 0x82, 0x97, 0xcf, 0x97, 0x35,
-                          0x89, 0xc2])
+        data = bytearray([
+            0x00, 0x15, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x14, 0x03, 0xe3, 0x72, 0x50, 0x4f, 0x8c,
+            0x5c, 0x42, 0x81, 0x68, 0xe2, 0x11, 0xfc, 0xf5, 0x8c, 0x62, 0x8e, 0x83, 0x99, 0xe7, 0x26, 0x86, 0x34, 0x3b,
+            0xa7, 0x68, 0xc7, 0x93, 0xfb, 0x72, 0xd9, 0xcc, 0x13, 0x5e, 0x5b, 0x96, 0x0e, 0xf1, 0x80, 0x03, 0x55, 0x4f,
+            0x27, 0xc2, 0x96, 0xf4, 0x9c, 0x65, 0x82, 0x97, 0xcf, 0x97, 0x35, 0x89, 0xc2
+        ])
 
-        factory = config.create_default_mle_message_factory(master_key=config.DEFAULT_MASTER_KEY)
+        factory = config.create_default_mle_message_factory(network_key=config.DEFAULT_NETWORK_KEY)
 
         # WHEN
         actual_mle_message = factory.parse(io.BytesIO(data), message_info)
@@ -1725,9 +1747,10 @@ class TestMleMessageFactory(unittest.TestCase):
 
         self.assertEqual(mle.Version(2), actual_mle_message.command.tlvs[5])
 
-        self.assertEqual(mle.AddressRegistration(addresses=[
-            mle.AddressCompressed(cid=0, iid=bytearray([0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))]),
-            actual_mle_message.command.tlvs[6])
+        self.assertEqual(
+            mle.AddressRegistration(addresses=[
+                mle.AddressCompressed(cid=0, iid=bytearray([0x86, 0xa2, 0x1b, 0x81, 0x6d, 0xb8, 0xb5, 0xe8]))
+            ]), actual_mle_message.command.tlvs[6])
 
         self.assertEqual(mle.TlvRequest(tlvs=[10, 12, 9]), actual_mle_message.command.tlvs[7])
 
@@ -1744,15 +1767,13 @@ class TestMleMessageFactory(unittest.TestCase):
         message_info.destination_mac_address = common.MacAddress.from_eui64(
             bytearray([0x3a, 0xba, 0xad, 0xca, 0xfe, 0xde, 0xff, 0xa5]))
 
-        data = bytearray([0x00, 0x15, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00,
-                          0x00, 0x00, 0x01, 0xca, 0xd3, 0x45, 0xe2, 0x35,
-                          0x1d, 0x00, 0x2d, 0x72, 0x71, 0xb1, 0x19, 0xaf,
-                          0x8b, 0x05, 0xd9, 0x52, 0x74, 0xce, 0xe6, 0x36,
-                          0x53, 0xeb, 0xc6, 0x25, 0x94, 0x01, 0x6d, 0x20,
-                          0xdf, 0x30, 0x82, 0xf8, 0xbb, 0x34, 0x47, 0x42,
-                          0x50, 0xe9, 0x41, 0xa7, 0x33, 0xa5])
+        data = bytearray([
+            0x00, 0x15, 0x15, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0xca, 0xd3, 0x45, 0xe2, 0x35, 0x1d, 0x00,
+            0x2d, 0x72, 0x71, 0xb1, 0x19, 0xaf, 0x8b, 0x05, 0xd9, 0x52, 0x74, 0xce, 0xe6, 0x36, 0x53, 0xeb, 0xc6, 0x25,
+            0x94, 0x01, 0x6d, 0x20, 0xdf, 0x30, 0x82, 0xf8, 0xbb, 0x34, 0x47, 0x42, 0x50, 0xe9, 0x41, 0xa7, 0x33, 0xa5
+        ])
 
-        factory = config.create_default_mle_message_factory(master_key=config.DEFAULT_MASTER_KEY)
+        factory = config.create_default_mle_message_factory(network_key=config.DEFAULT_NETWORK_KEY)
 
         # WHEN
         actual_mle_message = factory.parse(io.BytesIO(data), message_info)
@@ -1764,27 +1785,25 @@ class TestMleMessageFactory(unittest.TestCase):
 
         self.assertEqual(mle.SourceAddress(address=0x9400), actual_mle_message.command.tlvs[0])
 
-        self.assertEqual(mle.LeaderData(
-            partition_id=0x06d014ca,
-            weighting=64,
-            data_version=131,
-            stable_data_version=168,
-            leader_router_id=37
-        ), actual_mle_message.command.tlvs[1])
+        self.assertEqual(
+            mle.LeaderData(partition_id=0x06d014ca,
+                           weighting=64,
+                           data_version=131,
+                           stable_data_version=168,
+                           leader_router_id=37), actual_mle_message.command.tlvs[1])
 
-        self.assertEqual(mle.NetworkData(tlvs=[
-            network_data.Prefix(
-                domain_id=0,
-                prefix_length=64,
-                prefix=bytearray([0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34]),
-                sub_tlvs=[
-                    network_data.LowpanId(c=1, cid=1, context_length=64, stable=1),
-                    network_data.BorderRouter(border_router_16=37888, prf=0, p=1,
-                                              s=1, d=0, c=0, r=1, o=1, n=0, stable=1)
-                ],
-                stable=1
-            )
-        ]), actual_mle_message.command.tlvs[2])
+        self.assertEqual(
+            mle.NetworkData(tlvs=[
+                network_data.Prefix(domain_id=0,
+                                    prefix_length=64,
+                                    prefix=bytearray([0x12, 0x34, 0x12, 0x34, 0x12, 0x34, 0x12, 0x34]),
+                                    sub_tlvs=[
+                                        network_data.LowpanId(c=1, cid=1, context_length=64, stable=1),
+                                        network_data.BorderRouter(
+                                            border_router_16=37888, prf=0, p=1, s=1, d=0, c=0, r=1, o=1, n=0, stable=1)
+                                    ],
+                                    stable=1)
+            ]), actual_mle_message.command.tlvs[2])
 
         self.assertEqual(bytearray(data[-4:]), actual_mle_message.mic)
 

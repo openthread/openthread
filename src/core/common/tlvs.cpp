@@ -31,101 +31,242 @@
  *   This file implements common methods for manipulating MLE TLVs.
  */
 
-#include <common/code_utils.hpp>
-#include <common/message.hpp>
-#include <thread/mle_tlvs.hpp>
+#include "tlvs.hpp"
 
-namespace Thread {
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/message.hpp"
 
-ThreadError Tlv::Get(const Message &aMessage, uint8_t aType, uint16_t aMaxLength, Tlv &aTlv)
+namespace ot {
+
+uint32_t Tlv::GetSize(void) const
 {
-    ThreadError error = kThreadError_Parse;
+    return IsExtended() ? sizeof(ExtendedTlv) + static_cast<const ExtendedTlv *>(this)->GetLength()
+                        : sizeof(Tlv) + GetLength();
+}
+
+uint8_t *Tlv::GetValue(void)
+{
+    return reinterpret_cast<uint8_t *>(this) + (IsExtended() ? sizeof(ExtendedTlv) : sizeof(Tlv));
+}
+
+const uint8_t *Tlv::GetValue(void) const
+{
+    return reinterpret_cast<const uint8_t *>(this) + (IsExtended() ? sizeof(ExtendedTlv) : sizeof(Tlv));
+}
+
+Error Tlv::AppendTo(Message &aMessage) const
+{
+    return aMessage.AppendBytes(this, static_cast<uint16_t>(GetSize()));
+}
+
+Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, uint16_t aMaxSize, Tlv &aTlv)
+{
+    Error    error;
     uint16_t offset;
+    uint16_t size;
 
-    SuccessOrExit(error = GetOffset(aMessage, aType, offset));
-    aMessage.Read(offset, sizeof(Tlv), &aTlv);
+    SuccessOrExit(error = Find(aMessage, aType, &offset, &size, nullptr));
 
-    if (aMaxLength > sizeof(aTlv) + aTlv.GetLength())
+    if (aMaxSize > size)
     {
-        aMaxLength = sizeof(aTlv) + aTlv.GetLength();
+        aMaxSize = size;
     }
 
-    aMessage.Read(offset, aMaxLength, &aTlv);
+    aMessage.ReadBytes(offset, &aTlv, aMaxSize);
 
 exit:
     return error;
 }
 
-ThreadError Tlv::GetOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
+Error Tlv::FindTlvOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset)
 {
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-    Tlv tlv;
+    return Find(aMessage, aType, &aOffset, nullptr, nullptr);
+}
 
-    while (offset < end)
+Error Tlv::FindTlvValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aValueOffset, uint16_t &aLength)
+{
+    Error    error;
+    uint16_t offset;
+    uint16_t size;
+    bool     isExtendedTlv;
+
+    SuccessOrExit(error = Find(aMessage, aType, &offset, &size, &isExtendedTlv));
+
+    if (!isExtendedTlv)
     {
-        aMessage.Read(offset, sizeof(Tlv), &tlv);
+        aValueOffset = offset + sizeof(Tlv);
+        aLength      = size - sizeof(Tlv);
+    }
+    else
+    {
+        aValueOffset = offset + sizeof(ExtendedTlv);
+        aLength      = size - sizeof(ExtendedTlv);
+    }
 
-        // skip extended TLV
-        if (tlv.GetLength() == kExtendedLength)
-        {
-            uint16_t length = 0;
+exit:
+    return error;
+}
 
-            offset += sizeof(tlv);
-            aMessage.Read(offset, sizeof(length), &length);
-            offset += sizeof(length) + HostSwap16(length);
-        }
-        else if (tlv.GetType() == aType && (offset + sizeof(tlv) + tlv.GetLength()) <= end)
+Error Tlv::Find(const Message &aMessage, uint8_t aType, uint16_t *aOffset, uint16_t *aSize, bool *aIsExtendedTlv)
+{
+    // This static method searches within a `aMessage` for a TLV type
+    // `aType` and outputs the TLV offset, size, and whether or not it
+    // is an Extended TLV.
+    //
+    // A `nullptr` pointer can be used for output parameters `aOffset`,
+    // `aSize`, or `aIsExtendedTlv` if the parameter is not required.
+    //
+    // Returns `kErrorNone` when found, otherwise `kErrorNotFound`.
+
+    Error    error        = kErrorNotFound;
+    uint16_t offset       = aMessage.GetOffset();
+    uint16_t remainingLen = aMessage.GetLength();
+    Tlv      tlv;
+    uint32_t size;
+
+    VerifyOrExit(offset <= remainingLen);
+    remainingLen -= offset;
+
+    while (true)
+    {
+        SuccessOrExit(aMessage.Read(offset, tlv));
+
+        if (tlv.mLength != kExtendedLength)
         {
-            aOffset = offset;
-            ExitNow(error = kThreadError_None);
+            size = tlv.GetSize();
         }
         else
         {
-            offset += sizeof(tlv) + tlv.GetLength();
+            ExtendedTlv extTlv;
+
+            SuccessOrExit(aMessage.Read(offset, extTlv));
+
+            VerifyOrExit(extTlv.GetLength() <= (remainingLen - sizeof(ExtendedTlv)));
+            size = extTlv.GetSize();
         }
-    }
 
-exit:
-    return error;
-}
-
-ThreadError Tlv::GetValueOffset(const Message &aMessage, uint8_t aType, uint16_t &aOffset, uint16_t &aLength)
-{
-    ThreadError error = kThreadError_Parse;
-    uint16_t offset = aMessage.GetOffset();
-    uint16_t end = aMessage.GetLength();
-
-    while (offset < end)
-    {
-        Tlv tlv;
-        uint16_t length;
-
-        aMessage.Read(offset, sizeof(tlv), &tlv);
-        offset += sizeof(tlv);
-
-        length = tlv.GetLength();
-
-        if (length == kExtendedLength)
-        {
-            aMessage.Read(offset, sizeof(length), &length);
-            offset += sizeof(length);
-            length = HostSwap16(length);
-        }
+        VerifyOrExit(size <= remainingLen);
 
         if (tlv.GetType() == aType)
         {
-            aOffset = offset;
-            aLength = length;
-            ExitNow(error = kThreadError_None);
+            if (aOffset != nullptr)
+            {
+                *aOffset = offset;
+            }
+
+            if (aSize != nullptr)
+            {
+                *aSize = static_cast<uint16_t>(size);
+            }
+
+            if (aIsExtendedTlv != nullptr)
+            {
+                *aIsExtendedTlv = (tlv.mLength == kExtendedLength);
+            }
+
+            error = kErrorNone;
+            ExitNow();
         }
 
-        offset += length;
+        offset += size;
+        remainingLen -= size;
     }
 
 exit:
     return error;
 }
 
-}  // namespace Thread
+template <typename UintType> Error Tlv::ReadUintTlv(const Message &aMessage, uint16_t aOffset, UintType &aValue)
+{
+    Error error;
+
+    SuccessOrExit(error = ReadTlv(aMessage, aOffset, &aValue, sizeof(aValue)));
+    aValue = Encoding::BigEndian::HostSwap<UintType>(aValue);
+
+exit:
+    return error;
+}
+
+// Explicit instantiations of `ReadUintTlv<>()`
+template Error Tlv::ReadUintTlv<uint8_t>(const Message &aMessage, uint16_t aOffset, uint8_t &aValue);
+template Error Tlv::ReadUintTlv<uint16_t>(const Message &aMessage, uint16_t aOffset, uint16_t &aValue);
+template Error Tlv::ReadUintTlv<uint32_t>(const Message &aMessage, uint16_t aOffset, uint32_t &aValue);
+
+Error Tlv::ReadTlv(const Message &aMessage, uint16_t aOffset, void *aValue, uint8_t aMinLength)
+{
+    Error error = kErrorNone;
+    Tlv   tlv;
+
+    SuccessOrExit(error = aMessage.Read(aOffset, tlv));
+    VerifyOrExit(!tlv.IsExtended() && (tlv.GetLength() >= aMinLength), error = kErrorParse);
+    VerifyOrExit(tlv.GetSize() + aOffset <= aMessage.GetLength(), error = kErrorParse);
+
+    aMessage.ReadBytes(aOffset + sizeof(Tlv), aValue, aMinLength);
+
+exit:
+    return error;
+}
+
+template <typename UintType> Error Tlv::FindUintTlv(const Message &aMessage, uint8_t aType, UintType &aValue)
+{
+    Error    error = kErrorNone;
+    uint16_t offset;
+
+    SuccessOrExit(error = FindTlvOffset(aMessage, aType, offset));
+    error = ReadUintTlv<UintType>(aMessage, offset, aValue);
+
+exit:
+    return error;
+}
+
+// Explicit instantiations of `FindUintTlv<>()`
+template Error Tlv::FindUintTlv<uint8_t>(const Message &aMessage, uint8_t aType, uint8_t &aValue);
+template Error Tlv::FindUintTlv<uint16_t>(const Message &aMessage, uint8_t aType, uint16_t &aValue);
+template Error Tlv::FindUintTlv<uint32_t>(const Message &aMessage, uint8_t aType, uint32_t &aValue);
+
+Error Tlv::FindTlv(const Message &aMessage, uint8_t aType, void *aValue, uint8_t aLength)
+{
+    Error    error;
+    uint16_t offset;
+    uint16_t length;
+
+    SuccessOrExit(error = FindTlvValueOffset(aMessage, aType, offset, length));
+    VerifyOrExit(length >= aLength, error = kErrorParse);
+    aMessage.ReadBytes(offset, aValue, aLength);
+
+exit:
+    return error;
+}
+
+template <typename UintType> Error Tlv::AppendUintTlv(Message &aMessage, uint8_t aType, UintType aValue)
+{
+    UintType value = Encoding::BigEndian::HostSwap<UintType>(aValue);
+
+    return AppendTlv(aMessage, aType, &value, sizeof(UintType));
+}
+
+// Explicit instantiations of `AppendUintTlv<>()`
+template Error Tlv::AppendUintTlv<uint8_t>(Message &aMessage, uint8_t aType, uint8_t aValue);
+template Error Tlv::AppendUintTlv<uint16_t>(Message &aMessage, uint8_t aType, uint16_t aValue);
+template Error Tlv::AppendUintTlv<uint32_t>(Message &aMessage, uint8_t aType, uint32_t aValue);
+
+Error Tlv::AppendTlv(Message &aMessage, uint8_t aType, const void *aValue, uint8_t aLength)
+{
+    Error error = kErrorNone;
+    Tlv   tlv;
+
+    OT_ASSERT(aLength <= Tlv::kBaseTlvMaxLength);
+
+    tlv.SetType(aType);
+    tlv.SetLength(aLength);
+    SuccessOrExit(error = aMessage.Append(tlv));
+
+    VerifyOrExit(aLength > 0);
+    error = aMessage.AppendBytes(aValue, aLength);
+
+exit:
+    return error;
+}
+
+} // namespace ot

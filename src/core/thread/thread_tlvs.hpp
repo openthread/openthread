@@ -34,47 +34,52 @@
 #ifndef THREAD_TLVS_HPP_
 #define THREAD_TLVS_HPP_
 
-#include <openthread-types.h>
-#include <common/encoding.hpp>
-#include <common/message.hpp>
-#include <common/tlvs.hpp>
-#include <net/ip6_address.hpp>
-#include <thread/mle.hpp>
+#include "openthread-core-config.h"
 
-using Thread::Encoding::BigEndian::HostSwap16;
-using Thread::Encoding::BigEndian::HostSwap32;
+#include "common/encoding.hpp"
+#include "common/message.hpp"
+#include "common/tlvs.hpp"
+#include "net/ip6_address.hpp"
+#include "thread/mle.hpp"
+#include "thread/mle_types.hpp"
 
-namespace Thread {
+namespace ot {
 
-enum
-{
-    kCoapUdpPort = 61631,
-};
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
+
+// Thread 1.2.0 5.19.13 limits the number of IPv6 addresses should be [1, 15].
+constexpr uint8_t kIp6AddressesNumMin = 1;
+constexpr uint8_t kIp6AddressesNumMax = 15;
 
 /**
  * This class implements Network Layer TLV generation and parsing.
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ThreadTlv : public Thread::Tlv
+class ThreadTlv : public ot::Tlv
 {
 public:
     /**
      * Network Layer TLV Types.
      *
      */
-    enum Type
+    enum Type : uint8_t
     {
-        kTarget              = 0,  ///< Target EID TLV
-        kExtMacAddress       = 1,  ///< Extended MAC Address TLV
-        kRloc16              = 2,  ///< RLOC16 TLV
-        kMeshLocalEid        = 3,  ///< ML-EID TLV
-        kStatus              = 4,  ///< Status TLV
-        kLastTransactionTime = 6,  ///< Time Since Last Transaction TLV
-        kRouterMask          = 7,  ///< Router Mask TLV
-        kNDOption            = 8,  ///< ND Option TLV
-        kNDData              = 9,  ///< ND Data TLV
-        kThreadNetworkData   = 10, ///< Thread Network Data TLV
+        kTarget                = 0,  ///< Target EID TLV
+        kExtMacAddress         = 1,  ///< Extended MAC Address TLV
+        kRloc16                = 2,  ///< RLOC16 TLV
+        kMeshLocalEid          = 3,  ///< ML-EID TLV
+        kStatus                = 4,  ///< Status TLV
+        kLastTransactionTime   = 6,  ///< Time Since Last Transaction TLV
+        kRouterMask            = 7,  ///< Router Mask TLV
+        kNdOption              = 8,  ///< ND Option TLV
+        kNdData                = 9,  ///< ND Data TLV
+        kThreadNetworkData     = 10, ///< Thread Network Data TLV
+        kTimeout               = 11, ///< Timeout TLV
+        kNetworkName           = 12, ///< Network Name TLV
+        kIp6Addresses          = 14, ///< IPv6 Addresses TLV
+        kCommissionerSessionId = 15, ///< Commissioner Session ID TLV
     };
 
     /**
@@ -83,7 +88,7 @@ public:
      * @returns The Type value.
      *
      */
-    Type GetType(void) const { return static_cast<Type>(Thread::Tlv::GetType()); }
+    Type GetType(void) const { return static_cast<Type>(ot::Tlv::GetType()); }
 
     /**
      * This method sets the Type value.
@@ -91,309 +96,126 @@ public:
      * @param[in]  aType  The Type value.
      *
      */
-    void SetType(Type aType) { Thread::Tlv::SetType(static_cast<uint8_t>(aType)); }
-
-    /**
-     * This static method reads the requested TLV out of @p aMessage.
-     *
-     * @param[in]   aMessage    A reference to the message.
-     * @param[in]   aType       The Type value to search for.
-     * @param[in]   aMaxLength  Maximum number of bytes to read.
-     * @param[out]  aTlv        A reference to the TLV that will be copied to.
-     *
-     * @retval kThreadError_None      Successfully copied the TLV.
-     * @retval kThreadError_NotFound  Could not find the TLV with Type @p aType.
-     *
-     */
-    static ThreadError GetTlv(const Message &aMessage, Type aType, uint16_t aMaxLength, Tlv &aTlv) {
-        return Thread::Tlv::Get(aMessage, static_cast<uint8_t>(aType), aMaxLength, aTlv);
-    }
+    void SetType(Type aType) { ot::Tlv::SetType(static_cast<uint8_t>(aType)); }
 
 } OT_TOOL_PACKED_END;
 
 /**
- * This class implements Target EID TLV generation and parsing.
+ * This class defines Target TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadTargetTlv: public ThreadTlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kTarget); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * This method returns a pointer to the Target EID.
-     *
-     * @returns A pointer to the Target EID.
-     *
-     */
-    const Ip6::Address *GetTarget(void) const { return &mTarget; }
-
-    /**
-     * This method sets the Target EID.
-     *
-     * @param[in]  aTarget  A reference to the Target EID.
-     *
-     */
-    void SetTarget(const Ip6::Address &aTarget) { mTarget = aTarget; }
-
-private:
-    Ip6::Address mTarget;
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<ThreadTlv::kTarget, Ip6::Address> ThreadTargetTlv;
 
 /**
- * This class implements Extended MAC Address TLV generation and parsing.
+ * This class defines Extended MAC Address TLV constants and types.
  *
  */
-class ThreadExtMacAddressTlv: public ThreadTlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kExtMacAddress); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * This method returns a pointer to the Extended MAC Address.
-     *
-     * @returns A pointer to the Extended MAC Address.
-     *
-     */
-    const Mac::ExtAddress *GetMacAddr(void) const { return &mMacAddr; }
-
-    /**
-     * This method sets the Extended MAC Address.
-     *
-     * @param[in]  aAddress  A reference to the Extended MAC Address.
-     *
-     */
-    void SetMacAddr(const Mac::ExtAddress &aAddress) { mMacAddr = aAddress; }
-
-private:
-    Mac::ExtAddress mMacAddr;
-};
+typedef SimpleTlvInfo<ThreadTlv::kExtMacAddress, Mac::ExtAddress> ThreadExtMacAddressTlv;
 
 /**
- * This class implements RLOC16 TLV generation and parsing.
+ * This class defines RLOC16 TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadRloc16Tlv: public ThreadTlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kRloc16); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * This method returns the RLOC16 value.
-     *
-     * @returns The RLOC16 value.
-     *
-     */
-    uint16_t GetRloc16(void) const { return HostSwap16(mRloc16); }
-
-    /**
-     * This method sets the RLOC16 value.
-     *
-     * @param[in]  aRloc16  The RLOC16 value.
-     *
-     */
-    void SetRloc16(uint16_t aRloc16) { mRloc16 = HostSwap16(aRloc16); }
-
-private:
-    uint16_t mRloc16;
-} OT_TOOL_PACKED_END;
+typedef UintTlvInfo<ThreadTlv::kRloc16, uint16_t> ThreadRloc16Tlv;
 
 /**
- * This class implements ML-EID TLV generation and parsing.
+ * This class defines ML-EID TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadMeshLocalEidTlv: public ThreadTlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kMeshLocalEid); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * This method returns a pointer to the ML-EID IID.
-     *
-     * @returns A pointer to the Extended MAC Address.
-     *
-     */
-    const uint8_t *GetIid(void) const { return mIid; }
-
-    /**
-     * This method sets the ML-EID IID.
-     *
-     * @param[in]  aIid  A pointer to the ML-EID IID..
-     *
-     */
-    void SetIid(const uint8_t *aIid) { memcpy(mIid, aIid, sizeof(mIid)); }
-
-private:
-    uint8_t mIid[8];
-} OT_TOOL_PACKED_END;
+typedef SimpleTlvInfo<ThreadTlv::kMeshLocalEid, Ip6::InterfaceIdentifier> ThreadMeshLocalEidTlv;
 
 /**
- * This class implements Status TLV generation and parsing.
+ * This class defines Time Since Last Transaction TLV constants and types.
  *
  */
-OT_TOOL_PACKED_BEGIN
-class ThreadStatusTlv: public ThreadTlv
+typedef UintTlvInfo<ThreadTlv::kLastTransactionTime, uint32_t> ThreadLastTransactionTimeTlv;
+
+/**
+ * This class defines Timeout TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kTimeout, uint32_t> ThreadTimeoutTlv;
+
+/**
+ * This class defines Network Name TLV constants and types.
+ *
+ */
+typedef TlvInfo<ThreadTlv::kNetworkName> ThreadNetworkNameTlv;
+
+/**
+ * This class defines Commissioner Session ID TLV constants and types.
+ *
+ */
+typedef UintTlvInfo<ThreadTlv::kCommissionerSessionId, uint16_t> ThreadCommissionerSessionIdTlv;
+
+/**
+ * This class defines Status TLV constants and types.
+ *
+ */
+class ThreadStatusTlv : public UintTlvInfo<ThreadTlv::kStatus, uint8_t>
 {
 public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kStatus); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
-
     /**
      * Status values.
      *
      */
-    enum Status
+    enum Status : uint8_t
     {
-        kSuccess            = 0,  ///< Success.
-        kNoAddressAvailable = 1,  ///< No address available.
-        kTooFewRouters      = 2,  ///< Address Solicit due to too few routers.
-        kHaveChildIdRequest = 3,  ///< Address Solicit due to child ID request.
-        kParentPartitionChange = 4,  ///< Address Solicit due to parent partition change
+        kSuccess               = 0, ///< Success.
+        kNoAddressAvailable    = 1, ///< No address available.
+        kTooFewRouters         = 2, ///< Address Solicit due to too few routers.
+        kHaveChildIdRequest    = 3, ///< Address Solicit due to child ID request.
+        kParentPartitionChange = 4, ///< Address Solicit due to parent partition change
     };
 
     /**
-     * This method returns the Status value.
-     *
-     * @returns The Status value.
+     * Multicast Listener Registration (MLR) Status values
      *
      */
-    Status GetStatus(void) const { return static_cast<Status>(mStatus); }
+    enum MlrStatus
+    {
+        kMlrSuccess        = 0, ///< Successful (de)registration of all IPv6 addresses.
+        kMlrInvalid        = 2, ///< Invalid IPv6 address(es) in request.
+        kMlrNoPersistent   = 3, ///< This device does not support persistent registrations.
+        kMlrNoResources    = 4, ///< BBR resource shortage.
+        kMlrBbrNotPrimary  = 5, ///< BBR is not Primary at this moment.
+        kMlrGeneralFailure = 6, ///< Reason(s) for failure are not further specified.
+        kMlrStatusMax      = 6, ///< Max MLR status.
+    };
 
     /**
-     * This method sets the Status value.
-     *
-     * @param[in]  aStatus  The Status value.
+     * Domain Unicast Address (DUA) Registration Status values
      *
      */
-    void SetStatus(Status aStatus) { mStatus = static_cast<uint8_t>(aStatus); }
-
-private:
-    uint8_t mStatus;
-} OT_TOOL_PACKED_END;
-
-/**
- * This class implements Time Since Last Transaction TLV generation and parsing.
- *
- */
-OT_TOOL_PACKED_BEGIN
-class ThreadLastTransactionTimeTlv: public ThreadTlv
-{
-public:
-    /**
-     * This method initializes the TLV.
-     *
-     */
-    void Init(void) { SetType(kLastTransactionTime); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
-
-    /**
-     * This method indicates whether or not the TLV appears to be well-formed.
-     *
-     * @retval TRUE   If the TLV appears to be well-formed.
-     * @retval FALSE  If the TLV does not appear to be well-formed.
-     *
-     */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
-
-    /**
-     * This method returns the Last Transaction Time value.
-     *
-     * @returns The Last Transaction Time value.
-     *
-     */
-    uint32_t GetTime(void) const { return HostSwap32(mTime); }
-
-    /**
-     * This method sets the Last Transaction Time value.
-     *
-     * @param[in]  aTime  The Last Transaction Time value.
-     *
-     */
-    void SetTime(uint32_t aTime) { mTime = HostSwap32(aTime); }
-
-private:
-    uint32_t mTime;
-} OT_TOOL_PACKED_END;
-
+    enum DuaStatus : uint8_t
+    {
+        kDuaSuccess        = 0, ///< Successful registration.
+        kDuaReRegister     = 1, ///< Registration was accepted but immediate reregistration is required to solve.
+        kDuaInvalid        = 2, ///< Registration rejected (Fatal): Target EID is not a valid DUA.
+        kDuaDuplicate      = 3, ///< Registration rejected (Fatal): DUA is already in use by another device.
+        kDuaNoResources    = 4, ///< Registration rejected (Non-fatal): Backbone Router Resource shortage.
+        kDuaNotPrimary     = 5, ///< Registration rejected (Non-fatal): Backbone Router is not primary at this moment.
+        kDuaGeneralFailure = 6, ///< Registration failure (Non-fatal): Reason(s) not further specified.
+    };
+};
 
 /**
  * This class implements Router Mask TLV generation and parsing.
  *
  */
-class ThreadRouterMaskTlv: public ThreadTlv
+class ThreadRouterMaskTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kRouterMask>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kRouterMask); SetLength(sizeof(*this) - sizeof(ThreadTlv)); }
+    void Init(void)
+    {
+        SetType(kRouterMask);
+        SetLength(sizeof(*this) - sizeof(ThreadTlv));
+        mAssignedRouterIdMask.Clear();
+    }
 
     /**
      * This method indicates whether or not the TLV appears to be well-formed.
@@ -402,7 +224,7 @@ public:
      * @retval FALSE  If the TLV does not appear to be well-formed.
      *
      */
-    bool IsValid(void) const { return GetLength() == sizeof(*this) - sizeof(ThreadTlv); }
+    bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(ThreadTlv); }
 
     /**
      * This method returns the ID Sequence value.
@@ -421,35 +243,24 @@ public:
     void SetIdSequence(uint8_t aSequence) { mIdSequence = aSequence; }
 
     /**
-     * This method clears the Assigned Router ID Mask.
+     * This method gets the Assigned Router ID Mask.
+     *
+     * @returns The Assigned Router ID Mask.
      *
      */
-    void ClearAssignedRouterIdMask(void) { memset(mAssignedRouterIdMask, 0, sizeof(mAssignedRouterIdMask)); }
+    const Mle::RouterIdSet &GetAssignedRouterIdMask(void) const { return mAssignedRouterIdMask; }
 
     /**
-     * This method indicates whether or not a given Router ID is set in the Assigned Router ID Mask.
+     * This method sets the Assigned Router ID Mask.
      *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     * @retval TRUE   If the given Router ID is set in the Assigned Router ID Mask.
-     * @retval FALSE  If the given Router ID is not set in the Assigned Router ID Mask.
+     * @param[in]  aRouterIdSet A reference to the Assigned Router ID Mask.
      *
      */
-    bool IsAssignedRouterIdSet(uint8_t aRouterId) const {
-        return (mAssignedRouterIdMask[aRouterId / 8] & (0x80 >> (aRouterId % 8))) != 0;
-    }
-
-    /**
-     * This method clears the Assigned Router ID Mask.
-     *
-     * @param[in]  aRouterId  The Router ID.
-     *
-     */
-    void SetAssignedRouterId(uint8_t aRouterId) { mAssignedRouterIdMask[aRouterId / 8] |= 0x80 >> (aRouterId % 8); }
+    void SetAssignedRouterIdMask(const Mle::RouterIdSet &aRouterIdSet) { mAssignedRouterIdMask = aRouterIdSet; }
 
 private:
-    uint8_t mIdSequence;
-    uint8_t mAssignedRouterIdMask[BitVectorBytes(Mle::kMaxRouterId + 1)];
+    uint8_t          mIdSequence;
+    Mle::RouterIdSet mAssignedRouterIdMask;
 };
 
 /**
@@ -457,14 +268,18 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ThreadNetworkDataTlv: public ThreadTlv
+class ThreadNetworkDataTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kThreadNetworkData>
 {
 public:
     /**
      * This method initializes the TLV.
      *
      */
-    void Init(void) { SetType(kThreadNetworkData); SetLength(0); }
+    void Init(void)
+    {
+        SetType(kThreadNetworkData);
+        SetLength(0);
+    }
 
     /**
      * This method overrides same method of the base class
@@ -483,14 +298,56 @@ public:
     uint8_t *GetTlvs(void) { return mTlvs; }
 
 private:
-    enum
-    {
-        kMaxSize = 255,
-    };
+    static constexpr uint8_t kMaxSize = 255;
 
     uint8_t mTlvs[kMaxSize];
 } OT_TOOL_PACKED_END;
 
-}  // namespace Thread
+#if OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-#endif  // THREAD_TLVS_HPP_
+/**
+ * This class implements IPv6 Addresses TLV generation and parsing.
+ *
+ */
+OT_TOOL_PACKED_BEGIN
+class Ip6AddressesTlv : public ThreadTlv, public TlvInfo<ThreadTlv::kIp6Addresses>
+{
+public:
+    /**
+     * This method initializes the TLV.
+     *
+     */
+    void Init(void) { SetType(kIp6Addresses); }
+
+    /**
+     * This method indicates whether or not the TLV appears to be well-formed.
+     *
+     * @retval TRUE   If the TLV appears to be well-formed.
+     * @retval FALSE  If the TLV does not appear to be well-formed.
+     *
+     */
+    bool IsValid(void) const
+    {
+        return GetLength() >= sizeof(Ip6::Address) * kIp6AddressesNumMin &&
+               GetLength() <= sizeof(Ip6::Address) * kIp6AddressesNumMax && (GetLength() % sizeof(Ip6::Address)) == 0;
+    }
+
+    /**
+     * This method returns a pointer to the IPv6 address entry.
+     *
+     * @param[in]  aIndex  The index into the IPv6 address list.
+     *
+     * @returns A reference to the IPv6 address.
+     *
+     */
+    const Ip6::Address &GetIp6Address(uint8_t aIndex) const
+    {
+        return *reinterpret_cast<const Ip6::Address *>(GetValue() + (aIndex * sizeof(Ip6::Address)));
+    }
+} OT_TOOL_PACKED_END;
+
+#endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
+
+} // namespace ot
+
+#endif // THREAD_TLVS_HPP_

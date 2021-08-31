@@ -39,7 +39,7 @@
 
 .PHONY: install-headers install-headers-recursive
 
-install-headers: install-headers-recursive
+install-headers: $(BUILT_SOURCES) install-headers-recursive
 
 install-headers-recursive:
 	$(nl-make-subdirs)

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -28,12 +28,21 @@
 #
 
 import struct
-import sys
 
 from binascii import hexlify
 from enum import IntEnum
 
 import ipaddress
+
+# Map of 2 bits of parent priority.
+pp_map = {1: 1, 0: 0, 3: -1, 2: -2}
+
+UDP_TEST_PORT = 12345
+
+
+# Get the signed parent priority from the byte that parent priority is in.
+def map_pp(pp_byte):
+    return pp_map[((pp_byte & 0xC0) >> 6)]
 
 
 def expect_the_same_class(self, other):
@@ -48,7 +57,7 @@ class MessageInfo(object):
         self.aux_sec_hdr_bytes = None
 
         self.mhr_bytes = None
-        self.nonpayload_fields = None
+        self.extra_open_fields = None
 
         self.source_mac_address = None
         self.destination_mac_address = None
@@ -65,9 +74,6 @@ class MessageInfo(object):
     def _convert_value_to_ip_address(self, value):
         if isinstance(value, bytearray):
             value = bytes(value)
-
-        elif isinstance(value, str) and sys.version_info[0] == 2:
-            value = value.decode("utf-8")
 
         return ipaddress.ip_address(value)
 
@@ -137,9 +143,9 @@ class MacAddress(object):
 
     def convert_to_iid(self):
         if self._type == MacAddressType.SHORT:
-            return bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + self._mac_address[:2]
+            return (bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + self._mac_address[:2])
         elif self._type == MacAddressType.LONG:
-            return bytearray([self._mac_address[0] ^ 0x02]) + self._mac_address[1:]
+            return (bytearray([self._mac_address[0] ^ 0x02]) + self._mac_address[1:])
         else:
             raise RuntimeError("Could not convert to IID. Invalid MAC address type: {}".format(self._type))
 

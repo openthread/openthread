@@ -1,7 +1,10 @@
-/*
- *  Minimal configuration for TLS 1.2 with PSK and AES-CCM ciphersuites
+/**
+ * \file config-ccm-psk-tls1_2.h
  *
- *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
+ * \brief Minimal configuration for TLS 1.2 with PSK and AES-CCM ciphersuites
+ */
+/*
+ *  Copyright The Mbed TLS Contributors
  *  SPDX-License-Identifier: Apache-2.0
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may
@@ -15,8 +18,6 @@
  *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
- *
- *  This file is part of mbed TLS (https://tls.mbed.org)
  */
 /*
  * Minimal configuration for TLS 1.2 with PSK and AES-CCM ciphersuites
@@ -78,7 +79,7 @@
  * both ends of the connection!  (See comments in "mbedtls/ssl.h".)
  * The optimal size here depends on the typical size of records.
  */
-#define MBEDTLS_SSL_MAX_CONTENT_LEN             512
+#define MBEDTLS_SSL_MAX_CONTENT_LEN             1024
 
 #include "mbedtls/check_config.h"
 

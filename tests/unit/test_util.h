@@ -32,68 +32,56 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include <openthread-types.h>
-
-#ifndef _WIN32
+#include "common/arg_macros.hpp"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-// Enable main functions
-#define ENABLE_TEST_MAIN
+/**
+ * This macro verifies a given error status to be successful (compared against value zero (0)), otherwise, it emits a
+ * given error messages and exits the program.
+ *
+ * @param[in]  aStatus     A scalar error status to be evaluated against zero (0).
+ * @param[in]  aMessage    An optional message (constant C string) to print on failure.
+ *
+ */
+#define SuccessOrQuit(...)                                                                                      \
+    do                                                                                                          \
+    {                                                                                                           \
+        if ((OT_FIRST_ARG(__VA_ARGS__)) != 0)                                                                   \
+        {                                                                                                       \
+            fprintf(stderr, "\nFAILED %s:%d - SuccessOrQuit(%s)" OT_SECOND_ARG(__VA_ARGS__) "\n", __FUNCTION__, \
+                    __LINE__, _Stringize(OT_FIRST_ARG(__VA_ARGS__)));                                           \
+            exit(-1);                                                                                           \
+        }                                                                                                       \
+    } while (false)
 
-#define SuccessOrQuit(ERR, MSG)                 \
-  do { \
-    if ((ERR) != kThreadError_None)     \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
+/**
+ * This macro verifies that a given boolean condition is true, otherwise, it emits a given error message and exits the
+ * program.
+ *
+ * @param[in]  aCondition  A Boolean expression to be evaluated.
+ * @param[in]  aMessage    An optional message (constant C string) to print on failure.
+ *
+ */
+#define VerifyOrQuit(...)                                                                                       \
+    do                                                                                                          \
+    {                                                                                                           \
+        if (!(OT_FIRST_ARG(__VA_ARGS__)))                                                                       \
+        {                                                                                                       \
+            fprintf(stderr, "\nFAILED %s:%d - VerifyOrQuit(%s) " OT_SECOND_ARG(__VA_ARGS__) "\n", __FUNCTION__, \
+                    __LINE__, _Stringize(OT_FIRST_ARG(__VA_ARGS__)));                                           \
+            exit(-1);                                                                                           \
+        }                                                                                                       \
+    } while (false)
 
-#define VerifyOrQuit(TST, MSG) \
-  do { \
-    if (!(TST)) \
-    { \
-      fprintf(stderr, "%s FAILED: ", __FUNCTION__); \
-      fputs(MSG, stderr); \
-      exit(-1); \
-    } \
-  } while (0)
-
-//#define CompileTimeAssert(COND, MSG) typedef char __C_ASSERT__[(COND)?1:-1]
-
-// I would use the above definition for CompileTimeAssert, but I am getting the following errors
-// when I run 'make -f examples/Makefile-posix distcheck':
-//
-//      error: typedef ‘__C_ASSERT__’ locally defined but not used [-Werror=unused-local-typedefs]
-//
-#define CompileTimeAssert(COND, MSG)
-
-#define Log(aFormat, ...) printf(aFormat "\n", ## __VA_ARGS__)
+// Private macros to convert `aArg` to string
+#define _Stringize(aArg) _Stringize2(aArg)
+#define _Stringize2(aArg) #aArg
 
 #ifdef __cplusplus
 }
-#endif
-
-#else
-
-typedef void (*utAssertTrue)(bool condition, const wchar_t *message);
-extern utAssertTrue s_AssertTrue;
-
-typedef void (*utLogMessage)(const char *format, ...);
-extern utLogMessage s_LogMessage;
-
-#define SuccessOrQuit(ERR, MSG) s_AssertTrue((ERR) == kThreadError_None, L##MSG)
-
-#define VerifyOrQuit(ERR, MSG) s_AssertTrue(ERR, L##MSG)
-
-#define CompileTimeAssert(COND, MSG) static_assert(COND, MSG)
-
-#define Log(aFormat, ...) s_LogMessage(aFormat, ## __VA_ARGS__)
-
 #endif
 
 #endif

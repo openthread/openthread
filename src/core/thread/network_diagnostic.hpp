@@ -34,22 +34,21 @@
 #ifndef NETWORK_DIAGNOSTIC_HPP_
 #define NETWORK_DIAGNOSTIC_HPP_
 
-#include <openthread-core-config.h>
-#include <openthread-types.h>
-#include <coap/coap_client.hpp>
-#include <coap/coap_server.hpp>
-#include <net/udp6.hpp>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#if OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
 
-class ThreadNetif;
-using namespace Coap;
+#include <openthread/netdiag.h>
+
+#include "coap/coap.hpp"
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "net/udp6.hpp"
+#include "thread/network_diagnostic_tlvs.hpp"
+
+namespace ot {
 
 namespace NetworkDiagnostic {
-
-class IPv6AddressListTlv;
-class ChildTableTlv;
-class NetworkDiagnosticTlv;
 
 /**
  * @addtogroup core-netdiag
@@ -64,35 +63,40 @@ class NetworkDiagnosticTlv;
  * This class implements the Network Diagnostic processing.
  *
  */
-class NetworkDiagnostic
+class NetworkDiagnostic : public InstanceLocator, private NonCopyable
 {
 public:
+    /**
+     * This type represents an iterator used to iterate through Network Diagnostic TLVs from `GetNextDiagTlv()`.
+     *
+     */
+    typedef otNetworkDiagIterator Iterator;
+
+    static constexpr Iterator kIteratorInit = OT_NETWORK_DIAGNOSTIC_ITERATOR_INIT; ///< Initializer for Iterator.
+
     /**
      * This constructor initializes the object.
      *
      */
-    explicit NetworkDiagnostic(ThreadNetif &aThreadNetif);
-
-    /**
-     * This method registers a callback to provide received raw DIAG_GET.rsp or an DIAG_GET.ans payload.
-     *
-     * @param[in]  aCallback         A pointer to a function that is called when an DIAG_GET.rsp or an DIAG_GET.ans
-     *                               is received or NULL to disable the callback.
-     * @param[in]  aCallbackContext  A pointer to application-specific context.
-     *
-     */
-    void SetReceiveDiagnosticGetCallback(otReceiveDiagnosticGetCallback aCallback, void *aCallbackContext);
+    explicit NetworkDiagnostic(Instance &aInstance);
 
     /**
      * This method sends Diagnostic Get request. If the @p aDestination is of multicast type, the DIAG_GET.qry
      * message is sent or the DIAG_GET.req otherwise.
      *
-     * @param[in] aDestination  A reference to the destination address.
-     * @param[in] aTlvTypes     An array of Network Diagnostic TLV types.
-     * @param[in] aCount        Number of types in aTlvTypes
+     * @param[in]  aDestination      A reference to the destination address.
+     * @param[in]  aTlvTypes         An array of Network Diagnostic TLV types.
+     * @param[in]  aCount            Number of types in aTlvTypes.
+     * @param[in]  aCallback         A pointer to a function that is called when Network Diagnostic Get response
+     *                               is received or NULL to disable the callback.
+     * @param[in]  aCallbackContext  A pointer to application-specific context.
      *
      */
-    ThreadError SendDiagnosticGet(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+    Error SendDiagnosticGet(const Ip6::Address &           aDestination,
+                            const uint8_t                  aTlvTypes[],
+                            uint8_t                        aCount,
+                            otReceiveDiagnosticGetCallback aCallback,
+                            void *                         aCallbackContext);
 
     /**
      * This method sends Diagnostic Reset request.
@@ -102,44 +106,53 @@ public:
      * @param[in] aCount        Number of types in aTlvTypes
      *
      */
-    ThreadError SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+    Error SendDiagnosticReset(const Ip6::Address &aDestination, const uint8_t aTlvTypes[], uint8_t aCount);
+
+    /**
+     * This static method gets the next Network Diagnostic TLV in a given message.
+     *
+     * @param[in]     aMessage         A message.
+     * @param[inout]  aIterator        The Network Diagnostic iterator. To get the first TLV set it to `kIteratorInit`.
+     * @param[out]    aNetworkDiagTlv  A reference to a Network Diagnostic TLV to output the next TLV.
+     *
+     * @retval kErrorNone       Successfully found the next Network Diagnostic TLV.
+     * @retval kErrorNotFound   No subsequent Network Diagnostic TLV exists in the message.
+     * @retval kErrorParse      Parsing the next Network Diagnostic failed.
+     *
+     */
+    static Error GetNextDiagTlv(const Coap::Message &aMessage, Iterator &aIterator, otNetworkDiagTlv &aNetworkDiagTlv);
 
 private:
+    Error AppendIp6AddressList(Message &aMessage);
+    Error AppendChildTable(Message &aMessage);
+    void  FillMacCountersTlv(MacCountersTlv &aMacCountersTlv);
+    Error FillRequestedTlvs(const Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
 
-    ThreadError AppendIPv6AddressList(Message &aMessage);
-    ThreadError AppendChildTable(Message &aMessage);
-    ThreadError FillRequestedTlvs(Message &aRequest, Message &aResponse, NetworkDiagnosticTlv &aNetworkDiagnosticTlv);
+    static void HandleDiagnosticGetRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetRequest(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                           const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetRequest(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetQuery(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetQuery(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                         const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetQuery(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticGetResponse(void *               aContext,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            Error                aResult);
+    void HandleDiagnosticGetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
 
-    static void HandleDiagnosticGetResponse(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                            const otMessageInfo *aMessageInfo, ThreadError aResult);
-    void HandleDiagnosticGetResponse(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo,
-                                     ThreadError aResult);
+    static void HandleDiagnosticGetAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticGetAnswer(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
-    static void HandleDiagnosticGetAnswer(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                          const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticGetAnswer(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
-
-    static void HandleDiagnosticReset(void *aContext, otCoapHeader *aHeader, otMessage aMessage,
-                                      const otMessageInfo *aMessageInfo);
-    void HandleDiagnosticReset(Coap::Header &aHeader, Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+    static void HandleDiagnosticReset(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleDiagnosticReset(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     Coap::Resource mDiagnosticGetRequest;
     Coap::Resource mDiagnosticGetQuery;
     Coap::Resource mDiagnosticGetAnswer;
     Coap::Resource mDiagnosticReset;
 
-    ThreadNetif &mNetif;
-
     otReceiveDiagnosticGetCallback mReceiveDiagnosticGetCallback;
-    void *mReceiveDiagnosticGetCallbackContext;
+    void *                         mReceiveDiagnosticGetCallbackContext;
 };
 
 /**
@@ -147,6 +160,8 @@ private:
  */
 } // namespace NetworkDiagnostic
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // NETWORK_DIAGNOSTIC_HPP_
+#endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE
+
+#endif // NETWORK_DIAGNOSTIC_HPP_

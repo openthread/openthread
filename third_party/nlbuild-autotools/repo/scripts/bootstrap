@@ -1,7 +1,8 @@
-#!/bin/sh
+#!/bin/bash
 
 #
-#    Copyright 2014-2016 Nest Labs Inc. All Rights Reserved.
+#    Copyright 2019 Google LLC. All Rights Reserved.
+#    Copyright 2014-2017 Nest Labs Inc. All Rights Reserved.
 #
 #    Licensed under the Apache License, Version 2.0 (the "License");
 #    you may not use this file except in compliance with the License.
@@ -52,14 +53,89 @@ usage() {
 }
 
 #
+# check_required_executable <path variable> <executable name>
+#
+# Check to ensure that the named executable with the path in the
+# provided variable exists and is executable by the current user.
+#
+check_required_executable() {
+    variable="${1}"
+    path="${!variable}"
+    name="${2}"
+    output="${3}"
+    stem="The required executable '${name}'"
+
+    if [ -z "${path}" ]; then
+        echo "${stem} could not be found."
+
+        eval "${output}"="no"
+
+        return 1
+    elif [ ! -e "${path}" ] || [ ! -x "${path}" ]; then
+        stem="${stem} at '${path}'"
+
+        if [ ! -e ${path} ]; then
+            echo "${stem} does not exist."
+        elif [ ! -x ${path} ]; then
+            echo "${stem} is not executable."
+        fi
+
+        echo "Please ensure '${name}' is available in PATH."
+
+	eval "${output}"="no"
+
+        return 1
+    fi
+
+    eval "${output}"="yes"
+
+    return 0
+}
+
+check_required_executables()
+{
+    check_required_executable ACLOCAL aclocal have_aclocal
+    check_required_executable AUTOCONF autoconf have_autoconf
+    check_required_executable AUTOHEADER autoheader have_autoheader
+    check_required_executable AUTOMAKE automake have_automake
+    check_required_executable LIBTOOLIZE libtoolize have_libtoolize
+    check_required_executable M4 m4 have_m4
+
+    if [ "${have_aclocal}" = "no" ] || [ "${have_autoconf}" = "no" ] || [ "${have_autoheader}" = "no" ] || [ "${have_automake}" = "no" ] || [ "${have_libtoolize}" = "no" ] || [ "${have_m4}" = "no" ]; then
+	cat << EOF
+--------------------------------------------------------------------------------
+Your build host system is missing one or more of the above executables required
+for bootstrapping this nlbuild-autotools-based package. You can either install
+these yourself using package management tools available and appropriate for your
+build host platform or you can build preselected versions of these executables
+from source for this package on this build host by invoking:
+
+    make -C ${nlbuild_autotools_dir} tools
+
+and then re-running this script which will use those executables.
+--------------------------------------------------------------------------------
+EOF
+    
+      exit 1
+    
+    fi
+}
+
+#
 # removetmp
 #
 # Remove temporary files and directories used during the run of this
 # script.
 #
 removetmp() {
-    rm -f "${LIBTOOLIZE}"
-    rm -f "${AUTOM4TE_CFG}"
+    if [ -n "${LIBTOOLIZE}"  ] && [ "${LIBTOOLIZE}" = "${BOOTSTRAP_TMPDIR}/libtoolize" ]; then
+        rm -f "${LIBTOOLIZE}"
+    fi
+
+    if [ -n "${AUTOM4TE_CFG}" ]; then
+        rm -f "${AUTOM4TE_CFG}"
+    fi
+
     rm -r -f "${BOOTSTRAP_TMPDIR}"
 }
 
@@ -87,13 +163,14 @@ while [ ${#} -gt 0 ]; do
 
     -w|--what)
         case "${2}" in
+
         all|make*|conf*|none)
             what="${2}"
             shift 2
             ;;
 
         *)
-	    echo "Unknown what value '${2}'."
+	    echo "Unknown what value '${2}'." >&2
             usage 1
             ;;
 
@@ -111,11 +188,11 @@ done
 # is sane.
 
 if [ -z "${nlbuild_autotools_dir}" ]; then
-    echo "$0: No -I option specified. Please provide the location of the nlbuild-autotools directory."
+    echo "$0: No -I option specified. Please provide the location of the nlbuild-autotools directory." >&2
     exit 1
 
 elif [ ! -d "${nlbuild_autotools_dir}" ]; then
-    echo "$0: No such directory: ${nlbuild_autotools_dir}. Please provide a valid path to the nlbuild-autotools directory."
+    echo "$0: No such directory: ${nlbuild_autotools_dir}. Please provide a valid path to the nlbuild-autotools directory." >&2
     exit 1
 
 fi
@@ -132,28 +209,52 @@ abs_top_hostdir="${nlbuild_autotools_dir}/tools/host"
 # any trailing version number information typically included on Darwin
 # / Mac OS X.
 
-host=`${nlbuild_autotools_dir}/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g'`
+host=`${nlbuild_autotools_dir}/third_party/autoconf/config.guess | sed -e 's/[[:digit:].]*$//g'`
 
-# Attempt to be self-sufficient, relying on GNU autotools executables
-# installed along with the SDK itself.
+# If possible, attempt to be self-sufficient, relying on GNU autotools
+# executables installed along with the SDK itself.
 
-export PATH="${abs_top_hostdir}/bin:${abs_top_hostdir}/${host}/bin:${PATH}"
+if [ -d "${abs_top_hostdir}/${host}/bin" ]; then
+    export PATH="${abs_top_hostdir}/${host}/bin:${PATH}"
+fi
+
+if [ -d "${abs_top_hostdir}/bin" ]; then
+    export PATH="${abs_top_hostdir}/bin:${PATH}"
+fi
 
 export ACLOCAL=`which aclocal`
 export AUTOCONF="`which autoconf`"
 export AUTOHEADER="`which autoheader`"
 export AUTOM4TE="`which autom4te`"
 export AUTOMAKE="`which automake`"
+export LIBTOOLIZE="`which libtoolize || which glibtoolize`"
 export M4=`which m4`
 
-# Establish some SDK-specific directories needed to override various
-# paths in GNU autotools that otherwise expect to be absolute
-# (e.g. /usr/share, etc.).
+# Establish, if necessary, some SDK-specific directories needed to
+# override various paths in GNU autotools that otherwise expect to be
+# absolute (e.g. /usr/share, etc.).
 
-export AC_MACRODIR="${abs_top_hostdir}/share/autoconf"
+if [ -d "${abs_top_hostdir}/share" ]; then
+    if [ -d "${abs_top_hostdir}/share/autoconf" ]; then
+        export AC_MACRODIR="${abs_top_hostdir}/share/autoconf"
 
-export autom4te_perllibdir="${abs_top_hostdir}/share/autoconf"
-export PERL5LIB="${abs_top_hostdir}/share/automake-1.14:${PERL5LIB}"
+        export autom4te_perllibdir="${abs_top_hostdir}/share/autoconf"
+    fi
+
+    if [ -d "${abs_top_hostdir}/share/automake-1.14" ]; then
+        export PERL5LIB="${abs_top_hostdir}/share/automake-1.14:${PERL5LIB}"
+
+	make_action_options="--libdir ${abs_top_hostdir}/share/automake-1.14"
+    fi
+
+    if [ -d "${abs_top_hostdir}/share/aclocal-1.14" ]; then
+        local_action_options="--automake-acdir=${abs_top_hostdir}/share/aclocal-1.14 ${local_action_options}"
+    fi
+
+    if [ -d "${abs_top_hostdir}/share/aclocal" ]; then
+        local_action_options="--system-acdir=${abs_top_hostdir}/share/aclocal ${local_action_options}"
+    fi
+fi
 
 # Both autom4te.cfg and libtoolize, as installed from source, want to
 # use absolute file system paths that cannot be
@@ -164,9 +265,6 @@ BOOTSTRAP_TMPDIR="`mktemp -d /tmp/tmp.bootstrapXXXXXX`"
 
 trap "removetmp" 1 2 3 9 15
 
-export AUTOM4TE_CFG="${BOOTSTRAP_TMPDIR}/autom4te.cfg"
-export LIBTOOLIZE="${BOOTSTRAP_TMPDIR}/libtoolize"
-
 #
 # Generate any temporary files that need to be patched at run time
 # with the location of the SDK tree, including:
@@ -175,12 +273,29 @@ export LIBTOOLIZE="${BOOTSTRAP_TMPDIR}/libtoolize"
 #   -  The libtoolize executable script
 #
 
-sed -e "s,//share/autoconf,${abs_top_hostdir}/share/autoconf,g" < "${abs_top_hostdir}/share/autoconf/autom4te.cfg" > "${AUTOM4TE_CFG}"
+if [ -r "${abs_top_hostdir}/share/autoconf/autom4te.cfg" ]; then
+    export AUTOM4TE_CFG="${BOOTSTRAP_TMPDIR}/autom4te.cfg"
 
-sed -e "s,//share/libtool,${abs_top_hostdir}/share/libtool,g" -e "s,//share/aclocal,${abs_top_hostdir}/share/aclocal,g" < "${abs_top_hostdir}/${host}/bin/libtoolize" > "${LIBTOOLIZE}"
-chmod 775 "${LIBTOOLIZE}"
+    sed -e "s,//share/autoconf,${abs_top_hostdir}/share/autoconf,g" < "${abs_top_hostdir}/share/autoconf/autom4te.cfg" > "${AUTOM4TE_CFG}"
+fi
 
+if [ -r "${abs_top_hostdir}/${host}/bin/libtoolize" ]; then
+    export LIBTOOLIZE="${BOOTSTRAP_TMPDIR}/libtoolize"
+
+    sed -e "s,//share/libtool,${abs_top_hostdir}/share/libtool,g" -e "s,//share/aclocal,${abs_top_hostdir}/share/aclocal,g" < "${abs_top_hostdir}/${host}/bin/libtoolize" > "${LIBTOOLIZE}"
+
+    chmod 775 "${LIBTOOLIZE}"
+fi
+
+# Before we get much further, check to ensure that the required
+# executables are available and, if not, provide some actionable
+# guidance.
+
+check_required_executables
+ 
 if [ -n "${verbose}" ]; then
+    echo PATH="${PATH}"
+
     echo ACLOCAL="${ACLOCAL}"
     echo AUTOCONF="${AUTOCONF}"
     echo AUTOHEADER="${AUTOHEADER}"
@@ -193,14 +308,17 @@ if [ -n "${verbose}" ]; then
     echo AUTOM4TE_CFG="${AUTOM4TE_CFG}"
     echo PERL5LIB="${PERL5LIB}"
     echo autom4te_perllibdir="${autom4te_perllibdir}"
+
+    echo local_action_options="${local_action_options}"
+    echo make_action_options="${make_action_options}"
 fi
 
 # Set up the default actions for each bootstrap stage.
 
-local_action="${ACLOCAL} ${verbose} --automake-acdir=${abs_top_hostdir}/share/aclocal-1.14 --system-acdir=${abs_top_hostdir}/share/aclocal -I${nlbuild_autotools_dir}/autoconf/m4"
+local_action="${ACLOCAL} ${verbose} ${local_action_options}"
 header_action="${AUTOHEADER} ${verbose}"
 tool_action="${LIBTOOLIZE} ${verbose} --automake --copy --force"
-make_action="${AUTOMAKE} ${verbose} --libdir ${abs_top_hostdir}/share/automake-1.14 --add-missing --copy"
+make_action="${AUTOMAKE} ${verbose} ${make_action_options} --add-missing --copy"
 config_action="${AUTOCONF} ${verbose}"
 
 # Determine what needs to be short-circuited based on the
@@ -236,7 +354,11 @@ esac
 
 # Bootstrap the package.
 
-${local_action} && ${header_action} && ${tool_action} && ${make_action} && ${config_action}
+if [ -n "${verbose}" ]; then
+    echo "${local_action} && ${tool_action} && ${header_action} && ${make_action} && ${config_action}"
+fi
+
+${local_action} && ${tool_action} && ${header_action} && ${make_action} && ${config_action}
 
 # Clean up any temporary files created.
 

@@ -34,9 +34,11 @@
 #ifndef CRC16_HPP_
 #define CRC16_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdint.h>
 
-namespace Thread {
+namespace ot {
 
 /**
  * This class implements CRC16 computations.
@@ -45,10 +47,10 @@ namespace Thread {
 class Crc16
 {
 public:
-    enum Polynomial
+    enum Polynomial : uint16_t
     {
-        kCcitt = 0x1021,  ///< CRC16_CCITT
-        kAnsi  = 0x8005,  ///< CRC16-ANSI
+        kCcitt = 0x1021, ///< CRC16_CCITT
+        kAnsi  = 0x8005, ///< CRC16-ANSI
     };
 
     /**
@@ -57,13 +59,13 @@ public:
      * @param[in]  aPolynomial  The polynomial value.
      *
      */
-    Crc16(Polynomial aPolynomial);
+    explicit Crc16(Polynomial aPolynomial);
 
     /**
      * This method initializes the CRC16 computation.
      *
      */
-    void Init(void);
+    void Init(void) { mCrc = 0; }
 
     /*c*
      * This method feeds a byte value into the CRC16 computation.
@@ -79,13 +81,13 @@ public:
      * @returns The current CRC16 value.
      *
      */
-    uint16_t Get(void) const;
+    uint16_t Get(void) const { return mCrc; }
 
 private:
     uint16_t mPolynomial;
     uint16_t mCrc;
 };
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // CRC16_HPP_
+#endif // CRC16_HPP_

@@ -35,12 +35,20 @@
 #ifndef MESHCOP_TIMESTAMP_HPP_
 #define MESHCOP_TIMESTAMP_HPP_
 
-#include <common/encoding.hpp>
+#include "openthread-core-config.h"
 
-using Thread::Encoding::BigEndian::HostSwap16;
+#include <string.h>
 
-namespace Thread {
+#include <openthread/platform/toolchain.h>
+
+#include "common/encoding.hpp"
+#include "common/random.hpp"
+
+namespace ot {
 namespace MeshCoP {
+
+using ot::Encoding::BigEndian::HostSwap16;
+using ot::Encoding::BigEndian::HostSwap32;
 
 /**
  * This class implements Timestamp generation and parsing.
@@ -54,7 +62,7 @@ public:
      * This method initializes the Timestamp
      *
      */
-    void Init(void) { memset(mSeconds, 0, sizeof(mSeconds)); mTicks = 0; }
+    void Init(void) { memset(this, 0, sizeof(*this)); }
 
     /**
      * This method compares this timestamp to another.
@@ -74,14 +82,9 @@ public:
      * @returns The Seconds value.
      *
      */
-    uint64_t GetSeconds(void) const {
-        uint64_t seconds = 0;
-
-        for (size_t i = 0; i < sizeof(mSeconds); i++) {
-            seconds = (seconds << 8) | mSeconds[i];
-        }
-
-        return seconds;
+    uint64_t GetSeconds(void) const
+    {
+        return (static_cast<uint64_t>(HostSwap16(mSeconds16)) << 32) + HostSwap32(mSeconds32);
     }
 
     /**
@@ -90,10 +93,10 @@ public:
      * @param[in]  aSeconds  The Seconds value.
      *
      */
-    void SetSeconds(uint64_t aSeconds) {
-        for (size_t i = 0; i < sizeof(mSeconds); i++, aSeconds >>= 8) {
-            mSeconds[sizeof(mSeconds) - 1 - i] = aSeconds & 0xff;
-        }
+    void SetSeconds(uint64_t aSeconds)
+    {
+        mSeconds16 = HostSwap16(static_cast<uint16_t>(aSeconds >> 32));
+        mSeconds32 = HostSwap32(static_cast<uint32_t>(aSeconds & 0xffffffff));
     }
 
     /**
@@ -110,7 +113,8 @@ public:
      * @param[in]  aTicks  The Ticks value.
      *
      */
-    void SetTicks(uint16_t aTicks) {
+    void SetTicks(uint16_t aTicks)
+    {
         mTicks = HostSwap16((HostSwap16(mTicks) & ~kTicksMask) | ((aTicks << kTicksOffset) & kTicksMask));
     }
 
@@ -128,25 +132,31 @@ public:
      * @param[in]  aAuthoritative  The Authoritative value.
      *
      */
-    void SetAuthoritative(bool aAuthoritative) {
-        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) | ((aAuthoritative << kAuthoritativeOffset) &
-                                                                 kAuthoritativeMask));
+    void SetAuthoritative(bool aAuthoritative)
+    {
+        mTicks = HostSwap16((HostSwap16(mTicks) & kTicksMask) |
+                            ((aAuthoritative << kAuthoritativeOffset) & kAuthoritativeMask));
     }
 
-private:
-    uint8_t mSeconds[6];
+    /**
+     * This method increments the timestamp by a random number of ticks [0, 32767].
+     *
+     */
+    void AdvanceRandomTicks(void);
 
-    enum
-    {
-        kTicksOffset         = 1,
-        kTicksMask           = 0x7fff << kTicksOffset,
-        kAuthoritativeOffset = 0,
-        kAuthoritativeMask   = 1 << kAuthoritativeOffset,
-    };
+private:
+    static constexpr uint8_t  kTicksOffset         = 1;
+    static constexpr uint16_t kTicksMask           = 0x7fff << kTicksOffset;
+    static constexpr uint16_t kMaxRandomTicks      = 0x7fff;
+    static constexpr uint8_t  kAuthoritativeOffset = 0;
+    static constexpr uint16_t kAuthoritativeMask   = 1 << kAuthoritativeOffset;
+
+    uint16_t mSeconds16; // bits 32-47
+    uint32_t mSeconds32; // bits 0-31
     uint16_t mTicks;
 } OT_TOOL_PACKED_END;
 
-}  // namespace MeshCoP
-}  // namespace Thread
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // MESHCOP_TIMESTAMP_HPP_
+#endif // MESHCOP_TIMESTAMP_HPP_

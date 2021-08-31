@@ -31,41 +31,167 @@
  *   This file implements Thread security material generation.
  */
 
-#include <common/code_utils.hpp>
-#include <common/timer.hpp>
-#include <crypto/hmac_sha256.hpp>
-#include <thread/key_manager.hpp>
-#include <thread/mle_router.hpp>
-#include <thread/thread_netif.hpp>
+#include "key_manager.hpp"
 
-namespace Thread {
+#include "common/code_utils.hpp"
+#include "common/encoding.hpp"
+#include "common/instance.hpp"
+#include "common/locator_getters.hpp"
+#include "common/timer.hpp"
+#include "crypto/hkdf_sha256.hpp"
+#include "thread/mle_router.hpp"
+#include "thread/thread_netif.hpp"
 
-static const uint8_t kThreadString[] =
-{
+namespace ot {
+
+const uint8_t KeyManager::kThreadString[] = {
     'T', 'h', 'r', 'e', 'a', 'd',
 };
 
-KeyManager::KeyManager(ThreadNetif &aThreadNetif):
-    mNetif(aThreadNetif),
-    mMasterKeyLength(0),
-    mKeySequence(0),
-    mMacFrameCounter(0),
-    mMleFrameCounter(0),
-    mStoredMacFrameCounter(0),
-    mStoredMleFrameCounter(0),
-    mKeyRotationTime(kDefaultKeyRotationTime),
-    mKeySwitchGuardTime(kDefaultKeySwitchGuardTime),
-    mKeySwitchGuardEnabled(false),
-    mKeyRotationTimer(aThreadNetif.GetIp6().mTimerScheduler, &KeyManager::HandleKeyRotationTimer, this),
-    mKekFrameCounter(0),
-    mSecurityPolicyFlags(0xff)
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+const uint8_t KeyManager::kHkdfExtractSaltString[] = {'T', 'h', 'r', 'e', 'a', 'd', 'S', 'e', 'q', 'u', 'e', 'n',
+                                                      'c', 'e', 'M', 'a', 's', 't', 'e', 'r', 'K', 'e', 'y'};
+
+const uint8_t KeyManager::kTrelInfoString[] = {'T', 'h', 'r', 'e', 'a', 'd', 'O', 'v', 'e',
+                                               'r', 'I', 'n', 'f', 'r', 'a', 'K', 'e', 'y'};
+#endif
+
+void SecurityPolicy::SetToDefault(void)
 {
+    mRotationTime = kDefaultKeyRotationTime;
+    SetToDefaultFlags();
+}
+
+void SecurityPolicy::SetToDefaultFlags(void)
+{
+    mObtainNetworkKeyEnabled        = true;
+    mNativeCommissioningEnabled     = true;
+    mRoutersEnabled                 = true;
+    mExternalCommissioningEnabled   = true;
+    mBeaconsEnabled                 = true;
+    mCommercialCommissioningEnabled = false;
+    mAutonomousEnrollmentEnabled    = false;
+    mNetworkKeyProvisioningEnabled  = false;
+    mTobleLinkEnabled               = true;
+    mNonCcmRoutersEnabled           = false;
+    mVersionThresholdForRouting     = 0;
+}
+
+void SecurityPolicy::SetFlags(const uint8_t *aFlags, uint8_t aFlagsLength)
+{
+    OT_ASSERT(aFlagsLength > 0);
+
+    SetToDefaultFlags();
+
+    mObtainNetworkKeyEnabled        = aFlags[0] & kObtainNetworkKeyMask;
+    mNativeCommissioningEnabled     = aFlags[0] & kNativeCommissioningMask;
+    mRoutersEnabled                 = aFlags[0] & kRoutersMask;
+    mExternalCommissioningEnabled   = aFlags[0] & kExternalCommissioningMask;
+    mBeaconsEnabled                 = aFlags[0] & kBeaconsMask;
+    mCommercialCommissioningEnabled = (aFlags[0] & kCommercialCommissioningMask) == 0;
+    mAutonomousEnrollmentEnabled    = (aFlags[0] & kAutonomousEnrollmentMask) == 0;
+    mNetworkKeyProvisioningEnabled  = (aFlags[0] & kNetworkKeyProvisioningMask) == 0;
+
+    VerifyOrExit(aFlagsLength > sizeof(aFlags[0]));
+    mTobleLinkEnabled           = aFlags[1] & kTobleLinkMask;
+    mNonCcmRoutersEnabled       = (aFlags[1] & kNonCcmRoutersMask) == 0;
+    mVersionThresholdForRouting = aFlags[1] & kVersionThresholdForRoutingMask;
+
+exit:
+    return;
+}
+
+void SecurityPolicy::GetFlags(uint8_t *aFlags, uint8_t aFlagsLength) const
+{
+    OT_ASSERT(aFlagsLength > 0);
+
+    memset(aFlags, 0, aFlagsLength);
+
+    if (mObtainNetworkKeyEnabled)
+    {
+        aFlags[0] |= kObtainNetworkKeyMask;
+    }
+
+    if (mNativeCommissioningEnabled)
+    {
+        aFlags[0] |= kNativeCommissioningMask;
+    }
+
+    if (mRoutersEnabled)
+    {
+        aFlags[0] |= kRoutersMask;
+    }
+
+    if (mExternalCommissioningEnabled)
+    {
+        aFlags[0] |= kExternalCommissioningMask;
+    }
+
+    if (mBeaconsEnabled)
+    {
+        aFlags[0] |= kBeaconsMask;
+    }
+
+    if (!mCommercialCommissioningEnabled)
+    {
+        aFlags[0] |= kCommercialCommissioningMask;
+    }
+
+    if (!mAutonomousEnrollmentEnabled)
+    {
+        aFlags[0] |= kAutonomousEnrollmentMask;
+    }
+
+    if (!mNetworkKeyProvisioningEnabled)
+    {
+        aFlags[0] |= kNetworkKeyProvisioningMask;
+    }
+
+    VerifyOrExit(aFlagsLength > sizeof(aFlags[0]));
+
+    if (mTobleLinkEnabled)
+    {
+        aFlags[1] |= kTobleLinkMask;
+    }
+
+    if (!mNonCcmRoutersEnabled)
+    {
+        aFlags[1] |= kNonCcmRoutersMask;
+    }
+
+    aFlags[1] |= kReservedMask;
+    aFlags[1] |= mVersionThresholdForRouting;
+
+exit:
+    return;
+}
+
+KeyManager::KeyManager(Instance &aInstance)
+    : InstanceLocator(aInstance)
+    , mKeySequence(0)
+    , mMleFrameCounter(0)
+    , mStoredMacFrameCounter(0)
+    , mStoredMleFrameCounter(0)
+    , mHoursSinceKeyRotation(0)
+    , mKeySwitchGuardTime(kDefaultKeySwitchGuardTime)
+    , mKeySwitchGuardEnabled(false)
+    , mKeyRotationTimer(aInstance, KeyManager::HandleKeyRotationTimer)
+    , mKekFrameCounter(0)
+    , mIsPskcSet(false)
+{
+    Error error = mNetworkKey.GenerateRandom();
+
+    OT_ASSERT(error == kErrorNone);
+    OT_UNUSED_VARIABLE(error);
+
+    mMacFrameCounters.Reset();
+    mPskc.Clear();
 }
 
 void KeyManager::Start(void)
 {
     mKeySwitchGuardEnabled = false;
-    mKeyRotationTimer.Start(Timer::HoursToMsec(mKeyRotationTime));
+    StartKeyRotationTimer();
 }
 
 void KeyManager::Stop(void)
@@ -73,171 +199,190 @@ void KeyManager::Stop(void)
     mKeyRotationTimer.Stop();
 }
 
-const uint8_t *KeyManager::GetMasterKey(uint8_t *aKeyLength) const
+#if OPENTHREAD_MTD || OPENTHREAD_FTD
+void KeyManager::SetPskc(const Pskc &aPskc)
 {
-    if (aKeyLength)
+    IgnoreError(Get<Notifier>().Update(mPskc, aPskc, kEventPskcChanged));
+    mIsPskcSet = true;
+}
+#endif // OPENTHREAD_MTD || OPENTHREAD_FTD
+
+Error KeyManager::SetNetworkKey(const NetworkKey &aKey)
+{
+    Error   error = kErrorNone;
+    Router *parent;
+
+    SuccessOrExit(Get<Notifier>().Update(mNetworkKey, aKey, kEventNetworkKeyChanged));
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
+    mKeySequence = 0;
+    UpdateKeyMaterial();
+
+    // reset parent frame counters
+    parent = &Get<Mle::MleRouter>().GetParent();
+    parent->SetKeySequence(0);
+    parent->GetLinkFrameCounters().Reset();
+    parent->SetLinkAckFrameCounter(0);
+    parent->SetMleFrameCounter(0);
+
+#if OPENTHREAD_FTD
+    // reset router frame counters
+    for (Router &router : Get<RouterTable>().Iterate())
     {
-        *aKeyLength = mMasterKeyLength;
+        router.SetKeySequence(0);
+        router.GetLinkFrameCounters().Reset();
+        router.SetLinkAckFrameCounter(0);
+        router.SetMleFrameCounter(0);
     }
 
-    return mMasterKey;
-}
-
-ThreadError KeyManager::SetMasterKey(const void *aKey, uint8_t aKeyLength)
-{
-    ThreadError error = kThreadError_None;
-
-    VerifyOrExit(aKeyLength <= sizeof(mMasterKey), error = kThreadError_InvalidArgs);
-    VerifyOrExit((mMasterKeyLength != aKeyLength) || (memcmp(mMasterKey, aKey, aKeyLength) != 0), ;);
-
-    memcpy(mMasterKey, aKey, aKeyLength);
-    mMasterKeyLength = aKeyLength;
-    mKeySequence = 0;
-    ComputeKey(mKeySequence, mKey);
-
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);
+    // reset child frame counters
+    for (Child &child : Get<ChildTable>().Iterate(Child::kInStateAnyExceptInvalid))
+    {
+        child.SetKeySequence(0);
+        child.GetLinkFrameCounters().Reset();
+        child.SetLinkAckFrameCounter(0);
+        child.SetMleFrameCounter(0);
+    }
+#endif
 
 exit:
     return error;
 }
 
-ThreadError KeyManager::ComputeKey(uint32_t aKeySequence, uint8_t *aKey)
+void KeyManager::ComputeKeys(uint32_t aKeySequence, HashKeys &aHashKeys)
 {
     Crypto::HmacSha256 hmac;
-    uint8_t keySequenceBytes[4];
+    uint8_t            keySequenceBytes[sizeof(uint32_t)];
 
-    hmac.Start(mMasterKey, mMasterKeyLength);
+    hmac.Start(mNetworkKey.m8, sizeof(mNetworkKey.m8));
 
-    keySequenceBytes[0] = (aKeySequence >> 24) & 0xff;
-    keySequenceBytes[1] = (aKeySequence >> 16) & 0xff;
-    keySequenceBytes[2] = (aKeySequence >> 8) & 0xff;
-    keySequenceBytes[3] = aKeySequence & 0xff;
-    hmac.Update(keySequenceBytes, sizeof(keySequenceBytes));
-    hmac.Update(kThreadString, sizeof(kThreadString));
+    Encoding::BigEndian::WriteUint32(aKeySequence, keySequenceBytes);
+    hmac.Update(keySequenceBytes);
+    hmac.Update(kThreadString);
 
-    hmac.Finish(aKey);
-
-    return kThreadError_None;
+    hmac.Finish(aHashKeys.mHash);
 }
 
-uint32_t KeyManager::GetCurrentKeySequence(void) const
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+void KeyManager::ComputeTrelKey(uint32_t aKeySequence, Mac::Key &aTrelKey)
 {
-    return mKeySequence;
+    Crypto::HkdfSha256 hkdf;
+    uint8_t            salt[sizeof(uint32_t) + sizeof(kHkdfExtractSaltString)];
+
+    Encoding::BigEndian::WriteUint32(aKeySequence, salt);
+    memcpy(salt + sizeof(uint32_t), kHkdfExtractSaltString, sizeof(kHkdfExtractSaltString));
+
+    hkdf.Extract(salt, sizeof(salt), mNetworkKey.m8, sizeof(NetworkKey));
+    hkdf.Expand(kTrelInfoString, sizeof(kTrelInfoString), aTrelKey.m8, sizeof(Mac::Key));
+}
+#endif
+
+void KeyManager::UpdateKeyMaterial(void)
+{
+    HashKeys cur;
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    HashKeys prev;
+    HashKeys next;
+#endif
+
+    ComputeKeys(mKeySequence, cur);
+    mMleKey = cur.mKeys.mMleKey;
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    ComputeKeys(mKeySequence - 1, prev);
+    ComputeKeys(mKeySequence + 1, next);
+
+    Get<Mac::SubMac>().SetMacKey(Mac::Frame::kKeyIdMode1, (mKeySequence & 0x7f) + 1, prev.mKeys.mMacKey,
+                                 cur.mKeys.mMacKey, next.mKeys.mMacKey);
+#endif
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+    ComputeTrelKey(mKeySequence, mTrelKey);
+#endif
 }
 
 void KeyManager::SetCurrentKeySequence(uint32_t aKeySequence)
 {
-    if (aKeySequence == mKeySequence)
-    {
-        ExitNow();
-    }
+    VerifyOrExit(aKeySequence != mKeySequence, Get<Notifier>().SignalIfFirst(kEventThreadKeySeqCounterChanged));
 
-    // Check if the guard timer has expired if key rotation is requested.
-    if ((aKeySequence == (mKeySequence + 1)) &&
-        (mKeySwitchGuardTime != 0) &&
-        mKeyRotationTimer.IsRunning() &&
-        mKeySwitchGuardEnabled)
+    if ((aKeySequence == (mKeySequence + 1)) && mKeyRotationTimer.IsRunning())
     {
-        uint32_t now = Timer::GetNow();
-        uint32_t guardStartTimestamp = mKeyRotationTimer.Gett0();
-        uint32_t guardEndTimestamp = guardStartTimestamp + Timer::HoursToMsec(mKeySwitchGuardTime);
+        if (mKeySwitchGuardEnabled)
+        {
+            // Check if the guard timer has expired if key rotation is requested.
+            VerifyOrExit(mHoursSinceKeyRotation >= mKeySwitchGuardTime);
+            StartKeyRotationTimer();
+        }
 
-        // Check for timer overflow
-        if (guardEndTimestamp < mKeyRotationTimer.Gett0())
-        {
-            if ((now > guardStartTimestamp) || (now < guardEndTimestamp))
-            {
-                ExitNow();
-            }
-        }
-        else
-        {
-            if ((now > guardStartTimestamp) && (now < guardEndTimestamp))
-            {
-                ExitNow();
-            }
-        }
+        mKeySwitchGuardEnabled = true;
     }
 
     mKeySequence = aKeySequence;
-    ComputeKey(mKeySequence, mKey);
+    UpdateKeyMaterial();
 
-    mMacFrameCounter = 0;
+    mMacFrameCounters.Reset();
     mMleFrameCounter = 0;
 
-    if (mKeyRotationTimer.IsRunning())
-    {
-        mKeySwitchGuardEnabled = true;
-        mKeyRotationTimer.Start(Timer::HoursToMsec(mKeyRotationTime));
-    }
-
-    mNetif.SetStateChangedFlags(OT_NET_KEY_SEQUENCE_COUNTER);
+    Get<Notifier>().Signal(kEventThreadKeySeqCounterChanged);
 
 exit:
     return;
 }
 
-const uint8_t *KeyManager::GetCurrentMacKey(void) const
+const Mle::Key &KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
 {
-    return mKey + 16;
+    HashKeys hashKeys;
+
+    ComputeKeys(aKeySequence, hashKeys);
+    mTemporaryMleKey = hashKeys.mKeys.mMleKey;
+
+    return mTemporaryMleKey;
 }
 
-const uint8_t *KeyManager::GetCurrentMleKey(void) const
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+const Mac::Key &KeyManager::GetTemporaryTrelMacKey(uint32_t aKeySequence)
 {
-    return mKey;
+    ComputeTrelKey(aKeySequence, mTemporaryTrelKey);
+
+    return mTemporaryTrelKey;
+}
+#endif
+
+void KeyManager::SetAllMacFrameCounters(uint32_t aMacFrameCounter)
+{
+    mMacFrameCounters.SetAll(aMacFrameCounter);
+
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+    Get<Mac::SubMac>().SetFrameCounter(aMacFrameCounter);
+#endif
 }
 
-const uint8_t *KeyManager::GetTemporaryMacKey(uint32_t aKeySequence)
+#if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
+void KeyManager::MacFrameCounterUpdated(uint32_t aMacFrameCounter)
 {
-    ComputeKey(aKeySequence, mTemporaryKey);
-    return mTemporaryKey + 16;
-}
+    mMacFrameCounters.Set154(aMacFrameCounter);
 
-const uint8_t *KeyManager::GetTemporaryMleKey(uint32_t aKeySequence)
-{
-    ComputeKey(aKeySequence, mTemporaryKey);
-    return mTemporaryKey;
-}
-
-uint32_t KeyManager::GetMacFrameCounter(void) const
-{
-    return mMacFrameCounter;
-}
-
-void KeyManager::SetMacFrameCounter(uint32_t aMacFrameCounter)
-{
-    mMacFrameCounter = aMacFrameCounter;
-}
-
-void KeyManager::SetStoredMacFrameCounter(uint32_t aStoredMacFrameCounter)
-{
-    mStoredMacFrameCounter = aStoredMacFrameCounter;
-}
-
-void KeyManager::IncrementMacFrameCounter(void)
-{
-    mMacFrameCounter++;
-
-    if (mMacFrameCounter >= mStoredMacFrameCounter)
+    if (mMacFrameCounters.Get154() >= mStoredMacFrameCounter)
     {
-        mNetif.GetMle().Store();
+        IgnoreError(Get<Mle::MleRouter>().Store());
     }
 }
-
-uint32_t KeyManager::GetMleFrameCounter(void) const
+#else
+void KeyManager::MacFrameCounterUpdated(uint32_t)
 {
-    return mMleFrameCounter;
 }
+#endif
 
-void KeyManager::SetMleFrameCounter(uint32_t aMleFrameCounter)
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+void KeyManager::IncrementTrelMacFrameCounter(void)
 {
-    mMleFrameCounter = aMleFrameCounter;
-}
+    mMacFrameCounters.IncrementTrel();
 
-void KeyManager::SetStoredMleFrameCounter(uint32_t aStoredMleFrameCounter)
-{
-    mStoredMleFrameCounter = aStoredMleFrameCounter;
+    if (mMacFrameCounters.GetTrel() >= mStoredMacFrameCounter)
+    {
+        IgnoreError(Get<Mle::MleRouter>().Store());
+    }
 }
+#endif
 
 void KeyManager::IncrementMleFrameCounter(void)
 {
@@ -245,52 +390,57 @@ void KeyManager::IncrementMleFrameCounter(void)
 
     if (mMleFrameCounter >= mStoredMleFrameCounter)
     {
-        mNetif.GetMle().Store();
+        IgnoreError(Get<Mle::MleRouter>().Store());
     }
 }
 
-const uint8_t *KeyManager::GetKek(void) const
+void KeyManager::SetKek(const Kek &aKek)
 {
-    return mKek;
+    mKek             = aKek;
+    mKekFrameCounter = 0;
 }
 
 void KeyManager::SetKek(const uint8_t *aKek)
 {
-    memcpy(mKek, aKek, sizeof(mKek));
+    memcpy(mKek.m8, aKek, sizeof(mKek));
     mKekFrameCounter = 0;
 }
 
-uint32_t KeyManager::GetKekFrameCounter(void) const
+void KeyManager::SetSecurityPolicy(const SecurityPolicy &aSecurityPolicy)
 {
-    return mKekFrameCounter;
+    OT_ASSERT(aSecurityPolicy.mRotationTime >= SecurityPolicy::kMinKeyRotationTime);
+
+    IgnoreError(Get<Notifier>().Update(mSecurityPolicy, aSecurityPolicy, kEventSecurityPolicyChanged));
 }
 
-void KeyManager::IncrementKekFrameCounter(void)
+void KeyManager::StartKeyRotationTimer(void)
 {
-    mKekFrameCounter++;
+    mHoursSinceKeyRotation = 0;
+    mKeyRotationTimer.Start(kOneHourIntervalInMsec);
 }
 
-ThreadError KeyManager::SetKeyRotation(uint32_t aKeyRotation)
+void KeyManager::HandleKeyRotationTimer(Timer &aTimer)
 {
-    ThreadError result = kThreadError_None;
-
-    VerifyOrExit(aKeyRotation >= static_cast<uint32_t>(kMinKeyRotationTime), result = kThreadError_InvalidArgs);
-    VerifyOrExit(aKeyRotation <= static_cast<uint32_t>(kMaxKeyRotationTime), result = kThreadError_InvalidArgs);
-
-    mKeyRotationTime = aKeyRotation;
-
-exit:
-    return result;
-}
-
-void KeyManager::HandleKeyRotationTimer(void *aContext)
-{
-    static_cast<KeyManager *>(aContext)->HandleKeyRotationTimer();
+    aTimer.Get<KeyManager>().HandleKeyRotationTimer();
 }
 
 void KeyManager::HandleKeyRotationTimer(void)
 {
-    SetCurrentKeySequence(mKeySequence + 1);
+    mHoursSinceKeyRotation++;
+
+    // Order of operations below is important. We should restart the timer (from
+    // last fire time for one hour interval) before potentially calling
+    // `SetCurrentKeySequence()`. `SetCurrentKeySequence()` uses the fact that
+    // timer is running to decide to check for the guard time and to reset the
+    // rotation timer (and the `mHoursSinceKeyRotation`) if it updates the key
+    // sequence.
+
+    mKeyRotationTimer.StartAt(mKeyRotationTimer.GetFireTime(), kOneHourIntervalInMsec);
+
+    if (mHoursSinceKeyRotation >= mSecurityPolicy.mRotationTime)
+    {
+        SetCurrentKeySequence(mKeySequence + 1);
+    }
 }
 
-}  // namespace Thread
+} // namespace ot

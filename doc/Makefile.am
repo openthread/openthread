@@ -32,10 +32,21 @@ EXTRA_DIST                                      = \
     $(srcdir)/Doxyfile.in                         \
     $(srcdir)/header.html                         \
     $(srcdir)/images/Open-Thread-Logo-200x42.png  \
-    $(srcdir)/images/openthread_contrib.png       \
     $(srcdir)/images/openthread_logo.png          \
-    draft-spinel-protocol.txt                     \
-    draft-spinel-protocol.html                    \
+    $(srcdir)/images/ot-contrib-arm.png           \
+    $(srcdir)/images/ot-contrib-cascoda.png       \
+    $(srcdir)/images/ot-contrib-google.png        \
+    $(srcdir)/images/ot-contrib-nordic.png        \
+    $(srcdir)/images/ot-contrib-nxp.png           \
+    $(srcdir)/images/ot-contrib-qc.png            \
+    $(srcdir)/images/ot-contrib-qorvo.png         \
+    $(srcdir)/images/ot-contrib-samsung.png       \
+    $(srcdir)/images/ot-contrib-silabs.png        \
+    $(srcdir)/images/ot-contrib-stm.png           \
+    $(srcdir)/images/ot-contrib-synopsys.png      \
+    $(srcdir)/images/ot-contrib-ti.png            \
+    $(srcdir)/images/ot-contrib-zephyr.png        \
+    $(srcdir)/ot_api_doc.h                        \
     $(NULL)
 
 #
@@ -65,6 +76,9 @@ CLEANFILES                                      = \
     $(NULL)
 
 if OPENTHREAD_BUILD_DOCS
+
+openthreaddir = $(includedir)/openthread
+dist_openthread_HEADERS = ot_api_doc.h
 
 all-local: html/index.html
 

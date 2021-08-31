@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -76,7 +76,10 @@ class TestMessageInfo(unittest.TestCase):
         actual_destination_ipv6 = message_info.destination_ipv6
 
         # THEN
-        self.assertEqual(ipaddress.ip_address(bytes(destination_ipv6)), actual_destination_ipv6)
+        self.assertEqual(
+            ipaddress.ip_address(bytes(destination_ipv6)),
+            actual_destination_ipv6,
+        )
 
     def test_should_return_source_eui64_value_when_source_eui64_property_is_called(self):
         # GIVEN
@@ -152,7 +155,7 @@ class TestMacAddress(unittest.TestCase):
         # THEN
         self.assertEqual(bytearray([0x00, 0x00, 0x00, 0xff, 0xfe, 0x00]) + rloc16, iid)
 
-    def test_should_convert_short_MacAddress_to_iid_when_convert_method_is_called(self):
+    def test_should_convert_eui64_MacAddress_to_iid_when_convert_method_is_called(self):
         # GIVEN
         eui64 = any_eui64()
 

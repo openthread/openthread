@@ -34,41 +34,49 @@
 #ifndef DTLS_HPP_
 #define DTLS_HPP_
 
-#include <openthread-types.h>
-#include <common/message.hpp>
-#include <common/timer.hpp>
-#include <crypto/sha256.hpp>
-#include <meshcop/tlvs.hpp>
+#include "openthread-core-config.h"
 
-#include <mbedtls/ssl.h>
-#include <mbedtls/entropy.h>
-#include <mbedtls/ctr_drbg.h>
-#include <mbedtls/error.h>
 #include <mbedtls/certs.h>
+#include <mbedtls/net_sockets.h>
+#include <mbedtls/ssl.h>
 #include <mbedtls/ssl_cookie.h>
 
-namespace Thread {
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+#include <mbedtls/base64.h>
+#include <mbedtls/x509.h>
+#include <mbedtls/x509_crl.h>
+#include <mbedtls/x509_crt.h>
+#include <mbedtls/x509_csr.h>
+#endif
+#endif
 
-class ThreadNetif;
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/random.hpp"
+#include "common/timer.hpp"
+#include "crypto/sha256.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/socket.hpp"
+#include "net/udp6.hpp"
+
+namespace ot {
 
 namespace MeshCoP {
 
-class Dtls
+class Dtls : public InstanceLocator
 {
 public:
-    enum
-    {
-        kPskMaxLength = 32,
-        kApplicationDataMaxLength = 128,
-    };
+    static constexpr uint8_t kPskMaxLength = 32; ///< Maximum PSK length.
 
     /**
      * This constructor initializes the DTLS object.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
+     * @param[in]  aNetif               A reference to the Thread network interface.
+     * @param[in]  aLayerTwoSecurity    Specifies whether to use layer two security or not.
      *
      */
-    Dtls(ThreadNetif &aNetif);
+    explicit Dtls(Instance &aInstance, bool aLayerTwoSecurity);
 
     /**
      * This function pointer is called when a connection is established or torn down.
@@ -90,67 +98,84 @@ public:
     typedef void (*ReceiveHandler)(void *aContext, uint8_t *aBuf, uint16_t aLength);
 
     /**
-     * This function pointer is called when data is ready to transmit for the DTLS session.
+     * This function pointer is called when secure CoAP server want to send encrypted message.
      *
-     * @param[in]  aContext  A pointer to application-specific context.
-     * @param[in]  aBuf      A pointer to the transmit data buffer.
-     * @param[in]  aLength   Number of bytes in the transmit data buffer.
+     * @param[in]  aContext      A pointer to arbitrary context information.
+     * @param[in]  aMessage      A reference to the message to send.
+     * @param[in]  aMessageInfo  A reference to the message info associated with @p aMessage.
      *
      */
-    typedef ThreadError(*SendHandler)(void *aContext, const uint8_t *aBuf, uint16_t aLength);
+    typedef Error (*TransportCallback)(void *aContext, ot::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
     /**
-     * This method starts the DTLS service.
+     * This method opens the DTLS socket.
      *
-     * @param[in]  aClient            TRUE if operating as a client, FALSE if operating as a server.
-     * @param[in]  aConnectedHandler  A pointer to the connected handler.
-     * @param[in]  aReceiveHandler    A pointer to the receive handler.
-     * @param[in]  aSendHandler       A pointer to the send handler.
-     * @param[in]  aContext           A pointer to application-specific context.
+     * @param[in]  aReceiveHandler      A pointer to a function that is called to receive DTLS payload.
+     * @param[in]  aConnectedHandler    A pointer to a function that is called when connected or disconnected.
+     * @param[in]  aContext             A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None      Successfully started the DTLS service.
+     * @retval kErrorNone     Successfully opened the socket.
+     * @retval kErrorAlready  The DTLS is already open.
      *
      */
-    ThreadError Start(bool aClient, ConnectedHandler aConnectedHandler, ReceiveHandler aReceiveHandler,
-                      SendHandler aSendHandler, void *aContext);
+    Error Open(ReceiveHandler aReceiveHandler, ConnectedHandler aConnectedHandler, void *aContext);
 
     /**
-     * This method stops the DTLS service.
+     * This method binds this DTLS to a UDP port.
      *
-     * @retval kThreadError_None  Successfully stopped the DTLS service.
+     * @param[in]  aPort              The port to bind.
+     *
+     * @retval kErrorNone           Successfully bound the DTLS socket.
+     * @retval kErrorInvalidState   The DTLS socket is not open.
+     * @retval kErrorAlready        Already bound.
      *
      */
-    ThreadError Stop(void);
+    Error Bind(uint16_t aPort);
 
     /**
-     * This method indicates whether or not the DTLS service is active.
+     * This method gets the UDP port of this session.
      *
-     * @returns TRUE if the DTLS service is active, FALSE otherwise.
+     * @returns  UDP port number.
      *
      */
-    bool IsStarted(void);
+    uint16_t GetUdpPort(void) const;
 
     /**
-     * This method sets the PSK.
+     * This method binds this DTLS with a transport callback.
      *
-     * @param[in]  aPSK  A pointer to the PSK.
+     * @param[in]  aCallback  A pointer to a function for sending messages.
+     * @param[in]  aContext   A pointer to arbitrary context information.
      *
-     * @retval kThreadError_None         Successfully set the PSK.
-     * @retval kThreadError_InvalidArgs  The PSK is invalid.
+     * @retval kErrorNone           Successfully bound the DTLS socket.
+     * @retval kErrorInvalidState   The DTLS socket is not open.
+     * @retval kErrorAlready        Already bound.
      *
      */
-    ThreadError SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+    Error Bind(TransportCallback aCallback, void *aContext);
 
     /**
-     * This method sets the Client ID used for generating the Hello Cookie.
+     * This method establishes a DTLS session.
      *
-     * @param[in]  aClientId  A pointer to the Client ID.
-     * @param[in]  aLength    Number of bytes in the Client ID.
+     * For CoAP Secure API do first:
+     * Set X509 Pk and Cert for use DTLS mode ECDHE ECDSA with AES 128 CCM 8 or
+     * set PreShared Key for use DTLS mode PSK with AES 128 CCM 8.
      *
-     * @retval kThreadError_None  Successfully set the Client ID.
+     * @param[in]  aSockAddr               A reference to the remote sockaddr.
+     *
+     * @retval kErrorNone          Successfully started DTLS handshake.
+     * @retval kErrorInvalidState  The DTLS socket is not open.
      *
      */
-    ThreadError SetClientId(const uint8_t *aClientId, uint8_t aLength);
+    Error Connect(const Ip6::SockAddr &aSockAddr);
+
+    /**
+     * This method indicates whether or not the DTLS session is active.
+     *
+     * @retval TRUE  If DTLS session is active.
+     * @retval FALSE If DTLS session is not active.
+     *
+     */
+    bool IsConnectionActive(void) const { return mState >= kStateConnecting; }
 
     /**
      * This method indicates whether or not the DTLS session is connected.
@@ -159,7 +184,123 @@ public:
      * @retval FALSE  The DTLS session is not connected.
      *
      */
-    bool IsConnected(void);
+    bool IsConnected(void) const { return mState == kStateConnected; }
+
+    /**
+     * This method disconnects the DTLS session.
+     *
+     */
+    void Disconnect(void);
+
+    /**
+     * This method closes the DTLS socket.
+     *
+     */
+    void Close(void);
+
+    /**
+     * This method sets the PSK.
+     *
+     * @param[in]  aPsk  A pointer to the PSK.
+     *
+     * @retval kErrorNone          Successfully set the PSK.
+     * @retval kErrorInvalidArgs   The PSK is invalid.
+     *
+     */
+    Error SetPsk(const uint8_t *aPsk, uint8_t aPskLength);
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    /**
+     * This method sets the Pre-Shared Key (PSK) for DTLS sessions-
+     * identified by a PSK.
+     *
+     * DTLS mode "PSK with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[in]  aPsk          A pointer to the PSK.
+     * @param[in]  aPskLength    The PSK char length.
+     * @param[in]  aPskIdentity  The Identity Name for the PSK.
+     * @param[in]  aPskIdLength  The PSK Identity Length.
+     *
+     * @retval kErrorNone  Successfully set the PSK.
+     *
+     */
+    void SetPreSharedKey(const uint8_t *aPsk, uint16_t aPskLength, const uint8_t *aPskIdentity, uint16_t aPskIdLength);
+
+#endif
+
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    /**
+     * This method sets a reference to the own x509 certificate with corresponding private key.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[in]  aX509Certificate   A pointer to the PEM formatted X509 certificate.
+     * @param[in]  aX509CertLength    The length of certificate.
+     * @param[in]  aPrivateKey        A pointer to the PEM formatted private key.
+     * @param[in]  aPrivateKeyLength  The length of the private key.
+     *
+     */
+    void SetCertificate(const uint8_t *aX509Certificate,
+                        uint32_t       aX509CertLength,
+                        const uint8_t *aPrivateKey,
+                        uint32_t       aPrivateKeyLength);
+
+    /**
+     * This method sets the trusted top level CAs. It is needed for validate the
+     * certificate of the peer.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[in]  aX509CaCertificateChain  A pointer to the PEM formatted X509 CA chain.
+     * @param[in]  aX509CaCertChainLength   The length of chain.
+     *
+     */
+    void SetCaCertificateChain(const uint8_t *aX509CaCertificateChain, uint32_t aX509CaCertChainLength);
+#endif // MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+
+#if defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+    /**
+     * This method returns the peer x509 certificate base64 encoded.
+     *
+     * DTLS mode "ECDHE ECDSA with AES 128 CCM 8" for Application CoAPS.
+     *
+     * @param[out]  aPeerCert        A pointer to the base64 encoded certificate buffer.
+     * @param[out]  aCertLength      The length of the base64 encoded peer certificate.
+     * @param[in]   aCertBufferSize  The buffer size of aPeerCert.
+     *
+     * @retval kErrorInvalidState   Not connected yet.
+     * @retval kErrorNone           Successfully get the peer certificate.
+     * @retval kErrorNoBufs         Can't allocate memory for certificate.
+     *
+     */
+    Error GetPeerCertificateBase64(unsigned char *aPeerCert, size_t *aCertLength, size_t aCertBufferSize);
+#endif // defined(MBEDTLS_BASE64_C) && defined(MBEDTLS_SSL_KEEP_PEER_CERTIFICATE)
+
+    /**
+     * This method set the authentication mode for a dtls connection.
+     *
+     * Disable or enable the verification of peer certificate.
+     * Must called before start.
+     *
+     * @param[in]  aVerifyPeerCertificate  true, if the peer certificate should verify.
+     *
+     */
+    void SetSslAuthMode(bool aVerifyPeerCertificate) { mVerifyPeerCertificate = aVerifyPeerCertificate; }
+#endif // OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+
+#ifdef MBEDTLS_SSL_SRV_C
+    /**
+     * This method sets the Client ID used for generating the Hello Cookie.
+     *
+     * @param[in]  aClientId  A pointer to the Client ID.
+     * @param[in]  aLength    Number of bytes in the Client ID.
+     *
+     * @retval kErrorNone  Successfully set the Client ID.
+     *
+     */
+    Error SetClientId(const uint8_t *aClientId, uint8_t aLength);
+#endif
 
     /**
      * This method sends data within the DTLS session.
@@ -167,87 +308,172 @@ public:
      * @param[in]  aMessage  A message to send via DTLS.
      * @param[in]  aLength   Number of bytes in the data buffer.
      *
-     * @retval kThreadError_None    Successfully sent the data via the DTLS session.
-     * @retval kThreadError_NoBufs  A message is too long.
+     * @retval kErrorNone     Successfully sent the data via the DTLS session.
+     * @retval kErrorNoBufs   A message is too long.
      *
      */
-    ThreadError Send(Message &aMessage, uint16_t aLength);
+    Error Send(Message &aMessage, uint16_t aLength);
 
     /**
      * This method provides a received DTLS message to the DTLS object.
      *
      * @param[in]  aMessage  A reference to the message.
-     * @param[in]  aOffset   The offset within @p aMessage where the DTLS message starts.
-     * @param[in]  aLength   The size of the DTLS message (bytes).
-     *
-     * @retval kThreadError_None  Successfully processed the received DTLS message.
      *
      */
-    ThreadError Receive(Message &aMessage, uint16_t aOffset, uint16_t aLength);
+    void Receive(Message &aMessage);
 
     /**
-     * The provisioning URL is placed here so that both the Commissioner and Joiner can share the same object.
+     * This method sets the default message sub-type that will be used for all messages without defined
+     * sub-type.
+     *
+     * @param[in]  aMessageSubType  The default message sub-type.
      *
      */
-    ProvisioningUrlTlv mProvisioningUrl;
+    void SetDefaultMessageSubType(Message::SubType aMessageSubType) { mMessageDefaultSubType = aMessageSubType; }
+
+    /**
+     * This method returns the DTLS session's peer address.
+     *
+     * @return DTLS session's message info.
+     *
+     */
+    const Ip6::MessageInfo &GetMessageInfo(void) const { return mMessageInfo; }
+
+    void HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
 
 private:
-    static ThreadError MapError(int rval);
+    enum State : uint8_t
+    {
+        kStateClosed,       // UDP socket is closed.
+        kStateOpen,         // UDP socket is open.
+        kStateInitializing, // The DTLS service is initializing.
+        kStateConnecting,   // The DTLS service is establishing a connection.
+        kStateConnected,    // The DTLS service has a connection established.
+        kStateCloseNotify,  // The DTLS service is closing a connection.
+    };
 
-    static void HandleMbedtlsDebug(void *ctx, int level, const char *file, int line, const char *str);
+    static constexpr uint32_t kGuardTimeNewConnectionMilli = 2000;
+
+#if !OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+    static constexpr uint16_t kApplicationDataMaxLength = 1152;
+#else
+    static constexpr uint16_t kApplicationDataMaxLength = OPENTHREAD_CONFIG_DTLS_APPLICATION_DATA_MAX_LENGTH;
+#endif
+
+    void  FreeMbedtls(void);
+    Error Setup(bool aClient);
+
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+    /**
+     * Set keys and/or certificates for dtls session dependent of used cipher suite.
+     *
+     * @retval mbedtls error, 0 if successfully.
+     *
+     */
+    int SetApplicationCoapSecureKeys(void);
+#endif
+
+    static void HandleMbedtlsDebug(void *aContext, int aLevel, const char *aFile, int aLine, const char *aStr);
+    void        HandleMbedtlsDebug(int aLevel, const char *aFile, int aLine, const char *aStr);
 
     static int HandleMbedtlsGetTimer(void *aContext);
-    int HandleMbedtlsGetTimer(void);
+    int        HandleMbedtlsGetTimer(void);
 
     static void HandleMbedtlsSetTimer(void *aContext, uint32_t aIntermediate, uint32_t aFinish);
-    void HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
+    void        HandleMbedtlsSetTimer(uint32_t aIntermediate, uint32_t aFinish);
 
     static int HandleMbedtlsReceive(void *aContext, unsigned char *aBuf, size_t aLength);
-    int HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
+    int        HandleMbedtlsReceive(unsigned char *aBuf, size_t aLength);
 
     static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
-    int HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
+    int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
 
-    static int HandleMbedtlsExportKeys(void *aContext, const unsigned char *aMasterSecret,
+    static int HandleMbedtlsExportKeys(void *               aContext,
+                                       const unsigned char *aMasterSecret,
                                        const unsigned char *aKeyBlock,
-                                       size_t aMacLength, size_t aKeyLength, size_t aIvLength);
-    int HandleMbedtlsExportKeys(const unsigned char *aMasterSecret, const unsigned char *aKeyBlock,
-                                size_t aMacLength, size_t aKeyLength, size_t aIvLength);
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
+    int        HandleMbedtlsExportKeys(const unsigned char *aMasterSecret,
+                                       const unsigned char *aKeyBlock,
+                                       size_t               aMacLength,
+                                       size_t               aKeyLength,
+                                       size_t               aIvLength);
 
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
 
-    void Close(void);
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+
+    void  HandleDtlsReceive(const uint8_t *aBuf, uint16_t aLength);
+    Error HandleDtlsSend(const uint8_t *aBuf, uint16_t aLength, Message::SubType aMessageSubType);
+
     void Process(void);
 
+    State mState;
+
+    int     mCipherSuites[2];
     uint8_t mPsk[kPskMaxLength];
     uint8_t mPskLength;
 
-    mbedtls_entropy_context mEntropy;
-    mbedtls_ctr_drbg_context mCtrDrbg;
-    mbedtls_ssl_context mSsl;
-    mbedtls_ssl_config mConf;
-    mbedtls_ssl_cookie_ctx mCookieCtx;
-    bool mStarted;
+    static const mbedtls_ecp_group_id sCurves[];
+#if defined(MBEDTLS_KEY_EXCHANGE__WITH_CERT__ENABLED) || defined(MBEDTLS_KEY_EXCHANGE_WITH_CERT_ENABLED)
+    static const int sHashes[];
+#endif
 
-    Timer mTimer;
-    uint32_t mTimerIntermediate;
-    bool mTimerSet;
+#if OPENTHREAD_CONFIG_COAP_SECURE_API_ENABLE
+#ifdef MBEDTLS_KEY_EXCHANGE_ECDHE_ECDSA_ENABLED
+    const uint8_t *    mCaChainSrc;
+    uint32_t           mCaChainLength;
+    const uint8_t *    mOwnCertSrc;
+    uint32_t           mOwnCertLength;
+    const uint8_t *    mPrivateKeySrc;
+    uint32_t           mPrivateKeyLength;
+    mbedtls_x509_crt   mCaChain;
+    mbedtls_x509_crt   mOwnCert;
+    mbedtls_pk_context mPrivateKey;
+#endif
+#ifdef MBEDTLS_KEY_EXCHANGE_PSK_ENABLED
+    const uint8_t *mPreSharedKey;
+    const uint8_t *mPreSharedKeyIdentity;
+    uint16_t       mPreSharedKeyLength;
+    uint16_t       mPreSharedKeyIdLength;
+#endif
+#endif
+
+    bool mVerifyPeerCertificate;
+
+    mbedtls_ssl_context mSsl;
+    mbedtls_ssl_config  mConf;
+
+#ifdef MBEDTLS_SSL_COOKIE_C
+    mbedtls_ssl_cookie_ctx mCookieCtx;
+#endif
+
+    TimerMilliContext mTimer;
+
+    TimeMilli mTimerIntermediate;
+    bool      mTimerSet : 1;
+
+    bool mLayerTwoSecurity : 1;
 
     Message *mReceiveMessage;
-    uint16_t mReceiveOffset;
-    uint16_t mReceiveLength;
 
     ConnectedHandler mConnectedHandler;
-    ReceiveHandler mReceiveHandler;
-    SendHandler mSendHandler;
-    void *mContext;
-    bool mClient;
+    ReceiveHandler   mReceiveHandler;
+    void *           mContext;
 
-    ThreadNetif &mNetif;
+    Ip6::MessageInfo mMessageInfo;
+    Ip6::Udp::Socket mSocket;
+
+    TransportCallback mTransportCallback;
+    void *            mTransportContext;
+
+    Message::SubType mMessageSubType;
+    Message::SubType mMessageDefaultSubType;
 };
 
-}  // namespace MeshCoP
-}  // namespace Thread
+} // namespace MeshCoP
+} // namespace ot
 
-#endif  // DTLS_HPP_
+#endif // DTLS_HPP_

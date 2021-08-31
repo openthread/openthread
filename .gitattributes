@@ -36,10 +36,3 @@ configure.ac      eol=lf
 Makefile.am       eol=lf
 Makefile.in       eol=lf
 Makefile          eol=lf
-
-# Files normalized to always keep Windows line endings
-*.vcxproj         eol=crlf
-*.vcxproj.filters eol=crlf
-*.sln             eol=crlf
-*.rc     text     eol=crlf
-*.inf    text     eol=crlf

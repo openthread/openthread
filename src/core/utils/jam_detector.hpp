@@ -34,26 +34,28 @@
 #ifndef JAM_DETECTOR_HPP_
 #define JAM_DETECTOR_HPP_
 
-#ifdef OPENTHREAD_CONFIG_FILE
-#include OPENTHREAD_CONFIG_FILE
-#else
-#include <openthread-config.h>
-#endif
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
 
 #include <stdint.h>
-#include <common/timer.hpp>
 
+#include "common/locator.hpp"
+#include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
+#include "common/timer.hpp"
 
-namespace Thread {
+namespace ot {
 
 class ThreadNetif;
 
 namespace Utils {
 
-class JamDetector
+class JamDetector : public InstanceLocator, private NonCopyable
 {
-public:
+    friend class ot::Notifier;
 
+public:
     /**
      * This function pointer is called if jam state changes (assuming jamming detection is enabled).
      *
@@ -66,10 +68,10 @@ public:
     /**
      * This constructor initializes the object.
      *
-     * @param[in]  aThreadNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit JamDetector(ThreadNetif &aThreadNetif);
+    explicit JamDetector(Instance &aInstance);
 
     /**
      * Start the jamming detection.
@@ -77,20 +79,20 @@ public:
      * @param[in]  aHandler             A pointer to a function called when jamming is detected.
      * @param[in]  aContext             A pointer to application-specific context.
      *
-     * @retval kThreadErrorNone         Successfully started the jamming detection.
-     * @retval kThreadErrorAlready      Jam detection has been started before.
+     * @retval kErrorNone            Successfully started the jamming detection.
+     * @retval kErrorAlready         Jam detection has been started before.
      *
      */
-    ThreadError Start(Handler aHandler, void *aContext);
+    Error Start(Handler aHandler, void *aContext);
 
     /**
      * Stop the jamming detection.
      *
-     * @retval kThreadErrorNone         Successfully stopped the jamming detection.
-     * @retval kThreadErrorAlready      Jam detection is already stopped.
+     * @retval kErrorNone            Successfully stopped the jamming detection.
+     * @retval kErrorAlready         Jam detection is already stopped.
      *
      */
-    ThreadError Stop(void);
+    Error Stop(void);
 
     /**
      * Get the Jam Detection Status
@@ -111,10 +113,8 @@ public:
      *
      * @param[in]  aRssiThreshold  The RSSI threshold.
      *
-     * @retval kThreadErrorNone    Successfully set the threshold.
-     *
      */
-    ThreadError SetRssiThreshold(int8_t aThreshold);
+    void SetRssiThreshold(int8_t aThreshold);
 
     /**
      * Get the Jam Detection RSSI Threshold (in dBm).
@@ -126,13 +126,13 @@ public:
     /**
      * Set the Jam Detection Detection Window (in seconds).
      *
-     * @param[in]  aWindow              The Jam Detection window (valid range is 1 to 63)
+     * @param[in]  aWindow            The Jam Detection window (valid range is 1 to 63)
      *
-     * @retval kThreadErrorNone         Successfully set the window.
-     * @retval kThreadErrorInvalidArgs  The given input parameter not within valid range (1-63)
+     * @retval kErrorNone          Successfully set the window.
+     * @retval kErrorInvalidArgs   The given input parameter not within valid range (1-63)
      *
      */
-    ThreadError SetWindow(uint8_t aWindow);
+    Error SetWindow(uint8_t aWindow);
 
     /**
      * Get the Jam Detection Detection Window (in seconds).
@@ -150,11 +150,11 @@ public:
      * @param[in]  aBusyPeriod          The Jam Detection busy period (should be non-zero and
                                         less than or equal to Jam Detection Window)
      *
-     * @retval kThreadErrorNone         Successfully set the window.
-     * @retval kThreadErrorInvalidArgs  The given input is not within the valid range.
+     * @retval kErrorNone           Successfully set the window.
+     * @retval kErrorInvalidArgs    The given input is not within the valid range.
      *
      */
-    ThreadError SetBusyPeriod(uint8_t aBusyPeriod);
+    Error SetBusyPeriod(uint8_t aBusyPeriod);
 
     /**
      * Get the Jam Detection Busy Period (in seconds)
@@ -178,37 +178,34 @@ public:
     uint64_t GetHistoryBitmap(void) const { return mHistoryBitmap; }
 
 private:
-    static void HandleTimer(void *aContext);
-    void HandleTimer(void);
-    void UpdateHistory(bool aThresholdExceeded);
-    void UpdateJamState(void);
+    static constexpr uint8_t kMaxWindow            = 63; // Max window size
+    static constexpr int8_t  kDefaultRssiThreshold = 0;
 
-private:
-    enum
-    {
-        kMaxWindow              = 63,   // Max window size
-        kDefaultRssiThreshold   = 0,
+    static constexpr uint16_t kMaxSampleInterval = 256;  // in ms
+    static constexpr uint16_t kMinSampleInterval = 2;    // in ms
+    static constexpr uint32_t kMaxRandomDelay    = 4;    // in ms
+    static constexpr uint32_t kOneSecondInterval = 1000; // in ms
 
-        kMaxSampleInterval      = 256,  // in ms
-        kMinSampleInterval      = 2,    // in ms
-        kMaxRandomDelay         = 4,    // in ms
-        kOneSecondInterval      = 1000  // in ms
+    void        CheckState(void);
+    void        SetJamState(bool aNewState);
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+    void        UpdateHistory(bool aDidExceedThreshold);
+    void        UpdateJamState(void);
+    void        HandleNotifierEvents(Events aEvents);
 
-    };
-
-    ThreadNetif &mNetif;
-    Handler      mHandler;                  // Handler/callback to inform about jamming state
-    void        *mContext;                  // Context for handler/callback
-    int8_t       mRssiThreshold;            // RSSI threshold for jam detection
-    Timer        mTimer;                    // RSSI sample timer
-    uint64_t     mHistoryBitmap;            // History bitmap, each bit correspond to 1 sec interval
-    uint32_t     mCurSecondStartTime;       // Start time for current 1 sec interval
-    uint16_t     mSampleInterval;           // Current sample interval
-    uint8_t      mWindow : 6;               // Window (in sec) to monitor jamming
-    uint8_t      mBusyPeriod : 6;           // BusyPeriod (in sec) with mWindow to alert jamming
-    bool         mEnabled : 1;              // If jam detection is enabled
-    bool         mAlwaysAboveThreshold : 1; // State for current 1 sec interval
-    bool         mJamState : 1;             // Current jam state
+    Handler    mHandler;                  // Handler/callback to inform about jamming state
+    void *     mContext;                  // Context for handler/callback
+    TimerMilli mTimer;                    // RSSI sample timer
+    uint64_t   mHistoryBitmap;            // History bitmap, each bit correspond to 1 sec interval
+    TimeMilli  mCurSecondStartTime;       // Start time for current 1 sec interval
+    uint16_t   mSampleInterval;           // Current sample interval
+    uint8_t    mWindow : 6;               // Window (in sec) to monitor jamming
+    uint8_t    mBusyPeriod : 6;           // BusyPeriod (in sec) with mWindow to alert jamming
+    bool       mEnabled : 1;              // If jam detection is enabled
+    bool       mAlwaysAboveThreshold : 1; // State for current 1 sec interval
+    bool       mJamState : 1;             // Current jam state
+    int8_t     mRssiThreshold;            // RSSI threshold for jam detection
 };
 
 /**
@@ -216,7 +213,9 @@ private:
  *
  */
 
-}  // namespace Utils
-}  // namespace Thread
+} // namespace Utils
+} // namespace ot
 
-#endif  // JAM_DETECTOR_HPP_
+#endif // OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
+
+#endif // JAM_DETECTOR_HPP_

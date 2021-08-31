@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -316,7 +316,10 @@ class TestTimeSinceLastTransaction(unittest.TestCase):
         time_since_last_transaction = network_layer.TimeSinceLastTransaction(seconds)
 
         # THEN
-        self.assertEqual(time_since_last_transaction, network_layer.TimeSinceLastTransaction(seconds))
+        self.assertEqual(
+            time_since_last_transaction,
+            network_layer.TimeSinceLastTransaction(seconds),
+        )
 
 
 class TestTimeSinceLastTransactionFactory(unittest.TestCase):
@@ -333,7 +336,10 @@ class TestTimeSinceLastTransactionFactory(unittest.TestCase):
         time_since_last_transaction = factory.parse(io.BytesIO(data), common.MessageInfo())
 
         # THEN
-        self.assertTrue(isinstance(time_since_last_transaction, network_layer.TimeSinceLastTransaction))
+        self.assertTrue(isinstance(
+            time_since_last_transaction,
+            network_layer.TimeSinceLastTransaction,
+        ))
         self.assertEqual(seconds, time_since_last_transaction.seconds)
 
 
@@ -480,25 +486,6 @@ class TestThreadNetworkDataFactory(unittest.TestCase):
         self.assertTrue(isinstance(thread_network_data, network_layer.ThreadNetworkData))
         self.assertEqual(tlvs, thread_network_data.tlvs)
 
-
-class TestNetworkLayerTlvsFactory(unittest.TestCase):
-
-    def test_should_create_tlv_when_parse_method_is_called(self):
-        # GIVEN
-        class DummyNetworkDataTlvsFactory:
-
-            def parse(self, data, message_info):
-                return bytearray(data.read())
-
-        tlv = any_tlv_data()
-
-        factory = network_layer.NetworkLayerTlvsFactory({tlv[0]: DummyNetworkDataTlvsFactory()})
-
-        # WHEN
-        actual_tlvs = factory.parse(io.BytesIO(tlv), None)
-
-        # THEN
-        self.assertEqual(tlv[2:], actual_tlvs[0])
 
 if __name__ == "__main__":
     unittest.main()

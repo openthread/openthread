@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,111 +27,230 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import node
+import command
+import config
+import thread_cert
+from pktverify.consts import MLE_CHILD_ID_REQUEST, MLE_CHILD_ID_RESPONSE, ADDR_QRY_URI, ADDR_NTF_URI, NL_ML_EID_TLV, NL_RLOC16_TLV, NL_TARGET_EID_TLV, COAP_CODE_POST
+from pktverify.packet_verifier import PacketVerifier
 
 LEADER = 1
-ROUTER1 = 2
+DUT_ROUTER1 = 2
 SED1 = 3
-ED2 = 4
-ED3 = 5
-ED4 = 6
-ED5 = 7
+MED1 = 4
+MED2 = 5
+MED3 = 6
+MED4 = 7
 
-class Cert_5_3_4_AddressMapCache(unittest.TestCase):
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1,8):
-            self.nodes[i] = node.Node(i)
+MTDS = [SED1, MED1, MED2, MED3, MED4]
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED2].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED3].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED4].get_addr64())
-        self.nodes[LEADER].add_whitelist(self.nodes[ED5].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to validate that the DUT is able to
+# maintain an EID-to-RLOC Map Cache for a Sleepy End Device child attached to
+# it. Each EID-to-RLOC Set MUST support at least four non-link-local unicast
+# IPv6 addresses.
+#
+# Test Topology:
+# -------------
+# Router_1 - Leader
+#    |      /      \
+#   SED   MED_1 .. MED_4
+#
+# DUT Types:
+# ----------
+#  Router
 
-        self.nodes[ROUTER1].set_panid(0xface)
-        self.nodes[ROUTER1].set_mode('rsdn')
-        self.nodes[ROUTER1].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER1].add_whitelist(self.nodes[SED1].get_addr64())
-        self.nodes[ROUTER1].enable_whitelist()
-        self.nodes[ROUTER1].set_router_selection_jitter(1)
 
-        self.nodes[SED1].set_panid(0xface)
-        self.nodes[SED1].set_mode('rsn')
-        self.nodes[SED1].add_whitelist(self.nodes[ROUTER1].get_addr64())
-        self.nodes[SED1].enable_whitelist()
+class Cert_5_3_4_AddressMapCache(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
 
-        self.nodes[ED2].set_panid(0xface)
-        self.nodes[ED2].set_mode('rsn')
-        self.nodes[ED2].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED2].enable_whitelist()
-
-        self.nodes[ED3].set_panid(0xface)
-        self.nodes[ED3].set_mode('rsn')
-        self.nodes[ED3].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED3].enable_whitelist()
-
-        self.nodes[ED4].set_panid(0xface)
-        self.nodes[ED4].set_mode('rsn')
-        self.nodes[ED4].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED4].enable_whitelist()
-
-        self.nodes[ED5].set_panid(0xface)
-        self.nodes[ED5].set_mode('rsn')
-        self.nodes[ED5].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ED5].enable_whitelist()
-
-    def tearDown(self):
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'LEADER',
+            'mode': 'rdn',
+            'allowlist': [DUT_ROUTER1, MED1, MED2, MED3, MED4]
+        },
+        DUT_ROUTER1: {
+            'name': 'ROUTER',
+            'mode': 'rdn',
+            'allowlist': [LEADER, SED1]
+        },
+        SED1: {
+            'name': 'SED',
+            'is_mtd': True,
+            'mode': '-',
+            'timeout': 5,
+            'allowlist': [DUT_ROUTER1]
+        },
+        MED1: {
+            'name': 'MED_1',
+            'is_mtd': True,
+            'mode': 'rn',
+            'allowlist': [LEADER]
+        },
+        MED2: {
+            'name': 'MED_2',
+            'is_mtd': True,
+            'mode': 'rn',
+            'allowlist': [LEADER]
+        },
+        MED3: {
+            'name': 'MED_3',
+            'is_mtd': True,
+            'mode': 'rn',
+            'allowlist': [LEADER]
+        },
+        MED4: {
+            'name': 'MED_4',
+            'is_mtd': True,
+            'mode': 'rn',
+            'allowlist': [LEADER]
+        },
+    }
 
     def test(self):
+        # 1
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
-        self.nodes[ROUTER1].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ROUTER1].get_state(), 'router')
+        self.nodes[DUT_ROUTER1].start()
+        self.simulator.go(5)
+        self.assertEqual(self.nodes[DUT_ROUTER1].get_state(), 'router')
 
-        self.nodes[SED1].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[SED1].get_state(), 'child')
+        for i in MTDS:
+            self.nodes[i].start()
+        self.simulator.go(5)
 
-        self.nodes[ED2].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED2].get_state(), 'child')
+        for i in MTDS:
+            self.assertEqual(self.nodes[i].get_state(), 'child')
 
-        self.nodes[ED3].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED3].get_state(), 'child')
+        self.collect_ipaddrs()
+        self.collect_rlocs()
+        self.collect_rloc16s()
 
-        self.nodes[ED4].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED4].get_state(), 'child')
+        # 2
+        for MED in [MED1, MED2, MED3, MED4]:
+            ed_mleid = self.nodes[MED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+            self.assertTrue(self.nodes[SED1].ping(ed_mleid))
+            self.simulator.go(5)
 
-        self.nodes[ED5].start()
-        time.sleep(5)
-        self.assertEqual(self.nodes[ED5].get_state(), 'child')
+        # 3 & 4
+        for MED in [MED1, MED2, MED3, MED4]:
+            ed_mleid = self.nodes[MED].get_ip6_address(config.ADDRESS_TYPE.ML_EID)
+            self.assertTrue(self.nodes[SED1].ping(ed_mleid))
+            self.simulator.go(5)
 
-        for i in range(4, 8):
-            addrs = self.nodes[i].get_addrs()
-            for addr in addrs:
-                if addr[0:4] != 'fe80':
-                    self.assertTrue(self.nodes[SED1].ping(addr))
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        for i in range(4, 8):
-            addrs = self.nodes[i].get_addrs()
-            for addr in addrs:
-                if addr[0:4] != 'fe80':
-                    self.assertTrue(self.nodes[SED1].ping(addr))
+        LEADER = pv.vars['LEADER']
+        LEADER_RLOC16 = pv.vars['LEADER_RLOC16']
+        ROUTER = pv.vars['ROUTER']
+        ROUTER_RLOC = pv.vars['ROUTER_RLOC']
+        SED = pv.vars['SED']
+        SED_RLOC = pv.vars['SED_RLOC']
+        SED_RLOC16 = pv.vars['SED_RLOC16']
+        SED_MLEID = pv.vars['SED_MLEID']
+        MM = pv.vars['MM_PORT']
+
+        # Step 1: Build the topology as described
+        pv.verify_attached('ROUTER')
+        for i in range(1, 5):
+            with pkts.save_index():
+                pkts.filter_wpan_src64(pv.vars['MED_%d' %i]).\
+                  filter_wpan_dst64(LEADER).\
+                  filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+                  must_next()
+                pkts.filter_wpan_src64(LEADER).\
+                    filter_wpan_dst64(pv.vars['MED_%d' %i]).\
+                    filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+                    must_next()
+        pkts.filter_wpan_src64(pv.vars['SED']).\
+          filter_wpan_dst64(ROUTER).\
+          filter_mle_cmd(MLE_CHILD_ID_REQUEST).\
+          must_next()
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_wpan_dst64(pv.vars['SED']).\
+            filter_mle_cmd(MLE_CHILD_ID_RESPONSE).\
+            must_next()
+
+        # Step 2: SED sends an ICMPv6 Echo Request to MED_1, MED_2, MED_3, MED_4 ML-EID
+        #         The DUT MUST generate an Address Query Request on SED’s behalf
+        #         to find each node’s RLOC.
+        #         The Address Query Request MUST be sent to the Realm-Local
+        #         All-Routers address (FF03::2)
+        #             CoAP URI-Path
+        #                 - NON POST coap://<FF03::2>
+        #             CoAP Payload
+        #                 - Target EID TLV
+
+        # Step 3: Leader sends Address Notification Messages with RLOC of MED_1, MED_2, MED_3, MED_4
+        for i in range(1, 5):
+            _pkt = pkts.filter_ping_request().\
+                filter_wpan_src64(SED).\
+                filter_ipv6_dst(pv.vars['MED_%d_MLEID' %i]).\
+                must_next()
+            pkts.filter_wpan_src64(ROUTER).\
+                filter_RLARMA().\
+                filter_coap_request(ADDR_QRY_URI, port=MM).\
+                filter(lambda p: p.thread_address.tlv.target_eid == pv.vars['MED_%d_MLEID' %i]).\
+                must_next()
+            pkts.filter_wpan_src64(LEADER).\
+                filter_ipv6_dst(ROUTER_RLOC).\
+                filter_coap_request(ADDR_NTF_URI, port=MM).\
+                filter(lambda p: {
+                                  NL_ML_EID_TLV,
+                                  NL_RLOC16_TLV,
+                                  NL_TARGET_EID_TLV
+                                  } <= set(p.coap.tlv.type) and\
+                       p.thread_address.tlv.target_eid == pv.vars['MED_%d_MLEID' %i] and\
+                       p.thread_address.tlv.rloc16 == LEADER_RLOC16 and\
+                       p.coap.code == COAP_CODE_POST
+                       ).\
+               must_next()
+            pkts.filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).\
+                filter_wpan_src64(ROUTER).\
+                filter_ipv6_dst(pv.vars['MED_%d_MLEID' %i]).\
+                must_next()
+            pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+                filter_wpan_src64(pv.vars['MED_%d' %i]).\
+                filter_ipv6_dst(SED_MLEID).\
+                must_next()
+            pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+                filter_wpan_src64(ROUTER).\
+                filter_wpan_dst16(SED_RLOC16).\
+                must_next()
+
+        # Step 4: SED sends another ICMPv6 Echo Request to MED_1, MED_2, MED_3, MED_4 ML-EID
+        #         The DUT MUST not send an Address Query during this step; If an address query
+        #         message is sent, the test fails
+        #         An ICMPv6 Echo Reply MUST be sent for each ICMPv6 Echo Request from SED
+        for i in range(1, 5):
+            _pkt = pkts.filter_ping_request().\
+                filter_wpan_src64(SED).\
+                filter_ipv6_dst(pv.vars['MED_%d_MLEID' %i]).\
+                must_next()
+            pkts.filter_wpan_src64(ROUTER).\
+                filter_RLARMA().\
+                filter_coap_request(ADDR_QRY_URI, port=MM).\
+                must_not_next()
+            pkts.filter_ping_request(identifier=_pkt.icmpv6.echo.identifier).\
+                filter_wpan_src64(ROUTER).\
+                filter_ipv6_dst(pv.vars['MED_%d_MLEID' %i]).\
+                must_next()
+            pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+                filter_wpan_src64(pv.vars['MED_%d' %i]).\
+                filter_ipv6_dst(SED_MLEID).\
+                must_next()
+            pkts.filter_ping_reply(identifier=_pkt.icmpv6.echo.identifier).\
+                filter_wpan_src64(ROUTER).\
+                filter_wpan_dst16(SED_RLOC16).\
+                must_next()
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -34,11 +34,22 @@
 #ifndef SHA256_HPP_
 #define SHA256_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdint.h>
 
 #include <mbedtls/sha256.h>
 
-namespace Thread {
+#include <openthread/crypto.h>
+
+#include "common/clearable.hpp"
+#include "common/equatable.hpp"
+#include "common/type_traits.hpp"
+
+namespace ot {
+
+class Message;
+
 namespace Crypto {
 
 /**
@@ -55,10 +66,35 @@ namespace Crypto {
 class Sha256
 {
 public:
-    enum
+    /**
+     * This type represents a SHA-256 hash.
+     *
+     */
+    class Hash : public otCryptoSha256Hash, public Clearable<Hash>, public Equatable<Hash>
     {
-        kHashSize = 32,  ///< SHA-256 hash size (bytes)
+    public:
+        static const uint8_t kSize = OT_CRYPTO_SHA256_HASH_SIZE; ///< SHA-256 hash size (bytes)
+
+        /**
+         * This method returns a pointer to a byte array containing the hash value.
+         *
+         * @returns A pointer to a byte array containing the hash.
+         *
+         */
+        const uint8_t *GetBytes(void) const { return m8; }
     };
+
+    /**
+     * Constructor for `Sha256` object.
+     *
+     */
+    Sha256(void);
+
+    /**
+     * Destructor for `Sha256` object.
+     *
+     */
+    ~Sha256(void);
 
     /**
      * This method starts the SHA-256 computation.
@@ -73,15 +109,39 @@ public:
      * @param[in]  aBufLength  The length of @p aBuf in bytes.
      *
      */
-    void Update(const uint8_t *aBuf, uint16_t aBufLength);
+    void Update(const void *aBuf, uint16_t aBufLength);
+
+    /**
+     * This method inputs an object (treated as a sequence of bytes) into the SHA-256 computation.
+     *
+     * @tparam    ObjectType   The object type.
+     *
+     * @param[in] aObject      A reference to the object.
+     *
+     */
+    template <typename ObjectType> void Update(const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+        return Update(&aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method inputs the bytes read from a given message into the SHA-256 computation.
+     *
+     * @param[in] aMessage    The message to read the data from.
+     * @param[in] aOffset     The offset into @p aMessage to start to read.
+     * @param[in] aLength     The number of bytes to read.
+     *
+     */
+    void Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method finalizes the hash computation.
      *
-     * @param[out]  aHash  A pointer to the output buffer.
+     * @param[out]  aHash  A reference to a `Hash` to output the calculated hash.
      *
      */
-    void Finish(uint8_t aHash[kHashSize]);
+    void Finish(Hash &aHash);
 
 private:
     mbedtls_sha256_context mContext;
@@ -92,7 +152,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace Thread
+} // namespace Crypto
+} // namespace ot
 
-#endif  // SHA256_HPP_
+#endif // SHA256_HPP_

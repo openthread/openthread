@@ -31,34 +31,35 @@
  *   This file implements common methods for manipulating Thread Network Data.
  */
 
-#define WPP_NAME "network_data.tmh"
+#include "network_data.hpp"
 
-#include <coap/coap_header.hpp>
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/logging.hpp>
-#include <mac/mac_frame.hpp>
-#include <platform/random.h>
-#include <thread/network_data.hpp>
-#include <thread/thread_netif.hpp>
-#include <thread/thread_tlvs.hpp>
-#include <thread/thread_uris.hpp>
+#include "coap/coap_message.hpp"
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/instance.hpp"
+#include "common/locator_getters.hpp"
+#include "common/logging.hpp"
+#include "mac/mac_types.hpp"
+#include "thread/thread_netif.hpp"
+#include "thread/thread_tlvs.hpp"
+#include "thread/uri_paths.hpp"
 
-namespace Thread {
+namespace ot {
 namespace NetworkData {
 
-NetworkData::NetworkData(ThreadNetif &aThreadNetif, bool aLocal):
-    mNetif(aThreadNetif),
-    mLocal(aLocal),
-    mLastAttemptWait(false),
-    mLastAttempt(0)
+NetworkData::NetworkData(Instance &aInstance, Type aType)
+    : InstanceLocator(aInstance)
+    , mType(aType)
 {
     mLength = 0;
 }
 
-void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength)
+Error NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
 {
-    assert(aData != NULL);
+    Error error = kErrorNone;
+
+    OT_ASSERT(aData != nullptr);
+    VerifyOrExit(aDataLength >= mLength, error = kErrorNoBufs);
 
     memcpy(aData, mTlvs, mLength);
     aDataLength = mLength;
@@ -67,154 +68,239 @@ void NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLen
     {
         RemoveTemporaryData(aData, aDataLength);
     }
+
+exit:
+    return error;
 }
 
-ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, otBorderRouterConfig *aConfig)
+Error NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, OnMeshPrefixConfig &aConfig) const
 {
     return GetNextOnMeshPrefix(aIterator, Mac::kShortAddrBroadcast, aConfig);
 }
 
-ThreadError NetworkData::GetNextOnMeshPrefix(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                                             otBorderRouterConfig *aConfig)
+Error NetworkData::GetNextOnMeshPrefix(Iterator &aIterator, uint16_t aRloc16, OnMeshPrefixConfig &aConfig) const
 {
-    ThreadError error = kThreadError_NotFound;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    Config config;
 
-    for (; cur < end; cur = cur->GetNext())
-    {
-        PrefixTlv *prefix;
-        BorderRouterTlv *borderRouter;
-        BorderRouterEntry *borderRouterEntry = NULL;
+    config.mOnMeshPrefix  = &aConfig;
+    config.mExternalRoute = nullptr;
+    config.mService       = nullptr;
 
-        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
-        {
-            continue;
-        }
-
-        prefix = static_cast<PrefixTlv *>(cur);
-
-        if ((borderRouter = FindBorderRouter(*prefix)) == NULL)
-        {
-            continue;
-        }
-
-        for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
-        {
-            if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(i)->GetRloc() == aRloc16)
-            {
-                borderRouterEntry = borderRouter->GetEntry(i);
-                break;
-            }
-        }
-
-        if (borderRouterEntry == NULL)
-        {
-            continue;
-        }
-
-        memset(aConfig, 0, sizeof(*aConfig));
-        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
-        aConfig->mPrefix.mLength = prefix->GetPrefixLength();
-        aConfig->mPreference = borderRouterEntry->GetPreference();
-        aConfig->mPreferred = borderRouterEntry->IsPreferred();
-        aConfig->mSlaac = borderRouterEntry->IsSlaac();
-        aConfig->mDhcp = borderRouterEntry->IsDhcp();
-        aConfig->mConfigure = borderRouterEntry->IsConfigure();
-        aConfig->mDefaultRoute = borderRouterEntry->IsDefaultRoute();
-        aConfig->mOnMesh = borderRouterEntry->IsOnMesh();
-        aConfig->mStable = cur->IsStable();
-        aConfig->mRloc16 = borderRouterEntry->GetRloc();
-
-        *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
-
-        ExitNow(error = kThreadError_None);
-    }
-
-exit:
-    return error;
+    return Iterate(aIterator, aRloc16, config);
 }
 
-ThreadError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, otExternalRouteConfig *aConfig)
+Error NetworkData::GetNextExternalRoute(Iterator &aIterator, ExternalRouteConfig &aConfig) const
 {
     return GetNextExternalRoute(aIterator, Mac::kShortAddrBroadcast, aConfig);
 }
 
-ThreadError NetworkData::GetNextExternalRoute(otNetworkDataIterator *aIterator, uint16_t aRloc16,
-                                              otExternalRouteConfig *aConfig)
+Error NetworkData::GetNextExternalRoute(Iterator &aIterator, uint16_t aRloc16, ExternalRouteConfig &aConfig) const
 {
-    ThreadError error = kThreadError_NotFound;
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(mTlvs + *aIterator);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(mTlvs + mLength);
+    Config config;
 
-    for (; cur < end; cur = cur->GetNext())
+    config.mOnMeshPrefix  = nullptr;
+    config.mExternalRoute = &aConfig;
+    config.mService       = nullptr;
+
+    return Iterate(aIterator, aRloc16, config);
+}
+
+Error NetworkData::GetNextService(Iterator &aIterator, ServiceConfig &aConfig) const
+{
+    return GetNextService(aIterator, Mac::kShortAddrBroadcast, aConfig);
+}
+
+Error NetworkData::GetNextService(Iterator &aIterator, uint16_t aRloc16, ServiceConfig &aConfig) const
+{
+    Config config;
+
+    config.mOnMeshPrefix  = nullptr;
+    config.mExternalRoute = nullptr;
+    config.mService       = &aConfig;
+
+    return Iterate(aIterator, aRloc16, config);
+}
+
+Error NetworkData::Iterate(Iterator &aIterator, uint16_t aRloc16, Config &aConfig) const
+{
+    // Iterate to the next entry in Network Data matching `aRloc16`
+    // (can be set to `Mac::kShortAddrBroadcast` to allow any RLOC).
+    // The `aIterator` is used to track and save the current position.
+    // On input, the non-nullptr pointer members in `aConfig` specify the
+    // Network Data entry types (`mOnMeshPrefix`, `mExternalRoute`,
+    // `mService`) to iterate over. On successful exit, the `aConfig`
+    // is updated such that only one member pointer is not nullptr
+    // indicating the type of entry and the non-nullptr config is updated
+    // with the entry info.
+
+    Error               error = kErrorNotFound;
+    NetworkDataIterator iterator(aIterator);
+
+    for (const NetworkDataTlv *cur;
+         cur = iterator.GetTlv(mTlvs), (cur + 1 <= GetTlvsEnd()) && (cur->GetNext() <= GetTlvsEnd());
+         iterator.AdvanceTlv(mTlvs))
     {
-        PrefixTlv *prefix;
-        HasRouteTlv *hasRoute;
-        HasRouteEntry *hasRouteEntry = NULL;
+        const NetworkDataTlv *subTlvs = nullptr;
 
-        if (cur->GetType() != NetworkDataTlv::kTypePrefix)
+        switch (cur->GetType())
         {
-            continue;
-        }
-
-        prefix = static_cast<PrefixTlv *>(cur);
-
-        if ((hasRoute = FindHasRoute(*prefix)) == NULL)
-        {
-            continue;
-        }
-
-        for (uint8_t i = 0; i < hasRoute->GetNumEntries(); i++)
-        {
-            if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(i)->GetRloc() == aRloc16)
+        case NetworkDataTlv::kTypePrefix:
+            if ((aConfig.mOnMeshPrefix != nullptr) || (aConfig.mExternalRoute != nullptr))
             {
-                hasRouteEntry = hasRoute->GetEntry(i);
-                break;
+                subTlvs = static_cast<const PrefixTlv *>(cur)->GetSubTlvs();
+            }
+            break;
+        case NetworkDataTlv::kTypeService:
+            if (aConfig.mService != nullptr)
+            {
+                subTlvs = static_cast<const ServiceTlv *>(cur)->GetSubTlvs();
+            }
+            break;
+        default:
+            break;
+        }
+
+        if (subTlvs == nullptr)
+        {
+            continue;
+        }
+
+        for (const NetworkDataTlv *subCur; subCur = iterator.GetSubTlv(subTlvs),
+                                           (subCur + 1 <= cur->GetNext()) && (subCur->GetNext() <= cur->GetNext());
+             iterator.AdvaceSubTlv(subTlvs))
+        {
+            if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+            {
+                const PrefixTlv *prefixTlv = static_cast<const PrefixTlv *>(cur);
+
+                switch (subCur->GetType())
+                {
+                case NetworkDataTlv::kTypeBorderRouter:
+                {
+                    const BorderRouterTlv *borderRouter = static_cast<const BorderRouterTlv *>(subCur);
+
+                    if (aConfig.mOnMeshPrefix == nullptr)
+                    {
+                        continue;
+                    }
+
+                    for (uint8_t index; (index = iterator.GetAndAdvanceIndex()) < borderRouter->GetNumEntries();)
+                    {
+                        if (aRloc16 == Mac::kShortAddrBroadcast || borderRouter->GetEntry(index)->GetRloc() == aRloc16)
+                        {
+                            const BorderRouterEntry *borderRouterEntry = borderRouter->GetEntry(index);
+
+                            aConfig.mExternalRoute = nullptr;
+                            aConfig.mService       = nullptr;
+                            aConfig.mOnMeshPrefix->SetFrom(*prefixTlv, *borderRouter, *borderRouterEntry);
+
+                            ExitNow(error = kErrorNone);
+                        }
+                    }
+
+                    break;
+                }
+
+                case NetworkDataTlv::kTypeHasRoute:
+                {
+                    const HasRouteTlv *hasRoute = static_cast<const HasRouteTlv *>(subCur);
+
+                    if (aConfig.mExternalRoute == nullptr)
+                    {
+                        continue;
+                    }
+
+                    for (uint8_t index; (index = iterator.GetAndAdvanceIndex()) < hasRoute->GetNumEntries();)
+                    {
+                        if (aRloc16 == Mac::kShortAddrBroadcast || hasRoute->GetEntry(index)->GetRloc() == aRloc16)
+                        {
+                            const HasRouteEntry *hasRouteEntry = hasRoute->GetEntry(index);
+
+                            aConfig.mOnMeshPrefix = nullptr;
+                            aConfig.mService      = nullptr;
+                            aConfig.mExternalRoute->SetFrom(GetInstance(), *prefixTlv, *hasRoute, *hasRouteEntry);
+
+                            ExitNow(error = kErrorNone);
+                        }
+                    }
+
+                    break;
+                }
+
+                default:
+                    break;
+                }
+            }
+            else // cur is `ServiceTLv`
+            {
+                const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
+
+                if (aConfig.mService == nullptr)
+                {
+                    continue;
+                }
+
+                if (subCur->GetType() == NetworkDataTlv::kTypeServer)
+                {
+                    const ServerTlv *server = static_cast<const ServerTlv *>(subCur);
+
+                    if (!iterator.IsNewEntry())
+                    {
+                        continue;
+                    }
+
+                    if ((aRloc16 == Mac::kShortAddrBroadcast) || (server->GetServer16() == aRloc16))
+                    {
+                        aConfig.mOnMeshPrefix  = nullptr;
+                        aConfig.mExternalRoute = nullptr;
+                        aConfig.mService->SetFrom(*service, *server);
+
+                        iterator.MarkEntryAsNotNew();
+
+                        ExitNow(error = kErrorNone);
+                    }
+                }
             }
         }
-
-        if (hasRouteEntry == NULL)
-        {
-            continue;
-        }
-
-        memset(aConfig, 0, sizeof(*aConfig));
-        memcpy(&aConfig->mPrefix.mPrefix, prefix->GetPrefix(), BitVectorBytes(prefix->GetPrefixLength()));
-        aConfig->mPrefix.mLength = prefix->GetPrefixLength();
-        aConfig->mPreference = hasRouteEntry->GetPreference();
-        aConfig->mStable = cur->IsStable();
-
-        *aIterator = static_cast<otNetworkDataIterator>(reinterpret_cast<uint8_t *>(cur->GetNext()) - mTlvs);
-
-        ExitNow(error = kThreadError_None);
     }
 
 exit:
     return error;
 }
 
-bool NetworkData::ContainsOnMeshPrefixes(NetworkData &aCompare, uint16_t aRloc16)
+Error NetworkData::GetNextServiceId(Iterator &aIterator, uint16_t aRloc16, uint8_t &aServiceId) const
 {
-    otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otBorderRouterConfig outerConfig;
-    bool rval = true;
+    Error         error;
+    ServiceConfig config;
 
-    while (aCompare.GetNextOnMeshPrefix(&outerIterator, aRloc16, &outerConfig) == kThreadError_None)
+    SuccessOrExit(error = GetNextService(aIterator, aRloc16, config));
+    aServiceId = config.mServiceId;
+
+exit:
+    return error;
+}
+
+bool NetworkData::ContainsOnMeshPrefixes(const NetworkData &aCompare, uint16_t aRloc16) const
+{
+    Iterator           outerIterator = kIteratorInit;
+    OnMeshPrefixConfig outerConfig;
+    bool               rval = true;
+
+    while (aCompare.GetNextOnMeshPrefix(outerIterator, aRloc16, outerConfig) == kErrorNone)
     {
-        otNetworkDataIterator innerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otBorderRouterConfig innerConfig;
-        ThreadError error;
+        Iterator           innerIterator = kIteratorInit;
+        OnMeshPrefixConfig innerConfig;
+        Error              error;
 
-        while ((error = GetNextOnMeshPrefix(&innerIterator, aRloc16, &innerConfig)) == kThreadError_None)
+        while ((error = GetNextOnMeshPrefix(innerIterator, aRloc16, innerConfig)) == kErrorNone)
         {
-            if (memcmp(&outerConfig, &innerConfig, (sizeof(outerConfig) - sizeof(outerConfig.mRloc16))) == 0)
+            if (outerConfig == innerConfig)
             {
                 break;
             }
         }
 
-        if (error != kThreadError_None)
+        if (error != kErrorNone)
         {
             ExitNow(rval = false);
         }
@@ -224,29 +310,77 @@ exit:
     return rval;
 }
 
-bool NetworkData::ContainsExternalRoutes(NetworkData &aCompare, uint16_t aRloc16)
+bool NetworkData::ContainsExternalRoutes(const NetworkData &aCompare, uint16_t aRloc16) const
 {
-    otNetworkDataIterator outerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
-    otExternalRouteConfig outerConfig;
-    bool rval = true;
+    Iterator            outerIterator = kIteratorInit;
+    ExternalRouteConfig outerConfig;
+    bool                rval = true;
 
-    while (aCompare.GetNextExternalRoute(&outerIterator, aRloc16, &outerConfig) == kThreadError_None)
+    while (aCompare.GetNextExternalRoute(outerIterator, aRloc16, outerConfig) == kErrorNone)
     {
-        otNetworkDataIterator innerIterator = OT_NETWORK_DATA_ITERATOR_INIT;
-        otExternalRouteConfig innerConfig;
-        ThreadError error;
+        Iterator            innerIterator = kIteratorInit;
+        ExternalRouteConfig innerConfig;
+        Error               error;
 
-        while ((error = GetNextExternalRoute(&innerIterator, aRloc16, &innerConfig)) == kThreadError_None)
+        while ((error = GetNextExternalRoute(innerIterator, aRloc16, innerConfig)) == kErrorNone)
         {
-            if (memcmp(&outerConfig, &innerConfig, sizeof(outerConfig)) == 0)
+            if (outerConfig == innerConfig)
             {
                 break;
             }
         }
 
-        if (error != kThreadError_None)
+        if (error != kErrorNone)
         {
             ExitNow(rval = false);
+        }
+    }
+
+exit:
+    return rval;
+}
+
+bool NetworkData::ContainsServices(const NetworkData &aCompare, uint16_t aRloc16) const
+{
+    Iterator      outerIterator = kIteratorInit;
+    ServiceConfig outerConfig;
+    bool          rval = true;
+
+    while (aCompare.GetNextService(outerIterator, aRloc16, outerConfig) == kErrorNone)
+    {
+        Iterator      innerIterator = kIteratorInit;
+        ServiceConfig innerConfig;
+        Error         error;
+
+        while ((error = GetNextService(innerIterator, aRloc16, innerConfig)) == kErrorNone)
+        {
+            if (outerConfig == innerConfig)
+            {
+                break;
+            }
+        }
+
+        if (error != kErrorNone)
+        {
+            ExitNow(rval = false);
+        }
+    }
+
+exit:
+    return rval;
+}
+
+bool NetworkData::ContainsService(uint8_t aServiceId, uint16_t aRloc16) const
+{
+    Iterator iterator = kIteratorInit;
+    uint8_t  serviceId;
+    bool     rval = false;
+
+    while (GetNextServiceId(iterator, aRloc16, serviceId) == kErrorNone)
+    {
+        if (serviceId == aServiceId)
+        {
+            ExitNow(rval = true);
         }
     }
 
@@ -257,57 +391,51 @@ exit:
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 {
     NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);
-    NetworkDataTlv *end;
-    PrefixTlv *prefix;
-    uint8_t length;
-    uint8_t *dst;
-    uint8_t *src;
 
-    while (1)
+    while (cur < reinterpret_cast<NetworkDataTlv *>(aData + aDataLength))
     {
-        end = reinterpret_cast<NetworkDataTlv *>(aData + aDataLength);
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         switch (cur->GetType())
         {
         case NetworkDataTlv::kTypePrefix:
         {
-            prefix = reinterpret_cast<PrefixTlv *>(cur);
+            PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
+
             RemoveTemporaryData(aData, aDataLength, *prefix);
 
             if (prefix->GetSubTlvsLength() == 0)
             {
-                length = sizeof(NetworkDataTlv) + cur->GetLength();
-                dst = reinterpret_cast<uint8_t *>(cur);
-                src = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-                aDataLength -= length;
+                RemoveTlv(aData, aDataLength, cur);
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", mTlvs, mLength);
+            otDumpDebgNetData("remove prefix done", aData, aDataLength);
+            break;
+        }
+
+        case NetworkDataTlv::kTypeService:
+        {
+            ServiceTlv *service = static_cast<ServiceTlv *>(cur);
+            RemoveTemporaryData(aData, aDataLength, *service);
+
+            if (service->GetSubTlvsLength() == 0)
+            {
+                RemoveTlv(aData, aDataLength, cur);
+                continue;
+            }
+
+            otDumpDebgNetData("remove service done", aData, aDataLength);
             break;
         }
 
         default:
-        {
             // remove temporary tlv
             if (!cur->IsStable())
             {
-                length = sizeof(NetworkDataTlv) + cur->GetLength();
-                dst = reinterpret_cast<uint8_t *>(cur);
-                src = reinterpret_cast<uint8_t *>(cur->GetNext());
-                memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-                aDataLength -= length;
+                RemoveTlv(aData, aDataLength, cur);
                 continue;
             }
 
             break;
-        }
         }
 
         cur = cur->GetNext();
@@ -319,53 +447,29 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end;
-    BorderRouterTlv *borderRouter;
-    HasRouteTlv *hasRoute;
-    ContextTlv *context;
-    BorderRouterEntry *borderRouterEntry;
-    HasRouteEntry *hasRouteEntry;
-    uint8_t length;
-    uint8_t contextId;
-    uint8_t *dst;
-    uint8_t *src;
 
-    while (1)
+    while (cur < aPrefix.GetNext())
     {
-        end = aPrefix.GetNext();
-
-        if (cur >= end)
-        {
-            break;
-        }
-
         if (cur->IsStable())
         {
             switch (cur->GetType())
             {
             case NetworkDataTlv::kTypeBorderRouter:
             {
-                borderRouter = FindBorderRouter(aPrefix);
+                BorderRouterTlv *borderRouter = static_cast<BorderRouterTlv *>(cur);
+                ContextTlv *     context      = aPrefix.FindSubTlv<ContextTlv>();
 
-                if ((context = FindContext(aPrefix)) == NULL)
+                // Replace p_border_router_16
+                for (BorderRouterEntry *entry = borderRouter->GetFirstEntry(); entry <= borderRouter->GetLastEntry();
+                     entry                    = entry->GetNext())
                 {
-                    break;
-                }
-
-                contextId = context->GetContextId();
-
-                // replace p_border_router_16
-                for (uint8_t i = 0; i < borderRouter->GetNumEntries(); i++)
-                {
-                    borderRouterEntry = borderRouter->GetEntry(i);
-
-                    if (borderRouterEntry->IsDhcp() || borderRouterEntry->IsConfigure())
+                    if ((entry->IsDhcp() || entry->IsConfigure()) && (context != nullptr))
                     {
-                        borderRouterEntry->SetRloc(0xfc00 | contextId);
+                        entry->SetRloc(0xfc00 | context->GetContextId());
                     }
                     else
                     {
-                        borderRouterEntry->SetRloc(0xfffe);
+                        entry->SetRloc(0xfffe);
                     }
                 }
 
@@ -374,22 +478,20 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
 
             case NetworkDataTlv::kTypeHasRoute:
             {
-                hasRoute = FindHasRoute(aPrefix);
+                HasRouteTlv *hasRoute = static_cast<HasRouteTlv *>(cur);
 
-                // replace r_border_router_16
-                for (uint8_t j = 0; j < hasRoute->GetNumEntries(); j++)
+                // Replace r_border_router_16
+                for (HasRouteEntry *entry = hasRoute->GetFirstEntry(); entry <= hasRoute->GetLastEntry();
+                     entry                = entry->GetNext())
                 {
-                    hasRouteEntry = hasRoute->GetEntry(j);
-                    hasRouteEntry->SetRloc(0xfffe);
+                    entry->SetRloc(0xfffe);
                 }
 
                 break;
             }
 
             default:
-            {
                 break;
-            }
             }
 
             // keep stable tlv
@@ -398,258 +500,270 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
         else
         {
             // remove temporary tlv
-            length = sizeof(NetworkDataTlv) + cur->GetLength();
-            dst = reinterpret_cast<uint8_t *>(cur);
-            src = reinterpret_cast<uint8_t *>(cur->GetNext());
-            memmove(dst, src, aDataLength - static_cast<size_t>(src - aData));
-            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - length);
-            aDataLength -= length;
+            uint8_t subTlvSize = cur->GetSize();
+            RemoveTlv(aData, aDataLength, cur);
+            aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
         }
     }
 }
 
-BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix)
+void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService)
 {
-    BorderRouterTlv *rval = NULL;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
+    NetworkDataTlv *cur = aService.GetSubTlvs();
 
-    while (cur < end)
+    while (cur < aService.GetNext())
     {
-        if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter)
+        if (cur->IsStable())
         {
-            ExitNow(rval = reinterpret_cast<BorderRouterTlv *>(cur));
+            switch (cur->GetType())
+            {
+            case NetworkDataTlv::kTypeServer:
+            {
+                ServerTlv *server = static_cast<ServerTlv *>(cur);
+                server->SetServer16(Mle::Mle::ServiceAlocFromId(aService.GetServiceId()));
+                break;
+            }
+
+            default:
+                break;
+            }
+
+            // keep stable tlv
+            cur = cur->GetNext();
         }
-
-        cur = cur->GetNext();
+        else
+        {
+            // remove temporary tlv
+            uint8_t subTlvSize = cur->GetSize();
+            RemoveTlv(aData, aDataLength, cur);
+            aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
+        }
     }
-
-exit:
-    return rval;
 }
 
-BorderRouterTlv *NetworkData::FindBorderRouter(PrefixTlv &aPrefix, bool aStable)
-{
-    BorderRouterTlv *rval = NULL;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
-
-    while (cur < end)
-    {
-        if (cur->GetType() == NetworkDataTlv::kTypeBorderRouter &&
-            cur->IsStable() == aStable)
-        {
-            ExitNow(rval = reinterpret_cast<BorderRouterTlv *>(cur));
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
-}
-
-HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix)
-{
-    HasRouteTlv *rval = NULL;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
-
-    while (cur < end)
-    {
-        if (cur->GetType() == NetworkDataTlv::kTypeHasRoute)
-        {
-            ExitNow(rval = reinterpret_cast<HasRouteTlv *>(cur));
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
-}
-
-HasRouteTlv *NetworkData::FindHasRoute(PrefixTlv &aPrefix, bool aStable)
-{
-    HasRouteTlv *rval = NULL;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
-
-    while (cur < end)
-    {
-        if (cur->GetType() == NetworkDataTlv::kTypeHasRoute &&
-            cur->IsStable() == aStable)
-        {
-            ExitNow(rval = reinterpret_cast<HasRouteTlv *>(cur));
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
-}
-
-ContextTlv *NetworkData::FindContext(PrefixTlv &aPrefix)
-{
-    ContextTlv *rval = NULL;
-    NetworkDataTlv *cur = aPrefix.GetSubTlvs();
-    NetworkDataTlv *end = aPrefix.GetNext();
-
-    while (cur < end)
-    {
-        if (cur->GetType() == NetworkDataTlv::kTypeContext)
-        {
-            ExitNow(rval = reinterpret_cast<ContextTlv *>(cur));
-        }
-
-        cur = cur->GetNext();
-    }
-
-exit:
-    return rval;
-}
-
-PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
+const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
 {
     return FindPrefix(aPrefix, aPrefixLength, mTlvs, mLength);
 }
 
-PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
+const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
+                                         uint8_t        aPrefixLength,
+                                         const uint8_t *aTlvs,
+                                         uint8_t        aTlvsLength)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aTlvs);
-    NetworkDataTlv *end = reinterpret_cast<NetworkDataTlv *>(aTlvs + aTlvsLength);
-    PrefixTlv *compare;
+    TlvIterator      tlvIterator(aTlvs, aTlvsLength);
+    const PrefixTlv *prefixTlv;
 
-    while (cur < end)
+    while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
     {
-        if (cur->GetType() == NetworkDataTlv::kTypePrefix)
+        if (prefixTlv->IsEqual(aPrefix, aPrefixLength))
         {
-            compare = reinterpret_cast<PrefixTlv *>(cur);
-
-            if (compare->GetPrefixLength() == aPrefixLength &&
-                PrefixMatch(compare->GetPrefix(), aPrefix, aPrefixLength) >= aPrefixLength)
-            {
-                return compare;
-            }
-        }
-
-        cur = cur->GetNext();
-    }
-
-    return NULL;
-}
-
-int8_t NetworkData::PrefixMatch(const uint8_t *a, const uint8_t *b, uint8_t aLength)
-{
-    int8_t rval = 0;
-    uint8_t bytes = BitVectorBytes(aLength);
-    uint8_t diff;
-
-    for (uint8_t i = 0; i < bytes; i++)
-    {
-        diff = a[i] ^ b[i];
-
-        if (diff == 0)
-        {
-            rval += 8;
-        }
-        else
-        {
-            while ((diff & 0x80) == 0)
-            {
-                rval++;
-                diff <<= 1;
-            }
-
             break;
         }
     }
 
-    return (rval >= aLength) ? rval : -1;
+    return prefixTlv;
 }
 
-ThreadError NetworkData::Insert(uint8_t *aStart, uint8_t aLength)
+const ServiceTlv *NetworkData::FindService(uint32_t         aEnterpriseNumber,
+                                           const uint8_t *  aServiceData,
+                                           uint8_t          aServiceDataLength,
+                                           ServiceMatchMode aServiceMatchMode) const
 {
-    assert(aLength + mLength <= sizeof(mTlvs) &&
-           mTlvs <= aStart &&
-           aStart <= mTlvs + mLength);
-    memmove(aStart + aLength, aStart, mLength - static_cast<size_t>(aStart - mTlvs));
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode, mTlvs, mLength);
+}
+
+const ServiceTlv *NetworkData::FindService(uint32_t         aEnterpriseNumber,
+                                           const uint8_t *  aServiceData,
+                                           uint8_t          aServiceDataLength,
+                                           ServiceMatchMode aServiceMatchMode,
+                                           const uint8_t *  aTlvs,
+                                           uint8_t          aTlvsLength)
+{
+    TlvIterator       tlvIterator(aTlvs, aTlvsLength);
+    const ServiceTlv *serviceTlv;
+
+    while ((serviceTlv = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
+    {
+        if (MatchService(*serviceTlv, aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode))
+        {
+            break;
+        }
+    }
+
+    return serviceTlv;
+}
+
+const ServiceTlv *NetworkData::FindNextService(const ServiceTlv *aPrevServiceTlv,
+                                               uint32_t          aEnterpriseNumber,
+                                               const uint8_t *   aServiceData,
+                                               uint8_t           aServiceDataLength,
+                                               ServiceMatchMode  aServiceMatchMode) const
+{
+    const uint8_t *tlvs;
+    uint8_t        length;
+
+    if (aPrevServiceTlv == nullptr)
+    {
+        tlvs   = mTlvs;
+        length = mLength;
+    }
+    else
+    {
+        tlvs   = reinterpret_cast<const uint8_t *>(aPrevServiceTlv->GetNext());
+        length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
+    }
+
+    return FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode, tlvs, length);
+}
+
+bool NetworkData::MatchService(const ServiceTlv &aServiceTlv,
+                               uint32_t          aEnterpriseNumber,
+                               const uint8_t *   aServiceData,
+                               uint8_t           aServiceDataLength,
+                               ServiceMatchMode  aServiceMatchMode)
+{
+    bool match = false;
+
+    VerifyOrExit(aServiceTlv.GetEnterpriseNumber() == aEnterpriseNumber &&
+                 aServiceTlv.GetServiceDataLength() >= aServiceDataLength);
+
+    switch (aServiceMatchMode)
+    {
+    case kServiceExactMatch:
+        VerifyOrExit(aServiceTlv.GetServiceDataLength() == aServiceDataLength);
+        OT_FALL_THROUGH;
+
+    case kServicePrefixMatch:
+        VerifyOrExit(memcmp(aServiceTlv.GetServiceData(), aServiceData, aServiceDataLength) == 0);
+        break;
+    }
+
+    match = true;
+
+exit:
+    return match;
+}
+
+NetworkDataTlv *NetworkData::AppendTlv(uint16_t aTlvSize)
+{
+    NetworkDataTlv *tlv;
+
+    VerifyOrExit(CanInsert(aTlvSize), tlv = nullptr);
+
+    tlv = GetTlvsEnd();
+    mLength += static_cast<uint8_t>(aTlvSize);
+
+exit:
+    return tlv;
+}
+
+void NetworkData::Insert(void *aStart, uint8_t aLength)
+{
+    uint8_t *start = reinterpret_cast<uint8_t *>(aStart);
+
+    OT_ASSERT(CanInsert(aLength) && mTlvs <= start && start <= mTlvs + mLength);
+    memmove(start + aLength, start, mLength - static_cast<size_t>(start - mTlvs));
     mLength += aLength;
-    return kThreadError_None;
 }
 
-ThreadError NetworkData::Remove(uint8_t *aStart, uint8_t aLength)
+void NetworkData::Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength)
 {
-    assert(aLength <= mLength &&
-           mTlvs <= aStart &&
-           (aStart - mTlvs) + aLength <= mLength);
-    memmove(aStart, aStart + aLength, mLength - (static_cast<size_t>(aStart - mTlvs) + aLength));
-    mLength -= aLength;
-    return kThreadError_None;
+    uint8_t *dataEnd   = aData + aDataLength;
+    uint8_t *removeEnd = aRemoveStart + aRemoveLength;
+
+    OT_ASSERT((aRemoveLength <= aDataLength) && (aData <= aRemoveStart) && (removeEnd <= dataEnd));
+
+    memmove(aRemoveStart, removeEnd, static_cast<uint8_t>(dataEnd - removeEnd));
+    aDataLength -= aRemoveLength;
 }
 
-ThreadError NetworkData::SendServerDataNotification(uint16_t aRloc16)
+void NetworkData::RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv)
 {
-    ThreadError error = kThreadError_None;
-    Coap::Header header;
-    Message *message = NULL;
+    Remove(aData, aDataLength, reinterpret_cast<uint8_t *>(aTlv), aTlv->GetSize());
+}
+
+void NetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
+{
+    NetworkData::Remove(mTlvs, mLength, reinterpret_cast<uint8_t *>(aRemoveStart), aRemoveLength);
+}
+
+void NetworkData::RemoveTlv(NetworkDataTlv *aTlv)
+{
+    NetworkData::RemoveTlv(mTlvs, mLength, aTlv);
+}
+
+Error NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext)
+{
+    Error            error   = kErrorNone;
+    Coap::Message *  message = nullptr;
     Ip6::MessageInfo messageInfo;
 
-    VerifyOrExit(!mLastAttemptWait || static_cast<int32_t>(Timer::GetNow() - mLastAttempt) < kDataResubmitDelay,
-                 error = kThreadError_Already);
+    VerifyOrExit((message = Get<Tmf::Agent>().NewMessage()) != nullptr, error = kErrorNoBufs);
 
-    header.Init(kCoapTypeConfirmable, kCoapRequestPost);
-    header.SetToken(Coap::Header::kDefaultTokenLength);
-    header.AppendUriPathOptions(OPENTHREAD_URI_SERVER_DATA);
-    header.SetPayloadMarker();
+    SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
+    SuccessOrExit(error = message->SetPayloadMarker());
 
-    VerifyOrExit((message = mNetif.GetCoapClient().NewMessage(header)) != NULL, error = kThreadError_NoBufs);
-
-    if (mLocal)
+    if (mType == kTypeLocal)
     {
         ThreadTlv tlv;
         tlv.SetType(ThreadTlv::kThreadNetworkData);
         tlv.SetLength(mLength);
-        SuccessOrExit(error = message->Append(&tlv, sizeof(tlv)));
-        SuccessOrExit(error = message->Append(mTlvs, mLength));
+        SuccessOrExit(error = message->Append(tlv));
+        SuccessOrExit(error = message->AppendBytes(mTlvs, mLength));
     }
 
     if (aRloc16 != Mac::kShortAddrInvalid)
     {
-        ThreadRloc16Tlv rloc16Tlv;
-        rloc16Tlv.Init();
-        rloc16Tlv.SetRloc16(aRloc16);
-        SuccessOrExit(error = message->Append(&rloc16Tlv, sizeof(rloc16Tlv)));
+        SuccessOrExit(error = Tlv::Append<ThreadRloc16Tlv>(*message, aRloc16));
     }
 
-    mNetif.GetMle().GetLeaderAloc(messageInfo.GetPeerAddr());
-    messageInfo.SetSockAddr(mNetif.GetMle().GetMeshLocal16());
-    messageInfo.SetPeerPort(kCoapUdpPort);
-    SuccessOrExit(error = mNetif.GetCoapClient().SendMessage(*message, messageInfo));
-
-    if (mLocal)
-    {
-        mLastAttempt = Timer::GetNow();
-        mLastAttemptWait = true;
-    }
+    IgnoreError(Get<Mle::MleRouter>().GetLeaderAloc(messageInfo.GetPeerAddr()));
+    messageInfo.SetSockAddr(Get<Mle::MleRouter>().GetMeshLocal16());
+    messageInfo.SetPeerPort(Tmf::kUdpPort);
+    SuccessOrExit(error = Get<Tmf::Agent>().SendMessage(*message, messageInfo, aHandler, aContext));
 
     otLogInfoNetData("Sent server data notification");
 
 exit:
-
-    if (error != kThreadError_None && message != NULL)
-    {
-        message->Free();
-    }
-
+    FreeMessageOnError(message, error);
     return error;
 }
 
-void NetworkData::ClearResubmitDelayTimer(void)
+Error NetworkData::GetNextServer(Iterator &aIterator, uint16_t &aRloc16) const
 {
-    mLastAttemptWait = false;
+    Error               error;
+    OnMeshPrefixConfig  prefixConfig;
+    ExternalRouteConfig routeConfig;
+    ServiceConfig       serviceConfig;
+    Config              config;
+
+    config.mOnMeshPrefix  = &prefixConfig;
+    config.mExternalRoute = &routeConfig;
+    config.mService       = &serviceConfig;
+
+    SuccessOrExit(error = Iterate(aIterator, Mac::kShortAddrBroadcast, config));
+
+    if (config.mOnMeshPrefix != nullptr)
+    {
+        aRloc16 = config.mOnMeshPrefix->mRloc16;
+    }
+    else if (config.mExternalRoute != nullptr)
+    {
+        aRloc16 = config.mExternalRoute->mRloc16;
+    }
+    else if (config.mService != nullptr)
+    {
+        aRloc16 = config.mService->mServerConfig.mRloc16;
+    }
+    else
+    {
+        OT_ASSERT(false);
+    }
+
+exit:
+    return error;
 }
 
-}  // namespace NetworkData
-}  // namespace Thread
+} // namespace NetworkData
+} // namespace ot

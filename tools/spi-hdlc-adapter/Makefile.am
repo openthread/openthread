@@ -35,6 +35,7 @@ bin_PROGRAMS                                                           = \
     $(NULL)
 
 spi_hdlc_adapter_CPPFLAGS                                              = \
+    -I$(top_srcdir)/include/openthread                                   \
     $(NULL)
 
 spi_hdlc_adapter_LDADD                                                 = \

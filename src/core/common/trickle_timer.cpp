@@ -31,208 +31,146 @@
  *   This file implements the trickle timer logic.
  */
 
-#include <common/code_utils.hpp>
-#include <common/debug.hpp>
-#include <common/trickle_timer.hpp>
-#include <platform/random.h>
+#include "trickle_timer.hpp"
 
-namespace Thread {
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+#include "common/random.hpp"
 
-TrickleTimer::TrickleTimer(
-    TimerScheduler &aScheduler,
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    uint32_t aRedundancyConstant,
-#endif
-    Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext)
-    :
-    mTimer(aScheduler, HandleTimerFired, this),
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    k(aRedundancyConstant),
-    c(0),
-#endif
-    Imin(0),
-    Imax(0),
-    mMode(kModeNormal),
-    I(0),
-    t(0),
-    mPhase(kPhaseDormant),
-    mTransmitHandler(aTransmitHandler),
-    mIntervalExpiredHandler(aIntervalExpiredHandler),
-    mContext(aContext)
+namespace ot {
+
+TrickleTimer::TrickleTimer(Instance &aInstance, Handler aHandler)
+    : TimerMilli(aInstance, TrickleTimer::HandleTimer)
+    , mIntervalMin(0)
+    , mIntervalMax(0)
+    , mInterval(0)
+    , mTimeInInterval(0)
+    , mRedundancyConstant(0)
+    , mCounter(0)
+    , mHandler(aHandler)
+    , mMode(kModeTrickle)
+    , mPhase(kBeforeRandomTime)
 {
 }
 
-bool TrickleTimer::IsRunning(void) const
+void TrickleTimer::Start(Mode aMode, uint32_t aIntervalMin, uint32_t aIntervalMax, uint16_t aRedundancyConstant)
 {
-    return mPhase != kPhaseDormant;
-}
+    OT_ASSERT((aIntervalMax >= aIntervalMin) && (aIntervalMin > 0));
 
-void TrickleTimer::Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode)
-{
-    assert(!IsRunning());
+    mIntervalMin        = aIntervalMin;
+    mIntervalMax        = aIntervalMax;
+    mRedundancyConstant = aRedundancyConstant;
+    mMode               = aMode;
 
-    // Set the interval limits and mode
-    Imin = aIntervalMin;
-    Imax = aIntervalMax;
-    mMode = aMode;
+    // Select interval randomly from range [Imin, Imax].
+    mInterval = Random::NonCrypto::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
 
-    // Initialize I to [Imin, Imax]
-    if (Imin == Imax)
-    {
-        I = Imin;
-    }
-    else
-    {
-        I = Imin + otPlatRandomGet() % (Imax - Imin);
-    }
-
-    // Start a new interval
     StartNewInterval();
 }
 
-void TrickleTimer::Stop(void)
-{
-    mPhase = kPhaseDormant;
-    mTimer.Stop();
-}
-
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
 void TrickleTimer::IndicateConsistent(void)
 {
-    // Increment counter
-    c++;
+    if (mCounter < kInfiniteRedundancyConstant)
+    {
+        mCounter++;
+    }
 }
-#endif
 
 void TrickleTimer::IndicateInconsistent(void)
 {
-    // Only relevant if we aren't already at 'I' == 'Imin'
-    if (IsRunning() && I != Imin)
-    {
-        // Reset I to Imin
-        I = Imin;
+    VerifyOrExit(mMode == kModeTrickle);
 
-        // Stop the existing timer
-        mTimer.Stop();
+    // If interval is equal to minimum when an "inconsistent" event
+    // is received, do nothing.
 
-        // Start a new interval
-        StartNewInterval();
-    }
+    VerifyOrExit(IsRunning() && (mInterval != mIntervalMin));
+
+    mInterval = mIntervalMin;
+    StartNewInterval();
+
+exit:
+    return;
 }
 
 void TrickleTimer::StartNewInterval(void)
 {
-    // Reset the counter and timer phase
+    uint32_t halfInterval;
 
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    c = 0;
-#endif
-    mPhase = kPhaseTransmit;
+    switch (mMode)
+    {
+    case kModePlainTimer:
+        mTimeInInterval = mInterval;
+        break;
 
-    // Initialize t
-    if (I < 2)
-    {
-        // Immediate interval, just set t to 0
-        t = 0;
-    }
-    else if (mMode == kModeMPL)
-    {
-        // Initialize t to random value between (0, I]
-        t = otPlatRandomGet() % I;
-    }
-    else if (mMode == kModePlainTimer)
-    {
-        // Initialize t to I, which has already been randomized in Start
-        t = I;
-    }
-    else
-    {
-        // Initialize t to random value between (I/2, I]
-        t = (I / 2) + otPlatRandomGet() % (I / 2);
+    case kModeTrickle:
+        // Select a random point in the interval taken from the range [I/2, I).
+        halfInterval = mInterval / 2;
+        mTimeInInterval =
+            (halfInterval < mInterval) ? Random::NonCrypto::GetUint32InRange(halfInterval, mInterval) : halfInterval;
+        mCounter = 0;
+        mPhase   = kBeforeRandomTime;
+        break;
     }
 
-    // Start the timer for 't' milliseconds from now
-    mTimer.Start(t);
+    TimerMilli::Start(mTimeInInterval);
 }
 
-void TrickleTimer::HandleTimerFired(void *aContext)
+void TrickleTimer::HandleTimer(Timer &aTimer)
 {
-    TrickleTimer *obj = static_cast<TrickleTimer *>(aContext);
-    obj->HandleTimerFired();
+    static_cast<TrickleTimer *>(&aTimer)->HandleTimer();
 }
 
-void TrickleTimer::HandleTimerFired(void)
+void TrickleTimer::HandleTimer(void)
 {
-    Phase curPhase = mPhase;
-    bool shouldContinue = true;
-
-    // Default the current state to Dormant
-    mPhase = kPhaseDormant;
-
-    switch (curPhase)
+    switch (mMode)
     {
-    // We have just reached time 't'
-    case kPhaseTransmit:
-    {
-        // Are we not using redundancy or is the counter still less than it?
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-        if (k == 0 || c < k)
-#endif
-        {
-            // Invoke the transmission callback
-            shouldContinue = TransmitFired();
-        }
+    case kModePlainTimer:
+        mInterval = Random::NonCrypto::GetUint32InRange(mIntervalMin, mIntervalMax + 1);
+        StartNewInterval();
+        break;
 
-        // Wait for the rest of the interval to elapse
-        if (shouldContinue)
+    case kModeTrickle:
+        switch (mPhase)
         {
-            // If we are in plain timer mode, just randomize I and restart the interval
-            if (mMode == kModePlainTimer)
+        case kBeforeRandomTime:
+            // We reached end of random `mTimeInInterval` (aka `t`)
+            // within the current interval. Trickle timer invokes
+            // handler if and only if the counter is less than the
+            // redundancy constant.
+
+            mPhase = kAfterRandomTime;
+            TimerMilli::Start(mInterval - mTimeInInterval);
+            VerifyOrExit(mCounter < mRedundancyConstant);
+            break;
+
+        case kAfterRandomTime:
+            // Interval has expired. Double the interval length and
+            // ensure result is below max.
+
+            if (mInterval == 0)
             {
-                // Initialize I to [Imin, Imax]
-                I = Imin + otPlatRandomGet() % (Imax - Imin);
-
-                // Start a new interval
-                StartNewInterval();
+                mInterval = 1;
+            }
+            else if (mInterval <= mIntervalMax - mInterval)
+            {
+                mInterval *= 2;
             }
             else
             {
-                // Start next phase of the timer
-                mPhase = kPhaseInterval;
-
-                // Start the time for 'I - t' milliseconds
-                mTimer.Start(I - t);
+                mInterval = mIntervalMax;
             }
-        }
 
-        break;
-    }
-
-    // We have just reached time 'I'
-    case kPhaseInterval:
-    {
-        // Double 'I' to get the new interval length
-        uint32_t newI = I == 0 ? 1 : I << 1;
-
-        if (newI > Imax) { newI = Imax; }
-
-        I = newI;
-
-        // Invoke the interval expiration callback
-        shouldContinue = IntervalExpiredFired();
-
-        if (shouldContinue)
-        {
-            // Start a new interval
             StartNewInterval();
+            ExitNow(); // Exit so to not call `mHanlder`
         }
 
         break;
     }
 
-    default:
-        assert(false);
-    }
+    mHandler(*this);
+
+exit:
+    return;
 }
 
-}  // namespace Thread
+} // namespace ot

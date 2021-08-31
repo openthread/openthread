@@ -30,7 +30,6 @@
 
 #include "test_util.h"
 
-#ifdef ENABLE_TEST_MAIN
 int main(int argc, char *argv[])
 {
     (void)argv;
@@ -39,11 +38,10 @@ int main(int argc, char *argv[])
 
     for (int i = 0; i < 100; i++)
     {
-	stack_array[i] = i;
+        stack_array[i] = i;
     }
 
     printf("stack_array[%d] = %d\n", array_index, stack_array[array_index]);
 
     return 0;
 }
-#endif

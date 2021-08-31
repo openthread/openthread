@@ -34,9 +34,12 @@
 #ifndef TRICKLE_TIMER_HPP_
 #define TRICKLE_TIMER_HPP_
 
-#include <common/timer.hpp>
+#include "openthread-core-config.h"
 
-namespace Thread {
+#include "common/numeric_limits.hpp"
+#include "common/timer.hpp"
+
+namespace ot {
 
 /**
  * @addtogroup core-timer-trickle
@@ -52,132 +55,129 @@ namespace Thread {
  * This class implements a trickle timer.
  *
  */
-class TrickleTimer
+class TrickleTimer : public TimerMilli
 {
 public:
-
     /**
-     * Represents the modes of operation for the TrickleTimer
+     * This enumeration defines the modes of operation for the `TrickleTimer`.
+     *
      */
-    typedef enum Mode
+    enum Mode : uint8_t
     {
-        kModeNormal     = 0,  ///< Runs the normal trickle logic.
-        kModePlainTimer = 1,  ///< Runs a normal timer between Imin and Imax.
-        kModeMPL        = 2,  ///< Runs the trickle logic modified for MPL.
-    } Mode;
+        kModeTrickle,    ///< Operate as the normal trickle logic (as per RFC 6206).
+        kModePlainTimer, ///< Operate as a plain periodic timer with random interval selected within min/max intervals.
+    };
 
     /**
-     * This function pointer is called when the timer expires.
+     * Special value for redundancy constant (aka `k`) to indicate infinity (when used, it disables trickle timer's
+     * suppression behavior, invoking the handler callback independent of number of "consistent" events).
      *
-     * @param[in]  aContext  A pointer to arbitrary context information.
-     *
-     * @retval TRUE   If the trickle timer should continue running.
-     * @retval FALSE  If the trickle timer should stop running.
      */
-    typedef bool (*Handler)(void *aContext);
+    static constexpr uint16_t kInfiniteRedundancyConstant = NumericLimits<uint16_t>::kMax;
 
     /**
-     * This constructor creates a trickle timer instance.
+     * This function pointer is called when the timer expires (i.e., transmission should happen).
      *
-     * @param[in]  aScheduler               A reference to the timer scheduler.
-     * @param[in]  aRedundancyConstant      The redundancy constant for the timer, k.
-     * @param[in]  aTransmitHandler         A pointer to a function that is called when transmission should occur.
-     * @param[in]  aIntervalExpiredHandler  An optional pointer to a function that is called when the interval expires.
-     * @param[in]  aContext                 A pointer to arbitrary context information.
+     * @param[in]  aTimer  A reference to the trickle timer.
      *
      */
-    TrickleTimer(TimerScheduler &aScheduler,
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-                 uint32_t aRedundancyConstant,
-#endif
-                 Handler aTransmitHandler, Handler aIntervalExpiredHandler, void *aContext);
+    typedef void (&Handler)(TrickleTimer &aTimer);
+
+    /**
+     * This constructor initializes a `TrickleTimer` instance.
+     *
+     * @param[in]  aInstance   A reference to the OpenThread instance.
+     * @param[in]  aHandler    A handler which is called when transmission should occur.
+     *
+     */
+    TrickleTimer(Instance &aInstance, Handler aHandler);
 
     /**
      * This method indicates whether or not the trickle timer instance is running.
      *
      * @retval TRUE   If the trickle timer is running.
      * @retval FALSE  If the trickle timer is not running.
+     *
      */
-    bool IsRunning(void) const;
+    bool IsRunning(void) const { return TimerMilli::IsRunning(); }
 
     /**
-     * This method start the trickle timer.
+     * This method gets the current operation mode of the trickle timer.
      *
-     * @param[in]  aIntervalMin  The minimum interval for the timer, Imin.
-     * @param[in]  aIntervalMax  The maximum interval for the timer, Imax.
-     * @param[in]  aMode         The operating mode for the timer.
+     * @returns The current operation mode of the timer.
      *
      */
-    void Start(uint32_t aIntervalMin, uint32_t aIntervalMax, Mode aMode);
+    Mode GetMode(void) const { return mMode; }
+
+    /**
+     * This method starts the trickle timer.
+     *
+     * @param[in]  aMode                The operation mode of timer (trickle or plain periodic mode).
+     * @param[in]  aIntervalMin         The minimum interval for the timer in milliseconds.
+     * @param[in]  aIntervalMax         The maximum interval for the timer in milliseconds.
+     * @param[in]  aRedundancyConstant  The redundancy constant for the timer, also known as `k`. The default value
+     *                                  is set to `kInfiniteRedundancyConstant` which disables the suppression behavior
+     *                                  (i.e., handler is always invoked independent of number of "consistent" events).
+     *
+     */
+    void Start(Mode     aMode,
+               uint32_t aIntervalMin,
+               uint32_t aIntervalMax,
+               uint16_t aRedundancyConstant = kInfiniteRedundancyConstant);
 
     /**
      * This method stops the trickle timer.
      *
      */
-    void Stop(void);
+    void Stop(void) { TimerMilli::Stop(); }
 
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
     /**
-     * This method indicates to the trickle timer a 'consistent' state.
+     * This method indicates to the trickle timer a 'consistent' event.
+     *
+     * The 'consistent' events are used to control suppression behavior. The trickle timer keeps track of the number of
+     * 'consistent' events in each interval. The timer handler is invoked only if the number of `consistent` events
+     * received in the interval is less than the redundancy constant.
      *
      */
     void IndicateConsistent(void);
-#endif
 
     /**
-     * This method indicates to the trickle timer an 'inconsistent' state.
+     * This method indicates to the trickle timer an 'inconsistent' event.
+     *
+     * Receiving an 'inconsistent' event causes the trickle timer to reset (i.e., start with interval set to the min
+     * value) unless the current interval being used is already equal to the min interval.
      *
      */
     void IndicateInconsistent(void);
 
 private:
-    bool TransmitFired(void) { return mTransmitHandler(mContext); }
-    bool IntervalExpiredFired(void) { return mIntervalExpiredHandler ? mIntervalExpiredHandler(mContext) : true; }
-
-    void StartNewInterval(void);
-
-    static void HandleTimerFired(void *aContext);
-    void HandleTimerFired(void);
-
-    typedef enum Phase
+    enum Phase : uint8_t
     {
-        ///< Indicates we are currently not running
-        kPhaseDormant    = 1,
-        ///< Indicates that when the timer expires, it should evaluate for transmit callbacks
-        kPhaseTransmit   = 2,
-        ///< Indicates that when the timer expires, it should process interval expiration callbacks
-        kPhaseInterval   = 3,
-    } Phase;
+        kBeforeRandomTime, // Trickle timer is before random time `t` in the current interval.
+        kAfterRandomTime,  // Trickle timer is after random time `t` in the current interval.
+    };
 
-    Timer mTimer;
+    void        StartNewInterval(void);
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+    void        HandleEndOfTimeInInterval(void);
+    void        HandleEndOfInterval(void);
 
-#ifdef ENABLE_TRICKLE_TIMER_SUPPRESSION_SUPPORT
-    // Redundancy constant
-    const uint32_t k;
+    // Shadow base class `TimerMilli` methods to ensure they are hidden.
+    void StartAt(void) {}
+    void FireAt(void) {}
+    void FireAtIfEarlier(void) {}
+    void GetFireTime(void) {}
 
-    // A counter, keeping track of the number of "consistent" transmissions received
-    uint32_t c;
-#endif
-
-    // Minimum interval size
-    uint32_t Imin;
-    // Maximum interval size
-    uint32_t Imax;
-    // The mode of operation
-    Mode mMode;
-
-    // The current interval size (in milliseconds)
-    uint32_t I;
-    // The time (in milliseconds) into the interval at which we should transmit
-    uint32_t t;
-
-    // The current trickle phase for the timer
-    Phase mPhase;
-
-    // Callback variables
-    Handler mTransmitHandler;
-    Handler mIntervalExpiredHandler;
-    void *mContext;
+    uint32_t mIntervalMin;        // Minimum interval (aka `Imin`).
+    uint32_t mIntervalMax;        // Maximum interval (aka `Imax`).
+    uint32_t mInterval;           // Current interval (aka `I`).
+    uint32_t mTimeInInterval;     // Time in interval (aka `t`).
+    uint16_t mRedundancyConstant; // Redundancy constant (aka 'k').
+    uint16_t mCounter;            // A counter for number of "consistent" transmissions (aka 'c').
+    Handler  mHandler;            // Handler callback.
+    Mode     mMode;               // Trickle timer operation mode.
+    Phase    mPhase;              // Trickle timer phase (before or after time `t` in the current interval).
 };
 
 /**
@@ -185,6 +185,6 @@ private:
  *
  */
 
-}  // namespace Thread
+} // namespace ot
 
-#endif  // TRICKLE_TIMER_HPP_
+#endif // TRICKLE_TIMER_HPP_

@@ -31,30 +31,53 @@
  *   This file implements HMAC SHA-256.
  */
 
-#include <crypto/hmac_sha256.hpp>
+#include "hmac_sha256.hpp"
 
-namespace Thread {
+#include "common/message.hpp"
+
+namespace ot {
 namespace Crypto {
 
-void HmacSha256::Start(const uint8_t *aKey, uint16_t aKeyLength)
+HmacSha256::HmacSha256(void)
 {
-    const mbedtls_md_info_t *mdInfo = NULL;
+    const mbedtls_md_info_t *mdInfo = nullptr;
     mbedtls_md_init(&mContext);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
     mbedtls_md_setup(&mContext, mdInfo, 1);
-    mbedtls_md_hmac_starts(&mContext, aKey, aKeyLength);
 }
 
-void HmacSha256::Update(const uint8_t *aBuf, uint16_t aBufLength)
+HmacSha256::~HmacSha256(void)
 {
-    mbedtls_md_hmac_update(&mContext, aBuf, aBufLength);
-}
-
-void HmacSha256::Finish(uint8_t aHash[kHashSize])
-{
-    mbedtls_md_hmac_finish(&mContext, aHash);
     mbedtls_md_free(&mContext);
 }
 
-}  // namespace Crypto
-}  // namespace Thread
+void HmacSha256::Start(const uint8_t *aKey, uint16_t aKeyLength)
+{
+    mbedtls_md_hmac_starts(&mContext, aKey, aKeyLength);
+}
+
+void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
+{
+    mbedtls_md_hmac_update(&mContext, reinterpret_cast<const uint8_t *>(aBuf), aBufLength);
+}
+
+void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
+{
+    Message::Chunk chunk;
+
+    aMessage.GetFirstChunk(aOffset, aLength, chunk);
+
+    while (chunk.GetLength() > 0)
+    {
+        Update(chunk.GetData(), chunk.GetLength());
+        aMessage.GetNextChunk(aLength, chunk);
+    }
+}
+
+void HmacSha256::Finish(Hash &aHash)
+{
+    mbedtls_md_hmac_finish(&mContext, aHash.m8);
+}
+
+} // namespace Crypto
+} // namespace ot

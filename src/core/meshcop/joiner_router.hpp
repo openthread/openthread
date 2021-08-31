@@ -26,8 +26,113 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifdef OPENTHREAD_MTD
-#include "joiner_router_mtd.hpp"
-#else
-#include "joiner_router_ftd.hpp"
-#endif
+/**
+ * @file
+ *  This file includes definitions for the Joiner Router role.
+ */
+
+#ifndef JOINER_ROUTER_HPP_
+#define JOINER_ROUTER_HPP_
+
+#include "openthread-core-config.h"
+
+#if OPENTHREAD_FTD
+
+#include "coap/coap.hpp"
+#include "coap/coap_message.hpp"
+#include "common/locator.hpp"
+#include "common/message.hpp"
+#include "common/non_copyable.hpp"
+#include "common/notifier.hpp"
+#include "common/timer.hpp"
+#include "mac/mac_types.hpp"
+#include "meshcop/meshcop_tlvs.hpp"
+#include "net/udp6.hpp"
+#include "thread/key_manager.hpp"
+
+namespace ot {
+
+namespace MeshCoP {
+
+class JoinerRouter : public InstanceLocator, private NonCopyable
+{
+    friend class ot::Notifier;
+
+public:
+    /**
+     * This constructor initializes the Joiner Router object.
+     *
+     * @param[in]  aInstance     A reference to the OpenThread instance.
+     *
+     */
+    explicit JoinerRouter(Instance &aInstance);
+
+    /**
+     * This method returns the Joiner UDP Port.
+     *
+     * @returns The Joiner UDP Port number .
+     *
+     */
+    uint16_t GetJoinerUdpPort(void);
+
+    /**
+     * This method sets the Joiner UDP Port.
+     *
+     * @param[in]  The Joiner UDP Port number.
+     *
+     */
+    void SetJoinerUdpPort(uint16_t aJoinerUdpPort);
+
+private:
+    static constexpr uint32_t kJoinerEntrustTxDelay = 50; // in msec
+
+    struct JoinerEntrustMetadata
+    {
+        Error AppendTo(Message &aMessage) const { return aMessage.Append(*this); }
+        void  ReadFrom(const Message &aMessage);
+
+        Ip6::MessageInfo mMessageInfo; // Message info of the message to send.
+        TimeMilli        mSendTime;    // Time when the message shall be sent.
+        Kek              mKek;         // KEK used by MAC layer to encode this message.
+    };
+
+    void HandleNotifierEvents(Events aEvents);
+
+    static void HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleRelayTransmit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo);
+    void        HandleRelayTransmit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo);
+
+    static void HandleJoinerEntrustResponse(void *               aContext,
+                                            otMessage *          aMessage,
+                                            const otMessageInfo *aMessageInfo,
+                                            Error                aResult);
+    void HandleJoinerEntrustResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult);
+
+    static void HandleTimer(Timer &aTimer);
+    void        HandleTimer(void);
+
+    void           Start(void);
+    void           DelaySendingJoinerEntrust(const Ip6::MessageInfo &aMessageInfo, const Kek &aKek);
+    void           SendDelayedJoinerEntrust(void);
+    Error          SendJoinerEntrust(const Ip6::MessageInfo &aMessageInfo);
+    Coap::Message *PrepareJoinerEntrustMessage(void);
+
+    Ip6::Udp::Socket mSocket;
+    Coap::Resource   mRelayTransmit;
+
+    TimerMilli   mTimer;
+    MessageQueue mDelayedJoinEnts;
+
+    uint16_t mJoinerUdpPort;
+
+    bool mIsJoinerPortConfigured : 1;
+};
+
+} // namespace MeshCoP
+} // namespace ot
+
+#endif // OPENTHREAD_FTD
+
+#endif // JOINER_ROUTER_HPP_

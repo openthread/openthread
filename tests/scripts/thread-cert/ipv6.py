@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -30,21 +30,22 @@
 import abc
 import io
 import struct
-import sys
 
 from binascii import hexlify
 from ipaddress import ip_address
+
+import common
 
 try:
     from itertools import izip_longest as zip_longest
 except ImportError:
     from itertools import zip_longest
 
-
 # Next headers for IPv6 protocols
 IPV6_NEXT_HEADER_HOP_BY_HOP = 0
 IPV6_NEXT_HEADER_TCP = 6
 IPV6_NEXT_HEADER_UDP = 17
+IPV6_NEXT_HEADER_FRAGMENT = 44
 IPV6_NEXT_HEADER_ICMP = 58
 
 UPPER_LAYER_PROTOCOLS = [
@@ -55,6 +56,7 @@ UPPER_LAYER_PROTOCOLS = [
 
 # ICMP Protocol codes
 ICMP_DESTINATION_UNREACHABLE = 1
+ICMP_TIME_EXCEEDED = 3
 ICMP_ECHO_REQUEST = 128
 ICMP_ECHO_RESPONSE = 129
 
@@ -74,24 +76,24 @@ def calculate_checksum(data):
     Returns:
         int: calculated checksum
     """
-    # Create halfwords from data bytes. Example: data[0] = 0x01, data[1] = 0xb2 => 0x01b2
+    # Create halfwords from data bytes. Example: data[0] = 0x01, data[1] =
+    # 0xb2 => 0x01b2
     halfwords = [((byte0 << 8) | byte1) for byte0, byte1 in zip_longest(data[::2], data[1::2], fillvalue=0x00)]
 
     checksum = 0
     for halfword in halfwords:
         checksum += halfword
-        checksum = (checksum & 0xFFFF) + (checksum >> 16)
+        checksum = (checksum & 0xffff) + (checksum >> 16)
 
-    checksum ^= 0xFFFF
+    checksum ^= 0xffff
 
     if checksum == 0:
-        return 0xFFFF
+        return 0xffff
     else:
         return checksum
 
 
 class PacketFactory(object):
-
     """ Interface for classes that produce objects from data. """
 
     def parse(self, data, message_info):
@@ -106,7 +108,6 @@ class PacketFactory(object):
 
 
 class BuildableFromBytes(object):
-
     """ Interface for classes which can be built from bytes. """
 
     @classmethod
@@ -121,7 +122,6 @@ class BuildableFromBytes(object):
 
 
 class ConvertibleToBytes(object):
-
     """ Interface for classes which can be converted to bytes. """
 
     def to_bytes(self):
@@ -142,7 +142,6 @@ class ConvertibleToBytes(object):
 
 
 class Header(object):
-
     """ Interface for header classes. """
 
     __metaclass__ = abc.ABCMeta
@@ -157,7 +156,6 @@ class Header(object):
 
 
 class ExtensionHeader(object):
-
     """ Base for classes representing Extension Headers in IPv6 packets. """
 
     def __init__(self, next_header, hdr_ext_len=0):
@@ -166,7 +164,6 @@ class ExtensionHeader(object):
 
 
 class UpperLayerProtocol(Header, ConvertibleToBytes):
-
     """ Base for classes representing upper layer protocol payload in IPv6 packets. """
 
     def __init__(self, header):
@@ -195,7 +192,6 @@ class UpperLayerProtocol(Header, ConvertibleToBytes):
 
 
 class IPv6PseudoHeader(ConvertibleToBytes):
-
     """ Class representing IPv6 pseudo header which is required to calculate
     upper layer protocol (like e.g. UDP or ICMPv6) checksum.
 
@@ -212,9 +208,6 @@ class IPv6PseudoHeader(ConvertibleToBytes):
     def _convert_to_ipaddress(self, value):
         if isinstance(value, bytearray):
             value = bytes(value)
-
-        elif isinstance(value, str) and sys.version_info[0] == 2:
-            value = value.decode("utf-8")
 
         return ip_address(value)
 
@@ -245,15 +238,22 @@ class IPv6PseudoHeader(ConvertibleToBytes):
 
 
 class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing IPv6 packet header. """
 
     _version = 6
 
     _header_length = 40
 
-    def __init__(self, source_address, destination_address, traffic_class=0, flow_label=0, hop_limit=64,
-                 payload_length=0, next_header=0):
+    def __init__(
+        self,
+        source_address,
+        destination_address,
+        traffic_class=0,
+        flow_label=0,
+        hop_limit=64,
+        payload_length=0,
+        next_header=0,
+    ):
         self.version = self._version
         self._source_address = self._convert_to_ipaddress(source_address)
         self._destination_address = self._convert_to_ipaddress(destination_address)
@@ -266,9 +266,6 @@ class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
     def _convert_to_ipaddress(self, value):
         if isinstance(value, bytearray):
             value = bytes(value)
-
-        elif isinstance(value, str) and sys.version_info[0] == 2:
-            value = value.decode("utf-8")
 
         return ip_address(value)
 
@@ -288,8 +285,8 @@ class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
         data = bytearray([
             ((self.version & 0x0F) << 4) | ((self.traffic_class >> 4) & 0x0F),
             ((self.traffic_class & 0x0F) << 4) | ((self.flow_label >> 16) & 0x0F),
-            ((self.flow_label >> 8) & 0xFF),
-            ((self.flow_label & 0xFF))
+            ((self.flow_label >> 8) & 0xff),
+            ((self.flow_label & 0xff)),
         ])
         data += struct.pack(">H", self.payload_length)
         data += bytearray([self.next_header, self.hop_limit])
@@ -302,7 +299,7 @@ class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
     def from_bytes(cls, data):
         b = bytearray(data.read(4))
 
-        version = (b[0] >> 4) & 0x0F
+        (b[0] >> 4) & 0x0F
         traffic_class = ((b[0] & 0x0F) << 4) | ((b[1] >> 4) & 0x0F)
         flow_label = ((b[1] & 0x0F) << 16) | (b[2] << 8) | b[3]
 
@@ -312,30 +309,33 @@ class IPv6Header(ConvertibleToBytes, BuildableFromBytes):
         src_addr = bytearray(data.read(16))
         dst_addr = bytearray(data.read(16))
 
-        return cls(src_addr,
-                   dst_addr,
-                   traffic_class,
-                   flow_label,
-                   hop_limit,
-                   payload_length,
-                   next_header)
+        return cls(
+            src_addr,
+            dst_addr,
+            traffic_class,
+            flow_label,
+            hop_limit,
+            payload_length,
+            next_header,
+        )
 
     def __repr__(self):
         return "IPv6Header(source_address={}, destination_address={}, next_header={}, payload_length={}, \
-            hop_limit={}, traffic_class={}, flow_label={})".format(self.source_address.compressed,
-                                                                   self.destination_address.compressed,
-                                                                   self.next_header,
-                                                                   self.payload_length,
-                                                                   self.hop_limit,
-                                                                   self.traffic_class,
-                                                                   self.flow_label)
+            hop_limit={}, traffic_class={}, flow_label={})".format(
+            self.source_address.compressed,
+            self.destination_address.compressed,
+            self.next_header,
+            self.payload_length,
+            self.hop_limit,
+            self.traffic_class,
+            self.flow_label,
+        )
 
     def __len__(self):
         return self._header_length
 
 
 class IPv6Packet(ConvertibleToBytes):
-
     """ Class representing IPv6 packet.
 
     IPv6 packet consists of IPv6 header, optional extension header, and upper layer protocol.
@@ -351,6 +351,7 @@ class IPv6Packet(ConvertibleToBytes):
     Extension headers:
         - HopByHop
         - Routing header (not implemented in this module)
+        - Fragment Header
 
     Upper layer protocols:
         - ICMPv6
@@ -385,7 +386,7 @@ class IPv6Packet(ConvertibleToBytes):
 
         self.upper_layer_protocol = upper_layer_protocol
 
-        self.extension_headers = extension_headers if extension_headers is not None else []
+        self.extension_headers = (extension_headers if extension_headers is not None else [])
 
         self._update_next_header_values_in_headers()
 
@@ -402,8 +403,8 @@ class IPv6Packet(ConvertibleToBytes):
         self.upper_layer_protocol.checksum = checksum
 
     def _update_payload_length_value_in_ipv6_header(self):
-        self.ipv6_header.payload_length = len(self.upper_layer_protocol) + \
-            sum([len(extension_header) for extension_header in self.extension_headers])
+        self.ipv6_header.payload_length = len(self.upper_layer_protocol) + sum(
+            [len(extension_header) for extension_header in self.extension_headers])
 
     def _update_next_header_values_in_headers(self):
         last_header = self.ipv6_header
@@ -423,10 +424,12 @@ class IPv6Packet(ConvertibleToBytes):
 
         self.upper_layer_protocol.checksum = saved_checksum
 
-        pseudo_header = IPv6PseudoHeader(self.ipv6_header.source_address,
-                                         self.ipv6_header.destination_address,
-                                         len(upper_layer_protocol_bytes),
-                                         self.upper_layer_protocol.type)
+        pseudo_header = IPv6PseudoHeader(
+            self.ipv6_header.source_address,
+            self.ipv6_header.destination_address,
+            len(upper_layer_protocol_bytes),
+            self.upper_layer_protocol.type,
+        )
 
         return calculate_checksum(pseudo_header.to_bytes() + upper_layer_protocol_bytes)
 
@@ -449,7 +452,6 @@ class IPv6Packet(ConvertibleToBytes):
 
 
 class UDPHeader(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing UDP datagram header.
 
     This header is required to construct UDP datagram.
@@ -499,7 +501,6 @@ class UDPHeader(ConvertibleToBytes, BuildableFromBytes):
 
 
 class UDPDatagram(UpperLayerProtocol):
-
     """ Class representing UDP datagram.
 
     UDP is an upper layer protocol for IPv6 so it can be passed to IPv6 packet as upper_layer_protocol.
@@ -536,7 +537,6 @@ class UDPDatagram(UpperLayerProtocol):
 
 
 class ICMPv6Header(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing ICMPv6 message header.
 
     This header is required to construct ICMPv6 message.
@@ -567,7 +567,6 @@ class ICMPv6Header(ConvertibleToBytes, BuildableFromBytes):
 
 
 class ICMPv6(UpperLayerProtocol):
-
     """ Class representing ICMPv6 message.
 
     ICMPv6 is an upper layer protocol for IPv6 so it can be passed to IPv6 packet as upper_layer_protocol.
@@ -581,6 +580,7 @@ class ICMPv6(UpperLayerProtocol):
                                                         0x41, 0x41])))
 
     """
+
     @property
     def type(self):
         return 58
@@ -596,8 +596,69 @@ class ICMPv6(UpperLayerProtocol):
         return len(self.header) + len(self.body)
 
 
-class HopByHop(ExtensionHeader):
+class FragmentHeader(ExtensionHeader):
+    """ Class representing Fragment extension header.
 
+    +-------------+----------+-----------------+-----+---+----------------+
+    | Next Header | Reserved | Fragment Offset | Res | M | Identification |
+    +-------------+----------+-----------------+-----+---+----------------+
+
+    Fragment extention header consists of:
+        - next_header type (8 bit)
+        - fragment offset which is multiple of 8 (13 bit)
+        - more_flag to indicate further data (1 bit)
+        - identification for all associated fragments (32 bit)
+    """
+
+    @property
+    def type(self):
+        return 44
+
+    @property
+    def identification(self):
+        return self._identification
+
+    @property
+    def more_flag(self):
+        return self._more_flag
+
+    @property
+    def offset(self):
+        return self._fragm_offset
+
+    def __init__(self, next_header=None, fragm_offset=0, more_flag=False, identification=0):
+        super(FragmentHeader, self).__init__(next_header, 0)
+        self._fragm_offset = fragm_offset
+        self._more_flag = more_flag
+        self._identification = identification
+
+    def callculate_offset(self, position):
+        return position >> 3
+
+    def to_bytes(self):
+        data = bytearray([self.next_header, 0x00])
+        data += bytearray([self._fragm_offset >> 5, ((self._fragm_offset << 3) | self._more_flag) & 0xff])
+        data += struct.pack(">I", self._identification)
+
+        return data
+
+    @classmethod
+    def from_bytes(cls, data):
+        next_header = struct.unpack(">B", data.read(1))[0]
+        struct.unpack(">B", data.read(1))[0]  # reserved
+        fragment_offset = struct.unpack(">H", data.read(2))[0]
+        more_flag = fragment_offset & 0x1
+        identificaton = struct.unpack(">I", data.read(4))[0]
+
+        fragment_offset = fragment_offset >> 3
+
+        return cls(next_header, fragment_offset, more_flag, identificaton)
+
+    def __len__(self):
+        return 64
+
+
+class HopByHop(ExtensionHeader):
     """ Class representing HopByHop extension header.
 
     HopByHop extension header consists of:
@@ -606,6 +667,7 @@ class HopByHop(ExtensionHeader):
         - options
 
     """
+
     _one_byte_padding = 0x00
     _many_bytes_padding = 0x01
 
@@ -676,7 +738,6 @@ class HopByHop(ExtensionHeader):
 
 
 class HopByHopOptionHeader(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing HopByHop option header. """
 
     _header_length = 2
@@ -702,7 +763,6 @@ class HopByHopOptionHeader(ConvertibleToBytes, BuildableFromBytes):
 
 
 class HopByHopOption(ConvertibleToBytes):
-
     """ Class representing HopByHop option.
 
     Class consists of two elements: HopByHopOptionHeader and value (e.g. for MPLOption).
@@ -733,17 +793,11 @@ class HopByHopOption(ConvertibleToBytes):
 
 
 class MPLOption(ConvertibleToBytes):
-
     """ Class representing MPL option. """
 
     _header_length = 2
 
-    _seed_id_length = {
-        0: 0,
-        1: 2,
-        2: 8,
-        3: 16
-    }
+    _seed_id_length = {0: 0, 1: 2, 2: 8, 3: 16}
 
     def __init__(self, S, M, V, sequence, seed_id):
         self.S = S
@@ -753,7 +807,7 @@ class MPLOption(ConvertibleToBytes):
         self.seed_id = seed_id
 
     def to_bytes(self):
-        smv = ((self.S & 0x03) << 6) | ((self.M & 0x01) << 5) | ((self.V & 0x01) << 4)
+        smv = (((self.S & 0x03) << 6) | ((self.M & 0x01) << 5) | ((self.V & 0x01) << 4))
 
         return bytearray([smv, self.sequence]) + self.seed_id
 
@@ -761,9 +815,9 @@ class MPLOption(ConvertibleToBytes):
     def from_bytes(cls, data):
         b = ord(data.read(1))
 
-        s = ((b >> 6) & 0x03)
-        m = ((b >> 5) & 0x01)
-        v = ((b >> 4) & 0x01)
+        s = (b >> 6) & 0x03
+        m = (b >> 5) & 0x01
+        v = (b >> 4) & 0x01
 
         sequence = ord(data.read(1))
         seed_id = data.read(cls._seed_id_length[s])
@@ -774,11 +828,11 @@ class MPLOption(ConvertibleToBytes):
         return self._header_length + self._seed_id_length[self.S]
 
     def __repr__(self):
-        return "MPLOption(S={}, M={}, V={}, sequence={}, seed_id={})".format(self.S, self.M, self.V, self.sequence, hexlify(self.seed_id))
+        return "MPLOption(S={}, M={}, V={}, sequence={}, seed_id={})".format(self.S, self.M, self.V, self.sequence,
+                                                                             hexlify(self.seed_id))
 
 
 class IPv6PacketFactory(PacketFactory):
-
     """ Factory that produces IPv6 packets from data.
 
     This factory must be initialized with factories which allow to parse extension headers and upper layer protocols.
@@ -832,7 +886,7 @@ class IPv6PacketFactory(PacketFactory):
         self._ulpf = ulpf if ulpf is not None else {}
 
     def _is_extension_header(self, header_type):
-        return not header_type in UPPER_LAYER_PROTOCOLS
+        return header_type not in UPPER_LAYER_PROTOCOLS
 
     def _get_extension_header_factory_for(self, next_header):
         try:
@@ -879,14 +933,13 @@ class IPv6PacketFactory(PacketFactory):
 
 
 class HopByHopOptionsFactory(object):
-
     """ Factory that produces HopByHop options. """
 
     _one_byte_padding = 0x00
     _many_bytes_padding = 0x01
 
     def __init__(self, options_factories=None):
-        self._options_factories = options_factories if options_factories is not None else {}
+        self._options_factories = (options_factories if options_factories is not None else {})
 
     def _get_HopByHopOption_value_factory(self, _type):
         try:
@@ -913,7 +966,10 @@ class HopByHopOptionsFactory(object):
 
                 option_data = data.read(option_header.length)
 
-                option = HopByHopOption(option_header, factory.parse(io.BytesIO(option_data), message_info))
+                option = HopByHopOption(
+                    option_header,
+                    factory.parse(io.BytesIO(option_data), message_info),
+                )
 
                 options.append(option)
 
@@ -921,7 +977,6 @@ class HopByHopOptionsFactory(object):
 
 
 class HopByHopFactory(PacketFactory):
-
     """ Factory that produces HopByHop extension headers from data. """
 
     def __init__(self, hop_by_hop_options_factory):
@@ -935,8 +990,9 @@ class HopByHopFactory(PacketFactory):
 
         hdr_ext_len = ord(data.read(1))
 
-        # Note! Two bytes were read (next_header and hdr_ext_len) so they must be substracted from header length
-        hop_by_hop_length = self._calculate_extension_header_length(hdr_ext_len) - 2
+        # Note! Two bytes were read (next_header and hdr_ext_len) so they must
+        # be substracted from header length
+        hop_by_hop_length = (self._calculate_extension_header_length(hdr_ext_len) - 2)
 
         hop_by_hop_data = data.read(hop_by_hop_length)
 
@@ -950,7 +1006,6 @@ class HopByHopFactory(PacketFactory):
 
 
 class MPLOptionFactory(PacketFactory):
-
     """ Factory that produces MPL options for HopByHop extension header. """
 
     def parse(self, data, message_info):
@@ -958,7 +1013,6 @@ class MPLOptionFactory(PacketFactory):
 
 
 class UDPHeaderFactory:
-
     """ Factory that produces UDP header. """
 
     def parse(self, data, message_info):
@@ -968,13 +1022,14 @@ class UDPHeaderFactory:
 class UdpBasedOnSrcDstPortsPayloadFactory:
 
     # TODO: Unittests
-
     """ Factory that produces UDP payload. """
 
     def __init__(self, src_dst_port_based_payload_factories):
         """
         Args:
-            src_dst_port_based_payload_factories (PacketFactory): Factories parse UDP payload based on source or destination port.
+            src_dst_port_based_payload_factories (PacketFactory):
+                Factories parse UDP payload based on source or
+                destination port.
         """
         self._factories = src_dst_port_based_payload_factories
 
@@ -987,7 +1042,10 @@ class UdpBasedOnSrcDstPortsPayloadFactory:
         if message_info.src_port in self._factories:
             factory = self._factories[message_info.src_port]
 
-        if factory is None:
+        if message_info.dst_port == common.UDP_TEST_PORT:
+            # Ignore traffic targeted to test port
+            return None
+        elif factory is None:
             raise RuntimeError("Could not find factory to build UDP payload.")
 
         return factory.parse(data, message_info)
@@ -996,7 +1054,6 @@ class UdpBasedOnSrcDstPortsPayloadFactory:
 class UDPDatagramFactory(PacketFactory):
 
     # TODO: Unittests
-
     """ Factory that produces UDP datagrams. """
 
     def __init__(self, udp_header_factory, udp_payload_factory):
@@ -1018,11 +1075,10 @@ class UDPDatagramFactory(PacketFactory):
 
 
 class ICMPv6Factory(PacketFactory):
-
     """ Factory that produces ICMPv6 messages from data. """
 
     def __init__(self, body_factories=None):
-        self._body_factories = body_factories if body_factories is not None else {}
+        self._body_factories = (body_factories if body_factories is not None else {})
 
     def _get_icmpv6_body_factory(self, _type):
         try:
@@ -1051,7 +1107,6 @@ class ICMPv6Factory(PacketFactory):
 
 
 class ICMPv6EchoBodyFactory(PacketFactory):
-
     """ Factory that produces ICMPv6 echo message body. """
 
     def parse(self, data, message_info):
@@ -1059,7 +1114,6 @@ class ICMPv6EchoBodyFactory(PacketFactory):
 
 
 class BytesPayload(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing bytes payload. """
 
     def __init__(self, data):
@@ -1077,7 +1131,6 @@ class BytesPayload(ConvertibleToBytes, BuildableFromBytes):
 
 
 class BytesPayloadFactory(PacketFactory):
-
     """ Factory that produces bytes payload. """
 
     def parse(self, data, message_info):
@@ -1085,7 +1138,6 @@ class BytesPayloadFactory(PacketFactory):
 
 
 class ICMPv6EchoBody(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing body of ICMPv6 echo messages. """
 
     _header_length = 4
@@ -1113,7 +1165,6 @@ class ICMPv6EchoBody(ConvertibleToBytes, BuildableFromBytes):
 
 
 class ICMPv6DestinationUnreachableFactory(PacketFactory):
-
     """ Factory that produces ICMPv6 echo message body. """
 
     def parse(self, data, message_info):
@@ -1121,7 +1172,6 @@ class ICMPv6DestinationUnreachableFactory(PacketFactory):
 
 
 class ICMPv6DestinationUnreachable(ConvertibleToBytes, BuildableFromBytes):
-
     """ Class representing body of ICMPv6 Destination Unreachable messages. """
 
     _header_length = 4

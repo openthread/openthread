@@ -77,5 +77,30 @@ $(NL_V_LCOV)$(LCOV) $(NL_V_LCOV_FLAGS) --config-file="$(abs_top_nlbuild_autotool
 $(NL_V_GENHTML)$(GENHTML) $(NL_V_GENHTML_FLAGS) --config-file="$(abs_top_nlbuild_autotools_dir)/etc/lcov.config" "$(@)" --output-directory "$(@D)"
 endef # generate-coverage-report
 
+#
+# generate-coverage-report-with-filter <directory> <remove_filter>
+#
+# Capture, using lcov, a coverage report from the specified directory 'directory' and a filter 'remove_filter'
+# with an final output "info" file as specified by the target variable.
+#
+#   <directory>      - The directory from which lcov should search for coverage data (*.gcno & *.gcda)
+#
+#   <remove_filter>  - The filter is a whitespace-separated list of shell wildcard patterns. (note that they may need to be escaped accordingly to prevent
+#                      the shell from expanding them first). Every file entry in tracefile which matches at least one of those patterns will be removed.
+#
+#   - create baseline coverage data file (base.info) with '-i|--initial' option
+#   - create test coverage data file (test.info)
+#   - combine baseline and test coverage data to create the final "info" file
+#   - remove particular coverage data specifiled by the remove_filter (no change if remove_filter is null)
+#
+# Then, on success, generate an HTML-based coverage report using genhtml.
+#
+define generate-coverage-report-with-filter
+$(NL_V_LCOV)$(LCOV) $(NL_V_LCOV_FLAGS) --config-file="$(abs_top_nlbuild_autotools_dir)/etc/lcov.config" --initial --capture --directory "$(1)" --output-file "base.info"
+$(NL_V_LCOV)$(LCOV) $(NL_V_LCOV_FLAGS) --config-file="$(abs_top_nlbuild_autotools_dir)/etc/lcov.config" --capture --directory "$(1)" --output-file "test.info"
+$(NL_V_LCOV)$(LCOV) $(NL_V_LCOV_FLAGS) --config-file="$(abs_top_nlbuild_autotools_dir)/etc/lcov.config" --add-tracefile "base.info" --add-tracefile "test.info" --output-file "$(@)"
+$(NL_V_LCOV)$(LCOV) $(NL_V_LCOV_FLAGS) --config-file="$(abs_top_nlbuild_autotools_dir)/etc/lcov.config" --remove "$(@)" $(foreach pattern,$(2),"$(pattern)") --output-file "$(@)"
+$(NL_V_GENHTML)$(GENHTML) $(NL_V_GENHTML_FLAGS) --config-file="$(abs_top_nlbuild_autotools_dir)/etc/lcov.config" "$(@)" --output-directory "$(@D)"
+endef # generate-coverage-report-with-filter
 
 

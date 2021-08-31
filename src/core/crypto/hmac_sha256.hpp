@@ -34,11 +34,18 @@
 #ifndef HMAC_SHA256_HPP_
 #define HMAC_SHA256_HPP_
 
+#include "openthread-core-config.h"
+
 #include <stdint.h>
 
 #include <mbedtls/md.h>
 
-namespace Thread {
+#include "crypto/sha256.hpp"
+
+namespace ot {
+
+class Message;
+
 namespace Crypto {
 
 /**
@@ -55,13 +62,26 @@ namespace Crypto {
 class HmacSha256
 {
 public:
-    enum
-    {
-        kHashSize = 32,  ///< SHA-256 hash size (bytes)
-    };
+    /**
+     * This type represents a HMAC SHA-256 hash.
+     *
+     */
+    typedef Sha256::Hash Hash;
 
     /**
-     * This method sets the key.
+     * Constructor for `HmacSha256`.
+     *
+     */
+    HmacSha256(void);
+
+    /**
+     * Destructor for `HmacSha256`.
+     *
+     */
+    ~HmacSha256(void);
+
+    /**
+     * This method sets the key and starts the HMAC computation.
      *
      * @param[in]  aKey        A pointer to the key.
      * @param[in]  aKeyLength  The key length in bytes.
@@ -76,15 +96,39 @@ public:
      * @param[in]  aBufLength  The length of @p aBuf in bytes.
      *
      */
-    void Update(const uint8_t *aBuf, uint16_t aBufLength);
+    void Update(const void *aBuf, uint16_t aBufLength);
+
+    /**
+     * This method inputs an object (treated as a sequence of bytes) into the HMAC computation.
+     *
+     * @tparam    ObjectType   The object type.
+     *
+     * @param[in] aObject      A reference to the object.
+     *
+     */
+    template <typename ObjectType> void Update(const ObjectType &aObject)
+    {
+        static_assert(!TypeTraits::IsPointer<ObjectType>::kValue, "ObjectType must not be a pointer");
+        return Update(&aObject, sizeof(ObjectType));
+    }
+
+    /**
+     * This method inputs the bytes read from a given message into the HMAC computation.
+     *
+     * @param[in] aMessage    The message to read the data from.
+     * @param[in] aOffset     The offset into @p aMessage to start to read.
+     * @param[in] aLength     The number of bytes to read.
+     *
+     */
+    void Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength);
 
     /**
      * This method finalizes the hash computation.
      *
-     * @param[out]  aHash  A pointer to the output buffer.
+     * @param[out]  aHash  A reference to a `Hash` to output the calculated hash.
      *
      */
-    void Finish(uint8_t aHash[kHashSize]);
+    void Finish(Hash &aHash);
 
 private:
     mbedtls_md_context_t mContext;
@@ -95,7 +139,7 @@ private:
  *
  */
 
-}  // namespace Crypto
-}  // namespace Thread
+} // namespace Crypto
+} // namespace ot
 
-#endif  // HMAC_SHA256_HPP_
+#endif // HMAC_SHA256_HPP_

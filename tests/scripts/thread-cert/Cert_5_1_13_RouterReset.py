@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 #
 #  Copyright (c) 2016, The OpenThread Authors.
 #  All rights reserved.
@@ -27,126 +27,178 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-import time
 import unittest
 
-import config
 import mle
-import node
+import thread_cert
+from pktverify.consts import MLE_ADVERTISEMENT, MLE_LINK_REQUEST, MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST, SOURCE_ADDRESS_TLV, CHALLENGE_TLV, RESPONSE_TLV, LINK_LAYER_FRAME_COUNTER_TLV, ROUTE64_TLV, ADDRESS16_TLV, LEADER_DATA_TLV, TLV_REQUEST_TLV, VERSION_TLV, MLE_MAX_RESPONSE_DELAY
+from pktverify.packet_verifier import PacketVerifier
+from pktverify.null_field import nullField
 
 LEADER = 1
 ROUTER = 2
-SNIFFER = 3
+
+# Test Purpose and Description:
+# -----------------------------
+# The purpose of this test case is to validate that when a router resets,
+# it will synchronize upon returning by using the Router Synchronization
+# after Reset procedure.
+#
+# Test Topology:
+# -------------
+#     Leader
+#       |
+#     Router
+#
+# DUT Types:
+# ----------
+#  Leader
+#  Router
 
 
-class Cert_5_1_13_RouterReset(unittest.TestCase):
+class Cert_5_1_13_RouterReset(thread_cert.TestCase):
+    USE_MESSAGE_FACTORY = False
 
-    def setUp(self):
-        self.nodes = {}
-        for i in range(1, 3):
-            self.nodes[i] = node.Node(i)
+    TOPOLOGY = {
+        LEADER: {
+            'name': 'LEADER',
+            'mode': 'rdn',
+            'allowlist': [ROUTER]
+        },
+        ROUTER: {
+            'name': 'ROUTER',
+            'mode': 'rdn',
+            'allowlist': [LEADER]
+        },
+    }
 
-        self.nodes[LEADER].set_panid(0xface)
-        self.nodes[LEADER].set_mode('rsdn')
-        self.nodes[LEADER].add_whitelist(self.nodes[ROUTER].get_addr64())
-        self.nodes[LEADER].enable_whitelist()
-
-        self.nodes[ROUTER].set_panid(0xface)
-        self.nodes[ROUTER].set_mode('rsdn')
-        self.nodes[ROUTER].add_whitelist(self.nodes[LEADER].get_addr64())
-        self.nodes[ROUTER].enable_whitelist()
+    def _setUpRouter(self):
+        self.nodes[ROUTER].add_allowlist(self.nodes[LEADER].get_addr64())
+        self.nodes[ROUTER].enable_allowlist()
         self.nodes[ROUTER].set_router_selection_jitter(1)
-
-        self.sniffer = config.create_default_thread_sniffer(SNIFFER)
-        self.sniffer.start()
-
-    def tearDown(self):
-        self.sniffer.stop()
-        del self.sniffer
-
-        for node in list(self.nodes.values()):
-            node.stop()
-        del self.nodes
 
     def test(self):
         self.nodes[LEADER].start()
-        self.nodes[LEADER].set_state('leader')
+        self.simulator.go(5)
         self.assertEqual(self.nodes[LEADER].get_state(), 'leader')
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
+        self.collect_rloc16s()
 
-        rloc16 = self.nodes[ROUTER].get_addr16()
-
-        self.nodes[ROUTER].stop()
-        time.sleep(5)
+        self.nodes[ROUTER].reset()
+        self._setUpRouter()
+        self.simulator.go(5)
 
         self.nodes[ROUTER].start()
-        time.sleep(5)
+        self.simulator.go(5)
         self.assertEqual(self.nodes[ROUTER].get_state(), 'router')
-        self.assertEqual(self.nodes[ROUTER].get_addr16(), rloc16)
 
-        leader_messages = self.sniffer.get_messages_sent_by(LEADER)
-        router1_messages = self.sniffer.get_messages_sent_by(ROUTER)
+    def verify(self, pv):
+        pkts = pv.pkts
+        pv.summary.show()
 
-        # 1 - All
-        leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
+        LEADER = pv.vars['LEADER']
+        ROUTER = pv.vars['ROUTER']
+        ROUTER_RLOC16 = pv.vars['ROUTER_RLOC16']
 
-        router1_messages.next_mle_message(mle.CommandType.PARENT_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.PARENT_RESPONSE)
+        # Step 1: Verify topology is formed correctly.
 
-        router1_messages.next_mle_message(mle.CommandType.CHILD_ID_REQUEST)
-        leader_messages.next_mle_message(mle.CommandType.CHILD_ID_RESPONSE)
+        # Step 2: Devices MUST send properly formatted MLE Advertisements with
+        #         an IP Hop Limit of 255 to the Link-Local All Nodes multicast
+        #         address (FF02::1).
+        #          The following TLVs MUST be present in the MLE Advertisements:
+        #              - Leader Data TLV
+        #              - Route64 TLV
+        #              - Source Address TLV
 
-        msg = router1_messages.next_coap_message("0.02")
-        msg.assertCoapMessageRequestUriPath("/a/as")
+        pv.verify_attached('ROUTER')
+        pkts.filter_wpan_src64(ROUTER).\
+            filter_LLANMA().\
+            filter_mle_cmd(MLE_ADVERTISEMENT).\
+            filter(lambda p: {
+                              LEADER_DATA_TLV,
+                              ROUTE64_TLV,
+                              SOURCE_ADDRESS_TLV
+                              } == set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255
+                   ).\
+            must_next()
+        pkts.filter_wpan_src64(LEADER).\
+            filter_LLANMA().\
+            filter_mle_cmd(MLE_ADVERTISEMENT).\
+            filter(lambda p: {
+                              LEADER_DATA_TLV,
+                              ROUTE64_TLV,
+                              SOURCE_ADDRESS_TLV
+                              } == set(p.mle.tlv.type) and\
+                   p.ipv6.hlim == 255
+                   ).\
+            must_next()
 
-        msg = leader_messages.next_coap_message("2.04")
+        # Step 4: Router sends multicast Link Request message
+        #
+        #         The Link Request Message MUST be sent to the Link-Local All Routers
+        #         Routers multicast address (FF02::2) and contain the following TLVs:
+        #             - Challenge TLV
+        #             - TLV Request TLV
+        #                 - Address16 TLV
+        #                 - Route64 TLV
+        #             - Version TLV
+        #
 
-        router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-        msg = leader_messages.next_mle_message_of_one_of_command_types(mle.CommandType.LINK_ACCEPT_AND_REQUEST,
-                                                                       mle.CommandType.LINK_ACCEPT)
-        self.assertIsNotNone(msg)
+        _pkt_lq = pkts.filter_mle_cmd(MLE_LINK_REQUEST).\
+                filter_LLARMA().\
+                filter(lambda p: {
+                                  CHALLENGE_TLV,
+                                  VERSION_TLV,
+                                  TLV_REQUEST_TLV,
+                                  ADDRESS16_TLV,
+                                  ROUTE64_TLV
+                                  } <= set(p.mle.tlv.type) and\
+                       p.mle.tlv.addr16 is nullField and \
+                       p.mle.tlv.route64.id_mask is nullField
+                       ).\
+                must_next()
 
-        # 2 - Router1 / Leader
-        msg = router1_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-        msg.assertSentWithHopLimit(255)
-        msg.assertSentToDestinationAddress("ff02::1")
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.Route64)
+        # Step 5: Leader replies to Router with Link Accept message
+        #         The following TLVs MUST be present in the Link Accept message:
+        #             - Leader Data TLV
+        #             - Link-layer Frame Counter TLV
+        #             - Link Margin TLV
+        #             - Response TLV
+        #             - Source Address TLV
+        #             - Version TLV
+        #             - TLV Request TLV: Link Margin
+        #             - Challenge TLV (optional)
+        #             - MLE Frame Counter TLV (optional)
+        #         The Challenge TLV MUST be included if the response is an
+        #         Accept and Request message.
+        #         Responses to multicast Link Requests MUST be delayed by a
+        #         random time of up to MLE_MAX_RESPONSE_DELAY (1 second).
 
-        msg = leader_messages.next_mle_message(mle.CommandType.ADVERTISEMENT)
-        msg.assertSentWithHopLimit(255)
-        msg.assertSentToDestinationAddress("ff02::1")
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.Route64)
-
-        # 4 - Router1
-        msg = router1_messages.next_mle_message(mle.CommandType.LINK_REQUEST)
-        msg.assertSentToDestinationAddress("ff02::2")
-        msg.assertMleMessageContainsTlv(mle.Challenge)
-        msg.assertMleMessageContainsTlv(mle.Version)
-        msg.assertMleMessageContainsTlv(mle.TlvRequest)
-
-        tlv_request = msg.get_mle_message_tlv(mle.TlvRequest)
-        self.assertIn(mle.TlvType.ROUTE64, tlv_request.tlvs)
-        self.assertIn(mle.TlvType.ADDRESS16, tlv_request.tlvs)
-
-        # 5 - Leader
-        msg = leader_messages.next_mle_message(mle.CommandType.LINK_ACCEPT)
-        msg.assertSentToNode(self.nodes[ROUTER])
-        msg.assertMleMessageContainsTlv(mle.SourceAddress)
-        msg.assertMleMessageContainsTlv(mle.LeaderData)
-        msg.assertMleMessageContainsTlv(mle.Response)
-        msg.assertMleMessageContainsTlv(mle.LinkLayerFrameCounter)
-        msg.assertMleMessageContainsOptionalTlv(mle.MleFrameCounter)
-        msg.assertMleMessageContainsTlv(mle.Address16)
-        msg.assertMleMessageContainsTlv(mle.Version)
-        msg.assertMleMessageContainsTlv(mle.Route64)
-        msg.assertMleMessageContainsOptionalTlv(mle.Challenge)
+        _pkt = pkts.filter_wpan_src64(LEADER).\
+                filter_wpan_dst64(ROUTER).\
+                filter_mle_cmd2(MLE_LINK_ACCEPT, MLE_LINK_ACCEPT_AND_REQUEST).\
+                filter(lambda p: {
+                                  ADDRESS16_TLV,
+                                  LEADER_DATA_TLV,
+                                  LINK_LAYER_FRAME_COUNTER_TLV,
+                                  RESPONSE_TLV,
+                                  ROUTE64_TLV,
+                                  SOURCE_ADDRESS_TLV,
+                                  VERSION_TLV
+                                   } <= set(p.mle.tlv.type) and\
+                       p.mle.tlv.addr16 is not nullField and \
+                       p.mle.tlv.route64.id_mask is not nullField and\
+                       p.mle.tlv.addr16 == ROUTER_RLOC16 and\
+                       p.sniff_timestamp - _pkt_lq.sniff_timestamp <
+                       MLE_MAX_RESPONSE_DELAY + 0.1
+                       ).\
+                must_next()
+        if _pkt.mle.cmd == MLE_LINK_ACCEPT_AND_REQUEST:
+            _pkt.must_verify(lambda p: [CHALLENGE_TLV] in p.mle.tlv.type)
 
 
 if __name__ == '__main__':

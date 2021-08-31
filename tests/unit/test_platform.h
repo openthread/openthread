@@ -29,67 +29,21 @@
 #ifndef TEST_PLATFORM_H
 #define TEST_PLATFORM_H
 
-#if _WIN32
-#define _CRT_SECURE_NO_WARNINGS
-#include <windows.h>
-#include <time.h>
-#endif
-
-#include <openthread.h>
-#include <openthread-tasklet.h>
-
-#include <common/code_utils.hpp>
-#include <platform/alarm.h>
-#include <platform/logging.h>
-#include <platform/misc.h>
-#include <platform/radio.h>
-#include <platform/random.h>
-
 #include <string.h>
+
+#include <openthread/config.h>
+#include <openthread/platform/alarm-milli.h>
+#include <openthread/platform/entropy.h>
+#include <openthread/platform/logging.h>
+#include <openthread/platform/misc.h>
+#include <openthread/platform/radio.h>
+
+#include "common/code_utils.hpp"
+#include "common/instance.hpp"
 
 #include "test_util.h"
 
-//
-// Alarm Platform
-//
-
-typedef void (*testPlatAlarmStop)(otInstance *);
-typedef void (*testPlatAlarmStartAt)(otInstance *, uint32_t, uint32_t);
-typedef uint32_t (*testPlatAlarmGetNow)(void);
-
-extern bool                             g_testPlatAlarmSet;
-extern uint32_t                         g_testPlatAlarmNext;
-extern testPlatAlarmStop                g_testPlatAlarmStop;
-extern testPlatAlarmStartAt             g_testPlatAlarmStartAt;
-extern testPlatAlarmGetNow              g_testPlatAlarmGetNow;
-
-//
-// Radio Platform
-//
-
-typedef void (*testPlatRadioSetPanId)(otInstance *, uint16_t);
-typedef void (*testPlatRadioSetExtendedAddress)(otInstance *, uint8_t *);
-typedef void (*testPlatRadioSetShortAddress)(otInstance *, uint16_t);
-
-typedef bool(*testPlatRadioIsEnabled)(otInstance *);
-typedef ThreadError(*testPlatRadioEnable)(otInstance *);
-typedef ThreadError(*testPlatRadioDisable)(otInstance *);
-typedef ThreadError(*testPlatRadioReceive)(otInstance *, uint8_t);
-typedef ThreadError(*testPlatRadioTransmit)(otInstance *);
-typedef RadioPacket *(*testPlatRadioGetTransmitBuffer)(otInstance *);
-
-extern otRadioCaps                      g_testPlatRadioCaps;
-extern testPlatRadioSetPanId            g_testPlatRadioSetPanId;
-extern testPlatRadioSetExtendedAddress  g_testPlatRadioSetExtendedAddress;
-extern testPlatRadioSetShortAddress     g_testPlatRadioSetShortAddress;
-extern testPlatRadioIsEnabled           g_testPlatRadioIsEnabled;
-extern testPlatRadioEnable              g_testPlatRadioEnable;
-extern testPlatRadioDisable             g_testPlatRadioDisable;
-extern testPlatRadioReceive             g_testPlatRadioReceive;
-extern testPlatRadioTransmit            g_testPlatRadioTransmit;
-extern testPlatRadioGetTransmitBuffer   g_testPlatRadioGetTransmitBuffer;
-
-// Resets platform functions to defaults
-void testPlatResetToDefaults(void);
+ot::Instance *testInitInstance(void);
+void          testFreeInstance(otInstance *aInstance);
 
 #endif // TEST_PLATFORM_H
