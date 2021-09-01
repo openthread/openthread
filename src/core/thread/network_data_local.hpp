@@ -64,10 +64,14 @@ public:
     /**
      * This constructor initializes the local Network Data.
      *
-     * @param[in]  aNetif  A reference to the Thread network interface.
+     * @param[in]  aInstance     A reference to the OpenThread instance.
      *
      */
-    explicit Local(Instance &aInstance);
+    explicit Local(Instance &aInstance)
+        : NetworkData(aInstance)
+        , mOldRloc(Mac::kShortAddrInvalid)
+    {
+    }
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
     /**
