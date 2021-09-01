@@ -292,7 +292,6 @@ BorderAgent::BorderAgent(Instance &aInstance)
     , mUdpReceiver(BorderAgent::HandleUdpReceive, this)
     , mTimer(aInstance, HandleTimeout)
     , mState(kStateStopped)
-    , mUdpProxyPort(0)
 {
     mCommissionerAloc.InitAsThreadOriginRealmLocalScope();
 }
@@ -342,7 +341,6 @@ void BorderAgent::HandleProxyTransmit(const Coap::Message &aMessage)
     SuccessOrExit(error = Tlv::Find<Ip6AddressTlv>(aMessage, messageInfo.GetPeerAddr()));
 
     SuccessOrExit(error = Get<Ip6::Udp>().SendDatagram(*message, messageInfo, Ip6::kProtoUdp));
-    mUdpProxyPort = tlv.GetSourcePort();
 
     otLogInfoMeshCoP("Proxy transmit sent to %s", messageInfo.GetPeerAddr().ToString().AsCString());
 
@@ -569,8 +567,7 @@ void BorderAgent::HandleConnected(bool aConnected)
         otLogInfoMeshCoP("Commissioner disconnected");
         IgnoreError(Get<Ip6::Udp>().RemoveReceiver(mUdpReceiver));
         Get<ThreadNetif>().RemoveUnicastAddress(mCommissionerAloc);
-        mState        = kStateStarted;
-        mUdpProxyPort = 0;
+        mState = kStateStarted;
     }
 }
 
@@ -603,8 +600,7 @@ void BorderAgent::Start(void)
 
     Get<Tmf::Agent>().AddResource(mRelayReceive);
 
-    mState        = kStateStarted;
-    mUdpProxyPort = 0;
+    mState = kStateStarted;
 
     otLogInfoMeshCoP("Border Agent start listening on port %d", kBorderAgentUdpPort);
 
@@ -652,8 +648,7 @@ void BorderAgent::Stop(void)
 
     coaps.Stop();
 
-    mState        = kStateStopped;
-    mUdpProxyPort = 0;
+    mState = kStateStopped;
 
     otLogInfoMeshCoP("Border Agent stopped");
 
@@ -674,6 +669,13 @@ void BorderAgent::ApplyMeshLocalPrefix(void)
 
 exit:
     return;
+}
+
+const Ip6::Address &BorderAgent::GetCommissionerAloc(void) const
+{
+    OT_ASSERT(mState == kStateActive);
+
+    return mCommissionerAloc.GetAddress();
 }
 
 } // namespace MeshCoP

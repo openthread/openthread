@@ -1041,9 +1041,10 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
             Udp::Header udp;
 
             IgnoreError(aMessage.Read(aMessage.GetOffset(), udp));
-            VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(udp.GetDestinationPort()) &&
-                             !Get<Udp>().IsPortInUse(udp.GetDestinationPort()),
-                         error = kErrorNoRoute);
+            VerifyOrExit(
+                Get<Udp>().ShouldReceiveWithPlatformUdp(aMessageInfo.GetSockAddr(), udp.GetDestinationPort()) &&
+                    !Get<Udp>().IsPortInUse(udp.GetDestinationPort()),
+                error = kErrorNoRoute);
             break;
         }
 
@@ -1299,7 +1300,7 @@ start:
 #if !OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
             if (nextHeader == kProtoUdp)
             {
-                VerifyOrExit(Get<Udp>().ShouldUsePlatformUdp(destPort), error = kErrorDrop);
+                VerifyOrExit(Get<Udp>().ShouldPortUsePlatformUdp(destPort), error = kErrorDrop);
             }
 #else
             OT_UNUSED_VARIABLE(destPort);

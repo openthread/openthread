@@ -242,7 +242,7 @@ Error Udp::Bind(SocketHandle &aSocket, const SockAddr &aSockAddr, otNetifIdentif
         } while (error != kErrorNone);
     }
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    else if (ShouldUsePlatformUdp(aSocket))
+    else if (ShouldSocketUsePlatformUdp(aSocket))
     {
         error = otPlatUdpBind(&aSocket);
     }
@@ -301,7 +301,7 @@ Error Udp::Connect(SocketHandle &aSocket, const SockAddr &aSockAddr)
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (ShouldUsePlatformUdp(aSocket))
+    if (ShouldSocketUsePlatformUdp(aSocket))
     {
         error = otPlatUdpConnect(&aSocket);
     }
@@ -366,7 +366,7 @@ Error Udp::SendTo(SocketHandle &aSocket, Message &aMessage, const MessageInfo &a
     messageInfoLocal.SetSockPort(aSocket.GetSockName().mPort);
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    if (ShouldUsePlatformUdp(aSocket))
+    if (ShouldSocketUsePlatformUdp(aSocket))
     {
         SuccessOrExit(error = otPlatUdpSend(&aSocket, &aMessage, &messageInfoLocal));
     }
@@ -489,7 +489,8 @@ Error Udp::HandleMessage(Message &aMessage, MessageInfo &aMessageInfo)
     aMessageInfo.mSockPort = udpHeader.GetDestinationPort();
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    VerifyOrExit(!ShouldUsePlatformUdp(aMessageInfo.mSockPort) || IsPortInUse(aMessageInfo.mSockPort));
+    VerifyOrExit(!ShouldReceiveWithPlatformUdp(aMessageInfo.GetSockAddr(), aMessageInfo.mSockPort) ||
+                 IsPortInUse(aMessageInfo.mSockPort));
 #endif
 
     for (Receiver &receiver : mReceivers)
@@ -555,14 +556,11 @@ bool Udp::IsPortInUse(uint16_t aPort) const
     return found;
 }
 
-bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
+bool Udp::ShouldPortUsePlatformUdp(uint16_t aPort) const
 {
     return (aPort != Mle::kUdpPort && aPort != Tmf::kUdpPort
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE && !OPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF
             && aPort != Dns::ServiceDiscovery::Server::kPort
-#endif
-#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
-            && aPort != Get<MeshCoP::BorderAgent>().GetUdpProxyPort()
 #endif
 #if OPENTHREAD_FTD
             && aPort != Get<MeshCoP::JoinerRouter>().GetJoinerUdpPort()
@@ -570,10 +568,32 @@ bool Udp::ShouldUsePlatformUdp(uint16_t aPort) const
     );
 }
 
-#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-bool Udp::ShouldUsePlatformUdp(const Udp::SocketHandle &aSocket) const
+bool Udp::ShouldReceiveWithPlatformUdp(const Address &aSockAddr, uint16_t aPort) const
 {
-    return (ShouldUsePlatformUdp(aSocket.mSockName.mPort)
+    bool should;
+
+#if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
+    // Border Agent provides transparent UDP proxying for Commissioner.
+    // UDP messages to Commissioner ALOC should be handled by Border Agent without passing to platform UDP.
+    if (Get<MeshCoP::BorderAgent>().GetState() == MeshCoP::BorderAgent::kStateActive &&
+        aSockAddr == Get<MeshCoP::BorderAgent>().GetCommissionerAloc())
+    {
+        ExitNow(should = false);
+    }
+#else
+    OT_UNUSED_VARIABLE(aSockAddr);
+#endif
+
+    ExitNow(should = ShouldPortUsePlatformUdp(aPort));
+
+exit:
+    return should;
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+bool Udp::ShouldSocketUsePlatformUdp(const Udp::SocketHandle &aSocket) const
+{
+    return (ShouldPortUsePlatformUdp(aSocket.mSockName.mPort)
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
             || IsBackboneSocket(aSocket)
 #endif

@@ -609,7 +609,20 @@ public:
      * @retval False when the port belongs to the stack.
      *
      */
-    bool ShouldUsePlatformUdp(uint16_t aPort) const;
+    bool ShouldPortUsePlatformUdp(uint16_t aPort) const;
+
+    /**
+     * This method returns whether a received UDP message with the socket address and udp port belongs to the platform
+     * or the stack.
+     *
+     * @param[in] aSockAddr     The socket address of the received UDP message.
+     * @param[in] aPort         The port of the received UDP message.
+     *
+     * @retval True     When the message belongs to the platform.
+     * @retval False    When the message belongs to the stack.
+     *
+     */
+    bool ShouldReceiveWithPlatformUdp(const Address &aSockAddr, uint16_t aPort) const;
 
 private:
     static constexpr uint16_t kDynamicPortMin = 49152; // Service Name and Transport Protocol Port Number Registry
@@ -624,7 +637,7 @@ private:
     void AddSocket(SocketHandle &aSocket);
     void RemoveSocket(SocketHandle &aSocket);
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-    bool ShouldUsePlatformUdp(const SocketHandle &aSocket) const;
+    bool ShouldSocketUsePlatformUdp(const SocketHandle &aSocket) const;
 #endif
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE

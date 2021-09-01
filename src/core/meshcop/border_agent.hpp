@@ -109,13 +109,14 @@ public:
     void ApplyMeshLocalPrefix(void);
 
     /**
-     * This method returns the UDP Proxy port to which the commissioner is currently
-     * bound.
+     * This method gets the Commissioner ALOC.
      *
-     * @returns  The current UDP Proxy port or 0 if no Proxy Transmit has been received yet.
+     * Note: should only be called when the Border Agent is active.
+     *
+     * @returns  The Commissioner ALOC.
      *
      */
-    uint16_t GetUdpProxyPort(void) const { return mUdpProxyPort; }
+    const Ip6::Address &GetCommissionerAloc(void) const;
 
 private:
     class ForwardContext : public InstanceLocatorInit
@@ -194,7 +195,6 @@ private:
 
     TimerMilli mTimer;
     State      mState;
-    uint16_t   mUdpProxyPort;
 };
 
 } // namespace MeshCoP
