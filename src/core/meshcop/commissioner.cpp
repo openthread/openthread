@@ -296,7 +296,10 @@ void Commissioner::RemoveJoinerEntry(Commissioner::Joiner &aJoiner)
     SignalJoinerEvent(kJoinerEventRemoved, &joinerCopy);
 }
 
-Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext)
+Error Commissioner::Start(const char *   aId,
+                          StateCallback  aStateCallback,
+                          JoinerCallback aJoinerCallback,
+                          void *         aCallbackContext)
 {
     Error error = kErrorNone;
 
@@ -315,8 +318,13 @@ Error Commissioner::Start(StateCallback aStateCallback, JoinerCallback aJoinerCa
     mCallbackContext  = aCallbackContext;
     mTransmitAttempts = 0;
 
+    mCommissionerId.Init();
+    mCommissionerId.SetCommissionerId(aId == nullptr ? "OpenThread Commissioner" : aId);
+
     SuccessOrExit(error = SendPetition());
     SetState(kStatePetition);
+
+    LogInfo("start commissioner %s", mCommissionerId.GetCommissionerId());
 
 exit:
     if ((error != kErrorNone) && (error != kErrorAlready))
@@ -824,10 +832,7 @@ Error Commissioner::SendPetition(void)
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kLeaderPetition));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    commissionerId.Init();
-    commissionerId.SetCommissionerId("OpenThread Commissioner");
-
-    SuccessOrExit(error = commissionerId.AppendTo(*message));
+    SuccessOrExit(error = mCommissionerId.AppendTo(*message));
 
     SuccessOrExit(error = messageInfo.SetSockAddrToRlocPeerAddrToLeaderAloc());
     SuccessOrExit(

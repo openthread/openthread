@@ -334,10 +334,8 @@ template <> otError Commissioner::Process<Cmd("sessionid")>(Arg aArgs[])
 
 template <> otError Commissioner::Process<Cmd("start")>(Arg aArgs[])
 {
-    OT_UNUSED_VARIABLE(aArgs);
-
-    return otCommissionerStart(GetInstancePtr(), &Commissioner::HandleStateChanged, &Commissioner::HandleJoinerEvent,
-                               this);
+    return otCommissionerStartWithId(GetInstancePtr(), aArgs[0].IsEmpty() ? nullptr : aArgs[0].GetCString(),
+                                     &Commissioner::HandleStateChanged, &Commissioner::HandleJoinerEvent, this);
 }
 
 void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)

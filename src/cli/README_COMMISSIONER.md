@@ -215,6 +215,16 @@ Done
 Commissioner: active
 ```
 
+The default ID of the commissioner is "OpenThread Commissioner", but can be specified in the command line:
+
+
+```bash
+> commissioner start myCustomId
+Commissioner: petitioning
+Done
+Commissioner: active
+```
+
 ### state
 
 Usage: `commissioner state`

@@ -47,7 +47,18 @@ otError otCommissionerStart(otInstance *                 aInstance,
                             otCommissionerJoinerCallback aJoinerCallback,
                             void *                       aCallbackContext)
 {
-    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Start(aStateCallback, aJoinerCallback, aCallbackContext);
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Start(nullptr, aStateCallback, aJoinerCallback,
+                                                                    aCallbackContext);
+}
+
+otError otCommissionerStartWithId(otInstance *                 aInstance,
+                                  const char *                 aId,
+                                  otCommissionerStateCallback  aStateCallback,
+                                  otCommissionerJoinerCallback aJoinerCallback,
+                                  void *                       aCallbackContext)
+{
+    return AsCoreType(aInstance).Get<MeshCoP::Commissioner>().Start(aId, aStateCallback, aJoinerCallback,
+                                                                    aCallbackContext);
 }
 
 otError otCommissionerStop(otInstance *aInstance)

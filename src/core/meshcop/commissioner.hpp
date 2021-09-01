@@ -231,6 +231,7 @@ public:
     /**
      * This method starts the Commissioner service.
      *
+     * @param[in]  aId               A pointer to the Commissioner ID.
      * @param[in]  aStateCallback    A pointer to a function that is called when the commissioner state changes.
      * @param[in]  aJoinerCallback   A pointer to a function that is called when a joiner event occurs.
      * @param[in]  aCallbackContext  A pointer to application-specific context.
@@ -240,7 +241,7 @@ public:
      * @retval kErrorInvalidState   Device is not currently attached to a network.
      *
      */
-    Error Start(StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext);
+    Error Start(const char *aId, StateCallback aStateCallback, JoinerCallback aJoinerCallback, void *aCallbackContext);
 
     /**
      * This method stops the Commissioner service.
@@ -602,6 +603,7 @@ private:
     AnnounceBeginClient mAnnounceBegin;
     EnergyScanClient    mEnergyScan;
     PanIdQueryClient    mPanIdQuery;
+    CommissionerIdTlv   mCommissionerId;
 
     Ip6::Netif::UnicastAddress mCommissionerAloc;
 
