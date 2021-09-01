@@ -38,6 +38,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/const_cast.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
@@ -322,10 +323,7 @@ private:
         Child::StateFilter mFilter;
     };
 
-    Child *FindChild(const Child::AddressMatcher &aMatcher)
-    {
-        return const_cast<Child *>(const_cast<const ChildTable *>(this)->FindChild(aMatcher));
-    }
+    Child *FindChild(const Child::AddressMatcher &aMatcher) { return AsNonConst(AsConst(this)->FindChild(aMatcher)); }
 
     const Child *FindChild(const Child::AddressMatcher &aMatcher) const;
     void         RefreshStoredChildren(void);

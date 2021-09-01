@@ -41,6 +41,7 @@
 
 #include "coap/coap.hpp"
 #include "common/clearable.hpp"
+#include "common/const_cast.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -356,7 +357,7 @@ protected:
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
     {
-        return const_cast<PrefixTlv *>(const_cast<const NetworkData *>(this)->FindPrefix(aPrefix, aPrefixLength));
+        return AsNonConst(AsConst(this)->FindPrefix(aPrefix, aPrefixLength));
     }
 
     /**
@@ -406,8 +407,7 @@ protected:
      */
     static PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
     {
-        return const_cast<PrefixTlv *>(
-            FindPrefix(aPrefix, aPrefixLength, const_cast<const uint8_t *>(aTlvs), aTlvsLength));
+        return AsNonConst(FindPrefix(aPrefix, aPrefixLength, AsConst(aTlvs), aTlvsLength));
     }
 
     /**
@@ -442,8 +442,8 @@ protected:
                             uint8_t          aServiceDataLength,
                             ServiceMatchMode aServiceMatchMode)
     {
-        return const_cast<ServiceTlv *>(const_cast<const NetworkData *>(this)->FindService(
-            aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
+        return AsNonConst(
+            AsConst(this)->FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
     }
 
     /**
@@ -482,9 +482,8 @@ protected:
                                    uint8_t *        aTlvs,
                                    uint8_t          aTlvsLength)
     {
-        return const_cast<ServiceTlv *>(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength,
-                                                    aServiceMatchMode, const_cast<const uint8_t *>(aTlvs),
-                                                    aTlvsLength));
+        return AsNonConst(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode,
+                                      AsConst(aTlvs), aTlvsLength));
     }
 
     /**

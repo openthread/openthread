@@ -38,6 +38,7 @@
 
 #include "common/clearable.hpp"
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -225,10 +226,7 @@ public:
          * @returns A pointer to the next multicast address.
          *
          */
-        MulticastAddress *GetNext(void)
-        {
-            return static_cast<MulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
-        }
+        MulticastAddress *GetNext(void) { return static_cast<MulticastAddress *>(AsNonConst(mNext)); }
 
     private:
         bool Matches(const Address &aAddress) const { return GetAddress() == aAddress; }
@@ -314,10 +312,7 @@ public:
 #endif
 
     private:
-        ExternalMulticastAddress *GetNext(void)
-        {
-            return static_cast<ExternalMulticastAddress *>(const_cast<otNetifMulticastAddress *>(mNext));
-        }
+        ExternalMulticastAddress *GetNext(void) { return static_cast<ExternalMulticastAddress *>(AsNonConst(mNext)); }
 
 #if OPENTHREAD_CONFIG_MLR_ENABLE
         MlrState mMlrState;

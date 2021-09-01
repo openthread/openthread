@@ -386,6 +386,7 @@ HEADERS_COMMON                                  = \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \
+    common/const_cast.hpp                         \
     common/crc16.hpp                              \
     common/debug.hpp                              \
     common/encoding.hpp                           \
