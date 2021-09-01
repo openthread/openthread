@@ -69,87 +69,8 @@
  * official policies, either expressed or implied, of the US Naval
  * Research Laboratory (NRL).
  */
-#if 0
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
 
-#include "opt_inet.h"
-#include "opt_inet6.h"
-#include "opt_tcpdebug.h"
-
-#include <sys/param.h>
-#include <sys/systm.h>
-#include <sys/kernel.h>
-#include <sys/sysctl.h>
-#include <sys/malloc.h>
-#include <sys/mbuf.h>
-#include <sys/proc.h>		/* for proc0 declaration */
-#include <sys/protosw.h>
-#include <sys/socket.h>
-#include <sys/socketvar.h>
-#include <sys/syslog.h>
-#include <sys/systm.h>
-
-#include <machine/cpu.h>	/* before tcp_seq.h, for tcp_random18() */
-
-#include <vm/uma.h>
-
-#include <net/if.h>
-#include <net/if_var.h>
-#include <net/route.h>
-#include <net/vnet.h>
-
-#include <netinet/in.h>
-#include <netinet/in_systm.h>
-#include <netinet/ip.h>
-#include <netinet/in_var.h>
-#include <netinet/in_pcb.h>
-#include <netinet/ip_var.h>
-#include <netinet/ip6.h>
-#include <netinet/icmp6.h>
-#include <netinet6/nd6.h>
-#include <netinet6/ip6_var.h>
-#include <netinet6/in6_pcb.h>
-#include <netinet/tcp.h>
-#include <netinet/tcp_fsm.h>
-#include <netinet/tcp_seq.h>
-#include <netinet/tcp_timer.h>
-#include <netinet/tcp_var.h>
-#include <netinet6/tcp6_var.h>
-#include <netinet/tcpip.h>
-#ifdef TCPDEBUG
-#include <netinet/tcp_debug.h>
-#endif /* TCPDEBUG */
-
-#include <machine/in_cksum.h>
-
-VNET_DECLARE(struct uma_zone *, sack_hole_zone);
-#define	V_sack_hole_zone		VNET(sack_hole_zone)
-
-SYSCTL_NODE(_net_inet_tcp, OID_AUTO, sack, CTLFLAG_RW, 0, "TCP SACK");
-VNET_DEFINE(int, tcp_do_sack) = 1;
-#define	V_tcp_do_sack			VNET(tcp_do_sack)
-SYSCTL_INT(_net_inet_tcp_sack, OID_AUTO, enable, CTLFLAG_VNET | CTLFLAG_RW,
-    &VNET_NAME(tcp_do_sack), 0, "Enable/Disable TCP SACK support");
-
-VNET_DEFINE(int, tcp_sack_maxholes) = 128;
-#define	V_tcp_sack_maxholes		VNET(tcp_sack_maxholes)
-SYSCTL_INT(_net_inet_tcp_sack, OID_AUTO, maxholes, CTLFLAG_VNET | CTLFLAG_RW,
-    &VNET_NAME(tcp_sack_maxholes), 0,
-    "Maximum number of TCP SACK holes allowed per connection");
-
-VNET_DEFINE(int, tcp_sack_globalmaxholes) = 65536;
-#define	V_tcp_sack_globalmaxholes	VNET(tcp_sack_globalmaxholes)
-SYSCTL_INT(_net_inet_tcp_sack, OID_AUTO, globalmaxholes, CTLFLAG_VNET | CTLFLAG_RW,
-    &VNET_NAME(tcp_sack_globalmaxholes), 0,
-    "Global maximum number of TCP SACK holes");
-
-VNET_DEFINE(int, tcp_sack_globalholes) = 0;
-#define	V_tcp_sack_globalholes		VNET(tcp_sack_globalholes)
-SYSCTL_INT(_net_inet_tcp_sack, OID_AUTO, globalholes, CTLFLAG_VNET | CTLFLAG_RD,
-    &VNET_NAME(tcp_sack_globalholes), 0,
-    "Global number of TCP SACK holes currently allocated");
-#endif
+/* samkumar: Removed a bunch of #include's and VNET declarations. */
 
 #include <strings.h>
 #include "tcp.h"
@@ -160,15 +81,27 @@ SYSCTL_INT(_net_inet_tcp_sack, OID_AUTO, globalholes, CTLFLAG_VNET | CTLFLAG_RD,
 #include "sys/queue.h"
 
 enum tcp_sack_consts {
-    V_tcp_sack_maxholes = MAX_SACKHOLES
+	V_tcp_sack_maxholes = MAX_SACKHOLES
 };
-/* Don't need these constants, since I have an explicit pool. */
-#if 0
-const int V_tcp_sack_globalmaxholes = 65536;
-int V_tcp_sack_globalholes = 0;
-#endif
 
-/* Initialize the pool of SACK holes. */
+/*
+ * samkumar: Removed tcp_sack_globalmaxholes and tcp_sack_globalholes.
+ * There used to be a counter, V_tcp_sack_globalholes, that kept track of the
+ * total number of SACK holes allocated across all TCP connections.
+ */
+
+/*
+ * samkumar: I added these three functions. The first, tcp_sack_init,
+ * initializes a per-connection pool of SACK holes.
+ *
+ * The next two, sackhole_alloc and sackhole_free, allocate and deallocate SACK
+ * holes from the pool. Previously, the FreeBSD code would allocate SACK holes
+ * dynamically, for example, using the code
+ * "hole = (struct sackhole *)uma_zalloc(V_sack_hole_zone, M_NOWAIT);".
+ * TCPlp avoids dynamic memory allocation in the TCP implementation, so we
+ * replace it with this per-connection pool.
+ */
+
 void
 tcp_sack_init(struct tcpcb* tp)
 {
@@ -190,6 +123,14 @@ void sackhole_free(struct tcpcb* tp, struct sackhole* tofree) {
 	bmp_clrrange(tp->sackhole_bmp, freeindex, 1);
 }
 
+/*
+ * samkumar: Throughout the remaining functions, I have replaced allocation and
+ * deallocation of SACK holes, which previously used uma_zalloc and uma_zfree,
+ * with calls to sackhole_alloc and sackhole_free. I've also removed code for
+ * locking, global stats collection, global SACK hole limits, and debugging
+ * probes.
+ */
+
 
 /*
  * This function is called upon receipt of new valid data (while not in
@@ -206,8 +147,6 @@ tcp_update_sack_list(struct tcpcb *tp, tcp_seq rcv_start, tcp_seq rcv_end)
 	 */
 	struct sackblk head_blk, saved_blks[MAX_SACK_BLKS];
 	int num_head, num_saved, i;
-
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 
 	/* Check arguments. */
 	KASSERT(SEQ_LT(rcv_start, rcv_end), ("rcv_start < rcv_end"));
@@ -287,7 +226,6 @@ tcp_clean_sackreport(struct tcpcb *tp)
 {
 	int i;
 
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 	tp->rcv_numsacks = 0;
 	for (i = 0; i < MAX_SACK_BLKS; i++)
 		tp->sackblks[i].start = tp->sackblks[i].end=0;
@@ -301,13 +239,17 @@ tcp_sackhole_alloc(struct tcpcb *tp, tcp_seq start, tcp_seq end)
 {
 	struct sackhole *hole;
 
-	if (tp->snd_numholes >= V_tcp_sack_maxholes/* ||
-	    V_tcp_sack_globalholes >= V_tcp_sack_globalmaxholes*/) {
-//		TCPSTAT_INC(tcps_sack_sboverflow);
+	/*
+	 * samkumar: This if block also used to also return NULL if
+	 * V_tcp_sack_globalholes >= V_tcp_sack_globalmaxholes
+	 * but I removed that check since it doesn't make sense to enforce a global
+	 * limit on SACK holes when we have a fixed-size pool (moreover, a separate
+	 * pool per connection). The per-connection limit is sufficient.
+	 */
+	if (tp->snd_numholes >= V_tcp_sack_maxholes) {
 		return NULL;
 	}
 
-//	hole = (struct sackhole *)uma_zalloc(V_sack_hole_zone, M_NOWAIT);
 	hole = sackhole_alloc(tp);
 	if (hole == NULL)
 		return NULL;
@@ -317,7 +259,6 @@ tcp_sackhole_alloc(struct tcpcb *tp, tcp_seq start, tcp_seq end)
 	hole->rxmit = start;
 
 	tp->snd_numholes++;
-//	atomic_add_int(&V_tcp_sack_globalholes, 1);
 
 	return hole;
 }
@@ -328,15 +269,11 @@ tcp_sackhole_alloc(struct tcpcb *tp, tcp_seq start, tcp_seq end)
 static void
 tcp_sackhole_free(struct tcpcb *tp, struct sackhole *hole)
 {
-
-//	uma_zfree(V_sack_hole_zone, hole);
 	sackhole_free(tp, hole);
 
 	tp->snd_numholes--;
-//	atomic_subtract_int(&V_tcp_sack_globalholes, 1);
 
 	KASSERT(tp->snd_numholes >= 0, ("tp->snd_numholes >= 0"));
-//	KASSERT(V_tcp_sack_globalholes >= 0, ("tcp_sack_globalholes >= 0"));
 }
 
 /*
@@ -395,8 +332,6 @@ tcp_sack_doack(struct tcpcb *tp, struct tcpopt *to, tcp_seq th_ack)
 	struct sackhole *cur, *temp;
 	struct sackblk sack, sack_blocks[TCP_MAX_SACK + 1], *sblkp;
 	int i, j, num_sack_blks;
-
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 
 	num_sack_blks = 0;
 	/*
@@ -594,7 +529,6 @@ tcp_free_sackholes(struct tcpcb *tp)
 {
 	struct sackhole *q;
 
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 	while ((q = TAILQ_FIRST(&tp->snd_holes)) != NULL)
 		tcp_sackhole_remove(tp, q);
 	tp->sackhint.sack_bytes_rexmit = 0;
@@ -617,7 +551,6 @@ tcp_sack_partialack(struct tcpcb *tp, struct tcphdr *th)
 {
 	int num_segs = 1;
 
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 	tcp_timer_activate(tp, TT_REXMT, 0);
 	tp->t_rtttime = 0;
 	/* Send one or 2 segments based on how much new data was acked. */
@@ -631,6 +564,10 @@ tcp_sack_partialack(struct tcpcb *tp, struct tcphdr *th)
 	(void) tcp_output(tp);
 }
 
+/*
+ * samkumar: Removed this function for now, but I left it in as a comment
+ * (using #if 0) in case it is useful later for debugging.
+ */
 #if 0
 /*
  * Debug version of tcp_sack_output() that walks the scoreboard.  Used for
@@ -679,7 +616,6 @@ tcp_sack_output(struct tcpcb *tp, int *sack_bytes_rexmt)
 {
 	struct sackhole *hole = NULL;
 
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 	*sack_bytes_rexmt = tp->sackhint.sack_bytes_rexmit;
 	hole = tp->sackhint.nexthole;
 	if (hole == NULL || SEQ_LT(hole->rxmit, hole->end))
@@ -704,7 +640,6 @@ tcp_sack_adjust(struct tcpcb *tp)
 {
 	struct sackhole *p, *cur = TAILQ_FIRST(&tp->snd_holes);
 
-//	INP_WLOCK_ASSERT(tp->t_inpcb);
 	if (cur == NULL)
 		return; /* No holes */
 	if (SEQ_GEQ(tp->snd_nxt, tp->snd_fack))

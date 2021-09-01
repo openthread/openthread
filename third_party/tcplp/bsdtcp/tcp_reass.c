@@ -37,29 +37,25 @@
 #include "tcp_seq.h"
 #include "tcp_var.h"
 
-/* Sam: Segments are only reassembled within the window; data outside the window
-   is thrown away. So, the total amount of reassembly data cannot exceed the
-   size of the receive window.
-   The receive window is just the amount of empty space in the receive buffer, and
-   the receive buffer is statically allocated and is of known size. So, I am just
-   going to use the empty space in the receive buffer for segment reassembly. A
-   bitmap keeps track of which bytes represent partial segments, and which ones are
-   free space.
-
-   I've kept the original function for reference, but I rewrote it to use my data
-   structure for the reassembly buffer.
-
-   Looking at the usage of this function in tcp_input, this just has to set *tlenp
-   to 0 if the received segment is already completely buffered; it does not need
-   to update it if only part of the segment is trimmed off. */
-
+/*
+ * samkumar: Segments are only reassembled within the window; data outside the
+ * window is thrown away. So, the total amount of reassembly data cannot exceed
+ * the size of the receive window.
+ *
+ * I have essentially rewritten it to use TCPlp's data structure for the
+ * reassembly buffer. I have kept the original code as a comment below this
+ * function, for reference.
+ *
+ * Looking at the usage of this function in tcp_input, this just has to set
+ * *tlenp to 0 if the received segment is already completely buffered; it does
+ * not need to update it if only part of the segment is trimmed off.
+ */
 int
 tcp_reass(struct tcpcb* tp, struct tcphdr* th, int* tlenp, otMessage* data, off_t data_offset, struct signals* sig)
 {
 	size_t mergeable, written;
 	size_t offset;
 	size_t start_index;
-	//int added_fin;
 	size_t usedbefore;
 	int tlen = *tlenp;
 	size_t merged = 0;
