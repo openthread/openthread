@@ -182,8 +182,7 @@ struct tcpcb {
 	struct	inpcb *t_inpcb;		/* back pointer to internet pcb */
 #endif
 
-	uint16_t	tw_last_win;       /* For time wait */
-	int		tw_time;           /* For time wait */
+	uint16_t	tw_last_win; // samkumar: Taken from struct tcptw
 
 	uint32_t	t_flags;
 
