@@ -365,7 +365,7 @@ otError otPlatCryptoAesFree(void *aContext, size_t aContextSize);
  * @param[in]  aContext           Operation context for HKDF operation.
  * @param[in]  aContextSize       Context size HKDF operation.
  * @param[in]  aInfo              Pointer to the Info sequence.
- * @param[in]  aInfoLength        length of Info sequence.
+ * @param[in]  aInfoLength        Length of the Info sequence.
  * @param[out] aOutputKey         Pointer to the output Key.
  * @param[in]  aOutputKeyLength   Size of the output key buffer.
  *

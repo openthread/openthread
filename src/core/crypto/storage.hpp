@@ -94,7 +94,7 @@ enum StorageType : uint8_t
  */
 typedef otCryptoKeyRef KeyRef;
 
-constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value.
+constexpr KeyRef kInvalidKeyRef = 0x80000000; ///< Invalid `KeyRef` value (PSA_KEY_ID_VENDOR_MAX + 1).
 
 /**
  * This type represents the Key Attributes structure.
