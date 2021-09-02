@@ -47,12 +47,6 @@
 namespace ot {
 namespace NetworkData {
 
-Local::Local(Instance &aInstance)
-    : NetworkData(aInstance, kTypeLocal)
-    , mOldRloc(Mac::kShortAddrInvalid)
-{
-}
-
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 Error Local::AddOnMeshPrefix(const OnMeshPrefixConfig &aConfig)
@@ -329,7 +323,7 @@ Error Local::UpdateInconsistentServerData(Coap::ResponseHandler aHandler, void *
         mOldRloc = Mac::kShortAddrInvalid;
     }
 
-    SuccessOrExit(error = SendServerDataNotification(mOldRloc, aHandler, aContext));
+    SuccessOrExit(error = SendServerDataNotification(mOldRloc, /* aAppendNetDataTlv */ true, aHandler, aContext));
     mOldRloc = rloc;
 
 exit:

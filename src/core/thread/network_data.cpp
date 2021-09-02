@@ -47,13 +47,6 @@
 namespace ot {
 namespace NetworkData {
 
-NetworkData::NetworkData(Instance &aInstance, Type aType)
-    : InstanceLocator(aInstance)
-    , mType(aType)
-{
-    mLength = 0;
-}
-
 Error NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
 {
     Error error = kErrorNone;
@@ -693,7 +686,10 @@ void NetworkData::RemoveTlv(NetworkDataTlv *aTlv)
     NetworkData::RemoveTlv(mTlvs, mLength, aTlv);
 }
 
-Error NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext)
+Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
+                                              bool                  aAppendNetDataTlv,
+                                              Coap::ResponseHandler aHandler,
+                                              void *                aContext)
 {
     Error            error   = kErrorNone;
     Coap::Message *  message = nullptr;
@@ -704,7 +700,7 @@ Error NetworkData::SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHa
     SuccessOrExit(error = message->InitAsConfirmablePost(UriPath::kServerData));
     SuccessOrExit(error = message->SetPayloadMarker());
 
-    if (mType == kTypeLocal)
+    if (aAppendNetDataTlv)
     {
         ThreadTlv tlv;
         tlv.SetType(ThreadTlv::kThreadNetworkData);
