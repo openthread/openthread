@@ -4300,6 +4300,22 @@ exit:
     return error;
 }
 
+otError Interpreter::ProcessWait(Arg aArgs[])
+{
+    OT_UNUSED_VARIABLE(aArgs);
+
+    otError  error;
+    uint32_t msecs;
+
+    SuccessOrExit(error = aArgs[0].ParseAsUint32(msecs));
+
+    SetCommandTimeout(msecs);
+    error = OT_ERROR_PENDING;
+
+exit:
+    return error;
+}
+
 #if OPENTHREAD_CONFIG_COMMISSIONER_ENABLE && OPENTHREAD_FTD
 otError Interpreter::ProcessCommissioner(Arg aArgs[])
 {

@@ -604,7 +604,7 @@ class NodeImpl:
 
         return results
 
-    def _expect_command_output(self, cmd: str, ignore_logs=True):
+    def _expect_command_output(self, cmd: str, ignore_logs=True) -> List[str]:
         lines = []
         cmd_output_started = False
 
@@ -2428,6 +2428,12 @@ class NodeImpl:
             payload += tlv.to_hex()
         self.commissioner_mgmtset(self.bytes_to_hex_str(payload))
 
+    def wait(self, msecs: int):
+        cmd = 'wait %d' % msecs
+        self.send_command(cmd)
+        self.simulator.go(msecs / 1000.0 + 1)
+        return self._expect_command_output(cmd)
+
     def udp_start(self, local_ipaddr, local_port):
         cmd = 'udp open'
         self.send_command(cmd)
@@ -2442,8 +2448,12 @@ class NodeImpl:
         self.send_command(cmd)
         self._expect_done()
 
-    def udp_send(self, bytes, ipaddr, port, success=True):
-        cmd = 'udp send %s %d -s %d ' % (ipaddr, port, bytes)
+    def udp_send(self, bytes: Union[bytes, int], ipaddr, port, success=True):
+        if isinstance(bytes, int):
+            cmd = 'udp send %s %d -s %d' % (ipaddr, port, bytes)
+        else:
+            cmd = 'udp send %s %d -t %s' % (ipaddr, port, bytes.decode('ascii'))
+
         self.send_command(cmd)
         if success:
             self._expect_done()

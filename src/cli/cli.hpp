@@ -668,6 +668,8 @@ private:
     otError ProcessUptime(Arg aArgs[]);
 #endif
     otError ProcessVersion(Arg aArgs[]);
+    otError ProcessWait(Arg aArgs[]);
+
 #if OPENTHREAD_CONFIG_MAC_FILTER_ENABLE
     otError ProcessMacFilter(Arg aArgs[]);
     void    PrintMacFilter(void);
@@ -966,6 +968,7 @@ private:
         {"uptime", &Interpreter::ProcessUptime},
 #endif
         {"version", &Interpreter::ProcessVersion},
+        {"wait", &Interpreter::ProcessWait},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");

@@ -112,6 +112,7 @@ Done
 - [unsecureport](#unsecureport-add-port)
 - [uptime](#uptime)
 - [version](#version)
+- [wait](#wait-duration)
 
 ## OpenThread Command Details
 
@@ -2846,3 +2847,16 @@ Done
 Factory Diagnostics module is enabled only when building OpenThread with `OPENTHREAD_CONFIG_DIAG_ENABLE=1` option. Go [diagnostics module][diag] for more information.
 
 [diag]: ../../src/core/diags/README.md
+
+### wait <duration>
+
+Wait for a given duration. `wait` command will block the CLI for the given duration and output `Done` lastly.
+
+Tip: `wait` command can be used to capture asynchronous CLI output.
+
+- duration: The time in milliseconds to wait.
+
+```bash
+> wait 3000
+Done
+```
