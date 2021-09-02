@@ -39,6 +39,7 @@
 #include <limits.h>
 #include <stdint.h>
 
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "mac/mac_types.hpp"
 
@@ -866,7 +867,7 @@ public:
      * @returns A pointer to the MAC Payload.
      *
      */
-    uint8_t *GetPayload(void) { return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetPayload()); }
+    uint8_t *GetPayload(void) { return AsNonConst(AsConst(this)->GetPayload()); }
 
     /**
      * This const method returns a pointer to the MAC Payload.
@@ -882,7 +883,7 @@ public:
      * @returns A pointer to the MAC Footer.
      *
      */
-    uint8_t *GetFooter(void) { return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetFooter()); }
+    uint8_t *GetFooter(void) { return AsNonConst(AsConst(this)->GetFooter()); }
 
     /**
      * This const method returns a pointer to the MAC Footer.
@@ -900,7 +901,7 @@ public:
      * @returns A pointer to the Time IE, nullptr if not found.
      *
      */
-    TimeIe *GetTimeIe(void) { return const_cast<TimeIe *>(const_cast<const Frame *>(this)->GetTimeIe()); }
+    TimeIe *GetTimeIe(void) { return AsNonConst(AsConst(this)->GetTimeIe()); }
 
     /**
      * This method returns a pointer to the vendor specific Time IE.
@@ -938,10 +939,7 @@ public:
      * @returns A pointer to the Header IE, nullptr if not found.
      *
      */
-    uint8_t *GetHeaderIe(uint8_t aIeId)
-    {
-        return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetHeaderIe(aIeId));
-    }
+    uint8_t *GetHeaderIe(uint8_t aIeId) { return AsNonConst(AsConst(this)->GetHeaderIe(aIeId)); }
 
     /**
      * This method returns a pointer to the Header IE.
@@ -963,10 +961,7 @@ public:
      * @returns A pointer to the Thread IE, nullptr if not found.
      *
      */
-    uint8_t *GetThreadIe(uint8_t aSubType)
-    {
-        return const_cast<uint8_t *>(const_cast<const Frame *>(this)->GetThreadIe(aSubType));
-    }
+    uint8_t *GetThreadIe(uint8_t aSubType) { return AsNonConst(AsConst(this)->GetThreadIe(aSubType)); }
 
     /**
      * This method returns a pointer to a specific Thread IE.

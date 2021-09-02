@@ -40,6 +40,7 @@
 #include <openthread/dataset.h>
 
 #include "common/clearable.hpp"
+#include "common/const_cast.hpp"
 #include "common/locator.hpp"
 #include "common/message.hpp"
 #include "common/timer.hpp"
@@ -637,7 +638,7 @@ public:
      * @returns A pointer to the TLV or nullptr if none is found.
      *
      */
-    Tlv *GetTlv(Tlv::Type aType) { return const_cast<Tlv *>(const_cast<const Dataset *>(this)->GetTlv(aType)); }
+    Tlv *GetTlv(Tlv::Type aType) { return AsNonConst(AsConst(this)->GetTlv(aType)); }
 
     /**
      * This method returns a pointer to the TLV with a given type.

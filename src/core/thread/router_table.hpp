@@ -33,6 +33,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/iterator_utils.hpp"
 #include "common/locator.hpp"
@@ -218,10 +219,7 @@ public:
      * @returns A pointer to the router or nullptr if the router could not be found.
      *
      */
-    Router *GetRouter(uint8_t aRouterId)
-    {
-        return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetRouter(aRouterId));
-    }
+    Router *GetRouter(uint8_t aRouterId) { return AsNonConst(AsConst(this)->GetRouter(aRouterId)); }
 
     /**
      * This method returns the router for a given router id.
@@ -356,16 +354,13 @@ private:
     void          UpdateAllocation(void);
     const Router *GetFirstEntry(void) const;
     const Router *GetNextEntry(const Router *aRouter) const;
-    Router *GetFirstEntry(void) { return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetFirstEntry()); }
-    Router *GetNextEntry(Router *aRouter)
-    {
-        return const_cast<Router *>(const_cast<const RouterTable *>(this)->GetNextEntry(aRouter));
-    }
+    Router *      GetFirstEntry(void) { return AsNonConst(AsConst(this)->GetFirstEntry()); }
+    Router *      GetNextEntry(Router *aRouter) { return AsNonConst(AsConst(this)->GetNextEntry(aRouter)); }
 
     const Router *FindRouter(const Router::AddressMatcher &aMatcher) const;
     Router *      FindRouter(const Router::AddressMatcher &aMatcher)
     {
-        return const_cast<Router *>(const_cast<const RouterTable *>(this)->FindRouter(aMatcher));
+        return AsNonConst(AsConst(this)->FindRouter(aMatcher));
     }
 
     Router           mRouters[Mle::kMaxRouters];

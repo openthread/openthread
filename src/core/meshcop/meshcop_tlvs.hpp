@@ -41,6 +41,7 @@
 #include <openthread/dataset.h>
 #include <openthread/platform/radio.h>
 
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/message.hpp"
 #include "common/string.hpp"
@@ -207,7 +208,7 @@ public:
      */
     static Tlv *FindTlv(uint8_t *aTlvsStart, uint16_t aTlvsLength, Type aType)
     {
-        return const_cast<Tlv *>(FindTlv(const_cast<const uint8_t *>(aTlvsStart), aTlvsLength, aType));
+        return AsNonConst(FindTlv(AsConst(aTlvsStart), aTlvsLength, aType));
     }
 
     /**
@@ -1325,10 +1326,7 @@ public:
      * @returns A pointer to next Channel Mask Entry.
      *
      */
-    ChannelMaskEntryBase *GetNext(void)
-    {
-        return const_cast<ChannelMaskEntryBase *>(static_cast<const ChannelMaskEntryBase *>(this)->GetNext());
-    }
+    ChannelMaskEntryBase *GetNext(void) { return AsNonConst(AsConst(this)->GetNext()); }
 
 private:
     uint8_t mChannelPage;

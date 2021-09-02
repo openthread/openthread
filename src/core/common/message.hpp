@@ -42,6 +42,7 @@
 #include <openthread/platform/messagepool.h>
 
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -1359,7 +1360,7 @@ private:
 
     struct WritableChunk : public Chunk
     {
-        uint8_t *GetData(void) const { return const_cast<uint8_t *>(mData); }
+        uint8_t *GetData(void) const { return AsNonConst(mData); }
     };
 
     void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &chunk) const;
@@ -1367,12 +1368,12 @@ private:
 
     void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, WritableChunk &aChunk)
     {
-        const_cast<const Message *>(this)->GetFirstChunk(aOffset, aLength, static_cast<Chunk &>(aChunk));
+        AsConst(this)->GetFirstChunk(aOffset, aLength, static_cast<Chunk &>(aChunk));
     }
 
     void GetNextChunk(uint16_t &aLength, WritableChunk &aChunk)
     {
-        const_cast<const Message *>(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
+        AsConst(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
 };
 

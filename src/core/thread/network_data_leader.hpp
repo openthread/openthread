@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include "coap/coap.hpp"
+#include "common/const_cast.hpp"
 #include "common/timer.hpp"
 #include "net/ip6_address.hpp"
 #include "thread/mle_router.hpp"
@@ -176,10 +177,7 @@ public:
      * @returns A pointer to the Commissioning Data or nullptr if no Commissioning Data exists.
      *
      */
-    CommissioningDataTlv *GetCommissioningData(void)
-    {
-        return const_cast<CommissioningDataTlv *>(const_cast<const LeaderBase *>(this)->GetCommissioningData());
-    }
+    CommissioningDataTlv *GetCommissioningData(void) { return AsNonConst(AsConst(this)->GetCommissioningData()); }
 
     /**
      * This method returns a pointer to the Commissioning Data.
@@ -199,7 +197,7 @@ public:
      */
     MeshCoP::Tlv *GetCommissioningDataSubTlv(MeshCoP::Tlv::Type aType)
     {
-        return const_cast<MeshCoP::Tlv *>(const_cast<const LeaderBase *>(this)->GetCommissioningDataSubTlv(aType));
+        return AsNonConst(AsConst(this)->GetCommissioningDataSubTlv(aType));
     }
 
     /**
