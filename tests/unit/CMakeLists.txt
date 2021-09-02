@@ -192,6 +192,27 @@ target_link_libraries(ot-test-cmd-line-parser
 
 add_test(NAME ot-test-cmd-line-parser COMMAND ot-test-cmd-line-parser)
 
+add_executable(ot-test-data
+    test_data.cpp
+)
+
+target_include_directories(ot-test-data
+    PRIVATE
+        ${COMMON_INCLUDES}
+)
+
+target_compile_options(ot-test-data
+    PRIVATE
+        ${COMMON_COMPILE_OPTIONS}
+)
+
+target_link_libraries(ot-test-data
+    PRIVATE
+        ${COMMON_LIBS}
+)
+
+add_test(NAME ot-test-data COMMAND ot-test-data)
+
 add_executable(ot-test-dns
     test_dns.cpp
 )

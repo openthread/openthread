@@ -394,6 +394,7 @@ HEADERS_COMMON                                  = \
     common/code_utils.hpp                         \
     common/const_cast.hpp                         \
     common/crc16.hpp                              \
+    common/data.hpp                               \
     common/debug.hpp                              \
     common/encoding.hpp                           \
     common/equatable.hpp                          \
