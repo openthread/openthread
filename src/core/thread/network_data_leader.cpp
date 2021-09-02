@@ -61,21 +61,21 @@ void LeaderBase::Reset(void)
     Get<ot::Notifier>().Signal(kEventThreadNetdataChanged);
 }
 
-Error LeaderBase::GetServiceId(uint32_t       aEnterpriseNumber,
-                               const uint8_t *aServiceData,
-                               uint8_t        aServiceDataLength,
-                               bool           aServerStable,
-                               uint8_t &      aServiceId) const
+Error LeaderBase::GetServiceId(uint32_t           aEnterpriseNumber,
+                               const ServiceData &aServiceData,
+                               bool               aServerStable,
+                               uint8_t &          aServiceId) const
 {
     Error         error    = kErrorNotFound;
     Iterator      iterator = kIteratorInit;
     ServiceConfig serviceConfig;
+    ServiceData   serviceData;
 
     while (GetNextService(iterator, serviceConfig) == kErrorNone)
     {
-        if (aEnterpriseNumber == serviceConfig.mEnterpriseNumber &&
-            aServiceDataLength == serviceConfig.mServiceDataLength &&
-            memcmp(aServiceData, serviceConfig.mServiceData, aServiceDataLength) == 0 &&
+        serviceConfig.GetServiceData(serviceData);
+
+        if (aEnterpriseNumber == serviceConfig.mEnterpriseNumber && aServiceData == serviceData &&
             aServerStable == serviceConfig.mServerConfig.mStable)
         {
             aServiceId = serviceConfig.mServiceId;

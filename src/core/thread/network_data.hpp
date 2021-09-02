@@ -423,44 +423,38 @@ protected:
      * This method returns a pointer to a matching Service TLV.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                            const uint8_t *  aServiceData,
-                            uint8_t          aServiceDataLength,
-                            ServiceMatchMode aServiceMatchMode)
+    ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
+                            const ServiceData &aServiceData,
+                            ServiceMatchMode   aServiceMatchMode)
     {
-        return AsNonConst(
-            AsConst(this)->FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
+        return AsNonConst(AsConst(this)->FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode));
     }
 
     /**
      * This method returns a pointer to a matching Service TLV.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    const ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                                  const uint8_t *  aServiceData,
-                                  uint8_t          aServiceDataLength,
-                                  ServiceMatchMode aServiceMatchMode) const;
+    const ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
+                                  const ServiceData &aServiceData,
+                                  ServiceMatchMode   aServiceMatchMode) const;
 
     /**
      * This method returns a pointer to a Service TLV in a specified tlvs buffer.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
@@ -468,23 +462,20 @@ protected:
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    static ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                                   const uint8_t *  aServiceData,
-                                   uint8_t          aServiceDataLength,
-                                   ServiceMatchMode aServiceMatchMode,
-                                   uint8_t *        aTlvs,
-                                   uint8_t          aTlvsLength)
+    static ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
+                                   const ServiceData &aServiceData,
+                                   ServiceMatchMode   aServiceMatchMode,
+                                   uint8_t *          aTlvs,
+                                   uint8_t            aTlvsLength)
     {
-        return AsNonConst(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode,
-                                      AsConst(aTlvs), aTlvsLength));
+        return AsNonConst(FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode, AsConst(aTlvs), aTlvsLength));
     }
 
     /**
      * This method returns a pointer to a Service TLV in a specified tlvs buffer.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      * @param[in]  aTlvs              A pointer to a specified tlvs buffer.
      * @param[in]  aTlvsLength        The specified tlvs buffer length pointed to by @p aTlvs.
@@ -492,12 +483,11 @@ protected:
      * @returns A pointer to the Service TLV if one is found or nullptr if no matching Service TLV exists.
      *
      */
-    static const ServiceTlv *FindService(uint32_t         aEnterpriseNumber,
-                                         const uint8_t *  aServiceData,
-                                         uint8_t          aServiceDataLength,
-                                         ServiceMatchMode aServiceMatchMode,
-                                         const uint8_t *  aTlvs,
-                                         uint8_t          aTlvsLength);
+    static const ServiceTlv *FindService(uint32_t           aEnterpriseNumber,
+                                         const ServiceData &aServiceData,
+                                         ServiceMatchMode   aServiceMatchMode,
+                                         const uint8_t *    aTlvs,
+                                         uint8_t            aTlvsLength);
 
     /**
      * This method returns the next pointer to a matching Service TLV.
@@ -508,18 +498,34 @@ protected:
      *                                Service TLV), or a pointer to the previous Service TLV returned from this method
      *                                to iterate to the next matching Service TLV.
      * @param[in]  aEnterpriseNumber  Enterprise Number.
-     * @param[in]  aServiceData       A pointer to a Service Data to match with Service TLVs.
-     * @param[in]  aServiceDataLength The Service Data length pointed to by @p aServiceData.
+     * @param[in]  aServiceData       A Service Data to match with Service TLVs.
      * @param[in]  aServiceMatchMode  The Service Data match mode.
      *
      * @returns A pointer to the next matching Service TLV if one is found or nullptr if it cannot be found.
      *
      */
-    const ServiceTlv *FindNextService(const ServiceTlv *aPrevServiceTlv,
-                                      uint32_t          aEnterpriseNumber,
-                                      const uint8_t *   aServiceData,
-                                      uint8_t           aServiceDataLength,
-                                      ServiceMatchMode  aServiceMatchMode) const;
+    const ServiceTlv *FindNextService(const ServiceTlv * aPrevServiceTlv,
+                                      uint32_t           aEnterpriseNumber,
+                                      const ServiceData &aServiceData,
+                                      ServiceMatchMode   aServiceMatchMode) const;
+
+    /**
+     * This method returns the next pointer to a matching Thread Service TLV (with Thread Enterprise number).
+     *
+     * This method can be used to iterate over all Thread Service TLVs that start with a given Service Data.
+     *
+     * @param[in]  aPrevServiceTlv    Set to nullptr to start from the beginning of the TLVs (finding the first matching
+     *                                Service TLV), or a pointer to the previous Service TLV returned from this method
+     *                                to iterate to the next matching Service TLV.
+     * @param[in]  aServiceData       A Service Data to match with Service TLVs.
+     * @param[in]  aServiceMatchMode  The Service Data match mode.
+     *
+     * @returns A pointer to the next matching Thread Service TLV if one is found or nullptr if it cannot be found.
+     *
+     */
+    const ServiceTlv *FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
+                                            const ServiceData &aServiceData,
+                                            ServiceMatchMode   aServiceMatchMode) const;
 
     /**
      * This method indicates whether there is space in Network Data to insert/append new info and grow it by a given
@@ -682,11 +688,10 @@ private:
     static void Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength);
     static void RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv);
 
-    static bool MatchService(const ServiceTlv &aServiceTlv,
-                             uint32_t          aEnterpriseNumber,
-                             const uint8_t *   aServiceData,
-                             uint8_t           aServiceDataLength,
-                             ServiceMatchMode  aServiceMatchMode);
+    static bool MatchService(const ServiceTlv & aServiceTlv,
+                             uint32_t           aEnterpriseNumber,
+                             const ServiceData &aServiceData,
+                             ServiceMatchMode   aServiceMatchMode);
 };
 
 } // namespace NetworkData

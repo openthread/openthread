@@ -183,32 +183,29 @@ bool Local::IsExternalRouteConsistent(void) const
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
 
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
-Error Local::AddService(uint32_t       aEnterpriseNumber,
-                        const uint8_t *aServiceData,
-                        uint8_t        aServiceDataLength,
-                        bool           aServerStable,
-                        const uint8_t *aServerData,
-                        uint8_t        aServerDataLength)
+Error Local::AddService(uint32_t           aEnterpriseNumber,
+                        const ServiceData &aServiceData,
+                        bool               aServerStable,
+                        const ServerData & aServerData)
 {
     Error       error = kErrorNone;
     ServiceTlv *serviceTlv;
     ServerTlv * serverTlv;
-    uint16_t    serviceTlvSize =
-        ServiceTlv::CalculateSize(aEnterpriseNumber, aServiceDataLength) + sizeof(ServerTlv) + aServerDataLength;
+    uint16_t    serviceTlvSize = ServiceTlv::CalculateSize(aEnterpriseNumber, aServiceData.GetLength()) +
+                              sizeof(ServerTlv) + aServerData.GetLength();
 
-    IgnoreError(RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength));
+    IgnoreError(RemoveService(aEnterpriseNumber, aServiceData));
 
     VerifyOrExit(serviceTlvSize <= kMaxSize, error = kErrorNoBufs);
 
     serviceTlv = static_cast<ServiceTlv *>(AppendTlv(serviceTlvSize));
     VerifyOrExit(serviceTlv != nullptr, error = kErrorNoBufs);
 
-    serviceTlv->Init(/* aServiceId */ 0, aEnterpriseNumber, aServiceData, aServiceDataLength);
-    serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerDataLength);
+    serviceTlv->Init(/* aServiceId */ 0, aEnterpriseNumber, aServiceData);
+    serviceTlv->SetSubTlvsLength(sizeof(ServerTlv) + aServerData.GetLength());
 
     serverTlv = static_cast<ServerTlv *>(serviceTlv->GetSubTlvs());
-
-    serverTlv->Init(Get<Mle::MleRouter>().GetRloc16(), aServerData, aServerDataLength);
+    serverTlv->Init(Get<Mle::MleRouter>().GetRloc16(), aServerData);
 
     // According to Thread spec 1.1.1, section 5.18.6 Service TLV:
     // "The Stable flag is set if any of the included sub-TLVs have their Stable flag set."
@@ -225,13 +222,12 @@ exit:
     return error;
 }
 
-Error Local::RemoveService(uint32_t aEnterpriseNumber, const uint8_t *aServiceData, uint8_t aServiceDataLength)
+Error Local::RemoveService(uint32_t aEnterpriseNumber, const ServiceData &aServiceData)
 {
     Error       error = kErrorNone;
     ServiceTlv *tlv;
 
-    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, kServiceExactMatch)) !=
-                     nullptr,
+    VerifyOrExit((tlv = FindService(aEnterpriseNumber, aServiceData, kServiceExactMatch)) != nullptr,
                  error = kErrorNotFound);
     RemoveTlv(tlv);
 

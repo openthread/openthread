@@ -219,10 +219,13 @@ bool ServiceConfig::ServerConfig::operator==(const ServerConfig &aOther) const
 
 void ServiceConfig::ServerConfig::SetFrom(const ServerTlv &aServerTlv)
 {
+    ServerData serverData;
+
+    aServerTlv.GetServerData(serverData);
     mStable           = aServerTlv.IsStable();
     mRloc16           = aServerTlv.GetServer16();
-    mServerDataLength = aServerTlv.GetServerDataLength();
-    memcpy(&mServerData, aServerTlv.GetServerData(), mServerDataLength);
+    mServerDataLength = serverData.GetLength();
+    serverData.CopyBytesTo(mServerData);
 }
 
 bool ServiceConfig::operator==(const ServiceConfig &aOther) const
@@ -234,12 +237,15 @@ bool ServiceConfig::operator==(const ServiceConfig &aOther) const
 
 void ServiceConfig::SetFrom(const ServiceTlv &aServiceTlv, const ServerTlv &aServerTlv)
 {
+    ServiceData serviceData;
+
     Clear();
 
+    aServiceTlv.GetServiceData(serviceData);
     mServiceId         = aServiceTlv.GetServiceId();
     mEnterpriseNumber  = aServiceTlv.GetEnterpriseNumber();
-    mServiceDataLength = aServiceTlv.GetServiceDataLength();
-    memcpy(&mServiceData, aServiceTlv.GetServiceData(), mServiceDataLength);
+    mServiceDataLength = serviceData.GetLength();
+    serviceData.CopyBytesTo(mServiceData);
     GetServerConfig().SetFrom(aServerTlv);
 }
 

@@ -53,12 +53,15 @@ otError otServerGetNetDataLocal(otInstance *aInstance, bool aStable, uint8_t *aD
 
 otError otServerAddService(otInstance *aInstance, const otServiceConfig *aConfig)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Instance &               instance = *static_cast<Instance *>(aInstance);
+    NetworkData::ServiceData serviceData;
+    NetworkData::ServerData  serverData;
 
-    return instance.Get<NetworkData::Local>().AddService(aConfig->mEnterpriseNumber, &aConfig->mServiceData[0],
-                                                         aConfig->mServiceDataLength, aConfig->mServerConfig.mStable,
-                                                         &aConfig->mServerConfig.mServerData[0],
-                                                         aConfig->mServerConfig.mServerDataLength);
+    serviceData.Init(&aConfig->mServiceData[0], aConfig->mServiceDataLength);
+    serverData.Init(&aConfig->mServerConfig.mServerData[0], aConfig->mServerConfig.mServerDataLength);
+
+    return instance.Get<NetworkData::Local>().AddService(aConfig->mEnterpriseNumber, serviceData,
+                                                         aConfig->mServerConfig.mStable, serverData);
 }
 
 otError otServerRemoveService(otInstance *   aInstance,
@@ -66,9 +69,12 @@ otError otServerRemoveService(otInstance *   aInstance,
                               const uint8_t *aServiceData,
                               uint8_t        aServiceDataLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Instance &               instance = *static_cast<Instance *>(aInstance);
+    NetworkData::ServiceData serviceData;
 
-    return instance.Get<NetworkData::Local>().RemoveService(aEnterpriseNumber, aServiceData, aServiceDataLength);
+    serviceData.Init(aServiceData, aServiceDataLength);
+
+    return instance.Get<NetworkData::Local>().RemoveService(aEnterpriseNumber, serviceData);
 }
 
 otError otServerGetNextService(otInstance *aInstance, otNetworkDataIterator *aIterator, otServiceConfig *aConfig)
