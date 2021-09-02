@@ -375,6 +375,7 @@ openthread_core_files = [
   "common/const_cast.hpp",
   "common/crc16.cpp",
   "common/crc16.hpp",
+  "common/data.hpp",
   "common/debug.hpp",
   "common/encoding.hpp",
   "common/equatable.hpp",
