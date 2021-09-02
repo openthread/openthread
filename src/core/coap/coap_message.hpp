@@ -961,10 +961,10 @@ private:
 
     const HelpData &GetHelpData(void) const
     {
-        static_assert(sizeof(mBuffer.mHead.mMetadata) + sizeof(HelpData) + kHelpDataAlignment <= sizeof(mBuffer),
+        static_assert(sizeof(HelpData) + kHelpDataAlignment <= kHeadBufferDataSize,
                       "Insufficient buffer size for CoAP processing!");
 
-        return *static_cast<const HelpData *>(OT_ALIGN(mBuffer.mHead.mData, kHelpDataAlignment));
+        return *static_cast<const HelpData *>(OT_ALIGN(GetFirstData(), kHelpDataAlignment));
     }
 
     HelpData &GetHelpData(void) { return AsNonConst(AsConst(this)->GetHelpData()); }
