@@ -427,13 +427,16 @@ Error Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc
         case NetworkDataTlv::kTypeService:
         {
             const ServiceTlv *service = static_cast<const ServiceTlv *>(cur);
+            ServiceData       serviceData;
 
             VerifyOrExit(service->IsValid(), error = kErrorParse);
 
+            service->GetServiceData(serviceData);
+
             // Ensure there is no duplicate Service TLV with same
             // Enterprise Number and Service Data.
-            VerifyOrExit(FindService(service->GetEnterpriseNumber(), service->GetServiceData(),
-                                     service->GetServiceDataLength(), kServiceExactMatch, aTlvs, offset) == nullptr,
+            VerifyOrExit(FindService(service->GetEnterpriseNumber(), serviceData, kServiceExactMatch, aTlvs, offset) ==
+                             nullptr,
                          error = kErrorParse);
 
             SuccessOrExit(error = ValidateService(*service, aRloc16));
@@ -786,10 +789,13 @@ exit:
 
 Error Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags)
 {
-    Error            error      = kErrorNone;
-    ServiceTlv *     dstService = FindService(aService.GetEnterpriseNumber(), aService.GetServiceData(),
-                                         aService.GetServiceDataLength(), kServiceExactMatch);
+    Error            error = kErrorNone;
+    ServiceTlv *     dstService;
+    ServiceData      serviceData;
     const ServerTlv *server;
+
+    aService.GetServiceData(serviceData);
+    dstService = FindService(aService.GetEnterpriseNumber(), serviceData, kServiceExactMatch);
 
     if (dstService == nullptr)
     {
@@ -798,11 +804,10 @@ Error Leader::AddService(const ServiceTlv &aService, ChangedFlags &aChangedFlags
         SuccessOrExit(error = AllocateServiceId(serviceId));
 
         dstService = static_cast<ServiceTlv *>(
-            AppendTlv(ServiceTlv::CalculateSize(aService.GetEnterpriseNumber(), aService.GetServiceDataLength())));
+            AppendTlv(ServiceTlv::CalculateSize(aService.GetEnterpriseNumber(), serviceData.GetLength())));
         VerifyOrExit(dstService != nullptr, error = kErrorNoBufs);
 
-        dstService->Init(serviceId, aService.GetEnterpriseNumber(), aService.GetServiceData(),
-                         aService.GetServiceDataLength());
+        dstService->Init(serviceId, aService.GetEnterpriseNumber(), serviceData);
     }
 
     server = NetworkDataTlv::Find<ServerTlv>(aService.GetSubTlvs(), aService.GetNext());
@@ -934,15 +939,18 @@ Error Leader::AddServer(const ServerTlv &aServer, ServiceTlv &aDstService, Chang
 {
     Error      error = kErrorNone;
     ServerTlv *dstServer;
+    ServerData serverData;
     uint8_t    tlvSize = aServer.GetSize();
 
     VerifyOrExit(!ContainsMatchingServer(&aDstService, aServer));
 
     VerifyOrExit(CanInsert(tlvSize), error = kErrorNoBufs);
 
+    aServer.GetServerData(serverData);
+
     dstServer = static_cast<ServerTlv *>(aDstService.GetNext());
     Insert(dstServer, tlvSize);
-    dstServer->Init(aServer.GetServer16(), aServer.GetServerData(), aServer.GetServerDataLength());
+    dstServer->Init(aServer.GetServer16(), serverData);
 
     if (aServer.IsStable())
     {
@@ -1078,9 +1086,13 @@ void Leader::RemoveRloc(uint16_t       aRloc16,
         case NetworkDataTlv::kTypeService:
         {
             ServiceTlv *      service = static_cast<ServiceTlv *>(cur);
-            const ServiceTlv *excludeService =
-                FindService(service->GetEnterpriseNumber(), service->GetServiceData(), service->GetServiceDataLength(),
-                            kServiceExactMatch, aExcludeTlvs, aExcludeTlvsLength);
+            ServiceData       serviceData;
+            const ServiceTlv *excludeService;
+
+            service->GetServiceData(serviceData);
+
+            excludeService = FindService(service->GetEnterpriseNumber(), serviceData, kServiceExactMatch, aExcludeTlvs,
+                                         aExcludeTlvsLength);
 
             RemoveRlocInService(*service, aRloc16, aMatchMode, excludeService, aChangedFlags);
 

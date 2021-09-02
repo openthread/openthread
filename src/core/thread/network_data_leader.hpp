@@ -260,20 +260,18 @@ public:
      * This method gets the Service ID for the specified service.
      *
      * @param[in]  aEnterpriseNumber  Enterprise Number (IANA-assigned) for Service TLV
-     * @param[in]  aServiceData       A pointer to the Service Data
-     * @param[in]  aServiceDataLength The length of @p aServiceData in bytes.
-     * @param[in]  aServerStable      The Stable flag value for Server TLV
+     * @param[in]  aServiceData       The Service Data.
+     * @param[in]  aServerStable      The Stable flag value for Server TLV.
      * @param[out] aServiceId         A reference where to put the Service ID.
      *
      * @retval kErrorNone       Successfully got the Service ID.
      * @retval kErrorNotFound   The specified service was not found.
      *
      */
-    Error GetServiceId(uint32_t       aEnterpriseNumber,
-                       const uint8_t *aServiceData,
-                       uint8_t        aServiceDataLength,
-                       bool           aServerStable,
-                       uint8_t &      aServiceId) const;
+    Error GetServiceId(uint32_t           aEnterpriseNumber,
+                       const ServiceData &aServiceData,
+                       bool               aServerStable,
+                       uint8_t &          aServiceId) const;
 
 protected:
     uint8_t mStableVersion;
