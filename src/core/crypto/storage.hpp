@@ -312,7 +312,7 @@ public:
     explicit LiteralKey(const Key &aKey);
 
     /*
-     * This method gets the pointer to the bye array containing the literal key.
+     * This method gets the pointer to the byte array containing the literal key.
      *
      * @returns The pointer to the byte array containing the literal key.
      *
