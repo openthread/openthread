@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_SRP_SERVER_ENABLE
 
+#include "common/const_cast.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -1526,7 +1527,7 @@ Error Server::Service::Description::SetTxtDataFromMessage(const Message &aMessag
     VerifyOrExit(txtData != nullptr, error = kErrorNoBufs);
 
     VerifyOrExit(aMessage.ReadBytes(aOffset, txtData, aLength) == aLength, error = kErrorParse);
-    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength), error = kErrorParse);
+    VerifyOrExit(Dns::TxtRecord::VerifyTxtData(txtData, aLength, /* aAllowEmpty */ false), error = kErrorParse);
 
     Instance::HeapFree(mTxtData);
     mTxtData   = txtData;
@@ -1802,7 +1803,7 @@ const Server::Service::Description *Server::Host::FindServiceDescription(const c
 
 Server::Service::Description *Server::Host::FindServiceDescription(const char *aInstanceName)
 {
-    return const_cast<Service::Description *>(const_cast<const Host *>(this)->FindServiceDescription(aInstanceName));
+    return AsNonConst(AsConst(this)->FindServiceDescription(aInstanceName));
 }
 
 const Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName) const
@@ -1812,7 +1813,7 @@ const Server::Service *Server::Host::FindService(const char *aServiceName, const
 
 Server::Service *Server::Host::FindService(const char *aServiceName, const char *aInstanceName)
 {
-    return const_cast<Service *>(const_cast<const Host *>(this)->FindService(aServiceName, aInstanceName));
+    return AsNonConst(AsConst(this)->FindService(aServiceName, aInstanceName));
 }
 
 Error Server::Host::AddIp6Address(const Ip6::Address &aIp6Address)

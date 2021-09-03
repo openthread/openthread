@@ -82,9 +82,10 @@ SubMac::SubMac(Instance &aInstance)
 
 otRadioCaps SubMac::GetCaps(void) const
 {
-    otRadioCaps caps = mRadioCaps;
+    otRadioCaps caps;
 
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+    caps = mRadioCaps;
 
 #if OPENTHREAD_CONFIG_MAC_SOFTWARE_ACK_TIMEOUT_ENABLE
     caps |= OT_RADIO_CAPS_ACK_TIMEOUT;

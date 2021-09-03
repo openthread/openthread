@@ -67,6 +67,7 @@ build_simulation()
         "-DOT_SERVICE=ON"
         "-DOT_SRP_CLIENT=ON"
         "-DOT_SRP_SERVER=ON"
+        "-DOT_UPTIME=ON"
         "-DOT_THREAD_VERSION=${version}"
     )
 
@@ -275,6 +276,7 @@ do_build_otbr_docker()
         "-DOT_SLAAC=ON"
         "-DOT_SRP_CLIENT=ON"
         "-DOT_TREL=OFF"
+        "-DOT_UPTIME=ON"
         "-DOTBR_DUA_ROUTING=ON"
         "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )

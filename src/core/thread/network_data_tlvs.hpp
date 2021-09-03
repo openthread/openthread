@@ -38,6 +38,7 @@
 
 #include <openthread/netdata.h>
 
+#include "common/const_cast.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
 #include "common/equatable.hpp"
@@ -221,8 +222,7 @@ public:
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType)
     {
-        return const_cast<NetworkDataTlv *>(
-            Find(const_cast<const NetworkDataTlv *>(aStart), const_cast<const NetworkDataTlv *>(aEnd), aType));
+        return AsNonConst(Find(AsConst(aStart), AsConst(aEnd), aType));
     }
 
     /**
@@ -283,8 +283,7 @@ public:
      */
     static NetworkDataTlv *Find(NetworkDataTlv *aStart, NetworkDataTlv *aEnd, Type aType, bool aStable)
     {
-        return const_cast<NetworkDataTlv *>(
-            Find(const_cast<const NetworkDataTlv *>(aStart), const_cast<const NetworkDataTlv *>(aEnd), aType, aStable));
+        return AsNonConst(Find(AsConst(aStart), AsConst(aEnd), aType, aStable));
     }
 
     /**
@@ -793,10 +792,7 @@ public:
      * @returns A pointer to the TLV if found, or nullptr if not found.
      *
      */
-    NetworkDataTlv *FindSubTlv(Type aType)
-    {
-        return const_cast<NetworkDataTlv *>(const_cast<const PrefixTlv *>(this)->FindSubTlv(aType));
-    }
+    NetworkDataTlv *FindSubTlv(Type aType) { return AsNonConst(AsConst(this)->FindSubTlv(aType)); }
 
     /**
      * This method searches in the sub-TLVs to find the first one matching a given TLV type.
@@ -819,7 +815,7 @@ public:
      */
     NetworkDataTlv *FindSubTlv(Type aType, bool aStable)
     {
-        return const_cast<NetworkDataTlv *>(const_cast<const PrefixTlv *>(this)->FindSubTlv(aType, aStable));
+        return AsNonConst(AsConst(this)->FindSubTlv(aType, aStable));
     }
 
     /**

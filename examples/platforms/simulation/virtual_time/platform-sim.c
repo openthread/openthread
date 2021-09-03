@@ -127,7 +127,7 @@ static void platformSendSleepEvent(void)
 
     assert(platformAlarmGetNext() > 0);
 
-    event.mDelay      = (uint64_t)platformAlarmGetNext();
+    event.mDelay      = platformAlarmGetNext();
     event.mEvent      = OT_SIM_EVENT_ALARM_FIRED;
     event.mDataLength = 0;
 

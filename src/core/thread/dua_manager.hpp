@@ -42,6 +42,10 @@
 #error "Thread 1.2 or higher version is required for OPENTHREAD_CONFIG_DUA_ENABLE"
 #endif
 
+#if OPENTHREAD_CONFIG_DUA_ENABLE && !OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE
+#error "OPENTHREAD_CONFIG_IP6_SLAAC_ENABLE is required for OPENTHREAD_CONFIG_DUA_ENABLE"
+#endif
+
 #include "backbone_router/bbr_leader.hpp"
 #include "coap/coap.hpp"
 #include "coap/coap_message.hpp"

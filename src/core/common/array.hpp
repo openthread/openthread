@@ -37,6 +37,7 @@
 #include "openthread-core-config.h"
 
 #include "common/code_utils.hpp"
+#include "common/const_cast.hpp"
 #include "common/error.hpp"
 #include "common/numeric_limits.hpp"
 #include "common/type_traits.hpp"
@@ -264,7 +265,7 @@ public:
      * @returns A pointer to matched array element, or `nullptr` if a match could not be found.
      *
      */
-    Type *Find(const Type &aEntry) { return const_cast<Type *>(const_cast<const Array *>(this)->Find(aEntry)); }
+    Type *Find(const Type &aEntry) { return AsNonConst(AsConst(this)->Find(aEntry)); }
 
     /**
      * This method finds the first match of a given entry in the array.
@@ -321,7 +322,7 @@ public:
      */
     template <typename Indicator> Type *FindMatching(const Indicator &aIndicator)
     {
-        return const_cast<Type *>(const_cast<const Array *>(this)->FindMatching(aIndicator));
+        return AsNonConst(AsConst(this)->FindMatching(aIndicator));
     }
 
     /**

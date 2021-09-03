@@ -152,6 +152,13 @@ public:
      */
     void OnRcpReset(void);
 
+    /**
+     * This method is called when RCP is reset to recreate the connection with it.
+     * Intentionally empty.
+     *
+     */
+    otError ResetConnection(void) { return OT_ERROR_NONE; }
+
 private:
     int     SetupGpioHandle(int aFd, uint8_t aLine, uint32_t aHandleFlags, const char *aLabel);
     int     SetupGpioEvent(int aFd, uint8_t aLine, uint32_t aHandleFlags, uint32_t aEventFlags, const char *aLabel);

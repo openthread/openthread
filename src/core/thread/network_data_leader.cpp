@@ -53,12 +53,6 @@
 namespace ot {
 namespace NetworkData {
 
-LeaderBase::LeaderBase(Instance &aInstance)
-    : NetworkData(aInstance, kTypeLeader)
-{
-    Reset();
-}
-
 void LeaderBase::Reset(void)
 {
     mVersion       = Random::NonCrypto::GetUint8();

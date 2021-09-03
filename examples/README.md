@@ -54,7 +54,6 @@ This page lists the available common switches with description. Unless stated ot
 | OTNS | OT_OTNS | Enables support for [OpenThread Network Simulator](https://github.com/openthread/ot-ns). Enable this switch if you are building OpenThread for OpenThread Network Simulator. |
 | PLATFORM_UDP | OT_PLATFORM_UDP | Enables platform UDP support. |
 | REFERENCE_DEVICE | OT_REFERENCE_DEVICE | Enables support for Thread Test Harness reference device. Enable this switch on the reference device during certification. |
-| RESET_CONNECTION | OT_SPINEL_RESET_CONNECTION | Enables resetting connection with RCP device. Enable this switch if RCP uses USB transport and performs hard reset. Use symlink instead of file name pointing the RCP device i.e. /dev/serial/by-id/usb-device-name instead of /dev/ttyUSB0 in a connection configuration. |
 | SERVICE | OT_SERVICE | Enables support for injecting Service entries into the Thread Network Data. |
 | SETTINGS_RAM | OT_SETTINGS_RAM | Enables volatile-only storage of settings. |
 | SLAAC | OT_SLAAC | Enables support for adding auto-configured SLAAC addresses by OpenThread. This feature is enabled by default. |
@@ -66,3 +65,4 @@ This page lists the available common switches with description. Unless stated ot
 | TIME_SYNC | OT_TIME_SYNC | Enables the time synchronization service feature. **Note: Enabling this feature breaks conformance to the Thread Specification.** |  |
 | TREL | OT_TREL | Enables TREL radio link for Thread over Infrastructure feature. |
 | UDP_FORWARD | OT_UDP_FORWARD | Enables support for UDP forward. | Enable this switch on the Border Router device (running on the NCP design) with External Commissioning support to service Thread Commissioner packets on the NCP side. |
+| UPTIME | OT_UPTIME | Enables support for tracking OpenThread instance's uptime. |

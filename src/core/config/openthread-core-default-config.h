@@ -89,6 +89,16 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_UPTIME_ENABLE
+ *
+ * Define to 1 to enable tracking the uptime of OpenThread instance.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_UPTIME_ENABLE
+#define OPENTHREAD_CONFIG_UPTIME_ENABLE 0
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_JAM_DETECTION_ENABLE
  *
  * Define to 1 to enable the Jam Detection service.

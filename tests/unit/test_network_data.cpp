@@ -68,7 +68,7 @@ void TestNetworkDataIterator(void)
     {
     public:
         TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength)
-            : NetworkData(*aInstance, kTypeLeader)
+            : NetworkData(*aInstance)
         {
             memcpy(mTlvs, aTlvs, aTlvsLength);
             mLength = aTlvsLength;

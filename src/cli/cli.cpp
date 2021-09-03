@@ -4224,6 +4224,31 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+otError Interpreter::ProcessUptime(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        char string[OT_UPTIME_STRING_SIZE];
+
+        otInstanceGetUptimeAsString(mInstance, string, sizeof(string));
+        OutputLine("%s", string);
+    }
+    else if (aArgs[0] == "ms")
+    {
+        OutputLine("%lu", otInstanceGetUptime(mInstance));
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
+
+    return error;
+}
+#endif
+
 otError Interpreter::ProcessVersion(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;

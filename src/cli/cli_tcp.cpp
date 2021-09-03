@@ -213,7 +213,7 @@ exit:
 
 otError TcpExample::ProcessBenchmark(Arg aArgs[])
 {
-    otError  error;
+    otError  error = OT_ERROR_NONE;
     uint32_t toSendOut;
 
     VerifyOrExit(!mSendBusy, error = OT_ERROR_BUSY);

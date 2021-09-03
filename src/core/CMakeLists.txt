@@ -107,6 +107,7 @@ set(COMMON_SOURCES
     common/timer.cpp
     common/tlvs.cpp
     common/trickle_timer.cpp
+    common/uptime.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
     crypto/crypto_platform.cpp

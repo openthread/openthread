@@ -41,6 +41,7 @@
 
 #include "coap/coap.hpp"
 #include "common/clearable.hpp"
+#include "common/const_cast.hpp"
 #include "common/equatable.hpp"
 #include "common/locator.hpp"
 #include "common/timer.hpp"
@@ -112,23 +113,16 @@ public:
     static constexpr uint8_t kMaxSize = 254; ///< Maximum size of Thread Network Data in bytes.
 
     /**
-     * This enumeration specifies the type of Network Data (local or leader).
-     *
-     */
-    enum Type : uint8_t
-    {
-        kTypeLocal,  ///< Local Network Data.
-        kTypeLeader, ///< Leader Network Data.
-    };
-
-    /**
      * This constructor initializes the object.
      *
      * @param[in]  aInstance     A reference to the OpenThread instance.
-     * @param[in]  aType         Network data type
      *
      */
-    NetworkData(Instance &aInstance, Type aType);
+    explicit NetworkData(Instance &aInstance)
+        : InstanceLocator(aInstance)
+        , mLength(0)
+    {
+    }
 
     /**
      * This method clears the network data.
@@ -356,7 +350,7 @@ protected:
      */
     PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength)
     {
-        return const_cast<PrefixTlv *>(const_cast<const NetworkData *>(this)->FindPrefix(aPrefix, aPrefixLength));
+        return AsNonConst(AsConst(this)->FindPrefix(aPrefix, aPrefixLength));
     }
 
     /**
@@ -406,8 +400,7 @@ protected:
      */
     static PrefixTlv *FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength, uint8_t *aTlvs, uint8_t aTlvsLength)
     {
-        return const_cast<PrefixTlv *>(
-            FindPrefix(aPrefix, aPrefixLength, const_cast<const uint8_t *>(aTlvs), aTlvsLength));
+        return AsNonConst(FindPrefix(aPrefix, aPrefixLength, AsConst(aTlvs), aTlvsLength));
     }
 
     /**
@@ -442,8 +435,8 @@ protected:
                             uint8_t          aServiceDataLength,
                             ServiceMatchMode aServiceMatchMode)
     {
-        return const_cast<ServiceTlv *>(const_cast<const NetworkData *>(this)->FindService(
-            aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
+        return AsNonConst(
+            AsConst(this)->FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode));
     }
 
     /**
@@ -482,9 +475,8 @@ protected:
                                    uint8_t *        aTlvs,
                                    uint8_t          aTlvsLength)
     {
-        return const_cast<ServiceTlv *>(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength,
-                                                    aServiceMatchMode, const_cast<const uint8_t *>(aTlvs),
-                                                    aTlvsLength));
+        return AsNonConst(FindService(aEnterpriseNumber, aServiceData, aServiceDataLength, aServiceMatchMode,
+                                      AsConst(aTlvs), aTlvsLength));
     }
 
     /**
@@ -594,15 +586,19 @@ protected:
     /**
      * This method sends a Server Data Notification message to the Leader.
      *
-     * @param[in]  aRloc16   The old RLOC16 value that was previously registered.
-     * @param[in]  aHandler  A function pointer that is called when the transaction ends.
-     * @param[in]  aContext  A pointer to arbitrary context information.
+     * @param[in]  aRloc16            The old RLOC16 value that was previously registered.
+     * @param[in]  aAppendNetDataTlv  Indicates whether or not to append Thread Network Data TLV to the message.
+     * @param[in]  aHandler           A function pointer that is called when the transaction ends.
+     * @param[in]  aContext           A pointer to arbitrary context information.
      *
      * @retval kErrorNone     Successfully enqueued the notification message.
      * @retval kErrorNoBufs   Insufficient message buffers to generate the notification message.
      *
      */
-    Error SendServerDataNotification(uint16_t aRloc16, Coap::ResponseHandler aHandler, void *aContext);
+    Error SendServerDataNotification(uint16_t              aRloc16,
+                                     bool                  aAppendNetDataTlv,
+                                     Coap::ResponseHandler aHandler,
+                                     void *                aContext);
 
     uint8_t mTlvs[kMaxSize]; ///< The Network Data buffer.
     uint8_t mLength;         ///< The number of valid bytes in @var mTlvs.
@@ -691,8 +687,6 @@ private:
                              const uint8_t *   aServiceData,
                              uint8_t           aServiceDataLength,
                              ServiceMatchMode  aServiceMatchMode);
-
-    const Type mType;
 };
 
 } // namespace NetworkData

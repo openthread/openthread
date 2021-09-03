@@ -145,6 +145,7 @@ size_nrf52840_version()
         "-DOT_SRP_SERVER=ON"
         "-DOT_TIME_SYNC=ON"
         "-DOT_UDP_FORWARD=ON"
+        "-DOT_UPTIME=ON"
     )
 
     local thread_version=$1

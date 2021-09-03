@@ -48,13 +48,15 @@ uint32_t sPlatDt;
 bool     sTimerOn;
 uint32_t sCallCount[kCallCountIndexMax];
 
-void testTimerAlarmStop(otInstance *)
+extern "C" {
+
+void otPlatAlarmMilliStop(otInstance *)
 {
     sTimerOn = false;
     sCallCount[kCallCountIndexAlarmStop]++;
 }
 
-void testTimerAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+void otPlatAlarmMilliStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
 {
     sTimerOn = true;
     sCallCount[kCallCountIndexAlarmStart]++;
@@ -62,17 +64,33 @@ void testTimerAlarmStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
     sPlatDt = aDt;
 }
 
-uint32_t testTimerAlarmGetNow(void)
+uint32_t otPlatAlarmMilliGetNow(void)
 {
     return sNow;
 }
 
-void InitTestTimer(void)
+#if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
+void otPlatAlarmMicroStop(otInstance *)
 {
-    g_testPlatAlarmStop    = testTimerAlarmStop;
-    g_testPlatAlarmStartAt = testTimerAlarmStartAt;
-    g_testPlatAlarmGetNow  = testTimerAlarmGetNow;
+    sTimerOn = false;
+    sCallCount[kCallCountIndexAlarmStop]++;
 }
+
+void otPlatAlarmMicroStartAt(otInstance *, uint32_t aT0, uint32_t aDt)
+{
+    sTimerOn = true;
+    sCallCount[kCallCountIndexAlarmStart]++;
+    sPlatT0 = aT0;
+    sPlatDt = aDt;
+}
+
+uint32_t otPlatAlarmMicroGetNow(void)
+{
+    return sNow;
+}
+#endif
+
+} // extern "C"
 
 void InitCounters(void)
 {
@@ -137,7 +155,6 @@ template <typename TimerType> int TestOneTimer(void)
     // Test one Timer basic operation.
 
     TestTimer<TimerType>::RemoveAll(*instance);
-    InitTestTimer();
     InitCounters();
 
     printf("TestOneTimer() ");
@@ -263,7 +280,6 @@ template <typename TimerType> int TestTwoTimers(void)
     TestTimer<TimerType> timer2(*instance);
 
     TestTimer<TimerType>::RemoveAll(*instance);
-    InitTestTimer();
     printf("TestTwoTimers() ");
 
     // Test when second timer stars at the fire time of first timer (before alarm callback).
@@ -496,7 +512,6 @@ template <typename TimerType> static void TenTimers(uint32_t aTimeShift)
     // Start the Ten timers.
 
     TestTimer<TimerType>::RemoveAll(*instance);
-    InitTestTimer();
     InitCounters();
 
     for (i = 0; i < kNumTimers; i++)

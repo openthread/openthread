@@ -44,7 +44,7 @@ using namespace ot;
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, Error aError)
+extern "C" void otPlatRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     Instance &    instance = *static_cast<Instance *>(aInstance);
     Mac::RxFrame *rxFrame  = static_cast<Mac::RxFrame *>(aFrame);
@@ -81,7 +81,7 @@ exit:
     return;
 }
 
-extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, Error aError)
+extern "C" void otPlatRadioTxDone(otInstance *aInstance, otRadioFrame *aFrame, otRadioFrame *aAckFrame, otError aError)
 {
     Instance &    instance = *static_cast<Instance *>(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
@@ -116,7 +116,7 @@ exit:
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, Error aError)
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     Instance &    instance = *static_cast<Instance *>(aInstance);
     Mac::RxFrame *rxFrame  = static_cast<Mac::RxFrame *>(aFrame);
@@ -131,7 +131,7 @@ extern "C" void otPlatDiagRadioReceiveDone(otInstance *aInstance, otRadioFrame *
     instance.Get<Radio::Callbacks>().HandleDiagsReceiveDone(rxFrame, aError);
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, Error aError)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame *aFrame, otError aError)
 {
     Instance &    instance = *static_cast<Instance *>(aInstance);
     Mac::TxFrame &txFrame  = *static_cast<Mac::TxFrame *>(aFrame);
@@ -146,7 +146,7 @@ extern "C" void otPlatDiagRadioTransmitDone(otInstance *aInstance, otRadioFrame 
 
 #else // #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
-extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, Error)
+extern "C" void otPlatRadioReceiveDone(otInstance *, otRadioFrame *, otError)
 {
 }
 
@@ -154,7 +154,7 @@ extern "C" void otPlatRadioTxStarted(otInstance *, otRadioFrame *)
 {
 }
 
-extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, Error)
+extern "C" void otPlatRadioTxDone(otInstance *, otRadioFrame *, otRadioFrame *, otError)
 {
 }
 
@@ -163,11 +163,11 @@ extern "C" void otPlatRadioEnergyScanDone(otInstance *, int8_t)
 }
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
-extern "C" void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, Error)
+extern "C" void otPlatDiagRadioReceiveDone(otInstance *, otRadioFrame *, otError)
 {
 }
 
-extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, Error)
+extern "C" void otPlatDiagRadioTransmitDone(otInstance *, otRadioFrame *, otError)
 {
 }
 #endif
@@ -258,7 +258,7 @@ OT_TOOL_WEAK uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance)
     return OPENTHREAD_CONFIG_PLATFORM_CSL_UNCERT;
 }
 
-OT_TOOL_WEAK Error otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
+OT_TOOL_WEAK otError otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aGain);
@@ -266,7 +266,7 @@ OT_TOOL_WEAK Error otPlatRadioGetFemLnaGain(otInstance *aInstance, int8_t *aGain
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK Error otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
+OT_TOOL_WEAK otError otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aGain);
@@ -274,7 +274,7 @@ OT_TOOL_WEAK Error otPlatRadioSetFemLnaGain(otInstance *aInstance, int8_t aGain)
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK Error otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
+OT_TOOL_WEAK otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);
@@ -283,7 +283,7 @@ OT_TOOL_WEAK Error otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, 
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK Error otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
+OT_TOOL_WEAK otError otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aRegionCode);
@@ -291,7 +291,7 @@ OT_TOOL_WEAK Error otPlatRadioSetRegion(otInstance *aInstance, uint16_t aRegionC
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK Error otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
+OT_TOOL_WEAK otError otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegionCode)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aRegionCode);
@@ -299,7 +299,7 @@ OT_TOOL_WEAK Error otPlatRadioGetRegion(otInstance *aInstance, uint16_t *aRegion
     return kErrorNotImplemented;
 }
 
-OT_TOOL_WEAK Error otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
+OT_TOOL_WEAK otError otPlatRadioReceiveAt(otInstance *aInstance, uint8_t aChannel, uint32_t aStart, uint32_t aDuration)
 {
     OT_UNUSED_VARIABLE(aInstance);
     OT_UNUSED_VARIABLE(aChannel);

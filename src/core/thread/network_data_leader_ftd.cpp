@@ -1364,7 +1364,7 @@ Error Leader::RemoveStaleChildEntries(Coap::ResponseHandler aHandler, void *aCon
             Get<ChildTable>().FindChild(rloc16, Child::kInStateValid) == nullptr)
         {
             // In Thread 1.1 Specification 5.15.6.1, only one RLOC16 TLV entry may appear in SRV_DATA.ntf.
-            error = SendServerDataNotification(rloc16, aHandler, aContext);
+            error = SendServerDataNotification(rloc16, /* aAppendNetDataTlv */ false, aHandler, aContext);
             ExitNow();
         }
     }

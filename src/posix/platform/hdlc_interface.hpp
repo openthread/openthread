@@ -163,13 +163,11 @@ public:
      */
     void OnRcpReset(void);
 
-#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
     /**
      * This method is called when RCP is reset to recreate the connection with it.
      *
      */
     otError ResetConnection(void);
-#endif
 
 private:
     /**
@@ -237,29 +235,18 @@ private:
      */
     void CloseFile(void);
 
-#if OPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION
-    /**
-     * This method waits until enumeration of RCP(USB CDC ACM) device ends.
-     *
-     * This is blocking call, this method waits for up to 10 seconds.
-     *
-     * @param[in] aRadioUrlPath  A path to RCP device.
-     *
-     * @retval OT_ERROR_NONE    The RCP device has been added to the host OS before timeout ends.
-     * @retval OT_ERROR_FAILED  The RCP device has not been added to the host OS before timeout ends.
-     *
-     */
-    otError WaitForUsbDevice(const char *aRadioUrlPath);
-#endif
-
 #if OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
     static int ForkPty(const Url::Url &aRadioUrl);
 #endif
 
     enum
     {
-        kMaxFrameSize = Spinel::SpinelInterface::kMaxFrameSize,
-        kMaxWaitTime  = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
+        kMaxFrameSize  = Spinel::SpinelInterface::kMaxFrameSize,
+        kMaxWaitTime   = 2000, ///< Maximum wait time in Milliseconds for socket to become writable (see `SendFrame`).
+        kResetTimeout  = 5000, ///< Maximum wait time in Milliseconds for file to become ready (see `ResetConnection`).
+        kOpenFileDelay = 500,  ///< Delay between open file calls, in Milliseconds (see `ResetConnection`).
+        kRemoveRcpDelay =
+            2000, ///< Delay for removing RCP device from host OS after hard reset (see `ResetConnection`).
     };
 
     Spinel::SpinelInterface::ReceiveFrameCallback mReceiveFrameCallback;

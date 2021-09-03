@@ -51,6 +51,7 @@
 #include "common/tasklet.hpp"
 #include "common/time_ticker.hpp"
 #include "common/timer.hpp"
+#include "common/uptime.hpp"
 #include "diags/factory_diags.hpp"
 #include "radio/radio.hpp"
 
@@ -357,6 +358,9 @@ private:
     // (particularly, SubMac and Mac) to allow them to use its methods
     // from their constructor.
     Radio mRadio;
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+    Uptime mUptime;
+#endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
     // Notifier, TimeTicker, Settings, and MessagePool are initialized
@@ -443,6 +447,13 @@ template <> inline Radio::Callbacks &Instance::Get(void)
 {
     return mRadio.mCallbacks;
 }
+
+#if OPENTHREAD_CONFIG_UPTIME_ENABLE
+template <> inline Uptime &Instance::Get(void)
+{
+    return mUptime;
+}
+#endif
 
 #if OPENTHREAD_MTD || OPENTHREAD_FTD
 template <> inline Notifier &Instance::Get(void)

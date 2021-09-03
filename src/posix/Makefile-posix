@@ -68,7 +68,6 @@ NETDATA_PUBLISHER                    ?= 1
 PING_SENDER                          ?= 1
 READLINE                             ?= readline
 REFERENCE_DEVICE                     ?= 1
-RESET_CONNECTION                     ?= 0
 SERVICE                              ?= 1
 SNTP_CLIENT                          ?= 1
 SRP_CLIENT                           ?= 1
@@ -76,6 +75,7 @@ SRP_SERVER                           ?= 1
 ifneq ($(DAEMON),1)
 UDP_FORWARD                          ?= 1
 endif
+UPTIME                               ?= 1
 
 COMMONCFLAGS                         := \
     -g                                  \
@@ -126,11 +126,6 @@ endif
 
 ifeq ($(VIRTUAL_TIME),1)
 COMMONCFLAGS                   += -DOPENTHREAD_POSIX_VIRTUAL_TIME=1
-endif
-
-ifeq ($(RESET_CONNECTION),1)
-COMMONCFLAGS                   += -DOPENTHREAD_SPINEL_CONFIG_RESET_CONNECTION=1
-configure_OPTIONS              += --with-udev
 endif
 
 include $(dir $(abspath $(lastword $(MAKEFILE_LIST))))/../../examples/common-switches.mk

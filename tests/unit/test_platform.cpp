@@ -31,30 +31,13 @@
 #include <stdio.h>
 #include <sys/time.h>
 
-bool                 g_testPlatAlarmSet     = false;
-uint32_t             g_testPlatAlarmNext    = 0;
-testPlatAlarmStop    g_testPlatAlarmStop    = nullptr;
-testPlatAlarmStartAt g_testPlatAlarmStartAt = nullptr;
-testPlatAlarmGetNow  g_testPlatAlarmGetNow  = nullptr;
-
-otRadioCaps                     g_testPlatRadioCaps               = OT_RADIO_CAPS_NONE;
-testPlatRadioSetPanId           g_testPlatRadioSetPanId           = nullptr;
-testPlatRadioSetExtendedAddress g_testPlatRadioSetExtendedAddress = nullptr;
-testPlatRadioIsEnabled          g_testPlatRadioIsEnabled          = nullptr;
-testPlatRadioEnable             g_testPlatRadioEnable             = nullptr;
-testPlatRadioDisable            g_testPlatRadioDisable            = nullptr;
-testPlatRadioSetShortAddress    g_testPlatRadioSetShortAddress    = nullptr;
-testPlatRadioReceive            g_testPlatRadioReceive            = nullptr;
-testPlatRadioTransmit           g_testPlatRadioTransmit           = nullptr;
-testPlatRadioGetTransmitBuffer  g_testPlatRadioGetTransmitBuffer  = nullptr;
-
 enum
 {
     FLASH_SWAP_SIZE = 2048,
     FLASH_SWAP_NUM  = 2,
 };
 
-uint8_t g_flash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
+static uint8_t sFlash[FLASH_SWAP_SIZE * FLASH_SWAP_NUM];
 
 ot::Instance *testInitInstance(void)
 {
@@ -95,287 +78,173 @@ bool sDiagMode = false;
 extern "C" {
 
 #if OPENTHREAD_CONFIG_HEAP_EXTERNAL_ENABLE
-void *otPlatCAlloc(size_t aNum, size_t aSize)
+OT_TOOL_WEAK void *otPlatCAlloc(size_t aNum, size_t aSize)
 {
     return calloc(aNum, aSize);
 }
 
-void otPlatFree(void *aPtr)
+OT_TOOL_WEAK void otPlatFree(void *aPtr)
 {
     free(aPtr);
 }
 #endif
 
-void otTaskletsSignalPending(otInstance *)
+OT_TOOL_WEAK void otTaskletsSignalPending(otInstance *)
 {
 }
 
-//
-// Alarm
-//
-
-void otPlatAlarmMilliStop(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatAlarmMilliStop(otInstance *)
 {
-    if (g_testPlatAlarmStop)
-    {
-        g_testPlatAlarmStop(aInstance);
-    }
-    else
-    {
-        g_testPlatAlarmSet = false;
-    }
 }
 
-void otPlatAlarmMilliStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+OT_TOOL_WEAK void otPlatAlarmMilliStartAt(otInstance *, uint32_t, uint32_t)
 {
-    if (g_testPlatAlarmStartAt)
-    {
-        g_testPlatAlarmStartAt(aInstance, aT0, aDt);
-    }
-    else
-    {
-        g_testPlatAlarmSet  = true;
-        g_testPlatAlarmNext = aT0 + aDt;
-    }
 }
 
-uint32_t otPlatAlarmMilliGetNow(void)
+OT_TOOL_WEAK uint32_t otPlatAlarmMilliGetNow(void)
 {
     struct timeval tv;
-
-    if (g_testPlatAlarmGetNow)
-    {
-        return g_testPlatAlarmGetNow();
-    }
 
     gettimeofday(&tv, nullptr);
 
     return (uint32_t)((tv.tv_sec * 1000) + (tv.tv_usec / 1000) + 123456);
 }
 
-void otPlatAlarmMicroStop(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatAlarmMicroStop(otInstance *)
 {
-    if (g_testPlatAlarmStop)
-    {
-        g_testPlatAlarmStop(aInstance);
-    }
-    else
-    {
-        g_testPlatAlarmSet = false;
-    }
 }
 
-void otPlatAlarmMicroStartAt(otInstance *aInstance, uint32_t aT0, uint32_t aDt)
+OT_TOOL_WEAK void otPlatAlarmMicroStartAt(otInstance *, uint32_t, uint32_t)
 {
-    if (g_testPlatAlarmStartAt)
-    {
-        g_testPlatAlarmStartAt(aInstance, aT0, aDt);
-    }
-    else
-    {
-        g_testPlatAlarmSet  = true;
-        g_testPlatAlarmNext = aT0 + aDt;
-    }
 }
 
-uint32_t otPlatAlarmMicroGetNow(void)
+OT_TOOL_WEAK uint32_t otPlatAlarmMicroGetNow(void)
 {
     struct timeval tv;
-
-    if (g_testPlatAlarmGetNow)
-    {
-        return g_testPlatAlarmGetNow();
-    }
 
     gettimeofday(&tv, nullptr);
 
     return (uint32_t)((tv.tv_sec * 1000000) + tv.tv_usec + 123456);
 }
 
-//
-// Radio
-//
-
-void otPlatRadioGetIeeeEui64(otInstance *, uint8_t *)
+OT_TOOL_WEAK void otPlatRadioGetIeeeEui64(otInstance *, uint8_t *)
 {
 }
 
-void otPlatRadioSetPanId(otInstance *aInstance, uint16_t aPanId)
-{
-    if (g_testPlatRadioSetPanId)
-    {
-        g_testPlatRadioSetPanId(aInstance, aPanId);
-    }
-}
-
-void otPlatRadioSetExtendedAddress(otInstance *aInstance, const otExtAddress *aExtAddr)
-{
-    if (g_testPlatRadioSetExtendedAddress)
-    {
-        g_testPlatRadioSetExtendedAddress(aInstance, aExtAddr);
-    }
-}
-
-void otPlatRadioSetShortAddress(otInstance *aInstance, uint16_t aShortAddress)
-{
-    if (g_testPlatRadioSetShortAddress)
-    {
-        g_testPlatRadioSetShortAddress(aInstance, aShortAddress);
-    }
-}
-
-void otPlatRadioSetPromiscuous(otInstance *, bool)
+OT_TOOL_WEAK void otPlatRadioSetPanId(otInstance *, uint16_t)
 {
 }
 
-bool otPlatRadioIsEnabled(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatRadioSetExtendedAddress(otInstance *, const otExtAddress *)
 {
-    if (g_testPlatRadioIsEnabled)
-    {
-        return g_testPlatRadioIsEnabled(aInstance);
-    }
+}
 
+OT_TOOL_WEAK void otPlatRadioSetShortAddress(otInstance *, uint16_t)
+{
+}
+
+OT_TOOL_WEAK void otPlatRadioSetPromiscuous(otInstance *, bool)
+{
+}
+
+OT_TOOL_WEAK bool otPlatRadioIsEnabled(otInstance *)
+{
     return true;
 }
 
-otError otPlatRadioEnable(otInstance *aInstance)
-{
-    if (g_testPlatRadioEnable)
-    {
-        return g_testPlatRadioEnable(aInstance);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatRadioDisable(otInstance *aInstance)
-{
-    if (g_testPlatRadioEnable)
-    {
-        return g_testPlatRadioDisable(aInstance);
-    }
-
-    return OT_ERROR_NONE;
-}
-
-otError otPlatRadioSleep(otInstance *)
+OT_TOOL_WEAK otError otPlatRadioEnable(otInstance *)
 {
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioReceive(otInstance *aInstance, uint8_t aChannel)
+OT_TOOL_WEAK otError otPlatRadioDisable(otInstance *)
 {
-    if (g_testPlatRadioReceive)
-    {
-        return g_testPlatRadioReceive(aInstance, aChannel);
-    }
-
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioTransmit(otInstance *aInstance, otRadioFrame *aFrame)
+OT_TOOL_WEAK otError otPlatRadioSleep(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aFrame);
-
-    if (g_testPlatRadioTransmit)
-    {
-        return g_testPlatRadioTransmit(aInstance);
-    }
-
     return OT_ERROR_NONE;
 }
 
-otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *aInstance)
+OT_TOOL_WEAK otError otPlatRadioReceive(otInstance *, uint8_t)
 {
-    if (g_testPlatRadioGetTransmitBuffer)
-    {
-        return g_testPlatRadioGetTransmitBuffer(aInstance);
-    }
+    return OT_ERROR_NONE;
+}
 
+OT_TOOL_WEAK otError otPlatRadioTransmit(otInstance *, otRadioFrame *)
+{
+    return OT_ERROR_NONE;
+}
+
+OT_TOOL_WEAK otRadioFrame *otPlatRadioGetTransmitBuffer(otInstance *)
+{
     return nullptr;
 }
 
-int8_t otPlatRadioGetRssi(otInstance *)
+OT_TOOL_WEAK int8_t otPlatRadioGetRssi(otInstance *)
 {
     return 0;
 }
 
-otRadioCaps otPlatRadioGetCaps(otInstance *)
+OT_TOOL_WEAK otRadioCaps otPlatRadioGetCaps(otInstance *)
 {
-    return g_testPlatRadioCaps;
+    return OT_RADIO_CAPS_NONE;
 }
 
-bool otPlatRadioGetPromiscuous(otInstance *)
+OT_TOOL_WEAK bool otPlatRadioGetPromiscuous(otInstance *)
 {
     return false;
 }
 
-void otPlatRadioEnableSrcMatch(otInstance *aInstance, bool aEnable)
+OT_TOOL_WEAK void otPlatRadioEnableSrcMatch(otInstance *, bool)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aEnable);
 }
 
-otError otPlatRadioAddSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
+OT_TOOL_WEAK otError otPlatRadioAddSrcMatchShortEntry(otInstance *, uint16_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddress);
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioAddSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
+OT_TOOL_WEAK otError otPlatRadioAddSrcMatchExtEntry(otInstance *, const otExtAddress *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddress);
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioClearSrcMatchShortEntry(otInstance *aInstance, uint16_t aShortAddress)
+OT_TOOL_WEAK otError otPlatRadioClearSrcMatchShortEntry(otInstance *, uint16_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddress);
     return OT_ERROR_NONE;
 }
 
-otError otPlatRadioClearSrcMatchExtEntry(otInstance *aInstance, const otExtAddress *aExtAddress)
+OT_TOOL_WEAK otError otPlatRadioClearSrcMatchExtEntry(otInstance *, const otExtAddress *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aExtAddress);
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioClearSrcMatchShortEntries(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatRadioClearSrcMatchShortEntries(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatRadioClearSrcMatchExtEntries(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatRadioClearSrcMatchExtEntries(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
+OT_TOOL_WEAK otError otPlatRadioEnergyScan(otInstance *, uint8_t, uint16_t)
 {
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-otError otPlatRadioSetTransmitPower(otInstance *aInstance, int8_t aPower)
+OT_TOOL_WEAK otError otPlatRadioSetTransmitPower(otInstance *, int8_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aPower);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-int8_t otPlatRadioGetReceiveSensitivity(otInstance *aInstance)
+OT_TOOL_WEAK int8_t otPlatRadioGetReceiveSensitivity(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     return -100;
 }
-//
-// Random
-//
 
-otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
+OT_TOOL_WEAK otError otPlatEntropyGet(uint8_t *aOutput, uint16_t aOutputLength)
 {
     otError error = OT_ERROR_NONE;
 
@@ -409,167 +278,113 @@ exit:
     return error;
 }
 
-//
-// Diag
-//
-
-void otPlatDiagProcess(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
+OT_TOOL_WEAK void otPlatDiagProcess(otInstance *, uint8_t, char *aArgs[], char *aOutput, size_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aArgsLength);
-    OT_UNUSED_VARIABLE(aOutputMaxLen);
-
-    // no more diagnostics features for Posix platform
     sprintf(aOutput, "diag feature '%s' is not supported\r\n", aArgs[0]);
 }
 
-void otPlatDiagModeSet(bool aMode)
+OT_TOOL_WEAK void otPlatDiagModeSet(bool aMode)
 {
     sDiagMode = aMode;
 }
 
-bool otPlatDiagModeGet()
+OT_TOOL_WEAK bool otPlatDiagModeGet()
 {
     return sDiagMode;
 }
 
-void otPlatDiagChannelSet(uint8_t)
+OT_TOOL_WEAK void otPlatDiagChannelSet(uint8_t)
 {
 }
 
-void otPlatDiagTxPowerSet(int8_t)
+OT_TOOL_WEAK void otPlatDiagTxPowerSet(int8_t)
 {
 }
 
-void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError)
+OT_TOOL_WEAK void otPlatDiagRadioReceived(otInstance *, otRadioFrame *, otError)
 {
 }
 
-void otPlatDiagAlarmCallback(otInstance *)
+OT_TOOL_WEAK void otPlatDiagAlarmCallback(otInstance *)
 {
 }
 
-//
-// Uart
-//
-
-void otPlatUartSendDone(void)
+OT_TOOL_WEAK void otPlatUartSendDone(void)
 {
 }
 
-void otPlatUartReceived(const uint8_t *, uint16_t)
+OT_TOOL_WEAK void otPlatUartReceived(const uint8_t *, uint16_t)
 {
 }
 
-//
-// Misc
-//
-
-void otPlatReset(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatReset(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-otPlatResetReason otPlatGetResetReason(otInstance *aInstance)
+OT_TOOL_WEAK otPlatResetReason otPlatGetResetReason(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
     return OT_PLAT_RESET_REASON_POWER_ON;
 }
 
-void otPlatLog(otLogLevel, otLogRegion, const char *, ...)
+OT_TOOL_WEAK void otPlatLog(otLogLevel, otLogRegion, const char *, ...)
 {
 }
 
-//
-// Settings
-//
-
-void otPlatSettingsInit(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatSettingsInit(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatSettingsDeinit(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatSettingsDeinit(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-otError otPlatSettingsGet(otInstance *aInstance, uint16_t aKey, int aIndex, uint8_t *aValue, uint16_t *aValueLength)
+OT_TOOL_WEAK otError otPlatSettingsGet(otInstance *, uint16_t, int, uint8_t *, uint16_t *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aIndex);
-    OT_UNUSED_VARIABLE(aValue);
-    OT_UNUSED_VARIABLE(aValueLength);
-
     return OT_ERROR_NOT_FOUND;
 }
 
-otError otPlatSettingsSet(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+OT_TOOL_WEAK otError otPlatSettingsSet(otInstance *, uint16_t, const uint8_t *, uint16_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aValue);
-    OT_UNUSED_VARIABLE(aValueLength);
-
     return OT_ERROR_NONE;
 }
 
-otError otPlatSettingsAdd(otInstance *aInstance, uint16_t aKey, const uint8_t *aValue, uint16_t aValueLength)
+OT_TOOL_WEAK otError otPlatSettingsAdd(otInstance *, uint16_t, const uint8_t *, uint16_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aValue);
-    OT_UNUSED_VARIABLE(aValueLength);
-
     return OT_ERROR_NONE;
 }
 
-otError otPlatSettingsDelete(otInstance *aInstance, uint16_t aKey, int aIndex)
+OT_TOOL_WEAK otError otPlatSettingsDelete(otInstance *, uint16_t, int)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aKey);
-    OT_UNUSED_VARIABLE(aIndex);
-
     return OT_ERROR_NONE;
 }
 
-void otPlatSettingsWipe(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatSettingsWipe(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
 }
 
-void otPlatFlashInit(otInstance *aInstance)
+OT_TOOL_WEAK void otPlatFlashInit(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
-    memset(g_flash, 0xff, sizeof(g_flash));
+    memset(sFlash, 0xff, sizeof(sFlash));
 }
 
-uint32_t otPlatFlashGetSwapSize(otInstance *aInstance)
+OT_TOOL_WEAK uint32_t otPlatFlashGetSwapSize(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     return FLASH_SWAP_SIZE;
 }
 
-void otPlatFlashErase(otInstance *aInstance, uint8_t aSwapIndex)
+OT_TOOL_WEAK void otPlatFlashErase(otInstance *, uint8_t aSwapIndex)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     uint32_t address;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
 
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
 
-    memset(g_flash + address, 0xff, FLASH_SWAP_SIZE);
+    memset(sFlash + address, 0xff, FLASH_SWAP_SIZE);
 }
 
-void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
+OT_TOOL_WEAK void otPlatFlashRead(otInstance *, uint8_t aSwapIndex, uint32_t aOffset, void *aData, uint32_t aSize)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     uint32_t address;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
@@ -578,13 +393,15 @@ void otPlatFlashRead(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset
 
     address = aSwapIndex ? FLASH_SWAP_SIZE : 0;
 
-    memcpy(aData, g_flash + address + aOffset, aSize);
+    memcpy(aData, sFlash + address + aOffset, aSize);
 }
 
-void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffset, const void *aData, uint32_t aSize)
+OT_TOOL_WEAK void otPlatFlashWrite(otInstance *,
+                                   uint8_t     aSwapIndex,
+                                   uint32_t    aOffset,
+                                   const void *aData,
+                                   uint32_t    aSize)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     uint32_t address;
 
     VerifyOrQuit(aSwapIndex < FLASH_SWAP_NUM, "aSwapIndex invalid");
@@ -595,114 +412,76 @@ void otPlatFlashWrite(otInstance *aInstance, uint8_t aSwapIndex, uint32_t aOffse
 
     for (uint32_t index = 0; index < aSize; index++)
     {
-        g_flash[address + aOffset + index] &= ((uint8_t *)aData)[index];
+        sFlash[address + aOffset + index] &= ((uint8_t *)aData)[index];
     }
 }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE || OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-uint16_t otPlatTimeGetXtalAccuracy(void)
+OT_TOOL_WEAK uint16_t otPlatTimeGetXtalAccuracy(void)
 {
     return 0;
 }
 #endif
 
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-otError otPlatRadioEnableCsl(otInstance *        aInstance,
-                             uint32_t            aCslPeriod,
-                             otShortAddress      aShortAdd,
-                             const otExtAddress *aExtAddr)
+OT_TOOL_WEAK otError otPlatRadioEnableCsl(otInstance *, uint32_t, otShortAddress, const otExtAddress *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aCslPeriod);
-    OT_UNUSED_VARIABLE(aShortAdd);
-    OT_UNUSED_VARIABLE(aExtAddr);
-
     return OT_ERROR_NONE;
 }
 
-void otPlatRadioUpdateCslSampleTime(otInstance *aInstance, uint32_t aCslSampleTime)
+OT_TOOL_WEAK void otPlatRadioUpdateCslSampleTime(otInstance *, uint32_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aCslSampleTime);
 }
 
-uint8_t otPlatRadioGetCslAccuracy(otInstance *aInstance)
+OT_TOOL_WEAK uint8_t otPlatRadioGetCslAccuracy(otInstance *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-
     return static_cast<uint8_t>(otPlatTimeGetXtalAccuracy() / 2);
 }
-#endif // OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_OTNS_ENABLE
-void otPlatOtnsStatus(const char *aStatus)
+OT_TOOL_WEAK void otPlatOtnsStatus(const char *)
 {
-    OT_UNUSED_VARIABLE(aStatus);
 }
-#endif // OPENTHREAD_CONFIG_OTNS_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-void otPlatTrelUdp6Init(otInstance *aInstance, const otIp6Address *aUnicastAddress, uint16_t aUdpPort)
+OT_TOOL_WEAK void otPlatTrelUdp6Init(otInstance *, const otIp6Address *, uint16_t)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aUnicastAddress);
-    OT_UNUSED_VARIABLE(aUdpPort);
 }
 
-void otPlatTrelUdp6UpdateAddress(otInstance *aInstance, const otIp6Address *aUnicastAddress)
+OT_TOOL_WEAK void otPlatTrelUdp6UpdateAddress(otInstance *, const otIp6Address *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aUnicastAddress);
 }
 
-void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *aInstance, const otIp6Address *aMulticastAddress)
+OT_TOOL_WEAK void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *, const otIp6Address *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aMulticastAddress);
 }
 
-otError otPlatTrelUdp6SendTo(otInstance *        aInstance,
-                             const uint8_t *     aBuffer,
-                             uint16_t            aLength,
-                             const otIp6Address *aDestAddress)
+OT_TOOL_WEAK otError otPlatTrelUdp6SendTo(otInstance *, const uint8_t *, uint16_t, const otIp6Address *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aBuffer);
-    OT_UNUSED_VARIABLE(aLength);
-    OT_UNUSED_VARIABLE(aDestAddress);
-
     return OT_ERROR_ABORT;
 }
 
-otError otPlatTrelUdp6SetTestMode(otInstance *aInstance, bool aEnable)
+OT_TOOL_WEAK otError otPlatTrelUdp6SetTestMode(otInstance *, bool)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aEnable);
     return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
+#endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
-otError otPlatRadioConfigureEnhAckProbing(otInstance *         aInstance,
-                                          otLinkMetrics        aLinkMetrics,
-                                          const otShortAddress aShortAddress,
-                                          const otExtAddress * aExtAddress)
+OT_TOOL_WEAK otError otPlatRadioConfigureEnhAckProbing(otInstance *,
+                                                       otLinkMetrics,
+                                                       const otShortAddress,
+                                                       const otExtAddress *)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aLinkMetrics);
-    OT_UNUSED_VARIABLE(aShortAddress);
-    OT_UNUSED_VARIABLE(aExtAddress);
-
     return OT_ERROR_NONE;
 }
 
-otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const otShortAddress aShortAddress)
+OT_TOOL_WEAK otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *, const otShortAddress)
 {
-    OT_UNUSED_VARIABLE(aInstance);
-    OT_UNUSED_VARIABLE(aShortAddress);
-
     otLinkMetrics metrics;
 
     memset(&metrics, 0, sizeof(metrics));
@@ -712,24 +491,13 @@ otLinkMetrics otPlatRadioGetEnhAckProbingMetrics(otInstance *aInstance, const ot
 #endif
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
-bool otPlatInfraIfHasAddress(uint32_t aInfraIfIndex, const otIp6Address *aAddress)
+OT_TOOL_WEAK bool otPlatInfraIfHasAddress(uint32_t, const otIp6Address *)
 {
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-    OT_UNUSED_VARIABLE(aAddress);
-
     return false;
 }
 
-otError otPlatInfraIfSendIcmp6Nd(uint32_t            aInfraIfIndex,
-                                 const otIp6Address *aDestAddress,
-                                 const uint8_t *     aBuffer,
-                                 uint16_t            aBufferLength)
+OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, const uint8_t *, uint16_t)
 {
-    OT_UNUSED_VARIABLE(aInfraIfIndex);
-    OT_UNUSED_VARIABLE(aDestAddress);
-    OT_UNUSED_VARIABLE(aBuffer);
-    OT_UNUSED_VARIABLE(aBufferLength);
-
     return OT_ERROR_FAILED;
 }
 #endif

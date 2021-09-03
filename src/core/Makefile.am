@@ -184,6 +184,7 @@ SOURCES_COMMON                                  = \
     common/timer.cpp                              \
     common/tlvs.cpp                               \
     common/trickle_timer.cpp                      \
+    common/uptime.cpp                             \
     crypto/aes_ccm.cpp                            \
     crypto/aes_ecb.cpp                            \
     crypto/crypto_platform.cpp                    \
@@ -325,6 +326,7 @@ libopenthread_radio_a_SOURCES              = \
     common/string.cpp                        \
     common/tasklet.cpp                       \
     common/timer.cpp                         \
+    common/uptime.cpp                        \
     crypto/aes_ccm.cpp                       \
     crypto/aes_ecb.cpp                       \
     crypto/crypto_platform.cpp               \
@@ -390,6 +392,7 @@ HEADERS_COMMON                                  = \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \
+    common/const_cast.hpp                         \
     common/crc16.hpp                              \
     common/debug.hpp                              \
     common/encoding.hpp                           \
@@ -421,6 +424,7 @@ HEADERS_COMMON                                  = \
     common/tlvs.hpp                               \
     common/trickle_timer.hpp                      \
     common/type_traits.hpp                        \
+    common/uptime.hpp                             \
     config/announce_sender.h                      \
     config/backbone_router.h                      \
     config/border_router.h                        \
