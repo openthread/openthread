@@ -46,7 +46,7 @@ otMessage *otUdpNewMessage(otInstance *aInstance, const otMessageSettings *aSett
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Ip6::Udp>().NewMessage(0, Message::Settings(aSettings));
+    return instance.Get<Ip6::Udp>().NewMessage(0, Message::Settings::From(aSettings));
 }
 
 otError otUdpOpen(otInstance *aInstance, otUdpSocket *aSocket, otUdpReceive aCallback, void *aContext)

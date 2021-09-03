@@ -171,7 +171,7 @@ otMessage *otIp6NewMessage(otInstance *aInstance, const otMessageSettings *aSett
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.Get<Ip6::Ip6>().NewMessage(0, Message::Settings(aSettings));
+    return instance.Get<Ip6::Ip6>().NewMessage(0, Message::Settings::From(aSettings));
 }
 
 otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
@@ -184,7 +184,8 @@ otMessage *otIp6NewMessageFromBuffer(otInstance *             aInstance,
 
     if (aSettings != nullptr)
     {
-        message = instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, Message::Settings(aSettings));
+        message =
+            instance.Get<Ip6::Ip6>().NewMessage(aData, aDataLength, *static_cast<const Message::Settings *>(aSettings));
     }
     else
     {

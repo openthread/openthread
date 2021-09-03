@@ -193,18 +193,17 @@ uint16_t MessagePool::GetTotalBufferCount(void) const
 //---------------------------------------------------------------------------------------------------------------------
 // Message::Settings
 
-const Message::Settings Message::Settings::kDefault(Message::kWithLinkSecurity, Message::kPriorityNormal);
+const otMessageSettings Message::Settings::kDefault = {kWithLinkSecurity, kPriorityNormal};
 
 Message::Settings::Settings(LinkSecurityMode aSecurityMode, Priority aPriority)
-    : mLinkSecurityEnabled(aSecurityMode == kWithLinkSecurity)
-    , mPriority(aPriority)
 {
+    mLinkSecurityEnabled = aSecurityMode;
+    mPriority            = aPriority;
 }
 
-Message::Settings::Settings(const otMessageSettings *aSettings)
-    : mLinkSecurityEnabled((aSettings != nullptr) ? aSettings->mLinkSecurityEnabled : true)
-    , mPriority((aSettings != nullptr) ? static_cast<Priority>(aSettings->mPriority) : kPriorityNormal)
+const Message::Settings &Message::Settings::From(const otMessageSettings *aSettings)
 {
+    return (aSettings == nullptr) ? GetDefault() : *static_cast<const Settings *>(aSettings);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

@@ -307,10 +307,10 @@ public:
      * This enumeration represents the link security mode (used by `Settings` constructor).
      *
      */
-    enum LinkSecurityMode : uint8_t
+    enum LinkSecurityMode : bool
     {
-        kNoLinkSecurity,   ///< Link security disabled (no link security).
-        kWithLinkSecurity, ///< Link security enabled.
+        kNoLinkSecurity   = false, ///< Link security disabled (no link security).
+        kWithLinkSecurity = true,  ///< Link security enabled.
     };
 
     /**
@@ -339,7 +339,7 @@ public:
      * This class represents settings used for creating a new message.
      *
      */
-    class Settings
+    class Settings : public otMessageSettings
     {
     public:
         /**
@@ -352,21 +352,12 @@ public:
         Settings(LinkSecurityMode aSecurityMode, Priority aPriority);
 
         /**
-         * This constructor initializes the `Settings` object from a given `otMessageSettings`.
-         *
-         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from. If nullptr default settings (link
-         *                       security enabled with `kPriorityNormal` priority) would be used.
-         *
-         */
-        explicit Settings(const otMessageSettings *aSettings);
-
-        /**
          * This method gets the message priority.
          *
          * @returns The message priority.
          *
          */
-        Priority GetPriority(void) const { return mPriority; }
+        Priority GetPriority(void) const { return static_cast<Priority>(mPriority); }
 
         /**
          * This method indicates whether the link security should be enabled.
@@ -377,18 +368,26 @@ public:
         bool IsLinkSecurityEnabled(void) const { return mLinkSecurityEnabled; }
 
         /**
+         * This static method converts a pointer to an `otMessageSettings` to a `Settings`.
+         *
+         * @param[in] aSettings  A pointer to `otMessageSettings` to covert from.
+         *                       If it is `nullptr`, then the default settings `GetDefault()` will be used.
+         *
+         * @returns A reference to the converted `Settings` or the default if @p aSettings is `nullptr`.
+         *
+         */
+        static const Settings &From(const otMessageSettings *aSettings);
+
+        /**
          * This static method returns the default settings with link security enabled and `kPriorityNormal` priority.
          *
          * @returns A reference to the default settings (link security enable and `kPriorityNormal` priority).
          *
          */
-        static const Settings &GetDefault(void) { return kDefault; }
+        static const Settings &GetDefault(void) { return static_cast<const Settings &>(kDefault); }
 
     private:
-        static const Settings kDefault;
-
-        bool     mLinkSecurityEnabled;
-        Priority mPriority;
+        static const otMessageSettings kDefault;
     };
 
     /**
