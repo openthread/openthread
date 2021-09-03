@@ -35,30 +35,24 @@
 
 #include <openthread/icmp6.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otIcmp6EchoMode otIcmp6GetEchoMode(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Icmp>().GetEchoMode();
+    return AsCoreType(aInstance).Get<Ip6::Icmp>().GetEchoMode();
 }
 
 void otIcmp6SetEchoMode(otInstance *aInstance, otIcmp6EchoMode aMode)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Ip6::Icmp>().SetEchoMode(aMode);
+    AsCoreType(aInstance).Get<Ip6::Icmp>().SetEchoMode(aMode);
 }
 
 otError otIcmp6RegisterHandler(otInstance *aInstance, otIcmp6Handler *aHandler)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Icmp>().RegisterHandler(*static_cast<Ip6::Icmp::Handler *>(aHandler));
+    return AsCoreType(aInstance).Get<Ip6::Icmp>().RegisterHandler(AsCoreType(aHandler));
 }
 
 otError otIcmp6SendEchoRequest(otInstance *         aInstance,
@@ -66,8 +60,6 @@ otError otIcmp6SendEchoRequest(otInstance *         aInstance,
                                const otMessageInfo *aMessageInfo,
                                uint16_t             aIdentifier)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Ip6::Icmp>().SendEchoRequest(*static_cast<Message *>(aMessage),
-                                                     *static_cast<const Ip6::MessageInfo *>(aMessageInfo), aIdentifier);
+    return AsCoreType(aInstance).Get<Ip6::Icmp>().SendEchoRequest(AsCoreType(aMessage), AsCoreType(aMessageInfo),
+                                                                  aIdentifier);
 }

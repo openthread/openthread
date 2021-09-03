@@ -37,7 +37,7 @@
 
 #include <openthread/child_supervision.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
@@ -46,32 +46,24 @@ using namespace ot;
 
 uint16_t otChildSupervisionGetInterval(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::ChildSupervisor>().GetSupervisionInterval();
+    return AsCoreType(aInstance).Get<Utils::ChildSupervisor>().GetSupervisionInterval();
 }
 
 void otChildSupervisionSetInterval(otInstance *aInstance, uint16_t aInterval)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Utils::ChildSupervisor>().SetSupervisionInterval(aInterval);
+    AsCoreType(aInstance).Get<Utils::ChildSupervisor>().SetSupervisionInterval(aInterval);
 }
 
 #endif
 
 uint16_t otChildSupervisionGetCheckTimeout(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<Utils::SupervisionListener>().GetTimeout();
+    return AsCoreType(aInstance).Get<Utils::SupervisionListener>().GetTimeout();
 }
 
 void otChildSupervisionSetCheckTimeout(otInstance *aInstance, uint16_t aTimeout)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<Utils::SupervisionListener>().SetTimeout(aTimeout);
+    AsCoreType(aInstance).Get<Utils::SupervisionListener>().SetTimeout(aTimeout);
 }
 
 #endif // OPENTHREAD_CONFIG_CHILD_SUPERVISION_ENABLE

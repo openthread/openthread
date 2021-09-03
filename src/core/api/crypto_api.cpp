@@ -36,6 +36,7 @@
 #include <openthread/crypto.h>
 #include <openthread/error.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/locator_getters.hpp"
@@ -43,6 +44,7 @@
 #include "crypto/ecdsa.hpp"
 #include "crypto/hmac_sha256.hpp"
 
+using namespace ot;
 using namespace ot::Crypto;
 
 void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash)
@@ -51,9 +53,9 @@ void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t a
 
     OT_ASSERT((aKey != nullptr) && (aBuf != nullptr) && (aHash != nullptr));
 
-    hmac.Start(*static_cast<const Key *>(aKey));
+    hmac.Start(AsCoreType(aKey));
     hmac.Update(aBuf, aBufLength);
-    hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
+    hmac.Finish(ot::AsCoreType(aHash));
 }
 
 void otCryptoAesCcm(const otCryptoKey *aKey,
@@ -71,7 +73,7 @@ void otCryptoAesCcm(const otCryptoKey *aKey,
     AesCcm aesCcm;
     OT_ASSERT((aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) && (aTag != nullptr));
 
-    aesCcm.SetKey(*static_cast<const Key *>(aKey));
+    aesCcm.SetKey(AsCoreType(aKey));
     aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
 
     if (aHeaderLength != 0)

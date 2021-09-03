@@ -37,7 +37,8 @@
 
 #include <openthread/netdiag.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
@@ -45,8 +46,7 @@ otError otThreadGetNextDiagnosticTlv(const otMessage *      aMessage,
                                      otNetworkDiagIterator *aIterator,
                                      otNetworkDiagTlv *     aNetworkDiagTlv)
 {
-    return NetworkDiagnostic::NetworkDiagnostic::GetNextDiagTlv(*static_cast<const Coap::Message *>(aMessage),
-                                                                *aIterator, *aNetworkDiagTlv);
+    return NetworkDiagnostic::NetworkDiagnostic::GetNextDiagTlv(AsCoapMessage(aMessage), *aIterator, *aNetworkDiagTlv);
 }
 
 otError otThreadSendDiagnosticGet(otInstance *                   aInstance,
@@ -56,10 +56,8 @@ otError otThreadSendDiagnosticGet(otInstance *                   aInstance,
                                   otReceiveDiagnosticGetCallback aCallback,
                                   void *                         aCallbackContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticGet(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount, aCallback, aCallbackContext);
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticGet(
+        AsCoreType(aDestination), aTlvTypes, aCount, aCallback, aCallbackContext);
 }
 
 otError otThreadSendDiagnosticReset(otInstance *        aInstance,
@@ -67,10 +65,8 @@ otError otThreadSendDiagnosticReset(otInstance *        aInstance,
                                     const uint8_t       aTlvTypes[],
                                     uint8_t             aCount)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
-        *static_cast<const Ip6::Address *>(aDestination), aTlvTypes, aCount);
+    return AsCoreType(aInstance).Get<NetworkDiagnostic::NetworkDiagnostic>().SendDiagnosticReset(
+        AsCoreType(aDestination), aTlvTypes, aCount);
 }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_CONFIG_TMF_NETWORK_DIAG_MTD_ENABLE

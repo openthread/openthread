@@ -37,30 +37,24 @@
 
 #include <openthread/diag.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 void otDiagProcessCmdLine(otInstance *aInstance, const char *aString, char *aOutput, size_t aOutputMaxLen)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
+    AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessLine(aString, aOutput, aOutputMaxLen);
 }
 
 otError otDiagProcessCmd(otInstance *aInstance, uint8_t aArgsLength, char *aArgs[], char *aOutput, size_t aOutputMaxLen)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<FactoryDiags::Diags>().ProcessCmd(aArgsLength, aArgs, aOutput, aOutputMaxLen);
+    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().ProcessCmd(aArgsLength, aArgs, aOutput, aOutputMaxLen);
 }
 
 bool otDiagIsEnabled(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<FactoryDiags::Diags>().IsEnabled();
+    return AsCoreType(aInstance).Get<FactoryDiags::Diags>().IsEnabled();
 }
 
 #endif // OPENTHREAD_CONFIG_DIAG_ENABLE
