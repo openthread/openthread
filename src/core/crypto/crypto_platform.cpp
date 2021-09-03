@@ -184,8 +184,6 @@ exit:
     return error;
 }
 
-// HKDF platform implementations
-// As the HKDF does not actually use mbedTLS APIs but uses HMAC module, this feature is not implemented.
 OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(void *         aContext,
                                             size_t         aContextSize,
                                             const uint8_t *aInfo,

@@ -178,12 +178,12 @@ inline void DestroyKey(KeyRef aKeyRef)
 }
 
 /**
- * Check if the keyId passed has an associated key in PSA ITS.
+ * Check if the keyRef passed has an associated key in PSA ITS.
  *
- * @param[in]  aKeyRef          The Key Id for to check.
+ * @param[in]  aKeyRef          The Key Ref for to check.
  *
- * @retval true                 Key Id passed has a key associated in PSA.
- * @retval false                Key Id passed is invalid and has no key associated in PSA.
+ * @retval true                 Key Ref passed has a key associated in PSA.
+ * @retval false                Key Ref passed is invalid and has no key associated in PSA.
  *
  */
 inline bool HasKey(KeyRef aKeyRef)

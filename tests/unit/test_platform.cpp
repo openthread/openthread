@@ -773,12 +773,11 @@ otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
     return OT_ERROR_NONE;
 }
 
-otError otPlatCryptoGetKeyAttributes(otCryptoKeyRef aKeyRef, otCryptoKeyAttributes *aKeyAttributes)
+bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
 {
     OT_UNUSED_VARIABLE(aKeyRef);
-    OT_UNUSED_VARIABLE(aKeyAttributes);
 
-    return OT_ERROR_NONE;
+    return false;
 }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE

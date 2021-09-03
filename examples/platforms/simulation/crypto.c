@@ -78,7 +78,7 @@ bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
 {
     OT_UNUSED_VARIABLE(aKeyRef);
 
-    return OT_ERROR_NOT_IMPLEMENTED;
+    return false;
 }
 
 #endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
