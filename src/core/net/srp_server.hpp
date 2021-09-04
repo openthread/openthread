@@ -98,6 +98,18 @@ class Server : public InstanceLocator, private NonCopyable
     friend class Host;
     friend class Dns::ServiceDiscovery::Server;
 
+    enum RetainName : bool
+    {
+        kDeleteName = false,
+        kRetainName = true,
+    };
+
+    enum NotifyMode : bool
+    {
+        kDoNotNotifyServiceHandler = false,
+        kNotifyServiceHandler      = true,
+    };
+
 public:
     static constexpr uint16_t kUdpPortMin = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MIN; ///< The reserved min port.
     static constexpr uint16_t kUdpPortMax = OPENTHREAD_CONFIG_SRP_SERVER_UDP_PORT_MAX; ///< The reserved max port.
@@ -498,19 +510,19 @@ public:
         static Host *New(Instance &aInstance);
 
         explicit Host(Instance &aInstance);
-        void                        Free(void);
-        Error                       SetFullName(const char *aFullName);
-        void                        SetKey(Dns::Ecdsa256KeyRecord &aKey);
-        void                        SetLease(uint32_t aLease) { mLease = aLease; }
-        void                        SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
-        LinkedList<Service> &       GetServices(void) { return mServices; }
-        Service *                   AddNewService(const char *aServiceName, const char *aInstanceName, bool aIsSubType);
-        void                        RemoveService(Service *aService, bool aRetainName, bool aNotifyServiceHandler);
-        void                        FreeAllServices(void);
-        void                        FreeUnusedServiceDescriptions(void);
-        void                        ClearResources(void);
-        Error                       MergeServicesAndResourcesFrom(Host &aHost);
-        Error                       AddIp6Address(const Ip6::Address &aIp6Address);
+        void                 Free(void);
+        Error                SetFullName(const char *aFullName);
+        void                 SetKey(Dns::Ecdsa256KeyRecord &aKey);
+        void                 SetLease(uint32_t aLease) { mLease = aLease; }
+        void                 SetKeyLease(uint32_t aKeyLease) { mKeyLease = aKeyLease; }
+        LinkedList<Service> &GetServices(void) { return mServices; }
+        Service *            AddNewService(const char *aServiceName, const char *aInstanceName, bool aIsSubType);
+        void                 RemoveService(Service *aService, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
+        void                 FreeAllServices(void);
+        void                 FreeUnusedServiceDescriptions(void);
+        void                 ClearResources(void);
+        Error                MergeServicesAndResourcesFrom(Host &aHost);
+        Error                AddIp6Address(const Ip6::Address &aIp6Address);
         Service::Description *      FindServiceDescription(const char *aInstanceName);
         const Service::Description *FindServiceDescription(const char *aInstanceName) const;
         Service *                   FindService(const char *aServiceName, const char *aInstanceName);
@@ -847,7 +859,7 @@ private:
 
     void        HandleUpdate(const Dns::UpdateHeader &aDnsHeader, Host &aHost, const Ip6::MessageInfo &aMessageInfo);
     void        AddHost(Host &aHost);
-    void        RemoveHost(Host *aHost, bool aRetainName, bool aNotifyServiceHandler);
+    void        RemoveHost(Host *aHost, RetainName aRetainName, NotifyMode aNotifyServiceHandler);
     bool        HasNameConflictsWith(Host &aHost) const;
     void        SendResponse(const Dns::UpdateHeader &   aHeader,
                              Dns::UpdateHeader::Response aResponseCode,
