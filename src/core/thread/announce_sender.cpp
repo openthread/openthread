@@ -123,7 +123,7 @@ exit:
 
 void AnnounceSenderBase::HandleTimer(void)
 {
-    Get<Mle::MleRouter>().SendAnnounce(mChannel, false);
+    Get<Mle::MleRouter>().SendAnnounce(mChannel);
 
     // Go to the next channel in the mask. If we have reached the end
     // of the channel mask, we start over from the first channel in
