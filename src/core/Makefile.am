@@ -40,6 +40,9 @@ endif
 
 if OPENTHREAD_ENABLE_RADIO_ONLY
 lib_LIBRARIES                             += libopenthread-radio.a
+if OPENTHREAD_ENABLE_CLI
+lib_LIBRARIES                             += libopenthread-radio-alone.a
+endif
 endif
 
 CPPFLAGS_COMMON                            = \
@@ -52,6 +55,15 @@ libopenthread_radio_a_CPPFLAGS             = \
     -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=0                       \
     -DOPENTHREAD_RADIO=1                     \
+    -DOPENTHREAD_RADIO_ALONE=0               \
+    $(NULL)
+
+libopenthread_radio_alone_a_CPPFLAGS       = \
+    $(CPPFLAGS_COMMON)                       \
+    -DOPENTHREAD_MTD=0                       \
+    -DOPENTHREAD_FTD=0                       \
+    -DOPENTHREAD_RADIO=0                     \
+    -DOPENTHREAD_RADIO_ALONE=1               \
     $(NULL)
 
 libopenthread_ftd_a_CPPFLAGS               = \
@@ -59,6 +71,7 @@ libopenthread_ftd_a_CPPFLAGS               = \
     -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=1                       \
     -DOPENTHREAD_RADIO=0                     \
+    -DOPENTHREAD_RADIO_ALONE=0               \
     $(NULL)
 
 libopenthread_mtd_a_CPPFLAGS               = \
@@ -66,6 +79,7 @@ libopenthread_mtd_a_CPPFLAGS               = \
     -DOPENTHREAD_MTD=1                       \
     -DOPENTHREAD_FTD=0                       \
     -DOPENTHREAD_RADIO=0                     \
+    -DOPENTHREAD_RADIO_ALONE=0               \
     $(NULL)
 
 #------------------------------------------------------
@@ -307,14 +321,9 @@ SOURCES_COMMON                                  = \
     utils/srp_client_buffers.cpp                  \
     $(NULL)
 
-EXTRA_DIST                                 = \
-    common/extension_example.cpp             \
-    $(NULL)
-
-libopenthread_radio_a_SOURCES              = \
+RADIO_SOURCES_COMMON                       = \
     api/diags_api.cpp                        \
     api/error_api.cpp                        \
-    api/heap_api.cpp                         \
     api/instance_api.cpp                     \
     api/link_raw_api.cpp                     \
     api/logging_api.cpp                      \
@@ -346,6 +355,18 @@ libopenthread_radio_a_SOURCES              = \
     utils/parse_cmdline.cpp                  \
     $(NULL)
 
+EXTRA_DIST                                 = \
+    common/extension_example.cpp             \
+    $(NULL)
+
+libopenthread_radio_a_SOURCES              = \
+    $(RADIO_SOURCES_COMMON)                  \
+    $(NULL)
+
+libopenthread_radio_alone_a_SOURCES        = \
+    $(RADIO_SOURCES_COMMON)                  \
+    $(NULL)
+
 libopenthread_mtd_a_SOURCES                = \
     $(SOURCES_COMMON)                        \
     $(NULL)
@@ -371,6 +392,10 @@ nodist_libopenthread_mtd_a_SOURCES         = \
     $(NULL)
 
 nodist_libopenthread_radio_a_SOURCES       = \
+    vendor_extension_temp.cpp                \
+    $(NULL)
+
+nodist_libopenthread_radio_alone_a_SOURCES = \
     vendor_extension_temp.cpp                \
     $(NULL)
 

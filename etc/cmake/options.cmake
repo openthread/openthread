@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2019, The OpenThread Authors.
+#  Copyright (c) 2019, The OpenThread Authors. 
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -172,11 +172,6 @@ endif()
 option(OT_DIAGNOSTIC "enable diagnostic support")
 if(OT_DIAGNOSTIC)
     target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DIAG_ENABLE=1")
-endif()
-
-option(OT_APP_RCP_CLI "enable native diag commands on rcp" OFF)
-if (OT_APP_RCP_CLI)
-    target_compile_definitions(ot-config INTERFACE "OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP=1")
 endif()
 
 option(OT_DNS_CLIENT "enable DNS client support")

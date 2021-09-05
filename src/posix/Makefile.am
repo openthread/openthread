@@ -50,6 +50,7 @@ CPPFLAGS_COMMON                                                        = \
     -DOPENTHREAD_FTD=1                                                   \
     -DOPENTHREAD_MTD=0                                                   \
     -DOPENTHREAD_RADIO=0                                                 \
+    -DOPENTHREAD_RADIO_ALONE=0                                           \
     $(NULL)
 
 LIBTOOLFLAGS_COMMON = --preserve-dup-deps

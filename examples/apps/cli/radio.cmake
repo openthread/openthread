@@ -36,7 +36,7 @@ target_include_directories(ot-cli-radio PRIVATE ${COMMON_INCLUDES})
 target_link_libraries(ot-cli-radio PRIVATE
     openthread-cli-radio
     ${OT_PLATFORM_LIB}
-    openthread-radio
+    openthread-radio-alone
     ${OT_PLATFORM_LIB}
     openthread-cli-radio
     ${OT_MBEDTLS}

@@ -1009,6 +1009,8 @@ private:
     void *              mUserCommandsContext;
     bool                mCommandIsPending;
 
+    TimerMilliContext mTimer;
+
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     bool mSntpQueryingInProgress;
@@ -1021,8 +1023,6 @@ private:
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     TcpExample mTcp;
 #endif
-
-    TimerMilliContext mTimer;
 
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     Coap mCoap;

@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #include <string.h>
 #include <openthread/diag.h>
@@ -243,7 +243,7 @@ uint64_t otLinkRawGetRadioTime(otInstance *aInstance)
     return otPlatTimeGet();
 }
 
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
 
 otDeviceRole otThreadGetDeviceRole(otInstance *aInstance)
 {
@@ -291,6 +291,6 @@ void otLinkGetFactoryAssignedIeeeEui64(otInstance *aInstance, otExtAddress *aEui
     otPlatRadioGetIeeeEui64(aInstance, aEui64->m8);
 }
 
-#endif // OPENTHREAD_RADIO
+#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

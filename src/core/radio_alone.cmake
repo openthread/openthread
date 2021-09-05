@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2021, The OpenThread Authors.
+#  Copyright (c) 2020, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,29 +26,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-cli-radio)
+add_library(openthread-radio-alone)
 
-target_compile_definitions(openthread-cli-radio
-    PRIVATE
-        OPENTHREAD_RADIO_ALONE=1
+target_compile_definitions(openthread-radio-alone PRIVATE
+    OPENTHREAD_RADIO_ALONE=1
 )
 
-target_compile_options(openthread-cli-radio PRIVATE
+target_compile_options(openthread-radio-alone PRIVATE
     ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-cli-radio PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+target_include_directories(openthread-radio-alone PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-target_sources(openthread-cli-radio
-    PRIVATE
-        cli.cpp
+target_sources(openthread-radio-alone PRIVATE
+    ${RADIO_COMMON_SOURCES}
 )
 
-target_link_libraries(openthread-cli-radio
-    PUBLIC
-        openthread-radio
+if(OT_VENDOR_EXTENSION)
+  target_sources(openthread-radio-alone PRIVATE ${OT_VENDOR_EXTENSION})
+endif()
+
+target_link_libraries(openthread-radio-alone
     PRIVATE
         ${OT_MBEDTLS}
         ot-config
 )
-

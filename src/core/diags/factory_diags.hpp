@@ -46,9 +46,6 @@
 #include "common/locator.hpp"
 #include "common/non_copyable.hpp"
 
-#define DIAG_NATIVE_CMDS \
-    (OPENTHREAD_FTD || OPENTHREAD_MTD || (OPENTHREAD_RADIO && OPENTHREAD_CONFIG_DIAG_NATIVE_CMDS_ON_RCP))
-
 namespace ot {
 namespace FactoryDiags {
 
@@ -162,7 +159,7 @@ private:
 
     static const struct Command sCommands[];
 
-#if DIAG_NATIVE_CMDS
+#if OPENTHREAD_FTD || OPENTHREAD_MTD || OPENTHREAD_RADIO_ALONE
     Stats mStats;
 
     otRadioFrame *mTxPacket;

@@ -230,6 +230,40 @@ set(COMMON_SOURCES
     utils/srp_client_buffers.cpp
 )
 
+set(RADIO_COMMON_SOURCES
+    api/diags_api.cpp
+    api/error_api.cpp
+    api/instance_api.cpp
+    api/link_raw_api.cpp
+    api/logging_api.cpp
+    api/random_noncrypto_api.cpp
+    api/tasklet_api.cpp
+    common/error.cpp
+    common/instance.cpp
+    common/logging.cpp
+    common/random_manager.cpp
+    common/string.cpp
+    common/tasklet.cpp
+    common/timer.cpp
+    common/uptime.cpp
+    crypto/aes_ccm.cpp
+    crypto/aes_ecb.cpp
+    crypto/crypto_platform.cpp
+    crypto/storage.cpp
+    diags/factory_diags.cpp
+    mac/link_raw.cpp
+    mac/mac_frame.cpp
+    mac/mac_types.cpp
+    mac/sub_mac.cpp
+    mac/sub_mac_callbacks.cpp
+    radio/radio.cpp
+    radio/radio_callbacks.cpp
+    radio/radio_platform.cpp
+    thread/link_quality.cpp
+    utils/lookup_table.cpp
+    utils/parse_cmdline.cpp
+)
+
 set(OT_VENDOR_EXTENSION "" CACHE STRING "specify a C++ source file built as part of OpenThread core library")
 if(OT_VENDOR_EXTENSION)
   target_compile_definitions(ot-config INTERFACE "OPENTHREAD_ENABLE_VENDOR_EXTENSION=1")
@@ -246,6 +280,9 @@ endif()
 
 if(OT_RCP)
     include(radio.cmake)
+    if (OT_APP_CLI)
+        include(radio_alone.cmake)
+    endif()
 endif()
 
 set_property(SOURCE api/instance_api.cpp

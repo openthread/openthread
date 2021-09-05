@@ -105,6 +105,7 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
     , mUserCommands(nullptr)
     , mUserCommandsLength(0)
     , mCommandIsPending(false)
+    , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     , mSntpQueryingInProgress(false)
@@ -115,7 +116,6 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_CONFIG_TCP_ENABLE && OPENTHREAD_CONFIG_CLI_TCP_ENABLE
     , mTcp(*this)
 #endif
-    , mTimer(*aInstance, HandleTimer, this)
 #if OPENTHREAD_CONFIG_COAP_API_ENABLE
     , mCoap(*this)
 #endif
@@ -281,12 +281,9 @@ otError Interpreter::ProcessDiag(Arg aArgs[])
     char    output[OPENTHREAD_CONFIG_DIAG_OUTPUT_BUFFER_SIZE];
 
     // all diagnostics related features are processed within diagnostics module
-    output[0]                  = '\0';
-    output[sizeof(output) - 1] = '\0';
-
     Arg::CopyArgsToStringArray(aArgs, args);
 
-    error = otDiagProcessCmd(mInstance, Arg::GetArgsLength(aArgs), args, output, sizeof(output) - 1);
+    error = otDiagProcessCmd(mInstance, Arg::GetArgsLength(aArgs), args, output, sizeof(output));
 
     OutputFormat("%s", output);
 
@@ -341,6 +338,84 @@ otError Interpreter::ProcessReset(Arg aArgs[])
     otInstanceReset(mInstance);
 
     return OT_ERROR_NONE;
+}
+
+void Interpreter::ProcessLine(char *aBuf)
+{
+    Arg            args[kMaxArgs + 1];
+    const Command *command;
+    otError        error = OT_ERROR_NONE;
+
+    OT_ASSERT(aBuf != nullptr);
+
+    // Ignore the command if another command is pending.
+    VerifyOrExit(!mCommandIsPending, args[0].Clear());
+    mCommandIsPending = true;
+
+    VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+    otLogNoteCli("Input: %s", aBuf);
+#endif
+
+    SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
+    VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
+
+#if OPENTHREAD_CONFIG_DIAG_ENABLE
+    if (otDiagIsEnabled(mInstance) && (args[0] != "diag"))
+    {
+        OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
+        ExitNow(error = OT_ERROR_INVALID_STATE);
+    }
+#endif
+
+    command = Utils::LookupTable::Find(args[0].GetCString(), sCommands);
+
+    if (command != nullptr)
+    {
+        error = (this->*command->mHandler)(args + 1);
+    }
+    else
+    {
+        error = ProcessUserCommands(args);
+    }
+
+exit:
+    if ((error != OT_ERROR_NONE) || !args[0].IsEmpty())
+    {
+        OutputResult(error);
+    }
+    else if (!mCommandIsPending)
+    {
+        OutputPrompt();
+    }
+}
+
+otError Interpreter::ProcessUserCommands(Arg aArgs[])
+{
+    otError error = OT_ERROR_INVALID_COMMAND;
+
+    for (uint8_t i = 0; i < mUserCommandsLength; i++)
+    {
+        if (aArgs[0] == mUserCommands[i].mName)
+        {
+            char *args[kMaxArgs];
+
+            Arg::CopyArgsToStringArray(aArgs, args);
+            mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
+            error = OT_ERROR_NONE;
+            break;
+        }
+    }
+
+    return error;
+}
+
+void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
+{
+    mUserCommands        = aCommands;
+    mUserCommandsLength  = aLength;
+    mUserCommandsContext = aContext;
 }
 
 #if OPENTHREAD_FTD || OPENTHREAD_MTD
@@ -5003,79 +5078,6 @@ void Interpreter::HandleDiscoveryRequest(const otThreadDiscoveryRequestInfo &aIn
 }
 
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD
-
-void Interpreter::ProcessLine(char *aBuf)
-{
-    Arg            args[kMaxArgs + 1];
-    const Command *command;
-    otError        error = OT_ERROR_NONE;
-
-    OT_ASSERT(aBuf != nullptr);
-
-    VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
-
-    error = Utils::CmdLineParser::ParseCmd(aBuf, args);
-
-    if (error != OT_ERROR_NONE)
-    {
-        OutputLine("Error: too many args (max %d)", kMaxArgs);
-        ExitNow();
-    }
-
-    VerifyOrExit(!args[0].IsEmpty());
-
-#if OPENTHREAD_CONFIG_DIAG_ENABLE
-    if (otDiagIsEnabled(mInstance) && (args[0] != "diag"))
-    {
-        OutputLine("under diagnostics mode, execute 'diag stop' before running any other commands.");
-        ExitNow(error = OT_ERROR_INVALID_STATE);
-    }
-#endif
-
-    command = Utils::LookupTable::Find(args[0].GetCString(), sCommands);
-
-    if (command != nullptr)
-    {
-        error = (this->*command->mHandler)(args + 1);
-    }
-    else
-    {
-        error = ProcessUserCommands(args);
-    }
-
-exit:
-    if ((error != OT_ERROR_NONE) || !args[0].IsEmpty())
-    {
-        OutputResult(error);
-    }
-}
-
-otError Interpreter::ProcessUserCommands(Arg aArgs[])
-{
-    otError error = OT_ERROR_INVALID_COMMAND;
-
-    for (uint8_t i = 0; i < mUserCommandsLength; i++)
-    {
-        if (aArgs[0] == mUserCommands[i].mName)
-        {
-            char *args[kMaxArgs];
-
-            Arg::CopyArgsToStringArray(aArgs, args);
-            mUserCommands[i].mCommand(mUserCommandsContext, Arg::GetArgsLength(aArgs) - 1, args + 1);
-            error = OT_ERROR_NONE;
-            break;
-        }
-    }
-
-    return error;
-}
-
-void Interpreter::SetUserCommands(const otCliCommand *aCommands, uint8_t aLength, void *aContext)
-{
-    mUserCommands        = aCommands;
-    mUserCommandsLength  = aLength;
-    mUserCommandsContext = aContext;
-}
 
 int Interpreter::OutputFormat(const char *aFormat, ...)
 {
