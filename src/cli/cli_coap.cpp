@@ -533,8 +533,9 @@ otError Coap::ProcessRequest(Arg aArgs[], otCoapCode aCoapCode)
         memcpy(&mRequestAddr, &coapDestinationIp, sizeof(mRequestAddr));
         mRequestTokenLength = otCoapMessageGetTokenLength(message);
         memcpy(mRequestToken, otCoapMessageGetToken(message), mRequestTokenLength);
-        strncpy(mRequestUri, coapUri, sizeof(mRequestUri) - 1);
-        mRequestUri[sizeof(mRequestUri) - 1] = '\0'; // Fix gcc-9.2 warning
+        // Use `memcpy` instead of `strncpy` here because GCC will give warnings for `strncpy` when the dest's length is
+        // not bigger than the src's length.
+        memcpy(mRequestUri, coapUri, sizeof(mRequestUri) - 1);
     }
 #endif
 
