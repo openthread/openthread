@@ -155,6 +155,7 @@ Error NetworkName::Set(const char *aNameString)
     Error    error;
     NameData data(aNameString, kMaxSize + 1);
 
+    VerifyOrExit(data.GetLength() >= 1, error = kErrorInvalidArgs);
     VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
 
     error = Set(data);

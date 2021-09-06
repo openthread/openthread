@@ -172,6 +172,8 @@ bool IsValidUtf8String(const char *aString, size_t aLength)
 
         if ((byte & 0x80) == 0)
         {
+            // We don't allow control characters.
+            VerifyOrExit(!iscntrl(byte), ret = false);
             continue;
         }
 

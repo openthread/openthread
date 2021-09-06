@@ -136,7 +136,7 @@ void NetworkNameTlv::SetNetworkName(const Mac::NameData &aNameData)
 
 bool NetworkNameTlv::IsValid(void) const
 {
-    return IsValidUtf8String(mNetworkName, GetLength());
+    return GetLength() >= 1 && IsValidUtf8String(mNetworkName, GetLength());
 }
 
 void SteeringDataTlv::CopyTo(SteeringData &aSteeringData) const
