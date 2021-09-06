@@ -270,6 +270,7 @@ jobs:
         submodules: true
     - name: Bootstrap
       run: |
+        rm -f '/usr/local/bin/2to3'
         brew update
         brew install automake m4 ninja
         [ ${{ matrix.CC }} != clang ] || brew install llvm
