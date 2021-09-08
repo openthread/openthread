@@ -35,10 +35,6 @@
 
 #include <openthread/platform/entropy.h>
 
-#if !OPENTHREAD_RADIO
-#include <mbedtls/entropy_poll.h>
-#endif
-
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/logging.hpp"
@@ -155,7 +151,7 @@ void RandomManager::Entropy::Init(void)
 
 #ifndef OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
     mbedtls_entropy_add_source(&mEntropyContext, &RandomManager::Entropy::HandleMbedtlsEntropyPoll, nullptr,
-                               MBEDTLS_ENTROPY_MIN_HARDWARE, MBEDTLS_ENTROPY_SOURCE_STRONG);
+                               kEntropyMinThreshold, MBEDTLS_ENTROPY_SOURCE_STRONG);
 #endif // OT_MBEDTLS_STRONG_DEFAULT_ENTROPY_PRESENT
 }
 

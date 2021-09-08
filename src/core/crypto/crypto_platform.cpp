@@ -298,7 +298,11 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize
     mbedtls_sha256_context *context = static_cast<mbedtls_sha256_context *>(aContext);
 
     VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit((mbedtls_sha256_starts(context, 0) == 0), error = kErrorFailed);
+#else
     VerifyOrExit((mbedtls_sha256_starts_ret(context, 0) == 0), error = kErrorFailed);
+#endif
 
 exit:
     return error;
@@ -313,8 +317,13 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Update(void *      aContext,
     mbedtls_sha256_context *context = static_cast<mbedtls_sha256_context *>(aContext);
 
     VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit((mbedtls_sha256_update(context, reinterpret_cast<const uint8_t *>(aBuf), aBufLength) == 0),
+                 error = kErrorFailed);
+#else
     VerifyOrExit((mbedtls_sha256_update_ret(context, reinterpret_cast<const uint8_t *>(aBuf), aBufLength) == 0),
                  error = kErrorFailed);
+#endif
 
 exit:
     return error;
@@ -328,7 +337,11 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Finish(void *aContext, size_t aContextSiz
     mbedtls_sha256_context *context = static_cast<mbedtls_sha256_context *>(aContext);
 
     VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit((mbedtls_sha256_finish(context, aHash) == 0), error = kErrorFailed);
+#else
     VerifyOrExit((mbedtls_sha256_finish_ret(context, aHash) == 0), error = kErrorFailed);
+#endif
 
 exit:
     return error;

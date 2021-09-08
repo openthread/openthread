@@ -31,6 +31,16 @@
  *   This file implements ECDSA signing.
  */
 
+/**
+ * Direct access to fields of structures declared in public headers is no longer
+ * supported. In Mbed TLS 3, the layout of structures is not considered part of
+ * the stable API, and minor versions (3.1, 3.2, etc.) may add, remove, rename,
+ * reorder or change the type of structure fields.
+ */
+#if !defined(MBEDTLS_ALLOW_PRIVATE_ACCESS)
+#define MBEDTLS_ALLOW_PRIVATE_ACCESS
+#endif
+
 #include "ecdsa.hpp"
 
 #if OPENTHREAD_CONFIG_ECDSA_ENABLE
@@ -86,8 +96,13 @@ Error P256::KeyPair::Parse(void *aContext) const
     mbedtls_pk_init(pk);
 
     VerifyOrExit(mbedtls_pk_setup(pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)) == 0, error = kErrorFailed);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit(mbedtls_pk_parse_key(pk, mDerBytes, mDerLength, nullptr, 0, mbedtls_ctr_drbg_random,
+                                      Random::Crypto::MbedTlsContextGet()) == 0,
+                 error = kErrorParse);
+#else
     VerifyOrExit(mbedtls_pk_parse_key(pk, mDerBytes, mDerLength, nullptr, 0) == 0, error = kErrorParse);
-
+#endif
 exit:
     return error;
 }
@@ -220,8 +235,14 @@ Error Sign(uint8_t *      aOutput,
     mbedtls_mpi_init(&sMpi);
 
     // Parse a private key in PEM format.
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0, mbedtls_ctr_drbg_random,
+                                      Random::Crypto::MbedTlsContextGet()) == 0,
+                 error = kErrorInvalidArgs);
+#else
     VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0) == 0,
                  error = kErrorInvalidArgs);
+#endif
     VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = kErrorInvalidArgs);
 
     keypair = mbedtls_pk_ec(pkCtx);
