@@ -273,7 +273,7 @@ void SubMac::HandleReceiveDone(RxFrame *aFrame, Error aError)
     if (aFrame != nullptr && aError == kErrorNone)
     {
         // Assuming the risk of the parent missing the Enh-ACK in favor of smaller CSL receive window
-        if (mCslPeriod > 0)
+        if ((mCslPeriod > 0) && aFrame->IsVersion2015() && aFrame->GetAckRequest())
         {
             mCslLastSync = TimeMicro(static_cast<uint32_t>(aFrame->mInfo.mRxInfo.mTimestamp));
         }
