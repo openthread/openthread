@@ -502,4 +502,52 @@ OT_TOOL_WEAK otError otPlatInfraIfSendIcmp6Nd(uint32_t, const otIp6Address *, co
 }
 #endif
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
+                              otCryptoKeyType      aKeyType,
+                              otCryptoKeyAlgorithm aKeyAlgorithm,
+                              int                  aKeyUsage,
+                              otCryptoKeyStorage   aKeyPersistence,
+                              const uint8_t *      aKey,
+                              size_t               aKeyLen)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aKeyType);
+    OT_UNUSED_VARIABLE(aKeyAlgorithm);
+    OT_UNUSED_VARIABLE(aKeyUsage);
+    OT_UNUSED_VARIABLE(aKeyPersistence);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aKeyLen);
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aBufferLen);
+
+    *aKeyLen = 0;
+
+    return OT_ERROR_NONE;
+}
+
+otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+
+    return OT_ERROR_NONE;
+}
+
+bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
+{
+    OT_UNUSED_VARIABLE(aKeyRef);
+
+    return false;
+}
+
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
 } // extern "C"

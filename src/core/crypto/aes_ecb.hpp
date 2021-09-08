@@ -35,8 +35,10 @@
 #define AES_ECB_HPP_
 
 #include "openthread-core-config.h"
-
 #include <mbedtls/aes.h>
+#include <openthread/platform/crypto.h>
+
+#include "crypto/storage.hpp"
 
 namespace ot {
 namespace Crypto {
@@ -72,11 +74,10 @@ public:
     /**
      * This method sets the key.
      *
-     * @param[in]  aKey        A pointer to the key.
-     * @param[in]  aKeyLength  The key length in bits.
+     * @param[in]  aKey     Crypto Key used for ECB operation
      *
      */
-    void SetKey(const uint8_t *aKey, uint16_t aKeyLength);
+    void SetKey(const Key &aKey);
 
     /**
      * This method encrypts data.
@@ -88,7 +89,13 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-    mbedtls_aes_context mContext;
+    union AesEcbContext
+    {
+        uint32_t            mKeyRef;
+        mbedtls_aes_context mContext;
+    };
+
+    AesEcbContext mContext;
 };
 
 /**

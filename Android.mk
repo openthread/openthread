@@ -237,12 +237,14 @@ LOCAL_SRC_FILES                                                  := \
     src/core/common/uptime.cpp                                      \
     src/core/crypto/aes_ccm.cpp                                     \
     src/core/crypto/aes_ecb.cpp                                     \
+    src/core/crypto/crypto_platform.cpp                             \
     src/core/crypto/ecdsa.cpp                                       \
     src/core/crypto/hkdf_sha256.cpp                                 \
     src/core/crypto/hmac_sha256.cpp                                 \
     src/core/crypto/mbedtls.cpp                                     \
     src/core/crypto/pbkdf2_cmac.cpp                                 \
     src/core/crypto/sha256.cpp                                      \
+    src/core/crypto/storage.cpp                                     \
     src/core/diags/factory_diags.cpp                                \
     src/core/mac/channel_mask.cpp                                   \
     src/core/mac/data_poll_handler.cpp                              \

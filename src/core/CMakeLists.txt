@@ -110,12 +110,14 @@ set(COMMON_SOURCES
     common/uptime.cpp
     crypto/aes_ccm.cpp
     crypto/aes_ecb.cpp
+    crypto/crypto_platform.cpp
     crypto/ecdsa.cpp
     crypto/hkdf_sha256.cpp
     crypto/hmac_sha256.cpp
     crypto/mbedtls.cpp
     crypto/pbkdf2_cmac.cpp
     crypto/sha256.cpp
+    crypto/storage.cpp
     diags/factory_diags.cpp
     mac/channel_mask.cpp
     mac/data_poll_handler.cpp

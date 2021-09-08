@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,65 +26,59 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file implements HMAC SHA-256.
- */
+#include "platform-simulation.h"
 
-#include "hmac_sha256.hpp"
-#include "common/debug.hpp"
-#include "common/message.hpp"
+#include <stdio.h>
+#include <stdlib.h>
 
-namespace ot {
-namespace Crypto {
+#include <openthread/config.h>
+#include <openthread/platform/crypto.h>
 
-HmacSha256::HmacSha256(void)
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+
+// crypto key storage stubs
+
+otError otPlatCryptoImportKey(otCryptoKeyRef *     aKeyRef,
+                              otCryptoKeyType      aKeyType,
+                              otCryptoKeyAlgorithm aKeyAlgorithm,
+                              int                  aKeyUsage,
+                              otCryptoKeyStorage   aKeyPersistence,
+                              const uint8_t *      aKey,
+                              size_t               aKeyLen)
 {
-    Error err = otPlatCryptoHmacSha256Init(&mContext, sizeof(mContext));
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aKeyType);
+    OT_UNUSED_VARIABLE(aKeyAlgorithm);
+    OT_UNUSED_VARIABLE(aKeyUsage);
+    OT_UNUSED_VARIABLE(aKeyPersistence);
+    OT_UNUSED_VARIABLE(aKey);
+    OT_UNUSED_VARIABLE(aKeyLen);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-HmacSha256::~HmacSha256(void)
+otError otPlatCryptoExportKey(otCryptoKeyRef aKeyRef, uint8_t *aBuffer, size_t aBufferLen, size_t *aKeyLen)
 {
-    Error err = otPlatCryptoHmacSha256Deinit(&mContext, sizeof(mContext));
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    OT_UNUSED_VARIABLE(aKeyRef);
+    OT_UNUSED_VARIABLE(aBuffer);
+    OT_UNUSED_VARIABLE(aBufferLen);
+    OT_UNUSED_VARIABLE(aKeyLen);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void HmacSha256::Start(const Key &aKey)
+otError otPlatCryptoDestroyKey(otCryptoKeyRef aKeyRef)
 {
-    Error err = otPlatCryptoHmacSha256Start(&mContext, sizeof(mContext), &aKey);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    OT_UNUSED_VARIABLE(aKeyRef);
+
+    return OT_ERROR_NOT_IMPLEMENTED;
 }
 
-void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
+bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef)
 {
-    Error err = otPlatCryptoHmacSha256Update(&mContext, sizeof(mContext), aBuf, aBufLength);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    OT_UNUSED_VARIABLE(aKeyRef);
+
+    return false;
 }
 
-void HmacSha256::Finish(Hash &aHash)
-{
-    Error err = otPlatCryptoHmacSha256Finish(&mContext, sizeof(mContext), aHash.m8, Hash::kSize);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
-}
-
-void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
-{
-    Message::Chunk chunk;
-
-    aMessage.GetFirstChunk(aOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
-    {
-        Update(chunk.GetData(), chunk.GetLength());
-        aMessage.GetNextChunk(aLength, chunk);
-    }
-}
-
-} // namespace Crypto
-} // namespace ot
+#endif // OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE

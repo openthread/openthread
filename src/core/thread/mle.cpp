@@ -2675,21 +2675,21 @@ void Mle::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageI
 
 void Mle::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error           error = kErrorNone;
-    Header          header;
-    uint32_t        keySequence;
-    const Key *     mleKey;
-    uint32_t        frameCounter;
-    uint8_t         messageTag[kMleSecurityTagSize];
-    uint8_t         nonce[Crypto::AesCcm::kNonceSize];
-    Mac::ExtAddress extAddr;
-    Crypto::AesCcm  aesCcm;
-    uint16_t        mleOffset;
-    uint8_t         buf[64];
-    uint16_t        length;
-    uint8_t         tag[kMleSecurityTagSize];
-    uint8_t         command;
-    Neighbor *      neighbor;
+    Error              error = kErrorNone;
+    Header             header;
+    uint32_t           keySequence;
+    const KeyMaterial *mleKey;
+    uint32_t           frameCounter;
+    uint8_t            messageTag[kMleSecurityTagSize];
+    uint8_t            nonce[Crypto::AesCcm::kNonceSize];
+    Mac::ExtAddress    extAddr;
+    Crypto::AesCcm     aesCcm;
+    uint16_t           mleOffset;
+    uint8_t            buf[64];
+    uint16_t           length;
+    uint8_t            tag[kMleSecurityTagSize];
+    uint8_t            command;
+    Neighbor *         neighbor;
 
     otLogDebgMle("Receive UDP message");
 

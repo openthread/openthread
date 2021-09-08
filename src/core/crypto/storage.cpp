@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -28,62 +28,53 @@
 
 /**
  * @file
- *   This file implements HMAC SHA-256.
+ *   This file includes implementation for Crypto Internal Trusted Storage (ITS) APIs.
  */
 
-#include "hmac_sha256.hpp"
+#include "crypto/storage.hpp"
+
 #include "common/debug.hpp"
-#include "common/message.hpp"
 
 namespace ot {
 namespace Crypto {
 
-HmacSha256::HmacSha256(void)
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 {
-    Error err = otPlatCryptoHmacSha256Init(&mContext, sizeof(mContext));
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    Error  error;
+    size_t readKeyLength;
+
+    OT_ASSERT(IsKeyRef());
+
+    error = Crypto::Storage::ExportKey(GetKeyRef(), aKeyBuffer, aKeyLength, readKeyLength);
+
+    OT_ASSERT(error == kErrorNone);
+    VerifyOrExit(readKeyLength <= aKeyLength, error = kErrorNoBufs);
+
+    aKeyLength = static_cast<uint16_t>(readKeyLength);
+
+exit:
+    return error;
 }
+#endif
 
-HmacSha256::~HmacSha256(void)
+LiteralKey::LiteralKey(const Key &aKey)
+    : mKey(aKey.GetBytes())
+    , mLength(aKey.GetLength())
 {
-    Error err = otPlatCryptoHmacSha256Deinit(&mContext, sizeof(mContext));
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
-}
-
-void HmacSha256::Start(const Key &aKey)
-{
-    Error err = otPlatCryptoHmacSha256Start(&mContext, sizeof(mContext), &aKey);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
-}
-
-void HmacSha256::Update(const void *aBuf, uint16_t aBufLength)
-{
-    Error err = otPlatCryptoHmacSha256Update(&mContext, sizeof(mContext), aBuf, aBufLength);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
-}
-
-void HmacSha256::Finish(Hash &aHash)
-{
-    Error err = otPlatCryptoHmacSha256Finish(&mContext, sizeof(mContext), aHash.m8, Hash::kSize);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
-}
-
-void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLength)
-{
-    Message::Chunk chunk;
-
-    aMessage.GetFirstChunk(aOffset, aLength, chunk);
-
-    while (chunk.GetLength() > 0)
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    if (aKey.IsKeyRef())
     {
-        Update(chunk.GetData(), chunk.GetLength());
-        aMessage.GetNextChunk(aLength, chunk);
+        Error error;
+
+        mKey    = mBuffer;
+        mLength = sizeof(mBuffer);
+        error   = aKey.ExtractKey(mBuffer, mLength);
+
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
     }
+#endif
 }
 
 } // namespace Crypto

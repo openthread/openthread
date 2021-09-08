@@ -225,10 +225,18 @@ Error LinkRaw::SetMacKey(uint8_t    aKeyIdMode,
                          const Key &aCurrKey,
                          const Key &aNextKey)
 {
-    Error error = kErrorNone;
+    Error       error = kErrorNone;
+    KeyMaterial prevKey;
+    KeyMaterial currKey;
+    KeyMaterial nextKey;
 
     VerifyOrExit(IsEnabled(), error = kErrorInvalidState);
-    mSubMac.SetMacKey(aKeyIdMode, aKeyId, aPrevKey, aCurrKey, aNextKey);
+
+    prevKey.SetFrom(aPrevKey);
+    currKey.SetFrom(aCurrKey);
+    nextKey.SetFrom(aNextKey);
+
+    mSubMac.SetMacKey(aKeyIdMode, aKeyId, prevKey, currKey, nextKey);
 
 exit:
     return error;

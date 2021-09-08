@@ -39,6 +39,7 @@
 #include <stdint.h>
 
 #include <openthread/error.h>
+#include <openthread/platform/crypto.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -78,23 +79,17 @@ typedef struct otCryptoSha256Hash otCryptoSha256Hash;
  * This function performs HMAC computation.
  *
  * @param[in]     aKey           A pointer to the key.
- * @param[in]     aKeyLength     The key length in bytes.
  * @param[in]     aBuf           A pointer to the input buffer.
  * @param[in]     aBufLength     The length of @p aBuf in bytes.
  * @param[out]    aHash          A pointer to a `otCryptoSha256Hash` structure to output the hash value.
  *
  */
-void otCryptoHmacSha256(const uint8_t *     aKey,
-                        uint16_t            aKeyLength,
-                        const uint8_t *     aBuf,
-                        uint16_t            aBufLength,
-                        otCryptoSha256Hash *aHash);
+void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash);
 
 /**
  * This method performs AES CCM computation.
  *
  * @param[in]     aKey           A pointer to the key.
- * @param[in]     aKeyLength     Length of the key in bytes.
  * @param[in]     aTagLength     Length of tag in bytes.
  * @param[in]     aNonce         A pointer to the nonce.
  * @param[in]     aNonceLength   Length of nonce in bytes.
@@ -110,18 +105,17 @@ void otCryptoHmacSha256(const uint8_t *     aKey,
  * @param[out]    aTag           A pointer to the tag.
  *
  */
-void otCryptoAesCcm(const uint8_t *aKey,
-                    uint16_t       aKeyLength,
-                    uint8_t        aTagLength,
-                    const void *   aNonce,
-                    uint8_t        aNonceLength,
-                    const void *   aHeader,
-                    uint32_t       aHeaderLength,
-                    void *         aPlainText,
-                    void *         aCipherText,
-                    uint32_t       aLength,
-                    bool           aEncrypt,
-                    void *         aTag);
+void otCryptoAesCcm(const otCryptoKey *aKey,
+                    uint8_t            aTagLength,
+                    const void *       aNonce,
+                    uint8_t            aNonceLength,
+                    const void *       aHeader,
+                    uint32_t           aHeaderLength,
+                    void *             aPlainText,
+                    void *             aCipherText,
+                    uint32_t           aLength,
+                    bool               aEncrypt,
+                    void *             aTag);
 
 /**
  * This method creates ECDSA sign.

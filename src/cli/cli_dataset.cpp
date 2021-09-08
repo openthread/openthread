@@ -692,6 +692,8 @@ otError Dataset::ProcessPskc(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
+        // sDataset holds the key as a literal string, we don't
+        // need to export it from PSA ITS.
         if (sDataset.mComponents.mIsPskcPresent)
         {
             mInterpreter.OutputBytes(sDataset.mPskc.m8);

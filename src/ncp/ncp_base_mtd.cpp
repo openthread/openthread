@@ -662,7 +662,11 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_NETWORK_KEY>(void)
 {
-    return mEncoder.WriteData(otThreadGetNetworkKey(mInstance)->m8, OT_NETWORK_KEY_SIZE);
+    otNetworkKey networkKey;
+
+    otThreadGetNetworkKey(mInstance, &networkKey);
+
+    return mEncoder.WriteData(networkKey.m8, OT_NETWORK_KEY_SIZE);
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_NETWORK_KEY>(void)

@@ -1163,8 +1163,11 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
     Coap::Message *  message;
     uint16_t         offset;
     Ip6::MessageInfo messageInfo;
+    Kek              kek;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
+
+    Get<KeyManager>().ExtractKek(kek);
 
     message->InitAsNonConfirmablePost();
     SuccessOrExit(error = message->AppendUriPathOptions(UriPath::kRelayTx));
@@ -1176,7 +1179,7 @@ Error Commissioner::SendRelayTransmit(Message &aMessage, const Ip6::MessageInfo 
 
     if (aMessage.GetSubType() == Message::kSubTypeJoinerFinalizeResponse)
     {
-        SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, Get<KeyManager>().GetKek()));
+        SuccessOrExit(error = Tlv::Append<JoinerRouterKekTlv>(*message, kek));
     }
 
     tlv.SetType(Tlv::kJoinerDtlsEncapsulation);

@@ -78,9 +78,6 @@ SubMac::SubMac(Instance &aInstance)
 #endif
 {
     mExtAddress.Clear();
-    mPrevKey.Clear();
-    mCurrKey.Clear();
-    mNextKey.Clear();
 }
 
 otRadioCaps SubMac::GetCaps(void) const
@@ -832,11 +829,11 @@ void SubMac::SetState(State aState)
     }
 }
 
-void SubMac::SetMacKey(uint8_t    aKeyIdMode,
-                       uint8_t    aKeyId,
-                       const Key &aPrevKey,
-                       const Key &aCurrKey,
-                       const Key &aNextKey)
+void SubMac::SetMacKey(uint8_t            aKeyIdMode,
+                       uint8_t            aKeyId,
+                       const KeyMaterial &aPrevKey,
+                       const KeyMaterial &aCurrKey,
+                       const KeyMaterial &aNextKey)
 {
     switch (aKeyIdMode)
     {

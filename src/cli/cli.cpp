@@ -2550,9 +2550,10 @@ otError Interpreter::ProcessPskc(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        const otPskc *pskc = otThreadGetPskc(mInstance);
+        otPskc pskc;
 
-        OutputBytes(pskc->m8);
+        otThreadGetPskc(mInstance, &pskc);
+        OutputBytes(pskc.m8);
         OutputLine("");
     }
     else
@@ -2581,6 +2582,36 @@ otError Interpreter::ProcessPskc(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+otError Interpreter::ProcessPskcRef(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("0x%04x", otThreadGetPskcRef(mInstance));
+    }
+    else
+    {
+        otPskcRef pskcRef;
+
+        if (aArgs[1].IsEmpty())
+        {
+            SuccessOrExit(error = aArgs[0].ParseAsUint32(pskcRef));
+        }
+        else
+        {
+            ExitNow(error = OT_ERROR_INVALID_ARGS);
+        }
+
+        SuccessOrExit(error = otThreadSetPskcRef(mInstance, pskcRef));
+    }
+
+exit:
+    return error;
+}
+#endif
 #endif // OPENTHREAD_FTD
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -2965,7 +2996,10 @@ otError Interpreter::ProcessNetworkKey(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        OutputBytes(otThreadGetNetworkKey(mInstance)->m8);
+        otNetworkKey networkKey;
+
+        otThreadGetNetworkKey(mInstance, &networkKey);
+        OutputBytes(networkKey.m8);
         OutputLine("");
     }
     else
@@ -2979,6 +3013,28 @@ otError Interpreter::ProcessNetworkKey(Arg aArgs[])
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+otError Interpreter::ProcessNetworkKeyRef(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+
+    if (aArgs[0].IsEmpty())
+    {
+        OutputLine("0x%04x", otThreadGetNetworkKeyRef(mInstance));
+    }
+    else
+    {
+        otNetworkKeyRef keyRef;
+
+        SuccessOrExit(error = aArgs[0].ParseAsUint32(keyRef));
+        SuccessOrExit(error = otThreadSetNetworkKeyRef(mInstance, keyRef));
+    }
+
+exit:
+    return error;
+}
+#endif
 
 otError Interpreter::ProcessNetworkName(Arg aArgs[])
 {

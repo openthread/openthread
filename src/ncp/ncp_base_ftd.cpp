@@ -502,7 +502,11 @@ exit:
 
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_NET_PSKC>(void)
 {
-    return mEncoder.WriteData(otThreadGetPskc(mInstance)->m8, sizeof(spinel_net_pskc_t));
+    Pskc pskc;
+
+    otThreadGetPskc(mInstance, &pskc);
+
+    return mEncoder.WriteData(pskc.m8, sizeof(spinel_net_pskc_t));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_NET_PSKC>(void)

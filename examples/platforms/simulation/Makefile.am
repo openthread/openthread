@@ -41,6 +41,7 @@ libopenthread_simulation_a_CPPFLAGS       = \
 
 PLATFORM_SOURCES                          = \
     alarm.c                                 \
+    crypto.c                                \
     diag.c                                  \
     entropy.c                               \
     flash.c                                 \

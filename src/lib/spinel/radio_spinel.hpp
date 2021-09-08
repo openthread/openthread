@@ -628,20 +628,21 @@ public:
      *
      * @param[in] aKeyIdMode  The key ID mode.
      * @param[in] aKeyId      The key index.
-     * @param[in] aPrevKey    The previous MAC key.
-     * @param[in] aCurrKey    The current MAC key.
-     * @param[in] aNextKey    The next MAC key.
+     * @param[in] aPrevKey    Pointer to previous MAC key.
+     * @param[in] aCurrKey    Pointer to current MAC key.
+     * @param[in] aNextKey    Pointer to next MAC key.
      *
      * @retval  OT_ERROR_NONE               Succeeded.
+     * @retval  OT_ERROR_INVALID_ARGS       One of the keys passed is invalid..
      * @retval  OT_ERROR_BUSY               Failed due to another operation is on going.
      * @retval  OT_ERROR_RESPONSE_TIMEOUT   Failed due to no response received from the transceiver.
      *
      */
-    otError SetMacKey(uint8_t         aKeyIdMode,
-                      uint8_t         aKeyId,
-                      const otMacKey &aPrevKey,
-                      const otMacKey &aCurrKey,
-                      const otMacKey &aNextKey);
+    otError SetMacKey(uint8_t                 aKeyIdMode,
+                      uint8_t                 aKeyId,
+                      const otMacKeyMaterial *aPrevKey,
+                      const otMacKeyMaterial *aCurrKey,
+                      const otMacKeyMaterial *aNextKey);
 
     /**
      * This method sets the current MAC Frame Counter value.

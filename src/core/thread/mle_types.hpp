@@ -571,7 +571,13 @@ private:
 } OT_TOOL_PACKED_END;
 
 /**
- * This class represents a MLE key.
+ * This class represents a MLE Key Material
+ *
+ */
+typedef Mac::KeyMaterial KeyMaterial;
+
+/**
+ * This class represents a MLE Key.
  *
  */
 typedef Mac::Key Key;

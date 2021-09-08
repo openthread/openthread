@@ -140,8 +140,7 @@ void TestHmacSha256(void)
 {
     struct TestCase
     {
-        const void *       mKey;
-        uint16_t           mKeyLength;
+        otCryptoKey        mKey;
         const void *       mData;
         uint16_t           mDataLength;
         otCryptoSha256Hash mHash;
@@ -219,11 +218,11 @@ void TestHmacSha256(void)
     }};
 
     static const TestCase kTestCases[] = {
-        {kKey1, sizeof(kKey1), kData1, sizeof(kData1) - 1, kHash1},
-        {kKey2, sizeof(kKey2) - 1, kData2, sizeof(kData2) - 1, kHash2},
-        {kKey3, sizeof(kKey3), kData3, sizeof(kData3), kHash3},
-        {kKey4, sizeof(kKey4), kData4, sizeof(kData4), kHash4},
-        {kKey5, sizeof(kKey5), kData5, sizeof(kData5) - 1, kHash5},
+        {{&kKey1[0], sizeof(kKey1), 0}, kData1, sizeof(kData1) - 1, kHash1},
+        {{reinterpret_cast<const uint8_t *>(&kKey2[0]), sizeof(kKey2) - 1, 0}, kData2, sizeof(kData2) - 1, kHash2},
+        {{&kKey3[0], sizeof(kKey3), 0}, kData3, sizeof(kData3), kHash3},
+        {{&kKey4[0], sizeof(kKey4), 0}, kData4, sizeof(kData4), kHash4},
+        {{&kKey5[0], sizeof(kKey5), 0}, kData5, sizeof(kData5) - 1, kHash5},
     };
 
     Instance *   instance = testInitInstance();
@@ -244,7 +243,7 @@ void TestHmacSha256(void)
         Crypto::HmacSha256       hmac;
         Crypto::HmacSha256::Hash hash;
 
-        hmac.Start(reinterpret_cast<const uint8_t *>(testCase.mKey), testCase.mKeyLength);
+        hmac.Start(static_cast<const Crypto::Key &>(testCase.mKey));
         hmac.Update(testCase.mData, testCase.mDataLength);
         hmac.Finish(hash);
 
@@ -270,7 +269,7 @@ void TestHmacSha256(void)
         Crypto::HmacSha256       hmac;
         Crypto::HmacSha256::Hash hash;
 
-        hmac.Start(reinterpret_cast<const uint8_t *>(testCase.mKey), testCase.mKeyLength);
+        hmac.Start(static_cast<const Crypto::Key &>(testCase.mKey));
         hmac.Update(*message, offsets[index++], testCase.mDataLength);
         hmac.Finish(hash);
 

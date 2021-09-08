@@ -1329,7 +1329,7 @@ exit:
 }
 #endif // OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2
 
-Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const Key &aMacKey)
+Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
 #if OPENTHREAD_RADIO
     OT_UNUSED_VARIABLE(aExtAddress);

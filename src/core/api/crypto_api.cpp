@@ -45,40 +45,33 @@
 
 using namespace ot::Crypto;
 
-void otCryptoHmacSha256(const uint8_t *     aKey,
-                        uint16_t            aKeyLength,
-                        const uint8_t *     aBuf,
-                        uint16_t            aBufLength,
-                        otCryptoSha256Hash *aHash)
+void otCryptoHmacSha256(const otCryptoKey *aKey, const uint8_t *aBuf, uint16_t aBufLength, otCryptoSha256Hash *aHash)
 {
     HmacSha256 hmac;
 
     OT_ASSERT((aKey != nullptr) && (aBuf != nullptr) && (aHash != nullptr));
 
-    hmac.Start(aKey, aKeyLength);
+    hmac.Start(*static_cast<const Key *>(aKey));
     hmac.Update(aBuf, aBufLength);
     hmac.Finish(*static_cast<HmacSha256::Hash *>(aHash));
 }
 
-void otCryptoAesCcm(const uint8_t *aKey,
-                    uint16_t       aKeyLength,
-                    uint8_t        aTagLength,
-                    const void *   aNonce,
-                    uint8_t        aNonceLength,
-                    const void *   aHeader,
-                    uint32_t       aHeaderLength,
-                    void *         aPlainText,
-                    void *         aCipherText,
-                    uint32_t       aLength,
-                    bool           aEncrypt,
-                    void *         aTag)
+void otCryptoAesCcm(const otCryptoKey *aKey,
+                    uint8_t            aTagLength,
+                    const void *       aNonce,
+                    uint8_t            aNonceLength,
+                    const void *       aHeader,
+                    uint32_t           aHeaderLength,
+                    void *             aPlainText,
+                    void *             aCipherText,
+                    uint32_t           aLength,
+                    bool               aEncrypt,
+                    void *             aTag)
 {
     AesCcm aesCcm;
+    OT_ASSERT((aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) && (aTag != nullptr));
 
-    OT_ASSERT((aKey != nullptr) && (aNonce != nullptr) && (aPlainText != nullptr) && (aCipherText != nullptr) &&
-              (aTag != nullptr));
-
-    aesCcm.SetKey(aKey, aKeyLength);
+    aesCcm.SetKey(*static_cast<const Key *>(aKey));
     aesCcm.Init(aHeaderLength, aLength, aTagLength, aNonce, aNonceLength);
 
     if (aHeaderLength != 0)

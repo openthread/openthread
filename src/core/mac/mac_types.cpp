@@ -334,5 +334,98 @@ void LinkFrameCounters::SetAll(uint32_t aCounter)
 #endif
 }
 
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+KeyMaterial &KeyMaterial::operator=(const KeyMaterial &aOther)
+{
+    VerifyOrExit(GetKeyRef() != aOther.GetKeyRef());
+    DestroyKey();
+    SetKeyRef(aOther.GetKeyRef());
+
+exit:
+    return *this;
+}
+#endif
+
+void KeyMaterial::Clear(void)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    DestroyKey();
+    SetKeyRef(kInvalidKeyRef);
+#else
+    GetKey().Clear();
+#endif
+}
+
+void KeyMaterial::SetFrom(const Key &aKey, bool aIsExportable)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    {
+        Error  error;
+        KeyRef keyRef = 0;
+
+        DestroyKey();
+
+        error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeAes, Crypto::Storage::kKeyAlgorithmAesEcb,
+                                           (aIsExportable ? Crypto::Storage::kUsageExport : 0) |
+                                               Crypto::Storage::kUsageEncrypt | Crypto::Storage::kUsageDecrypt,
+                                           Crypto::Storage::kTypeVolatile, aKey.GetBytes(), Key::kSize);
+
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+
+        SetKeyRef(keyRef);
+    }
+#else
+    SetKey(aKey);
+    OT_UNUSED_VARIABLE(aIsExportable);
+#endif
+}
+
+void KeyMaterial::ExtractKey(Key &aKey)
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    aKey.Clear();
+
+    if (Crypto::Storage::IsKeyRefValid(GetKeyRef()))
+    {
+        Error  error;
+        size_t keySize;
+
+        error = Crypto::Storage::ExportKey(GetKeyRef(), aKey.m8, Key::kSize, keySize);
+        OT_ASSERT(error == kErrorNone);
+        OT_UNUSED_VARIABLE(error);
+    }
+#else
+    aKey = GetKey();
+#endif
+}
+
+void KeyMaterial::ConvertToCryptoKey(Crypto::Key &aCryptoKey) const
+{
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+    aCryptoKey.SetAsKeyRef(GetKeyRef());
+#else
+    aCryptoKey.Set(GetKey().GetBytes(), Key::kSize);
+#endif
+}
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+void KeyMaterial::DestroyKey(void)
+{
+    Crypto::Storage::DestroyKey(GetKeyRef());
+    SetKeyRef(kInvalidKeyRef);
+}
+#endif
+
+bool KeyMaterial::operator==(const KeyMaterial &aOther) const
+{
+    return
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+        (GetKeyRef() == aOther.GetKeyRef());
+#else
+        (GetKey() == aOther.GetKey());
+#endif
+}
+
 } // namespace Mac
 } // namespace ot

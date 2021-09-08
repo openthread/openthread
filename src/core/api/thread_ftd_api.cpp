@@ -343,12 +343,21 @@ void otThreadSetSteeringData(otInstance *aInstance, const otExtAddress *aExtAddr
 }
 #endif
 
-const otPskc *otThreadGetPskc(otInstance *aInstance)
+void otThreadGetPskc(otInstance *aInstance, otPskc *aPskc)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetPskc();
+    instance.Get<KeyManager>().GetPskc(*static_cast<Pskc *>(aPskc));
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+otPskcRef otThreadGetPskcRef(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<KeyManager>().GetPskcRef();
+}
+#endif
 
 otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 {
@@ -364,6 +373,24 @@ otError otThreadSetPskc(otInstance *aInstance, const otPskc *aPskc)
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+otError otThreadSetPskcRef(otInstance *aInstance, otPskcRef aKeyRef)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(aKeyRef != 0, error = kErrorInvalidArgs);
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+
+    instance.Get<KeyManager>().SetPskcRef(aKeyRef);
+    instance.Get<MeshCoP::ActiveDataset>().Clear();
+    instance.Get<MeshCoP::PendingDataset>().Clear();
+
+exit:
+    return error;
+}
+#endif
 
 int8_t otThreadGetParentPriority(otInstance *aInstance)
 {

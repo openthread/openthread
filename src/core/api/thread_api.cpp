@@ -112,12 +112,21 @@ otError otThreadSetLinkMode(otInstance *aInstance, otLinkModeConfig aConfig)
     return instance.Get<Mle::MleRouter>().SetDeviceMode(Mle::DeviceMode(aConfig));
 }
 
-const otNetworkKey *otThreadGetNetworkKey(otInstance *aInstance)
+void otThreadGetNetworkKey(otInstance *aInstance, otNetworkKey *aNetworkKey)
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return &instance.Get<KeyManager>().GetNetworkKey();
+    instance.Get<KeyManager>().GetNetworkKey(*static_cast<NetworkKey *>(aNetworkKey));
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+otNetworkKeyRef otThreadGetNetworkKeyRef(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    return instance.Get<KeyManager>().GetNetworkKeyRef();
+}
+#endif
 
 otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 {
@@ -128,13 +137,33 @@ otError otThreadSetNetworkKey(otInstance *aInstance, const otNetworkKey *aKey)
 
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    error = instance.Get<KeyManager>().SetNetworkKey(*static_cast<const NetworkKey *>(aKey));
+    instance.Get<KeyManager>().SetNetworkKey(*static_cast<const NetworkKey *>(aKey));
+
     instance.Get<MeshCoP::ActiveDataset>().Clear();
     instance.Get<MeshCoP::PendingDataset>().Clear();
 
 exit:
     return error;
 }
+
+#if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
+otError otThreadSetNetworkKeyRef(otInstance *aInstance, otNetworkKeyRef aKeyRef)
+{
+    Error     error    = kErrorNone;
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    VerifyOrExit(aKeyRef != 0, error = kErrorInvalidArgs);
+
+    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+
+    instance.Get<KeyManager>().SetNetworkKeyRef(static_cast<NetworkKeyRef>(aKeyRef));
+    instance.Get<MeshCoP::ActiveDataset>().Clear();
+    instance.Get<MeshCoP::PendingDataset>().Clear();
+
+exit:
+    return error;
+}
+#endif
 
 const otIp6Address *otThreadGetRloc(otInstance *aInstance)
 {

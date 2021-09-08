@@ -314,9 +314,9 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     Error          error;
     Coap::Message *message = nullptr;
     Dataset        dataset;
-
     NetworkNameTlv networkName;
     const Tlv *    tlv;
+    NetworkKey     networkKey;
 
     VerifyOrExit((message = NewMeshCoPMessage(Get<Tmf::Agent>())) != nullptr, error = kErrorNoBufs);
 
@@ -325,7 +325,8 @@ Coap::Message *JoinerRouter::PrepareJoinerEntrustMessage(void)
     SuccessOrExit(error = message->SetPayloadMarker());
     message->SetSubType(Message::kSubTypeJoinerEntrust);
 
-    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, Get<KeyManager>().GetNetworkKey()));
+    Get<KeyManager>().GetNetworkKey(networkKey);
+    SuccessOrExit(error = Tlv::Append<NetworkKeyTlv>(*message, networkKey));
     SuccessOrExit(error = Tlv::Append<MeshLocalPrefixTlv>(*message, Get<Mle::MleRouter>().GetMeshLocalPrefix()));
     SuccessOrExit(error = Tlv::Append<ExtendedPanIdTlv>(*message, Get<Mac::Mac>().GetExtendedPanId()));
 

@@ -35,61 +35,24 @@
 
 #include <string.h>
 
+#include "common/code_utils.hpp"
+#include "common/debug.hpp"
+
 namespace ot {
 namespace Crypto {
 
-void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const uint8_t *aInputKey, uint16_t aInputKeyLength)
+void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey)
 {
-    HmacSha256 hmac;
-
-    // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
-
-    hmac.Start(aSalt, aSaltLength);
-    hmac.Update(aInputKey, aInputKeyLength);
-    hmac.Finish(mPrk);
+    Error err = otPlatCryptoHkdfExtract(&mContext, sizeof(mContext), aSalt, aSaltLength, &aInputKey);
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    HmacSha256       hmac;
-    HmacSha256::Hash hash;
-    uint8_t          iter = 0;
-    uint16_t         copyLength;
-
-    // The aOutputKey is calculated as follows [RFC5889]:
-    //
-    //   N = ceil( aOutputKeyLength / HashSize)
-    //   T = T(1) | T(2) | T(3) | ... | T(N)
-    //   aOutputKey is first aOutputKeyLength of T
-    //
-    // Where:
-    //   T(0) = empty string (zero length)
-    //   T(1) = HMAC-Hash(PRK, T(0) | info | 0x01)
-    //   T(2) = HMAC-Hash(PRK, T(1) | info | 0x02)
-    //   T(3) = HMAC-Hash(PRK, T(2) | info | 0x03)
-    //   ...
-
-    while (aOutputKeyLength > 0)
-    {
-        hmac.Start(mPrk.GetBytes(), sizeof(mPrk));
-
-        if (iter != 0)
-        {
-            hmac.Update(hash);
-        }
-
-        hmac.Update(aInfo, aInfoLength);
-
-        iter++;
-        hmac.Update(iter);
-        hmac.Finish(hash);
-
-        copyLength = (aOutputKeyLength > sizeof(hash)) ? sizeof(hash) : aOutputKeyLength;
-
-        memcpy(aOutputKey, hash.GetBytes(), copyLength);
-        aOutputKey += copyLength;
-        aOutputKeyLength -= copyLength;
-    }
+    Error err = otPlatCryptoHkdfExpand(&mContext, sizeof(mContext), aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
 }
 
 } // namespace Crypto
