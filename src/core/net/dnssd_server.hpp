@@ -49,6 +49,11 @@
  */
 
 namespace ot {
+
+namespace Srp {
+class Server;
+}
+
 namespace Dns {
 namespace ServiceDiscovery {
 
@@ -58,6 +63,8 @@ namespace ServiceDiscovery {
  */
 class Server : public InstanceLocator, private NonCopyable
 {
+    friend class Srp::Server;
+
 public:
     /**
      * This enumeration specifies a DNS-SD query type.
