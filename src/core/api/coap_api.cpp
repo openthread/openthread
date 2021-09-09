@@ -47,7 +47,7 @@ otMessage *otCoapNewMessage(otInstance *aInstance, const otMessageSettings *aSet
 {
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    return instance.GetApplicationCoap().NewMessage(Message::Settings(aSettings));
+    return instance.GetApplicationCoap().NewMessage(Message::Settings::From(aSettings));
 }
 
 void otCoapMessageInit(otMessage *aMessage, otCoapType aType, otCoapCode aCode)
