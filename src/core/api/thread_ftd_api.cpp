@@ -380,7 +380,6 @@ otError otThreadSetPskcRef(otInstance *aInstance, otPskcRef aKeyRef)
     Error     error    = kErrorNone;
     Instance &instance = *static_cast<Instance *>(aInstance);
 
-    VerifyOrExit(aKeyRef != 0, error = kErrorInvalidArgs);
     VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
     instance.Get<KeyManager>().SetPskcRef(aKeyRef);
