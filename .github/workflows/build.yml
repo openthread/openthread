@@ -116,7 +116,7 @@ jobs:
     - name: Bootstrap
       run: |
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
-        sudo apt-get --no-install-recommends install -y clang-tools-9
+        sudo apt-get --no-install-recommends install -y clang-tools-9 ninja-build
     - name: Run
       run: |
         script/check-scan-build
