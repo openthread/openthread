@@ -3406,6 +3406,15 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
     SuccessOrExit(error = Tlv::FindTlv(aMessage, connectivity));
     VerifyOrExit(connectivity.IsValid(), error = kErrorParse);
 
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    // CSL Accuracy
+    if (Tlv::FindTlv(aMessage, clockAccuracy) != kErrorNone)
+    {
+        clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
+        clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
+    }
+#endif
+
     // Share data with application, if requested.
     if (mParentResponseCb)
     {
@@ -3473,14 +3482,6 @@ void Mle::HandleParentResponse(const Message &aMessage, const Ip6::MessageInfo &
 
         // only consider partitions that are the same or better
         VerifyOrExit(compare >= 0);
-#endif
-
-#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-        if (Tlv::FindTlv(aMessage, clockAccuracy) != kErrorNone)
-        {
-            clockAccuracy.SetCslClockAccuracy(kCslWorstCrystalPpm);
-            clockAccuracy.SetCslUncertainty(kCslWorstUncertainty);
-        }
 #endif
 
         // only consider better parents if the partitions are the same

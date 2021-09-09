@@ -584,10 +584,6 @@ private:
     // than expected sample window. The value is in usec.
     static constexpr uint32_t kCslReceiveTimeAhead = OPENTHREAD_CONFIG_CSL_RECEIVE_TIME_AHEAD;
 
-    static constexpr uint8_t kCslWorstCrystalPpm  = 255; // Worst possible crystal accuracy, in units of ± ppm.
-    static constexpr uint8_t kCslWorstUncertainty = 255; // Worst possible scheduling uncertainty, in units of 100 us.
-    static constexpr uint8_t kUsPerUncertUnit     = 100; // Number of microseconds by uncertainty unit.
-
     enum CslState : uint8_t{
         kCslIdle,   // CSL receiver is not started.
         kCslSample, // Sampling CSL channel.
