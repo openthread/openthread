@@ -31,16 +31,6 @@
  *   This file implements the necessary hooks for mbedTLS.
  */
 
-/**
- * Direct access to fields of structures declared in public headers is no longer
- * supported. In Mbed TLS 3, the layout of structures is not considered part of
- * the stable API, and minor versions (3.1, 3.2, etc.) may add, remove, rename,
- * reorder or change the type of structure fields.
- */
-#if !defined(MBEDTLS_ALLOW_PRIVATE_ACCESS)
-#define MBEDTLS_ALLOW_PRIVATE_ACCESS
-#endif
-
 #include "dtls.hpp"
 
 #include <mbedtls/debug.h>
@@ -864,7 +854,7 @@ void Dtls::Process(void)
         {
             rval = mbedtls_ssl_handshake(&mSsl);
 
-            if (mSsl.state == MBEDTLS_SSL_HANDSHAKE_OVER)
+            if (mSsl.MBEDTLS_PRIVATE(state) == MBEDTLS_SSL_HANDSHAKE_OVER)
             {
                 mState = kStateConnected;
 
@@ -908,7 +898,7 @@ void Dtls::Process(void)
                 OT_UNREACHABLE_CODE(break);
 
             case MBEDTLS_ERR_SSL_INVALID_MAC:
-                if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
+                if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_BAD_RECORD_MAC);
@@ -918,7 +908,7 @@ void Dtls::Process(void)
                 break;
 
             default:
-                if (mSsl.state != MBEDTLS_SSL_HANDSHAKE_OVER)
+                if (mSsl.MBEDTLS_PRIVATE(state) != MBEDTLS_SSL_HANDSHAKE_OVER)
                 {
                     mbedtls_ssl_send_alert_message(&mSsl, MBEDTLS_SSL_ALERT_LEVEL_FATAL,
                                                    MBEDTLS_SSL_ALERT_MSG_HANDSHAKE_FAILURE);
