@@ -1964,7 +1964,7 @@ void Mle::HandleDelayedResponseTimer(void)
             mDelayedResponses.Dequeue(*message);
             metadata.RemoveFrom(*message);
 
-            if (metadata.mAppendTimestamps)
+            if (message->GetSubType() == Message::kSubTypeMleDataRequest)
             {
                 error = AppendActiveTimestamp(*message);
                 error = (error == kErrorNone) ? AppendPendingTimestamp(*message) : error;
@@ -2018,6 +2018,25 @@ void Mle::RemoveDelayedDataResponseMessage(void)
         }
 
         message = message->GetNext();
+    }
+}
+
+void Mle::RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination)
+{
+    for (Message *message = mDelayedResponses.GetHead(); message != nullptr; message = message->GetNext())
+    {
+        DelayedResponseMetadata metadata;
+
+        metadata.ReadFrom(*message);
+
+        if (message->GetSubType() == Message::kSubTypeMleDataRequest && metadata.mDestination == aDestination)
+        {
+            mDelayedResponses.DequeueAndFree(*message);
+            Log(kMessageRemoveDelayed, kTypeDataRequest, metadata.mDestination);
+
+            // no more than one MLE Data Request for the destination in Delayed Message Queue.
+            break;
+        }
     }
 }
 
@@ -2160,7 +2179,10 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
     Error    error = kErrorNone;
     Message *message;
 
+    RemoveDelayedDataRequestMessage(aDestination);
+
     VerifyOrExit((message = NewMleMessage()) != nullptr, error = kErrorNoBufs);
+    message->SetSubType(Message::kSubTypeMleDataRequest);
     SuccessOrExit(error = AppendHeader(*message, kCommandDataRequest));
     SuccessOrExit(error = AppendTlvRequest(*message, aTlvs, aTlvsLength));
 
@@ -2171,7 +2193,7 @@ Error Mle::SendDataRequest(const Ip6::Address &aDestination,
 
     if (aDelay)
     {
-        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay, /* aAppendTimestamps */ true));
+        SuccessOrExit(error = AddDelayedResponse(*message, aDestination, aDelay));
         Log(kMessageDelay, kTypeDataRequest, aDestination);
     }
     else
@@ -2662,17 +2684,13 @@ exit:
     return error;
 }
 
-Error Mle::AddDelayedResponse(Message &           aMessage,
-                              const Ip6::Address &aDestination,
-                              uint16_t            aDelay,
-                              bool                aAppendTimestamps)
+Error Mle::AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay)
 {
     Error                   error = kErrorNone;
     DelayedResponseMetadata metadata;
 
-    metadata.mSendTime         = TimerMilli::GetNow() + aDelay;
-    metadata.mDestination      = aDestination;
-    metadata.mAppendTimestamps = aAppendTimestamps;
+    metadata.mSendTime    = TimerMilli::GetNow() + aDelay;
+    metadata.mDestination = aDestination;
 
     SuccessOrExit(error = metadata.AppendTo(aMessage));
     mDelayedResponses.Enqueue(aMessage);

@@ -1445,16 +1445,12 @@ protected:
      * @param[in]  aMessage             The message to transmit after given delay.
      * @param[in]  aDestination         The IPv6 address of the recipient of the message.
      * @param[in]  aDelay               The delay in milliseconds before transmission of the message.
-     * @param[in]  aAppendTimestamps    Whether or not to append Active and Pending Timestamps before sending.
      *
      * @retval kErrorNone     Successfully queued the message to transmit after the delay.
      * @retval kErrorNoBufs   Insufficient buffers to queue the message.
      *
      */
-    Error AddDelayedResponse(Message &           aMessage,
-                             const Ip6::Address &aDestination,
-                             uint16_t            aDelay,
-                             bool                aAppendTimestamps = false);
+    Error AddDelayedResponse(Message &aMessage, const Ip6::Address &aDestination, uint16_t aDelay);
 
 #if (OPENTHREAD_CONFIG_LOG_LEVEL >= OT_LOG_LEVEL_INFO) && (OPENTHREAD_CONFIG_LOG_MLE == 1)
     /**
@@ -1671,9 +1667,8 @@ private:
         void  ReadFrom(const Message &aMessage);
         void  RemoveFrom(Message &aMessage) const;
 
-        Ip6::Address mDestination;          // IPv6 address of the message destination.
-        TimeMilli    mSendTime;             // Time when the message shall be sent.
-        bool         mAppendTimestamps : 1; // Append Active Timestamp and Pending Timestamp before sending.
+        Ip6::Address mDestination; // IPv6 address of the message destination.
+        TimeMilli    mSendTime;    // Time when the message shall be sent.
     };
 
     OT_TOOL_PACKED_BEGIN
@@ -1818,6 +1813,7 @@ private:
     bool     PrepareAnnounceState(void);
     void     SendAnnounce(uint8_t aChannel, AnnounceMode aMode);
     void     SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode = kNormalAnnounce);
+    void     RemoveDelayedDataRequestMessage(const Ip6::Address &aDestination);
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE
     Error SendLinkMetricsManagementResponse(const Ip6::Address &aDestination, LinkMetrics::Status aStatus);
 #endif
