@@ -42,9 +42,7 @@ using namespace ot;
 
 otError otNetDataGet(otInstance *aInstance, bool aStable, uint8_t *aData, uint8_t *aDataLength)
 {
-    OT_ASSERT(aData != nullptr && aDataLength != nullptr);
-
-    return AsCoreType(aInstance).Get<NetworkData::Leader>().GetNetworkData(aStable, aData, *aDataLength);
+    return AsCoreType(aInstance).Get<NetworkData::Leader>().CopyNetworkData(aStable, aData, *aDataLength);
 }
 
 otError otNetDataGetNextOnMeshPrefix(otInstance *           aInstance,

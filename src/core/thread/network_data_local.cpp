@@ -125,7 +125,7 @@ Error Local::AddPrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubTlvT
         prefixTlv->GetSubTlvs()->SetStable();
     }
 
-    otDumpDebgNetData("add prefix done", mTlvs, mLength);
+    otDumpDebgNetData("AddPrefix", GetBytes(), GetLength());
 
 exit:
     return error;
@@ -141,7 +141,7 @@ Error Local::RemovePrefix(const Ip6::Prefix &aPrefix, NetworkDataTlv::Type aSubT
     RemoveTlv(tlv);
 
 exit:
-    otDumpDebgNetData("remove done", mTlvs, mLength);
+    otDumpDebgNetData("RmvPrefix", GetBytes(), GetLength());
     return error;
 }
 
@@ -216,7 +216,7 @@ Error Local::AddService(uint32_t           aEnterpriseNumber,
         serverTlv->SetStable();
     }
 
-    otDumpDebgNetData("add service done", mTlvs, mLength);
+    otDumpDebgNetData("AddService", GetBytes(), GetLength());
 
 exit:
     return error;
@@ -232,7 +232,7 @@ Error Local::RemoveService(uint32_t aEnterpriseNumber, const ServiceData &aServi
     RemoveTlv(tlv);
 
 exit:
-    otDumpDebgNetData("remove service done", mTlvs, mLength);
+    otDumpDebgNetData("RmvService", GetBytes(), GetLength());
     return error;
 }
 

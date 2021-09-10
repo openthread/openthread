@@ -209,7 +209,7 @@ private:
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
 
-    void RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength);
+    void RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData);
 
     Error AddPrefix(const PrefixTlv &aPrefix, ChangedFlags &aChangedFlags);
     Error AddHasRoute(const HasRouteTlv &aHasRoute, PrefixTlv &aDstPrefix, ChangedFlags &aChangedFlags);
@@ -230,11 +230,10 @@ private:
     void RemoveCommissioningData(void);
 
     void RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags);
-    void RemoveRloc(uint16_t       aRloc16,
-                    MatchMode      aMatchMode,
-                    const uint8_t *aExcludeTlvs,
-                    uint8_t        aExcludeTlvsLength,
-                    ChangedFlags & aChangedFlags);
+    void RemoveRloc(uint16_t           aRloc16,
+                    MatchMode          aMatchMode,
+                    const NetworkData &aExcludeNetworkData,
+                    ChangedFlags &     aChangedFlags);
     void RemoveRlocInPrefix(PrefixTlv &      aPrefix,
                             uint16_t         aRloc16,
                             MatchMode        aMatchMode,
@@ -260,7 +259,7 @@ private:
 
     static bool RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode aMatchMode);
 
-    static Error Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc16);
+    static Error Validate(const NetworkData &aNetworkData, uint16_t aRloc16);
     static Error ValidatePrefix(const PrefixTlv &aPrefix, uint16_t aRloc16);
     static Error ValidateService(const ServiceTlv &aService, uint16_t aRloc16);
 

@@ -64,17 +64,6 @@ bool CompareExternalRouteConfig(const otExternalRouteConfig &aConfig1, const otE
 
 void TestNetworkDataIterator(void)
 {
-    class TestNetworkData : public NetworkData
-    {
-    public:
-        TestNetworkData(ot::Instance *aInstance, const uint8_t *aTlvs, uint8_t aTlvsLength)
-            : NetworkData(*aInstance)
-        {
-            memcpy(mTlvs, aTlvs, aTlvsLength);
-            mLength = aTlvsLength;
-        }
-    };
-
     ot::Instance *      instance;
     Iterator            iter = kIteratorInit;
     ExternalRouteConfig config;
@@ -115,7 +104,7 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        TestNetworkData netData(instance, kNetworkData, sizeof(kNetworkData));
+        NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
         iter = OT_NETWORK_DATA_ITERATOR_INIT;
 
@@ -201,7 +190,7 @@ void TestNetworkDataIterator(void)
             },
         };
 
-        TestNetworkData netData(instance, kNetworkData, sizeof(kNetworkData));
+        NetworkData netData(*instance, kNetworkData, sizeof(kNetworkData));
 
         iter = OT_NETWORK_DATA_ITERATOR_INIT;
 
@@ -276,7 +265,7 @@ public:
         SuccessOrQuit(AddService(serviceData4));
         SuccessOrQuit(AddService(serviceData5));
 
-        DumpBuffer("netdata", mTlvs, mLength);
+        DumpBuffer("netdata", GetBytes(), GetLength());
 
         // Iterate through all entries that start with { 0x02 } (kServiceData1)
         tlv = nullptr;
@@ -334,8 +323,8 @@ void TestNetworkDataDsnSrpServices(void)
     public:
         void Populate(const uint8_t *aTlvs, uint8_t aTlvsLength)
         {
-            memcpy(mTlvs, aTlvs, aTlvsLength);
-            mLength = aTlvsLength;
+            memcpy(GetBytes(), aTlvs, aTlvsLength);
+            SetLength(aTlvsLength);
         }
     };
 

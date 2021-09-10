@@ -355,11 +355,9 @@ Error NetworkDiagnostic::FillRequestedTlvs(const Message &       aRequest,
 
         case NetworkDiagnosticTlv::kNetworkData:
         {
-            uint8_t netData[NetworkData::NetworkData::kMaxSize];
-            uint8_t length = sizeof(netData);
+            NetworkData::NetworkData &netData = Get<NetworkData::Leader>();
 
-            IgnoreError(Get<NetworkData::Leader>().GetNetworkData(/* aStableOnly */ false, netData, length));
-            SuccessOrExit(error = Tlv::Append<NetworkDataTlv>(aResponse, netData, length));
+            SuccessOrExit(error = Tlv::Append<NetworkDataTlv>(aResponse, netData.GetBytes(), netData.GetLength()));
             break;
         }
 

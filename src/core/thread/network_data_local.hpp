@@ -58,7 +58,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data contributed by the local device.
  *
  */
-class Local : public NetworkData, private NonCopyable
+class Local : public MutableNetworkData, private NonCopyable
 {
 public:
     /**
@@ -68,7 +68,7 @@ public:
      *
      */
     explicit Local(Instance &aInstance)
-        : NetworkData(aInstance)
+        : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
         , mOldRloc(Mac::kShortAddrInvalid)
     {
     }
@@ -181,6 +181,7 @@ private:
     bool IsServiceConsistent(void) const;
 #endif
 
+    uint8_t  mTlvBuffer[kMaxSize];
     uint16_t mOldRloc;
 };
 
