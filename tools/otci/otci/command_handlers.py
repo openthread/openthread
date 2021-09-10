@@ -180,6 +180,8 @@ class OtCliCommandRunner(OTCommandHandler):
     def __otcli_read_routine(self):
         while not self.__should_close.isSet():
             line = self.__otcli.readline()
+            logging.debug('%s: %r', self.__otcli, line)
+
             if line.startswith('> '):
                 line = line[2:]
 
