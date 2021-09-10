@@ -188,7 +188,7 @@ Error Mle::Disable(void)
 {
     Error error = kErrorNone;
 
-    Stop(false);
+    Stop(kKeepNetworkDatasets);
     SuccessOrExit(error = mSocket.Close());
     Get<ThreadNetif>().RemoveUnicastAddress(mLinkLocal64);
 
@@ -196,7 +196,7 @@ exit:
     return error;
 }
 
-Error Mle::Start(bool aAnnounceAttach)
+Error Mle::Start(StartMode aMode)
 {
     Error error = kErrorNone;
 
@@ -218,12 +218,12 @@ Error Mle::Start(bool aAnnounceAttach)
 
     Get<KeyManager>().Start();
 
-    if (!aAnnounceAttach)
+    if (aMode == kNormalAttach)
     {
         mReattachState = kReattachStart;
     }
 
-    if (aAnnounceAttach || (GetRloc16() == Mac::kShortAddrInvalid))
+    if ((aMode == kAnnounceAttach) || (GetRloc16() == Mac::kShortAddrInvalid))
     {
         IgnoreError(BecomeChild(kAttachAny));
     }
@@ -246,9 +246,9 @@ exit:
     return error;
 }
 
-void Mle::Stop(bool aClearNetworkDatasets)
+void Mle::Stop(StopMode aMode)
 {
-    if (aClearNetworkDatasets)
+    if (aMode == kUpdateNetworkDatasets)
     {
         Get<MeshCoP::ActiveDataset>().HandleDetach();
         Get<MeshCoP::PendingDataset>().HandleDetach();
@@ -1808,7 +1808,7 @@ void Mle::HandleAttachTimer(void)
     case kAttachStateAnnounce:
         if (shouldAnnounce && (GetNextAnnouceChannel(mAnnounceChannel) == kErrorNone))
         {
-            SendAnnounce(mAnnounceChannel, /* aOrphanAnnounce */ true);
+            SendAnnounce(mAnnounceChannel, kOrphanAnnounce);
             delay = mAnnounceDelay;
             break;
         }
@@ -2462,16 +2462,16 @@ exit:
     return error;
 }
 
-void Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce)
+void Mle::SendAnnounce(uint8_t aChannel, AnnounceMode aMode)
 {
     Ip6::Address destination;
 
     destination.SetToLinkLocalAllNodesMulticast();
 
-    SendAnnounce(aChannel, aOrphanAnnounce, destination);
+    SendAnnounce(aChannel, destination, aMode);
 }
 
-void Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Address &aDestination)
+void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, AnnounceMode aMode)
 {
     Error              error = kErrorNone;
     ChannelTlv         channel;
@@ -2489,18 +2489,19 @@ void Mle::SendAnnounce(uint8_t aChannel, bool aOrphanAnnounce, const Ip6::Addres
     channel.SetChannel(Get<Mac::Mac>().GetPanChannel());
     SuccessOrExit(error = channel.AppendTo(*message));
 
-    if (aOrphanAnnounce)
+    switch (aMode)
     {
+    case kOrphanAnnounce:
         activeTimestamp.Init();
         activeTimestamp.SetSeconds(0);
         activeTimestamp.SetTicks(0);
         activeTimestamp.SetAuthoritative(true);
-
         SuccessOrExit(error = activeTimestamp.AppendTo(*message));
-    }
-    else
-    {
+        break;
+
+    case kNormalAnnounce:
         SuccessOrExit(error = AppendActiveTimestamp(*message));
+        break;
     }
 
     SuccessOrExit(error = Tlv::Append<PanIdTlv>(*message, Get<Mac::Mac>().GetPanId()));
@@ -3945,10 +3946,10 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
     }
     else if (localTimestamp->Compare(timestamp) < 0)
     {
-        SendAnnounce(channel, false);
+        SendAnnounce(channel);
 
 #if OPENTHREAD_CONFIG_MLE_SEND_UNICAST_ANNOUNCE_RESPONSE
-        SendAnnounce(channel, false, aMessageInfo.GetPeerAddr());
+        SendAnnounce(channel, aMessageInfo.GetPeerAddr());
 #endif
     }
     else
@@ -4032,7 +4033,7 @@ void Mle::ProcessAnnounce(void)
 
     otLogNoteMle("Processing Announce - channel %d, panid 0x%02x", newChannel, newPanId);
 
-    Stop(/* aClearNetworkDatasets */ false);
+    Stop(kKeepNetworkDatasets);
 
     // Save the current/previous channel and pan-id
     mAlternateChannel   = Get<Mac::Mac>().GetPanChannel();
@@ -4042,7 +4043,7 @@ void Mle::ProcessAnnounce(void)
     IgnoreError(Get<Mac::Mac>().SetPanChannel(newChannel));
     Get<Mac::Mac>().SetPanId(newPanId);
 
-    IgnoreError(Start(/* aAnnounceAttach */ true));
+    IgnoreError(Start(kAnnounceAttach));
 }
 
 uint16_t Mle::GetNextHop(uint16_t aDestination) const

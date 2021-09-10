@@ -481,11 +481,11 @@ otError otThreadSetEnabled(otInstance *aInstance, bool aEnabled)
 
     if (aEnabled)
     {
-        error = instance.Get<Mle::MleRouter>().Start(/* aAnnounceAttach */ false);
+        error = instance.Get<Mle::MleRouter>().Start();
     }
     else
     {
-        instance.Get<Mle::MleRouter>().Stop(true);
+        instance.Get<Mle::MleRouter>().Stop();
     }
 
     return error;
