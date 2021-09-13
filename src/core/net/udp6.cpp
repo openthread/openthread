@@ -66,7 +66,7 @@ bool Udp::SocketHandle::Matches(const MessageInfo &aMessageInfo) const
     }
 
 #if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
-
+    VerifyOrExit((GetBoundNetif() != OT_NETIF_THREAD) == aMessageInfo.IsHostInterface());
 #endif
 
     matches = true;
