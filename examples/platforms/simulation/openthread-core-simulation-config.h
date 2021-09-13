@@ -199,4 +199,17 @@
 #define OPENTHREAD_CONFIG_CLI_UART_RX_BUFFER_SIZE 640
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+ *
+ * Define as 1 for a child to inform its previous parent when it attaches to a new parent.
+ *
+ * If this feature is enabled, when a device attaches to a new parent, it will send an IP message (with empty payload
+ * and mesh-local IP address as the source address) to its previous parent.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH
+#define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1
+#endif
+
 #endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_
