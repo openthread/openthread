@@ -89,6 +89,18 @@ otError otPlatUdpBind(otUdpSocket *aUdpSocket);
 otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifIdentifier);
 
 /**
+ * This function gets the network interface the UDP socket was bound to.
+ *
+ * Note: only available when `OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE` is used.
+ *
+ * @param[in]   aUdpSocket          A pointer to the UDP socket.
+ *
+ * @returns     The network interface bound to by the UDP socket.
+ *
+ */
+otNetifIdentifier otPlatUdpGetBoundNetif(const otUdpSocket *aUdpSocket);
+
+/**
  * This function connects UDP socket by platform.
  *
  * @param[in]   aUdpSocket  A pointer to the UDP socket.

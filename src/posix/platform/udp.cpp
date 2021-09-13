@@ -41,6 +41,7 @@
 
 #include <arpa/inet.h>
 #include <assert.h>
+#include <map>
 #include <net/if.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -64,6 +65,8 @@ using namespace ot::Posix::Ip6Utils;
 namespace {
 
 constexpr size_t kMaxUdpSize = 1280;
+
+std::map<int, otNetifIdentifier> sSockNetifIdentifiers;
 
 void *FdToHandle(int aFd)
 {
@@ -261,6 +264,7 @@ otError otPlatUdpClose(otUdpSocket *aUdpSocket)
     VerifyOrExit(0 == close(fd), error = OT_ERROR_FAILED);
 
     aUdpSocket->mHandle = nullptr;
+    sSockNetifIdentifiers.erase(fd);
 
 exit:
     return error;
@@ -307,6 +311,8 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
     int     fd    = FdFromHandle(aUdpSocket->mHandle);
     int     one   = 1;
     int     zero  = 0;
+
+    assert(sSockNetifIdentifiers.find(fd) == sSockNetifIdentifiers.end());
 
     switch (aNetifIdentifier)
     {
@@ -355,8 +361,18 @@ otError otPlatUdpBindToNetif(otUdpSocket *aUdpSocket, otNetifIdentifier aNetifId
 
     VerifyOrExit(setsockopt(fd, IPPROTO_IPV6, IPV6_MULTICAST_LOOP, &zero, sizeof(zero)) == 0, error = OT_ERROR_FAILED);
 
+    sSockNetifIdentifiers.emplace(fd, aNetifIdentifier);
+
 exit:
     return error;
+}
+
+otNetifIdentifier otPlatUdpGetBoundNetif(const otUdpSocket *aUdpSocket)
+{
+    int fd = FdFromHandle(aUdpSocket->mHandle);
+
+    assert(sSockNetifIdentifiers.find(fd) != sSockNetifIdentifiers.end());
+    return sSockNetifIdentifiers[fd];
 }
 
 otError otPlatUdpConnect(otUdpSocket *aUdpSocket)

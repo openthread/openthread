@@ -125,6 +125,16 @@ public:
     private:
         bool Matches(const MessageInfo &aMessageInfo) const;
 
+#if OPENTHREAD_CONFIG_PLATFORM_UDP_ENABLE
+        /**
+         * This method gets the network interface bound to by the UDP socket.
+         *
+         * @returns     The network interface bound to by the UDP socket.
+         *
+         */
+        otNetifIdentifier GetBoundNetif(void) const;
+#endif
+
         void HandleUdpReceive(Message &aMessage, const MessageInfo &aMessageInfo)
         {
             mHandler(mContext, &aMessage, &aMessageInfo);
@@ -627,18 +637,9 @@ private:
     bool ShouldUsePlatformUdp(const SocketHandle &aSocket) const;
 #endif
 
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    void                SetBackboneSocket(SocketHandle &aSocket);
-    const SocketHandle *GetBackboneSockets(void) const;
-    bool                IsBackboneSocket(const SocketHandle &aSocket) const;
-#endif
-
     uint16_t                 mEphemeralPort;
     LinkedList<Receiver>     mReceivers;
     LinkedList<SocketHandle> mSockets;
-#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
-    SocketHandle *mPrevBackboneSockets;
-#endif
 #if OPENTHREAD_CONFIG_UDP_FORWARD_ENABLE
     void *         mUdpForwarderContext;
     otUdpForwarder mUdpForwarder;
