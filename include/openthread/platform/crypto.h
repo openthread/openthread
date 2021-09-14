@@ -40,10 +40,6 @@
 
 #include <openthread/error.h>
 
-#ifdef OT_PLAT_CRYPTO_ATTRIBUTES_TYPE_HEADER
-#include OT_PLAT_CRYPTO_ATTRIBUTES_TYPE_HEADER
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
