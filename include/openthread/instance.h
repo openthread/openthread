@@ -258,6 +258,8 @@ void otInstanceFactoryReset(otInstance *aInstance);
 /**
  * This method resets the internal states of the OpenThread radio stack. Callbacks and configurations are preserved.
  *
+ * This API is only available under radio builds (`OPENTHREAD_RADIO = 1`).
+ *
  * @param[in]  aInstance A pointer to an OpenThread instance.
  */
 void otInstanceResetRadioStack(otInstance *aInstance);

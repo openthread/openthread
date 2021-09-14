@@ -33,6 +33,7 @@
 
 namespace ot {
 
+#if OPENTHREAD_RADIO
 void Radio::Init(void)
 {
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
@@ -67,6 +68,7 @@ void Radio::Init(void)
     SetPromiscuous(false);
 #endif // OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 }
+#endif // OPENTHREAD_RADIO
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_IEEE_802_15_4_ENABLE
 
