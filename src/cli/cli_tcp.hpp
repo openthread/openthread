@@ -39,6 +39,7 @@
 #include <openthread/tcp.h>
 
 #include "cli/cli_config.h"
+#include "cli/cli_output.hpp"
 #include "common/time.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
@@ -46,13 +47,11 @@
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements a CLI-based TCP example.
  *
  */
-class TcpExample
+class TcpExample : private OutputWrapper
 {
 public:
     using Arg = Utils::CmdLineParser::Arg;
@@ -60,13 +59,13 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput  The CLI console output context.
      *
      */
-    explicit TcpExample(Interpreter &aInterpreter);
+    explicit TcpExample(Output &aOutput);
 
     /**
-     * This mehtod interprets a list of CLI arguments.
+     * This method interprets a list of CLI arguments.
      *
      * @param[in]  aArgs   An array of command line arguments.
      *
@@ -133,8 +132,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 
     otTcpEndpoint mEndpoint;
     otTcpListener mListener;

@@ -40,19 +40,18 @@
 
 #include <openthread/coap.h>
 
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the CLI CoAP server and client.
  *
  */
-class Coap
+class Coap : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -60,10 +59,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput The CLI console output context
      *
      */
-    explicit Coap(Interpreter &aInterpreter);
+    explicit Coap(Output &aOutput);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -87,8 +86,7 @@ private:
     };
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE
-    enum BlockType : uint8_t
-    {
+    enum BlockType : uint8_t{
         kBlockType1,
         kBlockType2,
     };
@@ -99,7 +97,7 @@ private:
     void    CancelSubscriber(void);
 #endif
 
-    void PrintPayload(otMessage *aMessage) const;
+    void PrintPayload(otMessage *aMessage);
 
     otError ProcessHelp(Arg aArgs[]);
 #if OPENTHREAD_CONFIG_COAP_OBSERVE_API_ENABLE
@@ -189,8 +187,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 
     bool mUseDefaultRequestTxParameters;
     bool mUseDefaultResponseTxParameters;

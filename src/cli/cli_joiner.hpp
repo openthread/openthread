@@ -38,6 +38,7 @@
 
 #include <openthread/joiner.h>
 
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -46,13 +47,11 @@
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the Joiner CLI interpreter.
  *
  */
-class Joiner
+class Joiner : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -60,11 +59,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput The CLI console output context
      *
      */
-    explicit Joiner(Interpreter &aInterpreter)
-        : mInterpreter(aInterpreter)
+    explicit Joiner(Output &aOutput)
+        : OutputWrapper(aOutput)
     {
     }
 
@@ -98,8 +97,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 };
 
 } // namespace Cli

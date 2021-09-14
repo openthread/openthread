@@ -45,11 +45,6 @@ namespace Cli {
 
 constexpr NetworkData::Command NetworkData::sCommands[];
 
-NetworkData::NetworkData(Interpreter &aInterpreter)
-    : mInterpreter(aInterpreter)
-{
-}
-
 void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
 {
     enum
@@ -63,7 +58,7 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
     char  flagsString[kMaxFlagStringSize];
     char *flagsPtr = &flagsString[0];
 
-    mInterpreter.OutputIp6Prefix(aConfig.mPrefix);
+    OutputIp6Prefix(aConfig.mPrefix);
 
     if (aConfig.mPreferred)
     {
@@ -114,12 +109,12 @@ void NetworkData::OutputPrefix(const otBorderRouterConfig &aConfig)
 
     if (flagsPtr != &flagsString[0])
     {
-        mInterpreter.OutputFormat(" %s", flagsString);
+        OutputFormat(" %s", flagsString);
     }
 
     OutputPreference(aConfig.mPreference);
 
-    mInterpreter.OutputLine(" %04x", aConfig.mRloc16);
+    OutputLine(" %04x", aConfig.mRloc16);
 }
 
 void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
@@ -135,7 +130,7 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
     char  flagsString[kMaxFlagStringSize];
     char *flagsPtr = &flagsString[0];
 
-    mInterpreter.OutputIp6Prefix(aConfig.mPrefix);
+    OutputIp6Prefix(aConfig.mPrefix);
 
     if (aConfig.mStable)
     {
@@ -151,12 +146,12 @@ void NetworkData::OutputRoute(const otExternalRouteConfig &aConfig)
 
     if (flagsPtr != &flagsString[0])
     {
-        mInterpreter.OutputFormat(" %s", flagsString);
+        OutputFormat(" %s", flagsString);
     }
 
     OutputPreference(aConfig.mPreference);
 
-    mInterpreter.OutputLine(" %04x", aConfig.mRloc16);
+    OutputLine(" %04x", aConfig.mRloc16);
 }
 
 void NetworkData::OutputPreference(signed int aPreference)
@@ -164,15 +159,15 @@ void NetworkData::OutputPreference(signed int aPreference)
     switch (aPreference)
     {
     case OT_ROUTE_PREFERENCE_LOW:
-        mInterpreter.OutputFormat(" low");
+        OutputFormat(" low");
         break;
 
     case OT_ROUTE_PREFERENCE_MED:
-        mInterpreter.OutputFormat(" med");
+        OutputFormat(" med");
         break;
 
     case OT_ROUTE_PREFERENCE_HIGH:
-        mInterpreter.OutputFormat(" high");
+        OutputFormat(" high");
         break;
 
     default:
@@ -182,17 +177,17 @@ void NetworkData::OutputPreference(signed int aPreference)
 
 void NetworkData::OutputService(const otServiceConfig &aConfig)
 {
-    mInterpreter.OutputFormat("%u ", aConfig.mEnterpriseNumber);
-    mInterpreter.OutputBytes(aConfig.mServiceData, aConfig.mServiceDataLength);
-    mInterpreter.OutputFormat(" ");
-    mInterpreter.OutputBytes(aConfig.mServerConfig.mServerData, aConfig.mServerConfig.mServerDataLength);
+    OutputFormat("%u ", aConfig.mEnterpriseNumber);
+    OutputBytes(aConfig.mServiceData, aConfig.mServiceDataLength);
+    OutputFormat(" ");
+    OutputBytes(aConfig.mServerConfig.mServerData, aConfig.mServerConfig.mServerDataLength);
 
     if (aConfig.mServerConfig.mStable)
     {
-        mInterpreter.OutputFormat(" s");
+        OutputFormat(" s");
     }
 
-    mInterpreter.OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
+    OutputLine(" %04x", aConfig.mServerConfig.mRloc16);
 }
 
 otError NetworkData::ProcessHelp(Arg aArgs[])
@@ -201,7 +196,7 @@ otError NetworkData::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -220,7 +215,7 @@ otError NetworkData::ProcessPublish(Arg aArgs[])
             uint8_t sequenceNumber;
 
             SuccessOrExit(error = aArgs[2].ParseAsUint8(sequenceNumber));
-            otNetDataPublishDnsSrpServiceAnycast(mInterpreter.mInstance, sequenceNumber);
+            otNetDataPublishDnsSrpServiceAnycast(GetInstancePtr(), sequenceNumber);
             ExitNow();
         }
 
@@ -232,13 +227,13 @@ otError NetworkData::ProcessPublish(Arg aArgs[])
             if (aArgs[3].IsEmpty())
             {
                 SuccessOrExit(error = aArgs[2].ParseAsUint16(port));
-                otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(mInterpreter.mInstance, port);
+                otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(GetInstancePtr(), port);
                 ExitNow();
             }
 
             SuccessOrExit(error = aArgs[2].ParseAsIp6Address(address));
             SuccessOrExit(error = aArgs[3].ParseAsUint16(port));
-            otNetDataPublishDnsSrpServiceUnicast(mInterpreter.mInstance, &address, port);
+            otNetDataPublishDnsSrpServiceUnicast(GetInstancePtr(), &address, port);
             ExitNow();
         }
     }
@@ -250,7 +245,7 @@ otError NetworkData::ProcessPublish(Arg aArgs[])
         otBorderRouterConfig config;
 
         SuccessOrExit(error = Interpreter::ParsePrefix(aArgs + 1, config));
-        error = otNetDataPublishOnMeshPrefix(mInterpreter.mInstance, &config);
+        error = otNetDataPublishOnMeshPrefix(GetInstancePtr(), &config);
         ExitNow();
     }
 
@@ -259,7 +254,7 @@ otError NetworkData::ProcessPublish(Arg aArgs[])
         otExternalRouteConfig config;
 
         SuccessOrExit(error = Interpreter::ParseRoute(aArgs + 1, config));
-        error = otNetDataPublishExternalRoute(mInterpreter.mInstance, &config);
+        error = otNetDataPublishExternalRoute(GetInstancePtr(), &config);
         ExitNow();
     }
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
@@ -277,7 +272,7 @@ otError NetworkData::ProcessUnpublish(Arg aArgs[])
 #if OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
     if (aArgs[0] == "dnssrp")
     {
-        otNetDataUnpublishDnsSrpService(mInterpreter.mInstance);
+        otNetDataUnpublishDnsSrpService(GetInstancePtr());
         ExitNow();
     }
 #endif
@@ -288,7 +283,7 @@ otError NetworkData::ProcessUnpublish(Arg aArgs[])
 
         if (aArgs[0].ParseAsIp6Prefix(prefix) == OT_ERROR_NONE)
         {
-            error = otNetDataUnpublishPrefix(mInterpreter.mInstance, &prefix);
+            error = otNetDataUnpublishPrefix(GetInstancePtr(), &prefix);
             ExitNow();
         }
     }
@@ -309,9 +304,9 @@ otError NetworkData::ProcessRegister(Arg aArgs[])
     otError error = OT_ERROR_NONE;
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
-    SuccessOrExit(error = otBorderRouterRegister(mInterpreter.mInstance));
+    SuccessOrExit(error = otBorderRouterRegister(GetInstancePtr()));
 #else
-    SuccessOrExit(error = otServerRegister(mInterpreter.mInstance));
+    SuccessOrExit(error = otServerRegister(GetInstancePtr()));
 #endif
 
 exit:
@@ -339,11 +334,11 @@ otError NetworkData::ProcessSteeringData(Arg aArgs[])
 
     if (discerner.mLength)
     {
-        error = otNetDataSteeringDataCheckJoinerWithDiscerner(mInterpreter.mInstance, &discerner);
+        error = otNetDataSteeringDataCheckJoinerWithDiscerner(GetInstancePtr(), &discerner);
     }
     else
     {
-        error = otNetDataSteeringDataCheckJoiner(mInterpreter.mInstance, &addr);
+        error = otNetDataSteeringDataCheckJoiner(GetInstancePtr(), &addr);
     }
 
 exit:
@@ -355,9 +350,9 @@ void NetworkData::OutputPrefixes(void)
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otBorderRouterConfig  config;
 
-    mInterpreter.OutputLine("Prefixes:");
+    OutputLine("Prefixes:");
 
-    while (otNetDataGetNextOnMeshPrefix(mInterpreter.mInstance, &iterator, &config) == OT_ERROR_NONE)
+    while (otNetDataGetNextOnMeshPrefix(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
     {
         OutputPrefix(config);
     }
@@ -368,9 +363,9 @@ void NetworkData::OutputRoutes(void)
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otExternalRouteConfig config;
 
-    mInterpreter.OutputLine("Routes:");
+    OutputLine("Routes:");
 
-    while (otNetDataGetNextRoute(mInterpreter.mInstance, &iterator, &config) == OT_ERROR_NONE)
+    while (otNetDataGetNextRoute(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
     {
         OutputRoute(config);
     }
@@ -381,9 +376,9 @@ void NetworkData::OutputServices(void)
     otNetworkDataIterator iterator = OT_NETWORK_DATA_ITERATOR_INIT;
     otServiceConfig       config;
 
-    mInterpreter.OutputLine("Services:");
+    OutputLine("Services:");
 
-    while (otNetDataGetNextService(mInterpreter.mInstance, &iterator, &config) == OT_ERROR_NONE)
+    while (otNetDataGetNextService(GetInstancePtr(), &iterator, &config) == OT_ERROR_NONE)
     {
         OutputService(config);
     }
@@ -395,10 +390,9 @@ otError NetworkData::OutputBinary(void)
     uint8_t data[255];
     uint8_t len = sizeof(data);
 
-    SuccessOrExit(error = otNetDataGet(mInterpreter.mInstance, false, data, &len));
+    SuccessOrExit(error = otNetDataGet(GetInstancePtr(), false, data, &len));
 
-    mInterpreter.OutputBytes(data, static_cast<uint8_t>(len));
-    mInterpreter.OutputLine("");
+    OutputBytesLine(data, static_cast<uint8_t>(len));
 
 exit:
     return error;

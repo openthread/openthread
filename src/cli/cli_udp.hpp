@@ -38,19 +38,18 @@
 
 #include <openthread/udp.h>
 
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements a CLI-based UDP example.
  *
  */
-class UdpExample
+class UdpExample : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -58,10 +57,10 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutputContext The CLI console output context.
      *
      */
-    explicit UdpExample(Interpreter &aInterpreter);
+    explicit UdpExample(Output &aOutput);
 
     /**
      * This method interprets a list of CLI arguments.
@@ -103,8 +102,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 
     bool        mLinkSecurityEnabled;
     otUdpSocket mSocket;

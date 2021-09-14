@@ -48,7 +48,7 @@ otError Commissioner::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -67,7 +67,7 @@ otError Commissioner::ProcessAnnounce(Arg aArgs[])
     SuccessOrExit(error = aArgs[2].ParseAsUint16(period));
     SuccessOrExit(error = aArgs[3].ParseAsIp6Address(address));
 
-    error = otCommissionerAnnounceBegin(mInterpreter.mInstance, mask, count, period, &address);
+    error = otCommissionerAnnounceBegin(GetInstancePtr(), mask, count, period, &address);
 
 exit:
     return error;
@@ -88,7 +88,7 @@ otError Commissioner::ProcessEnergy(Arg aArgs[])
     SuccessOrExit(error = aArgs[3].ParseAsUint16(scanDuration));
     SuccessOrExit(error = aArgs[4].ParseAsIp6Address(address));
 
-    error = otCommissionerEnergyScan(mInterpreter.mInstance, mask, count, period, scanDuration, &address,
+    error = otCommissionerEnergyScan(GetInstancePtr(), mask, count, period, scanDuration, &address,
                                      &Commissioner::HandleEnergyReport, this);
 
 exit:
@@ -136,23 +136,22 @@ otError Commissioner::ProcessJoiner(Arg aArgs[])
 
         if (discerner.mLength)
         {
-            error = otCommissionerAddJoinerWithDiscerner(mInterpreter.mInstance, &discerner, aArgs[2].GetCString(),
-                                                         timeout);
+            error = otCommissionerAddJoinerWithDiscerner(GetInstancePtr(), &discerner, aArgs[2].GetCString(), timeout);
         }
         else
         {
-            error = otCommissionerAddJoiner(mInterpreter.mInstance, addrPtr, aArgs[2].GetCString(), timeout);
+            error = otCommissionerAddJoiner(GetInstancePtr(), addrPtr, aArgs[2].GetCString(), timeout);
         }
     }
     else if (aArgs[0] == "remove")
     {
         if (discerner.mLength)
         {
-            error = otCommissionerRemoveJoinerWithDiscerner(mInterpreter.mInstance, &discerner);
+            error = otCommissionerRemoveJoinerWithDiscerner(GetInstancePtr(), &discerner);
         }
         else
         {
-            error = otCommissionerRemoveJoiner(mInterpreter.mInstance, addrPtr);
+            error = otCommissionerRemoveJoiner(GetInstancePtr(), addrPtr);
         }
     }
     else
@@ -205,7 +204,7 @@ otError Commissioner::ProcessMgmtGet(Arg aArgs[])
         }
     }
 
-    error = otCommissionerSendMgmtGet(mInterpreter.mInstance, tlvs, static_cast<uint8_t>(length));
+    error = otCommissionerSendMgmtGet(GetInstancePtr(), tlvs, static_cast<uint8_t>(length));
 
 exit:
     return error;
@@ -267,7 +266,7 @@ otError Commissioner::ProcessMgmtSet(Arg aArgs[])
         }
     }
 
-    error = otCommissionerSendMgmtSet(mInterpreter.mInstance, &dataset, tlvs, tlvsLength);
+    error = otCommissionerSendMgmtSet(GetInstancePtr(), &dataset, tlvs, tlvsLength);
 
 exit:
     return error;
@@ -284,8 +283,7 @@ otError Commissioner::ProcessPanId(Arg aArgs[])
     SuccessOrExit(error = aArgs[1].ParseAsUint32(mask));
     SuccessOrExit(error = aArgs[2].ParseAsIp6Address(address));
 
-    error = otCommissionerPanIdQuery(mInterpreter.mInstance, panId, mask, &address, &Commissioner::HandlePanIdConflict,
-                                     this);
+    error = otCommissionerPanIdQuery(GetInstancePtr(), panId, mask, &address, &Commissioner::HandlePanIdConflict, this);
 
 exit:
     return error;
@@ -295,14 +293,14 @@ otError Commissioner::ProcessProvisioningUrl(Arg aArgs[])
 {
     // If aArgs[0] is empty, `GetCString() will return `nullptr`
     /// which will correctly clear the provisioning URL.
-    return otCommissionerSetProvisioningUrl(mInterpreter.mInstance, aArgs[0].GetCString());
+    return otCommissionerSetProvisioningUrl(GetInstancePtr(), aArgs[0].GetCString());
 }
 
 otError Commissioner::ProcessSessionId(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.OutputLine("%d", otCommissionerGetSessionId(mInterpreter.mInstance));
+    OutputLine("%d", otCommissionerGetSessionId(GetInstancePtr()));
 
     return OT_ERROR_NONE;
 }
@@ -311,8 +309,8 @@ otError Commissioner::ProcessStart(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    return otCommissionerStart(mInterpreter.mInstance, &Commissioner::HandleStateChanged,
-                               &Commissioner::HandleJoinerEvent, this);
+    return otCommissionerStart(GetInstancePtr(), &Commissioner::HandleStateChanged, &Commissioner::HandleJoinerEvent,
+                               this);
 }
 
 void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext)
@@ -322,7 +320,7 @@ void Commissioner::HandleStateChanged(otCommissionerState aState, void *aContext
 
 void Commissioner::HandleStateChanged(otCommissionerState aState)
 {
-    mInterpreter.OutputLine("Commissioner: %s", StateToString(aState));
+    OutputLine("Commissioner: %s", StateToString(aState));
 }
 
 const char *Commissioner::StateToString(otCommissionerState aState)
@@ -359,47 +357,47 @@ void Commissioner::HandleJoinerEvent(otCommissionerJoinerEvent aEvent,
 {
     OT_UNUSED_VARIABLE(aJoinerInfo);
 
-    mInterpreter.OutputFormat("Commissioner: Joiner ");
+    OutputFormat("Commissioner: Joiner ");
 
     switch (aEvent)
     {
     case OT_COMMISSIONER_JOINER_START:
-        mInterpreter.OutputFormat("start ");
+        OutputFormat("start ");
         break;
     case OT_COMMISSIONER_JOINER_CONNECTED:
-        mInterpreter.OutputFormat("connect ");
+        OutputFormat("connect ");
         break;
     case OT_COMMISSIONER_JOINER_FINALIZE:
-        mInterpreter.OutputFormat("finalize ");
+        OutputFormat("finalize ");
         break;
     case OT_COMMISSIONER_JOINER_END:
-        mInterpreter.OutputFormat("end ");
+        OutputFormat("end ");
         break;
     case OT_COMMISSIONER_JOINER_REMOVED:
-        mInterpreter.OutputFormat("remove ");
+        OutputFormat("remove ");
         break;
     }
 
     if (aJoinerId != nullptr)
     {
-        mInterpreter.OutputExtAddress(*aJoinerId);
+        OutputExtAddress(*aJoinerId);
     }
 
-    mInterpreter.OutputLine("");
+    OutputLine("");
 }
 
 otError Commissioner::ProcessStop(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    return otCommissionerStop(mInterpreter.mInstance);
+    return otCommissionerStop(GetInstancePtr());
 }
 
 otError Commissioner::ProcessState(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.OutputLine(StateToString(otCommissionerGetState(mInterpreter.mInstance)));
+    OutputLine(StateToString(otCommissionerGetState(GetInstancePtr())));
 
     return OT_ERROR_NONE;
 }
@@ -434,14 +432,14 @@ void Commissioner::HandleEnergyReport(uint32_t       aChannelMask,
 
 void Commissioner::HandleEnergyReport(uint32_t aChannelMask, const uint8_t *aEnergyList, uint8_t aEnergyListLength)
 {
-    mInterpreter.OutputFormat("Energy: %08x ", aChannelMask);
+    OutputFormat("Energy: %08x ", aChannelMask);
 
     for (uint8_t i = 0; i < aEnergyListLength; i++)
     {
-        mInterpreter.OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
+        OutputFormat("%d ", static_cast<int8_t>(aEnergyList[i]));
     }
 
-    mInterpreter.OutputLine("");
+    OutputLine("");
 }
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, void *aContext)
@@ -451,7 +449,7 @@ void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask, v
 
 void Commissioner::HandlePanIdConflict(uint16_t aPanId, uint32_t aChannelMask)
 {
-    mInterpreter.OutputLine("Conflict: %04x, %08x", aPanId, aChannelMask);
+    OutputLine("Conflict: %04x, %08x", aPanId, aChannelMask);
 }
 
 } // namespace Cli

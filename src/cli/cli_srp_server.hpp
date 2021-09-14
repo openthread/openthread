@@ -38,6 +38,7 @@
 
 #include <openthread/srp_server.h>
 
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -46,13 +47,11 @@
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the SRP Server CLI interpreter.
  *
  */
-class SrpServer
+class SrpServer : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -60,11 +59,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput  The CLI console output context.
      *
      */
-    explicit SrpServer(Interpreter &aInterpreter)
-        : mInterpreter(aInterpreter)
+    explicit SrpServer(Output &aOutput)
+        : OutputWrapper(aOutput)
     {
     }
 
@@ -80,6 +79,8 @@ public:
     otError Process(Arg aArgs[]);
 
 private:
+    static constexpr uint8_t kIndentSize = 4;
+
     struct Command
     {
         const char *mName;
@@ -108,8 +109,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 };
 
 } // namespace Cli
