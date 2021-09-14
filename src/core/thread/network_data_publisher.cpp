@@ -40,6 +40,7 @@
 #include "common/const_cast.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
+#include "common/logging.hpp"
 #include "common/random.hpp"
 #include "thread/network_data_local.hpp"
 #include "thread/network_data_service.hpp"
