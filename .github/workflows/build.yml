@@ -151,7 +151,7 @@ jobs:
         cd /tmp
         sudo rm /etc/apt/sources.list.d/* && sudo apt-get update
         sudo apt-get --no-install-recommends install -y lib32z1 ninja-build gcc-arm-linux-gnueabihf g++-arm-linux-gnueabihf
-        wget ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
+        wget --tries 4 --no-check-certificate --quiet ${{ matrix.gcc_download_url }} -O gcc-arm.tar.bz2
         tar xjf gcc-arm.tar.bz2
         # use the minimal required cmake version
         sudo pip3 install --system -U cmake==3.10.3
