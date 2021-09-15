@@ -221,7 +221,7 @@ public:
      * @retval kErrorParse    Encountered a malformed header when processing the message.
      *
      */
-    Error HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
+    Error HandleDatagram(Message &&aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost);
 
     /**
      * This method registers a callback to provide received raw IPv6 datagrams.

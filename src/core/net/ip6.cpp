@@ -33,6 +33,8 @@
 
 #include "ip6.hpp"
 
+#include <utility>
+
 #include "backbone_router/bbr_leader.hpp"
 #include "backbone_router/bbr_local.hpp"
 #include "backbone_router/ndproxy_table.hpp"
@@ -307,7 +309,7 @@ Error Ip6::InsertMplOption(Message &aMessage, Header &aHeader, MessageInfo &aMes
 
             if ((messageCopy = aMessage.Clone()) != nullptr)
             {
-                IgnoreError(HandleDatagram(*messageCopy, nullptr, nullptr, true));
+                IgnoreError(HandleDatagram(std::move(*messageCopy), nullptr, nullptr, true));
                 otLogInfoIp6("Message copy for indirect transmission to sleepy children");
             }
             else
@@ -540,7 +542,7 @@ void Ip6::HandleSendQueue(void)
     while ((message = mSendQueue.GetHead()) != nullptr)
     {
         mSendQueue.Dequeue(*message);
-        IgnoreError(HandleDatagram(*message, nullptr, nullptr, false));
+        IgnoreError(HandleDatagram(std::move(*message), nullptr, nullptr, false));
     }
 }
 
@@ -774,7 +776,7 @@ Error Ip6::HandleFragment(Message &aMessage, Netif *aNetif, MessageInfo &aMessag
 
         mReassemblyList.Dequeue(*message);
 
-        IgnoreError(HandleDatagram(*message, aNetif, aMessageInfo.mLinkInfo, aFromNcpHost));
+        IgnoreError(HandleDatagram(std::move(*message), aNetif, aMessageInfo.mLinkInfo, aFromNcpHost));
     }
 
 exit:
@@ -1101,7 +1103,7 @@ Error Ip6::SendRaw(Message &aMessage)
         SuccessOrExit(error = InsertMplOption(aMessage, header, messageInfo));
     }
 
-    error = HandleDatagram(aMessage, nullptr, nullptr, true);
+    error = HandleDatagram(std::move(aMessage), nullptr, nullptr, true);
     freed = true;
 
 exit:
@@ -1114,7 +1116,7 @@ exit:
     return error;
 }
 
-Error Ip6::HandleDatagram(Message &aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost)
+Error Ip6::HandleDatagram(Message &&aMessage, Netif *aNetif, const void *aLinkMessageInfo, bool aFromNcpHost)
 {
     Error       error;
     MessageInfo messageInfo;

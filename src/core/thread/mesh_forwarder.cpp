@@ -33,6 +33,8 @@
 
 #include "mesh_forwarder.hpp"
 
+#include <utility>
+
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -1316,7 +1318,7 @@ exit:
         if (message->GetOffset() >= message->GetLength())
         {
             mReassemblyList.Dequeue(*message);
-            IgnoreError(HandleDatagram(*message, aLinkInfo, aMacSource));
+            IgnoreError(HandleDatagram(std::move(*message), aLinkInfo, aMacSource));
         }
     }
     else
@@ -1445,7 +1447,7 @@ exit:
 
     if (error == kErrorNone)
     {
-        IgnoreError(HandleDatagram(*message, aLinkInfo, aMacSource));
+        IgnoreError(HandleDatagram(std::move(*message), aLinkInfo, aMacSource));
     }
     else
     {
@@ -1454,7 +1456,7 @@ exit:
     }
 }
 
-Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource)
+Error MeshForwarder::HandleDatagram(Message &&aMessage, const ThreadLinkInfo &aLinkInfo, const Mac::Address &aMacSource)
 {
     ThreadNetif &netif = Get<ThreadNetif>();
 
@@ -1469,7 +1471,7 @@ Error MeshForwarder::HandleDatagram(Message &aMessage, const ThreadLinkInfo &aLi
         mIpCounters.mRxSuccess++;
     }
 
-    return Get<Ip6::Ip6>().HandleDatagram(aMessage, &netif, &aLinkInfo, false);
+    return Get<Ip6::Ip6>().HandleDatagram(std::move(aMessage), &netif, &aLinkInfo, false);
 }
 
 Error MeshForwarder::GetFramePriority(const uint8_t *     aFrame,
