@@ -89,13 +89,7 @@ public:
     void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
 
 private:
-    union AesEcbContext
-    {
-        uint32_t            mKeyRef;
-        mbedtls_aes_context mContext;
-    };
-
-    AesEcbContext mContext;
+    otCryptoContext mContext;
 };
 
 /**

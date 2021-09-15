@@ -40,6 +40,7 @@
 #include <psa/crypto.h>
 
 #include "crypto/hmac_sha256.hpp"
+#include "openthread/platform/crypto.h"
 
 namespace ot {
 namespace Crypto {
@@ -58,6 +59,18 @@ namespace Crypto {
 class HkdfSha256
 {
 public:
+    /**
+     * Constructor to initialize the context.
+     *
+     */
+    HkdfSha256();
+
+    /**
+     * Destructor to free the context.
+     *
+     */
+    ~HkdfSha256();
+
     /**
      * This method performs the HKDF Extract step.
      *
@@ -85,13 +98,7 @@ public:
     void Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength);
 
 private:
-    union HkdfContext
-    {
-        HmacSha256::Hash               mPrk; // Pseudo-Random Key (derived from Extract step).
-        psa_key_derivation_operation_t mOperation;
-    };
-
-    HkdfContext mContext;
+    otCryptoContext mContext;
 };
 
 /**

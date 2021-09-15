@@ -38,9 +38,6 @@
 
 #include <stdint.h>
 
-#include <mbedtls/sha256.h>
-#include <psa/crypto.h>
-
 #include <openthread/crypto.h>
 #include <openthread/platform/crypto.h>
 
@@ -146,13 +143,7 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    union Sha256Context
-    {
-        psa_hash_operation_t   mOperation;
-        mbedtls_sha256_context mContext;
-    };
-
-    Sha256Context mContext;
+    otCryptoContext mContext;
 };
 
 /**
