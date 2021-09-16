@@ -30,7 +30,8 @@ add_library(openthread-cli-radio)
 
 target_compile_definitions(openthread-cli-radio
     PRIVATE
-        OPENTHREAD_RADIO_ALONE=1
+        OPENTHREAD_RADIO=1
+        OPENTHREAD_RADIO_CLI=1
 )
 
 target_compile_options(openthread-cli-radio PRIVATE
@@ -51,4 +52,3 @@ target_link_libraries(openthread-cli-radio
         ${OT_MBEDTLS}
         ot-config
 )
-

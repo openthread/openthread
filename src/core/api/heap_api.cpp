@@ -37,7 +37,7 @@
 
 #include "common/instance.hpp"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#if OPENTHREAD_RADIO
 
 void *otHeapCAlloc(size_t aCount, size_t aSize)
 {
@@ -59,7 +59,7 @@ void otHeapFree(void *aPointer)
     OT_ASSERT(false);
 }
 
-#else  // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#else  // OPENTHREAD_RADIO
 void *otHeapCAlloc(size_t aCount, size_t aSize)
 {
     return ot::Instance::HeapCAlloc(aCount, aSize);
@@ -69,4 +69,4 @@ void otHeapFree(void *aPointer)
 {
     ot::Instance::HeapFree(aPointer);
 }
-#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#endif // OPENTHREAD_RADIO

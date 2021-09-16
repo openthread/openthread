@@ -26,27 +26,28 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-radio-alone)
+add_library(openthread-radio-cli)
 
-target_compile_definitions(openthread-radio-alone PRIVATE
-    OPENTHREAD_RADIO_ALONE=1
+target_compile_definitions(openthread-radio-cli PRIVATE
+    OPENTHREAD_RADIO=1
+    OPENTHREAD_RADIO_CLI=1
 )
 
-target_compile_options(openthread-radio-alone PRIVATE
+target_compile_options(openthread-radio-cli PRIVATE
     ${OT_CFLAGS}
 )
 
-target_include_directories(openthread-radio-alone PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
+target_include_directories(openthread-radio-cli PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
 
-target_sources(openthread-radio-alone PRIVATE
+target_sources(openthread-radio-cli PRIVATE
     ${RADIO_COMMON_SOURCES}
 )
 
 if(OT_VENDOR_EXTENSION)
-  target_sources(openthread-radio-alone PRIVATE ${OT_VENDOR_EXTENSION})
+  target_sources(openthread-radio-cli PRIVATE ${OT_VENDOR_EXTENSION})
 endif()
 
-target_link_libraries(openthread-radio-alone
+target_link_libraries(openthread-radio-cli
     PRIVATE
         ${OT_MBEDTLS}
         ot-config

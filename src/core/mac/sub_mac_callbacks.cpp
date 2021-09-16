@@ -112,7 +112,7 @@ void SubMac::Callbacks::FrameCounterUpdated(uint32_t aFrameCounter)
     Get<KeyManager>().MacFrameCounterUpdated(aFrameCounter);
 }
 
-#elif OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#elif OPENTHREAD_RADIO
 
 void SubMac::Callbacks::ReceiveDone(RxFrame *aFrame, Error aError)
 {
@@ -147,7 +147,7 @@ void SubMac::Callbacks::FrameCounterUpdated(uint32_t aFrameCounter)
     OT_UNUSED_VARIABLE(aFrameCounter);
 }
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#endif // OPENTHREAD_RADIO
 
 } // namespace Mac
 } // namespace ot

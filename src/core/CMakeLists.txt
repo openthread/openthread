@@ -281,7 +281,7 @@ endif()
 if(OT_RCP)
     include(radio.cmake)
     if (OT_APP_CLI)
-        include(radio_alone.cmake)
+        include(radio_cli.cmake)
     endif()
 endif()
 

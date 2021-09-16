@@ -38,7 +38,7 @@
 
 #include <stdint.h>
 
-#if !OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE
+#if !OPENTHREAD_RADIO
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/entropy.h>
 #endif
@@ -80,7 +80,7 @@ public:
      */
     static uint32_t NonCryptoGetUint32(void);
 
-#if !OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE
+#if !OPENTHREAD_RADIO
     /**
      * This static method returns the initialized mbedtls_entropy_context.
      *
@@ -119,7 +119,7 @@ private:
         uint32_t mState;
     };
 
-#if !OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE
+#if !OPENTHREAD_RADIO
     class Entropy
     {
     public:
@@ -152,7 +152,7 @@ private:
 
     static uint16_t      sInitCount;
     static NonCryptoPrng sPrng;
-#if !OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE
+#if !OPENTHREAD_RADIO
     static Entropy       sEntropy;
     static CryptoCtrDrbg sCtrDrbg;
 #endif

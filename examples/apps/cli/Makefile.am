@@ -134,9 +134,9 @@ ot_cli_radio_CPPFLAGS                                                    = \
 
 ot_cli_radio_LDADD                                                       = \
     $(top_builddir)/src/cli/libopenthread-cli-radio.a                      \
-    $(top_builddir)/src/core/libopenthread-radio-alone.a                   \
+    $(top_builddir)/src/core/libopenthread-radio-cli.a                     \
     $(LDADD_COMMON)                                                        \
-    $(top_builddir)/src/core/libopenthread-radio-alone.a                   \
+    $(top_builddir)/src/core/libopenthread-radio-cli.a                     \
     $(LDADD_COMMON)                                                        \
     $(NULL)
 

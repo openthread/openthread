@@ -111,7 +111,7 @@ exit:
     return error;
 }
 
-#if !OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE
+#if !OPENTHREAD_RADIO
 
 // HMAC implementations
 OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(void *aContext, size_t aContextSize)
@@ -334,4 +334,4 @@ exit:
     return error;
 }
 
-#endif // #if !OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE
+#endif // #if !OPENTHREAD_RADIO

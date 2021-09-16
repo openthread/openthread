@@ -38,7 +38,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "radio/trel_link.hpp"
-#if (!OPENTHREAD_RADIO && !OPENTHREAD_RADIO_ALONE) || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#if !OPENTHREAD_RADIO || OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 #include "crypto/aes_ccm.hpp"
 #endif
 
@@ -1169,7 +1169,7 @@ void TxFrame::CopyFrom(const TxFrame &aFromFrame)
 
 void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 {
-#if (OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE) && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#if OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
     OT_UNUSED_VARIABLE(aExtAddress);
 #else
     uint32_t       frameCounter = 0;
@@ -1197,7 +1197,7 @@ void TxFrame::ProcessTransmitAesCcm(const ExtAddress &aExtAddress)
 
 exit:
     return;
-#endif // (OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE) && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
+#endif // OPENTHREAD_RADIO && !OPENTHREAD_CONFIG_MAC_SOFTWARE_TX_SECURITY_ENABLE
 }
 
 void TxFrame::GenerateImmAck(const RxFrame &aFrame, bool aIsFramePending)
@@ -1331,7 +1331,7 @@ exit:
 
 Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMaterial &aMacKey)
 {
-#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#if OPENTHREAD_RADIO
     OT_UNUSED_VARIABLE(aExtAddress);
     OT_UNUSED_VARIABLE(aMacKey);
 
@@ -1374,7 +1374,7 @@ Error RxFrame::ProcessReceiveAesCcm(const ExtAddress &aExtAddress, const KeyMate
 
 exit:
     return error;
-#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#endif // OPENTHREAD_RADIO
 }
 
 // LCOV_EXCL_START

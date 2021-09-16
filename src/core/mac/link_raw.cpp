@@ -33,7 +33,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #include <string.h>
 #include <openthread/diag.h>
@@ -295,4 +295,4 @@ void LinkRaw::RecordFrameTransmitStatus(const TxFrame &aFrame,
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE

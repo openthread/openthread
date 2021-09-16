@@ -40,7 +40,7 @@
 #endif
 
 #ifndef OPENTHREAD_RADIO
-#define OPENTHREAD_RADIO_ALONE 0
+#define OPENTHREAD_RADIO_CLI 0
 #endif
 
 /**

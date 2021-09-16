@@ -36,7 +36,7 @@
 
 #include "openthread-core-config.h"
 
-#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #include <openthread/link_raw.h>
 
@@ -311,7 +311,7 @@ private:
     otLinkRawTransmitDone   mTransmitDoneCallback;
     otLinkRawEnergyScanDone mEnergyScanDoneCallback;
 
-#if OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE
+#if OPENTHREAD_RADIO
     SubMac mSubMac;
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     SubMac &mSubMac;
@@ -321,6 +321,6 @@ private:
 } // namespace Mac
 } // namespace ot
 
-#endif // OPENTHREAD_RADIO || OPENTHREAD_RADIO_ALONE || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+#endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #endif // LINK_RAW_HPP_

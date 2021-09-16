@@ -36,7 +36,7 @@ target_include_directories(ot-cli-radio PRIVATE ${COMMON_INCLUDES})
 target_link_libraries(ot-cli-radio PRIVATE
     openthread-cli-radio
     ${OT_PLATFORM_LIB}
-    openthread-radio-alone
+    openthread-radio-cli
     ${OT_PLATFORM_LIB}
     openthread-cli-radio
     ${OT_MBEDTLS}
@@ -44,4 +44,5 @@ target_link_libraries(ot-cli-radio PRIVATE
 )
 
 install(TARGETS ot-cli-radio
-    DESTINATION bin)
+    DESTINATION bin
+)

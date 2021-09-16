@@ -41,7 +41,7 @@ endif
 if OPENTHREAD_ENABLE_RADIO_ONLY
 lib_LIBRARIES                             += libopenthread-radio.a
 if OPENTHREAD_ENABLE_CLI
-lib_LIBRARIES                             += libopenthread-radio-alone.a
+lib_LIBRARIES                             += libopenthread-radio-cli.a
 endif
 endif
 
@@ -55,15 +55,15 @@ libopenthread_radio_a_CPPFLAGS             = \
     -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=0                       \
     -DOPENTHREAD_RADIO=1                     \
-    -DOPENTHREAD_RADIO_ALONE=0               \
+    -DOPENTHREAD_RADIO_CLI=0                 \
     $(NULL)
 
-libopenthread_radio_alone_a_CPPFLAGS       = \
+libopenthread_radio_cli_a_CPPFLAGS         = \
     $(CPPFLAGS_COMMON)                       \
     -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=0                       \
-    -DOPENTHREAD_RADIO=0                     \
-    -DOPENTHREAD_RADIO_ALONE=1               \
+    -DOPENTHREAD_RADIO=1                     \
+    -DOPENTHREAD_RADIO_CLI=1                 \
     $(NULL)
 
 libopenthread_ftd_a_CPPFLAGS               = \
@@ -71,7 +71,6 @@ libopenthread_ftd_a_CPPFLAGS               = \
     -DOPENTHREAD_MTD=0                       \
     -DOPENTHREAD_FTD=1                       \
     -DOPENTHREAD_RADIO=0                     \
-    -DOPENTHREAD_RADIO_ALONE=0               \
     $(NULL)
 
 libopenthread_mtd_a_CPPFLAGS               = \
@@ -79,7 +78,6 @@ libopenthread_mtd_a_CPPFLAGS               = \
     -DOPENTHREAD_MTD=1                       \
     -DOPENTHREAD_FTD=0                       \
     -DOPENTHREAD_RADIO=0                     \
-    -DOPENTHREAD_RADIO_ALONE=0               \
     $(NULL)
 
 #------------------------------------------------------
@@ -363,7 +361,7 @@ libopenthread_radio_a_SOURCES              = \
     $(RADIO_SOURCES_COMMON)                  \
     $(NULL)
 
-libopenthread_radio_alone_a_SOURCES        = \
+libopenthread_radio_cli_a_SOURCES          = \
     $(RADIO_SOURCES_COMMON)                  \
     $(NULL)
 
@@ -395,7 +393,7 @@ nodist_libopenthread_radio_a_SOURCES       = \
     vendor_extension_temp.cpp                \
     $(NULL)
 
-nodist_libopenthread_radio_alone_a_SOURCES = \
+nodist_libopenthread_radio_cli_a_SOURCES   = \
     vendor_extension_temp.cpp                \
     $(NULL)
 

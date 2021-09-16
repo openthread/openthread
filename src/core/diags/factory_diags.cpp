@@ -66,7 +66,7 @@ otError otPlatDiagProcess(otInstance *aInstance,
 namespace ot {
 namespace FactoryDiags {
 
-#if OPENTHREAD_RADIO
+#if OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
 
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel},
@@ -142,8 +142,8 @@ extern "C" void otPlatDiagAlarmFired(otInstance *aInstance)
     otPlatDiagAlarmCallback(aInstance);
 }
 
-#else // OPENTHREAD_RADIO
-// For OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO_ALONE
+#else // OPENTHREAD_RADIO && !OPENTHREAD_RADIO_CLI
+// For OPENTHREAD_FTD, OPENTHREAD_MTD, OPENTHREAD_RADIO_CLI
 const struct Diags::Command Diags::sCommands[] = {
     {"channel", &Diags::ProcessChannel}, {"power", &Diags::ProcessPower}, {"radio", &Diags::ProcessRadio},
     {"repeat", &Diags::ProcessRepeat},   {"send", &Diags::ProcessSend},   {"start", &Diags::ProcessStart},

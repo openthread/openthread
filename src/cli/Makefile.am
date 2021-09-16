@@ -135,7 +135,6 @@ libopenthread_cli_ftd_a_CPPFLAGS =    \
     -DOPENTHREAD_MTD=0                \
     -DOPENTHREAD_FTD=1                \
     -DOPENTHREAD_RADIO=0              \
-    -DOPENTHREAD_RADIO_ALONE=0        \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
@@ -143,15 +142,14 @@ libopenthread_cli_mtd_a_CPPFLAGS =    \
     -DOPENTHREAD_MTD=1                \
     -DOPENTHREAD_FTD=0                \
     -DOPENTHREAD_RADIO=0              \
-    -DOPENTHREAD_RADIO_ALONE=0        \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
 libopenthread_cli_radio_a_CPPFLAGS =  \
     -DOPENTHREAD_MTD=0                \
     -DOPENTHREAD_FTD=0                \
-    -DOPENTHREAD_RADIO=0              \
-    -DOPENTHREAD_RADIO_ALONE=1        \
+    -DOPENTHREAD_RADIO=1              \
+    -DOPENTHREAD_RADIO_CLI=1          \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
