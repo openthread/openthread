@@ -40,7 +40,9 @@ namespace Crypto {
 
 AesEcb::AesEcb(void)
 {
-    Error err = otPlatCryptoAesInit(&mContext);
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    Error err             = otPlatCryptoAesInit(&mContext);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

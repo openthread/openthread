@@ -44,7 +44,9 @@ namespace Crypto {
 
 HkdfSha256::HkdfSha256()
 {
-    Error err = otPlatCryptoHkdfInit(&mContext);
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    Error err             = otPlatCryptoHkdfInit(&mContext);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

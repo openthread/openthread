@@ -42,6 +42,7 @@
 #include <openthread/platform/crypto.h>
 
 #include "common/clearable.hpp"
+#include "common/code_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
 
@@ -144,6 +145,7 @@ public:
 
 private:
     otCryptoContext mContext;
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE, uint64_t);
 };
 
 /**

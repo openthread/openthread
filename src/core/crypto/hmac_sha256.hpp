@@ -40,6 +40,7 @@
 
 #include <openthread/platform/crypto.h>
 
+#include "common/code_utils.hpp"
 #include "crypto/sha256.hpp"
 #include "crypto/storage.hpp"
 
@@ -132,6 +133,7 @@ public:
 
 private:
     otCryptoContext mContext;
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE, uint64_t);
 };
 
 /**

@@ -37,8 +37,7 @@
 
 #include "openthread-core-config.h"
 
-#include <psa/crypto.h>
-
+#include "common/code_utils.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "openthread/platform/crypto.h"
 
@@ -99,6 +98,7 @@ public:
 
 private:
     otCryptoContext mContext;
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE, uint64_t);
 };
 
 /**

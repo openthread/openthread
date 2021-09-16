@@ -460,6 +460,7 @@ HEADERS_COMMON                                  = \
     config/child_supervision.h                    \
     config/coap.h                                 \
     config/commissioner.h                         \
+    config/crypto.h                               \
     config/dataset_updater.h                      \
     config/dhcp6_client.h                         \
     config/dhcp6_server.h                         \

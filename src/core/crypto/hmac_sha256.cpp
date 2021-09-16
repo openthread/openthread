@@ -40,7 +40,9 @@ namespace Crypto {
 
 HmacSha256::HmacSha256(void)
 {
-    Error err = otPlatCryptoHmacSha256Init(&mContext);
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    Error err             = otPlatCryptoHmacSha256Init(&mContext);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

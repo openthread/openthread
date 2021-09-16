@@ -54,8 +54,6 @@ extern "C" {
  *
  */
 
-#define OT_CRYPTO_CONTEXT_IN_PLACE_STORAGE_SIZE 288
-
 /**
  * This enumeration defines the key types.
  *
@@ -124,8 +122,6 @@ typedef struct otCryptoContext
 {
     void *   mContext;     ///< Pointer to the context.
     uint16_t mContextSize; ///< The length of the context in bytes.
-    uint64_t mInPlaceStorage[OT_CRYPTO_CONTEXT_IN_PLACE_STORAGE_SIZE /
-                             sizeof(uint64_t)]; ///< In place storage for on-stack memory allocation.
 } otCryptoContext;
 
 /**

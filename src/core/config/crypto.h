@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,81 +26,47 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for performing AES-ECB computations.
- */
-
-#ifndef AES_ECB_HPP_
-#define AES_ECB_HPP_
-
-#include "openthread-core-config.h"
-
-#include <mbedtls/aes.h>
-#include <openthread/platform/crypto.h>
-
-#include "common/code_utils.hpp"
-#include "crypto/storage.hpp"
-
-namespace ot {
-namespace Crypto {
+#ifndef CONFIG_CRYPTO_H_
+#define CONFIG_CRYPTO_H_
 
 /**
- * @addtogroup core-security
+ * @def OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
  *
- * @{
+ * The size of the AES context byte array.
  *
  */
+#ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_AES_CONTEXT_SIZE 288
+#endif
 
 /**
- * This class implements AES ECB computation.
+ * @def OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
+ *
+ * The size of the HMAC_SHA256 context byte array.
  *
  */
-class AesEcb
-{
-public:
-    static constexpr uint8_t kBlockSize = 16; ///< AES-128 block size (bytes).
-
-    /**
-     * Constructor to initialize the mbedtls_aes_context.
-     *
-     */
-    AesEcb(void);
-
-    /**
-     * Destructor to free the mbedtls_aes_context.
-     *
-     */
-    ~AesEcb(void);
-
-    /**
-     * This method sets the key.
-     *
-     * @param[in]  aKey     Crypto Key used for ECB operation
-     *
-     */
-    void SetKey(const Key &aKey);
-
-    /**
-     * This method encrypts data.
-     *
-     * @param[in]   aInput   A pointer to the input buffer.
-     * @param[out]  aOutput  A pointer to the output buffer.
-     *
-     */
-    void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
-
-private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_AES_CONTEXT_SIZE, uint64_t);
-};
+#ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE 32
+#endif
 
 /**
- * @}
+ * @def OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
+ *
+ * The size of the HKDF context byte array.
  *
  */
+#ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE 288
+#endif
 
-} // namespace Crypto
-} // namespace ot
+/**
+ * @def OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
+ *
+ * The size of the SHA256 context byte array.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE 288
+#endif
 
-#endif // AES_ECB_HPP_
+#endif // CONFIG_CRYPTO_H_

@@ -45,6 +45,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "config/crypto.h"
 #include "crypto/hmac_sha256.hpp"
 #include "crypto/storage.hpp"
 
@@ -66,13 +67,9 @@ OT_TOOL_WEAK otError otPlatCryptoAesInit(otCryptoContext *aContext)
     mbedtls_aes_context *context;
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_aes_context), error = kErrorFailed);
 
-    static_assert(sizeof(aContext->mInPlaceStorage) >= sizeof(mbedtls_aes_context),
-                  "Cannot fit mbedtls_aes_context into in-place storage");
-
-    aContext->mContext     = aContext->mInPlaceStorage;
-    aContext->mContextSize = sizeof(aContext->mInPlaceStorage);
-    context                = static_cast<mbedtls_aes_context *>(aContext->mContext);
+    context = static_cast<mbedtls_aes_context *>(aContext->mContext);
     mbedtls_aes_init(context);
 
 exit:
@@ -121,8 +118,6 @@ OT_TOOL_WEAK otError otPlatCryptoAesFree(otCryptoContext *aContext)
 
     context = static_cast<mbedtls_aes_context *>(aContext->mContext);
     mbedtls_aes_free(context);
-    aContext->mContext     = nullptr;
-    aContext->mContextSize = 0;
 
 exit:
     return error;
@@ -137,13 +132,10 @@ OT_TOOL_WEAK otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext)
     const mbedtls_md_info_t *mdInfo = nullptr;
     mbedtls_md_context_t *   context;
 
-    static_assert(sizeof(aContext->mInPlaceStorage) >= sizeof(mbedtls_md_context_t),
-                  "Cannot fit mbedtls_md_context_t into in-place storage");
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_md_context_t), error = kErrorFailed);
 
-    aContext->mContext     = aContext->mInPlaceStorage;
-    aContext->mContextSize = sizeof(aContext->mInPlaceStorage);
-    context                = static_cast<mbedtls_md_context_t *>(aContext->mContext);
+    context = static_cast<mbedtls_md_context_t *>(aContext->mContext);
     mbedtls_md_init(context);
     mdInfo = mbedtls_md_info_from_type(MBEDTLS_MD_SHA256);
     VerifyOrExit((mbedtls_md_setup(context, mdInfo, 1) == 0), error = kErrorFailed);
@@ -220,13 +212,10 @@ otError otPlatCryptoHkdfInit(otCryptoContext *aContext)
 {
     Error error = kErrorNone;
 
-    static_assert(sizeof(aContext->mInPlaceStorage) >= sizeof(HmacSha256::Hash),
-                  "Cannot fit HmacSha256::Hash into in-place storage");
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
+    VerifyOrExit(aContext->mContextSize >= sizeof(HmacSha256::Hash), error = kErrorFailed);
 
-    aContext->mContext     = aContext->mInPlaceStorage;
-    aContext->mContextSize = sizeof(aContext->mInPlaceStorage);
-    new (aContext->mInPlaceStorage) HmacSha256::Hash();
+    new (aContext->mContext) HmacSha256::Hash();
 
 exit:
     return error;
@@ -340,13 +329,9 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Init(otCryptoContext *aContext)
     Error                   error = kErrorNone;
     mbedtls_sha256_context *context;
 
-    static_assert(sizeof(aContext->mInPlaceStorage) >= sizeof(mbedtls_sha256_context),
-                  "Cannot fit mbedtls_sha256_context into in-place storage");
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
 
-    aContext->mContext     = aContext->mInPlaceStorage;
-    aContext->mContextSize = sizeof(aContext->mInPlaceStorage);
-    context                = static_cast<mbedtls_sha256_context *>(aContext->mContext);
+    context = static_cast<mbedtls_sha256_context *>(aContext->mContext);
     mbedtls_sha256_init(context);
 
 exit:
