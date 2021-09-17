@@ -11,6 +11,8 @@ The number of entries recorded for each history list is configurable through a s
 Usage : `history [command] ...`
 
 - [help](#help)
+- [ipaddr](#ipaddr)
+- [ipmaddr](#ipmaddr)
 - [neighbor](#neighbor)
 - [netinfo](#netinfo)
 - [rx](#rx)
@@ -46,6 +48,8 @@ Print SRP client help menu.
 ```bash
 > history help
 help
+ipaddr
+ipmaddr
 neighbor
 netinfo
 rx
@@ -53,6 +57,92 @@ rxtx
 tx
 Done
 >
+```
+
+### ipaddr
+
+Usage `history ipaddr [list] [<num-entries>]`
+
+Print the unicast IPv6 address history. Each entry provides:
+
+- Event: Added or Removed.
+- Address: Unicast address along with its prefix length (in bits).
+- Origin: Thread, SLAAC, DHCPv6, or Manual.
+- Address Scope.
+- Flags: Preferred, Valid, and RLOC (whether the address is RLOC).
+
+Print the unicast IPv6 address history as table.
+
+```bash
+> history ipaddr
+| Age                  | Event   | Address / PrefixLength                      | Origin |Scope| P | V | R |
++----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
+|         00:00:04.991 | Removed | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | SLAAC  |  14 | Y | Y | N |
+|         00:00:44.647 | Added   | 2001:dead:beef:cafe:c4cb:caba:8d55:e30b/64  | SLAAC  |  14 | Y | Y | N |
+|         00:01:07.199 | Added   | fd00:0:0:0:0:0:0:1/64                       | Manual |  14 | Y | Y | N |
+|         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:fc00/64          | Thread |   3 | N | Y | N |
+|         00:02:17.885 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | Thread |   3 | N | Y | Y |
+|         00:02:20.107 | Removed | fdde:ad00:beef:0:0:ff:fe00:5400/64          | Thread |   3 | N | Y | Y |
+|         00:02:21.575 | Added   | fdde:ad00:beef:0:0:ff:fe00:5400/64          | Thread |   3 | N | Y | Y |
+|         00:02:21.575 | Added   | fdde:ad00:beef:0:ecea:c4fc:ad96:4655/64     | Thread |   3 | N | Y | N |
+|         00:02:23.904 | Added   | fe80:0:0:0:3c12:a4d2:fbe0:31ad/64           | Thread |   2 | Y | Y | N |
+Done
+```
+
+Print the unicast IPv6 address history as a list (the last 5 entries).
+
+```bash
+> history ipaddr list 5
+00:00:20.327 -> event:Removed address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:SLAAC scope:14 preferred:yes valid:yes rloc:no
+00:00:59.983 -> event:Added address:2001:dead:beef:cafe:c4cb:caba:8d55:e30b prefixlen:64 origin:SLAAC scope:14 preferred:yes valid:yes rloc:no
+00:01:22.535 -> event:Added address:fd00:0:0:0:0:0:0:1 prefixlen:64 origin:Manual scope:14 preferred:yes valid:yes rloc:no
+00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:fc00 prefixlen:64 origin:Thread scope:3 preferred:no valid:yes rloc:no
+00:02:33.221 -> event:Added address:fdde:ad00:beef:0:0:ff:fe00:5400 prefixlen:64 origin:Thread scope:3 preferred:no valid:yes rloc:yes
+Done
+```
+
+### ipmaddr
+
+Usage `history ipmaddr [list] [<num-entries>]`
+
+Print the multicast IPv6 address history. Each entry provides:
+
+- Event: Subscribed or Unsubscribed.
+- Address: Multicast address.
+- Origin: Thread, or Manual.
+
+Print the multicast IPv6 address history as table.
+
+```bash
+> history ipmaddr
+| Age                  | Event        | Multicast Address                       | Origin |
++----------------------+--------------+-----------------------------------------+--------+
+|         00:00:08.592 | Unsubscribed | ff05:0:0:0:0:0:0:1                      | Manual |
+|         00:01:25.353 | Subscribed   | ff05:0:0:0:0:0:0:1                      | Manual |
+|         00:01:54.953 | Subscribed   | ff03:0:0:0:0:0:0:2                      | Thread |
+|         00:01:54.953 | Subscribed   | ff02:0:0:0:0:0:0:2                      | Thread |
+|         00:01:59.329 | Subscribed   | ff33:40:fdde:ad00:beef:0:0:1            | Thread |
+|         00:01:59.329 | Subscribed   | ff32:40:fdde:ad00:beef:0:0:1            | Thread |
+|         00:02:01.129 | Subscribed   | ff03:0:0:0:0:0:0:fc                     | Thread |
+|         00:02:01.129 | Subscribed   | ff03:0:0:0:0:0:0:1                      | Thread |
+|         00:02:01.129 | Subscribed   | ff02:0:0:0:0:0:0:1                      | Thread |
+Done
+```
+
+Print the multicast IPv6 address history as a list.
+
+```bash
+> history ipmaddr list
+00:00:25.447 -> event:Unsubscribed address:ff05:0:0:0:0:0:0:1 origin:Manual
+00:01:42.208 -> event:Subscribed address:ff05:0:0:0:0:0:0:1 origin:Manual
+00:02:11.808 -> event:Subscribed address:ff03:0:0:0:0:0:0:2 origin:Thread
+00:02:11.808 -> event:Subscribed address:ff02:0:0:0:0:0:0:2 origin:Thread
+00:02:16.184 -> event:Subscribed address:ff33:40:fdde:ad00:beef:0:0:1 origin:Thread
+00:02:16.184 -> event:Subscribed address:ff32:40:fdde:ad00:beef:0:0:1 origin:Thread
+00:02:17.984 -> event:Subscribed address:ff03:0:0:0:0:0:0:fc origin:Thread
+00:02:17.984 -> event:Subscribed address:ff03:0:0:0:0:0:0:1 origin:Thread
+00:02:17.984 -> event:Subscribed address:ff02:0:0:0:0:0:0:1 origin:Thread
+Done
 ```
 
 ### neighbor

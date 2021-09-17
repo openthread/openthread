@@ -80,6 +80,130 @@ otError History::ParseArgs(Arg aArgs[], bool &aIsList, uint16_t &aNumEntries) co
     return aArgs[0].IsEmpty() ? OT_ERROR_NONE : OT_ERROR_INVALID_ARGS;
 }
 
+otError History::ProcessIpAddr(Arg aArgs[])
+{
+    static const char *const kEventStrings[] = {
+        "Added",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
+        "Removed" // (1) OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED
+    };
+
+    otError                                   error;
+    bool                                      isList;
+    uint16_t                                  numEntries;
+    otHistoryTrackerIterator                  iterator;
+    const otHistoryTrackerUnicastAddressInfo *info;
+    uint32_t                                  entryAge;
+    char                                      ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                      addressString[OT_IP6_ADDRESS_STRING_SIZE + 4];
+
+    static_assert(0 == OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED, "ADDRESS_EVENT_ADDED is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED, "ADDRESS_EVENT_REMOVED is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event   | Address / PrefixLen                  /123   | Origin |Scope| P | V | R |
+        // +----------------------+---------+---------------------------------------------+--------+-----+---+---+---+
+
+        static const char *const kUnicastAddrInfoTitles[] = {
+            "Age", "Event", "Address / PrefixLength", "Origin", "Scope", "P", "V", "R"};
+
+        static const uint8_t kUnicastAddrInfoColumnWidths[] = {22, 9, 45, 8, 5, 3, 3, 3};
+
+        mInterpreter.OutputTableHeader(kUnicastAddrInfoTitles, kUnicastAddrInfoColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateUnicastAddressHistory(mInterpreter.mInstance, &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+        otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
+
+        if (!isList)
+        {
+            sprintf(&addressString[strlen(addressString)], "/%d", info->mPrefixLength);
+
+            mInterpreter.OutputLine("| %20s | %-7s | %-43s | %-6s | %3d | %c | %c | %c |", ageString,
+                                    kEventStrings[info->mEvent], addressString,
+                                    AddressOriginToString(info->mAddressOrigin), info->mScope,
+                                    info->mPreferred ? 'Y' : 'N', info->mValid ? 'Y' : 'N', info->mRloc ? 'Y' : 'N');
+        }
+        else
+        {
+            mInterpreter.OutputLine(
+                "%s -> event:%s address:%s prefixlen:%d origin:%s scope:%d preferred:%s valid:%s rloc:%s", ageString,
+                kEventStrings[info->mEvent], addressString, info->mPrefixLength,
+                AddressOriginToString(info->mAddressOrigin), info->mScope, info->mPreferred ? "yes" : "no",
+                info->mValid ? "yes" : "no", info->mRloc ? "yes" : "no");
+        }
+    }
+
+exit:
+    return error;
+}
+
+otError History::ProcessIpMulticastAddr(Arg aArgs[])
+{
+    static const char *const kEventStrings[] = {
+        "Subscribed",  // (0) OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED
+        "Unsubscribed" // (1) OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED
+    };
+
+    otError                                     error;
+    bool                                        isList;
+    uint16_t                                    numEntries;
+    otHistoryTrackerIterator                    iterator;
+    const otHistoryTrackerMulticastAddressInfo *info;
+    uint32_t                                    entryAge;
+    char                                        ageString[OT_HISTORY_TRACKER_ENTRY_AGE_STRING_SIZE];
+    char                                        addressString[OT_IP6_ADDRESS_STRING_SIZE];
+
+    static_assert(0 == OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED, "ADDRESS_EVENT_ADDED is incorrect");
+    static_assert(1 == OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED, "ADDRESS_EVENT_REMOVED is incorrect");
+
+    SuccessOrExit(error = ParseArgs(aArgs, isList, numEntries));
+
+    if (!isList)
+    {
+        // | Age                  | Event        | Multicast Address                       | Origin |
+        // +----------------------+--------------+-----------------------------------------+--------+
+
+        static const char *const kMulticastAddrInfoTitles[] = {
+            "Age",
+            "Event",
+            "Multicast Address",
+            "Origin",
+        };
+
+        static const uint8_t kMulticastAddrInfoColumnWidths[] = {22, 14, 42, 8};
+
+        mInterpreter.OutputTableHeader(kMulticastAddrInfoTitles, kMulticastAddrInfoColumnWidths);
+    }
+
+    otHistoryTrackerInitIterator(&iterator);
+
+    for (uint16_t index = 0; (numEntries == 0) || (index < numEntries); index++)
+    {
+        info = otHistoryTrackerIterateMulticastAddressHistory(mInterpreter.mInstance, &iterator, &entryAge);
+        VerifyOrExit(info != nullptr);
+
+        otHistoryTrackerEntryAgeToString(entryAge, ageString, sizeof(ageString));
+        otIp6AddressToString(&info->mAddress, addressString, sizeof(addressString));
+
+        mInterpreter.OutputLine(isList ? "%s -> event:%s address:%s origin:%s" : "| %20s | %-12s | %-39s | %-6s |",
+                                ageString, kEventStrings[info->mEvent], addressString,
+                                AddressOriginToString(info->mAddressOrigin));
+    }
+
+exit:
+    return error;
+}
+
 otError History::ProcessNeighbor(Arg aArgs[])
 {
     static const char *const kEventString[] = {
@@ -201,6 +325,35 @@ otError History::ProcessRxTx(Arg aArgs[])
 otError History::ProcessTx(Arg aArgs[])
 {
     return ProcessRxTxHistory(kTx, aArgs);
+}
+
+const char *History::AddressOriginToString(uint8_t aOrigin)
+{
+    const char *str = "Unknown";
+
+    switch (aOrigin)
+    {
+    case OT_ADDRESS_ORIGIN_THREAD:
+        str = "Thread";
+        break;
+
+    case OT_ADDRESS_ORIGIN_SLAAC:
+        str = "SLAAC";
+        break;
+
+    case OT_ADDRESS_ORIGIN_DHCPV6:
+        str = "DHCPv6";
+        break;
+
+    case OT_ADDRESS_ORIGIN_MANUAL:
+        str = "Manual";
+        break;
+
+    default:
+        break;
+    }
+
+    return str;
 }
 
 const char *History::MessagePriorityToString(uint8_t aPriority)

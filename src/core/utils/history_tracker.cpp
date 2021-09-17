@@ -254,6 +254,42 @@ exit:
     return;
 }
 
+void HistoryTracker::RecordAddressEvent(Ip6::Netif::AddressEvent          aEvent,
+                                        const Ip6::Netif::UnicastAddress &aUnicastAddress)
+{
+    UnicastAddressInfo *entry = mUnicastAddressHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mAddress       = aUnicastAddress.GetAddress();
+    entry->mPrefixLength  = aUnicastAddress.GetPrefixLength();
+    entry->mAddressOrigin = aUnicastAddress.GetOrigin();
+    entry->mEvent         = (aEvent == Ip6::Netif::kAddressAdded) ? kAddressAdded : kAddressRemoved;
+    entry->mScope         = (aUnicastAddress.GetScope() & 0xf);
+    entry->mPreferred     = aUnicastAddress.mPreferred;
+    entry->mValid         = aUnicastAddress.mValid;
+    entry->mRloc          = aUnicastAddress.mRloc;
+
+exit:
+    return;
+}
+
+void HistoryTracker::RecordAddressEvent(Ip6::Netif::AddressEvent            aEvent,
+                                        const Ip6::Netif::MulticastAddress &aMulticastAddress,
+                                        Ip6::Netif::AddressOrigin           aAddressOrigin)
+{
+    MulticastAddressInfo *entry = mMulticastAddressHistory.AddNewEntry();
+
+    VerifyOrExit(entry != nullptr);
+
+    entry->mAddress       = aMulticastAddress.GetAddress();
+    entry->mAddressOrigin = aAddressOrigin;
+    entry->mEvent         = (aEvent == Ip6::Netif::kAddressAdded) ? kAddressAdded : kAddressRemoved;
+
+exit:
+    return;
+}
+
 void HistoryTracker::HandleNotifierEvents(Events aEvents)
 {
     if (aEvents.ContainsAny(kEventThreadRoleChanged | kEventThreadRlocAdded | kEventThreadRlocRemoved |
@@ -271,6 +307,8 @@ void HistoryTracker::HandleTimer(Timer &aTimer)
 void HistoryTracker::HandleTimer(void)
 {
     mNetInfoHistory.UpdateAgedEntries();
+    mUnicastAddressHistory.UpdateAgedEntries();
+    mMulticastAddressHistory.UpdateAgedEntries();
     mRxHistory.UpdateAgedEntries();
     mTxHistory.UpdateAgedEntries();
     mNeighborHistory.UpdateAgedEntries();

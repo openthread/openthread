@@ -91,6 +91,44 @@ typedef struct otHistoryTrackerNetworkInfo
 } otHistoryTrackerNetworkInfo;
 
 /**
+ * This enumeration defines the events for an IPv6 (unicast or multicast) address info (i.e., whether address is added
+ * or removed).
+ *
+ */
+typedef enum
+{
+    OT_HISTORY_TRACKER_ADDRESS_EVENT_ADDED   = 0, ///< Address is added.
+    OT_HISTORY_TRACKER_ADDRESS_EVENT_REMOVED = 1, ///< Address is removed.
+} otHistoryTrackerAddressEvent;
+
+/**
+ * This structure represent a unicast IPv6 address info.
+ *
+ */
+typedef struct otHistoryTrackerUnicastAddressInfo
+{
+    otIp6Address                 mAddress;       ///< The unicast IPv6 address.
+    uint8_t                      mPrefixLength;  ///< The Prefix length (in bits).
+    uint8_t                      mAddressOrigin; ///< The address origin (`OT_ADDRESS_ORIGIN_*` constants).
+    otHistoryTrackerAddressEvent mEvent;         ///< Indicates the event (address is added/removed).
+    uint8_t                      mScope : 4;     ///< The IPv6 scope.
+    bool                         mPreferred : 1; ///< If the address is preferred.
+    bool                         mValid : 1;     ///< If the address is valid.
+    bool                         mRloc : 1;      ///< If the address is an RLOC.
+} otHistoryTrackerUnicastAddressInfo;
+
+/**
+ * This structure represent an IPv6 multicast address info.
+ *
+ */
+typedef struct otHistoryTrackerMulticastAddressInfo
+{
+    otIp6Address                 mAddress;       ///< The IPv6 multicast address.
+    uint8_t                      mAddressOrigin; ///< The address origin (`OT_ADDRESS_ORIGIN_*` constants).
+    otHistoryTrackerAddressEvent mEvent;         ///< Indicates the event (address is added/removed).
+} otHistoryTrackerMulticastAddressInfo;
+
+/**
  * Constants representing message priority used in `otHistoryTrackerMessageInfo` struct.
  *
  */
@@ -190,6 +228,42 @@ void otHistoryTrackerInitIterator(otHistoryTrackerIterator *aIterator);
 const otHistoryTrackerNetworkInfo *otHistoryTrackerIterateNetInfoHistory(otInstance *              aInstance,
                                                                          otHistoryTrackerIterator *aIterator,
                                                                          uint32_t *                aEntryAge);
+
+/**
+ * This function iterates over the entries in the unicast address history list.
+ *
+ * @param[in]    aInstance   A pointer to the OpenThread instance.
+ * @param[inout] aIterator   A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]   aEntryAge   A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns A pointer to `otHistoryTrackerUnicastAddressInfo` entry or `NULL` if no more entries in the list.
+ *
+ */
+const otHistoryTrackerUnicastAddressInfo *otHistoryTrackerIterateUnicastAddressHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge);
+
+/**
+ * This function iterates over the entries in the multicast address history list.
+ *
+ * @param[in]    aInstance   A pointer to the OpenThread instance.
+ * @param[inout] aIterator   A pointer to an iterator. MUST be initialized or the behavior is undefined.
+ * @param[out]   aEntryAge   A pointer to a variable to output the entry's age. MUST NOT be NULL.
+ *                           Age is provided as the duration (in milliseconds) from when entry was recorded to
+ *                           @p aIterator initialization time. It is set to `OT_HISTORY_TRACKER_MAX_AGE` for entries
+ *                           older than max age.
+ *
+ * @returns A pointer to `otHistoryTrackerMulticastAddressInfo` entry or `NULL` if no more entries in the list.
+ *
+ */
+const otHistoryTrackerMulticastAddressInfo *otHistoryTrackerIterateMulticastAddressHistory(
+    otInstance *              aInstance,
+    otHistoryTrackerIterator *aIterator,
+    uint32_t *                aEntryAge);
 
 /**
  * This function iterates over the entries in the RX message history list.

@@ -96,6 +96,8 @@ private:
     };
 
     otError ProcessHelp(Arg aArgs[]);
+    otError ProcessIpAddr(Arg aArgs[]);
+    otError ProcessIpMulticastAddr(Arg aArgs[]);
     otError ProcessNetInfo(Arg aArgs[]);
     otError ProcessNeighbor(Arg aArgs[]);
     otError ProcessRx(Arg aArgs[]);
@@ -107,13 +109,20 @@ private:
     void    OutputRxTxEntryListFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
     void    OutputRxTxEntryTableFormat(const otHistoryTrackerMessageInfo &aInfo, uint32_t aEntryAge, bool aIsRx);
 
+    static const char *AddressOriginToString(uint8_t aOrigin);
     static const char *MessagePriorityToString(uint8_t aPriority);
     static const char *RadioTypeToString(const otHistoryTrackerMessageInfo &aInfo);
     static const char *MessageTypeToString(const otHistoryTrackerMessageInfo &aInfo);
 
     static constexpr Command sCommands[] = {
-        {"help", &History::ProcessHelp}, {"neighbor", &History::ProcessNeighbor}, {"netinfo", &History::ProcessNetInfo},
-        {"rx", &History::ProcessRx},     {"rxtx", &History::ProcessRxTx},         {"tx", &History::ProcessTx},
+        {"help", &History::ProcessHelp},
+        {"ipaddr", &History::ProcessIpAddr},
+        {"ipmaddr", &History::ProcessIpMulticastAddr},
+        {"neighbor", &History::ProcessNeighbor},
+        {"netinfo", &History::ProcessNetInfo},
+        {"rx", &History::ProcessRx},
+        {"rxtx", &History::ProcessRxTx},
+        {"tx", &History::ProcessTx},
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");

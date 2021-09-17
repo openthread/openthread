@@ -578,7 +578,7 @@ Error Client::ProcessIaAddress(Message &aMessage, uint16_t aOffset)
             idAssociation.mNetifAddress.mAddress       = option.GetAddress();
             idAssociation.mPreferredLifetime           = option.GetPreferredLifetime();
             idAssociation.mValidLifetime               = option.GetValidLifetime();
-            idAssociation.mNetifAddress.mAddressOrigin = OT_ADDRESS_ORIGIN_DHCPV6;
+            idAssociation.mNetifAddress.mAddressOrigin = Ip6::Netif::kOriginDhcp6;
             idAssociation.mNetifAddress.mPreferred     = option.GetPreferredLifetime() != 0;
             idAssociation.mNetifAddress.mValid         = option.GetValidLifetime() != 0;
             idAssociation.mStatus                      = kIaStatusSolicitReplied;
