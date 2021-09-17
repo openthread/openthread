@@ -43,6 +43,7 @@
 #include <openthread/thread.h>
 
 #include "common/clearable.hpp"
+#include "common/data.hpp"
 #include "common/equatable.hpp"
 #include "common/string.hpp"
 #include "crypto/storage.hpp"
@@ -583,8 +584,10 @@ public:
  * @note The char array does NOT need to be null terminated.
  *
  */
-class NameData
+class NameData : private Data<kWithUint8Length>
 {
+    friend class NetworkName;
+
 public:
     /**
      * This constructor initializes the NameData object.
@@ -593,11 +596,7 @@ public:
      * @param[in] aLength   The length (number of chars) in the buffer.
      *
      */
-    NameData(const char *aBuffer, uint8_t aLength)
-        : mBuffer(aBuffer)
-        , mLength(aLength)
-    {
-    }
+    NameData(const char *aBuffer, uint8_t aLength) { Init(aBuffer, aLength); }
 
     /**
      * This method returns the pointer to char buffer (not necessarily null terminated).
@@ -605,7 +604,7 @@ public:
      * @returns The pointer to the char buffer.
      *
      */
-    const char *GetBuffer(void) const { return mBuffer; }
+    const char *GetBuffer(void) const { return reinterpret_cast<const char *>(GetBytes()); }
 
     /**
      * This method returns the length (number of chars in buffer).
@@ -613,7 +612,7 @@ public:
      * @returns The name length.
      *
      */
-    uint8_t GetLength(void) const { return mLength; }
+    uint8_t GetLength(void) const { return Data<kWithUint8Length>::GetLength(); }
 
     /**
      * This method copies the name data into a given char buffer with a given size.
@@ -628,17 +627,13 @@ public:
      *
      */
     uint8_t CopyTo(char *aBuffer, uint8_t aMaxSize) const;
-
-private:
-    const char *mBuffer;
-    uint8_t     mLength;
 };
 
 /**
  * This structure represents an IEEE802.15.4 Network Name.
  *
  */
-class NetworkName : public otNetworkName
+class NetworkName : public otNetworkName, public Unequatable<NetworkName>
 {
 public:
     /**
