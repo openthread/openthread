@@ -136,7 +136,7 @@ void otInstanceResetRadioStack(otInstance *aInstance)
 
     instance.ResetRadioStack();
 }
-#endif // OPENTHREAD_RADIO
+#endif
 
 const char *otGetVersionString(void)
 {
