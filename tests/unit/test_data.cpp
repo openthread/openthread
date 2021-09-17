@@ -66,6 +66,7 @@ template <DataLengthType kDataLengthType> void TestData(void)
     data.CopyBytesTo(buffer);
     VerifyOrQuit(memcmp(buffer, kData, sizeof(kData)) == 0);
     VerifyOrQuit(buffer[sizeof(kData)] == 0);
+    VerifyOrQuit(data.MatchesBytesIn(buffer));
 
     data2.InitFrom(kDataCopy);
     VerifyOrQuit(data2.GetLength() == sizeof(kDataCopy));
@@ -74,7 +75,10 @@ template <DataLengthType kDataLengthType> void TestData(void)
     VerifyOrQuit(data.StartsWith(data2));
     VerifyOrQuit(data2.StartsWith(data));
 
-    data2.Init(kDataCopy, sizeof(kDataCopy) - 1);
+    data2.SetLength(sizeof(kDataCopy) - 1);
+    VerifyOrQuit(data2.GetLength() == sizeof(kDataCopy) - 1);
+    VerifyOrQuit(data2.GetBytes() == &kDataCopy[0]);
+    VerifyOrQuit(data2.MatchesBytesIn(kDataCopy));
     VerifyOrQuit(data != data2);
     VerifyOrQuit(data.StartsWith(data2));
     VerifyOrQuit(!data2.StartsWith(data));
