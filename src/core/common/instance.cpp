@@ -58,6 +58,10 @@ bool Instance::sDnsNameCompressionEnabled = true;
 #endif
 #endif
 
+#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
+otLogLevel Instance::sLogLevel = static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT);
+#endif
+
 Instance::Instance(void)
     : mTimerMilliScheduler(*this)
 #if OPENTHREAD_CONFIG_PLATFORM_USEC_TIMER_ENABLE
@@ -108,9 +112,6 @@ Instance::Instance(void)
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 #if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
     , mLinkRaw(*this)
-#endif
-#if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    , mLogLevel(static_cast<otLogLevel>(OPENTHREAD_CONFIG_LOG_LEVEL_INIT))
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     , mExtension(Extension::ExtensionBase::Init(*this))

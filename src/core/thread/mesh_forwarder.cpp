@@ -1812,7 +1812,7 @@ void MeshForwarder::LogMessage(MessageAction       aAction,
         break;
     }
 
-    VerifyOrExit(GetInstance().GetLogLevel() >= logLevel);
+    VerifyOrExit(Instance::GetLogLevel() >= logLevel);
 
     switch (aMessage.GetType())
     {
