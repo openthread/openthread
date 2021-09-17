@@ -439,7 +439,6 @@ typedef otMacKeyRef KeyRef;
  * This class represents a MAC Key Material.
  *
  */
-OT_TOOL_PACKED_BEGIN
 class KeyMaterial : public otMacKeyMaterial, public Unequatable<KeyMaterial>
 {
 public:
@@ -549,7 +548,7 @@ private:
 #endif
     Key &GetKey(void) { return static_cast<Key &>(mKeyMaterial.mKey); }
     void SetKey(const Key &aKey) { mKeyMaterial.mKey = aKey; }
-} OT_TOOL_PACKED_END;
+};
 
 /**
  * This structure represents an IEEE 802.15.4 Extended PAN Identifier.
