@@ -37,26 +37,23 @@
 
 #include <openthread/network_time.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otNetworkTimeStatus otNetworkTimeGet(otInstance *aInstance, uint64_t *aNetworkTime)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<TimeSync>().GetTime(*aNetworkTime);
+    return AsCoreType(aInstance).Get<TimeSync>().GetTime(*aNetworkTime);
 }
 
 otError otNetworkTimeSetSyncPeriod(otInstance *aInstance, uint16_t aTimeSyncPeriod)
 {
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Error error = kErrorNone;
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    instance.Get<TimeSync>().SetTimeSyncPeriod(aTimeSyncPeriod);
+    AsCoreType(aInstance).Get<TimeSync>().SetTimeSyncPeriod(aTimeSyncPeriod);
 
 exit:
     return error;
@@ -64,19 +61,16 @@ exit:
 
 uint16_t otNetworkTimeGetSyncPeriod(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<TimeSync>().GetTimeSyncPeriod();
+    return AsCoreType(aInstance).Get<TimeSync>().GetTimeSyncPeriod();
 }
 
 otError otNetworkTimeSetXtalThreshold(otInstance *aInstance, uint16_t aXtalThreshold)
 {
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Error error = kErrorNone;
 
-    VerifyOrExit(instance.Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
+    VerifyOrExit(AsCoreType(aInstance).Get<Mle::MleRouter>().IsDisabled(), error = kErrorInvalidState);
 
-    instance.Get<TimeSync>().SetXtalThreshold(aXtalThreshold);
+    AsCoreType(aInstance).Get<TimeSync>().SetXtalThreshold(aXtalThreshold);
 
 exit:
     return error;
@@ -84,16 +78,12 @@ exit:
 
 uint16_t otNetworkTimeGetXtalThreshold(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<TimeSync>().GetXtalThreshold();
+    return AsCoreType(aInstance).Get<TimeSync>().GetXtalThreshold();
 }
 
 void otNetworkTimeSyncSetCallback(otInstance *aInstance, otNetworkTimeSyncCallbackFn aCallback, void *aCallbackContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<TimeSync>().SetTimeSyncCallback(aCallback, aCallbackContext);
+    return AsCoreType(aInstance).Get<TimeSync>().SetTimeSyncCallback(aCallback, aCallbackContext);
 }
 
 #endif // OPENTHREAD_CONFIG_TIME_SYNC_ENABLE

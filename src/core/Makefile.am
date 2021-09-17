@@ -389,6 +389,7 @@ HEADERS_COMMON                                  = \
     coap/coap_secure.hpp                          \
     common/arg_macros.hpp                         \
     common/array.hpp                              \
+    common/as_core_type.hpp                       \
     common/bit_vector.hpp                         \
     common/clearable.hpp                          \
     common/code_utils.hpp                         \

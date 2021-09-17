@@ -67,6 +67,14 @@
 #include "net/udp6.hpp"
 #include "thread/network_data_publisher.hpp"
 
+struct otSrpServerHost
+{
+};
+
+struct otSrpServerService
+{
+};
+
 namespace ot {
 
 namespace Dns {
@@ -127,7 +135,7 @@ public:
      * This class implements a server-side SRP service.
      *
      */
-    class Service : public LinkedListEntry<Service>, private NonCopyable
+    class Service : public otSrpServerService, public LinkedListEntry<Service>, private NonCopyable
     {
         friend class Server;
         friend class LinkedList<Service>;
@@ -369,7 +377,7 @@ public:
      * This class implements the Host which registers services on the SRP server.
      *
      */
-    class Host : public LinkedListEntry<Host>, public InstanceLocator, private NonCopyable
+    class Host : public otSrpServerHost, public LinkedListEntry<Host>, public InstanceLocator, private NonCopyable
     {
         friend class LinkedListEntry<Host>;
         friend class Server;

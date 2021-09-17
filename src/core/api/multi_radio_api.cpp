@@ -37,9 +37,8 @@
 
 #include <openthread/multi_radio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
-#include "common/debug.hpp"
-#include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "thread/radio_selector.hpp"
 
@@ -49,12 +48,11 @@ otError otMultiRadioGetNeighborInfo(otInstance *              aInstance,
                                     const otExtAddress *      aExtAddress,
                                     otMultiRadioNeighborInfo *aNeighborInfo)
 {
-    Error     error    = kErrorNone;
-    Instance &instance = *static_cast<Instance *>(aInstance);
+    Error     error = kErrorNone;
     Neighbor *neighbor;
 
-    neighbor = instance.Get<NeighborTable>().FindNeighbor(*static_cast<const Mac::ExtAddress *>(aExtAddress),
-                                                          Neighbor::kInStateAnyExceptInvalid);
+    neighbor = AsCoreType(aInstance).Get<NeighborTable>().FindNeighbor(AsCoreType(aExtAddress),
+                                                                       Neighbor::kInStateAnyExceptInvalid);
     VerifyOrExit(neighbor != nullptr, error = kErrorNotFound);
 
     neighbor->PopulateMultiRadioInfo(*aNeighborInfo);

@@ -37,156 +37,114 @@
 
 #include <openthread/tcp.h>
 
-#include "common/instance.hpp"
-#include "net/tcp6.hpp"
+#include "common/as_core_type.hpp"
+#include "common/locator_getters.hpp"
 
 using namespace ot;
 
 otError otTcpEndpointInitialize(otInstance *aInstance, otTcpEndpoint *aEndpoint, otTcpEndpointInitializeArgs *aArgs)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.Initialize(*static_cast<Instance *>(aInstance), *aArgs);
+    return AsCoreType(aEndpoint).Initialize(AsCoreType(aInstance), *aArgs);
 }
 
 otInstance *otTcpEndpointGetInstance(otTcpEndpoint *aEndpoint)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return &endpoint.GetInstance();
+    return &AsCoreType(aEndpoint).GetInstance();
 }
 
 void *otTcpEndpointGetContext(otTcpEndpoint *aEndpoint)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.GetContext();
+    return AsCoreType(aEndpoint).GetContext();
 }
 
 const otSockAddr *otTcpGetLocalAddress(const otTcpEndpoint *aEndpoint)
 {
-    const Ip6::Tcp::Endpoint &endpoint = *static_cast<const Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return &endpoint.GetLocalAddress();
+    return &AsCoreType(aEndpoint).GetLocalAddress();
 }
 
 const otSockAddr *otTcpGetPeerAddress(const otTcpEndpoint *aEndpoint)
 {
-    const Ip6::Tcp::Endpoint &endpoint = *static_cast<const Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return &endpoint.GetPeerAddress();
+    return &AsCoreType(aEndpoint).GetPeerAddress();
 }
 
 otError otTcpBind(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.Bind(*static_cast<const Ip6::SockAddr *>(aSockName));
+    return AsCoreType(aEndpoint).Bind(AsCoreType(aSockName));
 }
 
 otError otTcpConnect(otTcpEndpoint *aEndpoint, const otSockAddr *aSockName, uint32_t aFlags)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.Connect(*static_cast<const Ip6::SockAddr *>(aSockName), aFlags);
+    return AsCoreType(aEndpoint).Connect(AsCoreType(aSockName), aFlags);
 }
 
 otError otTcpSendByReference(otTcpEndpoint *aEndpoint, otLinkedBuffer *aBuffer, uint32_t aFlags)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.SendByReference(*aBuffer, aFlags);
+    return AsCoreType(aEndpoint).SendByReference(*aBuffer, aFlags);
 }
 
 otError otTcpSendByExtension(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.SendByExtension(aNumBytes, aFlags);
+    return AsCoreType(aEndpoint).SendByExtension(aNumBytes, aFlags);
 }
 
 otError otTcpReceiveByReference(const otTcpEndpoint *aEndpoint, const otLinkedBuffer **aBuffer)
 {
-    const Ip6::Tcp::Endpoint &endpoint = *static_cast<const Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.ReceiveByReference(*aBuffer);
+    return AsCoreType(aEndpoint).ReceiveByReference(*aBuffer);
 }
 
 otError otTcpReceiveContiguify(otTcpEndpoint *aEndpoint)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.ReceiveContiguify();
+    return AsCoreType(aEndpoint).ReceiveContiguify();
 }
 
 otError otTcpCommitReceive(otTcpEndpoint *aEndpoint, size_t aNumBytes, uint32_t aFlags)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.CommitReceive(aNumBytes, aFlags);
+    return AsCoreType(aEndpoint).CommitReceive(aNumBytes, aFlags);
 }
 
 otError otTcpSendEndOfStream(otTcpEndpoint *aEndpoint)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.SendEndOfStream();
+    return AsCoreType(aEndpoint).SendEndOfStream();
 }
 
 otError otTcpAbort(otTcpEndpoint *aEndpoint)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.Abort();
+    return AsCoreType(aEndpoint).Abort();
 }
 
 otError otTcpEndpointDeinitialize(otTcpEndpoint *aEndpoint)
 {
-    Ip6::Tcp::Endpoint &endpoint = *static_cast<Ip6::Tcp::Endpoint *>(aEndpoint);
-
-    return endpoint.Deinitialize();
+    return AsCoreType(aEndpoint).Deinitialize();
 }
 
 otError otTcpListenerInitialize(otInstance *aInstance, otTcpListener *aListener, otTcpListenerInitializeArgs *aArgs)
 {
-    Ip6::Tcp::Listener &listener = *static_cast<Ip6::Tcp::Listener *>(aListener);
-
-    return listener.Initialize(*static_cast<Instance *>(aInstance), *aArgs);
+    return AsCoreType(aListener).Initialize(AsCoreType(aInstance), *aArgs);
 }
 
 otInstance *otTcpListenerGetInstance(otTcpListener *aListener)
 {
-    Ip6::Tcp::Listener &listener = *static_cast<Ip6::Tcp::Listener *>(aListener);
-
-    return &listener.GetInstance();
+    return &AsCoreType(aListener).GetInstance();
 }
 
 void *otTcpListenerGetContext(otTcpListener *aListener)
 {
-    Ip6::Tcp::Listener &listener = *static_cast<Ip6::Tcp::Listener *>(aListener);
-
-    return listener.GetContext();
+    return AsCoreType(aListener).GetContext();
 }
 
 otError otTcpListen(otTcpListener *aListener, const otSockAddr *aSockName)
 {
-    Ip6::Tcp::Listener &listener = *static_cast<Ip6::Tcp::Listener *>(aListener);
-
-    return listener.Listen(*static_cast<const Ip6::SockAddr *>(aSockName));
+    return AsCoreType(aListener).Listen(AsCoreType(aSockName));
 }
 
 otError otTcpStopListening(otTcpListener *aListener)
 {
-    Ip6::Tcp::Listener &listener = *static_cast<Ip6::Tcp::Listener *>(aListener);
-
-    return listener.StopListening();
+    return AsCoreType(aListener).StopListening();
 }
 
 otError otTcpListenerDeinitialize(otTcpListener *aListener)
 {
-    Ip6::Tcp::Listener &listener = *static_cast<Ip6::Tcp::Listener *>(aListener);
-
-    return listener.Deinitialize();
+    return AsCoreType(aListener).Deinitialize();
 }
 
 #endif // OPENTHREAD_CONFIG_TCP_ENABLE

@@ -37,7 +37,7 @@
 
 #include <openthread/dataset_updater.h>
 
-#include "common/instance.hpp"
+#include "common/as_core_type.hpp"
 #include "common/locator_getters.hpp"
 #include "meshcop/dataset_updater.hpp"
 
@@ -48,24 +48,18 @@ otError otDatasetUpdaterRequestUpdate(otInstance *                aInstance,
                                       otDatasetUpdaterCallback    aCallback,
                                       void *                      aContext)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<MeshCoP::DatasetUpdater>().RequestUpdate(*static_cast<const MeshCoP::Dataset::Info *>(aDataset),
-                                                                 aCallback, aContext);
+    return AsCoreType(aInstance).Get<MeshCoP::DatasetUpdater>().RequestUpdate(AsCoreType(aDataset), aCallback,
+                                                                              aContext);
 }
 
 void otDatasetUpdaterCancelUpdate(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<MeshCoP::DatasetUpdater>().CancelUpdate();
+    AsCoreType(aInstance).Get<MeshCoP::DatasetUpdater>().CancelUpdate();
 }
 
 bool otDatasetUpdaterIsUpdateOngoing(otInstance *aInstance)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<MeshCoP::DatasetUpdater>().IsUpdateOngoing();
+    return AsCoreType(aInstance).Get<MeshCoP::DatasetUpdater>().IsUpdateOngoing();
 }
 
 #endif // OPENTHREAD_CONFIG_DATASET_UPDATER_ENABLE && OPENTHREAD_FTD

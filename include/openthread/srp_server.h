@@ -59,13 +59,13 @@ extern "C" {
  * This opaque type represents a SRP service host.
  *
  */
-typedef void otSrpServerHost;
+typedef struct otSrpServerHost otSrpServerHost;
 
 /**
  * This opaque type represents a SRP service.
  *
  */
-typedef void otSrpServerService;
+typedef struct otSrpServerService otSrpServerService;
 
 /**
  * The ID of a SRP service update transaction on the SRP Server.
