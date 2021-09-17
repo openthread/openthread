@@ -190,8 +190,7 @@ void TestMacNetworkName(void)
     SuccessOrQuit(networkName.Set(Mac::NameData(kName2, sizeof(kName2))));
     CompareNetworkName(networkName, kName2);
 
-    SuccessOrQuit(networkName.Set(Mac::NameData(kEmptyName, 0)));
-    CompareNetworkName(networkName, kEmptyName);
+    VerifyOrQuit(networkName.Set(Mac::NameData(kEmptyName, 0)) == kErrorInvalidArgs);
 
     SuccessOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName))));
     CompareNetworkName(networkName, kLongName);
@@ -199,8 +198,7 @@ void TestMacNetworkName(void)
     VerifyOrQuit(networkName.Set(Mac::NameData(kLongName, sizeof(kLongName) - 1)) == kErrorAlready,
                  "failed to detect duplicate");
 
-    SuccessOrQuit(networkName.Set(Mac::NameData(nullptr, 0)));
-    CompareNetworkName(networkName, kEmptyName);
+    VerifyOrQuit(networkName.Set(kEmptyName) == kErrorInvalidArgs);
 
     SuccessOrQuit(networkName.Set(Mac::NameData(kName1, sizeof(kName1))));
 

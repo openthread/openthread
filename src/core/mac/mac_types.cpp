@@ -155,7 +155,6 @@ Error NetworkName::Set(const char *aNameString)
     Error    error;
     NameData data(aNameString, kMaxSize + 1);
 
-    VerifyOrExit(data.GetLength() >= 1, error = kErrorInvalidArgs);
     VerifyOrExit(IsValidUtf8String(aNameString), error = kErrorInvalidArgs);
 
     error = Set(data);
@@ -169,7 +168,7 @@ Error NetworkName::Set(const NameData &aNameData)
     Error   error  = kErrorNone;
     uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
 
-    VerifyOrExit(newLen <= kMaxSize, error = kErrorInvalidArgs);
+    VerifyOrExit((0 < newLen) && (newLen <= kMaxSize), error = kErrorInvalidArgs);
 
     // Ensure the new name does not match the current one.
     VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
