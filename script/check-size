@@ -114,6 +114,7 @@ nm_size()
 size_nrf52840_version()
 {
     local options=(
+        "-DOT_ANYCAST_LOCATOR=ON"
         "-DOT_BORDER_AGENT=ON"
         "-DOT_BORDER_ROUTER=ON"
         "-DOT_CHANNEL_MANAGER=ON"

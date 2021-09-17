@@ -173,6 +173,31 @@
 #endif
 
 /**
+ * @def OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+ *
+ * Define to 1 to enable TMF anycast locator functionality.
+ *
+ * This feature allows a device to determine the mesh local EID and RLOC16 of the closest destination of an anycast
+ * address (if any) through sending `TMF_ANYCAST_LOCATE` requests.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+#define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE 0
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
+ *
+ * Define to 1 to require the device to listen and respond to `TMF_ANYCAST_LOCATE` requests.
+ *
+ * This config is used only when `OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE` is enabled. It is enabled by default.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE
+#define OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_SEND_RESPONSE 1
+#endif
+
+/**
  * @def OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE
  *
  * Define to 1 for Thread 1.2 FTD device to register DUA of its MTD children registered

@@ -639,6 +639,13 @@ template <> inline PanIdQueryServer &Instance::Get(void)
     return mThreadNetif.mPanIdQuery;
 }
 
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+template <> inline AnycastLocator &Instance::Get(void)
+{
+    return mThreadNetif.mAnycastLocator;
+}
+#endif
+
 #if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE || OPENTHREAD_CONFIG_TMF_NETDATA_SERVICE_ENABLE
 template <> inline NetworkData::Local &Instance::Get(void)
 {

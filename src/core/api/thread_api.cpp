@@ -486,4 +486,19 @@ void otThreadRegisterParentResponseCallback(otInstance *                   aInst
     AsCoreType(aInstance).Get<Mle::MleRouter>().RegisterParentResponseStatsCallback(aCallback, aContext);
 }
 
+#if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
+otError otThreadLocateAnycastDestination(otInstance *                   aInstance,
+                                         const otIp6Address *           aAnycastAddress,
+                                         otThreadAnycastLocatorCallback aCallback,
+                                         void *                         aContext)
+{
+    return AsCoreType(aInstance).Get<AnycastLocator>().Locate(AsCoreType(aAnycastAddress), aCallback, aContext);
+}
+
+bool otThreadIsAnycastLocateInProgress(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<AnycastLocator>().IsInProgress();
+}
+#endif
+
 #endif // OPENTHREAD_FTD || OPENTHREAD_MTD

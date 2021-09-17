@@ -62,6 +62,10 @@ if (openthread_enable_core_config_args) {
       defines += [ "OPENTHREAD_CONFIG_ASSERT_ENABLE=0" ]
     }
 
+    if (openthread_config_anycast_locator_enable) {
+      defines += [ "OPENTHREAD_CONFIG_ANYCAST_LOCATOR_ENABLE=1" ]
+    }
+
     if (openthread_config_backbone_router_enable) {
       defines += [ "OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE=1" ]
     }
@@ -558,6 +562,8 @@ openthread_core_files = [
   "thread/announce_begin_server.hpp",
   "thread/announce_sender.cpp",
   "thread/announce_sender.hpp",
+  "thread/anycast_locator.cpp",
+  "thread/anycast_locator.hpp",
   "thread/child_mask.hpp",
   "thread/child_table.cpp",
   "thread/child_table.hpp",

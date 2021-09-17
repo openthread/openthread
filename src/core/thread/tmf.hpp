@@ -34,6 +34,8 @@
 #ifndef OT_CORE_THREAD_TMF_HPP_
 #define OT_CORE_THREAD_TMF_HPP_
 
+#include "openthread-core-config.h"
+
 #include "coap/coap.hpp"
 
 namespace ot {
