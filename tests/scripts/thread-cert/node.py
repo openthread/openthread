@@ -39,7 +39,7 @@ import time
 import traceback
 import unittest
 from ipaddress import IPv6Address, IPv6Network
-from typing import Union, Dict, Optional, List
+from typing import Union, Dict, Optional, List, Any
 
 import pexpect
 import pexpect.popen_spawn
@@ -1578,6 +1578,63 @@ class NodeImpl:
         cmd = 'service remove %s %s' % (enterpriseNumber, serviceData)
         self.send_command(cmd)
         self._expect_done()
+
+    def get_child_table(self) -> Dict[int, Dict[str, Any]]:
+        """Get the table of attached children."""
+        cmd = 'child table'
+        self.send_command(cmd)
+        output = self._expect_command_output(cmd)
+
+        #
+        # Example output:
+        # | ID  | RLOC16 | Timeout    | Age        | LQ In | C_VN |R|D|N|Ver|CSL|QMsgCnt| Extended MAC     |
+        # +-----+--------+------------+------------+-------+------+-+-+-+---+---+-------+------------------+
+        # |   1 | 0xc801 |        240 |         24 |     3 |  131 |1|0|0|  3| 0 |     0 | 4ecede68435358ac |
+        # |   2 | 0xc802 |        240 |          2 |     3 |  131 |0|0|0|  3| 1 |     0 | a672a601d2ce37d8 |
+        # Done
+        #
+
+        headers = self.__split_table_row(output[0])
+
+        table = {}
+        for line in output[2:]:
+            line = line.strip()
+            if not line:
+                continue
+
+            fields = self.__split_table_row(line)
+            col = lambda colname: self.__get_table_col(colname, headers, fields)
+
+            id = int(col("ID"))
+            r, d, n = int(col("R")), int(col("D")), int(col("N"))
+            mode = f'{"r" if r else ""}{"d" if d else ""}{"n" if n else ""}'
+
+            table[int(id)] = {
+                'id': int(id),
+                'rloc16': int(col('RLOC16'), 16),
+                'timeout': int(col('Timeout')),
+                'age': int(col('Age')),
+                'lq_in': int(col('LQ In')),
+                'c_vn': int(col('C_VN')),
+                'mode': mode,
+                'extaddr': col('Extended MAC'),
+                'ver': int(col('Ver')),
+                'csl': bool(int(col('CSL'))),
+                'qmsgcnt': int(col('QMsgCnt')),
+            }
+
+        return table
+
+    def __split_table_row(self, row: str) -> List[str]:
+        if not (row.startswith('|') and row.endswith('|')):
+            raise ValueError(row)
+
+        fields = row.split('|')
+        fields = [x.strip() for x in fields[1:-1]]
+        return fields
+
+    def __get_table_col(self, colname: str, headers: List[str], fields: List[str]) -> str:
+        return fields[headers.index(colname)]
 
     def __getOmrAddress(self):
         prefixes = [prefix.split('::')[0] for prefix in self.get_prefixes()]
