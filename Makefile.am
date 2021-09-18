@@ -37,6 +37,7 @@ AM_DISTCHECK_CONFIGURE_FLAGS        = \
     --enable-mtd                      \
     --enable-ncp                      \
     --enable-radio-only               \
+    --enable-radio-cli                \
     --with-examples=simulation        \
     $(NULL)
 

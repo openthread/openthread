@@ -118,10 +118,8 @@ if OPENTHREAD_ENABLE_MTD
 lib_LIBRARIES                      += libopenthread-cli-mtd.a
 endif
 
-if OPENTHREAD_ENABLE_RADIO_ONLY
-if OPENTHREAD_ENABLE_CLI
+if OPENTHREAD_ENABLE_RADIO_CLI
 lib_LIBRARIES                      += libopenthread-cli-radio.a
-endif
 endif
 
 CPPFLAGS_COMMON =                     \

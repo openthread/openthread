@@ -40,9 +40,10 @@ endif
 
 if OPENTHREAD_ENABLE_RADIO_ONLY
 lib_LIBRARIES                             += libopenthread-radio.a
-if OPENTHREAD_ENABLE_CLI
-lib_LIBRARIES                             += libopenthread-radio-cli.a
 endif
+
+if OPENTHREAD_ENABLE_RADIO_CLI
+lib_LIBRARIES                             += libopenthread-radio-cli.a
 endif
 
 CPPFLAGS_COMMON                            = \

@@ -120,12 +120,10 @@ ot_cli_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
-if OPENTHREAD_ENABLE_RADIO_ONLY
-if OPENTHREAD_ENABLE_CLI
+if OPENTHREAD_ENABLE_RADIO_CLI
 bin_PROGRAMS                                                            += \
     ot-cli-radio                                                           \
     $(NULL)
-endif
 endif
 
 ot_cli_radio_CPPFLAGS                                                    = \
