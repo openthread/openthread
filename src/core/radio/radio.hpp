@@ -244,6 +244,14 @@ public:
      */
     int8_t GetReceiveSensitivity(void);
 
+#if OPENTHREAD_RADIO
+    /**
+     * This method initializes the states of the Thread radio.
+     *
+     */
+    void Init(void);
+#endif
+
     /**
      * This method sets the PAN ID for address filtering.
      *

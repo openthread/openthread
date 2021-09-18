@@ -194,6 +194,14 @@ public:
      */
     void Reset(void);
 
+#if OPENTHREAD_RADIO
+    /**
+     * This method resets the internal states of the radio.
+     *
+     */
+    void ResetRadioStack(void);
+#endif
+
     /**
      * This method returns the active log level.
      *

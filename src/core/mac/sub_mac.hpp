@@ -81,6 +81,10 @@ namespace Mac {
 #error "OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE is required for OPENTHREAD_CONFIG_MAC_CSL_DEBUG_ENABLE."
 #endif
 
+#if OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
+class LinkRaw;
+#endif
+
 /**
  * This class implements the IEEE 802.15.4 MAC (sub-MAC).
  *
@@ -101,6 +105,7 @@ namespace Mac {
 class SubMac : public InstanceLocator, private NonCopyable
 {
     friend class Radio::Callbacks;
+    friend class LinkRaw;
 
 public:
     static constexpr int8_t kInvalidRssiValue = 127; ///< Invalid Received Signal Strength Indicator (RSSI) value.
@@ -590,6 +595,12 @@ private:
         kCslSleep,  // Radio in sleep.
     };
 #endif
+
+    /**
+     * This method initializes the states of the sub-MAC layer.
+     *
+     */
+    void Init(void);
 
     bool RadioSupportsCsmaBackoff(void) const
     {

@@ -52,32 +52,48 @@ namespace Mac {
 SubMac::SubMac(Instance &aInstance)
     : InstanceLocator(aInstance)
     , mRadioCaps(Get<Radio>().GetCaps())
-    , mState(kStateDisabled)
-    , mCsmaBackoffs(0)
-    , mTransmitRetries(0)
-    , mShortAddress(kShortAddrInvalid)
-    , mRxOnWhenBackoff(true)
-    , mEnergyScanMaxRssi(kInvalidRssiValue)
-    , mEnergyScanEndTime(0)
     , mTransmitFrame(Get<Radio>().GetTransmitBuffer())
     , mCallbacks(aInstance)
     , mPcapCallback(nullptr)
     , mPcapCallbackContext(nullptr)
-    , mFrameCounter(0)
-    , mKeyId(0)
     , mTimer(aInstance, SubMac::HandleTimer)
 #if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
-    , mCslPeriod(0)
-    , mCslChannel(0)
-    , mIsCslChannelSpecified(false)
-    , mCslLastSync(0)
     , mCslParentAccuracy(kCslWorstCrystalPpm)
     , mCslParentUncert(kCslWorstUncertainty)
-    , mCslState(kCslIdle)
     , mCslTimer(aInstance, SubMac::HandleCslTimer)
 #endif
 {
+    Init();
+}
+
+void SubMac::Init(void)
+{
+    mState           = kStateDisabled;
+    mCsmaBackoffs    = 0;
+    mTransmitRetries = 0;
+    mShortAddress    = kShortAddrInvalid;
     mExtAddress.Clear();
+    mRxOnWhenBackoff   = true;
+    mEnergyScanMaxRssi = kInvalidRssiValue;
+    mEnergyScanEndTime = Time{0};
+
+    mPrevKey.Clear();
+    mCurrKey.Clear();
+    mNextKey.Clear();
+
+    mFrameCounter = 0;
+    mKeyId        = 0;
+    mTimer.Stop();
+
+#if OPENTHREAD_CONFIG_MAC_CSL_RECEIVER_ENABLE
+    mCslPeriod             = 0;
+    mCslChannel            = 0;
+    mIsCslChannelSpecified = false;
+    mCslSampleTime         = TimeMicro{0};
+    mCslLastSync           = TimeMicro{0};
+    mCslState              = kCslIdle;
+    mCslTimer.Stop();
+#endif
 }
 
 otRadioCaps SubMac::GetCaps(void) const

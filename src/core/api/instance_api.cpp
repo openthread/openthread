@@ -129,6 +129,15 @@ otError otInstanceErasePersistentInfo(otInstance *aInstance)
 }
 #endif // OPENTHREAD_MTD || OPENTHREAD_FTD
 
+#if OPENTHREAD_RADIO
+void otInstanceResetRadioStack(otInstance *aInstance)
+{
+    Instance &instance = *static_cast<Instance *>(aInstance);
+
+    instance.ResetRadioStack();
+}
+#endif
+
 const char *otGetVersionString(void)
 {
     /**
