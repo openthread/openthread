@@ -51,6 +51,11 @@ namespace Mac {
 
 LinkRaw::LinkRaw(Instance &aInstance)
     : InstanceLocator(aInstance)
+    , mReceiveChannel(OPENTHREAD_CONFIG_DEFAULT_CHANNEL)
+    , mPanId(kPanIdBroadcast)
+    , mReceiveDoneCallback(nullptr)
+    , mTransmitDoneCallback(nullptr)
+    , mEnergyScanDoneCallback(nullptr)
 #if OPENTHREAD_RADIO
     , mSubMac(aInstance)
 #elif OPENTHREAD_CONFIG_LINK_RAW_ENABLE

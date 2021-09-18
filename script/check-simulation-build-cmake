@@ -42,6 +42,10 @@ build_all_features()
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1
 
+    # Build Thread 1.1 cli-radio
+    reset_source
+    "$(dirname "$0")"/cmake-build simulation -DOT_THREAD_VERSION=1.1 -DOT_DIAGNOSTIC=ON -DOT_APP_CLI=ON -DOT_APP_NCP=OFF -DOT_APP_RCP=OFF -DOT_FTD=OFF -DOT_MTD=OFF
+
     # Build Thread 1.2 with full features
     reset_source
     "$(dirname "$0")"/cmake-build simulation -DOT_OTNS=ON -DOT_SIMULATION_VIRTUAL_TIME=ON -DOT_THREAD_VERSION=1.2 -DOT_DUA=ON -DOT_MLR=ON -DOT_BACKBONE_ROUTER=ON -DOT_CSL_RECEIVER=ON

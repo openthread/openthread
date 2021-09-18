@@ -1,5 +1,5 @@
 #
-#  Copyright (c) 2020, The OpenThread Authors.
+#  Copyright (c) 2021, The OpenThread Authors.
 #  All rights reserved.
 #
 #  Redistribution and use in source and binary forms, with or without
@@ -26,28 +26,23 @@
 #  POSSIBILITY OF SUCH DAMAGE.
 #
 
-add_library(openthread-rcp)
-
-target_compile_definitions(openthread-rcp PRIVATE
-    OPENTHREAD_RADIO=1
-    OPENTHREAD_RADIO_CLI=0
-    OPENTHREAD_CONFIG_NCP_HDLC_ENABLE=1
+add_executable(ot-cli-radio
+    cli_uart.cpp
+    main.c
 )
 
-target_compile_options(openthread-rcp PRIVATE
-    ${OT_CFLAGS}
+target_include_directories(ot-cli-radio PRIVATE ${COMMON_INCLUDES})
+
+target_link_libraries(ot-cli-radio PRIVATE
+    openthread-cli-radio
+    ${OT_PLATFORM_LIB}
+    openthread-radio-cli
+    ${OT_PLATFORM_LIB}
+    openthread-cli-radio
+    ${OT_MBEDTLS}
+    ot-config
 )
 
-target_include_directories(openthread-rcp PUBLIC ${OT_PUBLIC_INCLUDES} PRIVATE ${COMMON_INCLUDES})
-
-target_sources(openthread-rcp PRIVATE ${COMMON_SOURCES})
-target_include_directories(openthread-rcp PRIVATE ${CMAKE_CURRENT_SOURCE_DIR})
-
-target_link_libraries(openthread-rcp
-    PUBLIC
-        openthread-radio
-    PRIVATE
-        openthread-hdlc
-        openthread-spinel-rcp
-        ot-config
+install(TARGETS ot-cli-radio
+    DESTINATION bin
 )

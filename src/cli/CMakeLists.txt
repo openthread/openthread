@@ -54,6 +54,10 @@ if(OT_MTD)
     include(mtd.cmake)
 endif()
 
+if(OT_RCP)
+    include(radio.cmake)
+endif()
+
 set_property(SOURCE cli_joiner.cpp
     APPEND PROPERTY COMPILE_DEFINITIONS "PACKAGE_VERSION=\"${OT_PACKAGE_VERSION}\""
 )

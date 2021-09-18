@@ -118,11 +118,22 @@ if OPENTHREAD_ENABLE_MTD
 lib_LIBRARIES                      += libopenthread-cli-mtd.a
 endif
 
+if OPENTHREAD_ENABLE_RADIO_CLI
+lib_LIBRARIES                      += libopenthread-cli-radio.a
+endif
+
 CPPFLAGS_COMMON =                     \
     -I$(top_srcdir)/include           \
     -I$(top_srcdir)/src               \
     -I$(top_srcdir)/src/core          \
     $(OPENTHREAD_TARGET_DEFINES)      \
+    $(NULL)
+
+libopenthread_cli_ftd_a_CPPFLAGS =    \
+    -DOPENTHREAD_MTD=0                \
+    -DOPENTHREAD_FTD=1                \
+    -DOPENTHREAD_RADIO=0              \
+    $(CPPFLAGS_COMMON)                \
     $(NULL)
 
 libopenthread_cli_mtd_a_CPPFLAGS =    \
@@ -132,10 +143,11 @@ libopenthread_cli_mtd_a_CPPFLAGS =    \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
-libopenthread_cli_ftd_a_CPPFLAGS =    \
+libopenthread_cli_radio_a_CPPFLAGS =  \
     -DOPENTHREAD_MTD=0                \
-    -DOPENTHREAD_FTD=1                \
-    -DOPENTHREAD_RADIO=0              \
+    -DOPENTHREAD_FTD=0                \
+    -DOPENTHREAD_RADIO=1              \
+    -DOPENTHREAD_RADIO_CLI=1          \
     $(CPPFLAGS_COMMON)                \
     $(NULL)
 
@@ -160,6 +172,10 @@ libopenthread_cli_ftd_a_SOURCES =     \
 
 libopenthread_cli_mtd_a_SOURCES =     \
     $(SOURCES_COMMON)                 \
+    $(NULL)
+
+libopenthread_cli_radio_a_SOURCES =   \
+    cli.cpp                           \
     $(NULL)
 
 noinst_HEADERS                      = \

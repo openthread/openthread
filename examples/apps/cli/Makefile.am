@@ -120,9 +120,40 @@ ot_cli_mtd_SOURCES                                                     = \
     $(SOURCES_COMMON)                                                    \
     $(NULL)
 
+if OPENTHREAD_ENABLE_RADIO_CLI
+bin_PROGRAMS                                                            += \
+    ot-cli-radio                                                           \
+    $(NULL)
+endif
+
+ot_cli_radio_CPPFLAGS                                                    = \
+    $(CPPFLAGS_COMMON)                                                     \
+    $(NULL)
+
+ot_cli_radio_LDADD                                                       = \
+    $(top_builddir)/src/cli/libopenthread-cli-radio.a                      \
+    $(top_builddir)/src/core/libopenthread-radio-cli.a                     \
+    $(LDADD_COMMON)                                                        \
+    $(top_builddir)/src/core/libopenthread-radio-cli.a                     \
+    $(LDADD_COMMON)                                                        \
+    $(NULL)
+
+ot_cli_radio_LDFLAGS                                                     = \
+    $(LDFLAGS_COMMON)                                                      \
+    $(NULL)
+
+ot_cli_radio_LIBTOOLFLAGS                                                = \
+    $(LIBTOOLFLAGS_COMMON)                                                 \
+    $(NULL)
+
+ot_cli_radio_SOURCES                                                     = \
+    $(SOURCES_COMMON)                                                      \
+    $(NULL)
+
 if OPENTHREAD_ENABLE_LINKER_MAP
 ot_cli_ftd_LDFLAGS                                                    += -Wl,-Map=ot-cli-ftd.map
 ot_cli_mtd_LDFLAGS                                                    += -Wl,-Map=ot-cli-mtd.map
+ot_cli_radio_LDFLAGS                                                  += -Wl,-Map=ot-cli-radio.map
 endif
 
 if OPENTHREAD_BUILD_COVERAGE
