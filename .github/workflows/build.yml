@@ -121,6 +121,25 @@ jobs:
       run: |
         script/check-scan-build
 
+  mbedtls3-build:
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        submodules: true
+    - name: Bootstrap
+      run: |
+        sudo apt-get --no-install-recommends install -y ninja-build libreadline-dev libncurses-dev
+        rm -rf third_party/mbedtls/repo
+    - uses: actions/checkout@v2
+      with:
+        repository: ARMmbed/mbedtls
+        ref: v3.0.0
+        path: third_party/mbedtls/repo
+    - name: Build
+      run: |
+        ./script/test build
+
   arm-gcc:
     name: arm-gcc-${{ matrix.gcc_ver }}
     runs-on: ubuntu-18.04
