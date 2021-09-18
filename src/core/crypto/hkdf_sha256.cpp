@@ -37,23 +37,28 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/error.hpp"
 #include "openthread/platform/crypto.h"
 
 namespace ot {
 namespace Crypto {
 
-HkdfSha256::HkdfSha256()
+HkdfSha256::HkdfSha256(void)
 {
+    Error err = kErrorNone;
+
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
-    Error err             = otPlatCryptoHkdfInit(&mContext);
+    err                   = otPlatCryptoHkdfInit(&mContext);
+
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
-HkdfSha256::~HkdfSha256()
+HkdfSha256::~HkdfSha256(void)
 {
     Error err = otPlatCryptoHkdfDeinit(&mContext);
+
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

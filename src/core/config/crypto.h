@@ -30,43 +30,25 @@
 #define CONFIG_CRYPTO_H_
 
 /**
- * @def OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
+ * @def OPENTHREAD_CONFIG_CRYPTO_LIB
  *
- * The size of the AES context byte array.
+ * Selects the crypto backend library for OpenThread.
+ *
+ * There are several options available
+ * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+ * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+ * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
  *
  */
-#ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_AES_CONTEXT_SIZE 288
+#ifndef OPENTHREAD_CONFIG_CRYPTO_LIB
+#define OPENTHREAD_CONFIG_CRYPTO_LIB OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
 #endif
 
-/**
- * @def OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
- *
- * The size of the HMAC_SHA256 context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE 32
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
- *
- * The size of the HKDF context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE 288
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
- *
- * The size of the SHA256 context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE 288
-#endif
+/** Use mbedtls v2.x as crypto library */
+#define OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2 0
+/** Use ARM Platform Security Library as crypto library */
+#define OPENTHREAD_CONFIG_CRYPTO_LIB_PSA 1
+/** Use platform provided crypto library */
+#define OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM 2
 
 #endif // CONFIG_CRYPTO_H_

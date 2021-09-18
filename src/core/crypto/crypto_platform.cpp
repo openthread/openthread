@@ -32,8 +32,6 @@
 
 #include "openthread-core-config.h"
 
-#include <new>
-
 #include <mbedtls/aes.h>
 #include <mbedtls/md.h>
 #include <mbedtls/sha256.h>
@@ -45,6 +43,7 @@
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
+#include "common/new.hpp"
 #include "config/crypto.h"
 #include "crypto/hmac_sha256.hpp"
 #include "crypto/storage.hpp"
@@ -361,7 +360,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Start(otCryptoContext *aContext)
     mbedtls_sha256_context *context;
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
-    VerifyOrExit(aContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+    VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
     context = static_cast<mbedtls_sha256_context *>(aContext->mContext);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)

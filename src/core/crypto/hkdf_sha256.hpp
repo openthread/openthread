@@ -38,6 +38,7 @@
 #include "openthread-core-config.h"
 
 #include "common/code_utils.hpp"
+#include "crypto/context_size.hpp"
 #include "crypto/hmac_sha256.hpp"
 #include "openthread/platform/crypto.h"
 
@@ -62,13 +63,13 @@ public:
      * Constructor to initialize the context.
      *
      */
-    HkdfSha256();
+    HkdfSha256(void);
 
     /**
      * Destructor to free the context.
      *
      */
-    ~HkdfSha256();
+    ~HkdfSha256(void);
 
     /**
      * This method performs the HKDF Extract step.

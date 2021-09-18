@@ -42,9 +42,12 @@ namespace Crypto {
 
 Sha256::Sha256(void)
 {
+    Error err = kErrorNone;
+
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
-    Error err             = otPlatCryptoSha256Init(&mContext);
+    err                   = otPlatCryptoSha256Init(&mContext);
+
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

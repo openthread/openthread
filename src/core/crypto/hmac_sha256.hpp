@@ -41,6 +41,7 @@
 #include <openthread/platform/crypto.h>
 
 #include "common/code_utils.hpp"
+#include "crypto/context_size.hpp"
 #include "crypto/sha256.hpp"
 #include "crypto/storage.hpp"
 

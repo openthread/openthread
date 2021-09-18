@@ -45,6 +45,7 @@
 #include "common/code_utils.hpp"
 #include "common/equatable.hpp"
 #include "common/type_traits.hpp"
+#include "crypto/context_size.hpp"
 
 namespace ot {
 

@@ -33,6 +33,7 @@
 
 #include "hmac_sha256.hpp"
 #include "common/debug.hpp"
+#include "common/error.hpp"
 #include "common/message.hpp"
 
 namespace ot {
@@ -40,9 +41,12 @@ namespace Crypto {
 
 HmacSha256::HmacSha256(void)
 {
+    Error err = kErrorNone;
+
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
-    Error err             = otPlatCryptoHmacSha256Init(&mContext);
+
+    err = otPlatCryptoHmacSha256Init(&mContext);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

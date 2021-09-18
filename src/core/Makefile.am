@@ -490,6 +490,7 @@ HEADERS_COMMON                                  = \
     config/tmf.h                                  \
     crypto/aes_ccm.hpp                            \
     crypto/aes_ecb.hpp                            \
+    crypto/context_size.hpp                       \
     crypto/ecdsa.hpp                              \
     crypto/hkdf_sha256.hpp                        \
     crypto/hmac_sha256.hpp                        \
