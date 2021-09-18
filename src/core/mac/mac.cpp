@@ -1001,7 +1001,8 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
     case Frame::kKeyIdMode2:
     {
         const uint8_t keySource[] = {0xff, 0xff, 0xff, 0xff};
-        aFrame.SetAesKey(static_cast<const KeyMaterial &>(mMode2KeyMaterial));
+
+        aFrame.SetAesKey(mMode2KeyMaterial);
 
         mKeyIdMode2FrameCounter++;
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
@@ -1700,7 +1701,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
         break;
 
     case Frame::kKeyIdMode2:
-        macKey     = static_cast<const KeyMaterial *>(&mMode2KeyMaterial);
+        macKey     = &mMode2KeyMaterial;
         extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
         break;
 
