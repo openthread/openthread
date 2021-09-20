@@ -36,10 +36,26 @@
 
 #include "openthread-core-config.h"
 
+#include <mbedtls/version.h>
+
 #include <openthread/instance.h>
 
 #include "common/error.hpp"
 #include "common/non_copyable.hpp"
+
+/**
+ * Keep forward-compatibility with Mbed TLS 3.0.
+ *
+ * Direct access to fields of structures declared in public headers is no longer
+ * supported. In Mbed TLS 3, the layout of structures is not considered part of
+ * the stable API, and minor versions (3.1, 3.2, etc.) may add, remove, rename,
+ * reorder or change the type of structure fields.
+ */
+#if (MBEDTLS_VERSION_NUMBER < 0x03000000)
+#ifndef MBEDTLS_PRIVATE
+#define MBEDTLS_PRIVATE(member) member
+#endif
+#endif
 
 namespace ot {
 namespace Crypto {

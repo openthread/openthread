@@ -86,7 +86,13 @@ Error P256::KeyPair::Parse(void *aContext) const
     mbedtls_pk_init(pk);
 
     VerifyOrExit(mbedtls_pk_setup(pk, mbedtls_pk_info_from_type(MBEDTLS_PK_ECKEY)) == 0, error = kErrorFailed);
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit(mbedtls_pk_parse_key(pk, mDerBytes, mDerLength, nullptr, 0, mbedtls_ctr_drbg_random,
+                                      Random::Crypto::MbedTlsContextGet()) == 0,
+                 error = kErrorParse);
+#else
     VerifyOrExit(mbedtls_pk_parse_key(pk, mDerBytes, mDerLength, nullptr, 0) == 0, error = kErrorParse);
+#endif
 
 exit:
     return error;
@@ -103,10 +109,11 @@ Error P256::KeyPair::GetPublicKey(PublicKey &aPublicKey) const
 
     keyPair = mbedtls_pk_ec(pk);
 
-    ret = mbedtls_mpi_write_binary(&keyPair->Q.X, aPublicKey.mData, kMpiSize);
+    ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), aPublicKey.mData, kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    ret = mbedtls_mpi_write_binary(&keyPair->Q.Y, aPublicKey.mData + kMpiSize, kMpiSize);
+    ret = mbedtls_mpi_write_binary(&keyPair->MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), aPublicKey.mData + kMpiSize,
+                                   kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
 exit:
@@ -136,11 +143,12 @@ Error P256::KeyPair::Sign(const Sha256::Hash &aHash, Signature &aSignature) cons
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x02130000)
-    ret = mbedtls_ecdsa_sign_det_ext(&ecdsa.grp, &r, &s, &ecdsa.d, aHash.GetBytes(), Sha256::Hash::kSize,
-                                     MBEDTLS_MD_SHA256, mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet());
+    ret = mbedtls_ecdsa_sign_det_ext(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
+                                     Sha256::Hash::kSize, MBEDTLS_MD_SHA256, mbedtls_ctr_drbg_random,
+                                     Random::Crypto::MbedTlsContextGet());
 #else
-    ret =
-        mbedtls_ecdsa_sign_det(&ecdsa.grp, &r, &s, &ecdsa.d, aHash.GetBytes(), Sha256::Hash::kSize, MBEDTLS_MD_SHA256);
+    ret = mbedtls_ecdsa_sign_det(&ecdsa.MBEDTLS_PRIVATE(grp), &r, &s, &ecdsa.MBEDTLS_PRIVATE(d), aHash.GetBytes(),
+                                 Sha256::Hash::kSize, MBEDTLS_MD_SHA256);
 #endif
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
@@ -173,14 +181,14 @@ Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSigna
     mbedtls_mpi_init(&r);
     mbedtls_mpi_init(&s);
 
-    ret = mbedtls_ecp_group_load(&ecdsa.grp, MBEDTLS_ECP_DP_SECP256R1);
+    ret = mbedtls_ecp_group_load(&ecdsa.MBEDTLS_PRIVATE(grp), MBEDTLS_ECP_DP_SECP256R1);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    ret = mbedtls_mpi_read_binary(&ecdsa.Q.X, GetBytes(), kMpiSize);
+    ret = mbedtls_mpi_read_binary(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(X), GetBytes(), kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-    ret = mbedtls_mpi_read_binary(&ecdsa.Q.Y, GetBytes() + kMpiSize, kMpiSize);
+    ret = mbedtls_mpi_read_binary(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Y), GetBytes() + kMpiSize, kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
-    ret = mbedtls_mpi_lset(&ecdsa.Q.Z, 1);
+    ret = mbedtls_mpi_lset(&ecdsa.MBEDTLS_PRIVATE(Q).MBEDTLS_PRIVATE(Z), 1);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
     ret = mbedtls_mpi_read_binary(&r, aSignature.mShared.mMpis.mR, kMpiSize);
@@ -189,7 +197,8 @@ Error P256::PublicKey::Verify(const Sha256::Hash &aHash, const Signature &aSigna
     ret = mbedtls_mpi_read_binary(&s, aSignature.mShared.mMpis.mS, kMpiSize);
     VerifyOrExit(ret == 0, error = MbedTls::MapError(ret));
 
-    ret = mbedtls_ecdsa_verify(&ecdsa.grp, aHash.GetBytes(), Sha256::Hash::kSize, &ecdsa.Q, &r, &s);
+    ret = mbedtls_ecdsa_verify(&ecdsa.MBEDTLS_PRIVATE(grp), aHash.GetBytes(), Sha256::Hash::kSize,
+                               &ecdsa.MBEDTLS_PRIVATE(Q), &r, &s);
     VerifyOrExit(ret == 0, error = kErrorSecurity);
 
 exit:
@@ -220,8 +229,14 @@ Error Sign(uint8_t *      aOutput,
     mbedtls_mpi_init(&sMpi);
 
     // Parse a private key in PEM format.
+#if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+    VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0, mbedtls_ctr_drbg_random,
+                                      Random::Crypto::MbedTlsContextGet()) == 0,
+                 error = kErrorInvalidArgs);
+#else
     VerifyOrExit(mbedtls_pk_parse_key(&pkCtx, aPrivateKey, aPrivateKeyLength, nullptr, 0) == 0,
                  error = kErrorInvalidArgs);
+#endif
     VerifyOrExit(mbedtls_pk_get_type(&pkCtx) == MBEDTLS_PK_ECKEY, error = kErrorInvalidArgs);
 
     keypair = mbedtls_pk_ec(pkCtx);
@@ -230,8 +245,9 @@ Error Sign(uint8_t *      aOutput,
     VerifyOrExit(mbedtls_ecdsa_from_keypair(&ctx, keypair) == 0, error = kErrorFailed);
 
     // Sign using ECDSA.
-    VerifyOrExit(mbedtls_ecdsa_sign(&ctx.grp, &rMpi, &sMpi, &ctx.d, aInputHash, aInputHashLength,
-                                    mbedtls_ctr_drbg_random, Random::Crypto::MbedTlsContextGet()) == 0,
+    VerifyOrExit(mbedtls_ecdsa_sign(&ctx.MBEDTLS_PRIVATE(grp), &rMpi, &sMpi, &ctx.MBEDTLS_PRIVATE(d), aInputHash,
+                                    aInputHashLength, mbedtls_ctr_drbg_random,
+                                    Random::Crypto::MbedTlsContextGet()) == 0,
                  error = kErrorFailed);
     VerifyOrExit(mbedtls_mpi_size(&rMpi) + mbedtls_mpi_size(&sMpi) <= aOutputLength, error = kErrorNoBufs);
 
