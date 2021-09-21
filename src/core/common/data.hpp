@@ -146,6 +146,14 @@ public:
     LengthType GetLength(void) const { return mLength; }
 
     /**
+     * This method sets the data length.
+     *
+     * @param[in] aLength   The data length (number of bytes).
+     *
+     */
+    void SetLength(LengthType aLength) { mLength = aLength; }
+
+    /**
      * This method copies the `Data` bytes to a given buffer.
      *
      * It is up to the caller to ensure that @p aBuffer has enough space for the current data length.
@@ -153,7 +161,20 @@ public:
      * @param[out] aBuffer  The buffer to copy the bytes into.
      *
      */
-    void CopyBytesTo(uint8_t *aBuffer) const { memcpy(aBuffer, mBuffer, mLength); }
+    void CopyBytesTo(void *aBuffer) const { memcpy(aBuffer, mBuffer, mLength); }
+
+    /**
+     * This method compares the `Data` content with the bytes from a given buffer.
+     *
+     * It is up to the caller to ensure that @p aBuffer has enough bytes to compare with the current data length.
+     *
+     * @param[in] aBuffer   A pointer to a buffer to compare with the data.
+     *
+     * @retval TRUE   The `Data` content matches the bytes in @p aBuffer.
+     * @retval FALSE  The `Data` content does not match the byes in @p aBuffer.
+     *
+     */
+    bool MatchesBytesIn(const void *aBuffer) const { return memcmp(mBuffer, aBuffer, mLength) == 0; }
 
     /**
      * This method overloads operator `==` to compare the `Data` content with the content from another one.
@@ -166,7 +187,7 @@ public:
      */
     bool operator==(const Data &aOtherData) const
     {
-        return (mLength == aOtherData.mLength) && (memcmp(mBuffer, aOtherData.mBuffer, mLength) == 0);
+        return (mLength == aOtherData.mLength) && MatchesBytesIn(aOtherData.mBuffer);
     }
 
     /**
@@ -183,7 +204,7 @@ public:
      */
     bool StartsWith(const Data &aOtherData) const
     {
-        return (mLength >= aOtherData.mLength) && (memcmp(mBuffer, aOtherData.mBuffer, aOtherData.mLength) == 0);
+        return (mLength >= aOtherData.mLength) && aOtherData.MatchesBytesIn(mBuffer);
     }
 
 private:

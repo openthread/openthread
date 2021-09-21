@@ -410,7 +410,7 @@ Error Message::AppendBytesFromMessage(const Message &aMessage, uint16_t aOffset,
 
     while (chunk.GetLength() > 0)
     {
-        WriteBytes(writeOffset, chunk.GetData(), chunk.GetLength());
+        WriteBytes(writeOffset, chunk.GetBytes(), chunk.GetLength());
         writeOffset += chunk.GetLength();
         aMessage.GetNextChunk(aLength, chunk);
     }
@@ -475,12 +475,12 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
 {
     // This method gets the first message chunk (contiguous data
     // buffer) corresponding to a given offset and length. On exit
-    // `aChunk` is updated such that `aChunk.GetData()` gives the
+    // `aChunk` is updated such that `aChunk.GetBytes()` gives the
     // pointer to the start of chunk and `aChunk.GetLength()` gives
     // its length. The `aLength` is also decreased by the chunk
     // length.
 
-    VerifyOrExit(aOffset < GetLength(), aChunk.mLength = 0);
+    VerifyOrExit(aOffset < GetLength(), aChunk.SetLength(0));
 
     if (aOffset + aLength >= GetLength())
     {
@@ -489,14 +489,13 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
 
     aOffset += GetReserved();
 
-    aChunk.mBuffer = this;
+    aChunk.SetBuffer(this);
 
     // Special case for the first buffer
 
     if (aOffset < kHeadBufferDataSize)
     {
-        aChunk.mData   = GetFirstData() + aOffset;
-        aChunk.mLength = kHeadBufferDataSize - aOffset;
+        aChunk.Init(GetFirstData() + aOffset, kHeadBufferDataSize - aOffset);
         ExitNow();
     }
 
@@ -506,13 +505,13 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
 
     while (true)
     {
-        aChunk.mBuffer = aChunk.mBuffer->GetNextBuffer();
-        OT_ASSERT(aChunk.mBuffer != nullptr);
+        aChunk.SetBuffer(aChunk.GetBuffer()->GetNextBuffer());
+
+        OT_ASSERT(aChunk.GetBuffer() != nullptr);
 
         if (aOffset < kBufferDataSize)
         {
-            aChunk.mData   = aChunk.mBuffer->GetData() + aOffset;
-            aChunk.mLength = kBufferDataSize - aOffset;
+            aChunk.Init(aChunk.GetBuffer()->GetData() + aOffset, kBufferDataSize - aOffset);
             ExitNow();
         }
 
@@ -520,12 +519,12 @@ void Message::GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) 
     }
 
 exit:
-    if (aChunk.mLength > aLength)
+    if (aChunk.GetLength() > aLength)
     {
-        aChunk.mLength = aLength;
+        aChunk.SetLength(aLength);
     }
 
-    aLength -= aChunk.mLength;
+    aLength -= aChunk.GetLength();
 }
 
 void Message::GetNextChunk(uint16_t &aLength, Chunk &aChunk) const
@@ -536,20 +535,20 @@ void Message::GetNextChunk(uint16_t &aLength, Chunk &aChunk) const
     // is decreased by the chunk length. If there is no more
     // chunk, `aChunk.GetLength()` would be zero.
 
-    VerifyOrExit(aLength > 0, aChunk.mLength = 0);
+    VerifyOrExit(aLength > 0, aChunk.SetLength(0));
 
-    aChunk.mBuffer = aChunk.mBuffer->GetNextBuffer();
-    OT_ASSERT(aChunk.mBuffer != nullptr);
+    aChunk.SetBuffer(aChunk.GetBuffer()->GetNextBuffer());
 
-    aChunk.mData   = aChunk.mBuffer->GetData();
-    aChunk.mLength = kBufferDataSize;
+    OT_ASSERT(aChunk.GetBuffer() != nullptr);
 
-    if (aChunk.mLength > aLength)
+    aChunk.Init(aChunk.GetBuffer()->GetData(), kBufferDataSize);
+
+    if (aChunk.GetLength() > aLength)
     {
-        aChunk.mLength = aLength;
+        aChunk.SetLength(aLength);
     }
 
-    aLength -= aChunk.mLength;
+    aLength -= aChunk.GetLength();
 
 exit:
     return;
@@ -564,7 +563,7 @@ uint16_t Message::ReadBytes(uint16_t aOffset, void *aBuf, uint16_t aLength) cons
 
     while (chunk.GetLength() > 0)
     {
-        memcpy(bufPtr, chunk.GetData(), chunk.GetLength());
+        chunk.CopyBytesTo(bufPtr);
         bufPtr += chunk.GetLength();
         GetNextChunk(aLength, chunk);
     }
@@ -587,7 +586,7 @@ bool Message::CompareBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
 
     while (chunk.GetLength() > 0)
     {
-        VerifyOrExit(memcmp(bufPtr, chunk.GetData(), chunk.GetLength()) == 0);
+        VerifyOrExit(chunk.MatchesBytesIn(bufPtr));
         bufPtr += chunk.GetLength();
         bytesToCompare -= chunk.GetLength();
         GetNextChunk(aLength, chunk);
@@ -609,7 +608,7 @@ bool Message::CompareBytes(uint16_t       aOffset,
 
     while (chunk.GetLength() > 0)
     {
-        VerifyOrExit(aOtherMessage.CompareBytes(aOtherOffset, chunk.GetData(), chunk.GetLength()));
+        VerifyOrExit(aOtherMessage.CompareBytes(aOtherOffset, chunk.GetBytes(), chunk.GetLength()));
         aOtherOffset += chunk.GetLength();
         bytesToCompare -= chunk.GetLength();
         GetNextChunk(aLength, chunk);
@@ -622,7 +621,7 @@ exit:
 void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
 {
     const uint8_t *bufPtr = reinterpret_cast<const uint8_t *>(aBuf);
-    WritableChunk  chunk;
+    MutableChunk   chunk;
 
     OT_ASSERT(aOffset + aLength <= GetLength());
 
@@ -630,7 +629,7 @@ void Message::WriteBytes(uint16_t aOffset, const void *aBuf, uint16_t aLength)
 
     while (chunk.GetLength() > 0)
     {
-        memmove(chunk.GetData(), bufPtr, chunk.GetLength());
+        memmove(chunk.GetBytes(), bufPtr, chunk.GetLength());
         bufPtr += chunk.GetLength();
         GetNextChunk(aLength, chunk);
     }
@@ -652,7 +651,7 @@ uint16_t Message::CopyTo(uint16_t aSourceOffset, uint16_t aDestinationOffset, ui
 
     while (chunk.GetLength() > 0)
     {
-        aMessage.WriteBytes(aDestinationOffset, chunk.GetData(), chunk.GetLength());
+        aMessage.WriteBytes(aDestinationOffset, chunk.GetBytes(), chunk.GetLength());
         aDestinationOffset += chunk.GetLength();
         bytesCopied += chunk.GetLength();
         GetNextChunk(aLength, chunk);

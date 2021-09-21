@@ -81,7 +81,7 @@ void HmacSha256::Update(const Message &aMessage, uint16_t aOffset, uint16_t aLen
 
     while (chunk.GetLength() > 0)
     {
-        Update(chunk.GetData(), chunk.GetLength());
+        Update(chunk.GetBytes(), chunk.GetLength());
         aMessage.GetNextChunk(aLength, chunk);
     }
 }

@@ -43,6 +43,7 @@
 
 #include "common/code_utils.hpp"
 #include "common/const_cast.hpp"
+#include "common/data.hpp"
 #include "common/encoding.hpp"
 #include "common/linked_list.hpp"
 #include "common/locator.hpp"
@@ -1208,30 +1209,31 @@ protected:
     void     SetReserved(uint16_t aReservedHeader) { GetMetadata().mReserved = aReservedHeader; }
 
 private:
-    struct Chunk
+    class Chunk : public Data<kWithUint16Length>
     {
-        const uint8_t *GetData(void) const { return mData; }
-        uint16_t       GetLength(void) const { return mLength; }
+    public:
+        const Buffer *GetBuffer(void) const { return mBuffer; }
+        void          SetBuffer(const Buffer *aBuffer) { mBuffer = aBuffer; }
 
-        const uint8_t *mData;   // Pointer to start of chunk data buffer.
-        uint16_t       mLength; // Length of chunk data (in bytes).
-        const Buffer * mBuffer; // Buffer containing the chunk
+    private:
+        const Buffer *mBuffer; // Buffer containing the chunk
     };
 
-    struct WritableChunk : public Chunk
+    class MutableChunk : public Chunk
     {
-        uint8_t *GetData(void) const { return AsNonConst(mData); }
+    public:
+        uint8_t *GetBytes(void) { return AsNonConst(Chunk::GetBytes()); }
     };
 
-    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &chunk) const;
+    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, Chunk &aChunk) const;
     void GetNextChunk(uint16_t &aLength, Chunk &aChunk) const;
 
-    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, WritableChunk &aChunk)
+    void GetFirstChunk(uint16_t aOffset, uint16_t &aLength, MutableChunk &aChunk)
     {
         AsConst(this)->GetFirstChunk(aOffset, aLength, static_cast<Chunk &>(aChunk));
     }
 
-    void GetNextChunk(uint16_t &aLength, WritableChunk &aChunk)
+    void GetNextChunk(uint16_t &aLength, MutableChunk &aChunk)
     {
         AsConst(this)->GetNextChunk(aLength, static_cast<Chunk &>(aChunk));
     }
