@@ -139,7 +139,7 @@ void Leader::HandleServerData(void *aContext, otMessage *aMessage, const otMessa
 
 void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    ThreadNetworkDataTlv networkData;
+    ThreadNetworkDataTlv networkDataTlv;
     uint16_t             rloc16;
 
     otLogInfoNetData("Received network data registration");
@@ -157,11 +157,15 @@ void Leader::HandleServerData(Coap::Message &aMessage, const Ip6::MessageInfo &a
         ExitNow();
     }
 
-    if (Tlv::FindTlv(aMessage, networkData) == kErrorNone)
+    if (Tlv::FindTlv(aMessage, networkDataTlv) == kErrorNone)
     {
-        VerifyOrExit(networkData.IsValid());
-        RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData.GetTlvs(),
-                            networkData.GetLength());
+        VerifyOrExit(networkDataTlv.IsValid());
+
+        {
+            NetworkData networkData(GetInstance(), networkDataTlv.GetTlvs(), networkDataTlv.GetLength());
+
+            RegisterNetworkData(aMessageInfo.GetPeerAddr().GetIid().GetLocator(), networkData);
+        }
     }
 
     SuccessOrExit(Get<Tmf::Agent>().SendEmptyAck(aMessage, aMessageInfo));
@@ -391,22 +395,20 @@ bool Leader::RlocMatch(uint16_t aFirstRloc16, uint16_t aSecondRloc16, MatchMode 
     return matched;
 }
 
-Error Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc16)
+Error Leader::Validate(const NetworkData &aNetworkData, uint16_t aRloc16)
 {
     // Validate that the `aTlvs` contains well-formed TLVs, sub-TLVs,
     // and entries all matching `aRloc16` (no other entry for other
     // RLOCs and no duplicates TLVs).
 
     Error                 error = kErrorNone;
-    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
+    const NetworkDataTlv *end   = aNetworkData.GetTlvsEnd();
 
-    for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    for (const NetworkDataTlv *cur = aNetworkData.GetTlvsStart(); cur < end; cur = cur->GetNext())
     {
-        uint8_t offset;
+        NetworkData validatedSegment(aNetworkData.GetInstance(), aNetworkData.GetTlvsStart(), cur);
 
         VerifyOrExit((cur + 1) <= end && cur->GetNext() <= end, error = kErrorParse);
-
-        offset = static_cast<uint8_t>(reinterpret_cast<const uint8_t *>(cur) - aTlvs);
 
         switch (cur->GetType())
         {
@@ -417,7 +419,7 @@ Error Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc
             VerifyOrExit(prefix->IsValid(), error = kErrorParse);
 
             // Ensure there is no duplicate Prefix TLVs with same prefix.
-            VerifyOrExit(FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aTlvs, offset) == nullptr,
+            VerifyOrExit(validatedSegment.FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength()) == nullptr,
                          error = kErrorParse);
 
             SuccessOrExit(error = ValidatePrefix(*prefix, aRloc16));
@@ -435,8 +437,8 @@ Error Leader::Validate(const uint8_t *aTlvs, uint8_t aTlvsLength, uint16_t aRloc
 
             // Ensure there is no duplicate Service TLV with same
             // Enterprise Number and Service Data.
-            VerifyOrExit(FindService(service->GetEnterpriseNumber(), serviceData, kServiceExactMatch, aTlvs, offset) ==
-                             nullptr,
+            VerifyOrExit(validatedSegment.FindService(service->GetEnterpriseNumber(), serviceData,
+                                                      kServiceExactMatch) == nullptr,
                          error = kErrorParse);
 
             SuccessOrExit(error = ValidateService(*service, aRloc16));
@@ -695,24 +697,23 @@ exit:
     return status;
 }
 
-void Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t aTlvsLength)
+void Leader::RegisterNetworkData(uint16_t aRloc16, const NetworkData &aNetworkData)
 {
-    Error                 error = kErrorNone;
-    const NetworkDataTlv *end   = reinterpret_cast<const NetworkDataTlv *>(aTlvs + aTlvsLength);
-    ChangedFlags          flags;
+    Error        error = kErrorNone;
+    ChangedFlags flags;
 
     VerifyOrExit(Get<RouterTable>().IsAllocated(Mle::Mle::RouterIdFromRloc16(aRloc16)), error = kErrorNoRoute);
 
-    // Validate that the `aTlvs` contains well-formed TLVs, sub-TLVs,
+    // Validate that the `aNetworkData` contains well-formed TLVs, sub-TLVs,
     // and entries all matching `aRloc16` (no other RLOCs).
-    SuccessOrExit(error = Validate(aTlvs, aTlvsLength, aRloc16));
+    SuccessOrExit(error = Validate(aNetworkData, aRloc16));
 
     // Remove all entries matching `aRloc16` excluding entries that are
-    // present in `aTlvs`
-    RemoveRloc(aRloc16, kMatchModeRloc16, aTlvs, aTlvsLength, flags);
+    // present in `aNetworkData`
+    RemoveRloc(aRloc16, kMatchModeRloc16, aNetworkData, flags);
 
     // Now add all new entries in `aTlvs` to Network Data.
-    for (const NetworkDataTlv *cur = reinterpret_cast<const NetworkDataTlv *>(aTlvs); cur < end; cur = cur->GetNext())
+    for (const NetworkDataTlv *cur = aNetworkData.GetTlvsStart(); cur < aNetworkData.GetTlvsEnd(); cur = cur->GetNext())
     {
         switch (cur->GetType())
         {
@@ -731,7 +732,7 @@ void Leader::RegisterNetworkData(uint16_t aRloc16, const uint8_t *aTlvs, uint8_t
 
     IncrementVersions(flags);
 
-    otDumpDebgNetData("add done", mTlvs, mLength);
+    otDumpDebgNetData("Register", GetBytes(), GetLength());
 
 exit:
 
@@ -1045,20 +1046,21 @@ void Leader::StopContextReuseTimer(uint8_t aContextId)
 
 void Leader::RemoveRloc(uint16_t aRloc16, MatchMode aMatchMode, ChangedFlags &aChangedFlags)
 {
-    RemoveRloc(aRloc16, aMatchMode, nullptr, 0, aChangedFlags);
+    NetworkData excludeNetworkData(GetInstance()); // Empty network data.
+
+    RemoveRloc(aRloc16, aMatchMode, excludeNetworkData, aChangedFlags);
 }
 
-void Leader::RemoveRloc(uint16_t       aRloc16,
-                        MatchMode      aMatchMode,
-                        const uint8_t *aExcludeTlvs,
-                        uint8_t        aExcludeTlvsLength,
-                        ChangedFlags & aChangedFlags)
+void Leader::RemoveRloc(uint16_t           aRloc16,
+                        MatchMode          aMatchMode,
+                        const NetworkData &aExcludeNetworkData,
+                        ChangedFlags &     aChangedFlags)
 {
     // Remove entries from Network Data matching `aRloc16` (using
     // `aMatchMode` to determine the match) but exclude any entries
-    // that are present in `aExcludeTlvs`. As entries are removed
-    // update `aChangedFlags` to indicate if Network Data (stable or
-    // not) got changed.
+    // that are present in `aExcludeNetworkData`. As entries are
+    // removed update `aChangedFlags` to indicate if Network Data
+    // (stable or not) got changed.
 
     NetworkDataTlv *cur = GetTlvsStart();
 
@@ -1070,7 +1072,7 @@ void Leader::RemoveRloc(uint16_t       aRloc16,
         {
             PrefixTlv *      prefix = static_cast<PrefixTlv *>(cur);
             const PrefixTlv *excludePrefix =
-                FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength(), aExcludeTlvs, aExcludeTlvsLength);
+                aExcludeNetworkData.FindPrefix(prefix->GetPrefix(), prefix->GetPrefixLength());
 
             RemoveRlocInPrefix(*prefix, aRloc16, aMatchMode, excludePrefix, aChangedFlags);
 
@@ -1091,8 +1093,8 @@ void Leader::RemoveRloc(uint16_t       aRloc16,
 
             service->GetServiceData(serviceData);
 
-            excludeService = FindService(service->GetEnterpriseNumber(), serviceData, kServiceExactMatch, aExcludeTlvs,
-                                         aExcludeTlvsLength);
+            excludeService =
+                aExcludeNetworkData.FindService(service->GetEnterpriseNumber(), serviceData, kServiceExactMatch);
 
             RemoveRlocInService(*service, aRloc16, aMatchMode, excludeService, aChangedFlags);
 
@@ -1111,8 +1113,6 @@ void Leader::RemoveRloc(uint16_t       aRloc16,
 
         cur = cur->GetNext();
     }
-
-    otDumpDebgNetData("remove done", mTlvs, mLength);
 }
 
 void Leader::RemoveRlocInPrefix(PrefixTlv &      aPrefix,

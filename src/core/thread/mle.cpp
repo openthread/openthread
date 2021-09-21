@@ -1199,7 +1199,7 @@ Error Mle::AppendNetworkData(Message &aMessage, bool aStableOnly)
     VerifyOrExit(!mRetrieveNewNetworkData, error = kErrorInvalidState);
 
     length = sizeof(networkData);
-    IgnoreError(Get<NetworkData::Leader>().GetNetworkData(aStableOnly, networkData, length));
+    IgnoreError(Get<NetworkData::Leader>().CopyNetworkData(aStableOnly, networkData, length));
 
     error = Tlv::Append<NetworkDataTlv>(aMessage, networkData, length);
 

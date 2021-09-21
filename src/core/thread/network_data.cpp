@@ -47,19 +47,30 @@
 namespace ot {
 namespace NetworkData {
 
-Error NetworkData::GetNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
+Error NetworkData::CopyNetworkData(bool aStable, uint8_t *aData, uint8_t &aDataLength) const
+{
+    Error              error;
+    MutableNetworkData netDataCopy(GetInstance(), aData, 0, aDataLength);
+
+    SuccessOrExit(error = CopyNetworkData(aStable, netDataCopy));
+    aDataLength = netDataCopy.GetLength();
+
+exit:
+    return error;
+}
+
+Error NetworkData::CopyNetworkData(bool aStable, MutableNetworkData &aNetworkData) const
 {
     Error error = kErrorNone;
 
-    OT_ASSERT(aData != nullptr);
-    VerifyOrExit(aDataLength >= mLength, error = kErrorNoBufs);
+    VerifyOrExit(aNetworkData.GetSize() >= mLength, error = kErrorNoBufs);
 
-    memcpy(aData, mTlvs, mLength);
-    aDataLength = mLength;
+    memcpy(aNetworkData.GetBytes(), mTlvs, mLength);
+    aNetworkData.SetLength(mLength);
 
     if (aStable)
     {
-        RemoveTemporaryData(aData, aDataLength);
+        aNetworkData.RemoveTemporaryData();
     }
 
 exit:
@@ -381,11 +392,11 @@ exit:
     return rval;
 }
 
-void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
+void MutableNetworkData::RemoveTemporaryData(void)
 {
-    NetworkDataTlv *cur = reinterpret_cast<NetworkDataTlv *>(aData);
+    NetworkDataTlv *cur = GetTlvsStart();
 
-    while (cur < reinterpret_cast<NetworkDataTlv *>(aData + aDataLength))
+    while (cur < GetTlvsEnd())
     {
         switch (cur->GetType())
         {
@@ -393,30 +404,28 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
         {
             PrefixTlv *prefix = static_cast<PrefixTlv *>(cur);
 
-            RemoveTemporaryData(aData, aDataLength, *prefix);
+            RemoveTemporaryDataIn(*prefix);
 
             if (prefix->GetSubTlvsLength() == 0)
             {
-                RemoveTlv(aData, aDataLength, cur);
+                RemoveTlv(cur);
                 continue;
             }
 
-            otDumpDebgNetData("remove prefix done", aData, aDataLength);
             break;
         }
 
         case NetworkDataTlv::kTypeService:
         {
             ServiceTlv *service = static_cast<ServiceTlv *>(cur);
-            RemoveTemporaryData(aData, aDataLength, *service);
+            RemoveTemporaryDataIn(*service);
 
             if (service->GetSubTlvsLength() == 0)
             {
-                RemoveTlv(aData, aDataLength, cur);
+                RemoveTlv(cur);
                 continue;
             }
 
-            otDumpDebgNetData("remove service done", aData, aDataLength);
             break;
         }
 
@@ -424,7 +433,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
             // remove temporary tlv
             if (!cur->IsStable())
             {
-                RemoveTlv(aData, aDataLength, cur);
+                RemoveTlv(cur);
                 continue;
             }
 
@@ -433,11 +442,9 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength)
 
         cur = cur->GetNext();
     }
-
-    otDumpDebgNetData("remove done", aData, aDataLength);
 }
 
-void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, PrefixTlv &aPrefix)
+void MutableNetworkData::RemoveTemporaryDataIn(PrefixTlv &aPrefix)
 {
     NetworkDataTlv *cur = aPrefix.GetSubTlvs();
 
@@ -494,13 +501,13 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Pref
         {
             // remove temporary tlv
             uint8_t subTlvSize = cur->GetSize();
-            RemoveTlv(aData, aDataLength, cur);
+            RemoveTlv(cur);
             aPrefix.SetSubTlvsLength(aPrefix.GetSubTlvsLength() - subTlvSize);
         }
     }
 }
 
-void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, ServiceTlv &aService)
+void MutableNetworkData::RemoveTemporaryDataIn(ServiceTlv &aService)
 {
     NetworkDataTlv *cur = aService.GetSubTlvs();
 
@@ -528,7 +535,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
         {
             // remove temporary tlv
             uint8_t subTlvSize = cur->GetSize();
-            RemoveTlv(aData, aDataLength, cur);
+            RemoveTlv(cur);
             aService.SetSubTlvsLength(aService.GetSubTlvsLength() - subTlvSize);
         }
     }
@@ -536,15 +543,7 @@ void NetworkData::RemoveTemporaryData(uint8_t *aData, uint8_t &aDataLength, Serv
 
 const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix, uint8_t aPrefixLength) const
 {
-    return FindPrefix(aPrefix, aPrefixLength, mTlvs, mLength);
-}
-
-const PrefixTlv *NetworkData::FindPrefix(const uint8_t *aPrefix,
-                                         uint8_t        aPrefixLength,
-                                         const uint8_t *aTlvs,
-                                         uint8_t        aTlvsLength)
-{
-    TlvIterator      tlvIterator(aTlvs, aTlvsLength);
+    TlvIterator      tlvIterator(mTlvs, mLength);
     const PrefixTlv *prefixTlv;
 
     while ((prefixTlv = tlvIterator.Iterate<PrefixTlv>()) != nullptr)
@@ -562,16 +561,7 @@ const ServiceTlv *NetworkData::FindService(uint32_t           aEnterpriseNumber,
                                            const ServiceData &aServiceData,
                                            ServiceMatchMode   aServiceMatchMode) const
 {
-    return FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode, mTlvs, mLength);
-}
-
-const ServiceTlv *NetworkData::FindService(uint32_t           aEnterpriseNumber,
-                                           const ServiceData &aServiceData,
-                                           ServiceMatchMode   aServiceMatchMode,
-                                           const uint8_t *    aTlvs,
-                                           uint8_t            aTlvsLength)
-{
-    TlvIterator       tlvIterator(aTlvs, aTlvsLength);
+    TlvIterator       tlvIterator(mTlvs, mLength);
     const ServiceTlv *serviceTlv;
 
     while ((serviceTlv = tlvIterator.Iterate<ServiceTlv>()) != nullptr)
@@ -604,7 +594,7 @@ const ServiceTlv *NetworkData::FindNextService(const ServiceTlv * aPrevServiceTl
         length = static_cast<uint8_t>((mTlvs + mLength) - tlvs);
     }
 
-    return FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode, tlvs, length);
+    return NetworkData(GetInstance(), tlvs, length).FindService(aEnterpriseNumber, aServiceData, aServiceMatchMode);
 }
 
 const ServiceTlv *NetworkData::FindNextThreadService(const ServiceTlv * aPrevServiceTlv,
@@ -641,7 +631,7 @@ exit:
     return match;
 }
 
-NetworkDataTlv *NetworkData::AppendTlv(uint16_t aTlvSize)
+NetworkDataTlv *MutableNetworkData::AppendTlv(uint16_t aTlvSize)
 {
     NetworkDataTlv *tlv;
 
@@ -654,7 +644,7 @@ exit:
     return tlv;
 }
 
-void NetworkData::Insert(void *aStart, uint8_t aLength)
+void MutableNetworkData::Insert(void *aStart, uint8_t aLength)
 {
     uint8_t *start = reinterpret_cast<uint8_t *>(aStart);
 
@@ -663,36 +653,27 @@ void NetworkData::Insert(void *aStart, uint8_t aLength)
     mLength += aLength;
 }
 
-void NetworkData::Remove(uint8_t *aData, uint8_t &aDataLength, uint8_t *aRemoveStart, uint8_t aRemoveLength)
+void MutableNetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
 {
-    uint8_t *dataEnd   = aData + aDataLength;
-    uint8_t *removeEnd = aRemoveStart + aRemoveLength;
+    uint8_t *end         = GetBytes() + mLength;
+    uint8_t *removeStart = reinterpret_cast<uint8_t *>(aRemoveStart);
+    uint8_t *removeEnd   = removeStart + aRemoveLength;
 
-    OT_ASSERT((aRemoveLength <= aDataLength) && (aData <= aRemoveStart) && (removeEnd <= dataEnd));
+    OT_ASSERT((aRemoveLength <= mLength) && (GetBytes() <= removeStart) && (removeEnd <= end));
 
-    memmove(aRemoveStart, removeEnd, static_cast<uint8_t>(dataEnd - removeEnd));
-    aDataLength -= aRemoveLength;
+    memmove(removeStart, removeEnd, static_cast<uint8_t>(end - removeEnd));
+    mLength -= aRemoveLength;
 }
 
-void NetworkData::RemoveTlv(uint8_t *aData, uint8_t &aDataLength, NetworkDataTlv *aTlv)
+void MutableNetworkData::RemoveTlv(NetworkDataTlv *aTlv)
 {
-    Remove(aData, aDataLength, reinterpret_cast<uint8_t *>(aTlv), aTlv->GetSize());
-}
-
-void NetworkData::Remove(void *aRemoveStart, uint8_t aRemoveLength)
-{
-    NetworkData::Remove(mTlvs, mLength, reinterpret_cast<uint8_t *>(aRemoveStart), aRemoveLength);
-}
-
-void NetworkData::RemoveTlv(NetworkDataTlv *aTlv)
-{
-    NetworkData::RemoveTlv(mTlvs, mLength, aTlv);
+    Remove(aTlv, aTlv->GetSize());
 }
 
 Error NetworkData::SendServerDataNotification(uint16_t              aRloc16,
                                               bool                  aAppendNetDataTlv,
                                               Coap::ResponseHandler aHandler,
-                                              void *                aContext)
+                                              void *                aContext) const
 {
     Error            error   = kErrorNone;
     Coap::Message *  message = nullptr;

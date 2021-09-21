@@ -63,7 +63,7 @@ namespace NetworkData {
  * This class implements the Thread Network Data maintained by the Leader.
  *
  */
-class LeaderBase : public NetworkData
+class LeaderBase : public MutableNetworkData
 {
 public:
     /**
@@ -73,7 +73,7 @@ public:
      *
      */
     explicit LeaderBase(Instance &aInstance)
-        : NetworkData(aInstance)
+        : MutableNetworkData(aInstance, mTlvBuffer, 0, sizeof(mTlvBuffer))
     {
         Reset();
     }
@@ -290,6 +290,8 @@ private:
                               uint16_t *          aRloc16) const;
     Error DefaultRouteLookup(const PrefixTlv &aPrefix, uint16_t *aRloc16) const;
     Error SteeringDataCheck(const FilterIndexes &aFilterIndexes) const;
+
+    uint8_t mTlvBuffer[kMaxSize];
 };
 
 /**
@@ -302,7 +304,11 @@ private:
 #if OPENTHREAD_MTD
 namespace ot {
 namespace NetworkData {
-typedef class LeaderBase Leader;
+class Leader : public LeaderBase
+{
+public:
+    using LeaderBase::LeaderBase;
+};
 } // namespace NetworkData
 } // namespace ot
 #elif OPENTHREAD_FTD
