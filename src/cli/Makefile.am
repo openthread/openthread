@@ -160,6 +160,7 @@ SOURCES_COMMON =                      \
     cli_history.cpp                   \
     cli_joiner.cpp                    \
     cli_network_data.cpp              \
+    cli_output.cpp                    \
     cli_srp_client.cpp                \
     cli_srp_server.cpp                \
     cli_tcp.cpp                       \
@@ -176,6 +177,7 @@ libopenthread_cli_mtd_a_SOURCES =     \
 
 libopenthread_cli_radio_a_SOURCES =   \
     cli.cpp                           \
+    cli_output.cpp                    \
     $(NULL)
 
 noinst_HEADERS                      = \
@@ -188,6 +190,7 @@ noinst_HEADERS                      = \
     cli_history.hpp                   \
     cli_joiner.hpp                    \
     cli_network_data.hpp              \
+    cli_output.hpp                    \
     cli_srp_client.hpp                \
     cli_srp_server.hpp                \
     cli_tcp.hpp                       \

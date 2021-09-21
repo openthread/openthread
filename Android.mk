@@ -508,6 +508,7 @@ LOCAL_SRC_FILES                            := \
     src/cli/cli_history.cpp                   \
     src/cli/cli_joiner.cpp                    \
     src/cli/cli_network_data.cpp              \
+    src/cli/cli_output.cpp                    \
     src/cli/cli_srp_client.cpp                \
     src/cli/cli_srp_server.cpp                \
     src/cli/cli_tcp.cpp                       \

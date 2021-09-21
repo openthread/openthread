@@ -44,8 +44,8 @@ namespace Cli {
 
 constexpr UdpExample::Command UdpExample::sCommands[];
 
-UdpExample::UdpExample(Interpreter &aInterpreter)
-    : mInterpreter(aInterpreter)
+UdpExample::UdpExample(Output &aOutput)
+    : OutputWrapper(aOutput)
     , mLinkSecurityEnabled(true)
 {
     memset(&mSocket, 0, sizeof(mSocket));
@@ -57,7 +57,7 @@ otError UdpExample::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -84,7 +84,7 @@ otError UdpExample::ProcessBind(Arg aArgs[])
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    error = otUdpBind(mInterpreter.mInstance, &mSocket, &sockaddr, netif);
+    error = otUdpBind(GetInstancePtr(), &mSocket, &sockaddr, netif);
 
 exit:
     return error;
@@ -99,7 +99,7 @@ otError UdpExample::ProcessConnect(Arg aArgs[])
     SuccessOrExit(error = aArgs[1].ParseAsUint16(sockaddr.mPort));
     VerifyOrExit(aArgs[2].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    error = otUdpConnect(mInterpreter.mInstance, &mSocket, &sockaddr);
+    error = otUdpConnect(GetInstancePtr(), &mSocket, &sockaddr);
 
 exit:
     return error;
@@ -109,7 +109,7 @@ otError UdpExample::ProcessClose(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    return otUdpClose(mInterpreter.mInstance, &mSocket);
+    return otUdpClose(GetInstancePtr(), &mSocket);
 }
 
 otError UdpExample::ProcessOpen(Arg aArgs[])
@@ -118,8 +118,8 @@ otError UdpExample::ProcessOpen(Arg aArgs[])
 
     otError error;
 
-    VerifyOrExit(!otUdpIsOpen(mInterpreter.mInstance, &mSocket), error = OT_ERROR_ALREADY);
-    error = otUdpOpen(mInterpreter.mInstance, &mSocket, HandleUdpReceive, this);
+    VerifyOrExit(!otUdpIsOpen(GetInstancePtr(), &mSocket), error = OT_ERROR_ALREADY);
+    error = otUdpOpen(GetInstancePtr(), &mSocket, HandleUdpReceive, this);
 
 exit:
     return error;
@@ -148,7 +148,7 @@ otError UdpExample::ProcessSend(Arg aArgs[])
         aArgs += 2;
     }
 
-    message = otUdpNewMessage(mInterpreter.mInstance, &messageSettings);
+    message = otUdpNewMessage(GetInstancePtr(), &messageSettings);
     VerifyOrExit(message != nullptr, error = OT_ERROR_NO_BUFS);
 
     if (aArgs[0] == "-s")
@@ -180,7 +180,7 @@ otError UdpExample::ProcessSend(Arg aArgs[])
         SuccessOrExit(error = otMessageAppend(message, aArgs[0].GetCString(), aArgs[0].GetLength()));
     }
 
-    SuccessOrExit(error = otUdpSend(mInterpreter.mInstance, &mSocket, message, &messageInfo));
+    SuccessOrExit(error = otUdpSend(GetInstancePtr(), &mSocket, message, &messageInfo));
 
     message = nullptr;
 
@@ -199,7 +199,7 @@ otError UdpExample::ProcessLinkSecurity(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        mInterpreter.OutputEnabledDisabledStatus(mLinkSecurityEnabled);
+        OutputEnabledDisabledStatus(mLinkSecurityEnabled);
     }
     else
     {
@@ -296,14 +296,14 @@ void UdpExample::HandleUdpReceive(otMessage *aMessage, const otMessageInfo *aMes
     char buf[1500];
     int  length;
 
-    mInterpreter.OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
-    mInterpreter.OutputIp6Address(aMessageInfo->mPeerAddr);
-    mInterpreter.OutputFormat(" %d ", aMessageInfo->mPeerPort);
+    OutputFormat("%d bytes from ", otMessageGetLength(aMessage) - otMessageGetOffset(aMessage));
+    OutputIp6Address(aMessageInfo->mPeerAddr);
+    OutputFormat(" %d ", aMessageInfo->mPeerPort);
 
     length      = otMessageRead(aMessage, otMessageGetOffset(aMessage), buf, sizeof(buf) - 1);
     buf[length] = '\0';
 
-    mInterpreter.OutputLine("%s", buf);
+    OutputLine("%s", buf);
 }
 
 } // namespace Cli

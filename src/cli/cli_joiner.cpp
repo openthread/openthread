@@ -50,11 +50,11 @@ otError Joiner::ProcessDiscerner(Arg aArgs[])
 
     if (aArgs[0].IsEmpty())
     {
-        const otJoinerDiscerner *discerner = otJoinerGetDiscerner(mInterpreter.mInstance);
+        const otJoinerDiscerner *discerner = otJoinerGetDiscerner(GetInstancePtr());
 
         VerifyOrExit(discerner != nullptr, error = OT_ERROR_NOT_FOUND);
 
-        mInterpreter.OutputLine("0x%llx/%u", static_cast<unsigned long long>(discerner->mValue), discerner->mLength);
+        OutputLine("0x%llx/%u", static_cast<unsigned long long>(discerner->mValue), discerner->mLength);
         error = OT_ERROR_NONE;
     }
     else
@@ -65,13 +65,13 @@ otError Joiner::ProcessDiscerner(Arg aArgs[])
 
         if (aArgs[0] == "clear")
         {
-            error = otJoinerSetDiscerner(mInterpreter.mInstance, nullptr);
+            error = otJoinerSetDiscerner(GetInstancePtr(), nullptr);
         }
         else
         {
             VerifyOrExit(aArgs[1].IsEmpty());
             SuccessOrExit(Interpreter::ParseJoinerDiscerner(aArgs[0], discerner));
-            error = otJoinerSetDiscerner(mInterpreter.mInstance, &discerner);
+            error = otJoinerSetDiscerner(GetInstancePtr(), &discerner);
         }
     }
 
@@ -85,7 +85,7 @@ otError Joiner::ProcessHelp(Arg aArgs[])
 
     for (const Command &command : sCommands)
     {
-        mInterpreter.OutputLine(command.mName);
+        OutputLine(command.mName);
     }
 
     return OT_ERROR_NONE;
@@ -95,8 +95,7 @@ otError Joiner::ProcessId(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    mInterpreter.OutputExtAddress(*otJoinerGetId(mInterpreter.mInstance));
-    mInterpreter.OutputLine("");
+    OutputExtAddressLine(*otJoinerGetId(GetInstancePtr()));
 
     return OT_ERROR_NONE;
 }
@@ -107,7 +106,7 @@ otError Joiner::ProcessStart(Arg aArgs[])
 
     VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_ARGS);
 
-    error = otJoinerStart(mInterpreter.mInstance,
+    error = otJoinerStart(GetInstancePtr(),
                           aArgs[0].GetCString(),           // aPskd
                           aArgs[1].GetCString(),           // aProvisioningUrl (nullptr if aArgs[1] is empty)
                           PACKAGE_NAME,                    // aVendorName
@@ -124,7 +123,7 @@ otError Joiner::ProcessStop(Arg aArgs[])
 {
     OT_UNUSED_VARIABLE(aArgs);
 
-    otJoinerStop(mInterpreter.mInstance);
+    otJoinerStop(GetInstancePtr());
 
     return OT_ERROR_NONE;
 }
@@ -159,11 +158,11 @@ void Joiner::HandleCallback(otError aError)
     switch (aError)
     {
     case OT_ERROR_NONE:
-        mInterpreter.OutputLine("Join success");
+        OutputLine("Join success");
         break;
 
     default:
-        mInterpreter.OutputLine("Join failed [%s]", otThreadErrorToString(aError));
+        OutputLine("Join failed [%s]", otThreadErrorToString(aError));
         break;
     }
 }

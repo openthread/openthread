@@ -39,6 +39,7 @@
 #include <openthread/history_tracker.h>
 
 #include "cli/cli_config.h"
+#include "cli/cli_output.hpp"
 #include "utils/lookup_table.hpp"
 #include "utils/parse_cmdline.hpp"
 
@@ -47,13 +48,11 @@
 namespace ot {
 namespace Cli {
 
-class Interpreter;
-
 /**
  * This class implements the History Tracker CLI interpreter.
  *
  */
-class History
+class History : private OutputWrapper
 {
 public:
     typedef Utils::CmdLineParser::Arg Arg;
@@ -61,11 +60,11 @@ public:
     /**
      * Constructor
      *
-     * @param[in]  aInterpreter  The CLI interpreter.
+     * @param[in]  aOutput The CLI console output context
      *
      */
-    explicit History(Interpreter &aInterpreter)
-        : mInterpreter(aInterpreter)
+    explicit History(Output &aOutput)
+        : OutputWrapper(aOutput)
     {
     }
 
@@ -126,8 +125,6 @@ private:
     };
 
     static_assert(Utils::LookupTable::IsSorted(sCommands), "Command Table is not sorted");
-
-    Interpreter &mInterpreter;
 };
 
 } // namespace Cli
