@@ -208,10 +208,10 @@ public:
      * @returns The log level.
      *
      */
-    otLogLevel GetLogLevel(void) const
+    static otLogLevel GetLogLevel(void)
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
     {
-        return mLogLevel;
+        return sLogLevel;
     }
 #else
     {
@@ -226,10 +226,10 @@ public:
      * @param[in] aLogLevel  A log level.
      *
      */
-    void SetLogLevel(otLogLevel aLogLevel)
+    static void SetLogLevel(otLogLevel aLogLevel)
     {
         OT_ASSERT(aLogLevel <= OT_LOG_LEVEL_DEBG && aLogLevel >= OT_LOG_LEVEL_NONE);
-        mLogLevel = aLogLevel;
+        sLogLevel = aLogLevel;
     }
 #endif
 
@@ -429,7 +429,7 @@ private:
 #endif // OPENTHREAD_RADIO || OPENTHREAD_CONFIG_LINK_RAW_ENABLE
 
 #if OPENTHREAD_CONFIG_LOG_LEVEL_DYNAMIC_ENABLE
-    otLogLevel mLogLevel;
+    static otLogLevel sLogLevel;
 #endif
 #if OPENTHREAD_ENABLE_VENDOR_EXTENSION
     Extension::ExtensionBase &mExtension;
