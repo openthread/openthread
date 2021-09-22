@@ -391,6 +391,7 @@ private:
     static int HandleMbedtlsTransmit(void *aContext, const unsigned char *aBuf, size_t aLength);
     int        HandleMbedtlsTransmit(const unsigned char *aBuf, size_t aLength);
 
+#ifdef MBEDTLS_SSL_EXPORT_KEYS
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
 
     static void HandleMbedtlsExportKeys(void *                      aContext,
@@ -422,7 +423,8 @@ private:
                                        size_t               aKeyLength,
                                        size_t               aIvLength);
 
-#endif
+#endif // (MBEDTLS_VERSION_NUMBER >= 0x03000000)
+#endif // MBEDTLS_SSL_EXPORT_KEYS
 
     static void HandleTimer(Timer &aTimer);
     void        HandleTimer(void);
