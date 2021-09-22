@@ -35,17 +35,17 @@
  * Selects the crypto backend library for OpenThread.
  *
  * There are several options available
- * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+ * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
  * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
  * - @sa OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
  *
  */
 #ifndef OPENTHREAD_CONFIG_CRYPTO_LIB
-#define OPENTHREAD_CONFIG_CRYPTO_LIB OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+#define OPENTHREAD_CONFIG_CRYPTO_LIB OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 #endif
 
-/** Use mbedtls v2.x as crypto library */
-#define OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2 0
+/** Use mbedtls as crypto library */
+#define OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS 0
 /** Use ARM Platform Security Library as crypto library */
 #define OPENTHREAD_CONFIG_CRYPTO_LIB_PSA 1
 /** Use platform provided crypto library */
@@ -60,7 +60,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_AES_CONTEXT_SIZE (sizeof(void *))
+#error "OPENTHREAD_CONFIG_AES_CONTEXT_SIZE is missing"
 #endif
 
 /**
@@ -70,7 +70,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE (sizeof(void *))
+#error "OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE is missing"
 #endif
 
 /**
@@ -80,7 +80,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE (sizeof(void *))
+#error "OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE is missing"
 #endif
 
 /**
@@ -90,7 +90,7 @@
  *
  */
 #ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE (sizeof(void *))
+#error "OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE is missing"
 #endif
 
 #endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM

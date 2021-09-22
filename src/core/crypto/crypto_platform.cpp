@@ -235,6 +235,7 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(HmacSha256::Hash), error = kErrorFailed);
+
     prk = static_cast<HmacSha256::Hash *>(aContext->mContext);
 
     // The aOutputKey is calculated as follows [RFC5889]:
@@ -292,10 +293,10 @@ OT_TOOL_WEAK otError otPlatCryptoHkdfExtract(otCryptoContext *  aContext,
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(HmacSha256::Hash), error = kErrorFailed);
+
     prk = static_cast<HmacSha256::Hash *>(aContext->mContext);
 
     cryptoKey.Set(aSalt, aSaltLength);
-
     // PRK is calculated as HMAC-Hash(aSalt, aInputKey)
     hmac.Start(cryptoKey);
     hmac.Update(inputKey.GetBytes(), inputKey.GetLength());
@@ -361,6 +362,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Start(otCryptoContext *aContext)
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+
     context = static_cast<mbedtls_sha256_context *>(aContext->mContext);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
@@ -380,6 +382,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Update(otCryptoContext *aContext, const v
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+
     context = static_cast<mbedtls_sha256_context *>(aContext->mContext);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)
@@ -403,6 +406,7 @@ OT_TOOL_WEAK otError otPlatCryptoSha256Finish(otCryptoContext *aContext, uint8_t
 
     VerifyOrExit(aContext != nullptr, error = kErrorInvalidArgs);
     VerifyOrExit(aContext->mContextSize >= sizeof(mbedtls_sha256_context), error = kErrorFailed);
+
     context = static_cast<mbedtls_sha256_context *>(aContext->mContext);
 
 #if (MBEDTLS_VERSION_NUMBER >= 0x03000000)

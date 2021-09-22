@@ -118,6 +118,12 @@ typedef struct otCryptoKey
     uint32_t       mKeyRef;    ///< The PSA key ref (requires `mKey` to be NULL).
 } otCryptoKey;
 
+/**
+ * @struct otCryptoContext
+ *
+ * This structure stores the context object for platform APIs.
+ *
+ */
 typedef struct otCryptoContext
 {
     void *   mContext;     ///< Pointer to the context.
@@ -384,7 +390,7 @@ otError otPlatCryptoHkdfExtract(otCryptoContext *  aContext,
                                 const otCryptoKey *aInputKey);
 
 /**
- * UnInitialise the HKDF context.
+ * Uninitialize the HKDF context.
  *
  * @param[in]  aContext           Context for HKDF operation.
  *
@@ -411,7 +417,7 @@ otError otPlatCryptoHkdfDeinit(otCryptoContext *aContext);
 otError otPlatCryptoSha256Init(otCryptoContext *aContext);
 
 /**
- * UnInitialise the SHA-256 operation.
+ * Uninitialize the SHA-256 operation.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
  *

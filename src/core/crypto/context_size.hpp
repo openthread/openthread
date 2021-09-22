@@ -32,18 +32,18 @@
 #include "openthread-core-config.h"
 #include "openthread/crypto.h"
 
-#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 #include <mbedtls/aes.h>
 #include <mbedtls/md.h>
 #include <mbedtls/sha256.h>
 #elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 #include <psa/crypto.h>
-#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 namespace ot {
 namespace Crypto {
 
-#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 constexpr uint16_t kAesContextSize        = sizeof(mbedtls_aes_context);
 constexpr uint16_t kHmacSha256ContextSize = sizeof(mbedtls_md_context_t);
@@ -52,7 +52,7 @@ constexpr uint16_t kSha256ContextSize     = sizeof(mbedtls_sha256_context);
 
 #elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 
-constexpr uint16_t kAesContextSize        = sizeof(uint32_t);
+constexpr uint16_t kAesContextSize        = sizeof(psa_key_id_t);
 constexpr uint16_t kHmacSha256ContextSize = sizeof(psa_mac_operation_t);
 constexpr uint16_t kHkdfContextSize       = sizeof(psa_key_derivation_operation_t);
 constexpr uint16_t kSha256ContextSize     = sizeof(psa_hash_operation_t);
@@ -64,7 +64,7 @@ constexpr uint16_t kHmacSha256ContextSize = OPENTHREAD_CONFIG_HMAC_SHA256_CONTEX
 constexpr uint16_t kHkdfContextSize       = OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE;
 constexpr uint16_t kSha256ContextSize     = OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE;
 
-#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 } // namespace Crypto
 } // namespace ot
