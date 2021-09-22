@@ -99,7 +99,7 @@ public:
 
 private:
     otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE, uint64_t);
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHkdfContextSize, uint64_t);
 };
 
 /**

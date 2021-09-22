@@ -26,119 +26,47 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef CRYPTO_CONTEXT_H_
-#define CRYPTO_CONTEXT_H_
+#ifndef CRYPTO_CONTEXT_HPP_
+#define CRYPTO_CONTEXT_HPP_
 
 #include "openthread-core-config.h"
+#include "openthread/crypto.h"
 
 #if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
-
 #include <mbedtls/aes.h>
 #include <mbedtls/md.h>
 #include <mbedtls/sha256.h>
+#elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+#include <psa/crypto.h>
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
 
-/**
- * @def OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
- *
- * The size of the AES context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_AES_CONTEXT_SIZE (sizeof(mbedtls_aes_context))
-#endif
+namespace ot {
+namespace Crypto {
 
-/**
- * @def OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
- *
- * The size of the HMAC_SHA256 context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE (sizeof(mbedtls_md_context_t))
-#endif
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
 
-/**
- * @def OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
- *
- * The size of the HKDF context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE (sizeof(ot::Crypto::Sha256::Hash))
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
- *
- * The size of the SHA256 context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE (sizeof(mbedtls_sha256_context))
-#endif
+constexpr uint16_t kAesContextSize        = sizeof(mbedtls_aes_context);
+constexpr uint16_t kHmacSha256ContextSize = sizeof(mbedtls_md_context_t);
+constexpr uint16_t kHkdfContextSize       = sizeof(otCryptoSha256Hash);
+constexpr uint16_t kSha256ContextSize     = sizeof(mbedtls_sha256_context);
 
 #elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 
-#include <psa/crypto.h>
-
-/**
- * @def OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
- *
- * The size of the AES context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_AES_CONTEXT_SIZE (sizeof(uint32_t))
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
- *
- * The size of the HMAC_SHA256 context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE (sizeof(psa_mac_operation_t))
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
- *
- * The size of the HKDF context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE (sizeof(psa_key_derivation_operation_t))
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
- *
- * The size of the SHA256 context byte array.
- *
- */
-#ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
-#define OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE (sizeof(psa_hash_operation_t))
-#endif
+constexpr uint16_t kAesContextSize        = sizeof(uint32_t);
+constexpr uint16_t kHmacSha256ContextSize = sizeof(psa_mac_operation_t);
+constexpr uint16_t kHkdfContextSize       = sizeof(psa_key_derivation_operation_t);
+constexpr uint16_t kSha256ContextSize     = sizeof(psa_hash_operation_t);
 
 #else
 
-#ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
-#error "OPENTHREAD_CONFIG_AES_CONTEXT_SIZE should be defined in platform config"
-#endif
-
-#ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
-#error "OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE should be defined in platform config"
-#endif
-
-#ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
-#error "OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE should be defined in platform config"
-#endif
-
-#ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
-#error "OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE should be defined in platform config"
-#endif
+constexpr uint16_t kAesContextSize        = OPENTHREAD_CONFIG_AES_CONTEXT_SIZE;
+constexpr uint16_t kHmacSha256ContextSize = OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE;
+constexpr uint16_t kHkdfContextSize       = OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE;
+constexpr uint16_t kSha256ContextSize     = OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE;
 
 #endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS_2
 
-#endif // CRYPTO_CONTEXT_H_
+} // namespace Crypto
+} // namespace ot
+
+#endif // CRYPTO_CONTEXT_HPP_

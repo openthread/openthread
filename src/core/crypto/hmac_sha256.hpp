@@ -134,7 +134,7 @@ public:
 
 private:
     otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE, uint64_t);
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHmacSha256ContextSize, uint64_t);
 };
 
 /**

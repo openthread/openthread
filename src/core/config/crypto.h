@@ -51,4 +51,48 @@
 /** Use platform provided crypto library */
 #define OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM 2
 
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
+
+/**
+ * @def OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
+ *
+ * The size of the AES context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_AES_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_AES_CONTEXT_SIZE (sizeof(void *))
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
+ *
+ * The size of the HMAC_SHA256 context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE (sizeof(void *))
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
+ *
+ * The size of the HKDF context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE (sizeof(void *))
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
+ *
+ * The size of the SHA256 context byte array. Only applicable with OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE
+#define OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE (sizeof(void *))
+#endif
+
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PLATFORM
+
 #endif // CONFIG_CRYPTO_H_

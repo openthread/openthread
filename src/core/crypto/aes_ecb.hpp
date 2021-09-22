@@ -92,7 +92,7 @@ public:
 
 private:
     otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, OPENTHREAD_CONFIG_AES_CONTEXT_SIZE, uint64_t);
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, kAesContextSize, uint64_t);
 };
 
 /**
