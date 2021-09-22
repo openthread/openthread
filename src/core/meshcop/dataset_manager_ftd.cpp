@@ -70,29 +70,20 @@ Error DatasetManager::AppendMleDatasetTlv(Message &aMessage) const
 
 Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Tlv             tlv;
-    Timestamp *     timestamp;
-    uint16_t        offset = aMessage.GetOffset();
-    Tlv::Type       type;
-    bool            isUpdateFromCommissioner = false;
-    bool            doesAffectConnectivity   = false;
-    bool            doesAffectNetworkKey     = false;
-    bool            hasNetworkKey            = false;
-    StateTlv::State state                    = StateTlv::kReject;
-    Dataset         dataset;
-
-    ActiveTimestampTlv   activeTimestamp;
-    PendingTimestampTlv  pendingTimestamp;
+    Tlv                  tlv;
+    uint16_t             offset                   = aMessage.GetOffset();
+    bool                 isUpdateFromCommissioner = false;
+    bool                 doesAffectConnectivity   = false;
+    bool                 doesAffectNetworkKey     = false;
+    bool                 hasNetworkKey            = false;
+    StateTlv::State      state                    = StateTlv::kReject;
+    Dataset              dataset;
+    Timestamp            activeTimestamp;
     ChannelTlv           channel;
     uint16_t             sessionId;
     Mle::MeshLocalPrefix meshLocalPrefix;
     NetworkKey           networkKey;
     uint16_t             panId;
-
-    activeTimestamp.SetLength(0);
-    pendingTimestamp.SetLength(0);
-    channel.SetLength(0);
-    pendingTimestamp.SetLength(0);
 
     VerifyOrExit(Get<Mle::MleRouter>().IsLeader());
 
@@ -107,32 +98,20 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     // verify that does not overflow dataset buffer
     VerifyOrExit((offset - aMessage.GetOffset()) <= Dataset::kMaxSize);
 
-    type = (GetType() == Dataset::kActive) ? Tlv::kActiveTimestamp : Tlv::kPendingTimestamp;
+    // verify the request includes a timestamp that is ahead of the locally stored value
+    SuccessOrExit(Tlv::Find<ActiveTimestampTlv>(aMessage, activeTimestamp));
 
-    if (Tlv::FindTlv(aMessage, activeTimestamp) != kErrorNone)
+    if (GetType() == Dataset::kPending)
     {
-        ExitNow();
-    }
+        Timestamp pendingTimestamp;
 
-    VerifyOrExit(activeTimestamp.IsValid());
-
-    if (Tlv::FindTlv(aMessage, pendingTimestamp) == kErrorNone)
-    {
-        VerifyOrExit(pendingTimestamp.IsValid());
-    }
-
-    if (type == Tlv::kActiveTimestamp)
-    {
-        timestamp = static_cast<Timestamp *>(&activeTimestamp);
+        SuccessOrExit(Tlv::Find<PendingTimestampTlv>(aMessage, pendingTimestamp));
+        VerifyOrExit(mLocal.Compare(&pendingTimestamp) > 0);
     }
     else
     {
-        VerifyOrExit(pendingTimestamp.GetLength() > 0);
-        timestamp = static_cast<Timestamp *>(&pendingTimestamp);
+        VerifyOrExit(mLocal.Compare(&activeTimestamp) > 0);
     }
-
-    // verify the request includes a timestamp that is ahead of the locally stored value
-    VerifyOrExit(mLocal.Compare(timestamp) > 0);
 
     // check channel
     if (Tlv::FindTlv(aMessage, channel) == kErrorNone)
@@ -174,7 +153,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // check active timestamp rollback
-    if (type == Tlv::kPendingTimestamp && (!hasNetworkKey || !doesAffectNetworkKey))
+    if (GetType() == Dataset::kPending && (!hasNetworkKey || !doesAffectNetworkKey))
     {
         // no change to network key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
@@ -196,7 +175,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
     }
 
     // verify an MGMT_ACTIVE_SET.req from a Commissioner does not affect connectivity
-    VerifyOrExit(!isUpdateFromCommissioner || type == Tlv::kPendingTimestamp || !doesAffectConnectivity);
+    VerifyOrExit(!isUpdateFromCommissioner || GetType() == Dataset::kPending || !doesAffectConnectivity);
 
     if (isUpdateFromCommissioner)
     {
@@ -205,7 +184,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         IgnoreError(Get<ActiveDataset>().Read(dataset));
     }
 
-    if (type == Tlv::kPendingTimestamp || !doesAffectConnectivity)
+    if (GetType() == Dataset::kPending || !doesAffectConnectivity)
     {
         offset = aMessage.GetOffset();
 
@@ -328,11 +307,10 @@ Error ActiveDataset::GenerateLocal(void)
 
     if (dataset.GetTlv<ActiveTimestampTlv>() == nullptr)
     {
-        ActiveTimestampTlv activeTimestampTlv;
-        activeTimestampTlv.Init();
-        activeTimestampTlv.SetSeconds(0);
-        activeTimestampTlv.SetTicks(0);
-        IgnoreError(dataset.SetTlv(activeTimestampTlv));
+        Timestamp timestamp;
+
+        timestamp.Clear();
+        IgnoreError(dataset.SetTlv(Tlv::kActiveTimestamp, timestamp));
     }
 
     if (dataset.GetTlv<ChannelTlv>() == nullptr)

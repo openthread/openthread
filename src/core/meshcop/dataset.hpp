@@ -729,19 +729,21 @@ public:
     TimeMilli GetUpdateTime(void) const { return mUpdateTime; }
 
     /**
-     * This method returns a reference to the Timestamp.
+     * This method gets the Timestamp (Active or Pending).
      *
-     * @param[in]  aType       The type of the dataset, active or pending.
+     * @param[in]  aType       The type: active or pending.
+     * @param[out] aTimestamp  A reference to a `Timestamp` to output the value.
      *
-     * @returns A pointer to the Timestamp.
+     * @retval kErrorNone      Timestamp was read successfully. @p aTimestamp is updated.
+     * @retval kErrorNotFound  Could not find the requested Timestamp TLV.
      *
      */
-    const Timestamp *GetTimestamp(Type aType) const;
+    Error GetTimestamp(Type aType, Timestamp &aTimestamp) const;
 
     /**
      * This method sets the Timestamp value.
      *
-     * @param[in] aType        The type of the dataset, active or pending.
+     * @param[in] aType        The type: active or pending.
      * @param[in] aTimestamp   A Timestamp.
      *
      */

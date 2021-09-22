@@ -55,35 +55,28 @@ DatasetLocal::DatasetLocal(Instance &aInstance, Dataset::Type aType)
     , mTimestampPresent(false)
     , mSaved(false)
 {
-    mTimestamp.Init();
+    mTimestamp.Clear();
 }
 
 void DatasetLocal::Clear(void)
 {
     IgnoreError(Get<Settings>().DeleteOperationalDataset(IsActive()));
-    mTimestamp.Init();
+    mTimestamp.Clear();
     mTimestampPresent = false;
     mSaved            = false;
 }
 
 Error DatasetLocal::Restore(Dataset &aDataset)
 {
-    const Timestamp *timestamp;
-    Error            error;
+    Error error;
 
     mTimestampPresent = false;
 
     error = Read(aDataset);
     SuccessOrExit(error);
 
-    mSaved    = true;
-    timestamp = aDataset.GetTimestamp(mType);
-
-    if (timestamp != nullptr)
-    {
-        mTimestamp        = *timestamp;
-        mTimestampPresent = true;
-    }
+    mSaved            = true;
+    mTimestampPresent = (aDataset.GetTimestamp(mType, mTimestamp) == kErrorNone);
 
 exit:
     return error;
@@ -177,8 +170,7 @@ Error DatasetLocal::Save(const otOperationalDatasetTlvs &aDataset)
 
 Error DatasetLocal::Save(const Dataset &aDataset)
 {
-    const Timestamp *timestamp;
-    Error            error = kErrorNone;
+    Error error = kErrorNone;
 
     if (aDataset.GetSize() == 0)
     {
@@ -194,19 +186,8 @@ Error DatasetLocal::Save(const Dataset &aDataset)
         otLogInfoMeshCoP("%s dataset set", Dataset::TypeToString(mType));
     }
 
-    timestamp = aDataset.GetTimestamp(mType);
-
-    if (timestamp != nullptr)
-    {
-        mTimestamp        = *timestamp;
-        mTimestampPresent = true;
-    }
-    else
-    {
-        mTimestampPresent = false;
-    }
-
-    mUpdateTime = TimerMilli::GetNow();
+    mTimestampPresent = (aDataset.GetTimestamp(mType, mTimestamp) == kErrorNone);
+    mUpdateTime       = TimerMilli::GetNow();
 
 exit:
     return error;

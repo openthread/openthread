@@ -59,7 +59,7 @@ DatasetManager::DatasetManager(Instance &aInstance, Dataset::Type aType, Timer::
     , mMgmtSetCallback(nullptr)
     , mMgmtSetCallbackContext(nullptr)
 {
-    mTimestamp.Init();
+    mTimestamp.Clear();
 }
 
 const Timestamp *DatasetManager::GetTimestamp(void) const
@@ -82,9 +82,8 @@ int DatasetManager::Compare(const Timestamp &aTimestamp) const
 
 Error DatasetManager::Restore(void)
 {
-    Error            error;
-    Dataset          dataset;
-    const Timestamp *timestamp;
+    Error   error;
+    Dataset dataset;
 
     mTimer.Stop();
 
@@ -92,13 +91,7 @@ Error DatasetManager::Restore(void)
 
     SuccessOrExit(error = mLocal.Restore(dataset));
 
-    timestamp = dataset.GetTimestamp(GetType());
-
-    if (timestamp != nullptr)
-    {
-        mTimestamp      = *timestamp;
-        mTimestampValid = true;
-    }
+    mTimestampValid = (dataset.GetTimestamp(GetType(), mTimestamp) == kErrorNone);
 
     if (IsActiveDataset())
     {
@@ -125,7 +118,7 @@ exit:
 
 void DatasetManager::Clear(void)
 {
-    mTimestamp.Init();
+    mTimestamp.Clear();
     mTimestampValid = false;
     mLocal.Clear();
     mTimer.Stop();
@@ -139,16 +132,12 @@ void DatasetManager::HandleDetach(void)
 
 Error DatasetManager::Save(const Dataset &aDataset)
 {
-    Error            error = kErrorNone;
-    const Timestamp *timestamp;
-    int              compare;
-    bool             isNetworkkeyUpdated = false;
+    Error error = kErrorNone;
+    int   compare;
+    bool  isNetworkkeyUpdated = false;
 
-    timestamp = aDataset.GetTimestamp(GetType());
-
-    if (timestamp != nullptr)
+    if (aDataset.GetTimestamp(GetType(), mTimestamp) == kErrorNone)
     {
-        mTimestamp      = *timestamp;
         mTimestampValid = true;
 
         if (IsActiveDataset())
@@ -157,7 +146,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
         }
     }
 
-    compare = mLocal.Compare(timestamp);
+    compare = mLocal.Compare(mTimestampValid ? &mTimestamp : nullptr);
 
     if (isNetworkkeyUpdated || compare > 0)
     {
@@ -285,13 +274,13 @@ void DatasetManager::SendSet(void)
 
     if (IsActiveDataset())
     {
-        Dataset pendingDataset;
+        Dataset   pendingDataset;
+        Timestamp timestamp;
+
         IgnoreError(Get<PendingDataset>().Read(pendingDataset));
 
-        const ActiveTimestampTlv *tlv                    = pendingDataset.GetTlv<ActiveTimestampTlv>();
-        const Timestamp *         pendingActiveTimestamp = static_cast<const Timestamp *>(tlv);
-
-        if (pendingActiveTimestamp != nullptr && mLocal.Compare(pendingActiveTimestamp) == 0)
+        if ((pendingDataset.GetTimestamp(Dataset::kActive, timestamp) == kErrorNone) &&
+            (mLocal.Compare(&timestamp) == 0))
         {
             // stop registration attempts during dataset transition
             ExitNow(error = kErrorInvalidState);
@@ -762,7 +751,7 @@ void PendingDataset::ClearNetwork(void)
 {
     Dataset dataset;
 
-    mTimestamp.Init();
+    mTimestamp.Clear();
     mTimestampValid = false;
     IgnoreError(DatasetManager::Save(dataset));
 }
