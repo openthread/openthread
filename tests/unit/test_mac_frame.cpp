@@ -175,6 +175,7 @@ void TestMacNetworkName(void)
     char             buffer[sizeof(kTooLongName) + 2];
     uint8_t          len;
     Mac::NetworkName networkName;
+    Mac::NetworkName networkName2;
 
     CompareNetworkName(networkName, kEmptyName);
 
@@ -224,6 +225,12 @@ void TestMacNetworkName(void)
     VerifyOrQuit(len == sizeof(kName1) - 1, "NameData::CopyTo() failed");
     VerifyOrQuit(memcmp(buffer, kName1, sizeof(kName1) - 1) == 0, "NameData::CopyTo() failed");
     VerifyOrQuit(buffer[sizeof(kName1)] == 0, "NameData::CopyTo() failed");
+
+    SuccessOrQuit(networkName2.Set(Mac::NameData(kName1, sizeof(kName1))));
+    VerifyOrQuit(networkName == networkName2);
+
+    SuccessOrQuit(networkName2.Set(kName2));
+    VerifyOrQuit(networkName != networkName2);
 }
 
 void TestMacHeader(void)

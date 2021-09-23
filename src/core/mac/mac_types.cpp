@@ -121,25 +121,18 @@ ExtendedPanId::InfoString ExtendedPanId::ToString(void) const
 
 uint8_t NameData::CopyTo(char *aBuffer, uint8_t aMaxSize) const
 {
-    uint8_t len = GetLength();
+    MutableData<kWithUint8Length> destData;
 
-    memset(aBuffer, 0, aMaxSize);
+    destData.Init(aBuffer, aMaxSize);
+    destData.ClearBytes();
+    IgnoreError(destData.CopyBytesFrom(*this));
 
-    if (len > aMaxSize)
-    {
-        len = aMaxSize;
-    }
-
-    memcpy(aBuffer, GetBuffer(), len);
-
-    return len;
+    return destData.GetLength();
 }
 
 NameData NetworkName::GetAsData(void) const
 {
-    uint8_t len = static_cast<uint8_t>(StringLength(m8, kMaxSize + 1));
-
-    return NameData(m8, len);
+    return NameData(m8, static_cast<uint8_t>(StringLength(m8, kMaxSize + 1)));
 }
 
 Error NetworkName::Set(const char *aNameString)
@@ -165,15 +158,21 @@ exit:
 
 Error NetworkName::Set(const NameData &aNameData)
 {
-    Error   error  = kErrorNone;
-    uint8_t newLen = static_cast<uint8_t>(StringLength(aNameData.GetBuffer(), aNameData.GetLength()));
+    Error    error  = kErrorNone;
+    NameData data   = aNameData;
+    uint8_t  newLen = static_cast<uint8_t>(StringLength(data.GetBuffer(), data.GetLength()));
 
     VerifyOrExit((0 < newLen) && (newLen <= kMaxSize), error = kErrorInvalidArgs);
 
-    // Ensure the new name does not match the current one.
-    VerifyOrExit(memcmp(m8, aNameData.GetBuffer(), newLen) || (m8[newLen] != '\0'), error = kErrorAlready);
+    data.SetLength(newLen);
 
-    memcpy(m8, aNameData.GetBuffer(), newLen);
+    // Ensure the new name does not match the current one.
+    if (data.MatchesBytesIn(m8) && m8[newLen] == '\0')
+    {
+        ExitNow(error = kErrorAlready);
+    }
+
+    data.CopyBytesTo(m8);
     m8[newLen] = '\0';
 
 exit:
@@ -182,11 +181,7 @@ exit:
 
 bool NetworkName::operator==(const NetworkName &aOther) const
 {
-    NameData data      = GetAsData();
-    NameData otherData = aOther.GetAsData();
-
-    return (data.GetLength() == otherData.GetLength()) &&
-           (memcmp(data.GetBuffer(), otherData.GetBuffer(), data.GetLength()) == 0);
+    return GetAsData() == aOther.GetAsData();
 }
 
 #if OPENTHREAD_CONFIG_MULTI_RADIO
