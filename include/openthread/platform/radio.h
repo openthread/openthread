@@ -212,21 +212,14 @@ typedef otCryptoKeyRef otMacKeyRef;
  * This structure represents a MAC Key.
  *
  */
-OT_TOOL_PACKED_BEGIN
-struct otMacKeyMaterial
+typedef struct otMacKeyMaterial
 {
     union
     {
         otMacKeyRef mKeyRef; ///< Reference to the key stored.
         otMacKey    mKey;    ///< Key stored as literal.
     } mKeyMaterial;
-} OT_TOOL_PACKED_END;
-
-/**
- * This structure represents a MAC Key reference.
- *
- */
-typedef struct otMacKeyMaterial otMacKeyMaterial;
+} otMacKeyMaterial;
 
 /**
  * This enumeration defines constants about key types.
