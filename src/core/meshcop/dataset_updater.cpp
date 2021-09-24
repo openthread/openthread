@@ -150,7 +150,8 @@ void DatasetUpdater::PreparePendingDataset(void)
 
     {
         ActiveTimestampTlv *tlv = dataset.GetTlv<ActiveTimestampTlv>();
-        tlv->AdvanceRandomTicks();
+
+        tlv->GetTimestamp().AdvanceRandomTicks();
     }
 
     SuccessOrExit(error = Get<PendingDataset>().Save(dataset));

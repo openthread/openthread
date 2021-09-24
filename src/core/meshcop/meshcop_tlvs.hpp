@@ -1003,7 +1003,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class ActiveTimestampTlv : public Tlv, public Timestamp, public SimpleTlvInfo<Tlv::kActiveTimestamp, Timestamp>
+class ActiveTimestampTlv : public Tlv, public SimpleTlvInfo<Tlv::kActiveTimestamp, Timestamp>
 {
 public:
     /**
@@ -1014,7 +1014,7 @@ public:
     {
         SetType(kActiveTimestamp);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
+        mTimestamp.Clear();
     }
 
     /**
@@ -1025,6 +1025,33 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method gets the timestamp.
+     *
+     * @returns The timestamp.
+     *
+     */
+    const Timestamp &GetTimestamp(void) const { return mTimestamp; }
+
+    /**
+     * This method returns a reference to the timestamp.
+     *
+     * @returns A reference to the timestamp.
+     *
+     */
+    Timestamp &GetTimestamp(void) { return mTimestamp; }
+
+    /**
+     * This method sets the timestamp.
+     *
+     * @param[in] aTimestamp   The new timestamp.
+     *
+     */
+    void SetTimestamp(const Timestamp &aTimestamp) { mTimestamp = aTimestamp; }
+
+private:
+    Timestamp mTimestamp;
 } OT_TOOL_PACKED_END;
 
 /**
@@ -1137,7 +1164,7 @@ private:
  *
  */
 OT_TOOL_PACKED_BEGIN
-class PendingTimestampTlv : public Tlv, public Timestamp, public SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp>
+class PendingTimestampTlv : public Tlv, public SimpleTlvInfo<Tlv::kPendingTimestamp, Timestamp>
 {
 public:
     /**
@@ -1148,7 +1175,7 @@ public:
     {
         SetType(kPendingTimestamp);
         SetLength(sizeof(*this) - sizeof(Tlv));
-        Timestamp::Init();
+        mTimestamp.Clear();
     }
 
     /**
@@ -1159,6 +1186,33 @@ public:
      *
      */
     bool IsValid(void) const { return GetLength() >= sizeof(*this) - sizeof(Tlv); }
+
+    /**
+     * This method gets the timestamp.
+     *
+     * @returns The timestamp.
+     *
+     */
+    const Timestamp &GetTimestamp(void) const { return mTimestamp; }
+
+    /**
+     * This method returns a reference to the timestamp.
+     *
+     * @returns A reference to the timestamp.
+     *
+     */
+    Timestamp &GetTimestamp(void) { return mTimestamp; }
+
+    /**
+     * This method sets the timestamp.
+     *
+     * @param[in] aTimestamp   The new timestamp.
+     *
+     */
+    void SetTimestamp(const Timestamp &aTimestamp) { mTimestamp = aTimestamp; }
+
+private:
+    Timestamp mTimestamp;
 } OT_TOOL_PACKED_END;
 
 /**

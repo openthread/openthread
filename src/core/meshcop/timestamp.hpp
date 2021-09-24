@@ -41,6 +41,7 @@
 
 #include <openthread/platform/toolchain.h>
 
+#include "common/clearable.hpp"
 #include "common/encoding.hpp"
 #include "common/random.hpp"
 
@@ -55,15 +56,9 @@ using ot::Encoding::BigEndian::HostSwap32;
  *
  */
 OT_TOOL_PACKED_BEGIN
-class Timestamp
+class Timestamp : public Clearable<Timestamp>
 {
 public:
-    /**
-     * This method initializes the Timestamp
-     *
-     */
-    void Init(void) { memset(this, 0, sizeof(*this)); }
-
     /**
      * This method compares this timestamp to another.
      *

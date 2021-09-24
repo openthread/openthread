@@ -1426,16 +1426,11 @@ Error Mle::AppendXtalAccuracy(Message &aMessage)
 
 Error Mle::AppendActiveTimestamp(Message &aMessage)
 {
-    Error                     error;
-    ActiveTimestampTlv        timestampTlv;
-    const MeshCoP::Timestamp *timestamp;
+    Error                     error     = kErrorNone;
+    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
 
-    timestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
-    VerifyOrExit(timestamp, error = kErrorNone);
-
-    timestampTlv.Init();
-    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error                                             = timestampTlv.AppendTo(aMessage);
+    VerifyOrExit(timestamp != nullptr);
+    error = Tlv::Append<ActiveTimestampTlv>(aMessage, *timestamp);
 
 exit:
     return error;
@@ -1443,16 +1438,11 @@ exit:
 
 Error Mle::AppendPendingTimestamp(Message &aMessage)
 {
-    Error                     error;
-    PendingTimestampTlv       timestampTlv;
-    const MeshCoP::Timestamp *timestamp;
+    Error                     error     = kErrorNone;
+    const MeshCoP::Timestamp *timestamp = Get<MeshCoP::PendingDataset>().GetTimestamp();
 
-    timestamp = Get<MeshCoP::PendingDataset>().GetTimestamp();
-    VerifyOrExit(timestamp && timestamp->GetSeconds() != 0, error = kErrorNone);
-
-    timestampTlv.Init();
-    *static_cast<MeshCoP::Timestamp *>(&timestampTlv) = *timestamp;
-    error                                             = timestampTlv.AppendTo(aMessage);
+    VerifyOrExit(timestamp != nullptr && timestamp->GetSeconds() != 0);
+    error = Tlv::Append<PendingTimestampTlv>(aMessage, *timestamp);
 
 exit:
     return error;
@@ -2508,7 +2498,7 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
 {
     Error              error = kErrorNone;
     ChannelTlv         channel;
-    ActiveTimestampTlv activeTimestamp;
+    MeshCoP::Timestamp activeTimestamp;
     Message *          message = nullptr;
 
     VerifyOrExit(Get<Mac::Mac>().GetSupportedChannelMask().ContainsChannel(aChannel), error = kErrorInvalidArgs);
@@ -2525,11 +2515,9 @@ void Mle::SendAnnounce(uint8_t aChannel, const Ip6::Address &aDestination, Annou
     switch (aMode)
     {
     case kOrphanAnnounce:
-        activeTimestamp.Init();
-        activeTimestamp.SetSeconds(0);
-        activeTimestamp.SetTicks(0);
+        activeTimestamp.Clear();
         activeTimestamp.SetAuthoritative(true);
-        SuccessOrExit(error = activeTimestamp.AppendTo(*message));
+        SuccessOrExit(error = Tlv::Append<ActiveTimestampTlv>(*message, activeTimestamp));
         break;
 
     case kNormalAnnounce:
@@ -3133,15 +3121,18 @@ bool Mle::IsNetworkDataNewer(const LeaderData &aLeaderData)
 
 Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
-    Error               error = kErrorNone;
-    LeaderData          leaderData;
-    ActiveTimestampTlv  activeTimestamp;
-    PendingTimestampTlv pendingTimestamp;
-    uint16_t            networkDataOffset    = 0;
-    uint16_t            activeDatasetOffset  = 0;
-    uint16_t            pendingDatasetOffset = 0;
-    bool                dataRequest          = false;
-    Tlv                 tlv;
+    Error                     error = kErrorNone;
+    LeaderData                leaderData;
+    MeshCoP::Timestamp        activeTimestamp;
+    MeshCoP::Timestamp        pendingTimestamp;
+    const MeshCoP::Timestamp *timestamp;
+    bool                      hasActiveTimestamp   = false;
+    bool                      hasPendingTimestamp  = false;
+    uint16_t                  networkDataOffset    = 0;
+    uint16_t                  activeDatasetOffset  = 0;
+    uint16_t                  pendingDatasetOffset = 0;
+    bool                      dataRequest          = false;
+    Tlv                       tlv;
 
     // Leader Data
     SuccessOrExit(error = ReadLeaderData(aMessage, leaderData));
@@ -3165,11 +3156,11 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
     }
 
     // Active Timestamp
-    if (Tlv::FindTlv(aMessage, activeTimestamp) == kErrorNone)
+    switch (Tlv::Find<ActiveTimestampTlv>(aMessage, activeTimestamp))
     {
-        const MeshCoP::Timestamp *timestamp;
+    case kErrorNone:
+        hasActiveTimestamp = true;
 
-        VerifyOrExit(activeTimestamp.IsValid(), error = kErrorParse);
         timestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
@@ -3179,18 +3170,22 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         {
             ExitNow(dataRequest = true);
         }
-    }
-    else
-    {
-        activeTimestamp.SetLength(0);
+
+        break;
+
+    case kErrorNotFound:
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     // Pending Timestamp
-    if (Tlv::FindTlv(aMessage, pendingTimestamp) == kErrorNone)
+    switch (Tlv::Find<PendingTimestampTlv>(aMessage, pendingTimestamp))
     {
-        const MeshCoP::Timestamp *timestamp;
+    case kErrorNone:
+        hasPendingTimestamp = true;
 
-        VerifyOrExit(pendingTimestamp.IsValid(), error = kErrorParse);
         timestamp = Get<MeshCoP::PendingDataset>().GetTimestamp();
 
         // if received timestamp does not match the local value and message does not contain the dataset,
@@ -3200,10 +3195,14 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         {
             ExitNow(dataRequest = true);
         }
-    }
-    else
-    {
-        pendingTimestamp.SetLength(0);
+
+        break;
+
+    case kErrorNotFound:
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     if (Tlv::FindTlvOffset(aMessage, Tlv::kNetworkData, networkDataOffset) == kErrorNone)
@@ -3227,7 +3226,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
 #endif
     {
         // Active Dataset
-        if (activeTimestamp.GetLength() > 0)
+        if (hasActiveTimestamp)
         {
             if (activeDatasetOffset > 0)
             {
@@ -3238,7 +3237,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
         }
 
         // Pending Dataset
-        if (pendingTimestamp.GetLength() > 0)
+        if (hasPendingTimestamp)
         {
             if (pendingDatasetOffset > 0)
             {
@@ -3596,15 +3595,14 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
 
-    Error               error = kErrorNone;
-    LeaderData          leaderData;
-    uint16_t            sourceAddress;
-    uint16_t            shortAddress;
-    ActiveTimestampTlv  activeTimestamp;
-    PendingTimestampTlv pendingTimestamp;
-    Tlv                 tlv;
-    uint16_t            networkDataOffset;
-    uint16_t            offset;
+    Error              error = kErrorNone;
+    LeaderData         leaderData;
+    uint16_t           sourceAddress;
+    uint16_t           shortAddress;
+    MeshCoP::Timestamp timestamp;
+    Tlv                tlv;
+    uint16_t           networkDataOffset;
+    uint16_t           offset;
 
     // Source Address
     SuccessOrExit(error = Tlv::Find<SourceAddressTlv>(aMessage, sourceAddress));
@@ -3626,17 +3624,22 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     SuccessOrExit(error);
 
     // Active Timestamp
-    if (Tlv::FindTlv(aMessage, activeTimestamp) == kErrorNone)
+    switch (Tlv::Find<ActiveTimestampTlv>(aMessage, timestamp))
     {
-        VerifyOrExit(activeTimestamp.IsValid(), error = kErrorParse);
-
+    case kErrorNone:
         // Active Dataset
         if (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, offset) == kErrorNone)
         {
             IgnoreError(aMessage.Read(offset, tlv));
-            IgnoreError(
-                Get<MeshCoP::ActiveDataset>().Save(activeTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
+            IgnoreError(Get<MeshCoP::ActiveDataset>().Save(timestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
         }
+        break;
+
+    case kErrorNotFound:
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
     }
 
     // clear Pending Dataset if device succeed to reattach using stored Pending Dataset
@@ -3646,21 +3649,24 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
     }
 
     // Pending Timestamp
-    if (Tlv::FindTlv(aMessage, pendingTimestamp) == kErrorNone)
+    switch (Tlv::Find<PendingTimestampTlv>(aMessage, timestamp))
     {
-        VerifyOrExit(pendingTimestamp.IsValid(), error = kErrorParse);
-
+    case kErrorNone:
         // Pending Dataset
         if (Tlv::FindTlvOffset(aMessage, Tlv::kPendingDataset, offset) == kErrorNone)
         {
             IgnoreError(aMessage.Read(offset, tlv));
             IgnoreError(
-                Get<MeshCoP::PendingDataset>().Save(pendingTimestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
+                Get<MeshCoP::PendingDataset>().Save(timestamp, aMessage, offset + sizeof(tlv), tlv.GetLength()));
         }
-    }
-    else
-    {
+        break;
+
+    case kErrorNotFound:
         Get<MeshCoP::PendingDataset>().ClearNetwork();
+        break;
+
+    default:
+        ExitNow(error = kErrorParse);
     }
 
 #if OPENTHREAD_CONFIG_TIME_SYNC_ENABLE
@@ -3935,7 +3941,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
 
     Error                     error = kErrorNone;
     ChannelTlv                channelTlv;
-    ActiveTimestampTlv        timestamp;
+    MeshCoP::Timestamp        timestamp;
     const MeshCoP::Timestamp *localTimestamp;
     uint8_t                   channel;
     uint16_t                  panId;
@@ -3947,9 +3953,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
 
     channel = static_cast<uint8_t>(channelTlv.GetChannel());
 
-    SuccessOrExit(error = Tlv::FindTlv(aMessage, timestamp));
-    VerifyOrExit(timestamp.IsValid(), error = kErrorParse);
-
+    SuccessOrExit(error = Tlv::Find<ActiveTimestampTlv>(aMessage, timestamp));
     SuccessOrExit(error = Tlv::Find<PanIdTlv>(aMessage, panId));
 
     localTimestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
