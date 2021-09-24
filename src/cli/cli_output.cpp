@@ -53,7 +53,7 @@ Output::Output(otInstance *aInstance, otCliOutputCallback aCallback, void *aCall
     , mCallbackContext(aCallbackContext)
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
     , mOutputLength(0)
-    , mIsLogging(false)
+    , mEmittingCommandOutput(true)
 #endif
 {
 }
@@ -233,7 +233,7 @@ void Output::OutputFormatV(const char *aFormat, va_list aArguments)
     mCallback(mCallbackContext, aFormat, aArguments);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    VerifyOrExit(!IsLogging());
+    VerifyOrExit(mEmittingCommandOutput);
 
     charsWritten = vsnprintf(&mOutputString[mOutputLength], sizeof(mOutputString) - mOutputLength, aFormat, args);
 
@@ -311,6 +311,20 @@ exit:
     va_end(args);
 #endif // OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
 }
+
+#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
+void Output::LogInput(const Arg *aArgs)
+{
+    String<kInputOutputLogStringSize> inputString;
+
+    for (bool isFirst = true; !aArgs->IsEmpty(); aArgs++, isFirst = false)
+    {
+        inputString.Append(isFirst ? "%s" : " %s", aArgs->GetCString());
+    }
+
+    otLogNoteCli("Input: %s", inputString.AsCString());
+}
+#endif
 
 void Output::OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[])
 {

@@ -280,12 +280,10 @@ void Interpreter::ProcessLine(char *aBuf)
 
     VerifyOrExit(StringLength(aBuf, kMaxLineLength) <= kMaxLineLength - 1, error = OT_ERROR_PARSE);
 
-#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    otLogNoteCli("Input: %s", aBuf);
-#endif
-
     SuccessOrExit(error = Utils::CmdLineParser::ParseCmd(aBuf, args, kMaxArgs));
     VerifyOrExit(!args[0].IsEmpty(), mCommandIsPending = false);
+
+    LogInput(args);
 
 #if OPENTHREAD_CONFIG_DIAG_ENABLE
     if (otDiagIsEnabled(GetInstancePtr()) && (args[0] != "diag"))
@@ -4940,7 +4938,14 @@ void Interpreter::OutputPrompt(void)
 {
     static const char sPrompt[] = "> ";
 
+    // The `OutputFormat()` below is adding the prompt which is not
+    // part of any command output, so we set the `EmittingCommandOutput`
+    // flag to false to avoid it being included in the command output
+    // log (under `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE`).
+
+    SetEmittingCommandOutput(false);
     OutputFormat("%s", sPrompt);
+    SetEmittingCommandOutput(true);
 }
 
 void Interpreter::HandleTimer(Timer &aTimer)
@@ -5009,19 +5014,12 @@ extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, cons
 
     VerifyOrExit(Interpreter::IsInitialized());
 
-#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    // CLI output can be used for logging. The `IsLogging` flag is
-    // used to indicate whether it is being used for a CLI command
-    // output or for logging.
-    Interpreter::GetInterpreter().SetIsLogging(true);
-#endif
-
+    // CLI output is being used for logging, so we set the flag
+    // `EmittingCommandOutput` to false indicate this.
+    Interpreter::GetInterpreter().SetEmittingCommandOutput(false);
     Interpreter::GetInterpreter().OutputFormatV(aFormat, aArgs);
     Interpreter::GetInterpreter().OutputLine("");
-
-#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    Interpreter::GetInterpreter().SetIsLogging(false);
-#endif
+    Interpreter::GetInterpreter().SetEmittingCommandOutput(true);
 
 exit:
     return;
@@ -5034,15 +5032,9 @@ extern "C" void otCliPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, c
 
     VerifyOrExit(Interpreter::IsInitialized());
 
-#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    Interpreter::GetInterpreter().SetIsLogging(true);
-#endif
-
+    Interpreter::GetInterpreter().SetEmittingCommandOutput(false);
     Interpreter::GetInterpreter().OutputLine(aLogLine);
-
-#if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    Interpreter::GetInterpreter().SetIsLogging(false);
-#endif
+    Interpreter::GetInterpreter().SetEmittingCommandOutput(true);
 
 exit:
     return;
