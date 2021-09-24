@@ -195,12 +195,15 @@ public:
         void EnergyScanDone(int8_t aMaxRssi);
 
         /**
-         * This method notifies user of `SubMac` that MAC frame counter is updated.
+         * This method notifies user of `SubMac` that a specific MAC frame counter is used for transmission.
          *
-         * @param[in]  aFrameCounter  The MAC frame counter value.
+         * It is possible that this callback is invoked out of order in terms of counter values (i.e., called for a
+         * smaller counter value after a call for a larger counter value).
+         *
+         * @param[in]  aFrameCounter  The MAC frame counter value which was used.
          *
          */
-        void FrameCounterUpdated(uint32_t aFrameCounter);
+        void FrameCounterUsed(uint32_t aFrameCounter);
     };
 
     /**
@@ -622,7 +625,7 @@ private:
     bool ShouldHandleTransmitTargetTime(void) const;
 
     void ProcessTransmitSecurity(void);
-    void UpdateFrameCounter(uint32_t aFrameCounter);
+    void SignalFrameCounterUsed(uint32_t aFrameCounter);
     void StartCsmaBackoff(void);
     void BeginTransmit(void);
     void SampleRssi(void);
@@ -630,7 +633,7 @@ private:
     void HandleReceiveDone(RxFrame *aFrame, Error aError);
     void HandleTransmitStarted(TxFrame &aFrame);
     void HandleTransmitDone(TxFrame &aFrame, RxFrame *aAckFrame, Error aError);
-    void UpdateFrameCounterOnTxDone(const TxFrame &aFrame);
+    void SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame);
     void HandleEnergyScanDone(int8_t aMaxRssi);
 
     static void HandleTimer(Timer &aTimer);
