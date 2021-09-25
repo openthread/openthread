@@ -29,6 +29,9 @@
 include $(abs_top_nlbuild_autotools_dir)/automake/pre.am
 
 EXTRA_DIST                                    = \
+    lib/bitmap.h                                \
+    lib/cbuf.h                                  \
+    lib/lbuf.h                                  \
     tcplp.h                                     \
     $(NULL)
 
@@ -62,7 +65,9 @@ libtcplp_a_CPPFLAGS                           = \
     $(NULL)
 
 libtcplp_a_SOURCES                            = \
-    tcplp.c
+    lib/bitmap.c                                \
+    lib/cbuf.c                                  \
+    lib/lbuf.c                                  \
     $(NULL)
 
 include $(abs_top_nlbuild_autotools_dir)/automake/post.am
