@@ -705,26 +705,26 @@ target_link_libraries(ot-test-pskc
 
 add_test(NAME ot-test-pskc COMMAND ot-test-pskc)
 
-add_executable(ot-test-steering-data
-    test_steering_data.cpp
+add_executable(ot-test-meshcop
+    test_meshcop.cpp
 )
 
-target_include_directories(ot-test-steering-data
+target_include_directories(ot-test-meshcop
     PRIVATE
         ${COMMON_INCLUDES}
 )
 
-target_compile_options(ot-test-steering-data
+target_compile_options(ot-test-meshcop
     PRIVATE
         ${COMMON_COMPILE_OPTIONS}
 )
 
-target_link_libraries(ot-test-steering-data
+target_link_libraries(ot-test-meshcop
     PRIVATE
         ${COMMON_LIBS}
 )
 
-add_test(NAME ot-test-steering-data COMMAND ot-test-steering-data)
+add_test(NAME ot-test-meshcop COMMAND ot-test-meshcop)
 
 add_executable(ot-test-string
     test_string.cpp

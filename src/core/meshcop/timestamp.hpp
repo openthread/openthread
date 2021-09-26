@@ -60,18 +60,6 @@ class Timestamp : public Clearable<Timestamp>
 {
 public:
     /**
-     * This method compares this timestamp to another.
-     *
-     * @param[in]  aCompare  A reference to the timestamp to compare.
-     *
-     * @retval -1  if @p aCompare is less than this timestamp.
-     * @retval  0  if @p aCompare is equal to this timestamp.
-     * @retval  1  if @p aCompare is greater than this timestamp.
-     *
-     */
-    int Compare(const Timestamp &aCompare) const;
-
-    /**
      * This method returns the Seconds value.
      *
      * @returns The Seconds value.
@@ -138,6 +126,22 @@ public:
      *
      */
     void AdvanceRandomTicks(void);
+
+    /**
+     * This static method compares two timestamps.
+     *
+     * Either one or both @p aFirst or @p aSecond can be `nullptr`. A non-null timestamp is considered greater than
+     * a null one. If both are null, they are considered as equal.
+     *
+     * @param[in]  aFirst   A pointer to the first timestamp to compare (can be nullptr).
+     * @param[in]  aSecond  A pointer to the second timestamp to compare (can be nullptr).
+     *
+     * @retval -1  if @p aFirst is less than @p aSecond (`aFirst < aSecond`).
+     * @retval  0  if @p aFirst is equal to @p aSecond (`aFirst == aSecond`).
+     * @retval  1  if @p aFirst is greater than @p aSecond (`aFirst > aSecond`).
+     *
+     */
+    static int Compare(const Timestamp *aFirst, const Timestamp *aSecond);
 
 private:
     static constexpr uint8_t  kTicksOffset         = 1;

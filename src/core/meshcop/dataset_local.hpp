@@ -89,6 +89,14 @@ public:
     bool IsTimestampPresent(void) const { return mTimestampPresent; }
 
     /**
+     * This method returns a pointer to the Timestamp or `nullptr` when it is not present in the Dataset.
+     *
+     * @returns A pointer to the Timestamp or `nullptr` if timestamp is not present in the Dataset.
+     *
+     */
+    const Timestamp *GetTimestamp(void) const { return mTimestampPresent ? &mTimestamp : nullptr; }
+
+    /**
      * This method restores and retrieves the dataset from non-volatile memory.
      *
      * This method also sets the memory-cached timestamp for subsequent calls to `Compare()`.
@@ -174,18 +182,6 @@ public:
      *
      */
     Error Save(const Dataset &aDataset);
-
-    /**
-     * This method compares this dataset to another based on the timestamp.
-     *
-     * @param[in]  aCompare  A reference to the timestamp to compare.
-     *
-     * @retval -1  if @p aCompare is older than this dataset.
-     * @retval  0  if @p aCompare is equal to this dataset.
-     * @retval  1  if @p aCompare is newer than this dataset.
-     *
-     */
-    int Compare(const Timestamp *aCompare);
 
 private:
     bool IsActive(void) const { return (mType == Dataset::kActive); }
