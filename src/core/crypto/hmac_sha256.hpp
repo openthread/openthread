@@ -38,11 +38,10 @@
 
 #include <stdint.h>
 
-#include <mbedtls/md.h>
-#include <psa/crypto.h>
-
 #include <openthread/platform/crypto.h>
 
+#include "common/code_utils.hpp"
+#include "crypto/context_size.hpp"
 #include "crypto/sha256.hpp"
 #include "crypto/storage.hpp"
 
@@ -134,13 +133,8 @@ public:
     void Finish(Hash &aHash);
 
 private:
-    union HmacContext
-    {
-        psa_mac_operation_t  mOperation;
-        mbedtls_md_context_t mContext;
-    };
-
-    HmacContext mContext;
+    otCryptoContext mContext;
+    OT_DEFINE_ALIGNED_VAR(mContextStorage, kHmacSha256ContextSize, uint64_t);
 };
 
 /**

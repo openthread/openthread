@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2016, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,81 +26,47 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-/**
- * @file
- *   This file includes definitions for performing AES-ECB computations.
- */
-
-#ifndef AES_ECB_HPP_
-#define AES_ECB_HPP_
+#ifndef CRYPTO_CONTEXT_HPP_
+#define CRYPTO_CONTEXT_HPP_
 
 #include "openthread-core-config.h"
+#include "openthread/crypto.h"
 
-#include <openthread/platform/crypto.h>
-
-#include "common/code_utils.hpp"
-#include "crypto/context_size.hpp"
-#include "crypto/storage.hpp"
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
+#include <mbedtls/aes.h>
+#include <mbedtls/md.h>
+#include <mbedtls/sha256.h>
+#elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
+#include <psa/crypto.h>
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 namespace ot {
 namespace Crypto {
 
-/**
- * @addtogroup core-security
- *
- * @{
- *
- */
+#if OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
-/**
- * This class implements AES ECB computation.
- *
- */
-class AesEcb
-{
-public:
-    static constexpr uint8_t kBlockSize = 16; ///< AES-128 block size (bytes).
+constexpr uint16_t kAesContextSize        = sizeof(mbedtls_aes_context);
+constexpr uint16_t kHmacSha256ContextSize = sizeof(mbedtls_md_context_t);
+constexpr uint16_t kHkdfContextSize       = sizeof(otCryptoSha256Hash);
+constexpr uint16_t kSha256ContextSize     = sizeof(mbedtls_sha256_context);
 
-    /**
-     * Constructor to initialize the mbedtls_aes_context.
-     *
-     */
-    AesEcb(void);
+#elif OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_PSA
 
-    /**
-     * Destructor to free the mbedtls_aes_context.
-     *
-     */
-    ~AesEcb(void);
+constexpr uint16_t kAesContextSize        = sizeof(psa_key_id_t);
+constexpr uint16_t kHmacSha256ContextSize = sizeof(psa_mac_operation_t);
+constexpr uint16_t kHkdfContextSize       = sizeof(psa_key_derivation_operation_t);
+constexpr uint16_t kSha256ContextSize     = sizeof(psa_hash_operation_t);
 
-    /**
-     * This method sets the key.
-     *
-     * @param[in]  aKey     Crypto Key used for ECB operation
-     *
-     */
-    void SetKey(const Key &aKey);
+#else
 
-    /**
-     * This method encrypts data.
-     *
-     * @param[in]   aInput   A pointer to the input buffer.
-     * @param[out]  aOutput  A pointer to the output buffer.
-     *
-     */
-    void Encrypt(const uint8_t aInput[kBlockSize], uint8_t aOutput[kBlockSize]);
+constexpr uint16_t kAesContextSize        = OPENTHREAD_CONFIG_AES_CONTEXT_SIZE;
+constexpr uint16_t kHmacSha256ContextSize = OPENTHREAD_CONFIG_HMAC_SHA256_CONTEXT_SIZE;
+constexpr uint16_t kHkdfContextSize       = OPENTHREAD_CONFIG_HKDF_CONTEXT_SIZE;
+constexpr uint16_t kSha256ContextSize     = OPENTHREAD_CONFIG_SHA256_CONTEXT_SIZE;
 
-private:
-    otCryptoContext mContext;
-    OT_DEFINE_ALIGNED_VAR(mContextStorage, kAesContextSize, uint64_t);
-};
-
-/**
- * @}
- *
- */
+#endif // OPENTHREAD_CONFIG_CRYPTO_LIB == OPENTHREAD_CONFIG_CRYPTO_LIB_MBEDTLS
 
 } // namespace Crypto
 } // namespace ot
 
-#endif // AES_ECB_HPP_
+#endif // CRYPTO_CONTEXT_HPP_

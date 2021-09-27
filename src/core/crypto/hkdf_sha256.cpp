@@ -37,20 +37,42 @@
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
+#include "common/error.hpp"
+#include "openthread/platform/crypto.h"
 
 namespace ot {
 namespace Crypto {
 
+HkdfSha256::HkdfSha256(void)
+{
+    Error err = kErrorNone;
+
+    mContext.mContext     = mContextStorage;
+    mContext.mContextSize = sizeof(mContextStorage);
+    err                   = otPlatCryptoHkdfInit(&mContext);
+
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
+}
+
+HkdfSha256::~HkdfSha256(void)
+{
+    Error err = otPlatCryptoHkdfDeinit(&mContext);
+
+    OT_ASSERT(err == kErrorNone);
+    OT_UNUSED_VARIABLE(err);
+}
+
 void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey)
 {
-    Error err = otPlatCryptoHkdfExtract(&mContext, sizeof(mContext), aSalt, aSaltLength, &aInputKey);
+    Error err = otPlatCryptoHkdfExtract(&mContext, aSalt, aSaltLength, &aInputKey);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    Error err = otPlatCryptoHkdfExpand(&mContext, sizeof(mContext), aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
+    Error err = otPlatCryptoHkdfExpand(&mContext, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
     OT_ASSERT(err == kErrorNone);
     OT_UNUSED_VARIABLE(err);
 }

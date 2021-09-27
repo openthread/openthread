@@ -119,6 +119,18 @@ typedef struct otCryptoKey
 } otCryptoKey;
 
 /**
+ * @struct otCryptoContext
+ *
+ * This structure stores the context object for platform APIs.
+ *
+ */
+typedef struct otCryptoContext
+{
+    void *   mContext;     ///< Pointer to the context.
+    uint16_t mContextSize; ///< The length of the context in bytes.
+} otCryptoContext;
+
+/**
  * Initialize the Crypto module.
  *
  * @retval OT_ERROR_NONE          Successfully initialized Crypto module.
@@ -206,57 +218,46 @@ bool otPlatCryptoHasKey(otCryptoKeyRef aKeyRef);
  * Initialize the HMAC operation.
  *
  * @param[in]  aContext          Context for HMAC operation.
- * @param[in]  aContextSize      Context size HMAC operation.
  *
  * @retval OT_ERROR_NONE          Successfully initialized HMAC operation.
  * @retval OT_ERROR_FAILED        Failed to initialize HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
+ * @note The platform driver shall point the context to the correct object such as psa_mac_operation_t or
+ *       mbedtls_md_context_t.
  *
  */
-otError otPlatCryptoHmacSha256Init(void *aContext, size_t aContextSize);
+otError otPlatCryptoHmacSha256Init(otCryptoContext *aContext);
 
 /**
  * Uninitialize the HMAC operation.
  *
  * @param[in]  aContext          Context for HMAC operation.
- * @param[in]  aContextSize      Context size HMAC operation.
- *
  *
  * @retval OT_ERROR_NONE          Successfully uninitialized HMAC operation.
  * @retval OT_ERROR_FAILED        Failed to uninitialized HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
- *
  */
-otError otPlatCryptoHmacSha256Deinit(void *aContext, size_t aContextSize);
+otError otPlatCryptoHmacSha256Deinit(otCryptoContext *aContext);
 
 /**
  * Start HMAC operation.
  *
  * @param[in]  aContext           Context for HMAC operation.
- * @param[in]  aContextSize       Context size HMAC operation.
  * @param[in]  aKey               Key material to be used for for HMAC operation.
  *
  * @retval OT_ERROR_NONE          Successfully started HMAC operation.
  * @retval OT_ERROR_FAILED        Failed to start HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aKey was NULL
  *
- * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
- *
  */
-otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContextSize, const otCryptoKey *aKey);
+otError otPlatCryptoHmacSha256Start(otCryptoContext *aContext, const otCryptoKey *aKey);
 
 /**
  * Update the HMAC operation with new input.
  *
  * @param[in]  aContext           Context for HMAC operation.
- * @param[in]  aContextSize       Context size HMAC operation.
  * @param[in]  aBuf               A pointer to the input buffer.
  * @param[in]  aBufLength         The length of @p aBuf in bytes.
  *
@@ -264,17 +265,13 @@ otError otPlatCryptoHmacSha256Start(void *aContext, size_t aContextSize, const o
  * @retval OT_ERROR_FAILED        Failed to update HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
  *
- * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
- *
  */
-otError otPlatCryptoHmacSha256Update(void *aContext, size_t aContextSize, const void *aBuf, uint16_t aBufLength);
+otError otPlatCryptoHmacSha256Update(otCryptoContext *aContext, const void *aBuf, uint16_t aBufLength);
 
 /**
  * Complete the HMAC operation.
  *
  * @param[in]  aContext           Context for HMAC operation.
- * @param[in]  aContextSize       Context size HMAC operation.
  * @param[out] aBuf               A pointer to the output buffer.
  * @param[in]  aBufLength         The length of @p aBuf in bytes.
  *
@@ -282,50 +279,42 @@ otError otPlatCryptoHmacSha256Update(void *aContext, size_t aContextSize, const 
  * @retval OT_ERROR_FAILED        Failed to complete HMAC operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
  *
- * @note In case PSA is supported pointer to psa_mac_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_md_context_t will be provided.
- *
  */
-otError otPlatCryptoHmacSha256Finish(void *aContext, size_t aContextSize, uint8_t *aBuf, size_t aBufLength);
+otError otPlatCryptoHmacSha256Finish(otCryptoContext *aContext, uint8_t *aBuf, size_t aBufLength);
 
 /**
  * Initialise the AES operation.
  *
  * @param[in]  aContext           Context for AES operation.
- * @param[in]  aContextSize       Context size AES operation.
  *
  * @retval OT_ERROR_NONE          Successfully Initialised AES operation.
  * @retval OT_ERROR_FAILED        Failed to Initialise AES operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
+ * @retval OT_ERROR_NO_BUFS       Cannot allocate the context.
  *
- * @note In case PSA is supported pointer to psa_key_id will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
+ * @note The platform driver shall point the context to the correct object such as psa_key_id
+ *       or mbedtls_aes_context_t.
  *
  */
-otError otPlatCryptoAesInit(void *aContext, size_t aContextSize);
+otError otPlatCryptoAesInit(otCryptoContext *aContext);
 
 /**
  * Set the key for AES operation.
  *
  * @param[in]  aContext           Context for AES operation.
- * @param[in]  aContextSize       Context size AES operation.
  * @param[out] aKey               Key to use for AES operation.
  *
  * @retval OT_ERROR_NONE          Successfully set the key for AES operation.
  * @retval OT_ERROR_FAILED        Failed to set the key for AES operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aKey was NULL
  *
- * @note In case PSA is supported pointer to psa_key_id will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
- *
  */
-otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, const otCryptoKey *aKey);
+otError otPlatCryptoAesSetKey(otCryptoContext *aContext, const otCryptoKey *aKey);
 
 /**
  * Encrypt the given data.
  *
  * @param[in]  aContext           Context for AES operation.
- * @param[in]  aContextSize       Context size AES operation.
  * @param[in]  aInput             Pointer to the input buffer.
  * @param[in]  aOutput            Pointer to the output buffer.
  *
@@ -333,33 +322,40 @@ otError otPlatCryptoAesSetKey(void *aContext, size_t aContextSize, const otCrypt
  * @retval OT_ERROR_FAILED        Failed to encrypt @p aInput.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aKey or @p aOutput were NULL
  *
- * @note In case PSA is supported pointer to psa_key_id will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
- *
  */
-otError otPlatCryptoAesEncrypt(void *aContext, size_t aContextSize, const uint8_t *aInput, uint8_t *aOutput);
+otError otPlatCryptoAesEncrypt(otCryptoContext *aContext, const uint8_t *aInput, uint8_t *aOutput);
 
 /**
  * Free the AES context.
  *
  * @param[in]  aContext           Context for AES operation.
- * @param[in]  aContextSize       Context size AES operation.
  *
  * @retval OT_ERROR_NONE          Successfully freed AES context.
  * @retval OT_ERROR_FAILED        Failed to free AES context.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note In case PSA is supported pointer to psa_key_id will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_aes_context_t will be provided.
+ */
+otError otPlatCryptoAesFree(otCryptoContext *aContext);
+
+/**
+ * Initialise the HKDF context.
+ *
+ * @param[in]  aContext           Context for HKDF operation.
+ *
+ * @retval OT_ERROR_NONE          Successfully Initialised AES operation.
+ * @retval OT_ERROR_FAILED        Failed to Initialise AES operation.
+ * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
+ *
+ * @note The platform driver shall point the context to the correct object such as psa_key_derivation_operation_t
+ *       or HmacSha256::Hash
  *
  */
-otError otPlatCryptoAesFree(void *aContext, size_t aContextSize);
+otError otPlatCryptoHkdfInit(otCryptoContext *aContext);
 
 /**
  * Perform HKDF Expand step.
  *
  * @param[in]  aContext           Operation context for HKDF operation.
- * @param[in]  aContextSize       Context size HKDF operation.
  * @param[in]  aInfo              Pointer to the Info sequence.
  * @param[in]  aInfoLength        Length of the Info sequence.
  * @param[out] aOutputKey         Pointer to the output Key.
@@ -367,20 +363,19 @@ otError otPlatCryptoAesFree(void *aContext, size_t aContextSize);
  *
  * @retval OT_ERROR_NONE          HKDF Expand was successful.
  * @retval OT_ERROR_FAILED        HKDF Expand failed.
+ * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
  */
-otError otPlatCryptoHkdfExpand(void *         aContext,
-                               size_t         aContextSize,
-                               const uint8_t *aInfo,
-                               uint16_t       aInfoLength,
-                               uint8_t *      aOutputKey,
-                               uint16_t       aOutputKeyLength);
+otError otPlatCryptoHkdfExpand(otCryptoContext *aContext,
+                               const uint8_t *  aInfo,
+                               uint16_t         aInfoLength,
+                               uint8_t *        aOutputKey,
+                               uint16_t         aOutputKeyLength);
 
 /**
  * Perform HKDF Extract step.
  *
  * @param[in]  aContext           Operation context for HKDF operation.
- * @param[in]  aContextSize       Context size HKDF operation.
  * @param[in]  aSalt              Pointer to the Salt for HKDF.
  * @param[in]  aInfoLength        length of Salt.
  * @param[in]  aInputKey          Pointer to the input key.
@@ -389,62 +384,66 @@ otError otPlatCryptoHkdfExpand(void *         aContext,
  * @retval OT_ERROR_FAILED        HKDF Extract failed.
  *
  */
-otError otPlatCryptoHkdfExtract(void *             aContext,
-                                size_t             aContextSize,
+otError otPlatCryptoHkdfExtract(otCryptoContext *  aContext,
                                 const uint8_t *    aSalt,
                                 uint16_t           aSaltLength,
                                 const otCryptoKey *aInputKey);
 
 /**
+ * Uninitialize the HKDF context.
+ *
+ * @param[in]  aContext           Context for HKDF operation.
+ *
+ * @retval OT_ERROR_NONE          Successfully un-initialised HKDF operation.
+ * @retval OT_ERROR_FAILED        Failed to un-initialised HKDF operation.
+ * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
+ *
+ */
+otError otPlatCryptoHkdfDeinit(otCryptoContext *aContext);
+
+/**
  * Initialise the SHA-256 operation.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
- * @param[in]  aContextSize       Context size SHA-256 operation.
  *
  * @retval OT_ERROR_NONE          Successfully initialised SHA-256 operation.
  * @retval OT_ERROR_FAILED        Failed to initialise SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
+ *
+ * @note The platform driver shall point the context to the correct object such as psa_hash_operation_t
+ *       or mbedtls_sha256_context.
  */
-otError otPlatCryptoSha256Init(void *aContext, size_t aContextSize);
+otError otPlatCryptoSha256Init(otCryptoContext *aContext);
 
 /**
- * UnInitialise the SHA-256 operation.
+ * Uninitialize the SHA-256 operation.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
- * @param[in]  aContextSize       Context size SHA-256 operation.
  *
  * @retval OT_ERROR_NONE          Successfully un-initialised SHA-256 operation.
  * @retval OT_ERROR_FAILED        Failed to un-initialised SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
-otError otPlatCryptoSha256Deinit(void *aContext, size_t aContextSize);
+otError otPlatCryptoSha256Deinit(otCryptoContext *aContext);
 
 /**
  * Start SHA-256 operation.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
- * @param[in]  aContextSize       Context size SHA-256 operation.
  *
  * @retval OT_ERROR_NONE          Successfully started SHA-256 operation.
  * @retval OT_ERROR_FAILED        Failed to start SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext was NULL
  *
- * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
-otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize);
+otError otPlatCryptoSha256Start(otCryptoContext *aContext);
 
 /**
  * Update SHA-256 operation with new input.
  *
  * @param[in]  aContext           Context for SHA-256 operation.
- * @param[in]  aContextSize       Context size SHA-256 operation.
  * @param[in]  aBuf               A pointer to the input buffer.
  * @param[in]  aBufLength         The length of @p aBuf in bytes.
  *
@@ -452,10 +451,8 @@ otError otPlatCryptoSha256Start(void *aContext, size_t aContextSize);
  * @retval OT_ERROR_FAILED        Failed to update SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aBuf was NULL
  *
- * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
-otError otPlatCryptoSha256Update(void *aContext, size_t aContextSize, const void *aBuf, uint16_t aBufLength);
+otError otPlatCryptoSha256Update(otCryptoContext *aContext, const void *aBuf, uint16_t aBufLength);
 
 /**
  * Finish SHA-256 operation.
@@ -469,10 +466,8 @@ otError otPlatCryptoSha256Update(void *aContext, size_t aContextSize, const void
  * @retval OT_ERROR_FAILED        Failed to complete SHA-256 operation.
  * @retval OT_ERROR_INVALID_ARGS  @p aContext or @p aHash was NULL
  *
- * @note In case PSA is supported pointer to psa_hash_operation_t will be passed as input.
- * In case of mbedTLS, pointer to  mbedtls_sha256_context will be provided.
  */
-otError otPlatCryptoSha256Finish(void *aContext, size_t aContextSize, uint8_t *aHash, uint16_t aHashSize);
+otError otPlatCryptoSha256Finish(otCryptoContext *aContext, uint8_t *aHash, uint16_t aHashSize);
 
 /**
  * @}
