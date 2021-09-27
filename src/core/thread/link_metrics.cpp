@@ -602,11 +602,13 @@ void LinkMetrics::ProcessEnhAckIeData(const uint8_t *aData, uint8_t aLength, con
     }
     if (values.GetMetrics().mLinkMargin && idx < aLength)
     {
-        values.mLinkMarginValue = aData[idx++];
+        // Reverse operation for linear scale, map from [0, 255] to [0, 130]
+        values.mLinkMarginValue = aData[idx++] * 130 / 255;
     }
     if (values.GetMetrics().mRssi && idx < aLength)
     {
-        values.mRssiValue = aData[idx++];
+        // Reverse operation for linear scale, map from [0, 255] to [-130, 0]
+        values.mRssiValue = aData[idx++] * 130 / 255 - 130;
     }
 
     mEnhAckProbingIeReportCallback(aNeighbor.GetRloc16(), &aNeighbor.GetExtAddress(), &values,
