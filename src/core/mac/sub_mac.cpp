@@ -579,7 +579,7 @@ void SubMac::SignalFrameCounterUsedOnTxDone(const TxFrame &aFrame)
 
     OT_UNUSED_VARIABLE(allowError);
 
-    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled());
+    VerifyOrExit(!ShouldHandleTransmitSecurity() && aFrame.GetSecurityEnabled() && aFrame.IsHeaderUpdated());
 
     // In an FTD/MTD build, if/when link-raw is enabled, the `TxFrame`
     // is prepared and given by user and may not necessarily follow 15.4
