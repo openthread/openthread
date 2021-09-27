@@ -41,6 +41,7 @@
 #include <openthread/cli.h>
 
 #include "cli_config.h"
+#include "utils/parse_cmdline.hpp"
 
 namespace ot {
 namespace Cli {
@@ -292,14 +293,21 @@ public:
     }
 
 protected:
+    typedef Utils::CmdLineParser::Arg Arg;
+
     void OutputFormatV(const char *aFormat, va_list aArguments);
 
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    bool IsLogging(void) const { return mIsLogging; }
-    void SetIsLogging(bool aIsLogging) { mIsLogging = aIsLogging; }
+    void LogInput(const Arg *aArgs);
+    void SetEmittingCommandOutput(bool aEmittingOutput) { mEmittingCommandOutput = aEmittingOutput; }
+#else
+    void LogInput(const Arg *) {}
+    void SetEmittingCommandOutput(bool) {}
 #endif
 
 private:
+    static constexpr uint16_t kInputOutputLogStringSize = OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE;
+
     void OutputTableHeader(uint8_t aNumColumns, const char *const aTitles[], const uint8_t aWidths[]);
     void OutputTableSeparator(uint8_t aNumColumns, const uint8_t aWidths[]);
 
@@ -307,9 +315,9 @@ private:
     otCliOutputCallback mCallback;
     void *              mCallbackContext;
 #if OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE
-    char     mOutputString[OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_LOG_STRING_SIZE];
+    char     mOutputString[kInputOutputLogStringSize];
     uint16_t mOutputLength;
-    bool     mIsLogging;
+    bool     mEmittingCommandOutput;
 #endif
 };
 
