@@ -143,6 +143,7 @@ private:
 
     void ReceiveNetLinkMessage(void);
     void ReceiveIcmp6Message(void);
+    bool HasLinkLocalAddress(void) const;
 };
 
 } // namespace Posix
