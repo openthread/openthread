@@ -852,19 +852,25 @@ void RoutingManager::HandleRouterSolicitTimer(void)
         Error    error;
 
         error = SendRouterSolicitation();
-        ++mRouterSolicitCount;
 
         if (error == kErrorNone)
         {
             otLogDebgBr("Successfully sent %uth Router Solicitation", mRouterSolicitCount);
+            ++mRouterSolicitCount;
+            nextSolicitationDelay =
+                (mRouterSolicitCount == kMaxRtrSolicitations) ? kMaxRtrSolicitationDelay : kRtrSolicitationInterval;
         }
         else
         {
             otLogCritBr("Failed to send %uth Router Solicitation: %s", mRouterSolicitCount, ErrorToString(error));
-        }
 
-        nextSolicitationDelay =
-            (mRouterSolicitCount == kMaxRtrSolicitations) ? kMaxRtrSolicitationDelay : kRtrSolicitationInterval;
+            // It's unexpected that RS will fail and we will retry sending RS messages in 60 seconds.
+            // Notice that `mRouterSolicitCount` is not incremented for failed RS and thus we will
+            // not start configuring on-link prefixes before `kMaxRtrSolicitations` successful RS
+            // messages have been sent.
+            nextSolicitationDelay = kRtrSolicitationRetryDelay;
+            mRouterSolicitCount   = 0;
+        }
 
         otLogDebgBr("Router solicitation timer scheduled in %u seconds", nextSolicitationDelay);
         mRouterSolicitTimer.Start(Time::SecToMsec(nextSolicitationDelay));
