@@ -50,6 +50,7 @@ readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
 
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
 readonly FULL_LOGS=${FULL_LOGS:-0}
+readonly TREL=${TREL:-0}
 
 build_simulation()
 {
@@ -277,12 +278,18 @@ do_build_otbr_docker()
         "-DOT_NETDATA_PUBLISHER=ON"
         "-DOT_SLAAC=ON"
         "-DOT_SRP_CLIENT=ON"
-        "-DOT_TREL=OFF"
         "-DOT_FULL_LOGS=ON"
         "-DOT_UPTIME=ON"
         "-DOTBR_DUA_ROUTING=ON"
         "-DCMAKE_CXX_FLAGS='-DOPENTHREAD_CONFIG_DNSSD_SERVER_BIND_UNSPECIFIED_NETIF=1'"
     )
+
+    if [[ ${TREL} == 1 ]]; then
+        otbr_options+=("-DOT_TREL=ON")
+    else
+        otbr_options+=("-DOT_TREL=OFF")
+    fi
+
     local otbr_docker_image=${OTBR_DOCKER_IMAGE:-otbr-ot12-backbone-ci}
 
     otbrdir=$(mktemp -d -t otbr_XXXXXX)
