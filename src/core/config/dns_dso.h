@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,46 +26,14 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-
 /**
- * This header file defines the OpenThread core configuration for toranj with simulation platform.
+ * @file
+ *   This file includes compile-time configurations for the DNS Stateful Operations (DSO).
  *
  */
 
-// Include the common configuration for all platforms.
-#include "openthread-core-toranj-config.h"
-
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#if OPENTHREAD_RADIO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
-#else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
-#endif
-
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
- *
- * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
- *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
-
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+#ifndef CONFIG_DNS_DSO_H_
+#define CONFIG_DNS_DSO_H_
 
 /**
  * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
@@ -73,6 +41,38 @@
  * Define to 1 to enable DSO support.
  *
  */
-#define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
+#ifndef OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+#define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 0
+#endif
 
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */
+/**
+ * @def OPENTHREAD_CONFIG_DNS_DSO_CONNECTING_TIMEOUT
+ *
+ * Specifies the maximum time (in msec) waiting for a connection to be established by DSO platform layer.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_DSO_CONNECTING_TIMEOUT
+#define OPENTHREAD_CONFIG_DNS_DSO_CONNECTING_TIMEOUT (45 * 1000)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_DSO_RESPONSE_TIMEOUT
+ *
+ * Specifies the maximum time (in msec) waiting for a response to a request.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_DSO_RESPONSE_TIMEOUT
+#define OPENTHREAD_CONFIG_DNS_DSO_RESPONSE_TIMEOUT (30 * 1000)
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS
+ *
+ * Specifies the maximum number of pending requests per DSO session.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS
+#define OPENTHREAD_CONFIG_DNS_DSO_MAX_PENDING_REQUESTS 3
+#endif
+
+#endif // CONFIG_DNS_DSO_H_

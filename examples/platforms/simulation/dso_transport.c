@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,53 +26,34 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_
+#include "platform-simulation.h"
 
-/**
- * This header file defines the OpenThread core configuration for toranj with simulation platform.
- *
- */
+#include <openthread/platform/dso_transport.h>
 
-// Include the common configuration for all platforms.
-#include "openthread-core-toranj-config.h"
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#if OPENTHREAD_RADIO
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-RCP-toranj"
-#else
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "SIMULATION-toranj"
-#endif
+void otPlatDsoEnableListening(otInstance *aInstance, bool aEnable)
+{
+    OT_UNUSED_VARIABLE(aInstance);
+    OT_UNUSED_VARIABLE(aEnable);
+}
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE
- *
- * Define to 1 to enable otPlatFlash* APIs to support non-volatile storage.
- *
- * When defined to 1, the platform MUST implement the otPlatFlash* APIs instead of the otPlatSettings* APIs.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_FLASH_API_ENABLE 1
+void otPlatDsoConnect(otPlatDsoConnection *aConnection, const otSockAddr *aPeerSockAddr)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aPeerSockAddr);
+}
 
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_APP
+void otPlatDsoSend(otPlatDsoConnection *aConnection, otMessage *aMessage)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMessage);
+}
 
-/**
- * @def OPENTHREAD_CONFIG_DNS_DSO_ENABLE
- *
- * Define to 1 to enable DSO support.
- *
- */
-#define OPENTHREAD_CONFIG_DNS_DSO_ENABLE 1
+void otPlatDsoDisconnect(otPlatDsoConnection *aConnection, otPlatDsoDisconnectMode aMode)
+{
+    OT_UNUSED_VARIABLE(aConnection);
+    OT_UNUSED_VARIABLE(aMode);
+}
 
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_SIMULATION_H_ */
+#endif // #if OPENTHREAD_CONFIG_DNS_DSO_ENABLE

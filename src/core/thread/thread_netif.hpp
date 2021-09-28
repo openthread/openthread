@@ -52,6 +52,7 @@
 #include "net/dhcp6_client.hpp"
 #include "net/dhcp6_server.hpp"
 #include "net/dns_client.hpp"
+#include "net/dns_dso.hpp"
 #include "net/dnssd_server.hpp"
 #include "net/ip6_filter.hpp"
 #include "net/nd_agent.hpp"
@@ -189,6 +190,9 @@ private:
 #endif
 #if OPENTHREAD_CONFIG_DNSSD_SERVER_ENABLE
     Dns::ServiceDiscovery::Server mDnssdServer;
+#endif
+#if OPENTHREAD_CONFIG_DNS_DSO_ENABLE
+    Dns::Dso mDnsDso;
 #endif
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
     Sntp::Client mSntpClient;

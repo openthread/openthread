@@ -77,6 +77,7 @@ Error Header::ResponseCodeToError(Response aResponse)
         break;
 
     case kResponseNotImplemented: // Server does not support the query type (OpCode).
+    case kDsoTypeNotImplemented:  // DSO TLV type is not implemented.
         error = kErrorNotImplemented;
         break;
 
