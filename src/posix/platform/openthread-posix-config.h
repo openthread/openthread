@@ -190,6 +190,31 @@
 #define OPENTHREAD_POSIX_CONFIG_MAX_EXTERNAL_ROUTE_NUM 8
 #endif
 
+/**
+ * @def OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+ *
+ * Define as 1 to enable firewall.
+ *
+ * The rules are implemented using ip6tables and ipset. The rules are as follows.
+ *
+ * ip6tables -A $OTBR_FORWARD_CHAIN -m set --match-set otbr-deny-src src -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_CHAIN -m set --match-set otbr-allow-dst dst -p ip -j ACCEPT
+ * ip6tables -A $OTBR_FORWARD_CHAIN -m pkttype --pkt-type unicast -p ip -j DROP
+ * ip6tables -A $OTBR_FORWARD_CHAIN -p ip -j ACCEPT
+ *
+ */
+#ifdef __linux__
+#if OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE & OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
+#ifndef OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE 1
+#endif
+#endif
+#endif
+
+#ifndef OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
+#define OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE 0
+#endif
+
 #ifdef __APPLE__
 
 /**

@@ -361,6 +361,32 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
             test_info['rlocs'][i] = node.get_rloc()
 
+    def collect_omrs(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['omrs'] = {}
+
+        for i, node in self.nodes.items():
+            if node.is_host:
+                continue
+
+            test_info['omrs'][i] = node.get_ip6_address(config.ADDRESS_TYPE.OMR)
+
+    def collect_duas(self):
+        if not self._do_packet_verification:
+            return
+
+        test_info = self._test_info
+        test_info['duas'] = {}
+
+        for i, node in self.nodes.items():
+            if node.is_host:
+                continue
+
+            test_info['duas'][i] = node.get_ip6_address(config.ADDRESS_TYPE.DUA)
+
     def collect_leader_aloc(self, node):
         if not self._do_packet_verification:
             return
