@@ -53,6 +53,8 @@ class TestInfo(object):
             self.mleids = {int(k): Ipv6Addr(v) for k, v in test_info.get('mleids', {}).items()}
             self.rlocs = {int(k): Ipv6Addr(v) for k, v in test_info.get('rlocs', {}).items()}
             self.rloc16s = self._convert_hex_values(self._convert_keys_to_ints(test_info.get('rloc16s', {})))
+            self.omrs = {int(k): [Ipv6Addr(x) for x in l] for k, l in test_info.get('omrs', {}).items()}
+            self.duas = {int(k): Ipv6Addr(v) for k, v in test_info.get('duas', {}).items()}
             self.extra_vars = test_info.get('extra_vars', {})
             self.leader_aloc = Ipv6Addr(test_info.get('leader_aloc')) if 'leader_aloc' in test_info else ''
 
