@@ -303,7 +303,7 @@ void platformRadioUpdateFdSet(fd_set *aReadFdSet, fd_set *aWriteFdSet, int *aMax
     {
         uint64_t remain = deadline - now;
 
-        if (remain < static_cast<uint64_t>(aTimeout->tv_sec * US_PER_S + aTimeout->tv_usec))
+        if (remain < (static_cast<uint64_t>(aTimeout->tv_sec) * US_PER_S + static_cast<uint64_t>(aTimeout->tv_usec)))
         {
             aTimeout->tv_sec  = static_cast<time_t>(remain / US_PER_S);
             aTimeout->tv_usec = static_cast<suseconds_t>(remain % US_PER_S);
