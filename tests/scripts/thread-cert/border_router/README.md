@@ -2,7 +2,7 @@
 
 ## Run Border Router (BR) tests locally
 
-BR tests run in isolated Docker network and containers, so new OTBR Docker image needs to be created before running the tests:
+BR tests run in isolated Docker network and containers, so a new OTBR Docker image needs to be created before running these tests:
 
 ```shell
 # Use root privilege when necessary.
