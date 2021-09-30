@@ -212,4 +212,24 @@
 #define OPENTHREAD_CONFIG_MLE_INFORM_PREVIOUS_PARENT_ON_REATTACH 1
 #endif
 
+/**
+ * @def OPENTHREAD_CONFIG_UPTIME_ENABLE
+ *
+ * Define to 1 to enable tracking the uptime of OpenThread instance.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_UPTIME_ENABLE
+#define OPENTHREAD_CONFIG_UPTIME_ENABLE 1
+#endif
+
+/**
+ * @def OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
+ *
+ * Define as 1 to prepend the current uptime to all log messages.
+ *
+ */
+#ifndef OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME
+#define OPENTHREAD_CONFIG_LOG_PREPEND_UPTIME 1
+#endif
+
 #endif // OPENTHREAD_CORE_SIMULATION_CONFIG_H_
