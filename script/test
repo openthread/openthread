@@ -51,6 +51,7 @@ readonly INTER_OP_BBR="${INTER_OP_BBR:-1}"
 readonly OT_COREDUMP_DIR="${PWD}/ot-core-dump"
 readonly FULL_LOGS=${FULL_LOGS:-0}
 readonly TREL=${TREL:-0}
+readonly LOCAL_OTBR_DIR=${LOCAL_OTBR_DIR:-""}
 
 build_simulation()
 {
@@ -296,7 +297,12 @@ do_build_otbr_docker()
     otdir=$(pwd)
 
     (
-        ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "${otbrdir}"
+        if [[ -z ${LOCAL_OTBR_DIR} ]]; then
+            ./script/git-tool clone https://github.com/openthread/ot-br-posix.git --depth 1 "${otbrdir}"
+        else
+            cp -r "${LOCAL_OTBR_DIR}"/* "${otbrdir}"
+            rm -rf "${otbrdir}"/build
+        fi
         cd "${otbrdir}"
         rm -rf third_party/openthread/repo
         cp -r "${otdir}" third_party/openthread/repo
