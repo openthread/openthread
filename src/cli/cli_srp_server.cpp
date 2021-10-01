@@ -73,7 +73,7 @@ otError SrpServer::ProcessAddrMode(Arg aArgs[])
     {
         switch (otSrpServerGetAddressMode(GetInstancePtr()))
         {
-        case OT_SRP_SREVER_ADDRESS_MODE_UNICAST:
+        case OT_SRP_SERVER_ADDRESS_MODE_UNICAST:
             OutputLine("unicast");
             break;
 
@@ -86,7 +86,7 @@ otError SrpServer::ProcessAddrMode(Arg aArgs[])
     }
     else if (aArgs[0] == "unicast")
     {
-        error = otSrpServerSetAddressMode(GetInstancePtr(), OT_SRP_SREVER_ADDRESS_MODE_UNICAST);
+        error = otSrpServerSetAddressMode(GetInstancePtr(), OT_SRP_SERVER_ADDRESS_MODE_UNICAST);
     }
     else if (aArgs[0] == "anycast")
     {

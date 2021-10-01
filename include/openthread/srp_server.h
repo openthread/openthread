@@ -151,7 +151,7 @@ typedef enum
  */
 typedef enum otSrpServerAddressMode
 {
-    OT_SRP_SREVER_ADDRESS_MODE_UNICAST = 0, ///< Unicast address mode.
+    OT_SRP_SERVER_ADDRESS_MODE_UNICAST = 0, ///< Unicast address mode.
     OT_SRP_SERVER_ADDRESS_MODE_ANYCAST = 1, ///< Anycast address mode.
 } otSrpServerAddressMode;
 
