@@ -428,7 +428,7 @@ const otSrpServerService *otSrpServerHostGetNextService(const otSrpServerHost * 
  *
  * To iterate over sub-types of a specific instance name `instanceName`:
  *   service = otSrpServerHostFindNextService(host, service, OT_SRP_SERVER_FLAGS_SUB_TYPE_SERVICE_ONLY, NULL,
- *                                            insatnceName);
+ *                                            instanceName);
  *
  * To find a specific service with service name `serviceName` and service instance name `instanceName`:
  *   service = otSrpServerHostFindNextService(host, NULL, OT_SRP_SERVER_FLAGS_ANY_SERVICE, serviceName, instanceName);

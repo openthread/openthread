@@ -121,7 +121,7 @@ otSrpClientBuffersServiceEntry *otSrpClientBuffersAllocateService(otInstance *aI
  * the behavior of this function is undefined.
  *
  * @param[in] aInstance   A pointer to the OpenThread instance.
- * @param[in] aSevice     A pointer to the service entry to free (MUST NOT be NULL).
+ * @param[in] aService    A pointer to the service entry to free (MUST NOT be NULL).
  *
  */
 void otSrpClientBuffersFreeService(otInstance *aInstance, otSrpClientBuffersServiceEntry *aService);

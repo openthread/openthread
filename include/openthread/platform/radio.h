@@ -1076,7 +1076,7 @@ uint8_t otPlatRadioGetCslClockUncertainty(otInstance *aInstance);
  * @retval  OT_ERROR_NOT_IMPLEMENTED  The feature is not implemented
  * @retval  OT_ERROR_INVALID_ARGS     The specified channel is not valid.
  * @retval  OT_ERROR_FAILED           Other platform specific errors.
- * @retval  OT_ERROR_NONE             Successfully set max transmit poewr.
+ * @retval  OT_ERROR_NONE             Successfully set max transmit power.
  *
  */
 otError otPlatRadioSetChannelMaxTransmitPower(otInstance *aInstance, uint8_t aChannel, int8_t aMaxPower);
