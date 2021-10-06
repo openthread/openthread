@@ -183,13 +183,13 @@ exit:
 void otDumpMacFrame(otLogLevel aLogLevel, const char *aId, const void *aBuf, const size_t aLength)
 {
     constexpr uint8_t kFixedStringPart = 10; // strlen(" seqno=000")
+    constexpr uint8_t kSeqnoIdx        = 2;  // index of the sequence number within aBuf
 
-    uint8_t seqnoIdx = 2;
-    size_t  idLength = strlen(aId) + kFixedStringPart + 1; // allow for the '\0' character
-    char    newId[25];
+    size_t idLength = strlen(aId) + kFixedStringPart + 1; // allow for the '\0' character
+    char   newId[25];
 
-    VerifyOrExit(idLength <= 25);
-    snprintf(newId, idLength, "%s seqno=%03u", aId, static_cast<const uint8_t *>(aBuf)[seqnoIdx]);
+    VerifyOrExit(idLength <= sizeof(newId));
+    snprintf(newId, idLength, "%s seqno=%03u", aId, static_cast<const uint8_t *>(aBuf)[kSeqnoIdx]);
     otDump(aLogLevel, OT_LOG_REGION_MAC, newId, aBuf, aLength);
 exit:
     return;
