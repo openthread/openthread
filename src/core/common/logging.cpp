@@ -179,6 +179,21 @@ void otLogMac(otLogLevel aLogLevel, const char *aFormat, ...)
 exit:
     return;
 }
+
+void otDumpMacFrame(otLogLevel aLogLevel, const char *aId, const void *aBuf, const size_t aLength)
+{
+    constexpr uint8_t kFixedStringPart = 10; // strlen(" seqno=000")
+    constexpr uint8_t kSeqnoIdx        = 2;  // index of the sequence number within aBuf
+
+    size_t idLength = strlen(aId) + kFixedStringPart + 1; // allow for the '\0' character
+    char   newId[25];
+
+    VerifyOrExit(idLength <= sizeof(newId));
+    snprintf(newId, idLength, "%s seqno=%03u", aId, static_cast<const uint8_t *>(aBuf)[kSeqnoIdx]);
+    otDump(aLogLevel, OT_LOG_REGION_MAC, newId, aBuf, aLength);
+exit:
+    return;
+}
 #endif
 
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
@@ -276,19 +291,20 @@ static void DumpLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const uint8_t
 
 void otDump(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aId, const void *aBuf, const size_t aLength)
 {
-    constexpr uint8_t kWidth = 72;
+    constexpr uint8_t kWidth           = 72;
+    constexpr uint8_t kFixedStringPart = 10; // strlen("[ len=000]")
 
-    size_t                        idLen = strlen(aId);
+    size_t                        idLen = strlen(aId) + kFixedStringPart;
     ot::String<kStringLineLength> string;
 
-    for (size_t i = 0; i < (kWidth - idLen) / 2 - 5; i++)
+    for (size_t i = 0; i < (kWidth - idLen) / 2; i++)
     {
         string.Append("=");
     }
 
     string.Append("[%s len=%03u]", aId, static_cast<unsigned>(aLength));
 
-    for (size_t i = 0; i < (kWidth - idLen) / 2 - 4; i++)
+    for (size_t i = 0; i < kWidth - idLen - (kWidth - idLen) / 2; i++)
     {
         string.Append("=");
     }
