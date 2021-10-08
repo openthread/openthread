@@ -152,7 +152,7 @@ void otNetDataPublishDnsSrpServiceUnicastMeshLocalEid(otInstance *aInstance, uin
  * @param[in] aInstance  A pointer to an OpenThread instance.
  *
  * @retval TRUE    The published DNS/SRP Service entry is added to the Thread Network Data.
- * @retval FLASE   The entry is not added to Thread Network Data or there is no entry to publish.
+ * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
  *
  */
 bool otNetDataIsDnsSrpServiceAdded(otInstance *aInstance);
@@ -235,7 +235,7 @@ otError otNetDataPublishExternalRoute(otInstance *aInstance, const otExternalRou
  * @param[in] aPrefix    A pointer to the prefix (MUST NOT be NULL).
  *
  * @retval TRUE    The published prefix entry is added to the Thread Network Data.
- * @retval FLASE   The entry is not added to Thread Network Data or there is no entry to publish.
+ * @retval FALSE   The entry is not added to Thread Network Data or there is no entry to publish.
  *
  */
 bool otNetDataIsPrefixAdded(otInstance *aInstance, const otIp6Prefix *aPrefix);

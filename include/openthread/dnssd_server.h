@@ -198,7 +198,7 @@ void otDnssdQueryHandleDiscoveredServiceInstance(otInstance *                aIn
 void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFullName, otDnssdHostInfo *aHostInfo);
 
 /**
- * This function aquires the next query in the DNS-SD server.
+ * This function acquires the next query in the DNS-SD server.
  *
  * @param[in] aInstance         The OpenThread instance structure.
  * @param[in] aQuery            The query pointer. Pass NULL to get the first query.
@@ -209,7 +209,7 @@ void otDnssdQueryHandleDiscoveredHost(otInstance *aInstance, const char *aHostFu
 const otDnssdQuery *otDnssdGetNextQuery(otInstance *aInstance, const otDnssdQuery *aQuery);
 
 /**
- * This function aquires the DNS-SD query type and name for a specific query.
+ * This function acquires the DNS-SD query type and name for a specific query.
  *
  * @param[in]   aQuery            The query pointer acquired from `otDnssdGetNextQuery`.
  * @param[out]  aNameOutput       The name output buffer, which should be `OT_DNS_MAX_NAME_SIZE` bytes long.
