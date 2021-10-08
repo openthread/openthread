@@ -162,6 +162,8 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
                 version=params['version'],
                 is_bbr=params['is_bbr'],
             )
+            if 'boot_delay' in params:
+                self.simulator.go(params['boot_delay'])
 
             self.nodes[i] = node
 
