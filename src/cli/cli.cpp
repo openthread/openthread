@@ -3343,7 +3343,7 @@ otError Interpreter::ProcessPing(Arg aArgs[])
 
     if (!async)
     {
-        error = kErrorPending;
+        error = OT_ERROR_PENDING;
     }
 
 exit:
