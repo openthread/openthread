@@ -233,7 +233,7 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
         # we have to add allowlist after nodes are all created
         for i, params in initial_topology.items():
             allowlist = params['allowlist']
-            if not allowlist:
+            if allowlist is None:
                 continue
 
             for j in allowlist:
