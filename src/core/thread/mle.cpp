@@ -3165,7 +3165,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
-        if (!IsLeader() && ((timestamp == nullptr) || (timestamp->Compare(activeTimestamp) != 0)) &&
+        if (!IsLeader() && (MeshCoP::Timestamp::Compare(&activeTimestamp, timestamp) != 0) &&
             (Tlv::FindTlvOffset(aMessage, Tlv::kActiveDataset, activeDatasetOffset) != kErrorNone))
         {
             ExitNow(dataRequest = true);
@@ -3190,7 +3190,7 @@ Error Mle::HandleLeaderData(const Message &aMessage, const Ip6::MessageInfo &aMe
 
         // if received timestamp does not match the local value and message does not contain the dataset,
         // send MLE Data Request
-        if (!IsLeader() && ((timestamp == nullptr) || (timestamp->Compare(pendingTimestamp) != 0)) &&
+        if (!IsLeader() && (MeshCoP::Timestamp::Compare(&pendingTimestamp, timestamp) != 0) &&
             (Tlv::FindTlvOffset(aMessage, Tlv::kPendingDataset, pendingDatasetOffset) != kErrorNone))
         {
             ExitNow(dataRequest = true);
@@ -3958,7 +3958,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
 
     localTimestamp = Get<MeshCoP::ActiveDataset>().GetTimestamp();
 
-    if (localTimestamp == nullptr || localTimestamp->Compare(timestamp) > 0)
+    if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) > 0)
     {
         // No action is required if device is detached, and current
         // channel and pan-id match the values from the received MLE
@@ -3981,7 +3981,7 @@ void Mle::HandleAnnounce(const Message &aMessage, const Ip6::MessageInfo &aMessa
 
         otLogNoteMle("Delay processing Announce - channel %d, panid 0x%02x", channel, panId);
     }
-    else if (localTimestamp->Compare(timestamp) < 0)
+    else if (MeshCoP::Timestamp::Compare(&timestamp, localTimestamp) < 0)
     {
         SendAnnounce(channel);
 

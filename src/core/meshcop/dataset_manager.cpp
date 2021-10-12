@@ -67,19 +67,6 @@ const Timestamp *DatasetManager::GetTimestamp(void) const
     return mTimestampValid ? &mTimestamp : nullptr;
 }
 
-int DatasetManager::Compare(const Timestamp &aTimestamp) const
-{
-    const Timestamp *timestamp = GetTimestamp();
-    int              rval      = 1;
-
-    if (timestamp)
-    {
-        rval = timestamp->Compare(aTimestamp);
-    }
-
-    return rval;
-}
-
 Error DatasetManager::Restore(void)
 {
     Error   error;
@@ -146,7 +133,7 @@ Error DatasetManager::Save(const Dataset &aDataset)
         }
     }
 
-    compare = mLocal.Compare(mTimestampValid ? &mTimestamp : nullptr);
+    compare = Timestamp::Compare(mTimestampValid ? &mTimestamp : nullptr, mLocal.GetTimestamp());
 
     if (isNetworkkeyUpdated || compare > 0)
     {
@@ -270,7 +257,8 @@ void DatasetManager::SendSet(void)
 
     VerifyOrExit(!mMgmtPending, error = kErrorBusy);
     VerifyOrExit(Get<Mle::MleRouter>().IsChild() || Get<Mle::MleRouter>().IsRouter(), error = kErrorInvalidState);
-    VerifyOrExit(mLocal.Compare(GetTimestamp()) < 0, error = kErrorInvalidState);
+
+    VerifyOrExit(Timestamp::Compare(GetTimestamp(), mLocal.GetTimestamp()) < 0, error = kErrorInvalidState);
 
     if (IsActiveDataset())
     {
@@ -280,7 +268,7 @@ void DatasetManager::SendSet(void)
         IgnoreError(Get<PendingDataset>().Read(pendingDataset));
 
         if ((pendingDataset.GetTimestamp(Dataset::kActive, timestamp) == kErrorNone) &&
-            (mLocal.Compare(&timestamp) == 0))
+            (Timestamp::Compare(&timestamp, mLocal.GetTimestamp()) == 0))
         {
             // stop registration attempts during dataset transition
             ExitNow(error = kErrorInvalidState);

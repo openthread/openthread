@@ -106,11 +106,11 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         Timestamp pendingTimestamp;
 
         SuccessOrExit(Tlv::Find<PendingTimestampTlv>(aMessage, pendingTimestamp));
-        VerifyOrExit(mLocal.Compare(&pendingTimestamp) > 0);
+        VerifyOrExit(Timestamp::Compare(&pendingTimestamp, mLocal.GetTimestamp()) > 0);
     }
     else
     {
-        VerifyOrExit(mLocal.Compare(&activeTimestamp) > 0);
+        VerifyOrExit(Timestamp::Compare(&activeTimestamp, mLocal.GetTimestamp()) > 0);
     }
 
     // check channel
@@ -158,7 +158,7 @@ Error DatasetManager::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo 
         // no change to network key, active timestamp must be ahead
         const Timestamp *localActiveTimestamp = Get<ActiveDataset>().GetTimestamp();
 
-        VerifyOrExit(localActiveTimestamp == nullptr || localActiveTimestamp->Compare(activeTimestamp) > 0);
+        VerifyOrExit(Timestamp::Compare(&activeTimestamp, localActiveTimestamp) > 0);
     }
 
     // check commissioner session id

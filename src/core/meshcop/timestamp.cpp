@@ -33,38 +33,54 @@
 
 #include "timestamp.hpp"
 
+#include "common/code_utils.hpp"
+
 namespace ot {
 namespace MeshCoP {
 
-int Timestamp::Compare(const Timestamp &aCompare) const
+int Timestamp::Compare(const Timestamp *aFirst, const Timestamp *aSecond)
 {
-    uint64_t thisSeconds    = GetSeconds();
-    uint64_t compareSeconds = aCompare.GetSeconds();
-    uint16_t thisTicks      = GetTicks();
-    uint16_t compareTicks   = aCompare.GetTicks();
     int      rval;
+    uint64_t firstSeconds;
+    uint64_t secondSeconds;
+    uint16_t firstTicks;
+    uint16_t secondTicks;
 
-    if (compareSeconds > thisSeconds)
+    if (aFirst == nullptr)
     {
-        rval = 1;
-    }
-    else if (compareSeconds < thisSeconds)
-    {
-        rval = -1;
-    }
-    else if (compareTicks > thisTicks)
-    {
-        rval = 1;
-    }
-    else if (compareTicks < thisTicks)
-    {
-        rval = -1;
-    }
-    else
-    {
-        rval = 0;
+        // When `aFirst` is null but `aSecond is not, we return -1,
+        // (indicate `aFirst (null) < aSecond (non-null)`).
+        ExitNow(rval = (aSecond == nullptr) ? 0 : -1);
     }
 
+    if (aSecond == nullptr)
+    {
+        // When `aFirst` is not null, but `aSecond` is, we return +1,
+        // (indicate `aFirst (non-null) > aSecond (null)`).
+        ExitNow(rval = 1);
+    }
+
+    // Both are non-null.
+
+    firstSeconds  = aFirst->GetSeconds();
+    secondSeconds = aSecond->GetSeconds();
+
+    if (firstSeconds != secondSeconds)
+    {
+        ExitNow(rval = (firstSeconds > secondSeconds) ? 1 : -1);
+    }
+
+    firstTicks  = aFirst->GetTicks();
+    secondTicks = aSecond->GetTicks();
+
+    if (firstTicks != secondTicks)
+    {
+        ExitNow(rval = (firstTicks > secondTicks) ? 1 : -1);
+    }
+
+    rval = 0;
+
+exit:
     return rval;
 }
 
