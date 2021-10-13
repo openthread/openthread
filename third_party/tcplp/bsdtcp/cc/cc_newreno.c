@@ -48,27 +48,7 @@
  *   http://caia.swin.edu.au/urp/newtcp/
  */
 
-#if 0
-#include <sys/cdefs.h>
-__FBSDID("$FreeBSD$");
-
-#include <sys/param.h>
-#include <sys/kernel.h>
-#include <sys/malloc.h>
-#include <sys/module.h>
-#include <sys/socket.h>
-#include <sys/socketvar.h>
-#include <sys/sysctl.h>
-#include <sys/systm.h>
-
-#include <net/vnet.h>
-
-#include <netinet/cc.h>
-#include <netinet/tcp_seq.h>
-#include <netinet/tcp_var.h>
-
-#include <netinet/cc/cc_module.h>
-#endif
+/* samkumar: Removed/replaced a bunch of #include's. */
 
 #include "../cc.h"
 #include "../tcp.h"
@@ -93,12 +73,15 @@ const struct cc_algo newreno_cc_algo = {
 	.post_recovery = newreno_post_recovery,
 };
 
-#if 0
-// Normally, this is done in cc.c, but this is the only line from that file that I need.
-struct cc_algo* V_default_cc_ptr = &newreno_cc_algo;
-#endif
+/*
+ * samkumar: Normally, this is done in cc.c. It's commented out since we
+ * just hardcode using New Reno in TCPlp (for now). We don't use FreeBSD's
+ * mechanism to have multiple congestion control modules and choose among
+ * them.
+ */
+//struct cc_algo* V_default_cc_ptr = &newreno_cc_algo;
 
-// Constant that is referenced (may want to change this later)
+/* samkumar: Constant that is referenced (may want to change this later) */
 enum {
     V_tcp_do_rfc3465 = 1
 };
@@ -255,5 +238,9 @@ newreno_post_recovery(struct cc_var *ccv)
 	}
 }
 
-
+/*
+ * samkumar: I commented this out because it's not necessary for TCPlp. See the
+ * comment above about not using FreeBSD's mechanism for having multiple
+ * congestion control modules.
+ */
 //DECLARE_CC_MODULE(newreno, &newreno_cc_algo);
