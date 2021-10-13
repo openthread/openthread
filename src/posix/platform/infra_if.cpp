@@ -423,6 +423,7 @@ void InfraNetif::ReceiveNetLinkMessage(void)
 
             OT_UNUSED_VARIABLE(errMsg);
             otLogWarnPlat("netlink NLMSG_ERROR response: seq=%u, error=%d", header->nlmsg_seq, errMsg->error);
+            break;
         }
         default:
             break;
