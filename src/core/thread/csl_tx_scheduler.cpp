@@ -228,10 +228,11 @@ void CslTxScheduler::HandleSentFrame(const Mac::TxFrame &aFrame, Error aError)
 {
     Child *child = mCslTxChild;
 
+    mCslTxMessage = nullptr;
+
     VerifyOrExit(child != nullptr); // The result is no longer interested by upper layer
 
-    mCslTxChild   = nullptr;
-    mCslTxMessage = nullptr;
+    mCslTxChild = nullptr;
 
     HandleSentFrame(aFrame, aError, *child);
 
