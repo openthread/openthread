@@ -43,6 +43,7 @@
 #ifndef _NETINET_CC_MODULE_H_
 #define _NETINET_CC_MODULE_H_
 
+/* samkumar: This was already commented out in FreeBSD (I didn't do it). */
 /*
  * Allows a CC algorithm to manipulate a commonly named CC variable regardless
  * of the transport protocol and associated C struct.
@@ -56,6 +57,11 @@
  */
 #define	CCV(ccv, what) (ccv)->ccvc.tcp->what
 
+/*
+ * samkumar: I've commented this out (using #if 0) because our current TCPlp
+ * implementation hardcodes New Reno. Thus, we don't need FreeBSD's "module"
+ * mechanism to choose a congestion control algorithm.
+ */
 #if 0
 #define	DECLARE_CC_MODULE(ccname, ccalgo) 				\
 	static moduledata_t cc_##ccname = {				\
