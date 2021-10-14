@@ -227,7 +227,6 @@ class OTCI(object):
 
     def discover(self, channel: int = None) -> List[Dict[str, Any]]:
         """Perform an MLE Discovery operation."""
-        cmd = 'discover'
         return self.__scan_networks('discover', channel)
 
     def scan(self, channel: int = None) -> List[Dict[str, Any]]:
