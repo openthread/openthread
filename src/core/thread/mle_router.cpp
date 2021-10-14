@@ -1590,7 +1590,11 @@ void MleRouter::HandleParentRequest(const Message &aMessage, const Ip6::MessageI
 
     Log(kMessageReceive, kTypeParentRequest, aMessageInfo.GetPeerAddr());
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(IsRouterOrLeader() || IsRouterEligible(), error = kErrorInvalidState);
+#else
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
+#endif
 
     // A Router/REED MUST NOT send an MLE Parent Response if:
 
@@ -2211,7 +2215,11 @@ void MleRouter::HandleChildIdRequest(const Message &         aMessage,
 
     Log(kMessageReceive, kTypeChildIdRequest, aMessageInfo.GetPeerAddr());
 
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(IsRouterOrLeader() || IsRouterEligible(), error = kErrorInvalidState);
+#else
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
+#endif
 
     // only process message when operating as a child, router, or leader
     VerifyOrExit(IsAttached(), error = kErrorInvalidState);
@@ -2871,7 +2879,11 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
     discoveryRequest.SetLength(0);
 
     // only Routers and REEDs respond
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+    VerifyOrExit(IsRouterOrLeader() || IsRouterEligible(), error = kErrorInvalidState);
+#else
     VerifyOrExit(IsRouterEligible(), error = kErrorInvalidState);
+#endif
 
     // find MLE Discovery TLV
     VerifyOrExit(Tlv::FindTlvOffset(aMessage, Tlv::kDiscovery, offset) == kErrorNone, error = kErrorParse);
