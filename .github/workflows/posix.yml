@@ -209,6 +209,12 @@ jobs:
     - name: Run
       run: |
         script/check-posix-pty check
+    - name: Run (OT_DAEMON_ALLOW_ALL)
+      if: matrix.OT_DAEMON == 'on'
+      env:
+        OT_DAEMON_ALLOW_ALL: 1
+      run: |
+        script/check-posix-pty check
     - name: Generate Coverage
       run: |
         ./script/test generate_coverage gcc

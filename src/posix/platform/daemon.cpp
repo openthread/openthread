@@ -34,6 +34,8 @@
 #include <string.h>
 #include <sys/file.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <sys/un.h>
 #include <unistd.h>
 
@@ -152,6 +154,32 @@ void Daemon::SetUp(void)
     struct sockaddr_un sockname;
     int                ret;
 
+    class AllowAllGuard
+    {
+    public:
+        AllowAllGuard(void)
+        {
+            const char *allowAll = getenv("OT_DAEMON_ALLOW_ALL");
+            mAllowAll            = (allowAll != nullptr && strcmp("1", allowAll) == 0);
+
+            if (mAllowAll)
+            {
+                mMode = umask(0);
+            }
+        }
+        ~AllowAllGuard(void)
+        {
+            if (mAllowAll)
+            {
+                umask(mMode);
+            }
+        }
+
+    private:
+        bool   mAllowAll = false;
+        mode_t mMode     = 0;
+    };
+
     // This allows implementing pseudo reset.
     VerifyOrExit(mListenSocket == -1);
 
@@ -188,7 +216,11 @@ void Daemon::SetUp(void)
     GetFilename(sockname.sun_path, OPENTHREAD_POSIX_DAEMON_SOCKET_NAME);
     (void)unlink(sockname.sun_path);
 
-    ret = bind(mListenSocket, (const struct sockaddr *)&sockname, sizeof(struct sockaddr_un));
+    {
+        AllowAllGuard allowAllGuard;
+
+        ret = bind(mListenSocket, reinterpret_cast<const struct sockaddr *>(&sockname), sizeof(struct sockaddr_un));
+    }
 
     if (ret == -1)
     {
