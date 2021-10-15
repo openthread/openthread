@@ -363,6 +363,11 @@ otError otThreadSendProactiveBackboneNotification(otInstance *              aIns
         AsCoreType(aTarget), AsCoreType(aMlIid), aTimeSinceLastTransaction);
 }
 #endif
+
+void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled)
+{
+    AsCoreType(aInstance).Get<Mle::MleRouter>().SetCcmEnabled(aEnabled);
+}
 #endif
 
 #endif // OPENTHREAD_FTD

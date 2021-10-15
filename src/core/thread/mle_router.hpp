@@ -552,6 +552,14 @@ public:
      *
      */
     Error SetMaxChildIpAddresses(uint8_t aMaxIpAddresses);
+
+    /**
+     * This method sets whether the device was commissioned using CCM.
+     *
+     * @param[in]  aEnabled  TRUE if the device was commissioned using CCM, FALSE otherwise.
+     *
+     */
+    void SetCcmEnabled(bool aEnabled) { mCcmEnabled = aEnabled; }
 #endif
 
 private:
@@ -672,6 +680,7 @@ private:
     uint8_t  mLeaderWeight;
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     uint32_t mPreferredLeaderPartitionId; ///< only for certification testing
+    bool     mCcmEnabled : 1;
 #endif
     bool mRouterEligible : 1;
     bool mAddressSolicitPending : 1;

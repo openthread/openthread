@@ -728,6 +728,18 @@ typedef void (*otNeighborTableCallback)(otNeighborTableEvent aEvent, const otNei
 void otThreadRegisterNeighborTableCallback(otInstance *aInstance, otNeighborTableCallback aCallback);
 
 /**
+ * This function sets whether the device was commissioned using CCM.
+ *
+ * @note This API requires `OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE`, and is only used by Thread Test Harness
+ *       to indicate whether this device was commissioned using CCM.
+ *
+ * @param[in]  aInstance  A pointer to an OpenThread instance.
+ * @param[in]  aEnabled   TRUE if the device was commissioned using CCM, FALSE otherwise.
+ *
+ */
+void otThreadSetCcmEnabled(otInstance *aInstance, bool aEnabled);
+
+/**
  * @}
  *
  */
