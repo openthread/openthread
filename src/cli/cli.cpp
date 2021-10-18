@@ -841,6 +841,22 @@ exit:
     return error;
 }
 
+#if OPENTHREAD_FTD && OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+otError Interpreter::ProcessCcm(Arg aArgs[])
+{
+    otError error = OT_ERROR_NONE;
+    bool    enable;
+
+    VerifyOrExit(!aArgs[0].IsEmpty(), error = OT_ERROR_INVALID_COMMAND);
+
+    SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
+    otThreadSetCcmEnabled(GetInstancePtr(), enable);
+
+exit:
+    return error;
+}
+#endif
+
 otError Interpreter::ProcessChannel(Arg aArgs[])
 {
     otError error = OT_ERROR_NONE;

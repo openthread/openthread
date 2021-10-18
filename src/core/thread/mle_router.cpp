@@ -70,6 +70,7 @@ MleRouter::MleRouter(Instance &aInstance)
     , mLeaderWeight(kLeaderWeight)
 #if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
     , mPreferredLeaderPartitionId(0)
+    , mCcmEnabled(false)
 #endif
     , mRouterEligible(true)
     , mAddressSolicitPending(false)
@@ -122,7 +123,11 @@ bool MleRouter::IsRouterEligible(void) const
 #else
     if (secPolicy.mCommercialCommissioningEnabled)
     {
+#if OPENTHREAD_CONFIG_REFERENCE_DEVICE_ENABLE
+        VerifyOrExit(mCcmEnabled || secPolicy.mNonCcmRoutersEnabled);
+#else
         VerifyOrExit(secPolicy.mNonCcmRoutersEnabled);
+#endif
     }
     if (!secPolicy.mRoutersEnabled)
     {
