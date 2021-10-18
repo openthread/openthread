@@ -343,9 +343,9 @@ static int CliUartOutput(void *aContext, const char *aFormat, va_list aArguments
                 }
                 else
                 {
-                    // Flush did not succeed, so abort here.
+                    // Flush did not succeed, so abandon buffered output.
                     otLogWarnPlat("Failed to output CLI: %s", otThreadErrorToString(error));
-                    ExitNow();
+                    break;
                 }
             }
             rval = vsnprintf(sTxBuffer, kTxBufferSize, aFormat, retryArguments);
