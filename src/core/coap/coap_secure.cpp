@@ -100,17 +100,11 @@ Error CoapSecure::Connect(const Ip6::SockAddr &aSockAddr, ConnectedCallback aCal
 
 void CoapSecure::SetPsk(const MeshCoP::JoinerPskd &aPskd)
 {
-    Error error;
-
-    OT_UNUSED_VARIABLE(error);
-
     static_assert(static_cast<uint16_t>(MeshCoP::JoinerPskd::kMaxLength) <=
                       static_cast<uint16_t>(MeshCoP::Dtls::kPskMaxLength),
                   "The maximum length of DTLS PSK is smaller than joiner PSKd");
 
-    error = mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength());
-
-    OT_ASSERT(error == kErrorNone);
+    SuccessOrAssert(mDtls.SetPsk(reinterpret_cast<const uint8_t *>(aPskd.GetAsCString()), aPskd.GetLength()));
 }
 
 #if OPENTHREAD_CONFIG_COAP_BLOCKWISE_TRANSFER_ENABLE

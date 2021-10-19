@@ -92,4 +92,20 @@
 
 #endif // OPENTHREAD_CONFIG_ASSERT_ENABLE
 
+/**
+ * This macro checks a given status (which is expected to be successful) against zero (0) which indicates success,
+ * and `OT_ASSERT()` if it is not.
+ *
+ * @param[in]  aStatus     A scalar status to be evaluated against zero (0).
+ *
+ */
+#define SuccessOrAssert(aStatus) \
+    do                           \
+    {                            \
+        if ((aStatus) != 0)      \
+        {                        \
+            OT_ASSERT(false);    \
+        }                        \
+    } while (false)
+
 #endif // DEBUG_HPP_

@@ -187,13 +187,7 @@ bool InterfaceIdentifier::IsReservedSubnetAnycast(void) const
 
 void InterfaceIdentifier::GenerateRandom(void)
 {
-    Error error;
-
-    OT_UNUSED_VARIABLE(error);
-
-    error = Random::Crypto::FillBuffer(mFields.m8, kSize);
-
-    OT_ASSERT(error == kErrorNone);
+    SuccessOrAssert(Random::Crypto::FillBuffer(mFields.m8, kSize));
 }
 
 void InterfaceIdentifier::SetBytes(const uint8_t *aBuffer)
