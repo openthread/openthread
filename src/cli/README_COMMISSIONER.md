@@ -11,6 +11,7 @@ See [README_COMMISSIONING.md](README_COMMISSIONING.md).
 - [energy](#energy)
 - [joiner add](#joiner-add)
 - [joiner remove](#joiner-remove)
+- [joiner table](#joiner-table)
 - [mgmtget](#mgmtget)
 - [mgmtset](#mgmtset)
 - [panid](#panid)
@@ -117,6 +118,22 @@ Done
 
 ```bash
 > commissioner joiner remove 0xabc/12
+Done
+```
+
+### joiner table
+
+Usage: `commissioner joiner table`
+
+List all Joiner entries.
+
+```bash
+> commissioner joiner table
+| ID                    | PSKd                             | Expiration |
++-----------------------+----------------------------------+------------+
+|                     * |                           J01NME |      81015 |
+|      d45e64fa83f81cf7 |                           J01NME |     101204 |
+| 0x0000000000000abc/12 |                           J01NME |     114360 |
 Done
 ```
 
