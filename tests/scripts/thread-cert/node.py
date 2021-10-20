@@ -558,27 +558,6 @@ class NodeImpl:
     def _expect_done(self, timeout=-1):
         self._expect('Done', timeout)
 
-    def _prepare_pattern(self, pattern):
-        """Build a new pexpect pattern matching line by line.
-
-        Adds lookahead and lookbehind to make each pattern match a whole line,
-        and add 'Done' as the first pattern.
-
-        Args:
-            pattern: a single regex or a list of regex.
-
-        Returns:
-            A list of regex.
-        """
-        EXPECT_LINE_FORMAT = r'(?<=[\r\n])%s(?=[\r\n])'
-
-        if isinstance(pattern, list):
-            pattern = [EXPECT_LINE_FORMAT % p for p in pattern]
-        else:
-            pattern = [EXPECT_LINE_FORMAT % pattern]
-
-        return [EXPECT_LINE_FORMAT % 'Done'] + pattern
-
     def _expect_result(self, pattern, *args, **kwargs):
         """Expect a single matching result.
 
@@ -599,34 +578,25 @@ class NodeImpl:
         Returns:
             The matched lines.
         """
-        results = []
-        pattern = self._prepare_pattern(pattern)
-
-        while self._expect(pattern, *args, **kwargs):
-            results.append(self.pexpect.match.group(0).decode('utf8'))
-
+        output = self._expect_command_output()
+        results = [line for line in output if self._match_pattern(line, pattern)]
         return results
 
-    def _expect_command_output(self, cmd: str, ignore_logs=True):
+    @staticmethod
+    def _match_pattern(line, pattern):
+        if isinstance(pattern, str):
+            pattern = re.compile(pattern)
+
+        if isinstance(pattern, re.Pattern):
+            return pattern.match(line)
+        else:
+            return any(NodeImpl._match_pattern(line, p) for p in pattern)
+
+    def _expect_command_output(self, ignore_logs=True):
         lines = []
-        cmd_output_started = False
 
         while True:
-            self._expect(r"[^\n]+\n")
-            line = self.pexpect.match.group(0).decode('utf8').strip()
-
-            if line.startswith('> '):
-                line = line[2:]
-
-            if line == '':
-                continue
-
-            if line == cmd:
-                cmd_output_started = True
-                continue
-
-            if not cmd_output_started or (ignore_logs and self.__is_logging_line(line)):
-                continue
+            line = self.__readline(ignore_logs=ignore_logs)
 
             if line == 'Done':
                 break
@@ -635,7 +605,7 @@ class NodeImpl:
             else:
                 lines.append(line)
 
-        print(f'_expect_command_output({cmd!r}) returns {lines!r}')
+        print(f'_expect_command_output() returns {lines!r}')
         return lines
 
     def __is_logging_line(self, line: str) -> bool:
@@ -690,12 +660,40 @@ class NodeImpl:
         assert len(payload) == payload_len
         return (direction, type, payload)
 
-    def send_command(self, cmd, go=True):
+    def send_command(self, cmd, go=True, expect_command_echo=True):
         print("%d: %s" % (self.nodeid, cmd))
         self.pexpect.send(cmd + '\n')
         if go:
             self.simulator.go(0, nodeid=self.nodeid)
         sys.stdout.flush()
+
+        if expect_command_echo:
+            self._expect_command_echo(cmd)
+
+    def _expect_command_echo(self, cmd):
+        cmd = cmd.strip()
+        while True:
+            line = self.__readline()
+            if line == cmd:
+                break
+
+            logging.warning("expecting echo %r, but read %r", cmd, line)
+
+    def __readline(self, ignore_logs=True):
+        PROMPT = 'spinel-cli > ' if self.node_type == 'ncp-sim' else '> '
+        while True:
+            self._expect(r"[^\n]+\n")
+            line = self.pexpect.match.group(0).decode('utf8').strip()
+            while line.startswith(PROMPT):
+                line = line[len(PROMPT):]
+
+            if line == '':
+                continue
+
+            if ignore_logs and self.__is_logging_line(line):
+                continue
+
+            return line
 
     def get_commands(self):
         self.send_command('?')
@@ -848,7 +846,7 @@ class NodeImpl:
 
         cmd = 'srp server host'
         self.send_command(cmd)
-        lines = self._expect_command_output(cmd)
+        lines = self._expect_command_output()
         host_list = []
         while lines:
             host = {}
@@ -904,7 +902,7 @@ class NodeImpl:
 
         cmd = 'srp server service'
         self.send_command(cmd)
-        lines = self._expect_command_output(cmd)
+        lines = self._expect_command_output()
         service_list = []
         while lines:
             service = {}
@@ -975,12 +973,12 @@ class NodeImpl:
     def srp_client_get_state(self):
         cmd = 'srp client state'
         self.send_command(cmd)
-        return self._expect_command_output(cmd)[0]
+        return self._expect_command_output()[0]
 
     def srp_client_get_auto_start_mode(self):
         cmd = 'srp client autostart'
         self.send_command(cmd)
-        return self._expect_command_output(cmd)[0]
+        return self._expect_command_output()[0]
 
     def srp_client_enable_auto_start_mode(self):
         self.send_command(f'srp client autostart enable')
@@ -993,17 +991,17 @@ class NodeImpl:
     def srp_client_get_server_address(self):
         cmd = 'srp client server address'
         self.send_command(cmd)
-        return self._expect_command_output(cmd)[0]
+        return self._expect_command_output()[0]
 
     def srp_client_get_server_port(self):
         cmd = 'srp client server port'
         self.send_command(cmd)
-        return int(self._expect_command_output(cmd)[0])
+        return int(self._expect_command_output()[0])
 
     def srp_client_get_host_state(self):
         cmd = 'srp client host state'
         self.send_command(cmd)
-        return self._expect_command_output(cmd)[0]
+        return self._expect_command_output()[0]
 
     def srp_client_set_host_name(self, name):
         self.send_command(f'srp client host name {name}')
@@ -1046,7 +1044,7 @@ class NodeImpl:
     def srp_client_get_services(self):
         cmd = 'srp client service'
         self.send_command(cmd)
-        service_lines = self._expect_command_output(cmd)
+        service_lines = self._expect_command_output()
         return [self._parse_srp_client_service(line) for line in service_lines]
 
     def _encode_txt_entry(self, entry):
@@ -1086,7 +1084,7 @@ class NodeImpl:
         cmd = 'locate ' + anycast_addr
         self.send_command(cmd)
         self.simulator.go(5)
-        return self._parse_locate_result(self._expect_command_output(cmd)[0])
+        return self._parse_locate_result(self._expect_command_output()[0])
 
     def _parse_locate_result(self, line: str):
         """Parse anycast locate result as list of ml-eid and rloc16.
@@ -1238,7 +1236,7 @@ class NodeImpl:
             cmd += f' {int(timeout)}'
         self.send_command(cmd)
         self.simulator.go(3)
-        lines = self._expect_command_output(cmd)
+        lines = self._expect_command_output()
         m = re.match(r'status (\d+), (\d+) failed', lines[0])
         assert m is not None, lines
         status = int(m.group(1))
@@ -1572,12 +1570,8 @@ class NodeImpl:
     def get_eidcaches(self):
         eidcaches = []
         self.send_command('eidcache')
-
-        pattern = self._prepare_pattern(r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)')
-        while self._expect(pattern):
-            eid = self.pexpect.match.groups()[0].decode("utf-8")
-            rloc = self.pexpect.match.groups()[1].decode("utf-8")
-            eidcaches.append((eid, rloc))
+        for line in self._expect_results(r'([a-fA-F0-9\:]+) ([a-fA-F0-9]+)'):
+            eidcaches.append(line.split())
 
         return eidcaches
 
@@ -1599,7 +1593,7 @@ class NodeImpl:
         """Get the table of attached children."""
         cmd = 'child table'
         self.send_command(cmd)
-        output = self._expect_command_output(cmd)
+        output = self._expect_command_output()
 
         #
         # Example output:
@@ -1787,12 +1781,12 @@ class NodeImpl:
     def get_omr_prefix(self):
         cmd = 'br omrprefix'
         self.send_command(cmd)
-        return self._expect_command_output(cmd)[0]
+        return self._expect_command_output()[0]
 
     def get_on_link_prefix(self):
         cmd = 'br onlinkprefix'
         self.send_command(cmd)
-        return self._expect_command_output(cmd)[0]
+        return self._expect_command_output()[0]
 
     def get_prefixes(self):
         return self.get_netdata()['Prefixes']
@@ -1814,7 +1808,7 @@ class NodeImpl:
 
     def netdata_show(self):
         self.send_command('netdata show')
-        return self._expect_command_output('netdata show')
+        return self._expect_command_output()
 
     def get_netdata(self):
         raw_netdata = self.netdata_show()
@@ -1970,8 +1964,16 @@ class NodeImpl:
         return result
 
     def reset(self):
-        self.send_command('reset')
+        self.send_command('reset', expect_command_echo=False)
         time.sleep(self.RESET_DELAY)
+        # Send a "version" command and drain the CLI output after reset
+        self.send_command('version', expect_command_echo=False)
+        while True:
+            try:
+                self._expect(r"[^\n]+\n", timeout=0.1)
+                continue
+            except pexpect.TIMEOUT:
+                break
 
         if self.is_otbr:
             self.set_log_level(5)
@@ -2664,7 +2666,7 @@ class NodeImpl:
         """
         cmd = f'dns config'
         self.send_command(cmd)
-        output = self._expect_command_output(cmd)
+        output = self._expect_command_output()
         config = {}
         for line in output:
             k, v = line.split(': ')
@@ -2683,7 +2685,7 @@ class NodeImpl:
 
         self.send_command(cmd)
         self.simulator.go(10)
-        output = self._expect_command_output(cmd)
+        output = self._expect_command_output()
         dns_resp = output[0]
         # example output: "DNS response for host1.default.service.arpa. - fd00:db8:0:0:fd3d:d471:1e8c:b60 TTL:7190 "
         #                 " fd00:db8:0:0:0:ff:fe00:9000 TTL:7190"
@@ -2716,7 +2718,7 @@ class NodeImpl:
 
         self.send_command(cmd)
         self.simulator.go(10)
-        output = self._expect_command_output(cmd)
+        output = self._expect_command_output()
 
         # Example output:
         # DNS service resolution response for ins2 for service _ipps._tcp.default.service.arpa.
@@ -2786,7 +2788,7 @@ class NodeImpl:
 
         self.send_command(cmd)
         self.simulator.go(10)
-        output = '\n'.join(self._expect_command_output(cmd))
+        output = '\n'.join(self._expect_command_output())
 
         # Example output:
         # ins2
@@ -2822,7 +2824,7 @@ class NodeImpl:
     def set_mliid(self, mliid: str):
         cmd = f'mliid {mliid}'
         self.send_command(cmd)
-        self._expect_command_output(cmd)
+        self._expect_command_output()
 
     def history_netinfo(self, num_entries=0):
         """
@@ -2849,7 +2851,7 @@ class NodeImpl:
         """
         cmd = f'history netinfo list {num_entries}'
         self.send_command(cmd)
-        output = self._expect_command_output(cmd)
+        output = self._expect_command_output()
         netinfos = []
         for entry in output:
             netinfo = {}
@@ -2884,7 +2886,7 @@ class NodeImpl:
         """
         cmd = f'history rx list {num_entries}'
         self.send_command(cmd)
-        return self._parse_history_rx_tx_ouput(self._expect_command_output(cmd))
+        return self._parse_history_rx_tx_ouput(self._expect_command_output())
 
     def history_tx(self, num_entries=0):
         """
@@ -2910,7 +2912,7 @@ class NodeImpl:
         """
         cmd = f'history tx list {num_entries}'
         self.send_command(cmd)
-        return self._parse_history_rx_tx_ouput(self._expect_command_output(cmd))
+        return self._parse_history_rx_tx_ouput(self._expect_command_output())
 
     def _parse_history_rx_tx_ouput(self, lines):
         rxtx_list = []

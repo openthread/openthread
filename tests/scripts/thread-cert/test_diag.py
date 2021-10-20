@@ -89,7 +89,7 @@ class TestDiag(thread_cert.TestCase):
         ]
 
         for case in cases:
-            node.send_command(case[0])
+            node.send_command(case[0], expect_command_echo=False)
             self.simulator.go(1)
             if type(self.simulator).__name__ == 'VirtualTime':
                 time.sleep(0.1)
