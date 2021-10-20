@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/encoding.hpp"
 #include "common/instance.hpp"
@@ -144,7 +145,7 @@ void Prefix::ToString(StringWriter &aWriter) const
 {
     uint8_t sizeInUint16 = (GetBytesSize() + sizeof(uint16_t) - 1) / sizeof(uint16_t);
 
-    static_cast<const Address &>(mPrefix).AppendHexWords(aWriter, sizeInUint16);
+    AsCoreType(&mPrefix).AppendHexWords(aWriter, sizeInUint16);
 
     if (GetBytesSize() < Address::kSize - 1)
     {
@@ -659,27 +660,27 @@ void Address::AppendHexWords(StringWriter &aWriter, uint8_t aLength) const
 
 const Address &Address::GetLinkLocalAllNodesMulticast(void)
 {
-    return static_cast<const Address &>(Netif::kLinkLocalAllNodesMulticastAddress.mAddress);
+    return AsCoreType(&Netif::kLinkLocalAllNodesMulticastAddress.mAddress);
 }
 
 const Address &Address::GetLinkLocalAllRoutersMulticast(void)
 {
-    return static_cast<const Address &>(Netif::kLinkLocalAllRoutersMulticastAddress.mAddress);
+    return AsCoreType(&Netif::kLinkLocalAllRoutersMulticastAddress.mAddress);
 }
 
 const Address &Address::GetRealmLocalAllNodesMulticast(void)
 {
-    return static_cast<const Address &>(Netif::kRealmLocalAllNodesMulticastAddress.mAddress);
+    return AsCoreType(&Netif::kRealmLocalAllNodesMulticastAddress.mAddress);
 }
 
 const Address &Address::GetRealmLocalAllRoutersMulticast(void)
 {
-    return static_cast<const Address &>(Netif::kRealmLocalAllRoutersMulticastAddress.mAddress);
+    return AsCoreType(&Netif::kRealmLocalAllRoutersMulticastAddress.mAddress);
 }
 
 const Address &Address::GetRealmLocalAllMplForwarders(void)
 {
-    return static_cast<const Address &>(Netif::kRealmLocalAllMplForwardersMulticastAddress.mAddress);
+    return AsCoreType(&Netif::kRealmLocalAllMplForwardersMulticastAddress.mAddress);
 }
 
 } // namespace Ip6

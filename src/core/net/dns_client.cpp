@@ -30,6 +30,7 @@
 
 #if OPENTHREAD_CONFIG_DNS_CLIENT_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -258,12 +259,12 @@ Error Client::Response::FindServiceInfo(Section aSection, const Name &aName, Ser
 
     // Search in additional section for AAAA record for the host name.
 
-    error = FindHostAddress(kAdditionalDataSection, hostName, /* aIndex */ 0,
-                            static_cast<Ip6::Address &>(aServiceInfo.mHostAddress), aServiceInfo.mHostAddressTtl);
+    error = FindHostAddress(kAdditionalDataSection, hostName, /* aIndex */ 0, AsCoreType(&aServiceInfo.mHostAddress),
+                            aServiceInfo.mHostAddressTtl);
 
     if (error == kErrorNotFound)
     {
-        static_cast<Ip6::Address &>(aServiceInfo.mHostAddress).Clear();
+        AsCoreType(&aServiceInfo.mHostAddress).Clear();
         aServiceInfo.mHostAddressTtl = 0;
     }
     else
@@ -924,7 +925,7 @@ void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessa
 {
     OT_UNUSED_VARIABLE(aMsgInfo);
 
-    static_cast<Client *>(aContext)->ProcessResponse(*static_cast<Message *>(aMessage));
+    static_cast<Client *>(aContext)->ProcessResponse(AsCoreType(aMessage));
 }
 
 void Client::ProcessResponse(const Message &aMessage)

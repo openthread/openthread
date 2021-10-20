@@ -36,6 +36,9 @@
 
 #if OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE
 
+#include "common/as_core_type.hpp"
+#include "common/code_utils.hpp"
+
 namespace ot {
 
 namespace BorderRouter {
@@ -107,7 +110,7 @@ void PrefixInfoOption::SetAutoAddrConfig(bool aAutoAddrConfig)
 void PrefixInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
 {
     mPrefixLength = aPrefix.mLength;
-    mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
+    mPrefix       = AsCoreType(&aPrefix.mPrefix);
 }
 
 Ip6::Prefix PrefixInfoOption::GetPrefix(void) const
@@ -149,7 +152,7 @@ void RouteInfoOption::SetPrefix(const Ip6::Prefix &aPrefix)
     SetLength((aPrefix.mLength + kLengthUnit * CHAR_BIT - 1) / (kLengthUnit * CHAR_BIT) + 1);
 
     mPrefixLength = aPrefix.mLength;
-    mPrefix       = static_cast<const Ip6::Address &>(aPrefix.mPrefix);
+    mPrefix       = AsCoreType(&aPrefix.mPrefix);
 }
 
 Ip6::Prefix RouteInfoOption::GetPrefix(void) const

@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_DUA_ENABLE || (OPENTHREAD_FTD && OPENTHREAD_CONFIG_TMF_PROXY_DUA_ENABLE)
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -543,6 +544,15 @@ exit:
     FreeMessageOnError(message, error);
 }
 
+void DuaManager::HandleDuaResponse(void *               aContext,
+                                   otMessage *          aMessage,
+                                   const otMessageInfo *aMessageInfo,
+                                   Error                aResult)
+{
+    static_cast<DuaManager *>(aContext)->HandleDuaResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
+                                                           aResult);
+}
+
 void DuaManager::HandleDuaResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aResult)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
@@ -576,6 +586,10 @@ exit:
     otLogInfoDua("Received DUA.rsp: %s", ErrorToString(error));
 }
 
+void DuaManager::HandleDuaNotification(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
+{
+    static_cast<DuaManager *>(aContext)->HandleDuaNotification(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
+}
 void DuaManager::HandleDuaNotification(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);

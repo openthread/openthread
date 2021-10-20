@@ -36,6 +36,7 @@
 
 #include <stdio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -316,8 +317,8 @@ void DatasetManager::HandleMgmtSetResponse(void *               aContext,
                                            const otMessageInfo *aMessageInfo,
                                            Error                aError)
 {
-    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aError);
+    static_cast<DatasetManager *>(aContext)->HandleMgmtSetResponse(AsCoapMessagePtr(aMessage),
+                                                                   AsCoreTypePtr(aMessageInfo), aError);
 }
 
 void DatasetManager::HandleMgmtSetResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
@@ -642,7 +643,7 @@ Error DatasetManager::SendGetRequest(const Dataset::Components &aDatasetComponen
 
     if (aAddress != nullptr)
     {
-        messageInfo.SetPeerAddr(*static_cast<const Ip6::Address *>(aAddress));
+        messageInfo.SetPeerAddr(AsCoreType(aAddress));
     }
     else
     {
@@ -704,8 +705,7 @@ exit:
 
 void ActiveDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleGet(*static_cast<Coap::Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<ActiveDataset *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void ActiveDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const
@@ -855,8 +855,7 @@ exit:
 
 void PendingDataset::HandleGet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleGet(*static_cast<Coap::Message *>(aMessage),
-                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<PendingDataset *>(aContext)->HandleGet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void PendingDataset::HandleGet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo) const

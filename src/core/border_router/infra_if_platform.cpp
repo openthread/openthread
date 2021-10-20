@@ -37,6 +37,7 @@
 #include <openthread/platform/infra_if.h>
 
 #include "border_router/routing_manager.hpp"
+#include "common/as_core_type.hpp"
 #include "common/instance.hpp"
 
 using namespace ot;
@@ -47,17 +48,14 @@ extern "C" void otPlatInfraIfRecvIcmp6Nd(otInstance *        aInstance,
                                          const uint8_t *     aBuffer,
                                          uint16_t            aBufferLength)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    instance.Get<BorderRouter::RoutingManager>().RecvIcmp6Message(
-        aInfraIfIndex, static_cast<const Ip6::Address &>(*aSrcAddress), aBuffer, aBufferLength);
+    AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().RecvIcmp6Message(aInfraIfIndex, AsCoreType(aSrcAddress),
+                                                                               aBuffer, aBufferLength);
 }
 
 extern "C" otError otPlatInfraIfStateChanged(otInstance *aInstance, uint32_t aInfraIfIndex, bool aIsRunning)
 {
-    Instance &instance = *static_cast<Instance *>(aInstance);
-
-    return instance.Get<BorderRouter::RoutingManager>().HandleInfraIfStateChanged(aInfraIfIndex, aIsRunning);
+    return AsCoreType(aInstance).Get<BorderRouter::RoutingManager>().HandleInfraIfStateChanged(aInfraIfIndex,
+                                                                                               aIsRunning);
 }
 
 #endif // OPENTHREAD_CONFIG_BORDER_ROUTING_ENABLE

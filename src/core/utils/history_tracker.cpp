@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_HISTORY_TRACKER_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -62,7 +63,7 @@ void HistoryTracker::RecordNetworkInfo(void)
 
     VerifyOrExit(entry != nullptr);
 
-    entry->mRole        = static_cast<otDeviceRole>(Get<Mle::Mle>().GetRole());
+    entry->mRole        = MapEnum(Get<Mle::Mle>().GetRole());
     entry->mRloc16      = Get<Mle::Mle>().GetRloc16();
     entry->mPartitionId = Get<Mle::Mle>().GetLeaderData().GetPartitionId();
     mode                = Get<Mle::Mle>().GetDeviceMode();

@@ -31,6 +31,7 @@
 
 #if OPENTHREAD_CONFIG_SNTP_CLIENT_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -143,7 +144,7 @@ Error Client::Query(const otSntpQuery *aQuery, otSntpResponseHandler aHandler, v
 
     VerifyOrExit((message = NewMessage(header)) != nullptr, error = kErrorNoBufs);
 
-    messageInfo = static_cast<const Ip6::MessageInfo *>(aQuery->mMessageInfo);
+    messageInfo = AsCoreTypePtr(aQuery->mMessageInfo);
 
     queryMetadata.mTransmitTimestamp   = header.GetTransmitTimestampSeconds();
     queryMetadata.mTransmissionTime    = TimerMilli::GetNow() + kResponseTimeout;
@@ -331,8 +332,7 @@ void Client::HandleRetransmissionTimer(void)
 
 void Client::HandleUdpReceive(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Client *>(aContext)->HandleUdpReceive(*static_cast<Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Client *>(aContext)->HandleUdpReceive(AsCoreType(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Client::HandleUdpReceive(Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
