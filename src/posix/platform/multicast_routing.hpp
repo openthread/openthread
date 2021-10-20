@@ -108,6 +108,10 @@ private:
     void    Disable(void);
     void    Add(const Ip6::Address &aAddress);
     void    Remove(const Ip6::Address &aAddress);
+    void    UpdateMldReport(const Ip6::Address &aAddress, bool isAdd);
+    void    ToggleMcastIcmpReply(bool state);
+    void    EnableMcastIcmpReply(){ToggleMcastIcmpReply(false);};
+    void    DisableMcastIcmpReply(){ToggleMcastIcmpReply(true);};
     bool    HasMulticastListener(const Ip6::Address &aAddress) const;
     bool    IsEnabled(void) const { return mMulticastRouterSock >= 0; }
     void    InitMulticastRouterSock(void);

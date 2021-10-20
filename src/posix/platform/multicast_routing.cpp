@@ -40,6 +40,7 @@
 #include <unistd.h>
 #if __linux__
 #include <linux/mroute6.h>
+#include <stdlib.h>
 #else
 #error "Multicast Routing feature is not ported to non-Linux platforms yet."
 #endif
@@ -59,6 +60,7 @@ void MulticastRoutingManager::SetUp(void)
     otBackboneRouterSetMulticastListenerCallback(gInstance,
                                                  &MulticastRoutingManager::HandleBackboneMulticastListenerEvent, this);
     Mainloop::Manager::Get().Add(*this);
+    DisableMcastIcmpReply();
 }
 
 void MulticastRoutingManager::TearDown(void)
@@ -67,6 +69,7 @@ void MulticastRoutingManager::TearDown(void)
 
     otBackboneRouterSetMulticastListenerCallback(gInstance, nullptr, nullptr);
     Mainloop::Manager::Get().Remove(*this);
+    EnableMcastIcmpReply();
 }
 
 void MulticastRoutingManager::HandleBackboneMulticastListenerEvent(void *                                 aContext,
@@ -114,6 +117,8 @@ void MulticastRoutingManager::Add(const Ip6::Address &aAddress)
     VerifyOrExit(IsEnabled());
 
     UnblockInboundMulticastForwardingCache(aAddress);
+    UpdateMldReport(aAddress, true);
+
     otLogResultPlat(OT_ERROR_NONE, "MulticastRoutingManager: %s: %s", __FUNCTION__, aAddress.ToString().AsCString());
 
 exit:
@@ -127,8 +132,36 @@ void MulticastRoutingManager::Remove(const Ip6::Address &aAddress)
     VerifyOrExit(IsEnabled());
 
     RemoveInboundMulticastForwardingCache(aAddress);
+    UpdateMldReport(aAddress, false);
+
     otLogResultPlat(error, "MulticastRoutingManager: %s: %s", __FUNCTION__, aAddress.ToString().AsCString());
 
+exit:
+    return;
+}
+
+void MulticastRoutingManager::UpdateMldReport(const Ip6::Address &aAddress, bool isAdd)
+{
+    struct ipv6_mreq ipv6mr;
+    otError          error = OT_ERROR_NONE;
+
+    ipv6mr.ipv6mr_interface = gBackboneNetifIndex;
+    memcpy(&ipv6mr.ipv6mr_multiaddr, aAddress.GetBytes(), sizeof(ipv6mr.ipv6mr_multiaddr));
+    error = (setsockopt(mMulticastRouterSock, IPPROTO_IPV6, (isAdd ? IPV6_JOIN_GROUP : IPV6_LEAVE_GROUP),
+                        (void *)&ipv6mr, sizeof(ipv6mr))
+                 ? OT_ERROR_FAILED
+                 : OT_ERROR_NONE);
+
+    otLogResultPlat(error, "MulticastRoutingManager: %s: address %s %s", __FUNCTION__, aAddress.ToString().AsCString(),
+                    (isAdd ? "Added" : "Removed"));
+}
+
+void MulticastRoutingManager::ToggleMcastIcmpReply(bool state)
+{
+    FILE *mcast_echo = fopen("/proc/sys/net/ipv6/icmp/echo_ignore_multicast", "w");
+    VerifyOrExit(mcast_echo != nullptr);
+    fprintf(mcast_echo, "%d", (int32_t)state);
+    fclose(mcast_echo);
 exit:
     return;
 }
@@ -350,6 +383,7 @@ void MulticastRoutingManager::RemoveInboundMulticastForwardingCache(const Ip6::A
     {
         if (mfc.IsValid() && mfc.mIif == kMifIndexBackbone && mfc.mGroupAddr == aGroupAddr)
         {
+            UpdateMldReport(mfc.mGroupAddr, false);
             RemoveMulticastForwardingCache(mfc);
         }
     }
@@ -374,6 +408,7 @@ void MulticastRoutingManager::ExpireMulticastForwardingCache(void)
         {
             if (!UpdateMulticastRouteInfo(mfc))
             {
+                UpdateMldReport(mfc.mGroupAddr, false);
                 // The multicast route is expired
                 RemoveMulticastForwardingCache(mfc);
             }
@@ -539,6 +574,7 @@ void MulticastRoutingManager::SaveMulticastForwardingCache(const Ip6::Address & 
     }
     else
     {
+        UpdateMldReport(oldest->mGroupAddr, false);
         RemoveMulticastForwardingCache(*oldest);
         oldest->Set(aSrcAddr, aGroupAddr, aIif, aOif);
     }
