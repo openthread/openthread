@@ -338,7 +338,7 @@ void Server::HandleServiceUpdateResult(ServiceUpdateId aId, Error aError)
     }
     else
     {
-        otLogInfoSrp("[server] delayed SRP host update result, the SRP update has been committed");
+        otLogInfoSrp("[server] delayed SRP host update result, the SRP update has been committed (updateId = %u)", aId);
     }
 }
 
@@ -1406,9 +1406,10 @@ void Server::HandleOutstandingUpdatesTimer(Timer &aTimer)
 
 void Server::HandleOutstandingUpdatesTimer(void)
 {
-    otLogInfoSrp("[server] outstanding service update timeout");
     while (!mOutstandingUpdates.IsEmpty() && mOutstandingUpdates.GetTail()->GetExpireTime() <= TimerMilli::GetNow())
     {
+        otLogInfoSrp("[server] outstanding service update timeout (updateId = %u)",
+                     mOutstandingUpdates.GetTail()->GetId());
         HandleServiceUpdateResult(mOutstandingUpdates.GetTail(), kErrorResponseTimeout);
     }
 }
