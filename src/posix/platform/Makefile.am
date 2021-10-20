@@ -48,8 +48,8 @@ libopenthread_posix_a_SOURCES             = \
     backbone.cpp                            \
     daemon.cpp                              \
     entropy.cpp                             \
+    firewall.cpp                            \
     hdlc_interface.cpp                      \
-    firewall.cpp                   \
     infra_if.cpp                            \
     logging.cpp                             \
     mainloop.cpp                            \
