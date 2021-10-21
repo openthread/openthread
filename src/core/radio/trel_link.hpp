@@ -40,6 +40,7 @@
 
 #include "common/encoding.hpp"
 #include "common/locator.hpp"
+#include "common/notifier.hpp"
 #include "common/tasklet.hpp"
 #include "common/timer.hpp"
 #include "mac/mac_frame.hpp"
@@ -70,6 +71,7 @@ namespace Trel {
 class Link : public InstanceLocator
 {
     friend class ot::Instance;
+    friend class ot::Notifier;
     friend class Interface;
 
 public:
@@ -170,6 +172,7 @@ private:
     void SendAck(Packet &aRxPacket);
     void ReportDeferredAckStatus(Neighbor &aNeighbor, Error aError);
     void HandleTimer(Neighbor &aNeighbor);
+    void HandleNotifierEvents(Events aEvents);
 
     static void HandleTxTasklet(Tasklet &aTasklet);
     void        HandleTxTasklet(void);

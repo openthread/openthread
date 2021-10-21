@@ -115,7 +115,7 @@ source_set("openthread") {
     "platform/spi-slave.h",
     "platform/time.h",
     "platform/toolchain.h",
-    "platform/trel-udp6.h",
+    "platform/trel.h",
     "platform/udp.h",
     "random_crypto.h",
     "random_noncrypto.h",
@@ -128,6 +128,7 @@ source_set("openthread") {
     "tcp.h",
     "thread.h",
     "thread_ftd.h",
+    "trel.h",
     "udp.h",
   ]
 

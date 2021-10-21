@@ -446,29 +446,21 @@ OT_TOOL_WEAK void otPlatOtnsStatus(const char *)
 #endif
 
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-
-OT_TOOL_WEAK void otPlatTrelUdp6Init(otInstance *, const otIp6Address *, uint16_t)
+OT_TOOL_WEAK void otPlatTrelEnable(otInstance *, uint16_t *)
 {
 }
 
-OT_TOOL_WEAK void otPlatTrelUdp6UpdateAddress(otInstance *, const otIp6Address *)
+OT_TOOL_WEAK void otPlatTrelDisable(otInstance *)
 {
 }
 
-OT_TOOL_WEAK void otPlatTrelUdp6SubscribeMulticastAddress(otInstance *, const otIp6Address *)
+OT_TOOL_WEAK void otPlatTrelSend(otInstance *, const uint8_t *, uint16_t, const otSockAddr *)
 {
 }
 
-OT_TOOL_WEAK otError otPlatTrelUdp6SendTo(otInstance *, const uint8_t *, uint16_t, const otIp6Address *)
+OT_TOOL_WEAK void otPlatTrelRegisterService(otInstance *, uint16_t, const uint8_t *, uint8_t)
 {
-    return OT_ERROR_ABORT;
 }
-
-OT_TOOL_WEAK otError otPlatTrelUdp6SetTestMode(otInstance *, bool)
-{
-    return OT_ERROR_NOT_IMPLEMENTED;
-}
-
 #endif
 
 #if OPENTHREAD_CONFIG_MLE_LINK_METRICS_SUBJECT_ENABLE

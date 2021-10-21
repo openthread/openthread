@@ -82,7 +82,7 @@
 #include <openthread/platform/debug_uart.h>
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/platform/trel-udp6.h>
+#include <openthread/trel.h>
 #endif
 
 #include "common/logging.hpp"
@@ -4743,12 +4743,92 @@ exit:
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 otError Interpreter::ProcessTrel(Arg aArgs[])
 {
-    otError error;
+    otError error = OT_ERROR_NONE;
     bool    enable;
 
-    SuccessOrExit(error = ParseEnableOrDisable(aArgs[0], enable));
+    if (aArgs[0].IsEmpty())
+    {
+        OutputEnabledDisabledStatus(otTrelIsEnabled(GetInstancePtr()));
+    }
+    else if (ParseEnableOrDisable(aArgs[0], enable) == OT_ERROR_NONE)
+    {
+        if (enable)
+        {
+            otTrelEnable(GetInstancePtr());
+        }
+        else
+        {
+            otTrelDisable(GetInstancePtr());
+        }
+    }
+    else if (aArgs[0] == "filter")
+    {
+        if (aArgs[1].IsEmpty())
+        {
+            OutputEnabledDisabledStatus(otTrelIsFilterEnabled(GetInstancePtr()));
+        }
+        else
+        {
+            SuccessOrExit(error = ParseEnableOrDisable(aArgs[1], enable));
+            otTrelSetFilterEnabled(GetInstancePtr(), enable);
+        }
+    }
+    else if (aArgs[0] == "peers")
+    {
+        uint16_t           index = 0;
+        otTrelPeerIterator iterator;
+        const otTrelPeer * peer;
+        bool               isTable = true;
 
-    error = otPlatTrelUdp6SetTestMode(GetInstancePtr(), enable);
+        if (aArgs[1] == "list")
+        {
+            isTable = false;
+        }
+        else
+        {
+            VerifyOrExit(aArgs[1].IsEmpty(), error = kErrorInvalidArgs);
+        }
+
+        if (isTable)
+        {
+            static const char *const kTrelPeerTableTitles[] = {"No", "Ext MAC Address", "Ext PAN Id",
+                                                               "IPv6 Socket Address"};
+
+            static const uint8_t kTrelPeerTableColumnWidths[] = {5, 18, 18, 50};
+
+            OutputTableHeader(kTrelPeerTableTitles, kTrelPeerTableColumnWidths);
+        }
+
+        otTrelInitPeerIterator(GetInstancePtr(), &iterator);
+
+        while ((peer = otTrelGetNextPeer(GetInstancePtr(), &iterator)) != nullptr)
+        {
+            if (!isTable)
+            {
+                OutputFormat("%03u ExtAddr:", ++index);
+                OutputExtAddress(peer->mExtAddress);
+                OutputFormat(" ExtPanId:");
+                OutputBytes(peer->mExtPanId.m8);
+                OutputFormat(" SockAddr:");
+                OutputSockAddrLine(peer->mSockAddr);
+            }
+            else
+            {
+                char string[OT_IP6_SOCK_ADDR_STRING_SIZE];
+
+                OutputFormat("| %3u | ", ++index);
+                OutputExtAddress(peer->mExtAddress);
+                OutputFormat(" | ");
+                OutputBytes(peer->mExtPanId.m8);
+                otIp6SockAddrToString(&peer->mSockAddr, string, sizeof(string));
+                OutputLine(" | %-48s |", string);
+            }
+        }
+    }
+    else
+    {
+        error = OT_ERROR_INVALID_ARGS;
+    }
 
 exit:
     return error;
