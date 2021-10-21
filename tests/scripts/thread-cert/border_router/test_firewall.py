@@ -95,7 +95,7 @@ class Firewall(thread_cert.TestCase):
         router1.add_ipmaddr(MA1)
         router1.register_netdata()
 
-        self.simulator.go(5)
+        self.simulator.go(20)
 
         def host_ping_ether(dest, interface, ttl=10, add_interface=False, add_route=False, gateway=None):
             if add_interface:
