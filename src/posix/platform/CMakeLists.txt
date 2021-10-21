@@ -67,7 +67,6 @@ add_library(openthread-posix
     backbone.cpp
     daemon.cpp
     entropy.cpp
-    firewall.cpp
     hdlc_interface.cpp
     infra_if.cpp
     logging.cpp
@@ -83,7 +82,6 @@ add_library(openthread-posix
     system.cpp
     trel_udp6.cpp
     udp.cpp
-    utils.cpp
     virtual_time.cpp
 )
 

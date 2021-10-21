@@ -1657,7 +1657,7 @@ class NodeImpl:
         omr_addrs = []
         for addr in self.get_addrs():
             for prefix in prefixes:
-                if (addr.startswith(prefix)) and (addr != self.__getDua()):
+                if (addr.startswith(prefix)):
                     omr_addrs.append(addr)
                     break
 
