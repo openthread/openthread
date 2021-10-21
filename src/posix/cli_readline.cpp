@@ -56,6 +56,17 @@
 #include "openthread-core-config.h"
 #include "platform-posix.h"
 
+static bool sInputCallbackInstalled = false;
+
+static void UninstallInputCallback(void)
+{
+    if (sInputCallbackInstalled)
+    {
+        rl_callback_handler_remove();
+        sInputCallbackInstalled = false;
+    }
+}
+
 static void InputCallback(char *aLine)
 {
     if (aLine != nullptr)
@@ -67,7 +78,11 @@ static void InputCallback(char *aLine)
         //        otLogCritPlat("otCliInputLine %s", aLine);
         otCliInputLine(aLine);
         free(aLine);
-        rl_on_new_line();
+
+        if (otCliIsCommandPending())
+        {
+            UninstallInputCallback();
+        }
     }
     else
     {
@@ -75,13 +90,20 @@ static void InputCallback(char *aLine)
     }
 }
 
-static int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
+static void InstallInputCallback(void)
+{
+    if (!sInputCallbackInstalled && !otCliIsCommandPending())
+    {
+        rl_callback_handler_install("> ", InputCallback);
+        sInputCallbackInstalled = true;
+    }
+}
+
+extern "C" int OutputCallback(void *aContext, const char *aFormat, va_list aArguments)
 {
     OT_UNUSED_VARIABLE(aContext);
 
     int ret = vdprintf(STDOUT_FILENO, aFormat, aArguments);
-
-    rl_callback_read_char();
 
     return ret;
 }
@@ -89,20 +111,19 @@ static int OutputCallback(void *aContext, const char *aFormat, va_list aArgument
 extern "C" void otAppCliInit(otInstance *aInstance)
 {
     rl_instream           = stdin;
-    rl_outstream          = stdout;
+    rl_outstream          = stderr;
     rl_inhibit_completion = true;
 
     rl_set_screen_size(0, OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH);
 
     rl_already_prompted = 0;
-    rl_callback_handler_install("> ", InputCallback);
 
     otCliInit(aInstance, OutputCallback, nullptr);
 }
 
 extern "C" void otAppCliDeinit(void)
 {
-    rl_callback_handler_remove();
+    UninstallInputCallback();
 }
 
 extern "C" void otAppCliUpdate(otSysMainloopContext *aMainloop)
@@ -114,6 +135,8 @@ extern "C" void otAppCliUpdate(otSysMainloopContext *aMainloop)
     {
         aMainloop->mMaxFd = STDIN_FILENO;
     }
+
+    InstallInputCallback();
 }
 
 extern "C" void otAppCliProcess(const otSysMainloopContext *aMainloop)
@@ -123,7 +146,7 @@ extern "C" void otAppCliProcess(const otSysMainloopContext *aMainloop)
         exit(OT_EXIT_FAILURE);
     }
 
-    if (FD_ISSET(STDIN_FILENO, &aMainloop->mReadFdSet))
+    if (FD_ISSET(STDIN_FILENO, &aMainloop->mReadFdSet) && !otCliIsCommandPending())
     {
         rl_callback_read_char();
     }

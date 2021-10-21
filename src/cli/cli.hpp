@@ -95,6 +95,7 @@ extern "C" void otCliPlatLogLine(otLogLevel, otLogRegion, const char *);
 extern "C" void otCliAppendResult(otError aError);
 extern "C" void otCliOutputBytes(const uint8_t *aBytes, uint8_t aLength);
 extern "C" void otCliOutputFormat(const char *aFmt, ...);
+extern "C" bool otCliIsCommandPending(void);
 
 /**
  * This class implements the CLI interpreter.
@@ -203,6 +204,8 @@ public:
      *
      */
     static const char *LinkModeToString(const otLinkModeConfig &aLinkMode, char (&aStringBuffer)[kLinkModeStringSize]);
+
+    bool IsCommandPending(void) { return mCommandIsPending; }
 
 protected:
     static Interpreter *sInterpreter;

@@ -156,6 +156,8 @@ void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFo
  */
 void otCliPlatLogLine(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aLogLine);
 
+bool otCliIsCommandPending(void);
+
 /**
  * @}
  *

@@ -5002,6 +5002,11 @@ extern "C" void otCliAppendResult(otError aError)
     Interpreter::GetInterpreter().OutputResult(aError);
 }
 
+extern "C" bool otCliIsCommandPending(void)
+{
+    return Interpreter::GetInterpreter().IsCommandPending();
+}
+
 extern "C" void otCliPlatLogv(otLogLevel aLogLevel, otLogRegion aLogRegion, const char *aFormat, va_list aArgs)
 {
     OT_UNUSED_VARIABLE(aLogLevel);
