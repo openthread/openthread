@@ -143,8 +143,6 @@ Interpreter::Interpreter(Instance *aInstance, otCliOutputCallback aCallback, voi
 #if OPENTHREAD_FTD
     otThreadSetDiscoveryRequestCallback(GetInstancePtr(), &Interpreter::HandleDiscoveryRequest, this);
 #endif
-
-    OutputPrompt();
 }
 
 void Interpreter::OutputResult(otError aError)
@@ -164,7 +162,6 @@ void Interpreter::OutputResult(otError aError)
 
     mCommandIsPending = false;
     mTimer.Stop();
-    OutputPrompt();
 
 exit:
     return;
@@ -308,10 +305,6 @@ exit:
     if ((error != OT_ERROR_NONE) || !args[0].IsEmpty())
     {
         OutputResult(error);
-    }
-    else if (!mCommandIsPending)
-    {
-        OutputPrompt();
     }
 }
 
@@ -4948,20 +4941,6 @@ void Interpreter::Initialize(otInstance *aInstance, otCliOutputCallback aCallbac
     Instance *instance = static_cast<Instance *>(aInstance);
 
     Interpreter::sInterpreter = new (&sInterpreterRaw) Interpreter(instance, aCallback, aContext);
-}
-
-void Interpreter::OutputPrompt(void)
-{
-    static const char sPrompt[] = "> ";
-
-    // The `OutputFormat()` below is adding the prompt which is not
-    // part of any command output, so we set the `EmittingCommandOutput`
-    // flag to false to avoid it being included in the command output
-    // log (under `OPENTHREAD_CONFIG_CLI_LOG_INPUT_OUTPUT_ENABLE`).
-
-    SetEmittingCommandOutput(false);
-    OutputFormat("%s", sPrompt);
-    SetEmittingCommandOutput(true);
 }
 
 void Interpreter::HandleTimer(Timer &aTimer)

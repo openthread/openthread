@@ -64,8 +64,10 @@ static void InputCallback(char *aLine)
         {
             add_history(aLine);
         }
+        //        otLogCritPlat("otCliInputLine %s", aLine);
         otCliInputLine(aLine);
         free(aLine);
+        rl_on_new_line();
     }
     else
     {
@@ -77,7 +79,11 @@ static int OutputCallback(void *aContext, const char *aFormat, va_list aArgument
 {
     OT_UNUSED_VARIABLE(aContext);
 
-    return vdprintf(STDOUT_FILENO, aFormat, aArguments);
+    int ret = vdprintf(STDOUT_FILENO, aFormat, aArguments);
+
+    rl_callback_read_char();
+
+    return ret;
 }
 
 extern "C" void otAppCliInit(otInstance *aInstance)
@@ -88,8 +94,8 @@ extern "C" void otAppCliInit(otInstance *aInstance)
 
     rl_set_screen_size(0, OPENTHREAD_CONFIG_CLI_MAX_LINE_LENGTH);
 
-    rl_callback_handler_install("", InputCallback);
-    rl_already_prompted = true;
+    rl_already_prompted = 0;
+    rl_callback_handler_install("> ", InputCallback);
 
     otCliInit(aInstance, OutputCallback, nullptr);
 }

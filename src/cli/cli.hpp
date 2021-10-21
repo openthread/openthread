@@ -301,7 +301,6 @@ private:
         return error;
     }
 
-    void OutputPrompt(void);
     void OutputResult(otError aError);
 
 #if OPENTHREAD_CONFIG_PING_SENDER_ENABLE
