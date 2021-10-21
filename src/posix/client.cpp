@@ -318,7 +318,7 @@ int main(int argc, char *argv[])
         rl_outstream          = stdout;
         rl_inhibit_completion = true;
         rl_callback_handler_install("> ", InputCallback);
-        rl_already_prompted = 1;
+        rl_already_prompted = 0;
     }
 #endif
 
