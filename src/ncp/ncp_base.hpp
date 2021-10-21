@@ -677,10 +677,6 @@ protected:
 
     bool mDidInitialUpdates;
 
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-    bool mTrelTestModeEnable;
-#endif
-
     uint64_t mLogTimestampBase; // Timestamp base used for logging
 };
 

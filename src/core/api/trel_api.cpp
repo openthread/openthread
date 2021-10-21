@@ -1,5 +1,5 @@
 /*
- *  Copyright (c) 2020, The OpenThread Authors.
+ *  Copyright (c) 2021, The OpenThread Authors.
  *  All rights reserved.
  *
  *  Redistribution and use in source and binary forms, with or without
@@ -26,49 +26,56 @@
  *  POSSIBILITY OF SUCH DAMAGE.
  */
 
-#ifndef OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
-#define OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_
-
 /**
- * This header file defines the OpenThread core configuration options for toranj with POSIX platform.
- *
+ * @file
+ *   This file implements the OpenThread TREL (Thread Radio Encapsulation Link) APIs for Thread Over Infrastructure.
  */
 
-// Include the common configuration for all platforms.
-#include "openthread-core-toranj-config.h"
+#include "openthread-core-config.h"
 
-/**
- * @def OPENTHREAD_CONFIG_PLATFORM_INFO
- *
- * The platform-specific string to insert into the OpenThread version string.
- *
- */
-#define OPENTHREAD_CONFIG_PLATFORM_INFO "POSIX-toranj"
+#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 
-/**
- * @def OPENTHREAD_CONFIG_LOG_OUTPUT
- *
- * Selects if, and where the LOG output goes to.
- *
- */
-#define OPENTHREAD_CONFIG_LOG_OUTPUT OPENTHREAD_CONFIG_LOG_OUTPUT_PLATFORM_DEFINED
+#include <openthread/trel.h>
 
-/**
- * @def OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE
- *
- * Define to 1 to enable Border Router support.
- *
- */
-#define OPENTHREAD_CONFIG_BORDER_ROUTER_ENABLE 1
+#include "common/as_core_type.hpp"
+#include "common/code_utils.hpp"
+#include "common/instance.hpp"
 
-/**
- * @def OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE
- *
- * Define as 1 to enable PTY device support in POSIX app.
- *
- */
-#define OPENTHREAD_POSIX_CONFIG_RCP_PTY_ENABLE 1
+using namespace ot;
 
-#define OPENTHREAD_POSIX_CONFIG_RCP_BUS OT_POSIX_RCP_BUS_UART
+void otTrelEnable(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().Enable();
+}
 
-#endif /* OPENTHREAD_CORE_TORANJ_CONFIG_POSIX_H_ */
+void otTrelDisable(otInstance *aInstance)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().Disable();
+}
+
+bool otTrelIsEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Trel::Interface>().IsEnabled();
+}
+
+void otTrelInitPeerIterator(otInstance *aInstance, otTrelPeerIterator *aIterator)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().InitIterator(*aIterator);
+}
+
+const otTrelPeer *otTrelGetNextPeer(otInstance *aInstance, otTrelPeerIterator *aIterator)
+{
+    return AsCoreType(aInstance).Get<Trel::Interface>().GetNextPeer(*aIterator);
+}
+
+void otTrelSetFilterEnabled(otInstance *aInstance, bool aEnable)
+{
+    AsCoreType(aInstance).Get<Trel::Interface>().SetFilterEnabled(aEnable);
+}
+
+bool otTrelIsFilterEnabled(otInstance *aInstance)
+{
+    return AsCoreType(aInstance).Get<Trel::Interface>().IsFilterEnabled();
+}
+
+#endif // OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE

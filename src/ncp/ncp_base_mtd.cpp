@@ -67,7 +67,7 @@
 #include <openthread/srp_client_buffers.h>
 #endif
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/platform/trel-udp6.h>
+#include <openthread/trel.h>
 #endif
 
 #include "common/code_utils.hpp"
@@ -4046,15 +4046,21 @@ exit:
 #if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
 template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
 {
-    return mEncoder.WriteBool(mTrelTestModeEnable);
+    return mEncoder.WriteBool(!otTrelIsFilterEnabled(mInstance));
 }
 
 template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
 {
     otError error = OT_ERROR_NONE;
+    bool    testMode;
 
-    SuccessOrExit(error = mDecoder.ReadBool(mTrelTestModeEnable));
-    error = otPlatTrelUdp6SetTestMode(mInstance, mTrelTestModeEnable);
+    SuccessOrExit(error = mDecoder.ReadBool(testMode));
+
+    // Note that `TEST_MODE` being `true` indicates that the TREL
+    // interface should be enabled and functional, so filtering
+    // should be disabled.
+
+    otTrelSetFilterEnabled(mInstance, !testMode);
 
 exit:
     return error;
