@@ -157,6 +157,14 @@ class PacketVerifier(object):
             key = self.test_info.get_node_name(i) + '_RLOC'
             self._vars[key] = rloc
 
+        for i, omr in self.test_info.omrs.items():
+            key = self.test_info.get_node_name(i) + '_OMR'
+            self._vars[key] = omr
+
+        for i, dua in self.test_info.duas.items():
+            key = self.test_info.get_node_name(i) + '_DUA'
+            self._vars[key] = dua
+
         if self.test_info.leader_aloc:
             self._vars['LEADER_ALOC'] = self.test_info.leader_aloc
 
