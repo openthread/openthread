@@ -184,7 +184,7 @@ Error SubMac::Enable(void)
     SetState(kStateSleep);
 
 exit:
-    OT_ASSERT(error == kErrorNone);
+    SuccessOrAssert(error);
     return error;
 }
 
@@ -455,8 +455,7 @@ void SubMac::BeginTransmit(void)
 
     if ((mRadioCaps & OT_RADIO_CAPS_SLEEP_TO_TX) == 0)
     {
-        error = Get<Radio>().Receive(mTransmitFrame.GetChannel());
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Get<Radio>().Receive(mTransmitFrame.GetChannel()));
     }
 
     SetState(kStateTransmit);
@@ -474,7 +473,8 @@ void SubMac::BeginTransmit(void)
         mTransmitFrame.mInfo.mTxInfo.mTxDelayBaseTime = 0;
         error                                         = Get<Radio>().Transmit(mTransmitFrame);
     }
-    OT_ASSERT(error == kErrorNone);
+
+    SuccessOrAssert(error);
 
 exit:
     return;
@@ -644,8 +644,7 @@ Error SubMac::EnergyScan(uint8_t aScanChannel, uint16_t aScanDuration)
     }
     else if (ShouldHandleEnergyScan())
     {
-        error = Get<Radio>().Receive(aScanChannel);
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Get<Radio>().Receive(aScanChannel));
 
         SetState(kStateEnergyScan);
         mEnergyScanMaxRssi = kInvalidRssiValue;

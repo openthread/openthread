@@ -775,9 +775,6 @@ start:
                                     maxPayloadLength - headerLength - Lowpan::FragmentHeader::kFirstFragmentHeaderSize);
         uint8_t              hcLength;
         Mac::Address         meshSource, meshDest;
-        Error                error;
-
-        OT_UNUSED_VARIABLE(error);
 
         if (aAddMeshHeader)
         {
@@ -790,8 +787,7 @@ start:
             meshDest   = aMacDest;
         }
 
-        error = Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer);
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Get<Lowpan::Lowpan>().Compress(aMessage, meshSource, meshDest, buffer));
 
         hcLength = static_cast<uint8_t>(buffer.GetWritePointer() - payload);
         headerLength += hcLength;

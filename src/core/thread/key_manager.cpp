@@ -523,13 +523,10 @@ void KeyManager::GetNetworkKey(NetworkKey &aNetworkKey) const
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     if (Crypto::Storage::IsKeyRefValid(mNetworkKeyRef))
     {
-        Error  error = kErrorNone;
         size_t keyLen;
 
-        error = Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen);
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Crypto::Storage::ExportKey(mNetworkKeyRef, aNetworkKey.m8, NetworkKey::kSize, keyLen));
         OT_ASSERT(keyLen == NetworkKey::kSize);
-        OT_UNUSED_VARIABLE(error);
     }
     else
     {
@@ -545,13 +542,10 @@ void KeyManager::GetPskc(Pskc &aPskc) const
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     if (Crypto::Storage::IsKeyRefValid(mPskcRef))
     {
-        Error  error = kErrorNone;
         size_t keyLen;
 
-        error = Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen);
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Crypto::Storage::ExportKey(mPskcRef, aPskc.m8, Pskc::kSize, keyLen));
         OT_ASSERT(keyLen == Pskc::kSize);
-        OT_UNUSED_VARIABLE(error);
     }
     else
     {
@@ -566,7 +560,6 @@ void KeyManager::GetPskc(Pskc &aPskc) const
 
 void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteExisting)
 {
-    Error         error;
     NetworkKeyRef keyRef;
 
     keyRef = kNetworkKeyPsaItsOffset;
@@ -584,10 +577,10 @@ void KeyManager::StoreNetworkKey(const NetworkKey &aNetworkKey, bool aOverWriteE
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac, Crypto::Storage::kKeyAlgorithmHmacSha256,
-                                       Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
-                                       Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize);
-    OT_ASSERT(error == kErrorNone);
+    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeHmac,
+                                               Crypto::Storage::kKeyAlgorithmHmacSha256,
+                                               Crypto::Storage::kUsageSignHash | Crypto::Storage::kUsageExport,
+                                               Crypto::Storage::kTypePersistent, aNetworkKey.m8, NetworkKey::kSize));
 
 exit:
     if (mNetworkKeyRef != keyRef)
@@ -601,15 +594,12 @@ exit:
 void KeyManager::StorePskc(const Pskc &aPskc)
 {
     PskcRef keyRef = kPskcPsaItsOffset;
-    Error   error  = kErrorNone;
 
     Crypto::Storage::DestroyKey(keyRef);
 
-    error = Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw, Crypto::Storage::kKeyAlgorithmVendor,
-                                       Crypto::Storage::kUsageExport, Crypto::Storage::kTypePersistent, aPskc.m8,
-                                       Pskc::kSize);
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
+    SuccessOrAssert(Crypto::Storage::ImportKey(keyRef, Crypto::Storage::kKeyTypeRaw,
+                                               Crypto::Storage::kKeyAlgorithmVendor, Crypto::Storage::kUsageExport,
+                                               Crypto::Storage::kTypePersistent, aPskc.m8, Pskc::kSize));
 
     if (mPskcRef != keyRef)
     {

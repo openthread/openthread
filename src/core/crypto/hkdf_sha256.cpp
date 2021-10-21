@@ -45,36 +45,24 @@ namespace Crypto {
 
 HkdfSha256::HkdfSha256(void)
 {
-    Error err = kErrorNone;
-
     mContext.mContext     = mContextStorage;
     mContext.mContextSize = sizeof(mContextStorage);
-    err                   = otPlatCryptoHkdfInit(&mContext);
-
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    SuccessOrAssert(otPlatCryptoHkdfInit(&mContext));
 }
 
 HkdfSha256::~HkdfSha256(void)
 {
-    Error err = otPlatCryptoHkdfDeinit(&mContext);
-
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    SuccessOrAssert(otPlatCryptoHkdfDeinit(&mContext));
 }
 
 void HkdfSha256::Extract(const uint8_t *aSalt, uint16_t aSaltLength, const Key &aInputKey)
 {
-    Error err = otPlatCryptoHkdfExtract(&mContext, aSalt, aSaltLength, &aInputKey);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    SuccessOrAssert(otPlatCryptoHkdfExtract(&mContext, aSalt, aSaltLength, &aInputKey));
 }
 
 void HkdfSha256::Expand(const uint8_t *aInfo, uint16_t aInfoLength, uint8_t *aOutputKey, uint16_t aOutputKeyLength)
 {
-    Error err = otPlatCryptoHkdfExpand(&mContext, aInfo, aInfoLength, aOutputKey, aOutputKeyLength);
-    OT_ASSERT(err == kErrorNone);
-    OT_UNUSED_VARIABLE(err);
+    SuccessOrAssert(otPlatCryptoHkdfExpand(&mContext, aInfo, aInfoLength, aOutputKey, aOutputKeyLength));
 }
 
 } // namespace Crypto

@@ -46,9 +46,8 @@ Error Key::ExtractKey(uint8_t *aKeyBuffer, uint16_t &aKeyLength) const
 
     OT_ASSERT(IsKeyRef());
 
-    error = Crypto::Storage::ExportKey(GetKeyRef(), aKeyBuffer, aKeyLength, readKeyLength);
+    SuccessOrAssert(Crypto::Storage::ExportKey(GetKeyRef(), aKeyBuffer, aKeyLength, readKeyLength));
 
-    OT_ASSERT(error == kErrorNone);
     VerifyOrExit(readKeyLength <= aKeyLength, error = kErrorNoBufs);
 
     aKeyLength = static_cast<uint16_t>(readKeyLength);
@@ -65,14 +64,9 @@ LiteralKey::LiteralKey(const Key &aKey)
 #if OPENTHREAD_CONFIG_PLATFORM_KEY_REFERENCES_ENABLE
     if (aKey.IsKeyRef())
     {
-        Error error;
-
         mKey    = mBuffer;
         mLength = sizeof(mBuffer);
-        error   = aKey.ExtractKey(mBuffer, mLength);
-
-        OT_ASSERT(error == kErrorNone);
-        OT_UNUSED_VARIABLE(error);
+        SuccessOrAssert(aKey.ExtractKey(mBuffer, mLength));
     }
 #endif
 }

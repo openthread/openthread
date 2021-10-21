@@ -1307,9 +1307,7 @@ Error Mle::AppendAddressRegistration(Message &aMessage, AddressRegistrationMode 
 
     if (Get<ThreadNetif>().HasUnicastAddress(domainUnicastAddress))
     {
-        error = Get<NetworkData::Leader>().GetContext(domainUnicastAddress, context);
-
-        OT_ASSERT(error == kErrorNone);
+        SuccessOrAssert(Get<NetworkData::Leader>().GetContext(domainUnicastAddress, context));
 
         // Prioritize DUA, compressed entry
         entry.SetContextId(context.mContextId);
@@ -4611,9 +4609,7 @@ void Mle::DelayedResponseMetadata::ReadFrom(const Message &aMessage)
 
 void Mle::DelayedResponseMetadata::RemoveFrom(Message &aMessage) const
 {
-    Error error = aMessage.SetLength(aMessage.GetLength() - sizeof(*this));
-    OT_ASSERT(error == kErrorNone);
-    OT_UNUSED_VARIABLE(error);
+    SuccessOrAssert(aMessage.SetLength(aMessage.GetLength() - sizeof(*this)));
 }
 
 } // namespace Mle
