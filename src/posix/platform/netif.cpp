@@ -163,9 +163,6 @@ unsigned int otSysGetThreadNetifIndex(void)
 }
 
 #if OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
-#if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
-#include "firewall.hpp"
-#endif
 #include "posix/platform/ip6_utils.hpp"
 
 using namespace ot::Posix::Ip6Utils;
@@ -747,12 +744,6 @@ void platformNetifStateChange(otInstance *aInstance, otChangedFlags aFlags)
     if (OT_CHANGED_THREAD_NETDATA & aFlags)
     {
         UpdateExternalRoutes(aInstance);
-    }
-#endif
-#if OPENTHREAD_POSIX_CONFIG_FIREWALL_ENABLE
-    if (OT_CHANGED_THREAD_NETDATA & aFlags)
-    {
-        ot::Posix::UpdateIpSets(aInstance);
     }
 #endif
 }
