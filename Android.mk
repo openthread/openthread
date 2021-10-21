@@ -365,7 +365,6 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/backbone.cpp                                 \
     src/posix/platform/daemon.cpp                                   \
     src/posix/platform/entropy.cpp                                  \
-    src/posix/platform/firewall.cpp                                 \
     src/posix/platform/hdlc_interface.cpp                           \
     src/posix/platform/infra_if.cpp                                 \
     src/posix/platform/logging.cpp                                  \
@@ -381,7 +380,6 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/system.cpp                                   \
     src/posix/platform/trel_udp6.cpp                                \
     src/posix/platform/udp.cpp                                      \
-    src/posix/platform/utils.cpp                                    \
     third_party/mbedtls/repo/library/aes.c                          \
     third_party/mbedtls/repo/library/aesni.c                        \
     third_party/mbedtls/repo/library/arc4.c                         \
