@@ -205,6 +205,7 @@ LOCAL_SRC_FILES                                                  := \
     src/core/api/tcp_api.cpp                                        \
     src/core/api/thread_api.cpp                                     \
     src/core/api/thread_ftd_api.cpp                                 \
+    src/core/api/trel_api.cpp                                       \
     src/core/api/udp_api.cpp                                        \
     src/core/backbone_router/backbone_tmf.cpp                       \
     src/core/backbone_router/bbr_leader.cpp                         \
@@ -383,7 +384,7 @@ LOCAL_SRC_FILES                                                  := \
     src/posix/platform/settings.cpp                                 \
     src/posix/platform/spi_interface.cpp                            \
     src/posix/platform/system.cpp                                   \
-    src/posix/platform/trel_udp6.cpp                                \
+    src/posix/platform/trel.cpp                                     \
     src/posix/platform/udp.cpp                                      \
     src/posix/platform/utils.cpp                                    \
     third_party/mbedtls/repo/library/aes.c                          \

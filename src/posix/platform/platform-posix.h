@@ -389,10 +389,10 @@ enum SocketBlockOption
 /**
  * This function initializes platform TREL UDP6 driver.
  *
- * @param[in]   aInterfaceName   The name of network interface.
+ * @param[in]   aTrelUrl   The TREL URL (configuration for TREL platform).
  *
  */
-void platformTrelInit(const char *aInterfaceName);
+void platformTrelInit(const char *aTrelUrl);
 
 /**
  * This function shuts down the platform TREL UDP6 platform driver.

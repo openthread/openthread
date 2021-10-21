@@ -75,6 +75,8 @@ void Link::AfterInit(void)
 
 void Link::Enable(void)
 {
+    mInterface.Enable();
+
     if (mState == kStateDisabled)
     {
         SetState(kStateSleep);
@@ -83,6 +85,8 @@ void Link::Enable(void)
 
 void Link::Disable(void)
 {
+    mInterface.Disable();
+
     if (mState != kStateDisabled)
     {
         SetState(kStateDisabled);
@@ -126,8 +130,9 @@ void Link::BeginTransmit(void)
     Mac::PanId    destPanId;
     Header::Type  type;
     Packet        txPacket;
-    Neighbor *    neighbor = nullptr;
-    Mac::RxFrame *ackFrame = nullptr;
+    Neighbor *    neighbor   = nullptr;
+    Mac::RxFrame *ackFrame   = nullptr;
+    bool          isDisovery = false;
 
     VerifyOrExit(mState == kStateTransmit);
 
@@ -163,6 +168,28 @@ void Link::BeginTransmit(void)
         }
     }
 
+    if (type == Header::kTypeBroadcast)
+    {
+        // Thread utilizes broadcast transmissions to discover
+        // neighboring devices. We determine whether this broadcast
+        // frame tx is a discovery or normal data. All messages
+        // used for discovery either disable MAC security or utilize
+        // MAC Key ID mode 2. All data communication uses MAC Key ID
+        // Mode 1.
+
+        if (!mTxFrame.GetSecurityEnabled())
+        {
+            isDisovery = true;
+        }
+        else
+        {
+            uint8_t keyIdMode;
+
+            IgnoreError(mTxFrame.GetKeyIdMode(keyIdMode));
+            isDisovery = (keyIdMode == Mac::Frame::kKeyIdMode2);
+        }
+    }
+
     if (mTxFrame.GetDstPanId(destPanId) != kErrorNone)
     {
         destPanId = Mac::kPanIdBroadcast;
@@ -195,7 +222,7 @@ void Link::BeginTransmit(void)
     otLogDebgMac("Trel: BeginTransmit() [%s] plen:%d", txPacket.GetHeader().ToString().AsCString(),
                  txPacket.GetPayloadLength());
 
-    VerifyOrExit(mInterface.Send(txPacket) == kErrorNone, InvokeSendDone(kErrorAbort));
+    VerifyOrExit(mInterface.Send(txPacket, isDisovery) == kErrorNone, InvokeSendDone(kErrorAbort));
 
     if (mTxFrame.GetAckRequest())
     {
@@ -442,6 +469,14 @@ void Link::SetState(State aState)
     {
         otLogDebgMac("Trel: State: %s -> %s", StateToString(mState), StateToString(aState));
         mState = aState;
+    }
+}
+
+void Link::HandleNotifierEvents(Events aEvents)
+{
+    if (aEvents.Contains(kEventThreadExtPanIdChanged))
+    {
+        mInterface.HandleExtPanIdChange();
     }
 }
 
