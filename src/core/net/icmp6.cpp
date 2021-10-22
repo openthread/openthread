@@ -175,12 +175,17 @@ Error Icmp::HandleEchoRequest(Message &aRequestMessage, const MessageInfo &aMess
 {
     Error       error = kErrorNone;
     Header      icmp6Header;
+    Netif *     netif;
     Message *   replyMessage = nullptr;
     MessageInfo replyMessageInfo;
     uint16_t    payloadLength;
 
-    // always handle Echo Request destined for RLOC or ALOC
-    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator());
+    netif = &Get<ThreadNetif>();
+
+    // always handle Echo Request destined for RLOC or ALOC and destined for subscribed unicast and multicast addresses
+    VerifyOrExit(ShouldHandleEchoRequest(aMessageInfo) || aMessageInfo.GetSockAddr().GetIid().IsLocator() ||
+                 (netif != nullptr && (netif->IsMulticastSubscribed(aMessageInfo.GetSockAddr()) ||
+                                       netif->HasUnicastAddress(aMessageInfo.GetSockAddr()))));
 
     otLogInfoIcmp("Received Echo Request");
 
