@@ -76,6 +76,9 @@ if TESTHARNESS_VERSION == TESTHARNESS_1_2:
 
 from IThci import IThci
 
+CMD_PREFIX = ''
+"""Prefix to be included before the CLI commands"""
+
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
@@ -250,7 +253,13 @@ class OpenThreadTHCI(object):
     def _onCommissionStop(self):
         """Called when commissioning stops."""
 
+    def __add_cmd_prefix(self, cmd):
+        if not self.IsBorderRouter:
+            cmd = '{prefix}{cmd}'.format(prefix=CMD_PREFIX, cmd=cmd)
+        return cmd
+
     def __sendCommand(self, cmd, expectEcho=True):
+        cmd = self.__add_cmd_prefix(cmd)
         self.log("command: %s", cmd)
         self._cliWriteLine(cmd)
         if expectEcho:
@@ -406,6 +415,7 @@ class OpenThreadTHCI(object):
 
         # init serial port
         self._connect()
+        self.__detectZephyr()
         if TESTHARNESS_VERSION == TESTHARNESS_1_2:
             self.__discoverDeviceCapability()
         self.UIStatusMsg = self.getVersionNumber()
@@ -3447,6 +3457,16 @@ class OpenThreadTHCI(object):
     @API
     def setLeaderWeight(self, iWeight=72):
         self.__executeCommand('leaderweight %d' % iWeight)
+
+    def __detectZephyr(self):
+        """Detect if the device is running Zephyr and adapt in that case"""
+
+        global CMD_PREXIX, LINESEPX
+
+        if not self.IsBorderRouter:
+            if self.__executeCommand('ot thread version')[0].isdigit():
+                CMD_PREXIX = 'ot '
+                LINESEPX = re.compile(r'\r\n|\r|\n')
 
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
