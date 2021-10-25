@@ -1011,7 +1011,7 @@ Error Ip6::ProcessReceiveCallback(Message &          aMessage,
     // Do not forward reassembled IPv6 packets.
     VerifyOrExit(aMessage.GetLength() <= kMinimalMtu, error = kErrorDrop);
 
-    if (mIsReceiveIp6FilterEnabled)
+    if (mIsReceiveIp6FilterEnabled && Get<Netif>().HasUnicastAddress(aMessageInfo.GetSockAddr()))
     {
 #if !OPENTHREAD_CONFIG_PLATFORM_NETIF_ENABLE
         // do not pass messages sent to an RLOC/ALOC, except Service Locator
