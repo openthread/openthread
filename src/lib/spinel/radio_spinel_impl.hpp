@@ -48,6 +48,7 @@
 #include "common/settings.hpp"
 #include "lib/platform/exit_code.h"
 #include "lib/spinel/radio_spinel.hpp"
+#include "lib/spinel/spinel.h"
 #include "lib/spinel/spinel_decoder.hpp"
 #include "meshcop/dataset.hpp"
 #include "meshcop/meshcop_tlvs.hpp"
@@ -233,7 +234,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::Init(bool aResetRadio,
 
     if (aResetRadio)
     {
-        SuccessOrExit(error = SendReset());
+        SuccessOrExit(error = SendReset(SPINEL_RESET_STACK));
         SuccessOrDie(mSpinelInterface.ResetConnection());
     }
 
@@ -1703,15 +1704,15 @@ spinel_tid_t RadioSpinel<InterfaceType, ProcessContextType>::GetNextTid(void)
 }
 
 template <typename InterfaceType, typename ProcessContextType>
-otError RadioSpinel<InterfaceType, ProcessContextType>::SendReset(void)
+otError RadioSpinel<InterfaceType, ProcessContextType>::SendReset(uint8_t aResetType)
 {
     otError        error = OT_ERROR_NONE;
     uint8_t        buffer[kMaxSpinelFrame];
     spinel_ssize_t packed;
 
     // Pack the header, command and key
-    packed =
-        spinel_datatype_pack(buffer, sizeof(buffer), "Ci", SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET);
+    packed = spinel_datatype_pack(buffer, sizeof(buffer), SPINEL_DATATYPE_COMMAND_S SPINEL_DATATYPE_UINT8_S,
+                                  SPINEL_HEADER_FLAG | SPINEL_HEADER_IID_0, SPINEL_CMD_RESET, aResetType);
 
     VerifyOrExit(packed > 0 && static_cast<size_t>(packed) <= sizeof(buffer), error = OT_ERROR_NO_BUFS);
 
@@ -2256,7 +2257,7 @@ void RadioSpinel<InterfaceType, ProcessContextType>::RecoverFromRcpFailure(void)
 
     if (mResetRadioOnStartup)
     {
-        SuccessOrDie(SendReset());
+        SuccessOrDie(SendReset(SPINEL_RESET_STACK));
         SuccessOrDie(mSpinelInterface.ResetConnection());
     }
 
