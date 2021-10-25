@@ -36,6 +36,7 @@
 #if OPENTHREAD_CONFIG_BORDER_AGENT_ENABLE
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
 #include "common/logging.hpp"
@@ -162,8 +163,7 @@ void BorderAgent::HandleCoapResponse(void *               aContext,
 
     ForwardContext &forwardContext = *static_cast<ForwardContext *>(aContext);
 
-    forwardContext.Get<BorderAgent>().HandleCoapResponse(forwardContext, static_cast<const Coap::Message *>(aMessage),
-                                                         aResult);
+    forwardContext.Get<BorderAgent>().HandleCoapResponse(forwardContext, AsCoapMessagePtr(aMessage), aResult);
 }
 
 void BorderAgent::HandleCoapResponse(ForwardContext &aForwardContext, const Coap::Message *aResponse, Error aResult)
@@ -222,7 +222,7 @@ template <Coap::Resource BorderAgent::*aResource>
 void BorderAgent::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
     IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
+        AsCoapMessage(aMessage), AsCoreType(aMessageInfo),
         (static_cast<BorderAgent *>(aContext)->*aResource).GetUriPath(), false, false));
 }
 
@@ -231,9 +231,8 @@ void BorderAgent::HandleRequest<&BorderAgent::mCommissionerPetition>(void *     
                                                                      otMessage *          aMessage,
                                                                      const otMessageInfo *aMessageInfo)
 {
-    IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(
-        *static_cast<Coap::Message *>(aMessage), *static_cast<const Ip6::MessageInfo *>(aMessageInfo),
-        UriPath::kLeaderPetition, true, true));
+    IgnoreError(static_cast<BorderAgent *>(aContext)->ForwardToLeader(AsCoapMessage(aMessage), AsCoreType(aMessageInfo),
+                                                                      UriPath::kLeaderPetition, true, true));
 }
 
 template <>
@@ -241,8 +240,7 @@ void BorderAgent::HandleRequest<&BorderAgent::mCommissionerKeepAlive>(void *    
                                                                       otMessage *          aMessage,
                                                                       const otMessageInfo *aMessageInfo)
 {
-    static_cast<BorderAgent *>(aContext)->HandleKeepAlive(*static_cast<Coap::Message *>(aMessage),
-                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<BorderAgent *>(aContext)->HandleKeepAlive(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 template <>
@@ -251,7 +249,7 @@ void BorderAgent::HandleRequest<&BorderAgent::mRelayTransmit>(void *            
                                                               const otMessageInfo *aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
-    static_cast<BorderAgent *>(aContext)->HandleRelayTransmit(*static_cast<Coap::Message *>(aMessage));
+    static_cast<BorderAgent *>(aContext)->HandleRelayTransmit(AsCoapMessage(aMessage));
 }
 
 template <>
@@ -260,7 +258,7 @@ void BorderAgent::HandleRequest<&BorderAgent::mRelayReceive>(void *             
                                                              const otMessageInfo *aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
-    static_cast<BorderAgent *>(aContext)->HandleRelayReceive(*static_cast<Coap::Message *>(aMessage));
+    static_cast<BorderAgent *>(aContext)->HandleRelayReceive(AsCoapMessage(aMessage));
 }
 
 template <>
@@ -269,7 +267,7 @@ void BorderAgent::HandleRequest<&BorderAgent::mProxyTransmit>(void *            
                                                               const otMessageInfo *aMessageInfo)
 {
     OT_UNUSED_VARIABLE(aMessageInfo);
-    static_cast<BorderAgent *>(aContext)->HandleProxyTransmit(*static_cast<Coap::Message *>(aMessage));
+    static_cast<BorderAgent *>(aContext)->HandleProxyTransmit(AsCoapMessage(aMessage));
 }
 
 BorderAgent::BorderAgent(Instance &aInstance)

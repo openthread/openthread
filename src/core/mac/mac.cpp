@@ -35,6 +35,7 @@
 
 #include <stdio.h>
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -137,7 +138,7 @@ Mac::Mac(Instance &aInstance)
     mLinks.Enable();
 
     Get<KeyManager>().UpdateKeyMaterial();
-    SetExtendedPanId(static_cast<const ExtendedPanId &>(sExtendedPanidInit));
+    SetExtendedPanId(AsCoreType(&sExtendedPanidInit));
     IgnoreError(SetNetworkName(sNetworkNameInit));
 #if (OPENTHREAD_CONFIG_THREAD_VERSION >= OT_THREAD_VERSION_1_2)
     IgnoreError(SetDomainName(sDomainNameInit));
@@ -146,7 +147,7 @@ Mac::Mac(Instance &aInstance)
     SetExtAddress(randomExtAddress);
     SetShortAddress(GetShortAddress());
 
-    mMode2KeyMaterial.SetFrom(static_cast<const Key &>(sMode2Key));
+    mMode2KeyMaterial.SetFrom(AsCoreType(&sMode2Key));
 }
 
 Error Mac::ActiveScan(uint32_t aScanChannels, uint16_t aScanDuration, ActiveScanHandler aHandler, void *aContext)
@@ -266,7 +267,7 @@ Error Mac::ConvertBeaconToActiveScanResult(const RxFrame *aBeaconFrame, ActiveSc
         aResult.mVersion    = beaconPayload->GetProtocolVersion();
         aResult.mIsJoinable = beaconPayload->IsJoiningPermitted();
         aResult.mIsNative   = beaconPayload->IsNative();
-        IgnoreError(static_cast<NetworkName &>(aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
+        IgnoreError(AsCoreType(&aResult.mNetworkName).Set(beaconPayload->GetNetworkName()));
         VerifyOrExit(IsValidUtf8String(aResult.mNetworkName.m8), error = kErrorParse);
         aResult.mExtendedPanId = beaconPayload->GetExtendedPanId();
     }
@@ -1008,7 +1009,7 @@ void Mac::ProcessTransmitSecurity(TxFrame &aFrame)
         aFrame.SetFrameCounter(mKeyIdMode2FrameCounter);
         aFrame.SetKeySource(keySource);
         aFrame.SetKeyId(0xff);
-        extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
+        extAddress = &AsCoreType(&sMode2ExtAddress);
         break;
     }
 
@@ -1702,7 +1703,7 @@ Error Mac::ProcessReceiveSecurity(RxFrame &aFrame, const Address &aSrcAddr, Neig
 
     case Frame::kKeyIdMode2:
         macKey     = &mMode2KeyMaterial;
-        extAddress = static_cast<const ExtAddress *>(&sMode2ExtAddress);
+        extAddress = &AsCoreType(&sMode2ExtAddress);
         break;
 
     default:

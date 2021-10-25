@@ -33,6 +33,7 @@
 
 #include "message.hpp"
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -203,7 +204,7 @@ Message::Settings::Settings(LinkSecurityMode aSecurityMode, Priority aPriority)
 
 const Message::Settings &Message::Settings::From(const otMessageSettings *aSettings)
 {
-    return (aSettings == nullptr) ? GetDefault() : *static_cast<const Settings *>(aSettings);
+    return (aSettings == nullptr) ? GetDefault() : AsCoreType(aSettings);
 }
 
 //---------------------------------------------------------------------------------------------------------------------

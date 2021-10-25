@@ -41,6 +41,7 @@
 #include <openthread/platform/radio.h>
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -406,8 +407,7 @@ void ActiveDataset::StopLeader(void)
 
 void ActiveDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<ActiveDataset *>(aContext)->HandleSet(*static_cast<Coap::Message *>(aMessage),
-                                                      *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<ActiveDataset *>(aContext)->HandleSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void ActiveDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -432,8 +432,7 @@ void PendingDataset::StopLeader(void)
 
 void PendingDataset::HandleSet(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<PendingDataset *>(aContext)->HandleSet(*static_cast<Coap::Message *>(aMessage),
-                                                       *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<PendingDataset *>(aContext)->HandleSet(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void PendingDataset::HandleSet(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

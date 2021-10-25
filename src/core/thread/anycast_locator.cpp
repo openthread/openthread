@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_CONFIG_TMF_ANYCAST_LOCATOR_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -96,8 +97,8 @@ void AnycastLocator::HandleResponse(void *               aContext,
                                     const otMessageInfo *aMessageInfo,
                                     Error                aError)
 {
-    static_cast<AnycastLocator *>(aContext)->HandleResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aError);
+    static_cast<AnycastLocator *>(aContext)->HandleResponse(AsCoapMessagePtr(aMessage), AsCoreTypePtr(aMessageInfo),
+                                                            aError);
 }
 
 void AnycastLocator::HandleResponse(Coap::Message *aMessage, const Ip6::MessageInfo *aMessageInfo, Error aError)
@@ -135,8 +136,7 @@ exit:
 
 void AnycastLocator::HandleAnycastLocate(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<AnycastLocator *>(aContext)->HandleAnycastLocate(*static_cast<const Coap::Message *>(aMessage),
-                                                                 *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<AnycastLocator *>(aContext)->HandleAnycastLocate(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void AnycastLocator::HandleAnycastLocate(const Coap::Message &aRequest, const Ip6::MessageInfo &aMessageInfo)

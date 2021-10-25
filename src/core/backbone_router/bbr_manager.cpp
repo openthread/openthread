@@ -35,6 +35,7 @@
 
 #if OPENTHREAD_FTD && OPENTHREAD_CONFIG_BACKBONE_ROUTER_ENABLE
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/instance.hpp"
 #include "common/locator_getters.hpp"
@@ -562,8 +563,7 @@ exit:
 
 void Manager::HandleBackboneQuery(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Manager *>(aContext)->HandleBackboneQuery(*static_cast<const Coap::Message *>(aMessage),
-                                                          *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Manager *>(aContext)->HandleBackboneQuery(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Manager::HandleBackboneQuery(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -597,8 +597,7 @@ exit:
 
 void Manager::HandleBackboneAnswer(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<Manager *>(aContext)->HandleBackboneAnswer(*static_cast<const Coap::Message *>(aMessage),
-                                                           *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<Manager *>(aContext)->HandleBackboneAnswer(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void Manager::HandleBackboneAnswer(const Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

@@ -34,6 +34,7 @@
 
 #if OPENTHREAD_FTD
 
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/encoding.hpp"
@@ -2916,7 +2917,7 @@ void MleRouter::HandleDiscoveryRequest(const Message &aMessage, const Ip6::Messa
         {
             otThreadDiscoveryRequestInfo info;
 
-            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(*static_cast<Mac::ExtAddress *>(&info.mExtAddress));
+            aMessageInfo.GetPeerAddr().GetIid().ConvertToExtAddress(AsCoreType(&info.mExtAddress));
             info.mVersion  = discoveryRequest.GetVersion();
             info.mIsJoiner = discoveryRequest.IsJoiner();
 
@@ -3670,8 +3671,8 @@ void MleRouter::HandleAddressSolicitResponse(void *               aContext,
                                              const otMessageInfo *aMessageInfo,
                                              Error                aResult)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(
-        static_cast<Coap::Message *>(aMessage), static_cast<const Ip6::MessageInfo *>(aMessageInfo), aResult);
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicitResponse(AsCoapMessagePtr(aMessage),
+                                                                     AsCoreTypePtr(aMessageInfo), aResult);
 }
 
 void MleRouter::HandleAddressSolicitResponse(Coap::Message *         aMessage,
@@ -3778,8 +3779,7 @@ bool MleRouter::IsExpectedToBecomeRouterSoon(void) const
 
 void MleRouter::HandleAddressSolicit(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(*static_cast<Coap::Message *>(aMessage),
-                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<MleRouter *>(aContext)->HandleAddressSolicit(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void MleRouter::HandleAddressSolicit(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
@@ -3905,8 +3905,7 @@ exit:
 
 void MleRouter::HandleAddressRelease(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<MleRouter *>(aContext)->HandleAddressRelease(*static_cast<Coap::Message *>(aMessage),
-                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<MleRouter *>(aContext)->HandleAddressRelease(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void MleRouter::HandleAddressRelease(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)

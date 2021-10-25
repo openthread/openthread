@@ -37,7 +37,6 @@
 
 #include <openthread/platform/time.h>
 
-#include "mac_frame.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -45,6 +44,7 @@
 #include "common/logging.hpp"
 #include "common/random.hpp"
 #include "common/time.hpp"
+#include "mac/mac_frame.hpp"
 
 namespace ot {
 namespace Mac {

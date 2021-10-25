@@ -34,6 +34,7 @@
 #include "energy_scan_server.hpp"
 
 #include "coap/coap_message.hpp"
+#include "common/as_core_type.hpp"
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
 #include "common/instance.hpp"
@@ -63,8 +64,7 @@ EnergyScanServer::EnergyScanServer(Instance &aInstance)
 
 void EnergyScanServer::HandleRequest(void *aContext, otMessage *aMessage, const otMessageInfo *aMessageInfo)
 {
-    static_cast<EnergyScanServer *>(aContext)->HandleRequest(*static_cast<Coap::Message *>(aMessage),
-                                                             *static_cast<const Ip6::MessageInfo *>(aMessageInfo));
+    static_cast<EnergyScanServer *>(aContext)->HandleRequest(AsCoapMessage(aMessage), AsCoreType(aMessageInfo));
 }
 
 void EnergyScanServer::HandleRequest(Coap::Message &aMessage, const Ip6::MessageInfo &aMessageInfo)
