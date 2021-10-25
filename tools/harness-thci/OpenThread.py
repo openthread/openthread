@@ -197,8 +197,8 @@ class OpenThreadTHCI(object):
     externalCommissioner = None
     _update_router_status = False
 
-    cmdPrefix = ''
-    lineSepX = LINESEPX
+    __cmdPrefix = ''
+    __lineSepX = LINESEPX
 
     if TESTHARNESS_VERSION == TESTHARNESS_1_2:
         _ROLE_MODE_DICT = {
@@ -257,7 +257,7 @@ class OpenThreadTHCI(object):
         """Called when commissioning stops."""
 
     def __sendCommand(self, cmd, expectEcho=True):
-        cmd = self.cmdPrefix + cmd
+        cmd = self.__cmdPrefix + cmd
         self.log("command: %s", cmd)
         self._cliWriteLine(cmd)
         if expectEcho:
@@ -3459,10 +3459,12 @@ class OpenThreadTHCI(object):
     def __detectZephyr(self):
         """Detect if the device is running Zephyr and adapt in that case"""
 
-        if not self.IsBorderRouter:
-            if self.__executeCommand('ot thread version', timeout=0.2)[0].isdigit():
-                self.cmdPrefix = 'ot '
-                self.lineSepX = re.compile(r'\r\n|\r|\n')
+        try:
+            if self.__executeCommand('ot thread version')[0].isdigit():
+                self.__cmdPrefix = 'ot '
+                self.__lineSepX = re.compile(r'\r\n|\r|\n')
+        except CommandError:
+            pass
 
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
@@ -3557,7 +3559,7 @@ class OpenThread(OpenThreadTHCI, IThci):
             logging.exception('%s: No new data', self)
             self.sleep(0.1)
 
-        self.__lines += self.lineSepX.split(tail)
+        self.__lines += self.__lineSepX.split(tail)
         if len(self.__lines) > 1:
             return self.__lines.pop(0)
 
