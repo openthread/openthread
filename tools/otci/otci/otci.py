@@ -225,9 +225,15 @@ class OTCI(object):
         """Stop sending ICMPv6 Echo Requests."""
         self.execute_command('ping stop')
 
+    def discover(self, channel: int = None) -> List[Dict[str, Any]]:
+        """Perform an MLE Discovery operation."""
+        return self.__scan_networks('discover', channel)
+
     def scan(self, channel: int = None) -> List[Dict[str, Any]]:
         """Perform an IEEE 802.15.4 Active Scan."""
-        cmd = 'scan'
+        return self.__scan_networks('scan', channel)
+
+    def __scan_networks(self, cmd: str, channel: int = None) -> List[Dict[str, Any]]:
         if channel is not None:
             cmd += f' {channel}'
 
