@@ -92,6 +92,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
         TD: {
             'name': 'TD',
             'allowlist': [ROUTER_1],
+            'router_eligible': False,
             'version': '1.2',
             'partition_id': 1,
         },
@@ -116,7 +117,7 @@ class MATN_15_ChangeOfPrimaryBBRTriggersRegistration(thread_cert.TestCase):
 
         td.start()
         self.simulator.go(5)
-        self.assertEqual('router', td.get_state())
+        self.assertEqual('child', td.get_state())
 
         br2.start()
         self.simulator.go(5)
