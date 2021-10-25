@@ -76,9 +76,6 @@ if TESTHARNESS_VERSION == TESTHARNESS_1_2:
 
 from IThci import IThci
 
-CMD_PREFIX = ''
-"""Prefix to be included before the CLI commands"""
-
 LINESEPX = re.compile(r'\r\n|\n')
 """regex: used to split lines"""
 
