@@ -197,6 +197,9 @@ class OpenThreadTHCI(object):
     externalCommissioner = None
     _update_router_status = False
 
+    cmdPrefix = ''
+    lineSepX = LINESEPX
+
     if TESTHARNESS_VERSION == TESTHARNESS_1_2:
         _ROLE_MODE_DICT = {
             Thread_Device_Role.Leader: 'rdn',
@@ -253,13 +256,8 @@ class OpenThreadTHCI(object):
     def _onCommissionStop(self):
         """Called when commissioning stops."""
 
-    def __add_cmd_prefix(self, cmd):
-        if not self.IsBorderRouter:
-            cmd = '{prefix}{cmd}'.format(prefix=CMD_PREFIX, cmd=cmd)
-        return cmd
-
     def __sendCommand(self, cmd, expectEcho=True):
-        cmd = self.__add_cmd_prefix(cmd)
+        cmd = self.cmdPrefix + cmd
         self.log("command: %s", cmd)
         self._cliWriteLine(cmd)
         if expectEcho:
@@ -3461,12 +3459,10 @@ class OpenThreadTHCI(object):
     def __detectZephyr(self):
         """Detect if the device is running Zephyr and adapt in that case"""
 
-        global CMD_PREXIX, LINESEPX
-
         if not self.IsBorderRouter:
-            if self.__executeCommand('ot thread version')[0].isdigit():
-                CMD_PREXIX = 'ot '
-                LINESEPX = re.compile(r'\r\n|\r|\n')
+            if self.__executeCommand('ot thread version', timeout=0.2)[0].isdigit():
+                self.cmdPrefix = 'ot '
+                self.lineSepX = re.compile(r'\r\n|\r|\n')
 
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
@@ -3561,7 +3557,7 @@ class OpenThread(OpenThreadTHCI, IThci):
             logging.exception('%s: No new data', self)
             self.sleep(0.1)
 
-        self.__lines += LINESEPX.split(tail)
+        self.__lines += self.lineSepX.split(tail)
         if len(self.__lines) > 1:
             return self.__lines.pop(0)
 
