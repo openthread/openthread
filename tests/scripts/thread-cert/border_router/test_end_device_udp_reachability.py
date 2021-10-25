@@ -91,16 +91,19 @@ class TestEndDeviceUdpReachability(thread_cert.TestCase):
 
         self.simulator.go(20)
 
-        fed1.udp_start("::", PORT)
-
+        fed1_omr_addr = fed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
         host_addr = host.get_ip6_address(config.ADDRESS_TYPE.ONLINK_ULA)[0]
         print("Host address:", host_addr)
+        print('FED address:', fed1_omr_addr)
+
+        self.assertTrue(fed1.ping(host_addr))
+        self.assertTrue(host.ping(fed1_omr_addr, backbone=True))
+
+        fed1.udp_start("::", PORT)
 
         fed1.udp_send(UDP_PAYLOAD_LEN, host_addr, PORT)
         self.simulator.go(5)
 
-        fed1_omr_addr = fed1.get_ip6_address(config.ADDRESS_TYPE.OMR)[0]
-        print('FED address:', fed1_omr_addr)
         host.udp_send_host(data='A' * UDP_PAYLOAD_LEN, ipaddr=fed1_omr_addr, port=PORT)
         self.simulator.go(5)
 
