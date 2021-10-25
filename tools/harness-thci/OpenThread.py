@@ -194,6 +194,9 @@ class OpenThreadTHCI(object):
     externalCommissioner = None
     _update_router_status = False
 
+    __cmdPrefix = ''
+    __lineSepX = LINESEPX
+
     if TESTHARNESS_VERSION == TESTHARNESS_1_2:
         _ROLE_MODE_DICT = {
             Thread_Device_Role.Leader: 'rdn',
@@ -251,6 +254,7 @@ class OpenThreadTHCI(object):
         """Called when commissioning stops."""
 
     def __sendCommand(self, cmd, expectEcho=True):
+        cmd = self.__cmdPrefix + cmd
         self.log("command: %s", cmd)
         self._cliWriteLine(cmd)
         if expectEcho:
@@ -406,6 +410,7 @@ class OpenThreadTHCI(object):
 
         # init serial port
         self._connect()
+        self.__detectZephyr()
         if TESTHARNESS_VERSION == TESTHARNESS_1_2:
             self.__discoverDeviceCapability()
         self.UIStatusMsg = self.getVersionNumber()
@@ -3448,6 +3453,16 @@ class OpenThreadTHCI(object):
     def setLeaderWeight(self, iWeight=72):
         self.__executeCommand('leaderweight %d' % iWeight)
 
+    def __detectZephyr(self):
+        """Detect if the device is running Zephyr and adapt in that case"""
+
+        try:
+            if self.__executeCommand('ot thread version')[0].isdigit():
+                self.__cmdPrefix = 'ot '
+                self.__lineSepX = re.compile(r'\r\n|\r|\n')
+        except CommandError:
+            pass
+
     def __discoverDeviceCapability(self):
         """Discover device capability according to version"""
         self.DeviceCapability = DevCapb.NotSpecified
@@ -3541,7 +3556,7 @@ class OpenThread(OpenThreadTHCI, IThci):
             logging.exception('%s: No new data', self)
             self.sleep(0.1)
 
-        self.__lines += LINESEPX.split(tail)
+        self.__lines += self.__lineSepX.split(tail)
         if len(self.__lines) > 1:
             return self.__lines.pop(0)
 
