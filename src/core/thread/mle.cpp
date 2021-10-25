@@ -3681,16 +3681,6 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
 
     SetLeaderData(leaderData.GetPartitionId(), leaderData.GetWeighting(), leaderData.GetLeaderRouterId());
 
-    if (!IsRxOnWhenIdle())
-    {
-        Get<DataPollSender>().SetAttachMode(false);
-        Get<MeshForwarder>().SetRxOnWhenIdle(false);
-    }
-    else
-    {
-        Get<MeshForwarder>().SetRxOnWhenIdle(true);
-    }
-
 #if OPENTHREAD_FTD
     if (IsFullThreadDevice())
     {
@@ -3718,6 +3708,16 @@ void Mle::HandleChildIdResponse(const Message &         aMessage,
                                                           aMessage, networkDataOffset));
 
     SetStateChild(shortAddress);
+
+    if (!IsRxOnWhenIdle())
+    {
+        Get<DataPollSender>().SetAttachMode(false);
+        Get<MeshForwarder>().SetRxOnWhenIdle(false);
+    }
+    else
+    {
+        Get<MeshForwarder>().SetRxOnWhenIdle(true);
+    }
 
 exit:
     LogProcessError(kTypeChildIdResponse, error);
