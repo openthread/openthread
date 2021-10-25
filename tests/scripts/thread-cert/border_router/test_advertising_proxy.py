@@ -197,7 +197,7 @@ class SingleHostAndService(thread_cert.TestCase):
             client.srp_client_clear_service('my-service', '_ipps._tcp')
             client.srp_client_set_host_address(host_address)
             client.srp_client_add_service('my-service', '_ipps._tcp', service_port)
-            self.simulator.go(5)
+            self.simulator.go(10)
 
             self.check_host_and_service(server, client, host_address, 'my-service', service_port)
             self.host_check_mdns_service(host, host_address, 'my-service', service_port)
