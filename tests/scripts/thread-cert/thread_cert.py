@@ -322,6 +322,10 @@ class TestCase(NcpSupportMixin, unittest.TestCase):
 
         for i, node in self.nodes.items():
             ipaddrs = node.get_addrs()
+
+            if hasattr(node, 'get_ether_addrs'):
+                ipaddrs += node.get_ether_addrs()
+
             test_info['ipaddrs'][i] = ipaddrs
             if not node.is_host:
                 mleid = node.get_mleid()
