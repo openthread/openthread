@@ -15,7 +15,7 @@ OpenThread released by Google is... <a href="https://www.threadgroup.org/What-is
 More information about Thread can be found at [threadgroup.org](http://threadgroup.org/). Thread is a registered trademark of the Thread Group, Inc.
 
 [ot-repo]: https://github.com/openthread/openthread
-[ot-logo]: doc/images/openthread_logo.png
+[ot-logo]: https://github.com/openthread/openthread/raw/main/doc/images/openthread_logo.png
 [ot-gh-action-build]: https://github.com/openthread/openthread/actions?query=workflow%3ABuild+branch%3Amain+event%3Apush
 [ot-gh-action-build-svg]: https://github.com/openthread/openthread/workflows/Build/badge.svg?branch=main&event=push
 [ot-gh-action-simulation]: https://github.com/openthread/openthread/actions?query=workflow%3ASimulation+branch%3Amain+event%3Apush
