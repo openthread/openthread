@@ -30,20 +30,23 @@
 #    This script generates the OpenThread version header file needed by Android.bp.
 #
 
-set -euo pipefail
+set -uo pipefail
 
 main()
 {
-    if [[ $# -ne 1 ]]; then
-        echo >&2 "Usage: $0 .default-version " \
-            "< third_party/nest/platforms/android/openthread-config-android-version.h.in > openthread-config-android-version.h"
-        exit 1
-    fi
+    # "Usage: config-android-version-gen.sh < src/android/openthread-config-android-version.h.in > openthread-config-android-version.h"
 
-    OPENTHREAD_DEFAULT_VERSION_FILE="$1"
-    OPENTHREAD_SRC_PATH=$(dirname "${OPENTHREAD_DEFAULT_VERSION_FILE}")
-    OPENTHREAD_DEFAULT_VERSION=$(cat "${OPENTHREAD_DEFAULT_VERSION_FILE}")
-    OPENTHREAD_SOURCE_VERSION=$("${OPENTHREAD_SRC_PATH}"/third_party/nlbuild-autotools/repo/scripts/mkversion -b "${OPENTHREAD_DEFAULT_VERSION}" "${OPENTHREAD_SRC_PATH}")
+    OPENTHREAD_VERSION_GEN_FILE="$0"
+    OPENTHREAD_VERSION_GEN_FILE_PATH=$(dirname "${OPENTHREAD_VERSION_GEN_FILE}")
+
+    cd ${OPENTHREAD_VERSION_GEN_FILE_PATH}
+    INSIDE_GIT_REPO=$(git rev-parse --is-inside-work-tree 2>/dev/null)
+
+    if [ "${INSIDE_GIT_REPO}" == "true" ]; then
+        OPENTHREAD_SOURCE_VERSION=$(git describe --dirty --always)
+    else
+        OPENTHREAD_SOURCE_VERSION="Unknown"
+    fi
 
     sed -e s/@OPENTHREAD_SOURCE_VERSION@/"${OPENTHREAD_SOURCE_VERSION}"/
 }

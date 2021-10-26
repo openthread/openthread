@@ -61,12 +61,11 @@ cc_defaults {
 
 genrule {
     name: "ot_version_header",
-    cmd: "$(location src/android/config-android-version-gen.sh) $(location .default-version) < $(in) > $(out)",
+    cmd: "$(location src/android/config-android-version-gen.sh) < $(in) > $(out)",
     srcs: ["src/android/openthread-config-android-version.h.in"],
     out: ["openthread-config-android-version.h"],
     tool_files: [
         "src/android/config-android-version-gen.sh",
-        ".default-version",
     ],
 }
 
