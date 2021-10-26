@@ -650,8 +650,8 @@ Error Manager::SendProactiveBackboneNotification(const Ip6::Address &           
                                                  const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                                  uint32_t                        aTimeSinceLastTransaction)
 {
-    return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), BackboneRouter::kBackboneUdpPort, aDua,
-                              aMeshLocalIid, aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
+    return SendBackboneAnswer(Get<Local>().GetAllDomainBackboneRoutersAddress(), aDua, aMeshLocalIid,
+                              aTimeSinceLastTransaction, Mac::kShortAddrInvalid);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo,
@@ -659,12 +659,11 @@ Error Manager::SendBackboneAnswer(const Ip6::MessageInfo &     aQueryMessageInfo
                                   uint16_t                     aSrcRloc16,
                                   const NdProxyTable::NdProxy &aNdProxy)
 {
-    return SendBackboneAnswer(aQueryMessageInfo.GetPeerAddr(), aQueryMessageInfo.GetPeerPort(), aDua,
-                              aNdProxy.GetMeshLocalIid(), aNdProxy.GetTimeSinceLastTransaction(), aSrcRloc16);
+    return SendBackboneAnswer(aQueryMessageInfo.GetPeerAddr(), aDua, aNdProxy.GetMeshLocalIid(),
+                              aNdProxy.GetTimeSinceLastTransaction(), aSrcRloc16);
 }
 
 Error Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
-                                  uint16_t                        aDstPort,
                                   const Ip6::Address &            aDua,
                                   const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                   uint32_t                        aTimeSinceLastTransaction,
@@ -699,7 +698,7 @@ Error Manager::SendBackboneAnswer(const Ip6::Address &            aDstAddr,
     }
 
     messageInfo.SetPeerAddr(aDstAddr);
-    messageInfo.SetPeerPort(aDstPort);
+    messageInfo.SetPeerPort(BackboneRouter::kBackboneUdpPort);
 
     messageInfo.SetHopLimit(Mle::kDefaultBackboneHoplimit);
     messageInfo.SetIsHostInterface(true);

@@ -207,7 +207,6 @@ private:
                                    uint16_t                     aSrcRloc16,
                                    const NdProxyTable::NdProxy &aNdProxy);
     Error       SendBackboneAnswer(const Ip6::Address &            aDstAddr,
-                                   uint16_t                        aDstPort,
                                    const Ip6::Address &            aDua,
                                    const Ip6::InterfaceIdentifier &aMeshLocalIid,
                                    uint32_t                        aTimeSinceLastTransaction,
