@@ -43,9 +43,6 @@
 #include <openthread/network_time.h>
 #include <openthread/platform/misc.h>
 #include <openthread/platform/radio.h>
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-#include <openthread/platform/trel-udp6.h>
-#endif
 
 #include "common/code_utils.hpp"
 #include "common/debug.hpp"
@@ -2538,24 +2535,6 @@ template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_RADIO_COEX_METRICS>(v
     // Encode common metrics
     SuccessOrExit(error = mEncoder.WriteBool(coexMetrics.mStopped));
     SuccessOrExit(error = mEncoder.WriteUint32(coexMetrics.mNumGrantGlitch));
-
-exit:
-    return error;
-}
-#endif
-
-#if OPENTHREAD_CONFIG_RADIO_LINK_TREL_ENABLE
-template <> otError NcpBase::HandlePropertyGet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
-{
-    return mEncoder.WriteBool(mTrelTestModeEnable);
-}
-
-template <> otError NcpBase::HandlePropertySet<SPINEL_PROP_DEBUG_TREL_TEST_MODE_ENABLE>(void)
-{
-    otError error = OT_ERROR_NONE;
-
-    SuccessOrExit(error = mDecoder.ReadBool(mTrelTestModeEnable));
-    error = otPlatTrelUdp6SetTestMode(mInstance, mTrelTestModeEnable);
 
 exit:
     return error;
